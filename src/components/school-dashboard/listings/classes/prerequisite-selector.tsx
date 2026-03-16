@@ -98,7 +98,7 @@ export function PrerequisiteSelector({
                     <div className="flex flex-col">
                       <span className="font-medium">{cls.name}</span>
                       <span className="text-muted-foreground text-xs">
-                        {cls.subjectName}
+                        {cls.name}
                       </span>
                     </div>
                   </SelectItem>

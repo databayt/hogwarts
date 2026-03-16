@@ -66,7 +66,7 @@ export async function getTeacherForWizard(
             id: true,
             subjectId: true,
             expertiseLevel: true,
-            subject: { select: { id: true, subjectName: true } },
+            subject: { select: { id: true, name: true } },
           },
         },
       },

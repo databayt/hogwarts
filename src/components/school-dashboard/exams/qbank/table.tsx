@@ -115,7 +115,7 @@ function QuestionBankTableInner({
             questionType: q.questionType,
             difficulty: q.difficulty,
             bloomLevel: q.bloomLevel,
-            subjectName: q.subject?.subjectName || "Unknown",
+            subjectName: q.subject?.name || "Unknown",
             points: Number(q.points),
             source: q.source,
             timesUsed: q.analytics?.timesUsed || 0,

@@ -60,9 +60,8 @@ export interface DepartmentRef {
 
 export interface SubjectRef {
   id: string
-  subjectName: string
-  lang: string
-  departmentId: string
+  name: string
+  department: string
 }
 
 export interface CatalogSubjectRef {
@@ -176,7 +175,6 @@ export interface SubjectData {
 }
 
 export interface TopicData {
-  subjectName: string
   name: string
   slug: string
   description?: string

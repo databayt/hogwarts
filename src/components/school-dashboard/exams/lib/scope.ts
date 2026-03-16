@@ -7,7 +7,7 @@ import { db } from "@/lib/db"
  * Get catalog subject IDs that a student (or guardian's children) are enrolled in.
  * Used to scope catalog-level content (quiz, mock) to relevant subjects.
  *
- * Chain: Student → StudentClass → Class → Subject → catalogSubjectId
+ * Chain: Student → StudentClass → Class → CatalogSubject (id)
  */
 export async function getEnrolledCatalogSubjectIds(
   role: string | undefined,
@@ -42,13 +42,13 @@ export async function getEnrolledCatalogSubjectIds(
 
   if (studentIds.length === 0) return null
 
-  // Get class enrollments → subjects → catalogSubjectId
+  // Get class enrollments → subjects (now CatalogSubject directly)
   const classes = await db.studentClass.findMany({
     where: { studentId: { in: studentIds }, schoolId },
     include: {
       class: {
         select: {
-          subject: { select: { catalogSubjectId: true } },
+          subjectId: true,
         },
       },
     },
@@ -56,9 +56,7 @@ export async function getEnrolledCatalogSubjectIds(
 
   const catalogSubjectIds = [
     ...new Set(
-      classes
-        .map((sc) => sc.class.subject?.catalogSubjectId)
-        .filter(Boolean) as string[]
+      classes.map((sc) => sc.class.subjectId).filter(Boolean) as string[]
     ),
   ]
 

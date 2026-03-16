@@ -133,7 +133,7 @@ export function MinistryHeader({
         <View style={styles.centerSection}>
           <Text style={styles.title}>{exam.title}</Text>
           <Text style={styles.subtitle}>
-            {exam.subject.subjectName} - {exam.class.name}
+            {exam.subject.name} - {exam.class.name}
           </Text>
         </View>
 

@@ -66,7 +66,7 @@ interface Absence {
     substituteName: string
     periodName: string
     className: string | undefined
-    subjectName: string | undefined
+    name: string | undefined
   }>
 }
 
@@ -85,7 +85,7 @@ interface SubstitutionRecord {
     periodName: string
     periodTime: string
     className: string | undefined
-    subjectName: string | undefined
+    name: string | undefined
     roomName: string | undefined
   }
   absence: { type: string; reason: string | null }
@@ -156,7 +156,7 @@ export function SubstitutionsContent({
     return (
       record.originalTeacher.name.toLowerCase().includes(query) ||
       record.substituteTeacher.name.toLowerCase().includes(query) ||
-      record.slot.subjectName?.toLowerCase().includes(query)
+      record.slot.name?.toLowerCase().includes(query)
     )
   })
 

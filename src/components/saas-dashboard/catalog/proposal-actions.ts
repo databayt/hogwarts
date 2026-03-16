@@ -156,23 +156,6 @@ export async function approveProposal(
             })
           }
 
-          // Auto-create school Subject with catalogSubjectId FK
-          const schoolDept = await tx.department.findFirst({
-            where: { schoolId: proposal.schoolId },
-            select: { id: true },
-          })
-
-          if (schoolDept) {
-            await tx.subject.create({
-              data: {
-                schoolId: proposal.schoolId,
-                subjectName: data.name,
-                departmentId: schoolDept.id,
-                catalogSubjectId: subject.id,
-              },
-            })
-          }
-
           return subject.id
         })
         break

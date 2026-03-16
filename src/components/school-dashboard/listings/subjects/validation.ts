@@ -3,18 +3,32 @@
 
 import { z } from "zod"
 
-export const subjectBaseSchema = z.object({
-  subjectName: z.string().min(1, "Subject name is required"),
-  departmentId: z.string().min(1, "Department is required"),
-  catalogSubjectId: z.string().optional(),
-  lang: z.string().optional(),
+/**
+ * Schema for selecting a catalog subject into a school.
+ * Subjects are no longer created manually — they come from the catalog.
+ */
+export const subjectSelectSchema = z.object({
+  catalogSubjectId: z.string().min(1, "Catalog subject is required"),
+  gradeId: z.string().min(1, "Grade is required"),
+  streamId: z.string().optional(),
+  customName: z.string().optional(),
+  isRequired: z.boolean().optional(),
+  weeklyPeriods: z.number().int().positive().optional(),
 })
 
-export const subjectCreateSchema = subjectBaseSchema
-
-export const subjectUpdateSchema = subjectBaseSchema.partial().extend({
+/**
+ * Schema for updating a SchoolSubjectSelection record.
+ */
+export const subjectUpdateSchema = z.object({
   id: z.string().min(1, "Required"),
+  customName: z.string().optional(),
+  isRequired: z.boolean().optional(),
+  weeklyPeriods: z.number().int().positive().optional(),
+  isActive: z.boolean().optional(),
 })
+
+// Keep for backward compat — re-export as subjectCreateSchema
+export const subjectCreateSchema = subjectSelectSchema
 
 export const sortItemSchema = z.object({
   id: z.string(),
@@ -24,7 +38,7 @@ export const sortItemSchema = z.object({
 export const getSubjectsSchema = z.object({
   page: z.number().int().positive().default(1),
   perPage: z.number().int().positive().max(200).default(20),
-  subjectName: z.string().optional().default(""),
-  departmentId: z.string().optional().default(""),
+  name: z.string().optional().default(""),
+  department: z.string().optional().default(""),
   sort: z.array(sortItemSchema).optional().default([]),
 })

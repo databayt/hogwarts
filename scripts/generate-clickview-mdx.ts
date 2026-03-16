@@ -33,7 +33,7 @@ interface Group {
 }
 
 interface InventoryEntry {
-  subjectName: string
+  name: string
   level: "elementary" | "middle" | "high"
   url: string
   groups: Group[]
@@ -130,16 +130,13 @@ function extractCoverId(imgSrc: string): string {
   return m ? m[1] : "-"
 }
 
-function getColor(subjectName: string): string {
-  const slug =
-    NAME_TO_SLUG[subjectName] ?? subjectName.toLowerCase().replace(/\s+/g, "-")
+function getColor(name: string): string {
+  const slug = NAME_TO_SLUG[name] ?? name.toLowerCase().replace(/\s+/g, "-")
   return SUBJECT_COLORS[slug] ?? "#64748b"
 }
 
-function getSlug(subjectName: string): string {
-  return (
-    NAME_TO_SLUG[subjectName] ?? subjectName.toLowerCase().replace(/\s+/g, "-")
-  )
+function getSlug(name: string): string {
+  return NAME_TO_SLUG[name] ?? name.toLowerCase().replace(/\s+/g, "-")
 }
 
 function levelLabel(level: string): string {
@@ -195,8 +192,7 @@ for (const [level, subjects] of Object.entries(bannerMeta)) {
 const levelOrder = { elementary: 0, middle: 1, high: 2 }
 const sorted = [...inventory].sort(
   (a, b) =>
-    levelOrder[a.level] - levelOrder[b.level] ||
-    a.subjectName.localeCompare(b.subjectName)
+    levelOrder[a.level] - levelOrder[b.level] || a.name.localeCompare(b.name)
 )
 
 const byLevel = new Map<string, InventoryEntry[]>()
@@ -277,12 +273,12 @@ function generateIndex(): string {
   w("| Level | Subject | Slug | Color | Groups | Topics |")
   w("| --- | --- | --- | --- | --- | --- |")
   for (const entry of sorted) {
-    const slug = getSlug(entry.subjectName)
-    const color = getColor(entry.subjectName)
+    const slug = getSlug(entry.name)
+    const color = getColor(entry.name)
     const groupCount = entry.groups.length
     const topicCount = entry.groups.reduce((sum, g) => sum + g.topics.length, 0)
     w(
-      `| ${levelLabel(entry.level)} | ${entry.subjectName} | \`${slug}\` | \`${color}\` | ${groupCount} | ${topicCount} |`
+      `| ${levelLabel(entry.level)} | ${entry.name} | \`${slug}\` | \`${color}\` | ${groupCount} | ${topicCount} |`
     )
   }
   w()
@@ -320,9 +316,9 @@ function generateLevel(level: "elementary" | "middle" | "high"): string {
   w()
 
   for (const entry of entries) {
-    const slug = getSlug(entry.subjectName)
-    const color = getColor(entry.subjectName)
-    const bannerId = bannerLookup.get(`${level}/${entry.subjectName}`) ?? "-"
+    const slug = getSlug(entry.name)
+    const color = getColor(entry.name)
+    const bannerId = bannerLookup.get(`${level}/${entry.name}`) ?? "-"
     const fullUrl = `https://www.clickview.net${entry.url}`
     const topicCount = entry.groups.reduce((sum, g) => sum + g.topics.length, 0)
     const groupCount = entry.groups.length
@@ -337,7 +333,7 @@ function generateLevel(level: "elementary" | "middle" | "high"): string {
       }
     }
 
-    w(`## ${entry.subjectName}`)
+    w(`## ${entry.name}`)
     w()
     w(`> **URL:** ${fullUrl}`)
     w(

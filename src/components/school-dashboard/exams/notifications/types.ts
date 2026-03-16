@@ -26,7 +26,7 @@ export type ExamNotificationType =
 interface BaseNotificationData {
   examId: string
   examTitle: string
-  subjectName: string
+  name: string
   className: string
 }
 
@@ -147,7 +147,7 @@ export const EXAM_NOTIFICATION_TEMPLATES: NotificationTemplate[] = [
     type: "EXAM_SCHEDULED",
     titleTemplate: "New Exam Scheduled: {{examTitle}}",
     bodyTemplate:
-      "{{subjectName}} exam scheduled for {{examDate}}. Duration: {{duration}} minutes.",
+      "{{name}} exam scheduled for {{examDate}}. Duration: {{duration}} minutes.",
     channels: ["email", "push", "in_app"],
     recipientTypes: ["STUDENT", "PARENT"],
   },
@@ -155,7 +155,7 @@ export const EXAM_NOTIFICATION_TEMPLATES: NotificationTemplate[] = [
     type: "EXAM_REMINDER",
     titleTemplate: "Exam Reminder: {{examTitle}}",
     bodyTemplate:
-      "Your {{subjectName}} exam starts in {{hoursUntil}} hours. Please prepare accordingly.",
+      "Your {{name}} exam starts in {{hoursUntil}} hours. Please prepare accordingly.",
     channels: ["push", "in_app"],
     recipientTypes: ["STUDENT", "PARENT"],
   },
@@ -163,7 +163,7 @@ export const EXAM_NOTIFICATION_TEMPLATES: NotificationTemplate[] = [
     type: "EXAM_STARTED",
     titleTemplate: "Exam In Progress: {{examTitle}}",
     bodyTemplate:
-      "{{studentName}} has started the {{subjectName}} exam. It will end at {{endTime}}.",
+      "{{studentName}} has started the {{name}} exam. It will end at {{endTime}}.",
     channels: ["push", "in_app"],
     recipientTypes: ["PARENT"],
   },
@@ -171,7 +171,7 @@ export const EXAM_NOTIFICATION_TEMPLATES: NotificationTemplate[] = [
     type: "EXAM_COMPLETED",
     titleTemplate: "Exam Submitted: {{examTitle}}",
     bodyTemplate:
-      "{{studentName}} has completed the {{subjectName}} exam. Answered {{questionsAnswered}}/{{totalQuestions}} questions.",
+      "{{studentName}} has completed the {{name}} exam. Answered {{questionsAnswered}}/{{totalQuestions}} questions.",
     channels: ["push", "in_app"],
     recipientTypes: ["PARENT"],
   },
@@ -179,7 +179,7 @@ export const EXAM_NOTIFICATION_TEMPLATES: NotificationTemplate[] = [
     type: "RESULTS_PUBLISHED",
     titleTemplate: "Exam Results: {{examTitle}}",
     bodyTemplate:
-      "{{studentName}} scored {{percentage}}% ({{grade}}) in {{subjectName}}. Class average: {{classAverage}}%.",
+      "{{studentName}} scored {{percentage}}% ({{grade}}) in {{name}}. Class average: {{classAverage}}%.",
     channels: ["email", "push", "in_app"],
     recipientTypes: ["STUDENT", "PARENT"],
   },
@@ -187,7 +187,7 @@ export const EXAM_NOTIFICATION_TEMPLATES: NotificationTemplate[] = [
     type: "RETAKE_AVAILABLE",
     titleTemplate: "Retake Available: {{examTitle}}",
     bodyTemplate:
-      "You can retake the {{subjectName}} exam. Previous score: {{previousScore}}%. Attempt {{attemptNumber}} of {{maxAttempts}}.",
+      "You can retake the {{name}} exam. Previous score: {{previousScore}}%. Attempt {{attemptNumber}} of {{maxAttempts}}.",
     channels: ["email", "push", "in_app"],
     recipientTypes: ["STUDENT", "PARENT"],
   },
@@ -195,7 +195,7 @@ export const EXAM_NOTIFICATION_TEMPLATES: NotificationTemplate[] = [
     type: "GRADE_UPDATED",
     titleTemplate: "Grade Updated: {{examTitle}}",
     bodyTemplate:
-      "Your grade for {{subjectName}} has been updated from {{previousGrade}} to {{newGrade}}.",
+      "Your grade for {{name}} has been updated from {{previousGrade}} to {{newGrade}}.",
     channels: ["push", "in_app"],
     recipientTypes: ["STUDENT", "PARENT"],
   },

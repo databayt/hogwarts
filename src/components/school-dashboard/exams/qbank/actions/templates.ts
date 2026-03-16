@@ -47,14 +47,15 @@ export async function createTemplate(
     const validated = examTemplateSchema.parse(data)
 
     // Verify subject exists and belongs to school
-    const subject = await db.subject.findFirst({
+    const subjectSelection = await db.schoolSubjectSelection.findFirst({
       where: {
-        id: validated.subjectId,
+        catalogSubjectId: validated.subjectId,
         schoolId,
+        isActive: true,
       },
     })
 
-    if (!subject) {
+    if (!subjectSelection) {
       return {
         success: false,
         error: "Subject not found",
@@ -263,7 +264,7 @@ export async function getTemplates(
         subject: {
           select: {
             id: true,
-            subjectName: true,
+            name: true,
           },
         },
         _count: {
@@ -307,7 +308,7 @@ export async function getTemplateById(
         subject: {
           select: {
             id: true,
-            subjectName: true,
+            name: true,
           },
         },
         _count: {

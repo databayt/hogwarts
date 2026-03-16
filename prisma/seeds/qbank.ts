@@ -56,15 +56,15 @@ export async function seedQBank(
 
   await processBatch(subjects, 5, async (subject) => {
     // Get real questions for this subject, or fall back to generic
-    const arabicKey = ENGLISH_TO_ARABIC_SUBJECT[subject.subjectName]
+    const arabicKey = ENGLISH_TO_ARABIC_SUBJECT[subject.name]
     const questions: QuestionData[] =
       (arabicKey
         ? SUBJECT_QUESTIONS[arabicKey]
-        : SUBJECT_QUESTIONS[subject.subjectName]) || GENERIC_QUESTIONS
+        : SUBJECT_QUESTIONS[subject.name]) || GENERIC_QUESTIONS
 
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i]
-      const uniqueQuestion = `${q.questionText} (${subject.subjectName} Q${i + 1})`
+      const uniqueQuestion = `${q.questionText} (${subject.name} Q${i + 1})`
 
       try {
         const existing = await prisma.questionBank.findFirst({
@@ -87,9 +87,9 @@ export async function seedQBank(
               points: q.points,
               options: q.options || undefined,
               sampleAnswer: q.sampleAnswer || null,
-              explanation: `سؤال في مادة ${subject.subjectName}`,
+              explanation: `سؤال في مادة ${subject.name}`,
               tags: [
-                subject.subjectName.toLowerCase(),
+                subject.name.toLowerCase(),
                 q.questionType.toLowerCase(),
                 q.difficulty.toLowerCase(),
               ],

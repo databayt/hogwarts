@@ -29,7 +29,7 @@ interface TranscriptYearData {
   terms: Array<{
     termName: string
     subjects: Array<{
-      subjectName: string
+      name: string
       grade: string
       score?: number
       maxScore?: number
@@ -73,7 +73,7 @@ export async function generateTranscript(input: {
           },
         },
         grades: {
-          include: { subject: { select: { subjectName: true } } },
+          include: { subject: { select: { name: true } } },
         },
       },
       orderBy: { term: { startDate: "asc" } },
@@ -97,7 +97,7 @@ export async function generateTranscript(input: {
       yearData.terms.push({
         termName: `Term ${rc.term.termNumber}`,
         subjects: rc.grades.map((g) => ({
-          subjectName: g.subject.subjectName,
+          name: g.subject.name,
           grade: g.grade,
           score: g.score ? Number(g.score) : undefined,
           maxScore: g.maxScore ? Number(g.maxScore) : undefined,

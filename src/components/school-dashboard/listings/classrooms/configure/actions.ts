@@ -420,22 +420,8 @@ export async function generateClassesForGrade(
           const catalogSubjectName =
             sel.subject?.name ?? sel.customName ?? "Unknown"
 
-          // Find or create school-scoped Subject
-          let subjectRecord = await tx.subject.findFirst({
-            where: { schoolId, catalogSubjectId: sel.catalogSubjectId },
-            select: { id: true },
-          })
-
-          if (!subjectRecord) {
-            subjectRecord = await tx.subject.create({
-              data: {
-                schoolId,
-                departmentId: defaultDept.id,
-                subjectName: catalogSubjectName,
-                catalogSubjectId: sel.catalogSubjectId,
-              },
-            })
-          }
+          // Class.subjectId now points directly to CatalogSubject
+          const subjectId = sel.catalogSubjectId
 
           const className = `${catalogSubjectName} - ${grade.name}`
 
@@ -443,7 +429,7 @@ export async function generateClassesForGrade(
           const existing = await tx.class.findFirst({
             where: {
               schoolId,
-              subjectId: subjectRecord.id,
+              subjectId,
               gradeId,
               termId: term.id,
             },
@@ -493,7 +479,7 @@ export async function generateClassesForGrade(
               data: {
                 schoolId,
                 name: className,
-                subjectId: subjectRecord.id,
+                subjectId,
                 gradeId,
                 termId: term.id,
                 teacherId: defaultTeacher.id,

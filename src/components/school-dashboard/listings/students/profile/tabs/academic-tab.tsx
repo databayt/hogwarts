@@ -238,7 +238,7 @@ export function AcademicTab({ student, gradeBoundaries }: AcademicTabProps) {
                 {catalogSubjects.map((selection: any) => (
                   <TableRow key={selection.id}>
                     <TableCell className="font-medium">
-                      {selection.subject?.subjectName || "Unknown"}
+                      {selection.subject?.name || "Unknown"}
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline">Available</Badge>

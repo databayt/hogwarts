@@ -70,7 +70,7 @@ export const QuestionForm = forwardRef<WizardFormRef, QuestionFormProps>(
       getSubjectsForQuestion().then((result) => {
         if (result.success && result.data) {
           setSubjectOptions(
-            result.data.map((s) => ({ label: s.subjectName, value: s.id }))
+            result.data.map((s) => ({ label: s.name, value: s.id }))
           )
         }
       })

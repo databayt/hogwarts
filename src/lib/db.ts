@@ -42,7 +42,7 @@ const TENANT_SCOPED_MODELS = new Set([
   "Teacher",
   "Class",
   "StudentClass",
-  "Subject",
+
   "YearLevel",
   "SchoolYear",
   "Department",

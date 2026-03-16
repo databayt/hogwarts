@@ -97,7 +97,7 @@ interface Teacher {
 
 interface Subject {
   id: string
-  subjectName: string
+  name: string
   lang?: string
 }
 
@@ -596,9 +596,7 @@ export function DepartmentsContent({ dictionary, lang }: Props) {
                           variant="secondary"
                           className="text-xs"
                         >
-                          {lang === "ar"
-                            ? subject.subjectName
-                            : subject.subjectName}
+                          {lang === "ar" ? subject.name : subject.name}
                         </Badge>
                       ))}
                       {dept.subjects.length > 4 && (
@@ -715,9 +713,7 @@ export function DepartmentsContent({ dictionary, lang }: Props) {
                         <div className="flex flex-wrap gap-2">
                           {dept.subjects.map((subject) => (
                             <Badge key={subject.id} variant="outline">
-                              {lang === "ar"
-                                ? subject.subjectName
-                                : subject.subjectName}
+                              {lang === "ar" ? subject.name : subject.name}
                             </Badge>
                           ))}
                         </div>

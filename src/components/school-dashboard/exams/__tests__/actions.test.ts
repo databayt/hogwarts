@@ -83,9 +83,8 @@ describe("Exam Actions", () => {
         id: "class-1",
         schoolId: mockSchoolId,
       } as any)
-      vi.mocked(db.subject.findFirst).mockResolvedValue({
+      vi.mocked(db.catalogSubject.findFirst).mockResolvedValue({
         id: "subject-1",
-        schoolId: mockSchoolId,
       } as any)
       vi.mocked(db.exam.create).mockResolvedValue(mockExam as any)
 
@@ -232,7 +231,7 @@ describe("Exam Actions", () => {
           examDate: new Date(),
           createdAt: new Date(),
           class: { name: "Class A" },
-          subject: { subjectName: "Math" },
+          subject: { name: "Math" },
         },
         {
           id: "2",
@@ -241,7 +240,7 @@ describe("Exam Actions", () => {
           examDate: new Date(),
           createdAt: new Date(),
           class: { name: "Class B" },
-          subject: { subjectName: "Science" },
+          subject: { name: "Science" },
         },
       ]
 

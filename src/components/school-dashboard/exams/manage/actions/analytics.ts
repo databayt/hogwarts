@@ -5,6 +5,7 @@
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { getSchoolSubject } from "@/lib/school-subjects"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import type { ActionResponse, ExamAnalytics } from "./types"
@@ -307,16 +308,13 @@ export async function getExamStandardsCoverage(examId: string): Promise<
     }
 
     // Get all standards for this subject area
-    const subject = await db.subject.findFirst({
-      where: { id: exam.subjectId, schoolId },
-      select: { subjectName: true },
-    })
+    const subject = await getSchoolSubject(schoolId, exam.subjectId)
 
     const allStandards = await db.curriculumStandard.findMany({
       where: {
         schoolId,
         isActive: true,
-        ...(subject ? { subjectArea: subject.subjectName } : {}),
+        ...(subject ? { subjectArea: subject.name } : {}),
       },
       select: {
         id: true,
@@ -396,7 +394,7 @@ export async function getSubjectAnalytics(input: {
   endDate?: Date
 }): Promise<
   ActionResponse<{
-    subjectName: string
+    name: string
     totalExams: number
     averageScore: number
     passRate: number
@@ -416,10 +414,7 @@ export async function getSubjectAnalytics(input: {
     const { subjectId, startDate, endDate } = input
 
     // Get subject details
-    const subject = await db.subject.findFirst({
-      where: { id: subjectId, schoolId },
-      select: { subjectName: true },
-    })
+    const subject = await getSchoolSubject(schoolId, subjectId)
 
     if (!subject) {
       return {
@@ -486,7 +481,7 @@ export async function getSubjectAnalytics(input: {
     return {
       success: true,
       data: {
-        subjectName: subject.subjectName,
+        name: subject.name,
         totalExams: exams.length,
         averageScore: Math.round(averageScore * 100) / 100,
         passRate: Math.round(passRate * 100) / 100,

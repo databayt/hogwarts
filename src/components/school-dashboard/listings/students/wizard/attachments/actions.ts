@@ -12,7 +12,7 @@ const DOC_TYPES = [
   { key: "degreeUrl", type: "DEGREE", name: "Degree" },
   { key: "transcriptUrl", type: "TRANSCRIPT", name: "Transcript" },
   { key: "idUrl", type: "ID", name: "ID Document" },
-  { key: "cvUrl", type: "CV", name: "CV" },
+  { key: "resumeUrl", type: "RESUME", name: "Resume" },
   { key: "otherUrl", type: "OTHER", name: "Other Document" },
 ] as const
 
@@ -47,7 +47,7 @@ export async function getStudentAttachments(
         degreeUrl: docMap.get("DEGREE") ?? "",
         transcriptUrl: docMap.get("TRANSCRIPT") ?? "",
         idUrl: docMap.get("ID") ?? "",
-        cvUrl: docMap.get("CV") ?? "",
+        resumeUrl: docMap.get("RESUME") ?? docMap.get("CV") ?? "",
         otherUrl: docMap.get("OTHER") ?? "",
       },
     }

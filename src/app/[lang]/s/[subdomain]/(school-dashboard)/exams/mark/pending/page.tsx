@@ -45,7 +45,7 @@ export default async function PendingPage({ params }: Props) {
         },
         include: {
           class: { select: { name: true } },
-          subject: { select: { subjectName: true } },
+          subject: { select: { name: true } },
           _count: {
             select: {
               examResults: true,
@@ -89,7 +89,7 @@ export default async function PendingPage({ params }: Props) {
                     <Users className="h-4 w-4" />
                     <span>{exam.class?.name}</span>
                     <span className="text-muted-foreground">•</span>
-                    <span>{exam.subject?.subjectName}</span>
+                    <span>{exam.subject?.name}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant="outline">

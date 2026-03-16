@@ -37,7 +37,7 @@ export async function getGradeForWizard(
           select: { id: true, title: true },
         },
         subject: {
-          select: { id: true, subjectName: true },
+          select: { id: true, name: true },
         },
       },
     })

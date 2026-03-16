@@ -47,11 +47,21 @@ export async function seedComboniTeachers() {
     throw new Error("No departments found. Run onboarding first.")
   }
 
-  // 3. Get school subjects for expertise linking
-  const subjects = await prisma.subject.findMany({
-    where: { schoolId: school.id },
-    select: { id: true, subjectName: true, departmentId: true },
+  // 3. Get school subjects for expertise linking (via CatalogSubject)
+  const selections = await prisma.schoolSubjectSelection.findMany({
+    where: { schoolId: school.id, isActive: true },
+    include: {
+      subject: {
+        select: { id: true, name: true, department: true },
+      },
+    },
+    distinct: ["catalogSubjectId"],
   })
+  const subjects = selections.map((s) => ({
+    id: s.subject.id,
+    name: s.subject.name,
+    department: s.subject.department,
+  }))
   console.log(`Found ${subjects.length} school subjects`)
 
   // 4. Check existing teachers to avoid duplicates
@@ -109,20 +119,17 @@ export async function seedComboniTeachers() {
       })
     }
 
-    // Link to matching school subjects (by department)
-    if (departmentId) {
-      const matchingSubjects = subjects.filter(
-        (s) => s.departmentId === departmentId
-      )
-      // Each teacher gets expertise on up to 3 subjects in their department
-      const subjectsToLink = matchingSubjects.slice(0, 3)
-
-      for (let j = 0; j < subjectsToLink.length; j++) {
+    // Link to matching school subjects (distributed across teachers)
+    if (subjects.length > 0) {
+      const startIdx = i % subjects.length
+      const count = Math.min(3, subjects.length)
+      for (let j = 0; j < count; j++) {
+        const subj = subjects[(startIdx + j) % subjects.length]
         await prisma.teacherSubjectExpertise.create({
           data: {
             schoolId: school.id,
             teacherId: teacher.id,
-            subjectId: subjectsToLink[j].id,
+            subjectId: subj.id,
             expertiseLevel: j === 0 ? "PRIMARY" : "SECONDARY",
           },
         })

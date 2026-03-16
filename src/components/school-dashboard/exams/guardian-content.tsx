@@ -130,7 +130,7 @@ export default async function GuardianExamsContent({
       },
       include: {
         class: { select: { name: true, lang: true } },
-        subject: { select: { subjectName: true, lang: true } },
+        subject: { select: { name: true, lang: true } },
       },
       orderBy: { examDate: "asc" },
       take: 10,
@@ -147,7 +147,7 @@ export default async function GuardianExamsContent({
             title: true,
             examDate: true,
             totalMarks: true,
-            subject: { select: { subjectName: true, lang: true } },
+            subject: { select: { name: true, lang: true } },
           },
         },
       },
@@ -317,9 +317,9 @@ export default async function GuardianExamsContent({
             {await Promise.all(
               upcomingExams.map(async (exam) => {
                 const daysUntil = differenceInDays(exam.examDate, today)
-                const subjectName = exam.subject?.subjectName
+                const name = exam.subject?.name
                   ? await getDisplayText(
-                      exam.subject.subjectName,
+                      exam.subject.name,
                       (exam.subject.lang || "ar") as SupportedLanguage,
                       lang,
                       schoolId!
@@ -352,7 +352,7 @@ export default async function GuardianExamsContent({
                             : `${daysUntil} ${lang === "ar" ? "أيام" : "days"}`}
                         </Badge>
                       </div>
-                      <CardDescription>{subjectName}</CardDescription>
+                      <CardDescription>{name}</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="flex items-center gap-4 text-sm">
@@ -401,9 +401,9 @@ export default async function GuardianExamsContent({
           <div className="grid gap-3">
             {await Promise.all(
               recentResults.map(async (result) => {
-                const subjectName = result.exam.subject?.subjectName
+                const name = result.exam.subject?.name
                   ? await getDisplayText(
-                      result.exam.subject.subjectName,
+                      result.exam.subject.name,
                       (result.exam.subject.lang || "ar") as SupportedLanguage,
                       lang,
                       schoolId!
@@ -417,8 +417,7 @@ export default async function GuardianExamsContent({
                         <p className="font-medium">{result.exam.title}</p>
                         <p className="text-muted-foreground text-sm">
                           {result.student.givenName} {result.student.surname} -{" "}
-                          {subjectName} -{" "}
-                          {format(result.exam.examDate, "MMM d, yyyy")}
+                          {name} - {format(result.exam.examDate, "MMM d, yyyy")}
                         </p>
                       </div>
                       <div className="flex items-center gap-3">

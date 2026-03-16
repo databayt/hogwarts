@@ -12,7 +12,7 @@ export interface EnrollmentRecord {
   id: string
   studentName: string | null
   studentEmail: string | null
-  subjectName: string
+  name: string
   subjectSlug: string
   isActive: boolean
   status: string
@@ -51,7 +51,7 @@ export async function getSchoolEnrollments(): Promise<EnrollmentRecord[]> {
     id: e.id,
     studentName: e.user.username,
     studentEmail: e.user.email,
-    subjectName: e.subject.name,
+    name: e.subject.name,
     subjectSlug: e.subject.slug,
     isActive: e.isActive,
     status: e.status,

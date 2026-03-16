@@ -78,7 +78,7 @@ export async function getStudentOwnAttendance(): Promise<
         class: {
           select: {
             name: true,
-            subject: { select: { subjectName: true } },
+            subject: { select: { name: true } },
           },
         },
       },
@@ -102,7 +102,7 @@ export async function getStudentOwnAttendance(): Promise<
           status: r.status,
           classId: r.classId,
           className: r.class
-            ? `${r.class.subject?.subjectName ?? ""} - ${r.class.name}`
+            ? `${r.class.subject?.name ?? ""} - ${r.class.name}`
             : null,
           notes: r.notes,
         })),
@@ -199,7 +199,7 @@ export async function getGuardianChildrenAttendance(): Promise<
                         id: true,
                         name: true,
                         subject: {
-                          select: { id: true, subjectName: true },
+                          select: { id: true, name: true },
                         },
                       },
                     },
@@ -222,7 +222,7 @@ export async function getGuardianChildrenAttendance(): Promise<
       email: null as string | null,
       classes: sg.student.studentClasses.map((sc) => ({
         id: sc.class.id,
-        name: `${sc.class.subject.subjectName} - ${sc.class.name}`,
+        name: `${sc.class.subject.name} - ${sc.class.name}`,
         teacher: sc.class.teacher
           ? `${sc.class.teacher.givenName} ${sc.class.teacher.surname}`
           : "N/A",
@@ -232,7 +232,7 @@ export async function getGuardianChildrenAttendance(): Promise<
         date: a.date,
         status: a.status,
         classId: a.classId,
-        className: a.class.subject.subjectName,
+        className: a.class.subject.name,
         notes: a.notes,
       })),
     }))

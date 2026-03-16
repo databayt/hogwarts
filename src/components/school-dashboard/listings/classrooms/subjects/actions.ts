@@ -21,7 +21,7 @@ export type GradeSubjectAssignment = {
   gradeNumber: number
   classes: {
     classId: string
-    subjectName: string
+    name: string
     teacherName: string
     currentRoomId: string
     currentRoomName: string
@@ -83,9 +83,9 @@ export async function getSubjectRoomAssignments(
           classroomId: true,
           subject: {
             select: {
-              subjectName: true,
+              id: true,
+              name: true,
               lang: true,
-              catalogSubjectId: true,
             },
           },
           classroom: {
@@ -103,7 +103,7 @@ export async function getSubjectRoomAssignments(
             },
           },
         },
-        orderBy: { subject: { subjectName: "asc" } },
+        orderBy: { subject: { name: "asc" } },
       })
 
       // Get weeklyPeriods from SchoolSubjectSelection for this grade
@@ -141,8 +141,8 @@ export async function getSubjectRoomAssignments(
       const translatedClasses = await Promise.all(
         classes.map(async (c) => ({
           classId: c.id,
-          subjectName: await getDisplayText(
-            c.subject.subjectName,
+          name: await getDisplayText(
+            c.subject.name,
             (c.subject.lang as "ar" | "en") || "ar",
             lang,
             schoolId
@@ -163,8 +163,7 @@ export async function getSubjectRoomAssignments(
             lang,
             schoolId
           ),
-          weeklyPeriods:
-            weeklyPeriodsMap.get(c.subject.catalogSubjectId ?? "") ?? null,
+          weeklyPeriods: weeklyPeriodsMap.get(c.subject.id ?? "") ?? null,
         }))
       )
 

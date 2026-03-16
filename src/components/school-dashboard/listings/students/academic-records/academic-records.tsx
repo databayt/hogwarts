@@ -69,7 +69,7 @@ interface AcademicRecord {
 
 interface SubjectGrade {
   subjectId: string
-  subjectName: string
+  name: string
   subjectCode: string
   maxMarks: number
   obtainedMarks: number
@@ -405,7 +405,7 @@ export function AcademicRecords({
                       return (
                         <TableRow key={subject.subjectId}>
                           <TableCell className="font-medium">
-                            {subject.subjectName}
+                            {subject.name}
                           </TableCell>
                           <TableCell>{subject.subjectCode}</TableCell>
                           <TableCell>{subject.maxMarks}</TableCell>

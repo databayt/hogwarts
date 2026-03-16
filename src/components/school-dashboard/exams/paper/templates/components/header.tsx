@@ -169,7 +169,7 @@ export function Header({
   const isRTL = locale === "ar"
 
   const schoolName = school.name
-  const subjectName = exam.subject.subjectName
+  const name = exam.subject.name
   const className = exam.class.name
   const examDate = formatExamDate(exam, locale)
   const academicYear = getAcademicYear()
@@ -222,9 +222,7 @@ export function Header({
         <View style={styles.titleSection}>
           <Text style={styles.examTitle}>{exam.title}</Text>
           <Text style={styles.examSubtitle}>
-            {isRTL
-              ? `${subjectName} - ${className}`
-              : `${subjectName} - ${className}`}
+            {isRTL ? `${name} - ${className}` : `${name} - ${className}`}
           </Text>
 
           {/* Exam metadata: date + academic year */}

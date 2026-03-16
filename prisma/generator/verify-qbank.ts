@@ -23,11 +23,11 @@ async function verifyQuestionBank() {
   const bySubject = await prisma.$queryRaw<
     Array<{ subject: string; count: bigint }>
   >`
-    SELECT s."subjectName" as subject, COUNT(*) as count
+    SELECT s."name" as subject, COUNT(*) as count
     FROM question_bank qb
     JOIN subjects s ON qb."subjectId" = s.id
     WHERE qb."schoolId" = ${schoolId}
-    GROUP BY s."subjectName"
+    GROUP BY s."name"
     ORDER BY COUNT(*) DESC
   `
 

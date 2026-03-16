@@ -133,7 +133,7 @@ export const TemplateForm = forwardRef<WizardFormRef, TemplateFormProps>(
                   {t.name}
                 </CardTitle>
                 <Badge variant="secondary" className="shrink-0 text-xs">
-                  {t.subjectName}
+                  {t.name}
                 </Badge>
               </div>
             </CardHeader>

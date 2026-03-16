@@ -16,7 +16,7 @@ export interface ExamExportData {
   id: string
   title: string
   description: string | null
-  subjectName: string | null
+  name: string | null
   className: string | null
   examDate: Date
   startTime: string
@@ -44,7 +44,7 @@ const { text, number, date } = createColumnHelpers<ExamExportData>()
 export const EXAM_EXPORT_COLUMNS: ExportColumn<ExamExportData>[] = [
   text("title", "Exam Title", "عنوان الاختبار"),
   text("description", "Description", "الوصف"),
-  text("subjectName", "Subject", "المادة"),
+  text("name", "Subject", "المادة"),
   text("className", "Class", "الفصل"),
   date("examDate", "Exam Date", undefined, "تاريخ الاختبار"),
   text("startTime", "Start Time", "وقت البدء"),
@@ -114,7 +114,7 @@ export const EXAM_EXPORT_COLUMNS: ExportColumn<ExamExportData>[] = [
 
 export const EXAM_EXPORT_COLUMNS_COMPACT: ExportColumn<ExamExportData>[] = [
   text("title", "Exam Title", "عنوان الاختبار"),
-  text("subjectName", "Subject", "المادة"),
+  text("name", "Subject", "المادة"),
   date("examDate", "Exam Date", undefined, "تاريخ الاختبار"),
   number("totalMarks", "Total Marks", "الدرجة الكلية"),
   {

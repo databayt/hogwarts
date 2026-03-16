@@ -83,7 +83,7 @@ export type StudentProfile = {
       className: string
       subject: {
         id: string
-        subjectName: string
+        name: string
       }
     }
   }>
@@ -141,7 +141,7 @@ export type TeacherProfile = {
     className: string
     subject: {
       id: string
-      subjectName: string
+      name: string
     }
   }>
 

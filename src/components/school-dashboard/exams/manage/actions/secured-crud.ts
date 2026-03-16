@@ -83,10 +83,11 @@ export const createExamSecured = secureExamAction.create(
       }
 
       // Check if subject exists and belongs to school
-      const subjectExists = await db.subject.findFirst({
+      const subjectExists = await db.schoolSubjectSelection.findFirst({
         where: {
-          id: parsed.subjectId,
+          catalogSubjectId: parsed.subjectId,
           schoolId,
+          isActive: true,
         },
       })
 
@@ -391,7 +392,7 @@ export const getExamsSecured = secureExamAction.read(async function getExams(
         },
         subject: {
           select: {
-            subjectName: true,
+            name: true,
           },
         },
         _count: {

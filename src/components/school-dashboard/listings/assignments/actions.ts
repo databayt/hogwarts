@@ -390,7 +390,7 @@ export async function getAssignmentsCSV(
             name: true,
             subject: {
               select: {
-                subjectName: true,
+                name: true,
               },
             },
           },
@@ -410,7 +410,7 @@ export async function getAssignmentsCSV(
       title: assignment.title || "",
       description: assignment.description || "",
       class: assignment.class?.name || "",
-      subject: assignment.class?.subject?.subjectName || "",
+      subject: assignment.class?.subject?.name || "",
       type: assignment.type || "",
       totalPoints: assignment.totalPoints || 0,
       weight: assignment.weight || 0,
@@ -464,7 +464,7 @@ export async function getAssignmentsExportData(
       title: string
       description: string | null
       className: string | null
-      subjectName: string | null
+      name: string | null
       teacherName: string | null
       dueDate: Date | null
       totalPoints: number | null
@@ -503,7 +503,7 @@ export async function getAssignmentsExportData(
             name: true,
             subject: {
               select: {
-                subjectName: true,
+                name: true,
               },
             },
             teacher: {
@@ -534,7 +534,7 @@ export async function getAssignmentsExportData(
       title: assignment.title as string,
       description: assignment.description as string | null,
       className: (assignment.class?.name as string) || null,
-      subjectName: (assignment.class?.subject?.subjectName as string) || null,
+      name: (assignment.class?.subject?.name as string) || null,
       teacherName: assignment.class?.teacher
         ? `${assignment.class.teacher.givenName} ${assignment.class.teacher.surname}`.trim()
         : null,

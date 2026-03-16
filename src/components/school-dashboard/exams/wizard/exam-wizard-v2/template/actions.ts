@@ -32,7 +32,7 @@ export async function getAvailableTemplates(): Promise<
         duration: true,
         totalMarks: true,
         distribution: true,
-        subject: { select: { subjectName: true } },
+        subject: { select: { name: true } },
       },
     })
 
@@ -59,7 +59,7 @@ export async function getAvailableTemplates(): Promise<
       return {
         id: t.id,
         name: t.name,
-        subjectName: t.subject?.subjectName || "Unknown",
+        subjectName: t.subject?.name || "Unknown",
         duration: t.duration,
         totalMarks: Number(t.totalMarks),
         questionCount,

@@ -24,7 +24,7 @@ export interface QuestionWizardData {
   imageUrl: string | null
   createdBy: string
   wizardStep: string | null
-  subject: { id: string; subjectName: string }
+  subject: { id: string; name: string }
 }
 
 export const {

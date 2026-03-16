@@ -91,7 +91,6 @@ model School {
   studentGuardians         StudentGuardian[]
   guardianPhoneNumbers     GuardianPhoneNumber[]
   studentYearLevels        StudentYearLevel[]
-  subjects                 Subject[]
   classes                  Class[]
   studentClasses           StudentClass[]
   classTeachers            ClassTeacher[]

@@ -140,7 +140,7 @@ export function StudentProgress({ isGuardian }: StudentProgressProps) {
     const point: Record<string, string | number> = { date }
     for (const subject of data.subjectTrends) {
       const dp = subject.dataPoints.find((p) => p.date === date)
-      if (dp) point[subject.subjectName] = dp.percentage
+      if (dp) point[subject.name] = dp.percentage
     }
     return point
   })
@@ -251,7 +251,7 @@ export function StudentProgress({ isGuardian }: StudentProgressProps) {
                     variant="outline"
                     className="text-xs"
                   >
-                    {s.subjectName}: {s.average}%{s.trend === "up" && " ↑"}
+                    {s.name}: {s.average}%{s.trend === "up" && " ↑"}
                     {s.trend === "down" && " ↓"}
                   </Badge>
                 ))}
@@ -277,7 +277,7 @@ export function StudentProgress({ isGuardian }: StudentProgressProps) {
                   <Line
                     key={subject.subjectId}
                     type="monotone"
-                    dataKey={subject.subjectName}
+                    dataKey={subject.name}
                     stroke={SUBJECT_COLORS[i % SUBJECT_COLORS.length]}
                     strokeWidth={2}
                     dot={{ r: 4 }}

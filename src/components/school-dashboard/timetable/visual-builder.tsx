@@ -63,7 +63,7 @@ interface TimetableEntry {
   dayOfWeek: number
   timeSlotId: string
   subjectId: string
-  subjectName: string
+  name: string
   teacherId: string
   teacherName: string
   classId: string
@@ -239,7 +239,7 @@ function TimetableCell({
         >
           <div className="flex items-start justify-between">
             <div>
-              <div className="font-medium">{entry.subjectName}</div>
+              <div className="font-medium">{entry.name}</div>
               <div className="text-xs opacity-90">{entry.teacherName}</div>
               {entry.roomNumber && (
                 <div className="mt-1 text-xs opacity-90">
@@ -330,7 +330,7 @@ export function TimetableBuilder({
       dayOfWeek,
       timeSlotId,
       subjectId: subject.id,
-      subjectName: subject.name,
+      name: subject.name,
       teacherId: subject.teacherId,
       teacherName: subject.teacherName,
       classId,
@@ -413,8 +413,8 @@ export function TimetableBuilder({
   const stats = useMemo(() => {
     const subjectHours = new Map<string, number>()
     entries.forEach((entry) => {
-      const current = subjectHours.get(entry.subjectName) || 0
-      subjectHours.set(entry.subjectName, current + 1)
+      const current = subjectHours.get(entry.name) || 0
+      subjectHours.set(entry.name, current + 1)
     })
 
     const totalPeriods =

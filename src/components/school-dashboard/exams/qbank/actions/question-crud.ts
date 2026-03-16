@@ -66,21 +66,16 @@ export async function createQuestion(
 
     const validated = questionBankSchema.parse(data)
 
-    // Resolve catalog subject from school subject
-    const subject = await db.subject.findFirst({
-      where: { id: validated.subjectId, schoolId },
-      select: { catalogSubjectId: true },
-    })
-
     // Extract optional fields from the discriminated union safely
     const v = validated as Record<string, unknown>
 
     // Create question with transaction: catalog first, then school mirror
     const question = await db.$transaction(async (tx) => {
       // 1. Create in catalog first (single source of truth)
+      // subjectId IS the catalogSubjectId now
       const catalogQuestion = await tx.catalogQuestion.create({
         data: {
-          catalogSubjectId: subject?.catalogSubjectId ?? null,
+          catalogSubjectId: validated.subjectId ?? null,
           questionText: validated.questionText,
           questionType: validated.questionType,
           difficulty: validated.difficulty,
@@ -106,7 +101,6 @@ export async function createQuestion(
           createdBy: userId,
           source: "MANUAL",
           catalogQuestionId: catalogQuestion.id,
-          catalogSubjectId: subject?.catalogSubjectId ?? null,
         },
       })
 
@@ -474,7 +468,7 @@ export async function getQuestions(
         subject: {
           select: {
             id: true,
-            subjectName: true,
+            name: true,
           },
         },
         analytics: true,
@@ -519,7 +513,7 @@ export async function getQuestionById(
         subject: {
           select: {
             id: true,
-            subjectName: true,
+            name: true,
           },
         },
         analytics: true,
@@ -575,17 +569,11 @@ export async function duplicateQuestion(
 
     // Create duplicate with transaction: new CatalogQuestion + new QuestionBank mirror
     const duplicate = await db.$transaction(async (tx) => {
-      // Resolve catalog subject from school subject
-      const subject = await tx.subject.findFirst({
-        where: { id: original.subjectId, schoolId },
-        select: { catalogSubjectId: true },
-      })
-
       // 1. Create new CatalogQuestion for the duplicate
+      // subjectId IS the catalogSubjectId now
       const catalogQuestion = await tx.catalogQuestion.create({
         data: {
-          catalogSubjectId:
-            subject?.catalogSubjectId ?? original.catalogSubjectId,
+          catalogSubjectId: original.subjectId,
           questionText: `${original.questionText} (Copy)`,
           questionType: original.questionType,
           difficulty: original.difficulty,
@@ -622,8 +610,6 @@ export async function duplicateQuestion(
           imageUrl: original.imageUrl ?? null,
           createdBy: userId,
           catalogQuestionId: catalogQuestion.id,
-          catalogSubjectId:
-            subject?.catalogSubjectId ?? original.catalogSubjectId,
           catalogChapterId: original.catalogChapterId ?? null,
           catalogLessonId: original.catalogLessonId ?? null,
         },

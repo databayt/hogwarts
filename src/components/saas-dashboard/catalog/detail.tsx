@@ -235,7 +235,7 @@ export function CatalogDetail({ subject, lang }: Props) {
 
   // Subject edit dialog state
   const [isSubjectEditOpen, setIsSubjectEditOpen] = useState(false)
-  const [subjectName, setSubjectName] = useState(subject.name)
+  const [name, setSubjectName] = useState(subject.name)
   const [subjectSlug, setSubjectSlug] = useState(subject.slug)
   const [subjectDepartment, setSubjectDepartment] = useState(subject.department)
   const [subjectDescription, setSubjectDescription] = useState(
@@ -273,7 +273,7 @@ export function CatalogDetail({ subject, lang }: Props) {
   }
 
   const handleSaveSubject = () => {
-    if (!subjectName.trim()) {
+    if (!name.trim()) {
       toast.error("Subject name is required")
       return
     }
@@ -281,7 +281,7 @@ export function CatalogDetail({ subject, lang }: Props) {
     startTransition(async () => {
       try {
         const formData = new FormData()
-        formData.set("name", subjectName.trim())
+        formData.set("name", name.trim())
         formData.set("slug", subjectSlug)
         formData.set("department", subjectDepartment)
         formData.set("description", subjectDescription)
@@ -300,7 +300,7 @@ export function CatalogDetail({ subject, lang }: Props) {
         }
 
         setHeroDisplay({
-          name: subjectName.trim(),
+          name: name.trim(),
           description: subjectDescription || null,
           color: subjectColor,
           levels: subjectLevels,
@@ -1187,7 +1187,7 @@ export function CatalogDetail({ subject, lang }: Props) {
               <Label htmlFor="es-name">Name *</Label>
               <Input
                 id="es-name"
-                value={subjectName}
+                value={name}
                 onChange={(e) => setSubjectName(e.target.value)}
               />
             </div>

@@ -106,7 +106,7 @@ export async function exportQuestionsToCSV(
       include: {
         subject: {
           select: {
-            subjectName: true,
+            name: true,
           },
         },
         ...(parsed.includeAnalytics && {
@@ -182,14 +182,15 @@ export async function importQuestionsFromCSV(
     const parsed = importQuestionsSchema.parse(input)
 
     // Verify subject exists and belongs to school
-    const subject = await db.subject.findFirst({
+    const subjectSelection = await db.schoolSubjectSelection.findFirst({
       where: {
-        id: parsed.subjectId,
+        catalogSubjectId: parsed.subjectId,
         schoolId,
+        isActive: true,
       },
     })
 
-    if (!subject) {
+    if (!subjectSelection) {
       return {
         success: false,
         error: "Subject not found or does not belong to your school",

@@ -24,7 +24,7 @@ interface SubjectFormProps {
   templateId: string
   initialData?: Partial<SubjectFormData>
   onValidChange?: (isValid: boolean) => void
-  subjectOptions: { id: string; subjectName: string }[]
+  subjectOptions: { id: string; name: string }[]
 }
 
 export const SubjectForm = forwardRef<WizardFormRef, SubjectFormProps>(
@@ -95,7 +95,7 @@ export const SubjectForm = forwardRef<WizardFormRef, SubjectFormProps>(
                           }
                         }}
                       >
-                        {subject.subjectName}
+                        {subject.name}
                       </Badge>
                     ))}
                   </div>

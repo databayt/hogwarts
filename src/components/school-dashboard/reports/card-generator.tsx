@@ -96,7 +96,7 @@ interface Student {
 
 interface SubjectGrade {
   subjectId: string
-  subjectName: string
+  name: string
   teacher: string
   marks: {
     obtained: number
@@ -443,7 +443,7 @@ export function ReportCardGenerator({
           <tbody>
             {reportCard.subjects.map((subject) => (
               <tr key={subject.subjectId}>
-                <td className="border p-2">{subject.subjectName}</td>
+                <td className="border p-2">{subject.name}</td>
                 <td className="border p-2 text-center">
                   {subject.marks.obtained} / {subject.marks.total}
                 </td>

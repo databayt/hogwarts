@@ -122,9 +122,7 @@ function ExamContributionList({ items }: { items: ExamContributionItem[] }) {
                   {item.examType}
                 </Badge>
               </div>
-              <p className="text-muted-foreground text-sm">
-                {item.subjectName}
-              </p>
+              <p className="text-muted-foreground text-sm">{item.name}</p>
               <div className="text-muted-foreground flex flex-wrap gap-3 text-xs">
                 <span>{item.questionCount} questions</span>
                 {item.totalMarks != null && (
@@ -194,9 +192,7 @@ function TemplateContributionList({
                   {item.examType}
                 </Badge>
               </div>
-              <p className="text-muted-foreground text-sm">
-                {item.subjectName}
-              </p>
+              <p className="text-muted-foreground text-sm">{item.name}</p>
               <div className="text-muted-foreground flex flex-wrap gap-3 text-xs">
                 <span>{item.duration} min</span>
                 <span>{item.totalMarks} marks</span>

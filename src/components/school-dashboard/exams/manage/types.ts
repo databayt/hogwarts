@@ -48,7 +48,7 @@ export type ExamDTO = {
   status: "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED"
   instructions: string | null
   class?: { id: string; name: string } | null
-  subject?: { id: string; subjectName: string } | null
+  subject?: { id: string; name: string } | null
   createdAt: Date
   updatedAt: Date
 }
@@ -57,7 +57,7 @@ export type ExamRow = {
   id: string
   title: string
   className: string
-  subjectName: string
+  name: string
   examDate: string
   startTime: string
   endTime: string

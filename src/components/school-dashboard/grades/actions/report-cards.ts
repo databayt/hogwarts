@@ -15,7 +15,7 @@ import { getTenantContext } from "@/lib/tenant-context"
 
 interface SubjectGradeData {
   subjectId: string
-  subjectName: string
+  name: string
   score: number
   maxScore: number
   percentage: number
@@ -112,7 +112,7 @@ export async function generateReportCards(input: {
                 subjectId: true,
                 termId: true,
                 credits: true,
-                subject: { select: { id: true, subjectName: true } },
+                subject: { select: { id: true, name: true } },
               },
             },
           },
@@ -188,7 +188,7 @@ export async function generateReportCards(input: {
 
         subjectGrades.push({
           subjectId: cls.subjectId,
-          subjectName: cls.subject?.subjectName || "",
+          name: cls.subject?.name || "",
           score: totalScore,
           maxScore: totalMax,
           percentage: Math.round(pct * 100) / 100,
@@ -449,7 +449,7 @@ export async function getReportCards(input: {
           },
         },
         grades: {
-          include: { subject: { select: { subjectName: true } } },
+          include: { subject: { select: { name: true } } },
         },
       },
       orderBy: { rank: "asc" },
@@ -486,8 +486,8 @@ export async function getReportCard(reportCardId: string) {
       },
       term: { select: { termNumber: true, startDate: true, endDate: true } },
       grades: {
-        include: { subject: { select: { id: true, subjectName: true } } },
-        orderBy: { subject: { subjectName: "asc" } },
+        include: { subject: { select: { id: true, name: true } } },
+        orderBy: { subject: { name: "asc" } },
       },
     },
   })

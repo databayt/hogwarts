@@ -72,17 +72,15 @@ export async function syncStudentClassToEnrollment(
   classId: string
 ): Promise<void> {
   try {
-    // Get class -> subject -> catalogSubjectId chain
+    // Get class -> subject (CatalogSubject) ID
     const classData = await db.class.findFirst({
       where: { id: classId, schoolId },
       select: {
-        subject: {
-          select: { catalogSubjectId: true },
-        },
+        subjectId: true,
       },
     })
 
-    const catalogSubjectId = classData?.subject?.catalogSubjectId
+    const catalogSubjectId = classData?.subjectId
     if (!catalogSubjectId) {
       // Class has no catalog link - skip silently
       return

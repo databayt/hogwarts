@@ -118,7 +118,7 @@ export function ClassDetailContent({
     ? `${classData.teacher.givenName} ${classData.teacher.surname}`
     : t.unknown
 
-  const subjectName = classData.subject?.subjectName || t.unknown
+  const name = classData.subject?.name || t.unknown
 
   return (
     <div className="space-y-6">
@@ -171,7 +171,7 @@ export function ClassDetailContent({
                 <BookOpen className="text-muted-foreground h-4 w-4" />
               </CardHeader>
               <CardContent>
-                <div className="text-lg font-semibold">{subjectName}</div>
+                <div className="text-lg font-semibold">{name}</div>
               </CardContent>
             </Card>
 

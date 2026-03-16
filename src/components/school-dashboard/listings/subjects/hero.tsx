@@ -13,7 +13,7 @@ import { getSubjectImage } from "./image-map"
 
 interface SubjectHeroProps {
   /** Subject name */
-  subjectName: string
+  name: string
   /** Number of topics/lessons (optional) */
   topicsCount?: number
   /** Number of resources (optional) */
@@ -32,14 +32,14 @@ interface SubjectHeroProps {
  * - RTL support for Arabic
  */
 export function SubjectHero({
-  subjectName,
+  name,
   topicsCount = 0,
   resourcesCount = 0,
   lang,
 }: SubjectHeroProps) {
   const { dictionary } = useDictionary()
-  const displayName = subjectName
-  const imageUrl = getSubjectImage(subjectName)
+  const displayName = name
+  const imageUrl = getSubjectImage(name)
 
   // Get translations with fallbacks
   const topicsLabel = dictionary?.school?.subjects?.topics || "topics"

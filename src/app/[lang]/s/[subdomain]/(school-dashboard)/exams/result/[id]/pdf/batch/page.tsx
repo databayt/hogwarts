@@ -41,7 +41,7 @@ export default async function BatchPDFPage({ params }: Props) {
     where: { id: examId, schoolId },
     include: {
       class: { select: { name: true } },
-      subject: { select: { subjectName: true } },
+      subject: { select: { name: true } },
       _count: {
         select: {
           examResults: true,
@@ -61,7 +61,7 @@ export default async function BatchPDFPage({ params }: Props) {
       <div className="flex flex-col gap-4">
         <PageHeadingSetter
           title="Batch PDF"
-          description={`${exam.class?.name} - ${exam.subject?.subjectName}`}
+          description={`${exam.class?.name} - ${exam.subject?.name}`}
         />
 
         <div className="grid gap-4 md:grid-cols-2">

@@ -190,9 +190,9 @@ export default async function EditorLayout({ children, params }: Props) {
   return (
     <div className="h-[calc(100vh-15rem)] overflow-hidden">
       <div className="mx-auto h-full max-w-7xl">
-        <div className="grid h-full grid-cols-1 gap-8 lg:grid-cols-3">
+        <div className="grid h-full grid-cols-1 gap-8 lg:grid-cols-[auto_1fr]">
           <ConfigSidebar lang={lang} sectionLinks={sectionLinks} />
-          <div className="lg:col-span-2 lg:overflow-y-auto">
+          <div className="lg:overflow-y-auto">
             <div className="flex h-full items-center justify-center">
               <div className="w-full max-w-[400px]">{children}</div>
             </div>

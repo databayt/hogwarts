@@ -69,7 +69,7 @@ export async function getExamResults(input: z.infer<typeof getResultsSchema>) {
       where: { id: examId, schoolId },
       include: {
         class: { select: { name: true } },
-        subject: { select: { subjectName: true } },
+        subject: { select: { name: true } },
         examResults: {
           where: includeAbsent ? {} : { isAbsent: false },
           include: {
@@ -236,7 +236,7 @@ export async function getExamAnalytics(
       where: { id: examId, schoolId },
       include: {
         class: { select: { name: true } },
-        subject: { select: { subjectName: true } },
+        subject: { select: { name: true } },
         examResults: {
           where: { isAbsent: false },
           include: {
@@ -328,7 +328,7 @@ export async function getExamAnalytics(
       examTitle: exam.title,
       examDate: exam.examDate,
       className: exam.class.name,
-      subjectName: exam.subject.subjectName,
+      name: exam.subject.name,
       totalMarks: exam.totalMarks,
       passingMarks: exam.passingMarks,
       totalStudents: exam.examResults.length,
@@ -467,7 +467,7 @@ export async function generateStudentPDF(
         where: { id: parsed.examId, schoolId },
         include: {
           class: { select: { name: true } },
-          subject: { select: { subjectName: true } },
+          subject: { select: { name: true } },
           examResults: {
             where: {
               studentId: parsed.studentId,
@@ -660,7 +660,7 @@ export async function generateStudentPDF(
         title: examData.title,
         date: examData.examDate,
         className: examData.class.name,
-        subjectName: examData.subject.subjectName,
+        name: examData.subject.name,
         totalMarks: examData.totalMarks,
         passingMarks: examData.passingMarks,
       },

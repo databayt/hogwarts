@@ -48,7 +48,7 @@ interface SubstitutionRecord {
     periodName: string
     periodTime: string
     className: string | undefined
-    subjectName: string | undefined
+    name: string | undefined
     roomName: string | undefined
   }
   absence: { type: string; reason: string | null }
@@ -306,8 +306,8 @@ export function SubstitutionList({
 
           <CardContent>
             <div className="flex flex-wrap gap-2">
-              {record.slot.subjectName && (
-                <Badge variant="secondary">{record.slot.subjectName}</Badge>
+              {record.slot.name && (
+                <Badge variant="secondary">{record.slot.name}</Badge>
               )}
               {record.slot.className && (
                 <Badge variant="outline">{record.slot.className}</Badge>

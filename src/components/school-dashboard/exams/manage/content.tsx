@@ -63,7 +63,7 @@ export default async function ExamsContent({
             select: { name: true, lang: true },
           },
           subject: {
-            select: { subjectName: true, lang: true },
+            select: { name: true, lang: true },
           },
         },
       }),
@@ -82,9 +82,9 @@ export default async function ExamsContent({
               schoolId!
             )
           : "Unknown",
-        subjectName: e.subject?.subjectName
+        name: e.subject?.name
           ? await getDisplayText(
-              e.subject.subjectName,
+              e.subject.name,
               (e.subject.lang || "ar") as SupportedLanguage,
               lang,
               schoolId!

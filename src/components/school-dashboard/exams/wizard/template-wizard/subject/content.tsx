@@ -23,7 +23,7 @@ export default function SubjectContent() {
   const { data, isLoading } = useTemplateWizard()
   const [isValid, setIsValid] = useState(false)
   const [subjectOptions, setSubjectOptions] = useState<
-    { id: string; subjectName: string }[]
+    { id: string; name: string }[]
   >([])
 
   // Fetch subject options on mount

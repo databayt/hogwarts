@@ -115,7 +115,7 @@ export function questionToCSVRow(question: any): Record<string, string> {
     "Bloom Level": question.bloomLevel,
     Points: question.points.toString(),
     "Time Estimate (minutes)": question.timeEstimate?.toString() || "",
-    Subject: question.subject?.subjectName || "",
+    Subject: question.subject?.name || "",
     Tags: question.tags?.join(", ") || "",
     "Sample Answer": question.sampleAnswer || "",
     "Grading Rubric": question.gradingRubric || "",

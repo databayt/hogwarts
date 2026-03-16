@@ -198,8 +198,7 @@ export function QuickAssessmentList({
                 {assessment.className}
               </div>
               <div>
-                <span className="font-medium">Subject:</span>{" "}
-                {assessment.subjectName}
+                <span className="font-medium">Subject:</span> {assessment.name}
               </div>
               <div>
                 <span className="font-medium">Questions:</span>{" "}

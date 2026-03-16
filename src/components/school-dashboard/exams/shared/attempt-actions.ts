@@ -74,7 +74,7 @@ export async function getStudentAttempts(options?: {
         select: {
           id: true,
           title: true,
-          subject: { select: { subjectName: true } },
+          subject: { select: { name: true } },
         },
       },
     },
@@ -129,7 +129,7 @@ export async function getStudentAttempts(options?: {
     return {
       id: r.id,
       examTitle: r.exam.title || "Exam",
-      subjectName: r.exam.subject?.subjectName || null,
+      name: r.exam.subject?.name || null,
       attemptNumber: session?.attemptNumber ?? 1,
       score: r.marksObtained,
       totalMarks: r.totalMarks,

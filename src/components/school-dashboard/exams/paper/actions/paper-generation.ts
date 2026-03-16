@@ -197,7 +197,7 @@ export async function generateExamPaper(
         exam: {
           include: {
             class: { select: { name: true, id: true } },
-            subject: { select: { subjectName: true, id: true } },
+            subject: { select: { name: true, id: true } },
           },
         },
         questions: {
@@ -380,7 +380,7 @@ export async function generateAnswerKey(
           exam: {
             include: {
               class: { select: { name: true, id: true } },
-              subject: { select: { subjectName: true, id: true } },
+              subject: { select: { name: true, id: true } },
             },
           },
           questions: {
@@ -690,7 +690,7 @@ export async function getPaperData(
         exam: {
           include: {
             class: { select: { name: true, id: true } },
-            subject: { select: { subjectName: true, id: true } },
+            subject: { select: { name: true, id: true } },
           },
         },
         questions: {

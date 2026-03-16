@@ -2,13 +2,14 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useRef } from "react"
+import { useRef, useState } from "react"
 
-import { Button } from "@/components/ui/button"
 import {
   TitleForm,
   type TitleFormRef,
 } from "@/components/onboarding/title/form"
+
+import { useAutoSave } from "./use-auto-save"
 
 interface Props {
   schoolId: string
@@ -18,20 +19,20 @@ interface Props {
 
 export function ConfigTitleForm({ schoolId, initialTitle, dictionary }: Props) {
   const titleRef = useRef<TitleFormRef>(null)
+  const [isDirty, setIsDirty] = useState(false)
+
+  useAutoSave(async () => {
+    await titleRef.current?.saveAndNext()
+    setIsDirty(false)
+  }, isDirty)
 
   return (
-    <div className="space-y-2">
-      <TitleForm
-        ref={titleRef}
-        schoolId={schoolId}
-        initialData={initialTitle}
-        dictionary={dictionary}
-      />
-      <div className="flex justify-end">
-        <Button size="sm" onClick={() => titleRef.current?.saveAndNext()}>
-          Save
-        </Button>
-      </div>
-    </div>
+    <TitleForm
+      ref={titleRef}
+      schoolId={schoolId}
+      initialData={initialTitle}
+      dictionary={dictionary}
+      onTitleChange={() => setIsDirty(true)}
+    />
   )
 }

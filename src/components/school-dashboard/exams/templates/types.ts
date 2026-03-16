@@ -99,7 +99,7 @@ export interface ExamWithDetails {
   duration: number
   totalMarks: number
   class: { name: string; id: string }
-  subject: { subjectName: string; id: string }
+  subject: { name: string; id: string }
 }
 
 /** School data for paper header */

@@ -4,6 +4,7 @@
 // Results Block Types
 
 import type {
+  CatalogSubject,
   Class,
   Exam,
   ExamResult,
@@ -11,7 +12,6 @@ import type {
   MarkingResult,
   SchoolBranding,
   Student,
-  Subject,
 } from "@prisma/client"
 
 // ========== Result Data Types ==========
@@ -21,7 +21,7 @@ export interface ResultSummary {
   examTitle: string
   examDate: Date
   className: string
-  subjectName: string
+  name: string
   totalMarks: number
   passingMarks: number
   totalStudents: number
@@ -97,7 +97,7 @@ export interface PDFResultData {
     title: string
     date: Date
     className: string
-    subjectName: string
+    name: string
     totalMarks: number
     passingMarks: number
   }
@@ -181,7 +181,7 @@ export interface ResultExportOptions {
 
 export interface ExamWithResults extends Exam {
   class: Class
-  subject: Subject
+  subject: CatalogSubject
   examResults: (ExamResult & {
     student: Student
   })[]

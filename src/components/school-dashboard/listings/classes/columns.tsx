@@ -46,7 +46,7 @@ export function getLocalizedClassName(row: ClassRow, locale: Locale): string {
  * Get localized subject name based on locale
  */
 export function getLocalizedSubjectName(row: ClassRow, locale: Locale): string {
-  return row.subjectName || ""
+  return row.name || ""
 }
 
 export interface ClassColumnCallbacks {
@@ -112,16 +112,16 @@ export const getClassColumns = (
       },
     },
     {
-      accessorKey: "subjectName",
+      accessorKey: "name",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t.subject} />
       ),
       meta: { label: t.subject, variant: "text" },
-      id: "subjectName",
+      id: "name",
       cell: ({ row }) => {
         const displayName = lang
           ? getLocalizedSubjectName(row.original, lang)
-          : row.original.subjectName
+          : row.original.name
         return <span>{displayName}</span>
       },
       enableColumnFilter: true,

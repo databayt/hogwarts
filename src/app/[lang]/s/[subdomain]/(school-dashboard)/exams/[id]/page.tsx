@@ -63,7 +63,7 @@ export default async function Page({ params }: Props) {
     where: { id, schoolId },
     include: {
       class: { select: { name: true } },
-      subject: { select: { subjectName: true } },
+      subject: { select: { name: true } },
       _count: {
         select: {
           examResults: true,
@@ -263,9 +263,7 @@ export default async function Page({ params }: Props) {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-lg font-semibold">
-                {exam.subject?.subjectName}
-              </p>
+              <p className="text-lg font-semibold">{exam.subject?.name}</p>
             </CardContent>
           </Card>
 

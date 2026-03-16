@@ -212,7 +212,7 @@ export async function getQuestions(filters?: {
         subject: {
           select: {
             id: true,
-            subjectName: true,
+            name: true,
           },
         },
         analytics: true,
@@ -252,7 +252,7 @@ export async function getQuestionById(questionId: string) {
         subject: {
           select: {
             id: true,
-            subjectName: true,
+            name: true,
           },
         },
         analytics: true,
@@ -334,7 +334,7 @@ export async function getTemplates(filters?: {
         subject: {
           select: {
             id: true,
-            subjectName: true,
+            name: true,
           },
         },
         _count: {
@@ -561,7 +561,7 @@ export async function getAnalyticsDashboard() {
             analytics: true,
             subject: {
               select: {
-                subjectName: true,
+                name: true,
               },
             },
           },

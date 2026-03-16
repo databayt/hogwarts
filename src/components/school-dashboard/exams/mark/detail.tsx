@@ -53,7 +53,7 @@ export async function QuestionDetail({
       subject: {
         select: {
           id: true,
-          subjectName: true,
+          name: true,
         },
       },
       rubrics: {
@@ -212,7 +212,7 @@ export async function QuestionDetail({
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <p className="text-muted-foreground">Subject</p>
-                  <p className="font-medium">{question.subject.subjectName}</p>
+                  <p className="font-medium">{question.subject.name}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">

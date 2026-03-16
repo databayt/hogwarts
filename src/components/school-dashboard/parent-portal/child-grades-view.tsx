@@ -77,7 +77,7 @@ export async function ChildGradesView({ studentId, lang = "ar" }: Props) {
                           <TableCell className="font-medium">
                             {result.examTitle}
                           </TableCell>
-                          <TableCell>{result.subjectName}</TableCell>
+                          <TableCell>{result.name}</TableCell>
                           <TableCell>
                             {formatDate(result.examDate, lang)}
                           </TableCell>
@@ -161,7 +161,7 @@ export async function ChildGradesView({ studentId, lang = "ar" }: Props) {
                           <TableCell className="font-medium">
                             {score.className}
                           </TableCell>
-                          <TableCell>{score.subjectName}</TableCell>
+                          <TableCell>{score.name}</TableCell>
                           <TableCell>
                             {score.score !== null ? (
                               <span className="font-medium">{score.score}</span>

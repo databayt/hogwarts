@@ -43,8 +43,8 @@ export const getTemplateColumns = (
     enableColumnFilter: true,
   },
   {
-    accessorKey: "subjectName",
-    id: "subjectName",
+    accessorKey: "name",
+    id: "name",
     header: ({ column }) => (
       <DataTableColumnHeader
         column={column}

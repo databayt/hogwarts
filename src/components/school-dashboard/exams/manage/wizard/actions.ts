@@ -7,6 +7,7 @@ import { auth } from "@/auth"
 
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { getSchoolSubjectOptions } from "@/lib/school-subjects"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import type { ExamWizardData } from "./use-exam-wizard"
@@ -25,7 +26,7 @@ export async function getExamForWizard(
       where: { id: examId, schoolId },
       include: {
         class: { select: { id: true, name: true } },
-        subject: { select: { id: true, subjectName: true } },
+        subject: { select: { id: true, name: true } },
       },
     })
 
@@ -40,8 +41,8 @@ export async function getExamForWizard(
           ? { id: exam.class.id, className: exam.class.name }
           : { id: "", className: "" },
         subject: exam.subject
-          ? { id: exam.subject.id, subjectName: exam.subject.subjectName }
-          : { id: "", subjectName: "" },
+          ? { id: exam.subject.id, name: exam.subject.name }
+          : { id: "", name: "" },
       } as unknown as ExamWizardData,
     }
   } catch (error) {
@@ -233,17 +234,13 @@ export async function getClassOptions(): Promise<
 
 /** Fetch subjects for the current school (for SelectField options) */
 export async function getSubjectOptions(): Promise<
-  ActionResponse<{ id: string; subjectName: string }[]>
+  ActionResponse<{ id: string; name: string }[]>
 > {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) return { success: false, error: "Missing school context" }
 
-    const subjects = await db.subject.findMany({
-      where: { schoolId },
-      select: { id: true, subjectName: true },
-      orderBy: { subjectName: "asc" },
-    })
+    const subjects = await getSchoolSubjectOptions(schoolId)
 
     return { success: true, data: subjects }
   } catch (error) {

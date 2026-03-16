@@ -4,22 +4,19 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { getSchoolSubjectOptions } from "@/lib/school-subjects"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import { subjectSchema, type SubjectFormData } from "./validation"
 
 export async function getSubjectOptions(): Promise<
-  ActionResponse<{ id: string; subjectName: string }[]>
+  ActionResponse<{ id: string; name: string }[]>
 > {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) return { success: false, error: "Missing school context" }
 
-    const subjects = await db.subject.findMany({
-      where: { schoolId },
-      select: { id: true, subjectName: true },
-      orderBy: { subjectName: "asc" },
-    })
+    const subjects = await getSchoolSubjectOptions(schoolId)
 
     return { success: true, data: subjects }
   } catch (error) {

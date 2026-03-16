@@ -86,13 +86,13 @@ export async function getClassesForAssignment(): Promise<
       select: {
         id: true,
         name: true,
-        subject: { select: { subjectName: true } },
+        subject: { select: { name: true } },
       },
       orderBy: { name: "asc" },
     })
 
     const options = classes.map((c) => ({
-      label: c.name || c.subject?.subjectName || c.id,
+      label: c.name || c.subject?.name || c.id,
       value: c.id,
     }))
 

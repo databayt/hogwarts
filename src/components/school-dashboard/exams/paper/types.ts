@@ -21,7 +21,6 @@ import type {
   QuestionType,
   School,
   SchoolBranding,
-  Subject,
 } from "@prisma/client"
 
 // ============================================================================
@@ -84,7 +83,7 @@ export interface GeneratedExamWithDetails extends GeneratedExam {
 /** Exam with class and subject */
 export interface ExamWithDetails extends Exam {
   class: { name: string; id: string }
-  subject: { subjectName: string; id: string }
+  subject: { name: string; id: string }
 }
 
 /** Generated question with full question data */

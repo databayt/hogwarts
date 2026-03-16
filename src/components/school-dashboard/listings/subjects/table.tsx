@@ -52,20 +52,12 @@ async function getSubjectsCSV(
     return ""
   }
   const rows = result.data.rows
-  const headers = [
-    "ID",
-    "Subject Name",
-    "المادة",
-    "Department",
-    "القسم",
-    "Created At",
-  ]
+  const headers = ["ID", "Subject Name", "Department", "Created At"]
   const csvRows = rows.map((row: SubjectRow) =>
     [
       row.id,
-      `"${row.subjectName.replace(/"/g, '""')}"`,
-      row.lang || "ar",
-      `"${row.departmentName.replace(/"/g, '""')}"`,
+      `"${row.name.replace(/"/g, '""')}"`,
+      `"${row.department.replace(/"/g, '""')}"`,
       row.createdAt,
     ].join(",")
   )
@@ -116,7 +108,7 @@ function SubjectsTableInner({
     loadMore,
     refresh,
     optimisticRemove,
-  } = usePlatformData<SubjectRow, { subjectName?: string }>({
+  } = usePlatformData<SubjectRow, { name?: string }>({
     initialData,
     total,
     perPage,
@@ -127,7 +119,7 @@ function SubjectsTableInner({
       }
       return { rows: result.data.rows, total: result.data.total }
     },
-    filters: searchValue ? { subjectName: searchValue } : undefined,
+    filters: searchValue ? { name: searchValue } : undefined,
   })
 
   // Handle delete with optimistic update (must be before columns useMemo)
@@ -179,7 +171,7 @@ function SubjectsTableInner({
         pageSize: data.length || perPage,
       },
       columnVisibility: {
-        // Default visible: subjectName, departmentName
+        // Default visible: name, department
         createdAt: false,
       },
     },
@@ -259,7 +251,7 @@ function SubjectsTableInner({
                 <SubjectCard
                   key={subject.id}
                   id={subject.id}
-                  name={subject.subjectName}
+                  name={subject.name}
                   lang={lang}
                 />
               ))}

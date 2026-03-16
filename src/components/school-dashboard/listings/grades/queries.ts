@@ -95,7 +95,7 @@ export const resultListSelect = {
   subject: {
     select: {
       id: true,
-      subjectName: true,
+      name: true,
     },
   },
 } as const
@@ -156,7 +156,7 @@ export const resultDetailSelect = {
   subject: {
     select: {
       id: true,
-      subjectName: true,
+      name: true,
     },
   },
 } as const
@@ -476,7 +476,7 @@ export async function getStudentPerformanceSummary(
     select: {
       percentage: true,
       grade: true,
-      subject: { select: { subjectName: true } },
+      subject: { select: { name: true } },
     },
   })
 
@@ -487,7 +487,7 @@ export async function getStudentPerformanceSummary(
 
   const bySubject: Record<string, { count: number; avgPercentage: number }> = {}
   results.forEach((r) => {
-    const subject = r.subject?.subjectName || "Unknown"
+    const subject = r.subject?.name || "Unknown"
     if (!bySubject[subject]) {
       bySubject[subject] = { count: 0, avgPercentage: 0 }
     }
@@ -579,7 +579,7 @@ export async function getStudentGradeHistory(
       gradedAt: true,
       assignment: { select: { title: true } },
       exam: { select: { title: true } },
-      subject: { select: { subjectName: true } },
+      subject: { select: { name: true } },
     },
   })
 

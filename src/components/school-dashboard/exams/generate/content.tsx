@@ -13,7 +13,6 @@ import {
   Wand2,
 } from "lucide-react"
 
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -29,7 +28,6 @@ import {
 import { Separator } from "@/components/ui/separator"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import type { SupportedLanguage } from "@/components/translation/types"
 
 import type { TemplateDistribution } from "./types"
 import { calculateTotalQuestions } from "./utils"
@@ -62,7 +60,7 @@ export default async function GenerateContent({
     id: string
     examTitle: string
     templateName: string | null
-    subjectName: string
+    name: string
     totalQuestions: number
     createdAt: string
     examId: string
@@ -75,7 +73,7 @@ export default async function GenerateContent({
         orderBy: { updatedAt: "desc" },
         take: 12,
         include: {
-          subject: { select: { subjectName: true, lang: true } },
+          subject: { select: { name: true } },
           _count: { select: { generatedExams: true } },
         },
       }),
@@ -87,7 +85,7 @@ export default async function GenerateContent({
           exam: {
             select: {
               title: true,
-              subject: { select: { subjectName: true, lang: true } },
+              subject: { select: { name: true } },
             },
           },
           template: { select: { name: true } },
@@ -95,50 +93,28 @@ export default async function GenerateContent({
       }),
     ])
 
-    templates = await Promise.all(
-      templateRows.map(async (t) => ({
-        id: t.id,
-        name: t.name,
-        subjectName: t.subject?.subjectName
-          ? await getDisplayText(
-              t.subject.subjectName,
-              (t.subject.lang || "ar") as SupportedLanguage,
-              lang,
-              schoolId
-            )
-          : lang === "ar"
-            ? "غير محدد"
-            : "Unknown",
-        duration: t.duration,
-        totalMarks: Number(t.totalMarks),
-        totalQuestions: calculateTotalQuestions(
-          t.distribution as TemplateDistribution
-        ),
-        timesUsed: t._count.generatedExams,
-        isActive: t.isActive,
-      }))
-    )
+    templates = templateRows.map((t) => ({
+      id: t.id,
+      name: t.name,
+      subjectName: t.subject?.name ?? (lang === "ar" ? "غير محدد" : "Unknown"),
+      duration: t.duration,
+      totalMarks: Number(t.totalMarks),
+      totalQuestions: calculateTotalQuestions(
+        t.distribution as TemplateDistribution
+      ),
+      timesUsed: t._count.generatedExams,
+      isActive: t.isActive,
+    }))
 
-    generatedExams = await Promise.all(
-      generatedRows.map(async (g) => ({
-        id: g.id,
-        examTitle: g.exam.title,
-        templateName: g.template?.name || null,
-        subjectName: g.exam.subject?.subjectName
-          ? await getDisplayText(
-              g.exam.subject.subjectName,
-              (g.exam.subject.lang || "ar") as SupportedLanguage,
-              lang,
-              schoolId
-            )
-          : lang === "ar"
-            ? "غير محدد"
-            : "Unknown",
-        totalQuestions: g.totalQuestions,
-        createdAt: g.createdAt.toISOString(),
-        examId: g.examId,
-      }))
-    )
+    generatedExams = generatedRows.map((g) => ({
+      id: g.id,
+      examTitle: g.exam.title,
+      templateName: g.template?.name || null,
+      name: g.exam.subject?.name ?? (lang === "ar" ? "غير محدد" : "Unknown"),
+      totalQuestions: g.totalQuestions,
+      createdAt: g.createdAt.toISOString(),
+      examId: g.examId,
+    }))
   }
 
   const isAr = lang === "ar"
@@ -205,7 +181,7 @@ export default async function GenerateContent({
                         {t.name}
                       </CardTitle>
                       <Badge variant="secondary" className="shrink-0 text-xs">
-                        {t.subjectName}
+                        {t.name}
                       </Badge>
                     </div>
                   </CardHeader>
@@ -309,7 +285,7 @@ export default async function GenerateContent({
                       {g.examTitle}
                     </CardTitle>
                     <Badge variant="outline" className="shrink-0 text-xs">
-                      {g.subjectName}
+                      {g.name}
                     </Badge>
                   </div>
                   {g.templateName && (

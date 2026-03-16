@@ -106,7 +106,7 @@ export default async function UpcomingExamsContent({
     examType: string
     status: string
     className: string
-    subjectName: string
+    name: string
     daysUntil: number
   }> = []
 
@@ -124,7 +124,7 @@ export default async function UpcomingExamsContent({
       },
       include: {
         class: { select: { name: true, lang: true } },
-        subject: { select: { subjectName: true, lang: true } },
+        subject: { select: { name: true, lang: true } },
       },
       orderBy: { examDate: "asc" },
       take: 30,
@@ -150,9 +150,9 @@ export default async function UpcomingExamsContent({
               schoolId!
             )
           : "Unknown",
-        subjectName: exam.subject?.subjectName
+        name: exam.subject?.name
           ? await getDisplayText(
-              exam.subject.subjectName,
+              exam.subject.name,
               (exam.subject.lang || "ar") as SupportedLanguage,
               lang,
               schoolId!
@@ -225,7 +225,7 @@ export default async function UpcomingExamsContent({
           <div className="space-y-1">
             <CardTitle className="text-lg">{exam.title}</CardTitle>
             <CardDescription>
-              {exam.className} - {exam.subjectName}
+              {exam.className} - {exam.name}
             </CardDescription>
           </div>
           <Badge variant={getUrgencyVariant(exam.daysUntil)}>
@@ -377,7 +377,7 @@ export default async function UpcomingExamsContent({
               duration: e.duration,
               examType: e.examType,
               className: e.className,
-              subjectName: e.subjectName,
+              name: e.name,
               totalMarks: e.totalMarks,
             })
           )}

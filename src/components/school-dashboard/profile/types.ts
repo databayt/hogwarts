@@ -21,7 +21,7 @@ import type {
   StudentDocument,
   StudentGuardian,
   StudentYearLevel,
-  Subject,
+  CatalogSubject as Subject,
   Teacher,
   TeacherExperience,
   TeacherQualification,
@@ -263,7 +263,7 @@ export interface StudentProfile extends BaseProfile {
  */
 export interface SubjectPerformance {
   subjectId: string
-  subjectName: string
+  name: string
   currentGrade: number | null
   trend: "up" | "down" | "stable"
   attendance: number

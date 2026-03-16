@@ -13,7 +13,7 @@ export interface QuickAssessmentSummary {
   classId: string
   className: string
   subjectId: string
-  subjectName: string
+  name: string
   questionCount: number
   responseCount: number
   duration: number

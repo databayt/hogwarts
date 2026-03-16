@@ -307,7 +307,7 @@ export function ClassicTemplate({ data }: ClassicTemplateProps) {
           </View>
           <View style={styles.examRow}>
             <Text style={styles.examLabel}>Subject:</Text>
-            <Text style={styles.examValue}>{exam.subjectName}</Text>
+            <Text style={styles.examValue}>{exam.name}</Text>
           </View>
           <View style={styles.examRow}>
             <Text style={styles.examLabel}>Class:</Text>

@@ -138,9 +138,7 @@ export function SubjectRoomForm({ grades }: SubjectRoomFormProps) {
                       key={cls.classId}
                       className={isChanged ? "bg-muted/50" : undefined}
                     >
-                      <TableCell className="font-medium">
-                        {cls.subjectName}
-                      </TableCell>
+                      <TableCell className="font-medium">{cls.name}</TableCell>
                       <TableCell>{cls.teacherName}</TableCell>
                       <TableCell>
                         {cls.weeklyPeriods ?? (

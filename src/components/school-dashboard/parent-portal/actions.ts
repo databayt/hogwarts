@@ -64,7 +64,7 @@ export async function getChildGrades(input: { studentId: string }) {
           totalMarks: true,
           subject: {
             select: {
-              subjectName: true,
+              name: true,
             },
           },
         },
@@ -82,7 +82,7 @@ export async function getChildGrades(input: { studentId: string }) {
           name: true,
           subject: {
             select: {
-              subjectName: true,
+              name: true,
             },
           },
         },
@@ -94,7 +94,7 @@ export async function getChildGrades(input: { studentId: string }) {
     examResults: examResults.map((result) => ({
       id: result.id,
       examTitle: result.exam.title,
-      subjectName: result.exam.subject.subjectName,
+      name: result.exam.subject.name,
       examDate: result.exam.examDate.toISOString(),
       examType: result.exam.examType,
       marksObtained: result.marksObtained,
@@ -106,7 +106,7 @@ export async function getChildGrades(input: { studentId: string }) {
     classScores: classScores.map((sc) => ({
       id: sc.id,
       className: sc.class.name,
-      subjectName: sc.class.subject.subjectName,
+      name: sc.class.subject.name,
       score: sc.score ? Number(sc.score) : null,
     })),
   }
@@ -155,7 +155,7 @@ export async function getChildAssignments(input: { studentId: string }) {
           name: true,
           subject: {
             select: {
-              subjectName: true,
+              name: true,
             },
           },
         },
@@ -180,7 +180,7 @@ export async function getChildAssignments(input: { studentId: string }) {
       title: assignment.title,
       description: assignment.description,
       className: assignment.class.name,
-      subjectName: assignment.class.subject.subjectName,
+      name: assignment.class.subject.name,
       publishDate: assignment.publishDate?.toISOString() || null,
       dueDate: assignment.dueDate.toISOString(),
       totalPoints: Number(assignment.totalPoints),
@@ -239,7 +239,7 @@ export async function getChildTimetable(input: { studentId: string }) {
           name: true,
           subject: {
             select: {
-              subjectName: true,
+              name: true,
             },
           },
           teacher: {
@@ -274,7 +274,7 @@ export async function getChildTimetable(input: { studentId: string }) {
       startTime: entry.period.startTime.toISOString(),
       endTime: entry.period.endTime.toISOString(),
       className: entry.class.name,
-      subjectName: entry.class.subject.subjectName,
+      name: entry.class.subject.name,
       teacherName: `${entry.class.teacher.givenName} ${entry.class.teacher.surname}`,
       roomName: entry.class.classroom?.roomName || "TBA",
     })),
@@ -340,7 +340,7 @@ export async function getChildOverview(input: { studentId: string }) {
           title: true,
           subject: {
             select: {
-              subjectName: true,
+              name: true,
             },
           },
         },
@@ -386,7 +386,7 @@ export async function getChildOverview(input: { studentId: string }) {
       : null,
     recentExams: recentExams.map((result) => ({
       examTitle: result.exam.title,
-      subjectName: result.exam.subject.subjectName,
+      name: result.exam.subject.name,
       percentage: result.percentage,
       grade: result.grade,
     })),

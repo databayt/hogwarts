@@ -27,7 +27,7 @@ interface FeaturedQuestion {
   difficulty: DifficultyLevel
   bloomLevel: BloomLevel
   points: number
-  subject: { subjectName: string }
+  subject: { name: string }
   tags?: string[]
   rubrics?: Rubric[]
   createdAt: Date
@@ -122,7 +122,7 @@ export function FeaturedQuestions({
                   difficulty={question.difficulty}
                   bloomLevel={question.bloomLevel}
                   points={Number(question.points)}
-                  subjectName={question.subject.subjectName}
+                  name={question.subject.name}
                   tags={question.tags}
                   usageCount={question._count.generatedExamQuestions}
                   averageScore={question.averageScore}
@@ -164,7 +164,7 @@ export function FeaturedQuestions({
                 difficulty={question.difficulty}
                 bloomLevel={question.bloomLevel}
                 points={Number(question.points)}
-                subjectName={question.subject.subjectName}
+                name={question.subject.name}
                 tags={question.tags}
                 usageCount={question._count.generatedExamQuestions}
                 averageScore={question.averageScore}
@@ -205,7 +205,7 @@ export function FeaturedQuestions({
                 difficulty={question.difficulty}
                 bloomLevel={question.bloomLevel}
                 points={Number(question.points)}
-                subjectName={question.subject.subjectName}
+                name={question.subject.name}
                 tags={question.tags}
                 usageCount={question._count.generatedExamQuestions}
                 averageScore={question.averageScore}

@@ -180,7 +180,7 @@ export async function checkExamConflicts(
           type: "class",
           entityId: exam.classId,
           entityName: exam.class.name,
-          conflictingEvent: `${exam.subject.subjectName} exam: ${exam.title}`,
+          conflictingEvent: `${exam.subject.name} exam: ${exam.title}`,
           conflictTime: `${exam.startTime} - ${exam.endTime}`,
           severity: "high",
         })
@@ -239,7 +239,7 @@ export async function checkExamConflicts(
           },
           subject: {
             select: {
-              subjectName: true,
+              name: true,
             },
           },
         },
@@ -253,7 +253,7 @@ export async function checkExamConflicts(
             type: "teacher",
             entityId: teacherId,
             entityName: "Teacher", // Would need to fetch teacher separately for name
-            conflictingEvent: `Proctoring ${exam.class.name} - ${exam.subject.subjectName}`,
+            conflictingEvent: `Proctoring ${exam.class.name} - ${exam.subject.name}`,
             conflictTime: `${exam.startTime} - ${exam.endTime}`,
             severity: "medium",
           })
@@ -317,7 +317,7 @@ export async function checkExamConflicts(
             type: "classroom",
             entityId: classroomId,
             entityName: "Classroom",
-            conflictingEvent: `${exam.class.name} - ${exam.subject.subjectName} exam`,
+            conflictingEvent: `${exam.class.name} - ${exam.subject.name} exam`,
             conflictTime: `${exam.startTime} - ${exam.endTime}`,
             severity: "medium",
           })
@@ -380,7 +380,7 @@ export async function checkExamConflicts(
               type: "student",
               entityId: exam.classId,
               entityName: `${affectedStudents} student(s) in ${exam.class.name}`,
-              conflictingEvent: `${exam.subject.subjectName}: ${exam.title}`,
+              conflictingEvent: `${exam.subject.name}: ${exam.title}`,
               conflictTime: `${exam.startTime} - ${exam.endTime}`,
               severity: "low",
             })

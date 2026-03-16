@@ -129,10 +129,7 @@ export default function ManagementContent() {
               </CardHeader>
               <CardContent className="grid grid-cols-2 gap-4">
                 <ReviewField label="Class Name" value={data.name} />
-                <ReviewField
-                  label="Subject"
-                  value={data.subject?.subjectName}
-                />
+                <ReviewField label="Subject" value={data.subject?.name} />
                 <ReviewField
                   label="Teacher"
                   value={

@@ -58,12 +58,12 @@ export function AttendanceContent({ dictionary, lang }: Props) {
   const [currentPeriodInfo, setCurrentPeriodInfo] = useState<{
     classId: string | null
     periodName: string | null
-    subjectName: string | null
+    name: string | null
     isAutoSelected: boolean
   }>({
     classId: null,
     periodName: null,
-    subjectName: null,
+    name: null,
     isAutoSelected: false,
   })
 
@@ -111,7 +111,7 @@ export function AttendanceContent({ dictionary, lang }: Props) {
           setCurrentPeriodInfo({
             classId: periodRes.data.currentPeriod.classId,
             periodName: periodRes.data.currentPeriod.periodName,
-            subjectName: periodRes.data.currentPeriod.subjectName,
+            name: periodRes.data.currentPeriod.name,
             isAutoSelected: true,
           })
         } else if (!classId && classesRes.data.classes[0]) {
@@ -278,8 +278,7 @@ export function AttendanceContent({ dictionary, lang }: Props) {
                 >
                   <Sparkles className="h-3 w-3" />
                   {currentPeriodInfo.periodName}
-                  {currentPeriodInfo.subjectName &&
-                    ` • ${currentPeriodInfo.subjectName}`}
+                  {currentPeriodInfo.name && ` • ${currentPeriodInfo.name}`}
                 </Badge>
               )}
             <Input

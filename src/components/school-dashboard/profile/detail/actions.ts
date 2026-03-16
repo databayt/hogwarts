@@ -55,7 +55,7 @@ export async function getProfileById(userId: string) {
                     subject: {
                       select: {
                         id: true,
-                        subjectName: true,
+                        name: true,
                       },
                     },
                   },
@@ -101,7 +101,7 @@ export async function getProfileById(userId: string) {
                 subject: {
                   select: {
                     id: true,
-                    subjectName: true,
+                    name: true,
                   },
                 },
               },

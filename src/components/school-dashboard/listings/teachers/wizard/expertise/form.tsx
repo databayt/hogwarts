@@ -20,8 +20,8 @@ import type { ExpertiseFormData } from "./validation"
 
 interface SubjectOption {
   id: string
-  subjectName: string
-  department: { id: string; departmentName: string } | null
+  name: string
+  department: string | null
 }
 
 type ExpertiseLevel = "PRIMARY" | "SECONDARY" | null
@@ -136,7 +136,7 @@ export const ExpertiseForm = forwardRef<WizardFormRef, ExpertiseFormProps>(
                       : "hover:bg-muted border-border"
                   )}
                 >
-                  {subject.subjectName}
+                  {subject.name}
                 </button>
                 <button
                   type="button"

@@ -80,9 +80,7 @@ export function MockExamList({
                   {mock.title}
                 </CardTitle>
                 <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                  {mock.subjectName && (
-                    <Badge variant="outline">{mock.subjectName}</Badge>
-                  )}
+                  {mock.name && <Badge variant="outline">{mock.name}</Badge>}
                   {mock.className && (
                     <Badge variant="secondary">{mock.className}</Badge>
                   )}
@@ -178,7 +176,7 @@ export function MockExamList({
                             : undefined
                         }
                       >
-                        {exam.subjectName}
+                        {exam.name}
                       </Badge>
                       <Badge variant="secondary">
                         {EXAM_TYPE_LABELS[exam.examType] ?? exam.examType}

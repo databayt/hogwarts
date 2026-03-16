@@ -4,7 +4,7 @@
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 
-import { db } from "@/lib/db"
+import { getSchoolSubjectOptions } from "@/lib/school-subjects"
 import type { Locale } from "@/components/internationalization/config"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 import { AIGenerateContent } from "@/components/school-dashboard/exams/qbank/ai-generate-content"
@@ -30,14 +30,10 @@ export default async function AIGeneratePage({ params }: Props) {
   }
 
   // Fetch subjects for the dropdown
-  const subjects = await db.subject.findMany({
-    where: { schoolId },
-    select: { id: true, subjectName: true },
-    orderBy: { subjectName: "asc" },
-  })
+  const subjects = await getSchoolSubjectOptions(schoolId)
 
   const subjectOptions = subjects.map((s) => ({
-    label: s.subjectName,
+    label: s.name,
     value: s.id,
   }))
 

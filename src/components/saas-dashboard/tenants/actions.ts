@@ -553,8 +553,8 @@ export async function tenantDelete(input: {
         await tx.section.deleteMany({ where: { schoolId } })
         await tx.classroomType.deleteMany({ where: { schoolId } })
 
-        // B12: Subject/Department chain
-        await tx.subject.deleteMany({ where: { schoolId } })
+        // B12: Subject selections/Department chain
+        await tx.schoolSubjectSelection.deleteMany({ where: { schoolId } })
         await tx.department.deleteMany({ where: { schoolId } })
 
         // B13: Academic structure dependencies

@@ -20,7 +20,7 @@ import { ExamTemplateForm } from "./form"
 
 interface SubjectOption {
   id: string
-  subjectName: string | null
+  name: string | null
 }
 
 interface TemplatesTableProps {

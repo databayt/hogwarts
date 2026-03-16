@@ -154,7 +154,7 @@ function ClassesTableInner({
         pageSize: data.length || perPage,
       },
       columnVisibility: {
-        // Default visible: name, subjectName, teacherName, enrolledStudents
+        // Default visible: name, name, teacherName, enrolledStudents
         termName: false,
         createdAt: false,
       },

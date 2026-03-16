@@ -384,7 +384,7 @@ export async function getStudentCGPAHistory(studentId: string) {
 
     semester.courses.push({
       courseId,
-      courseName: result.exam.subject?.subjectName || result.exam.title,
+      courseName: result.exam.subject?.name || result.exam.title,
       creditHours: 3, // Default credit hours - should be configurable
       percentage:
         typeof result.percentage === "number"

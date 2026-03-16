@@ -77,7 +77,7 @@ export function EnrollmentsContent({ enrollments }: Props) {
                     <TableCell className="text-muted-foreground text-sm">
                       {enrollment.studentEmail ?? "—"}
                     </TableCell>
-                    <TableCell>{enrollment.subjectName}</TableCell>
+                    <TableCell>{enrollment.name}</TableCell>
                     <TableCell>
                       <Badge
                         variant={statusVariant[enrollment.status] ?? "outline"}

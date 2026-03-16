@@ -3,13 +3,12 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useRef, useState, useTransition } from "react"
-import { Check, Loader2 } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
 import { MapForm } from "@/components/onboarding/location/map-form"
 import type { LocationFormData } from "@/components/onboarding/location/validation"
 
 import { updateSchoolLocation } from "./actions"
+import { useAutoSave } from "./use-auto-save"
 
 interface Props {
   schoolId: string
@@ -22,14 +21,14 @@ export function ConfigLocationForm({
   initialData,
   dictionary,
 }: Props) {
-  const [isPending, startTransition] = useTransition()
-  const [saved, setSaved] = useState(false)
+  const [, startTransition] = useTransition()
   const [error, setError] = useState("")
+  const [isDirty, setIsDirty] = useState(false)
   const locationRef = useRef<LocationFormData>(initialData)
 
   const handleLocationChange = useCallback((data: LocationFormData) => {
     locationRef.current = data
-    setSaved(false)
+    setIsDirty(true)
   }, [])
 
   const handleSave = () => {
@@ -45,12 +44,14 @@ export function ConfigLocationForm({
         longitude: data.longitude,
       })
       if (result.success) {
-        setSaved(true)
+        setIsDirty(false)
       } else {
         setError(result.error || "Failed to update location")
       }
     })
   }
+
+  useAutoSave(handleSave, isDirty)
 
   return (
     <div className="space-y-4">
@@ -65,24 +66,6 @@ export function ConfigLocationForm({
           {error}
         </div>
       )}
-
-      <div className="flex justify-end">
-        <Button size="sm" onClick={handleSave} disabled={isPending}>
-          {isPending ? (
-            <>
-              <Loader2 className="me-1 h-4 w-4 animate-spin" />
-              Saving...
-            </>
-          ) : saved ? (
-            <>
-              <Check className="me-1 h-4 w-4" />
-              Saved
-            </>
-          ) : (
-            "Save"
-          )}
-        </Button>
-      </div>
     </div>
   )
 }

@@ -126,7 +126,7 @@ export async function notifyExamScheduled(examId: string) {
     type: "EXAM_SCHEDULED",
     examId,
     examTitle: exam.title,
-    subjectName: exam.subject.subjectName,
+    name: exam.subject.name,
     className: exam.class.name,
     examDate: exam.examDate,
     duration: exam.duration,
@@ -164,7 +164,7 @@ export async function notifyExamReminder(examId: string, hoursUntil: number) {
     type: "EXAM_REMINDER",
     examId,
     examTitle: exam.title,
-    subjectName: exam.subject.subjectName,
+    name: exam.subject.name,
     className: exam.class.name,
     examDate: exam.examDate,
     hoursUntil,
@@ -246,7 +246,7 @@ export async function notifyResultsPublished(
     type: "RESULTS_PUBLISHED",
     examId,
     examTitle: result.exam.title,
-    subjectName: result.exam.subject.subjectName,
+    name: result.exam.subject.name,
     className: result.exam.class.name,
     percentage,
     grade: result.grade ?? "N/A",
@@ -324,7 +324,7 @@ export async function notifyRetakeAvailable(
     type: "RETAKE_AVAILABLE",
     examId,
     examTitle: exam.title,
-    subjectName: exam.subject.subjectName,
+    name: exam.subject.name,
     className: exam.class.name,
     attemptNumber,
     maxAttempts: exam.maxAttempts,
@@ -430,22 +430,22 @@ function formatNotification(
     case "EXAM_SCHEDULED":
       return {
         title: `New Exam: ${data.examTitle}`,
-        body: `${data.subjectName} exam scheduled for ${formatDate(data.examDate, "ar")}. Duration: ${data.duration} minutes.`,
+        body: `${data.name} exam scheduled for ${formatDate(data.examDate, "ar")}. Duration: ${data.duration} minutes.`,
       }
     case "EXAM_REMINDER":
       return {
         title: `Exam Reminder: ${data.examTitle}`,
-        body: `Your ${data.subjectName} exam starts in ${data.hoursUntil} hours.`,
+        body: `Your ${data.name} exam starts in ${data.hoursUntil} hours.`,
       }
     case "EXAM_STARTED":
       return {
         title: `Exam Started: ${data.examTitle}`,
-        body: `The ${data.subjectName} exam has started and will end at ${formatDateTime(data.endTime, "ar", { hour: "2-digit", minute: "2-digit" })}.`,
+        body: `The ${data.name} exam has started and will end at ${formatDateTime(data.endTime, "ar", { hour: "2-digit", minute: "2-digit" })}.`,
       }
     case "EXAM_COMPLETED":
       return {
         title: `Exam Completed: ${data.examTitle}`,
-        body: `Completed ${data.subjectName} exam. Answered ${data.questionsAnswered}/${data.totalQuestions} questions.`,
+        body: `Completed ${data.name} exam. Answered ${data.questionsAnswered}/${data.totalQuestions} questions.`,
       }
     case "RESULTS_PUBLISHED":
       return {
@@ -455,12 +455,12 @@ function formatNotification(
     case "RETAKE_AVAILABLE":
       return {
         title: `Retake Available: ${data.examTitle}`,
-        body: `You can retake the ${data.subjectName} exam. Previous: ${data.previousScore}%. Attempt ${data.attemptNumber}/${data.maxAttempts}.`,
+        body: `You can retake the ${data.name} exam. Previous: ${data.previousScore}%. Attempt ${data.attemptNumber}/${data.maxAttempts}.`,
       }
     case "GRADE_UPDATED":
       return {
         title: `Grade Updated: ${data.examTitle}`,
-        body: `Your ${data.subjectName} grade changed from ${data.previousGrade} to ${data.newGrade}.`,
+        body: `Your ${data.name} grade changed from ${data.previousGrade} to ${data.newGrade}.`,
       }
     default:
       return {

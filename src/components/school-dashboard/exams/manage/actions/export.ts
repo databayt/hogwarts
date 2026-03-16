@@ -51,7 +51,7 @@ export async function getExamsCSV(
         },
         subject: {
           select: {
-            subjectName: true,
+            name: true,
           },
         },
         _count: {
@@ -69,7 +69,7 @@ export async function getExamsCSV(
       title: exam.title || "",
       description: exam.description || "",
       class: exam.class?.name || "",
-      subject: exam.subject?.subjectName || "",
+      subject: exam.subject?.name || "",
       examDate: exam.examDate
         ? new Date(exam.examDate).toISOString().split("T")[0]
         : "",
@@ -136,7 +136,7 @@ export async function getExamResultsCSV(input: {
       select: {
         title: true,
         class: { select: { name: true } },
-        subject: { select: { subjectName: true } },
+        subject: { select: { name: true } },
       },
     })
 
@@ -199,7 +199,7 @@ export async function getExamResultsCSV(input: {
       `Exam Results Export\n` +
       `Exam: ${exam.title}\n` +
       `Class: ${exam.class?.name || ""}\n` +
-      `Subject: ${exam.subject?.subjectName || ""}\n` +
+      `Subject: ${exam.subject?.name || ""}\n` +
       `Date: ${new Date().toISOString().split("T")[0]}\n\n`
 
     return {
@@ -257,7 +257,7 @@ export async function getAnalyticsCSV(input: {
       where,
       include: {
         class: { select: { name: true } },
-        subject: { select: { subjectName: true } },
+        subject: { select: { name: true } },
         examResults: {
           select: {
             marksObtained: true,
@@ -291,7 +291,7 @@ export async function getAnalyticsCSV(input: {
       return {
         examTitle: exam.title,
         className: exam.class?.name || "",
-        subjectName: exam.subject?.subjectName || "",
+        name: exam.subject?.name || "",
         examDate: exam.examDate
           ? new Date(exam.examDate).toISOString().split("T")[0]
           : "",
@@ -309,7 +309,7 @@ export async function getAnalyticsCSV(input: {
     const columns = [
       { key: "examTitle" as const, label: "Exam Title" },
       { key: "className" as const, label: "Class" },
-      { key: "subjectName" as const, label: "Subject" },
+      { key: "name" as const, label: "Subject" },
       { key: "examDate" as const, label: "Exam Date" },
       { key: "totalStudents" as const, label: "Total Students" },
       { key: "presentStudents" as const, label: "Present" },
@@ -348,7 +348,7 @@ export async function getExamsExportData(
       id: string
       title: string
       description: string | null
-      subjectName: string | null
+      name: string | null
       className: string | null
       examDate: Date
       startTime: string
@@ -398,7 +398,7 @@ export async function getExamsExportData(
         },
         subject: {
           select: {
-            subjectName: true,
+            name: true,
           },
         },
         examResults: {
@@ -433,7 +433,7 @@ export async function getExamsExportData(
         id: exam.id,
         title: exam.title,
         description: exam.description,
-        subjectName: exam.subject?.subjectName || null,
+        name: exam.subject?.name || null,
         className: exam.class?.name || null,
         examDate: exam.examDate,
         startTime: exam.startTime,

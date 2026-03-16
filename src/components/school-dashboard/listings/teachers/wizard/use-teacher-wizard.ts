@@ -56,7 +56,7 @@ export interface TeacherWizardData {
     id: string
     subjectId: string
     expertiseLevel: string
-    subject: { id: string; subjectName: string }
+    subject: { id: string; name: string }
   }[]
 }
 

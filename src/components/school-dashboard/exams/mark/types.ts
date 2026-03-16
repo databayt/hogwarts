@@ -5,6 +5,7 @@
 
 import type {
   BloomLevel,
+  CatalogSubject,
   DifficultyLevel,
   Exam,
   GeneratedExam,
@@ -19,14 +20,13 @@ import type {
   RubricCriterion,
   Student,
   StudentAnswer,
-  Subject,
   SubmissionType,
 } from "@prisma/client"
 
 // ========== Extended Types with Relations ==========
 
 export type QuestionBankWithRelations = QuestionBank & {
-  subject: Subject
+  subject: CatalogSubject
   rubric?: RubricWithCriteria | null
   examQuestions?: GeneratedExamQuestion[]
   analytics?: QuestionAnalytics | null
@@ -297,7 +297,7 @@ export interface ConfidenceIndicator {
 export interface ExportMarkingData {
   examTitle: string
   className: string
-  subjectName: string
+  name: string
   exportDate: Date
   students: {
     studentName: string

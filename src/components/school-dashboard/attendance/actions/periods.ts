@@ -26,7 +26,7 @@ export async function getPeriodsForClass(input: {
       startTime: string
       endTime: string
       timetableId: string
-      subjectName: string | null
+      name: string | null
       teacherName: string | null
       hasAttendance: boolean
     }>
@@ -81,7 +81,7 @@ export async function getPeriodsForClass(input: {
         class: {
           include: {
             subject: {
-              select: { subjectName: true },
+              select: { name: true },
             },
           },
         },
@@ -127,7 +127,7 @@ export async function getPeriodsForClass(input: {
           startTime: entry.period.startTime.toISOString(),
           endTime: entry.period.endTime.toISOString(),
           timetableId: entry.id,
-          subjectName: entry.class.subject?.subjectName || null,
+          name: entry.class.subject?.name || null,
           teacherName: entry.teacher
             ? `${entry.teacher.givenName} ${entry.teacher.surname}`
             : null,
@@ -160,7 +160,7 @@ export async function getCurrentPeriod(classId?: string): Promise<
       endTime: string
       classId: string | null
       className: string | null
-      subjectName: string | null
+      name: string | null
     } | null
     nextPeriod: {
       periodId: string
@@ -228,7 +228,7 @@ export async function getCurrentPeriod(classId?: string): Promise<
               class: {
                 select: {
                   name: true,
-                  subject: { select: { subjectName: true } },
+                  subject: { select: { name: true } },
                 },
               },
             },
@@ -238,7 +238,7 @@ export async function getCurrentPeriod(classId?: string): Promise<
             classInfo = {
               classId: timetableEntry.classId,
               className: timetableEntry.class.name,
-              subjectName: timetableEntry.class.subject?.subjectName || null,
+              name: timetableEntry.class.subject?.name || null,
             }
           }
         }
@@ -250,7 +250,7 @@ export async function getCurrentPeriod(classId?: string): Promise<
           endTime: period.endTime.toISOString(),
           classId: classInfo?.classId || null,
           className: classInfo?.className || null,
-          subjectName: classInfo?.subjectName || null,
+          name: classInfo?.name || null,
         }
 
         // Get next period
@@ -629,7 +629,7 @@ export async function getStudentDayAttendance(input: {
       periodId: string | null
       periodName: string
       className: string
-      subjectName: string | null
+      name: string | null
       status: string
       checkInTime: string | null
       notes: string | null
@@ -678,7 +678,7 @@ export async function getStudentDayAttendance(input: {
         class: {
           select: {
             name: true,
-            subject: { select: { subjectName: true } },
+            subject: { select: { name: true } },
           },
         },
       },
@@ -718,7 +718,7 @@ export async function getStudentDayAttendance(input: {
           periodId: a.periodId,
           periodName: a.periodName || "All Day",
           className: a.class.name,
-          subjectName: a.class.subject?.subjectName || null,
+          name: a.class.subject?.name || null,
           status: a.status,
           checkInTime: a.checkInTime?.toISOString() || null,
           notes: a.notes,

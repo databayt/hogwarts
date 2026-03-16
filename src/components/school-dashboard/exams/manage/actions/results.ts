@@ -84,7 +84,7 @@ export async function getStudentResults(input: {
     Array<{
       examTitle: string
       examDate: Date
-      subjectName: string
+      name: string
       marksObtained: number
       totalMarks: number
       percentage: number
@@ -131,7 +131,7 @@ export async function getStudentResults(input: {
             examDate: true,
             subject: {
               select: {
-                subjectName: true,
+                name: true,
               },
             },
           },
@@ -165,7 +165,7 @@ export async function getStudentResults(input: {
         return {
           examTitle: result.exam.title,
           examDate: result.exam.examDate,
-          subjectName: result.exam.subject?.subjectName || "Unknown",
+          name: result.exam.subject?.name || "Unknown",
           marksObtained: result.marksObtained,
           totalMarks: result.totalMarks,
           percentage: result.percentage,

@@ -129,7 +129,7 @@ export function MockExamTaking({ exam, dictionary }: MockExamTakingProps) {
         <div>
           <h2 className="text-xl font-bold">{exam.title}</h2>
           <p className="text-muted-foreground text-sm">
-            {exam.subjectName} &middot; {d?.mockExam || "Mock Exam"}
+            {exam.name} &middot; {d?.mockExam || "Mock Exam"}
           </p>
         </div>
         {timeLeft !== null && (

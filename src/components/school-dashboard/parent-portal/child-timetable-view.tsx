@@ -134,7 +134,7 @@ export async function ChildTimetableView({ studentId }: Props) {
                               </TableCell>
                               <TableCell>
                                 <span className="font-medium">
-                                  {entry.subjectName}
+                                  {entry.name}
                                 </span>
                               </TableCell>
                               <TableCell>{entry.className}</TableCell>

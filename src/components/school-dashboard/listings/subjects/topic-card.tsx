@@ -21,7 +21,7 @@ interface TopicCardProps {
   /** Current locale */
   lang: Locale
   /** Subject name for image mapping */
-  subjectName: string
+  name: string
   /** Additional class names */
   className?: string
 }
@@ -41,10 +41,10 @@ function TopicCardInner({
   title,
   description,
   lang,
-  subjectName,
+  name,
   className,
 }: TopicCardProps) {
-  const imageUrl = getSubjectImage(subjectName)
+  const imageUrl = getSubjectImage(name)
 
   return (
     <div className={cn("group block", className)}>

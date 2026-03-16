@@ -114,7 +114,7 @@ export async function getExams(
           },
           subject: {
             select: {
-              subjectName: true,
+              name: true,
             },
           },
         },
@@ -127,7 +127,7 @@ export async function getExams(
       id: exam.id,
       title: exam.title,
       className: exam.class?.name || "Unknown",
-      subjectName: exam.subject?.subjectName || "Unknown",
+      name: exam.subject?.name || "Unknown",
       examDate: exam.examDate.toISOString(),
       startTime: exam.startTime,
       endTime: exam.endTime,
@@ -213,7 +213,7 @@ export async function getUpcomingExams(input?: {
           select: { name: true },
         },
         subject: {
-          select: { subjectName: true },
+          select: { name: true },
         },
       },
     })
@@ -222,7 +222,7 @@ export async function getUpcomingExams(input?: {
       id: exam.id,
       title: exam.title,
       className: exam.class?.name || "Unknown",
-      subjectName: exam.subject?.subjectName || "Unknown",
+      name: exam.subject?.name || "Unknown",
       examDate: exam.examDate.toISOString(),
       startTime: exam.startTime,
       endTime: exam.endTime,

@@ -47,15 +47,12 @@ export async function createExam(
       }
     }
 
-    // Check if subject exists and belongs to school (include catalog bridge FK)
-    const subjectExists = await db.subject.findFirst({
+    // Check if subject exists and belongs to school
+    const subjectExists = await db.schoolSubjectSelection.findFirst({
       where: {
-        id: parsed.subjectId,
+        catalogSubjectId: parsed.subjectId,
         schoolId,
-      },
-      select: {
-        id: true,
-        catalogSubjectId: true,
+        isActive: true,
       },
     })
 
@@ -119,8 +116,6 @@ export async function createExam(
         examType: parsed.examType,
         instructions: parsed.instructions || null,
         status: "PLANNED",
-        // Auto-populate catalog bridge FK from school subject
-        catalogSubjectId: subjectExists.catalogSubjectId || undefined,
       },
     })
 
@@ -221,17 +216,7 @@ export async function updateExam(
     if (typeof rest.description !== "undefined")
       data.description = rest.description || null
     if (typeof rest.classId !== "undefined") data.classId = rest.classId
-    if (typeof rest.subjectId !== "undefined") {
-      data.subjectId = rest.subjectId
-      // Auto-populate catalog bridge FK when subject changes
-      const subject = await db.subject.findFirst({
-        where: { id: rest.subjectId, schoolId },
-        select: { catalogSubjectId: true },
-      })
-      if (subject) {
-        data.catalogSubjectId = subject.catalogSubjectId || null
-      }
-    }
+    if (typeof rest.subjectId !== "undefined") data.subjectId = rest.subjectId
     if (typeof rest.examDate !== "undefined") data.examDate = rest.examDate
     if (typeof rest.startTime !== "undefined") data.startTime = rest.startTime
     if (typeof rest.endTime !== "undefined") data.endTime = rest.endTime

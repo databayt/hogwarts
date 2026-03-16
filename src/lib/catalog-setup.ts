@@ -70,8 +70,8 @@ const SCIENCE_ONLY_PATTERNS = [
 ]
 const ARTS_ONLY_PATTERNS = ["philosophy", "فلسفة"]
 
-function getSubjectStreamType(subjectName: string): "SCIENCE" | "ARTS" | null {
-  const lower = subjectName.toLowerCase()
+function getSubjectStreamType(name: string): "SCIENCE" | "ARTS" | null {
+  const lower = name.toLowerCase()
   // Exclude "physical education" before checking "physics" pattern
   if (lower.includes("physical education") || lower.includes("تربية بدنية"))
     return null
@@ -84,25 +84,22 @@ function getSubjectStreamType(subjectName: string): "SCIENCE" | "ARTS" | null {
  * Get default weekly periods for a subject based on name and grade.
  * Core subjects get more periods; electives/specials get fewer.
  */
-function getDefaultWeeklyPeriods(
-  subjectName: string,
-  gradeNumber: number
-): number {
-  const name = subjectName.toLowerCase()
-  if (name.includes("math") || name.includes("رياضيات"))
+function getDefaultWeeklyPeriods(name: string, gradeNumber: number): number {
+  const lowerName = name.toLowerCase()
+  if (lowerName.includes("math") || lowerName.includes("رياضيات"))
     return gradeNumber <= 6 ? 5 : 4
-  if (name.includes("arabic") || name.includes("عربي")) return 5
-  if (name.includes("english") || name.includes("إنجليزي"))
+  if (lowerName.includes("arabic") || lowerName.includes("عربي")) return 5
+  if (lowerName.includes("english") || lowerName.includes("إنجليزي"))
     return gradeNumber <= 6 ? 4 : 5
-  if (name.includes("science") || name.includes("علوم"))
+  if (lowerName.includes("science") || lowerName.includes("علوم"))
     return gradeNumber <= 6 ? 3 : 4
   if (
-    name.includes("pe") ||
-    name.includes("بدني") ||
-    name.includes("art") ||
-    name.includes("فن") ||
-    name.includes("music") ||
-    name.includes("موسيقى")
+    lowerName.includes("pe") ||
+    lowerName.includes("بدني") ||
+    lowerName.includes("art") ||
+    lowerName.includes("فن") ||
+    lowerName.includes("music") ||
+    lowerName.includes("موسيقى")
   )
     return 2
   return 3

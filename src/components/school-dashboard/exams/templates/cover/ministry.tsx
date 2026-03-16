@@ -238,7 +238,7 @@ export function MinistryCover({
   type MetaEntry = { label: string; value: string; isLast?: boolean }
 
   const metaRows: MetaEntry[] = [
-    { label: labels.subject, value: exam.subject.subjectName },
+    { label: labels.subject, value: exam.subject.name },
     { label: labels.class, value: exam.class.name },
     {
       label: labels.duration,
@@ -285,7 +285,7 @@ export function MinistryCover({
       {/* Exam title */}
       <Text style={styles.examTitle}>{exam.title}</Text>
       <Text style={styles.examSubtitle}>
-        {exam.subject.subjectName} - {exam.class.name}
+        {exam.subject.name} - {exam.class.name}
       </Text>
 
       {/* Formal metadata table */}

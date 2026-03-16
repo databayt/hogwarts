@@ -68,7 +68,7 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
         if (subjectResult.success && subjectResult.data) {
           setSubjectOptions(
             subjectResult.data.map((s) => ({
-              label: s.subjectName,
+              label: s.name,
               value: s.id,
             }))
           )

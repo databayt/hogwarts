@@ -71,7 +71,7 @@ interface ExportData {
   metadata?: {
     examTitle: string
     className: string
-    subjectName: string
+    name: string
     examDate: Date
   }
 }
@@ -116,7 +116,7 @@ export async function exportExamResultsToCSV(
         },
         subject: {
           select: {
-            subjectName: true,
+            name: true,
           },
         },
         examResults: {
@@ -186,7 +186,7 @@ export async function exportExamResultsToCSV(
         result.student.studentId || "",
         `"${studentName}"`,
         `"${exam.class.name}"`,
-        `"${exam.subject.subjectName}"`,
+        `"${exam.subject.name}"`,
         `"${exam.title}"`,
         exam.examDate.toISOString().split("T")[0],
         result.marksObtained.toString(),
@@ -270,7 +270,7 @@ export async function exportExamResultsToCSV(
         metadata: {
           examTitle: exam.title,
           className: exam.class.name,
-          subjectName: exam.subject.subjectName,
+          name: exam.subject.name,
           examDate: exam.examDate,
         },
       },
@@ -540,7 +540,7 @@ export async function generateResultImportTemplate(examId: string): Promise<{
       "Student ID,Student Name,Marks Obtained,Absent,Remarks",
       `# Exam: ${exam.title}`,
       `# Class: ${exam.class.name}`,
-      `# Subject: ${exam.subject.subjectName}`,
+      `# Subject: ${exam.subject.name}`,
       `# Total Marks: ${exam.totalMarks}`,
       `# Passing Marks: ${exam.passingMarks}`,
       "",

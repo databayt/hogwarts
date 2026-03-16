@@ -171,19 +171,19 @@ export async function getExamsForGrade(
 
 /** Get subjects for the grade selection dropdown */
 export async function getSubjectsForGrade(): Promise<
-  ActionResponse<{ id: string; subjectName: string }[]>
+  ActionResponse<{ id: string; name: string }[]>
 > {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) return { success: false, error: "Missing school context" }
 
-    const subjects = await db.subject.findMany({
-      where: { schoolId },
-      select: { id: true, subjectName: true },
-      orderBy: { subjectName: "asc" },
-    })
+    const { getSchoolSubjectOptions } = await import("@/lib/school-subjects")
+    const subjects = await getSchoolSubjectOptions(schoolId)
 
-    return { success: true, data: subjects }
+    return {
+      success: true,
+      data: subjects.map((s) => ({ id: s.id, name: s.name })),
+    }
   } catch (error) {
     return {
       success: false,

@@ -110,7 +110,6 @@ model Exam {
   status       ExamStatus @default(PLANNED)
 
   // Optional catalog FK bridges
-  catalogSubjectId String?
   catalogChapterId String?
   catalogLessonId  String?
   catalogExamId    String? // Bridge to CatalogExam (adopted exam)
@@ -132,7 +131,7 @@ model Exam {
 
   school         School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   class          Class           @relation(fields: [classId], references: [id], onDelete: Cascade)
-  subject        Subject         @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  subject        CatalogSubject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
   examResults    ExamResult[]
   results        Result[]
   generatedExam  GeneratedExam? // Auto-generated exam (one-to-one)
@@ -141,7 +140,6 @@ model Exam {
   examSessions   ExamSession[]   // Proctoring sessions
 
   // Catalog bridge relations
-  catalogSubject CatalogSubject? @relation(fields: [catalogSubjectId], references: [id], onDelete: SetNull)
   catalogChapter CatalogChapter? @relation(fields: [catalogChapterId], references: [id], onDelete: SetNull)
   catalogLesson  CatalogLesson?  @relation(fields: [catalogLessonId], references: [id], onDelete: SetNull)
   catalogExam    CatalogExam?    @relation("CatalogExamMirror", fields: [catalogExamId], references: [id], onDelete: SetNull)
@@ -754,7 +752,7 @@ model Result {
   class      Class       @relation(fields: [classId], references: [id], onDelete: Cascade)
   assignment Assignment? @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
   exam       Exam?       @relation(fields: [examId], references: [id], onDelete: Cascade)
-  subject    Subject?    @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  subject    CatalogSubject? @relation(fields: [subjectId], references: [id], onDelete: Cascade)
 
   // Wizard support
   wizardStep String? // null = complete, non-null = current wizard step slug
@@ -843,7 +841,7 @@ model ReportCardGrade {
   // Relations
   school     School     @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   reportCard ReportCard @relation(fields: [reportCardId], references: [id], onDelete: Cascade)
-  subject    Subject    @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  subject    CatalogSubject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

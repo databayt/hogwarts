@@ -33,7 +33,7 @@ export default async function PracticeContent({ lang }: Props) {
       class: {
         select: {
           subjectId: true,
-          subject: { select: { id: true, subjectName: true } },
+          subject: { select: { id: true, name: true } },
         },
       },
     },
@@ -64,9 +64,9 @@ export default async function PracticeContent({ lang }: Props) {
         subjectId: true,
       },
     }),
-    db.subject.findMany({
-      where: { schoolId, id: { in: subjectIds } },
-      select: { id: true, subjectName: true },
+    db.catalogSubject.findMany({
+      where: { id: { in: subjectIds } },
+      select: { id: true, name: true },
     }),
   ])
 
@@ -81,7 +81,7 @@ export default async function PracticeContent({ lang }: Props) {
 
     return {
       id: sub.id,
-      name: sub.subjectName || sub.id,
+      name: sub.name || sub.id,
       totalQuestions: subQuestions.length,
       easyCount,
       mediumCount,

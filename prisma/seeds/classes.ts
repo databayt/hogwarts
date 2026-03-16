@@ -78,7 +78,7 @@ export async function seedClasses(
       classroomIndex++
 
       // Create class name (Arabic: subject - level)
-      const className = `${subject.subjectName} - ${level.levelName}`
+      const className = `${subject.name} - ${level.levelName}`
 
       // Resolve gradeId from yearLevel
       const gradeId = gradeByYearLevel.get(level.id) || null

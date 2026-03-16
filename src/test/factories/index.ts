@@ -19,11 +19,11 @@
 import type {
   Announcement,
   Attendance,
+  CatalogSubject,
   Class,
   Exam,
   School,
   Student,
-  Subject,
   Teacher,
   Timetable,
   User,
@@ -223,18 +223,48 @@ export function createMockClass(overrides?: Partial<Class>): Class {
 }
 
 /**
- * Mock Subject Factory
+ * Mock CatalogSubject Factory (replaces old Subject factory)
  */
-export function createMockSubject(overrides?: Partial<Subject>): Subject {
+export function createMockSubject(
+  overrides?: Partial<CatalogSubject>
+): CatalogSubject {
   const id = overrides?.id ?? generateId("sub")
-  const schoolId = overrides?.schoolId ?? "s1"
 
   return {
     id,
-    schoolId,
-    departmentId: overrides?.departmentId ?? "dept1",
-    subjectName: overrides?.subjectName ?? `Subject ${id}`,
+    name: overrides?.name ?? `Subject ${id}`,
+    slug: overrides?.slug ?? `subject-${id}`,
     lang: overrides?.lang ?? "ar",
+    description: overrides?.description ?? null,
+    objectives: overrides?.objectives ?? [],
+    prerequisites: overrides?.prerequisites ?? null,
+    targetAudience: overrides?.targetAudience ?? null,
+    department: overrides?.department ?? "Sciences",
+    levels: overrides?.levels ?? [],
+    country: overrides?.country ?? "SD",
+    curriculum: overrides?.curriculum ?? "national",
+    schoolTypes: overrides?.schoolTypes ?? [],
+    concept: overrides?.concept ?? null,
+    imageKey: overrides?.imageKey ?? null,
+    thumbnailKey: overrides?.thumbnailKey ?? null,
+    color: overrides?.color ?? null,
+    iconUrl: overrides?.iconUrl ?? null,
+    bannerUrl: overrides?.bannerUrl ?? null,
+    tags: overrides?.tags ?? [],
+    status: overrides?.status ?? "PUBLISHED",
+    gradeRange: overrides?.gradeRange ?? null,
+    grades: overrides?.grades ?? [],
+    clickviewId: overrides?.clickviewId ?? null,
+    clickviewUrl: overrides?.clickviewUrl ?? null,
+    price: overrides?.price ?? null,
+    currency: overrides?.currency ?? null,
+    totalChapters: overrides?.totalChapters ?? 0,
+    totalLessons: overrides?.totalLessons ?? 0,
+    totalContent: overrides?.totalContent ?? 0,
+    usageCount: overrides?.usageCount ?? 0,
+    averageRating: overrides?.averageRating ?? 0,
+    ratingCount: overrides?.ratingCount ?? 0,
+    sortOrder: overrides?.sortOrder ?? 0,
     createdAt: overrides?.createdAt ?? new Date("2024-01-01"),
     updatedAt: overrides?.updatedAt ?? new Date("2024-01-01"),
   }

@@ -52,7 +52,7 @@ interface Assignment {
   class: {
     name: string
     subject: {
-      subjectName: string
+      name: string
     }
   }
 }
@@ -129,9 +129,7 @@ export function StudentAssignmentView({
 
   // Get unique subjects
   const subjects = useMemo(() => {
-    const subjectSet = new Set(
-      assignments.map((a) => a.class.subject.subjectName)
-    )
+    const subjectSet = new Set(assignments.map((a) => a.class.subject.name))
     return Array.from(subjectSet).sort()
   }, [assignments])
 
@@ -140,8 +138,7 @@ export function StudentAssignmentView({
     const now = new Date()
     const filtered = assignments.filter(
       (a) =>
-        selectedSubject === "all" ||
-        a.class.subject.subjectName === selectedSubject
+        selectedSubject === "all" || a.class.subject.name === selectedSubject
     )
 
     const upcoming: Assignment[] = []
@@ -239,7 +236,7 @@ export function StudentAssignmentView({
             <div className="space-y-1">
               <CardTitle className="text-lg">{assignment.title}</CardTitle>
               <CardDescription>
-                {assignment.class.subject.subjectName} • {assignment.class.name}
+                {assignment.class.subject.name} • {assignment.class.name}
               </CardDescription>
             </div>
             <div className="flex flex-col items-end gap-2">

@@ -112,7 +112,7 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
             title: true,
             examDate: true,
             totalMarks: true,
-            subject: { select: { subjectName: true, lang: true } },
+            subject: { select: { name: true, lang: true } },
             class: { select: { name: true, lang: true } },
           },
         },
@@ -129,9 +129,9 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
     // Pre-render all result cards (await must be at top level, not inside JSX .map)
     const allResultCards = await Promise.all(
       results.map(async (result) => {
-        const subjectName = result.exam.subject?.subjectName
+        const name = result.exam.subject?.name
           ? await getDisplayText(
-              result.exam.subject.subjectName,
+              result.exam.subject.name,
               (result.exam.subject.lang || "ar") as SupportedLanguage,
               lang,
               schoolId!
@@ -146,7 +146,7 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
                 <p className="text-muted-foreground text-sm">
                   {role === "GUARDIAN" &&
                     `${result.student.givenName} ${result.student.surname} - `}
-                  {subjectName} - {format(result.exam.examDate, "MMM d, yyyy")}
+                  {name} - {format(result.exam.examDate, "MMM d, yyyy")}
                 </p>
               </div>
               <div className="flex items-center gap-3">
@@ -275,7 +275,7 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
     title: string
     examDate: Date
     className: string
-    subjectName: string
+    name: string
     totalStudents: number
     resultsGenerated: number
     averagePercentage: number | null
@@ -291,7 +291,7 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
       },
       include: {
         class: { select: { name: true, lang: true } },
-        subject: { select: { subjectName: true, lang: true } },
+        subject: { select: { name: true, lang: true } },
         examResults: {
           select: {
             id: true,
@@ -324,8 +324,8 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
             lang,
             schoolId!
           ),
-          subjectName: await getDisplayText(
-            exam.subject.subjectName,
+          name: await getDisplayText(
+            exam.subject.name,
             (exam.subject.lang || "ar") as SupportedLanguage,
             lang,
             schoolId!
@@ -383,7 +383,7 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
                 <div>
                   <CardTitle>{exam.title}</CardTitle>
                   <p className="text-muted-foreground mt-1 text-sm">
-                    {exam.className} • {exam.subjectName} •{" "}
+                    {exam.className} • {exam.name} •{" "}
                     {new Date(exam.examDate).toLocaleDateString()}
                   </p>
                 </div>

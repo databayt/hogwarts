@@ -13,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 export interface AttemptItem {
   id: string
   examTitle: string
-  subjectName: string | null
+  name: string | null
   attemptNumber: number
   score: number
   totalMarks: number
@@ -98,7 +98,7 @@ export function AttemptHistory({
                 )}
               </div>
               <div className="text-muted-foreground mt-0.5 flex items-center gap-2 text-xs">
-                {attempt.subjectName && <span>{attempt.subjectName}</span>}
+                {attempt.name && <span>{attempt.name}</span>}
                 <span>Attempt #{attempt.attemptNumber}</span>
                 {attempt.submittedAt && (
                   <span className="flex items-center gap-0.5">

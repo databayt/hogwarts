@@ -67,18 +67,25 @@ export async function adoptCatalogExam(input: {
       }
     }
 
-    // 2. Resolve catalogSubjectId to school Subject
-    const subject = await db.subject.findFirst({
-      where: { schoolId, catalogSubjectId: catalogExam.subjectId },
+    // 2. Verify school has selected this catalog subject
+    const subjectSelection = await db.schoolSubjectSelection.findFirst({
+      where: {
+        schoolId,
+        catalogSubjectId: catalogExam.subjectId,
+        isActive: true,
+      },
+      include: { subject: true },
     })
 
-    if (!subject) {
+    if (!subjectSelection) {
       return {
         success: false,
         error: "Subject not available in your school. Adopt the subject first.",
         code: "SUBJECT_NOT_FOUND",
       }
     }
+
+    const subject = subjectSelection.subject
 
     // 3. Verify class belongs to school
     const classExists = await db.class.findFirst({
@@ -117,7 +124,6 @@ export async function adoptCatalogExam(input: {
           passingMarks: catalogExam.passingMarks || 50,
           examType: catalogExam.examType.toUpperCase() as any,
           status: "PLANNED",
-          catalogSubjectId: catalogExam.subjectId,
           catalogChapterId: catalogExam.chapterId,
           catalogLessonId: catalogExam.lessonId,
           catalogExamId: catalogExam.id,
@@ -151,7 +157,6 @@ export async function adoptCatalogExam(input: {
               schoolId,
               subjectId: subject.id,
               catalogQuestionId: cq.id,
-              catalogSubjectId: cq.catalogSubjectId,
               catalogChapterId: cq.catalogChapterId,
               catalogLessonId: cq.catalogLessonId,
               questionText: cq.questionText,
@@ -277,10 +282,10 @@ export async function adoptCatalogExamTemplate(
     }
 
     // Verify subject belongs to school
-    const subject = await db.subject.findFirst({
-      where: { id: subjectId, schoolId },
+    const subjectSelection = await db.schoolSubjectSelection.findFirst({
+      where: { catalogSubjectId: subjectId, schoolId, isActive: true },
     })
-    if (!subject) {
+    if (!subjectSelection) {
       return {
         success: false,
         error: "Subject not found in your school",

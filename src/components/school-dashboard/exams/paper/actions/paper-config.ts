@@ -59,7 +59,7 @@ export async function createPaperConfig(
         exam: {
           include: {
             class: { select: { name: true, id: true } },
-            subject: { select: { subjectName: true, id: true } },
+            subject: { select: { name: true, id: true } },
           },
         },
         questions: {
@@ -146,7 +146,7 @@ export async function createPaperConfig(
             exam: {
               include: {
                 class: { select: { name: true, id: true } },
-                subject: { select: { subjectName: true, id: true } },
+                subject: { select: { name: true, id: true } },
               },
             },
             questions: {
@@ -198,7 +198,7 @@ export async function getPaperConfig(
             exam: {
               include: {
                 class: { select: { name: true, id: true } },
-                subject: { select: { subjectName: true, id: true } },
+                subject: { select: { name: true, id: true } },
               },
             },
             questions: {
@@ -299,7 +299,7 @@ export async function updatePaperConfig(
             exam: {
               include: {
                 class: { select: { name: true, id: true } },
-                subject: { select: { subjectName: true, id: true } },
+                subject: { select: { name: true, id: true } },
               },
             },
             questions: {

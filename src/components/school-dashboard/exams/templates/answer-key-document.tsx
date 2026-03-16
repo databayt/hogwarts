@@ -191,7 +191,7 @@ export function AnswerKeyDocument({
           <Text style={styles.subtitle}>{exam.title}</Text>
           <View style={styles.metaRow}>
             <Text>
-              {labels.subject}: {exam.subject.subjectName}
+              {labels.subject}: {exam.subject.name}
             </Text>
             <Text>
               {labels.class}: {exam.class.name}

@@ -20,7 +20,7 @@ export async function getTeacherExpertise(
       select: {
         subjectId: true,
         expertiseLevel: true,
-        subject: { select: { subjectName: true } },
+        subject: { select: { name: true } },
       },
     })
 
@@ -86,8 +86,8 @@ export async function getSubjectsForExpertise(): Promise<
   ActionResponse<
     {
       id: string
-      subjectName: string
-      department: { id: string; departmentName: string } | null
+      name: string
+      department: string | null
     }[]
   >
 > {
@@ -95,19 +95,17 @@ export async function getSubjectsForExpertise(): Promise<
     const { schoolId } = await getTenantContext()
     if (!schoolId) return { success: false, error: "Missing school context" }
 
-    const subjects = await db.subject.findMany({
-      where: { schoolId },
-      select: {
-        id: true,
-        subjectName: true,
-        department: {
-          select: { id: true, departmentName: true },
-        },
-      },
-      orderBy: { subjectName: "asc" },
-    })
+    const { getSchoolSubjects } = await import("@/lib/school-subjects")
+    const subjects = await getSchoolSubjects(schoolId)
 
-    return { success: true, data: subjects }
+    return {
+      success: true,
+      data: subjects.map((s) => ({
+        id: s.id,
+        name: s.name,
+        department: s.department,
+      })),
+    }
   } catch (error) {
     return {
       success: false,

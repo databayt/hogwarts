@@ -67,7 +67,7 @@ export async function generateGradeCertificate(
         },
         subject: {
           select: {
-            subjectName: true,
+            name: true,
           },
         },
         assignment: {
@@ -128,7 +128,7 @@ export async function generateGradeCertificate(
       className: grade.class?.name || undefined,
       title,
       type: itemType,
-      subject: grade.subject?.subjectName || undefined,
+      subject: grade.subject?.name || undefined,
       score: Number(grade.score),
       maxScore: Number(grade.maxScore),
       percentage: grade.percentage,

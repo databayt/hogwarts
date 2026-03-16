@@ -36,7 +36,7 @@ interface QuestionCardProps {
   difficulty: DifficultyLevel
   bloomLevel: BloomLevel
   points: number
-  subjectName: string
+  name: string
   tags?: string[]
   usageCount?: number
   averageScore?: number
@@ -56,7 +56,7 @@ export function QuestionCard({
   difficulty,
   bloomLevel,
   points,
-  subjectName,
+  name,
   tags = [],
   usageCount = 0,
   averageScore,
@@ -162,7 +162,7 @@ export function QuestionCard({
       <CardContent className="pb-3">
         {/* Metadata */}
         <div className="text-muted-foreground flex items-center gap-4 text-xs">
-          <span>{subjectName}</span>
+          <span>{name}</span>
           <span>
             {points.toString()} {dict.questionBank.points}
           </span>

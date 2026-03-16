@@ -9,7 +9,7 @@ import { z } from "zod"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
-import { getModelOrThrow } from "@/lib/prisma-guards"
+import { getSchoolSubjects } from "@/lib/school-subjects"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
   assertSubjectPermission,
@@ -25,6 +25,10 @@ import {
 // Mutations
 // ============================================================================
 
+/**
+ * Select a catalog subject into a school (create SchoolSubjectSelection).
+ * Replaces the old createSubject that created a Subject record.
+ */
 export async function createSubject(
   input: z.infer<typeof subjectCreateSchema>
 ): Promise<ActionResponse<{ id: string }>> {
@@ -43,26 +47,51 @@ export async function createSubject(
     try {
       assertSubjectPermission(authContext, "create", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to create subjects" }
+      return { success: false, error: "Unauthorized to add subjects" }
     }
 
     const parsed = subjectCreateSchema.parse(input)
 
-    const subjectModel = getModelOrThrow("subject")
-    const row = await subjectModel.create({
+    // Check if already selected for this grade
+    const existing = await db.schoolSubjectSelection.findFirst({
+      where: {
+        schoolId,
+        catalogSubjectId: parsed.catalogSubjectId,
+        gradeId: parsed.gradeId,
+        streamId: parsed.streamId ?? null,
+      },
+    })
+
+    if (existing) {
+      // Reactivate if inactive
+      if (!existing.isActive) {
+        await db.schoolSubjectSelection.update({
+          where: { id: existing.id },
+          data: { isActive: true },
+        })
+        revalidatePath("/subjects")
+        return { success: true, data: { id: existing.id } }
+      }
+      return {
+        success: false,
+        error: "This subject is already selected for this grade",
+      }
+    }
+
+    const row = await db.schoolSubjectSelection.create({
       data: {
         schoolId,
-        subjectName: parsed.subjectName,
-        departmentId: parsed.departmentId,
-        lang: parsed.lang || "ar",
-        ...(parsed.catalogSubjectId
-          ? { catalogSubjectId: parsed.catalogSubjectId }
-          : {}),
+        catalogSubjectId: parsed.catalogSubjectId,
+        gradeId: parsed.gradeId,
+        streamId: parsed.streamId,
+        customName: parsed.customName,
+        isRequired: parsed.isRequired ?? true,
+        weeklyPeriods: parsed.weeklyPeriods,
       },
     })
 
     revalidatePath("/subjects")
-    return { success: true, data: { id: row.id as string } }
+    return { success: true, data: { id: row.id } }
   } catch (error) {
     console.error("[createSubject] Error:", error)
 
@@ -75,12 +104,14 @@ export async function createSubject(
 
     return {
       success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to create subject",
+      error: error instanceof Error ? error.message : "Failed to add subject",
     }
   }
 }
 
+/**
+ * Update a SchoolSubjectSelection record (customName, isRequired, weeklyPeriods).
+ */
 export async function updateSubject(
   input: z.infer<typeof subjectUpdateSchema>
 ): Promise<ActionResponse<void>> {
@@ -105,27 +136,29 @@ export async function updateSubject(
     const parsed = subjectUpdateSchema.parse(input)
     const { id, ...rest } = parsed
 
-    const subjectModel = getModelOrThrow("subject")
-
-    // Verify subject exists
-    const existing = await subjectModel.findFirst({
+    // Verify selection exists and belongs to this school
+    const existing = await db.schoolSubjectSelection.findFirst({
       where: { id, schoolId },
       select: { id: true },
     })
 
     if (!existing) {
-      return { success: false, error: "Subject not found" }
+      return { success: false, error: "Subject selection not found" }
     }
 
     const data: Record<string, unknown> = {}
-    if (typeof rest.subjectName !== "undefined")
-      data.subjectName = rest.subjectName
-    if (typeof rest.departmentId !== "undefined")
-      data.departmentId = rest.departmentId
-    if (typeof rest.catalogSubjectId !== "undefined")
-      data.catalogSubjectId = rest.catalogSubjectId || null
+    if (typeof rest.customName !== "undefined")
+      data.customName = rest.customName || null
+    if (typeof rest.isRequired !== "undefined")
+      data.isRequired = rest.isRequired
+    if (typeof rest.weeklyPeriods !== "undefined")
+      data.weeklyPeriods = rest.weeklyPeriods
+    if (typeof rest.isActive !== "undefined") data.isActive = rest.isActive
 
-    await subjectModel.updateMany({ where: { id, schoolId }, data })
+    await db.schoolSubjectSelection.update({
+      where: { id },
+      data,
+    })
 
     revalidatePath("/subjects")
     return { success: true, data: undefined }
@@ -147,6 +180,9 @@ export async function updateSubject(
   }
 }
 
+/**
+ * Delete (deactivate) a SchoolSubjectSelection record.
+ */
 export async function deleteSubject(input: {
   id: string
 }): Promise<ActionResponse<void>> {
@@ -165,79 +201,26 @@ export async function deleteSubject(input: {
     try {
       assertSubjectPermission(authContext, "delete", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to delete subjects" }
+      return { success: false, error: "Unauthorized to remove subjects" }
     }
 
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
-    const subjectModel = getModelOrThrow("subject")
-    const teacherSubjectExpertiseModel = getModelOrThrow(
-      "teacherSubjectExpertise"
-    )
-    const classModel = getModelOrThrow("class")
-    const examModel = getModelOrThrow("exam")
-    const questionBankModel = getModelOrThrow("questionBank")
-
-    // Verify subject exists
-    const existing = await subjectModel.findFirst({
+    // Verify selection exists
+    const existing = await db.schoolSubjectSelection.findFirst({
       where: { id, schoolId },
-      select: { id: true, subjectName: true },
+      select: { id: true, subject: { select: { name: true } } },
     })
 
     if (!existing) {
-      return { success: false, error: "Subject not found" }
+      return { success: false, error: "Subject selection not found" }
     }
 
-    // ============================================================================
-    // CASCADE VALIDATION - Check for dependencies before deletion
-    // ============================================================================
-
-    // 1. Check if any teachers have expertise in this subject
-    const teacherExpertiseCount = await teacherSubjectExpertiseModel.count({
-      where: { subjectId: id, schoolId },
+    // Soft-delete by deactivating
+    await db.schoolSubjectSelection.update({
+      where: { id },
+      data: { isActive: false },
     })
-    if (teacherExpertiseCount > 0) {
-      return {
-        success: false,
-        error: `Cannot delete "${existing.subjectName}": ${teacherExpertiseCount} teacher(s) have expertise in this subject. Remove their expertise first.`,
-      }
-    }
-
-    // 2. Check if any classes are teaching this subject
-    const classCount = await classModel.count({
-      where: { subjectId: id, schoolId },
-    })
-    if (classCount > 0) {
-      return {
-        success: false,
-        error: `Cannot delete "${existing.subjectName}": ${classCount} class(es) are teaching this subject. Delete or reassign those classes first.`,
-      }
-    }
-
-    // 3. Check if any exams are associated with this subject
-    const examCount = await examModel.count({
-      where: { subjectId: id, schoolId },
-    })
-    if (examCount > 0) {
-      return {
-        success: false,
-        error: `Cannot delete "${existing.subjectName}": ${examCount} exam(s) are associated with this subject. Delete those exams first.`,
-      }
-    }
-
-    // 4. Check if any question banks are associated with this subject
-    const questionBankCount = await questionBankModel.count({
-      where: { subjectId: id, schoolId },
-    })
-    if (questionBankCount > 0) {
-      return {
-        success: false,
-        error: `Cannot delete "${existing.subjectName}": ${questionBankCount} question bank(s) are associated with this subject. Delete those question banks first.`,
-      }
-    }
-
-    // All checks passed - safe to delete
-    await subjectModel.deleteMany({ where: { id, schoolId } })
 
     revalidatePath("/subjects")
     return { success: true, data: undefined }
@@ -254,7 +237,7 @@ export async function deleteSubject(input: {
     return {
       success: false,
       error:
-        error instanceof Error ? error.message : "Failed to delete subject",
+        error instanceof Error ? error.message : "Failed to remove subject",
     }
   }
 }
@@ -265,21 +248,10 @@ export async function deleteSubject(input: {
 
 type SubjectSelectResult = {
   id: string
-  schoolId: string
-  subjectName: string
+  name: string
+  slug: string
+  department: string
   lang: string
-  departmentId: string | null
-  catalogSubjectId: string | null
-  department: {
-    id: string
-    departmentName: string
-    lang: string
-  } | null
-  classes: {
-    id: string
-    name: string
-    lang: string
-  }[]
   createdAt: Date
   updatedAt: Date
 }
@@ -307,37 +279,21 @@ export async function getSubject(input: {
 
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
-    const subjectModel = getModelOrThrow("subject")
-
-    const subject = await subjectModel.findFirst({
-      where: { id, schoolId },
+    // Look up via catalog subject
+    const catalogSubject = await db.catalogSubject.findFirst({
+      where: { id },
       select: {
         id: true,
-        schoolId: true,
-        subjectName: true,
+        name: true,
+        slug: true,
+        department: true,
         lang: true,
-        departmentId: true,
-        catalogSubjectId: true,
-        department: {
-          select: {
-            id: true,
-            departmentName: true,
-            lang: true,
-          },
-        },
-        classes: {
-          select: {
-            id: true,
-            name: true,
-            lang: true,
-          },
-        },
         createdAt: true,
         updatedAt: true,
       },
     })
 
-    return { success: true, data: subject as SubjectSelectResult | null }
+    return { success: true, data: catalogSubject as SubjectSelectResult | null }
   } catch (error) {
     console.error("[getSubject] Error:", error)
 
@@ -357,9 +313,8 @@ export async function getSubject(input: {
 
 type SubjectListResult = {
   id: string
-  subjectName: string
-  lang: string
-  departmentName: string
+  name: string
+  department: string
   createdAt: string
 }
 
@@ -386,49 +341,50 @@ export async function getSubjects(
 
     const sp = getSubjectsSchema.parse(input ?? {})
 
-    const subjectModel = getModelOrThrow("subject")
+    // Get all school subjects from catalog via bridge table
+    let subjects = await getSchoolSubjects(schoolId)
 
-    const where: any = {
-      schoolId,
-      ...(sp.subjectName
-        ? { subjectName: { contains: sp.subjectName, mode: "insensitive" } }
-        : {}),
-      ...(sp.departmentId ? { departmentId: sp.departmentId } : {}),
+    // Filter by name
+    if (sp.name) {
+      const searchLower = sp.name.toLowerCase()
+      subjects = subjects.filter((s) =>
+        s.name.toLowerCase().includes(searchLower)
+      )
     }
 
+    // Filter by department
+    if (sp.department) {
+      subjects = subjects.filter((s) => s.department === sp.department)
+    }
+
+    // Sort
+    if (sp.sort?.length) {
+      subjects.sort((a, b) => {
+        for (const s of sp.sort) {
+          const key = s.id as keyof typeof a
+          const aVal = String(a[key] ?? "")
+          const bVal = String(b[key] ?? "")
+          const cmp = aVal.localeCompare(bVal)
+          if (cmp !== 0) return s.desc ? -cmp : cmp
+        }
+        return 0
+      })
+    } else {
+      subjects.sort((a, b) => a.name.localeCompare(b.name))
+    }
+
+    const total = subjects.length
     const skip = (sp.page - 1) * sp.perPage
-    const take = sp.perPage
-    const orderBy =
-      sp.sort && Array.isArray(sp.sort) && sp.sort.length
-        ? sp.sort.map((s) => ({ [s.id]: s.desc ? "desc" : "asc" }))
-        : [{ createdAt: "desc" }]
+    const paged = subjects.slice(skip, skip + sp.perPage)
 
-    const [rows, count] = await Promise.all([
-      subjectModel.findMany({
-        where,
-        orderBy,
-        skip,
-        take,
-        include: {
-          department: {
-            select: {
-              departmentName: true,
-            },
-          },
-        },
-      }),
-      subjectModel.count({ where }),
-    ])
-
-    const mapped: SubjectListResult[] = (rows as Array<any>).map((s) => ({
-      id: s.id as string,
-      subjectName: s.subjectName as string,
-      lang: (s.lang as string) || "ar",
-      departmentName: s.department?.departmentName || "Unknown",
-      createdAt: (s.createdAt as Date).toISOString(),
+    const mapped: SubjectListResult[] = paged.map((s) => ({
+      id: s.id,
+      name: s.name,
+      department: s.department || "Unknown",
+      createdAt: s.createdAt.toISOString(),
     }))
 
-    return { success: true, data: { rows: mapped, total: count as number } }
+    return { success: true, data: { rows: mapped, total } }
   } catch (error) {
     console.error("[getSubjects] Error:", error)
 
@@ -472,46 +428,10 @@ export async function bulkDeleteSubjects(input: {
       .object({ ids: z.array(z.string().min(1)).min(1) })
       .parse(input)
 
-    const subjectModel = getModelOrThrow("subject")
-    const existing = await subjectModel.findMany({
+    // Soft-delete by deactivating all matching selections
+    const result = await db.schoolSubjectSelection.updateMany({
       where: { id: { in: ids }, schoolId },
-      select: { id: true },
-    })
-    const validIds = existing.map((s: any) => s.id)
-
-    // Cascade validation: mirror single deleteSubject checks for bulk
-    const [expertiseCount, classCount, examCount, qbankCount] =
-      await Promise.all([
-        db.teacherSubjectExpertise.count({
-          where: { subjectId: { in: validIds }, schoolId },
-        }),
-        db.class.count({
-          where: { subjectId: { in: validIds }, schoolId },
-        }),
-        db.exam.count({
-          where: { subjectId: { in: validIds }, schoolId },
-        }),
-        db.questionBank.count({
-          where: { subjectId: { in: validIds }, schoolId },
-        }),
-      ])
-
-    const deps: string[] = []
-    if (expertiseCount > 0)
-      deps.push(`${expertiseCount} teacher expertise record(s)`)
-    if (classCount > 0) deps.push(`${classCount} class(es)`)
-    if (examCount > 0) deps.push(`${examCount} exam(s)`)
-    if (qbankCount > 0) deps.push(`${qbankCount} question bank(s)`)
-
-    if (deps.length > 0) {
-      return {
-        success: false,
-        error: `Cannot delete: ${deps.join(", ")} depend on selected subjects. Remove dependencies first.`,
-      }
-    }
-
-    const result = await subjectModel.deleteMany({
-      where: { id: { in: validIds }, schoolId },
+      data: { isActive: false },
     })
 
     revalidatePath("/subjects")
@@ -541,7 +461,7 @@ export async function getCatalogSubjectsForPicker(
       return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
-    const where: any = { status: "PUBLISHED" }
+    const where: Record<string, unknown> = { status: "PUBLISHED" }
     if (search && search.trim()) {
       where.OR = [
         { name: { contains: search, mode: "insensitive" } },
@@ -569,37 +489,6 @@ export async function getCatalogSubjectsForPicker(
   }
 }
 
-export async function getDepartments(): Promise<
-  ActionResponse<Array<{ id: string; departmentName: string }>>
-> {
-  try {
-    const session = await auth()
-    if (!session?.user) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
-
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
-    }
-
-    const departments = await db.department.findMany({
-      where: { schoolId },
-      select: { id: true, departmentName: true },
-      orderBy: { departmentName: "asc" },
-    })
-
-    return { success: true, data: departments }
-  } catch (error) {
-    console.error("[getDepartments] Error:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to fetch departments",
-    }
-  }
-}
-
 export async function getSubjectsCSV(
   input?: Partial<z.infer<typeof getSubjectsSchema>>
 ): Promise<ActionResponse<string>> {
@@ -621,26 +510,20 @@ export async function getSubjectsCSV(
       return { success: false, error: "Unauthorized to export subjects" }
     }
 
-    const sp = getSubjectsSchema.parse(input ?? {})
-    const subjectModel = getModelOrThrow("subject")
+    let subjects = await getSchoolSubjects(schoolId)
 
-    const where: any = {
-      schoolId,
-      ...(sp.subjectName
-        ? { subjectName: { contains: sp.subjectName, mode: "insensitive" } }
-        : {}),
-      ...(sp.departmentId ? { departmentId: sp.departmentId } : {}),
+    const sp = getSubjectsSchema.parse(input ?? {})
+    if (sp.name) {
+      const searchLower = sp.name.toLowerCase()
+      subjects = subjects.filter((s) =>
+        s.name.toLowerCase().includes(searchLower)
+      )
+    }
+    if (sp.department) {
+      subjects = subjects.filter((s) => s.department === sp.department)
     }
 
-    const subjects = await subjectModel.findMany({
-      where,
-      include: {
-        department: {
-          select: { departmentName: true },
-        },
-      },
-      orderBy: [{ subjectName: "asc" }],
-    })
+    subjects.sort((a, b) => a.name.localeCompare(b.name))
 
     const headers = [
       "ID",
@@ -649,12 +532,12 @@ export async function getSubjectsCSV(
       "Department",
       "Created Date",
     ]
-    const csvRows = (subjects as Array<any>).map((s) =>
+    const csvRows = subjects.map((s) =>
       [
         s.id,
-        `"${(s.subjectName || "").replace(/"/g, '""')}"`,
+        `"${(s.name || "").replace(/"/g, '""')}"`,
         s.lang || "ar",
-        `"${(s.department?.departmentName || "").replace(/"/g, '""')}"`,
+        `"${(s.department || "").replace(/"/g, '""')}"`,
         new Date(s.createdAt).toISOString().split("T")[0],
       ].join(",")
     )

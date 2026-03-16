@@ -64,7 +64,7 @@ export async function ParentAttendanceContent() {
                       subject: {
                         select: {
                           id: true,
-                          subjectName: true,
+                          name: true,
                         },
                       },
                     },
@@ -95,7 +95,7 @@ export async function ParentAttendanceContent() {
     email: null as string | null,
     classes: sg.student.studentClasses.map((sc) => ({
       id: sc.class.id,
-      name: `${sc.class.subject.subjectName} - ${sc.class.name}`,
+      name: `${sc.class.subject.name} - ${sc.class.name}`,
       teacher: sc.class.teacher
         ? `${sc.class.teacher.givenName} ${sc.class.teacher.surname}`
         : "N/A",
@@ -105,7 +105,7 @@ export async function ParentAttendanceContent() {
       date: a.date,
       status: a.status,
       classId: a.classId,
-      className: a.class.subject.subjectName,
+      className: a.class.subject.name,
       notes: a.notes,
     })),
   }))

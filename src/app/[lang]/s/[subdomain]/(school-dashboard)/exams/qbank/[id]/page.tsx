@@ -33,7 +33,7 @@ export default async function QuestionDetailPage({ params }: Props) {
   const question = await db.questionBank.findUnique({
     where: { id, schoolId },
     include: {
-      subject: { select: { subjectName: true } },
+      subject: { select: { name: true } },
     },
   })
 
@@ -48,7 +48,7 @@ export default async function QuestionDetailPage({ params }: Props) {
       <div className="flex flex-col gap-4">
         <PageHeadingSetter
           title="Question Details"
-          description={question.subject?.subjectName || ""}
+          description={question.subject?.name || ""}
         />
         <div className="flex justify-end">
           <Button asChild>

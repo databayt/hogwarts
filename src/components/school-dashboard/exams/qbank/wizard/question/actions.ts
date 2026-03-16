@@ -107,17 +107,17 @@ export async function updateQuestionDetails(
 
 /** Fetch subjects for the current school */
 export async function getSubjectsForQuestion(): Promise<
-  ActionResponse<{ id: string; subjectName: string }[]>
+  ActionResponse<{ id: string; name: string }[]>
 > {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) return { success: false, error: "Missing school context" }
 
-    const subjects = await db.subject.findMany({
-      where: { schoolId },
-      select: { id: true, subjectName: true },
-      orderBy: { subjectName: "asc" },
-    })
+    const { getSchoolSubjectOptions } = await import("@/lib/school-subjects")
+    const subjects = (await getSchoolSubjectOptions(schoolId)).map((s) => ({
+      id: s.id,
+      name: s.name,
+    }))
 
     return { success: true, data: subjects }
   } catch (error) {

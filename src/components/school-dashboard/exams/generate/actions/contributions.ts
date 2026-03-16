@@ -15,7 +15,7 @@ export interface ExamContributionItem {
   id: string
   title: string
   examType: string
-  subjectName: string
+  name: string
   approvalStatus: string
   rejectionReason: string | null
   totalMarks: number | null
@@ -98,7 +98,7 @@ export async function getMyExamContributions(): Promise<ExamContributionsResult>
     id: c.id,
     title: c.title,
     examType: c.examType,
-    subjectName: c.subject.name,
+    name: c.subject.name,
     approvalStatus: c.approvalStatus,
     rejectionReason: c.rejectionReason,
     totalMarks: c.totalMarks,

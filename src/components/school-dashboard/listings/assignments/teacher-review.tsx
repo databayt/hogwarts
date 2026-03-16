@@ -69,7 +69,7 @@ interface Assignment {
   class: {
     name: string
     subject: {
-      subjectName: string
+      name: string
     }
   }
 }
@@ -408,7 +408,7 @@ export function TeacherReview({
             <div>
               <CardTitle>{assignment.title}</CardTitle>
               <CardDescription>
-                {assignment.class.subject.subjectName} • {assignment.class.name}
+                {assignment.class.subject.name} • {assignment.class.name}
               </CardDescription>
             </div>
             <Badge variant="outline" className="text-lg">

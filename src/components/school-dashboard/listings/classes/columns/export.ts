@@ -38,7 +38,7 @@ const { text, number, date } = createColumnHelpers<ClassExportData>()
 export const CLASS_EXPORT_COLUMNS: ExportColumn<ClassExportData>[] = [
   text("name", "Class Name", "اسم الفصل"),
   text("code", "Class Code", "رمز الفصل"),
-  text("subjectName", "Subject", "المادة"),
+  text("name", "Subject", "المادة"),
   text("teacherName", "Teacher", "المعلم"),
   text("termName", "Term", "الفصل الدراسي"),
   number("capacity", "Capacity", "السعة"),
@@ -53,7 +53,7 @@ export const CLASS_EXPORT_COLUMNS: ExportColumn<ClassExportData>[] = [
 
 export const CLASS_EXPORT_COLUMNS_COMPACT: ExportColumn<ClassExportData>[] = [
   text("name", "Class Name", "اسم الفصل"),
-  text("subjectName", "Subject", "المادة"),
+  text("name", "Subject", "المادة"),
   text("teacherName", "Teacher", "المعلم"),
   number("studentCount", "Students", "عدد الطلاب"),
 ]

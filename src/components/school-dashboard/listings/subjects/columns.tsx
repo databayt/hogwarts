@@ -22,9 +22,8 @@ import { DataTableColumnHeader } from "@/components/table/data-table-column-head
 
 export type SubjectRow = {
   id: string
-  subjectName: string
-  lang: string
-  departmentName: string
+  name: string
+  department: string
   createdAt: string
 }
 
@@ -35,7 +34,7 @@ export function getLocalizedSubjectName(
   row: SubjectRow,
   locale: Locale
 ): string {
-  return row.subjectName || ""
+  return row.name || ""
 }
 
 /**
@@ -45,7 +44,7 @@ export function getLocalizedDepartmentName(
   row: SubjectRow,
   locale: Locale
 ): string {
-  return row.departmentName || ""
+  return row.department || ""
 }
 
 export interface SubjectColumnCallbacks {
@@ -69,31 +68,31 @@ export const getSubjectColumns = (
 
   return [
     {
-      accessorKey: "subjectName",
+      accessorKey: "name",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t.subject} />
       ),
       meta: { label: t.subject, variant: "text" },
-      id: "subjectName",
+      id: "name",
       cell: ({ row }) => {
         const displayName = lang
           ? getLocalizedSubjectName(row.original, lang)
-          : row.original.subjectName
+          : row.original.name
         return <span>{displayName}</span>
       },
       enableColumnFilter: true,
     },
     {
-      accessorKey: "departmentName",
+      accessorKey: "department",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t.department} />
       ),
       meta: { label: t.department, variant: "text" },
-      id: "departmentName",
+      id: "department",
       cell: ({ row }) => {
         const displayName = lang
           ? getLocalizedDepartmentName(row.original, lang)
-          : row.original.departmentName
+          : row.original.department
         return <span>{displayName}</span>
       },
       enableColumnFilter: true,

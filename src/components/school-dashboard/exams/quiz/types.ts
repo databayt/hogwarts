@@ -9,7 +9,7 @@ export interface QuizItem {
   totalMarks: number | null
   totalQuestions: number | null
   usageCount: number
-  subjectName: string
+  name: string
   subjectSlug: string
   subjectColor: string | null
   chapterName: string | null
@@ -18,7 +18,7 @@ export interface QuizItem {
 
 export interface QuizQuestionStats {
   catalogSubjectId: string
-  subjectName: string
+  name: string
   totalQuestions: number
   byDifficulty: Record<string, number>
   byType: Record<string, number>

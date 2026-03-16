@@ -557,8 +557,7 @@ export async function getTeacher(input: {
             subject: {
               select: {
                 id: true,
-                subjectName: true,
-                lang: true,
+                name: true,
               },
             },
           },
@@ -667,7 +666,7 @@ export async function getTeacherWorkload(input: {
           ...(termId ? { timetable: { termId } } : {}),
         },
         include: {
-          subject: { select: { subjectName: true } },
+          subject: { select: { name: true } },
           class: { select: { className: true } },
           period: { select: { periodNumber: true, dayOfWeek: true } },
         },
@@ -699,7 +698,7 @@ export async function getTeacherWorkload(input: {
     const schedule = timetableSlots.map((slot: any) => ({
       day: slot.period?.dayOfWeek || 0,
       period: slot.period?.periodNumber || 0,
-      subject: slot.subject?.subjectName || "Unknown",
+      subject: slot.subject?.name || "Unknown",
       className: slot.class?.className || "Unknown",
     }))
 
@@ -1021,32 +1020,17 @@ export async function getSubjectsForExpertise(): Promise<
       return { success: false, error: "Unauthorized to read teachers" }
     }
 
-    // Fetch all subjects with their departments
-    const subjectModel = getModelOrThrow("subject")
-    const subjects = await subjectModel.findMany({
-      where: { schoolId },
-      include: {
-        department: {
-          select: {
-            id: true,
-            departmentName: true,
-            lang: true,
-          },
-        },
-      },
-      orderBy: [
-        { department: { departmentName: "asc" } },
-        { subjectName: "asc" },
-      ],
-    })
+    // Fetch all subjects from catalog via school selections
+    const { getSchoolSubjects } = await import("@/lib/school-subjects")
+    const catalogSubjects = await getSchoolSubjects(schoolId)
 
     // Map subjects to a flat list
-    const mappedSubjects = subjects.map((s: any) => ({
+    const mappedSubjects = catalogSubjects.map((s) => ({
       id: s.id,
-      name: s.subjectName,
-      lang: s.lang || "ar",
-      departmentId: s.departmentId,
-      departmentName: s.department?.departmentName || "Unknown",
+      name: s.name,
+      lang: "ar",
+      departmentId: s.department || "unknown",
+      departmentName: s.department || "Unknown",
     }))
 
     // Group subjects by department name

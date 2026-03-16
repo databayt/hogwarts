@@ -48,7 +48,7 @@ export function MinimalHeader({ exam, theme }: MinimalHeaderProps) {
       <Text style={styles.title}>{exam.title}</Text>
       <View style={styles.meta}>
         <Text style={styles.metaText}>
-          {exam.subject.subjectName} - {exam.class.name}
+          {exam.subject.name} - {exam.class.name}
         </Text>
         <Text style={styles.metaText}>
           {theme.isRTL ? `${exam.duration} دقيقة` : `${exam.duration} min`}

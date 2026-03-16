@@ -131,14 +131,14 @@ const SUBJECT_KEYWORDS: Record<string, string[]> = {
  * Get the image path for a subject based on its name.
  * Uses fuzzy matching with keywords to find the best match.
  *
- * @param subjectName - The name of the subject (English or Arabic)
+ * @param name - The name of the subject (English or Arabic)
  * @returns The path to the subject's image
  */
-export function getSubjectImage(subjectName: string): string {
-  if (!subjectName) return DEFAULT_SUBJECT_IMAGE
+export function getSubjectImage(name: string): string {
+  if (!name) return DEFAULT_SUBJECT_IMAGE
 
   // Normalize: lowercase and create slug
-  const nameLower = subjectName.toLowerCase().trim()
+  const nameLower = name.toLowerCase().trim()
   const slug = nameLower.replace(/\s+/g, "-")
 
   // Direct match by slug
@@ -173,7 +173,7 @@ export function getSubjectImage(subjectName: string): string {
  * Get a random background color for subjects without images.
  * Used as fallback for the card background.
  */
-export function getSubjectColor(subjectName: string): string {
+export function getSubjectColor(name: string): string {
   const colors = [
     "bg-blue-100",
     "bg-green-100",
@@ -187,8 +187,8 @@ export function getSubjectColor(subjectName: string): string {
 
   // Generate consistent color based on subject name
   let hash = 0
-  for (let i = 0; i < subjectName.length; i++) {
-    hash = subjectName.charCodeAt(i) + ((hash << 5) - hash)
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash)
   }
 
   return colors[Math.abs(hash) % colors.length]

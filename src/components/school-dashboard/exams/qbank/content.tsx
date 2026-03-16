@@ -11,12 +11,11 @@ import type {
 } from "@prisma/client"
 import { SearchParams } from "nuqs/server"
 
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
+import { getSchoolSubjectOptions } from "@/lib/school-subjects"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import type { SupportedLanguage } from "@/components/translation/types"
 
 import type { QuestionBankRow } from "./columns"
 import { questionBankSearchParams } from "./list-params"
@@ -140,22 +139,18 @@ export default async function QuestionBankContent({
 
   if (schoolId) {
     // Fetch subjects for filter dropdown (scoped for teacher/student/guardian)
-    const rawSubjects = await db.subject.findMany({
-      where: {
-        schoolId,
-        ...(enrolledSubjectIds ? { id: { in: enrolledSubjectIds } } : {}),
-      },
-      select: { id: true, subjectName: true },
-      orderBy: { subjectName: "asc" },
-    })
+    const allSubjects = await getSchoolSubjectOptions(schoolId)
+    const rawSubjects = enrolledSubjectIds
+      ? allSubjects.filter((s) => enrolledSubjectIds.includes(s.id))
+      : allSubjects
     // Table filter uses subject name as value (matches row data)
     subjects = rawSubjects.map((s) => ({
-      label: s.subjectName || s.id,
-      value: s.subjectName || s.id,
+      label: s.name || s.id,
+      value: s.name || s.id,
     }))
     // Form uses subject ID as value (for subjectId field)
     subjectOptions = rawSubjects.map((s) => ({
-      label: s.subjectName || s.id,
+      label: s.name || s.id,
       value: s.id,
     }))
 
@@ -206,8 +201,7 @@ export default async function QuestionBankContent({
             subject: {
               select: {
                 id: true,
-                subjectName: true,
-                lang: true,
+                name: true,
               },
             },
             analytics: {
@@ -224,40 +218,31 @@ export default async function QuestionBankContent({
       ])
 
       // CRITICAL FIX: Safe date serialization - handle null/undefined dates
-      data = await Promise.all(
-        rows.map(async (q) => ({
-          id: q.id,
-          questionText: q.questionText,
-          questionType: q.questionType,
-          difficulty: q.difficulty,
-          bloomLevel: q.bloomLevel,
-          subjectName: q.subject?.subjectName
-            ? await getDisplayText(
-                q.subject.subjectName,
-                (q.subject.lang || "ar") as SupportedLanguage,
-                lang,
-                schoolId!
-              )
-            : "Unknown",
-          points: Number(q.points),
-          source: q.source,
-          timesUsed: q.analytics?.timesUsed || 0,
-          successRate: q.analytics?.successRate
-            ? Number(q.analytics.successRate)
-            : null,
-          avgScore: q.analytics?.avgScore ? Number(q.analytics.avgScore) : null,
-          qualityFlags: computeQualityFlags(
-            q.analytics?.successRate ? Number(q.analytics.successRate) : null,
-            q.analytics?.avgScore ? Number(q.analytics.avgScore) : null,
-            q.analytics?.timesUsed || 0,
-            q.difficulty,
-            q.analytics?.perceivedDifficulty || null
-          ),
-          createdAt: q.createdAt
-            ? new Date(q.createdAt).toISOString()
-            : new Date().toISOString(),
-        }))
-      )
+      data = rows.map((q) => ({
+        id: q.id,
+        questionText: q.questionText,
+        questionType: q.questionType,
+        difficulty: q.difficulty,
+        bloomLevel: q.bloomLevel,
+        subjectName: q.subject?.name ?? "Unknown",
+        points: Number(q.points),
+        source: q.source,
+        timesUsed: q.analytics?.timesUsed || 0,
+        successRate: q.analytics?.successRate
+          ? Number(q.analytics.successRate)
+          : null,
+        avgScore: q.analytics?.avgScore ? Number(q.analytics.avgScore) : null,
+        qualityFlags: computeQualityFlags(
+          q.analytics?.successRate ? Number(q.analytics.successRate) : null,
+          q.analytics?.avgScore ? Number(q.analytics.avgScore) : null,
+          q.analytics?.timesUsed || 0,
+          q.difficulty,
+          q.analytics?.perceivedDifficulty || null
+        ),
+        createdAt: q.createdAt
+          ? new Date(q.createdAt).toISOString()
+          : new Date().toISOString(),
+      }))
       total = count
     } catch (error) {
       // Log error for debugging but don't crash the page

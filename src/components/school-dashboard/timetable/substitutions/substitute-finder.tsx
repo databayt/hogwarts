@@ -45,7 +45,7 @@ interface SubstituteFinderProps {
   periodId: string
   periodName: string
   className?: string
-  subjectName?: string
+  name?: string
   onSuccess: () => void
   dictionary?: {
     substitutions?: {
@@ -76,7 +76,7 @@ export function SubstituteFinder({
   periodId,
   periodName,
   className,
-  subjectName,
+  name,
   onSuccess,
   dictionary,
 }: SubstituteFinderProps) {
@@ -165,7 +165,7 @@ export function SubstituteFinder({
           <DialogDescription>
             {t.findSubstituteDescription ||
               `Select a substitute for ${periodName}${
-                subjectName ? ` - ${subjectName}` : ""
+                name ? ` - ${name}` : ""
               }${className ? ` (${className})` : ""}`}
           </DialogDescription>
         </DialogHeader>

@@ -68,23 +68,40 @@ async function buildSubjectTeacherMap(
     teacherDeptMap.set(td.teacherId, td.departmentId)
   }
 
-  // Get subject department assignments
-  const subjects = await prisma.subject.findMany({
+  // Get department names for mapping
+  const departments = await prisma.department.findMany({
     where: { schoolId },
-    select: { id: true, departmentId: true },
+    select: { id: true, departmentName: true },
+  })
+  const deptNameById = new Map(departments.map((d) => [d.id, d.departmentName]))
+
+  // Get CatalogSubject department strings for subject→department matching
+  // Class.subjectId now points to CatalogSubject
+  const classes = await prisma.class.findMany({
+    where: { schoolId },
+    select: { subjectId: true },
+  })
+  const subjectIds = [...new Set(classes.map((c) => c.subjectId))]
+
+  const catalogSubjects = await prisma.catalogSubject.findMany({
+    where: { id: { in: subjectIds } },
+    select: { id: true, department: true },
   })
 
-  const subjectDeptMap = new Map<string, string>()
-  for (const s of subjects) {
-    if (s.departmentId) subjectDeptMap.set(s.id, s.departmentId)
-  }
-
-  // Build subjectId → matching teachers
+  // Build subjectId → matching teachers by department name
   const result = new Map<string, TeacherRef[]>()
-  for (const [subjectId, deptId] of subjectDeptMap) {
-    const matching = teachers.filter((t) => teacherDeptMap.get(t.id) === deptId)
+  for (const cs of catalogSubjects) {
+    if (!cs.department) continue
+    // Find departments whose name matches the catalog subject's department string
+    const matchingDeptIds = departments
+      .filter((d) => d.departmentName === cs.department)
+      .map((d) => d.id)
+    const matching = teachers.filter((t) => {
+      const teacherDeptId = teacherDeptMap.get(t.id)
+      return teacherDeptId && matchingDeptIds.includes(teacherDeptId)
+    })
     if (matching.length > 0) {
-      result.set(subjectId, matching)
+      result.set(cs.id, matching)
     }
   }
 
@@ -106,8 +123,8 @@ function isLabClassroom(name: string): boolean {
 /**
  * Check if a subject name suggests it needs a lab
  */
-function needsLab(subjectName: string): boolean {
-  return LAB_SUBJECTS.some((kw) => subjectName.includes(kw))
+function needsLab(name: string): boolean {
+  return LAB_SUBJECTS.some((kw) => name.includes(kw))
 }
 
 // ============================================================================
@@ -149,14 +166,15 @@ export async function seedTimetable(
     teachers
   )
 
-  // Get subject names for lab detection
-  const subjectRecords = await prisma.subject.findMany({
-    where: { schoolId },
-    select: { id: true, subjectName: true },
+  // Get subject names for lab detection (from CatalogSubject)
+  const classSubjectIds = [...new Set(classes.map((c) => c.subjectId))]
+  const nameRecords = await prisma.catalogSubject.findMany({
+    where: { id: { in: classSubjectIds } },
+    select: { id: true, name: true },
   })
-  const subjectNameMap = new Map<string, string>()
-  for (const s of subjectRecords) {
-    subjectNameMap.set(s.id, s.subjectName)
+  const nameMap = new Map<string, string>()
+  for (const s of nameRecords) {
+    nameMap.set(s.id, s.name)
   }
 
   // Occupancy tracking: "day-period" → Set of occupied teacherIds/classroomIds
@@ -220,8 +238,8 @@ export async function seedTimetable(
   }> = []
 
   for (const classInfo of classes) {
-    const subjectName = subjectNameMap.get(classInfo.subjectId) || ""
-    const isLabSubject = needsLab(subjectName)
+    const name = nameMap.get(classInfo.subjectId) || ""
+    const isLabSubject = needsLab(name)
 
     // Find a teacher for this class's subject
     const availableTeachers =

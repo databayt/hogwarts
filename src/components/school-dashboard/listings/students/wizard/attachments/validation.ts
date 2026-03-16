@@ -4,12 +4,12 @@
 import { z } from "zod"
 
 export const attachmentsSchema = z.object({
-  profilePhotoUrl: z.string().optional().default(""),
-  degreeUrl: z.string().optional().default(""),
-  transcriptUrl: z.string().optional().default(""),
-  idUrl: z.string().optional().default(""),
-  cvUrl: z.string().optional().default(""),
-  otherUrl: z.string().optional().default(""),
+  profilePhotoUrl: z.string().nullable().optional().default(""),
+  degreeUrl: z.string().nullable().optional().default(""),
+  transcriptUrl: z.string().nullable().optional().default(""),
+  idUrl: z.string().nullable().optional().default(""),
+  resumeUrl: z.string().nullable().optional().default(""),
+  otherUrl: z.string().nullable().optional().default(""),
 })
 
 export type AttachmentsFormData = z.infer<typeof attachmentsSchema>

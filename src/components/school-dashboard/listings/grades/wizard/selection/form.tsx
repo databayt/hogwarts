@@ -50,7 +50,7 @@ interface ExamOption {
 
 interface SubjectOption {
   id: string
-  subjectName: string
+  name: string
 }
 
 interface SelectionFormProps {
@@ -182,7 +182,7 @@ export const SelectionForm = forwardRef<WizardFormRef, SelectionFormProps>(
     }))
 
     const subjectOptions = subjects.map((s) => ({
-      label: s.subjectName,
+      label: s.name,
       value: s.id,
     }))
 

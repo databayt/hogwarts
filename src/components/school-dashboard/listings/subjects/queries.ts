@@ -3,17 +3,17 @@
 
 /**
  * Query builders for Subjects module
- * Pattern follows grades module for consistency
+ *
+ * Since the Subject model has been removed, all queries now go through
+ * SchoolSubjectSelection (bridge) → CatalogSubject.
  *
  * Centralizes query logic for:
  * - Filtering, sorting, pagination
- * - Select objects (list vs detail)
  * - Multi-tenant safety (schoolId)
  */
 
-import { Prisma } from "@prisma/client"
-
 import { db } from "@/lib/db"
+import { getSchoolSubjects } from "@/lib/school-subjects"
 
 // ============================================================================
 // Types
@@ -21,7 +21,7 @@ import { db } from "@/lib/db"
 
 export type SubjectListFilters = {
   search?: string
-  departmentId?: string
+  department?: string
 }
 
 export type PaginationParams = {
@@ -40,149 +40,72 @@ export type SubjectQueryParams = SubjectListFilters &
   }
 
 // ============================================================================
-// Select Objects
-// ============================================================================
-
-/** Minimal fields for list display */
-export const subjectListSelect = {
-  id: true,
-  subjectName: true,
-  createdAt: true,
-  department: {
-    select: {
-      id: true,
-      departmentName: true,
-    },
-  },
-  _count: {
-    select: {
-      classes: true,
-    },
-  },
-} as const
-
-/** Full fields for detail/edit */
-export const subjectDetailSelect = {
-  id: true,
-  schoolId: true,
-  subjectName: true,
-  departmentId: true,
-  createdAt: true,
-  updatedAt: true,
-  department: {
-    select: {
-      id: true,
-      departmentName: true,
-    },
-  },
-  classes: {
-    select: {
-      id: true,
-      name: true,
-      courseCode: true,
-      teacher: {
-        select: {
-          id: true,
-          givenName: true,
-          surname: true,
-        },
-      },
-    },
-  },
-} as const
-
-// ============================================================================
-// Query Builders
-// ============================================================================
-
-/**
- * Build where clause for subject queries
- * @param schoolId - School ID for multi-tenant filtering (REQUIRED)
- * @param filters - Additional filters
- */
-export function buildSubjectWhere(
-  schoolId: string,
-  filters: SubjectListFilters = {}
-): Prisma.SubjectWhereInput {
-  const where: Prisma.SubjectWhereInput = { schoolId }
-
-  // Search by name
-  if (filters.search) {
-    where.subjectName = {
-      contains: filters.search,
-      mode: Prisma.QueryMode.insensitive,
-    }
-  }
-
-  // Department filter
-  if (filters.departmentId) {
-    where.departmentId = filters.departmentId
-  }
-
-  return where
-}
-
-/**
- * Build order by clause
- */
-export function buildSubjectOrderBy(
-  sortParams?: SortParam[]
-): Prisma.SubjectOrderByWithRelationInput[] {
-  if (sortParams?.length) {
-    return sortParams.map((s) => ({
-      [s.id]: s.desc ? Prisma.SortOrder.desc : Prisma.SortOrder.asc,
-    }))
-  }
-  return [{ subjectName: Prisma.SortOrder.asc }]
-}
-
-/**
- * Build pagination params
- */
-export function buildPagination(page: number, perPage: number) {
-  return {
-    skip: (page - 1) * perPage,
-    take: perPage,
-  }
-}
-
-// ============================================================================
 // Query Functions
 // ============================================================================
 
 /**
- * Get subjects list with filtering, sorting, pagination
+ * Get subjects list with filtering, sorting, pagination.
+ * Uses SchoolSubjectSelection → CatalogSubject.
  */
 export async function getSubjectList(
   schoolId: string,
   params: Partial<SubjectQueryParams> = {}
 ) {
-  const where = buildSubjectWhere(schoolId, params)
-  const orderBy = buildSubjectOrderBy(params.sort)
-  const { skip, take } = buildPagination(params.page ?? 1, params.perPage ?? 20)
+  const allSubjects = await getSchoolSubjects(schoolId)
 
-  const [rows, count] = await Promise.all([
-    db.subject.findMany({
-      where,
-      orderBy,
-      skip,
-      take,
-      select: subjectListSelect,
-    }),
-    db.subject.count({ where }),
-  ])
+  // Apply filters
+  let filtered = allSubjects
 
-  return { rows, count }
+  if (params.search) {
+    const searchLower = params.search.toLowerCase()
+    filtered = filtered.filter(
+      (s) =>
+        s.name.toLowerCase().includes(searchLower) ||
+        (s.department && s.department.toLowerCase().includes(searchLower))
+    )
+  }
+
+  if (params.department) {
+    filtered = filtered.filter((s) => s.department === params.department)
+  }
+
+  // Sort
+  const sortParams = params.sort
+  if (sortParams?.length) {
+    filtered.sort((a, b) => {
+      for (const s of sortParams) {
+        const key = s.id as keyof typeof a
+        const aVal = String(a[key] ?? "")
+        const bVal = String(b[key] ?? "")
+        const cmp = aVal.localeCompare(bVal)
+        if (cmp !== 0) return s.desc ? -cmp : cmp
+      }
+      return 0
+    })
+  } else {
+    filtered.sort((a, b) => a.name.localeCompare(b.name))
+  }
+
+  // Paginate
+  const page = params.page ?? 1
+  const perPage = params.perPage ?? 20
+  const skip = (page - 1) * perPage
+  const rows = filtered.slice(skip, skip + perPage)
+
+  return { rows, count: filtered.length }
 }
 
 /**
- * Get single subject by ID
+ * Get single subject by CatalogSubject ID (verified for school).
  */
 export async function getSubjectDetail(schoolId: string, id: string) {
-  return db.subject.findFirst({
-    where: { id, schoolId },
-    select: subjectDetailSelect,
+  const selection = await db.schoolSubjectSelection.findFirst({
+    where: { schoolId, catalogSubjectId: id, isActive: true },
+    include: {
+      subject: true,
+    },
   })
+  return selection?.subject ?? null
 }
 
 /**
@@ -190,16 +113,12 @@ export async function getSubjectDetail(schoolId: string, id: string) {
  */
 export async function getDepartmentSubjects(
   schoolId: string,
-  departmentId: string
+  department: string
 ) {
-  return db.subject.findMany({
-    where: {
-      schoolId,
-      departmentId,
-    },
-    orderBy: { subjectName: "asc" },
-    select: subjectListSelect,
-  })
+  const allSubjects = await getSchoolSubjects(schoolId)
+  return allSubjects
+    .filter((s) => s.department === department)
+    .sort((a, b) => a.name.localeCompare(b.name))
 }
 
 /**
@@ -209,55 +128,32 @@ export async function verifySubjectOwnership(
   schoolId: string,
   subjectIds: string[]
 ) {
-  const subjects = await db.subject.findMany({
+  const selections = await db.schoolSubjectSelection.findMany({
     where: {
-      id: { in: subjectIds },
       schoolId,
+      catalogSubjectId: { in: subjectIds },
+      isActive: true,
     },
-    select: { id: true },
+    select: { catalogSubjectId: true },
   })
-
-  return subjects.map((s) => s.id)
+  return selections.map((s) => s.catalogSubjectId)
 }
 
 /**
  * Get subject statistics for a school
- * @param schoolId - School ID
- * @returns Promise with statistics
  */
 export async function getSubjectStats(schoolId: string) {
-  const [total, subjects] = await Promise.all([
-    db.subject.count({ where: { schoolId } }),
-    db.subject.findMany({
-      where: { schoolId },
-      select: {
-        id: true,
-        subjectName: true,
-        departmentId: true,
-        _count: {
-          select: { classes: true },
-        },
-      },
-    }),
-  ])
+  const allSubjects = await getSchoolSubjects(schoolId)
 
   const byDepartment: Record<string, number> = {}
-  let withNoClasses = 0
-  let mostClassesSubject = { name: "", count: 0 }
-
-  subjects.forEach((s) => {
-    byDepartment[s.departmentId] = (byDepartment[s.departmentId] || 0) + 1
-    if (s._count.classes === 0) withNoClasses++
-    if (s._count.classes > mostClassesSubject.count) {
-      mostClassesSubject = { name: s.subjectName, count: s._count.classes }
-    }
-  })
+  for (const s of allSubjects) {
+    const dept = s.department || "Unknown"
+    byDepartment[dept] = (byDepartment[dept] || 0) + 1
+  }
 
   return {
-    total,
+    total: allSubjects.length,
     byDepartment,
-    withNoClasses,
-    mostClassesSubject,
   }
 }
 
@@ -269,11 +165,11 @@ export async function getSubjectStats(schoolId: string) {
  * Format subject display with department
  */
 export function formatSubjectWithDepartment(subject: {
-  subjectName: string
-  department?: { departmentName: string } | null
+  name: string
+  department?: string | null
 }): string {
   if (subject.department) {
-    return `${subject.subjectName} (${subject.department.departmentName})`
+    return `${subject.name} (${subject.department})`
   }
-  return subject.subjectName
+  return subject.name
 }

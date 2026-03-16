@@ -57,7 +57,7 @@ export default async function QuestionBankPage({
       subject: {
         select: {
           id: true,
-          subjectName: true,
+          name: true,
         },
       },
       rubrics: {
@@ -160,7 +160,7 @@ export default async function QuestionBankPage({
                         {question.questionText}
                       </p>
                       <div className="text-muted-foreground flex items-center gap-4 text-xs">
-                        <span>{question.subject.subjectName}</span>
+                        <span>{question.subject.name}</span>
                         <span>
                           {question.points.toString()}{" "}
                           {dict.questionBank.points}

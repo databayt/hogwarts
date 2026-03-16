@@ -39,7 +39,7 @@ export default async function TemplateDetailPage({ params }: Props) {
   const template = await db.examTemplate.findUnique({
     where: { id, schoolId },
     include: {
-      subject: { select: { subjectName: true } },
+      subject: { select: { name: true } },
     },
   })
 
@@ -54,7 +54,7 @@ export default async function TemplateDetailPage({ params }: Props) {
       <div className="flex flex-col gap-4">
         <PageHeadingSetter
           title="Template Details"
-          description={template.subject?.subjectName || ""}
+          description={template.subject?.name || ""}
         />
         <div className="flex justify-end">
           <Button asChild>
@@ -73,9 +73,7 @@ export default async function TemplateDetailPage({ params }: Props) {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-lg font-semibold">
-                {template.subject?.subjectName}
-              </p>
+              <p className="text-lg font-semibold">{template.subject?.name}</p>
             </CardContent>
           </Card>
 

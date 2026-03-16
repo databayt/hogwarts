@@ -42,7 +42,7 @@ export async function getOwnEntity(
           experiences: { where: { schoolId } },
           subjectExpertise: {
             where: { schoolId },
-            include: { subject: { select: { id: true, subjectName: true } } },
+            include: { subject: { select: { id: true, name: true } } },
           },
         },
       })

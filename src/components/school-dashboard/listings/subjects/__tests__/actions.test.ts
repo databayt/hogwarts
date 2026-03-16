@@ -3,28 +3,27 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-import { db } from "@/lib/db"
+import { getSchoolSubjects } from "@/lib/school-subjects"
 import { getTenantContext } from "@/lib/tenant-context"
 
-import {
-  createSubject,
-  deleteSubject,
-  getSubjects,
-  updateSubject,
-} from "../actions"
+import { getSubjects } from "../actions"
 
-// Mock dependencies - need all models that actions use via getModelOrThrow
+// Mock dependencies
+vi.mock("@/lib/school-subjects", () => ({
+  getSchoolSubjects: vi.fn(),
+}))
+
 vi.mock("@/lib/db", () => ({
   db: {
-    subject: {
+    schoolSubjectSelection: {
+      findMany: vi.fn(),
       create: vi.fn(),
-      update: vi.fn(),
-      updateMany: vi.fn(),
       delete: vi.fn(),
-      deleteMany: vi.fn(),
+      count: vi.fn(),
+    },
+    catalogSubject: {
       findFirst: vi.fn(),
       findMany: vi.fn(),
-      count: vi.fn(),
     },
     teacherSubjectExpertise: {
       findFirst: vi.fn(),
@@ -49,18 +48,7 @@ vi.mock("@/lib/db", () => ({
       deleteMany: vi.fn(),
       count: vi.fn(),
     },
-    $transaction: vi.fn((callback) =>
-      callback({
-        subject: {
-          create: vi.fn(),
-          updateMany: vi.fn(),
-          deleteMany: vi.fn(),
-          findFirst: vi.fn(),
-          findMany: vi.fn(),
-          count: vi.fn(),
-        },
-      })
-    ),
+    $transaction: vi.fn((callback) => callback({})),
   },
 }))
 
@@ -85,23 +73,55 @@ describe("Subject Actions", () => {
     })
   })
 
-  describe("createSubject", () => {
-    it("creates subject with schoolId for multi-tenant isolation", async () => {
-      const mockSubject = {
-        id: "subject-1",
-        subjectName: "Mathematics",
-        schoolId: mockSchoolId,
-      }
+  describe("getSubjects", () => {
+    it("fetches subjects from CatalogSubject via school-subjects lib", async () => {
+      const mockSubjects = [
+        {
+          id: "1",
+          name: "Mathematics",
+          slug: "mathematics",
+          department: "Sciences",
+          description: null,
+          imageUrl: null,
+          color: null,
+          status: "PUBLISHED",
+          sortOrder: 0,
+          country: "US",
+          curriculum: "us-k12",
+          schoolTypes: [],
+          levels: [],
+          grades: [],
+          usageCount: 0,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: "2",
+          name: "English",
+          slug: "english",
+          department: "Languages",
+          description: null,
+          imageUrl: null,
+          color: null,
+          status: "PUBLISHED",
+          sortOrder: 1,
+          country: "US",
+          curriculum: "us-k12",
+          schoolTypes: [],
+          levels: [],
+          grades: [],
+          usageCount: 0,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ]
 
-      // Mock direct db.subject.create (used via getModelOrThrow)
-      vi.mocked(db.subject.create).mockResolvedValue(mockSubject as any)
+      vi.mocked(getSchoolSubjects).mockResolvedValue(mockSubjects as any)
 
-      const result = await createSubject({
-        subjectName: "Mathematics",
-        departmentId: "dept-1",
-      })
+      const result = await getSubjects({})
 
       expect(result.success).toBe(true)
+      expect(result.data?.rows).toHaveLength(2)
     })
 
     it("returns error when not authenticated", async () => {
@@ -112,132 +132,9 @@ describe("Subject Actions", () => {
         locale: "en",
       })
 
-      const result = await createSubject({
-        subjectName: "Mathematics",
-        departmentId: "dept-1",
-      })
-
-      expect(result.success).toBe(false)
-    })
-  })
-
-  describe("updateSubject", () => {
-    it("updates subject with schoolId scope", async () => {
-      const mockSubject = {
-        id: "subject-1",
-        subjectName: "Advanced Mathematics",
-        schoolId: mockSchoolId,
-      }
-
-      // Mock subject exists
-      vi.mocked(db.subject.findFirst).mockResolvedValue(mockSubject as any)
-      // Mock update success
-      vi.mocked(db.subject.update).mockResolvedValue(mockSubject as any)
-
-      const result = await updateSubject({
-        id: "subject-1",
-        subjectName: "Advanced Mathematics",
-      })
-
-      expect(result.success).toBe(true)
-    })
-
-    it("prevents updating subject from different school", async () => {
-      // Mock subject not found in this school
-      vi.mocked(db.subject.findFirst).mockResolvedValue(null)
-
-      const result = await updateSubject({
-        id: "subject-from-other-school",
-        subjectName: "Hacked Subject",
-      })
-
-      expect(result.success).toBe(false)
-    })
-  })
-
-  describe("deleteSubject", () => {
-    it("deletes subject with schoolId scope", async () => {
-      // Mock subject exists
-      vi.mocked(db.subject.findFirst).mockResolvedValue({
-        id: "subject-1",
-        subjectName: "Mathematics",
-        schoolId: mockSchoolId,
-      } as any)
-      // Mock no dependencies
-      vi.mocked(db.teacherSubjectExpertise.count).mockResolvedValue(0)
-      vi.mocked(db.class.count).mockResolvedValue(0)
-      vi.mocked(db.exam.count).mockResolvedValue(0)
-      vi.mocked(db.questionBank.count).mockResolvedValue(0)
-      // Mock successful delete
-      vi.mocked(db.subject.delete).mockResolvedValue({
-        id: "subject-1",
-      } as any)
-
-      const result = await deleteSubject({ id: "subject-1" })
-
-      expect(result.success).toBe(true)
-    })
-
-    it("prevents deleting subject from different school", async () => {
-      // Mock subject not found in this school
-      vi.mocked(db.subject.findFirst).mockResolvedValue(null)
-
-      const result = await deleteSubject({ id: "subject-from-other-school" })
-
-      expect(result.success).toBe(false)
-    })
-  })
-
-  describe("getSubjects", () => {
-    it("fetches subjects scoped to schoolId", async () => {
-      const now = new Date()
-      const mockSubjects = [
-        {
-          id: "1",
-          subjectName: "Mathematics",
-          lang: "ar",
-          schoolId: mockSchoolId,
-          departmentId: "dept-1",
-          createdAt: now,
-          updatedAt: now,
-          department: { id: "dept-1", departmentName: "Science" },
-          _count: { teachers: 2, classes: 3 },
-        },
-        {
-          id: "2",
-          subjectName: "English",
-          lang: "ar",
-          schoolId: mockSchoolId,
-          departmentId: "dept-2",
-          createdAt: now,
-          updatedAt: now,
-          department: { id: "dept-2", departmentName: "Languages" },
-          _count: { teachers: 1, classes: 2 },
-        },
-      ]
-
-      vi.mocked(db.subject.findMany).mockResolvedValue(mockSubjects as any)
-      vi.mocked(db.subject.count).mockResolvedValue(2)
-
       const result = await getSubjects({})
 
-      expect(result.success).toBe(true)
-      expect(result.data?.rows).toHaveLength(2)
-    })
-
-    it("applies department filter with schoolId", async () => {
-      vi.mocked(db.subject.findMany).mockResolvedValue([])
-      vi.mocked(db.subject.count).mockResolvedValue(0)
-
-      await getSubjects({ departmentId: "dept-1" })
-
-      expect(db.subject.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({
-            schoolId: mockSchoolId,
-          }),
-        })
-      )
+      expect(result.success).toBe(false)
     })
   })
 })

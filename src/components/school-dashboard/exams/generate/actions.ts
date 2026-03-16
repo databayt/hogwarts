@@ -39,6 +39,7 @@ import { auth } from "@/auth"
 import type { BloomLevel, DifficultyLevel, QuestionType } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { getSchoolSubject } from "@/lib/school-subjects"
 
 import type {
   ActionResult,
@@ -249,7 +250,7 @@ export async function getQuestions(filters?: {
         subject: {
           select: {
             id: true,
-            subjectName: true,
+            name: true,
           },
         },
         analytics: true,
@@ -289,7 +290,7 @@ export async function getQuestionById(questionId: string) {
         subject: {
           select: {
             id: true,
-            subjectName: true,
+            name: true,
           },
         },
         analytics: true,
@@ -329,21 +330,15 @@ export async function createTemplate(
 
     const validated = examTemplateSchema.parse(data)
 
-    // Resolve catalog subject from school subject
-    const subject = await db.subject.findFirst({
-      where: { id: validated.subjectId, schoolId },
-      select: { catalogSubjectId: true },
-    })
-
     // Dual-write: catalog first, then school mirror
     const template = await db.$transaction(async (tx) => {
       let catalogExamTemplateId: string | undefined
 
-      // Create in catalog if subject has catalog mapping
-      if (subject?.catalogSubjectId) {
+      // Create in catalog — subjectId IS the catalogSubjectId now
+      if (validated.subjectId) {
         const catalogTemplate = await tx.catalogExamTemplate.create({
           data: {
-            catalogSubjectId: subject.catalogSubjectId,
+            catalogSubjectId: validated.subjectId,
             name: validated.name,
             description: validated.description,
             examType: "custom",
@@ -405,7 +400,7 @@ export async function getTemplates(filters?: {
         subject: {
           select: {
             id: true,
-            subjectName: true,
+            name: true,
           },
         },
         _count: {
@@ -635,7 +630,7 @@ export async function getAnalyticsDashboard() {
             analytics: true,
             subject: {
               select: {
-                subjectName: true,
+                name: true,
               },
             },
           },

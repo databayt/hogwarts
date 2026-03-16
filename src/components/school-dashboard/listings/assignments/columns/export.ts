@@ -17,7 +17,7 @@ export interface AssignmentExportData {
   title: string
   description: string | null
   className: string | null
-  subjectName: string | null
+  name: string | null
   teacherName: string | null
   dueDate: Date | null
   totalPoints: number | null
@@ -41,7 +41,7 @@ export const ASSIGNMENT_EXPORT_COLUMNS: ExportColumn<AssignmentExportData>[] = [
   text("title", "Title", "العنوان"),
   text("description", "Description", "الوصف"),
   text("className", "Class", "الفصل"),
-  text("subjectName", "Subject", "المادة"),
+  text("name", "Subject", "المادة"),
   text("teacherName", "Teacher", "المعلم"),
   date("dueDate", "Due Date", undefined, "تاريخ التسليم"),
   number("totalPoints", "Total Points", "مجموع النقاط"),

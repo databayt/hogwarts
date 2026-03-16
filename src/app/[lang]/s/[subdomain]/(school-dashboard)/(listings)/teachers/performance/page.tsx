@@ -37,7 +37,7 @@ export default async function Page({ params }: Props) {
           subjectExpertise: {
             include: {
               subject: {
-                select: { id: true, subjectName: true, lang: true },
+                select: { id: true, name: true, lang: true },
               },
             },
           },
@@ -174,7 +174,7 @@ export default async function Page({ params }: Props) {
         subjects:
           teacher.subjectExpertise?.map((se: any) => ({
             id: se.subject?.id,
-            name: se.subject?.subjectName,
+            name: se.subject?.name,
             level: se.expertiseLevel,
           })) || [],
         classes:

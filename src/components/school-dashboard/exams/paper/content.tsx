@@ -113,7 +113,7 @@ export async function Content({
             {config.generatedExam.exam.title}
           </CardTitle>
           <CardDescription>
-            {config.generatedExam.exam.subject.subjectName} -{" "}
+            {config.generatedExam.exam.subject.name} -{" "}
             {config.generatedExam.exam.class.name}
           </CardDescription>
         </CardHeader>

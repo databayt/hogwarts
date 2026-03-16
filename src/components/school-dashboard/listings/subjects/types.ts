@@ -8,19 +8,18 @@ import { subjectCreateSchema } from "./validation"
 
 export type SubjectDTO = {
   id: string
-  schoolId: string
-  departmentId: string
-  subjectName: string
-  catalogSubjectId?: string | null
-  department?: { id: string; departmentName: string } | null
+  name: string
+  department: string
+  slug: string
+  lang: string
   createdAt: Date
   updatedAt: Date
 }
 
 export type SubjectRow = {
   id: string
-  subjectName: string
-  departmentName: string
+  name: string
+  department: string
   createdAt: string
 }
 

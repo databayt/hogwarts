@@ -40,7 +40,7 @@ interface ClickViewGroup {
 }
 
 interface ClickViewEntry {
-  subjectName: string
+  name: string
   level: "elementary" | "middle" | "high"
   url: string
   groups: ClickViewGroup[]
@@ -141,27 +141,27 @@ function toGradeSubjectName(name: string, grade: number): string {
 
 /** Generate grade-specific subject description */
 function getGradeSubjectDescription(
-  subjectName: string,
+  name: string,
   grade: number,
   level: string
 ): string {
-  const baseDesc = SUBJECT_DESCRIPTIONS[subjectName] ?? ""
+  const baseDesc = SUBJECT_DESCRIPTIONS[name] ?? ""
   const levelName =
     level === "elementary"
       ? "elementary"
       : level === "middle"
         ? "middle school"
         : "high school"
-  return `Grade ${grade} ${subjectName} for ${levelName} students. ${baseDesc}`.trim()
+  return `Grade ${grade} ${name} for ${levelName} students. ${baseDesc}`.trim()
 }
 
 /** Generate chapter description */
 function getChapterDescription(
   chapterName: string,
-  subjectName: string,
+  name: string,
   grade: number
 ): string {
-  return `${chapterName} — core topics in ${subjectName} for Grade ${grade} students.`
+  return `${chapterName} — core topics in ${name} for Grade ${grade} students.`
 }
 
 /** Generate lesson description */
@@ -994,7 +994,7 @@ export async function seedClickViewCatalog(
 
   for (let i = 0; i < entries.length; i++) {
     const entry = entries[i]
-    const legacySlug = toSubjectSlug(entry.level, entry.subjectName)
+    const legacySlug = toSubjectSlug(entry.level, entry.name)
     const schoolLevel = levelToSchoolLevel(entry.level)
     const allGrades = levelToGrades(entry.level)
     const clickviewId = extractClickViewId(entry.url)
@@ -1010,7 +1010,7 @@ export async function seedClickViewCatalog(
     const scraped = scrapedLookup[legacySlug]
 
     const scrapedHex = scraped?.bgColor ? rgbToHex(scraped.bgColor) : null
-    const color = scrapedHex ?? FALLBACK_COLORS[entry.subjectName] ?? "#6366f1"
+    const color = scrapedHex ?? FALLBACK_COLORS[entry.name] ?? "#6366f1"
 
     const imageKey = illustrationExists
       ? `/${illustrationFile}`
@@ -1019,9 +1019,9 @@ export async function seedClickViewCatalog(
     // Create one CatalogSubject per grade, with chapters/lessons duplicated
     // name = "Arts" (not "Arts Grade 1") — compose display name in UI as `${name} Grade ${grades[0]}`
     for (const grade of allGrades) {
-      const gradeSlug = toGradeSubjectSlug(entry.subjectName, grade)
+      const gradeSlug = toGradeSubjectSlug(entry.name, grade)
       const gradeDesc = getGradeSubjectDescription(
-        entry.subjectName,
+        entry.name,
         grade,
         entry.level
       )
@@ -1030,7 +1030,7 @@ export async function seedClickViewCatalog(
       const subject = await prisma.catalogSubject.upsert({
         where: { slug: gradeSlug },
         update: {
-          name: entry.subjectName,
+          name: entry.name,
           description: gradeDesc,
           objectives: SLUG_OBJECTIVES[legacySlug] ?? [],
           prerequisites: SLUG_PREREQUISITES[legacySlug] ?? null,
@@ -1047,14 +1047,14 @@ export async function seedClickViewCatalog(
           sortOrder: currentSort,
         },
         create: {
-          name: entry.subjectName,
+          name: entry.name,
           slug: gradeSlug,
           description: gradeDesc,
           objectives: SLUG_OBJECTIVES[legacySlug] ?? [],
           prerequisites: SLUG_PREREQUISITES[legacySlug] ?? null,
           targetAudience: SLUG_TARGET_AUDIENCE[legacySlug] ?? null,
           lang: "en",
-          department: entry.subjectName,
+          department: entry.name,
           levels: [schoolLevel],
           grades: [grade],
           gradeRange: String(grade),
@@ -1082,7 +1082,7 @@ export async function seedClickViewCatalog(
         const firstTopicImgSrc = group.topics[0]?.imgSrc ?? null
         const chapterDesc = getChapterDescription(
           group.parent,
-          entry.subjectName,
+          entry.name,
           grade
         )
 
@@ -1166,7 +1166,7 @@ export async function seedClickViewCatalog(
     }
 
     console.log(
-      `  [${i + 1}/${entries.length}] ${entry.subjectName} (${entry.level}): ${allGrades.length} grades done`
+      `  [${i + 1}/${entries.length}] ${entry.name} (${entry.level}): ${allGrades.length} grades done`
     )
   }
 

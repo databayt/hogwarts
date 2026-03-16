@@ -41,7 +41,6 @@ async function cloneSchool() {
           },
         },
         departments: true,
-        subjects: true,
         classrooms: true,
       },
     })
@@ -71,7 +70,6 @@ async function cloneSchool() {
       console.log(`  Year Levels: ${sourceSchool.yearLevels.length}`)
       console.log(`  School Years: ${sourceSchool.schoolYears.length}`)
       console.log(`  Departments: ${sourceSchool.departments.length}`)
-      console.log(`  Subjects: ${sourceSchool.subjects.length}`)
       console.log(`  Classrooms: ${sourceSchool.classrooms.length}`)
       return
     }
@@ -139,14 +137,20 @@ async function cloneSchool() {
         })
       }
 
-      // 5. Clone subjects
-      spinner.text = "Cloning subjects..."
-      for (const subject of sourceSchool.subjects) {
-        await tx.subject.create({
+      // 5. Clone subject selections (SchoolSubjectSelection bridge to CatalogSubject)
+      spinner.text = "Cloning subject selections..."
+      const sourceSelections = await tx.schoolSubjectSelection.findMany({
+        where: { schoolId: sourceSchool.id },
+      })
+      for (const sel of sourceSelections) {
+        await tx.schoolSubjectSelection.create({
           data: {
             schoolId: targetSchool.id,
-            departmentId: subject.departmentId,
-            subjectName: subject.subjectName,
+            catalogSubjectId: sel.catalogSubjectId,
+            gradeId: sel.gradeId,
+            isRequired: sel.isRequired,
+            isActive: sel.isActive,
+            weeklyPeriods: sel.weeklyPeriods,
           },
         })
       }
@@ -187,7 +191,7 @@ async function cloneSchool() {
       `  ✓ ${sourceSchool.schoolYears.reduce((sum, sy) => sum + sy.terms.length, 0)} Terms`
     )
     console.log(`  ✓ ${sourceSchool.departments.length} Departments`)
-    console.log(`  ✓ ${sourceSchool.subjects.length} Subjects`)
+    console.log(`  ✓ Subject Selections cloned`)
     console.log(`  ✓ ${sourceSchool.classrooms.length} Classrooms`)
 
     if (options.admin) {

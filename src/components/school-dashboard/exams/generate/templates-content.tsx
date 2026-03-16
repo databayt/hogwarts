@@ -4,14 +4,13 @@
 import type { Prisma } from "@prisma/client"
 import { SearchParams } from "nuqs/server"
 
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
+import { getSchoolSubjectOptions } from "@/lib/school-subjects"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 import { Shell as PageContainer } from "@/components/table/shell"
-import type { SupportedLanguage } from "@/components/translation/types"
 
 import type { ExamTemplateRow } from "./columns"
 import { templateSearchParams } from "./list-params"
@@ -34,7 +33,7 @@ export default async function TemplatesContent({
   const { schoolId } = await getTenantContext()
   let data: ExamTemplateRow[] = []
   let total = 0
-  let subjects: { id: string; subjectName: string | null }[] = []
+  let subjects: { id: string; name: string }[] = []
 
   if (schoolId) {
     const where: Prisma.ExamTemplateWhereInput = {
@@ -74,8 +73,7 @@ export default async function TemplatesContent({
           subject: {
             select: {
               id: true,
-              subjectName: true,
-              lang: true,
+              name: true,
             },
           },
           _count: {
@@ -86,35 +84,22 @@ export default async function TemplatesContent({
         },
       }),
       db.examTemplate.count({ where }),
-      db.subject.findMany({
-        where: { schoolId },
-        select: { id: true, subjectName: true },
-        orderBy: { subjectName: "asc" },
-      }),
+      getSchoolSubjectOptions(schoolId!),
     ])
 
-    data = await Promise.all(
-      rows.map(async (t) => ({
-        id: t.id,
-        name: t.name,
-        subjectName: t.subject?.subjectName
-          ? await getDisplayText(
-              t.subject.subjectName,
-              (t.subject.lang || "ar") as SupportedLanguage,
-              lang,
-              schoolId!
-            )
-          : "Unknown",
-        duration: t.duration,
-        totalMarks: Number(t.totalMarks),
-        totalQuestions: calculateTotalQuestions(
-          t.distribution as TemplateDistribution
-        ),
-        isActive: t.isActive,
-        timesUsed: t._count.generatedExams,
-        createdAt: t.createdAt.toISOString(),
-      }))
-    )
+    data = rows.map((t) => ({
+      id: t.id,
+      name: t.name,
+      subjectName: t.subject?.name ?? "Unknown",
+      duration: t.duration,
+      totalMarks: Number(t.totalMarks),
+      totalQuestions: calculateTotalQuestions(
+        t.distribution as TemplateDistribution
+      ),
+      isActive: t.isActive,
+      timesUsed: t._count.generatedExams,
+      createdAt: t.createdAt.toISOString(),
+    }))
     total = count
     subjects = fetchedSubjects
   }

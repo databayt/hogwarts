@@ -45,7 +45,7 @@ export async function contributeExamToCatalog(
       include: {
         exam: {
           include: {
-            subject: { select: { id: true, catalogSubjectId: true } },
+            subject: { select: { id: true } },
           },
         },
         questions: {
@@ -81,7 +81,8 @@ export async function contributeExamToCatalog(
     }
 
     const { exam } = generatedExam
-    const catalogSubjectId = exam.subject.catalogSubjectId
+    // subjectId IS the catalogSubjectId now (Subject model removed)
+    const catalogSubjectId = exam.subjectId
 
     if (!catalogSubjectId) {
       return {
@@ -240,9 +241,6 @@ export async function contributeExamTemplateToCatalog(
 
     const template = await db.examTemplate.findFirst({
       where: { id: templateId, schoolId },
-      include: {
-        subject: { select: { catalogSubjectId: true } },
-      },
     })
 
     if (!template) {
@@ -257,7 +255,8 @@ export async function contributeExamTemplateToCatalog(
       }
     }
 
-    const catalogSubjectId = template.subject.catalogSubjectId
+    // subjectId IS the catalogSubjectId now (Subject model removed)
+    const catalogSubjectId = template.subjectId
     if (!catalogSubjectId) {
       return {
         success: false,

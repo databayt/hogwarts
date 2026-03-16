@@ -81,7 +81,7 @@ export const assignmentListSelect = {
       subject: {
         select: {
           id: true,
-          subjectName: true,
+          name: true,
         },
       },
     },
@@ -124,7 +124,7 @@ export const assignmentDetailSelect = {
       subject: {
         select: {
           id: true,
-          subjectName: true,
+          name: true,
         },
       },
       studentClasses: {

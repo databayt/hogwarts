@@ -38,8 +38,8 @@ export async function getTeacherAttachments(
     const idDoc = teacher.qualifications.find(
       (q) => q.qualificationType === "ID"
     )
-    const cvDoc = teacher.qualifications.find(
-      (q) => q.qualificationType === "CV"
+    const resumeDoc = teacher.qualifications.find(
+      (q) => q.qualificationType === "RESUME" || q.qualificationType === "CV"
     )
     const otherDoc = teacher.qualifications.find(
       (q) => q.qualificationType === "OTHER"
@@ -50,7 +50,7 @@ export async function getTeacherAttachments(
       data: {
         profilePhotoUrl: teacher.profilePhotoUrl ?? "",
         degreeUrl: degreeDoc?.documentUrl ?? "",
-        cvUrl: cvDoc?.documentUrl ?? "",
+        resumeUrl: resumeDoc?.documentUrl ?? "",
         idUrl: idDoc?.documentUrl ?? "",
         certificationUrl: certDoc?.documentUrl ?? "",
         otherUrl: otherDoc?.documentUrl ?? "",
@@ -105,13 +105,13 @@ export async function updateTeacherAttachments(
           dateObtained: new Date(),
         })
       }
-      if (parsed.cvUrl) {
+      if (parsed.resumeUrl) {
         qualifications.push({
           teacherId,
           schoolId,
-          qualificationType: "CV",
-          name: "CV",
-          documentUrl: parsed.cvUrl,
+          qualificationType: "RESUME",
+          name: "Resume",
+          documentUrl: parsed.resumeUrl,
           dateObtained: new Date(),
         })
       }

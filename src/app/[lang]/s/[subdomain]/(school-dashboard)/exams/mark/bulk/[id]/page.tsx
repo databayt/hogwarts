@@ -39,7 +39,7 @@ export default async function BulkMarkingPage({ params }: Props) {
     where: { id: examId, schoolId },
     include: {
       class: { select: { name: true } },
-      subject: { select: { subjectName: true } },
+      subject: { select: { name: true } },
       _count: {
         select: {
           examResults: true,
@@ -59,7 +59,7 @@ export default async function BulkMarkingPage({ params }: Props) {
       <div className="flex flex-col gap-4">
         <PageHeadingSetter
           title="Bulk Grade"
-          description={`${exam.class?.name} - ${exam.subject?.subjectName}`}
+          description={`${exam.class?.name} - ${exam.subject?.name}`}
         />
 
         <Card>

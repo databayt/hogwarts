@@ -2,8 +2,6 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useEffect, useState } from "react"
-
 import {
   FormControl,
   FormField,
@@ -12,49 +10,25 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch"
 
-import { getDepartments } from "./actions"
 import { SubjectFormStepProps } from "./types"
 
 export function InformationStep({ form, isView }: SubjectFormStepProps) {
-  const [departments, setDepartments] = useState<
-    Array<{ id: string; departmentName: string }>
-  >([])
-
-  useEffect(() => {
-    const loadDepartments = async () => {
-      try {
-        const res = await getDepartments()
-        if (res.success && res.data) {
-          setDepartments(res.data)
-        }
-      } catch (error) {
-        console.error("Failed to load departments:", error)
-      }
-    }
-    loadDepartments()
-  }, [])
-
   return (
     <div className="w-full space-y-4">
       <FormField
         control={form.control}
-        name="subjectName"
+        name="customName"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Subject Name</FormLabel>
+            <FormLabel>Custom Name (optional)</FormLabel>
             <FormControl>
               <Input
-                placeholder="Enter subject name"
+                placeholder="School-specific name override"
                 disabled={isView}
                 {...field}
+                value={field.value ?? ""}
               />
             </FormControl>
             <FormMessage />
@@ -64,28 +38,46 @@ export function InformationStep({ form, isView }: SubjectFormStepProps) {
 
       <FormField
         control={form.control}
-        name="departmentId"
+        name="isRequired"
+        render={({ field }) => (
+          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+            <div className="space-y-0.5">
+              <FormLabel>Required Subject</FormLabel>
+              <p className="text-muted-foreground text-xs">
+                Mark as core (required) or elective
+              </p>
+            </div>
+            <FormControl>
+              <Switch
+                checked={field.value ?? true}
+                onCheckedChange={field.onChange}
+                disabled={isView}
+              />
+            </FormControl>
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="weeklyPeriods"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Department</FormLabel>
-            <Select
-              onValueChange={field.onChange}
-              value={field.value}
-              disabled={isView}
-            >
-              <FormControl>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select department" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                {departments.map((dept) => (
-                  <SelectItem key={dept.id} value={dept.id}>
-                    {dept.departmentName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <FormLabel>Weekly Periods (optional)</FormLabel>
+            <FormControl>
+              <Input
+                type="number"
+                min={1}
+                placeholder="Number of periods per week"
+                disabled={isView}
+                {...field}
+                value={field.value ?? ""}
+                onChange={(e) => {
+                  const val = e.target.value
+                  field.onChange(val ? parseInt(val, 10) : undefined)
+                }}
+              />
+            </FormControl>
             <FormMessage />
           </FormItem>
         )}

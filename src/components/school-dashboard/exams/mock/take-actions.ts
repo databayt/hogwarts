@@ -25,7 +25,7 @@ export interface MockQuestionWithAnswer extends MockQuestion {
 export interface MockExamData {
   id: string
   title: string
-  subjectName: string
+  name: string
   durationMinutes: number | null
   totalMarks: number | null
   totalQuestions: number
@@ -113,7 +113,7 @@ export async function getCatalogExamForTaking(
       data: {
         id: exam.id,
         title: exam.title,
-        subjectName: exam.subject.name,
+        name: exam.subject.name,
         durationMinutes: exam.durationMinutes,
         totalMarks: exam.totalMarks,
         totalQuestions: questions.length,

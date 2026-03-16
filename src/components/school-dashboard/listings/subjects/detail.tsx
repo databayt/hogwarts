@@ -13,18 +13,15 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { SubjectHero, SubjectHeroSkeleton } from "./hero"
 import { YearSection, YearSectionSkeleton } from "./year-section"
 
-// Type for subject detail - matches the select result from actions.ts
+// Type for subject detail - matches CatalogSubject shape
 interface SubjectDetailResult {
   id: string
-  schoolId: string
-  subjectName: string
+  name: string
+  slug: string
+  department: string
   lang?: string
-  departmentId: string | null
-  department?: {
-    id: string
-    departmentName: string
-    lang?: string
-  } | null
+  createdAt: Date
+  updatedAt: Date
   classes?: {
     id: string
     name: string
@@ -36,8 +33,6 @@ interface SubjectDetailResult {
       status: string
     }[]
   }[]
-  createdAt: Date
-  updatedAt: Date
 }
 
 interface SubjectDetailContentProps {
@@ -96,11 +91,7 @@ export function SubjectDetailContent({
   return (
     <div className="space-y-6">
       {/* Hero Section */}
-      <SubjectHero
-        subjectName={data.subjectName}
-        topicsCount={totalTopics}
-        lang={lang}
-      />
+      <SubjectHero name={data.name} topicsCount={totalTopics} lang={lang} />
 
       {/* Class Sections with Topics */}
       {lessonsByClass.length > 0 ? (
@@ -111,7 +102,7 @@ export function SubjectDetailContent({
               levelName={cls.name}
               lessons={cls.lessons}
               lang={lang}
-              subjectName={data.subjectName}
+              name={data.name}
             />
           ))}
         </div>

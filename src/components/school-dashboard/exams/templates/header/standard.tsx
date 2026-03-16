@@ -178,7 +178,7 @@ export function StandardHeader({
         <View style={styles.titleSection}>
           <Text style={styles.examTitle}>{exam.title}</Text>
           <Text style={styles.examSubtitle}>
-            {exam.subject.subjectName} - {exam.class.name}
+            {exam.subject.name} - {exam.class.name}
           </Text>
           <View style={styles.examMeta}>
             {examDate && <Text style={styles.metaItem}>{examDate}</Text>}

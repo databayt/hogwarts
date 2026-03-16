@@ -114,7 +114,7 @@ export function QuizList({ quizzes, subjects, questionStats }: QuizListProps) {
                           : undefined
                       }
                     >
-                      {quiz.subjectName}
+                      {quiz.name}
                     </Badge>
                     <Badge variant="outline">
                       {QUIZ_TYPE_LABELS[quiz.examType] ?? quiz.examType}
@@ -176,9 +176,7 @@ export function QuizList({ quizzes, subjects, questionStats }: QuizListProps) {
                 <Card key={stat.catalogSubjectId}>
                   <CardContent className="pt-4">
                     <div className="mb-2 flex items-center justify-between">
-                      <span className="text-sm font-medium">
-                        {stat.subjectName}
-                      </span>
+                      <span className="text-sm font-medium">{stat.name}</span>
                       <span className="text-muted-foreground text-sm">
                         {stat.totalQuestions} questions
                       </span>

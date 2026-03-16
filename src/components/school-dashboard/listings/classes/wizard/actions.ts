@@ -25,7 +25,7 @@ export async function getClassForWizard(
     const cls = await db.class.findFirst({
       where: { id: classId, schoolId },
       include: {
-        subject: { select: { id: true, subjectName: true } },
+        subject: { select: { id: true, name: true } },
         teacher: { select: { id: true, givenName: true, surname: true } },
         term: {
           select: {
@@ -101,7 +101,7 @@ export async function createDraftClass(): Promise<
 
     // Get first available subject, teacher, term, period, and classroom as placeholders
     const [subject, teacher, term, period, classroom] = await Promise.all([
-      db.subject.findFirst({ where: { schoolId }, select: { id: true } }),
+      db.catalogSubject.findFirst({ select: { id: true } }),
       db.teacher.findFirst({ where: { schoolId }, select: { id: true } }),
       db.term.findFirst({ where: { schoolId }, select: { id: true } }),
       db.period.findFirst({ where: { schoolId }, select: { id: true } }),
@@ -271,15 +271,12 @@ export async function getSubjectsForClass(): Promise<
     const { schoolId } = await getTenantContext()
     if (!schoolId) return { success: false, error: "Missing school context" }
 
-    const subjects = await db.subject.findMany({
-      where: { schoolId },
-      select: { id: true, subjectName: true },
-      orderBy: { subjectName: "asc" },
-    })
+    const { getSchoolSubjectOptions } = await import("@/lib/school-subjects")
+    const subjects = await getSchoolSubjectOptions(schoolId)
 
     return {
       success: true,
-      data: subjects.map((s) => ({ label: s.subjectName, value: s.id })),
+      data: subjects.map((s) => ({ label: s.name, value: s.id })),
     }
   } catch (error) {
     return {

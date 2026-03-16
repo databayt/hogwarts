@@ -10,7 +10,7 @@ import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
 export interface SubjectTrend {
-  subjectName: string
+  name: string
   subjectId: string
   dataPoints: { date: string; percentage: number }[]
   average: number
@@ -100,7 +100,7 @@ export async function getStudentProgress(options?: {
       exam: {
         select: {
           subjectId: true,
-          subject: { select: { subjectName: true } },
+          subject: { select: { name: true } },
         },
       },
     },
@@ -126,7 +126,7 @@ export async function getStudentProgress(options?: {
   >()
   for (const r of results) {
     const sid = r.exam.subjectId
-    const name = r.exam.subject.subjectName || "Unknown"
+    const name = r.exam.subject.name || "Unknown"
     if (!subjectMap.has(sid)) {
       subjectMap.set(sid, { name, points: [] })
     }
@@ -155,7 +155,7 @@ export async function getStudentProgress(options?: {
         : "stable"
 
     subjectTrends.push({
-      subjectName: data.name,
+      name: data.name,
       subjectId: sid,
       dataPoints: data.points,
       average: Math.round(avg * 10) / 10,

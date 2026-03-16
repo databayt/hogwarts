@@ -65,7 +65,7 @@ export type KnownModelName =
   | "school"
   | "class"
   | "classTeacher"
-  | "subject"
+  | "catalogSubject"
   | "attendance"
   | "assignment"
   | "announcement"

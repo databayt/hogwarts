@@ -68,7 +68,7 @@ export default async function ResultDetailContent({
       <div className="flex flex-1 flex-col gap-6">
         <PageHeadingSetter
           title={summary?.examTitle || r?.labels?.examResults || "Exam Results"}
-          description={`${summary?.className || ""} • ${summary?.subjectName || ""} • ${summary?.examDate ? formatDate(summary.examDate, lang) : ""}`}
+          description={`${summary?.className || ""} • ${summary?.name || ""} • ${summary?.examDate ? formatDate(summary.examDate, lang) : ""}`}
         />
         <div className="flex items-center justify-between">
           <Button variant="ghost" size="sm" asChild>

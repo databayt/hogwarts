@@ -8,6 +8,7 @@ import type { Prisma } from "@prisma/client"
 
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { getSchoolSubjectOptions } from "@/lib/school-subjects"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import {
@@ -148,17 +149,16 @@ export async function createDraftTemplate(): Promise<
     }
 
     // Find the first available subject
-    const firstSubject = await db.subject.findFirst({
-      where: { schoolId },
-      select: { id: true },
-    })
+    const schoolSubjects = await getSchoolSubjectOptions(schoolId)
 
-    if (!firstSubject) {
+    if (schoolSubjects.length === 0) {
       return {
         success: false,
         error: "No subjects found. Create a subject first.",
       }
     }
+
+    const firstSubject = schoolSubjects[0]
 
     const template = await db.examTemplate.create({
       data: {

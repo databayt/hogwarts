@@ -49,7 +49,7 @@ interface Exam {
   endTime: string
   duration: number
   class: { name: string }
-  subject: { subjectName: string }
+  subject: { name: string }
   examType: string
   status: "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED"
   totalMarks: number
@@ -259,7 +259,7 @@ export function ExamCalendar({
                                   ] || "bg-gray-100"
                                 )}
                               >
-                                {exam.subject.subjectName}
+                                {exam.subject.name}
                               </div>
                             ))}
 
@@ -285,7 +285,7 @@ export function ExamCalendar({
                           <div>
                             {dayExams.map((exam) => (
                               <div key={exam.id} className="text-xs">
-                                {exam.startTime} - {exam.subject.subjectName}
+                                {exam.startTime} - {exam.subject.name}
                               </div>
                             ))}
                           </div>
@@ -363,7 +363,7 @@ export function ExamCalendar({
                               </div>
                               <div className="flex items-center gap-1">
                                 <BookOpen className="h-3 w-3" />
-                                {exam.subject.subjectName}
+                                {exam.subject.name}
                               </div>
                               <div className="flex items-center gap-1">
                                 <Users className="h-3 w-3" />

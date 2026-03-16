@@ -100,18 +100,14 @@ export async function submitQuestion(data: {
         },
       })
 
-      // 2. Auto-mirror to school's QuestionBank if subject is linked
-      const subject = await tx.subject.findFirst({
-        where: { schoolId, catalogSubjectId: data.catalogSubjectId },
-      })
-
-      if (subject) {
+      // 2. Auto-mirror to school's QuestionBank
+      // Class.subjectId now points directly to CatalogSubject
+      {
         const mirror = await tx.questionBank.create({
           data: {
             schoolId,
-            subjectId: subject.id,
+            subjectId: data.catalogSubjectId,
             catalogQuestionId: question.id,
-            catalogSubjectId: data.catalogSubjectId,
             catalogChapterId: data.catalogChapterId ?? null,
             catalogLessonId: data.catalogLessonId ?? null,
             questionText: data.questionText,

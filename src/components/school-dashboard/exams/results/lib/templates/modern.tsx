@@ -334,7 +334,7 @@ export function ModernTemplate({ data }: ModernTemplateProps) {
               </View>
               <View style={styles.infoItem}>
                 <Text style={styles.infoLabel}>Subject</Text>
-                <Text style={styles.infoValue}>{exam.subjectName}</Text>
+                <Text style={styles.infoValue}>{exam.name}</Text>
               </View>
               <View style={styles.infoItem}>
                 <Text style={styles.infoLabel}>Examination</Text>

@@ -206,7 +206,7 @@ export function BookletCoverPage({
       {/* Exam Title */}
       <Text style={styles.examTitle}>{exam.title}</Text>
       <Text style={styles.examSubtitle}>
-        {exam.subject.subjectName} - {exam.class.name}
+        {exam.subject.name} - {exam.class.name}
       </Text>
 
       {/* Metadata */}

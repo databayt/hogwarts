@@ -43,7 +43,7 @@ import { examTemplateSchema } from "./validation"
 
 interface SubjectOption {
   id: string
-  subjectName: string | null
+  name: string | null
 }
 
 interface ExamTemplateFormProps {
@@ -221,7 +221,7 @@ export function ExamTemplateForm({
                   <SelectContent>
                     {subjects.map((s) => (
                       <SelectItem key={s.id} value={s.id}>
-                        {s.subjectName || s.id}
+                        {s.name || s.id}
                       </SelectItem>
                     ))}
                   </SelectContent>

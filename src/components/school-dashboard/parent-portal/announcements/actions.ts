@@ -119,7 +119,7 @@ export async function getParentAnnouncements(displayLang?: "ar" | "en") {
           ? {
               id: announcement.class.id,
               name: announcement.class.name,
-              subject: announcement.class.subject.subjectName,
+              subject: announcement.class.subject.name,
               teacher: announcement.class.teacher
                 ? `${announcement.class.teacher.givenName} ${announcement.class.teacher.surname}`
                 : "N/A",

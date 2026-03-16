@@ -68,7 +68,7 @@ export function ParentProgressContent({
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <p className="truncate text-sm font-medium">
-                          {enrollment.subjectName}
+                          {enrollment.name}
                         </p>
                         <Badge variant="outline" className="shrink-0">
                           {enrollment.completedLessons}/

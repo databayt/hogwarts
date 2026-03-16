@@ -291,8 +291,8 @@ export function AnswerSheet({
   const labels = {
     title: isRTL ? "ورقة الإجابة" : "ANSWER SHEET",
     subtitle: isRTL
-      ? `${exam.title} - ${exam.subject.subjectName}`
-      : `${exam.title} - ${exam.subject.subjectName}`,
+      ? `${exam.title} - ${exam.subject.name}`
+      : `${exam.title} - ${exam.subject.name}`,
     name: isRTL ? "الاسم:" : "Name:",
     id: isRTL ? "الرقم:" : "ID:",
     class: isRTL ? "الفصل:" : "Class:",

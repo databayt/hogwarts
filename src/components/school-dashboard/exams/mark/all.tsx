@@ -35,7 +35,7 @@ interface Question {
   difficulty: DifficultyLevel
   bloomLevel: BloomLevel
   points: number
-  subject: { subjectName: string }
+  subject: { name: string }
   tags?: string[]
   rubrics?: Rubric[]
   _count?: {
@@ -67,7 +67,7 @@ export function AllQuestions({
 
   // Extract unique subjects
   const subjects = useMemo(() => {
-    const uniqueSubjects = new Set(questions.map((q) => q.subject.subjectName))
+    const uniqueSubjects = new Set(questions.map((q) => q.subject.name))
     return Array.from(uniqueSubjects)
   }, [questions])
 
@@ -98,7 +98,7 @@ export function AllQuestions({
       }
 
       // Subject filter
-      if (subjectFilter !== "ALL" && q.subject.subjectName !== subjectFilter) {
+      if (subjectFilter !== "ALL" && q.subject.name !== subjectFilter) {
         return false
       }
 
@@ -294,7 +294,7 @@ export function AllQuestions({
               difficulty={question.difficulty}
               bloomLevel={question.bloomLevel}
               points={Number(question.points)}
-              subjectName={question.subject.subjectName}
+              name={question.subject.name}
               tags={question.tags}
               usageCount={question._count?.examQuestions}
               hasRubric={question.rubrics ? question.rubrics.length > 0 : false}

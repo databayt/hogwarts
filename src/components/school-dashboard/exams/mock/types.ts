@@ -9,7 +9,7 @@ export interface MockExamItem {
   totalMarks: number | null
   totalQuestions: number | null
   usageCount: number
-  subjectName: string
+  name: string
   subjectSlug: string
   subjectColor: string | null
   chapterName: string | null
@@ -20,7 +20,7 @@ export interface SchoolMockItem {
   examId: string
   title: string
   totalQuestions: number
-  subjectName: string
+  name: string
   className: string
   templateName: string | null
   createdAt: string

@@ -51,7 +51,7 @@ export default async function ClassesContent({
         include: {
           subject: {
             select: {
-              subjectName: true,
+              name: true,
               lang: true,
             },
           },
@@ -92,7 +92,7 @@ export default async function ClassesContent({
           schoolId!
         ),
         subjectName: await getDisplayText(
-          c.subject?.subjectName || "Unknown",
+          c.subject?.name || "Unknown",
           (c.subject?.lang as "ar" | "en") || "ar",
           lang,
           schoolId!

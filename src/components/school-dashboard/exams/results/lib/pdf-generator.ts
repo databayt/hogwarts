@@ -304,8 +304,8 @@ export function generatePDFMetadata(data: PDFResultData) {
   return {
     title: `${data.exam.title} - ${data.student.studentName}`,
     author: data.school.name,
-    subject: `Exam Results - ${data.exam.subjectName}`,
-    keywords: `exam, results, ${data.exam.className}, ${data.exam.subjectName}`,
+    subject: `Exam Results - ${data.exam.name}`,
+    keywords: `exam, results, ${data.exam.className}, ${data.exam.name}`,
     creator: "Hogwarts School Management System",
     producer: "Hogwarts School Management System",
     creationDate: data.metadata.generatedAt,

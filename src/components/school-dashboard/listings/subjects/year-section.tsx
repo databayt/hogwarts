@@ -25,7 +25,7 @@ interface YearSectionProps {
   /** Current locale */
   lang: Locale
   /** Subject name for image mapping */
-  subjectName: string
+  name: string
   /** Additional class names */
   className?: string
 }
@@ -43,7 +43,7 @@ export function YearSection({
   levelName,
   lessons,
   lang,
-  subjectName,
+  name,
   className,
 }: YearSectionProps) {
   const displayLevel = levelName
@@ -63,7 +63,7 @@ export function YearSection({
             title={lesson.title}
             description={lesson.description}
             lang={lang}
-            subjectName={subjectName}
+            name={name}
           />
         ))}
       </div>

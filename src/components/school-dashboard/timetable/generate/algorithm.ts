@@ -56,7 +56,7 @@ export interface ClassRequirement {
   classId: string
   className: string
   subjectId: string
-  subjectName: string
+  name: string
   hoursPerWeek: number // Required periods per week
   preferredTeacherIds: string[] // Teachers qualified for this subject
   requiresLab: boolean
@@ -282,7 +282,7 @@ function placeClassGreedy(
     }
     // Enforce allowedSubjectTypes: if set, the class's subject must match
     if (room.allowedSubjectTypes.length > 0) {
-      const subjectLower = req.subjectName.toLowerCase()
+      const subjectLower = req.name.toLowerCase()
       const isAllowed = room.allowedSubjectTypes.some(
         (t) =>
           subjectLower.includes(t.toLowerCase()) ||

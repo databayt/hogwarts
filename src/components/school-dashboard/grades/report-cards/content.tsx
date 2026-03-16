@@ -45,7 +45,7 @@ export async function ReportCardsContent() {
             },
           },
           grades: {
-            include: { subject: { select: { subjectName: true } } },
+            include: { subject: { select: { name: true } } },
           },
         },
         orderBy: { rank: "asc" },

@@ -118,7 +118,7 @@ export async function generateBatchExamPDFs(
           select: { name: true },
         },
         subject: {
-          select: { subjectName: true },
+          select: { name: true },
         },
       },
     })
@@ -312,7 +312,7 @@ async function processBatchPDFGeneration(
           title: exam.title,
           date: exam.examDate,
           className: exam.class.name,
-          subjectName: exam.subject.subjectName,
+          name: exam.subject.name,
           totalMarks: exam.totalMarks,
           passingMarks: exam.passingMarks,
         },

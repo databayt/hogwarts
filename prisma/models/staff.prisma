@@ -76,7 +76,6 @@ model Department {
   lang             String  @default("ar") // Content language
 
   school             School              @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  subjects           Subject[]
   teacherDepartments TeacherDepartment[]
   staffMembers       StaffMember[]
 
@@ -181,9 +180,9 @@ model TeacherSubjectExpertise {
   subjectId      String
   expertiseLevel String // PRIMARY, SECONDARY, CERTIFIED
 
-  teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
-  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  teacher Teacher        @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  subject CatalogSubject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  school  School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

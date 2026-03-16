@@ -24,7 +24,7 @@ export interface DepartmentTeacher {
 
 export interface DepartmentSubject {
   id: string
-  subjectName: string
+  name: string
   lang?: string
 }
 

@@ -29,7 +29,7 @@ export interface GradeWizardData {
   class: { id: string; name: string } | null
   assignment: { id: string; title: string } | null
   exam: { id: string; title: string } | null
-  subject: { id: string; subjectName: string } | null
+  subject: { id: string; name: string } | null
 }
 
 export const { Provider: GradeWizardProvider, useWizardData: useGradeWizard } =

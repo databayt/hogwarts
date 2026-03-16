@@ -194,20 +194,35 @@ async function resolveSubjects(
   prisma: PrismaClient,
   schoolId: string
 ): Promise<SubjectRef[]> {
-  const subjects = await prisma.subject.findMany({
-    where: { schoolId },
-    select: {
-      id: true,
-      subjectName: true,
-      lang: true,
-      departmentId: true,
+  // Resolve from SchoolSubjectSelection -> CatalogSubject
+  const selections = await prisma.schoolSubjectSelection.findMany({
+    where: { schoolId, isActive: true },
+    include: {
+      subject: {
+        select: { id: true, name: true, department: true },
+      },
     },
+    distinct: ["catalogSubjectId"],
   })
-  return subjects.map((s) => ({
-    id: s.id,
-    subjectName: s.subjectName,
-    lang: s.lang ?? "ar",
-    departmentId: s.departmentId ?? "",
+
+  if (selections.length > 0) {
+    return selections.map((s) => ({
+      id: s.subject.id,
+      name: s.subject.name,
+      department: s.subject.department ?? "",
+    }))
+  }
+
+  // Fallback: query CatalogSubject directly
+  const catalogSubjects = await prisma.catalogSubject.findMany({
+    where: { status: "PUBLISHED" },
+    select: { id: true, name: true, department: true },
+    orderBy: { sortOrder: "asc" },
+  })
+  return catalogSubjects.map((cs) => ({
+    id: cs.id,
+    name: cs.name,
+    department: cs.department ?? "",
   }))
 }
 

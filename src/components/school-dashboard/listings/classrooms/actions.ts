@@ -379,7 +379,7 @@ export async function getRoomTimetable(input: {
             id: true,
             name: true,
             grade: { select: { id: true, name: true } },
-            subject: { select: { id: true, subjectName: true } },
+            subject: { select: { id: true, name: true } },
           },
         },
         teacher: {
@@ -411,7 +411,7 @@ export async function getRoomTimetable(input: {
       classId: s.class.id,
       gradeName: s.class.grade?.name ?? null,
       gradeId: s.class.grade?.id ?? null,
-      subject: s.class.subject?.subjectName ?? "",
+      subject: s.class.subject?.name ?? "",
       teacher: `${s.teacher.givenName} ${s.teacher.surname}`,
       teacherId: s.teacher.id,
     })),
@@ -445,7 +445,7 @@ export async function getRoomClasses(input: { roomId: string }) {
       name: true,
       maxCapacity: true,
       grade: { select: { id: true, name: true } },
-      subject: { select: { id: true, subjectName: true } },
+      subject: { select: { id: true, name: true } },
       teacher: {
         select: {
           id: true,

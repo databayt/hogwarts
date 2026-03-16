@@ -44,13 +44,12 @@ export async function GET(
       )
     }
 
-    const subject = await db.subject.findFirst({
+    const subject = await db.catalogSubject.findFirst({
       where: {
         id: (await params).id,
-        schoolId,
       },
       select: {
-        subjectName: true,
+        name: true,
       },
     })
 
@@ -58,7 +57,7 @@ export async function GET(
       return NextResponse.json({ error: "Subject not found" }, { status: 404 })
     }
 
-    const name = subject.subjectName
+    const name = subject.name
 
     return NextResponse.json({ name })
   } catch (error) {

@@ -71,67 +71,59 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
     },
   })
 
-  // Fallback: if slug didn't match a catalog subject, check if it's a school subject ID
-  // that links to a catalog subject via catalogSubjectId
+  // Fallback: if slug didn't match a catalog subject, try looking up by ID directly
   if (!subject) {
-    const schoolSubject = await db.subject.findFirst({
+    subject = await db.catalogSubject.findUnique({
       where: { id: slug },
-      select: { catalogSubjectId: true },
-    })
-
-    if (schoolSubject?.catalogSubjectId) {
-      subject = await db.catalogSubject.findUnique({
-        where: { id: schoolSubject.catalogSubjectId },
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-          description: true,
-          department: true,
-          color: true,
-          imageKey: true,
-          thumbnailKey: true,
-          bannerUrl: true,
-          levels: true,
-          grades: true,
-          totalChapters: true,
-          totalLessons: true,
-          averageRating: true,
-          usageCount: true,
-          ratingCount: true,
-          chapters: {
-            where: { status: "PUBLISHED" },
-            orderBy: { sequenceOrder: "asc" },
-            select: {
-              id: true,
-              name: true,
-              slug: true,
-              description: true,
-              color: true,
-              imageKey: true,
-              thumbnailKey: true,
-              totalLessons: true,
-              lessons: {
-                where: { status: "PUBLISHED" },
-                orderBy: { sequenceOrder: "asc" },
-                select: {
-                  id: true,
-                  name: true,
-                  slug: true,
-                  description: true,
-                  color: true,
-                  imageKey: true,
-                  thumbnailKey: true,
-                  durationMinutes: true,
-                  videoCount: true,
-                  resourceCount: true,
-                },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        description: true,
+        department: true,
+        color: true,
+        imageKey: true,
+        thumbnailKey: true,
+        bannerUrl: true,
+        levels: true,
+        grades: true,
+        totalChapters: true,
+        totalLessons: true,
+        averageRating: true,
+        usageCount: true,
+        ratingCount: true,
+        chapters: {
+          where: { status: "PUBLISHED" },
+          orderBy: { sequenceOrder: "asc" },
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            description: true,
+            color: true,
+            imageKey: true,
+            thumbnailKey: true,
+            totalLessons: true,
+            lessons: {
+              where: { status: "PUBLISHED" },
+              orderBy: { sequenceOrder: "asc" },
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                description: true,
+                color: true,
+                imageKey: true,
+                thumbnailKey: true,
+                durationMinutes: true,
+                videoCount: true,
+                resourceCount: true,
               },
             },
           },
         },
-      })
-    }
+      },
+    })
   }
 
   if (!subject) {
@@ -338,7 +330,7 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
         data={contentSections}
         lang={lang}
         subjectColor={subject.color}
-        subjectName={subject.name}
+        name={subject.name}
         subdomain={subdomain}
         subjectSlug={subject.slug}
         catalogSubjectId={subject.id}

@@ -46,7 +46,7 @@ export async function getQuizzes(filters?: {
     totalMarks: e.totalMarks,
     totalQuestions: e.totalQuestions,
     usageCount: e.usageCount,
-    subjectName: e.subject.name,
+    name: e.subject.name,
     subjectSlug: e.subject.slug,
     subjectColor: e.subject.color,
     chapterName: e.chapter?.name ?? null,
@@ -88,7 +88,7 @@ export async function getQuizQuestionStats(
     if (!stats) {
       stats = {
         catalogSubjectId: q.catalogSubjectId,
-        subjectName: q.catalogSubject?.name ?? "Unknown",
+        name: q.catalogSubject?.name ?? "Unknown",
         totalQuestions: 0,
         byDifficulty: {},
         byType: {},

@@ -135,7 +135,7 @@ export function GridAnswerSheet({
           {theme.isRTL ? "ورقة الإجابة" : "ANSWER SHEET"}
         </Text>
         <Text style={styles.subtitle}>
-          {exam.title} - {exam.subject.subjectName}
+          {exam.title} - {exam.subject.name}
           {versionCode &&
             ` - ${theme.isRTL ? "نسخة" : "Version"} ${versionCode}`}
         </Text>

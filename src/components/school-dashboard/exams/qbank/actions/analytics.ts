@@ -211,7 +211,7 @@ export async function getAnalyticsDashboard(): Promise<
           subject: {
             select: {
               id: true,
-              subjectName: true,
+              name: true,
             },
           },
         },

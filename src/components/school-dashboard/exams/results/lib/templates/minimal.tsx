@@ -246,7 +246,7 @@ export function MinimalTemplate({ data }: MinimalTemplateProps) {
           </View>
           <View style={styles.dataRow}>
             <Text style={styles.dataLabel}>Subject:</Text>
-            <Text style={styles.dataValue}>{exam.subjectName}</Text>
+            <Text style={styles.dataValue}>{exam.name}</Text>
           </View>
           <View style={styles.dataRow}>
             <Text style={styles.dataLabel}>Class:</Text>

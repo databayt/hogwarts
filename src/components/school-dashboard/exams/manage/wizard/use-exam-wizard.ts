@@ -29,7 +29,7 @@ export interface ExamWizardData {
   lateSubmitMinutes: number
   wizardStep: string | null
   class: { id: string; name: string }
-  subject: { id: string; subjectName: string }
+  subject: { id: string; name: string }
 }
 
 export const { Provider: ExamWizardProvider, useWizardData: useExamWizard } =

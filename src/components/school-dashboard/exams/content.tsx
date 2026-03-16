@@ -46,6 +46,7 @@ import type { SearchParams } from "nuqs/server"
 
 import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
+import { getSchoolSubjectOptions } from "@/lib/school-subjects"
 import { getTenantContext } from "@/lib/tenant-context"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
@@ -132,16 +133,9 @@ export default async function ExamsContent({
   // Fetch subjects and grades for filter chips
   const [subjectOptions, gradeOptions] = schoolId
     ? await Promise.all([
-        db.subject
-          .findMany({
-            where: { schoolId },
-            select: { id: true, subjectName: true },
-            orderBy: { subjectName: "asc" },
-            take: 20,
-          })
-          .then((subjects) =>
-            subjects.map((s) => ({ id: s.id, label: s.subjectName || s.id }))
-          ),
+        getSchoolSubjectOptions(schoolId).then((subjects) =>
+          subjects.map((s) => ({ id: s.id, label: s.name || s.id }))
+        ),
         db.academicGrade
           .findMany({
             where: { schoolId },
@@ -177,7 +171,7 @@ export default async function ExamsContent({
     title: string
     examDate: Date
     duration: number
-    subject: { subjectName: string; lang: string | null }
+    subject: { name: string; lang: string | null }
     class: { name: string; lang: string | null }
   } | null = null
 
@@ -280,16 +274,16 @@ export default async function ExamsContent({
         title: true,
         examDate: true,
         duration: true,
-        subject: { select: { subjectName: true, lang: true } },
+        subject: { select: { name: true, lang: true } },
         class: { select: { name: true, lang: true } },
       },
     })
 
     // Translate nextExam relation fields
     if (nextExam) {
-      if (nextExam.subject?.subjectName) {
-        nextExam.subject.subjectName = await getDisplayText(
-          nextExam.subject.subjectName,
+      if (nextExam.subject?.name) {
+        nextExam.subject.name = await getDisplayText(
+          nextExam.subject.name,
           (nextExam.subject.lang || "ar") as SupportedLanguage,
           lang,
           schoolId!
@@ -414,7 +408,7 @@ export default async function ExamsContent({
           subtitle={nextExam?.title || d?.createExam || "Schedule an exam"}
           description={
             nextExam
-              ? `${nextExam.subject?.subjectName || ""} - ${nextExam.class?.name || ""}`
+              ? `${nextExam.subject?.name || ""} - ${nextExam.class?.name || ""}`
               : d?.createDescription || "Create a new examination"
           }
           examDetails={

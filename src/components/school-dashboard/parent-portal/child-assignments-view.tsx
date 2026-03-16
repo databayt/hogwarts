@@ -112,7 +112,7 @@ export async function ChildAssignmentsView({ studentId, lang = "ar" }: Props) {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell>{assignment.subjectName}</TableCell>
+                        <TableCell>{assignment.name}</TableCell>
                         <TableCell>{assignment.className}</TableCell>
                         <TableCell>
                           {publishDate ? formatDate(publishDate, lang) : "-"}

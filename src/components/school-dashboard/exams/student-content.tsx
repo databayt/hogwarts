@@ -77,7 +77,7 @@ export default async function StudentExamsContent({ dictionary, lang }: Props) {
         select: {
           id: true,
           subjectId: true,
-          subject: { select: { subjectName: true, lang: true } },
+          subject: { select: { name: true, lang: true } },
           name: true,
           lang: true,
         },
@@ -101,7 +101,7 @@ export default async function StudentExamsContent({ dictionary, lang }: Props) {
       },
       include: {
         class: { select: { name: true, lang: true } },
-        subject: { select: { subjectName: true, lang: true } },
+        subject: { select: { name: true, lang: true } },
       },
       orderBy: { examDate: "asc" },
       take: 10,
@@ -117,7 +117,7 @@ export default async function StudentExamsContent({ dictionary, lang }: Props) {
             title: true,
             examDate: true,
             totalMarks: true,
-            subject: { select: { subjectName: true, lang: true } },
+            subject: { select: { name: true, lang: true } },
             class: { select: { name: true, lang: true } },
           },
         },
@@ -246,9 +246,9 @@ export default async function StudentExamsContent({ dictionary, lang }: Props) {
             {await Promise.all(
               upcomingExams.map(async (exam) => {
                 const daysUntil = differenceInDays(exam.examDate, today)
-                const subjectName = exam.subject?.subjectName
+                const name = exam.subject?.name
                   ? await getDisplayText(
-                      exam.subject.subjectName,
+                      exam.subject.name,
                       (exam.subject.lang || "ar") as SupportedLanguage,
                       lang,
                       schoolId!
@@ -294,7 +294,7 @@ export default async function StudentExamsContent({ dictionary, lang }: Props) {
                         </Badge>
                       </div>
                       <CardDescription>
-                        {subjectName} - {className}
+                        {name} - {className}
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -344,9 +344,9 @@ export default async function StudentExamsContent({ dictionary, lang }: Props) {
           <div className="grid gap-3">
             {await Promise.all(
               recentResults.map(async (result) => {
-                const subjectName = result.exam.subject?.subjectName
+                const name = result.exam.subject?.name
                   ? await getDisplayText(
-                      result.exam.subject.subjectName,
+                      result.exam.subject.name,
                       (result.exam.subject.lang || "ar") as SupportedLanguage,
                       lang,
                       schoolId!
@@ -359,8 +359,7 @@ export default async function StudentExamsContent({ dictionary, lang }: Props) {
                       <div>
                         <p className="font-medium">{result.exam.title}</p>
                         <p className="text-muted-foreground text-sm">
-                          {subjectName} -{" "}
-                          {format(result.exam.examDate, "MMM d, yyyy")}
+                          {name} - {format(result.exam.examDate, "MMM d, yyyy")}
                         </p>
                       </div>
                       <div className="flex items-center gap-3">

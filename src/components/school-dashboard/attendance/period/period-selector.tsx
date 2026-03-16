@@ -35,7 +35,7 @@ interface Period {
   startTime: string
   endTime: string
   timetableId: string
-  subjectName: string | null
+  name: string | null
   teacherName: string | null
   hasAttendance: boolean
 }
@@ -192,8 +192,8 @@ export function PeriodSelector({
                     <div className="text-muted-foreground mt-0.5 text-xs">
                       {formatTime(period.startTime)} -{" "}
                       {formatTime(period.endTime)}
-                      {period.subjectName && <span className="mx-1">•</span>}
-                      {period.subjectName}
+                      {period.name && <span className="mx-1">•</span>}
+                      {period.name}
                     </div>
                   </div>
                 </div>
@@ -224,7 +224,7 @@ export function CurrentPeriodIndicator({
     periodName: string
     startTime: string
     endTime: string
-    subjectName: string | null
+    name: string | null
   } | null>(null)
   const [nextPeriod, setNextPeriod] = useState<{
     periodId: string
@@ -299,8 +299,7 @@ export function CurrentPeriodIndicator({
                 <p className="text-muted-foreground text-xs">
                   {formatTime(currentPeriod.startTime)} -{" "}
                   {formatTime(currentPeriod.endTime)}
-                  {currentPeriod.subjectName &&
-                    ` • ${currentPeriod.subjectName}`}
+                  {currentPeriod.name && ` • ${currentPeriod.name}`}
                 </p>
               </div>
             </div>

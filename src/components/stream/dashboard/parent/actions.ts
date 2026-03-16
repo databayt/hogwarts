@@ -15,7 +15,7 @@ export interface ChildProgress {
   }
   enrollments: Array<{
     id: string
-    subjectName: string
+    name: string
     subjectSlug: string
     isActive: boolean
     completedLessons: number
@@ -99,7 +99,7 @@ export async function getChildrenProgress(): Promise<ChildProgress[]> {
 
         return {
           id: enrollment.id,
-          subjectName: enrollment.subject.name,
+          name: enrollment.subject.name,
           subjectSlug: enrollment.subject.slug,
           isActive: enrollment.isActive,
           completedLessons,

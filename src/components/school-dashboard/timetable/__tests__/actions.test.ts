@@ -240,7 +240,7 @@ describe("Timetable Actions", () => {
           class: {
             id: CCLASS1,
             name: "Math 10",
-            subject: { subjectName: "Math" },
+            subject: { name: "Math" },
             teacher: { givenName: "Alan", surname: "Turing" },
           },
           teacher: { givenName: "Alan", surname: "Turing" },

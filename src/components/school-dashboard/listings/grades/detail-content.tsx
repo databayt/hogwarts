@@ -371,7 +371,7 @@ export function GradeDetailContent({
                 </div>
                 {grade.subject && (
                   <p className="text-muted-foreground text-sm">
-                    {t.subject}: {grade.subject.subjectName}
+                    {t.subject}: {grade.subject.name}
                   </p>
                 )}
                 {(grade.assignment?.dueDate || grade.exam?.examDate) && (

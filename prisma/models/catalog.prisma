@@ -73,10 +73,16 @@ model CatalogSubject {
   catalogBooks          CatalogBook[]
   catalogExamTemplates  CatalogExamTemplate[]
 
-  // School-scoped reverse relations (FK bridges)
-  schoolSubjects      Subject[]
-  schoolQuestionBanks QuestionBank[]
+  // School-scoped reverse relations (direct FK from school models)
+  schoolClasses       Class[]
   schoolExams         Exam[]
+  schoolExamTemplates ExamTemplate[]
+  schoolQuestionBanks QuestionBank[]
+  schoolResults       Result[]
+  schoolReportGrades  ReportCardGrade[]
+  schoolTeacherExpertise TeacherSubjectExpertise[]
+  schoolQuickAssessments QuickAssessment[]
+  schoolQuizCategories   QuizCategory[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

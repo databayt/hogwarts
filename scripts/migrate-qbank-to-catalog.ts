@@ -25,11 +25,6 @@ async function main() {
   // Get all QuestionBank records without a catalog link
   const questions = await prisma.questionBank.findMany({
     where: { catalogQuestionId: null },
-    include: {
-      subject: {
-        select: { catalogSubjectId: true },
-      },
-    },
   })
 
   console.log(
@@ -53,10 +48,10 @@ async function main() {
         for (const q of batch) {
           try {
             // Create CatalogQuestion
+            // QuestionBank.subjectId now points directly to CatalogSubject
             const catalogQuestion = await tx.catalogQuestion.create({
               data: {
-                catalogSubjectId:
-                  q.subject?.catalogSubjectId ?? q.catalogSubjectId ?? null,
+                catalogSubjectId: q.subjectId ?? null,
                 catalogChapterId: q.catalogChapterId ?? null,
                 catalogLessonId: q.catalogLessonId ?? null,
                 questionText: q.questionText,
@@ -81,8 +76,6 @@ async function main() {
               where: { id: q.id },
               data: {
                 catalogQuestionId: catalogQuestion.id,
-                catalogSubjectId:
-                  q.subject?.catalogSubjectId ?? q.catalogSubjectId ?? null,
               },
             })
 

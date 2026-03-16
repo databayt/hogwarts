@@ -310,7 +310,7 @@ describe("Class Actions", () => {
         {
           id: "c1",
           name: "Math A",
-          subject: { subjectName: "Math" },
+          subject: { name: "Math" },
           teacher: { givenName: "John", surname: "Smith" },
           term: { termNumber: 1 },
           grade: { name: "Grade 1", gradeNumber: 1 },
@@ -461,7 +461,7 @@ describe("Class Actions", () => {
           courseCode: "MATH101",
           maxCapacity: 30,
           createdAt: new Date("2026-01-01"),
-          subject: { subjectName: "Math" },
+          subject: { name: "Math" },
           teacher: { givenName: "John", surname: "Smith" },
           term: { termNumber: 1 },
           classroom: { roomName: "Room 101", capacity: 40 },

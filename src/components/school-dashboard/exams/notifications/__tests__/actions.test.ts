@@ -51,14 +51,14 @@ describe("Exam Notification Actions", () => {
         id: "exam-1",
         schoolId: SCHOOL_A,
         class: { studentClasses: [] },
-        subject: { subjectName: "Math" },
+        subject: { name: "Math" },
       } as any)
 
       await sendExamNotification({
         type: "EXAM_SCHEDULED",
         examId: "exam-1",
         examTitle: "Test Exam",
-        subjectName: "Math",
+        name: "Math",
         className: "Class A",
         examDate: new Date(),
       })
@@ -82,7 +82,7 @@ describe("Exam Notification Actions", () => {
           type: "EXAM_SCHEDULED",
           examId: "exam-cross-tenant",
           examTitle: "Cross Tenant",
-          subjectName: "Math",
+          name: "Math",
           className: "Class A",
           examDate: new Date(),
         })
@@ -96,7 +96,7 @@ describe("Exam Notification Actions", () => {
         id: "exam-1",
         schoolId: SCHOOL_A,
         title: "Midterm",
-        subject: { subjectName: "Science" },
+        subject: { name: "Science" },
         class: { name: "Grade 10", studentClasses: [] },
         examDate: new Date(),
         duration: 60,
@@ -120,7 +120,7 @@ describe("Exam Notification Actions", () => {
         id: "exam-1",
         schoolId: SCHOOL_A,
         title: "Final",
-        subject: { subjectName: "English" },
+        subject: { name: "English" },
         class: { name: "Grade 11", studentClasses: [] },
         examDate: new Date(),
       } as any)
@@ -142,7 +142,7 @@ describe("Exam Notification Actions", () => {
         schoolId: SCHOOL_A,
         title: "Quiz 1",
         maxAttempts: 3,
-        subject: { subjectName: "Art" },
+        subject: { name: "Art" },
         class: { name: "Grade 9", studentClasses: [] },
       } as any)
       vi.mocked(db.examResult.findFirst).mockResolvedValue({

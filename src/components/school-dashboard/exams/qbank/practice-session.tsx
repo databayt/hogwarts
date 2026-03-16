@@ -206,12 +206,11 @@ export function PracticeSession({
     const percentage =
       autoGradable > 0 ? Math.round((correctCount / autoGradable) * 100) : 0
 
-    const subjectName =
-      subjects.find((s) => s.id === selectedSubject)?.name || "Mixed"
+    const name = subjects.find((s) => s.id === selectedSubject)?.name || "Mixed"
 
     const entry = {
       id: Date.now().toString(),
-      subjectName,
+      name,
       totalQuestions: sessionQuestions.length,
       correctCount,
       autoGradable,
@@ -235,7 +234,7 @@ export function PracticeSession({
   const [practiceHistory, setPracticeHistory] = useState<
     Array<{
       id: string
-      subjectName: string
+      name: string
       totalQuestions: number
       correctCount: number
       percentage: number
@@ -398,9 +397,7 @@ export function PracticeSession({
                         {entry.percentage}%
                       </div>
                       <div>
-                        <p className="text-sm font-medium">
-                          {entry.subjectName}
-                        </p>
+                        <p className="text-sm font-medium">{entry.name}</p>
                         <p className="text-muted-foreground text-xs">
                           {entry.correctCount}/{entry.totalQuestions}{" "}
                           {isAr ? "صحيح" : "correct"} &middot;{" "}

@@ -37,13 +37,6 @@ export async function getDepartments(
     const departments = await db.department.findMany({
       where: { schoolId },
       include: {
-        subjects: {
-          select: {
-            id: true,
-            subjectName: true,
-            lang: true,
-          },
-        },
         teacherDepartments: {
           include: {
             teacher: {
@@ -59,7 +52,6 @@ export async function getDepartments(
         },
         _count: {
           select: {
-            subjects: true,
             teacherDepartments: true,
           },
         },
@@ -82,18 +74,7 @@ export async function getDepartments(
         lang: dept.lang,
         createdAt: dept.createdAt,
         updatedAt: dept.updatedAt,
-        subjects: await Promise.all(
-          dept.subjects.map(async (s) => ({
-            id: s.id,
-            subjectName: await getDisplayText(
-              s.subjectName,
-              (s.lang as "ar" | "en") || "ar",
-              lang,
-              schoolId!
-            ),
-            lang: s.lang,
-          }))
-        ),
+        subjects: [] as { id: string; name: string }[],
         teachers: dept.teacherDepartments.map((td) => ({
           id: td.teacher.id,
           givenName: td.teacher.givenName,
@@ -103,7 +84,7 @@ export async function getDepartments(
           isPrimary: td.isPrimary,
           isDepartmentHead: td.isDepartmentHead,
         })),
-        _count: dept._count,
+        _count: { ...dept._count, subjects: 0 },
       }))
     )
 
@@ -367,7 +348,6 @@ export async function deleteDepartment(
       include: {
         _count: {
           select: {
-            subjects: true,
             teacherDepartments: true,
           },
         },
@@ -379,13 +359,6 @@ export async function deleteDepartment(
     }
 
     // Check for dependencies
-    if (existing._count.subjects > 0) {
-      return {
-        success: false,
-        message: `Cannot delete department with ${existing._count.subjects} assigned subject(s). Please reassign subjects first.`,
-      }
-    }
-
     if (existing._count.teacherDepartments > 0) {
       return {
         success: false,

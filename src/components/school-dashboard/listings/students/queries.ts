@@ -124,7 +124,7 @@ export const studentDetailSelect = {
           subject: {
             select: {
               id: true,
-              subjectName: true,
+              name: true,
               slug: true,
             },
           },

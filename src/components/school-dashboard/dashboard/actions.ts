@@ -798,7 +798,7 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
       class: {
         select: {
           name: true,
-          subject: { select: { subjectName: true } },
+          subject: { select: { name: true } },
           teacher: { select: { givenName: true, surname: true } },
         },
       },
@@ -819,7 +819,7 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
       class: {
         select: {
           name: true,
-          subject: { select: { subjectName: true } },
+          subject: { select: { name: true } },
         },
       },
       submissions: {
@@ -838,7 +838,7 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
         select: {
           title: true,
           totalMarks: true,
-          subject: { select: { subjectName: true } },
+          subject: { select: { name: true } },
         },
       },
     },
@@ -868,7 +868,7 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
   return {
     todaysTimetable: todaysTimetable.map((entry) => ({
       id: entry.id,
-      subject: entry.class?.subject?.subjectName || "Unknown Subject",
+      subject: entry.class?.subject?.name || "Unknown Subject",
       className: entry.class?.name || "Unknown Class",
       teacher: entry.class?.teacher
         ? `${entry.class.teacher.givenName || ""} ${entry.class.teacher.surname || ""}`.trim() ||
@@ -882,7 +882,7 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
     upcomingAssignments: upcomingAssignments.map((assignment) => ({
       id: assignment.id,
       title: assignment.title,
-      subject: assignment.class?.subject?.subjectName || "Unknown Subject",
+      subject: assignment.class?.subject?.name || "Unknown Subject",
       className: assignment.class?.name || "Unknown Class",
       dueDate: assignment.dueDate.toISOString(),
       status: assignment.submissions[0]?.status || "NOT_SUBMITTED",
@@ -893,7 +893,7 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
     recentGrades: recentGrades.map((result) => ({
       id: result.id,
       examTitle: result.exam?.title || "Unknown Exam",
-      subject: result.exam?.subject?.subjectName || "Unknown Subject",
+      subject: result.exam?.subject?.name || "Unknown Subject",
       marksObtained: result.marksObtained,
       totalMarks: result.exam?.totalMarks || 100,
       percentage: result.percentage,
@@ -975,7 +975,7 @@ export async function getParentDashboardData(): Promise<ParentDashboardData> {
         select: {
           title: true,
           totalMarks: true,
-          subject: { select: { subjectName: true } },
+          subject: { select: { name: true } },
         },
       },
     },
@@ -1003,7 +1003,7 @@ export async function getParentDashboardData(): Promise<ParentDashboardData> {
       class: {
         select: {
           name: true,
-          subject: { select: { subjectName: true } },
+          subject: { select: { name: true } },
         },
       },
       submissions: {
@@ -1090,7 +1090,7 @@ export async function getParentDashboardData(): Promise<ParentDashboardData> {
     recentGrades: recentGrades.map((result) => ({
       id: result.id,
       examTitle: result.exam?.title || "Unknown Exam",
-      subject: result.exam?.subject?.subjectName || "Unknown Subject",
+      subject: result.exam?.subject?.name || "Unknown Subject",
       marksObtained: result.marksObtained,
       totalMarks: result.exam?.totalMarks || 100,
       percentage: result.percentage,
@@ -1099,7 +1099,7 @@ export async function getParentDashboardData(): Promise<ParentDashboardData> {
     upcomingAssignments: upcomingAssignments.map((assignment) => ({
       id: assignment.id,
       title: assignment.title,
-      subject: assignment.class?.subject?.subjectName || "Unknown Subject",
+      subject: assignment.class?.subject?.name || "Unknown Subject",
       className: assignment.class?.name || "Unknown Class",
       dueDate: assignment.dueDate.toISOString(),
       status: assignment.submissions[0]?.status || "NOT_SUBMITTED",
@@ -1384,18 +1384,33 @@ export async function getAcademicPerformanceTrends() {
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("Missing school context")
 
-  const subjects = await db.subject.findMany({
-    where: { schoolId },
+  const exams = await db.exam.findMany({
+    where: {
+      schoolId,
+      examDate: { gte: subMonths(new Date(), 3) },
+    },
     include: {
-      exams: {
-        where: { examDate: { gte: subMonths(new Date(), 3) } },
-        include: { results: { select: { percentage: true } } },
-      },
+      subject: { select: { id: true, name: true } },
+      results: { select: { percentage: true } },
     },
   })
 
-  const trends = subjects.map((subject) => {
-    const allResults = subject.exams.flatMap((exam) => exam.results)
+  // Group exams by subject
+  const subjectMap = new Map<
+    string,
+    { name: string; results: { percentage: number }[] }
+  >()
+  for (const exam of exams) {
+    const subjectId = exam.subjectId
+    const subjectName = exam.subject?.name || "Unknown"
+    if (!subjectMap.has(subjectId)) {
+      subjectMap.set(subjectId, { name: subjectName, results: [] })
+    }
+    subjectMap.get(subjectId)!.results.push(...exam.results)
+  }
+
+  const trends = Array.from(subjectMap.values()).map((subjectData) => {
+    const allResults = subjectData.results
     const currentAvg =
       allResults.length > 0
         ? allResults.reduce((sum, r) => sum + r.percentage, 0) /
@@ -1405,7 +1420,7 @@ export async function getAcademicPerformanceTrends() {
     const improvement = currentAvg - previousAvg
 
     return {
-      subject: subject.subjectName,
+      subject: subjectData.name,
       trend: improvement > 1 ? "up" : improvement < -1 ? "down" : "stable",
       improvement: `${improvement > 0 ? "+" : ""}${improvement.toFixed(1)}%`,
       currentAvg: currentAvg.toFixed(1),
@@ -2907,7 +2922,7 @@ async function getStudentUpcomingData(userId: string, schoolId: string) {
       status: "PUBLISHED",
     },
     include: {
-      class: { select: { subject: { select: { subjectName: true } } } },
+      class: { select: { subject: { select: { name: true } } } },
       submissions: {
         where: { studentId: student.id },
         select: { status: true },
@@ -2922,7 +2937,7 @@ async function getStudentUpcomingData(userId: string, schoolId: string) {
   const nextClass = await db.timetable.findFirst({
     where: { schoolId, dayOfWeek, classId: { in: classIds } },
     include: {
-      class: { select: { subject: { select: { subjectName: true } } } },
+      class: { select: { subject: { select: { name: true } } } },
       classroom: { select: { roomName: true } },
       period: { select: { startTime: true } },
     },
@@ -2933,7 +2948,7 @@ async function getStudentUpcomingData(userId: string, schoolId: string) {
     assignments: assignments.map((a) => ({
       id: a.id,
       title: a.title,
-      subject: a.class?.subject?.subjectName || "Unknown",
+      subject: a.class?.subject?.name || "Unknown",
       dueDate: a.dueDate < today ? "Overdue" : formatDate(a.dueDate, "ar"),
       isOverdue: a.dueDate < today,
       status: (a.submissions[0]?.status?.toLowerCase() || "not_submitted") as
@@ -2943,7 +2958,7 @@ async function getStudentUpcomingData(userId: string, schoolId: string) {
     })),
     nextClass: nextClass
       ? {
-          subject: nextClass.class?.subject?.subjectName || "Unknown",
+          subject: nextClass.class?.subject?.name || "Unknown",
           time: nextClass.period?.startTime
             ? new Date(nextClass.period.startTime).toLocaleTimeString([], {
                 hour: "2-digit",
@@ -2981,7 +2996,7 @@ async function getTeacherUpcomingData(userId: string, schoolId: string) {
       class: {
         select: {
           name: true,
-          subject: { select: { subjectName: true } },
+          subject: { select: { name: true } },
           _count: { select: { studentClasses: true } },
         },
       },
@@ -3023,7 +3038,7 @@ async function getTeacherUpcomingData(userId: string, schoolId: string) {
     nextClass: nextClass
       ? {
           subject:
-            nextClass.class?.subject?.subjectName ||
+            nextClass.class?.subject?.name ||
             nextClass.class?.name ||
             "Unknown",
           time: nextClass.period?.startTime
@@ -5636,7 +5651,7 @@ export async function getUpcomingClass(): Promise<{
         class: {
           select: {
             name: true,
-            subject: { select: { subjectName: true } },
+            subject: { select: { name: true } },
             teacher: { select: { givenName: true, surname: true } },
             _count: { select: { studentClasses: true } },
           },
@@ -5676,7 +5691,7 @@ export async function getUpcomingClass(): Promise<{
       : "--:--"
 
     return {
-      title: slot.class.subject?.subjectName || slot.class.name,
+      title: slot.class.subject?.name || slot.class.name,
       subtitle: slot.class.name,
       description: slot.class.teacher
         ? `${slot.class.teacher.givenName} ${slot.class.teacher.surname}`

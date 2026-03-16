@@ -78,9 +78,9 @@ const CATEGORY_RULES: {
   },
 ]
 
-export function getSubjectCategory(subjectName: string): SubjectCategory {
+export function getSubjectCategory(name: string): SubjectCategory {
   for (const rule of CATEGORY_RULES) {
-    if (rule.test(subjectName)) return rule.category
+    if (rule.test(name)) return rule.category
   }
   return "SOCIAL_STUDIES" // safe default
 }

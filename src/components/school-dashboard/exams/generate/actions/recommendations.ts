@@ -1,6 +1,7 @@
 "use server"
 
 import { db } from "@/lib/db"
+import { getSchoolSubjects } from "@/lib/school-subjects"
 import { getTenantContext } from "@/lib/tenant-context"
 
 // ============================================================================
@@ -31,25 +32,15 @@ export async function getExamRecommendations(
   const { schoolId } = await getTenantContext()
   if (!schoolId) return []
 
-  // Get school's subjects with catalog mappings
-  const subjects = await db.subject.findMany({
-    where: {
-      schoolId,
-      catalogSubjectId: { not: null },
-      ...(subjectId ? { id: subjectId } : {}),
-    },
-    select: {
-      id: true,
-      subjectName: true,
-      catalogSubjectId: true,
-    },
-  })
+  // Get school's subjects (all are CatalogSubject records now)
+  const allSubjects = await getSchoolSubjects(schoolId)
+  const subjects = subjectId
+    ? allSubjects.filter((s) => s.id === subjectId)
+    : allSubjects
 
   if (subjects.length === 0) return []
 
-  const catalogSubjectIds = subjects
-    .map((s) => s.catalogSubjectId)
-    .filter(Boolean) as string[]
+  const catalogSubjectIds = subjects.map((s) => s.id)
 
   // Get already-adopted exam IDs
   const adopted = await db.exam.findMany({
@@ -93,9 +84,7 @@ export async function getExamRecommendations(
     let reason = ""
 
     // High relevance: subject without any school exams (gap-filling)
-    const matchingSubject = subjects.find(
-      (s) => s.catalogSubjectId === exam.subjectId
-    )
+    const matchingSubject = subjects.find((s) => s.id === exam.subjectId)
     if (matchingSubject && !subjectsWithExams.has(matchingSubject.id)) {
       relevanceScore += 50
       reason = "No exams yet for this subject"

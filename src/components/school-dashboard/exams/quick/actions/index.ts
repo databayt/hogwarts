@@ -182,7 +182,7 @@ export async function getQuickAssessments(filters?: {
       classId: a.classId,
       className: a.class.name || "",
       subjectId: a.subjectId,
-      subjectName: a.subject.subjectName || "",
+      name: a.subject.name || "",
       questionCount: a.questionIds.length,
       responseCount: a._count.responses,
       duration: a.duration,

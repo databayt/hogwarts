@@ -36,7 +36,7 @@ export interface CalendarExam {
   duration: number
   examType: string
   className: string
-  subjectName: string
+  name: string
   totalMarks: number
 }
 
@@ -53,12 +53,12 @@ const COLOR_PALETTE = [
   "bg-indigo-500",
 ]
 
-function getSubjectColor(subjectName: string): string {
-  if (!SUBJECT_COLORS[subjectName]) {
+function getSubjectColor(name: string): string {
+  if (!SUBJECT_COLORS[name]) {
     const idx = Object.keys(SUBJECT_COLORS).length % COLOR_PALETTE.length
-    SUBJECT_COLORS[subjectName] = COLOR_PALETTE[idx]
+    SUBJECT_COLORS[name] = COLOR_PALETTE[idx]
   }
-  return SUBJECT_COLORS[subjectName]
+  return SUBJECT_COLORS[name]
 }
 
 const EXAM_TYPE_LABELS: Record<string, string> = {
@@ -171,7 +171,7 @@ export function CalendarView({ exams }: CalendarViewProps) {
                       <PopoverTrigger asChild>
                         <button className="hover:bg-accent flex w-full items-center gap-1 truncate rounded px-0.5 py-px text-start">
                           <span
-                            className={`h-1.5 w-1.5 shrink-0 rounded-full ${getSubjectColor(exam.subjectName)}`}
+                            className={`h-1.5 w-1.5 shrink-0 rounded-full ${getSubjectColor(exam.name)}`}
                           />
                           <span className="truncate text-[10px] leading-tight">
                             {exam.title}
@@ -183,7 +183,7 @@ export function CalendarView({ exams }: CalendarViewProps) {
                           <div>
                             <p className="font-medium">{exam.title}</p>
                             <p className="text-muted-foreground text-xs">
-                              {exam.className} - {exam.subjectName}
+                              {exam.className} - {exam.name}
                             </p>
                           </div>
                           <div className="text-muted-foreground flex items-center gap-1 text-xs">
@@ -217,7 +217,7 @@ export function CalendarView({ exams }: CalendarViewProps) {
         {/* Legend */}
         {exams.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-3 border-t pt-3">
-            {[...new Set(exams.map((e) => e.subjectName))].map((subject) => (
+            {[...new Set(exams.map((e) => e.name))].map((subject) => (
               <div key={subject} className="flex items-center gap-1.5">
                 <span
                   className={`h-2 w-2 rounded-full ${getSubjectColor(subject)}`}

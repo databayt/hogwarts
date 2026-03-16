@@ -47,7 +47,9 @@ export default async function AnalysisContent({ dictionary, lang }: Props) {
         db.student.count({ where: { schoolId } }).catch(() => 0),
         db.teacher.count({ where: { schoolId } }).catch(() => 0),
         db.classroom.count({ where: { schoolId } }).catch(() => 0),
-        db.subject.count({ where: { schoolId } }).catch(() => 0),
+        db.schoolSubjectSelection
+          .count({ where: { schoolId, isActive: true } })
+          .catch(() => 0),
       ])
 
       totalStudents = students

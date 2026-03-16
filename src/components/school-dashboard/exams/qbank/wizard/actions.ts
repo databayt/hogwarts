@@ -25,7 +25,7 @@ export async function getQuestionForWizard(
     const question = await db.questionBank.findFirst({
       where: { id: questionId, schoolId },
       include: {
-        subject: { select: { id: true, subjectName: true } },
+        subject: { select: { id: true, name: true } },
       },
     })
 
@@ -61,10 +61,10 @@ export async function createDraftQuestion(): Promise<
       return { success: false, error: "Not authenticated" }
     }
 
-    const firstSubject = await db.subject.findFirst({
-      where: { schoolId },
-      select: { id: true },
-    })
+    const { getSchoolSubjects } = await import("@/lib/school-subjects")
+    const schoolSubjects = await getSchoolSubjects(schoolId)
+    const firstSubject =
+      schoolSubjects.length > 0 ? { id: schoolSubjects[0].id } : null
 
     if (!firstSubject) {
       return {

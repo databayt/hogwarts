@@ -9,7 +9,6 @@ import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
 
-import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
 import { useModal } from "@/components/atom/modal/context"
 import { ModalFooter } from "@/components/atom/modal/modal-footer"
@@ -43,15 +42,16 @@ export function SubjectCreateForm({ onSuccess }: SubjectCreateFormProps) {
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
   const [catalogOptions, setCatalogOptions] = useState<CatalogOption[]>([])
-  const [showProposal, setShowProposal] = useState(false)
 
   const form = useForm<z.infer<typeof subjectCreateSchema>>({
     resolver: zodResolver(subjectCreateSchema),
     defaultValues: {
-      subjectName: "",
-      departmentId: "",
       catalogSubjectId: "",
-      lang: "ar",
+      gradeId: "",
+      streamId: undefined,
+      customName: "",
+      isRequired: true,
+      weeklyPeriods: undefined,
     },
   })
 
@@ -78,24 +78,21 @@ export function SubjectCreateForm({ onSuccess }: SubjectCreateFormProps) {
       if (!currentId) return
       const res = await getSubject({ id: currentId })
       if (!res.success || !res.data) return
-      const s = res.data as any
+      const s = res.data
       form.reset({
-        subjectName: s.subjectName ?? "",
-        departmentId: s.departmentId ?? "",
-        catalogSubjectId: s.catalogSubjectId ?? "",
+        catalogSubjectId: s.id ?? "",
+        gradeId: "",
+        customName: "",
+        isRequired: true,
       })
     }
     void load()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentId])
 
-  // When a catalog subject is selected, auto-fill the name
+  // When a catalog subject is selected, auto-fill catalogSubjectId
   const handleCatalogSelect = (catalogId: string) => {
-    const selected = catalogOptions.find((c) => c.id === catalogId)
-    if (selected) {
-      form.setValue("catalogSubjectId", catalogId)
-      form.setValue("subjectName", selected.name)
-    }
+    form.setValue("catalogSubjectId", catalogId)
   }
 
   async function onSubmit(values: z.infer<typeof subjectCreateSchema>) {
@@ -107,7 +104,7 @@ export function SubjectCreateForm({ onSuccess }: SubjectCreateFormProps) {
         toast.success(
           currentId
             ? t?.success?.subjectUpdated || "Subject updated"
-            : t?.success?.subjectCreated || "Subject created"
+            : t?.success?.subjectCreated || "Subject added"
         )
         closeModal()
         if (onSuccess) {
@@ -120,7 +117,7 @@ export function SubjectCreateForm({ onSuccess }: SubjectCreateFormProps) {
           res?.error ||
             (currentId
               ? t?.error?.subjectUpdateFailed || "Failed to update subject"
-              : t?.error?.subjectCreateFailed || "Failed to create subject")
+              : t?.error?.subjectCreateFailed || "Failed to add subject")
         )
       }
     } catch (error) {
@@ -133,7 +130,7 @@ export function SubjectCreateForm({ onSuccess }: SubjectCreateFormProps) {
 
   const handleNext = async () => {
     if (currentStep === 1) {
-      const step1Fields = ["subjectName", "departmentId"] as const
+      const step1Fields = ["catalogSubjectId", "gradeId"] as const
       const step1Valid = await form.trigger(step1Fields)
       if (step1Valid) {
         await form.handleSubmit(onSubmit)()
@@ -143,11 +140,7 @@ export function SubjectCreateForm({ onSuccess }: SubjectCreateFormProps) {
 
   const handleSaveCurrentStep = async () => {
     if (currentId) {
-      const currentStepFields = ["subjectName", "departmentId"] as const
-      const stepValid = await form.trigger(currentStepFields)
-      if (stepValid) {
-        await form.handleSubmit(onSubmit)()
-      }
+      await form.handleSubmit(onSubmit)()
     } else {
       await handleNext()
     }
@@ -166,7 +159,7 @@ export function SubjectCreateForm({ onSuccess }: SubjectCreateFormProps) {
             {!currentId && catalogOptions.length > 0 && (
               <div className="space-y-2">
                 <label className="text-sm font-medium">
-                  Link to Catalog Subject (optional)
+                  Select Subject from Catalog
                 </label>
                 <select
                   className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
@@ -180,7 +173,7 @@ export function SubjectCreateForm({ onSuccess }: SubjectCreateFormProps) {
                   }}
                   disabled={isView}
                 >
-                  <option value="">-- Manual entry (no catalog link) --</option>
+                  <option value="">-- Select a subject --</option>
                   {catalogOptions.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name} ({c.department})
@@ -188,26 +181,12 @@ export function SubjectCreateForm({ onSuccess }: SubjectCreateFormProps) {
                   ))}
                 </select>
                 <p className="text-muted-foreground text-xs">
-                  Linking to the catalog enables LMS content, chapters, and
-                  lessons.
+                  Select a subject from the catalog to add to your school.
                 </p>
               </div>
             )}
 
             <InformationStep form={form} isView={isView} />
-
-            {/* Propose New button */}
-            {!currentId && !isView && (
-              <div className="border-t pt-3">
-                <p className="text-muted-foreground mb-2 text-xs">
-                  Can&apos;t find your subject in the catalog?
-                </p>
-                {/* TODO: Implement proposal UI (ProposeSubjectDialog) */}
-                <Button type="button" variant="outline" size="sm" disabled>
-                  Propose New Subject to Catalog (Coming Soon)
-                </Button>
-              </div>
-            )}
           </div>
         )
       default:
@@ -220,18 +199,14 @@ export function SubjectCreateForm({ onSuccess }: SubjectCreateFormProps) {
       <form onSubmit={(e) => e.preventDefault()}>
         <ModalFormLayout
           title={
-            isView
-              ? "View Subject"
-              : currentId
-                ? "Edit Subject"
-                : "Create Subject"
+            isView ? "View Subject" : currentId ? "Edit Subject" : "Add Subject"
           }
           description={
             isView
               ? "View subject details"
               : currentId
-                ? "Update subject details"
-                : "Add a new subject to your school"
+                ? "Update subject settings"
+                : "Select a subject from the catalog to add to your school"
           }
         >
           {renderCurrentStep()}

@@ -18,7 +18,7 @@ import type {
 export type QuestionBankDTO = QuestionBank & {
   subject?: {
     id: string
-    subjectName: string
+    name: string
   } | null
   analytics?: QuestionAnalytics | null
   _count?: {
@@ -117,7 +117,7 @@ export type AIGenerationResponse = {
 export type ExamTemplateDTO = ExamTemplate & {
   subject?: {
     id: string
-    subjectName: string
+    name: string
   } | null
   _count?: {
     generatedExams: number

@@ -99,7 +99,6 @@ model QuestionBank {
   timeEstimate Int? // Estimated time in minutes
 
   // Optional catalog FK bridges
-  catalogSubjectId String?
   catalogChapterId String?
   catalogLessonId  String?
   catalogQuestionId String? @unique // 1:1 mirror of a CatalogQuestion
@@ -131,13 +130,12 @@ model QuestionBank {
 
   // Relations
   school                 School                  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  subject                Subject                 @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  subject                CatalogSubject          @relation(fields: [subjectId], references: [id], onDelete: Cascade)
   generatedExamQuestions GeneratedExamQuestion[]
   analytics              QuestionAnalytics?
   review                 QuestionReview? // AI generation review
 
   // Catalog bridge relations
-  catalogSubject CatalogSubject? @relation(fields: [catalogSubjectId], references: [id], onDelete: SetNull)
   catalogChapter CatalogChapter? @relation(fields: [catalogChapterId], references: [id], onDelete: SetNull)
   catalogLesson  CatalogLesson?  @relation(fields: [catalogLessonId], references: [id], onDelete: SetNull)
   catalogQuestion CatalogQuestion? @relation("CatalogQuestionMirror", fields: [catalogQuestionId], references: [id], onDelete: SetNull)
@@ -307,7 +305,7 @@ model ExamTemplate {
 
   // Relations
   school         School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  subject        Subject         @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  subject        CatalogSubject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
   generatedExams GeneratedExam[]
 
   // Catalog bridge relation

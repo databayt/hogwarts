@@ -95,7 +95,7 @@ interface Props {
   data: ContentSectionsData
   lang: Locale
   subjectColor: string | null
-  subjectName: string
+  name: string
   subdomain: string
   subjectSlug: string
   catalogSubjectId: string
@@ -190,7 +190,7 @@ export function CatalogContentSections({
   data,
   lang,
   subjectColor,
-  subjectName,
+  name,
   subdomain,
   subjectSlug,
   catalogSubjectId,

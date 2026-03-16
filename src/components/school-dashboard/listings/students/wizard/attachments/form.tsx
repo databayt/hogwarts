@@ -3,18 +3,16 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { forwardRef, useImperativeHandle, useTransition } from "react"
+import Image from "next/image"
 import { zodResolver } from "@hookform/resolvers/zod"
-import {
-  FileText,
-  FolderOpen,
-  GraduationCap,
-  IdCard,
-  ScrollText,
-} from "lucide-react"
-import { useForm } from "react-hook-form"
+import { CheckCircle, Loader2 } from "lucide-react"
+import { useDropzone } from "react-dropzone"
+import { useForm, useFormContext } from "react-hook-form"
 
+import { cn } from "@/lib/utils"
 import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
+import { useUpload } from "@/components/file/upload/use-upload"
 import { FileUploadField } from "@/components/form/atoms/file-upload"
 import type { WizardFormRef } from "@/components/form/wizard"
 
@@ -22,12 +20,83 @@ import { updateStudentAttachments } from "./actions"
 import { attachmentsSchema, type AttachmentsFormData } from "./validation"
 
 const DOCUMENT_SLOTS = [
-  { key: "degreeUrl" as const, label: "Degree", icon: GraduationCap },
-  { key: "transcriptUrl" as const, label: "Transcript", icon: ScrollText },
-  { key: "idUrl" as const, label: "ID", icon: IdCard },
-  { key: "cvUrl" as const, label: "CV", icon: FileText },
-  { key: "otherUrl" as const, label: "Other", icon: FolderOpen },
+  { key: "degreeUrl" as const, label: "Degree", icon: "/degree.png" },
+  {
+    key: "transcriptUrl" as const,
+    label: "Transcript",
+    icon: "/transcript.png",
+  },
+  { key: "idUrl" as const, label: "ID", icon: "/id.png" },
+  { key: "resumeUrl" as const, label: "Resume", icon: "/resume.png" },
+  { key: "otherUrl" as const, label: "Other", icon: "/files.png" },
 ]
+
+/**
+ * A single document upload card — the entire box is the drop target.
+ */
+function DocumentCard({
+  name,
+  label,
+  icon,
+  disabled,
+}: {
+  name: string
+  label: string
+  icon: string
+  disabled?: boolean
+}) {
+  const form = useFormContext()
+  const currentValue = form.watch(name)
+  const hasFile =
+    !!currentValue && typeof currentValue === "object" && currentValue?.url
+
+  const { isUploading, uploadedFiles, upload, getAcceptedTypes } = useUpload({
+    category: "document",
+    folder: "student-documents",
+    maxSize: 10 * 1024 * 1024,
+    maxFiles: 1,
+    onSuccess: (result) => {
+      form.setValue(name, result)
+    },
+  })
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop: async (files) => {
+      if (files.length > 0) {
+        await upload(files[0])
+      }
+    },
+    accept: getAcceptedTypes(),
+    maxSize: 10 * 1024 * 1024,
+    maxFiles: 1,
+    disabled: disabled || isUploading,
+    multiple: false,
+  })
+
+  const uploaded = hasFile || uploadedFiles.length > 0
+
+  return (
+    <div
+      {...getRootProps()}
+      className={cn(
+        "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border p-4 transition-colors",
+        isDragActive && "border-primary bg-primary/10",
+        uploaded && "border-green-500/50 bg-green-50/50 dark:bg-green-950/20",
+        disabled && "cursor-not-allowed opacity-50"
+      )}
+    >
+      <input {...getInputProps()} />
+      {isUploading ? (
+        <Loader2 className="text-primary h-8 w-8 animate-spin" />
+      ) : uploaded ? (
+        <CheckCircle className="h-8 w-8 text-green-500" />
+      ) : (
+        <Image src={icon} alt={label} width={32} height={32} />
+      )}
+      <p className="text-sm font-medium">{label}</p>
+    </div>
+  )
+}
 
 interface AttachmentsFormProps {
   studentId: string
@@ -47,7 +116,7 @@ export const AttachmentsForm = forwardRef<WizardFormRef, AttachmentsFormProps>(
         degreeUrl: initialData?.degreeUrl || "",
         transcriptUrl: initialData?.transcriptUrl || "",
         idUrl: initialData?.idUrl || "",
-        cvUrl: initialData?.cvUrl || "",
+        resumeUrl: initialData?.resumeUrl || "",
         otherUrl: initialData?.otherUrl || "",
       },
     })
@@ -82,8 +151,8 @@ export const AttachmentsForm = forwardRef<WizardFormRef, AttachmentsFormProps>(
     return (
       <Form {...form}>
         <form className="grid grid-cols-3 gap-4">
-          {/* Photo - circular avatar */}
-          <div className="flex flex-col items-center justify-center rounded-lg border p-4">
+          {/* Photo - circle only, no border box */}
+          <div className="flex items-center justify-center">
             <FileUploadField
               name="profilePhotoUrl"
               category="image"
@@ -104,25 +173,15 @@ export const AttachmentsForm = forwardRef<WizardFormRef, AttachmentsFormProps>(
             />
           </div>
 
-          {/* Document attachment slots */}
-          {DOCUMENT_SLOTS.map(({ key, label, icon: Icon }) => (
-            <div
+          {/* Document slots — entire card is clickable */}
+          {DOCUMENT_SLOTS.map(({ key, label, icon }) => (
+            <DocumentCard
               key={key}
-              className="flex flex-col items-center gap-2 rounded-lg border p-4"
-            >
-              <Icon className="text-muted-foreground h-8 w-8" />
-              <p className="text-sm font-medium">{label}</p>
-              <FileUploadField
-                name={key}
-                category="document"
-                folder="student-documents"
-                variant="compact"
-                maxSize={10 * 1024 * 1024}
-                maxFiles={1}
-                disabled={isPending}
-                placeholder={`Upload ${label}`}
-              />
-            </div>
+              name={key}
+              label={label}
+              icon={icon}
+              disabled={isPending}
+            />
           ))}
         </form>
       </Form>

@@ -773,7 +773,7 @@ export type ClassDetailResult = {
   createdAt: Date
   subject: {
     id: string
-    subjectName: string
+    name: string
     lang: string
   } | null
   teacher: {
@@ -837,7 +837,7 @@ export async function getClassById(input: {
         subject: {
           select: {
             id: true,
-            subjectName: true,
+            name: true,
             lang: true,
           },
         },
@@ -979,7 +979,7 @@ export async function getClasses(
         include: {
           subject: {
             select: {
-              subjectName: true,
+              name: true,
             },
           },
           teacher: {
@@ -1012,7 +1012,7 @@ export async function getClasses(
     const mapped: ClassListResult[] = (rows as Array<any>).map((c) => ({
       id: c.id as string,
       name: c.name as string,
-      subjectName: c.subject?.subjectName || "Unknown",
+      subjectName: c.subject?.name || "Unknown",
       teacherName: c.teacher
         ? `${c.teacher.givenName} ${c.teacher.surname}`
         : "Unknown",
@@ -1083,7 +1083,7 @@ export async function getClassesCSV(
       include: {
         subject: {
           select: {
-            subjectName: true,
+            name: true,
           },
         },
         teacher: {
@@ -1123,7 +1123,7 @@ export async function getClassesCSV(
       name: classItem.name || "",
       courseCode: classItem.courseCode || "",
       grade: classItem.grade?.name || "",
-      subject: classItem.subject?.subjectName || "",
+      subject: classItem.subject?.name || "",
       teacher: classItem.teacher
         ? `${classItem.teacher.givenName} ${classItem.teacher.surname}`
         : "",
@@ -1231,7 +1231,7 @@ export async function getAllClassesCapacity(): Promise<
       where: { schoolId },
       include: {
         subject: {
-          select: { subjectName: true },
+          select: { name: true },
         },
         teacher: {
           select: { givenName: true, surname: true },
@@ -1267,7 +1267,7 @@ export async function getAllClassesCapacity(): Promise<
       return {
         id: c.id,
         name: c.name,
-        subjectName: c.subject?.subjectName || "Unknown",
+        subjectName: c.subject?.name || "Unknown",
         teacherName: c.teacher
           ? `${c.teacher.givenName} ${c.teacher.surname}`
           : "Unassigned",
@@ -1388,7 +1388,7 @@ export async function getClassesExportData(
       include: {
         subject: {
           select: {
-            subjectName: true,
+            name: true,
           },
         },
         teacher: {
@@ -1421,7 +1421,7 @@ export async function getClassesExportData(
       id: classItem.id,
       name: classItem.name || "",
       code: classItem.courseCode || null,
-      subjectName: classItem.subject?.subjectName || null,
+      subjectName: classItem.subject?.name || null,
       teacherName: classItem.teacher
         ? `${classItem.teacher.givenName} ${classItem.teacher.surname}`
         : null,

@@ -107,7 +107,7 @@ export async function generateReportCards(input: {
         exam: {
           select: {
             subjectId: true,
-            subject: { select: { id: true, subjectName: true } },
+            subject: { select: { id: true, name: true } },
             classId: true,
             class: { select: { name: true } },
           },
@@ -158,7 +158,7 @@ export async function generateReportCards(input: {
       const subjectMap = new Map<
         string,
         {
-          subjectName: string
+          name: string
           totalMarks: number
           marksObtained: number
           count: number
@@ -168,7 +168,7 @@ export async function generateReportCards(input: {
       for (const r of studentResults) {
         const subId = r.exam.subjectId
         const existing = subjectMap.get(subId) ?? {
-          subjectName: r.exam.subject.subjectName,
+          name: r.exam.subject.name,
           totalMarks: 0,
           marksObtained: 0,
           count: 0,
@@ -182,7 +182,7 @@ export async function generateReportCards(input: {
       // Build grades
       const grades: Array<{
         subjectId: string
-        subjectName: string
+        name: string
         score: number
         maxScore: number
         percentage: number
@@ -199,7 +199,7 @@ export async function generateReportCards(input: {
         const { grade, gpa } = gradeFromPercentage(pct)
         grades.push({
           subjectId: subId,
-          subjectName: data.subjectName,
+          name: data.name,
           score: data.marksObtained,
           maxScore: data.totalMarks,
           percentage: Math.round(pct * 100) / 100,
@@ -269,7 +269,7 @@ export async function generateReportCards(input: {
       const className = studentResults[0].exam.class?.name ?? ""
 
       const subjects: ReportCardSubject[] = grades.map((g) => ({
-        name: g.subjectName,
+        name: g.name,
         grade: g.grade,
         score: g.score,
         maxScore: g.maxScore,

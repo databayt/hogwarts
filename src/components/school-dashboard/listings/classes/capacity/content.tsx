@@ -243,7 +243,7 @@ export default async function ClassCapacityContent({ dictionary }: Props) {
                   <tr key={classItem.id} className="border-b last:border-0">
                     <td className="px-4 py-3 font-medium">{classItem.name}</td>
                     <td className="text-muted-foreground px-4 py-3">
-                      {classItem.subjectName}
+                      {classItem.name}
                     </td>
                     <td className="text-muted-foreground px-4 py-3">
                       {classItem.teacherName}

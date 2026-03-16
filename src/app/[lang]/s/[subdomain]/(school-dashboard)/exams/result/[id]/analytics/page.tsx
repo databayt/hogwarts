@@ -31,7 +31,7 @@ export default async function ExamAnalyticsPage({ params }: Props) {
     where: { id: examId, schoolId },
     include: {
       class: { select: { name: true } },
-      subject: { select: { subjectName: true } },
+      subject: { select: { name: true } },
       examResults: {
         select: {
           marksObtained: true,
@@ -68,7 +68,7 @@ export default async function ExamAnalyticsPage({ params }: Props) {
       <div className="flex flex-col gap-4">
         <PageHeadingSetter
           title="Analytics"
-          description={`${exam.class?.name} - ${exam.subject?.subjectName}`}
+          description={`${exam.class?.name} - ${exam.subject?.name}`}
         />
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

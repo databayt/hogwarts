@@ -59,7 +59,7 @@ export interface ExamListRow {
   id: string
   title: string
   className: string
-  subjectName: string
+  name: string
   examDate: string
   startTime: string
   endTime: string

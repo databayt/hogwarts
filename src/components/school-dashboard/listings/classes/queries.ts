@@ -58,7 +58,7 @@ export const classListSelect = {
   subject: {
     select: {
       id: true,
-      subjectName: true,
+      name: true,
     },
   },
   teacher: {
@@ -98,7 +98,7 @@ export const classDetailSelect = {
   subject: {
     select: {
       id: true,
-      subjectName: true,
+      name: true,
     },
   },
   teacher: {
@@ -162,7 +162,7 @@ export const classDetailSelect = {
       subject: {
         select: {
           id: true,
-          subjectName: true,
+          name: true,
         },
       },
     },
@@ -398,10 +398,10 @@ export async function getClassStats(schoolId: string) {
  */
 export function formatClassName(cls: {
   name: string
-  subject?: { subjectName: string } | null
+  subject?: { name: string } | null
 }): string {
   if (cls.subject) {
-    return `${cls.name} - ${cls.subject.subjectName}`
+    return `${cls.name} - ${cls.subject.name}`
   }
   return cls.name
 }

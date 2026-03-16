@@ -41,9 +41,9 @@ export async function generateQuestionsAI(
     const parsed = aiGenerationSchema.parse(input)
 
     // Resolve subject name
-    const subject = await db.subject.findFirst({
-      where: { id: parsed.subjectId, schoolId: session.user.schoolId },
-      select: { subjectName: true },
+    const subject = await db.catalogSubject.findFirst({
+      where: { id: parsed.subjectId },
+      select: { name: true },
     })
 
     if (!subject) {
@@ -51,7 +51,7 @@ export async function generateQuestionsAI(
     }
 
     const result = await generateQuestionsWithAI({
-      subject: subject.subjectName,
+      subject: subject.name,
       topic: parsed.topic,
       difficulty: parsed.difficulty,
       bloomLevel: parsed.bloomLevel,
@@ -121,20 +121,14 @@ export async function saveAIGeneratedQuestions(input: {
     const schoolId = session.user.schoolId
     const userId = session.user.id
 
-    // Resolve catalog subject
-    const subject = await db.subject.findFirst({
-      where: { id: input.subjectId, schoolId },
-      select: { catalogSubjectId: true },
-    })
-
     let savedCount = 0
 
     for (const q of input.questions) {
       await db.$transaction(async (tx) => {
-        // Create in catalog
+        // Create in catalog — subjectId IS the catalogSubjectId now
         const catalogQuestion = await tx.catalogQuestion.create({
           data: {
-            catalogSubjectId: subject?.catalogSubjectId ?? null,
+            catalogSubjectId: input.subjectId ?? null,
             questionText: q.questionText,
             questionType: q.questionType,
             difficulty: q.difficulty,
@@ -185,7 +179,6 @@ export async function saveAIGeneratedQuestions(input: {
             generatedAt: new Date(),
             createdBy: userId,
             catalogQuestionId: catalogQuestion.id,
-            catalogSubjectId: subject?.catalogSubjectId ?? null,
           },
         })
 

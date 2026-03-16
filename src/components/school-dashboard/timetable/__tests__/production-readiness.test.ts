@@ -145,7 +145,7 @@ describe("Timetable Production Readiness - Logic Verification", () => {
       // The validation logic checks TeacherSubjectExpertise
       const classInfo = {
         subjectId: "subject-math",
-        subject: { subjectName: "Mathematics" },
+        subject: { name: "Mathematics" },
       }
 
       const teacherExpertise = {
@@ -162,7 +162,7 @@ describe("Timetable Production Readiness - Logic Verification", () => {
     it("should reject teacher without subject expertise", () => {
       const classInfo = {
         subjectId: "subject-math",
-        subject: { subjectName: "Mathematics" },
+        subject: { name: "Mathematics" },
       }
 
       const teacherExpertise = null // No expertise record
@@ -173,7 +173,7 @@ describe("Timetable Production Readiness - Logic Verification", () => {
 
       // Error message format documented
       const teacher = { givenName: "Severus", surname: "Snape" }
-      const errorMessage = `${teacher.givenName} ${teacher.surname} is not qualified to teach ${classInfo.subject.subjectName}`
+      const errorMessage = `${teacher.givenName} ${teacher.surname} is not qualified to teach ${classInfo.subject.name}`
       expect(errorMessage).toContain("is not qualified to teach")
     })
   })

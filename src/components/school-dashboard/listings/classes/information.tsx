@@ -29,9 +29,9 @@ import { ClassFormStepProps } from "./types"
 import { classCreateSchema } from "./validation"
 
 export function InformationStep({ form, isView }: ClassFormStepProps) {
-  const [subjects, setSubjects] = useState<
-    Array<{ id: string; subjectName: string }>
-  >([])
+  const [subjects, setSubjects] = useState<Array<{ id: string; name: string }>>(
+    []
+  )
   const [teachers, setTeachers] = useState<
     Array<{ id: string; givenName: string; surname: string }>
   >([])
@@ -55,7 +55,7 @@ export function InformationStep({ form, isView }: ClassFormStepProps) {
           setSubjects(
             subjectsRes.data.rows.map((s: any) => ({
               id: s.id,
-              subjectName: s.subjectName || s.name || "Unknown",
+              name: s.name || s.name || "Unknown",
             }))
           )
         }
@@ -121,7 +121,7 @@ export function InformationStep({ form, isView }: ClassFormStepProps) {
               <SelectContent>
                 {subjects.map((subject) => (
                   <SelectItem key={subject.id} value={subject.id}>
-                    {subject.subjectName}
+                    {subject.name}
                   </SelectItem>
                 ))}
               </SelectContent>

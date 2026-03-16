@@ -16,7 +16,7 @@ export type ClassDTO = {
   endPeriodId: string
   classroomId: string
   name: string
-  subject?: { id: string; subjectName: string } | null
+  subject?: { id: string; name: string } | null
   teacher?: { id: string; givenName: string; surname: string } | null
   term?: { id: string; termName: string } | null
   startPeriod?: { id: string; periodName: string } | null

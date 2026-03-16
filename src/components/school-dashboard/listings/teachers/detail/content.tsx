@@ -118,7 +118,7 @@ interface TeacherDetailData {
     expertiseLevel: string
     subject?: {
       id: string
-      subjectName: string
+      name: string
       lang?: string
     } | null
   }>
@@ -579,7 +579,7 @@ export function TeacherDetailContent({
                           {expertise.expertiseLevel === "CERTIFIED" && (
                             <Award className="h-3 w-3" />
                           )}
-                          {expertise.subject?.subjectName}
+                          {expertise.subject?.name}
                         </Badge>
                       ))}
                     </div>

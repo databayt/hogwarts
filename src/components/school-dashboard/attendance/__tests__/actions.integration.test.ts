@@ -94,11 +94,10 @@ async function createFullClassChain(schoolId: string, suffix: string) {
     data: { schoolId, departmentName: `Dept ${suffix}` },
   })
 
-  const subject = await db.subject.create({
+  const subject = await db.catalogSubject.create({
     data: {
-      schoolId,
-      departmentId: department.id,
-      subjectName: `Subject ${suffix}`,
+      name: `Subject ${suffix}`,
+      department: department.departmentName,
     },
   })
 
@@ -217,7 +216,7 @@ async function deepCleanup(schoolId: string) {
   await db.period.deleteMany({ where: { schoolId } })
   await db.term.deleteMany({ where: { schoolId } })
   await db.schoolYear.deleteMany({ where: { schoolId } })
-  await db.subject.deleteMany({ where: { schoolId } })
+  // CatalogSubject cleanup not needed (global, not school-scoped)
   await db.department.deleteMany({ where: { schoolId } })
   await db.teacher.deleteMany({ where: { schoolId } })
   await db.absenceIntention.deleteMany({ where: { schoolId } })

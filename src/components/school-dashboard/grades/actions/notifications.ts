@@ -60,14 +60,14 @@ export async function sendGradeNotification(input: {
         student: {
           select: { id: true, userId: true, givenName: true, surname: true },
         },
-        class: { include: { subject: { select: { subjectName: true } } } },
+        class: { include: { subject: { select: { name: true } } } },
       },
     })
 
     if (!result) return { success: false, error: "Result not found" }
 
     const studentName = `${result.student.givenName} ${result.student.surname}`
-    const subjectName = result.class?.subject?.subjectName || "a subject"
+    const name = result.class?.subject?.name || "a subject"
 
     const recipients: string[] = []
 
@@ -87,8 +87,8 @@ export async function sendGradeNotification(input: {
           data: {
             schoolId,
             userId,
-            title: `Grade Posted: ${subjectName}`,
-            body: `${studentName} received ${result.grade || `${result.score}/${result.maxScore}`} in ${subjectName}`,
+            title: `Grade Posted: ${name}`,
+            body: `${studentName} received ${result.grade || `${result.score}/${result.maxScore}`} in ${name}`,
             type: "grade_posted",
             metadata: {
               resultId: input.resultId,

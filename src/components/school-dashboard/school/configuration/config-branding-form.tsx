@@ -4,7 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState, useTransition } from "react"
 import Image from "next/image"
-import { Check, Loader2, X } from "lucide-react"
+import { X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -25,6 +25,7 @@ import {
 import type { Locale } from "@/components/internationalization/config"
 
 import { updateSchoolBranding } from "./actions"
+import { useAutoSave } from "./use-auto-save"
 
 const BORDER_RADIUS_OPTIONS = [
   { value: "none", label: "None (0px)" },
@@ -47,9 +48,9 @@ interface Props {
 }
 
 export function ConfigBrandingForm({ schoolId, initialData, lang }: Props) {
-  const [isPending, startTransition] = useTransition()
-  const [saved, setSaved] = useState(false)
+  const [, startTransition] = useTransition()
   const [error, setError] = useState("")
+  const [isDirty, setIsDirty] = useState(false)
   const [logo, setLogo] = useState(initialData.logoUrl)
   const [primaryColor, setPrimaryColor] = useState(
     initialData.primaryColor || "#000000"
@@ -65,13 +66,13 @@ export function ConfigBrandingForm({ schoolId, initialData, lang }: Props) {
     if (files.length > 0) {
       const uploadedFile = files[0]
       setLogo(uploadedFile.cdnUrl || uploadedFile.url)
-      setSaved(false)
+      setIsDirty(true)
     }
   }
 
   const handleRemoveLogo = () => {
     setLogo("")
-    setSaved(false)
+    setIsDirty(true)
   }
 
   const handleSave = () => {
@@ -84,12 +85,14 @@ export function ConfigBrandingForm({ schoolId, initialData, lang }: Props) {
         borderRadius,
       })
       if (result.success) {
-        setSaved(true)
+        setIsDirty(false)
       } else {
         setError(result.error || "Failed to update branding")
       }
     })
   }
+
+  useAutoSave(handleSave, isDirty)
 
   return (
     <div className="space-y-6">
@@ -143,7 +146,7 @@ export function ConfigBrandingForm({ schoolId, initialData, lang }: Props) {
               value={primaryColor}
               onChange={(e) => {
                 setPrimaryColor(e.target.value)
-                setSaved(false)
+                setIsDirty(true)
               }}
               className="h-10 w-10 cursor-pointer rounded border"
             />
@@ -151,7 +154,7 @@ export function ConfigBrandingForm({ schoolId, initialData, lang }: Props) {
               value={primaryColor}
               onChange={(e) => {
                 setPrimaryColor(e.target.value)
-                setSaved(false)
+                setIsDirty(true)
               }}
               placeholder="#000000"
               className="font-mono"
@@ -166,7 +169,7 @@ export function ConfigBrandingForm({ schoolId, initialData, lang }: Props) {
               value={secondaryColor}
               onChange={(e) => {
                 setSecondaryColor(e.target.value)
-                setSaved(false)
+                setIsDirty(true)
               }}
               className="h-10 w-10 cursor-pointer rounded border"
             />
@@ -174,7 +177,7 @@ export function ConfigBrandingForm({ schoolId, initialData, lang }: Props) {
               value={secondaryColor}
               onChange={(e) => {
                 setSecondaryColor(e.target.value)
-                setSaved(false)
+                setIsDirty(true)
               }}
               placeholder="#ffffff"
               className="font-mono"
@@ -190,7 +193,7 @@ export function ConfigBrandingForm({ schoolId, initialData, lang }: Props) {
           value={borderRadius}
           onValueChange={(v) => {
             setBorderRadius(v)
-            setSaved(false)
+            setIsDirty(true)
           }}
         >
           <SelectTrigger className="sm:max-w-xs">
@@ -211,24 +214,6 @@ export function ConfigBrandingForm({ schoolId, initialData, lang }: Props) {
           {error}
         </div>
       )}
-
-      <div className="flex justify-end">
-        <Button size="sm" onClick={handleSave} disabled={isPending}>
-          {isPending ? (
-            <>
-              <Loader2 className="me-1 h-4 w-4 animate-spin" />
-              Saving...
-            </>
-          ) : saved ? (
-            <>
-              <Check className="me-1 h-4 w-4" />
-              Saved
-            </>
-          ) : (
-            "Save"
-          )}
-        </Button>
-      </div>
     </div>
   )
 }

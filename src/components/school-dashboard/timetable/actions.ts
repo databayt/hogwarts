@@ -414,7 +414,7 @@ export async function validateRoomConstraints(input: {
     where: { id: input.classId, schoolId: input.schoolId },
     select: {
       name: true,
-      subject: { select: { subjectName: true } },
+      subject: { select: { name: true } },
       _count: { select: { studentClasses: true } },
     },
   })
@@ -475,23 +475,23 @@ export async function validateRoomConstraints(input: {
     constraint?.allowedSubjectTypes &&
     constraint.allowedSubjectTypes.length > 0
   ) {
-    const subjectName = classInfo?.subject?.subjectName?.toLowerCase() || ""
+    const name = classInfo?.subject?.name?.toLowerCase() || ""
     const allowed = (constraint.allowedSubjectTypes as string[]).map(
       (t: string) => t.toLowerCase()
     )
 
     // Check if the class's subject matches any allowed type
     const isAllowed = allowed.some(
-      (t: string) => subjectName.includes(t) || t.includes(subjectName)
+      (t: string) => name.includes(t) || t.includes(name)
     )
 
     if (!isAllowed) {
       violations.push({
         type: "ROOM_EQUIPMENT",
         severity: "warning",
-        message: `${classInfo?.subject?.subjectName} is not in the allowed subject types for ${room.roomName} (allowed: ${(constraint.allowedSubjectTypes as string[]).join(", ")})`,
+        message: `${classInfo?.subject?.name} is not in the allowed subject types for ${room.roomName} (allowed: ${(constraint.allowedSubjectTypes as string[]).join(", ")})`,
         details: {
-          subjectName: classInfo?.subject?.subjectName,
+          name: classInfo?.subject?.name,
           allowedTypes: constraint.allowedSubjectTypes,
           roomType: room.classroomType?.name,
         },
@@ -875,7 +875,7 @@ export async function upsertTimetableSlot(input: unknown) {
     where: { id: validatedInput.classId, schoolId },
     select: {
       subjectId: true,
-      subject: { select: { subjectName: true } },
+      subject: { select: { name: true } },
     },
   })
 
@@ -898,10 +898,10 @@ export async function upsertTimetableSlot(input: unknown) {
       const teacherName = teacher
         ? `${teacher.givenName} ${teacher.surname}`
         : "Selected teacher"
-      const subjectName = classInfo.subject?.subjectName || "this subject"
+      const name = classInfo.subject?.name || "this subject"
 
       throw new Error(
-        `${teacherName} is not qualified to teach ${subjectName}. ` +
+        `${teacherName} is not qualified to teach ${name}. ` +
           `Please assign a teacher with subject expertise or add this subject to the teacher's qualifications.`
       )
     }
@@ -1433,7 +1433,7 @@ export async function getWeeklyTimetable(input: unknown): Promise<{
         select: {
           id: true,
           name: true,
-          subject: { select: { subjectName: true } },
+          subject: { select: { name: true } },
           teacher: { select: { givenName: true, surname: true } },
         },
       },
@@ -1467,11 +1467,10 @@ export async function getWeeklyTimetable(input: unknown): Promise<{
         [row.class?.teacher?.givenName, row.class?.teacher?.surname]
           .filter(Boolean)
           .join(" ")
-      const subjectName =
-        row.class?.subject?.subjectName ?? row.class?.name ?? ""
+      const name = row.class?.subject?.name ?? row.class?.name ?? ""
       return {
         period: idx + 1,
-        subject: subjectName,
+        subject: name,
         teacher: teacherName,
         replaced: false,
         original: null,
@@ -1557,7 +1556,7 @@ export async function getTimetableByClass(input: {
         select: {
           id: true,
           name: true,
-          subject: { select: { subjectName: true } },
+          subject: { select: { name: true } },
         },
       },
       period: {
@@ -1571,7 +1570,7 @@ export async function getTimetableByClass(input: {
     select: {
       id: true,
       name: true,
-      subject: { select: { subjectName: true } },
+      subject: { select: { name: true } },
     },
   })
 
@@ -1580,7 +1579,7 @@ export async function getTimetableByClass(input: {
       ? {
           id: classInfo.id,
           name: classInfo.name,
-          subject: classInfo.subject?.subjectName,
+          subject: classInfo.subject?.name,
         }
       : null,
     workingDays: config.workingDays,
@@ -1599,7 +1598,7 @@ export async function getTimetableByClass(input: {
       teacherId: s.teacherId,
       room: s.classroom?.roomName || "",
       roomId: s.classroomId,
-      subject: s.class?.subject?.subjectName || s.class?.name || "",
+      subject: s.class?.subject?.name || s.class?.name || "",
     })),
     lunchAfterPeriod: config.defaultLunchAfterPeriod,
   }
@@ -1638,7 +1637,7 @@ export async function getTimetableByStudentGrade(input: {
               id: true,
               name: true,
               termId: true,
-              subject: { select: { subjectName: true } },
+              subject: { select: { name: true } },
             },
           },
         },
@@ -1685,7 +1684,7 @@ export async function getTimetableByStudentGrade(input: {
       select: {
         id: true,
         name: true,
-        subject: { select: { subjectName: true } },
+        subject: { select: { name: true } },
       },
     })
     classIds = gradeClasses.map((c) => c.id)
@@ -1732,7 +1731,7 @@ export async function getTimetableByStudentGrade(input: {
         select: {
           id: true,
           name: true,
-          subject: { select: { subjectName: true } },
+          subject: { select: { name: true } },
         },
       },
       period: {
@@ -1770,7 +1769,7 @@ export async function getTimetableByStudentGrade(input: {
       teacherId: s.teacherId,
       room: s.classroom?.roomName || "",
       roomId: s.classroomId,
-      subject: s.class?.subject?.subjectName || s.class?.name || "",
+      subject: s.class?.subject?.name || s.class?.name || "",
       className: s.class?.name || "",
       classId: s.classId,
     })),
@@ -1802,7 +1801,7 @@ export async function getTimetableByGradeLevel(input: {
     select: {
       id: true,
       name: true,
-      subject: { select: { subjectName: true } },
+      subject: { select: { name: true } },
     },
   })
 
@@ -1838,7 +1837,7 @@ export async function getTimetableByGradeLevel(input: {
         select: {
           id: true,
           name: true,
-          subject: { select: { subjectName: true } },
+          subject: { select: { name: true } },
         },
       },
       period: {
@@ -1861,7 +1860,7 @@ export async function getTimetableByGradeLevel(input: {
     subjectCount: gradeClasses.length,
     subjects: gradeClasses.map((c) => ({
       id: c.id,
-      name: c.subject?.subjectName || c.name,
+      name: c.subject?.name || c.name,
     })),
     workingDays: config.workingDays,
     periods: periods.map((p, idx) => ({
@@ -1883,7 +1882,7 @@ export async function getTimetableByGradeLevel(input: {
       teacherId: s.teacherId,
       room: s.classroom?.roomName || "",
       roomId: s.classroomId,
-      subject: s.class?.subject?.subjectName || s.class?.name || "",
+      subject: s.class?.subject?.name || s.class?.name || "",
       className: s.class?.name || "",
       classId: s.classId,
     })),
@@ -1989,7 +1988,7 @@ export async function getTimetableByTeacher(input: {
         select: {
           id: true,
           name: true,
-          subject: { select: { subjectName: true } },
+          subject: { select: { name: true } },
         },
       },
       classroom: { select: { id: true, roomName: true } },
@@ -2032,7 +2031,7 @@ export async function getTimetableByTeacher(input: {
       classId: s.classId,
       room: s.classroom?.roomName || "",
       roomId: s.classroomId,
-      subject: s.class?.subject?.subjectName || s.class?.name || "",
+      subject: s.class?.subject?.name || s.class?.name || "",
     })),
     workload: {
       daysPerWeek: uniqueDays.size,
@@ -2082,7 +2081,7 @@ export async function getTimetableByRoom(input: {
         select: {
           id: true,
           name: true,
-          subject: { select: { subjectName: true } },
+          subject: { select: { name: true } },
         },
       },
       teacher: { select: { id: true, givenName: true, surname: true } },
@@ -2130,7 +2129,7 @@ export async function getTimetableByRoom(input: {
       classId: s.classId,
       teacher: s.teacher ? `${s.teacher.givenName} ${s.teacher.surname}` : "",
       teacherId: s.teacherId,
-      subject: s.class?.subject?.subjectName || s.class?.name || "",
+      subject: s.class?.subject?.name || s.class?.name || "",
     })),
     utilization: {
       usedSlots: slots.length,
@@ -2172,7 +2171,7 @@ export async function getTimetableAnalytics(input: { termId: string }) {
         select: {
           id: true,
           name: true,
-          subject: { select: { subjectName: true } },
+          subject: { select: { name: true } },
         },
       },
     },
@@ -2199,8 +2198,8 @@ export async function getTimetableAnalytics(input: { termId: string }) {
       }
       existing.periods++
       existing.classes.add(slot.classId)
-      if (slot.class?.subject?.subjectName)
-        existing.subjects.add(slot.class.subject.subjectName)
+      if (slot.class?.subject?.name)
+        existing.subjects.add(slot.class.subject.name)
       teacherWorkload.set(key, existing)
     }
   }
@@ -2237,8 +2236,7 @@ export async function getTimetableAnalytics(input: { termId: string }) {
     { name: string; periods: number; classes: Set<string> }
   >()
   for (const slot of slots) {
-    const subject =
-      slot.class?.subject?.subjectName || slot.class?.name || "Unknown"
+    const subject = slot.class?.subject?.name || slot.class?.name || "Unknown"
     const existing = subjectDist.get(subject) || {
       name: subject,
       periods: 0,
@@ -2649,7 +2647,7 @@ export async function getGuardianChildren() {
                     select: {
                       id: true,
                       name: true,
-                      subject: { select: { subjectName: true } },
+                      subject: { select: { name: true } },
                     },
                   },
                 },
@@ -2850,7 +2848,7 @@ export async function getTodaySchedule(input?: { date?: Date }) {
     where,
     include: {
       class: {
-        select: { name: true, subject: { select: { subjectName: true } } },
+        select: { name: true, subject: { select: { name: true } } },
       },
       teacher: { select: { givenName: true, surname: true } },
       classroom: { select: { roomName: true } },
@@ -2866,7 +2864,7 @@ export async function getTodaySchedule(input?: { date?: Date }) {
     periodName: slot.period.name,
     startTime: slot.period.startTime,
     endTime: slot.period.endTime,
-    subject: slot.class?.subject?.subjectName || slot.class?.name || "",
+    subject: slot.class?.subject?.name || slot.class?.name || "",
     className: slot.class?.name || "",
     teacher: slot.teacher
       ? `${slot.teacher.givenName} ${slot.teacher.surname}`
@@ -3600,7 +3598,7 @@ export async function generateTimetablePreview(input: {
       subject: {
         select: {
           id: true,
-          subjectName: true,
+          name: true,
         },
       },
       _count: { select: { studentClasses: true } },
@@ -3647,8 +3645,8 @@ export async function generateTimetablePreview(input: {
   }
 
   const requirements: ClassRequirement[] = classes.map((c) => {
-    const subjectName = c.subject?.subjectName || c.name
-    const normalizedName = subjectName.toLowerCase().trim()
+    const name = c.subject?.name || c.name
+    const normalizedName = name.toLowerCase().trim()
 
     // Look up weeklyPeriods: try (name, gradeId) first, then name-only, fallback to 3
     let hoursPerWeek = 3
@@ -3666,10 +3664,10 @@ export async function generateTimetablePreview(input: {
       classId: c.id,
       className: c.name,
       subjectId: c.subjectId || "",
-      subjectName,
+      name,
       hoursPerWeek,
       preferredTeacherIds: subjectTeachers.get(c.subjectId || "") || [],
-      requiresLab: subjectName.toLowerCase().includes("lab"),
+      requiresLab: name.toLowerCase().includes("lab"),
       yearLevelId: "",
       studentCount: c._count.studentClasses,
     }
@@ -5196,7 +5194,7 @@ export async function getTeacherAbsences(input: {
                 class: {
                   select: {
                     name: true,
-                    subject: { select: { subjectName: true } },
+                    subject: { select: { name: true } },
                   },
                 },
               },
@@ -5227,7 +5225,7 @@ export async function getTeacherAbsences(input: {
         substituteName: `${s.substituteTeacher.givenName} ${s.substituteTeacher.surname}`,
         periodName: s.originalSlot.period.name,
         className: s.originalSlot.class?.name,
-        subjectName: s.originalSlot.class?.subject?.subjectName,
+        name: s.originalSlot.class?.subject?.name,
       })),
     })),
     total,
@@ -5374,7 +5372,7 @@ export async function assignSubstitute(input: {
     include: {
       teacher: { select: { id: true, givenName: true, surname: true } },
       class: {
-        select: { name: true, subject: { select: { subjectName: true } } },
+        select: { name: true, subject: { select: { name: true } } },
       },
       period: { select: { name: true } },
     },
@@ -5604,7 +5602,7 @@ export async function getSubstitutionRecords(input: {
             class: {
               select: {
                 name: true,
-                subject: { select: { subjectName: true } },
+                subject: { select: { name: true } },
               },
             },
             classroom: { select: { roomName: true } },
@@ -5640,7 +5638,7 @@ export async function getSubstitutionRecords(input: {
         periodName: r.originalSlot.period.name,
         periodTime: `${r.originalSlot.period.startTime} - ${r.originalSlot.period.endTime}`,
         className: r.originalSlot.class?.name,
-        subjectName: r.originalSlot.class?.subject?.subjectName,
+        name: r.originalSlot.class?.subject?.name,
         roomName: r.originalSlot.classroom?.roomName,
       },
       absence: {
@@ -5759,7 +5757,7 @@ export async function getMyUpcomingSubstitutions(input: { limit?: number }) {
         include: {
           period: { select: { name: true, startTime: true, endTime: true } },
           class: {
-            select: { name: true, subject: { select: { subjectName: true } } },
+            select: { name: true, subject: { select: { name: true } } },
           },
           classroom: { select: { roomName: true } },
         },
@@ -5776,7 +5774,7 @@ export async function getMyUpcomingSubstitutions(input: { limit?: number }) {
       periodName: r.originalSlot.period.name,
       periodTime: `${r.originalSlot.period.startTime} - ${r.originalSlot.period.endTime}`,
       className: r.originalSlot.class?.name,
-      subjectName: r.originalSlot.class?.subject?.subjectName,
+      name: r.originalSlot.class?.subject?.name,
       roomName: r.originalSlot.classroom?.roomName,
       dayOfWeek: r.originalSlot.dayOfWeek,
     })),
@@ -5823,7 +5821,7 @@ export async function getSlotsNeedingSubstitutes(input: {
         select: {
           id: true,
           name: true,
-          subject: { select: { id: true, subjectName: true } },
+          subject: { select: { id: true, name: true } },
         },
       },
       classroom: { select: { id: true, roomName: true } },
@@ -5848,7 +5846,7 @@ export async function getSlotsNeedingSubstitutes(input: {
     periodName: string
     className: string | undefined
     subjectId: string | undefined
-    subjectName: string | undefined
+    name: string | undefined
     roomName: string | undefined
     hasSubstitute: boolean
     substituteStatus: string | null
@@ -5876,7 +5874,7 @@ export async function getSlotsNeedingSubstitutes(input: {
         periodName: slot.period.name,
         className: slot.class?.name,
         subjectId: slot.class?.subject?.id,
-        subjectName: slot.class?.subject?.subjectName,
+        name: slot.class?.subject?.name,
         roomName: slot.classroom?.roomName,
         hasSubstitute: !!existing,
         substituteStatus: existing?.status || null,
@@ -5928,8 +5926,8 @@ export async function getSubjectsForSlotEditor(input: { termId: string }) {
       subject: {
         select: {
           id: true,
-          subjectName: true,
-          department: { select: { departmentName: true } },
+          name: true,
+          department: true,
         },
       },
     },
@@ -5959,10 +5957,10 @@ export async function getSubjectsForSlotEditor(input: { termId: string }) {
       .filter((c) => c.subject)
       .map((c, idx) => ({
         id: c.subject!.id,
-        name: c.subject!.subjectName,
-        code: c.subject!.subjectName.slice(0, 4).toUpperCase(),
+        name: c.subject!.name,
+        code: c.subject!.name.slice(0, 4).toUpperCase(),
         color: SLOT_EDITOR_COLORS[idx % SLOT_EDITOR_COLORS.length],
-        department: c.subject!.department?.departmentName,
+        department: c.subject!.department,
         hoursPerWeek: 3,
         isCore: true,
       })),

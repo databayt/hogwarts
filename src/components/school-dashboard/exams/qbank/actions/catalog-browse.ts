@@ -166,11 +166,22 @@ export async function adoptCatalogQuestion(
       }
     }
 
-    // Find matching school subject via catalogSubjectId bridge
-    const subject = await db.subject.findFirst({
-      where: { schoolId, catalogSubjectId: catalogQ.catalogSubjectId },
+    // Find matching school subject via SchoolSubjectSelection bridge
+    if (!catalogQ.catalogSubjectId) {
+      return {
+        success: false,
+        error: "Question has no subject mapping",
+        code: "SUBJECT_NOT_FOUND",
+      }
+    }
+    const subjectSelection = await db.schoolSubjectSelection.findFirst({
+      where: {
+        schoolId,
+        catalogSubjectId: catalogQ.catalogSubjectId,
+        isActive: true,
+      },
     })
-    if (!subject) {
+    if (!subjectSelection) {
       return {
         success: false,
         error: "Subject not in your school",
@@ -183,9 +194,8 @@ export async function adoptCatalogQuestion(
       const newQuestion = await tx.questionBank.create({
         data: {
           schoolId,
-          subjectId: subject.id,
+          subjectId: subjectSelection.catalogSubjectId,
           catalogQuestionId: catalogQ.id,
-          catalogSubjectId: catalogQ.catalogSubjectId,
           catalogChapterId: catalogQ.catalogChapterId,
           catalogLessonId: catalogQ.catalogLessonId,
           questionText: catalogQ.questionText,
