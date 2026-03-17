@@ -5,7 +5,7 @@
 import type { ActionResponse } from "@/lib/action-response"
 import { submitApplication } from "@/components/school-marketing/admission/actions"
 
-import type { ApplicationFormData } from "../types"
+import type { ApplicationFormData } from "./types"
 
 export interface SubmitActionResult {
   applicationNumber: string

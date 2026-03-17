@@ -53,6 +53,18 @@ export async function getStudentProfile(studentId?: string) {
       },
       include: {
         user: true,
+        application: {
+          select: {
+            applicationNumber: true,
+            campaignId: true,
+            status: true,
+            submittedAt: true,
+            confirmationDate: true,
+            meritRank: true,
+            meritScore: true,
+            campaign: { select: { name: true, academicYear: true } },
+          },
+        },
         studentYearLevels: {
           include: {
             yearLevel: true,
@@ -419,6 +431,18 @@ export async function getProfileBasicData(userId: string, lang?: string) {
             city: true,
             enrollmentDate: true,
             email: true,
+            application: {
+              select: {
+                applicationNumber: true,
+                campaignId: true,
+                status: true,
+                submittedAt: true,
+                confirmationDate: true,
+                meritRank: true,
+                meritScore: true,
+                campaign: { select: { name: true, academicYear: true } },
+              },
+            },
           },
         },
         teacher: {

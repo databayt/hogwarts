@@ -30,9 +30,14 @@ export const ContactForm = forwardRef<ContactFormRef, ContactFormProps>(
     const dict = ((dictionary as Record<string, Record<string, string>> | null)
       ?.apply?.contact ?? {}) as Record<string, string>
 
+    const prevDataRef = React.useRef<string>("")
     useEffect(() => {
       const subscription = form.watch((value) => {
-        updateStepData("contact", value as ContactSchemaType)
+        const json = JSON.stringify(value)
+        if (json !== prevDataRef.current) {
+          prevDataRef.current = json
+          updateStepData("contact", value as ContactSchemaType)
+        }
       })
       return () => subscription.unsubscribe()
     }, [form, updateStepData])

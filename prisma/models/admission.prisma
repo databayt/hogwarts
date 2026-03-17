@@ -130,6 +130,7 @@ model Application {
   campaign       AdmissionCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   communications Communication[]
   tourBookings   TourBooking[]
+  student        Student?
 
   @@unique([schoolId, applicationNumber])
   @@index([schoolId])

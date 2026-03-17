@@ -7,7 +7,6 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
@@ -15,7 +14,6 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 
 import { tenantDelete } from "./actions"
@@ -26,6 +24,7 @@ interface DeleteSchoolDialogProps {
   domain: string
   studentCount: number
   teacherCount: number
+  onDeleted?: () => void
   children: React.ReactNode
 }
 
@@ -35,22 +34,21 @@ export function DeleteSchoolDialog({
   domain,
   studentCount,
   teacherCount,
+  onDeleted,
   children,
 }: DeleteSchoolDialogProps) {
   const [open, setOpen] = useState(false)
   const [confirmName, setConfirmName] = useState("")
-  const [reason, setReason] = useState("")
   const [isPending, startTransition] = useTransition()
 
   const nameMatches = confirmName === name
-  const canSubmit = nameMatches && reason.trim().length > 0 && !isPending
+  const canSubmit = nameMatches && !isPending
 
   const handleDelete = () => {
     startTransition(async () => {
       const result = await tenantDelete({
         tenantId,
         confirmName,
-        reason: reason.trim(),
       })
 
       if (result.success) {
@@ -60,7 +58,7 @@ export function DeleteSchoolDialog({
         )
         setOpen(false)
         setConfirmName("")
-        setReason("")
+        onDeleted?.()
       } else {
         ErrorToast(result.error?.message || "Failed to delete school")
       }
@@ -70,7 +68,6 @@ export function DeleteSchoolDialog({
   const handleOpenChange = (next: boolean) => {
     if (!next) {
       setConfirmName("")
-      setReason("")
     }
     setOpen(next)
   }
@@ -81,12 +78,6 @@ export function DeleteSchoolDialog({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Delete School</AlertDialogTitle>
-          <AlertDialogDescription>
-            This will permanently delete <strong>{name}</strong> ({domain}
-            .databayt.org) and all its data including students, teachers,
-            classes, attendance, grades, and financial records. Users will be
-            detached but not deleted.
-          </AlertDialogDescription>
         </AlertDialogHeader>
 
         <div className="space-y-3 py-2">
@@ -103,19 +94,6 @@ export function DeleteSchoolDialog({
               value={confirmName}
               onChange={(e) => setConfirmName(e.target.value)}
               placeholder={name}
-              disabled={isPending}
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-sm">
-              Reason for deletion <span className="text-destructive">*</span>
-            </Label>
-            <Textarea
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder="Why is this school being deleted?"
-              rows={2}
               disabled={isPending}
             />
           </div>

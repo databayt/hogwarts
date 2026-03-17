@@ -9,7 +9,6 @@
 import type {
   AcademicStepData,
   ContactStepData,
-  DocumentsStepData,
   GuardianStepData,
   PersonalStepData,
 } from "./types"
@@ -72,32 +71,19 @@ export function validateAcademicStep(
 }
 
 /**
- * Validate documents step data
- * Optional - allows proceeding without uploads
- */
-export function validateDocumentsStep(
-  data: DocumentsStepData | undefined
-): boolean {
-  // Documents are optional, so always valid
-  return true
-}
-
-/**
- * Check if all required steps are complete for review
+ * Check if all required steps are complete for submission
  */
 export function validateAllSteps(formData: {
   personal?: PersonalStepData
   contact?: ContactStepData
   guardian?: GuardianStepData
   academic?: AcademicStepData
-  documents?: DocumentsStepData
 }): boolean {
   return (
     validatePersonalStep(formData.personal) &&
     validateContactStep(formData.contact) &&
     validateGuardianStep(formData.guardian) &&
-    validateAcademicStep(formData.academic) &&
-    validateDocumentsStep(formData.documents)
+    validateAcademicStep(formData.academic)
   )
 }
 
@@ -109,14 +95,12 @@ export function getStepValidationStatus(formData: {
   contact?: ContactStepData
   guardian?: GuardianStepData
   academic?: AcademicStepData
-  documents?: DocumentsStepData
 }): Record<string, boolean> {
   return {
     personal: validatePersonalStep(formData.personal),
     contact: validateContactStep(formData.contact),
     guardian: validateGuardianStep(formData.guardian),
     academic: validateAcademicStep(formData.academic),
-    documents: validateDocumentsStep(formData.documents),
   }
 }
 

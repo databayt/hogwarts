@@ -8,12 +8,10 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import {
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { ActionMenu, ActionMenuItem } from "@/components/atom/action-menu"
-import { useModal } from "@/components/atom/modal/context"
 import {
   confirmDeleteDialog,
   DeleteToast,
@@ -298,8 +296,6 @@ export const getStudentColumns = (
       header: () => <span className="sr-only">{t.actions}</span>,
       cell: ({ row }) => {
         const student = row.original
-        const { openModal } = useModal()
-        const onEdit = () => openModal(student.id)
         const onDelete = async () => {
           try {
             const ok = await confirmDeleteDialog(undefined, {
@@ -336,14 +332,12 @@ export const getStudentColumns = (
               label={t.view}
               href={`/${lang}/profile/${student.userId || student.id}`}
             />
-            {student.wizardStep ? (
-              <ActionMenuItem
-                label={`${t.edit} (${t.incomplete})`}
-                href={`/${lang}/students/add/${student.id}/${student.wizardStep}`}
-              />
-            ) : (
-              <DropdownMenuItem onClick={onEdit}>{t.edit}</DropdownMenuItem>
-            )}
+            <ActionMenuItem
+              label={
+                student.wizardStep ? `${t.edit} (${t.incomplete})` : t.edit
+              }
+              href={`/${lang}/students/add/${student.id}/${student.wizardStep || "personal"}`}
+            />
             <DropdownMenuSeparator />
             <ActionMenuItem
               label={t.viewGrades}

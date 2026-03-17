@@ -2,13 +2,18 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React, { useCallback, useEffect, useRef } from "react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { GraduationCap } from "lucide-react"
 
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { FormHeading, FormLayout } from "@/components/form"
 import { useLocale } from "@/components/internationalization/use-locale"
 
 import { useApplySession } from "../application-context"
+import {
+  submitApplicationAction,
+  type SubmitActionResult,
+} from "../submit-action"
 import type { AcademicStepData } from "../types"
 import { useApplyValidation } from "../validation-context"
 import { ACADEMIC_STEP_CONFIG } from "./config"
@@ -30,27 +35,97 @@ export default function AcademicContent({ dictionary }: Props) {
   const { enableNext, disableNext, setCustomNavigation } = useApplyValidation()
   const { session, getStepData } = useApplySession()
   const academicFormRef = useRef<AcademicFormRef>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const initialData = getStepData("academic")
 
-  const onNext = useCallback(async () => {
-    if (academicFormRef.current) {
-      try {
-        await academicFormRef.current.saveAndNext()
-        router.push(`/${locale}/apply/${id}/documents`)
-      } catch (error) {
-        console.error("Error saving academic step:", error)
+  const handleSuccess = useCallback(
+    (result: SubmitActionResult) => {
+      if (result.requiresPayment) {
+        const searchParams = new URLSearchParams({
+          number: result.applicationNumber,
+        })
+        router.push(
+          `/${locale}/apply/${result.applicationId}/payment?${searchParams.toString()}`
+        )
+      } else {
+        router.push(
+          `/${locale}/apply/${id}/success?number=${result.applicationNumber}`
+        )
       }
+    },
+    [locale, id, router]
+  )
+
+  const onNext = useCallback(async () => {
+    if (!academicFormRef.current) return
+
+    setIsSubmitting(true)
+    setError(null)
+
+    try {
+      // Save academic step first
+      await academicFormRef.current.saveAndNext()
+
+      // Check completeness
+      const { personal, contact, guardian, academic } = session.formData
+      if (
+        !personal?.firstName ||
+        !personal?.lastName ||
+        !contact?.email ||
+        !contact?.phone ||
+        !guardian?.fatherName ||
+        !guardian?.motherName ||
+        !academic?.applyingForClass
+      ) {
+        throw new Error(
+          isRTL
+            ? "يرجى إكمال جميع الخطوات المطلوبة"
+            : "Please complete all required steps"
+        )
+      }
+
+      if (!session.sessionToken) {
+        throw new Error("No session token")
+      }
+
+      // Build flat form data and submit
+      const formData = {
+        campaignId: id,
+        ...session.formData.attachments,
+        ...personal,
+        ...contact,
+        ...session.formData.location,
+        ...guardian,
+        ...academic,
+        photoUrl: session.formData.attachments?.passportPhotoUrl,
+        signatureUrl: session.formData.attachments?.signatureUrl,
+      }
+
+      const result = await submitApplicationAction(
+        subdomain,
+        session.sessionToken,
+        formData
+      )
+
+      if (!result.success || !result.data) {
+        throw new Error(result.error || "Failed to submit application")
+      }
+
+      handleSuccess(result.data)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to submit")
+      setIsSubmitting(false)
     }
-  }, [locale, subdomain, id, router])
+  }, [session, subdomain, id, isRTL, handleSuccess])
 
   useEffect(() => {
     const academicData = session.formData.academic
 
-    // Only applyingForClass is required
     const isValid = academicData?.applyingForClass
 
-    if (isValid) {
+    if (isValid && !isSubmitting) {
       enableNext()
       setCustomNavigation({ onNext })
     } else {
@@ -59,6 +134,7 @@ export default function AcademicContent({ dictionary }: Props) {
     }
   }, [
     session.formData.academic,
+    isSubmitting,
     enableNext,
     disableNext,
     setCustomNavigation,
@@ -69,28 +145,25 @@ export default function AcademicContent({ dictionary }: Props) {
     ?.apply?.academic ?? {}) as Record<string, string>
 
   return (
-    <div className="space-y-8">
-      <div className="mx-auto max-w-4xl">
-        <div className="mb-8 flex items-start gap-4">
-          <div className="bg-primary/10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full">
-            <GraduationCap className="text-primary h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold">
-              {dict.title || ACADEMIC_STEP_CONFIG.label(isRTL)}
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              {dict.description || ACADEMIC_STEP_CONFIG.description(isRTL)}
-            </p>
-          </div>
-        </div>
-
+    <FormLayout>
+      <FormHeading
+        title={dict.title || ACADEMIC_STEP_CONFIG.label(isRTL)}
+        description={
+          dict.description || ACADEMIC_STEP_CONFIG.description(isRTL)
+        }
+      />
+      <div className="space-y-6">
+        {error && (
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
         <AcademicForm
           ref={academicFormRef}
           initialData={initialData as AcademicStepData}
           dictionary={dictionary}
         />
       </div>
-    </div>
+    </FormLayout>
   )
 }

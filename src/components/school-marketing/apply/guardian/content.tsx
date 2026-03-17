@@ -4,14 +4,13 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { useCallback, useEffect, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { Users } from "lucide-react"
 
+import { FormHeading, FormLayout } from "@/components/form"
 import { useLocale } from "@/components/internationalization/use-locale"
 
 import { useApplySession } from "../application-context"
 import type { GuardianStepData } from "../types"
 import { useApplyValidation } from "../validation-context"
-import { GUARDIAN_STEP_CONFIG } from "./config"
 import { GuardianForm } from "./form"
 import type { GuardianFormRef } from "./types"
 
@@ -95,29 +94,17 @@ export default function GuardianContent({ dictionary }: Props) {
     ?.apply?.guardian ?? {}) as Record<string, string>
 
   return (
-    <div className="space-y-8">
-      <div className="mx-auto max-w-4xl">
-        <div className="mb-8 flex items-start gap-4">
-          <div className="bg-primary/10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full">
-            <Users className="text-primary h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold">
-              {dict.title || heading.title}
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              {dict.description || heading.description}
-            </p>
-          </div>
-        </div>
-
-        <GuardianForm
-          ref={guardianFormRef}
-          initialData={initialData as GuardianStepData}
-          dictionary={dictionary}
-          onTabChange={handleTabChange}
-        />
-      </div>
-    </div>
+    <FormLayout>
+      <FormHeading
+        title={dict.title || heading.title}
+        description={dict.description || heading.description}
+      />
+      <GuardianForm
+        ref={guardianFormRef}
+        initialData={initialData as GuardianStepData}
+        dictionary={dictionary}
+        onTabChange={handleTabChange}
+      />
+    </FormLayout>
   )
 }

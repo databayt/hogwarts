@@ -35,6 +35,7 @@ export interface CustomNavigation {
 export interface ValidationContext {
   isNextDisabled: boolean
   customNavigation?: CustomNavigation
+  getCustomNavigation?: () => CustomNavigation | undefined
   onSave?: () => Promise<void>
 }
 
@@ -154,14 +155,14 @@ export function FormFooter({
 
   // Use validation context if provided
   let contextNextDisabled = false
-  let customNavigation: CustomNavigation | undefined
+  let getCustomNavigation: (() => CustomNavigation | undefined) | undefined
   let contextOnSave: (() => Promise<void>) | undefined
 
   if (useValidation) {
     try {
       const validationContext = useValidation()
       contextNextDisabled = validationContext.isNextDisabled
-      customNavigation = validationContext.customNavigation
+      getCustomNavigation = validationContext.getCustomNavigation
       contextOnSave = validationContext.onSave
     } catch {
       // Context not available
@@ -213,8 +214,9 @@ export function FormFooter({
 
   // Navigation handlers
   const handleBack = () => {
-    if (customNavigation?.onBack) {
-      customNavigation.onBack()
+    const customNav = getCustomNavigation?.()
+    if (customNav?.onBack) {
+      customNav.onBack()
       return
     }
 
@@ -231,8 +233,9 @@ export function FormFooter({
   }
 
   const handleNext = () => {
-    if (customNavigation?.onNext) {
-      customNavigation.onNext()
+    const customNav = getCustomNavigation?.()
+    if (customNav?.onNext) {
+      customNav.onNext()
       return
     }
 
@@ -286,11 +289,7 @@ export function FormFooter({
 
   // Button states
   const canGoBackActual = canGoBack && currentStepIndex > 0
-  const canGoNextActual =
-    canGoNext &&
-    !nextDisabled &&
-    !contextNextDisabled &&
-    !customNavigation?.nextDisabled
+  const canGoNextActual = canGoNext && !nextDisabled && !contextNextDisabled
 
   const groupCount = Object.keys(config.groups).length
 
@@ -472,15 +471,13 @@ export const ADMISSION_CONFIG: StepConfig = {
     "location",
     "guardian",
     "academic",
-    "documents",
-    "review",
   ],
   groups: {
-    1: ["attachments", "personal", "contact", "location"],
-    2: ["guardian", "academic"],
-    3: ["documents", "review"],
+    1: ["attachments", "personal"],
+    2: ["contact", "location"],
+    3: ["guardian", "academic"],
   },
-  groupLabels: ["Basic Information", "Family & Education", "Finalize"],
+  groupLabels: ["Basic Information", "Details", "Family & Education"],
 }
 
 /** Generic application flow configuration */

@@ -34,7 +34,7 @@ export default function StudentWizardLayout({
         wizard?.contactDetails || "Contact Details",
         wizard?.healthHistory || "Health & History",
       ],
-      finalLabel: wizard?.create || "Create",
+      finalLabel: wizard?.save || "Save",
     }),
     [wizard]
   )

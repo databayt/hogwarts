@@ -51,6 +51,11 @@ export interface AttachmentsStepData {
   idUrl?: string
   resumeUrl?: string
   otherUrl?: string
+  birthCertificateUrl?: string
+  passportPhotoUrl?: string
+  signatureUrl?: string
+  medicalCertificateUrl?: string
+  transferCertificateUrl?: string
 }
 
 export interface PersonalStepData {
@@ -105,30 +110,6 @@ export interface AcademicStepData {
   thirdLanguage?: string
 }
 
-export interface UploadedFileRef {
-  id: string
-  url: string
-  name: string
-  type: string
-  size?: number
-  uploadedAt?: string
-}
-
-export interface DocumentsStepData {
-  photoUrl?: string
-  signatureUrl?: string
-  photo?: UploadedFileRef
-  signature?: UploadedFileRef
-  documents?: Array<{
-    type: string
-    name: string
-    url: string
-    uploadedAt: string
-    fileId?: string
-    size?: number
-  }>
-}
-
 export type ApplicationStepData =
   | AttachmentsStepData
   | PersonalStepData
@@ -136,7 +117,6 @@ export type ApplicationStepData =
   | LocationStepData
   | GuardianStepData
   | AcademicStepData
-  | DocumentsStepData
 
 // Session state for context
 export interface ApplySessionState {
@@ -149,7 +129,6 @@ export interface ApplySessionState {
     location: LocationStepData
     guardian: GuardianStepData
     academic: AcademicStepData
-    documents: DocumentsStepData
   }>
   currentStep: ApplyStep
   lastSaved: Date | null

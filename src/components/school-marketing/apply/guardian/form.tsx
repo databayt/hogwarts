@@ -50,9 +50,14 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
     const dict = ((dictionary as Record<string, Record<string, string>> | null)
       ?.apply?.guardian ?? {}) as Record<string, string>
 
+    const prevDataRef = React.useRef<string>("")
     useEffect(() => {
       const subscription = form.watch((value) => {
-        updateStepData("guardian", value as GuardianSchemaType)
+        const json = JSON.stringify(value)
+        if (json !== prevDataRef.current) {
+          prevDataRef.current = json
+          updateStepData("guardian", value as GuardianSchemaType)
+        }
       })
       return () => subscription.unsubscribe()
     }, [form, updateStepData])

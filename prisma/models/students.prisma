@@ -169,6 +169,10 @@ model Student {
   promotionCandidates PromotionCandidate[]
   transcripts         Transcript[]
 
+  // Admission back-reference
+  applicationId String?      @unique
+  application   Application? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+
   // Wizard support
   wizardStep String? // null = complete, non-null = current wizard step slug
 

@@ -66,7 +66,7 @@ export function createApplicationStepSchemas(dictionary?: Dictionary) {
       address: z.string().min(1, v.required()),
       city: z.string().min(1, v.required()),
       state: z.string().min(1, v.required()),
-      postalCode: z.string().min(1, v.required()),
+      postalCode: z.string().optional().or(z.literal("")),
       country: z.string().default("Sudan"),
     }),
 
@@ -226,7 +226,7 @@ export function createOTPVerifySchema(dictionary?: Dictionary) {
 export const sessionDataSchema = z.object({
   formData: z.record(z.string(), z.unknown()),
   currentStep: z.number().min(0).max(6),
-  email: z.string().email(),
+  email: z.string().email().or(z.literal("")),
   campaignId: z.string().optional(),
 })
 

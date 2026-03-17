@@ -22,7 +22,13 @@ import type { UserRow } from "./actions"
 import { userResetSchool, userToggleSuspend } from "./actions"
 import { DeleteUserDialog } from "./delete-dialog"
 
-export const userColumns: ColumnDef<UserRow>[] = [
+export interface UserColumnCallbacks {
+  onDelete?: (user: UserRow) => void
+}
+
+export const getUserColumns = (
+  callbacks?: UserColumnCallbacks
+): ColumnDef<UserRow>[] => [
   {
     accessorKey: "email",
     header: ({ column }) => (
@@ -32,6 +38,11 @@ export const userColumns: ColumnDef<UserRow>[] = [
       <span className="font-mono text-sm">{getValue<string>() || "—"}</span>
     ),
     meta: { label: "Email", variant: "text", placeholder: "Search email" },
+    enableColumnFilter: true,
+    filterFn: (row, id, filterValue: string) => {
+      const email = row.original.email?.toLowerCase() || ""
+      return email.includes(filterValue.toLowerCase())
+    },
   },
   {
     accessorKey: "username",
@@ -83,6 +94,8 @@ export const userColumns: ColumnDef<UserRow>[] = [
         { label: "User", value: "USER" },
       ],
     },
+    enableColumnFilter: true,
+    filterFn: (row, id, value) => value.includes(row.getValue(id)),
   },
   {
     accessorKey: "schoolName",
@@ -123,6 +136,8 @@ export const userColumns: ColumnDef<UserRow>[] = [
         { label: "Suspended", value: "true" },
       ],
     },
+    enableColumnFilter: true,
+    filterFn: (row, id, value) => value.includes(String(row.getValue(id))),
   },
   {
     accessorKey: "createdAt",
@@ -203,6 +218,7 @@ export const userColumns: ColumnDef<UserRow>[] = [
                   email={user.email || "unknown"}
                   role={user.role}
                   schoolName={user.schoolName}
+                  onDeleted={() => callbacks?.onDelete?.(user)}
                 >
                   <DropdownMenuItem
                     className="text-destructive focus:text-destructive"
@@ -217,5 +233,7 @@ export const userColumns: ColumnDef<UserRow>[] = [
         </DropdownMenu>
       )
     },
+    enableSorting: false,
+    enableColumnFilter: false,
   },
 ]

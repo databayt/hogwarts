@@ -37,13 +37,24 @@ export type TenantRow = {
   trialEndsAt?: string | null
 }
 
-export const tenantColumns: ColumnDef<TenantRow>[] = [
+export interface TenantColumnCallbacks {
+  onDelete?: (tenant: TenantRow) => void
+}
+
+export const getTenantColumns = (
+  callbacks?: TenantColumnCallbacks
+): ColumnDef<TenantRow>[] => [
   {
     accessorKey: "name",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Name" />
     ),
     meta: { label: "Name", variant: "text", placeholder: "Search name" },
+    enableColumnFilter: true,
+    filterFn: (row, id, filterValue: string) => {
+      const name = row.original.name?.toLowerCase() || ""
+      return name.includes(filterValue.toLowerCase())
+    },
   },
   {
     accessorKey: "subdomain",
@@ -95,6 +106,8 @@ export const tenantColumns: ColumnDef<TenantRow>[] = [
         { label: "Enterprise", value: "ENTERPRISE" },
       ],
     },
+    enableColumnFilter: true,
+    filterFn: (row, id, value) => value.includes(row.getValue(id)),
   },
   {
     id: "users",
@@ -145,6 +158,8 @@ export const tenantColumns: ColumnDef<TenantRow>[] = [
         { label: "Inactive", value: "false" },
       ],
     },
+    enableColumnFilter: true,
+    filterFn: (row, id, value) => value.includes(String(row.getValue(id))),
   },
   {
     accessorKey: "createdAt",
@@ -288,6 +303,7 @@ export const tenantColumns: ColumnDef<TenantRow>[] = [
                   domain={tenant.domain}
                   studentCount={tenant.studentCount}
                   teacherCount={tenant.teacherCount}
+                  onDeleted={() => callbacks?.onDelete?.(tenant)}
                 >
                   <DropdownMenuItem
                     className="text-destructive focus:text-destructive"
@@ -302,5 +318,7 @@ export const tenantColumns: ColumnDef<TenantRow>[] = [
         </DropdownMenu>
       )
     },
+    enableSorting: false,
+    enableColumnFilter: false,
   },
 ]

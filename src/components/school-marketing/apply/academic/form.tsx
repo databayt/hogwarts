@@ -59,9 +59,14 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
     const dict = ((dictionary as Record<string, Record<string, string>> | null)
       ?.apply?.academic ?? {}) as Record<string, string>
 
+    const prevDataRef = React.useRef<string>("")
     useEffect(() => {
       const subscription = form.watch((value) => {
-        updateStepData("academic", value as AcademicSchemaType)
+        const json = JSON.stringify(value)
+        if (json !== prevDataRef.current) {
+          prevDataRef.current = json
+          updateStepData("academic", value as AcademicSchemaType)
+        }
       })
       return () => subscription.unsubscribe()
     }, [form, updateStepData])

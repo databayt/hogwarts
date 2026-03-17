@@ -4,28 +4,20 @@
 import { PageNav, type PageNavItem } from "@/components/atom/page-nav"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import { TenantsContent } from "@/components/saas-dashboard/tenants/content"
+import { TenantsAnalysis } from "@/components/saas-dashboard/tenants/analysis"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 
 export const metadata = {
-  title: "Tenant Management",
-  description: "Manage school subdomains and tenant settings",
+  title: "Tenant Analysis",
+  description: "Analytics and statistics for school tenants",
 }
 
 interface Props {
   params: Promise<{ lang: Locale }>
-  searchParams: Promise<{
-    page?: string
-    limit?: string
-    status?: string
-    plan?: string
-    search?: string
-  }>
 }
 
-export default async function Tenants({ params, searchParams }: Props) {
+export default async function TenantAnalysisPage({ params }: Props) {
   const { lang } = await params
-  const resolvedSearchParams = await searchParams
   const dictionary = await getDictionary(lang)
   const d = dictionary?.operator
 
@@ -40,11 +32,7 @@ export default async function Tenants({ params, searchParams }: Props) {
     <div className="space-y-6">
       <PageHeadingSetter title={d?.tenants?.title || "Tenants"} />
       <PageNav pages={tenantsPages} />
-      <TenantsContent
-        dictionary={dictionary}
-        lang={lang}
-        searchParams={resolvedSearchParams}
-      />
+      <TenantsAnalysis dictionary={dictionary} lang={lang} />
     </div>
   )
 }

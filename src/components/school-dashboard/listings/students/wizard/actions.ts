@@ -23,11 +23,23 @@ export async function getStudentForWizard(
 
     const student = await db.student.findFirst({
       where: { id: studentId, schoolId },
+      include: {
+        application: {
+          select: {
+            applicationNumber: true,
+            campaignId: true,
+            status: true,
+            submittedAt: true,
+            confirmationDate: true,
+            campaign: { select: { name: true, academicYear: true } },
+          },
+        },
+      },
     })
 
     if (!student) return { success: false, error: "Student not found" }
 
-    return { success: true, data: student as StudentWizardData }
+    return { success: true, data: student as unknown as StudentWizardData }
   } catch (error) {
     return {
       success: false,
@@ -134,8 +146,10 @@ export async function updateStudentWizardStep(
     const { schoolId } = await getTenantContext()
     if (!schoolId) return
 
+    // Only update wizardStep for draft students (wizardStep is non-null).
+    // Enrolled/complete students (wizardStep: null) should not be reverted to draft.
     await db.student.updateMany({
-      where: { id: studentId, schoolId },
+      where: { id: studentId, schoolId, wizardStep: { not: null } },
       data: { wizardStep: step },
     })
   } catch {

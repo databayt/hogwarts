@@ -63,7 +63,7 @@ function TeachersTableInner({
     status: dictionary?.status || "Status",
     created: dictionary?.created || "Created",
     actions: dictionary?.actions || "Actions",
-    view: dictionary?.view || "View Profile",
+    view: dictionary?.view || "View",
     edit: dictionary?.edit || "Edit",
     delete: dictionary?.delete || "Delete",
     allTeachers: dictionary?.allTeachers || "All Teachers",

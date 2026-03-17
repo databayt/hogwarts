@@ -7,7 +7,6 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
@@ -15,7 +14,6 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 
 import { userDelete } from "./actions"
@@ -25,6 +23,7 @@ interface DeleteUserDialogProps {
   email: string
   role: string
   schoolName: string | null
+  onDeleted?: () => void
   children: React.ReactNode
 }
 
@@ -33,29 +32,29 @@ export function DeleteUserDialog({
   email,
   role,
   schoolName,
+  onDeleted,
   children,
 }: DeleteUserDialogProps) {
   const [open, setOpen] = useState(false)
   const [confirmEmail, setConfirmEmail] = useState("")
-  const [reason, setReason] = useState("")
   const [isPending, startTransition] = useTransition()
 
   const emailMatches = confirmEmail === email
-  const canSubmit = emailMatches && reason.trim().length > 0 && !isPending
+  const canSubmit = emailMatches && !isPending
 
   const handleDelete = () => {
     startTransition(async () => {
       const result = await userDelete({
         userId,
         confirmEmail,
-        reason: reason.trim(),
+        reason: "",
       })
 
       if (result.success) {
         SuccessToast(`Deleted user "${result.data.deletedEmail}"`)
         setOpen(false)
         setConfirmEmail("")
-        setReason("")
+        onDeleted?.()
       } else {
         ErrorToast(result.error?.message || "Failed to delete user")
       }
@@ -65,7 +64,6 @@ export function DeleteUserDialog({
   const handleOpenChange = (next: boolean) => {
     if (!next) {
       setConfirmEmail("")
-      setReason("")
     }
     setOpen(next)
   }
@@ -76,10 +74,6 @@ export function DeleteUserDialog({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Delete User</AlertDialogTitle>
-          <AlertDialogDescription>
-            This will permanently delete <strong>{email}</strong> and all
-            associated data including accounts, sessions, and role records.
-          </AlertDialogDescription>
         </AlertDialogHeader>
 
         <div className="space-y-3 py-2">
@@ -96,19 +90,6 @@ export function DeleteUserDialog({
               value={confirmEmail}
               onChange={(e) => setConfirmEmail(e.target.value)}
               placeholder={email}
-              disabled={isPending}
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-sm">
-              Reason for deletion <span className="text-destructive">*</span>
-            </Label>
-            <Textarea
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder="Why is this user being deleted?"
-              rows={2}
               disabled={isPending}
             />
           </div>

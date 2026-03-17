@@ -102,6 +102,18 @@ export type StudentProfile = {
       name: string
     }
   }>
+
+  // Admission back-reference
+  application?: {
+    applicationNumber: string
+    campaignId: string
+    status: string
+    submittedAt: Date | null
+    confirmationDate: Date | null
+    meritRank: number | null
+    meritScore: number | null
+    campaign: { name: string; academicYear: string }
+  } | null
 }
 
 // Teacher profile with essential relationships

@@ -567,6 +567,7 @@ export async function confirmEnrollment(params: {
     }
 
     const enrollmentNumber = `ENR-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
+    let enrolledStudentId: string | null = null
 
     await db.$transaction(async (tx) => {
       // 2. Update application status to ADMITTED
@@ -612,6 +613,19 @@ export async function confirmEnrollment(params: {
           throw new Error("Student is already enrolled in another school")
         }
 
+        // Build previous academic record from application marks
+        const previousAcademicParts: string[] = []
+        if (application.previousMarks)
+          previousAcademicParts.push(`Marks: ${application.previousMarks}`)
+        if (application.previousPercentage)
+          previousAcademicParts.push(
+            `Percentage: ${application.previousPercentage}%`
+          )
+        if (application.achievements)
+          previousAcademicParts.push(
+            `Achievements: ${application.achievements}`
+          )
+
         const student = existingStudent
           ? existingStudent
           : await tx.student.create({
@@ -626,18 +640,25 @@ export async function confirmEnrollment(params: {
                 nationality: application.nationality ?? undefined,
                 email: application.email,
                 mobileNumber: application.phone,
+                alternatePhone: application.alternatePhone ?? undefined,
                 currentAddress: application.address,
                 city: application.city,
                 state: application.state,
                 postalCode: application.postalCode,
                 country: application.country,
+                applicationId: application.id,
                 admissionNumber: enrollmentNumber,
                 admissionDate: new Date(),
                 enrollmentDate: new Date(),
                 status: "ACTIVE",
                 category: application.category ?? undefined,
+                profilePhotoUrl: application.photoUrl ?? undefined,
                 previousSchoolName: application.previousSchool ?? undefined,
                 previousGrade: application.previousClass ?? undefined,
+                previousAcademicRecord:
+                  previousAcademicParts.length > 0
+                    ? previousAcademicParts.join("; ")
+                    : undefined,
                 // Map guardian/parent info to emergency contact
                 emergencyContactName:
                   application.guardianName ||
@@ -649,12 +670,13 @@ export async function confirmEnrollment(params: {
                   undefined,
                 emergencyContactRelation:
                   application.guardianRelation || "Parent",
-                // Mark incomplete — contact/location not collected by application
-                wizardStep: "contact",
+                // Application provides all required fields — wizard is complete
+                wizardStep: null,
               },
             })
 
         // 4. Try to match applyingForClass to a YearLevel and create StudentYearLevel
+        let matchedYearLevelId: string | null = null
         try {
           // Cascading search: exact -> case-insensitive -> grade number
           let yearLevel = await tx.yearLevel.findFirst({
@@ -681,13 +703,29 @@ export async function confirmEnrollment(params: {
               application.applyingForClass ?? ""
             )
             if (gradeNum) {
-              yearLevel = await tx.yearLevel.findFirst({
-                where: { schoolId, levelOrder: gradeNum },
+              // Match via AcademicGrade.gradeNumber (not levelOrder, which
+              // includes KG levels and shifts the numbering)
+              const academicGrade = await tx.academicGrade.findFirst({
+                where: { schoolId, gradeNumber: gradeNum },
+                select: { yearLevelId: true },
               })
+              if (academicGrade?.yearLevelId) {
+                yearLevel = await tx.yearLevel.findFirst({
+                  where: { id: academicGrade.yearLevelId, schoolId },
+                })
+              }
+              // Fallback to levelOrder if no AcademicGrade match
+              if (!yearLevel) {
+                yearLevel = await tx.yearLevel.findFirst({
+                  where: { schoolId, levelOrder: gradeNum },
+                })
+              }
             }
           }
 
           if (yearLevel) {
+            matchedYearLevelId = yearLevel.id
+
             // Find the school year matching the campaign's academic year
             const schoolYear = await tx.schoolYear.findFirst({
               where: {
@@ -721,6 +759,17 @@ export async function confirmEnrollment(params: {
                 `[confirmEnrollment] No SchoolYear found for academicYear="${application.campaign.academicYear}" in school=${schoolId}`
               )
             }
+
+            // 4b. Set academicGradeId from the matched YearLevel
+            const academicGrade = await tx.academicGrade.findFirst({
+              where: { schoolId, yearLevelId: yearLevel.id },
+            })
+            if (academicGrade) {
+              await tx.student.update({
+                where: { id: student.id },
+                data: { academicGradeId: academicGrade.id },
+              })
+            }
           } else {
             console.warn(
               `[confirmEnrollment] No YearLevel found matching applyingForClass="${application.applyingForClass}" in school=${schoolId}. Available levels should be checked in Year Level settings.`
@@ -738,13 +787,13 @@ export async function confirmEnrollment(params: {
         try {
           const user = await tx.user.findUnique({
             where: { id: userId },
-            select: { role: true },
+            select: { role: true, schoolId: true },
           })
 
           if (user && user.role === "USER") {
             await tx.user.update({
               where: { id: userId },
-              data: { role: "STUDENT" },
+              data: { role: "STUDENT", schoolId },
             })
           }
         } catch (roleError) {
@@ -792,6 +841,171 @@ export async function confirmEnrollment(params: {
             feeError
           )
         }
+
+        // 7. Create Guardian records from application parent/guardian data
+        try {
+          const guardianEntries: Array<{
+            typeName: string
+            fullName: string
+            email: string | null
+            phone: string | null
+            occupation: string | null
+            isPrimary: boolean
+          }> = []
+
+          if (application.fatherName) {
+            guardianEntries.push({
+              typeName: "father",
+              fullName: application.fatherName,
+              email: application.fatherEmail,
+              phone: application.fatherPhone,
+              occupation: application.fatherOccupation,
+              isPrimary: true,
+            })
+          }
+          if (application.motherName) {
+            guardianEntries.push({
+              typeName: "mother",
+              fullName: application.motherName,
+              email: application.motherEmail,
+              phone: application.motherPhone,
+              occupation: application.motherOccupation,
+              isPrimary: !application.fatherName,
+            })
+          }
+          if (
+            application.guardianName &&
+            application.guardianName !== application.fatherName &&
+            application.guardianName !== application.motherName
+          ) {
+            guardianEntries.push({
+              typeName:
+                application.guardianRelation?.toLowerCase() || "guardian",
+              fullName: application.guardianName,
+              email: application.guardianEmail,
+              phone: application.guardianPhone,
+              occupation: null,
+              isPrimary: false,
+            })
+          }
+
+          for (const entry of guardianEntries) {
+            // Split name into givenName + surname
+            const nameParts = entry.fullName.trim().split(/\s+/)
+            const surname = nameParts.length > 1 ? nameParts.pop()! : ""
+            const givenName = nameParts.join(" ") || entry.fullName
+
+            // Ensure GuardianType exists
+            const guardianType = await tx.guardianType.upsert({
+              where: {
+                schoolId_name: { schoolId, name: entry.typeName },
+              },
+              create: { schoolId, name: entry.typeName },
+              update: {},
+            })
+
+            // Create or find Guardian (unique by schoolId + email)
+            let guardian
+            if (entry.email) {
+              guardian = await tx.guardian.upsert({
+                where: {
+                  schoolId_emailAddress: {
+                    schoolId,
+                    emailAddress: entry.email,
+                  },
+                },
+                create: {
+                  schoolId,
+                  givenName,
+                  surname,
+                  emailAddress: entry.email,
+                },
+                update: {},
+              })
+            } else {
+              guardian = await tx.guardian.create({
+                data: { schoolId, givenName, surname },
+              })
+            }
+
+            // Link student to guardian
+            await tx.studentGuardian.upsert({
+              where: {
+                schoolId_studentId_guardianId: {
+                  schoolId,
+                  studentId: student.id,
+                  guardianId: guardian.id,
+                },
+              },
+              create: {
+                schoolId,
+                studentId: student.id,
+                guardianId: guardian.id,
+                guardianTypeId: guardianType.id,
+                isPrimary: entry.isPrimary,
+                occupation: entry.occupation,
+              },
+              update: {},
+            })
+
+            // Add phone number if provided
+            if (entry.phone) {
+              await tx.guardianPhoneNumber.upsert({
+                where: {
+                  schoolId_guardianId_phoneNumber: {
+                    schoolId,
+                    guardianId: guardian.id,
+                    phoneNumber: entry.phone,
+                  },
+                },
+                create: {
+                  schoolId,
+                  guardianId: guardian.id,
+                  phoneNumber: entry.phone,
+                  isPrimary: true,
+                },
+                update: {},
+              })
+            }
+          }
+        } catch (guardianError) {
+          console.warn(
+            "[confirmEnrollment] Guardian creation failed:",
+            guardianError
+          )
+        }
+
+        // 8. Copy application documents to StudentDocument records
+        try {
+          const appDocs = application.documents as Array<{
+            type?: string
+            name?: string
+            url?: string
+            uploadedAt?: string
+          }> | null
+
+          if (appDocs && Array.isArray(appDocs)) {
+            for (const doc of appDocs) {
+              if (!doc.url) continue
+              await tx.studentDocument.create({
+                data: {
+                  schoolId,
+                  studentId: student.id,
+                  documentType: doc.type || "Other",
+                  documentName: doc.name || doc.type || "Document",
+                  fileUrl: doc.url,
+                  uploadedAt: doc.uploadedAt
+                    ? new Date(doc.uploadedAt)
+                    : new Date(),
+                },
+              })
+            }
+          }
+        } catch (docError) {
+          console.warn("[confirmEnrollment] Document copy failed:", docError)
+        }
+
+        enrolledStudentId = student.id
       }
     })
 
@@ -873,9 +1087,14 @@ export async function confirmEnrollment(params: {
     }
 
     revalidatePath("/admission/enrollment")
+    revalidatePath("/students")
     return {
       success: true,
-      data: { suggestedSectionId, suggestedSectionName },
+      data: {
+        suggestedSectionId,
+        suggestedSectionName,
+        studentId: enrolledStudentId,
+      },
     }
   } catch (error) {
     console.error("[confirmEnrollment]", error)

@@ -371,7 +371,7 @@ export async function tenantSetupCatalog(input: { tenantId: string }): Promise<
 const deleteSchema = z.object({
   tenantId: z.string().min(1),
   confirmName: z.string().min(1),
-  reason: z.string().min(1, "Reason is required for deletion"),
+  reason: z.string().optional(),
 })
 
 /**
@@ -389,7 +389,7 @@ const deleteSchema = z.object({
 export async function tenantDelete(input: {
   tenantId: string
   confirmName: string
-  reason: string
+  reason?: string
 }): Promise<
   ActionResult<{
     deletedName: string
@@ -579,7 +579,7 @@ export async function tenantDelete(input: {
       userId: operator.userId,
       schoolId: null,
       action: "TENANT_DELETED",
-      reason: `Deleted "${school.name}" (${school.domain}). Reason: ${validated.reason}. Affected: ${stats.users} users, ${stats.students} students, ${stats.teachers} teachers, ${stats.classes} classes.`,
+      reason: `Deleted "${school.name}" (${school.domain}).${validated.reason ? ` Reason: ${validated.reason}.` : ""} Affected: ${stats.users} users, ${stats.students} students, ${stats.teachers} teachers, ${stats.classes} classes.`,
     })
 
     revalidatePath("/tenants")

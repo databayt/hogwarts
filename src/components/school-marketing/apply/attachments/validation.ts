@@ -10,6 +10,11 @@ export const attachmentsSchema = z.object({
   idUrl: z.string().nullable().optional().default(""),
   resumeUrl: z.string().nullable().optional().default(""),
   otherUrl: z.string().nullable().optional().default(""),
+  birthCertificateUrl: z.string().nullable().optional().default(""),
+  passportPhotoUrl: z.string().nullable().optional().default(""),
+  signatureUrl: z.string().nullable().optional().default(""),
+  medicalCertificateUrl: z.string().nullable().optional().default(""),
+  transferCertificateUrl: z.string().nullable().optional().default(""),
 })
 
 export type AttachmentsFormData = z.infer<typeof attachmentsSchema>

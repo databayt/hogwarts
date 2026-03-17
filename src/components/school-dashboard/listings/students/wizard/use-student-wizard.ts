@@ -53,6 +53,16 @@ export interface StudentWizardData {
   transferCertificateNo: string | null
   transferDate: Date | null
   previousAcademicRecord: string | null
+  // Admission back-reference
+  applicationId: string | null
+  application: {
+    applicationNumber: string
+    campaignId: string
+    status: string
+    submittedAt: Date | null
+    confirmationDate: Date | null
+    campaign: { name: string; academicYear: string }
+  } | null
   // Wizard
   wizardStep: string | null
 }

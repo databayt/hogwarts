@@ -53,9 +53,14 @@ export const LocationForm = forwardRef<LocationFormRef, LocationFormProps>(
     const dict = ((dictionary as Record<string, Record<string, string>> | null)
       ?.apply?.location ?? {}) as Record<string, string>
 
+    const prevDataRef = React.useRef<string>("")
     useEffect(() => {
       const subscription = form.watch((value) => {
-        updateStepData("location", value as LocationSchemaType)
+        const json = JSON.stringify(value)
+        if (json !== prevDataRef.current) {
+          prevDataRef.current = json
+          updateStepData("location", value as LocationSchemaType)
+        }
       })
       return () => subscription.unsubscribe()
     }, [form, updateStepData])

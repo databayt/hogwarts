@@ -60,23 +60,23 @@ const ApplyOverviewClient: React.FC<ApplyOverviewClientProps> = ({
       number: 1,
       title: groupsDict.basicInfo || "Basic Information",
       description:
-        overviewDict.stage1Desc || "Provide your personal and contact details",
+        overviewDict.stage1Desc ||
+        "Upload documents and enter personal details",
       illustration:
         "https://www-cdn.anthropic.com/images/4zrzovbb/website/521a945a74f2d25262db4a002073aaeec9bc1919-1000x1000.svg",
     },
     {
       number: 2,
-      title: groupsDict.familyEducation || "Family & Education",
+      title: groupsDict.details || "Details",
       description:
-        overviewDict.stage2Desc || "Add guardian info and academic background",
+        overviewDict.stage2Desc || "Provide your contact and location details",
       illustration: "/anthropic/eng-harnesses-long-running-agents.svg",
     },
     {
       number: 3,
-      title: groupsDict.finalize || "Finalize",
+      title: groupsDict.familyEducation || "Family & Education",
       description:
-        overviewDict.stage3Desc ||
-        "Upload documents and review your application",
+        overviewDict.stage3Desc || "Add guardian info and academic background",
       illustration:
         "https://www-cdn.anthropic.com/images/4zrzovbb/website/0321b0ecbbf53535e93be1310ae1935157bcebdd-1000x1000.svg",
     },

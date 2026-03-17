@@ -8,6 +8,7 @@ import React, {
   useCallback,
   useContext,
   useMemo,
+  useRef,
   useState,
 } from "react"
 
@@ -33,6 +34,7 @@ export interface WizardValidationContextType {
   // Custom navigation handlers
   customNavigation?: CustomNavigation
   setCustomNavigation: (navigation?: CustomNavigation) => void
+  getCustomNavigation: () => CustomNavigation | undefined
 
   // Save handler (save current form without advancing)
   onSave?: () => Promise<void>
@@ -103,9 +105,7 @@ export function WizardValidationProvider({
 }: WizardValidationProviderProps) {
   // Core validation state - default to disabled (pages must explicitly enable)
   const [isNextDisabled, setIsNextDisabled] = useState(true)
-  const [customNavigation, setCustomNavigation] = useState<
-    CustomNavigation | undefined
-  >(undefined)
+  const customNavigationRef = useRef<CustomNavigation | undefined>(undefined)
   const [onSave, setOnSave] = useState<(() => Promise<void>) | undefined>(
     undefined
   )
@@ -160,6 +160,16 @@ export function WizardValidationProvider({
   )
 
   // Context value
+  // Use ref for customNavigation to avoid infinite re-render loops
+  // (content components call setCustomNavigation({ onNext }) in useEffect,
+  // creating new object refs each time which would trigger state → re-render → loop)
+  const setCustomNavigation = useCallback((nav?: CustomNavigation) => {
+    customNavigationRef.current = nav
+  }, [])
+
+  // Getter that reads the ref at call time (used by footer at click time)
+  const getCustomNavigation = useCallback(() => customNavigationRef.current, [])
+
   // Stable setter that unwraps function values from React's setState convention
   const setOnSaveStable = useCallback(
     (fn?: () => Promise<void>) => setOnSave(() => fn),
@@ -172,8 +182,9 @@ export function WizardValidationProvider({
       setIsNextDisabled,
       enableNext,
       disableNext,
-      customNavigation,
+      customNavigation: customNavigationRef.current,
       setCustomNavigation,
+      getCustomNavigation,
       onSave,
       setOnSave: setOnSaveStable,
       flowType,
@@ -187,7 +198,8 @@ export function WizardValidationProvider({
       isNextDisabled,
       enableNext,
       disableNext,
-      customNavigation,
+      setCustomNavigation,
+      getCustomNavigation,
       onSave,
       setOnSaveStable,
       flowType,

@@ -40,7 +40,7 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
 
   useEffect(() => {
     if (id && subdomain && !session.sessionToken) {
-      initSession(subdomain, id)
+      initSession(id, subdomain)
     }
   }, [id, subdomain, initSession, session.sessionToken])
 
@@ -79,8 +79,13 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
     )
   }
 
-  // Show error state if initialization failed
-  if (error) {
+  // Show error state only if initialization failed (no session data yet)
+  // Auto-save errors should not block the UI when form data exists
+  if (
+    error &&
+    !session.sessionToken &&
+    Object.keys(session.formData).length === 0
+  ) {
     return (
       <div className="mx-auto w-full max-w-5xl self-stretch pb-20">
         <div className="flex items-center justify-center py-16">
@@ -93,7 +98,7 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
             <p className="text-muted-foreground mb-4">{error}</p>
             <div className="flex flex-col gap-3">
               <button
-                onClick={() => id && subdomain && initSession(subdomain, id)}
+                onClick={() => id && subdomain && initSession(id, subdomain)}
                 className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 py-2 transition-colors"
               >
                 {dict.tryAgain || (isRTL ? "حاول مرة أخرى" : "Try Again")}

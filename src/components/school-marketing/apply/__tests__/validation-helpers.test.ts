@@ -6,7 +6,6 @@ import { describe, expect, it } from "vitest"
 import type {
   AcademicStepData,
   ContactStepData,
-  DocumentsStepData,
   GuardianStepData,
   PersonalStepData,
 } from "../types"
@@ -19,7 +18,6 @@ import {
   validateAcademicStep,
   validateAllSteps,
   validateContactStep,
-  validateDocumentsStep,
   validateGuardianStep,
   validatePersonalStep,
 } from "../validation-helpers"
@@ -52,18 +50,6 @@ const validGuardian: GuardianStepData = {
 
 const validAcademic: AcademicStepData = {
   applyingForClass: "Grade 10",
-}
-
-const validDocuments: DocumentsStepData = {
-  photoUrl: "https://example.com/photo.jpg",
-  documents: [
-    {
-      type: "birth_certificate",
-      name: "birth-cert.pdf",
-      url: "https://example.com/doc.pdf",
-      uploadedAt: "2026-01-01",
-    },
-  ],
 }
 
 // ---------------------------------------------------------------------------
@@ -148,16 +134,6 @@ describe("validateAcademicStep", () => {
   })
 })
 
-describe("validateDocumentsStep", () => {
-  it("returns true (documents are optional)", () => {
-    expect(validateDocumentsStep(validDocuments)).toBe(true)
-  })
-
-  it("returns true for undefined (documents always valid)", () => {
-    expect(validateDocumentsStep(undefined)).toBe(true)
-  })
-})
-
 describe("validateAllSteps", () => {
   it("returns true when all steps are valid", () => {
     expect(
@@ -166,7 +142,6 @@ describe("validateAllSteps", () => {
         contact: validContact,
         guardian: validGuardian,
         academic: validAcademic,
-        documents: validDocuments,
       })
     ).toBe(true)
   })
@@ -201,7 +176,6 @@ describe("getStepValidationStatus", () => {
       contact: false,
       guardian: true,
       academic: true,
-      documents: true,
     })
   })
 })

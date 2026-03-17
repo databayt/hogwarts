@@ -240,12 +240,16 @@ export async function saveApplicationSession(
         return { success: false, error: "Session not found" }
       }
 
+      // Keep the original userId if already set (don't overwrite with a
+      // different session, e.g. admin logged into the same browser)
+      const resolvedUserId = existingSession.userId ?? userId
+
       await db.applicationSession.update({
         where: { sessionToken },
         data: {
           formData: validated.formData as unknown as object,
           currentStep: validated.currentStep,
-          userId,
+          userId: resolvedUserId,
           expiresAt,
         },
       })
@@ -523,13 +527,16 @@ export async function submitApplication(
 
     const schoolId = schoolResult.data.id
 
-    // Get authenticated user ID
-    const authSession = await auth()
-    const userId = authSession?.user?.id ?? undefined
-
     // Validate the full application
     const schema = createFullApplicationSchema()
-    const validated = schema.parse(data)
+    const parseResult = schema.safeParse(data)
+    if (!parseResult.success) {
+      const fieldErrors = parseResult.error.issues
+        .map((i) => `${i.path.join(".")}: ${i.message}`)
+        .join("; ")
+      return { success: false, error: `Validation failed: ${fieldErrors}` }
+    }
+    const validated = parseResult.data
 
     // Verify session exists and belongs to this school
     const appSession = await db.applicationSession.findUnique({
@@ -539,6 +546,12 @@ export async function submitApplication(
     if (appSession && appSession.schoolId !== schoolId) {
       return { success: false, error: "Invalid session" }
     }
+
+    // Resolve userId: prefer the session's original userId (set when applicant
+    // started the application) over the current auth() session, since an admin
+    // could be logged into the same browser on the school domain.
+    const authSession = await auth()
+    const userId = appSession?.userId ?? authSession?.user?.id ?? undefined
 
     // Check campaign is still open
     const campaign = await db.admissionCampaign.findFirst({

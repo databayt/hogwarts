@@ -15,6 +15,7 @@ import { useUpload } from "@/components/file/upload/use-upload"
 import { FileUploadField } from "@/components/form/atoms/file-upload"
 
 import { useApplySession } from "../application-context"
+import type { AttachmentsStepData } from "../types"
 import { saveAttachmentsStep } from "./actions"
 import type { AttachmentsFormProps, AttachmentsFormRef } from "./types"
 import { attachmentsSchema, type AttachmentsFormData } from "./validation"
@@ -28,6 +29,27 @@ const DOCUMENT_SLOTS = [
   },
   { key: "idUrl" as const, label: "ID", icon: "/id.png" },
   { key: "resumeUrl" as const, label: "Resume", icon: "/resume.png" },
+  {
+    key: "birthCertificateUrl" as const,
+    label: "Birth Certificate",
+    icon: "/files.png",
+  },
+  {
+    key: "passportPhotoUrl" as const,
+    label: "Passport Photo",
+    icon: "/image.png",
+  },
+  { key: "signatureUrl" as const, label: "Signature", icon: "/files.png" },
+  {
+    key: "medicalCertificateUrl" as const,
+    label: "Medical",
+    icon: "/files.png",
+  },
+  {
+    key: "transferCertificateUrl" as const,
+    label: "Transfer",
+    icon: "/files.png",
+  },
   { key: "otherUrl" as const, label: "Other", icon: "/files.png" },
 ]
 
@@ -111,12 +133,22 @@ export const AttachmentsForm = forwardRef<
       idUrl: initialData?.idUrl || "",
       resumeUrl: initialData?.resumeUrl || "",
       otherUrl: initialData?.otherUrl || "",
+      birthCertificateUrl: initialData?.birthCertificateUrl || "",
+      passportPhotoUrl: initialData?.passportPhotoUrl || "",
+      signatureUrl: initialData?.signatureUrl || "",
+      medicalCertificateUrl: initialData?.medicalCertificateUrl || "",
+      transferCertificateUrl: initialData?.transferCertificateUrl || "",
     },
   })
 
+  const prevDataRef = React.useRef<string>("")
   useEffect(() => {
     const subscription = form.watch((value) => {
-      updateStepData("attachments", value as AttachmentsFormData)
+      const json = JSON.stringify(value)
+      if (json !== prevDataRef.current) {
+        prevDataRef.current = json
+        updateStepData("attachments", value as unknown as AttachmentsStepData)
+      }
     })
     return () => subscription.unsubscribe()
   }, [form, updateStepData])
@@ -138,7 +170,7 @@ export const AttachmentsForm = forwardRef<
 
   return (
     <Form {...form}>
-      <form className="grid grid-cols-3 gap-4">
+      <form className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
         {/* Photo - avatar upload */}
         <div className="flex items-center justify-center">
           <FileUploadField

@@ -3,73 +3,162 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
-import { ColumnDef } from "@tanstack/react-table"
+import { useCallback, useDeferredValue, useMemo, useState } from "react"
+import { Users } from "lucide-react"
 
+import { usePlatformData } from "@/hooks/use-platform-data"
+import { usePlatformView } from "@/hooks/use-platform-view"
+import {
+  GridCard,
+  GridContainer,
+  GridEmptyState,
+  PlatformToolbar,
+} from "@/components/school-dashboard/shared"
 import { DataTable } from "@/components/table/data-table"
-import { DataTableToolbar } from "@/components/table/data-table-toolbar"
 import { useDataTable } from "@/components/table/use-data-table"
 
+import type { UserRow } from "./actions"
 import { fetchUsers } from "./actions"
+import { getUserColumns } from "./columns"
 
-interface UsersTableProps<TData> {
-  initialData: TData[]
-  columns: ColumnDef<TData, unknown>[]
+interface UsersTableProps {
+  initialData: UserRow[]
   total: number
   perPage?: number
 }
 
-export function UsersTable<TData>({
+export function UsersTable({
   initialData,
-  columns,
   total,
   perPage = 20,
-}: UsersTableProps<TData>) {
-  const [data, setData] = React.useState<TData[]>(initialData)
-  const [currentPage, setCurrentPage] = React.useState(1)
-  const [isLoading, setIsLoading] = React.useState(false)
+}: UsersTableProps) {
+  // View mode (table/grid)
+  const { view, toggleView } = usePlatformView({ defaultView: "table" })
 
-  const hasMore = data.length < total
+  // Search state with debouncing
+  const [searchInput, setSearchInput] = useState("")
+  const deferredSearch = useDeferredValue(searchInput)
 
-  const handleLoadMore = React.useCallback(async () => {
-    if (isLoading || !hasMore) return
+  // Build filters object
+  const filters = useMemo(() => {
+    const f: Record<string, unknown> = {}
+    if (deferredSearch) f.search = deferredSearch
+    return f
+  }, [deferredSearch])
 
-    setIsLoading(true)
-    try {
-      const nextPage = currentPage + 1
-      const result = await fetchUsers({ page: nextPage, perPage })
+  // Data management with optimistic updates
+  const { data, isLoading, hasMore, loadMore, optimisticRemove } =
+    usePlatformData<UserRow, Record<string, unknown>>({
+      initialData,
+      total,
+      perPage,
+      fetcher: async (params) => {
+        const result = await fetchUsers({
+          page: params.page,
+          perPage: params.perPage,
+          search: (deferredSearch as string) || undefined,
+        })
+        return {
+          rows: result.data,
+          total: result.total,
+        }
+      },
+      filters,
+    })
 
-      if (result.data.length > 0) {
-        setData((prev) => [...prev, ...(result.data as TData[])])
-        setCurrentPage(nextPage)
-      }
-    } catch (error) {
-      console.error("Failed to load more users:", error)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [currentPage, perPage, isLoading, hasMore])
+  // Handle delete - called after dialog confirms and server action succeeds
+  const handleDelete = useCallback(
+    (user: UserRow) => {
+      optimisticRemove(user.id)
+    },
+    [optimisticRemove]
+  )
 
-  const { table } = useDataTable<TData>({
+  // Generate columns with callbacks
+  const columns = useMemo(
+    () =>
+      getUserColumns({
+        onDelete: handleDelete,
+      }),
+    [handleDelete]
+  )
+
+  // Table instance
+  const { table } = useDataTable<UserRow>({
     data,
     columns,
     pageCount: 1,
+    enableClientFiltering: true,
     initialState: {
       pagination: {
         pageIndex: 0,
-        pageSize: data.length,
+        pageSize: data.length || perPage,
+      },
+      columnVisibility: {
+        username: false,
       },
     },
   })
 
+  // Handle search
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchInput(value)
+  }, [])
+
   return (
-    <DataTable
-      table={table}
-      paginationMode="load-more"
-      hasMore={hasMore}
-      isLoading={isLoading}
-      onLoadMore={handleLoadMore}
-    >
-      <DataTableToolbar table={table} />
-    </DataTable>
+    <>
+      <PlatformToolbar
+        table={table}
+        view={view}
+        onToggleView={toggleView}
+        searchValue={searchInput}
+        onSearchChange={handleSearchChange}
+        searchPlaceholder="Search users..."
+        entityName="users"
+      />
+
+      {view === "table" ? (
+        <DataTable
+          table={table}
+          paginationMode="load-more"
+          hasMore={hasMore}
+          isLoading={isLoading}
+          onLoadMore={loadMore}
+        />
+      ) : (
+        <>
+          {data.length === 0 ? (
+            <GridEmptyState
+              title="No users found"
+              description="Users will appear here once they register on the platform."
+              icon={<Users className="h-12 w-12" />}
+            />
+          ) : (
+            <GridContainer columns={4} className="mt-4">
+              {data.map((user) => (
+                <GridCard
+                  key={user.id}
+                  title={user.email || "No email"}
+                  description={user.role}
+                  subtitle={user.schoolName || "No school"}
+                />
+              ))}
+            </GridContainer>
+          )}
+
+          {hasMore && (
+            <div className="mt-4 flex justify-center">
+              <button
+                onClick={loadMore}
+                disabled={isLoading}
+                className="hover:bg-accent rounded-md border px-4 py-2 text-sm disabled:opacity-50"
+              >
+                {isLoading ? "Loading..." : "Load More"}
+              </button>
+            </div>
+          )}
+        </>
+      )}
+    </>
   )
 }

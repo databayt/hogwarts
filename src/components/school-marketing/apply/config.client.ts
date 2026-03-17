@@ -11,8 +11,6 @@ export type ApplyStep =
   | "location"
   | "guardian"
   | "academic"
-  | "documents"
-  | "review"
 
 // Step order for the application flow
 export const APPLY_STEPS: ApplyStep[] = [
@@ -22,8 +20,6 @@ export const APPLY_STEPS: ApplyStep[] = [
   "location",
   "guardian",
   "academic",
-  "documents",
-  "review",
 ]
 
 // Step navigation map
@@ -36,23 +32,21 @@ export const STEP_NAVIGATION: Record<
   contact: { next: "location", previous: "personal" },
   location: { next: "guardian", previous: "contact" },
   guardian: { next: "academic", previous: "location" },
-  academic: { next: "documents", previous: "guardian" },
-  documents: { next: "review", previous: "academic" },
-  review: { previous: "documents" },
+  academic: { previous: "guardian" },
 }
 
 // Group steps into 3 phases for progress bars
 export const STEP_GROUPS = {
-  1: ["attachments", "personal", "contact", "location"] as ApplyStep[],
-  2: ["guardian", "academic"] as ApplyStep[],
-  3: ["documents", "review"] as ApplyStep[],
+  1: ["attachments", "personal"] as ApplyStep[],
+  2: ["contact", "location"] as ApplyStep[],
+  3: ["guardian", "academic"] as ApplyStep[],
 }
 
 // Group labels
 export const STEP_GROUP_LABELS = {
   1: { en: "Basic Information", ar: "المعلومات الأساسية" },
-  2: { en: "Family & Education", ar: "العائلة والتعليم" },
-  3: { en: "Finalize", ar: "إتمام الطلب" },
+  2: { en: "Details", ar: "التفاصيل" },
+  3: { en: "Family & Education", ar: "العائلة والتعليم" },
 }
 
 // Step metadata
@@ -86,14 +80,6 @@ export const STEP_METADATA: Record<
   academic: {
     label: "المعلومات الأكاديمية",
     description: "التعليم السابق والصف المتقدم إليه",
-  },
-  documents: {
-    label: "المستندات",
-    description: "رفع المستندات المطلوبة",
-  },
-  review: {
-    label: "المراجعة والتقديم",
-    description: "مراجعة وتقديم طلبك",
   },
 }
 

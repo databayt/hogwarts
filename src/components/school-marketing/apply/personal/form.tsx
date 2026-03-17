@@ -45,9 +45,14 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
     const dict = ((dictionary as Record<string, Record<string, string>> | null)
       ?.apply?.personal ?? {}) as Record<string, string>
 
+    const prevDataRef = React.useRef<string>("")
     useEffect(() => {
       const subscription = form.watch((value) => {
-        updateStepData("personal", value as PersonalSchemaType)
+        const json = JSON.stringify(value)
+        if (json !== prevDataRef.current) {
+          prevDataRef.current = json
+          updateStepData("personal", value as PersonalSchemaType)
+        }
       })
       return () => subscription.unsubscribe()
     }, [form, updateStepData])

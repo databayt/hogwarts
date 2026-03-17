@@ -4,6 +4,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import Image from "next/image"
 
 import { cn } from "@/lib/utils"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
@@ -14,6 +15,52 @@ import type { Locale } from "@/components/internationalization/config"
 import { FEATURES } from "./constants"
 import { getCategoryIcon } from "./feature-icons"
 import type { FeatureCategory } from "./types"
+
+const FEATURE_IMAGES: Record<string, string> = {
+  // Core
+  student: "/feature/student.png",
+  faculty: "/feature/teacher.png",
+  financial: "/feature/fees.png",
+  exam: "/feature/exam.png",
+  // Essential
+  assignment: "/feature/assigment.png",
+  attendance: "/feature/attendance.png",
+  gradebook: "/feature/gradebook.png",
+  timetable: "/feature/timetable.png",
+  // Advance
+  "digital-library": "/feature/library.png",
+  library: "/feature/library.png",
+  events: "/feature/events.png",
+  "live-classroom": "/feature/video.png",
+  // ERP
+  payroll: "/feature/payroll.png",
+  "advance-accounting": "/feature/invoicing.png",
+  expense: "/feature/wallet-3.png",
+  payment: "/feature/credit-card.png",
+  "e-commerce": "/feature/app-store.png",
+  "email-marketing": "/feature/email.png",
+  recruitment: "/feature/offer.png",
+  // Management
+  canteen: "/feature/canteen.png",
+  "parent-login": "/feature/parent.png",
+  transportation: "/feature/transport.png",
+  // Communication
+  helpdesk: "/feature/headphone.png",
+  "notice-board": "/feature/notifications.png",
+  "online-appointment": "/feature/calendar-2.png",
+  "secure-transcript": "/feature/id-cards.png",
+  "whatsapp-integration": "/feature/phone.png",
+  grievance: "/feature/messaging.png",
+  convocation: "/feature/graduate.png",
+  // LMS
+  classroom: "/feature/blackboard.png",
+  // Technical
+  "mobile-application": "/feature/app-store.png",
+  "data-import-export": "/feature/download.png",
+  secure: "/feature/role-based.png",
+  // Other
+  application: "/feature/cover-letter.png",
+}
 
 type TabId = "all" | FeatureCategory
 
@@ -85,6 +132,7 @@ export default function FeatureTabs({ lang }: FeatureTabsProps) {
       {/* Card grid */}
       <div className="grid grid-cols-1 gap-4 py-12 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         {visible.map((feature) => {
+          const imageSrc = FEATURE_IMAGES[feature.id]
           const Icon = getCategoryIcon(feature.category)
           return (
             <Card
@@ -92,7 +140,18 @@ export default function FeatureTabs({ lang }: FeatureTabsProps) {
               id={feature.id}
               title={feature.title}
               description={feature.description}
-              icon={<Icon />}
+              icon={
+                imageSrc ? (
+                  <Image
+                    src={imageSrc}
+                    alt={feature.title}
+                    width={32}
+                    height={32}
+                  />
+                ) : (
+                  <Icon />
+                )
+              }
               href={`/${lang}/features/${feature.id}`}
             />
           )

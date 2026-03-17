@@ -23,7 +23,7 @@ type ActionResult<T> =
 const deleteUserSchema = z.object({
   userId: z.string().min(1),
   confirmEmail: z.string().min(1),
-  reason: z.string().min(1, "Reason is required for deletion"),
+  reason: z.string().optional(),
 })
 
 const suspendUserSchema = z.object({
@@ -52,7 +52,7 @@ const resetUserSchoolSchema = z.object({
 export async function userDelete(input: {
   userId: string
   confirmEmail: string
-  reason: string
+  reason?: string
 }): Promise<ActionResult<{ deletedEmail: string }>> {
   try {
     const operator = await requireOperator()
@@ -124,7 +124,7 @@ export async function userDelete(input: {
       userId: operator.userId,
       schoolId: null,
       action: "USER_DELETED",
-      reason: `Deleted user "${userEmail}". Reason: ${validated.reason}`,
+      reason: `Deleted user "${userEmail}".${validated.reason ? ` Reason: ${validated.reason}` : ""}`,
     })
 
     revalidatePath("/users")
@@ -278,14 +278,35 @@ export async function userResetSchool(input: {
 export async function fetchUsers(input: {
   page: number
   perPage: number
+  search?: string
 }): Promise<{ data: UserRow[]; total: number }> {
   try {
     await requireOperator()
 
     const offset = (input.page - 1) * input.perPage
 
+    const where = input.search
+      ? {
+          OR: [
+            {
+              email: {
+                contains: input.search,
+                mode: "insensitive" as const,
+              },
+            },
+            {
+              username: {
+                contains: input.search,
+                mode: "insensitive" as const,
+              },
+            },
+          ],
+        }
+      : {}
+
     const [users, total] = await Promise.all([
       db.user.findMany({
+        where,
         select: {
           id: true,
           email: true,
@@ -301,7 +322,7 @@ export async function fetchUsers(input: {
         skip: offset,
         take: input.perPage,
       }),
-      db.user.count(),
+      db.user.count({ where }),
     ])
 
     const data: UserRow[] = users.map((u) => ({

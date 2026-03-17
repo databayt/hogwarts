@@ -4,28 +4,20 @@
 import { PageNav, type PageNavItem } from "@/components/atom/page-nav"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import { UsersContent } from "@/components/saas-dashboard/users/content"
+import { UsersAnalysis } from "@/components/saas-dashboard/users/analysis"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 
 export const metadata = {
-  title: "User Management",
-  description: "Manage platform user accounts",
+  title: "User Analysis",
+  description: "Analytics and statistics for platform users",
 }
 
 interface Props {
   params: Promise<{ lang: Locale }>
-  searchParams: Promise<{
-    page?: string
-    limit?: string
-    role?: string
-    school?: string
-    search?: string
-  }>
 }
 
-export default async function Users({ params, searchParams }: Props) {
+export default async function UserAnalysisPage({ params }: Props) {
   const { lang } = await params
-  const resolvedSearchParams = await searchParams
   const dictionary = await getDictionary(lang)
   const d = dictionary?.operator
 
@@ -39,11 +31,7 @@ export default async function Users({ params, searchParams }: Props) {
     <div className="space-y-6">
       <PageHeadingSetter title="Users" />
       <PageNav pages={usersPages} />
-      <UsersContent
-        dictionary={dictionary}
-        lang={lang}
-        searchParams={resolvedSearchParams}
-      />
+      <UsersAnalysis />
     </div>
   )
 }

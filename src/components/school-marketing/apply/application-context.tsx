@@ -241,9 +241,8 @@ export const ApplySessionProvider: React.FC<ApplySessionProviderProps> = ({
         ...session.formData.location,
         ...session.formData.guardian,
         ...session.formData.academic,
-        photoUrl: session.formData.documents?.photoUrl,
-        signatureUrl: session.formData.documents?.signatureUrl,
-        documents: session.formData.documents?.documents,
+        photoUrl: session.formData.attachments?.passportPhotoUrl,
+        signatureUrl: session.formData.attachments?.signatureUrl,
       }
 
       // Get email from contact step for session
