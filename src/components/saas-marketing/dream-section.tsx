@@ -68,12 +68,9 @@ const tags: Tag[] = [
   { id: "live-classroom", categories: ["academic", "tech"] },
 ]
 
-// Placeholder images per category (replace with real images later)
-const categoryImages: Record<CategoryKey, string> = {
-  academic: "/placeholder-academic.png",
-  admin: "/placeholder-admin.png",
-  finance: "/placeholder-finance.png",
-  tech: "/placeholder-tech.png",
+// Per-tag images (add more as they become available)
+const tagImages: Record<string, string> = {
+  admission: "/features/admission.png",
 }
 
 const categoryCards = [
@@ -283,9 +280,9 @@ export function DreamSection({ dictionary, lang = "en" }: DreamSectionProps) {
             </motion.div>
             {/* Image - appears on hover, slides out from behind the box */}
             <AnimatePresence mode="wait">
-              {hoveredTag && (
+              {hoveredTag && tagImages[hoveredTag] && (
                 <motion.div
-                  key={tags.find((t) => t.id === hoveredTag)?.categories[0]}
+                  key={hoveredTag}
                   initial={{ opacity: 0, x: 100, zIndex: -10 }}
                   animate={{ opacity: 1, x: -100, zIndex: 10 }}
                   exit={{ opacity: 0, x: 100, zIndex: -10 }}
@@ -297,12 +294,7 @@ export function DreamSection({ dictionary, lang = "en" }: DreamSectionProps) {
                   className="pointer-events-none absolute top-[250px] -left-48 h-[30rem] w-80"
                 >
                   <Image
-                    src={
-                      categoryImages[
-                        (tags.find((t) => t.id === hoveredTag)?.categories[0] ||
-                          "academic") as CategoryKey
-                      ]
-                    }
+                    src={tagImages[hoveredTag]}
                     alt="Feature preview"
                     fill
                     className="object-contain object-bottom"
