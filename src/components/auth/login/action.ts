@@ -2,6 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { cookies } from "next/headers"
 import { signIn } from "@/auth"
 import { DEFAULT_LOGIN_REDIRECT } from "@/routes"
 import { AuthError } from "next-auth"
@@ -331,6 +332,24 @@ export const login = async (
       schoolId: loginSchoolId || "",
       redirect: false,
     })
+
+    // Sync authjs.role cookie immediately after signIn so the middleware
+    // reads the correct role on the very first redirect.
+    // Without this, a stale cookie from a prior session can cause access-denied.
+    try {
+      const cookieStore = await cookies()
+      cookieStore.set("authjs.role", existingUser.role, {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+        domain:
+          process.env.NODE_ENV === "production" ? ".databayt.org" : undefined,
+        maxAge: 24 * 60 * 60,
+      })
+    } catch {
+      // cookies() may not be available — session callback will set it later
+    }
 
     // Log successful login (fire-and-forget)
     logLoginAttempt({

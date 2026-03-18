@@ -343,6 +343,28 @@ export const {
           timestamp: new Date().toISOString(),
         })
       }
+
+      // Sync authjs.role cookie on every sign-in (credentials + OAuth)
+      // Prevents stale role cookie from a prior session causing access-denied
+      const role = (user as any).role
+      if (role) {
+        try {
+          const cookieStore = await cookies()
+          cookieStore.set("authjs.role", role, {
+            httpOnly: true,
+            sameSite: "lax",
+            path: "/",
+            secure: process.env.NODE_ENV === "production",
+            domain:
+              process.env.NODE_ENV === "production"
+                ? ".databayt.org"
+                : undefined,
+            maxAge: 24 * 60 * 60,
+          })
+        } catch {
+          // cookies() may not be available in all contexts
+        }
+      }
     },
     async signOut() {
       try {
