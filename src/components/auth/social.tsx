@@ -135,16 +135,20 @@ export const Social = ({ dictionary }: SocialProps = {}) => {
 
     // If we have a tenant (either from subdomain or parameter), use custom OAuth flow
     if (tenantSubdomain) {
-      // Use appropriate URL based on environment
-      const dashboardUrl =
+      // Build base URL for tenant, then honor original callbackUrl if present
+      const baseUrl =
         process.env.NODE_ENV === "production"
-          ? `https://${tenantSubdomain}.databayt.org/dashboard`
-          : `http://${tenantSubdomain}.localhost:3000/dashboard`
+          ? `https://${tenantSubdomain}.databayt.org`
+          : `http://${tenantSubdomain}.localhost:3000`
+      const targetUrl = callbackUrl
+        ? `${baseUrl}${callbackUrl}`
+        : `${baseUrl}/dashboard`
 
       console.log("🔗 TENANT OAUTH INITIATED:", {
         tenantSubdomain,
         provider,
-        dashboardUrl,
+        targetUrl,
+        callbackUrl,
         currentHost,
         environment: process.env.NODE_ENV,
         source: isSubdomain ? "subdomain_detection" : "url_parameter",
@@ -155,15 +159,15 @@ export const Social = ({ dictionary }: SocialProps = {}) => {
       // Store tenant info for fallback
       if (typeof window !== "undefined" && window.sessionStorage) {
         sessionStorage.setItem("oauth_tenant", tenantSubdomain)
-        sessionStorage.setItem("oauth_callback_url", dashboardUrl)
+        sessionStorage.setItem("oauth_callback_url", targetUrl)
         console.log("💾 Stored OAuth context:", {
           tenant: tenantSubdomain,
-          callbackUrl: dashboardUrl,
+          callbackUrl: targetUrl,
         })
       }
 
       signIn(provider, {
-        callbackUrl: `${dashboardUrl}?tenant=${tenantSubdomain}`,
+        callbackUrl: `${targetUrl}?tenant=${tenantSubdomain}`,
       })
       return
     }

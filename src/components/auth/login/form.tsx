@@ -514,8 +514,8 @@ export const LoginForm = ({
                 <Link
                   href={
                     callbackUrl
-                      ? `/join?callbackUrl=${encodeURIComponent(callbackUrl)}`
-                      : "/join"
+                      ? `/${lang}/join?callbackUrl=${encodeURIComponent(callbackUrl)}`
+                      : `/${lang}/join`
                   }
                   className="underline-offset-4 hover:underline"
                 >
