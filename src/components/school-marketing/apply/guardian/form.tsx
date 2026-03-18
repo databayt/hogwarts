@@ -2,32 +2,38 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React, { forwardRef, useEffect, useImperativeHandle } from "react"
+import React, {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useState,
+} from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { ChevronDown, ChevronUp } from "lucide-react"
 import { useForm } from "react-hook-form"
 
 import { Form } from "@/components/ui/form"
 import { InputField, PhoneField } from "@/components/form"
-import { SelectField } from "@/components/form/atoms/select"
-import { WizardTabs, type WizardTab } from "@/components/form/wizard"
 
 import { useApplySession } from "../application-context"
 import { saveGuardianStep } from "./actions"
-import { GUARDIAN_RELATION_OPTIONS } from "./config"
 import type { GuardianFormProps, GuardianFormRef } from "./types"
 import { guardianSchema, type GuardianSchemaType } from "./validation"
 
 export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
-  ({ initialData, onSuccess, dictionary, onTabChange }, ref) => {
+  ({ initialData, onSuccess, dictionary }, ref) => {
     const { updateStepData } = useApplySession()
     const isRTL =
       (dictionary as Record<string, string> | null)?.locale === "ar" || false
 
-    const tabs: WizardTab[] = [
-      { id: "father", label: isRTL ? "الأب" : "Father" },
-      { id: "mother", label: isRTL ? "الأم" : "Mother" },
-      { id: "guardian", label: isRTL ? "ولي الأمر" : "Guardian" },
-    ]
+    const [showMother, setShowMother] = useState(
+      !!(
+        initialData?.motherName ||
+        initialData?.motherPhone ||
+        initialData?.motherEmail ||
+        initialData?.motherOccupation
+      )
+    )
 
     const form = useForm<GuardianSchemaType>({
       resolver: zodResolver(guardianSchema),
@@ -83,91 +89,80 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
     return (
       <Form {...form}>
         <form className="space-y-6">
-          <WizardTabs tabs={tabs} onTabChange={onTabChange}>
-            {(activeTab) =>
-              activeTab === "father" ? (
-                <div className="space-y-6">
-                  <InputField
-                    name="fatherName"
-                    label={`${dict.fatherName || "Father's Name"} *`}
-                    placeholder={dict.namePlaceholder || "Enter name"}
-                  />
-                  <InputField
-                    name="fatherOccupation"
-                    label={dict.occupation || "Occupation"}
-                    placeholder={
-                      dict.occupationPlaceholder || "Enter occupation"
-                    }
-                  />
-                  <PhoneField
-                    name="fatherPhone"
-                    label={dict.phone || "Phone"}
-                    placeholder="+249 XXX XXX XXXX"
-                  />
-                  <InputField
-                    name="fatherEmail"
-                    label={dict.email || "Email"}
-                    placeholder="email@example.com"
-                    type="email"
-                  />
-                </div>
-              ) : activeTab === "mother" ? (
-                <div className="space-y-6">
-                  <InputField
-                    name="motherName"
-                    label={`${dict.motherName || "Mother's Name"} *`}
-                    placeholder={dict.namePlaceholder || "Enter name"}
-                  />
-                  <InputField
-                    name="motherOccupation"
-                    label={dict.occupation || "Occupation"}
-                    placeholder={
-                      dict.occupationPlaceholder || "Enter occupation"
-                    }
-                  />
-                  <PhoneField
-                    name="motherPhone"
-                    label={dict.phone || "Phone"}
-                    placeholder="+249 XXX XXX XXXX"
-                  />
-                  <InputField
-                    name="motherEmail"
-                    label={dict.email || "Email"}
-                    placeholder="email@example.com"
-                    type="email"
-                  />
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  <InputField
-                    name="guardianName"
-                    label={dict.guardianName || "Guardian's Name"}
-                    placeholder={dict.namePlaceholder || "Enter name"}
-                  />
-                  <SelectField
-                    name="guardianRelation"
-                    label={dict.relation || "Relation"}
-                    placeholder={dict.selectRelation || "Select relation"}
-                    options={GUARDIAN_RELATION_OPTIONS(isRTL).map((o) => ({
-                      value: o.value,
-                      label: o.label,
-                    }))}
-                  />
-                  <PhoneField
-                    name="guardianPhone"
-                    label={dict.phone || "Phone"}
-                    placeholder="+249 XXX XXX XXXX"
-                  />
-                  <InputField
-                    name="guardianEmail"
-                    label={dict.email || "Email"}
-                    placeholder="email@example.com"
-                    type="email"
-                  />
-                </div>
-              )
+          <InputField
+            name="fatherName"
+            label={`${dict.fatherName || (isRTL ? "اسم الأب" : "Father's Name")} *`}
+            placeholder={
+              dict.namePlaceholder || (isRTL ? "أدخل الاسم" : "Enter name")
             }
-          </WizardTabs>
+          />
+          <InputField
+            name="fatherOccupation"
+            label={dict.occupation || (isRTL ? "المهنة" : "Occupation")}
+            placeholder={
+              dict.occupationPlaceholder ||
+              (isRTL ? "أدخل المهنة" : "Enter occupation")
+            }
+          />
+          <PhoneField
+            name="fatherPhone"
+            label={dict.phone || (isRTL ? "الهاتف" : "Phone")}
+            placeholder="+249 XXX XXX XXXX"
+          />
+          <InputField
+            name="fatherEmail"
+            label={dict.email || (isRTL ? "البريد الإلكتروني" : "Email")}
+            placeholder="email@example.com"
+            type="email"
+          />
+
+          <button
+            type="button"
+            onClick={() => setShowMother(!showMother)}
+            className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-sm transition-colors"
+          >
+            {showMother ? (
+              <ChevronUp className="size-4" />
+            ) : (
+              <ChevronDown className="size-4" />
+            )}
+            {isRTL
+              ? "معلومات الأم (اختياري)"
+              : "Mother's Information (optional)"}
+          </button>
+
+          {showMother && (
+            <div className="space-y-6">
+              <InputField
+                name="motherName"
+                label={
+                  dict.motherName || (isRTL ? "اسم الأم" : "Mother's Name")
+                }
+                placeholder={
+                  dict.namePlaceholder || (isRTL ? "أدخل الاسم" : "Enter name")
+                }
+              />
+              <InputField
+                name="motherOccupation"
+                label={dict.occupation || (isRTL ? "المهنة" : "Occupation")}
+                placeholder={
+                  dict.occupationPlaceholder ||
+                  (isRTL ? "أدخل المهنة" : "Enter occupation")
+                }
+              />
+              <PhoneField
+                name="motherPhone"
+                label={dict.phone || (isRTL ? "الهاتف" : "Phone")}
+                placeholder="+249 XXX XXX XXXX"
+              />
+              <InputField
+                name="motherEmail"
+                label={dict.email || (isRTL ? "البريد الإلكتروني" : "Email")}
+                placeholder="email@example.com"
+                type="email"
+              />
+            </div>
+          )}
         </form>
       </Form>
     )

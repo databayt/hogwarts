@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React, { useCallback, useEffect, useRef, useState } from "react"
+import React, { useCallback, useEffect, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 
 import { FormHeading, FormLayout } from "@/components/form"
@@ -13,27 +13,6 @@ import type { GuardianStepData } from "../types"
 import { useApplyValidation } from "../validation-context"
 import { GuardianForm } from "./form"
 import type { GuardianFormRef } from "./types"
-
-const TAB_HEADINGS = (isRTL: boolean) => ({
-  father: {
-    title: isRTL ? "معلومات الأب" : "Father's Information",
-    description: isRTL
-      ? "أدخل معلومات والد الطالب"
-      : "Enter the student's father details.",
-  },
-  mother: {
-    title: isRTL ? "معلومات الأم" : "Mother's Information",
-    description: isRTL
-      ? "أدخل معلومات والدة الطالب"
-      : "Enter the student's mother details.",
-  },
-  guardian: {
-    title: isRTL ? "ولي الأمر" : "Other Guardian",
-    description: isRTL
-      ? "أدخل معلومات ولي الأمر (اختياري)"
-      : "Enter other guardian details (optional).",
-  },
-})
 
 interface Props {
   dictionary?: Record<string, unknown>
@@ -50,14 +29,7 @@ export default function GuardianContent({ dictionary }: Props) {
   const { session, getStepData } = useApplySession()
   const guardianFormRef = useRef<GuardianFormRef>(null)
 
-  const headings = TAB_HEADINGS(isRTL)
-  const [heading, setHeading] = useState(headings.father)
-
   const initialData = getStepData("guardian")
-
-  const handleTabChange = (tabId: string) => {
-    setHeading(headings[tabId as keyof typeof headings] || headings.father)
-  }
 
   const onNext = useCallback(async () => {
     if (guardianFormRef.current) {
@@ -73,7 +45,7 @@ export default function GuardianContent({ dictionary }: Props) {
   useEffect(() => {
     const guardianData = session.formData.guardian
 
-    const isValid = guardianData?.fatherName && guardianData?.motherName
+    const isValid = !!guardianData?.fatherName
 
     if (isValid) {
       enableNext()
@@ -96,14 +68,20 @@ export default function GuardianContent({ dictionary }: Props) {
   return (
     <FormLayout>
       <FormHeading
-        title={dict.title || heading.title}
-        description={dict.description || heading.description}
+        title={
+          dict.title || (isRTL ? "معلومات ولي الأمر" : "Guardian Information")
+        }
+        description={
+          dict.description ||
+          (isRTL
+            ? "أدخل معلومات ولي أمر الطالب"
+            : "Enter the student's guardian details.")
+        }
       />
       <GuardianForm
         ref={guardianFormRef}
         initialData={initialData as GuardianStepData}
         dictionary={dictionary}
-        onTabChange={handleTabChange}
       />
     </FormLayout>
   )

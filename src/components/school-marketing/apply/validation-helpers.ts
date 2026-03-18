@@ -56,7 +56,7 @@ export function validateGuardianStep(
   data: GuardianStepData | undefined
 ): boolean {
   if (!data) return false
-  return !!(data.fatherName && data.motherName)
+  return !!data.fatherName
 }
 
 /**

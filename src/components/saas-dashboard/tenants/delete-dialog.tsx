@@ -77,11 +77,13 @@ export function DeleteSchoolDialog({
       <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete School</AlertDialogTitle>
+          <AlertDialogTitle className="bg-background">
+            Delete Tenant
+          </AlertDialogTitle>
         </AlertDialogHeader>
 
         <div className="space-y-3 py-2">
-          <div className="bg-destructive/10 text-destructive rounded-md p-3 text-sm">
+          <div className="rounded-md p-3 text-sm">
             <strong>Affected data:</strong> {studentCount.toLocaleString()}{" "}
             students, {teacherCount.toLocaleString()} teachers
           </div>
@@ -104,7 +106,7 @@ export function DeleteSchoolDialog({
           <AlertDialogAction
             onClick={handleDelete}
             disabled={!canSubmit}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            className="bg-destructive hover:bg-destructive/90 text-white"
           >
             {isPending ? "Deleting..." : "Delete School"}
           </AlertDialogAction>

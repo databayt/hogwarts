@@ -68,12 +68,12 @@ export default function SuccessCompletionModal({
       preventDefaultClose={false}
     >
       <div className="px-8 py-12 text-center">
-        {/* Celebration Animation */}
-        {animationData && (
-          <div className="mx-auto mb-4 h-32 w-32">
+        {/* Celebration Animation - always reserve space to prevent layout shift */}
+        <div className="mx-auto mb-4 h-32 w-32">
+          {animationData && (
             <Lottie animationData={animationData} loop autoplay />
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Success Message */}
         <p className="text-muted-foreground mb-2">Your school lives at</p>

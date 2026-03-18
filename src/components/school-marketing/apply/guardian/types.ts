@@ -6,7 +6,7 @@ export interface GuardianFormData {
   fatherOccupation?: string
   fatherPhone?: string
   fatherEmail?: string
-  motherName: string
+  motherName?: string
   motherOccupation?: string
   motherPhone?: string
   motherEmail?: string

@@ -30,8 +30,9 @@ export const guardianSchema = z.object({
     .or(z.literal("")),
   motherName: z
     .string()
-    .min(FORM_LIMITS.NAME_MIN_LENGTH, "Mother's name is required")
-    .max(FORM_LIMITS.NAME_MAX_LENGTH, "Mother's name is too long"),
+    .max(FORM_LIMITS.NAME_MAX_LENGTH, "Mother's name is too long")
+    .optional()
+    .or(z.literal("")),
   motherOccupation: z
     .string()
     .max(100, "Occupation is too long")

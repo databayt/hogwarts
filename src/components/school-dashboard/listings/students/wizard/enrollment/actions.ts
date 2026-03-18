@@ -13,10 +13,15 @@ import type { SupportedLanguage } from "@/components/translation/types"
 
 import { enrollmentSchema, type EnrollmentFormData } from "./validation"
 
-async function getDisplayLocale(schoolId: string) {
-  const cookieStore = await cookies()
-  const displayLang =
-    (cookieStore.get("NEXT_LOCALE")?.value as SupportedLanguage) || "ar"
+async function getDisplayLocale(schoolId: string, locale?: string) {
+  let displayLang: SupportedLanguage
+  if (locale && (locale === "en" || locale === "ar")) {
+    displayLang = locale
+  } else {
+    const cookieStore = await cookies()
+    displayLang =
+      (cookieStore.get("NEXT_LOCALE")?.value as SupportedLanguage) || "ar"
+  }
   const school = await db.school.findUnique({
     where: { id: schoolId },
     select: { preferredLanguage: true },
@@ -25,9 +30,9 @@ async function getDisplayLocale(schoolId: string) {
   return { displayLang, contentLang }
 }
 
-export async function getGradeOptions(): Promise<
-  ActionResponse<{ value: string; label: string }[]>
-> {
+export async function getGradeOptions(
+  locale?: string
+): Promise<ActionResponse<{ value: string; label: string }[]>> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) return { success: false, error: "Missing school context" }
@@ -38,7 +43,10 @@ export async function getGradeOptions(): Promise<
       orderBy: { gradeNumber: "asc" },
     })
 
-    const { displayLang, contentLang } = await getDisplayLocale(schoolId)
+    const { displayLang, contentLang } = await getDisplayLocale(
+      schoolId,
+      locale
+    )
 
     const data = await Promise.all(
       grades.map(async (g) => ({
@@ -57,7 +65,8 @@ export async function getGradeOptions(): Promise<
 }
 
 export async function getSectionOptions(
-  gradeId: string
+  gradeId: string,
+  locale?: string
 ): Promise<ActionResponse<{ value: string; label: string }[]>> {
   try {
     const { schoolId } = await getTenantContext()
@@ -69,7 +78,10 @@ export async function getSectionOptions(
       orderBy: { name: "asc" },
     })
 
-    const { displayLang, contentLang } = await getDisplayLocale(schoolId)
+    const { displayLang, contentLang } = await getDisplayLocale(
+      schoolId,
+      locale
+    )
 
     const data = await Promise.all(
       sections.map(async (s) => ({

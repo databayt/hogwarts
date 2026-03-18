@@ -85,14 +85,7 @@ const publicRoutes = [
   "/pricing",
   "/blog",
 ]
-const authRoutes = [
-  "/login",
-  "/join",
-  "/error",
-  "/reset",
-  "/new-password",
-  "/access-denied",
-]
+const authRoutes = ["/login", "/join", "/error", "/reset", "/new-password"]
 
 // Public school-marketing routes (school subdomain public pages - no auth required)
 // NOTE: /apply removed - requires auth to couple application to userId
@@ -133,31 +126,15 @@ function isAuthenticated(request: NextRequest): boolean {
 }
 
 /**
- * Extract user role from JWT session cookie (lightweight - no NextAuth import)
- * JWT structure: header.payload.signature (base64url encoded)
- * Decodes payload to get role without cryptographic verification
- * (Full verification happens in auth() calls within server actions)
+ * Extract user role from the lightweight role cookie set by auth.ts session callback.
+ * The session cookie is JWE-encrypted (5-part token) and cannot be decoded in Edge
+ * without importing jose. Instead, auth.ts syncs a plain-text `authjs.role` cookie
+ * that mirrors the session role. Full verification still happens via auth() in layouts.
  */
 function getRoleFromCookie(request: NextRequest): Role | null {
-  const sessionCookie = request.cookies.get("authjs.session-token")?.value
-  if (!sessionCookie) return null
-
-  try {
-    // JWT is base64url encoded: header.payload.signature
-    const payload = sessionCookie.split(".")[1]
-    if (!payload) return null
-
-    // Convert base64url to base64 and decode
-    const decoded = JSON.parse(
-      atob(payload.replace(/-/g, "+").replace(/_/g, "/"))
-    )
-
-    // Role is stored in the JWT payload by NextAuth callbacks
-    return (decoded.role as Role) || null
-  } catch {
-    // Invalid JWT format or decode error - fail gracefully
-    return null
-  }
+  const role = request.cookies.get("authjs.role")?.value
+  if (!role) return null
+  return role as Role
 }
 
 export async function proxy(req: NextRequest) {

@@ -32,9 +32,9 @@ export default async function Page({ params }: Props) {
       givenName: "",
       surname: "",
       emailAddress: draftEmail,
-      wizardStep: "information",
+      wizardStep: "attachments",
     },
   })
 
-  redirect(`/${lang}/teachers/add/${teacher.id}/information`)
+  redirect(`/${lang}/teachers/add/${teacher.id}/attachments`)
 }

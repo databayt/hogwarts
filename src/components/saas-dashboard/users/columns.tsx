@@ -2,6 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { useState } from "react"
 import { ColumnDef } from "@tanstack/react-table"
 import { MoreHorizontal } from "lucide-react"
 
@@ -155,85 +156,106 @@ export const getUserColumns = (
     id: "actions",
     header: () => <span className="sr-only">Actions</span>,
     cell: ({ row }) => {
-      const user = row.original
-
-      const onToggleSuspend = async () => {
-        const reason =
-          prompt(
-            `Reason to ${user.isSuspended ? "unsuspend" : "suspend"} ${user.email}?`
-          ) || ""
-        const result = await userToggleSuspend({
-          userId: user.id,
-          reason,
-        })
-        if (result.success) {
-          SuccessToast(
-            `User ${result.data.isSuspended ? "suspended" : "unsuspended"}`
-          )
-        } else {
-          ErrorToast(result.error?.message || "Failed to toggle suspension")
-        }
-      }
-
-      const onResetSchool = async () => {
-        const reason =
-          prompt(`Reason to detach ${user.email} from school?`) || ""
-        const result = await userResetSchool({
-          userId: user.id,
-          reason,
-        })
-        if (result.success) {
-          SuccessToast(`Detached ${result.data.email} from school`)
-        } else {
-          ErrorToast(result.error?.message || "Failed to reset school")
-        }
-      }
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <MoreHorizontal className="h-4 w-4" />
-              <span className="sr-only">Open menu</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {user.role !== "DEVELOPER" && (
-              <DropdownMenuItem onClick={onToggleSuspend}>
-                {user.isSuspended ? "Unsuspend" : "Suspend"}
-              </DropdownMenuItem>
-            )}
-            {user.schoolId && (
-              <DropdownMenuItem onClick={onResetSchool}>
-                Detach from school
-              </DropdownMenuItem>
-            )}
-            {user.role !== "DEVELOPER" && (
-              <>
-                <DropdownMenuSeparator />
-                <DeleteUserDialog
-                  userId={user.id}
-                  email={user.email || "unknown"}
-                  role={user.role}
-                  schoolName={user.schoolName}
-                  onDeleted={() => callbacks?.onDelete?.(user)}
-                >
-                  <DropdownMenuItem
-                    className="text-destructive focus:text-destructive"
-                    onSelect={(e) => e.preventDefault()}
-                  >
-                    Delete User
-                  </DropdownMenuItem>
-                </DeleteUserDialog>
-              </>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )
+      return <UserActionsCell user={row.original} callbacks={callbacks} />
     },
     enableSorting: false,
     enableColumnFilter: false,
   },
 ]
+
+function UserActionsCell({
+  user,
+  callbacks,
+}: {
+  user: UserRow
+  callbacks?: UserColumnCallbacks
+}) {
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+
+  const onToggleSuspend = async () => {
+    setDropdownOpen(false)
+    const reason =
+      prompt(
+        `Reason to ${user.isSuspended ? "unsuspend" : "suspend"} ${user.email}?`
+      ) || ""
+    const result = await userToggleSuspend({
+      userId: user.id,
+      reason,
+    })
+    if (result.success) {
+      SuccessToast(
+        `User ${result.data.isSuspended ? "suspended" : "unsuspended"}`
+      )
+    } else {
+      ErrorToast(result.error?.message || "Failed to toggle suspension")
+    }
+  }
+
+  const onResetSchool = async () => {
+    setDropdownOpen(false)
+    const reason = prompt(`Reason to detach ${user.email} from school?`) || ""
+    const result = await userResetSchool({
+      userId: user.id,
+      reason,
+    })
+    if (result.success) {
+      SuccessToast(`Detached ${result.data.email} from school`)
+    } else {
+      ErrorToast(result.error?.message || "Failed to reset school")
+    }
+  }
+
+  return (
+    <>
+      <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <MoreHorizontal className="h-4 w-4" />
+            <span className="sr-only">Open menu</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {user.role !== "DEVELOPER" && (
+            <DropdownMenuItem onClick={onToggleSuspend}>
+              {user.isSuspended ? "Unsuspend" : "Suspend"}
+            </DropdownMenuItem>
+          )}
+          {user.schoolId && (
+            <DropdownMenuItem onClick={onResetSchool}>
+              Detach from school
+            </DropdownMenuItem>
+          )}
+          {user.role !== "DEVELOPER" && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onSelect={() => {
+                  setDropdownOpen(false)
+                  setDeleteOpen(true)
+                }}
+              >
+                Delete User
+              </DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {user.role !== "DEVELOPER" && (
+        <DeleteUserDialog
+          userId={user.id}
+          email={user.email || "unknown"}
+          role={user.role}
+          schoolName={user.schoolName}
+          open={deleteOpen}
+          onOpenChange={setDeleteOpen}
+          onDeleted={() => callbacks?.onDelete?.(user)}
+        />
+      )}
+    </>
+  )
+}

@@ -39,7 +39,6 @@ import type { getDictionary } from "@/components/internationalization/dictionari
 
 import { FormError } from "../error/form-error"
 import { FormSuccess } from "../form-success"
-import { login } from "../login/action"
 import { Social } from "../social"
 import { createRegisterSchema } from "../validation"
 import {
@@ -92,7 +91,7 @@ export const RegisterForm = (props: Props) => {
     },
   })
 
-  // Auto-login helper (mirrors login form pattern for proper redirect)
+  // Auto-login helper — single client-side signIn, then direct redirect
   const autoLogin = useCallback(
     async (email: string, pwd: string) => {
       try {
@@ -102,16 +101,7 @@ export const RegisterForm = (props: Props) => {
           redirect: false,
         })
         if (result?.ok) {
-          // Use login server action for proper redirect (handles /onboarding callbackUrls)
-          const loginResult = await login(
-            { email, password: pwd },
-            { callbackUrl, context: "saas", subdomain: null, locale: lang }
-          )
-          if (loginResult?.redirectUrl) {
-            window.location.href = loginResult.redirectUrl
-          } else {
-            window.location.href = callbackUrl || `/${lang}`
-          }
+          window.location.href = callbackUrl || `/${lang}`
         } else {
           router.push(
             callbackUrl

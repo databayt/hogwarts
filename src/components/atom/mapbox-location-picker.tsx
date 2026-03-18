@@ -170,8 +170,24 @@ export function MapboxLocationPicker({
   )
 
   // Handle GPS location
-  const handleGps = useCallback(() => {
+  const handleGps = useCallback(async () => {
     if (!navigator.geolocation) return
+
+    // Check/request permission first
+    try {
+      const permission = await navigator.permissions.query({
+        name: "geolocation",
+      })
+      if (permission.state === "denied") {
+        alert(
+          "Location access is blocked. Please enable it in your browser settings."
+        )
+        return
+      }
+    } catch {
+      // permissions API not supported, continue anyway
+    }
+
     setGpsLoading(true)
     navigator.geolocation.getCurrentPosition(
       async (position) => {
@@ -181,8 +197,15 @@ export function MapboxLocationPicker({
         )
         setGpsLoading(false)
       },
-      () => {
+      (error) => {
         setGpsLoading(false)
+        if (error.code === error.PERMISSION_DENIED) {
+          alert(
+            "Location access denied. Please allow location in your browser settings."
+          )
+        } else if (error.code === error.TIMEOUT) {
+          alert("Could not get your location. Please try again.")
+        }
       },
       { enableHighAccuracy: true, timeout: 10000 }
     )

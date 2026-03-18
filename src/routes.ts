@@ -44,7 +44,6 @@ export const authRoutes = [
   "/new-password",
   "/new-verification",
   "/reset",
-  "/access-denied",
 ]
 
 /**

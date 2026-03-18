@@ -9,6 +9,7 @@ import React, {
   useState,
   useTransition,
 } from "react"
+import { useParams } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
@@ -85,14 +86,16 @@ export const EnrollmentForm = forwardRef<WizardFormRef, EnrollmentFormProps>(
       },
     })
 
+    const params = useParams()
+    const locale = (params?.lang as string) || "ar"
     const selectedGradeId = form.watch("academicGradeId")
 
     // Fetch grades on mount
     useEffect(() => {
-      getGradeOptions().then((res) => {
+      getGradeOptions(locale).then((res) => {
         if (res.success && res.data) setGradeOptions(res.data)
       })
-    }, [])
+    }, [locale])
 
     // Fetch sections when grade changes (cascading)
     useEffect(() => {
@@ -100,10 +103,10 @@ export const EnrollmentForm = forwardRef<WizardFormRef, EnrollmentFormProps>(
         setSectionOptions([])
         return
       }
-      getSectionOptions(selectedGradeId).then((res) => {
+      getSectionOptions(selectedGradeId, locale).then((res) => {
         if (res.success && res.data) setSectionOptions(res.data)
       })
-    }, [selectedGradeId])
+    }, [selectedGradeId, locale])
 
     // Reset sectionId when grade changes (skip on initial mount)
     const gradeRef = React.useRef(initialData?.academicGradeId)

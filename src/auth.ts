@@ -348,6 +348,7 @@ export const {
       try {
         const cookieStore = await cookies()
         cookieStore.delete("impersonate_schoolId")
+        cookieStore.delete("authjs.role")
       } catch {
         // cookies() may not be available in all contexts
       }
@@ -562,7 +563,10 @@ export const {
       // 1. Session update is requested (trigger === 'update')
       // 2. Token doesn't have schoolId yet (new OAuth user during onboarding)
       // This ensures the JWT has the latest schoolId immediately after school creation
-      if (trigger === "update" || (!token.schoolId && token.id)) {
+      if (
+        trigger === "update" ||
+        (!token.schoolId && token.id && token.role !== "DEVELOPER")
+      ) {
         try {
           authLogger.debug("JWT: Refreshing from database", {
             trigger,
@@ -659,6 +663,30 @@ export const {
         }
         if (token.schoolId) {
           ;(session.user as any).schoolId = token.schoolId
+        }
+
+        // Sync lightweight role cookie for Edge middleware (proxy.ts)
+        // The session cookie is JWE-encrypted and cannot be decoded in Edge functions,
+        // so we maintain a plain-text role cookie that the middleware can read.
+        try {
+          const cookieStore = await cookies()
+          const currentRoleCookie = cookieStore.get("authjs.role")?.value
+          const effectiveRole = (session.user as any).role as string | undefined
+          if (effectiveRole && currentRoleCookie !== effectiveRole) {
+            cookieStore.set("authjs.role", effectiveRole, {
+              httpOnly: true,
+              sameSite: "lax",
+              path: "/",
+              secure: process.env.NODE_ENV === "production",
+              domain:
+                process.env.NODE_ENV === "production"
+                  ? ".databayt.org"
+                  : undefined,
+              maxAge: 24 * 60 * 60,
+            })
+          }
+        } catch {
+          // cookies() not available — skip role cookie sync
         }
 
         // Force session update if token has been updated

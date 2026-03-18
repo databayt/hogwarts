@@ -83,7 +83,8 @@ const nextConfig: NextConfig = {
     qualities: [25, 50, 75, 100],
     minimumCacheTTL: 2592000, // 30 days — catalog images rarely change
     dangerouslyAllowSVG: true,
-    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    contentSecurityPolicy:
+      "default-src 'self'; script-src 'none'; style-src 'self' 'unsafe-inline';",
     remotePatterns: [
       {
         protocol: "https",

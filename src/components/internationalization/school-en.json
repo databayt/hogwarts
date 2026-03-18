@@ -2671,6 +2671,8 @@
       "help": "Help",
       "save": "Save",
       "skip": "Skip",
+      "create": "Create",
+      "update": "Update",
       "finish": "Finish",
       "aboutSchool": "About Your School",
       "schoolTitle": "School Name",

@@ -34,7 +34,6 @@ export default function StudentWizardLayout({
         wizard?.contactDetails || "Contact Details",
         wizard?.healthHistory || "Health & History",
       ],
-      finalLabel: wizard?.save || "Save",
     }),
     [wizard]
   )
@@ -51,8 +50,8 @@ export default function StudentWizardLayout({
       onComplete={async (entityId) => {
         await completeStudentWizard(entityId)
       }}
-      finalLabel={translatedConfig.finalLabel}
       finalDestination="/students"
+      wizardStepField="wizardStep"
     >
       {children}
     </WizardLayout>

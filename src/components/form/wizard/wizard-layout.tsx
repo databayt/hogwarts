@@ -62,6 +62,7 @@ interface WizardLayoutProps {
   loadHook: () => {
     isLoading: boolean
     error: string | null
+    data?: Record<string, unknown> | null
     loadData: (id: string) => Promise<void>
     reload?: () => Promise<void>
   }
@@ -89,6 +90,10 @@ interface WizardLayoutProps {
   onComplete?: (entityId: string) => Promise<void>
   /** Label for the skip button (default: "Skip & Create", use "Skip & Update" for edit mode) */
   skipLabel?: string
+  /** Field name on entity data that tracks wizard progress (e.g., "wizardStep").
+   *  When set and the field is null, the wizard is in edit mode (entity was previously completed).
+   *  This changes labels from "Create" to "Update" and "Skip & Create" to "Skip & Update". */
+  wizardStepField?: string
   children: ReactNode
 }
 
@@ -118,16 +123,38 @@ function WizardLayoutContent({
   showSave = true,
   onComplete,
   skipLabel,
+  wizardStepField,
   children,
 }: Omit<WizardLayoutProps, "dataProvider">) {
   const params = useParams()
   const router = useRouter()
-  const { isLoading, error, loadData, reload } = loadHook()
+  const { isLoading, error, loadData, reload, data } = loadHook()
   const { dictionary } = useDictionary()
   const { locale } = useLocale()
   const entityId = params[idParam] as string | null
   const { onSave } = useWizardValidation()
   const [isSaving, setIsSaving] = useState(false)
+
+  // Detect create vs update mode from wizard step field.
+  // wizardStep === null means the entity was previously completed → edit mode.
+  const isEditMode =
+    wizardStepField && data
+      ? (data as Record<string, unknown>)[wizardStepField] === null
+      : false
+
+  const dict = dictionary?.school?.onboarding as
+    | Record<string, string>
+    | undefined
+  const createLabel = dict?.create || "Create"
+  const updateLabel = dict?.update || "Update"
+  const skipWord = dict?.skip || "Skip"
+  const resolvedFinalLabel =
+    finalLabel || (isEditMode ? updateLabel : createLabel)
+  const resolvedSkipLabel =
+    skipLabel ||
+    (isEditMode
+      ? `${skipWord} & ${updateLabel}`
+      : `${skipWord} & ${createLabel}`)
 
   // Derive close destination: strip /add from basePath
   const resolvedCloseDestination =
@@ -197,7 +224,9 @@ function WizardLayoutContent({
       dictionary={dictionary?.school?.onboarding}
       locale={locale}
       useValidation={useWizardValidation}
-      finalLabel={finalLabel || resolveFinalLabel(config, locale) || "Finish"}
+      finalLabel={
+        resolvedFinalLabel || resolveFinalLabel(config, locale) || "Finish"
+      }
       finalDestination={finalDestination || config.finalDestination}
       onStepChange={handleStepChange}
       showClose={showClose}
@@ -211,7 +240,7 @@ function WizardLayoutContent({
       onSkipToComplete={
         config.skipToComplete ? handleSkipToComplete : undefined
       }
-      skipLabel={skipLabel}
+      skipLabel={resolvedSkipLabel}
     />
   )
 

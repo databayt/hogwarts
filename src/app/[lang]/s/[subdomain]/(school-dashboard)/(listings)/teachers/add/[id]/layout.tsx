@@ -32,8 +32,8 @@ export default function TeacherWizardLayout({
       onComplete={async (entityId) => {
         await completeTeacherWizard(entityId)
       }}
-      finalLabel="Create"
       finalDestination="/teachers"
+      wizardStepField="wizardStep"
     >
       {children}
     </WizardLayout>

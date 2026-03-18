@@ -2,6 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { useState } from "react"
 import { ColumnDef } from "@tanstack/react-table"
 import { MoreHorizontal } from "lucide-react"
 
@@ -192,133 +193,147 @@ export const getTenantColumns = (
   {
     id: "actions",
     header: () => <span className="sr-only">Actions</span>,
-    cell: ({ row }) => {
-      const tenant = row.original as TenantRow
-      const onStartImpersonation = async () => {
-        try {
-          const reason = prompt(`Reason to impersonate ${tenant.name}?`) || ""
-          const res = await fetch(
-            `/operator/actions/impersonation/${tenant.id}/start`,
-            {
-              method: "POST",
-              body: (() => {
-                const fd = new FormData()
-                fd.set("reason", reason)
-                return fd
-              })(),
-            }
-          )
-          if (!res.ok) throw new Error("Failed to start impersonation")
-          SuccessToast("Impersonation started successfully")
-        } catch (e) {
-          ErrorToast(
-            e instanceof Error ? e.message : "Failed to start impersonation"
-          )
-        }
-      }
-      const onToggleActive = async () => {
-        try {
-          const reason =
-            prompt(
-              `Reason to ${tenant.isActive ? "suspend" : "activate"} ${tenant.name}?`
-            ) || ""
-          const res = await fetch(
-            `/operator/actions/tenants/${tenant.id}/toggle-active`,
-            {
-              method: "POST",
-              body: (() => {
-                const fd = new FormData()
-                fd.set("reason", reason)
-                return fd
-              })(),
-            }
-          )
-          if (!res.ok) throw new Error("Failed to toggle status")
-          SuccessToast("Status toggled successfully")
-        } catch (e) {
-          ErrorToast(e instanceof Error ? e.message : "Failed to toggle status")
-        }
-      }
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <MoreHorizontal className="h-4 w-4" />
-              <span className="sr-only">Open menu</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <a href={`/operator/tenants?impersonate=${tenant.id}`}>
-                Impersonate
-              </a>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={onStartImpersonation}>
-              Start impersonation
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={onToggleActive}>
-              {tenant.isActive ? "Suspend" : "Activate"}
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={async () => {
-                try {
-                  const res = await tenantSetupCatalog({
-                    tenantId: tenant.id,
-                  })
-                  if (res.success) {
-                    SuccessToast(
-                      `Catalog configured: ${res.data.levels} levels, ${res.data.grades} grades, ${res.data.selections} subject selections`
-                    )
-                  } else {
-                    ErrorToast(res.error?.message || "Failed to setup catalog")
-                  }
-                } catch (e) {
-                  ErrorToast(
-                    e instanceof Error ? e.message : "Failed to setup catalog"
-                  )
-                }
-              }}
-            >
-              Setup Catalog
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <div className="px-0">
-                <TenantDetail
-                  tenantId={tenant.id}
-                  name={tenant.name}
-                  domain={tenant.subdomain}
-                  planType={tenant.planType}
-                  isActive={tenant.isActive}
-                />
-              </div>
-            </DropdownMenuItem>
-            {tenant.domain !== "demo" && (
-              <>
-                <DropdownMenuSeparator />
-                <DeleteSchoolDialog
-                  tenantId={tenant.id}
-                  name={tenant.name}
-                  domain={tenant.domain}
-                  studentCount={tenant.studentCount}
-                  teacherCount={tenant.teacherCount}
-                  onDeleted={() => callbacks?.onDelete?.(tenant)}
-                >
-                  <DropdownMenuItem
-                    className="text-destructive focus:text-destructive"
-                    onSelect={(e) => e.preventDefault()}
-                  >
-                    Delete School
-                  </DropdownMenuItem>
-                </DeleteSchoolDialog>
-              </>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )
-    },
+    cell: ({ row }) => (
+      <TenantActionsCell tenant={row.original} callbacks={callbacks} />
+    ),
     enableSorting: false,
     enableColumnFilter: false,
   },
 ]
+
+function TenantActionsCell({
+  tenant,
+  callbacks,
+}: {
+  tenant: TenantRow
+  callbacks?: TenantColumnCallbacks
+}) {
+  const [open, setOpen] = useState(false)
+
+  const onStartImpersonation = async () => {
+    try {
+      const reason = prompt(`Reason to impersonate ${tenant.name}?`) || ""
+      const res = await fetch(
+        `/operator/actions/impersonation/${tenant.id}/start`,
+        {
+          method: "POST",
+          body: (() => {
+            const fd = new FormData()
+            fd.set("reason", reason)
+            return fd
+          })(),
+        }
+      )
+      if (!res.ok) throw new Error("Failed to start impersonation")
+      SuccessToast("Impersonation started successfully")
+    } catch (e) {
+      ErrorToast(
+        e instanceof Error ? e.message : "Failed to start impersonation"
+      )
+    }
+  }
+
+  const onToggleActive = async () => {
+    try {
+      const reason =
+        prompt(
+          `Reason to ${tenant.isActive ? "suspend" : "activate"} ${tenant.name}?`
+        ) || ""
+      const res = await fetch(
+        `/operator/actions/tenants/${tenant.id}/toggle-active`,
+        {
+          method: "POST",
+          body: (() => {
+            const fd = new FormData()
+            fd.set("reason", reason)
+            return fd
+          })(),
+        }
+      )
+      if (!res.ok) throw new Error("Failed to toggle status")
+      SuccessToast("Status toggled successfully")
+    } catch (e) {
+      ErrorToast(e instanceof Error ? e.message : "Failed to toggle status")
+    }
+  }
+
+  return (
+    <DropdownMenu open={open} onOpenChange={setOpen}>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="h-8 w-8 p-0">
+          <MoreHorizontal className="h-4 w-4" />
+          <span className="sr-only">Open menu</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <a href={`/operator/tenants?impersonate=${tenant.id}`}>Impersonate</a>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={onStartImpersonation}>
+          Start impersonation
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={onToggleActive}>
+          {tenant.isActive ? "Suspend" : "Activate"}
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={async () => {
+            try {
+              const res = await tenantSetupCatalog({
+                tenantId: tenant.id,
+              })
+              if (res.success) {
+                SuccessToast(
+                  `Catalog configured: ${res.data.levels} levels, ${res.data.grades} grades, ${res.data.selections} subject selections`
+                )
+              } else {
+                ErrorToast(res.error?.message || "Failed to setup catalog")
+              }
+            } catch (e) {
+              ErrorToast(
+                e instanceof Error ? e.message : "Failed to setup catalog"
+              )
+            }
+          }}
+        >
+          Setup Catalog
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <div className="px-0">
+            <TenantDetail
+              tenantId={tenant.id}
+              name={tenant.name}
+              domain={tenant.subdomain}
+              planType={tenant.planType}
+              isActive={tenant.isActive}
+            />
+          </div>
+        </DropdownMenuItem>
+        {tenant.domain !== "demo" && (
+          <>
+            <DropdownMenuSeparator />
+            <DeleteSchoolDialog
+              tenantId={tenant.id}
+              name={tenant.name}
+              domain={tenant.domain}
+              studentCount={tenant.studentCount}
+              teacherCount={tenant.teacherCount}
+              onDeleted={() => {
+                setOpen(false)
+                callbacks?.onDelete?.(tenant)
+              }}
+            >
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onSelect={(e) => e.preventDefault()}
+              >
+                Delete School
+              </DropdownMenuItem>
+            </DeleteSchoolDialog>
+          </>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}

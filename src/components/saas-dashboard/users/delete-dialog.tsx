@@ -10,7 +10,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -23,8 +22,9 @@ interface DeleteUserDialogProps {
   email: string
   role: string
   schoolName: string | null
+  open: boolean
+  onOpenChange: (open: boolean) => void
   onDeleted?: () => void
-  children: React.ReactNode
 }
 
 export function DeleteUserDialog({
@@ -32,10 +32,10 @@ export function DeleteUserDialog({
   email,
   role,
   schoolName,
+  open,
+  onOpenChange,
   onDeleted,
-  children,
 }: DeleteUserDialogProps) {
-  const [open, setOpen] = useState(false)
   const [confirmEmail, setConfirmEmail] = useState("")
   const [isPending, startTransition] = useTransition()
 
@@ -52,7 +52,7 @@ export function DeleteUserDialog({
 
       if (result.success) {
         SuccessToast(`Deleted user "${result.data.deletedEmail}"`)
-        setOpen(false)
+        onOpenChange(false)
         setConfirmEmail("")
         onDeleted?.()
       } else {
@@ -65,21 +65,20 @@ export function DeleteUserDialog({
     if (!next) {
       setConfirmEmail("")
     }
-    setOpen(next)
+    onOpenChange(next)
   }
 
   return (
     <AlertDialog open={open} onOpenChange={handleOpenChange}>
-      <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Delete User</AlertDialogTitle>
         </AlertDialogHeader>
 
         <div className="space-y-3 py-2">
-          <div className="bg-destructive/10 text-destructive rounded-md p-3 text-sm">
-            <strong>User details:</strong> {email} — Role: {role}
-            {schoolName && ` — School: ${schoolName}`}
+          <div className="text-muted-foreground text-sm">
+            {email} · {role.toLowerCase()}
+            {schoolName && ` · ${schoolName}`}
           </div>
 
           <div className="space-y-1.5">
@@ -100,7 +99,7 @@ export function DeleteUserDialog({
           <AlertDialogAction
             onClick={handleDelete}
             disabled={!canSubmit}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            className="bg-destructive hover:bg-destructive/90 text-white"
           >
             {isPending ? "Deleting..." : "Delete User"}
           </AlertDialogAction>
