@@ -113,6 +113,14 @@
           {
             "type": "command",
             "command": "npx prettier --write \"$CLAUDE_TOOL_ARGS\" --log-level silent || exit 0"
+          },
+          {
+            "type": "command",
+            "command": "FILE=\"$CLAUDE_FILE_PATH\"; if echo \"$FILE\" | grep -qE \"\\.tsx?$|jsx?$\"; then if grep -nE \"(redirect|href|push|replace).*\\/s\\/\" \"$FILE\" 2>/dev/null | grep -v revalidatePath | grep -v \"// internal\" | head -5; then echo \"WARNING: Possible /s/ URL leak in client-facing code\"; echo \"Use clean paths without /s/subdomain segment\"; fi; fi; exit 0"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/check-i18n.sh"
           }
         ]
       },
@@ -122,6 +130,14 @@
           {
             "type": "command",
             "command": "npx prettier --write \"$CLAUDE_TOOL_ARGS\" --log-level silent || exit 0"
+          },
+          {
+            "type": "command",
+            "command": "FILE=\"$CLAUDE_FILE_PATH\"; if echo \"$FILE\" | grep -qE \"\\.tsx?$|jsx?$\"; then if grep -nE \"(redirect|href|push|replace).*\\/s\\/\" \"$FILE\" 2>/dev/null | grep -v revalidatePath | grep -v \"// internal\" | head -5; then echo \"WARNING: Possible /s/ URL leak in client-facing code\"; echo \"Use clean paths without /s/subdomain segment\"; fi; fi; exit 0"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/check-i18n.sh"
           }
         ]
       },

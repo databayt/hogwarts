@@ -31,7 +31,7 @@ export function AdmissionCTA({ lang, dictionary }: AdmissionCTAProps) {
 
         <div className="flex flex-col justify-center gap-4 sm:flex-row">
           <Link
-            href={`/${lang}/apply`}
+            href={`/${lang}/application`}
             className={cn(
               buttonVariants({ size: "lg" }),
               "bg-background text-foreground hover:bg-background/90 gap-2"

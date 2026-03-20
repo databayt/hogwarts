@@ -499,7 +499,7 @@ export function ScheduleSettingsDialog({
                         mode="single"
                         selected={termStartDate}
                         onSelect={setTermStartDate}
-                        initialFocus
+                        autoFocus
                       />
                     </PopoverContent>
                   </Popover>
@@ -529,7 +529,7 @@ export function ScheduleSettingsDialog({
                         mode="single"
                         selected={termEndDate}
                         onSelect={setTermEndDate}
-                        initialFocus
+                        autoFocus
                       />
                     </PopoverContent>
                   </Popover>
@@ -702,7 +702,7 @@ export function ScheduleSettingsDialog({
                           onSelect={(d) =>
                             setExceptionForm((f) => ({ ...f, startDate: d }))
                           }
-                          initialFocus
+                          autoFocus
                         />
                       </PopoverContent>
                     </Popover>
@@ -731,7 +731,7 @@ export function ScheduleSettingsDialog({
                           onSelect={(d) =>
                             setExceptionForm((f) => ({ ...f, endDate: d }))
                           }
-                          initialFocus
+                          autoFocus
                         />
                       </PopoverContent>
                     </Popover>

@@ -94,6 +94,7 @@ export const ANIMATION_DURATION = {
 // Progress bar dimensions
 export const PROGRESS_BAR = {
   heightRest: 5,
-  heightHover: 8,
-  thumbSize: 14,
+  heightHover: 5,
+  thumbWidth: 18,
+  thumbHeight: 14,
 } as const

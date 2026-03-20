@@ -26,7 +26,8 @@ import { createGeneratedExamForPaper } from "./actions/quick-paper"
 
 interface QuickPaperButtonProps {
   examId: string
-  subdomain: string
+  /** @deprecated No longer used — kept for backward compatibility */
+  subdomain?: string
   locale: "en" | "ar"
   existingGeneratedExamId?: string
 }
@@ -60,7 +61,6 @@ const LABELS = {
 
 export function QuickPaperButton({
   examId,
-  subdomain,
   locale,
   existingGeneratedExamId,
 }: QuickPaperButtonProps) {
@@ -69,7 +69,7 @@ export function QuickPaperButton({
   const labels = LABELS[locale]
 
   const paperPath = (generatedExamId: string) =>
-    `/${locale}/s/${subdomain}/exams/paper/${generatedExamId}`
+    `/${locale}/exams/paper/${generatedExamId}`
 
   const handleClick = () => {
     // If a generated exam already exists, navigate directly

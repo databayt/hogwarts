@@ -48,7 +48,7 @@ export function BackgroundGradientAnimationDemo({
               : "Every great wizard started with a single step. Take yours today and join thousands of students who have discovered their potential in our enchanted halls of learning."}
           </p>
           <div className="flex flex-col justify-center gap-4 pt-4 sm:flex-row">
-            <Link href={`/${lang}/apply`}>
+            <Link href={`/${lang}/application`}>
               <Button
                 size="lg"
                 className="text-primary bg-white hover:bg-white/90"

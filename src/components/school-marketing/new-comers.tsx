@@ -18,7 +18,7 @@ export function NewComers({ lang = "en", subdomain }: NewComersProps) {
   const { dictionary } = useDictionary()
   const t = dictionary?.marketing?.site?.newComers
 
-  const joinHref = subdomain ? `/${lang}/s/${subdomain}/join` : "/onboarding"
+  const joinHref = subdomain ? `/${lang}/join` : "/onboarding"
 
   return (
     <section className="py-16 md:py-24">

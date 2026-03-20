@@ -87,7 +87,7 @@ export async function publishSchool(schoolId: string): Promise<ActionResponse> {
       id: school.id,
       name: school.name,
       domain: school.domain,
-      redirectUrl: `/s/${school.domain}`,
+      redirectUrl: `/`,
     })
   } catch (error) {
     return createActionResponse(undefined, error)

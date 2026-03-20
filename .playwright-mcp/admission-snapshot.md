@@ -1,0 +1,233 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e4]:
+      - banner [ref=e6]:
+        - generic [ref=e7]:
+          - button "Toggle Sidebar" [ref=e8]:
+            - img
+            - generic [ref=e9]: Toggle Sidebar
+          - navigation "breadcrumb" [ref=e11]:
+            - list [ref=e12]:
+              - link [disabled] [ref=e14]
+        - generic [ref=e15]:
+          - button "Search" [ref=e16] [cursor=pointer]:
+            - img
+            - generic [ref=e17]: Search
+          - button "Switch language" [ref=e18] [cursor=pointer]:
+            - img
+            - generic [ref=e19]: Switch language
+          - button "Toggle theme" [ref=e20]:
+            - img
+            - generic [ref=e21]: Toggle theme
+          - link "Notifications" [ref=e22] [cursor=pointer]:
+            - /url: /en/notifications
+            - img
+            - generic [ref=e23]: Notifications
+          - link "Messages" [ref=e24] [cursor=pointer]:
+            - /url: /en/messages
+            - img
+            - generic [ref=e25]: Messages
+          - button "admin User menu" [ref=e26]:
+            - img "admin" [ref=e28]
+            - generic [ref=e29]: User menu
+      - generic [ref=e30]:
+        - list [ref=e36]:
+          - listitem [ref=e37]:
+            - link "Overview" [ref=e38] [cursor=pointer]:
+              - /url: /en/dashboard
+              - img [ref=e40]
+              - text: Overview
+          - listitem [ref=e43]:
+            - link "School" [ref=e44] [cursor=pointer]:
+              - /url: /en/school
+              - img [ref=e46]
+              - text: School
+          - listitem [ref=e48]:
+            - link "Sales" [ref=e49] [cursor=pointer]:
+              - /url: /en/sales
+              - img [ref=e51]
+              - text: Sales
+          - listitem [ref=e55]:
+            - link "Announcements" [ref=e56] [cursor=pointer]:
+              - /url: /en/announcements
+              - img [ref=e58]
+              - text: Announcements
+          - listitem [ref=e62]:
+            - link "Finance" [ref=e63] [cursor=pointer]:
+              - /url: /en/finance
+              - img [ref=e65]
+              - text: Finance
+          - listitem [ref=e67]:
+            - link "Grades" [ref=e68] [cursor=pointer]:
+              - /url: /en/grades
+              - img [ref=e70]
+              - text: Grades
+          - listitem [ref=e76]:
+            - link "Subjects" [ref=e77] [cursor=pointer]:
+              - /url: /en/subjects
+              - img [ref=e79]
+              - text: Subjects
+          - listitem [ref=e80]:
+            - link "Parents" [ref=e81] [cursor=pointer]:
+              - /url: /en/parents
+              - img [ref=e83]
+              - text: Parents
+          - listitem [ref=e88]:
+            - link "Admission" [ref=e89] [cursor=pointer]:
+              - /url: /en/admission
+              - img [ref=e91]
+              - text: Admission
+          - listitem [ref=e94]:
+            - link "Students" [ref=e95] [cursor=pointer]:
+              - /url: /en/students
+              - img [ref=e97]
+              - text: Students
+          - listitem [ref=e100]:
+            - link "Teachers" [ref=e101] [cursor=pointer]:
+              - /url: /en/teachers
+              - img [ref=e103]
+              - text: Teachers
+          - listitem [ref=e107]:
+            - link "Classrooms" [ref=e108] [cursor=pointer]:
+              - /url: /en/classrooms
+              - img [ref=e110]
+              - text: Classrooms
+          - listitem [ref=e113]:
+            - link "Exams" [ref=e114] [cursor=pointer]:
+              - /url: /en/exams
+              - img [ref=e116]
+              - text: Exams
+          - listitem [ref=e119]:
+            - link "Events" [ref=e120] [cursor=pointer]:
+              - /url: /en/events
+              - img [ref=e122]
+              - text: Events
+          - listitem [ref=e124]:
+            - link "Attendance" [ref=e125] [cursor=pointer]:
+              - /url: /en/attendance
+              - img [ref=e127]
+              - text: Attendance
+          - listitem [ref=e130]:
+            - link "Timetable" [ref=e131] [cursor=pointer]:
+              - /url: /en/timetable
+              - img [ref=e133]
+              - text: Timetable
+          - listitem [ref=e136]:
+            - link "Library" [ref=e137] [cursor=pointer]:
+              - /url: /en/library
+              - img [ref=e139]
+              - text: Library
+          - listitem [ref=e141]:
+            - link "Stream" [ref=e142] [cursor=pointer]:
+              - /url: /en/stream
+              - img [ref=e144]
+              - text: Stream
+          - listitem [ref=e147]:
+            - link "Profile" [ref=e148] [cursor=pointer]:
+              - /url: /en/profile
+              - img [ref=e150]
+              - text: Profile
+          - listitem [ref=e153]:
+            - link "Settings" [ref=e154] [cursor=pointer]:
+              - /url: /en/settings
+              - img [ref=e156]
+              - text: Settings
+          - listitem [ref=e159]:
+            - link "Charts" [ref=e160] [cursor=pointer]:
+              - /url: /en/charts
+              - img [ref=e162]
+              - text: Charts
+          - listitem [ref=e164]:
+            - link "Stats" [ref=e165] [cursor=pointer]:
+              - /url: /en/stats
+              - img [ref=e167]
+              - text: Stats
+          - listitem [ref=e170]:
+            - link "Billing" [ref=e171] [cursor=pointer]:
+              - /url: /en/billing
+              - img [ref=e173]
+              - text: Billing
+        - generic [ref=e176]:
+          - heading "Admission" [level=1] [ref=e179]
+          - generic [ref=e180]:
+            - navigation [ref=e185]:
+              - link "Campaigns" [ref=e186] [cursor=pointer]:
+                - /url: /en/admission
+                - text: Campaigns
+              - link "Applications" [ref=e188] [cursor=pointer]:
+                - /url: /en/admission/applications
+              - link "Merit List" [ref=e189] [cursor=pointer]:
+                - /url: /en/admission/merit
+              - link "Enrollment" [ref=e190] [cursor=pointer]:
+                - /url: /en/admission/enrollment
+              - link "Settings" [ref=e191] [cursor=pointer]:
+                - /url: /en/admission/settings
+            - generic [ref=e412]:
+              - toolbar [ref=e413]:
+                - generic [ref=e414]:
+                  - generic [ref=e415]:
+                    - img [ref=e416]
+                    - textbox "Campaign Name" [ref=e418]
+                  - button "Status" [ref=e419]:
+                    - img
+                    - text: Status
+                - generic [ref=e420]:
+                  - combobox "Toggle columns" [ref=e421]:
+                    - img
+                    - text: View
+                    - img
+                  - button "Switch to grid view" [ref=e422]:
+                    - img
+                  - button "Create Campaign" [ref=e423]:
+                    - img
+              - table [ref=e427]:
+                - rowgroup [ref=e428]:
+                  - row "Campaign Name Academic Year Status Applications Total Seats Start Date End Date Actions" [ref=e429]:
+                    - columnheader "Campaign Name" [ref=e430]:
+                      - button "Campaign Name" [ref=e431]:
+                        - text: Campaign Name
+                        - img [ref=e432]
+                    - columnheader "Academic Year" [ref=e435]:
+                      - button "Academic Year" [ref=e436]:
+                        - text: Academic Year
+                        - img [ref=e437]
+                    - columnheader "Status" [ref=e440]:
+                      - button "Status" [ref=e441]:
+                        - text: Status
+                        - img [ref=e442]
+                    - columnheader "Applications" [ref=e445]:
+                      - button "Applications" [ref=e446]:
+                        - text: Applications
+                        - img [ref=e447]
+                    - columnheader "Total Seats" [ref=e450]:
+                      - button "Total Seats" [ref=e451]:
+                        - text: Total Seats
+                        - img [ref=e452]
+                    - columnheader "Start Date" [ref=e455]:
+                      - button "Start Date" [ref=e456]:
+                        - text: Start Date
+                        - img [ref=e457]
+                    - columnheader "End Date" [ref=e460]:
+                      - button "End Date" [ref=e461]:
+                        - text: End Date
+                        - img [ref=e462]
+                    - columnheader "Actions" [ref=e465]:
+                      - generic [ref=e466]: Actions
+                - rowgroup [ref=e467]:
+                  - row "Admission 2026-2027 2026-2027 Open 50 200 1/1/2026 8/31/2026 Open menu" [ref=e468]:
+                    - cell "Admission 2026-2027" [ref=e469]
+                    - cell "2026-2027" [ref=e470]
+                    - cell "Open" [ref=e471]:
+                      - generic [ref=e472]: Open
+                    - cell "50" [ref=e473]
+                    - cell "200" [ref=e474]
+                    - cell "1/1/2026" [ref=e475]
+                    - cell "8/31/2026" [ref=e476]
+                    - cell "Open menu" [ref=e477]:
+                      - button "Open menu" [ref=e478]:
+                        - img
+                        - generic [ref=e479]: Open menu
+    - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e407] [cursor=pointer]:
+    - img [ref=e408]
+  - alert [ref=e411]

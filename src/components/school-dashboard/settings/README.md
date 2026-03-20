@@ -1,211 +1,79 @@
-## Settings — School Configuration
+## Settings -- School Configuration and Administration
 
-**Admin Control Center for School Settings**
+### Overview
 
-The Settings feature enables administrators to configure school-wide preferences, academic year setup, grading scales, and system customization.
+The Settings block provides school-wide configuration including role management, permissions, academic year/term/period setup, appearance customization, domain requests, password management, and notification preferences. This is the central admin control panel for school operations.
 
-### URLs Handled by This Block
+### Capabilities by Role
 
-| URL                                                     | Page            | Status         |
-| ------------------------------------------------------- | --------------- | -------------- |
-| `/[lang]/s/[subdomain]/(platform)/school`               | School Settings | ✅ Ready       |
-| `/[lang]/s/[subdomain]/(platform)/school/academic`      | Academic Year   | **🔴 BLOCKED** |
-| `/[lang]/s/[subdomain]/(platform)/school/branding`      | Branding        | ✅ Ready       |
-| `/[lang]/s/[subdomain]/(platform)/school/domain`        | Custom Domain   | ✅ Ready       |
-| `/[lang]/s/[subdomain]/(platform)/school/members`       | Team Members    | ✅ Ready       |
-| `/[lang]/s/[subdomain]/(platform)/school/notifications` | Notifications   | ⏸️ Planned     |
-| `/[lang]/s/[subdomain]/(platform)/school/billing`       | Billing         | ⏸️ Planned     |
-| `/[lang]/s/[subdomain]/(platform)/school/danger`        | Danger Zone     | ✅ Ready       |
+- **Admin**: Manage roles and permissions, configure academic years/terms/periods, set active term, customize appearance, request custom domain, manage notification settings
+- **Teacher/Staff**: Change password, adjust personal notification preferences
 
-### What Admins Can Do
+### Routes
 
-**Core Capabilities:**
+| Route                                                           | Page                      | Status |
+| --------------------------------------------------------------- | ------------------------- | ------ |
+| `/{lang}/s/{subdomain}/(school-dashboard)/settings`             | Main Settings             | Ready  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/school/academic`      | Academic Year/Term/Period | Ready  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/school/configuration` | School Configuration      | Ready  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/school/security`      | Security Settings         | Ready  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/school/billing`       | Billing                   | Ready  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/school/communication` | Communication Settings    | Ready  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/school/membership`    | Membership                | Ready  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/school/reports`       | Reports                   | Ready  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/school/analysis`      | Analysis                  | Ready  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/school/bulk`          | Bulk Operations           | Ready  |
 
-- 🏫 Configure school profile (name, logo)
-- 📅 Manage academic years and terms **← BLOCKED**
-- 🌍 Set locale (Arabic/English)
-- ⏰ Configure timezone
-- 🎨 Customize branding
-- 🔐 Manage subdomain
+### File Structure
 
-### Current Implementation Status
-
-**🔴 BLOCKED - Academic Year Setup Incomplete**
-**Completion:** 60%
-
----
-
-## Critical Blocker: Academic Year Setup
-
-| Property          | Value                                                         |
-| ----------------- | ------------------------------------------------------------- |
-| **URL**           | `/school/academic`                                            |
-| **Current State** | Models exist, CRUD UI/actions incomplete                      |
-| **Impact**        | Cannot set active academic year for timetable, exams, results |
-
-**Missing Implementation:**
-
-- `createAcademicYear` server action (partial)
-- `updateAcademicYear` server action (missing)
-- `deleteAcademicYear` server action (missing)
-- `setActiveYear` server action (missing)
-- Term management CRUD (missing)
-- Period definitions (missing)
-
-**Prisma Models (Exist ✅):**
-
-- `SchoolYear` - Academic year model
-- `Term` - Terms within year
-- `Period` - Class periods
-
-**Files to Create/Modify:**
-
-- `src/components/platform/settings/academic-year/actions.ts`
-- `src/components/platform/settings/academic-year/form.tsx`
-
----
-
-**Completed:**
-
-- ✅ School profile management
-- ✅ Locale selection (ar/en)
-- ✅ Timezone configuration
-- ✅ Subdomain management
-- ✅ Branding/logo
-
-**Blocked:**
-
-- 🔴 **Academic year configuration** ← Critical MVP blocker
-
-**Planned:**
-
-- ⏸️ Grading scale configuration
-- ⏸️ Email templates
-- ⏸️ Notification preferences
-- ⏸️ Backup and restore
-
----
-
-## Admin Workflows
-
-### 1. Configure School Profile
-
-1. Navigate to `/settings`
-2. Update school information:
-   - School name
-   - Logo upload
-   - Contact information
-3. Save changes
-
-### 2. Setup Academic Year
-
-1. Navigate to `/settings/academic-year`
-2. Create new academic year
-3. Define terms (Fall, Spring, Summer)
-4. Set start/end dates
-5. Activate for current use
-
-### 3. Configure Grading Scale
-
-1. Navigate to `/settings/grading`
-2. Set grade boundaries
-3. Configure GPA weights
-4. Apply to all classes
-
----
-
-## Integration with Other Features
-
-### Links to All Features
-
-- Settings affect entire platform
-- Academic year used by timetable, results
-- Locale affects all UI translations
-- Grading scale used by results
-
----
-
-## Technical Implementation
-
-**Database Schema:**
-
-```prisma
-model School {
-  id            String   @id @default(cuid())
-  name          String
-  subdomain     String   @unique
-  locale        String   @default("ar")
-  timezone      String   @default("UTC")
-  logoUrl       String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-}
-
-model SchoolYear {
-  id        String   @id @default(cuid())
-  schoolId  String
-  name      String
-  startDate DateTime
-  endDate   DateTime
-  isActive  Boolean  @default(false)
-  createdAt DateTime @default(now())
-
-  school School @relation(fields: [schoolId], references: [id])
-  terms  Term[]
-}
+```
+src/components/school-dashboard/settings/
+  actions.ts                  # Server actions (role updates, permissions, user status)
+  content.tsx                 # Main settings server component
+  content-enhanced.tsx        # Enhanced settings layout
+  validation.ts               # Zod schemas
+  error-boundary.tsx          # Error boundary component
+  role-management.tsx         # Role assignment UI
+  role-switcher.tsx           # Role preview switcher
+  role-preview-actions.ts     # Role preview server actions
+  permissions-panel.tsx       # Permissions configuration UI
+  appearance-settings.tsx     # Theme and appearance config
+  notification-settings.tsx   # Notification preferences
+  password/
+    actions.ts                # Password change server action
+    content.tsx               # Password settings page
+    form.tsx                  # Password change form
+    validation.ts             # Password validation schema
+  academic/
+    actions.ts                # Full CRUD for years, terms, periods (934 lines)
+    content.tsx               # Academic settings page
+    types.ts                  # TypeScript interfaces
+    validation.ts             # Academic validation schemas
+    year-form.tsx             # School year form
+    year-list.tsx             # School year list
+    term-form.tsx             # Term form
+    term-list.tsx             # Term list
+    period-form.tsx           # Period form
+    period-list.tsx           # Period list
+    __tests__/actions.test.ts
+  domain-request/
+    actions.ts                # Domain request server action
+    content.tsx               # Domain request page
+    form.tsx                  # Domain request form
+  __tests__/
+    settings-tenant.test.ts   # Multi-tenant isolation tests
+    actions.test.ts           # Server action tests
 ```
 
----
+### Status
 
-## Technology Stack & Dependencies
+**Completion:** 85% | **Blockers:** None
 
-This feature is built with the following technologies (see [Platform README](../README.md) for complete stack details):
+Academic year CRUD (years, terms, periods) is fully implemented with 14 server actions. Remaining work is polish items: grading scale configuration, email templates, and backup/restore.
 
-### Core Framework
+### Integration Points
 
-- **Next.js 15.4+** - App Router with Server Components ([Docs](https://nextjs.org/docs))
-- **React 19+** - Server Actions, new hooks (`useActionState`, `useFormStatus`) ([Docs](https://react.dev))
-- **TypeScript** - Strict mode for type safety
-
-### Database & ORM
-
-- **Neon PostgreSQL** - Serverless database with autoscaling ([Docs](https://neon.tech/docs/introduction))
-- **Prisma ORM 6.14+** - Type-safe queries and migrations ([Docs](https://www.prisma.io/docs))
-
-### Forms & Validation
-
-- **React Hook Form 7.61+** - Performant form state management ([Docs](https://react-hook-form.com))
-- **Zod 4.0+** - Runtime schema validation (client + server) ([Docs](https://zod.dev))
-
-### UI Components
-
-- **shadcn/ui** - Accessible components built on Radix UI ([Docs](https://ui.shadcn.com/docs))
-- **TanStack Table 8.21+** - Headless table with sorting/filtering ([Docs](https://tanstack.com/table))
-- **Tailwind CSS 4** - Utility-first styling ([Docs](https://tailwindcss.com/docs))
-
-### Server Actions Pattern
-
-All mutations follow the standard server action pattern:
-
-```typescript
-"use server"
-export async function performAction(input: FormData) {
-  const { schoolId } = await getTenantContext()
-  const validated = schema.parse(input)
-  await db.model.create({ data: { ...validated, schoolId } })
-  revalidatePath("/feature-path")
-  return { success: true }
-}
-```
-
-### Key Features
-
-- **Multi-Tenant Isolation**: All queries scoped by `schoolId`
-- **Type Safety**: End-to-end TypeScript with Prisma + Zod inference
-- **Server-Side Operations**: Mutations via Next.js Server Actions
-- **URL State Management**: Filters and pagination synced to URL (where applicable)
-- **Accessibility**: ARIA labels, keyboard navigation, semantic HTML
-
-For complete technology documentation, see [Platform Technology Stack](../README.md#technology-stack--documentation).
-
----
+- **Timetable**: Academic year and term configuration drives term selectors in timetable
+- **Exams**: Active term determines exam scheduling context
+- **Attendance**: Period definitions used for period-by-period attendance
+- **All Features**: Locale, timezone, and branding affect the entire school dashboard

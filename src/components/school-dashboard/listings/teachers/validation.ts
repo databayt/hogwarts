@@ -6,16 +6,32 @@
 
 import { z } from "zod"
 
-import { contactSchema, phoneNumberSchema } from "./wizard/contact/validation"
+import { contactSchema } from "./wizard/contact/validation"
 import { experienceItemSchema } from "./wizard/experience/validation"
 import { expertiseItemSchema } from "./wizard/expertise/validation"
 import { informationSchema } from "./wizard/information/validation"
 import { photoSchema } from "./wizard/photo/validation"
-import { qualificationsSchema } from "./wizard/qualifications/validation"
 
-// Re-export individual schemas for consumers (CSV import, onboarding, etc.)
-export { phoneNumberSchema } from "./wizard/contact/validation"
-export { qualificationsSchema } from "./wizard/qualifications/validation"
+// Qualification item schema for composed teacher create/update
+const qualificationItemSchema = z.object({
+  qualificationType: z.enum(["DEGREE", "CERTIFICATION", "LICENSE"]),
+  name: z.string().min(1),
+  institution: z.string().optional(),
+  major: z.string().optional(),
+  dateObtained: z.coerce.date().optional(),
+  expiryDate: z.coerce.date().optional(),
+  licenseNumber: z.string().optional(),
+  documentUrl: z.string().optional(),
+})
+
+// Phone number schema for CSV import / onboarding consumers
+export const phoneNumberSchema = z.object({
+  phoneNumber: z.string().min(1),
+  phoneType: z.string().default("MOBILE"),
+  isPrimary: z.boolean().default(false),
+})
+
+export { qualificationItemSchema as qualificationsSchema }
 export { experienceItemSchema as experienceSchema } from "./wizard/experience/validation"
 export { expertiseItemSchema as subjectExpertiseSchema } from "./wizard/expertise/validation"
 
@@ -38,7 +54,7 @@ export const teacherCreateSchema = photoSchema
     contractStartDate: z.coerce.date().optional(),
     contractEndDate: z.coerce.date().optional(),
     // Nested arrays
-    qualifications: z.array(qualificationsSchema).optional().default([]),
+    qualifications: z.array(qualificationItemSchema).optional().default([]),
     experiences: z.array(experienceItemSchema).optional().default([]),
     subjectExpertise: z.array(expertiseItemSchema).optional().default([]),
   })
@@ -69,6 +85,7 @@ export const teacherCreateSchema = photoSchema
 
 export const teacherUpdateSchema = informationSchema
   .merge(contactSchema)
+  .merge(photoSchema)
   .extend({
     employeeId: z.string().optional(),
     joiningDate: z.coerce.date().optional(),
@@ -80,7 +97,7 @@ export const teacherUpdateSchema = informationSchema
       .optional(),
     contractStartDate: z.coerce.date().optional(),
     contractEndDate: z.coerce.date().optional(),
-    qualifications: z.array(qualificationsSchema).optional(),
+    qualifications: z.array(qualificationItemSchema).optional(),
     experiences: z.array(experienceItemSchema).optional(),
     subjectExpertise: z.array(expertiseItemSchema).optional(),
   })

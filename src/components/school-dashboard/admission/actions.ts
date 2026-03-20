@@ -350,12 +350,17 @@ export async function updateApplicationStatus(params: {
     // Notify applicant about status change (non-blocking)
     const application = await db.application.findFirst({
       where: { id: params.id, schoolId },
-      select: { userId: true, firstName: true, lastName: true },
+      select: {
+        userId: true,
+        firstName: true,
+        lastName: true,
+        campaignId: true,
+      },
     })
     if (application?.userId) {
       const statusMessages: Record<string, string> = {
         SHORTLISTED: "تم إدراجك في القائمة المختصرة",
-        SELECTED: "تهانينا! تم قبولك",
+        SELECTED: "تهانينا! تم قبولك. يرجى إكمال عملية الدفع لتأكيد التسجيل",
         REJECTED: "نأسف، لم يتم قبول طلبك",
         WAITLISTED: "تم وضعك في قائمة الانتظار",
       }
@@ -377,7 +382,10 @@ export async function updateApplicationStatus(params: {
         metadata: {
           applicationId: params.id,
           status: params.status,
-          url: "/admission",
+          url:
+            params.status === "SELECTED" && application.campaignId
+              ? `/application/${application.campaignId}/payment`
+              : "/admission",
         },
         actorId: session.user?.id,
       }).catch((err) =>

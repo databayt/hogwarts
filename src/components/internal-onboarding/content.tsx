@@ -4,7 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { useCallback, useState } from "react"
 import Image from "next/image"
-import { useParams, useRouter } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { GraduationCap, Loader2, Shield, Users } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -49,9 +49,7 @@ export function JoinLandingContent({
   schoolLogo,
 }: JoinLandingContentProps) {
   const router = useRouter()
-  const params = useParams()
   const { locale } = useLocale()
-  const subdomain = params.subdomain as string
   const { setRole, setAutoFillData, schoolId } = useOnboarding()
 
   const [selectedRole, setSelectedRole] = useState<OnboardingRole | null>(null)
@@ -83,7 +81,7 @@ export function JoinLandingContent({
   const handleContinue = () => {
     if (!selectedRole) return
     setRole(selectedRole)
-    router.push(`/${locale}/s/${subdomain}/join/personal`)
+    router.push(`/${locale}/join/personal`)
   }
 
   return (

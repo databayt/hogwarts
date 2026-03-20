@@ -211,7 +211,7 @@ export async function StaffDashboard({
             value={mockTodayTasks.length}
             iconName="ClipboardList"
             iconColor="text-blue-500"
-            href={`/${locale}/s/${school?.domain}/school`}
+            href={`/${locale}/school`}
           />
           <MetricCard
             title="Pending Requests"
@@ -222,7 +222,7 @@ export async function StaffDashboard({
                 ? "text-destructive"
                 : "text-amber-500"
             }
-            href={`/${locale}/s/${school?.domain}/school`}
+            href={`/${locale}/school`}
           />
           <MetricCard
             title="Visitors Today"
@@ -408,7 +408,7 @@ export async function StaffDashboard({
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-base">Pending Approvals</CardTitle>
               <Link
-                href={`/${locale}/s/${school?.domain}/school`}
+                href={`/${locale}/school`}
                 className="text-primary flex items-center gap-1 text-sm hover:underline"
               >
                 View all <ChevronRight className="h-4 w-4 rtl:rotate-180" />

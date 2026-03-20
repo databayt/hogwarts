@@ -8,6 +8,7 @@ import { nanoid } from "nanoid"
 import { Resend } from "resend"
 
 import { db } from "@/lib/db"
+import { dispatchNotificationsToAudience } from "@/lib/dispatch-notification"
 import {
   resolveDefaultCurrency,
   resolvePaymentGateways,
@@ -282,7 +283,7 @@ export async function saveApplicationSession(
             html: `
               <p>Hello,</p>
               <p>Your application has been saved. You can resume it anytime using this link:</p>
-              <p><a href="https://${subdomain}.databayt.org/apply/continue?token=${newToken}">Resume Application</a></p>
+              <p><a href="https://${subdomain}.databayt.org/application/continue?token=${newToken}">Resume Application</a></p>
               <p>This link expires in 7 days.</p>
               <p>Best regards,<br>${schoolResult.data.name}</p>
             `,
@@ -634,14 +635,14 @@ export async function submitApplication(
         address: validated.address,
         city: validated.city,
         state: validated.state,
-        postalCode: validated.postalCode,
+        postalCode: validated.postalCode || "",
         country: validated.country,
         // Guardian
-        fatherName: validated.fatherName,
+        fatherName: validated.fatherName || null,
         fatherOccupation: validated.fatherOccupation || null,
         fatherPhone: validated.fatherPhone || null,
         fatherEmail: validated.fatherEmail || null,
-        motherName: validated.motherName,
+        motherName: validated.motherName || null,
         motherOccupation: validated.motherOccupation || null,
         motherPhone: validated.motherPhone || null,
         motherEmail: validated.motherEmail || null,
@@ -665,7 +666,6 @@ export async function submitApplication(
         thirdLanguage: validated.thirdLanguage || null,
         // Documents
         photoUrl: validated.photoUrl || null,
-        signatureUrl: validated.signatureUrl || null,
         documents: validated.documents
           ? (validated.documents as unknown as object[])
           : undefined,
@@ -686,6 +686,25 @@ export async function submitApplication(
       })
     }
 
+    // Notify admins about new application (fire-and-forget)
+    dispatchNotificationsToAudience({
+      schoolId,
+      type: "system_alert",
+      title: "طلب قبول جديد",
+      body: `تم تقديم طلب قبول جديد من ${validated.firstName} ${validated.lastName} - رقم الطلب: ${applicationNumber}`,
+      priority: "normal",
+      channels: ["in_app", "email"],
+      targetScope: "role",
+      targetRole: "ADMIN",
+      metadata: {
+        applicationId: application.id,
+        applicationNumber,
+        url: `/admission/applications/${application.id}`,
+      },
+    }).catch((err) =>
+      console.error("[submitApplication] notification error:", err)
+    )
+
     // Send confirmation email
     if (resend) {
       try {
@@ -699,7 +718,7 @@ export async function submitApplication(
             <p>Thank you for submitting your application for <strong>${validated.firstName} ${validated.lastName}</strong>.</p>
             <p><strong>Application Number:</strong> ${applicationNumber}</p>
             <p>You can track your application status at any time using this link:</p>
-            <p><a href="https://${subdomain}.databayt.org/apply/status?token=${accessToken}">Track Application</a></p>
+            <p><a href="https://${subdomain}.databayt.org/application/status?token=${accessToken}">Track Application</a></p>
             <p>We will review your application and get back to you soon.</p>
             <p>Best regards,<br>${schoolResult.data.name}</p>
           `,
@@ -727,7 +746,7 @@ export async function submitApplication(
       applicationFee = Number(campaign.applicationFee)
     }
 
-    revalidatePath(`/apply`)
+    revalidatePath(`/application`)
 
     return {
       success: true,

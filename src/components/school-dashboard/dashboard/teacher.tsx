@@ -236,14 +236,14 @@ export async function TeacherDashboard({
             value={data.todaysClasses.length}
             iconName="BookOpen"
             iconColor="text-blue-500"
-            href={`/${locale}/s/${school?.domain}/subjects`}
+            href={`/${locale}/subjects`}
           />
           <MetricCard
             title="Total Students"
             value={data.totalStudents}
             iconName="Users"
             iconColor="text-purple-500"
-            href={`/${locale}/s/${school?.domain}/students`}
+            href={`/${locale}/students`}
           />
           <MetricCard
             title="Pending Grading"
@@ -252,7 +252,7 @@ export async function TeacherDashboard({
             iconColor={
               data.pendingGrading > 5 ? "text-destructive" : "text-orange-500"
             }
-            href={`/${locale}/s/${school?.domain}/assignments`}
+            href={`/${locale}/assignments`}
           />
           <MetricCard
             title="Attendance Due"
@@ -261,7 +261,7 @@ export async function TeacherDashboard({
             iconColor={
               data.attendanceDue > 0 ? "text-amber-500" : "text-green-500"
             }
-            href={`/${locale}/s/${school?.domain}/attendance`}
+            href={`/${locale}/attendance`}
           />
         </div>
 
@@ -323,7 +323,7 @@ export async function TeacherDashboard({
                 {dashDict.sections.pendingAssignments}
               </CardTitle>
               <Link
-                href={`/${locale}/s/${school?.domain}/assignments`}
+                href={`/${locale}/assignments`}
                 className="text-primary flex items-center gap-1 text-sm hover:underline"
               >
                 View all <ChevronRight className="h-4 w-4 rtl:rotate-180" />

@@ -243,7 +243,7 @@ export function IntentionSubmitForm({
                       today.setHours(0, 0, 0, 0)
                       return date < today
                     }}
-                    initialFocus
+                    autoFocus
                   />
                 </PopoverContent>
               </Popover>
@@ -279,7 +279,7 @@ export function IntentionSubmitForm({
                       today.setHours(0, 0, 0, 0)
                       return date < today
                     }}
-                    initialFocus
+                    autoFocus
                   />
                 </PopoverContent>
               </Popover>

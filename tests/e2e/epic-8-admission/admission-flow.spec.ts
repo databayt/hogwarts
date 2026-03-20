@@ -124,7 +124,7 @@ test.describe("ADM-001: Public admissions page loads", () => {
 
 test.describe("ADM-002: Application dashboard display", () => {
   test("apply page shows application dashboard", async ({ page }) => {
-    const ok = await goToSchoolPage(page, "/apply")
+    const ok = await goToSchoolPage(page, "/application")
     if (!ok) {
       test.skip(true, "Protocol mismatch in dev environment")
       return
@@ -139,7 +139,7 @@ test.describe("ADM-002: Application dashboard display", () => {
   })
 
   test("apply page loads with correct metadata", async ({ page }) => {
-    const ok = await goToSchoolPage(page, "/apply")
+    const ok = await goToSchoolPage(page, "/application")
     if (!ok) {
       test.skip(true, "Protocol mismatch in dev environment")
       return
@@ -182,7 +182,7 @@ test.describe("ADM-003: Application form steps", () => {
 
   test("personal step page renders", async ({ page }) => {
     // Go directly to apply page to test step rendering
-    const ok = await goToSchoolPage(page, "/apply")
+    const ok = await goToSchoolPage(page, "/application")
     if (!ok) {
       test.skip(true, "Protocol mismatch in dev environment")
       return
@@ -198,7 +198,7 @@ test.describe("ADM-003: Application form steps", () => {
 
 test.describe("ADM-004: Session resume / Continue application", () => {
   test("continue page loads correctly", async ({ page }) => {
-    const ok = await goToSchoolPage(page, "/apply/continue")
+    const ok = await goToSchoolPage(page, "/application/continue")
     if (!ok) {
       test.skip(true, "Protocol mismatch in dev environment")
       return
@@ -214,7 +214,7 @@ test.describe("ADM-004: Session resume / Continue application", () => {
   test("continue page with token param loads", async ({ page }) => {
     const ok = await goToSchoolPage(
       page,
-      "/apply/continue?token=test-invalid-token"
+      "/application/continue?token=test-invalid-token"
     )
     if (!ok) {
       test.skip(true, "Protocol mismatch in dev environment")
@@ -231,7 +231,7 @@ test.describe("ADM-004: Session resume / Continue application", () => {
 
 test.describe("ADM-005: Status tracker", () => {
   test("status page loads without SSE", async ({ page }) => {
-    const ok = await goToSchoolPage(page, "/apply/status")
+    const ok = await goToSchoolPage(page, "/application/status")
     if (!ok) {
       test.skip(true, "Protocol mismatch in dev environment")
       return
@@ -246,7 +246,7 @@ test.describe("ADM-005: Status tracker", () => {
   test("status page has input for application number or OTP", async ({
     page,
   }) => {
-    const ok = await goToSchoolPage(page, "/apply/status")
+    const ok = await goToSchoolPage(page, "/application/status")
     if (!ok) {
       test.skip(true, "Protocol mismatch in dev environment")
       return
@@ -267,7 +267,7 @@ test.describe("ADM-005: Status tracker", () => {
   test("status page with token param loads", async ({ page }) => {
     const ok = await goToSchoolPage(
       page,
-      "/apply/status?token=test-invalid-token"
+      "/application/status?token=test-invalid-token"
     )
     if (!ok) {
       test.skip(true, "Protocol mismatch in dev environment")
@@ -479,7 +479,7 @@ test.describe("ADM-012: Arabic locale support", () => {
   })
 
   test("apply page loads in Arabic", async ({ page }) => {
-    const ok = await goToSchoolPage(page, "/apply", "ar")
+    const ok = await goToSchoolPage(page, "/application", "ar")
     if (!ok) {
       test.skip(true, "Protocol mismatch in dev environment")
       return
@@ -492,7 +492,7 @@ test.describe("ADM-012: Arabic locale support", () => {
   })
 
   test("status page loads in Arabic", async ({ page }) => {
-    const ok = await goToSchoolPage(page, "/apply/status", "ar")
+    const ok = await goToSchoolPage(page, "/application/status", "ar")
     if (!ok) {
       test.skip(true, "Protocol mismatch in dev environment")
       return
@@ -597,7 +597,7 @@ test.describe("ADM-013: Tenant isolation", () => {
 
 test.describe("ADM-014: Continue application page", () => {
   test("continue page renders without SSE", async ({ page }) => {
-    const ok = await goToSchoolPage(page, "/apply/continue")
+    const ok = await goToSchoolPage(page, "/application/continue")
     if (!ok) {
       test.skip(true, "Protocol mismatch in dev environment")
       return
@@ -613,7 +613,7 @@ test.describe("ADM-014: Continue application page", () => {
 
 test.describe("ADM-015: Application overview page", () => {
   test("overview page renders without SSE", async ({ page }) => {
-    const ok = await goToSchoolPage(page, "/apply/overview")
+    const ok = await goToSchoolPage(page, "/application/overview")
     if (!ok) {
       test.skip(true, "Protocol mismatch in dev environment")
       return

@@ -44,5 +44,5 @@ export default async function MySchoolPage({ params }: MySchoolPageProps) {
   }
 
   // Redirect to school dashboard (domain is used as subdomain in routing)
-  redirect(`/${lang}/s/${school.domain}/dashboard`)
+  redirect(`/${lang}/dashboard`)
 }

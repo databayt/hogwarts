@@ -219,7 +219,7 @@ export function AbsenceFormDialog({
                     mode="single"
                     selected={startDate}
                     onSelect={setStartDate}
-                    initialFocus
+                    autoFocus
                   />
                 </PopoverContent>
               </Popover>
@@ -246,7 +246,7 @@ export function AbsenceFormDialog({
                     selected={endDate}
                     onSelect={setEndDate}
                     disabled={(date) => (startDate ? date < startDate : false)}
-                    initialFocus
+                    autoFocus
                   />
                 </PopoverContent>
               </Popover>

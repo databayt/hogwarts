@@ -74,7 +74,6 @@ export function StreamLessonContent({
   dictionary,
   lang,
   schoolId,
-  subdomain,
   lesson,
   quizQuestions,
 }: StreamLessonContentProps) {
@@ -111,7 +110,7 @@ export function StreamLessonContent({
   // Resolve the current video URL — prefer selected instructor video, fallback to lesson default
   const currentVideoUrl = activeVideo?.videoUrl ?? lesson.videoUrl
 
-  const baseUrl = `/${lang}/s/${subdomain}/stream/dashboard/${lesson.chapter.course.slug}`
+  const baseUrl = `/${lang}/stream/dashboard/${lesson.chapter.course.slug}`
 
   const handleToggleComplete = () => {
     startTransition(async () => {

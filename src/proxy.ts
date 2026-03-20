@@ -88,7 +88,7 @@ const publicRoutes = [
 const authRoutes = ["/login", "/join", "/error", "/reset", "/new-password"]
 
 // Public school-marketing routes (school subdomain public pages - no auth required)
-// NOTE: /apply removed - requires auth to couple application to userId
+// NOTE: /application removed - requires auth to couple application to userId
 const publicSiteRoutes = [
   "/about",
   "/academic",
@@ -204,7 +204,7 @@ export async function proxy(req: NextRequest) {
     pathWithoutLocale.startsWith("/stream")
 
   // Check if it's a public school-marketing route (for subdomains)
-  // Handle both clean URLs (/apply) and internal paths (/s/{subdomain}/apply)
+  // Handle both clean URLs (/application) and internal paths (/s/{subdomain}/application)
   const pathForRouteCheck = pathWithoutLocale.startsWith(`/s/${subdomain}/`)
     ? pathWithoutLocale.replace(`/s/${subdomain}`, "")
     : pathWithoutLocale

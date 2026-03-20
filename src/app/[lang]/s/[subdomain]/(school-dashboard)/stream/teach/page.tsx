@@ -24,7 +24,7 @@ export default async function TeachPage({ params }: Props) {
     !session?.user ||
     !["TEACHER", "ADMIN", "DEVELOPER"].includes(session.user.role || "")
   ) {
-    redirect(`/${lang}/s/${subdomain}/stream/courses`)
+    redirect(`/${lang}/stream/courses`)
   }
 
   const stats = await getTeacherStats()

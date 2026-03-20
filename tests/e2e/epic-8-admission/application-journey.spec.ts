@@ -4,7 +4,7 @@
  *
  * Tests the complete application flow mirroring onboarding:
  * - AD-050: Navigate to admissions → click apply → redirect to login
- * - AD-051: Login and redirect back to /apply
+ * - AD-051: Login and redirect back to /application
  * - AD-052: Campaign selector → Start from scratch → Overview → Get Started
  * - AD-053: Complete 6 steps (personal → contact → guardian → academic → documents → review)
  * - AD-054: Submit and verify success page
@@ -84,17 +84,17 @@ async function clickFooterNext(
 }
 
 // ============================================================================
-// TEST: AD-050 - Admission page redirects to login for /apply
+// TEST: AD-050 - Admission page redirects to login for /application
 // ============================================================================
 
-test.describe("AD-050: /apply requires authentication", () => {
-  test("unauthenticated user is redirected to login when visiting /apply", async ({
+test.describe("AD-050: /application requires authentication", () => {
+  test("unauthenticated user is redirected to login when visiting /application", async ({
     page,
   }) => {
     // Clear cookies to ensure unauthenticated
     await page.context().clearCookies()
 
-    const ok = await goToSchoolPage(page, "/apply")
+    const ok = await goToSchoolPage(page, "/application")
     if (!ok) {
       test.skip(true, "Protocol mismatch in dev environment")
       return
@@ -147,7 +147,7 @@ test.describe("AD-051 to AD-054: Full application journey", () => {
 
     // Step 2: Click "Start application" link → should redirect to login
     const applyLink = page.locator(
-      'a[href*="/apply"]:has-text("Start application"), a[href*="/apply"]:has-text("ابدأ")'
+      'a[href*="/application"]:has-text("Start application"), a[href*="/application"]:has-text("ابدأ")'
     )
     const hasApplyLink = await applyLink
       .first()
@@ -156,13 +156,13 @@ test.describe("AD-051 to AD-054: Full application journey", () => {
 
     if (!hasApplyLink) {
       // If no direct link, navigate manually
-      await goToSchoolPage(page, "/apply")
+      await goToSchoolPage(page, "/application")
     } else {
       await applyLink.first().click()
       await page.waitForLoadState("domcontentloaded")
     }
 
-    // Should be on login page (proxy redirect for unauthenticated /apply)
+    // Should be on login page (proxy redirect for unauthenticated /application)
     await page.waitForURL(/\/login/, { timeout: TIMEOUTS.navigation })
     expect(page.url()).toContain("/login")
 
@@ -170,10 +170,10 @@ test.describe("AD-051 to AD-054: Full application journey", () => {
     const loginPage = new LoginPage(page, "en")
     await loginPage.login("student@databayt.org", "1234")
 
-    // After login, should redirect back to /apply (via callbackUrl)
+    // After login, should redirect back to /application (via callbackUrl)
     // K-12 auto-skip: single campaign → auto-redirects to /overview
-    await page.waitForURL(/\/apply/, { timeout: TIMEOUTS.long })
-    expect(page.url()).toContain("/apply")
+    await page.waitForURL(/\/application/, { timeout: TIMEOUTS.long })
+    expect(page.url()).toContain("/application")
     await assertNoSSE(page)
 
     // Step 4: Application dashboard — click "Start from scratch" link

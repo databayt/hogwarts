@@ -82,6 +82,8 @@ export function StreamCourseDetailContent({
 }: Props) {
   const { dictionary: dict } = useDictionary()
 
+  const firstLessonId = course.chapters[0]?.lessons[0]?.id ?? null
+
   const totalLessons = course.chapters.reduce(
     (total, chapter) => total + chapter.lessons.length,
     0
@@ -193,6 +195,7 @@ export function StreamCourseDetailContent({
                 currency={course.currency}
                 subjectSlug={course.slug}
                 lang={lang}
+                firstLessonId={firstLessonId}
               />
               {(!course.price || course.price === 0) && (
                 <span

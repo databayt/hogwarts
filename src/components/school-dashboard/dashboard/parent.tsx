@@ -332,7 +332,7 @@ export async function ParentDashboard({
                 ? "text-green-500"
                 : "text-amber-500"
             }
-            href={`/${locale}/s/${school?.domain}/attendance`}
+            href={`/${locale}/attendance`}
           />
           <MetricCard
             title={dashDict.metrics?.pendingTasks || "Pending Tasks"}
@@ -341,14 +341,14 @@ export async function ParentDashboard({
             iconColor={
               pendingAssignments > 3 ? "text-destructive" : "text-purple-500"
             }
-            href={`/${locale}/s/${school?.domain}/assignments`}
+            href={`/${locale}/assignments`}
           />
           <MetricCard
             title={dashDict.metrics?.announcements || "Announcements"}
             value={data.announcements.length}
             iconName="Bell"
             iconColor="text-orange-500"
-            href={`/${locale}/s/${school?.domain}/announcements`}
+            href={`/${locale}/announcements`}
           />
         </div>
 
@@ -490,7 +490,7 @@ export async function ParentDashboard({
                 {dashDict.sections.recentGrades}
               </CardTitle>
               <Link
-                href={`/${locale}/s/${school?.domain}/grades`}
+                href={`/${locale}/grades`}
                 className="text-primary flex items-center gap-1 text-sm hover:underline"
               >
                 {dashDict.labels?.viewAll || "View all"}{" "}

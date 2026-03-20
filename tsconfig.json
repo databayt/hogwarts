@@ -43,6 +43,6 @@
     "**/__tests__/**",
     "src/test/**",
     "src/components/school-dashboard/file/**",
-    "src/components/school-marketing/apply/**"
+    "src/components/school-marketing/application/**"
   ]
 }

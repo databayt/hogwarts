@@ -39,7 +39,7 @@ export default async function StreamDashboardPage({ params }: Props) {
   ])
 
   if (!session?.user) {
-    redirect(`/${lang}/s/${subdomain}/auth/login`)
+    redirect(`/${lang}/auth/login`)
   }
 
   // Guardian view: show children's progress

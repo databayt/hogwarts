@@ -246,7 +246,7 @@ export async function StudentDashboard({
                 ? "text-green-500"
                 : "text-amber-500"
             }
-            href={`/${locale}/s/${school?.domain}/attendance`}
+            href={`/${locale}/attendance`}
           />
           <MetricCard
             title="Average Grade"
@@ -259,7 +259,7 @@ export async function StudentDashboard({
                   ? "text-blue-500"
                   : "text-amber-500"
             }
-            href={`/${locale}/s/${school?.domain}/grades`}
+            href={`/${locale}/grades`}
           />
           <MetricCard
             title="Assignments Due"
@@ -270,14 +270,14 @@ export async function StudentDashboard({
                 ? "text-destructive"
                 : "text-purple-500"
             }
-            href={`/${locale}/s/${school?.domain}/assignments`}
+            href={`/${locale}/assignments`}
           />
           <MetricCard
             title="Classes Today"
             value={data.todaysTimetable.length}
             iconName="BookOpen"
             iconColor="text-blue-500"
-            href={`/${locale}/s/${school?.domain}/timetable`}
+            href={`/${locale}/timetable`}
           />
         </div>
 
@@ -375,7 +375,7 @@ export async function StudentDashboard({
                 {dashDict.sections.upcomingAssignments}
               </CardTitle>
               <Link
-                href={`/${locale}/s/${school?.domain}/assignments`}
+                href={`/${locale}/assignments`}
                 className="text-primary flex items-center gap-1 text-sm hover:underline"
               >
                 View all <ChevronRight className="h-4 w-4 rtl:rotate-180" />
@@ -443,7 +443,7 @@ export async function StudentDashboard({
                 {dashDict.sections.recentGrades}
               </CardTitle>
               <Link
-                href={`/${locale}/s/${school?.domain}/grades`}
+                href={`/${locale}/grades`}
                 className="text-primary flex items-center gap-1 text-sm hover:underline"
               >
                 View all <ChevronRight className="h-4 w-4 rtl:rotate-180" />

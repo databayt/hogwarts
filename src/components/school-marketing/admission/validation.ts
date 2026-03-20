@@ -70,9 +70,9 @@ export function createApplicationStepSchemas(dictionary?: Dictionary) {
       country: z.string().default("Sudan"),
     }),
 
-    // Step 4: Guardian Information
+    // Step 4: Guardian Information (at least one parent name required)
     guardian: z.object({
-      fatherName: z.string().min(1, v.required()),
+      fatherName: z.string().optional().or(z.literal("")),
       fatherOccupation: z.string().optional().or(z.literal("")),
       fatherPhone: z.string().optional().or(z.literal("")),
       fatherEmail: z
@@ -80,7 +80,7 @@ export function createApplicationStepSchemas(dictionary?: Dictionary) {
         .email(v.invalidEmail())
         .optional()
         .or(z.literal("")),
-      motherName: z.string().min(1, v.required()),
+      motherName: z.string().optional().or(z.literal("")),
       motherOccupation: z.string().optional().or(z.literal("")),
       motherPhone: z.string().optional().or(z.literal("")),
       motherEmail: z
@@ -114,7 +114,6 @@ export function createApplicationStepSchemas(dictionary?: Dictionary) {
     // Step 6: Documents
     documents: z.object({
       photoUrl: z.string().optional().or(z.literal("")),
-      signatureUrl: z.string().optional().or(z.literal("")),
       documents: z
         .array(
           z.object({
@@ -132,14 +131,24 @@ export function createApplicationStepSchemas(dictionary?: Dictionary) {
 // Full application schema (all steps combined)
 export function createFullApplicationSchema(dictionary?: Dictionary) {
   const steps = createApplicationStepSchemas(dictionary)
-  return z.object({
-    ...steps.campaign.shape,
-    ...steps.personal.shape,
-    ...steps.contact.shape,
-    ...steps.guardian.shape,
-    ...steps.academic.shape,
-    ...steps.documents.shape,
-  })
+  return z
+    .object({
+      ...steps.campaign.shape,
+      ...steps.personal.shape,
+      ...steps.contact.shape,
+      ...steps.guardian.shape,
+      ...steps.academic.shape,
+      ...steps.documents.shape,
+    })
+    .refine(
+      (data) =>
+        (data.fatherName && data.fatherName.length >= 1) ||
+        (data.motherName && data.motherName.length >= 1),
+      {
+        message: "At least one parent name is required",
+        path: ["fatherName"],
+      }
+    )
 }
 
 // ============================================

@@ -18,6 +18,18 @@ import {
 } from "@/components/stream/authorization"
 import { sendEnrollmentEmail } from "@/components/stream/shared/email-service"
 
+function extractLocaleFromUrl(url: string): string | null {
+  try {
+    const pathname = new URL(url).pathname
+    const firstSegment = pathname.split("/")[1]
+    return i18n.locales.includes(firstSegment as (typeof i18n.locales)[number])
+      ? firstSegment
+      : null
+  } catch {
+    return null
+  }
+}
+
 /**
  * Enroll user in a catalog subject.
  * Supports both free (immediate) and paid (Stripe checkout) enrollment.
@@ -28,7 +40,8 @@ export async function enrollInCatalogSubject(catalogSubjectId: string) {
   const { schoolId } = await getTenantContext()
   const headersList = await headers()
   const host = headersList.get("host") || ""
-  const locale = i18n.defaultLocale
+  const referer = headersList.get("referer") || ""
+  const locale = extractLocaleFromUrl(referer) || i18n.defaultLocale
 
   const authCtx = getAuthContext(session)
   if (!authCtx || !session?.user) throw new Error("Authentication required")
@@ -118,7 +131,19 @@ export async function enrollInCatalogSubject(catalogSubjectId: string) {
           )
         }
 
-        return { enrollment, checkoutUrl: null }
+        // Find first lesson for direct redirect (skip intermediate page)
+        const firstLesson = await tx.catalogLesson.findFirst({
+          where: {
+            chapter: { subjectId: subject.id },
+          },
+          orderBy: [
+            { chapter: { sequenceOrder: "asc" } },
+            { sequenceOrder: "asc" },
+          ],
+          select: { id: true },
+        })
+
+        return { enrollment, checkoutUrl: null, firstLessonId: firstLesson?.id }
       }
 
       // Paid enrollment: create Stripe checkout
@@ -184,14 +209,21 @@ export async function enrollInCatalogSubject(catalogSubjectId: string) {
         },
       })
 
-      return { enrollment, checkoutUrl: checkoutSession.url }
+      return {
+        enrollment,
+        checkoutUrl: checkoutSession.url,
+        firstLessonId: undefined,
+      }
     })
 
     if (result.checkoutUrl) {
       checkoutUrl = result.checkoutUrl
     } else {
-      // Free enrollment — redirect to dashboard
-      redirect(`/${locale}/stream/dashboard/${subject.slug}`)
+      // Free enrollment — redirect directly to first lesson (avoids double redirect)
+      const dashboardPath = result.firstLessonId
+        ? `/${locale}/stream/dashboard/${subject.slug}/${result.firstLessonId}`
+        : `/${locale}/stream/dashboard/${subject.slug}`
+      redirect(dashboardPath)
     }
   } catch (error) {
     console.error("Catalog enrollment error:", error)

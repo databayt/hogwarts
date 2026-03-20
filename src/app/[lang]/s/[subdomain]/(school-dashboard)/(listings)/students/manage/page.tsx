@@ -52,15 +52,15 @@ export default async function StudentsManage({ params }: StudentsManageProps) {
   const studentPages: PageNavItem[] = [
     {
       name: dict.overview || "Overview",
-      href: `/${lang}/s/${subdomain}/students`,
+      href: `/${lang}/students`,
     },
     {
       name: dict.manage || "Manage",
-      href: `/${lang}/s/${subdomain}/students/manage`,
+      href: `/${lang}/students/manage`,
     },
     {
       name: dict.analysis || "Analysis",
-      href: `/${lang}/s/${subdomain}/students/analysis`,
+      href: `/${lang}/students/analysis`,
     },
   ]
 

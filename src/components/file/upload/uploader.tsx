@@ -140,6 +140,13 @@ export function Uploader({
 }: UploaderProps) {
   const [previews, setPreviews] = useState<FilePreview[]>([])
 
+  // Stable ref for onFilesChange to avoid infinite re-render loops
+  // (parent often passes inline arrow → new ref each render → useEffect retriggers)
+  const onFilesChangeRef = React.useRef(onFilesChange)
+  React.useEffect(() => {
+    onFilesChangeRef.current = onFilesChange
+  })
+
   const {
     isUploading,
     isOptimizing,
@@ -184,8 +191,8 @@ export function Uploader({
 
   // Update parent when files change
   React.useEffect(() => {
-    onFilesChange?.(uploadedFiles)
-  }, [uploadedFiles, onFilesChange])
+    onFilesChangeRef.current?.(uploadedFiles)
+  }, [uploadedFiles])
 
   // Handle file drop
   const onDrop = useCallback(

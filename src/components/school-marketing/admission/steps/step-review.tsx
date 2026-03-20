@@ -108,7 +108,7 @@ export default function StepReview({ dictionary, lang, campaign }: Props) {
     formData.state &&
     formData.postalCode
   )
-  const isGuardianComplete = !!(formData.fatherName && formData.motherName)
+  const isGuardianComplete = !!(formData.fatherName || formData.motherName)
   const isAcademicComplete = !!formData.applyingForClass
   const isDocumentsComplete = !!formData.photoUrl
 

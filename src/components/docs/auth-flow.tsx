@@ -551,7 +551,7 @@ export function LiveDemoFlow() {
               type: "end",
               title: "Application Form",
               description: "Start admission application",
-              url: "https://demo.databayt.org/en/apply",
+              url: "https://demo.databayt.org/en/application",
             },
           ],
         },

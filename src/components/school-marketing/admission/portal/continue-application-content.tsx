@@ -87,7 +87,9 @@ export default function ContinueApplicationContent({
           (result.data.formData as { campaignId?: string })?.campaignId ||
           result.data.campaignId
         if (campaignId) {
-          router.push(`/${lang}/apply/${campaignId}?token=${data.sessionToken}`)
+          router.push(
+            `/${lang}/application/${campaignId}?token=${data.sessionToken}`
+          )
         } else {
           toast.error(dict.campaignNotFound || "Campaign not found")
         }
@@ -198,7 +200,7 @@ export default function ContinueApplicationContent({
         <p className="text-muted-foreground text-sm">
           {dict.noSavedApp || "Don't have a saved application?"}
         </p>
-        <Link href={`/${lang}/apply`}>
+        <Link href={`/${lang}/application`}>
           <Button variant="outline">
             {dict.startNew || "Start New Application"}
           </Button>

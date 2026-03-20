@@ -52,7 +52,7 @@ async function loginAsStudent(
 
 test.describe("AD-071: Invalid continue token", () => {
   test("shows graceful error for invalid token", async ({ page }) => {
-    // Login first since /apply requires auth
+    // Login first since /application requires auth
     const ok = await goToSchoolPage(page, "/login")
     if (!ok) {
       test.skip(true, "Protocol mismatch in dev environment")
@@ -68,7 +68,7 @@ test.describe("AD-071: Invalid continue token", () => {
     // Navigate to continue page with invalid token
     const continueOk = await goToSchoolPage(
       page,
-      "/apply/continue?token=INVALID_TOKEN_12345"
+      "/application/continue?token=INVALID_TOKEN_12345"
     )
     if (!continueOk) {
       test.skip(true, "Protocol mismatch in dev environment")
@@ -85,7 +85,7 @@ test.describe("AD-071: Invalid continue token", () => {
       body?.includes("expired") ||
       body?.includes("invalid") ||
       body?.includes("error") ||
-      page.url().includes("/apply")
+      page.url().includes("/application")
 
     expect(hasErrorOrRedirect).toBeTruthy()
   })
@@ -103,7 +103,7 @@ test.describe("AD-072: Form validation blocks navigation", () => {
 
     // Login first
     await page.context().clearCookies()
-    const ok = await goToSchoolPage(page, "/apply")
+    const ok = await goToSchoolPage(page, "/application")
     if (!ok) {
       test.skip(true, "Protocol mismatch in dev environment")
       return
@@ -118,7 +118,7 @@ test.describe("AD-072: Form validation blocks navigation", () => {
     }
 
     // Navigate to apply flow
-    await page.waitForURL(/\/apply/, { timeout: TIMEOUTS.long })
+    await page.waitForURL(/\/application/, { timeout: TIMEOUTS.long })
 
     // Start application
     const startLink = page.locator(

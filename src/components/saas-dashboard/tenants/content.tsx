@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
@@ -21,7 +22,7 @@ interface Props {
   }
 }
 
-async function getTenants(searchParams: Props["searchParams"]) {
+async function getTenants(searchParams: Props["searchParams"], lang: Locale) {
   const page = Number(searchParams?.page) || 1
   const limit = Number(searchParams?.limit) || 10
   const offset = (page - 1) * limit
@@ -62,6 +63,7 @@ async function getTenants(searchParams: Props["searchParams"]) {
         domain: true,
         isActive: true,
         planType: true,
+        preferredLanguage: true,
         createdAt: true,
         _count: {
           select: {
@@ -79,9 +81,20 @@ async function getTenants(searchParams: Props["searchParams"]) {
     db.school.count({ where }),
   ])
 
-  const rows: TenantRow[] = tenants.map((tenant) => ({
+  const translatedNames = await Promise.all(
+    tenants.map((tenant) =>
+      getDisplayText(
+        tenant.name,
+        (tenant.preferredLanguage ?? "ar") as "en" | "ar",
+        lang,
+        tenant.id
+      )
+    )
+  )
+
+  const rows: TenantRow[] = tenants.map((tenant, i) => ({
     id: tenant.id,
-    name: tenant.name,
+    name: translatedNames[i],
     subdomain: tenant.domain,
     domain: tenant.domain,
     isActive: tenant.isActive,
@@ -109,7 +122,7 @@ export async function TenantsContent({
   const limit = Number(searchParams?.limit) || 10
   const t = dictionary?.operator?.tenants
 
-  const tenantData = await getTenants(searchParams)
+  const tenantData = await getTenants(searchParams, lang)
 
   return tenantData.rows.length > 0 ? (
     <TenantsTable

@@ -18,6 +18,7 @@ interface CatalogEnrollmentButtonProps {
   currency?: string | null
   subjectSlug: string
   lang: string
+  firstLessonId?: string | null
 }
 
 export function CatalogEnrollmentButton({
@@ -27,6 +28,7 @@ export function CatalogEnrollmentButton({
   currency,
   subjectSlug,
   lang,
+  firstLessonId,
 }: CatalogEnrollmentButtonProps) {
   const [pending, startTransition] = useTransition()
 
@@ -44,7 +46,9 @@ export function CatalogEnrollmentButton({
         variant="outline"
         className="h-9 w-auto px-6 text-sm font-medium"
         onClick={() => {
-          window.location.href = `/${lang}/stream/dashboard/${subjectSlug}`
+          window.location.href = firstLessonId
+            ? `/${lang}/stream/dashboard/${subjectSlug}/${firstLessonId}`
+            : `/${lang}/stream/dashboard/${subjectSlug}`
         }}
       >
         Continue Learning

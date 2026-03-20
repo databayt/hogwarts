@@ -62,7 +62,7 @@ interface WizardLayoutProps {
   loadHook: () => {
     isLoading: boolean
     error: string | null
-    data?: Record<string, unknown> | null
+    data?: unknown
     loadData: (id: string) => Promise<void>
     reload?: () => Promise<void>
   }
@@ -161,10 +161,8 @@ function WizardLayoutContent({
     closeDestination ?? basePath.replace(/\/add$/, "")
 
   const handleClose = useCallback(() => {
-    router.push(
-      `/${locale}/s/${params.subdomain as string}${resolvedCloseDestination}`
-    )
-  }, [router, locale, params.subdomain, resolvedCloseDestination])
+    router.push(`/${locale}${resolvedCloseDestination}`)
+  }, [router, locale, resolvedCloseDestination])
 
   const handleSave = useCallback(async () => {
     if (!onSave || isSaving) return

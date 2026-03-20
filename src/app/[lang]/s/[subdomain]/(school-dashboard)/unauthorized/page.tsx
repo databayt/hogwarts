@@ -49,14 +49,14 @@ export default async function UnauthorizedPage({
 
       <div className="flex gap-4">
         <Button variant="outline" className="gap-2" asChild>
-          <Link href={`/${lang}/s/${subdomain}/dashboard`}>
+          <Link href={`/${lang}/dashboard`}>
             <ArrowLeft className="h-4 w-4" />
             {dictionary?.common?.back || "Back"}{" "}
             {lang === "ar" ? "للوحة التحكم" : "to Dashboard"}
           </Link>
         </Button>
         <Button variant="ghost" className="gap-2" asChild>
-          <Link href={`/${lang}/s/${subdomain}`}>
+          <Link href={`/${lang}`}>
             <Home className="h-4 w-4" />
             {dictionary?.common?.home || "Home"}
           </Link>

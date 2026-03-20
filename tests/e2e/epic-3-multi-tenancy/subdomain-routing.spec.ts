@@ -127,7 +127,7 @@ test.describe("Story 3.2: Internal Route Mapping @multi-tenant", () => {
     console.log("demo.localhost/dashboard    → /en/s/demo/dashboard")
     console.log("demo.localhost/ar/students  → /ar/s/demo/students")
     console.log("demo.localhost/login        → /en/login (not rewritten)")
-    console.log("demo.localhost/apply        → /en/s/demo/apply")
+    console.log("demo.localhost/application   → /en/s/demo/application")
     console.log("==================================================")
   })
 

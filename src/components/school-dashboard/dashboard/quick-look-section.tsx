@@ -146,7 +146,7 @@ export function QuickLookSection({
                   </p>
                 )}
                 <Link
-                  href={`/${locale}/s/${subdomain}${item.href}`}
+                  href={`/${locale}${item.href}`}
                   className="text-primary inline-flex items-center text-xs hover:underline"
                 >
                   {dict?.viewAll || "View All"}{" "}

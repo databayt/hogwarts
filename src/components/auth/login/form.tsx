@@ -281,6 +281,7 @@ export const LoginForm = ({
           if (data?.success) {
             form.reset()
             setSuccess(data.success)
+            sessionStorage.setItem("_onboard_pw", values.password)
             // Hard redirect to force full page reload → fresh session
             // Skip if tenant param present (handled by useEffect above)
             if (data.redirectUrl && !tenant) {

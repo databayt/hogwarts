@@ -37,8 +37,8 @@
  */
 import { useCallback, useEffect, useRef } from "react"
 
-import { useApplySession } from "@/components/school-marketing/apply/application-context"
-import type { ApplySessionState } from "@/components/school-marketing/apply/types"
+import { useApplySession } from "@/components/school-marketing/application/application-context"
+import type { ApplySessionState } from "@/components/school-marketing/application/types"
 
 import { useMultiStepFormOptional } from "../template/provider"
 

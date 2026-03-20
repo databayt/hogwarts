@@ -84,7 +84,7 @@ export function AttendanceHub({
 
     // Navigate to method-specific page
     const methodPath = method.toLowerCase().replace("_", "-")
-    router.push(`/${locale}/s/subdomain/(platform)/attendance/${methodPath}`)
+    router.push(`/${locale}/attendance/${methodPath}`)
   }
 
   const isMethodAvailable = (method: AttendanceMethod) => {

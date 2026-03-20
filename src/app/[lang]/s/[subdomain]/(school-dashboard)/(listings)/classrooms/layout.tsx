@@ -16,7 +16,7 @@ export default async function ClassroomsLayout({ children, params }: Props) {
   const dictionary = await getDictionary(lang as Locale)
   const d = dictionary?.school?.classrooms
 
-  const base = `/${lang}/s/${subdomain}/classrooms`
+  const base = `/${lang}/classrooms`
 
   const classroomPages: PageNavItem[] = [
     {

@@ -59,11 +59,11 @@ model Application {
   country        String  @default("SD")
 
   // Parent/Guardian Details
-  fatherName       String
+  fatherName       String?
   fatherOccupation String?
   fatherPhone      String?
   fatherEmail      String?
-  motherName       String
+  motherName       String?
   motherOccupation String?
   motherPhone      String?
   motherEmail      String?

@@ -26,6 +26,7 @@ interface DataTableProps<TData> extends React.ComponentProps<"div"> {
   hasMore?: boolean
   isLoading?: boolean
   onLoadMore?: () => void
+  getRowClassName?: (row: TData) => string | undefined
   translations?: {
     loadMore?: string
     loading?: string
@@ -43,6 +44,7 @@ function DataTableInner<TData>({
   hasMore = false,
   isLoading = false,
   onLoadMore,
+  getRowClassName,
   translations,
   ...props
 }: DataTableProps<TData>) {
@@ -91,6 +93,7 @@ function DataTableInner<TData>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  className={getRowClassName?.(row.original)}
                 >
                   {row.getVisibleCells().map((cell) => {
                     const meta = cell.column.columnDef.meta as

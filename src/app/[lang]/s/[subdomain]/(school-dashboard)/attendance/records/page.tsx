@@ -36,7 +36,7 @@ export default async function Page({ params }: Props) {
 
   // Staff should use Reports instead of Records
   if (STAFF_ROLES.includes(role)) {
-    redirect(`/${lang}/s/${subdomain}/attendance/reports`)
+    redirect(`/${lang}/attendance/reports`)
   }
 
   return <RecordsContent locale={lang} subdomain={subdomain} />

@@ -1,173 +1,63 @@
-## Parents — Guardian Account Management
+## Parents -- Guardian Account Management
 
-**Admin Control Center for Parent/Guardian Records**
+### Overview
 
-The Parents feature manages guardian accounts, links them to students, handles communication preferences, and provides parent portal access with comprehensive family relationship management.
+The Parents feature manages guardian accounts within the school dashboard. It handles guardian records (create, update, delete), links guardians to students via access codes, manages contact information, and provides RBAC-based access control. Built with a two-step wizard (information, contact) and full multi-tenant isolation.
 
-### What Admins Can Do
+### Capabilities by Role
 
-**Core Capabilities:**
+- **Admin**: Full CRUD on all guardian records, link/unlink guardians to students, view all guardian data
+- **Teacher**: View parents of students in their classes
+- **Guardian**: View and edit own profile, view linked children
+- **Staff**: Read-only access
 
-- 👨‍👩‍👧 Create parent/guardian accounts
-- 🔗 Link parents to students
-- 📧 Manage contact information
-- 🔐 Set portal access permissions
-- 📊 Track parent engagement
+### Routes
 
-### Current Implementation Status
+| Route                                                                              | Page          | Status |
+| ---------------------------------------------------------------------------------- | ------------- | ------ |
+| `/{lang}/s/{subdomain}/(school-dashboard)/(listings)/parents`                      | Parents List  | Ready  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/(listings)/parents/[id]`                 | Parent Detail | Ready  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/(listings)/parents/add/[id]/information` | Wizard Step 1 | Ready  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/(listings)/parents/add/[id]/contact`     | Wizard Step 2 | Ready  |
 
-**✅ Production-Ready MVP**
+### File Structure
 
-**Completed:**
-
-- ✅ Guardian CRUD operations (create, read, update, delete)
-- ✅ Contact information management
-- ✅ Multi-tenant isolation (schoolId scoping)
-- ✅ `linkGuardian` action (links parents to students)
-- ✅ `unlinkGuardian` action (removes links)
-- ✅ Tests written (but failing due to Vitest import resolution bug)
-
-**Known Issues:**
-
-- ⚠️ Test infrastructure: Import alias `@/lib/db` not resolving in Vitest
-- ⚠️ 181 `db as any` casts for optional model checking
-
-**Planned:**
-
-- ⏸️ Communication logs
-- ⏸️ Access analytics
-- ⏸️ Permission management
-
----
-
-## Structure
-
-The component follows the standardized file pattern:
-
-- `content.tsx` - Main content component that renders the parents table
-- `actions.ts` - Server actions for CRUD operations
-- `validation.ts` - Zod schemas for form validation
-- `types.ts` - TypeScript type definitions
-- `config.ts` - Constants and configuration
-- `form.tsx` - Multi-step form for creating/editing parents
-- `information.tsx` - First step form for basic information
-- `contact.tsx` - Second step form for contact details
-- `footer.tsx` - Form footer with navigation and progress
-- `columns.tsx` - Table column definitions
-- `table.tsx` - Data table component
-- `list-params.ts` - Search parameters configuration
-
-## Features
-
-### Multi-step Form
-
-- **Step 1**: Basic Information (names)
-- **Step 2**: Contact Details (email address, user ID)
-
-### Data Management
-
-- Create new parents/guardians
-- Edit existing parents/guardians
-- Delete parents/guardians
-- View parent/guardian details
-- Search and filter by name, email, and status
-
-### Validation
-
-- Client-side validation with Zod schemas
-- Server-side validation for all mutations
-- Multi-tenant safety with `schoolId` scoping
-
-### Table Features
-
-- Sortable columns
-- Filterable data
-- Pagination
-- Action menu (View, Edit, Delete)
-
-## Database Schema
-
-Parents/Guardians are stored with the following fields (using the `guardian` table):
-
-- `id` - Unique identifier
-- `schoolId` - Multi-tenant identifier
-- `givenName` - First name
-- `surname` - Last name
-- `emailAddress` - Email address (optional, unique per school)
-- `teacherId` - Link to teacher if guardian is also a teacher (optional)
-- `userId` - Associated user account (optional)
-- `createdAt` - Creation timestamp
-- `updatedAt` - Last update timestamp
-
-## Usage
-
-The component is used in the platform dashboard at `/dashboard/parents` and automatically handles:
-
-- Multi-tenant data isolation
-- Form state management
-- Server-side validation
-- Optimistic updates
-- Error handling
-
-## Dependencies
-
-- React Hook Form for form management
-- Zod for validation
-- TanStack Table for data display
-- shadcn/ui components for UI elements
-- Next.js server actions for backend operations
-
----
-
-## Technology Stack & Dependencies
-
-This feature is built with the following technologies (see [Platform README](../../README.md) for complete stack details):
-
-### Core Framework
-
-- **Next.js 15.4+** - App Router with Server Components ([Docs](https://nextjs.org/docs))
-- **React 19+** - Server Actions, new hooks (`useActionState`, `useFormStatus`) ([Docs](https://react.dev))
-- **TypeScript** - Strict mode for type safety
-
-### Database & ORM
-
-- **Neon PostgreSQL** - Serverless database with autoscaling ([Docs](https://neon.tech/docs/introduction))
-- **Prisma ORM 6.14+** - Type-safe queries and migrations ([Docs](https://www.prisma.io/docs))
-
-### Forms & Validation
-
-- **React Hook Form 7.61+** - Performant form state management ([Docs](https://react-hook-form.com))
-- **Zod 4.0+** - Runtime schema validation (client + server) ([Docs](https://zod.dev))
-
-### UI Components
-
-- **shadcn/ui** - Accessible components built on Radix UI ([Docs](https://ui.shadcn.com/docs))
-- **TanStack Table 8.21+** - Headless table with sorting/filtering ([Docs](https://tanstack.com/table))
-- **Tailwind CSS 4** - Utility-first styling ([Docs](https://tailwindcss.com/docs))
-
-### Server Actions Pattern
-
-All mutations follow the standard server action pattern:
-
-```typescript
-"use server"
-export async function performAction(input: FormData) {
-  const { schoolId } = await getTenantContext()
-  const validated = schema.parse(input)
-  await db.model.create({ data: { ...validated, schoolId } })
-  revalidatePath("/feature-path")
-  return { success: true }
-}
+```
+parents/
+  content.tsx           # Server component - renders parents table
+  actions.ts            # Server actions for guardian CRUD
+  validation.ts         # Zod schemas
+  types.ts              # TypeScript type definitions
+  config.ts             # Constants and configuration
+  form.tsx              # Client form component
+  information.tsx       # Basic info display section
+  contact.tsx           # Contact info display section
+  columns.tsx           # Table column definitions
+  table.tsx             # DataTable component
+  list-params.ts        # Search/filter URL parameters
+  authorization.ts      # RBAC permission checks
+  queries.ts            # Centralized query builders
+  link-child-dialog.tsx # Dialog for linking child via access code
+  link-child-actions.ts # Server actions for link/unlink operations
+  wizard/
+    config.ts                   # Wizard config (2 steps: information, contact)
+    actions.ts                  # Wizard-level server actions
+    use-parent-wizard.ts        # Wizard state hook
+    information/                # Step 1: name, relationship
+      content.tsx, form.tsx, validation.ts, actions.ts
+    contact/                    # Step 2: email, phone
+      content.tsx, form.tsx, validation.ts, actions.ts
+  __tests__/
+    actions.test.ts             # Server action tests
+    validation.test.ts          # Zod schema tests
 ```
 
-### Key Features
+### Status
 
-- **Multi-Tenant Isolation**: All queries scoped by `schoolId`
-- **Type Safety**: End-to-end TypeScript with Prisma + Zod inference
-- **Server-Side Operations**: Mutations via Next.js Server Actions
-- **URL State Management**: Filters and pagination synced to URL (where applicable)
-- **Accessibility**: ARIA labels, keyboard navigation, semantic HTML
+**Completion:** 85% | **Blockers:** Vitest import alias resolution (`@/lib/db` not resolving)
 
-For complete technology documentation, see [Platform Technology Stack](../../README.md#technology-stack--documentation).
+### Integration Points
 
----
+- Student records via `link-child-actions.ts` (access code redemption)
+- User accounts via optional `userId` field
+- Teacher records via optional `teacherId` field

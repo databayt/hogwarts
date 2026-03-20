@@ -170,7 +170,11 @@ export function StreamDashboardContent({
 
                 <CardFooter className="border-t pt-4">
                   <Link
-                    href={`/${lang}/stream/dashboard/${course.slug}`}
+                    href={
+                      course.chapters[0]?.lessons[0]?.id
+                        ? `/${lang}/stream/dashboard/${course.slug}/${course.chapters[0].lessons[0].id}`
+                        : `/${lang}/stream/dashboard/${course.slug}`
+                    }
                     className={buttonVariants({ className: "w-full" })}
                   >
                     <PlayCircle className="size-4" />

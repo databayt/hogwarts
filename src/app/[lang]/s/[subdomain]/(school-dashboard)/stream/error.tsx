@@ -54,7 +54,7 @@ export default function StreamError({ error, reset }: Props) {
                 {isRTL ? "إعادة المحاولة" : "Try Again"}
               </Button>
               <Link
-                href={`/${lang}/s/${subdomain}/stream`}
+                href={`/${lang}/stream`}
                 className={buttonVariants({
                   variant: "outline",
                   className: "w-full",

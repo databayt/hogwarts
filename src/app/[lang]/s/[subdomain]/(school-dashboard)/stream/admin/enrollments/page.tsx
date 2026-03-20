@@ -14,7 +14,7 @@ interface Props {
 }
 
 export default async function AdminEnrollmentsPage({ params }: Props) {
-  const { lang, subdomain } = await params
+  const { lang } = await params
   const session = await auth()
   const dictionary = await getDictionary(lang)
 
@@ -22,7 +22,7 @@ export default async function AdminEnrollmentsPage({ params }: Props) {
     !session?.user ||
     !["ADMIN", "DEVELOPER"].includes(session.user.role || "")
   ) {
-    redirect(`/${lang}/s/${subdomain}/stream/courses`)
+    redirect(`/${lang}/stream/courses`)
   }
 
   const enrollments = await getSchoolEnrollments()

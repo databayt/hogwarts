@@ -319,8 +319,8 @@ export function TourWizard({
               t={t}
               isRTL={isRTL}
               confirmation={confirmation}
-              onHome={() => router.push(`/${lang}/s/${subdomain}`)}
-              onApply={() => router.push(`/${lang}/s/${subdomain}/apply`)}
+              onHome={() => router.push(`/${lang}`)}
+              onApply={() => router.push(`/${lang}/application`)}
             />
           )}
         </div>

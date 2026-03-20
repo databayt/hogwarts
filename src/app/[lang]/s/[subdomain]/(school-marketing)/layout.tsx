@@ -8,6 +8,7 @@ import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 import { Chatbot } from "@/components/chatbot"
 import { type Locale } from "@/components/internationalization/config"
 import { LoadingWrapper } from "@/components/marketing/loading"
+import { ApplicationStatusBanner } from "@/components/school-marketing/admission/application-status-banner"
 import SiteHeader from "@/components/template/site-header/content"
 
 // import { SiteFooter } from "@/components/school-marketing-footer";
@@ -55,6 +56,7 @@ export default async function SiteLayout({
     <LoadingWrapper>
       <div data-slot="site-layout" className="marketing-container">
         <SiteHeader school={school} locale={lang} />
+        <ApplicationStatusBanner schoolId={school.id} locale={lang as Locale} />
         <main data-slot="main-content" role="main">
           {children}
         </main>

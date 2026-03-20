@@ -82,14 +82,14 @@ export function ModalFooter({
       : t.next
 
   return (
-    <footer className="bg-background fixed start-0 end-0 bottom-0">
+    <footer className="bg-background fixed start-0 end-0 bottom-0 px-4 sm:px-6 md:px-12 lg:px-20">
       {/* Progress bar */}
-      <div className="px-4 py-3 sm:px-8 md:px-12">
-        <Progress value={progressValue} className="h-1" />
+      <div dir="ltr" className="mx-auto max-w-5xl">
+        <Progress value={progressValue} className="h-1 w-full" />
       </div>
 
       {/* Controls */}
-      <div className="flex items-center justify-between px-4 pb-4 sm:px-8 md:px-12">
+      <div className="mx-auto flex max-w-5xl items-center justify-between py-3 sm:py-4 rtl:flex-row-reverse">
         {/* Step indicator */}
         <div className="text-muted-foreground text-sm font-medium">
           {stepLabel ||
@@ -101,7 +101,7 @@ export function ModalFooter({
         </div>
 
         {/* Action buttons */}
-        <div className="flex gap-3">
+        <div className="flex items-center gap-2 sm:gap-4 rtl:flex-row-reverse">
           <Button
             type="button"
             size="sm"

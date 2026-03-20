@@ -29,7 +29,7 @@ export function DocumentsStep() {
     enableNext()
     setCustomNavigation({
       onNext: () => {
-        router.push(`/${locale}/s/${subdomain}/join/review`)
+        router.push(`/${locale}/join/review`)
       },
     })
   }, [enableNext, setCustomNavigation, router, locale, subdomain])

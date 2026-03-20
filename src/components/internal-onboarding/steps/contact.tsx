@@ -120,7 +120,7 @@ export function ContactStep() {
                 ...form.getValues(),
                 emailVerified: true,
               })
-              router.push(`/${locale}/s/${subdomain}/join/role-details`)
+              router.push(`/${locale}/join/role-details`)
             }
           },
         })

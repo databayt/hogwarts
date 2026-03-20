@@ -287,14 +287,14 @@ export function CatalogContentSections({
         <ContentSection
           title={t.videos}
           accentColor={accentColor}
-          actionHref={`/${lang}/s/${subdomain}/stream/dashboard/${subjectSlug}`}
+          actionHref={`/${lang}/stream/dashboard/${subjectSlug}`}
           actionLabel={t.continueWatching}
         >
           <div className="no-scrollbar -mx-1 flex gap-3 overflow-x-auto px-1 pb-2">
             {data.videos.map((video) => (
               <Link
                 key={video.id}
-                href={`/${lang}/s/${subdomain}/stream/dashboard/${subjectSlug}/${video.catalogLessonId}`}
+                href={`/${lang}/stream/dashboard/${subjectSlug}/${video.catalogLessonId}`}
                 className="group relative w-60 shrink-0 overflow-hidden rounded-lg"
               >
                 <div
@@ -351,7 +351,7 @@ export function CatalogContentSections({
         <ContentSection
           title={t.materials}
           accentColor={accentColor}
-          actionHref={`/${lang}/s/${subdomain}/subjects/${subjectSlug}/materials`}
+          actionHref={`/${lang}/subjects/${subjectSlug}/materials`}
           actionLabel={t.seeAll}
         >
           <MaterialTypePipeline
@@ -366,7 +366,7 @@ export function CatalogContentSections({
         <ContentSection
           title={t.exams}
           accentColor={accentColor}
-          actionHref={`/${lang}/s/${subdomain}/exams/upcoming?catalogSubjectId=${catalogSubjectId}`}
+          actionHref={`/${lang}/exams/upcoming?catalogSubjectId=${catalogSubjectId}`}
           actionLabel={t.seeAll}
         >
           <ExamTypePipeline
@@ -381,7 +381,7 @@ export function CatalogContentSections({
         <ContentSection
           title={t.qbank}
           accentColor={accentColor}
-          actionHref={`/${lang}/s/${subdomain}/exams/qbank?catalogSubjectId=${catalogSubjectId}`}
+          actionHref={`/${lang}/exams/qbank?catalogSubjectId=${catalogSubjectId}`}
           actionLabel={t.exploreQBank}
         >
           <div className="no-scrollbar -mx-1 flex gap-3 overflow-x-auto px-1 pb-2">

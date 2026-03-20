@@ -166,7 +166,7 @@ export const SCHOOL_MARKETING_ROUTES = {
   about: "/about",
   academic: "/academic",
   admissions: "/admissions",
-  apply: "/apply",
+  apply: "/application",
   tour: "/tour",
   login: "/login",
 } as const

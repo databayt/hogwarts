@@ -226,7 +226,7 @@ export function HealthInfoStep({ form, dictionary }: HealthInfoStepProps) {
                     selected={field.value}
                     onSelect={field.onChange}
                     disabled={(date) => date < new Date()}
-                    initialFocus
+                    autoFocus
                   />
                 </PopoverContent>
               </Popover>
@@ -314,7 +314,7 @@ export function HealthInfoStep({ form, dictionary }: HealthInfoStepProps) {
                           selected={field.value}
                           onSelect={field.onChange}
                           disabled={(date) => date > new Date()}
-                          initialFocus
+                          autoFocus
                         />
                       </PopoverContent>
                     </Popover>
@@ -354,7 +354,7 @@ export function HealthInfoStep({ form, dictionary }: HealthInfoStepProps) {
                           selected={field.value}
                           onSelect={field.onChange}
                           disabled={(date) => date < new Date()}
-                          initialFocus
+                          autoFocus
                         />
                       </PopoverContent>
                     </Popover>

@@ -200,10 +200,6 @@ export function VideoPlayer({
   const hasTriggeredUpNextRef = useRef(false)
   const hasResumedRef = useRef(false)
 
-  // Volume slider — compact, expands on hover
-  const [showVolumeSlider, setShowVolumeSlider] = useState(false)
-  const volumeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
   // Speed menu state
   const [showSpeedMenu, setShowSpeedMenu] = useState(false)
 
@@ -456,16 +452,6 @@ export function VideoPlayer({
     actions.cancelUpNext()
   }, [actions])
 
-  // Volume hover handlers — expand slider on hover, collapse on leave
-  const handleVolumeEnter = useCallback(() => {
-    if (volumeTimeoutRef.current) clearTimeout(volumeTimeoutRef.current)
-    setShowVolumeSlider(true)
-  }, [])
-
-  const handleVolumeLeave = useCallback(() => {
-    volumeTimeoutRef.current = setTimeout(() => setShowVolumeSlider(false), 600)
-  }, [])
-
   // Volume icon selection — matches original 4-level thresholds
   const VolumeIcon = state.isMuted
     ? VolumeMutedIcon
@@ -529,105 +515,106 @@ export function VideoPlayer({
             transition={{ duration: 0.3 }}
             className="absolute start-4 top-4 z-10 flex items-center gap-1.5"
           >
-            {/* PiP */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                if (
-                  videoRef.current &&
-                  document.pictureInPictureEnabled &&
-                  !document.pictureInPictureElement
-                ) {
-                  videoRef.current.requestPictureInPicture()
-                } else if (document.pictureInPictureElement) {
-                  document.exitPictureInPicture()
-                }
-              }}
-              className="flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-[40px] transition-all hover:bg-[rgba(40,40,40,0.6)]"
+            {/* PiP + Share — single pill */}
+            <div
+              className="flex items-center rounded-full px-1.5 backdrop-blur-[40px]"
               style={topGlassStyle}
-              aria-label="Picture in Picture"
             >
-              <PipIcon className="h-3.5 w-3.5 text-white" />
-            </button>
-
-            {/* Share */}
-            <div className="relative">
               <button
                 onClick={(e) => {
                   e.stopPropagation()
-                  setShowShareMenu((prev) => !prev)
+                  if (
+                    videoRef.current &&
+                    document.pictureInPictureEnabled &&
+                    !document.pictureInPictureElement
+                  ) {
+                    videoRef.current.requestPictureInPicture()
+                  } else if (document.pictureInPictureElement) {
+                    document.exitPictureInPicture()
+                  }
                 }}
-                className="flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-[40px] transition-all hover:bg-[rgba(40,40,40,0.6)]"
-                style={topGlassStyle}
-                aria-label="Share"
+                className="flex h-7 w-6 items-center justify-center transition-opacity hover:opacity-70"
+                aria-label="Picture in Picture"
               >
-                <ShareIcon className="h-3.5 w-3.5 text-white" />
+                <PipIcon className="h-3.5 w-3.5 text-white" />
               </button>
-              <AnimatePresence>
-                {showShareMenu && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: -4 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: -4 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute start-0 top-full z-20 mt-1 w-52 overflow-hidden rounded-xl bg-white/95 shadow-xl backdrop-blur-xl dark:bg-neutral-800/95"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {/* Header — thumbnail + title */}
-                    <div className="flex items-center gap-2.5 px-3 py-2.5">
-                      {posterUrl && (
-                        <img
-                          src={posterUrl}
-                          alt=""
-                          className="h-9 w-9 rounded-md object-cover"
-                        />
-                      )}
-                      <div className="min-w-0">
-                        <p className="truncate text-xs font-semibold text-gray-900 dark:text-white">
-                          {title}
-                        </p>
-                        <p className="truncate text-[10px] text-gray-500 dark:text-gray-400">
-                          {courseTitle}
-                          {chapterNumber != null
-                            ? ` · C${chapterNumber}, L${lessonNumber}`
-                            : ""}
-                        </p>
+              <div className="relative">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setShowShareMenu((prev) => !prev)
+                  }}
+                  className="flex h-7 w-6 items-center justify-center transition-opacity hover:opacity-70"
+                  aria-label="Share"
+                >
+                  <ShareIcon className="h-3.5 w-3.5 text-white" />
+                </button>
+                <AnimatePresence>
+                  {showShareMenu && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: -4 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: -4 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute start-0 top-full z-20 mt-1 w-52 overflow-hidden rounded-xl bg-white/95 shadow-xl backdrop-blur-xl dark:bg-neutral-800/95"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {/* Header — thumbnail + title */}
+                      <div className="flex items-center gap-2.5 px-3 py-2.5">
+                        {posterUrl && (
+                          <img
+                            src={posterUrl}
+                            alt=""
+                            className="h-9 w-9 rounded-md object-cover"
+                          />
+                        )}
+                        <div className="min-w-0">
+                          <p className="truncate text-xs font-semibold text-gray-900 dark:text-white">
+                            {title}
+                          </p>
+                          <p className="truncate text-[10px] text-gray-500 dark:text-gray-400">
+                            {courseTitle}
+                            {chapterNumber != null
+                              ? ` · C${chapterNumber}, L${lessonNumber}`
+                              : ""}
+                          </p>
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="h-px bg-gray-200 dark:bg-white/10" />
+                      <div className="h-px bg-gray-200 dark:bg-white/10" />
 
-                    {/* Share actions */}
-                    {[
-                      {
-                        icon: "🔗",
-                        label: "Copy Link",
-                        action: () => {
-                          navigator.clipboard.writeText(window.location.href)
-                          setShowShareMenu(false)
+                      {/* Share actions */}
+                      {[
+                        {
+                          icon: "🔗",
+                          label: "Copy Link",
+                          action: () => {
+                            navigator.clipboard.writeText(window.location.href)
+                            setShowShareMenu(false)
+                          },
                         },
-                      },
-                      { icon: "📨", label: "AirDrop" },
-                      { icon: "💬", label: "Messages" },
-                      { icon: "📝", label: "Notes" },
-                      { icon: "📋", label: "Reminders" },
-                    ].map((item) => (
-                      <button
-                        key={item.label}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          item.action?.()
-                          if (!item.action) setShowShareMenu(false)
-                        }}
-                        className="flex w-full items-center gap-2.5 px-3 py-1.5 text-start text-xs text-gray-800 transition-colors hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-white/10"
-                      >
-                        <span className="text-sm">{item.icon}</span>
-                        {item.label}
-                      </button>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                        { icon: "📨", label: "AirDrop" },
+                        { icon: "💬", label: "Messages" },
+                        { icon: "📝", label: "Notes" },
+                        { icon: "📋", label: "Reminders" },
+                      ].map((item) => (
+                        <button
+                          key={item.label}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            item.action?.()
+                            if (!item.action) setShowShareMenu(false)
+                          }}
+                          className="flex w-full items-center gap-2.5 px-3 py-1.5 text-start text-xs text-gray-800 transition-colors hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-white/10"
+                        >
+                          <span className="text-sm">{item.icon}</span>
+                          {item.label}
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           </motion.div>
         )}
@@ -643,41 +630,31 @@ export function VideoPlayer({
             transition={{ duration: 0.3 }}
             className="absolute end-4 top-4 z-10 flex items-center gap-1"
           >
-            {/* Volume — compact: icon only, slider expands on hover */}
+            {/* Volume — always-visible horizontal pill */}
             <div
-              className="flex items-center overflow-hidden rounded-full backdrop-blur-[40px] transition-all duration-300"
+              className="flex items-center gap-2 rounded-full px-3 py-1.5 backdrop-blur-[40px]"
               style={topGlassStyle}
-              onMouseEnter={handleVolumeEnter}
-              onMouseLeave={handleVolumeLeave}
             >
-              <div
-                className="overflow-hidden transition-all duration-300 ease-in-out"
+              <input
+                type="range"
+                min={0}
+                max={100}
+                step={1}
+                value={state.isMuted ? 0 : state.volume}
+                onChange={(e) => actions.setVolume(Number(e.target.value))}
+                className="h-[3px] w-20 cursor-pointer appearance-none rounded-full [&::-webkit-slider-thumb]:h-2 [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
                 style={{
-                  width: showVolumeSlider ? 80 : 0,
-                  opacity: showVolumeSlider ? 1 : 0,
+                  background: `linear-gradient(to right, rgba(255,255,255,0.9) ${state.isMuted ? 0 : state.volume}%, rgba(255,255,255,0.3) ${state.isMuted ? 0 : state.volume}%)`,
                 }}
-              >
-                <input
-                  type="range"
-                  min={0}
-                  max={100}
-                  step={1}
-                  value={state.isMuted ? 0 : state.volume}
-                  onChange={(e) => actions.setVolume(Number(e.target.value))}
-                  className="ms-3 h-[3px] w-[68px] cursor-pointer appearance-none rounded-full bg-white/30 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
-                  style={{
-                    background: `linear-gradient(to right, rgba(255,255,255,0.9) ${state.isMuted ? 0 : state.volume}%, rgba(255,255,255,0.3) ${state.isMuted ? 0 : state.volume}%)`,
-                  }}
-                  aria-label="Volume"
-                  onClick={(e) => e.stopPropagation()}
-                />
-              </div>
+                aria-label="Volume"
+                onClick={(e) => e.stopPropagation()}
+              />
               <button
                 onClick={(e) => {
                   e.stopPropagation()
                   actions.toggleMute()
                 }}
-                className="flex h-8 w-8 shrink-0 items-center justify-center transition-opacity hover:opacity-80"
+                className="flex shrink-0 items-center justify-center transition-opacity hover:opacity-80"
                 aria-label={state.isMuted ? "Unmute" : "Mute"}
               >
                 <VolumeIcon className="h-3.5 w-3.5 text-white" />

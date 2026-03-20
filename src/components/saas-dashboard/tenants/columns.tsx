@@ -193,9 +193,10 @@ export const getTenantColumns = (
   {
     id: "actions",
     header: () => <span className="sr-only">Actions</span>,
-    cell: ({ row }) => (
-      <TenantActionsCell tenant={row.original} callbacks={callbacks} />
-    ),
+    cell: ({ row }) => {
+      if (row.original.domain === "demo") return null
+      return <TenantActionsCell tenant={row.original} callbacks={callbacks} />
+    },
     enableSorting: false,
     enableColumnFilter: false,
   },

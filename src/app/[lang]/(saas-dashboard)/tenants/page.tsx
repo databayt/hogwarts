@@ -32,7 +32,7 @@ export default async function Tenants({ params, searchParams }: Props) {
   const n = d?.nav
   const tenantsPages: PageNavItem[] = [
     { name: n?.overview || "Overview", href: `/${lang}/tenants` },
-    { name: n?.analysis || "Analysis", href: `/${lang}/tenants/analysis` },
+    { name: n?.analytics || "Analysis", href: `/${lang}/tenants/analysis` },
     { name: n?.domains || "Domains", href: `/${lang}/domains` },
   ]
 

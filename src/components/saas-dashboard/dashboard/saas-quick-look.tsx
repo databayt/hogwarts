@@ -90,7 +90,7 @@ export function SaasQuickLook({ locale, totals }: SaasQuickLookProps) {
         const Icon = item.icon
         return (
           <Link key={item.label} href={`/${locale}${item.href}`}>
-            <Card className="group hover:bg-accent cursor-pointer border-none shadow-none transition-colors">
+            <Card className="group bg-muted hover:bg-accent cursor-pointer border-none shadow-none transition-colors">
               <CardContent className="p-4">
                 <div className="flex items-start justify-between">
                   <div className={cn("rounded-lg p-2", item.bgColor)}>

@@ -64,7 +64,7 @@ test.describe("Story 1.3: School Marketing Public Access @smoke @entry-points @m
     const response = await applyPage.goto()
 
     expect(response?.status()).toBeLessThan(400)
-    expect(page.url()).toMatch(/\/apply/)
+    expect(page.url()).toMatch(/\/application/)
     await assertNoSSE(page)
   })
 

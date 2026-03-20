@@ -2,7 +2,6 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useRouter } from "next/navigation"
 import { ColumnDef } from "@tanstack/react-table"
 import { Ellipsis } from "lucide-react"
 
@@ -12,10 +11,10 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { confirmDeleteDialog } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
@@ -169,31 +168,22 @@ export const getCampaignColumns = (
       ),
       cell: ({ row }) => {
         const campaign = row.original
-        const router = useRouter()
         const isRTL = locale === "ar"
-
-        const handleView = () => {
-          router.push(`/admission/campaigns/${campaign.id}`)
-        }
-
-        const handleViewApplications = () => {
-          router.push(`/admission/applications?campaignId=${campaign.id}`)
-        }
 
         const handleEdit = () => {
           onEdit?.(campaign.id)
         }
 
-        const handleDelete = () => {
-          if (
-            window.confirm(
-              isRTL
-                ? "هل أنت متأكد من حذف هذه الحملة؟"
-                : "Are you sure you want to delete this campaign?"
-            )
-          ) {
-            onDelete?.(campaign.id)
-          }
+        const handleDelete = async () => {
+          const confirmed = await confirmDeleteDialog(undefined, {
+            title: isRTL ? "حذف الحملة" : "Delete Campaign",
+            description: isRTL
+              ? "هل أنت متأكد؟ لا يمكن التراجع عن هذا الإجراء."
+              : "Are you sure? This action cannot be undone.",
+            confirmText: isRTL ? "حذف" : "Delete",
+            cancelText: isRTL ? "إلغاء" : "Cancel",
+          })
+          if (confirmed) onDelete?.(campaign.id)
         }
 
         return (
@@ -205,16 +195,6 @@ export const getCampaignColumns = (
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>
-                {t?.columns?.actions || "Actions"}
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleView}>
-                {t?.campaigns?.overview || "View Details"}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleViewApplications}>
-                {t?.campaigns?.viewAllApplications || "View Applications"}
-              </DropdownMenuItem>
               <DropdownMenuItem onClick={handleEdit}>
                 {t?.campaigns?.editCampaign || "Edit"}
               </DropdownMenuItem>

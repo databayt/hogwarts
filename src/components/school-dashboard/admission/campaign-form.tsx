@@ -4,30 +4,27 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useTransition } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { format } from "date-fns"
+import { CalendarIcon } from "lucide-react"
+import { type DateRange } from "react-day-picker"
 import { useForm } from "react-hook-form"
 
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
+import { Form } from "@/components/ui/form"
+import { Label } from "@/components/ui/label"
 import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 import { useModal } from "@/components/atom/modal/context"
+import { ModalFooter } from "@/components/atom/modal/modal-footer"
+import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout"
+import { NumberStepper } from "@/components/atom/number-stepper"
 import { ErrorToast, SuccessToast } from "@/components/atom/toast"
-import { Icons } from "@/components/icons"
+import { InputField, SelectField, TextareaField } from "@/components/form"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -37,6 +34,28 @@ import {
   campaignStatusOptions,
   type CampaignFormData,
 } from "./validation"
+
+const FIELD_NAMES = [
+  "name",
+  "academicYear",
+  "startDate",
+  "endDate",
+  "status",
+  "totalSeats",
+  "description",
+] as const
+
+function getAcademicYearOptions() {
+  const currentYear = new Date().getFullYear()
+  const options: { label: string; value: string }[] = []
+  for (let y = currentYear - 1; y <= currentYear + 2; y++) {
+    const label = `${y}-${y + 1}`
+    options.push({ label, value: label })
+  }
+  return options
+}
+
+const academicYearOptions = getAcademicYearOptions()
 
 interface CampaignFormProps {
   onSuccess?: () => void
@@ -65,24 +84,24 @@ export function CampaignForm({
       : isRTL
         ? "إنشاء حملة"
         : "Create Campaign",
+    subtitle: isRTL
+      ? "أدخل تفاصيل حملة القبول"
+      : "Enter the details for the admission campaign",
     name: isRTL ? "اسم الحملة" : "Campaign Name",
     namePlaceholder: isRTL
       ? "مثال: قبول 2024-2025"
       : "e.g., Admissions 2024-2025",
     academicYear: isRTL ? "العام الدراسي" : "Academic Year",
-    academicYearPlaceholder: isRTL ? "مثال: 2024-2025" : "e.g., 2024-2025",
-    startDate: isRTL ? "تاريخ البداية" : "Start Date",
-    endDate: isRTL ? "تاريخ الانتهاء" : "End Date",
+    dateRange: isRTL ? "فترة الحملة" : "Campaign Period",
     status: isRTL ? "الحالة" : "Status",
     description: isRTL ? "الوصف" : "Description",
     descriptionPlaceholder: isRTL
       ? "وصف اختياري للحملة..."
       : "Optional campaign description...",
     totalSeats: isRTL ? "المقاعد المتاحة" : "Total Seats",
-    applicationFee: isRTL ? "رسوم التقديم" : "Application Fee",
     cancel: isRTL ? "إلغاء" : "Cancel",
-    save: isRTL ? "حفظ" : "Save",
-    saving: isRTL ? "جاري الحفظ..." : "Saving...",
+    create: isRTL ? "إنشاء" : "Create",
+    update: isRTL ? "تحديث" : "Update",
     createSuccess: isRTL
       ? "تم إنشاء الحملة بنجاح"
       : "Campaign created successfully",
@@ -95,13 +114,12 @@ export function CampaignForm({
     resolver: zodResolver(campaignSchemaWithValidation) as any,
     defaultValues: {
       name: "",
-      academicYear: "",
+      academicYear: `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`,
       startDate: new Date(),
       endDate: new Date(new Date().setMonth(new Date().getMonth() + 3)),
       status: "DRAFT",
       description: "",
       totalSeats: 100,
-      applicationFee: 0,
     },
   })
 
@@ -145,244 +163,130 @@ export function CampaignForm({
     })
   }
 
+  const watched = form.watch()
+  const filledCount = FIELD_NAMES.filter((f) => {
+    const v = watched[f]
+    return v !== "" && v !== null && v !== undefined
+  }).length
+  const progress = (filledCount / FIELD_NAMES.length) * 100
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <Icons.fileText className="text-primary h-5 w-5" />
-        <h2 className="font-semibold">{labels.title}</h2>
-      </div>
-
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{labels.name}</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder={labels.namePlaceholder}
-                    {...field}
-                    disabled={isPending}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="academicYear"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{labels.academicYear}</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder={labels.academicYearPlaceholder}
-                      {...field}
-                      disabled={isPending}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)}>
+        <ModalFormLayout title={labels.title} description={labels.subtitle}>
+          <div className="space-y-4">
+            <InputField
+              name="name"
+              label={labels.name}
+              placeholder={labels.namePlaceholder}
+              disabled={isPending}
             />
 
-            <FormField
-              control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{labels.status}</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
+            <div className="grid grid-cols-3 gap-4">
+              <SelectField
+                name="academicYear"
+                label={labels.academicYear}
+                options={academicYearOptions}
+                disabled={isPending}
+              />
+              <SelectField
+                name="status"
+                label={labels.status}
+                options={[...campaignStatusOptions]}
+                disabled={isPending}
+              />
+              <div className="space-y-2">
+                <Label>{labels.totalSeats}</Label>
+                <NumberStepper
+                  value={watched.totalSeats ?? 100}
+                  onChange={(v) =>
+                    form.setValue("totalSeats", v, { shouldValidate: true })
+                  }
+                  min={1}
+                  max={9999}
+                  className="[&_button]:size-9 [&_input]:h-9"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>{labels.dateRange}</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-[calc(var(--cell-size,1.75rem)*14+1rem+1.5rem)] justify-start text-left font-normal",
+                      !watched.startDate && "text-muted-foreground"
+                    )}
                     disabled={isPending}
                   >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder={labels.status} />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {campaignStatusOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="startDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{labels.startDate}</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="date"
-                      {...field}
-                      value={
-                        field.value instanceof Date
-                          ? field.value.toISOString().split("T")[0]
-                          : ""
-                      }
-                      onChange={(e) => {
-                        const date = e.target.value
-                          ? new Date(e.target.value)
-                          : new Date()
-                        field.onChange(date)
-                      }}
-                      disabled={isPending}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="endDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{labels.endDate}</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="date"
-                      {...field}
-                      value={
-                        field.value instanceof Date
-                          ? field.value.toISOString().split("T")[0]
-                          : ""
-                      }
-                      onChange={(e) => {
-                        const date = e.target.value
-                          ? new Date(e.target.value)
-                          : new Date()
-                        field.onChange(date)
-                      }}
-                      disabled={isPending}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="totalSeats"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{labels.totalSeats}</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min={1}
-                      {...field}
-                      value={field.value ?? ""}
-                      onChange={(e) =>
-                        field.onChange(
-                          e.target.value ? parseInt(e.target.value) : undefined
-                        )
-                      }
-                      disabled={isPending}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="applicationFee"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{labels.applicationFee}</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min={0}
-                      step="0.01"
-                      {...field}
-                      value={field.value ?? ""}
-                      onChange={(e) =>
-                        field.onChange(
-                          e.target.value
-                            ? parseFloat(e.target.value)
-                            : undefined
-                        )
-                      }
-                      disabled={isPending}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    {isRTL ? "اتركه 0 إذا كان مجاني" : "Leave 0 if free"}
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{labels.description}</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder={labels.descriptionPlaceholder}
-                    className="resize-none"
-                    rows={3}
-                    {...field}
-                    value={field.value ?? ""}
-                    disabled={isPending}
+                    <CalendarIcon />
+                    {watched.startDate ? (
+                      watched.endDate ? (
+                        <>
+                          {format(watched.startDate, "LLL dd, y")} -{" "}
+                          {format(watched.endDate, "LLL dd, y")}
+                        </>
+                      ) : (
+                        format(watched.startDate, "LLL dd, y")
+                      )
+                    ) : (
+                      <span>{isRTL ? "اختر الفترة" : "Pick a date range"}</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="range"
+                    defaultMonth={watched.startDate}
+                    selected={{
+                      from: watched.startDate,
+                      to: watched.endDate,
+                    }}
+                    onSelect={(range: DateRange | undefined) => {
+                      if (range?.from)
+                        form.setValue("startDate", range.from, {
+                          shouldValidate: true,
+                        })
+                      if (range?.to)
+                        form.setValue("endDate", range.to, {
+                          shouldValidate: true,
+                        })
+                    }}
+                    numberOfMonths={2}
                   />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                </PopoverContent>
+              </Popover>
+            </div>
 
-          <div className="flex justify-end gap-2 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={closeModal}
+            <TextareaField
+              name="description"
+              label={labels.description}
+              placeholder={labels.descriptionPlaceholder}
+              rows={3}
               disabled={isPending}
-            >
-              {labels.cancel}
-            </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? (
-                <>
-                  <Icons.loader2 className="me-2 h-4 w-4 animate-spin" />
-                  {labels.saving}
-                </>
-              ) : (
-                labels.save
-              )}
-            </Button>
+            />
           </div>
-        </form>
-      </Form>
-    </div>
+        </ModalFormLayout>
+      </form>
+
+      <ModalFooter
+        currentStep={1}
+        totalSteps={1}
+        isEdit={isEdit}
+        isSubmitting={isPending}
+        progress={progress}
+        onBack={closeModal}
+        onNext={() => form.handleSubmit(onSubmit)()}
+        labels={{
+          cancel: labels.cancel,
+          create: labels.create,
+          save: labels.update,
+          saving: isEdit ? labels.update : labels.create,
+        }}
+      />
+    </Form>
   )
 }
 

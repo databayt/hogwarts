@@ -132,7 +132,7 @@ export function ClientItemsStep({ isView, currentId }: ClientItemsStepProps) {
                   onSelect={(date) =>
                     setValue("invoice_date", date || new Date())
                   }
-                  initialFocus
+                  autoFocus
                 />
               </PopoverContent>
             </Popover>
@@ -161,7 +161,7 @@ export function ClientItemsStep({ isView, currentId }: ClientItemsStepProps) {
                   mode="single"
                   selected={watch("due_date")}
                   onSelect={(date) => setValue("due_date", date || new Date())}
-                  initialFocus
+                  autoFocus
                 />
               </PopoverContent>
             </Popover>

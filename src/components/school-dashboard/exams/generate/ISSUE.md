@@ -1,183 +1,54 @@
-# Auto-Generate Block - Issues & Troubleshooting
+# Generate -- Production Readiness Tracker
 
-**Common issues and solutions for exam generation**
-
-Part of the [Exam Block System](../README.md) | [Generate Block README](./README.md)
-
----
-
-## Common Issues
-
-### Issue: Not Enough Questions to Meet Distribution
-
-**Symptoms:**
-
-- Template requires 10 HARD MCQ questions
-- Question bank only has 5
-- Generation fails
-
-**Solution:** Graceful degradation or warning
-
-```typescript
-// utils.ts
-export async function validateDistribution(
-  templateId: string
-): Promise<ValidationResult> {
-  const template = await getExamTemplate(templateId)
-  const warnings: string[] = []
-
-  for (const [type, diffMap] of Object.entries(template.distribution)) {
-    for (const [diff, count] of Object.entries(diffMap)) {
-      const available = await db.questionBank.count({
-        where: {
-          schoolId,
-          subjectId: template.subjectId,
-          questionType: type,
-          difficulty: diff,
-        },
-      })
-
-      if (available < count) {
-        warnings.push(
-          `Need ${count} ${diff} ${type} questions, only ${available} available`
-        )
-      }
-    }
-  }
-
-  return {
-    isValid: warnings.length === 0,
-    warnings,
-  }
-}
-```
+**Status:** IN PROGRESS
+**Completion:** 65%
+**Last Updated:** 2026-03-19
 
 ---
 
-### Issue: Generated Exam Always Same Questions
+## MVP Checklist
 
-**Symptoms:**
-
-- Generate exam multiple times
-- Same questions selected each time
-- Randomization enabled but not working
-
-**Solution:** Use proper randomization seed
-
-```typescript
-// actions.ts
-export async function generateExamFromTemplate(params) {
-  const { randomize, seed } = params.options
-
-  if (randomize) {
-    // Use seed for reproducible randomization
-    const rng = seedrandom(seed || `${Date.now()}`)
-
-    questions.sort(() => rng() - 0.5) // Shuffle
-  } else {
-    // Use least-used questions
-    questions.sort((a, b) => a.timesUsed - b.timesUsed)
-  }
-
-  return selected.slice(0, required)
-}
-```
+- [x] Exam template CRUD
+- [x] Question distribution configuration
+- [x] Distribution editor UI with real-time totals
+- [x] Question selection algorithms
+- [x] Bloom's taxonomy balancing
+- [x] Difficulty distribution enforcement
+- [x] Template reuse across classes
+- [x] Version library for template history
+- [x] Preview before finalization
+- [x] Server actions with Zod validation
+- [x] Multi-tenant isolation (schoolId scoping)
+- [ ] Route pages created in app directory (BLOCKER)
 
 ---
 
-### Issue: Bloom Distribution Not Respected
+## Known Issues
 
-**Symptoms:**
+### P0 -- Critical
 
-- Template specifies 50% REMEMBER, 30% UNDERSTAND
-- Generated exam has different distribution
-- Questions don't match Bloom requirements
+1. **No route pages** -- `src/app/.../exams/generate/` directory does not exist
 
-**Solution:** Enforce Bloom filtering
+### P1 -- High
 
-```typescript
-// utils.ts
-function filterByBloomLevel(
-  questions: QuestionBank[],
-  bloomDist: BloomDistribution
-): QuestionBank[] {
-  const selected: QuestionBank[] = []
-  const total = Object.values(bloomDist).reduce((a, b) => a + b, 0)
+1. **Hard failure on insufficient questions** -- If question bank lacks enough questions for a distribution requirement, generation fails entirely instead of degrading gracefully
 
-  for (const [level, count] of Object.entries(bloomDist)) {
-    const matching = questions.filter((q) => q.bloomLevel === level)
+### P2 -- Medium
 
-    if (matching.length < count) {
-      throw new Error(
-        `Need ${count} ${level} questions, only ${matching.length} available`
-      )
-    }
-
-    selected.push(...matching.slice(0, count))
-  }
-
-  return selected
-}
-```
+1. **No question replacement** -- Cannot swap individual questions after generation
+2. **Single template per exam** -- Cannot combine multiple templates
+3. **No partial distribution filling** -- All-or-nothing on question counts
 
 ---
 
-### Issue: Template Saves But Shows Wrong Total Marks
+## Enhancements (Post-MVP)
 
-**Symptoms:**
-
-- Configure distribution with 50 questions
-- Each question 2 points
-- Template shows 75 marks instead of 100
-
-**Solution:** Recalculate on distribution change
-
-```typescript
-// distribution-editor.tsx
-const totalMarks = useMemo(() => {
-  let total = 0
-
-  for (const [type, diffMap] of Object.entries(distribution)) {
-    for (const [diff, count] of Object.entries(diffMap)) {
-      const points = calculateDefaultPoints(type, diff)
-      total += points * count
-    }
-  }
-
-  return total
-}, [distribution])
-```
+- Graceful degradation when question pool is insufficient
+- Post-generation question swapping
+- Composite templates (combine multiple)
+- Seeded randomization for reproducible exam variants
+- Template sharing between teachers
 
 ---
 
-## Known Limitations
-
-1. **No Partial Distribution Filling**
-   - If 10 questions needed but only 7 available, fails entirely
-   - Workaround: Validate before generating
-
-2. **No Question Replacement**
-   - Cannot replace specific question after generation
-   - Workaround: Regenerate entire exam
-
-3. **Single Template Per Exam**
-   - Cannot combine multiple templates
-   - Workaround: Create composite template
-
----
-
-## FAQ
-
-**Q: Can I manually adjust generated exam?**
-A: Yes, after generation you can add/remove questions in the manage block.
-
-**Q: How does randomization work?**
-A: Uses seeded RNG for reproducible shuffling.
-
-**Q: Can I reuse a template across subjects?**
-A: No, templates are subject-specific. Clone and modify if needed.
-
----
-
-**Last Updated:** 2025-10-27
-**Version:** 2.0
+**Last Review:** 2026-03-19

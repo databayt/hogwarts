@@ -13,6 +13,6 @@ interface Props {
  * Redirect to courses page - course creation now handled via modal
  */
 export default async function StreamCourseCreatePage({ params }: Props) {
-  const { lang, subdomain } = await params
-  redirect(`/${lang}/s/${subdomain}/stream/admin/courses`)
+  const { lang } = await params
+  redirect(`/${lang}/stream/admin/courses`)
 }

@@ -1,244 +1,33 @@
 ---
 title: "Admission"
-description: "Complete guide to the admission system - application wizard, session management, payment, admin review, enrollment, tour booking, and status tracking"
+description: "Admin-facing admission management - application review, enrollment confirmation, merit list, payment recording, section placement, and configuration"
 ---
 
-## Pipeline Overview
+## Pipeline Overview (Admin Side)
 
 ```
-Applicant                          Admin                              System
-────────                          ─────                              ──────
-Visit school site ─────────────────────────────────────────────────────────
-Select campaign ──────────────────────────────────────────────────────────
-Complete 6-step wizard ───────────────────────────────────────────────────
-Submit application ───────────────── Application created (SUBMITTED) ─────
-Pay fee (card/cash/bank) ─────────── Payment recorded ────────────────────
-                                   Review application ── UNDER_REVIEW ────
-                                   Score & rank ──────── Merit list ──────
-                                   Select applicant ──── SELECTED ────────
-                                                         (auto: admissionOffered=true)
-                                   Confirm enrollment ── ADMITTED ─────────
-                                                         → Student record (ACTIVE)
-                                                         → User (role=STUDENT)
-                                                         → Guardian records
-                                                         → StudentYearLevel
-                                                         → AcademicGrade
-                                                         → FeeAssignments
-                                                         → StudentDocuments
-                                   Place in section ──── Classroom roster ─
-                                   Edit in wizard ────── Update details ───
-                                                         (all data pre-populated)
+Admin                              System
+─────                              ──────
+Review application ──────────────── UNDER_REVIEW
+Score & rank ────────────────────── Merit list
+Select applicant ────────────────── SELECTED
+                                    (auto: admissionOffered=true)
+Confirm enrollment ──────────────── ADMITTED
+                                    → Student record (ACTIVE)
+                                    → User (role=STUDENT)
+                                    → Guardian records
+                                    → StudentYearLevel
+                                    → AcademicGrade
+                                    → FeeAssignments
+                                    → StudentDocuments
+Place in section ────────────────── Classroom roster
+Edit in wizard ──────────────────── Update details
+                                    (all data pre-populated)
 ```
 
-## Application Flow (A to Z)
+## Admin Review Flow
 
-This section walks through the entire admission flow from the applicant's first click to the admin confirming enrollment.
-
-### Step 1: Applicant Visits the School Site
-
-The applicant navigates to the school's public site at `school.databayt.org` and clicks **Admissions** in the navigation. This leads to the admissions info page with a hero section, process overview, and a **Start Application** CTA.
-
-**Route:** `/{lang}/admissions`
-
-### Step 2: Campaign Selection
-
-The applicant is taken to the apply landing page where they see active admission campaigns (e.g., "Admission 2026-2027"). They can also see any saved draft applications if they're logged in.
-
-Two options are presented:
-
-- **Start from scratch** — begin a new application
-- **Import from profile** — auto-fill from documents or LinkedIn (same flow, pre-populated)
-
-**Route:** `/{lang}/apply`
-
-### Step 3: Overview Page
-
-After selecting a campaign, the applicant sees an overview of the 3 phases:
-
-| Phase | Label              | Steps                 |
-| ----- | ------------------ | --------------------- |
-| 1     | Basic Information  | Attachments, Personal |
-| 2     | Details            | Contact, Location     |
-| 3     | Family & Education | Guardian, Academic    |
-
-Clicking **Get Started** initializes a session and enters the wizard.
-
-**Route:** `/{lang}/apply/overview?id={campaignId}`
-
-### Step 4: The 6-Step Wizard
-
-The wizard uses a shared `FormFooter` with 3 progress bars (one per phase). Each step auto-saves to the server every 30 seconds and persists to localStorage as a backup.
-
-#### Step 1: Attachments (Optional)
-
-Upload documents via drag-and-drop cards. All fields are optional — the applicant can skip this step entirely.
-
-| Slot                 | Type                     |
-| -------------------- | ------------------------ |
-| Photo                | Avatar (profile picture) |
-| Degree               | Document                 |
-| Transcript           | Document                 |
-| ID                   | Document                 |
-| Resume               | Document                 |
-| Birth Certificate    | Document                 |
-| Passport Photo       | Document                 |
-| Signature            | Document                 |
-| Medical Certificate  | Document                 |
-| Transfer Certificate | Document                 |
-| Other                | Document                 |
-
-**Route:** `/{lang}/apply/{campaignId}/attachments`
-
-#### Step 2: Personal Information (Required)
-
-| Field         | Required | Validation            |
-| ------------- | -------- | --------------------- |
-| First Name    | Yes      | 2-50 chars            |
-| Last Name     | Yes      | 2-50 chars            |
-| Date of Birth | Yes      | Date picker           |
-| Gender        | Yes      | MALE / FEMALE / OTHER |
-| Nationality   | Yes      | Country selector      |
-| Religion      | No       | Free text             |
-| Category      | No       | Dropdown              |
-
-**Next enabled when:** firstName, lastName, dateOfBirth, gender, nationality are all filled.
-
-**Route:** `/{lang}/apply/{campaignId}/personal`
-
-#### Step 3: Contact Information (Required)
-
-| Field           | Required | Validation                    |
-| --------------- | -------- | ----------------------------- |
-| Email           | Yes      | Valid email, max 100          |
-| Phone           | Yes      | 10-20 chars with country code |
-| Alternate Phone | No       | 10-20 chars                   |
-
-**Next enabled when:** email and phone are filled.
-
-**Route:** `/{lang}/apply/{campaignId}/contact`
-
-#### Step 4: Location (Required)
-
-If `NEXT_PUBLIC_MAPBOX_TOKEN` is configured, shows an interactive map with geocoding search. Otherwise falls back to manual input fields.
-
-| Field       | Required | Validation       |
-| ----------- | -------- | ---------------- |
-| Address     | Yes      | 1-200 chars      |
-| City        | Yes      | 1-100 chars      |
-| State       | Yes      | 1-100 chars      |
-| Postal Code | No       | Max 20 chars     |
-| Country     | Yes      | Country selector |
-
-**Next enabled when:** address, city, state, country are all filled.
-
-**Route:** `/{lang}/apply/{campaignId}/location`
-
-#### Step 5: Guardian Information (Required)
-
-Uses a tabbed interface with **Father**, **Mother**, and **Guardian** tabs.
-
-**Father (required):**
-
-| Field         | Required         |
-| ------------- | ---------------- |
-| Father's Name | Yes (2-50 chars) |
-| Occupation    | No               |
-| Phone         | No               |
-| Email         | No               |
-
-**Mother (required):**
-
-| Field         | Required         |
-| ------------- | ---------------- |
-| Mother's Name | Yes (2-50 chars) |
-| Occupation    | No               |
-| Phone         | No               |
-| Email         | No               |
-
-**Guardian (all optional):**
-
-| Field         | Required |
-| ------------- | -------- |
-| Guardian Name | No       |
-| Relation      | No       |
-| Phone         | No       |
-| Email         | No       |
-
-**Next enabled when:** fatherName and motherName are both filled.
-
-**Route:** `/{lang}/apply/{campaignId}/guardian`
-
-#### Step 6: Academic Information (Final Step — Triggers Submit)
-
-Organized in 3 sections: Previous Education, Applying For, Languages.
-
-| Field              | Required | Notes                              |
-| ------------------ | -------- | ---------------------------------- |
-| Previous School    | No       | Free text                          |
-| Previous Class     | No       | Free text                          |
-| Previous Marks     | No       | e.g., "450/500"                    |
-| Percentage         | No       | e.g., "90%"                        |
-| Applying for Class | **Yes**  | Select from 14 Arabic grade levels |
-| Preferred Stream   | No       | Science / Arts / Commerce          |
-| Second Language    | No       | Arabic / English / French / etc.   |
-| Third Language     | No       | Same options                       |
-| Achievements       | No       | Textarea                           |
-
-**Available Grades:** KG1 through Grade 12 (14 levels, Arabic labels).
-
-The final button says **"Submit Application"** instead of "Next".
-
-**Route:** `/{lang}/apply/{campaignId}/academic`
-
-### Step 5: Submit
-
-When the applicant clicks "Submit Application", the system:
-
-1. Saves the academic step data
-2. Checks completeness across all steps (firstName, lastName, email, phone, fatherName, motherName, applyingForClass)
-3. Flattens all step data into a single object
-4. Calls `submitApplicationAction()` which delegates to `submitApplication()`
-
-**Server-side submit flow:**
-
-1. Resolve school from subdomain
-2. Validate with `createFullApplicationSchema()` (Zod)
-3. Verify session belongs to this school
-4. Check campaign is still OPEN and not expired
-5. Check for duplicate email + campaign combination
-6. Generate unique application number (`APP-{year}-{random6}`)
-7. Generate access token (32 chars, 6-month expiry)
-8. Create `Application` record with status `SUBMITTED`
-9. Mark session as converted
-10. Send confirmation email via Resend
-11. Check if payment is required (`campaign.applicationFee > 0`)
-
-### Step 6: Payment (If Required)
-
-If the campaign has an application fee, the applicant is redirected to the payment page.
-
-| Payment Method | Description                              |
-| -------------- | ---------------------------------------- |
-| Pay with Card  | Stripe Checkout redirect                 |
-| Pay at School  | Cash payment — shows reference number    |
-| Bank Transfer  | Shows bank details with reference number |
-
-After selecting cash or bank transfer, a confirmation card with the reference number is shown.
-
-**Route:** `/{lang}/apply/{applicationId}/payment?number={applicationNumber}`
-
-### Step 7: Success Page
-
-Displays:
-
-- Application number in a card
-- Payment status (paid/pending)
-- Next steps timeline (email confirmation → review → interview → decision)
-- Links to track status and schedule a school tour
-
-**Route:** `/{lang}/apply/{campaignId}/success?number={applicationNumber}`
-
-### Step 8: Admin Reviews Application
+### Step 1: Review Applications
 
 The admin logs into the school dashboard and navigates to **Admission → Applications**.
 
@@ -254,7 +43,7 @@ When status is updated to SELECTED, the system auto-sets `admissionOffered = tru
 
 **Route:** `/{lang}/admission/applications`
 
-### Step 9: Enrollment Confirmation
+### Step 2: Enrollment Confirmation
 
 The admin confirms enrollment for selected students. This triggers a single transaction that creates a fully integrated student record:
 
@@ -273,7 +62,66 @@ The admin confirms enrollment for selected students. This triggers a single tran
 
 The student is created with `wizardStep: null` and `status: ACTIVE`, meaning they appear as a fully complete active student — not a draft.
 
-#### Application → Student Data Transfer
+### Step 3: Section Placement
+
+After enrollment, the admin can place the student in a specific section:
+
+- The enrollment response includes a `suggestedSectionId` if exactly one section has capacity for the student's grade
+- Lists sections with available capacity for the student's grade
+- Assigns student to section
+- Auto-enrolls in grade classes via `enrollStudentInGradeClasses()`
+
+### Step 4: Student Wizard (Edit Mode)
+
+After enrollment, the admin can open the student record in the student wizard to review or edit any information. Since `wizardStep` is `null`, the student appears as "Active" in the students list (not "Draft").
+
+The admin can navigate to the wizard from:
+
+- Students table → Actions → Edit (opens wizard at the personal step)
+- Enrollment table → View Student (after enrollment confirmation)
+
+All application data is pre-populated in the wizard forms since it was written to the Student record during enrollment. The wizard serves as an **editing interface** for enrollment-created students — the admin can update or add information that wasn't collected during the application (e.g., health records, detailed previous education, section assignment).
+
+**Safety:** When editing an enrolled student, the `updateStudentWizardStep` action only updates `wizardStep` for draft students (where `wizardStep` is non-null). This prevents enrolled students from being accidentally reverted to draft status when navigating between wizard steps. The wizard final button shows "Save" (not "Create") for all students.
+
+### Step 5: Classroom & Finance Integration
+
+Once the student is enrolled and placed in a section:
+
+- **Classroom**: Student appears in classroom roster, timetable, attendance
+- **Finance**: `FeeAssignment` records show in Finance → Fees. The admin can record payments, apply discounts, or scholarships
+- **Profile**: Student has a profile page at `/profile/{userId}` accessible from the students table
+- **Attendance**: Student is available for attendance marking in their assigned classes
+
+---
+
+## Admin Dashboard
+
+### Admission Tabs
+
+| Tab          | Route                            | Purpose                                  |
+| ------------ | -------------------------------- | ---------------------------------------- |
+| Campaigns    | `/{lang}/admission`              | Create/manage admission campaigns        |
+| Applications | `/{lang}/admission/applications` | Review submitted applications            |
+| Merit List   | `/{lang}/admission/merit`        | Rank applications by scores              |
+| Enrollment   | `/{lang}/admission/enrollment`   | Confirm enrollment for selected students |
+| Settings     | `/{lang}/admission/settings`     | Configure admission portal settings      |
+
+### Merit List
+
+The admin can generate a merit list that ranks shortlisted/selected/waitlisted applications by:
+
+- Merit score
+- Entrance exam score
+- Interview score
+
+### Payment Recording
+
+Admins can manually record payments for cash/bank transfer methods, marking the application fee as paid.
+
+---
+
+## Application → Student Data Transfer
 
 | Application Field         | Student Field            | Notes                                   |
 | ------------------------- | ------------------------ | --------------------------------------- |
@@ -307,7 +155,9 @@ The student is created with `wizardStep: null` and `status: ACTIVE`, meaning the
 | documents (JSON)          | StudentDocument records  | Each document creates a record          |
 | applyingForClass          | academicGradeId          | Via YearLevel → AcademicGrade lookup    |
 
-#### Guardian Auto-Creation
+---
+
+## Guardian Auto-Creation
 
 For each parent/guardian in the application (father, mother, optional guardian):
 
@@ -319,171 +169,22 @@ For each parent/guardian in the application (father, mother, optional guardian):
 
 Father is marked as primary guardian. If no father, mother becomes primary.
 
-### Step 10: Section Placement
-
-After enrollment, the admin can place the student in a specific section:
-
-- The enrollment response includes a `suggestedSectionId` if exactly one section has capacity for the student's grade
-- Lists sections with available capacity for the student's grade
-- Assigns student to section
-- Auto-enrolls in grade classes via `enrollStudentInGradeClasses()`
-
-### Step 11: Student Wizard (Edit Mode)
-
-After enrollment, the admin can open the student record in the student wizard to review or edit any information. Since `wizardStep` is `null`, the student appears as "Active" in the students list (not "Draft").
-
-The admin can navigate to the wizard from:
-
-- Students table → Actions → Edit (opens wizard at the personal step)
-- Enrollment table → View Student (after enrollment confirmation)
-
-All application data is pre-populated in the wizard forms since it was written to the Student record during enrollment. The wizard serves as an **editing interface** for enrollment-created students — the admin can update or add information that wasn't collected during the application (e.g., health records, detailed previous education, section assignment).
-
-**Safety:** When editing an enrolled student, the `updateStudentWizardStep` action only updates `wizardStep` for draft students (where `wizardStep` is non-null). This prevents enrolled students from being accidentally reverted to draft status when navigating between wizard steps. The wizard final button shows "Save" (not "Create") for all students.
-
-### Step 12: Classroom & Finance Integration
-
-Once the student is enrolled and placed in a section:
-
-- **Classroom**: Student appears in classroom roster, timetable, attendance
-- **Finance**: `FeeAssignment` records show in Finance → Fees. The admin can record payments, apply discounts, or scholarships
-- **Profile**: Student has a profile page at `/profile/{userId}` accessible from the students table
-- **Attendance**: Student is available for attendance marking in their assigned classes
-
 ---
 
-## Session Management
+## Multi-Tenant Safety
 
-### How Sessions Work
+All queries are scoped by `schoolId`. The submit flow resolves school from subdomain:
 
-```
-┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│  localStorage │ ←──→ │   Context    │ ←──→ │  Database    │
-│  (backup)     │     │  (in-memory) │     │  (source of  │
-│               │     │              │     │   truth)     │
-└──────────────┘     └──────────────┘     └──────────────┘
+```typescript
+const schoolResult = await getSchoolBySubdomain(subdomain)
+const schoolId = schoolResult.data.id
+
+await db.application.create({
+  data: { ...formData, schoolId },
+})
 ```
 
-**Storage key:** `hogwarts_apply_session_{campaignId}`
-
-**Session state:**
-
-- `sessionToken` — server-generated nanoid(32), null until first save
-- `campaignId` — which admission campaign
-- `formData` — keyed by step name (attachments, personal, contact, location, guardian, academic)
-- `currentStep` — current step name
-- `lastSaved`, `isDirty`, `isLoading`, `isSaving`, `error`
-
-**Auto-save:** Every 30 seconds when `isDirty` is true.
-
-**Session expiry:** 7 days.
-
-**Resume methods:**
-
-1. **localStorage** — automatic on page load
-2. **Email link** — `/{lang}/apply/continue?token=xxx`
-3. **User account** — authenticated users see their drafts on the apply landing page
-
-**Unsaved changes:** The browser warns before navigating away when `isDirty` is true.
-
-### First Save Email
-
-On the first successful save, the system sends a "resume application" email with a token link so the applicant can continue from any device.
-
----
-
-## Status Tracking
-
-### OTP Verification
-
-Parents can track their application status without creating an account:
-
-1. Navigate to `/{lang}/apply/status`
-2. Enter application number + email
-3. Receive 6-digit OTP via email (10-minute expiry)
-4. Rate limited: max 3 OTPs per hour, max 5 verification attempts
-5. On verification, view application timeline
-
-### Status Timeline
-
-```
-DRAFT → SUBMITTED → UNDER_REVIEW → SHORTLISTED → SELECTED → ADMITTED
-                                  ↘ WAITLISTED
-                                  ↘ REJECTED
-                                  ↘ WITHDRAWN
-```
-
-The timeline shows each completed stage with dates and next steps.
-
----
-
-## Tour Booking
-
-The school can offer self-service tour scheduling at `/{lang}/tour`:
-
-1. **Calendar View** — select available dates
-2. **Time Slots** — show available times with capacity
-3. **Booking Form** — collect visitor information (name, email, phone, student name, grade interest, number of attendees, special requests)
-4. **Confirmation** — booking number, email with calendar invite
-
-### Slot Types
-
-| Type        | Purpose                 |
-| ----------- | ----------------------- |
-| TOUR        | Campus tour             |
-| INTERVIEW   | Admission interview     |
-| ORIENTATION | New student orientation |
-| OPEN_HOUSE  | Open house event        |
-
-### Booking Management
-
-Parents can view, reschedule, or cancel their bookings at `/{lang}/tour/{bookingId}`.
-
----
-
-## Inquiry Form
-
-Lead capture for families not ready to apply, at `/{lang}/inquiry`:
-
-| Field            | Required | Purpose                                                 |
-| ---------------- | -------- | ------------------------------------------------------- |
-| Parent Name      | Yes      | Contact name                                            |
-| Email            | Yes      | Follow-up                                               |
-| Phone            | No       | Alternative contact                                     |
-| Student Name     | No       | Personalization                                         |
-| Student DOB      | No       | Grade suggestion                                        |
-| Interested Grade | No       | Target grade                                            |
-| Source           | No       | Attribution (website, social, referral, open house, ad) |
-| Message          | No       | Questions                                               |
-| Newsletter       | No       | Opt-in                                                  |
-
-**Status flow:** `NEW → CONTACTED → QUALIFIED → CONVERTED → CLOSED`
-
----
-
-## Admin Dashboard
-
-### Admission Tabs
-
-| Tab          | Route                            | Purpose                                  |
-| ------------ | -------------------------------- | ---------------------------------------- |
-| Campaigns    | `/{lang}/admission`              | Create/manage admission campaigns        |
-| Applications | `/{lang}/admission/applications` | Review submitted applications            |
-| Merit List   | `/{lang}/admission/merit`        | Rank applications by scores              |
-| Enrollment   | `/{lang}/admission/enrollment`   | Confirm enrollment for selected students |
-| Settings     | `/{lang}/admission/settings`     | Configure admission portal settings      |
-
-### Merit List
-
-The admin can generate a merit list that ranks shortlisted/selected/waitlisted applications by:
-
-- Merit score
-- Entrance exam score
-- Interview score
-
-### Payment Recording
-
-Admins can manually record payments for cash/bank transfer methods, marking the application fee as paid.
+The session is also verified to belong to the correct school before accepting submissions.
 
 ---
 
@@ -509,102 +210,27 @@ Admins can manually record payments for cash/bank transfer methods, marking the 
 }
 ```
 
-### Wizard Configuration
+---
 
-```typescript
-// ADMISSION_CONFIG in form/footer.tsx
-{
-  steps: ["attachments", "personal", "contact", "location", "guardian", "academic"],
-  groups: {
-    1: ["attachments", "personal"],    // Basic Information
-    2: ["contact", "location"],         // Details
-    3: ["guardian", "academic"],         // Family & Education
-  },
-  groupLabels: ["Basic Information", "Details", "Family & Education"]
-}
-```
+## Status Reference
+
+| Status                | Trigger                      | What Happens                                     |
+| --------------------- | ---------------------------- | ------------------------------------------------ |
+| `DRAFT`               | Session created              | Form data being collected                        |
+| `SUBMITTED`           | Applicant submits final step | Application number generated, email sent         |
+| `UNDER_REVIEW`        | Admin changes status         | `reviewedAt` + `reviewedBy` set                  |
+| `SHORTLISTED`         | Admin changes status         | Applicant notified                               |
+| `ENTRANCE_SCHEDULED`  | Admin schedules              | Entrance exam date set                           |
+| `INTERVIEW_SCHEDULED` | Admin schedules              | Interview date set                               |
+| `SELECTED`            | Admin selects                | Offer created (30-day expiry), payment link sent |
+| `WAITLISTED`          | Admin waitlists              | Applicant notified                               |
+| `REJECTED`            | Admin rejects                | Applicant notified                               |
+| `ADMITTED`            | Admin confirms enrollment    | Student + Guardian + Fees created                |
+| `WITHDRAWN`           | Applicant or admin withdraws | Application closed                               |
 
 ---
 
-## File Structure
-
-```
-src/
-├── app/[lang]/s/[subdomain]/(school-apply)/apply/
-│   ├── page.tsx                    # Campaign selector
-│   ├── overview/page.tsx           # 3-phase overview
-│   ├── continue/page.tsx           # Resume from email link
-│   ├── status/page.tsx             # OTP status tracker
-│   └── [id]/
-│       ├── layout.tsx              # Session + validation providers
-│       ├── page.tsx                # Redirects to /attachments
-│       ├── attachments/page.tsx    # Step 1
-│       ├── personal/page.tsx       # Step 2
-│       ├── contact/page.tsx        # Step 3
-│       ├── location/page.tsx       # Step 4
-│       ├── guardian/page.tsx       # Step 5
-│       ├── academic/page.tsx       # Step 6 (final)
-│       ├── payment/page.tsx        # Payment page
-│       └── success/page.tsx        # Confirmation
-│
-├── components/school-marketing/apply/
-│   ├── application-context.tsx     # Session state management
-│   ├── validation-context.tsx      # Per-step validation (alias for WizardValidationProvider)
-│   ├── submit-action.ts            # Server action wrapper for submit
-│   ├── config.client.ts            # Steps, groups, limits, grades
-│   ├── types.ts                    # TypeScript types for all steps
-│   ├── error-boundary.tsx          # Error boundary wrapper
-│   │
-│   ├── overview/                   # Overview page client component
-│   ├── attachments/                # content.tsx, form.tsx, validation.ts, types.ts, config.ts, actions.ts
-│   ├── personal/                   # content.tsx, form.tsx, validation.ts, types.ts, actions.ts
-│   ├── contact/                    # content.tsx, form.tsx, validation.ts, types.ts, actions.ts
-│   ├── location/                   # content.tsx, form.tsx, validation.ts, types.ts, actions.ts
-│   ├── guardian/                   # content.tsx, form.tsx, validation.ts, types.ts, actions.ts
-│   ├── academic/                   # content.tsx, form.tsx, validation.ts, types.ts, config.ts, actions.ts
-│   ├── payment/                    # content.tsx (payment method selection)
-│   └── success/                    # content.tsx (confirmation page)
-│
-├── components/school-marketing/admission/
-│   ├── actions/
-│   │   ├── index.ts                # Re-exports
-│   │   ├── application.ts          # Save, submit, session management
-│   │   ├── status.ts               # OTP, status tracking
-│   │   ├── tour.ts                 # Tour booking actions
-│   │   └── inquiry.ts              # Inquiry form actions
-│   ├── validation.ts               # Zod schemas (full application, tour, inquiry, OTP)
-│   └── types.ts                    # Shared types
-│
-└── components/school-dashboard/admission/
-    ├── actions.ts                  # Admin actions (updateStatus, confirmEnrollment, etc.)
-    ├── applications-table.tsx      # Applications DataTable
-    ├── applications-columns.tsx    # Column definitions
-    ├── campaigns-table.tsx         # Campaign management
-    ├── enrollment-table.tsx        # Enrollment tracking
-    ├── merit-table.tsx             # Merit list
-    └── ...
-```
-
----
-
-## Server Actions Reference
-
-### Public Actions (No Auth Required)
-
-| Action                       | Purpose              | Parameters                                                  |
-| ---------------------------- | -------------------- | ----------------------------------------------------------- |
-| `getActiveCampaigns()`       | List open campaigns  | subdomain                                                   |
-| `saveApplicationSession()`   | Auto-save progress   | subdomain, formData, step, email, campaignId, sessionToken? |
-| `resumeApplicationSession()` | Load saved session   | sessionToken                                                |
-| `submitApplication()`        | Final submission     | subdomain, sessionToken, formData                           |
-| `requestStatusOTP()`         | Send tracking OTP    | subdomain, appNumber, email                                 |
-| `verifyStatusOTP()`          | Verify OTP code      | subdomain, appNumber, otp                                   |
-| `getApplicationStatus()`     | Get status timeline  | accessToken                                                 |
-| `getAvailableSlots()`        | List tour time slots | subdomain, slotType, date                                   |
-| `createTourBooking()`        | Book a tour          | subdomain, bookingData                                      |
-| `submitInquiry()`            | Submit inquiry       | subdomain, inquiryData                                      |
-
-### Admin Actions (Auth + Permission Required)
+## Server Actions Reference (Admin, Auth + Permission Required)
 
 | Action                      | Purpose                | Permission        |
 | --------------------------- | ---------------------- | ----------------- |
@@ -616,45 +242,15 @@ src/
 
 ---
 
-## Multi-Tenant Safety
+## Key Files
 
-All queries are scoped by `schoolId`. The submit flow resolves school from subdomain:
-
-```typescript
-const schoolResult = await getSchoolBySubdomain(subdomain)
-const schoolId = schoolResult.data.id
-
-await db.application.create({
-  data: { ...formData, schoolId },
-})
-```
-
-The session is also verified to belong to the correct school before accepting submissions.
-
----
-
-## Troubleshooting
-
-**Application Not Saving**
-
-- Check browser console for network errors
-- Verify session hasn't expired (7-day limit)
-- Ensure the school's subdomain resolves correctly
-
-**Submit Fails with Validation Error**
-
-- The error message includes field names (e.g., "Validation failed: postalCode: ...")
-- Check that all required fields are filled across all steps
-- The completeness check requires: firstName, lastName, email, phone, fatherName, motherName, applyingForClass
-
-**OTP Not Received**
-
-- Check spam folder
-- Verify email matches the application
-- Rate limit: max 3 OTPs per hour
-
-**Payment Page Shows No Methods**
-
-- Check `AdmissionSettings.paymentMethods` for the school
-- Ensure campaign has `applicationFee > 0`
-- Stripe requires webhook configuration for card payments
+| Purpose              | Path                                                                 |
+| -------------------- | -------------------------------------------------------------------- |
+| Dashboard actions    | `src/components/school-dashboard/admission/actions.ts`               |
+| Applications table   | `src/components/school-dashboard/admission/applications-table.tsx`   |
+| Applications columns | `src/components/school-dashboard/admission/applications-columns.tsx` |
+| Campaigns table      | `src/components/school-dashboard/admission/campaigns-table.tsx`      |
+| Enrollment table     | `src/components/school-dashboard/admission/enrollment-table.tsx`     |
+| Merit table          | `src/components/school-dashboard/admission/merit-table.tsx`          |
+| Prisma schema        | `prisma/models/admission.prisma`                                     |
+| Admission types      | `src/components/school-marketing/admission/types.ts`                 |

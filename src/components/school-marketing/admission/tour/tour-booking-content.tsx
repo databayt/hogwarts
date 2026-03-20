@@ -235,14 +235,11 @@ export default function TourBookingContent({
         </Card>
 
         <div className="flex justify-center gap-4">
-          <Button
-            variant="outline"
-            onClick={() => router.push(`/${lang}/s/${subdomain}`)}
-          >
+          <Button variant="outline" onClick={() => router.push(`/${lang}`)}>
             {tour?.backToHome || "Back to Home"}
           </Button>
           <Button
-            onClick={() => router.push(`/${lang}/s/${subdomain}/apply`)}
+            onClick={() => router.push(`/${lang}/application`)}
             className="group"
           >
             {tour?.applyNow || "Apply Now"}

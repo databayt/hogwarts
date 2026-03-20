@@ -175,26 +175,16 @@ export function VideoProgressBar({
           style={{ width: `${displayPosition}%` }}
         />
 
-        {/* Scrubber thumb */}
-        <AnimatePresence>
-          {(isHovering || isSeeking) && (
-            <motion.div
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0, opacity: 0 }}
-              className={cn(
-                "absolute top-1/2 -translate-x-1/2 -translate-y-1/2",
-                "rounded-full bg-white"
-              )}
-              style={{
-                left: `${displayPosition}%`,
-                width: PROGRESS_BAR.thumbSize,
-                height: PROGRESS_BAR.thumbSize,
-                boxShadow: "0 1px 3px rgba(0,0,0,0.4)",
-              }}
-            />
-          )}
-        </AnimatePresence>
+        {/* Scrubber thumb — always visible, grows on hover */}
+        <div
+          className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white"
+          style={{
+            left: `${displayPosition}%`,
+            width: PROGRESS_BAR.thumbWidth,
+            height: PROGRESS_BAR.thumbHeight,
+            boxShadow: "0 1px 3px rgba(0,0,0,0.4)",
+          }}
+        />
       </motion.div>
     </div>
   )

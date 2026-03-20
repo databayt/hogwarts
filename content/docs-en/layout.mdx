@@ -480,7 +480,7 @@ Key points:
 - Used for Next.js route groups that need a `layout.tsx` for structural reasons
 - Sync (no `async`, no `await params`)
 - No providers, no data fetching
-- 6 layouts in codebase follow this pattern: (listings), (school-apply), subjects, etc.
+- 6 layouts in codebase follow this pattern: (listings), application, subjects, etc.
 - If the layout truly does nothing, consider whether the route group itself is needed
 
 ## Anti-Patterns (Found in Current Codebase)
@@ -557,7 +557,7 @@ If params aren't needed, don't declare them. This is a passthrough layout preten
 
 | Shape            | Type                                  | Used by                                               |
 | ---------------- | ------------------------------------- | ----------------------------------------------------- |
-| None             | `{ children: React.ReactNode }`       | Root, passthrough, auth, onboarding, (school-apply)   |
+| None             | `{ children: React.ReactNode }`       | Root, passthrough, auth, onboarding, application      |
 | Lang only        | `{ lang: string }`                    | [lang], saas-dashboard, saas-marketing, docs, catalog |
 | Lang + subdomain | `{ lang: string; subdomain: string }` | school-dashboard, school-marketing, feature navs      |
 

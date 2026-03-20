@@ -88,7 +88,7 @@ export default async function Page({ params }: Props) {
     )
   }
 
-  const basePath = `/${lang}/s/${subdomain}/attendance`
+  const basePath = `/${lang}/attendance`
 
   // Define method metadata
   const methodMeta = {

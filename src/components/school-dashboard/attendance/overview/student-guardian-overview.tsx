@@ -90,7 +90,7 @@ export function StudentGuardianOverview({ locale, subdomain }: Props) {
   const [isGuardian, setIsGuardian] = useState<boolean | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const basePath = `/${locale}/s/${subdomain}/attendance`
+  const basePath = `/${locale}/attendance`
 
   useEffect(() => {
     startTransition(async () => {

@@ -72,11 +72,7 @@ export function CatalogSubjectsGrid({ subjects, lang, subdomain }: Props) {
           return (
             <Link
               key={subject.id}
-              href={
-                subdomain
-                  ? `/${lang}/s/${subdomain}/subjects/${subject.slug}`
-                  : `/${lang}/subjects/${subject.slug}`
-              }
+              href={`/${lang}/subjects/${subject.slug}`}
               className="hover:bg-muted/50 flex items-center gap-3 overflow-hidden rounded-lg border transition-colors"
             >
               <SubjectThumb

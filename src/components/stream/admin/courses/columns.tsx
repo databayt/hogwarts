@@ -170,7 +170,6 @@ export const getCourseColumns = (
         const course = row.original
         const params = useParams()
         const currentLang = (params?.lang as string) || lang
-        const subdomain = params?.subdomain as string
 
         return (
           <ActionMenu srLabel={t?.openMenu || "Open menu"}>
@@ -182,7 +181,7 @@ export const getCourseColumns = (
             />
             <ActionMenuItem
               label={t?.manageChapters || "Manage Chapters"}
-              href={`/${currentLang}/s/${subdomain}/stream/admin/courses/${course.id}/edit`}
+              href={`/${currentLang}/stream/admin/courses/${course.id}/edit`}
             />
             <DropdownMenuSeparator />
             <ActionMenuItem

@@ -19,34 +19,36 @@ export async function getTeacherQualifications(
       where: { teacherId, schoolId },
       select: {
         qualificationType: true,
-        name: true,
-        institution: true,
-        major: true,
-        dateObtained: true,
-        expiryDate: true,
-        licenseNumber: true,
         documentUrl: true,
       },
     })
 
-    return {
-      success: true,
-      data: {
-        qualifications: qualifications.map((q) => ({
-          qualificationType: q.qualificationType as
-            | "DEGREE"
-            | "CERTIFICATION"
-            | "LICENSE",
-          name: q.name,
-          institution: q.institution ?? undefined,
-          major: q.major ?? undefined,
-          dateObtained: q.dateObtained ?? undefined,
-          expiryDate: q.expiryDate ?? undefined,
-          licenseNumber: q.licenseNumber ?? undefined,
-          documentUrl: q.documentUrl ?? undefined,
-        })),
-      },
+    // Map structured DB records back to flat document URL fields
+    const data: QualificationsFormData = {
+      degrees: "",
+      certifications: "",
+      cv: "",
+      id: "",
+      licenses: "",
+      other: "",
     }
+
+    for (const q of qualifications) {
+      const url = q.documentUrl ?? ""
+      switch (q.qualificationType) {
+        case "DEGREE":
+          data.degrees = url
+          break
+        case "CERTIFICATION":
+          data.certifications = url
+          break
+        case "LICENSE":
+          data.licenses = url
+          break
+      }
+    }
+
+    return { success: true, data }
   } catch (error) {
     return {
       success: false,
@@ -71,20 +73,22 @@ export async function updateTeacherQualifications(
         where: { teacherId, schoolId },
       })
 
-      // Recreate with new data
-      if (parsed.qualifications.length > 0) {
+      // Create qualification records from flat document URL fields
+      const entries: { type: string; url: string }[] = [
+        { type: "DEGREE", url: parsed.degrees },
+        { type: "CERTIFICATION", url: parsed.certifications },
+        { type: "LICENSE", url: parsed.licenses },
+      ].filter((e) => e.url)
+
+      if (entries.length > 0) {
         await tx.teacherQualification.createMany({
-          data: parsed.qualifications.map((q) => ({
+          data: entries.map((e) => ({
             teacherId,
             schoolId,
-            qualificationType: q.qualificationType,
-            name: q.name,
-            institution: q.institution ?? null,
-            major: q.major ?? null,
-            dateObtained: q.dateObtained ?? new Date(),
-            expiryDate: q.expiryDate ?? null,
-            licenseNumber: q.licenseNumber ?? null,
-            documentUrl: q.documentUrl ?? null,
+            qualificationType: e.type,
+            name: e.type,
+            documentUrl: e.url,
+            dateObtained: new Date(),
           })),
         })
       }

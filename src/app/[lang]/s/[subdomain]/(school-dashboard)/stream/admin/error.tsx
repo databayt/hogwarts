@@ -54,7 +54,7 @@ export default function StreamAdminError({ error, reset }: Props) {
                 {isRTL ? "إعادة المحاولة" : "Try Again"}
               </Button>
               <Link
-                href={`/${lang}/s/${subdomain}/stream/admin`}
+                href={`/${lang}/stream/admin`}
                 className={buttonVariants({
                   variant: "outline",
                   className: "w-full",

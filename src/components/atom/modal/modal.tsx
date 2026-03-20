@@ -25,9 +25,10 @@ function useBodyScroll(open: boolean) {
 interface Props {
   content: React.ReactNode
   sm?: boolean
+  hideClose?: boolean
 }
 
-function Modal({ content, sm = false }: Props) {
+function Modal({ content, sm = false, hideClose = false }: Props) {
   const { modal, closeModal } = useModal()
   useBodyScroll(modal.open)
   const [isMobile, setIsMobile] = useState(false)
@@ -67,25 +68,29 @@ function Modal({ content, sm = false }: Props) {
               }`}
             >
               {/* Close button */}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute end-4 top-4 z-50 h-8 w-8 rounded-full"
-                onClick={closeModal}
-                aria-label="Close"
-              >
-                <Icons.x className="h-4 w-4" />
-              </Button>
+              {!hideClose && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute end-4 top-4 z-50 h-8 w-8 rounded-full"
+                  onClick={closeModal}
+                  aria-label="Close"
+                >
+                  <Icons.x className="h-4 w-4" />
+                </Button>
+              )}
 
               {/* Main content area - vertically centered with footer spacing */}
               <main
                 className={`${
                   sm && !isMobile
                     ? ""
-                    : "flex flex-1 items-center justify-center px-4 pb-20 sm:px-8 md:px-12"
+                    : "flex flex-1 items-center justify-center px-4 pb-20 sm:px-6 md:px-12 lg:px-20"
                 }`}
               >
-                <div className={`${sm && !isMobile ? "" : "w-full max-w-6xl"}`}>
+                <div
+                  className={`${sm && !isMobile ? "" : "mx-auto w-full max-w-5xl"}`}
+                >
                   {content}
                 </div>
               </main>

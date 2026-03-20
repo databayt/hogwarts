@@ -103,7 +103,7 @@ export async function submitInquiry(
             <p>In the meantime, you can:</p>
             <ul>
               <li><a href="https://${subdomain}.databayt.org/tour">Schedule a Campus Tour</a></li>
-              <li><a href="https://${subdomain}.databayt.org/apply">Start an Application</a></li>
+              <li><a href="https://${subdomain}.databayt.org/application">Start an Application</a></li>
             </ul>
             <p>Best regards,<br>Admissions Team<br>${schoolResult.data.name}</p>
           `,

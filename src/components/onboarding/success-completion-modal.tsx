@@ -11,6 +11,7 @@ import React, {
 } from "react"
 import Lottie from "lottie-react"
 import { Check, Copy } from "lucide-react"
+import { useSession } from "next-auth/react"
 
 import { Modal } from "@/components/atom/modal"
 
@@ -31,8 +32,15 @@ export default function SuccessCompletionModal({
   setShowModal,
   onGoToDashboard,
 }: SuccessCompletionModalProps) {
+  const { data: session } = useSession()
   const [copied, setCopied] = useState(false)
   const [animationData, setAnimationData] = useState<object | null>(null)
+  const [password, setPassword] = useState<string | null>(null)
+
+  useEffect(() => {
+    const pw = sessionStorage.getItem("_onboard_pw")
+    if (pw) setPassword(pw)
+  }, [])
 
   useEffect(() => {
     fetch("/animations/confetti.json")
@@ -50,15 +58,17 @@ export default function SuccessCompletionModal({
     const info = [
       `School: ${schoolData.name}`,
       `URL: ${fullDomain}`,
-      `Admin: Your current login email`,
-      `Password: Your current password`,
+      `Admin: ${session?.user?.email || "Your login email"}`,
+      `Password: ${password || "\u2022\u2022\u2022\u2022"}`,
+      `Docs: ed.databayt.org/docs`,
     ].join("\n")
 
     navigator.clipboard.writeText(info).then(() => {
       setCopied(true)
+      sessionStorage.removeItem("_onboard_pw")
       setTimeout(() => setCopied(false), 2000)
     })
-  }, [schoolData.name, fullDomain])
+  }, [schoolData.name, fullDomain, session?.user?.email, password])
 
   return (
     <Modal
@@ -93,10 +103,10 @@ export default function SuccessCompletionModal({
         <div className="flex items-center justify-center gap-1.5">
           {copied ? (
             <>
-              <span className="text-sm text-green-500">
+              <span className="text-sm text-green-700">
                 Copied to clipboard
               </span>
-              <Check className="h-3.5 w-3.5 text-green-500" />
+              <Check className="h-3.5 w-3.5 text-green-700" />
             </>
           ) : (
             <>

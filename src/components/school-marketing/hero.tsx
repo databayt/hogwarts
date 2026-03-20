@@ -62,11 +62,7 @@ export function Hero({ lang = "en", subdomain, dictionary }: HeroProps) {
                 "The most magical part of the Harry Potter books, is that they eventually used the skills they learned at school"}
             </p>
             <div className="flex flex-col gap-4 sm:flex-row">
-              <Link
-                href={
-                  subdomain ? `/${lang}/s/${subdomain}/tour` : `/${lang}/tour`
-                }
-              >
+              <Link href={`/${lang}/tour`}>
                 <AnimatedButton
                   size="lg"
                   className="w-full max-w-[200px] sm:w-auto sm:max-w-none"
@@ -74,13 +70,7 @@ export function Hero({ lang = "en", subdomain, dictionary }: HeroProps) {
                   {t?.scheduleVisit || "Schedule a Visit"}
                 </AnimatedButton>
               </Link>
-              <Link
-                href={
-                  subdomain
-                    ? `/${lang}/s/${subdomain}/admissions`
-                    : `/${lang}/admissions`
-                }
-              >
+              <Link href={`/${lang}/admissions`}>
                 <Button
                   variant="outline"
                   size="lg"
@@ -116,22 +106,12 @@ export function Hero({ lang = "en", subdomain, dictionary }: HeroProps) {
               "The most magical part of the Harry Potter books, is that they eventually used the skills they learned at school"}
           </p>
           <div className="flex flex-row gap-4">
-            <Link
-              href={
-                subdomain ? `/${lang}/s/${subdomain}/tour` : `/${lang}/tour`
-              }
-            >
+            <Link href={`/${lang}/tour`}>
               <AnimatedButton size="lg">
                 {t?.scheduleVisit || "Schedule a Visit"}
               </AnimatedButton>
             </Link>
-            <Link
-              href={
-                subdomain
-                  ? `/${lang}/s/${subdomain}/admissions`
-                  : `/${lang}/admissions`
-              }
-            >
+            <Link href={`/${lang}/admissions`}>
               <Button variant="outline" size="lg">
                 {t?.learnMore || "Learn More"}
               </Button>

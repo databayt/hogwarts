@@ -39,7 +39,7 @@ export default async function StreamLessonPage({ params }: Props) {
   const session = await auth()
 
   if (!session?.user) {
-    redirect(`/${lang}/s/${subdomain}/auth/login`)
+    redirect(`/${lang}/auth/login`)
   }
 
   const [lesson, lessonContent] = await Promise.all([

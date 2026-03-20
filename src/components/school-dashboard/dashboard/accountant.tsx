@@ -377,7 +377,7 @@ export async function AccountantDashboard({
             iconColor="text-emerald-500"
             change={8.5}
             changeType="positive"
-            href={`/${locale}/s/${school?.domain}/finance`}
+            href={`/${locale}/finance`}
           />
           <MetricCard
             title="Outstanding"
@@ -386,21 +386,21 @@ export async function AccountantDashboard({
             iconColor="text-amber-500"
             change={-12}
             changeType="negative"
-            href={`/${locale}/s/${school?.domain}/finance`}
+            href={`/${locale}/finance`}
           />
           <MetricCard
             title="Total Invoices"
             value={totalInvoices}
             iconName="FileText"
             iconColor="text-blue-500"
-            href={`/${locale}/s/${school?.domain}/invoice`}
+            href={`/${locale}/invoice`}
           />
           <MetricCard
             title="Overdue"
             value={`$${(mockFeeCollectionStatus.overdue / 1000).toFixed(0)}K`}
             iconName="Bell"
             iconColor="text-destructive"
-            href={`/${locale}/s/${school?.domain}/finance`}
+            href={`/${locale}/finance`}
           />
         </div>
 
@@ -517,7 +517,7 @@ export async function AccountantDashboard({
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-base">Pending Payments</CardTitle>
               <Link
-                href={`/${locale}/s/${school?.domain}/finance`}
+                href={`/${locale}/finance`}
                 className="text-primary flex items-center gap-1 text-sm hover:underline"
               >
                 View all <ChevronRight className="h-4 w-4 rtl:rotate-180" />

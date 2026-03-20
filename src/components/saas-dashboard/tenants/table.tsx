@@ -140,6 +140,9 @@ export function TenantsTable({
           hasMore={hasMore}
           isLoading={isLoading}
           onLoadMore={loadMore}
+          getRowClassName={(row) =>
+            row.domain === "demo" ? "opacity-50 pointer-events-none" : undefined
+          }
         />
       ) : (
         <>

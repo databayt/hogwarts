@@ -32,7 +32,7 @@ export default async function Users({ params, searchParams }: Props) {
   const n = d?.nav
   const usersPages: PageNavItem[] = [
     { name: n?.overview || "Overview", href: `/${lang}/users` },
-    { name: n?.analysis || "Analysis", href: `/${lang}/users/analysis` },
+    { name: n?.analytics || "Analysis", href: `/${lang}/users/analysis` },
   ]
 
   return (

@@ -156,10 +156,27 @@ export async function createTeacher(
         },
       })
 
-      // Create phone numbers if provided
-      if (parsed.phoneNumbers && parsed.phoneNumbers.length > 0) {
+      // Create phone numbers from flat fields
+      const phones = [
+        parsed.phone1 && {
+          phoneNumber: parsed.phone1,
+          phoneType: "PRIMARY",
+          isPrimary: true,
+        },
+        parsed.phone2 && {
+          phoneNumber: parsed.phone2,
+          phoneType: "SECONDARY",
+          isPrimary: false,
+        },
+      ].filter(Boolean) as {
+        phoneNumber: string
+        phoneType: string
+        isPrimary: boolean
+      }[]
+
+      if (phones.length > 0) {
         await tx.teacherPhoneNumber.createMany({
-          data: parsed.phoneNumbers.map((phone) => ({
+          data: phones.map((phone) => ({
             schoolId,
             teacherId: teacher.id,
             phoneNumber: phone.phoneNumber,

@@ -282,7 +282,7 @@ export default function ApplicationFormContent({
 
         // Redirect to success page
         router.push(
-          `/${lang}/apply/success?number=${result.data.applicationNumber}&token=${result.data.accessToken}`
+          `/${lang}/application/success?number=${result.data.applicationNumber}&token=${result.data.accessToken}`
         )
       } else {
         toast.error(result.error || "Failed to submit application")

@@ -15,7 +15,7 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import {
   DraftApplications,
   type DraftApplication,
-} from "@/components/school-marketing/apply/overview"
+} from "@/components/school-marketing/application/overview"
 
 import type { School } from "../../types"
 import type { PublicCampaign } from "../types"
@@ -49,11 +49,11 @@ export default function CampaignSelectorContent({
     )?.school?.admission?.portal ?? {}
 
   const handleStartNew = (campaignId: string) => {
-    router.push(`/${lang}/apply/overview?id=${campaignId}`)
+    router.push(`/${lang}/application/overview?id=${campaignId}`)
   }
 
   const handleResumeDraft = (sessionToken: string) => {
-    router.push(`/${lang}/apply/continue?token=${sessionToken}`)
+    router.push(`/${lang}/application/continue?token=${sessionToken}`)
   }
 
   const activeCampaign =
@@ -118,7 +118,7 @@ export default function CampaignSelectorContent({
             onClick={() =>
               activeCampaign &&
               router.push(
-                `/${lang}/apply/overview?id=${activeCampaign.id}&import=true`
+                `/${lang}/application/overview?id=${activeCampaign.id}&import=true`
               )
             }
             disabled={!activeCampaign || activeCampaign.availableSeats === 0}

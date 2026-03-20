@@ -302,7 +302,7 @@ export class SchoolApplyPage extends SchoolBasePage {
   }
 
   async isDisplayed(): Promise<boolean> {
-    return this.urlContains("/apply") && this.isOnCorrectSubdomain()
+    return this.urlContains("/application") && this.isOnCorrectSubdomain()
   }
 
   /**

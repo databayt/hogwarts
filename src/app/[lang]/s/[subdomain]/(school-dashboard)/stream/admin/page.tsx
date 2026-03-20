@@ -167,7 +167,7 @@ export default async function StreamAdminDashboardPage({ params }: Props) {
   ])
 
   if (!session?.user) {
-    redirect(`/${lang}/s/${subdomain}/auth/login`)
+    redirect(`/${lang}/auth/login`)
   }
 
   if (
@@ -175,7 +175,7 @@ export default async function StreamAdminDashboardPage({ params }: Props) {
     session.user.role !== "TEACHER" &&
     session.user.role !== "DEVELOPER"
   ) {
-    redirect(`/${lang}/s/${subdomain}/stream/not-admin`)
+    redirect(`/${lang}/stream/not-admin`)
   }
 
   const stats = schoolId ? await getCatalogAdminStats(schoolId) : null

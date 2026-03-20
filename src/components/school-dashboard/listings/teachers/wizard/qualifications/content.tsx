@@ -38,19 +38,21 @@ export default function QualificationsContent() {
           initialData={
             data
               ? {
-                  qualifications: data.qualifications.map((q) => ({
-                    qualificationType: q.qualificationType as
-                      | "DEGREE"
-                      | "CERTIFICATION"
-                      | "LICENSE",
-                    name: q.name,
-                    institution: q.institution ?? undefined,
-                    major: q.major ?? undefined,
-                    dateObtained: q.dateObtained ?? undefined,
-                    expiryDate: q.expiryDate ?? undefined,
-                    licenseNumber: q.licenseNumber ?? undefined,
-                    documentUrl: q.documentUrl ?? undefined,
-                  })),
+                  degrees:
+                    data.qualifications.find(
+                      (q) => q.qualificationType === "DEGREE"
+                    )?.documentUrl ?? "",
+                  certifications:
+                    data.qualifications.find(
+                      (q) => q.qualificationType === "CERTIFICATION"
+                    )?.documentUrl ?? "",
+                  licenses:
+                    data.qualifications.find(
+                      (q) => q.qualificationType === "LICENSE"
+                    )?.documentUrl ?? "",
+                  cv: "",
+                  id: "",
+                  other: "",
                 }
               : undefined
           }

@@ -5,12 +5,12 @@
 import { useCallback, useDeferredValue, useMemo, useState } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { toast } from "sonner"
 
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
 import { useModal } from "@/components/atom/modal/context"
 import Modal from "@/components/atom/modal/modal"
+import { DeleteToast, ErrorToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import {
@@ -94,10 +94,10 @@ export function CampaignsTable({
     async (id: string) => {
       const result = await deleteCampaign({ id })
       if (result.success) {
-        toast.success(lang === "ar" ? "تم حذف الحملة" : "Campaign deleted")
+        DeleteToast(lang === "ar" ? "تم حذف الحملة" : "Campaign deleted")
         refresh()
       } else {
-        toast.error(result.error)
+        ErrorToast(result.error ?? "Error")
       }
     },
     [lang, refresh]
@@ -228,6 +228,7 @@ export function CampaignsTable({
       )}
 
       <Modal
+        hideClose
         content={
           <CampaignForm onSuccess={refresh} lang={lang} dictionary={t} />
         }

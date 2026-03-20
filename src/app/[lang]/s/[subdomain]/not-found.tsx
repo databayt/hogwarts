@@ -38,9 +38,7 @@ export default function SchoolNotFound() {
       </div>
       <div className="flex gap-4">
         <Button asChild>
-          <Link href={`/${lang}/s/${params?.subdomain}/dashboard`}>
-            {t.dashboard}
-          </Link>
+          <Link href={`/${lang}/dashboard`}>{t.dashboard}</Link>
         </Button>
         <Button variant="outline" asChild>
           <Link href={`/${lang}`}>{t.home}</Link>

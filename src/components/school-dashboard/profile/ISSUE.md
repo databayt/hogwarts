@@ -1,71 +1,52 @@
-# Profile — Production Readiness Tracker
+# Profile -- Production Readiness Tracker
 
-**Status:** ✅ Production-Ready MVP
-**Last Updated:** 2025-10-10
-
----
-
-## Current Status
-
-**Completed Features ✅**
-
-- [x] View and edit information
-- [x] Password change
-- [x] Avatar upload
-- [x] Notification preferences
-
-**Planned ⏸️**
-
-- [ ] Two-factor authentication
-- [ ] Session management
-- [ ] Activity log
-- [ ] Privacy settings
+**Status:** IN PROGRESS
+**Completion:** 85%
+**Last Updated:** 2026-03-19
 
 ---
 
-## Technology Stack & Version Requirements
+## MVP Checklist
 
-This feature uses the platform's standard technology stack (see [Platform ISSUE.md](../ISSUE.md#technology-stack--version-requirements) for complete details):
+- [x] View own profile with role-specific layout
+- [x] View other users' profiles (with permission checks)
+- [x] Edit personal information (name, email, phone)
+- [x] Update bio
+- [x] Upload avatar
+- [x] GitHub-style contribution graph
+- [x] Activity feed
+- [x] Pinned items management
+- [x] Role-specific profile views (student, teacher, parent, staff)
+- [x] Profile settings (language, notifications)
+- [x] GitHub profile fields (optional social link)
+- [x] Detail view with permission-based access
+- [x] Multi-tenant scoping in all actions
+- [x] Zod validation on all inputs
+- [ ] Two-factor authentication setup
+- [ ] Session management (view/revoke active sessions)
+- [ ] Privacy settings (control profile visibility)
 
-### Core Stack
+## Known Issues
 
-- **Next.js 15.4+** with App Router and Server Components
-- **React 19+** with Server Actions and new hooks
-- **TypeScript 5.x** in strict mode
-- **Neon PostgreSQL** with autoscaling and branching
-- **Prisma ORM 6.14+** for type-safe database access
+### P1 -- High
 
-### UI & Forms
+- None currently identified
 
-- **shadcn/ui** components built on Radix UI primitives
-- **Tailwind CSS 4** with OKLCH colors
-- **React Hook Form 7.61+** for form state management
-- **Zod 4.0+** for schema validation
-- **TanStack Table 8.21+** for data tables
+### P2 -- Medium
 
-### Authentication & Security
+- [ ] Avatar upload lacks image crop/resize before upload
+- [ ] Contribution graph data resolution could be cached more aggressively
+- [ ] No email verification flow when changing email address
 
-- **NextAuth.js v5** with JWT sessions
-- Multi-tenant isolation via `schoolId` scoping
-- CSRF protection and secure cookie handling
-- Type-safe environment variables
+## Enhancements (Post-MVP)
 
-### Development & Testing
-
-- **Vitest 2.0+** for unit testing
-- **Playwright 1.55+** for E2E testing
-- **ESLint + Prettier** for code quality
-- **pnpm 9.x** as package manager
-
-### Key Patterns
-
-- **Server Actions**: All mutations use "use server" directive
-- **Multi-Tenant**: Every query scoped by `schoolId` from session
-- **Type Safety**: End-to-end TypeScript with Prisma + Zod
-- **Validation**: Double validation (client UX + server security)
-
-For detailed version requirements and architecture patterns, see [Platform Technology Stack](../ISSUE.md#technology-stack--version-requirements).
+- [ ] Two-factor authentication (TOTP/SMS)
+- [ ] Session management (list active sessions, revoke remotely)
+- [ ] Privacy settings (control who can view profile details)
+- [ ] Activity log export
+- [ ] Profile completeness indicator
+- [ ] Social links beyond GitHub
 
 ---
 
-**Last Review:** 2025-10-10
+**Last Review:** 2026-03-19

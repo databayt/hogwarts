@@ -223,21 +223,21 @@ SchoolProvider loads school context
 
 ### Key Components
 
-| Component      | Location                          | Purpose                |
-| -------------- | --------------------------------- | ---------------------- |
-| `SchoolHeader` | `components/school/site/header/`  | School-branded header  |
-| `SchoolHero`   | `components/school/site/hero/`    | School intro with CTA  |
-| `UserButton`   | `components/auth/user-button.tsx` | Login (variant="site") |
-| `ApplyForm`    | `components/admission/apply/`     | Application submission |
+| Component      | Location                            | Purpose                |
+| -------------- | ----------------------------------- | ---------------------- |
+| `SchoolHeader` | `components/school/site/header/`    | School-branded header  |
+| `SchoolHero`   | `components/school/site/hero/`      | School intro with CTA  |
+| `UserButton`   | `components/auth/user-button.tsx`   | Login (variant="site") |
+| `ApplyForm`    | `components/admission/application/` | Application submission |
 
 ### Call-to-Actions
 
-| CTA              | Destination              | Auth Required? |
-| ---------------- | ------------------------ | -------------- |
-| "Apply Now"      | `/{subdomain}/apply`     | Yes (to save)  |
-| "Schedule Tour"  | `/{subdomain}/tour`      | No             |
-| "Contact Us"     | `/{subdomain}/contact`   | No             |
-| "Go to Platform" | `/{subdomain}/dashboard` | Yes            |
+| CTA              | Destination                | Auth Required? |
+| ---------------- | -------------------------- | -------------- |
+| "Apply Now"      | `/{subdomain}/application` | Yes (to save)  |
+| "Schedule Tour"  | `/{subdomain}/tour`        | No             |
+| "Contact Us"     | `/{subdomain}/contact`     | No             |
+| "Go to Platform" | `/{subdomain}/dashboard`   | Yes            |
 
 ### Public vs Protected
 
@@ -606,7 +606,7 @@ Click "Platform"              Click "Apply"
      │                                 │
      ▼                                 ▼
 (See Platform                 Redirect to
- Link flow above)             /apply form
+ Link flow above)             /application form
 ```
 
 ### Navigation Scenarios Summary

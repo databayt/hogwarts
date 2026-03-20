@@ -1,178 +1,82 @@
-## Events — School Calendar and Activities
+## Events -- School Calendar and Activity Management
 
-**Admin Control Center for Event Management**
+### Overview
 
-The Events feature enables schools to manage calendars, schedule activities, track RSVPs, and coordinate school-wide events with comprehensive event planning tools.
+The Events feature enables schools to create, schedule, and manage school-wide activities. It supports event categorization by type (academic, sports, cultural, etc.), a three-step wizard for creation, calendar and attendance sub-pages, and recurring event configuration. Built with full multi-tenant isolation and RBAC.
 
-### What Admins Can Do
+### Capabilities by Role
 
-**Core Capabilities:**
+- **Admin**: Full CRUD on all events, manage categories, configure recurring events, view attendance, manage settings
+- **Teacher**: Create class events, view school calendar, RSVP to events
+- **Student**: View upcoming events, RSVP, view event details
+- **Guardian**: View school events, RSVP on behalf of child
 
-- 📅 Create and schedule events
-- 🎯 Manage event categories
-- 👥 Track attendance/RSVP
-- 📊 View event analytics
-- 📁 Export event calendar
+### Routes
 
-### What Teachers Can Do
+| Route                                                                             | Page             | Status |
+| --------------------------------------------------------------------------------- | ---------------- | ------ |
+| `/{lang}/s/{subdomain}/(school-dashboard)/(listings)/events`                      | Events List      | Ready  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/(listings)/events/[id]`                 | Event Detail     | Ready  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/(listings)/events/create`               | Quick Create     | Ready  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/(listings)/events/calendar`             | Calendar View    | Ready  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/(listings)/events/attendance`           | Attendance       | Ready  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/(listings)/events/categories`           | Categories       | Ready  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/(listings)/events/recurring`            | Recurring Events | Ready  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/(listings)/events/settings`             | Settings         | Ready  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/(listings)/events/add/[id]/information` | Wizard Step 1    | Ready  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/(listings)/events/add/[id]/schedule`    | Wizard Step 2    | Ready  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/(listings)/events/add/[id]/settings`    | Wizard Step 3    | Ready  |
 
-- ✅ Create class events
-- ✅ View school calendar
-- ✅ RSVP to events
-- ❌ Cannot create school-wide events
+### File Structure
 
-### What Students Can View
-
-- ✅ View upcoming events
-- ✅ RSVP to events
-- ✅ View event details
-
-### What Parents Can View
-
-- ✅ View school events
-- ✅ RSVP on behalf of child
-- ✅ Add to personal calendar
-
-### Current Implementation Status
-
-**Production-Ready MVP ✅**
-
-**Completed:**
-
-- ✅ CRUD operations
-- ✅ Event scheduling (date, time, location)
-- ✅ Attendee targeting
-- ✅ RSVP tracking
-- ✅ Multi-tenant isolation
-
-**Planned:**
-
-- ⏸️ Recurring events
-- ⏸️ iCal export
-- ⏸️ Email reminders
-- ⏸️ Event photos/gallery
-
----
-
-## Admin Workflows
-
-### 1. Create School Event
-
-1. Navigate to `/events`
-2. Click "Create Event"
-3. Fill in details:
-   - Event name
-   - Date and time
-   - Location
-   - Description
-   - Target audience
-4. Publish event
-5. Users receive notifications
-
-### 2. Track RSVPs
-
-1. Open event detail page
-2. View RSVP list
-3. See attending/not attending counts
-4. Export attendee list
-
-### 3. View Calendar
-
-1. Navigate to `/events/calendar`
-2. View monthly calendar
-3. Filter by event type
-4. Click event for details
-
----
-
-## Integration with Other Features
-
-### Links to Dashboard
-
-- Upcoming events widget
-- Event reminders
-
-### Links to Announcements
-
-- Event announcements
-- Reminder notifications
-
----
-
-## Technical Implementation
-
-**Database Schema:**
-
-```prisma
-model Event {
-  id          String   @id @default(cuid())
-  schoolId    String
-  title       String
-  description String?
-  startDate   DateTime
-  endDate     DateTime?
-  location    String?
-  published   Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  school School @relation(fields: [schoolId], references: [id])
-
-  @@index([schoolId, startDate])
-}
+```
+events/
+  content.tsx              # Server component - renders events table
+  actions.ts               # Server actions for event CRUD
+  validation.ts            # Zod schemas
+  types.ts                 # TypeScript type definitions
+  config.ts                # Constants, event type options
+  form.tsx                 # Client form component
+  columns.tsx              # Table column definitions
+  table.tsx                # DataTable component
+  list-params.ts           # Search/filter URL parameters
+  authorization.ts         # RBAC permission checks
+  queries.ts               # Centralized query builders
+  detail.tsx               # Event detail view
+  autocomplete.tsx         # Autocomplete for event search
+  basic-information.tsx    # Info display section
+  management.tsx           # Event management UI
+  schedule-location.tsx    # Schedule and location display
+  details-attendees.tsx    # Attendee details section
+  calendar/
+    content.tsx            # Calendar page server component
+    calendar-client.tsx    # Client-side calendar component
+  attendance/content.tsx   # Attendance tracking page
+  categories/content.tsx   # Event categories management
+  recurring/content.tsx    # Recurring events configuration
+  settings/content.tsx     # Event settings page
+  create/content.tsx       # Quick create page
+  wizard/
+    config.ts                   # Wizard config (3 steps)
+    actions.ts                  # Wizard-level server actions
+    use-event-wizard.ts         # Wizard state hook
+    information/                # Step 1: title, description, type
+      content.tsx, form.tsx, validation.ts, actions.ts
+    schedule/                   # Step 2: date, time, location
+      content.tsx, form.tsx, validation.ts, actions.ts
+    settings/                   # Step 3: visibility, RSVP settings
+      content.tsx, form.tsx, validation.ts, actions.ts
+  __tests__/
+    actions.test.ts             # Server action tests
+    validation.test.ts          # Zod schema tests
 ```
 
----
+### Status
 
-## Technology Stack & Dependencies
+**Completion:** 90% | **Blockers:** None
 
-This feature is built with the following technologies (see [Platform README](../../README.md) for complete stack details):
+### Integration Points
 
-### Core Framework
-
-- **Next.js 15.4+** - App Router with Server Components ([Docs](https://nextjs.org/docs))
-- **React 19+** - Server Actions, new hooks (`useActionState`, `useFormStatus`) ([Docs](https://react.dev))
-- **TypeScript** - Strict mode for type safety
-
-### Database & ORM
-
-- **Neon PostgreSQL** - Serverless database with autoscaling ([Docs](https://neon.tech/docs/introduction))
-- **Prisma ORM 6.14+** - Type-safe queries and migrations ([Docs](https://www.prisma.io/docs))
-
-### Forms & Validation
-
-- **React Hook Form 7.61+** - Performant form state management ([Docs](https://react-hook-form.com))
-- **Zod 4.0+** - Runtime schema validation (client + server) ([Docs](https://zod.dev))
-
-### UI Components
-
-- **shadcn/ui** - Accessible components built on Radix UI ([Docs](https://ui.shadcn.com/docs))
-- **TanStack Table 8.21+** - Headless table with sorting/filtering ([Docs](https://tanstack.com/table))
-- **Tailwind CSS 4** - Utility-first styling ([Docs](https://tailwindcss.com/docs))
-
-### Server Actions Pattern
-
-All mutations follow the standard server action pattern:
-
-```typescript
-"use server"
-export async function performAction(input: FormData) {
-  const { schoolId } = await getTenantContext()
-  const validated = schema.parse(input)
-  await db.model.create({ data: { ...validated, schoolId } })
-  revalidatePath("/feature-path")
-  return { success: true }
-}
-```
-
-### Key Features
-
-- **Multi-Tenant Isolation**: All queries scoped by `schoolId`
-- **Type Safety**: End-to-end TypeScript with Prisma + Zod inference
-- **Server-Side Operations**: Mutations via Next.js Server Actions
-- **URL State Management**: Filters and pagination synced to URL (where applicable)
-- **Accessibility**: ARIA labels, keyboard navigation, semantic HTML
-
-For complete technology documentation, see [Platform Technology Stack](../../README.md#technology-stack--documentation).
-
----
+- Announcements (event-related announcements)
+- Dashboard widgets (upcoming events)
+- Parent portal (`/{lang}/parent/events`)

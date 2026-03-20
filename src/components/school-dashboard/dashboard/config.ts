@@ -98,7 +98,7 @@ export function getQuickActionsByRole(
   role: string,
   subdomain?: string
 ): QuickActionItem[] {
-  const baseUrl = subdomain ? `/s/${subdomain}` : ""
+  const baseUrl = ""
 
   switch (role.toUpperCase()) {
     case "ADMIN":

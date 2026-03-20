@@ -96,7 +96,7 @@ export function WelcomeStep({
         showConfetti
         nextSteps={nextSteps}
         onComplete={() => {
-          window.location.href = `/${locale}/s/${subdomain}`
+          window.location.href = `/${locale}`
         }}
       />
 

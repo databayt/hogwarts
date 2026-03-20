@@ -74,7 +74,7 @@ export default async function BookingPage({ params }: BookingPageProps) {
                   ? "لم نتمكن من العثور على حجز بهذا الرقم"
                   : "We couldn't find a booking with this number"}
               </p>
-              <Link href={`/${lang}/s/${subdomain}/tour`}>
+              <Link href={`/${lang}/tour`}>
                 <Button>{isRTL ? "حجز جولة جديدة" : "Book a New Tour"}</Button>
               </Link>
             </CardContent>
@@ -114,7 +114,7 @@ export default async function BookingPage({ params }: BookingPageProps) {
     <div className="min-h-screen py-12">
       <div className="container mx-auto max-w-2xl px-4">
         <Link
-          href={`/${lang}/s/${subdomain}/tour`}
+          href={`/${lang}/tour`}
           className="text-muted-foreground hover:text-foreground mb-6 inline-flex items-center text-sm"
         >
           <ArrowLeft className="me-2 h-4 w-4" />
@@ -241,12 +241,12 @@ export default async function BookingPage({ params }: BookingPageProps) {
 
         {/* Additional Actions */}
         <div className="mt-6 flex justify-center gap-4">
-          <Link href={`/${lang}/s/${subdomain}`}>
+          <Link href={`/${lang}`}>
             <Button variant="outline">
               {isRTL ? "العودة للرئيسية" : "Back to Home"}
             </Button>
           </Link>
-          <Link href={`/${lang}/s/${subdomain}/apply`}>
+          <Link href={`/${lang}/application`}>
             <Button>{isRTL ? "قدم الآن" : "Apply Now"}</Button>
           </Link>
         </div>

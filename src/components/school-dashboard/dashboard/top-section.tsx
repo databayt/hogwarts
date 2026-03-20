@@ -224,7 +224,7 @@ function UpcomingClassCard({
 
           <div className="mt-4 border-t pt-4">
             <Link
-              href={`/${locale}/s/${subdomain}/timetable`}
+              href={`/${locale}/timetable`}
               className="bg-muted/50 hover:bg-primary/10 flex items-center justify-between rounded-lg p-2 transition-colors"
             >
               <span className="text-sm font-medium">

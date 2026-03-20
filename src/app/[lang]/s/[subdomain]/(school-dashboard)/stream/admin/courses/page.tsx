@@ -132,7 +132,7 @@ export default async function StreamAdminCoursesPage({ params }: Props) {
   const session = await auth()
 
   if (!session?.user) {
-    redirect(`/${lang}/s/${subdomain}/auth/login`)
+    redirect(`/${lang}/auth/login`)
   }
 
   if (
@@ -140,7 +140,7 @@ export default async function StreamAdminCoursesPage({ params }: Props) {
     session.user.role !== "TEACHER" &&
     session.user.role !== "DEVELOPER"
   ) {
-    redirect(`/${lang}/s/${subdomain}/stream/not-admin`)
+    redirect(`/${lang}/stream/not-admin`)
   }
 
   if (!schoolId) {

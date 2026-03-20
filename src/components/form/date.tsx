@@ -103,7 +103,7 @@ export function DateField({
                   field.onChange(date?.toISOString().split("T")[0])
                 }
                 disabled={isDateDisabled}
-                initialFocus
+                autoFocus
               />
             </PopoverContent>
           </Popover>

@@ -807,7 +807,10 @@ export const {
         // School subdomain logout path (e.g., /ar/s/school/)
         const schoolLogoutMatch = url.match(/^\/([a-z]{2})\/s\/([^/]+)\/?$/)
         if (schoolLogoutMatch) {
-          return `${baseUrl}/${schoolLogoutMatch[1]}/s/${schoolLogoutMatch[2]}/`
+          return constructSchoolUrl(
+            schoolLogoutMatch[2],
+            `/${schoolLogoutMatch[1]}/`
+          )
         }
 
         // --- Step 4: Smart redirect based on user's JWT ---
@@ -829,7 +832,10 @@ export const {
       if (url === "/") return `${baseUrl}/ar`
       const schoolLogoutMatch = url.match(/^\/([a-z]{2})\/s\/([^/]+)\/?$/)
       if (schoolLogoutMatch) {
-        return `${baseUrl}/${schoolLogoutMatch[1]}/s/${schoolLogoutMatch[2]}/`
+        return constructSchoolUrl(
+          schoolLogoutMatch[2],
+          `/${schoolLogoutMatch[1]}/`
+        )
       }
 
       const smartUrl = await getSmartRedirectUrl(url, baseUrl)

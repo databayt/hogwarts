@@ -431,7 +431,7 @@ export function StudentSearch({
                           onSelect={(date) =>
                             setFilters((prev) => ({ ...prev, dateFrom: date }))
                           }
-                          initialFocus
+                          autoFocus
                         />
                       </PopoverContent>
                     </Popover>
@@ -458,7 +458,7 @@ export function StudentSearch({
                           onSelect={(date) =>
                             setFilters((prev) => ({ ...prev, dateTo: date }))
                           }
-                          initialFocus
+                          autoFocus
                         />
                       </PopoverContent>
                     </Popover>

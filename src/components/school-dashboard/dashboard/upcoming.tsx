@@ -301,7 +301,7 @@ function StudentCard({
           ]
         : []),
     ],
-    linkHref: `/${locale}/s/${subdomain}/assignments`,
+    linkHref: `/${locale}/assignments`,
     linkLabel: dict?.viewAssignments || "View Assignments",
   }
 }
@@ -350,7 +350,7 @@ function TeacherCard({
         highlight: data.pendingGrading > 10,
       },
     ],
-    linkHref: `/${locale}/s/${subdomain}/timetable`,
+    linkHref: `/${locale}/timetable`,
     linkLabel: dict?.viewTimetable || "View Timetable",
   }
 }
@@ -390,7 +390,7 @@ function ParentCard({
           : `${child.pendingAssignments} ${dict?.pending || "pending"}`,
       highlight: child.overdueAssignments > 0,
     })),
-    linkHref: `/${locale}/s/${subdomain}/children`,
+    linkHref: `/${locale}/children`,
     linkLabel: dict?.viewChildren || "View Children",
   }
 }
@@ -436,7 +436,7 @@ function StaffCard({
         value: `${data.pendingRequests}`,
       },
     ],
-    linkHref: `/${locale}/s/${subdomain}/tasks`,
+    linkHref: `/${locale}/tasks`,
     linkLabel: dict?.viewTasks || "View Tasks",
   }
 }
@@ -480,7 +480,7 @@ function AccountantCard({
         value: formatCurrency(data.todayCollections),
       },
     ],
-    linkHref: `/${locale}/s/${subdomain}/finance/invoice`,
+    linkHref: `/${locale}/finance/invoice`,
     linkLabel: dict?.viewInvoices || "View Invoices",
   }
 }
@@ -526,7 +526,7 @@ function PrincipalCard({
         highlight: highAlerts > 0,
       },
     ],
-    linkHref: `/${locale}/s/${subdomain}/reports`,
+    linkHref: `/${locale}/reports`,
     linkLabel: dict?.viewDashboard || "View Dashboard",
   }
 }
@@ -572,7 +572,7 @@ function AdminCard({
         value: `${data.systemAlerts.length}`,
       },
     ],
-    linkHref: `/${locale}/s/${subdomain}/school`,
+    linkHref: `/${locale}/school`,
     linkLabel: dict?.viewSchoolPanel || "View School Panel",
   }
 }

@@ -53,7 +53,7 @@ export default function StreamCourseEditError({ error, reset }: Props) {
                 {isRTL ? "إعادة المحاولة" : "Try Again"}
               </Button>
               <Link
-                href={`/${lang}/s/${subdomain}/stream/admin/courses`}
+                href={`/${lang}/stream/admin/courses`}
                 className={buttonVariants({
                   variant: "outline",
                   className: "w-full",

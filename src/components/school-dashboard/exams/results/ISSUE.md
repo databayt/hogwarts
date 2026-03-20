@@ -1,186 +1,61 @@
-# Results Block - Issues & Troubleshooting
+# Results -- Production Readiness Tracker
 
-**Common issues and solutions for results and PDF generation**
-
-Part of the [Exam Block System](../README.md) | [Results Block README](./README.md)
-
----
-
-## Common Issues
-
-### Issue: Letter Grade Doesn't Match Percentage
-
-**Symptoms:**
-
-- Student scores 92%
-- Shows grade "B" instead of "A"
-
-**Root Cause:** Grade boundaries not configured or incorrect
-
-**Solution:** Configure grade boundaries
-
-```sql
--- Insert grade boundaries
-INSERT INTO grade_boundary (school_id, grade, min_score, max_score, gpa_value)
-VALUES
-  ('school-id', 'A+', 95, 100, 4.0),
-  ('school-id', 'A', 90, 94, 3.7),
-  ('school-id', 'B+', 85, 89, 3.3);
-```
+**Status:** IN PROGRESS
+**Completion:** 70%
+**Last Updated:** 2026-03-19
 
 ---
 
-### Issue: PDF Generation Fails
+## MVP Checklist
 
-**Symptoms:**
-
-- Click "Download PDF"
-- Error: "Failed to generate PDF"
-
-**Common Causes:**
-
-1. **Invalid data in template**
-
-```typescript
-// ❌ BAD - Undefined data
-<Text>{student.name}</Text>
-
-// ✅ GOOD - Safe access
-<Text>{student?.name || 'N/A'}</Text>
-```
-
-2. **Using HTML elements in PDF**
-
-```typescript
-// ❌ BAD - div not allowed
-<View>
-  <div>Content</div>
-</View>
-
-// ✅ GOOD - Use PDF components
-<View>
-  <Text>Content</Text>
-</View>
-```
-
-**File Reference:** `lib/pdf-generator.ts:1-280`, `lib/templates/*.tsx`
+- [x] Grade calculation with configurable boundaries
+- [x] Class rank computation with tie handling
+- [x] Performance analytics (average, median, std dev, quartiles)
+- [x] PDF report generation -- classic template
+- [x] PDF report generation -- modern template
+- [x] PDF report generation -- minimal template
+- [x] Batch PDF generation with progress tracking
+- [x] CSV import/export for results
+- [x] Question-wise breakdown
+- [x] Analytics charts (distribution, trends)
+- [x] LRU cache for analytics queries
+- [x] Arabic RTL support in PDF templates
+- [x] Server actions with Zod validation
+- [x] Multi-tenant isolation (schoolId scoping)
+- [ ] Route pages created in app directory (BLOCKER)
+- [ ] Gradebook sync integration
 
 ---
 
-### Issue: Class Rankings Incorrect with Ties
+## Known Issues
 
-**Symptoms:**
+### P0 -- Critical
 
-- Two students both score 85%
-- Ranks show 1, 3 (skipping 2)
+1. **No route pages** -- `src/app/.../exams/results/` directory does not exist
 
-**Expected:** Both should be rank 1, next is rank 3 (correct!)
+### P1 -- High
 
-**Explanation:** This is correct tie-handling behavior. Rankings skip positions after ties.
+1. **Gradebook not connected** -- Results do not sync to grade module
+2. **Large class PDF timeout** -- Generating 200+ PDFs can timeout on serverless
 
-**Example:**
+### P2 -- Medium
 
-- Score 95%: Rank 1
-- Score 95%: Rank 1 (tied)
-- Score 92%: Rank 3 (not 2)
-
----
-
-### Issue: Average Score Shows >100%
-
-**Symptoms:**
-
-- Class average shows 120%
-- Mathematically impossible
-
-**Root Cause:** Including absent students or calculation error
-
-**Solution:**
-
-```typescript
-// ✅ CORRECT - Exclude absent
-const presentResults = results.filter((r) => !r.isAbsent)
-const average =
-  presentResults.reduce((sum, r) => sum + r.percentage, 0) /
-  presentResults.length
-```
+1. **Single grading scale per school** -- No subject-specific grade boundaries
+2. **PDF size limit** -- Max 500 students per batch export
+3. **Arabic font ligatures** -- Some Arabic text may appear disconnected if wrong font loaded
+4. **No custom template builder** -- Only 3 built-in templates
 
 ---
 
-### Issue: PDF Shows Wrong Language
+## Enhancements (Post-MVP)
 
-**Symptoms:**
-
-- Request Arabic PDF
-- Shows English text
-
-**Solution:** Pass language parameter
-
-```typescript
-const pdf = await generateStudentPDF(examId, studentId, {
-  template: "modern",
-  language: "ar", // ✅ Specify language
-})
-```
+- Subject-specific grade boundaries
+- Custom PDF template builder
+- Performance trend analysis across terms
+- Student self-service PDF download
+- School logo in PDF headers
+- Watermark support
 
 ---
 
-### Issue: PDF Arabic Text Appears Disconnected
-
-**Symptoms:**
-
-- Arabic letters show separately: "م ح م د"
-- Should be connected: "محمد"
-
-**Root Cause:** Font doesn't support Arabic ligatures
-
-**Solution:** Use proper Arabic font
-
-```typescript
-// lib/templates/modern.tsx
-Font.register({
-  family: "Rubik", // ✅ Supports Arabic properly
-  src: "/fonts/Rubik-Regular.ttf",
-})
-```
-
----
-
-## Known Limitations
-
-1. **Single Template Per PDF**
-   - Cannot mix templates in one document
-   - Workaround: Generate multiple PDFs
-
-2. **Large Class PDF Generation Slow**
-   - Generating 200+ PDFs takes minutes
-   - Workaround: Use batch processing with delays
-
-3. **No Custom Grade Boundaries Per Subject**
-   - Same grading scale for all subjects in school
-   - Workaround: Use subject-specific boundaries (requires schema update)
-
-4. **PDF Size Limit**
-   - Max 500 students per export
-   - Workaround: Export by sections/classes
-
----
-
-## FAQ
-
-**Q: Can students download their own PDFs?**
-A: Yes, configure permissions in auth system.
-
-**Q: How do I change the grading scale?**
-A: Update `GradeBoundary` records in database.
-
-**Q: Can I include school logo in PDF?**
-A: Yes, set `includeSchoolLogo: true` in config and provide logo URL.
-
-**Q: How do I export all results to CSV?**
-A: Use `exportResultsToCSV(examId)` action.
-
----
-
-**Last Updated:** 2025-10-27
-**Version:** 2.0
+**Last Review:** 2026-03-19

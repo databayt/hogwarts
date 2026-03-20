@@ -1,266 +1,85 @@
-# Form Block
+## Form — Centralized Multi-Step Form System
 
-Centralized form system for building consistent multi-step forms across the application.
+### Overview
 
-## Directory Structure
+Centralized form system for building consistent multi-step and single-step forms across the Hogwarts platform. Provides reusable field atoms, wizard navigation, layout templates, and bridge hooks for integrating with different hosting contexts (modals, routes, apply flows).
+
+### File Structure
 
 ```
 src/components/form/
-├── index.ts          # Main exports
-├── types.ts          # TypeScript types
-├── README.md         # Documentation
-│
-├── provider.tsx      # Multi-step form provider & hooks
-├── modal.tsx         # Modal wrapper for multi-step forms
-│
-├── text.tsx          # Text input field
-├── number.tsx        # Number input field
-├── select.tsx        # Select dropdown field
-├── textarea.tsx      # Textarea field
-├── checkbox.tsx      # Checkbox field
-├── date.tsx          # Date picker field
-│
-├── container.tsx     # Step container wrapper
-├── header.tsx        # Step header with title/description
-├── navigation.tsx    # Back/Next navigation buttons
-├── progress.tsx      # Progress indicator (linear/dots/numbered)
-├── success.tsx       # Success celebration component
-│
-├── analytics.tsx     # Form analytics hook
-└── persistence.tsx   # Form persistence hook (localStorage)
+├── index.ts                        # Main exports
+├── types.ts                        # TypeScript types
+├── actions.ts                      # Server actions
+├── use-form.ts / use-form.tsx      # Form hook variants
+├── atoms/                          # Field primitives
+│   ├── input.tsx                   # Text input
+│   ├── select.tsx                  # Select dropdown
+│   ├── textarea.tsx                # Textarea
+│   ├── checkbox.tsx                # Checkbox
+│   ├── date.tsx                    # Date picker
+│   ├── number.tsx                  # Number input
+│   ├── radio-group.tsx             # Radio group
+│   ├── switch.tsx                  # Switch toggle
+│   ├── combobox.tsx                # Combobox with search
+│   ├── file-upload.tsx             # File upload
+│   ├── country.tsx                 # Country selector
+│   ├── phone.tsx                   # Phone number input
+│   └── index.ts                    # Barrel export
+├── template/                       # Layout and UI templates
+│   ├── provider.tsx                # Multi-step form provider
+│   ├── container.tsx               # Step container
+│   ├── header.tsx                  # Step header
+│   ├── heading.tsx                 # Form heading
+│   ├── navigation.tsx              # Back/Next buttons
+│   ├── progress.tsx                # Progress indicator
+│   ├── layout.tsx                  # Form layout wrapper
+│   ├── modal.tsx                   # Modal wrapper
+│   ├── success.tsx                 # Success celebration
+│   ├── field-array.tsx             # Dynamic field arrays
+│   ├── phone-field.tsx             # Phone field template
+│   ├── password-field.tsx          # Password field template
+│   ├── wizard-validation-context.tsx
+│   └── index.ts                    # Barrel export
+├── wizard/                         # Wizard-specific logic
+│   ├── wizard-provider.tsx         # Wizard state management
+│   ├── wizard-step.tsx             # Step renderer
+│   ├── wizard-tabs.tsx             # Tab navigation
+│   ├── wizard-layout.tsx           # Wizard layout
+│   ├── config.ts                   # Wizard configuration
+│   └── index.ts                    # Barrel export
+├── bridges/                        # Context-specific integrations
+│   ├── use-apply-bridge.ts         # Application flow bridge
+│   ├── use-host-bridge.ts          # Host/onboarding bridge
+│   ├── use-modal-bridge.ts         # Modal form bridge
+│   └── index.ts                    # Barrel export
+├── container.tsx                   # Legacy step container
+├── header.tsx                      # Legacy header
+├── heading.tsx                     # Legacy heading
+├── navigation.tsx                  # Legacy navigation
+├── progress.tsx                    # Legacy progress
+├── success.tsx                     # Legacy success
+├── layout.tsx                      # Legacy layout
+├── modal.tsx                       # Legacy modal
+├── footer.tsx                      # Form footer
+├── provider.tsx                    # Legacy provider
+├── text.tsx                        # Legacy text field
+├── number.tsx                      # Legacy number field
+├── select.tsx                      # Legacy select field
+├── textarea.tsx                    # Legacy textarea field
+├── checkbox.tsx                    # Legacy checkbox field
+└── date.tsx                        # Legacy date field
 ```
 
-## Core Concepts
+### Status
 
-### Multi-Step Form Provider
+**Completion:** 90% | **Blockers:** None
 
-The `MultiStepFormProvider` manages form state across steps:
+Legacy root-level field files coexist with the newer `atoms/` and `template/` directories. Migration to atoms/template pattern is ongoing.
 
-```tsx
-import {
-  FormStepContainer,
-  FormStepHeader,
-  FormStepNavigation,
-  MultiStepFormProvider,
-  useMultiStepForm,
-} from "@/components/form"
+### Integration Points
 
-const config = {
-  steps: [
-    { id: "info", title: "Personal Info", fields: ["name", "email"] },
-    { id: "details", title: "Details", fields: ["bio"] },
-    { id: "confirm", title: "Confirm", optional: true },
-  ],
-  validation: {
-    info: infoSchema,
-    details: detailsSchema,
-  },
-}
-
-function MyForm() {
-  return (
-    <MultiStepFormProvider config={config} onSubmit={handleSubmit}>
-      <FormContent />
-    </MultiStepFormProvider>
-  )
-}
-
-function FormContent() {
-  const { currentStep, next, back, isFirstStep, isLastStep } =
-    useMultiStepForm()
-
-  return (
-    <>
-      <FormStepHeader title={steps[currentStep].title} />
-      <FormStepContainer>
-        {currentStep === 0 && <InfoStep />}
-        {currentStep === 1 && <DetailsStep />}
-        {currentStep === 2 && <ConfirmStep />}
-      </FormStepContainer>
-      <FormStepNavigation
-        onBack={back}
-        onNext={next}
-        isFirstStep={isFirstStep}
-        isLastStep={isLastStep}
-      />
-    </>
-  )
-}
-```
-
-### Form Fields
-
-All fields integrate with `react-hook-form`:
-
-```tsx
-import { TextField, SelectField, NumberField, DateField } from "@/components/form"
-
-<TextField name="email" label="Email" type="email" required />
-<SelectField
-  name="role"
-  label="Role"
-  options={[
-    { value: "teacher", label: "Teacher" },
-    { value: "student", label: "Student" },
-  ]}
-/>
-<NumberField name="age" label="Age" min={0} max={120} />
-<DateField name="birthDate" label="Birth Date" maxDate={new Date()} />
-```
-
-## Possible Flows
-
-### 1. SaaS Onboarding (Route-Based)
-
-- **Path**: `/onboarding/[id]/[step]`
-- **Steps**: 14 steps across 3 groups (School, Host, Listing)
-- **Components**: Uses `host-footer.tsx` for navigation
-
-### 2. Newcomers Onboarding (Modal)
-
-- **Path**: School marketing page → "Join Us"
-- **Steps**: Role → Info → Verify → Profile → Welcome
-- **Components**: `NewcomersModal` with email verification
-
-### 3. Visit Scheduling (Modal)
-
-- **Path**: School marketing page → "Schedule Visit"
-- **Steps**: Date → Time → Info → Confirm
-- **Components**: `VisitModal` with timetable integration
-
-### 4. Admission Application (Modal)
-
-- **Path**: School marketing page → "Apply Now"
-- **Steps**: Personal → Contact → Guardian → Academic → Documents → Review
-
-### 5. Tour Booking (Modal)
-
-- **Path**: Various entry points
-- **Steps**: Similar to Visit but focused on guided tours
-
-### 6. CRUD Forms (Inline/Modal)
-
-- **Path**: Platform management pages
-- **Examples**: Create student, Update teacher, Add announcement
-
-## Component Reference
-
-### Provider & Hooks
-
-| Component                    | Description                                   |
-| ---------------------------- | --------------------------------------------- |
-| `MultiStepFormProvider`      | Context provider for multi-step forms         |
-| `useMultiStepForm()`         | Hook to access form state and navigation      |
-| `useMultiStepFormOptional()` | Optional hook (returns null outside provider) |
-| `useFormAnalytics()`         | Analytics tracking hook                       |
-| `useFormPersistence()`       | localStorage persistence hook                 |
-
-### Fields
-
-| Component       | Props                                                         |
-| --------------- | ------------------------------------------------------------- |
-| `TextField`     | name, label, type, placeholder, required, disabled, maxLength |
-| `NumberField`   | name, label, min, max, step, required                         |
-| `SelectField`   | name, label, options, placeholder, required                   |
-| `TextareaField` | name, label, rows, maxLength, required                        |
-| `CheckboxField` | name, label, checkboxLabel, required                          |
-| `DateField`     | name, label, minDate, maxDate, disabledDays                   |
-
-### Layouts
-
-| Component            | Description                        |
-| -------------------- | ---------------------------------- |
-| `FormStepContainer`  | Wrapper with max-width and spacing |
-| `FormStepHeader`     | Step title, description, indicator |
-| `FormStepNavigation` | Back/Next buttons                  |
-| `FormStepProgress`   | Progress bar/dots/numbered         |
-| `FormSuccess`        | Success celebration with confetti  |
-| `ModalMultiStepForm` | Complete modal wrapper             |
-
-## Configuration
-
-### Step Configuration
-
-```typescript
-interface FormStep {
-  id: string
-  title: string
-  description?: string
-  icon?: ComponentType
-  fields?: string[] // Fields to validate
-  optional?: boolean // Can be skipped
-}
-```
-
-### Form Configuration
-
-```typescript
-interface MultiStepFormConfig {
-  steps: FormStep[]
-  groups?: FormStepGroup[] // Optional grouping
-  validation?: Record<string, ZodSchema>
-  autoSave?: boolean
-  autoSaveInterval?: number // ms, default 30000
-  persistenceKey?: string // localStorage key
-  analyticsFlowType?: FormFlowType
-}
-```
-
-## Examples
-
-### Modal Multi-Step Form
-
-```tsx
-import { FormStepContainer, ModalMultiStepForm } from "@/components/form"
-
-;<ModalMultiStepForm
-  config={formConfig}
-  open={isOpen}
-  onOpenChange={setIsOpen}
-  onComplete={handleComplete}
-  title="Application Form"
-  showCloseConfirmation
->
-  <FormStepContainer>{/* Step content */}</FormStepContainer>
-</ModalMultiStepForm>
-```
-
-### With Persistence
-
-```tsx
-const persistence = useFormPersistence({
-  key: "draft-form",
-  autoSave: true,
-  autoSaveInterval: 30000,
-})
-
-// Load draft on mount
-useEffect(() => {
-  const draft = persistence.load()
-  if (draft) form.reset(draft)
-}, [])
-```
-
-### With Analytics
-
-```tsx
-const analytics = useFormAnalytics()
-
-useEffect(() => {
-  analytics.trackStepView("visit", "date-selection")
-}, [currentStep])
-
-const handleNext = async () => {
-  await next()
-  analytics.trackStepComplete("visit", "date-selection")
-}
-```
-
-## Best Practices
-
-1. **Validate twice**: Client-side for UX, server-side for security
-2. **Use step IDs**: Reference steps by ID, not index
-3. **Handle errors**: Show step-specific error messages
-4. **Track analytics**: Monitor step completion and abandonment
-5. **Enable auto-save**: Prevent data loss on complex forms
-6. **Show progress**: Use appropriate variant (dots for modal, linear for pages)
+- **Onboarding Wizard**: `src/components/onboarding/` uses wizard provider and bridges
+- **Application Flow**: `src/components/school-marketing/application/` uses apply bridge
+- **CRUD Forms**: Feature-specific forms import atoms and templates
+- **Validation**: Zod schemas from feature-level `validation.ts` files

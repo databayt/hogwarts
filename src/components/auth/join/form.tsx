@@ -152,6 +152,7 @@ export const RegisterForm = (props: Props) => {
         if (data.success && data.email) {
           setVerifyEmail(data.email)
           setPassword(values.password)
+          sessionStorage.setItem("_onboard_pw", values.password)
           setMode("verify")
           setResendCooldown(90)
         }

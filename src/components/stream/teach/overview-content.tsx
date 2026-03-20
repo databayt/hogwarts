@@ -23,7 +23,7 @@ export function TeachOverviewContent({
   stats,
   subdomain,
 }: Props) {
-  const base = `/${lang}/s/${subdomain}/stream/teach`
+  const base = `/${lang}/stream/teach`
 
   return (
     <div className="space-y-6">
@@ -101,7 +101,7 @@ export function TeachOverviewContent({
               View My Videos
             </Button>
           </Link>
-          <Link href={`/${lang}/s/${subdomain}/stream/courses`}>
+          <Link href={`/${lang}/stream/courses`}>
             <Button variant="outline">Browse Catalog</Button>
           </Link>
         </CardContent>

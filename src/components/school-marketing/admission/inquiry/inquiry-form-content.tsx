@@ -161,7 +161,7 @@ export default function InquiryFormContent({
               {dict.backToHome || "Back to Home"}
             </Button>
           </Link>
-          <Link href={`/${lang}/apply`}>
+          <Link href={`/${lang}/application`}>
             <Button className="group">
               {dict.applyNow || "Apply Now"}
               <AnthropicIcons.ArrowRight className="ms-2 h-4 w-4 transition-transform group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" />
@@ -449,7 +449,7 @@ export default function InquiryFormContent({
                 {dict.quickLinks || "Quick Links"}
               </h3>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <Link href={`/${lang}/apply`}>
+                <Link href={`/${lang}/application`}>
                   <Button
                     variant="outline"
                     className="group w-full justify-start"

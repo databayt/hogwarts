@@ -33,7 +33,7 @@ export function AcademicCTA({ lang, dictionary }: AcademicCTAProps) {
 
         <div className="flex flex-col justify-center gap-4 sm:flex-row">
           <Link
-            href={`/${lang}/apply`}
+            href={`/${lang}/application`}
             className={cn(buttonVariants({ size: "lg" }), "gap-2")}
           >
             {t?.scheduleVisit || "Schedule a Visit"}

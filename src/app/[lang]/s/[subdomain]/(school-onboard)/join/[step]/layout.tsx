@@ -43,27 +43,27 @@ function StepFooter() {
 
   const handleBack = () => {
     if (stepIndex > 0) {
-      router.push(`/${locale}/s/${subdomain}/join/${steps[stepIndex - 1]}`)
+      router.push(`/${locale}/join/${steps[stepIndex - 1]}`)
     }
   }
 
   const handleNext = () => {
     if (stepIndex < steps.length - 1) {
-      router.push(`/${locale}/s/${subdomain}/join/${steps[stepIndex + 1]}`)
+      router.push(`/${locale}/join/${steps[stepIndex + 1]}`)
     }
   }
 
   return (
     <FormFooter
       config={INTERNAL_ONBOARDING_CONFIG}
-      basePath={`/${locale}/s/${subdomain}/join`}
+      basePath={`/${locale}/join`}
       onBack={handleBack}
       onNext={handleNext}
       showSave={false}
       showHelp={false}
       showLogo={true}
       finalLabel="Submit"
-      finalDestination={`/${locale}/s/${subdomain}/join/welcome`}
+      finalDestination={`/${locale}/join/welcome`}
       useValidation={useWizardValidation}
     />
   )

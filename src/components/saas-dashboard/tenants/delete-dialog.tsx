@@ -7,6 +7,7 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
+  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
@@ -14,7 +15,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { ErrorToast, SuccessToast } from "@/components/atom/toast"
+import { DeleteToast, ErrorToast } from "@/components/atom/toast"
 
 import { tenantDelete } from "./actions"
 
@@ -53,9 +54,7 @@ export function DeleteSchoolDialog({
 
       if (result.success) {
         const { stats } = result.data
-        SuccessToast(
-          `Deleted "${result.data.deletedName}" — ${stats.students} students, ${stats.teachers} teachers, ${stats.classes} classes removed`
-        )
+        DeleteToast(`Deleted "${result.data.deletedName}"`)
         setOpen(false)
         setConfirmName("")
         onDeleted?.()
@@ -75,19 +74,17 @@ export function DeleteSchoolDialog({
   return (
     <AlertDialog open={open} onOpenChange={handleOpenChange}>
       <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
-      <AlertDialogContent>
+      <AlertDialogContent className="sm:max-w-sm">
         <AlertDialogHeader>
           <AlertDialogTitle className="bg-background">
             Delete Tenant
           </AlertDialogTitle>
+          <AlertDialogDescription>
+            All data will be permanently removed. This cannot be undone.
+          </AlertDialogDescription>
         </AlertDialogHeader>
 
         <div className="space-y-3 py-2">
-          <div className="rounded-md p-3 text-sm">
-            <strong>Affected data:</strong> {studentCount.toLocaleString()}{" "}
-            students, {teacherCount.toLocaleString()} teachers
-          </div>
-
           <div className="space-y-1.5">
             <Label className="text-sm">
               Type <strong>{name}</strong> to confirm

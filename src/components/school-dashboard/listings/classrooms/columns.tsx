@@ -48,7 +48,7 @@ export function getClassroomColumns(
       header: t.roomName,
       cell: ({ row }) => (
         <Link
-          href={`/${lang}/s/${subdomain}/classrooms/${row.original.id}`}
+          href={`/${lang}/classrooms/${row.original.id}`}
           className="text-primary font-medium hover:underline"
         >
           {row.original.roomName}

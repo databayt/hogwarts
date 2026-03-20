@@ -5,7 +5,7 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
-import ErrorBoundary from "@/components/school-marketing/apply/error-boundary"
+import ErrorBoundary from "@/components/school-marketing/application/error-boundary"
 
 interface LayoutProps {
   children: React.ReactNode

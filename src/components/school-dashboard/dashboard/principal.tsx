@@ -272,21 +272,21 @@ export async function PrincipalDashboard({
             iconColor="text-blue-500"
             change={5.2}
             changeType="positive"
-            href={`/${locale}/s/${school?.domain}/students`}
+            href={`/${locale}/students`}
           />
           <MetricCard
             title="Total Teachers"
             value={totalTeachers}
             iconName="GraduationCap"
             iconColor="text-purple-500"
-            href={`/${locale}/s/${school?.domain}/teachers`}
+            href={`/${locale}/teachers`}
           />
           <MetricCard
             title="Active Classes"
             value={totalClasses}
             iconName="BookOpen"
             iconColor="text-emerald-500"
-            href={`/${locale}/s/${school?.domain}/subjects`}
+            href={`/${locale}/subjects`}
           />
           <MetricCard
             title="Student:Teacher"
@@ -422,7 +422,7 @@ export async function PrincipalDashboard({
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-base">Subject Performance</CardTitle>
               <Link
-                href={`/${locale}/s/${school?.domain}/grades`}
+                href={`/${locale}/grades`}
                 className="text-primary flex items-center gap-1 text-sm hover:underline"
               >
                 View all <ChevronRight className="h-4 w-4 rtl:rotate-180" />

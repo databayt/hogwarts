@@ -40,7 +40,7 @@ export function AdmissionHero({ lang, dictionary }: AdmissionHeroProps) {
 
           <div className="flex flex-col gap-3 sm:flex-row">
             <Link
-              href={`/${lang}/apply`}
+              href={`/${lang}/application`}
               className={cn(buttonVariants({ size: "lg" }), "w-full sm:w-auto")}
             >
               {t?.startApplication || "Start application"}

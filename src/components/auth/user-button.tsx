@@ -252,9 +252,7 @@ function MarketingMenu({ locale, role, schoolId, t }: MenuProps) {
  */
 function SiteMenu({ locale, subdomain, t }: MenuProps) {
   // For school sites, school-dashboard URL uses the subdomain routing
-  const platformUrl = subdomain
-    ? `/${locale}/s/${subdomain}/dashboard`
-    : `/${locale}/dashboard`
+  const platformUrl = `/${locale}/dashboard`
 
   return (
     <DropdownMenuGroup>
@@ -327,7 +325,7 @@ function SaasMenu({ locale, role, t }: MenuProps) {
  */
 function PlatformMenu({ locale, subdomain, role, t }: MenuProps) {
   // Build URLs with subdomain context
-  const baseUrl = subdomain ? `/${locale}/s/${subdomain}` : `/${locale}`
+  const baseUrl = `/${locale}`
   const isAdmin = role === "ADMIN" || role === "DEVELOPER"
 
   return (

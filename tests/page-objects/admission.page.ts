@@ -65,7 +65,7 @@ export class AdmissionPortalPage extends SchoolBasePage {
    */
   async hasApplyLink(): Promise<boolean> {
     return this.isVisible(
-      'a[href*="/apply"], button:has-text("Apply"), button:has-text("تقدم")'
+      'a[href*="/application"], button:has-text("Apply"), button:has-text("تقدم")'
     )
   }
 
@@ -74,7 +74,7 @@ export class AdmissionPortalPage extends SchoolBasePage {
    */
   async clickApply(): Promise<void> {
     const link = this.page.locator(
-      'a[href*="/apply"], button:has-text("Apply"), button:has-text("تقدم")'
+      'a[href*="/application"], button:has-text("Apply"), button:has-text("تقدم")'
     )
     await link.first().click()
     await this.waitForLoad()
@@ -98,12 +98,12 @@ export class AdmissionPortalPage extends SchoolBasePage {
    * Check if status tracker link is visible
    */
   async hasStatusLink(): Promise<boolean> {
-    return this.isVisible('a[href*="/apply/status"]')
+    return this.isVisible('a[href*="/application/status"]')
   }
 }
 
 // =============================================================================
-// APPLY DASHBOARD PAGE (Public - /apply)
+// APPLY DASHBOARD PAGE (Public - /application)
 // =============================================================================
 
 /**
@@ -121,8 +121,8 @@ export class ApplyDashboardPage extends SchoolBasePage {
 
   async isDisplayed(): Promise<boolean> {
     return (
-      this.urlContains("/apply") &&
-      !this.urlContains("/apply/") &&
+      this.urlContains("/application") &&
+      !this.urlContains("/application/") &&
       this.isOnCorrectSubdomain()
     )
   }
@@ -170,7 +170,7 @@ export class ApplyDashboardPage extends SchoolBasePage {
 export const CampaignSelectorPage = ApplyDashboardPage
 
 // =============================================================================
-// APPLICATION FORM PAGE (Public - /apply/[id]/[step])
+// APPLICATION FORM PAGE (Public - /application/[id]/[step])
 // =============================================================================
 
 /**
@@ -182,11 +182,11 @@ export class ApplicationFormPage extends SchoolBasePage {
   }
 
   get path(): string {
-    return "/apply"
+    return "/application"
   }
 
   async isDisplayed(): Promise<boolean> {
-    return this.urlContains("/apply/") && this.isOnCorrectSubdomain()
+    return this.urlContains("/application/") && this.isOnCorrectSubdomain()
   }
 
   /**
@@ -213,7 +213,7 @@ export class ApplicationFormPage extends SchoolBasePage {
   async goToStep(campaignId: string, step: ApplicationStepName): Promise<void> {
     const url = this.buildSchoolUrl(
       this.subdomain,
-      `/apply/${campaignId}/${step}`
+      `/application/${campaignId}/${step}`
     )
     await this.page.goto(url)
     await this.waitForLoad()
@@ -453,7 +453,7 @@ export class ApplicationFormPage extends SchoolBasePage {
 }
 
 // =============================================================================
-// STATUS TRACKER PAGE (Public - /apply/status)
+// STATUS TRACKER PAGE (Public - /application/status)
 // =============================================================================
 
 /**
@@ -465,11 +465,13 @@ export class StatusTrackerPage extends SchoolBasePage {
   }
 
   get path(): string {
-    return "/apply/status"
+    return "/application/status"
   }
 
   async isDisplayed(): Promise<boolean> {
-    return this.urlContains("/apply/status") && this.isOnCorrectSubdomain()
+    return (
+      this.urlContains("/application/status") && this.isOnCorrectSubdomain()
+    )
   }
 
   /**
