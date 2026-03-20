@@ -5,7 +5,6 @@
 import React, { useCallback, useEffect } from "react"
 import { useParams } from "next/navigation"
 
-import { Skeleton } from "@/components/ui/skeleton"
 import { FormFooter, ONBOARDING_CONFIG } from "@/components/form/footer"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
@@ -26,7 +25,7 @@ interface HostLayoutProps {
 
 function HostLayoutContent({ children }: HostLayoutProps) {
   const params = useParams()
-  const { loadListing, isLoading, error } = useListing()
+  const { loadListing, error } = useListing()
   const { dictionary } = useDictionary()
   const { locale } = useLocale()
   const listingId = params.id as string | null
@@ -49,38 +48,6 @@ function HostLayoutContent({ children }: HostLayoutProps) {
       loadListing(listingId)
     }
   }, [listingId, loadListing])
-
-  if (isLoading) {
-    return (
-      <div className="mx-auto w-full max-w-5xl pb-20">
-        <div className="flex w-full flex-col gap-6 lg:flex-row lg:justify-between lg:gap-10">
-          {/* Left - heading area */}
-          <div className="w-full lg:w-auto lg:shrink-0 lg:basis-[48%]">
-            <div className="space-y-3 text-start sm:space-y-4">
-              <Skeleton className="h-9 w-48" />
-              <Skeleton className="h-4 w-72" />
-            </div>
-          </div>
-          {/* Right - form area */}
-          <div className="w-full lg:w-auto lg:shrink-0 lg:basis-[48%]">
-            <div className="space-y-4">
-              <Skeleton className="h-12 w-full rounded-md" />
-              <Skeleton className="h-12 w-full rounded-md" />
-            </div>
-          </div>
-        </div>
-        <FormFooter
-          config={ONBOARDING_CONFIG}
-          basePath="/onboarding"
-          dictionary={dictionary?.school?.onboarding}
-          locale={locale}
-          useValidation={useHostValidation}
-          finalLabel={dict.create || "Create"}
-          onStepChange={handleStepChange}
-        />
-      </div>
-    )
-  }
 
   if (error) {
     return (

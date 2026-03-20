@@ -70,7 +70,7 @@ const ApplyOverviewClient: React.FC<ApplyOverviewClientProps> = ({
       title: groupsDict.details || "Details",
       description:
         overviewDict.stage2Desc || "Provide your contact and location details",
-      illustration: "/anthropic/eng-harnesses-long-running-agents.svg",
+      illustration: "/anthropic/eng-long-running-agents.svg",
     },
     {
       number: 3,

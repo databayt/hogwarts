@@ -59,7 +59,7 @@ interface ApplySessionContextType {
   ) => ApplySessionState["formData"][T] | undefined
 
   // Auto-save
-  saveSession: () => Promise<void>
+  saveSession: () => Promise<string | null>
   markDirty: () => void
 
   // Navigation
@@ -226,8 +226,9 @@ export const ApplySessionProvider: React.FC<ApplySessionProviderProps> = ({
   )
 
   // Save session to server and localStorage
-  const saveSession = useCallback(async () => {
-    if (!subdomain || !session.campaignId) return
+  // Returns the session token on success, null on failure
+  const saveSession = useCallback(async (): Promise<string | null> => {
+    if (!subdomain || !session.campaignId) return null
 
     setSession((prev) => ({ ...prev, isSaving: true }))
 
@@ -278,12 +279,15 @@ export const ApplySessionProvider: React.FC<ApplySessionProviderProps> = ({
           isDirty: false,
           isSaving: false,
         }))
+
+        return newToken
       } else {
         setSession((prev) => ({
           ...prev,
           isSaving: false,
           error: result.error || "Failed to save",
         }))
+        return null
       }
     } catch (error) {
       setSession((prev) => ({
@@ -291,6 +295,7 @@ export const ApplySessionProvider: React.FC<ApplySessionProviderProps> = ({
         isSaving: false,
         error: "Failed to save session",
       }))
+      return null
     }
   }, [
     subdomain,

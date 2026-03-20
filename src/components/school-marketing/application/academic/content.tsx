@@ -30,7 +30,7 @@ export default function AcademicContent({ dictionary }: Props) {
   const id = params.id as string
 
   const { enableNext, disableNext, setCustomNavigation } = useApplyValidation()
-  const { session, getStepData } = useApplySession()
+  const { session, getStepData, saveSession } = useApplySession()
   const academicFormRef = useRef<AcademicFormRef>(null)
   const sessionRef = useRef(session)
   sessionRef.current = session
@@ -69,8 +69,15 @@ export default function AcademicContent({ dictionary }: Props) {
         )
       }
 
-      if (!currentSession.sessionToken) {
-        throw new Error("No session token")
+      // Ensure session is saved before submitting (handles race with auto-save)
+      let tokenToUse = currentSession.sessionToken
+      if (!tokenToUse) {
+        tokenToUse = await saveSession()
+        if (!tokenToUse) {
+          throw new Error(
+            isRTL ? "فشل في حفظ الجلسة" : "Failed to save session"
+          )
+        }
       }
 
       // Build flat form data and submit
@@ -87,7 +94,7 @@ export default function AcademicContent({ dictionary }: Props) {
 
       const result = await submitApplicationAction(
         subdomain,
-        currentSession.sessionToken,
+        tokenToUse,
         formData
       )
 
@@ -109,7 +116,7 @@ export default function AcademicContent({ dictionary }: Props) {
       setError(err instanceof Error ? err.message : "Failed to submit")
       setIsSubmitting(false)
     }
-  }, [subdomain, id, isRTL, locale, router])
+  }, [subdomain, id, isRTL, locale, router, saveSession])
 
   useEffect(() => {
     const academicData = session.formData.academic

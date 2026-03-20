@@ -95,6 +95,7 @@ async function getTenants(searchParams: Props["searchParams"], lang: Locale) {
   const rows: TenantRow[] = tenants.map((tenant, i) => ({
     id: tenant.id,
     name: translatedNames[i],
+    originalName: tenant.name,
     subdomain: tenant.domain,
     domain: tenant.domain,
     isActive: tenant.isActive,

@@ -9,11 +9,17 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 function OnboardingFormSkeleton({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex w-full flex-col gap-6 lg:flex-row lg:justify-between lg:gap-10">
+    <div className="flex w-full flex-col gap-6 lg:flex-row lg:items-start lg:justify-between lg:gap-10">
       <div className="w-full lg:w-auto lg:shrink-0 lg:basis-[48%]">
         <div className="space-y-3 text-start sm:space-y-4">
-          <Skeleton className="h-9 w-48" />
-          <Skeleton className="h-4 w-72" />
+          {/* h1 text-3xl (two lines for title with \n) */}
+          <Skeleton className="h-8 w-52 sm:h-9" />
+          <Skeleton className="h-8 w-28 sm:h-9" />
+          {/* Description text-sm/base */}
+          <div className="space-y-1.5">
+            <Skeleton className="h-4 w-full sm:h-5" />
+            <Skeleton className="h-4 w-3/4 sm:h-5" />
+          </div>
         </div>
       </div>
       <div className="w-full lg:w-auto lg:shrink-0 lg:basis-[48%]">
@@ -30,7 +36,21 @@ function OnboardingFormSkeleton({ children }: { children: React.ReactNode }) {
 export function TitleSkeleton() {
   return (
     <OnboardingFormSkeleton>
-      <Skeleton className="h-12 w-full rounded-md" />
+      <div className="space-y-6">
+        {/* Textarea (h-[80px] sm:h-[100px]) */}
+        <div>
+          <Skeleton className="h-[80px] w-full rounded-lg sm:h-[100px]" />
+          {/* Character count */}
+          <div className="mt-2 flex justify-end">
+            <Skeleton className="h-4 w-12" />
+          </div>
+        </div>
+        {/* Subdomain field */}
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-52" />
+          <Skeleton className="h-10 w-full rounded-lg lg:w-[70%]" />
+        </div>
+      </div>
     </OnboardingFormSkeleton>
   )
 }
@@ -61,10 +81,25 @@ export function LocationSkeleton() {
 export function CapacitySkeleton() {
   return (
     <OnboardingFormSkeleton>
-      <div className="space-y-4">
-        <Skeleton className="h-12 w-full rounded-md" />
-        <Skeleton className="h-12 w-full rounded-md" />
-        <Skeleton className="h-12 w-full rounded-md" />
+      <div className="space-y-6">
+        {/* 3 counter rows (label left, -/number/+ right, border-b) */}
+        <div>
+          {[...Array(3)].map((_, i) => (
+            <div
+              key={i}
+              className="border-border flex items-center justify-between border-b py-4 last:border-b-0 sm:py-6"
+            >
+              <Skeleton className="h-5 w-28 sm:w-36" />
+              <div className="flex items-center gap-2 sm:gap-3">
+                <Skeleton className="h-10 w-10 rounded-full sm:h-7 sm:w-7" />
+                <Skeleton className="h-5 w-16" />
+                <Skeleton className="h-10 w-10 rounded-full sm:h-7 sm:w-7" />
+              </div>
+            </div>
+          ))}
+        </div>
+        {/* Summary card */}
+        <Skeleton className="h-24 w-full rounded-lg" />
       </div>
     </OnboardingFormSkeleton>
   )
@@ -198,17 +233,17 @@ export function StandOutSkeleton() {
 export function AboutSchoolSkeleton() {
   return (
     <div className="w-full">
-      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2 lg:gap-12">
-        {/* Left Side - Content */}
+      <div className="grid grid-cols-1 items-center gap-6 lg:grid-cols-2 lg:gap-12">
+        {/* Left Side - Content (matches StepHeader) */}
         <div className="space-y-4 sm:space-y-6">
           {/* "Step 1" label */}
-          <Skeleton className="h-4 w-16 sm:h-5" />
-          {/* Title */}
-          <Skeleton className="h-10 w-72" />
-          {/* Description - 2 lines */}
+          <Skeleton className="h-4 w-14 sm:h-5" />
+          {/* Title (h1 text-4xl ~ 40px) */}
+          <Skeleton className="h-10 w-64 sm:w-80" />
+          {/* Description - 2 lines (text-sm/base/lg ~ 20-24px per line) */}
           <div className="space-y-2">
-            <Skeleton className="h-4 w-full sm:h-5" />
-            <Skeleton className="h-4 w-4/5 sm:h-5" />
+            <Skeleton className="h-5 w-full lg:h-6" />
+            <Skeleton className="h-5 w-5/6 lg:h-6" />
           </div>
         </div>
 

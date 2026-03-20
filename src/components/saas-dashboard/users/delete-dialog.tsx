@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { ErrorToast, SuccessToast } from "@/components/atom/toast"
+import { DeleteToast, ErrorToast } from "@/components/atom/toast"
 
 import { userDelete } from "./actions"
 
@@ -51,7 +51,7 @@ export function DeleteUserDialog({
       })
 
       if (result.success) {
-        SuccessToast(`Deleted user "${result.data.deletedEmail}"`)
+        DeleteToast(`Deleted "${result.data.deletedEmail}"`)
         onOpenChange(false)
         setConfirmEmail("")
         onDeleted?.()

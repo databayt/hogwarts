@@ -21,6 +21,7 @@ import { tenantDelete } from "./actions"
 interface DeleteSchoolDialogProps {
   tenantId: string
   name: string
+  displayName?: string
   domain: string
   studentCount: number
   teacherCount: number
@@ -32,6 +33,7 @@ interface DeleteSchoolDialogProps {
 export function DeleteSchoolDialog({
   tenantId,
   name,
+  displayName,
   domain,
   studentCount,
   teacherCount,
@@ -83,6 +85,9 @@ export function DeleteSchoolDialog({
         </AlertDialogHeader>
 
         <div className="space-y-3 py-2">
+          {displayName && displayName !== name && (
+            <p className="text-muted-foreground text-sm">{displayName}</p>
+          )}
           <div className="space-y-1.5">
             <Label className="text-sm">
               Type <strong>{name}</strong> to confirm

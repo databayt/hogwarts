@@ -55,11 +55,26 @@ export default function TitleContent({ dictionary }: Props) {
   if (loading) {
     return (
       <FormLayout>
-        <div className="space-y-3">
-          <Skeleton className="h-9 w-32" />
-          <Skeleton className="h-4 w-72" />
+        <div className="space-y-3 sm:space-y-4">
+          <Skeleton className="h-8 w-52 sm:h-9" />
+          <Skeleton className="h-8 w-28 sm:h-9" />
+          <div className="space-y-1.5">
+            <Skeleton className="h-4 w-full sm:h-5" />
+            <Skeleton className="h-4 w-3/4 sm:h-5" />
+          </div>
         </div>
-        <Skeleton className="h-10 w-full rounded-md" />
+        <div className="space-y-6">
+          <div>
+            <Skeleton className="h-[80px] w-full rounded-lg sm:h-[100px]" />
+            <div className="mt-2 flex justify-end">
+              <Skeleton className="h-4 w-12" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-52" />
+            <Skeleton className="h-10 w-full rounded-lg lg:w-[70%]" />
+          </div>
+        </div>
       </FormLayout>
     )
   }

@@ -35,14 +35,31 @@ export default function CapacityContent({ dictionary }: Props) {
   if (loading) {
     return (
       <FormLayout>
-        <div className="space-y-3">
-          <Skeleton className="h-9 w-40" />
-          <Skeleton className="h-4 w-72" />
+        <div className="space-y-3 sm:space-y-4">
+          <Skeleton className="h-8 w-52 sm:h-9" />
+          <Skeleton className="h-8 w-28 sm:h-9" />
+          <div className="space-y-1.5">
+            <Skeleton className="h-4 w-full sm:h-5" />
+            <Skeleton className="h-4 w-3/4 sm:h-5" />
+          </div>
         </div>
-        <div className="space-y-3">
-          <Skeleton className="h-10 w-full rounded-md" />
-          <Skeleton className="h-10 w-full rounded-md" />
-          <Skeleton className="h-10 w-full rounded-md" />
+        <div className="space-y-6">
+          <div>
+            {[...Array(3)].map((_, i) => (
+              <div
+                key={i}
+                className="border-border flex items-center justify-between border-b py-4 last:border-b-0 sm:py-6"
+              >
+                <Skeleton className="h-5 w-28 sm:w-36" />
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <Skeleton className="h-10 w-10 rounded-full sm:h-7 sm:w-7" />
+                  <Skeleton className="h-5 w-16" />
+                  <Skeleton className="h-10 w-10 rounded-full sm:h-7 sm:w-7" />
+                </div>
+              </div>
+            ))}
+          </div>
+          <Skeleton className="h-24 w-full rounded-lg" />
         </div>
       </FormLayout>
     )

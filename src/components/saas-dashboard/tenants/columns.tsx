@@ -26,6 +26,7 @@ import { TenantDetail } from "./detail"
 export type TenantRow = {
   id: string
   name: string
+  originalName: string
   subdomain: string
   domain: string
   isActive: boolean
@@ -334,7 +335,8 @@ function TenantActionsCell({
       {tenant.domain !== "demo" && (
         <DeleteSchoolDialog
           tenantId={tenant.id}
-          name={tenant.name}
+          name={tenant.originalName}
+          displayName={tenant.name}
           domain={tenant.domain}
           studentCount={tenant.studentCount}
           teacherCount={tenant.teacherCount}

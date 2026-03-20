@@ -55,7 +55,9 @@ function DocumentCard({
   const form = useFormContext()
   const currentValue = form.watch(name)
   const hasFile =
-    !!currentValue && typeof currentValue === "object" && currentValue?.url
+    !!currentValue &&
+    ((typeof currentValue === "object" && currentValue?.url) ||
+      (typeof currentValue === "string" && currentValue.length > 0))
 
   const { isUploading, uploadedFiles, upload, getAcceptedTypes } = useUpload({
     category: "document",
@@ -82,10 +84,14 @@ function DocumentCard({
   })
 
   const uploaded = hasFile || uploadedFiles.length > 0
-  const fileResult =
-    (currentValue as { url?: string; mimeType?: string }) || uploadedFiles[0]
-  const fileUrl = fileResult?.url || ""
-  const mimeType = (fileResult as { mimeType?: string })?.mimeType || ""
+  const fileUrl =
+    typeof currentValue === "string"
+      ? currentValue
+      : (currentValue as { url?: string })?.url || uploadedFiles[0]?.url || ""
+  const mimeType =
+    typeof currentValue === "object"
+      ? (currentValue as { mimeType?: string })?.mimeType || ""
+      : ""
   const isImage =
     /\.(jpe?g|png|gif|webp|bmp|svg)$/i.test(fileUrl) ||
     mimeType.startsWith("image/")
