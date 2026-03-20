@@ -69,7 +69,7 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
         {renderSkeleton()}
         <FormFooter
           config={ADMISSION_CONFIG}
-          basePath={`/${locale}/application`}
+          basePath="/application"
           dictionary={dict as Record<string, unknown>}
           locale={locale}
           useValidation={useApplyValidation}
@@ -117,7 +117,7 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
         </div>
         <FormFooter
           config={ADMISSION_CONFIG}
-          basePath={`/${locale}/application`}
+          basePath="/application"
           dictionary={dict as Record<string, unknown>}
           locale={locale}
           useValidation={useApplyValidation}
@@ -132,7 +132,7 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
       {children}
       <FormFooter
         config={ADMISSION_CONFIG}
-        basePath={`/${locale}/application`}
+        basePath="/application"
         dictionary={dict as Record<string, unknown>}
         locale={locale}
         useValidation={useApplyValidation}
@@ -140,7 +140,6 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
         showSave={false}
         onSave={saveSession}
         finalLabel={isRTL ? "تقديم" : "Submit"}
-        finalDestination={`/${locale}/application/${id}/success`}
       />
     </div>
   )

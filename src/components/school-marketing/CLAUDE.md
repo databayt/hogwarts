@@ -2,13 +2,13 @@
 
 ## Context
 
-Public-facing school website on subdomain (e.g., `demo.databayt.org`). Includes homepage sections, admission portal, multi-step apply form, visit booking, academic pages (85% complete). Blocker: hardcoded English validation messages.
+Public-facing school website on subdomain (e.g., `demo.databayt.org`). Includes homepage sections, admission portal, multi-step application form, visit booking, academic pages (85% complete). Blocker: hardcoded English validation messages.
 
 ## Before You Start
 
 1. Read `README.md` here for full file structure and key patterns
 2. Read `ISSUE.md` here for priorities (P1: hardcoded validation messages, two parallel application flows)
-3. If working on admission/apply, also read the cross-block rule at `.claude/rules/blocks/admission.md`
+3. If working on admission/application, also read the cross-block rule at `.claude/rules/blocks/admission.md`
 
 ## Key Decisions
 

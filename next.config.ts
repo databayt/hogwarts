@@ -10,6 +10,10 @@ const nextConfig: NextConfig = {
 
   // Optimize package imports for tree-shaking
   experimental: {
+    // Allow file uploads up to 10MB via server actions (default is 1MB)
+    serverActions: {
+      bodySizeLimit: "10mb",
+    },
     webpackMemoryOptimizations: true,
     optimizePackageImports: [
       "@assistant-ui/react",

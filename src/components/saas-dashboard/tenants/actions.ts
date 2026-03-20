@@ -21,7 +21,7 @@ import { getTenants as getTenantsQuery, type GetTenantsInput } from "./queries"
 
 type ActionResult<T> =
   | { success: true; data: T }
-  | { success: false; error: Error }
+  | { success: false; error: { message: string } }
 
 // ============= Validation Schemas =============
 
@@ -69,7 +69,7 @@ export async function tenantToggleActive(input: {
     if (!school) {
       return {
         success: false,
-        error: new Error("School not found"),
+        error: { message: "School not found" },
       }
     }
 
@@ -98,10 +98,12 @@ export async function tenantToggleActive(input: {
     console.error("Failed to toggle tenant active status:", error)
     return {
       success: false,
-      error:
-        error instanceof Error
-          ? error
-          : new Error("Failed to toggle tenant status"),
+      error: {
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to toggle tenant status",
+      },
     }
   }
 }
@@ -143,10 +145,12 @@ export async function tenantChangePlan(input: {
     console.error("Failed to change tenant plan:", error)
     return {
       success: false,
-      error:
-        error instanceof Error
-          ? error
-          : new Error("Failed to change tenant plan"),
+      error: {
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to change tenant plan",
+      },
     }
   }
 }
@@ -186,7 +190,9 @@ export async function tenantEndTrial(input: {
     console.error("Failed to end tenant trial:", error)
     return {
       success: false,
-      error: error instanceof Error ? error : new Error("Failed to end trial"),
+      error: {
+        message: error instanceof Error ? error.message : "Failed to end trial",
+      },
     }
   }
 }
@@ -212,7 +218,7 @@ export async function tenantStartImpersonation(input: {
     if (!school) {
       return {
         success: false,
-        error: new Error("School not found"),
+        error: { message: "School not found" },
       }
     }
 
@@ -240,10 +246,12 @@ export async function tenantStartImpersonation(input: {
     console.error("Failed to start impersonation:", error)
     return {
       success: false,
-      error:
-        error instanceof Error
-          ? error
-          : new Error("Failed to start impersonation"),
+      error: {
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to start impersonation",
+      },
     }
   }
 }
@@ -280,10 +288,12 @@ export async function tenantStopImpersonation(input?: {
     console.error("Failed to stop impersonation:", error)
     return {
       success: false,
-      error:
-        error instanceof Error
-          ? error
-          : new Error("Failed to stop impersonation"),
+      error: {
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to stop impersonation",
+      },
     }
   }
 }
@@ -327,7 +337,7 @@ export async function tenantSetupCatalog(input: { tenantId: string }): Promise<
     })
 
     if (!school) {
-      return { success: false, error: new Error("School not found") }
+      return { success: false, error: { message: "School not found" } }
     }
 
     const result = await setupCatalogForSchool(input.tenantId, {
@@ -337,9 +347,10 @@ export async function tenantSetupCatalog(input: { tenantId: string }): Promise<
     if (result.skipped) {
       return {
         success: false,
-        error: new Error(
-          "message" in result ? result.message : "Catalog already configured"
-        ),
+        error: {
+          message:
+            "message" in result ? result.message : "Catalog already configured",
+        },
       }
     }
 
@@ -360,8 +371,10 @@ export async function tenantSetupCatalog(input: { tenantId: string }): Promise<
     console.error("Failed to setup catalog:", error)
     return {
       success: false,
-      error:
-        error instanceof Error ? error : new Error("Failed to setup catalog"),
+      error: {
+        message:
+          error instanceof Error ? error.message : "Failed to setup catalog",
+      },
     }
   }
 }
@@ -426,14 +439,14 @@ export async function tenantDelete(input: {
     })
 
     if (!school) {
-      return { success: false, error: new Error("School not found") }
+      return { success: false, error: { message: "School not found" } }
     }
 
     // Guard: demo school protection
     if (school.domain === "demo") {
       return {
         success: false,
-        error: new Error("Cannot delete the demo school"),
+        error: { message: "Cannot delete the demo school" },
       }
     }
 
@@ -441,7 +454,7 @@ export async function tenantDelete(input: {
     if (validated.confirmName !== school.name) {
       return {
         success: false,
-        error: new Error("School name does not match"),
+        error: { message: "School name does not match" },
       }
     }
 
@@ -467,9 +480,9 @@ export async function tenantDelete(input: {
     // ========================================================
     await db.$transaction(
       async (tx) => {
-        // Phase A: Detach users from school
+        // Phase A: Detach users from school (preserve DEVELOPER role)
         await tx.user.updateMany({
-          where: { schoolId },
+          where: { schoolId, role: { not: "DEVELOPER" } },
           data: { schoolId: null, role: "USER" },
         })
 
@@ -596,8 +609,10 @@ export async function tenantDelete(input: {
     console.error("Failed to delete tenant:", error)
     return {
       success: false,
-      error:
-        error instanceof Error ? error : new Error("Failed to delete school"),
+      error: {
+        message:
+          error instanceof Error ? error.message : "Failed to delete school",
+      },
     }
   }
 }

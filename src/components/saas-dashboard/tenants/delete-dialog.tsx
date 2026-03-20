@@ -11,7 +11,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -25,8 +24,9 @@ interface DeleteSchoolDialogProps {
   domain: string
   studentCount: number
   teacherCount: number
+  open: boolean
+  onOpenChange: (open: boolean) => void
   onDeleted?: () => void
-  children: React.ReactNode
 }
 
 export function DeleteSchoolDialog({
@@ -35,10 +35,10 @@ export function DeleteSchoolDialog({
   domain,
   studentCount,
   teacherCount,
+  open,
+  onOpenChange,
   onDeleted,
-  children,
 }: DeleteSchoolDialogProps) {
-  const [open, setOpen] = useState(false)
   const [confirmName, setConfirmName] = useState("")
   const [isPending, startTransition] = useTransition()
 
@@ -53,9 +53,8 @@ export function DeleteSchoolDialog({
       })
 
       if (result.success) {
-        const { stats } = result.data
         DeleteToast(`Deleted "${result.data.deletedName}"`)
-        setOpen(false)
+        onOpenChange(false)
         setConfirmName("")
         onDeleted?.()
       } else {
@@ -68,12 +67,11 @@ export function DeleteSchoolDialog({
     if (!next) {
       setConfirmName("")
     }
-    setOpen(next)
+    onOpenChange(next)
   }
 
   return (
     <AlertDialog open={open} onOpenChange={handleOpenChange}>
-      <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
       <AlertDialogContent className="sm:max-w-sm">
         <AlertDialogHeader>
           <AlertDialogTitle className="bg-background">

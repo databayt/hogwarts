@@ -43,27 +43,27 @@ function StepFooter() {
 
   const handleBack = () => {
     if (stepIndex > 0) {
-      router.push(`/${locale}/join/${steps[stepIndex - 1]}`)
+      router.push(`/${locale}/internal-onboarding/${steps[stepIndex - 1]}`)
     }
   }
 
   const handleNext = () => {
     if (stepIndex < steps.length - 1) {
-      router.push(`/${locale}/join/${steps[stepIndex + 1]}`)
+      router.push(`/${locale}/internal-onboarding/${steps[stepIndex + 1]}`)
     }
   }
 
   return (
     <FormFooter
       config={INTERNAL_ONBOARDING_CONFIG}
-      basePath={`/${locale}/join`}
+      basePath="/internal-onboarding"
       onBack={handleBack}
       onNext={handleNext}
       showSave={false}
       showHelp={false}
       showLogo={true}
       finalLabel="Submit"
-      finalDestination={`/${locale}/join/welcome`}
+      finalDestination={`/${locale}/internal-onboarding/welcome`}
       useValidation={useWizardValidation}
     />
   )

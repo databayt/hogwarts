@@ -55,10 +55,17 @@ The admin confirms enrollment for selected students. This triggers a single tran
 6. Sets `academicGradeId` on the student from the matched `YearLevel` → `AcademicGrade` link
 7. Updates user role from `USER` to `STUDENT` and assigns `schoolId`
 8. Auto-assigns active `FeeStructures` for the campaign's academic year → creates `FeeAssignment` records
-9. Creates `Guardian` + `StudentGuardian` + `GuardianPhoneNumber` records from father/mother/guardian data
-10. Copies application documents to `StudentDocument` records
-11. Sends enrollment confirmation notification (in-app + email)
-12. Returns `studentId` for immediate navigation to the student profile
+9. **Auto-generates `UserInvoice`** from fee assignments (non-fatal — enrollment succeeds even if invoice generation fails):
+   - Queries the fee assignments created in step 8
+   - Creates a `UserInvoice` with one `UserInvoiceItem` per fee structure
+   - Invoice number format: `ENR{YY}{NNN}` (e.g., `ENR26001`)
+   - Status: `UNPAID`, due date: 30 days from enrollment
+   - School name/address as "from", student name/email as "to"
+   - Visible in Finance → Invoices immediately after enrollment
+10. Creates `Guardian` + `StudentGuardian` + `GuardianPhoneNumber` records from father/mother/guardian data
+11. Copies application documents to `StudentDocument` records
+12. Sends enrollment confirmation notification (in-app + email)
+13. Returns `studentId` for immediate navigation to the student profile
 
 The student is created with `wizardStep: null` and `status: ACTIVE`, meaning they appear as a fully complete active student — not a draft.
 
@@ -118,6 +125,19 @@ The admin can generate a merit list that ranks shortlisted/selected/waitlisted a
 ### Payment Recording
 
 Admins can manually record payments for cash/bank transfer methods, marking the application fee as paid.
+
+**Note:** Application fee payments currently update the `Application.applicationFeePaid` flag only. A future enhancement will bridge these into the `Payment` model for full accounting integration (requires making `Payment.feeAssignmentId` optional or creating a dedicated "application fee" FeeStructure).
+
+### Invoice Auto-Generation
+
+When enrollment is confirmed, the system auto-generates a `UserInvoice` from the student's fee assignments:
+
+1. Queries all `PENDING` fee assignments for the student's academic year
+2. Creates `UserInvoiceAddress` records for school (from) and student (to)
+3. Creates `UserInvoice` with one `UserInvoiceItem` per fee structure
+4. Invoice appears in **Finance → Invoices** immediately
+
+This is **non-fatal** — enrollment succeeds even if invoice generation fails. The invoice uses the `createInvoiceFromEnrollment()` utility from `finance/invoice/actions.ts`.
 
 ---
 
@@ -225,7 +245,7 @@ The session is also verified to belong to the correct school before accepting su
 | `SELECTED`            | Admin selects                | Offer created (30-day expiry), payment link sent |
 | `WAITLISTED`          | Admin waitlists              | Applicant notified                               |
 | `REJECTED`            | Admin rejects                | Applicant notified                               |
-| `ADMITTED`            | Admin confirms enrollment    | Student + Guardian + Fees created                |
+| `ADMITTED`            | Admin confirms enrollment    | Student + Guardian + Fees + Invoice created      |
 | `WITHDRAWN`           | Applicant or admin withdraws | Application closed                               |
 
 ---

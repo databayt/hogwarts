@@ -272,6 +272,12 @@ export interface DateFieldProps extends BaseFieldProps {
   minDate?: Date
   maxDate?: Date
   disabledDays?: (date: Date) => boolean
+  /** Calendar caption layout — "dropdown" shows month/year selects */
+  captionLayout?: "label" | "dropdown" | "dropdown-months" | "dropdown-years"
+  /** Earliest month shown in dropdown (default: 100 years ago) */
+  startMonth?: Date
+  /** Latest month shown in dropdown (default: current month) */
+  endMonth?: Date
 }
 
 // =============================================================================

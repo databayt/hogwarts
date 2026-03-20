@@ -892,6 +892,105 @@ export async function deleteInvoice({ id }: { id: string }) {
   }
 }
 
+// ============================================================================
+// Enrollment Invoice Generation (called from admission actions)
+// ============================================================================
+
+interface EnrollmentFeeItem {
+  name: string
+  amount: number
+}
+
+/**
+ * Create an invoice from enrollment fee assignments.
+ * Called by confirmEnrollment() — does NOT require auth (runs within the enrollment transaction context).
+ */
+export async function createInvoiceFromEnrollment(params: {
+  schoolId: string
+  userId: string
+  studentName: string
+  studentEmail: string
+  schoolName: string
+  schoolAddress: string
+  currency: string
+  items: EnrollmentFeeItem[]
+  dueDate?: Date
+}): Promise<{ success: boolean; invoiceId?: string; error?: string }> {
+  try {
+    const {
+      schoolId,
+      userId,
+      studentName,
+      studentEmail,
+      schoolName,
+      schoolAddress,
+      currency,
+      items,
+    } = params
+
+    if (items.length === 0) {
+      return { success: true } // Nothing to invoice
+    }
+
+    const invoiceNumber = await generateUniqueInvoiceNumber(schoolId, "ENR")
+    const subTotal = items.reduce((sum, item) => sum + item.amount, 0)
+    const dueDate =
+      params.dueDate ?? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days default
+
+    const fromAddress = await db.userInvoiceAddress.create({
+      data: {
+        name: schoolName,
+        address1: schoolAddress || "School Address",
+        schoolId,
+      },
+    })
+
+    const toAddress = await db.userInvoiceAddress.create({
+      data: {
+        name: studentName,
+        email: studentEmail,
+        address1: "Student",
+        schoolId,
+      },
+    })
+
+    const invoice = await db.userInvoice.create({
+      data: {
+        invoice_no: invoiceNumber,
+        invoice_date: new Date(),
+        due_date: dueDate,
+        currency,
+        fromAddressId: fromAddress.id,
+        toAddressId: toAddress.id,
+        sub_total: subTotal,
+        total: subTotal,
+        status: "UNPAID",
+        userId,
+        schoolId,
+        notes: "Auto-generated from enrollment",
+        items: {
+          create: items.map((item) => ({
+            item_name: item.name,
+            quantity: 1,
+            price: item.amount,
+            total: item.amount,
+            schoolId,
+          })),
+        },
+      },
+    })
+
+    return { success: true, invoiceId: invoice.id }
+  } catch (error) {
+    console.error("[createInvoiceFromEnrollment]", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to create invoice",
+    }
+  }
+}
+
 // Auth
 export async function logout() {
   await signOut()

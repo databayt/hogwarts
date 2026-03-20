@@ -20,6 +20,9 @@ const prisma = new PrismaClient()
 
 const TEST_USER_EMAIL = "user@databayt.org"
 
+// Accounts whose roles must never be changed by bulk operations
+const PROTECTED_EMAILS = ["dev@databayt.org"]
+
 async function resetTestUser() {
   console.log("🔄 Resetting test user: user@databayt.org")
 
@@ -57,7 +60,11 @@ async function resetTestUser() {
 
         // Unlink users first (FK constraint prevents school deletion otherwise)
         const unlinkedUsers = await prisma.user.updateMany({
-          where: { schoolId: { in: schoolIds } },
+          where: {
+            schoolId: { in: schoolIds },
+            email: { notIn: PROTECTED_EMAILS },
+            role: { not: "DEVELOPER" },
+          },
           data: { schoolId: null, role: "USER" },
         })
         if (unlinkedUsers.count > 0) {

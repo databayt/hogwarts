@@ -5,7 +5,7 @@
 import { useMemo } from "react"
 import Link from "next/link"
 import { useParams, usePathname } from "next/navigation"
-import { Bell, Mail } from "lucide-react"
+import { Mail } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import {
@@ -27,6 +27,7 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 import { useBreadcrumbs } from "@/components/saas-dashboard/hooks/use-breadcrumbs"
 import ImpersonationBanner from "@/components/saas-dashboard/impersonation-banner"
+import { NotificationBellIcon } from "@/components/school-dashboard/notifications/bell-icon"
 import type { School } from "@/components/school-marketing/types"
 import { ModeSwitcher } from "@/components/template/marketing-header/mode-switcher"
 import { MobileNav } from "@/components/template/mobile-nav"
@@ -142,19 +143,12 @@ export default function PlatformHeader({
           />
           <LanguageSwitcher variant="toggle" />
           <ModeSwitcher />
-          <Button
-            variant="link"
-            size="icon"
-            className="size-7 cursor-pointer transition-opacity hover:opacity-70"
-            asChild
-          >
-            <Link href={notificationsUrl}>
-              <Bell className="h-4 w-4" />
-              <span className="sr-only">
-                {dictionary?.platform?.notifications || "Notifications"}
-              </span>
-            </Link>
-          </Button>
+          {dictionary?.notifications && (
+            <NotificationBellIcon
+              locale={locale as "ar" | "en"}
+              dictionary={dictionary.notifications}
+            />
+          )}
           <Button
             variant="link"
             size="icon"

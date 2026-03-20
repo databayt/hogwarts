@@ -3,7 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { useCallback, useEffect, useRef, useState } from "react"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { FormHeading, FormLayout } from "@/components/form"
@@ -11,7 +11,6 @@ import { useLocale } from "@/components/internationalization/use-locale"
 
 import { useApplySession } from "../application-context"
 import { submitApplicationAction } from "../submit-action"
-import ApplicationSuccessModal from "../success-modal"
 import type { AcademicStepData } from "../types"
 import { useApplyValidation } from "../validation-context"
 import { ACADEMIC_STEP_CONFIG } from "./config"
@@ -24,6 +23,7 @@ interface Props {
 
 export default function AcademicContent({ dictionary }: Props) {
   const params = useParams()
+  const router = useRouter()
   const { locale } = useLocale()
   const isRTL = locale === "ar"
   const subdomain = params.subdomain as string
@@ -36,8 +36,6 @@ export default function AcademicContent({ dictionary }: Props) {
   sessionRef.current = session
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [showSuccess, setShowSuccess] = useState(false)
-  const [applicationNumber, setApplicationNumber] = useState("")
 
   const initialData = getStepData("academic")
 
@@ -97,13 +95,21 @@ export default function AcademicContent({ dictionary }: Props) {
         throw new Error(result.error || "Failed to submit application")
       }
 
-      setApplicationNumber(result.data.applicationNumber)
-      setShowSuccess(true)
+      // Route based on payment requirement
+      if (result.data.requiresPayment) {
+        router.push(
+          `/${locale}/application/${result.data.applicationId}/payment?number=${result.data.applicationNumber}`
+        )
+      } else {
+        router.push(
+          `/${locale}/application/${result.data.applicationId}/success?number=${result.data.applicationNumber}`
+        )
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to submit")
       setIsSubmitting(false)
     }
-  }, [subdomain, id, isRTL])
+  }, [subdomain, id, isRTL, locale, router])
 
   useEffect(() => {
     const academicData = session.formData.academic
@@ -130,33 +136,25 @@ export default function AcademicContent({ dictionary }: Props) {
     ?.apply?.academic ?? {}) as Record<string, string>
 
   return (
-    <>
-      <FormLayout>
-        <FormHeading
-          title={dict.title || ACADEMIC_STEP_CONFIG.label(isRTL)}
-          description={
-            dict.description || ACADEMIC_STEP_CONFIG.description(isRTL)
-          }
-        />
-        <div className="space-y-6">
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          <AcademicForm
-            ref={academicFormRef}
-            initialData={initialData as AcademicStepData}
-            dictionary={dictionary}
-          />
-        </div>
-      </FormLayout>
-      <ApplicationSuccessModal
-        applicationNumber={applicationNumber}
-        showModal={showSuccess}
-        setShowModal={setShowSuccess}
-        isRTL={isRTL}
+    <FormLayout>
+      <FormHeading
+        title={dict.title || ACADEMIC_STEP_CONFIG.label(isRTL)}
+        description={
+          dict.description || ACADEMIC_STEP_CONFIG.description(isRTL)
+        }
       />
-    </>
+      <div className="space-y-6">
+        {error && (
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+        <AcademicForm
+          ref={academicFormRef}
+          initialData={initialData as AcademicStepData}
+          dictionary={dictionary}
+        />
+      </div>
+    </FormLayout>
   )
 }

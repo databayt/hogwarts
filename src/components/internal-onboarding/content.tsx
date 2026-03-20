@@ -81,7 +81,7 @@ export function JoinLandingContent({
   const handleContinue = () => {
     if (!selectedRole) return
     setRole(selectedRole)
-    router.push(`/${locale}/join/personal`)
+    router.push(`/${locale}/internal-onboarding/personal`)
   }
 
   return (

@@ -14,6 +14,7 @@ import {
 } from "./constants"
 import {
   useAutoHide,
+  useMediaSession,
   useThumbnailSeek,
   useVideoPlayer,
   useVideoProgress,
@@ -232,6 +233,15 @@ export function VideoPlayer({
           })
         }
       : undefined,
+  })
+
+  // Media Session API (PiP controls: skip, progress bar)
+  useMediaSession({
+    videoRef,
+    isPlaying: state.isPlaying,
+    currentTime: state.currentTime,
+    duration: state.duration,
+    playbackRate: state.playbackRate,
   })
 
   // Thumbnail generation

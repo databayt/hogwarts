@@ -66,10 +66,10 @@ export const getCampaignColumns = (
       header: ({ column }) => (
         <DataTableColumnHeader
           column={column}
-          title={t?.campaigns?.campaignName || "Name"}
+          title={locale === "ar" ? "الاسم" : "Name"}
         />
       ),
-      meta: { label: t?.campaigns?.campaignName || "Name", variant: "text" },
+      meta: { label: locale === "ar" ? "الاسم" : "Name", variant: "text" },
       enableColumnFilter: true,
     },
     {
@@ -77,17 +77,17 @@ export const getCampaignColumns = (
       header: ({ column }) => (
         <DataTableColumnHeader
           column={column}
-          title={t?.campaigns?.academicYear || "Year"}
+          title={locale === "ar" ? "السنة" : "Year"}
         />
       ),
-      meta: { label: t?.campaigns?.academicYear || "Year", variant: "text" },
+      meta: { label: locale === "ar" ? "السنة" : "Year", variant: "text" },
     },
     {
       accessorKey: "status",
       header: ({ column }) => (
         <DataTableColumnHeader
           column={column}
-          title={t?.columns?.status || "Status"}
+          title={locale === "ar" ? "الحالة" : "Status"}
         />
       ),
       cell: ({ getValue }) => {
@@ -96,7 +96,7 @@ export const getCampaignColumns = (
         return <Badge variant={getStatusVariant(status)}>{label}</Badge>
       },
       meta: {
-        label: t?.columns?.status || "Status",
+        label: locale === "ar" ? "الحالة" : "Status",
         variant: "select",
         options: [
           { label: t?.status?.DRAFT || "Draft", value: "DRAFT" },
@@ -114,7 +114,7 @@ export const getCampaignColumns = (
       header: ({ column }) => (
         <DataTableColumnHeader
           column={column}
-          title={t?.nav?.applications || "Applications"}
+          title={locale === "ar" ? "الطلبات" : "Applications"}
         />
       ),
       cell: ({ getValue }) => (
@@ -126,7 +126,7 @@ export const getCampaignColumns = (
       header: ({ column }) => (
         <DataTableColumnHeader
           column={column}
-          title={t?.campaigns?.totalSeats || "Seats"}
+          title={locale === "ar" ? "المقاعد" : "Seats"}
         />
       ),
       cell: ({ getValue }) => (
@@ -138,7 +138,7 @@ export const getCampaignColumns = (
       header: ({ column }) => (
         <DataTableColumnHeader
           column={column}
-          title={t?.campaigns?.startDate || "Start"}
+          title={locale === "ar" ? "البداية" : "Start"}
         />
       ),
       cell: ({ getValue }) => (
@@ -152,7 +152,7 @@ export const getCampaignColumns = (
       header: ({ column }) => (
         <DataTableColumnHeader
           column={column}
-          title={t?.campaigns?.endDate || "End"}
+          title={locale === "ar" ? "النهاية" : "End"}
         />
       ),
       cell: ({ getValue }) => (

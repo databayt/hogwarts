@@ -52,6 +52,9 @@ export function DateField({
   minDate,
   maxDate,
   disabledDays,
+  captionLayout,
+  startMonth,
+  endMonth,
 }: DateFieldProps) {
   const form = useFormContext()
 
@@ -103,6 +106,9 @@ export function DateField({
                   field.onChange(date?.toISOString().split("T")[0])
                 }
                 disabled={isDateDisabled}
+                captionLayout={captionLayout}
+                startMonth={startMonth}
+                endMonth={endMonth}
                 autoFocus
               />
             </PopoverContent>

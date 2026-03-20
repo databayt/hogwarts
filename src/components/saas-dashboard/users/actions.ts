@@ -241,6 +241,14 @@ export async function userResetSchool(input: {
       }
     }
 
+    // DEVELOPER role is immutable — never downgrade
+    if (user.role === "DEVELOPER") {
+      return {
+        success: false,
+        error: new Error("Cannot detach a DEVELOPER user"),
+      }
+    }
+
     await db.user.update({
       where: { id: validated.userId },
       data: { schoolId: null, role: "USER" },

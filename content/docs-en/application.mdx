@@ -201,6 +201,13 @@ When the applicant clicks "Submit Application", the system:
 10. Send confirmation email via Resend
 11. Check if payment is required (`campaign.applicationFee > 0`)
 
+**Post-submit routing:** After successful submission, the academic step checks `result.requiresPayment`:
+
+- **Payment required** → redirects to `/{lang}/application/{applicationId}/payment?number={applicationNumber}`
+- **No payment** → redirects to `/{lang}/application/{applicationId}/success?number={applicationNumber}`
+
+The layout's `FormFooter` no longer has a `finalDestination` — the academic step's `onNext` callback handles all post-submit navigation.
+
 ### Step 6: Payment (If Required)
 
 If the campaign has an application fee, the applicant is redirected to the payment page.
@@ -211,7 +218,7 @@ If the campaign has an application fee, the applicant is redirected to the payme
 | Pay at School  | Cash payment — shows reference number    |
 | Bank Transfer  | Shows bank details with reference number |
 
-After selecting cash or bank transfer, a confirmation card with the reference number is shown.
+After selecting cash or bank transfer, a confirmation card with the reference number is shown. A "Continue" button navigates to the success page.
 
 **Route:** `/{lang}/application/{applicationId}/payment?number={applicationNumber}`
 
@@ -219,12 +226,35 @@ After selecting cash or bank transfer, a confirmation card with the reference nu
 
 Displays:
 
+- Confetti celebration modal on first visit (animated via `success-modal.tsx`)
 - Application number in a card
-- Payment status (paid/pending)
+- **"Complete Payment" CTA** if payment is required but not yet received — links to the payment page
+- Payment status (paid/pending) with method-specific details
 - Next steps timeline (email confirmation → review → interview → decision)
-- Links to track status and schedule a school tour
+- Links to explore school and schedule a school tour
 
-**Route:** `/{lang}/application/{campaignId}/success?number={applicationNumber}`
+**Route:** `/{lang}/application/{applicationId}/success?number={applicationNumber}`
+
+## Application Status Banner
+
+When a logged-in applicant visits the school site, a banner displays their application status at the top of the page. The banner is:
+
+- **Server-rendered** — queries the most recent non-draft application for the current user
+- **Client-interactive** — dismissible via localStorage per application
+- **Status-aware** — shows different messages and CTAs by status
+
+| Status          | Banner Message                                 | CTA                                   |
+| --------------- | ---------------------------------------------- | ------------------------------------- |
+| SUBMITTED       | "Application #\{number\} — Submitted"          | None                                  |
+| UNDER_REVIEW    | "Application #\{number\} — Under Review"       | None                                  |
+| SHORTLISTED     | "Application #\{number\} — Shortlisted"        | None                                  |
+| SELECTED        | "Congratulations! You've been accepted"        | **"Complete Payment"** → payment page |
+| SELECTED + paid | "Congratulations! Accepted — Payment received" | **"Go to Dashboard"**                 |
+| ADMITTED        | "Welcome! Enrollment confirmed"                | **"Go to Dashboard"**                 |
+| WAITLISTED      | "Application #\{number\} — Waitlisted"         | None                                  |
+| REJECTED        | "Application #\{number\} — Not Selected"       | None                                  |
+
+The banner includes a **timeline progress indicator** (4 dots: Submitted → Review → Decision → Enrolled) showing the applicant's position in the pipeline.
 
 ---
 

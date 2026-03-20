@@ -59,7 +59,8 @@ export function MultiTenantPrismaAdapter(prisma: PrismaClient): Adapter {
           emailVerified: user.emailVerified,
           name: user.username,
           image: user.image,
-        }
+          role: user.role,
+        } as AdapterUser
       } catch (error) {
         console.error("[ADAPTER] getUserByEmail error:", error)
         return null
@@ -74,6 +75,21 @@ export function MultiTenantPrismaAdapter(prisma: PrismaClient): Adapter {
      */
     async createUser(data: Omit<AdapterUser, "id">): Promise<AdapterUser> {
       try {
+        // Check if user already exists (prevents duplicate for existing accounts like DEVELOPER)
+        const existing = await prisma.user.findFirst({
+          where: { email: data.email, schoolId: null },
+        })
+        if (existing) {
+          return {
+            id: existing.id,
+            email: existing.email!,
+            emailVerified: existing.emailVerified,
+            name: existing.username,
+            image: existing.image,
+            role: existing.role,
+          } as AdapterUser
+        }
+
         const user = await prisma.user.create({
           data: {
             email: data.email,
@@ -95,7 +111,8 @@ export function MultiTenantPrismaAdapter(prisma: PrismaClient): Adapter {
           emailVerified: user.emailVerified,
           name: user.username,
           image: user.image,
-        }
+          role: user.role,
+        } as AdapterUser
       } catch (error) {
         console.error("[ADAPTER] createUser error:", error)
         throw error
@@ -134,7 +151,8 @@ export function MultiTenantPrismaAdapter(prisma: PrismaClient): Adapter {
           emailVerified: dbAccount.user.emailVerified,
           name: dbAccount.user.username,
           image: dbAccount.user.image,
-        }
+          role: dbAccount.user.role,
+        } as AdapterUser
       } catch (error) {
         console.error("[ADAPTER] getUserByAccount error:", error)
         return null

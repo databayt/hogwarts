@@ -4,7 +4,7 @@ paths:
   - "src/components/school-marketing/admission/**"
   - "src/components/school-marketing/application/**"
   - "src/app/**/admission/**"
-  - "src/app/**/apply/**"
+  - "src/app/**/application/**"
   - "prisma/models/admission.prisma"
 ---
 

@@ -36,6 +36,8 @@ interface UploadOptions {
   tier?: StorageTier
   access?: "public" | "private"
   metadata?: Record<string, string>
+  /** Override schoolId (e.g., for applicants uploading to a school they don't belong to) */
+  schoolId?: string
 }
 
 interface UploadResult {
@@ -96,6 +98,11 @@ export async function uploadFile(
         select: { id: true },
       })
       schoolId = ownedSchool?.id
+    }
+
+    // Allow explicit schoolId override (e.g., applicants uploading to a target school)
+    if (!schoolId && options.schoolId) {
+      schoolId = options.schoolId
     }
 
     if (!schoolId) {

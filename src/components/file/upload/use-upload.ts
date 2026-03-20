@@ -58,6 +58,8 @@ interface ImageOptimizationConfig {
 interface UseUploadOptions {
   category: FileCategory
   type?: FileType
+  /** Override schoolId for uploads (e.g., applicants uploading to a target school) */
+  schoolId?: string
   folder?: string
   provider?: StorageProvider
   tier?: StorageTier
@@ -334,6 +336,7 @@ export function useUpload(options: UseUploadOptions): UseUploadReturn {
           tier: options.tier,
           access: options.access,
           metadata: options.metadata,
+          schoolId: options.schoolId,
         })
 
         clearInterval(progressInterval)

@@ -23,6 +23,15 @@ export async function updateUserRole(userId: string, data: FormData) {
 
     const { role } = userRoleSchema.parse(data)
 
+    // DEVELOPER role is immutable — cannot be changed via self-service
+    const currentUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true },
+    })
+    if (currentUser?.role === "DEVELOPER" || role === "DEVELOPER") {
+      throw new Error("Cannot modify DEVELOPER role")
+    }
+
     // Update the user role.
     await prisma.user.update({
       where: {

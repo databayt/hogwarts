@@ -103,10 +103,10 @@ export default function SuccessCompletionModal({
         <div className="flex items-center justify-center gap-1.5">
           {copied ? (
             <>
-              <span className="text-sm text-green-700">
+              <span className="text-xs text-green-700">
                 Copied to clipboard
               </span>
-              <Check className="h-3.5 w-3.5 text-green-700" />
+              <Check className="h-3 w-3 text-green-700" />
             </>
           ) : (
             <>

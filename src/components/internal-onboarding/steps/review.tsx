@@ -73,7 +73,7 @@ export function ReviewStep() {
       const phone = contact.phone ? encodeURIComponent(contact.phone) : ""
       const params = new URLSearchParams({ ref, name, role })
       if (phone) params.set("phone", phone)
-      router.push(`/${locale}/join/welcome?${params.toString()}`)
+      router.push(`/${locale}/internal-onboarding/welcome?${params.toString()}`)
     } else {
       submittingRef.current = false
       setIsSubmitting(false)

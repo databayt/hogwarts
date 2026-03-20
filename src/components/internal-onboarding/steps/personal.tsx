@@ -71,7 +71,7 @@ export function PersonalStep() {
             const valid = await form.trigger()
             if (valid) {
               updateStepData("personal", form.getValues())
-              router.push(`/${locale}/join/contact`)
+              router.push(`/${locale}/internal-onboarding/contact`)
             }
           },
         })

@@ -54,7 +54,7 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({
       number: 2,
       title: dictionary.steps.step2.title,
       description: dictionary.steps.step2.description,
-      illustration: "/anthropic/eng-harnesses-long-running-agents.svg",
+      illustration: "/illustrations/onboarding-step2.svg",
     },
     {
       number: 3,

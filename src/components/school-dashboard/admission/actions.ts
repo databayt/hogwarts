@@ -12,6 +12,7 @@ import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
 import { enrollStudentInGradeClasses } from "@/lib/enrollment-sync"
 import { extractGradeNumber } from "@/lib/grade-utils"
+import { createInvoiceFromEnrollment } from "@/components/school-dashboard/finance/invoice/actions"
 
 import { assertAdmissionPermission } from "./authorization"
 import {
@@ -1016,6 +1017,49 @@ export async function confirmEnrollment(params: {
         enrolledStudentId = student.id
       }
     })
+
+    // 6b. Auto-generate invoice from fee assignments (non-fatal, outside transaction)
+    try {
+      if (enrolledStudentId && application.userId) {
+        const feeAssignments = await db.feeAssignment.findMany({
+          where: {
+            schoolId,
+            studentId: enrolledStudentId,
+            academicYear: application.campaign.academicYear,
+            status: "PENDING",
+          },
+          include: {
+            feeStructure: { select: { name: true } },
+          },
+        })
+
+        if (feeAssignments.length > 0) {
+          const school = await db.school.findUnique({
+            where: { id: schoolId },
+            select: { name: true, address: true, currency: true },
+          })
+
+          await createInvoiceFromEnrollment({
+            schoolId,
+            userId: application.userId,
+            studentName: `${application.firstName} ${application.lastName}`,
+            studentEmail: application.email,
+            schoolName: school?.name ?? "School",
+            schoolAddress: school?.address ?? "",
+            currency: school?.currency ?? "USD",
+            items: feeAssignments.map((fa) => ({
+              name: fa.feeStructure.name,
+              amount: Number(fa.finalAmount),
+            })),
+          })
+        }
+      }
+    } catch (invoiceError) {
+      console.warn(
+        "[confirmEnrollment] Invoice auto-generation failed:",
+        invoiceError
+      )
+    }
 
     // Check for suggested section placement (auto-suggest when a matching section has capacity)
     let suggestedSectionId: string | null = null

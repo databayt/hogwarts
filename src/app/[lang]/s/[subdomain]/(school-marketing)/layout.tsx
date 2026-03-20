@@ -54,9 +54,9 @@ export default async function SiteLayout({
 
   return (
     <LoadingWrapper>
+      <ApplicationStatusBanner schoolId={school.id} locale={lang as Locale} />
       <div data-slot="site-layout" className="marketing-container">
         <SiteHeader school={school} locale={lang} />
-        <ApplicationStatusBanner schoolId={school.id} locale={lang as Locale} />
         <main data-slot="main-content" role="main">
           {children}
         </main>

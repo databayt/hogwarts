@@ -210,6 +210,7 @@ function TenantActionsCell({
   callbacks?: TenantColumnCallbacks
 }) {
   const [open, setOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
   const onStartImpersonation = async () => {
     try {
@@ -259,82 +260,89 @@ function TenantActionsCell({
   }
 
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-8 w-8 p-0">
-          <MoreHorizontal className="h-4 w-4" />
-          <span className="sr-only">Open menu</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <a href={`/operator/tenants?impersonate=${tenant.id}`}>Impersonate</a>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={onStartImpersonation}>
-          Start impersonation
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={onToggleActive}>
-          {tenant.isActive ? "Suspend" : "Activate"}
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={async () => {
-            try {
-              const res = await tenantSetupCatalog({
-                tenantId: tenant.id,
-              })
-              if (res.success) {
-                SuccessToast(
-                  `Catalog configured: ${res.data.levels} levels, ${res.data.grades} grades, ${res.data.selections} subject selections`
+    <>
+      <DropdownMenu open={open} onOpenChange={setOpen}>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <MoreHorizontal className="h-4 w-4" />
+            <span className="sr-only">Open menu</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem asChild>
+            <a href={`/operator/tenants?impersonate=${tenant.id}`}>
+              Impersonate
+            </a>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={onStartImpersonation}>
+            Start impersonation
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={onToggleActive}>
+            {tenant.isActive ? "Suspend" : "Activate"}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={async () => {
+              try {
+                const res = await tenantSetupCatalog({
+                  tenantId: tenant.id,
+                })
+                if (res.success) {
+                  SuccessToast(
+                    `Catalog configured: ${res.data.levels} levels, ${res.data.grades} grades, ${res.data.selections} subject selections`
+                  )
+                } else {
+                  ErrorToast(res.error?.message || "Failed to setup catalog")
+                }
+              } catch (e) {
+                ErrorToast(
+                  e instanceof Error ? e.message : "Failed to setup catalog"
                 )
-              } else {
-                ErrorToast(res.error?.message || "Failed to setup catalog")
               }
-            } catch (e) {
-              ErrorToast(
-                e instanceof Error ? e.message : "Failed to setup catalog"
-              )
-            }
-          }}
-        >
-          Setup Catalog
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <div className="px-0">
-            <TenantDetail
-              tenantId={tenant.id}
-              name={tenant.name}
-              domain={tenant.subdomain}
-              planType={tenant.planType}
-              isActive={tenant.isActive}
-            />
-          </div>
-        </DropdownMenuItem>
-        {tenant.domain !== "demo" && (
-          <>
-            <DropdownMenuSeparator />
-            <DeleteSchoolDialog
-              tenantId={tenant.id}
-              name={tenant.name}
-              domain={tenant.domain}
-              studentCount={tenant.studentCount}
-              teacherCount={tenant.teacherCount}
-              onDeleted={() => {
-                setOpen(false)
-                callbacks?.onDelete?.(tenant)
-              }}
-            >
+            }}
+          >
+            Setup Catalog
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <div className="px-0">
+              <TenantDetail
+                tenantId={tenant.id}
+                name={tenant.name}
+                domain={tenant.subdomain}
+                planType={tenant.planType}
+                isActive={tenant.isActive}
+              />
+            </div>
+          </DropdownMenuItem>
+          {tenant.domain !== "demo" && (
+            <>
+              <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="text-destructive focus:text-destructive"
-                onSelect={(e) => e.preventDefault()}
+                onSelect={() => {
+                  setOpen(false)
+                  setDeleteDialogOpen(true)
+                }}
               >
                 Delete School
               </DropdownMenuItem>
-            </DeleteSchoolDialog>
-          </>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+      {tenant.domain !== "demo" && (
+        <DeleteSchoolDialog
+          tenantId={tenant.id}
+          name={tenant.name}
+          domain={tenant.domain}
+          studentCount={tenant.studentCount}
+          teacherCount={tenant.teacherCount}
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          onDeleted={() => callbacks?.onDelete?.(tenant)}
+        />
+      )}
+    </>
   )
 }

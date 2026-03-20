@@ -2,13 +2,20 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React, { forwardRef, useEffect, useImperativeHandle } from "react"
+import React, {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useState,
+} from "react"
 import Image from "next/image"
+import { useParams } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { CheckCircle, Loader2 } from "lucide-react"
 import { useDropzone } from "react-dropzone"
 import { useForm, useFormContext } from "react-hook-form"
 
+import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 import { cn } from "@/lib/utils"
 import { Form } from "@/components/ui/form"
 import { useUpload } from "@/components/file/upload/use-upload"
@@ -37,11 +44,13 @@ function DocumentCard({
   label,
   icon,
   disabled,
+  schoolId,
 }: {
   name: string
   label: string
   icon: string
   disabled?: boolean
+  schoolId?: string
 }) {
   const form = useFormContext()
   const currentValue = form.watch(name)
@@ -53,6 +62,7 @@ function DocumentCard({
     folder: "apply-documents",
     maxSize: 10 * 1024 * 1024,
     maxFiles: 1,
+    schoolId,
     onSuccess: (result) => {
       form.setValue(name, result)
     },
@@ -72,9 +82,13 @@ function DocumentCard({
   })
 
   const uploaded = hasFile || uploadedFiles.length > 0
-  const fileUrl =
-    (currentValue as { url?: string })?.url || uploadedFiles[0]?.url || ""
-  const isImage = /\.(jpe?g|png|gif|webp|bmp|svg)$/i.test(fileUrl)
+  const fileResult =
+    (currentValue as { url?: string; mimeType?: string }) || uploadedFiles[0]
+  const fileUrl = fileResult?.url || ""
+  const mimeType = (fileResult as { mimeType?: string })?.mimeType || ""
+  const isImage =
+    /\.(jpe?g|png|gif|webp|bmp|svg)$/i.test(fileUrl) ||
+    mimeType.startsWith("image/")
 
   return (
     <div
@@ -115,13 +129,10 @@ function DocumentCard({
               className="h-full w-full object-cover"
             />
           ) : (
-            <object
-              data={`${fileUrl}#toolbar=0&navpanes=0&scrollbar=0`}
-              type="application/pdf"
-              className="pointer-events-none h-full w-full"
-            >
+            <div className="flex flex-1 flex-col items-center justify-center gap-1">
               <CheckCircle className="h-8 w-8 text-green-500" />
-            </object>
+              <p className="text-muted-foreground text-xs">Uploaded</p>
+            </div>
           )}
         </>
       ) : (
@@ -139,6 +150,17 @@ export const AttachmentsForm = forwardRef<
   AttachmentsFormProps
 >(({ initialData, onSuccess, dictionary }, ref) => {
   const { updateStepData } = useApplySession()
+  const params = useParams()
+  const [schoolId, setSchoolId] = useState<string>()
+
+  // Resolve schoolId from subdomain so applicants (who have no school) can upload
+  useEffect(() => {
+    const subdomain = params?.subdomain as string | undefined
+    if (!subdomain) return
+    getSchoolBySubdomain(subdomain).then((result) => {
+      if (result.success) setSchoolId(result.data.id)
+    })
+  }, [params?.subdomain])
 
   const form = useForm<AttachmentsFormData>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -213,12 +235,19 @@ export const AttachmentsForm = forwardRef<
             }}
             placeholder="Photo"
             placeholderImage="/image.png"
+            schoolId={schoolId}
           />
         </div>
 
         {/* Document slots */}
         {DOCUMENT_SLOTS.map(({ key, label, icon }) => (
-          <DocumentCard key={key} name={key} label={label} icon={icon} />
+          <DocumentCard
+            key={key}
+            name={key}
+            label={label}
+            icon={icon}
+            schoolId={schoolId}
+          />
         ))}
       </form>
     </Form>

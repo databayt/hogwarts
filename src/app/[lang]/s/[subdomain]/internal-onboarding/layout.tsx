@@ -5,11 +5,13 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
+import { OnboardingProvider } from "@/components/internal-onboarding/use-onboarding"
+import type { Locale } from "@/components/internationalization/config"
 import ErrorBoundary from "@/components/school-marketing/application/error-boundary"
 
 interface LayoutProps {
   children: React.ReactNode
-  params: Promise<{ subdomain: string; lang: string }>
+  params: Promise<{ lang: Locale; subdomain: string }>
 }
 
 export async function generateMetadata({
@@ -19,20 +21,19 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { subdomain } = await params
   const result = await getSchoolBySubdomain(subdomain)
-
   return {
     title: result.data ? `Join ${result.data.name}` : "Join School",
   }
 }
 
-export default async function SchoolOnboardLayout({
+export default async function InternalOnboardingLayout({
   children,
   params,
-}: Readonly<LayoutProps>) {
+}: LayoutProps) {
   const { subdomain } = await params
   const result = await getSchoolBySubdomain(subdomain)
 
-  if (!result.success) {
+  if (!result.success || !result.data) {
     if (result.errorType === "db_error") {
       throw new Error("Database temporarily unavailable")
     }
@@ -42,7 +43,13 @@ export default async function SchoolOnboardLayout({
   return (
     <div className="min-h-screen">
       <main>
-        <ErrorBoundary>{children}</ErrorBoundary>
+        <ErrorBoundary>
+          <div className="mx-auto w-full max-w-5xl px-4 pt-8 pb-24 sm:px-6 lg:px-8">
+            <OnboardingProvider schoolId={result.data.id} subdomain={subdomain}>
+              {children}
+            </OnboardingProvider>
+          </div>
+        </ErrorBoundary>
       </main>
     </div>
   )

@@ -9,6 +9,7 @@ import React, {
   useEffect,
   useState,
 } from "react"
+import Link from "next/link"
 import Lottie from "lottie-react"
 import { Check, Copy } from "lucide-react"
 
@@ -16,16 +17,22 @@ import { Modal } from "@/components/atom/modal"
 
 interface ApplicationSuccessModalProps {
   applicationNumber: string
+  applicantEmail?: string
+  schoolUrl?: string
   showModal: boolean
   setShowModal: Dispatch<SetStateAction<boolean>>
   isRTL?: boolean
+  locale?: string
 }
 
 export default function ApplicationSuccessModal({
   applicationNumber,
+  applicantEmail,
+  schoolUrl,
   showModal,
   setShowModal,
   isRTL = false,
+  locale = "en",
 }: ApplicationSuccessModalProps) {
   const [copied, setCopied] = useState(false)
   const [animationData, setAnimationData] = useState<object | null>(null)
@@ -38,15 +45,22 @@ export default function ApplicationSuccessModal({
   }, [])
 
   const handleCopy = useCallback(() => {
-    const info = [
-      `${isRTL ? "رقم الطلب" : "Application Number"}: ${applicationNumber}`,
-    ].join("\n")
+    const lines = [
+      `${isRTL ? "رقم الطلب" : "Application No"}: ${applicationNumber}`,
+    ]
+    if (applicantEmail) {
+      lines.push(`${isRTL ? "البريد" : "Email"}: ${applicantEmail}`)
+    }
+    if (schoolUrl) {
+      lines.push(`${isRTL ? "الموقع" : "School"}: ${schoolUrl}`)
+    }
+    lines.push(`${isRTL ? "المستندات" : "Docs"}: ed.databayt.org/docs`)
 
-    navigator.clipboard.writeText(info).then(() => {
+    navigator.clipboard.writeText(lines.join("\n")).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     })
-  }, [applicationNumber, isRTL])
+  }, [applicationNumber, applicantEmail, schoolUrl, isRTL])
 
   return (
     <Modal
@@ -64,35 +78,45 @@ export default function ApplicationSuccessModal({
         </div>
 
         {/* Success Message */}
-        <p className="text-muted-foreground mb-2">
-          {isRTL ? "رقم طلبك هو" : "Your application number is"}
+        <p className="text-muted-foreground mb-6">
+          {isRTL
+            ? "تم تقديم طلبك بنجاح، سنتواصل معك قريبًا"
+            : "Your application is submitted successfully, we shall get back to you shortly"}
         </p>
-
-        <h5 className="mb-6 font-mono tracking-wider">{applicationNumber}</h5>
 
         {/* Copy details */}
         <div className="flex items-center justify-center gap-1.5">
           {copied ? (
             <>
-              <span className="text-sm text-green-700">
+              <span className="text-xs text-green-700">
                 {isRTL ? "تم النسخ" : "Copied to clipboard"}
               </span>
-              <Check className="h-3.5 w-3.5 text-green-700" />
+              <Check className="h-3 w-3 text-green-700" />
             </>
           ) : (
             <>
               <span className="text-muted-foreground text-xs">
-                {isRTL ? "انسخ رقم الطلب" : "Copy application number"}
+                {isRTL ? "نسخ التفاصيل" : "Copy details to clipboard"}
               </span>
               <button
                 onClick={handleCopy}
                 className="text-muted-foreground hover:text-foreground transition-colors"
-                aria-label="Copy application number"
+                aria-label="Copy application details"
               >
                 <Copy className="h-3.5 w-3.5" />
               </button>
             </>
           )}
+        </div>
+
+        {/* Home link */}
+        <div className="mt-6">
+          <Link
+            href={`/${locale}`}
+            className="text-primary text-sm underline transition-colors hover:opacity-80"
+          >
+            {isRTL ? "العودة للرئيسية" : "Back to Home"}
+          </Link>
         </div>
       </div>
     </Modal>

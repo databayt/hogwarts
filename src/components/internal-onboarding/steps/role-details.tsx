@@ -142,7 +142,7 @@ function TeacherFields() {
                 "roleDetails",
                 form.getValues() as TeacherDetailsData
               )
-              router.push(`/${locale}/join/documents`)
+              router.push(`/${locale}/internal-onboarding/documents`)
             }
           },
         })
@@ -376,7 +376,7 @@ function StaffFields() {
                 "roleDetails",
                 form.getValues() as StaffDetailsData
               )
-              router.push(`/${locale}/join/documents`)
+              router.push(`/${locale}/internal-onboarding/documents`)
             }
           },
         })
@@ -575,7 +575,7 @@ function AdminFields() {
                 "roleDetails",
                 form.getValues() as AdminDetailsData
               )
-              router.push(`/${locale}/join/documents`)
+              router.push(`/${locale}/internal-onboarding/documents`)
             }
           },
         })
@@ -734,7 +734,7 @@ function StudentFields() {
                 "roleDetails",
                 form.getValues() as StudentDetailsData
               )
-              router.push(`/${locale}/join/documents`)
+              router.push(`/${locale}/internal-onboarding/documents`)
             }
           },
         })

@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React from "react"
+import React, { useState } from "react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import {
@@ -11,6 +11,7 @@ import {
   Calendar,
   CheckCircle2,
   Clock,
+  CreditCard,
   FileText,
 } from "lucide-react"
 
@@ -26,6 +27,8 @@ import {
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { useLocale } from "@/components/internationalization/use-locale"
 
+import ApplicationSuccessModal from "../success-modal"
+
 interface SuccessContentProps {
   dictionary: Dictionary
   applicationNumber?: string
@@ -33,6 +36,7 @@ interface SuccessContentProps {
   paymentMethod?: string | null
   paymentReference?: string | null
   applicationFeePaid?: boolean
+  requiresPayment?: boolean
 }
 
 export default function SuccessContent({
@@ -42,11 +46,18 @@ export default function SuccessContent({
   paymentMethod,
   paymentReference,
   applicationFeePaid,
+  requiresPayment,
 }: SuccessContentProps) {
   const params = useParams()
   const { locale } = useLocale()
   const subdomain = params.subdomain as string
   const id = params.id as string
+  const isRTL = locale === "ar"
+
+  // Show confetti modal on first visit
+  const [showConfetti, setShowConfetti] = useState(true)
+
+  const paymentPending = requiresPayment && !applicationFeePaid
 
   // Access the success dictionary
   const successDict =
@@ -74,6 +85,14 @@ export default function SuccessContent({
 
   return (
     <div className="min-h-screen py-12">
+      <ApplicationSuccessModal
+        applicationNumber={applicationNumber || ""}
+        schoolUrl={`${subdomain}.databayt.org`}
+        showModal={showConfetti}
+        setShowModal={setShowConfetti}
+        isRTL={isRTL}
+        locale={locale}
+      />
       <div className="container mx-auto max-w-2xl px-4">
         <div className="mb-8 text-center">
           <div className="mb-4 inline-flex h-20 w-20 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
@@ -84,6 +103,33 @@ export default function SuccessContent({
           </h1>
           <p className="text-muted-foreground mt-2">{thankYouText}</p>
         </div>
+
+        {/* Payment CTA when payment is pending */}
+        {paymentPending && (
+          <Card className="border-primary/50 bg-primary/5 mb-6">
+            <CardContent className="flex items-center gap-4 pt-6">
+              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
+                <CreditCard className="h-6 w-6 text-amber-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-medium">
+                  {successDict.paymentRequired || "Payment Required"}
+                </h3>
+                <p className="text-muted-foreground text-sm">
+                  {successDict.completePaymentDesc ||
+                    "Complete your application fee payment to finalize your submission"}
+                </p>
+              </div>
+              <Link
+                href={`/${locale}/application/${id}/payment?number=${applicationNumber}`}
+              >
+                <Button>
+                  {successDict.completePayment || "Complete Payment"}
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        )}
 
         {applicationNumber && (
           <Card className="mb-6">
@@ -243,16 +289,16 @@ export default function SuccessContent({
         </Card>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <Link href={`/${locale}/application/status`}>
+          <Link href={`/${locale}`}>
             <Card className="hover:border-primary h-full cursor-pointer transition-colors">
               <CardContent className="flex items-center gap-4 pt-6">
                 <FileText className="text-primary h-8 w-8" />
                 <div>
                   <h4 className="font-medium">
-                    {successDict.trackStatus || "Track Application Status"}
+                    {successDict.exploreSchool || "Explore School"}
                   </h4>
                   <p className="text-muted-foreground text-sm">
-                    {successDict.checkStatus || "Check your application status"}
+                    {successDict.learnMore || "Learn more about our school"}
                   </p>
                 </div>
               </CardContent>

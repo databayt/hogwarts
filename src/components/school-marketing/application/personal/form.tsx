@@ -101,6 +101,9 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
             <DateField
               name="dateOfBirth"
               label={`${dict.dateOfBirth || "Date of Birth"} *`}
+              captionLayout="dropdown"
+              startMonth={new Date(1990, 0)}
+              endMonth={new Date()}
             />
             <SelectField
               name="gender"

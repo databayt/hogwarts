@@ -444,6 +444,14 @@ export async function removeMember(
       }
     }
 
+    // DEVELOPER role is immutable — never downgrade
+    if (targetUser.role === "DEVELOPER") {
+      return {
+        success: false,
+        error: "Cannot remove a DEVELOPER user from school",
+      }
+    }
+
     // Notify BEFORE removal (fire-and-forget) since they lose schoolId after
     dispatchNotification({
       schoolId,

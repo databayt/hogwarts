@@ -5,6 +5,8 @@ import { notFound } from "next/navigation"
 import { auth } from "@/auth"
 import { FileText, Signature } from "lucide-react"
 
+import { getDisplayFields } from "@/lib/content-display"
+import { db } from "@/lib/db"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import type { Locale } from "@/components/internationalization/config"
@@ -59,7 +61,7 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   )
 }
 
-const COUNTRY_CODES: Record<string, string> = {
+const ISO_NAMES: Record<string, string> = {
   SA: "Saudi Arabia",
   SD: "Sudan",
   AE: "United Arab Emirates",
@@ -72,11 +74,26 @@ const COUNTRY_CODES: Record<string, string> = {
   IQ: "Iraq",
   US: "United States",
   GB: "United Kingdom",
+  DZ: "Algeria",
+  MA: "Morocco",
+  TN: "Tunisia",
+  LB: "Lebanon",
+  SY: "Syria",
+  YE: "Yemen",
+  LY: "Libya",
+  PS: "Palestine",
+  PK: "Pakistan",
+  IN: "India",
+  TR: "Turkey",
+  DE: "Germany",
+  FR: "France",
+  CA: "Canada",
+  AU: "Australia",
 }
 
-function formatCountry(country: string | null | undefined): string | null {
-  if (!country) return null
-  return COUNTRY_CODES[country] || country
+function formatISOName(code: string | null | undefined): string | null {
+  if (!code) return null
+  return ISO_NAMES[code] || code
 }
 
 function formatDate(date: Date | string | null | undefined): string | null {
@@ -115,13 +132,66 @@ export default async function ApplicationDetailContent({
   const statusLabel =
     t?.status?.[application.status as keyof typeof t.status] ||
     application.status
-  const fullName = [
-    application.firstName,
-    application.middleName,
-    application.lastName,
+
+  // Get school's content language for translation
+  const school = await db.school.findUnique({
+    where: { id: schoolId },
+    select: { preferredLanguage: true },
+  })
+  const contentLang = (school?.preferredLanguage || "ar") as "ar" | "en"
+
+  // Translate display fields if viewer lang differs from content lang
+  const translatableFields = [
+    "firstName",
+    "middleName",
+    "lastName",
+    "applyingForClass",
+    "gender",
+    "religion",
+    "category",
+    "preferredStream",
+    "secondLanguage",
+    "thirdLanguage",
+    "achievements",
+    "previousSchool",
+    "previousClass",
+    "fatherName",
+    "fatherOccupation",
+    "motherName",
+    "motherOccupation",
+    "guardianName",
+    "guardianRelation",
+    "reviewNotes",
   ]
+  const translated = await getDisplayFields(
+    application as unknown as Record<string, unknown>,
+    translatableFields,
+    contentLang,
+    lang as "ar" | "en",
+    schoolId
+  )
+
+  // Helper to get translated value or fall back to original
+  const d = (field: string): string | null => {
+    const val =
+      translated[field] || (application as Record<string, unknown>)[field]
+    return typeof val === "string" ? val : null
+  }
+
+  const fullName = [d("firstName"), d("middleName"), d("lastName")]
     .filter(Boolean)
     .join(" ")
+
+  // Resolve reviewedBy user ID to name
+  let reviewerName: string | null = null
+  if (application.reviewedBy) {
+    const reviewer = await db.user.findUnique({
+      where: { id: application.reviewedBy },
+      select: { username: true, email: true },
+    })
+    reviewerName =
+      reviewer?.username || reviewer?.email || application.reviewedBy
+  }
 
   // Parse documents JSON
   let documents: Array<{ name: string; url: string }> = []
@@ -160,7 +230,7 @@ export default async function ApplicationDetailContent({
 
         {/* Info */}
         <div className="space-y-1 text-sm">
-          <div className="flex items-center gap-2">
+          <div className="space-y-1">
             <h1 className="text-lg font-semibold">{fullName}</h1>
             <Badge variant={getStatusVariant(application.status)}>
               {statusLabel}
@@ -171,7 +241,7 @@ export default async function ApplicationDetailContent({
           {application.alternatePhone && <p>{application.alternatePhone}</p>}
           {(application.country || application.city) && (
             <p className="text-muted-foreground">
-              {[formatCountry(application.country), application.city]
+              {[formatISOName(application.country), application.city]
                 .filter(Boolean)
                 .join(", ")}
             </p>
@@ -199,9 +269,9 @@ export default async function ApplicationDetailContent({
                   ` (${application.campaign.academicYear})`}
               </>
             )}
-            {application.applyingForClass && (
+            {d("applyingForClass") && (
               <>
-                {" · "} {application.applyingForClass}
+                {" · "} {d("applyingForClass")}
               </>
             )}
             {application.submittedAt && (
@@ -235,19 +305,19 @@ export default async function ApplicationDetailContent({
             />
             <InfoRow
               label={t?.applicationDetail?.gender || "Gender"}
-              value={application.gender}
+              value={d("gender")}
             />
             <InfoRow
               label={t?.applicationDetail?.nationality || "Nationality"}
-              value={application.nationality}
+              value={formatISOName(application.nationality)}
             />
             <InfoRow
               label={t?.applicationDetail?.religion || "Religion"}
-              value={application.religion}
+              value={d("religion")}
             />
             <InfoRow
               label={t?.applicationDetail?.category || "Category"}
-              value={application.category}
+              value={d("category")}
             />
           </div>
         </section>
@@ -261,11 +331,11 @@ export default async function ApplicationDetailContent({
           <div className="grid gap-x-8 gap-y-0.5 sm:grid-cols-2">
             <InfoRow
               label={t?.applicationDetail?.father || "Father"}
-              value={application.fatherName}
+              value={d("fatherName")}
             />
             <InfoRow
               label={t?.applicationDetail?.occupation || "Occupation"}
-              value={application.fatherOccupation}
+              value={d("fatherOccupation")}
             />
             <InfoRow
               label={t?.applicationDetail?.phone || "Phone"}
@@ -277,11 +347,11 @@ export default async function ApplicationDetailContent({
             />
             <InfoRow
               label={t?.applicationDetail?.mother || "Mother"}
-              value={application.motherName}
+              value={d("motherName")}
             />
             <InfoRow
               label={t?.applicationDetail?.occupation || "Occupation"}
-              value={application.motherOccupation}
+              value={d("motherOccupation")}
             />
             <InfoRow
               label={t?.applicationDetail?.phone || "Phone"}
@@ -293,11 +363,11 @@ export default async function ApplicationDetailContent({
             />
             <InfoRow
               label={t?.applicationDetail?.guardianLabel || "Guardian"}
-              value={application.guardianName}
+              value={d("guardianName")}
             />
             <InfoRow
               label={t?.applicationDetail?.relation || "Relation"}
-              value={application.guardianRelation}
+              value={d("guardianRelation")}
             />
             <InfoRow
               label={t?.applicationDetail?.phone || "Phone"}
@@ -321,29 +391,29 @@ export default async function ApplicationDetailContent({
               label={
                 t?.applicationDetail?.applyingForClass || "Applying for Class"
               }
-              value={application.applyingForClass}
+              value={d("applyingForClass")}
             />
             <InfoRow
               label={
                 t?.applicationDetail?.preferredStream || "Preferred Stream"
               }
-              value={application.preferredStream}
+              value={d("preferredStream")}
             />
             <InfoRow
               label={t?.applicationDetail?.secondLanguage || "Second Language"}
-              value={application.secondLanguage}
+              value={d("secondLanguage")}
             />
             <InfoRow
               label={t?.applicationDetail?.thirdLanguage || "Third Language"}
-              value={application.thirdLanguage}
+              value={d("thirdLanguage")}
             />
             <InfoRow
               label={t?.applicationDetail?.previousSchool || "Previous School"}
-              value={application.previousSchool}
+              value={d("previousSchool")}
             />
             <InfoRow
               label={t?.applicationDetail?.previousClass || "Previous Class"}
-              value={application.previousClass}
+              value={d("previousClass")}
             />
             <InfoRow
               label={t?.applicationDetail?.previousMarks || "Previous Marks"}
@@ -362,7 +432,7 @@ export default async function ApplicationDetailContent({
             />
             <InfoRow
               label={t?.applicationDetail?.achievements || "Achievements"}
-              value={application.achievements}
+              value={d("achievements")}
             />
           </div>
         </section>
@@ -473,11 +543,11 @@ export default async function ApplicationDetailContent({
           <div className="grid gap-x-8 gap-y-0.5 sm:grid-cols-2">
             <InfoRow
               label={t?.applicationDetail?.reviewNotes || "Review Notes"}
-              value={application.reviewNotes}
+              value={d("reviewNotes")}
             />
             <InfoRow
               label={t?.applicationDetail?.reviewedBy || "Reviewed By"}
-              value={application.reviewedBy}
+              value={reviewerName}
             />
             <InfoRow
               label={t?.applicationDetail?.reviewedAt || "Reviewed At"}

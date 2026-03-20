@@ -72,6 +72,8 @@ interface UploaderProps {
   }
   /** Files above this size (bytes) use chunked upload with real progress */
   chunkThreshold?: number
+  /** Override schoolId for uploads (e.g., applicants uploading to a target school) */
+  schoolId?: string
   onUploadComplete?: (results: UploadResult[]) => void
   onUploadError?: (error: string) => void
   onFilesChange?: (files: UploadResult[]) => void
@@ -133,6 +135,7 @@ export function Uploader({
   optimizeImages,
   imageOptimization,
   chunkThreshold,
+  schoolId,
   onUploadComplete,
   onUploadError,
   onFilesChange,
@@ -170,6 +173,7 @@ export function Uploader({
     optimizeImages,
     imageOptimization,
     chunkThreshold,
+    schoolId,
     onSuccess: (result) => {
       setPreviews((prev) =>
         prev.map((p) =>
