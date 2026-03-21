@@ -37,11 +37,11 @@ export function DocsMobileNav({ neighbours, lang }: DocsMobileNavProps) {
               <span className="max-w-[150px] truncate">
                 {neighbours.previous.name}
               </span>
-              <ChevronRight className="h-4 w-4 shrink-0" />
+              <ChevronRight className="h-4 w-4 shrink-0 rtl:rotate-180" />
             </>
           ) : (
             <>
-              <ChevronLeft className="h-4 w-4 shrink-0" />
+              <ChevronLeft className="h-4 w-4 shrink-0 rtl:rotate-180" />
               <span className="max-w-[150px] truncate">
                 {neighbours.previous.name}
               </span>
@@ -59,7 +59,7 @@ export function DocsMobileNav({ neighbours, lang }: DocsMobileNavProps) {
         >
           {isRTL ? (
             <>
-              <ChevronLeft className="h-4 w-4 shrink-0" />
+              <ChevronLeft className="h-4 w-4 shrink-0 rtl:rotate-180" />
               <span className="max-w-[150px] truncate">
                 {neighbours.next.name}
               </span>
@@ -69,7 +69,7 @@ export function DocsMobileNav({ neighbours, lang }: DocsMobileNavProps) {
               <span className="max-w-[150px] truncate">
                 {neighbours.next.name}
               </span>
-              <ChevronRight className="h-4 w-4 shrink-0" />
+              <ChevronRight className="h-4 w-4 shrink-0 rtl:rotate-180" />
             </>
           )}
         </Link>

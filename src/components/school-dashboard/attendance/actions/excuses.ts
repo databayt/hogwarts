@@ -7,6 +7,7 @@ import { auth } from "@/auth"
 import type { Prisma } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { dispatchNotification } from "@/lib/dispatch-notification"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import { reviewExcuseSchema, submitExcuseSchema } from "../shared/validation"
@@ -129,25 +130,23 @@ export async function submitExcuse(input: {
     // Notify each teacher assigned to the class
     for (const ct of classTeachers) {
       if (ct.teacher.userId) {
-        await db.notification.create({
-          data: {
-            schoolId,
-            userId: ct.teacher.userId,
-            type: "attendance_alert",
-            priority: "normal",
-            title: `Excuse Submitted: ${studentName}`,
-            body: `An excuse has been submitted for ${studentName}'s absence on ${dateStr}. Please review and approve or reject.`,
-            metadata: {
-              excuseId: excuse.id,
-              studentId: attendance.studentId,
-              studentName,
-              attendanceId: attendance.id,
-              date: attendance.date.toISOString(),
-              reason: parsed.reason,
-            },
-            channels: ["in_app", "email"],
-            actorId: session.user.id,
+        await dispatchNotification({
+          schoolId,
+          userId: ct.teacher.userId,
+          type: "attendance_alert",
+          priority: "normal",
+          title: `Excuse Submitted: ${studentName}`,
+          body: `An excuse has been submitted for ${studentName}'s absence on ${dateStr}. Please review and approve or reject.`,
+          metadata: {
+            excuseId: excuse.id,
+            studentId: attendance.studentId,
+            studentName,
+            attendanceId: attendance.id,
+            date: attendance.date.toISOString(),
+            reason: parsed.reason,
           },
+          channels: ["in_app", "email"],
+          actorId: session.user.id,
         })
       }
     }
@@ -266,26 +265,24 @@ export async function reviewExcuse(input: {
     )
 
     if (submitter?.guardian.userId) {
-      await db.notification.create({
-        data: {
-          schoolId,
-          userId: submitter.guardian.userId,
-          type: "attendance_alert",
-          priority: "normal",
-          title: `${statusTextAr} العذر: ${studentName}`,
-          body: `${statusTextAr} عذر غياب ${studentName} في ${excuse.attendance.date.toLocaleDateString("ar-SA")} (${className}).${parsed.reviewNotes ? ` ملاحظة: ${parsed.reviewNotes}` : ""}`,
-          metadata: {
-            excuseId: excuse.id,
-            studentId: excuse.attendance.studentId,
-            studentName,
-            attendanceId: excuse.attendanceId,
-            date: excuse.attendance.date.toISOString(),
-            status: parsed.status,
-            reviewNotes: parsed.reviewNotes,
-          },
-          channels: ["in_app", "email"],
-          actorId: session.user.id,
+      await dispatchNotification({
+        schoolId,
+        userId: submitter.guardian.userId,
+        type: "attendance_alert",
+        priority: "normal",
+        title: `${statusTextAr} العذر: ${studentName}`,
+        body: `${statusTextAr} عذر غياب ${studentName} في ${excuse.attendance.date.toLocaleDateString("ar-SA")} (${className}).${parsed.reviewNotes ? ` ملاحظة: ${parsed.reviewNotes}` : ""}`,
+        metadata: {
+          excuseId: excuse.id,
+          studentId: excuse.attendance.studentId,
+          studentName,
+          attendanceId: excuse.attendanceId,
+          date: excuse.attendance.date.toISOString(),
+          status: parsed.status,
+          reviewNotes: parsed.reviewNotes,
         },
+        channels: ["in_app", "email"],
+        actorId: session.user.id,
       })
     }
 

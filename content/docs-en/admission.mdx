@@ -39,7 +39,7 @@ The applications table shows all submissions with columns: Application #, Applic
 - **Update Status** — UNDER_REVIEW → SHORTLISTED → SELECTED → WAITLISTED → REJECTED
 - **Send Email** — opens mailto link
 
-When status is updated to SELECTED, the system auto-sets `admissionOffered = true` with a 30-day offer expiry.
+When status is updated to SELECTED, the system auto-sets `admissionOffered = true` with an offer expiry read from `AdmissionSettings.offerExpiryDays` (default 14 days).
 
 **Route:** `/{lang}/admission/applications`
 
@@ -64,8 +64,10 @@ The admin confirms enrollment for selected students. This triggers a single tran
    - Visible in Finance → Invoices immediately after enrollment
 10. Creates `Guardian` + `StudentGuardian` + `GuardianPhoneNumber` records from father/mother/guardian data
 11. Copies application documents to `StudentDocument` records
-12. Sends enrollment confirmation notification (in-app + email)
-13. Returns `studentId` for immediate navigation to the student profile
+12. Sends enrollment confirmation notification to student (in-app + email)
+13. Dispatches `fee_due` notification to student for auto-assigned fees
+14. Notifies guardians about enrollment (in-app + email)
+15. Returns `studentId` for immediate navigation to the student profile
 
 The student is created with `wizardStep: null` and `status: ACTIVE`, meaning they appear as a fully complete active student — not a draft.
 
@@ -234,19 +236,19 @@ The session is also verified to belong to the correct school before accepting su
 
 ## Status Reference
 
-| Status                | Trigger                      | What Happens                                     |
-| --------------------- | ---------------------------- | ------------------------------------------------ |
-| `DRAFT`               | Session created              | Form data being collected                        |
-| `SUBMITTED`           | Applicant submits final step | Application number generated, email sent         |
-| `UNDER_REVIEW`        | Admin changes status         | `reviewedAt` + `reviewedBy` set                  |
-| `SHORTLISTED`         | Admin changes status         | Applicant notified                               |
-| `ENTRANCE_SCHEDULED`  | Admin schedules              | Entrance exam date set                           |
-| `INTERVIEW_SCHEDULED` | Admin schedules              | Interview date set                               |
-| `SELECTED`            | Admin selects                | Offer created (30-day expiry), payment link sent |
-| `WAITLISTED`          | Admin waitlists              | Applicant notified                               |
-| `REJECTED`            | Admin rejects                | Applicant notified                               |
-| `ADMITTED`            | Admin confirms enrollment    | Student + Guardian + Fees + Invoice created      |
-| `WITHDRAWN`           | Applicant or admin withdraws | Application closed                               |
+| Status                | Trigger                      | What Happens                                                        |
+| --------------------- | ---------------------------- | ------------------------------------------------------------------- |
+| `DRAFT`               | Session created              | Form data being collected                                           |
+| `SUBMITTED`           | Applicant submits final step | Application number generated, email sent                            |
+| `UNDER_REVIEW`        | Admin changes status         | `reviewedAt` + `reviewedBy` set                                     |
+| `SHORTLISTED`         | Admin changes status         | Applicant notified                                                  |
+| `ENTRANCE_SCHEDULED`  | Admin schedules              | Entrance exam date set                                              |
+| `INTERVIEW_SCHEDULED` | Admin schedules              | Interview date set                                                  |
+| `SELECTED`            | Admin selects                | Offer created (configurable expiry via settings), payment link sent |
+| `WAITLISTED`          | Admin waitlists              | Applicant notified                                                  |
+| `REJECTED`            | Admin rejects                | Applicant notified                                                  |
+| `ADMITTED`            | Admin confirms enrollment    | Student + Guardian + Fees + Invoice created                         |
+| `WITHDRAWN`           | Applicant or admin withdraws | Application closed                                                  |
 
 ---
 
@@ -264,13 +266,16 @@ The session is also verified to belong to the correct school before accepting su
 
 ## Key Files
 
-| Purpose              | Path                                                                 |
-| -------------------- | -------------------------------------------------------------------- |
-| Dashboard actions    | `src/components/school-dashboard/admission/actions.ts`               |
-| Applications table   | `src/components/school-dashboard/admission/applications-table.tsx`   |
-| Applications columns | `src/components/school-dashboard/admission/applications-columns.tsx` |
-| Campaigns table      | `src/components/school-dashboard/admission/campaigns-table.tsx`      |
-| Enrollment table     | `src/components/school-dashboard/admission/enrollment-table.tsx`     |
-| Merit table          | `src/components/school-dashboard/admission/merit-table.tsx`          |
-| Prisma schema        | `prisma/models/admission.prisma`                                     |
-| Admission types      | `src/components/school-marketing/admission/types.ts`                 |
+| Purpose              | Path                                                                                       |
+| -------------------- | ------------------------------------------------------------------------------------------ |
+| Dashboard actions    | `src/components/school-dashboard/admission/actions.ts`                                     |
+| Applications table   | `src/components/school-dashboard/admission/applications-table.tsx`                         |
+| Applications columns | `src/components/school-dashboard/admission/applications-columns.tsx`                       |
+| Campaigns table      | `src/components/school-dashboard/admission/campaigns-table.tsx`                            |
+| Enrollment table     | `src/components/school-dashboard/admission/enrollment-table.tsx`                           |
+| Merit table          | `src/components/school-dashboard/admission/merit-table.tsx`                                |
+| Prisma schema        | `prisma/models/admission.prisma`                                                           |
+| Admission types      | `src/components/school-marketing/admission/types.ts`                                       |
+| Actions tests        | `src/components/school-dashboard/admission/__tests__/actions.test.ts`                      |
+| Enrollment tests     | `src/components/school-dashboard/admission/__tests__/enrollment-pipeline.test.ts`          |
+| Invoice integration  | `src/components/school-dashboard/finance/invoice/__tests__/create-from-enrollment.test.ts` |

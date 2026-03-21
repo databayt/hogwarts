@@ -19,14 +19,17 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { getExamAnalytics } from "./actions"
 
 interface Props {
   examId: string
+  dictionary?: Dictionary
 }
 
-export async function ExamAnalyticsDashboard({ examId }: Props) {
+export async function ExamAnalyticsDashboard({ examId, dictionary }: Props) {
+  const t = dictionary?.school?.exams?.manage?.analytics
   const response = await getExamAnalytics({ examId })
 
   if (!response.success || !response.data) {
@@ -187,7 +190,9 @@ export async function ExamAnalyticsDashboard({ examId }: Props) {
       {Object.keys(gradeDistribution).length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Grade Distribution</CardTitle>
+            <CardTitle>
+              {t?.gradeDistribution ?? "Grade Distribution"}
+            </CardTitle>
             <CardDescription>
               Number of students in each grade category
             </CardDescription>

@@ -111,6 +111,7 @@ export const staffDetailSelect = {
     },
   },
   qualifications: {
+    take: 50,
     select: {
       id: true,
       qualificationType: true,
@@ -120,6 +121,7 @@ export const staffDetailSelect = {
     },
   },
   experiences: {
+    take: 50,
     select: {
       id: true,
       organization: true,

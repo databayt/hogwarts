@@ -192,6 +192,22 @@ export default defineConfig({
     },
 
     // ============================================
+    // Lifecycle Tests (full school flow, sequential)
+    // ============================================
+    {
+      name: "lifecycle",
+      testDir: "./tests/e2e/lifecycle",
+      fullyParallel: false,
+      workers: 1,
+      timeout: 300_000,
+      use: {
+        ...devices["Desktop Chrome"],
+        channel: "chromium",
+        baseURL: "http://localhost:3000",
+      },
+    },
+
+    // ============================================
     // Production Tests
     // ============================================
     {

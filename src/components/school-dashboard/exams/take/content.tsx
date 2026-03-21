@@ -117,6 +117,8 @@ export function ExamTakingContent({
   dictionary,
 }: ExamTakingContentProps) {
   const router = useRouter()
+  const t = dictionary?.school?.exams?.take
+  const exams = dictionary?.school?.exams
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [answers, setAnswers] = useState<
     Map<string, { answerText?: string; selectedOptionIds?: string[] }>
@@ -267,7 +269,7 @@ export function ExamTakingContent({
       case "ESSAY":
         return renderEssay(question, currentAnswer)
       default:
-        return <p>Unsupported question type</p>
+        return <p>{t?.unsupportedType ?? "Unsupported question type"}</p>
     }
   }
 
@@ -374,7 +376,7 @@ export function ExamTakingContent({
     return (
       <div className="space-y-4">
         <Input
-          placeholder="Enter your answer..."
+          placeholder={t?.answerPlaceholder ?? "Enter your answer..."}
           value={answer?.answerText || ""}
           onChange={(e) =>
             handleAnswerChange(question.id, { answerText: e.target.value })
@@ -392,7 +394,7 @@ export function ExamTakingContent({
     return (
       <div className="space-y-4">
         <Textarea
-          placeholder="Enter your answer..."
+          placeholder={t?.answerPlaceholder ?? "Enter your answer..."}
           value={answer?.answerText || ""}
           onChange={(e) =>
             handleAnswerChange(question.id, { answerText: e.target.value })
@@ -413,7 +415,9 @@ export function ExamTakingContent({
     return (
       <div className="space-y-4">
         <Textarea
-          placeholder="Write your essay response here..."
+          placeholder={
+            t?.essayPlaceholder ?? "Write your essay response here..."
+          }
           value={answer?.answerText || ""}
           onChange={(e) =>
             handleAnswerChange(question.id, { answerText: e.target.value })
@@ -471,7 +475,7 @@ export function ExamTakingContent({
               disabled={isSubmitting}
             >
               <Send className="me-2 h-4 w-4" />
-              Submit Exam
+              {t?.submitDialog?.submit ?? "Submit Exam"}
             </Button>
           </div>
         </div>
@@ -481,7 +485,7 @@ export function ExamTakingContent({
           <div className="flex items-center gap-2">
             <Progress value={progress} className="flex-1" />
             <span className="text-muted-foreground text-sm">
-              {answeredCount}/{totalQuestions} answered
+              {answeredCount}/{totalQuestions} {t?.answered ?? "answered"}
             </span>
           </div>
         </div>
@@ -494,7 +498,9 @@ export function ExamTakingContent({
           <div className="order-2 lg:order-1 lg:col-span-1">
             <Card className="sticky top-32">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm">Questions</CardTitle>
+                <CardTitle className="text-sm">
+                  {t?.questions ?? "Questions"}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <ScrollArea className="h-[calc(100vh-300px)]">
@@ -534,15 +540,15 @@ export function ExamTakingContent({
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center gap-2">
                     <div className="bg-primary h-4 w-4 rounded" />
-                    <span>Current</span>
+                    <span>{t?.current ?? "Current"}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="h-4 w-4 rounded bg-green-100 dark:bg-green-900" />
-                    <span>Answered</span>
+                    <span>{t?.answered ?? "Answered"}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="h-4 w-4 rounded border" />
-                    <span>Not answered</span>
+                    <span>{t?.notAnswered ?? "Not answered"}</span>
                   </div>
                 </div>
               </CardContent>
@@ -616,14 +622,14 @@ export function ExamTakingContent({
                       disabled={currentQuestionIndex === 0}
                     >
                       <ChevronLeft className="me-2 h-4 w-4 rtl:rotate-180" />
-                      Previous
+                      {exams?.previous ?? "Previous"}
                     </Button>
 
                     <Button
                       onClick={() => goToQuestion(currentQuestionIndex + 1)}
                       disabled={currentQuestionIndex === totalQuestions - 1}
                     >
-                      Next
+                      {exams?.next ?? "Next"}
                       <ChevronRight className="ms-2 h-4 w-4 rtl:rotate-180" />
                     </Button>
                   </div>
@@ -639,16 +645,18 @@ export function ExamTakingContent({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-yellow-500" />5 Minutes
-              Remaining
+              <AlertTriangle className="h-5 w-5 text-yellow-500" />
+              {t?.timeWarning?.title ?? "5 Minutes Remaining"}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              You have 5 minutes left to complete and submit your exam. Make
-              sure to review your answers before the time runs out.
+              {t?.timeWarning?.description ??
+                "You have 5 minutes left to complete and submit your exam. Make sure to review your answers before the time runs out."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction>Continue Exam</AlertDialogAction>
+            <AlertDialogAction>
+              {t?.timeWarning?.continue ?? "Continue Exam"}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -657,27 +665,40 @@ export function ExamTakingContent({
       <AlertDialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Submit Exam?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t?.submitDialog?.title ?? "Submit Exam?"}
+            </AlertDialogTitle>
             <AlertDialogDescription className="space-y-2">
               <p>
-                You have answered {answeredCount} out of {totalQuestions}{" "}
-                questions.
+                {(
+                  t?.submitDialog?.answeredCount ??
+                  "You have answered {answered} out of {total} questions."
+                )
+                  .replace("{answered}", String(answeredCount))
+                  .replace("{total}", String(totalQuestions))}
               </p>
               {answeredCount < totalQuestions && (
                 <p className="text-yellow-600 dark:text-yellow-400">
-                  Warning: {totalQuestions - answeredCount} questions are
-                  unanswered.
+                  {(
+                    t?.submitDialog?.unansweredWarning ??
+                    "Warning: {count} questions are unanswered."
+                  ).replace("{count}", String(totalQuestions - answeredCount))}
                 </p>
               )}
-              <p>Once submitted, you cannot change your answers.</p>
+              <p>
+                {t?.submitDialog?.finalWarning ??
+                  "Once submitted, you cannot change your answers."}
+              </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isSubmitting}>
-              Continue Exam
+              {t?.submitDialog?.continue ?? "Continue Exam"}
             </AlertDialogCancel>
             <AlertDialogAction onClick={handleSubmit} disabled={isSubmitting}>
-              {isSubmitting ? "Submitting..." : "Submit Exam"}
+              {isSubmitting
+                ? (t?.submitDialog?.submitting ?? "Submitting...")
+                : (t?.submitDialog?.submit ?? "Submit Exam")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

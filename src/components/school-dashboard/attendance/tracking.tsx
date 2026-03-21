@@ -133,6 +133,7 @@ export function AttendanceTracking({
 }: AttendanceTrackingProps) {
   const { dictionary } = useDictionary()
   const t = dictionary?.messages?.toast
+  const att = dictionary?.attendance
   const [selectedTab, setSelectedTab] = useState<"manual" | "qrcode" | "bulk">(
     "manual"
   )
@@ -239,7 +240,9 @@ export function AttendanceTracking({
         return newData
       })
 
-      toast.success(`Marked ${status.toLowerCase()}`)
+      toast.success(
+        att?.success?.attendanceMarked ?? `Marked ${status.toLowerCase()}`
+      )
     },
     []
   )
@@ -263,7 +266,10 @@ export function AttendanceTracking({
         return newData
       })
 
-      toast.success(`Marked all students as ${status.toLowerCase()}`)
+      toast.success(
+        att?.success?.attendanceMarked ??
+          `Marked all students as ${status.toLowerCase()}`
+      )
     },
     [students]
   )
@@ -416,12 +422,12 @@ export function AttendanceTracking({
               {isLiveMode ? (
                 <Badge variant="default" className="animate-pulse">
                   <Wifi className="me-1 h-3 w-3" />
-                  Live Mode
+                  {att?.navigation?.overview ?? "Live Mode"}
                 </Badge>
               ) : (
                 <Badge variant="outline">
                   <WifiOff className="me-1 h-3 w-3" />
-                  Offline
+                  {att?.emptyStates?.noData ?? "Offline"}
                 </Badge>
               )}
               <Switch checked={isLiveMode} onCheckedChange={setIsLiveMode} />
@@ -434,7 +440,9 @@ export function AttendanceTracking({
       <div className="grid grid-cols-2 gap-4 md:grid-cols-6">
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Total Students</CardDescription>
+            <CardDescription>
+              {att?.stats?.totalStudents ?? "Total Students"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.total}</div>
@@ -443,7 +451,9 @@ export function AttendanceTracking({
 
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Present</CardDescription>
+            <CardDescription>
+              {att?.status?.PRESENT ?? "Present"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
@@ -454,7 +464,7 @@ export function AttendanceTracking({
 
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Absent</CardDescription>
+            <CardDescription>{att?.status?.ABSENT ?? "Absent"}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
@@ -465,7 +475,7 @@ export function AttendanceTracking({
 
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Late</CardDescription>
+            <CardDescription>{att?.status?.LATE ?? "Late"}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-600">
@@ -476,7 +486,9 @@ export function AttendanceTracking({
 
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Excused</CardDescription>
+            <CardDescription>
+              {att?.status?.EXCUSED ?? "Excused"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
@@ -487,7 +499,9 @@ export function AttendanceTracking({
 
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Attendance Rate</CardDescription>
+            <CardDescription>
+              {att?.stats?.attendanceRate ?? "Attendance Rate"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -501,10 +515,18 @@ export function AttendanceTracking({
       {/* Attendance Interface */}
       <Tabs value={selectedTab} onValueChange={(v) => setSelectedTab(v as any)}>
         <TabsList className="grid w-full max-w-md grid-cols-3">
-          <TabsTrigger value="manual">Manual</TabsTrigger>
-          {enableQRCode && <TabsTrigger value="qrcode">QR Code</TabsTrigger>}
+          <TabsTrigger value="manual">
+            {att?.method?.MANUAL ?? "Manual"}
+          </TabsTrigger>
+          {enableQRCode && (
+            <TabsTrigger value="qrcode">
+              {att?.navigation?.qrCode ?? "QR Code"}
+            </TabsTrigger>
+          )}
           {enableBulkUpload && (
-            <TabsTrigger value="bulk">Bulk Upload</TabsTrigger>
+            <TabsTrigger value="bulk">
+              {att?.bulkUpload?.title ?? "Bulk Upload"}
+            </TabsTrigger>
           )}
         </TabsList>
 
@@ -513,10 +535,12 @@ export function AttendanceTracking({
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>Mark Attendance</CardTitle>
+                <CardTitle>
+                  {att?.navigation?.markAttendance ?? "Mark Attendance"}
+                </CardTitle>
                 <div className="flex items-center gap-2">
                   <Input
-                    placeholder="Search students..."
+                    placeholder={att?.loading?.students ?? "Search students..."}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-64"
@@ -529,7 +553,7 @@ export function AttendanceTracking({
                       className="bg-green-600 hover:bg-green-700"
                     >
                       <CircleCheck className="me-1 h-4 w-4" />
-                      All Present
+                      {att?.status?.PRESENT ?? "All Present"}
                     </Button>
                     <Button
                       variant="outline"
@@ -538,7 +562,7 @@ export function AttendanceTracking({
                       className="text-red-600 hover:bg-red-50"
                     >
                       <CircleX className="me-1 h-4 w-4" />
-                      All Absent
+                      {att?.status?.ABSENT ?? "All Absent"}
                     </Button>
                     <Button
                       variant="outline"
@@ -547,7 +571,7 @@ export function AttendanceTracking({
                       className="text-yellow-600 hover:bg-yellow-50"
                     >
                       <Clock className="me-1 h-4 w-4" />
-                      All Late
+                      {att?.status?.LATE ?? "All Late"}
                     </Button>
                     <Button
                       variant="outline"
@@ -564,11 +588,11 @@ export function AttendanceTracking({
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Student</TableHead>
+                    <TableHead>{att?.table?.student ?? "Student"}</TableHead>
                     <TableHead>ID</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Check-in</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead>{att?.table?.status ?? "Status"}</TableHead>
+                    <TableHead>{att?.table?.time ?? "Check-in"}</TableHead>
+                    <TableHead>{att?.table?.actions ?? "Actions"}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -677,7 +701,7 @@ export function AttendanceTracking({
                   checked={autoSaveEnabled}
                   onCheckedChange={setAutoSaveEnabled}
                 />
-                <Label>Auto-save</Label>
+                <Label>{att?.form?.saving ?? "Auto-save"}</Label>
               </div>
               <Button
                 onClick={() => handleSaveAttendance(false)}
@@ -686,12 +710,12 @@ export function AttendanceTracking({
                 {saving ? (
                   <>
                     <RefreshCw className="me-2 h-4 w-4 animate-spin" />
-                    Saving...
+                    {att?.form?.saving ?? "Saving..."}
                   </>
                 ) : (
                   <>
                     <CircleCheck className="me-2 h-4 w-4" />
-                    Save Attendance
+                    {att?.form?.submit ?? "Save Attendance"}
                   </>
                 )}
               </Button>
@@ -704,18 +728,22 @@ export function AttendanceTracking({
           <TabsContent value="qrcode">
             <Card>
               <CardHeader>
-                <CardTitle>QR Code Attendance</CardTitle>
+                <CardTitle>
+                  {att?.qrCode?.title ?? "QR Code Attendance"}
+                </CardTitle>
                 <CardDescription>
-                  Generate a QR code for students to scan and mark their
-                  attendance
+                  {att?.qrActions?.scanDescription ??
+                    "Generate a QR code for students to scan and mark their attendance"}
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col items-center py-8">
                 <QrCode className="text-muted-foreground mb-4 h-32 w-32" />
-                <Button onClick={handleGenerateQRCode}>Generate QR Code</Button>
+                <Button onClick={handleGenerateQRCode}>
+                  {att?.qrCode?.generate ?? "Generate QR Code"}
+                </Button>
                 <p className="text-muted-foreground mt-4 max-w-md text-center text-sm">
-                  Students can scan the QR code with their mobile devices to
-                  automatically mark their attendance for this session.
+                  {att?.qrActions?.scanDescription ??
+                    "Students can scan the QR code with their mobile devices to automatically mark their attendance for this session."}
                 </p>
               </CardContent>
             </Card>
@@ -727,9 +755,10 @@ export function AttendanceTracking({
           <TabsContent value="bulk">
             <Card>
               <CardHeader>
-                <CardTitle>Bulk Upload</CardTitle>
+                <CardTitle>{att?.bulkUpload?.title ?? "Bulk Upload"}</CardTitle>
                 <CardDescription>
-                  Upload a CSV file with attendance data
+                  {att?.bulkUpload?.description ??
+                    "Upload a CSV file with attendance data"}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -745,16 +774,19 @@ export function AttendanceTracking({
                     />
                     <Button asChild>
                       <label htmlFor="csv-upload" className="cursor-pointer">
-                        Upload CSV File
+                        {att?.qrActions?.uploadCSV ?? "Upload CSV File"}
                       </label>
                     </Button>
                     <p className="text-muted-foreground mt-4 text-sm">
-                      CSV should contain Student ID and Status columns
+                      {att?.qrActions?.csvContains ??
+                        "CSV should contain Student ID and Status columns"}
                     </p>
                   </div>
 
                   <div className="space-y-2">
-                    <h4 className="font-medium">CSV Format Example:</h4>
+                    <h4 className="font-medium">
+                      {att?.qrActions?.csvFormatTitle ?? "CSV Format Example:"}
+                    </h4>
                     <div className="bg-muted rounded p-3 font-mono text-xs">
                       Student ID,Status
                       <br />
@@ -778,9 +810,12 @@ export function AttendanceTracking({
       <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Attendance QR Code</DialogTitle>
+            <DialogTitle>
+              {att?.qrActions?.attendanceQRCode ?? "Attendance QR Code"}
+            </DialogTitle>
             <DialogDescription>
-              Display this QR code for students to scan
+              {att?.qrActions?.displayForStudents ??
+                "Display this QR code for students to scan"}
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col items-center py-8">
@@ -797,14 +832,17 @@ export function AttendanceTracking({
               Valid for: {session.startTime} - {session.endTime}
             </p>
             <Badge variant="outline" className="mt-2">
-              {stats.present} / {stats.total} checked in
+              {stats.present} / {stats.total}{" "}
+              {att?.kiosk?.checked_in ?? "checked in"}
             </Badge>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setQrDialogOpen(false)}>
-              Close
+              {att?.form?.cancel ?? "Close"}
             </Button>
-            <Button onClick={() => window.print()}>Print QR Code</Button>
+            <Button onClick={() => window.print()}>
+              {att?.letters?.print ?? "Print QR Code"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

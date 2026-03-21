@@ -32,6 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { createTeacherAbsence, getTeachersForSelection } from "../actions"
 import { ABSENCE_TYPES } from "../constants"
@@ -45,15 +46,12 @@ interface AbsenceFormDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSuccess: () => void
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  dictionary?: Record<string, any>
 }
 
 export function AbsenceFormDialog({
   open,
   onOpenChange,
   onSuccess,
-  dictionary,
 }: AbsenceFormDialogProps) {
   const [teachers, setTeachers] = useState<Teacher[]>([])
   const [teacherId, setTeacherId] = useState("")
@@ -64,8 +62,9 @@ export function AbsenceFormDialog({
   const [reason, setReason] = useState("")
   const [isPending, startTransition] = useTransition()
   const { toast } = useToast()
+  const { dictionary } = useDictionary()
 
-  const t = dictionary?.substitutions || {}
+  const t = dictionary?.school?.timetable?.substitutions
 
   useEffect(() => {
     if (open) {
@@ -87,8 +86,9 @@ export function AbsenceFormDialog({
   const handleSubmit = useCallback(() => {
     if (!teacherId || !startDate || !endDate) {
       toast({
-        title: "Error",
-        description: "Please fill in all required fields",
+        title: t?.toast?.error_title ?? "Error",
+        description:
+          t?.toast?.errorRequiredFields ?? "Please fill in all required fields",
         variant: "destructive",
       })
       return
@@ -96,8 +96,9 @@ export function AbsenceFormDialog({
 
     if (endDate < startDate) {
       toast({
-        title: "Error",
-        description: "End date must be after start date",
+        title: t?.toast?.error_title ?? "Error",
+        description:
+          t?.toast?.errorEndDate ?? "End date must be after start date",
         variant: "destructive",
       })
       return
@@ -114,17 +115,20 @@ export function AbsenceFormDialog({
         })
 
         toast({
-          title: "Success",
-          description: "Absence reported successfully",
+          title: t?.toast?.success ?? "Success",
+          description:
+            t?.toast?.absenceReported ?? "Absence reported successfully",
         })
 
         onOpenChange(false)
         onSuccess()
       } catch (error) {
         toast({
-          title: "Error",
+          title: t?.toast?.error_title ?? "Error",
           description:
-            error instanceof Error ? error.message : "Failed to report absence",
+            error instanceof Error
+              ? error.message
+              : (t?.toast?.errorReportAbsence ?? "Failed to report absence"),
           variant: "destructive",
         })
       }
@@ -145,10 +149,10 @@ export function AbsenceFormDialog({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
-            {t.reportAbsence || "Report Teacher Absence"}
+            {t?.dialog?.reportAbsence ?? "Report Teacher Absence"}
           </DialogTitle>
           <DialogDescription>
-            {t.reportAbsenceDescription ||
+            {t?.dialog?.reportAbsenceDescription ??
               "Report a teacher absence to enable substitute assignment"}
           </DialogDescription>
         </DialogHeader>
@@ -156,11 +160,11 @@ export function AbsenceFormDialog({
         <div className="space-y-4 py-4">
           {/* Teacher Selection */}
           <div className="space-y-2">
-            <Label htmlFor="teacher">{t.teacher || "Teacher"}</Label>
+            <Label htmlFor="teacher">{t?.form?.teacher ?? "Teacher"}</Label>
             <Select value={teacherId} onValueChange={setTeacherId}>
               <SelectTrigger>
                 <SelectValue
-                  placeholder={t.selectTeacher || "Select teacher"}
+                  placeholder={t?.form?.selectTeacher ?? "Select teacher"}
                 />
               </SelectTrigger>
               <SelectContent>
@@ -176,7 +180,7 @@ export function AbsenceFormDialog({
           {/* Absence Type */}
           <div className="space-y-2">
             <Label htmlFor="absenceType">
-              {t.absenceType || "Absence Type"}
+              {t?.form?.absenceType ?? "Absence Type"}
             </Label>
             <Select
               value={absenceType}
@@ -200,7 +204,7 @@ export function AbsenceFormDialog({
           {/* Date Range */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>{t.startDate || "Start Date"}</Label>
+              <Label>{t?.form?.startDate ?? "Start Date"}</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -211,7 +215,9 @@ export function AbsenceFormDialog({
                     )}
                   >
                     <CalendarIcon className="me-2 h-4 w-4" />
-                    {startDate ? format(startDate, "PPP") : "Pick date"}
+                    {startDate
+                      ? format(startDate, "PPP")
+                      : (t?.form?.pickDate ?? "Pick date")}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -226,7 +232,7 @@ export function AbsenceFormDialog({
             </div>
 
             <div className="space-y-2">
-              <Label>{t.endDate || "End Date"}</Label>
+              <Label>{t?.form?.endDate ?? "End Date"}</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -237,7 +243,9 @@ export function AbsenceFormDialog({
                     )}
                   >
                     <CalendarIcon className="me-2 h-4 w-4" />
-                    {endDate ? format(endDate, "PPP") : "Pick date"}
+                    {endDate
+                      ? format(endDate, "PPP")
+                      : (t?.form?.pickDate ?? "Pick date")}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -255,13 +263,16 @@ export function AbsenceFormDialog({
 
           {/* Reason */}
           <div className="space-y-2">
-            <Label htmlFor="reason">{t.reason || "Reason (Optional)"}</Label>
+            <Label htmlFor="reason">
+              {t?.form?.reason ?? "Reason (Optional)"}
+            </Label>
             <Textarea
               id="reason"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder={
-                t.reasonPlaceholder || "Additional details about the absence..."
+                t?.form?.reasonPlaceholder ??
+                "Additional details about the absence..."
               }
               rows={3}
             />
@@ -270,13 +281,15 @@ export function AbsenceFormDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            {t.cancel || "Cancel"}
+            {t?.buttons?.cancel ?? "Cancel"}
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={isPending || !teacherId || !startDate || !endDate}
           >
-            {isPending ? "Submitting..." : t.submit || "Report Absence"}
+            {isPending
+              ? (t?.content?.submitting ?? "Submitting...")
+              : (t?.buttons?.reportAbsence ?? "Report Absence")}
           </Button>
         </DialogFooter>
       </DialogContent>

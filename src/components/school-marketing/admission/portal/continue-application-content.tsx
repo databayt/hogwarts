@@ -8,7 +8,6 @@ import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2 } from "lucide-react"
 import { useForm } from "react-hook-form"
-import { toast } from "sonner"
 import { z } from "zod"
 
 import { Button } from "@/components/ui/button"
@@ -28,6 +27,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { ErrorToast } from "@/components/atom/toast"
 import { AnthropicIcons } from "@/components/icons"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -91,15 +91,15 @@ export default function ContinueApplicationContent({
             `/${lang}/application/${campaignId}?token=${data.sessionToken}`
           )
         } else {
-          toast.error(dict.campaignNotFound || "Campaign not found")
+          ErrorToast(dict.campaignNotFound || "Campaign not found")
         }
       } else {
-        toast.error(
+        ErrorToast(
           result.error || dict.noSavedFound || "No saved application found"
         )
       }
     } catch (error) {
-      toast.error(dict.failedToResume || "Failed to resume application")
+      ErrorToast(dict.failedToResume || "Failed to resume application")
     } finally {
       setIsLoading(false)
     }
@@ -187,7 +187,7 @@ export default function ContinueApplicationContent({
                 ) : (
                   <>
                     {dict.resumeApplication || "Resume Application"}
-                    <AnthropicIcons.ArrowRight className="ms-2 h-4 w-4 transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
+                    <AnthropicIcons.ArrowRight className="ms-2 h-4 w-4 transition-transform group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" />
                   </>
                 )}
               </Button>

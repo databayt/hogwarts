@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useEffect, useOptimistic, useState } from "react"
 import {
+  ArrowLeft,
   EllipsisVertical,
   Info,
   Phone,
@@ -48,6 +49,7 @@ export interface ChatInterfaceProps {
   onLoadMoreMessages?: () => Promise<void>
   onViewParticipants?: () => void
   onViewDetails?: () => void
+  onBack?: () => void
   hasMoreMessages?: boolean
   className?: string
 }
@@ -66,6 +68,7 @@ export function ChatInterface({
   onLoadMoreMessages,
   onViewParticipants,
   onViewDetails,
+  onBack,
   hasMoreMessages = false,
   className,
 }: ChatInterfaceProps) {
@@ -77,17 +80,16 @@ export function ChatInterface({
   const [typingUsers, setTypingUsers] = useState<TypingIndicatorDTO[]>([])
   const [isLoadingMessages, setIsLoadingMessages] = useState(false)
 
-  // Optimistic updates layer (React 19 pattern)
+  // Optimistic updates (React 19)
   const [optimisticMessages, addOptimisticMessage] = useOptimistic(
     messages,
     (state, newMessage: MessageDTO) => [...state, newMessage]
   )
 
-  // Handle optimistic message sending
   const handleOptimisticSend = useCallback(
     (content: string, replyToId?: string) => {
       const optimisticMessage: MessageDTO = {
-        id: `temp-${Date.now()}`, // Temporary ID
+        id: `temp-${Date.now()}`,
         conversationId: conversation.id,
         senderId: currentUserId,
         sender: {
@@ -98,7 +100,7 @@ export function ChatInterface({
         },
         content,
         contentType: "text",
-        status: "sending", // Special status for optimistic messages
+        status: "sending",
         replyToId: replyToId || null,
         replyTo: replyToId
           ? messages.find((m) => m.id === replyToId) || null
@@ -116,17 +118,14 @@ export function ChatInterface({
         readReceipts: [],
         readCount: 0,
       }
-
-      // Add to optimistic state
       addOptimisticMessage(optimisticMessage)
     },
     [conversation.id, currentUserId, messages, addOptimisticMessage]
   )
 
   const config = CONVERSATION_TYPE_CONFIG[conversation.type]
-  const Icon = config.icon
 
-  // Get display name and avatar for header
+  // Header display info
   const otherUser =
     conversation.type === "direct"
       ? conversation.participants?.find((p) => p.userId !== currentUserId)?.user
@@ -144,6 +143,16 @@ export function ChatInterface({
 
   const avatarFallback = displayName?.[0]?.toUpperCase() || "C"
 
+  // Participant names for subtitle
+  const participantNames =
+    conversation.type !== "direct"
+      ? conversation.participants
+          ?.filter((p) => p.userId !== currentUserId)
+          .slice(0, 3)
+          .map((p) => p.user.username || p.user.email?.split("@")[0])
+          .join(", ")
+      : null
+
   // Mark conversation as read when opened
   useEffect(() => {
     markConversationAsRead({ conversationId: conversation.id }).catch(() => {})
@@ -153,10 +162,8 @@ export function ChatInterface({
   useEffect(() => {
     if (!socketService.isConnected()) return
 
-    // Subscribe to conversation
     socketService.subscribeToConversation(conversation.id)
 
-    // Listen for new messages
     const unsubscribeNewMessage = socketService.on("message:new", (data) => {
       if (data.conversationId === conversation.id) {
         const newMessage: MessageDTO = {
@@ -188,11 +195,8 @@ export function ChatInterface({
           readCount: 0,
         }
 
-        // Replace optimistic message or add new message
         setMessages((prev) => {
-          // If this is from current user, it might be replacing an optimistic message
           if (data.senderId === currentUserId) {
-            // Find and remove any temporary message with matching content
             const withoutOptimistic = prev.filter(
               (msg) =>
                 !msg.id.startsWith("temp-") ||
@@ -200,11 +204,9 @@ export function ChatInterface({
             )
             return [...withoutOptimistic, newMessage]
           }
-          // From another user, just add it
           return [...prev, newMessage]
         })
 
-        // Mark as read if from another user
         if (data.senderId !== currentUserId) {
           markConversationAsRead({ conversationId: conversation.id }).catch(
             () => {}
@@ -213,7 +215,6 @@ export function ChatInterface({
       }
     })
 
-    // Listen for message updates
     const unsubscribeMessageUpdated = socketService.on(
       "message:updated",
       (data) => {
@@ -232,7 +233,6 @@ export function ChatInterface({
       }
     )
 
-    // Listen for message deletions
     const unsubscribeMessageDeleted = socketService.on(
       "message:deleted",
       (data) => {
@@ -246,7 +246,6 @@ export function ChatInterface({
       }
     )
 
-    // Listen for reactions
     const unsubscribeReaction = socketService.on("message:reaction", (data) => {
       setMessages((prev) =>
         prev.map((msg) => {
@@ -289,7 +288,6 @@ export function ChatInterface({
       )
     })
 
-    // Listen for typing indicators
     const unsubscribeTypingStart = socketService.on("typing:start", (data) => {
       if (
         data.conversationId === conversation.id &&
@@ -333,7 +331,7 @@ export function ChatInterface({
     }
   }, [conversation.id, currentUserId])
 
-  // Auto-remove typing indicators after 5 seconds
+  // Auto-remove typing indicators after 5s
   useEffect(() => {
     const interval = setInterval(() => {
       setTypingUsers((prev) => {
@@ -341,7 +339,6 @@ export function ChatInterface({
         return prev.filter((u) => now - new Date(u.startedAt).getTime() < 5000)
       })
     }, 1000)
-
     return () => clearInterval(interval)
   }, [])
 
@@ -350,7 +347,7 @@ export function ChatInterface({
       await onSendMessage(content, replyToId)
       setReplyTo(null)
       setEditingMessage(null)
-    } catch (error) {
+    } catch {
       toast({
         title: m?.notifications?.error || "Error",
         description: m?.errors?.send_failed || "Failed to send message",
@@ -359,14 +356,13 @@ export function ChatInterface({
   }
 
   const handleEditMessage = async (message: MessageDTO) => {
-    // TODO: Implement edit UI
     setEditingMessage(message)
   }
 
   const handleDeleteMessage = async (messageId: string) => {
     try {
       await onDeleteMessage(messageId)
-    } catch (error) {
+    } catch {
       toast({
         title: m?.notifications?.error || "Error",
         description: m?.errors?.delete_failed || "Failed to delete message",
@@ -377,7 +373,7 @@ export function ChatInterface({
   const handleReactToMessage = async (messageId: string, emoji: string) => {
     try {
       await onReactToMessage(messageId, emoji)
-    } catch (error) {
+    } catch {
       toast({
         title: m?.notifications?.error || "Error",
         description: m?.errors?.react_failed || "Failed to add reaction",
@@ -387,7 +383,6 @@ export function ChatInterface({
 
   const handleLoadMore = useCallback(async () => {
     if (isLoadingMessages || !hasMoreMessages || !onLoadMoreMessages) return
-
     setIsLoadingMessages(true)
     try {
       await onLoadMoreMessages()
@@ -404,7 +399,6 @@ export function ChatInterface({
     socketService.sendTypingStop(conversation.id)
   }
 
-  // Get current user's participant role
   const currentParticipant = conversation.participants?.find(
     (p) => p.userId === currentUserId
   )
@@ -412,50 +406,61 @@ export function ChatInterface({
 
   return (
     <div className={cn("flex h-full flex-col", className)}>
-      {/* Header */}
-      <div className="border-border bg-background flex items-center justify-between gap-3 border-b p-4">
-        <div className="flex min-w-0 flex-1 items-center gap-3">
-          <Avatar className="h-10 w-10 flex-shrink-0">
-            <AvatarImage src={avatarUrl} alt={displayName} />
-            <AvatarFallback className="bg-muted text-muted-foreground">
-              {avatarFallback}
-            </AvatarFallback>
-          </Avatar>
+      {/* Header — WhatsApp style: 60px, avatar, name, status, actions */}
+      <div className="bg-msg-header-bg border-border flex h-[60px] flex-shrink-0 items-center gap-3 border-b px-3">
+        {/* Back arrow — mobile only */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onBack}
+          className="h-10 w-10 flex-shrink-0 rounded-full md:hidden"
+          aria-label={(m?.ui as Record<string, string>)?.back || "Back"}
+        >
+          <ArrowLeft className="h-5 w-5 rtl:rotate-180" />
+        </Button>
 
-          <div className="min-w-0 flex-1">
-            <h2 className="text-foreground truncate font-semibold">
-              {displayName}
-            </h2>
-            {conversation.type !== "direct" && (
-              <p className="text-muted-foreground text-sm">
-                {conversation.participantCount}{" "}
-                {m?.ui?.members_label || "members"}
-              </p>
-            )}
-            {typingUsers.length > 0 && (
-              <p className="text-muted-foreground text-sm italic">
-                {typingUsers.length === 1
-                  ? `${typingUsers[0].user.username} ${m?.ui?.is_typing || "is typing..."}`
-                  : `${typingUsers.length} ${m?.ui?.are_typing || "are typing..."}`}
-              </p>
-            )}
-          </div>
+        {/* Avatar */}
+        <Avatar className="h-10 w-10 flex-shrink-0">
+          <AvatarImage src={avatarUrl} alt={displayName} />
+          <AvatarFallback className="bg-muted text-muted-foreground">
+            {avatarFallback}
+          </AvatarFallback>
+        </Avatar>
+
+        {/* Name + status */}
+        <div className="min-w-0 flex-1">
+          <h2 className="text-foreground truncate font-medium">
+            {displayName}
+          </h2>
+          {typingUsers.length > 0 ? (
+            <p className="text-msg-unread-badge text-xs">
+              {typingUsers.length === 1
+                ? `${typingUsers[0].user.username || (m?.ui as Record<string, string>)?.someone || "Someone"} ${m?.ui?.is_typing || "is typing..."}`
+                : `${typingUsers.length} ${m?.ui?.are_typing || "are typing..."}`}
+            </p>
+          ) : conversation.type !== "direct" && participantNames ? (
+            <p className="text-muted-foreground truncate text-xs">
+              {participantNames}
+              {(conversation.participantCount ?? 0) > 3 &&
+                ` +${(conversation.participantCount ?? 0) - 3}`}
+            </p>
+          ) : (
+            <p className="text-muted-foreground text-xs">
+              {m?.ui?.online || "online"}
+            </p>
+          )}
         </div>
 
-        {/* Header actions */}
-        <div className="flex items-center gap-2">
-          {/* Message Search */}
+        {/* Action icons */}
+        <div className="flex items-center gap-0.5">
           <MessageSearch conversationId={conversation.id} locale={locale} />
-
-          {conversation.type !== "direct" && (
-            <Button variant="ghost" size="icon" onClick={onViewParticipants}>
-              <Users className="h-5 w-5" />
-            </Button>
-          )}
-
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-10 w-10 rounded-full"
+              >
                 <EllipsisVertical className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
@@ -464,6 +469,12 @@ export function ChatInterface({
                 <Info className="me-2 h-4 w-4" />
                 {m?.ui?.details || "Details"}
               </DropdownMenuItem>
+              {conversation.type !== "direct" && (
+                <DropdownMenuItem onClick={onViewParticipants}>
+                  <Users className="me-2 h-4 w-4" />
+                  {m?.ui?.members_label || "Members"}
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem disabled>
                 <Phone className="me-2 h-4 w-4" />
@@ -479,20 +490,43 @@ export function ChatInterface({
       </div>
 
       {/* Messages */}
-      <MessageList
-        messages={optimisticMessages}
-        currentUserId={currentUserId}
-        locale={locale}
-        isLoading={isLoadingMessages}
-        hasMore={hasMoreMessages}
-        onLoadMore={handleLoadMore}
-        onReply={setReplyTo}
-        onEdit={handleEditMessage}
-        onDelete={handleDeleteMessage}
-        onReact={handleReactToMessage}
-        onRemoveReaction={onRemoveReaction}
-        className="flex-1"
-      />
+      <div className="relative flex-1 overflow-hidden">
+        <MessageList
+          messages={optimisticMessages}
+          currentUserId={currentUserId}
+          locale={locale}
+          conversationType={conversation.type}
+          isLoading={isLoadingMessages}
+          hasMore={hasMoreMessages}
+          onLoadMore={handleLoadMore}
+          onReply={setReplyTo}
+          onEdit={handleEditMessage}
+          onDelete={handleDeleteMessage}
+          onReact={handleReactToMessage}
+          onRemoveReaction={onRemoveReaction}
+          className="h-full"
+        />
+
+        {/* Typing indicator — WhatsApp bouncing dots bubble */}
+        {typingUsers.length > 0 && (
+          <div className="absolute start-4 bottom-2 z-10">
+            <div className="bg-msg-incoming flex items-center gap-1 rounded-lg rounded-ss-sm px-3 py-2 shadow-sm">
+              <span
+                className="bg-msg-typing-dot h-2 w-2 animate-bounce rounded-full"
+                style={{ animationDelay: "0ms" }}
+              />
+              <span
+                className="bg-msg-typing-dot h-2 w-2 animate-bounce rounded-full"
+                style={{ animationDelay: "150ms" }}
+              />
+              <span
+                className="bg-msg-typing-dot h-2 w-2 animate-bounce rounded-full"
+                style={{ animationDelay: "300ms" }}
+              />
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Input */}
       {canSendMessages ? (
@@ -507,7 +541,7 @@ export function ChatInterface({
           onOptimisticSend={handleOptimisticSend}
         />
       ) : (
-        <div className="text-muted-foreground bg-muted/50 p-4 text-center text-sm">
+        <div className="bg-msg-header-bg text-muted-foreground border-border border-t p-4 text-center text-sm">
           {m?.ui?.no_permission_send ||
             "You don't have permission to send messages in this conversation"}
         </div>
@@ -523,16 +557,18 @@ export function ChatInterfaceSkeleton({
 }) {
   return (
     <div className="flex h-full flex-col">
-      <div className="border-border flex items-center gap-3 border-b p-4">
+      {/* Header skeleton */}
+      <div className="bg-msg-header-bg border-border flex h-[60px] items-center gap-3 border-b px-3">
         <div className="bg-muted h-10 w-10 animate-pulse rounded-full" />
-        <div className="flex-1 space-y-2">
-          <div className="bg-muted h-4 w-32 animate-pulse rounded" />
-          <div className="bg-muted h-3 w-24 animate-pulse rounded" />
+        <div className="flex-1 space-y-1.5">
+          <div className="bg-muted h-4 w-28 animate-pulse rounded" />
+          <div className="bg-muted h-3 w-20 animate-pulse rounded" />
         </div>
       </div>
       <MessageListSkeleton locale={locale} />
-      <div className="border-border border-t p-4">
-        <div className="bg-muted h-10 animate-pulse rounded" />
+      {/* Input skeleton */}
+      <div className="bg-msg-header-bg border-border border-t px-3 py-2">
+        <div className="bg-msg-input-bg h-[42px] animate-pulse rounded-[21px]" />
       </div>
     </div>
   )

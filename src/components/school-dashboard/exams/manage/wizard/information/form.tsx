@@ -16,6 +16,7 @@ import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { InputField, SelectField, TextareaField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { EXAM_TYPE_OPTIONS } from "@/components/school-dashboard/exams/manage/wizard/config"
 
 import { getClassOptions, getSubjectOptions } from "../actions"
@@ -30,6 +31,8 @@ interface InformationFormProps {
 
 export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
   ({ examId, initialData, onValidChange }, ref) => {
+    const { dictionary } = useDictionary()
+    const t = dictionary?.school?.exams?.wizard?.examWizard?.information
     const [isPending, startTransition] = useTransition()
     const [classOptions, setClassOptions] = useState<
       { label: string; value: string }[]
@@ -123,22 +126,24 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
         <form className="space-y-6">
           <InputField
             name="title"
-            label="Exam Title"
-            placeholder="Enter exam title"
+            label={t?.examTitle ?? "Exam Title"}
+            placeholder={t?.titlePlaceholder ?? "Enter exam title"}
             required
             disabled={isPending}
           />
           <TextareaField
             name="description"
             label="Description"
-            placeholder="Enter exam description (optional)"
+            placeholder={
+              t?.descriptionPlaceholder ?? "Enter exam description (optional)"
+            }
             disabled={isPending}
           />
           <SelectField
             name="classId"
             label="Class"
             options={[...classOptions]}
-            placeholder="Select a class"
+            placeholder={t?.selectClass ?? "Select a class"}
             required
             disabled={isPending}
           />
@@ -146,13 +151,13 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
             name="subjectId"
             label="Subject"
             options={[...subjectOptions]}
-            placeholder="Select a subject"
+            placeholder={t?.selectSubject ?? "Select a subject"}
             required
             disabled={isPending}
           />
           <SelectField
             name="examType"
-            label="Exam Type"
+            label={t?.examType ?? "Exam Type"}
             options={[...EXAM_TYPE_OPTIONS]}
             required
             disabled={isPending}

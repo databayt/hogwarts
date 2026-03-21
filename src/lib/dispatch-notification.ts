@@ -155,20 +155,22 @@ async function resolveTargetUsers(
     }
     case "class": {
       if (!classId) return []
-      // Get students enrolled in the class + the teacher
+      // Resolve User IDs via Student/Teacher relations (not their model IDs)
       const classData = await db.class.findUnique({
         where: { id: classId },
         select: {
-          teacherId: true,
+          teacher: { select: { userId: true } },
           studentClasses: {
-            select: { studentId: true },
+            select: { student: { select: { userId: true } } },
           },
         },
       })
       if (!classData) return []
-      const ids = classData.studentClasses.map((sc) => sc.studentId)
-      if (classData.teacherId) ids.push(classData.teacherId)
-      return ids
+      const ids: string[] = classData.studentClasses
+        .map((sc) => sc.student.userId)
+        .filter((id): id is string => id !== null)
+      if (classData.teacher?.userId) ids.push(classData.teacher.userId)
+      return [...new Set(ids)]
     }
     case "role": {
       if (!role) return []

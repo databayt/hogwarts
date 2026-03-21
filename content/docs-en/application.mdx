@@ -220,6 +220,8 @@ If the campaign has an application fee, the applicant is redirected to the payme
 
 After selecting cash or bank transfer, a confirmation card with the reference number is shown. A "Continue" button navigates to the success page.
 
+**Stripe Webhook:** When a card payment succeeds, the Stripe webhook (`/api/webhooks/stripe`) updates `applicationFeePaid = true` and dispatches a `fee_paid` notification (in-app + email) to the applicant confirming payment receipt.
+
 **Route:** `/{lang}/application/{applicationId}/payment?number={applicationNumber}`
 
 ### Step 7: Success Page
@@ -483,14 +485,19 @@ src/
 
 ## Key Files
 
-| Purpose               | Path                                                                  |
-| --------------------- | --------------------------------------------------------------------- |
-| Application routes    | `src/app/[lang]/s/[subdomain]/application/`                           |
-| Step config           | `src/components/school-marketing/application/config.client.ts`        |
-| Application context   | `src/components/school-marketing/application/application-context.tsx` |
-| Submit action         | `src/components/school-marketing/application/submit-action.ts`        |
-| Core submission logic | `src/components/school-marketing/admission/actions/application.ts`    |
-| Validation schemas    | `src/components/school-marketing/admission/validation.ts`             |
-| Payment actions       | `src/components/school-marketing/application/payment/actions.ts`      |
-| Prisma schema         | `prisma/models/admission.prisma`                                      |
-| Admission types       | `src/components/school-marketing/admission/types.ts`                  |
+| Purpose               | Path                                                                                  |
+| --------------------- | ------------------------------------------------------------------------------------- |
+| Application routes    | `src/app/[lang]/s/[subdomain]/application/`                                           |
+| Step config           | `src/components/school-marketing/application/config.client.ts`                        |
+| Application context   | `src/components/school-marketing/application/application-context.tsx`                 |
+| Submit action         | `src/components/school-marketing/application/submit-action.ts`                        |
+| Core submission logic | `src/components/school-marketing/admission/actions/application.ts`                    |
+| Validation schemas    | `src/components/school-marketing/admission/validation.ts`                             |
+| Payment actions       | `src/components/school-marketing/application/payment/actions.ts`                      |
+| Stripe webhook        | `src/app/api/webhooks/stripe/route.ts`                                                |
+| Prisma schema         | `prisma/models/admission.prisma`                                                      |
+| Admission types       | `src/components/school-marketing/admission/types.ts`                                  |
+| Status banner tests   | `src/components/school-marketing/admission/__tests__/status-banner.test.tsx`          |
+| Status display tests  | `src/components/school-marketing/admission/status/__tests__/status-display.test.tsx`  |
+| Status tracking tests | `src/components/school-marketing/admission/actions/__tests__/status-tracking.test.ts` |
+| Stripe webhook tests  | `src/app/api/webhooks/stripe/__tests__/route.test.ts`                                 |

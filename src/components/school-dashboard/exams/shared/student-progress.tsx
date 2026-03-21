@@ -41,6 +41,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import type { ProgressData } from "./progress-actions"
 import { getGuardianChildren, getStudentProgress } from "./progress-actions"
@@ -81,6 +82,8 @@ const SUBJECT_COLORS = [
 ]
 
 export function StudentProgress({ isGuardian }: StudentProgressProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.exams?.shared
   const [data, setData] = useState<ProgressData | null>(null)
   const [children, setChildren] = useState<{ id: string; name: string }[]>([])
   const [selectedChild, setSelectedChild] = useState<string>("")
@@ -164,7 +167,9 @@ export function StudentProgress({ isGuardian }: StudentProgressProps) {
       {/* Guardian child selector */}
       {isGuardian && children.length > 1 && (
         <div className="flex items-center gap-3">
-          <span className="text-sm font-medium">Viewing progress for:</span>
+          <span className="text-sm font-medium">
+            {t?.viewingProgress ?? "Viewing progress for:"}
+          </span>
           <Select value={selectedChild} onValueChange={setSelectedChild}>
             <SelectTrigger className="w-[200px]">
               <SelectValue />
@@ -200,7 +205,9 @@ export function StudentProgress({ isGuardian }: StudentProgressProps) {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Exams Taken</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t?.examsTaken ?? "Exams Taken"}
+            </CardTitle>
             <FileText className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
@@ -220,7 +227,9 @@ export function StudentProgress({ isGuardian }: StudentProgressProps) {
             <div className="truncate text-lg font-bold">
               {data.bestSubject || "N/A"}
             </div>
-            <p className="text-muted-foreground text-xs">Highest average</p>
+            <p className="text-muted-foreground text-xs">
+              {t?.highestAverage ?? "Highest average"}
+            </p>
           </CardContent>
         </Card>
 
@@ -233,7 +242,9 @@ export function StudentProgress({ isGuardian }: StudentProgressProps) {
             <div className="truncate text-lg font-bold">
               {data.weakestSubject || "N/A"}
             </div>
-            <p className="text-muted-foreground text-xs">Lowest average</p>
+            <p className="text-muted-foreground text-xs">
+              {t?.lowestAverage ?? "Lowest average"}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -243,7 +254,9 @@ export function StudentProgress({ isGuardian }: StudentProgressProps) {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Subject Score Trends</CardTitle>
+              <CardTitle className="text-base">
+                {t?.subjectTrends ?? "Subject Score Trends"}
+              </CardTitle>
               <div className="flex flex-wrap gap-1.5">
                 {data.subjectTrends.map((s) => (
                   <Badge

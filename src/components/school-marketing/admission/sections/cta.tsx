@@ -39,7 +39,7 @@ export function AdmissionCTA({ lang, dictionary }: AdmissionCTAProps) {
           >
             {dictionary?.marketing?.site?.admission?.cta?.startApplication ||
               "Start Application"}
-            <AnthropicIcons.ArrowRight className="h-4 w-4" />
+            <AnthropicIcons.ArrowRight className="h-4 w-4 rtl:rotate-180" />
           </Link>
           <Link
             href={`/${lang}/inquiry`}

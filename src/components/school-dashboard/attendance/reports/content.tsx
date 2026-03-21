@@ -209,7 +209,7 @@ export function ReportsContent({
     )
   }, [records, searchQuery])
 
-  const dict = dictionary?.school?.attendance || {}
+  const t = dictionary?.attendance
 
   return (
     <div className="space-y-6">
@@ -221,10 +221,11 @@ export function ReportsContent({
           </div>
           <div>
             <h1 className="scroll-m-20 text-2xl font-semibold tracking-tight">
-              Attendance Reports
+              {t?.reports?.title ?? "Attendance Reports"}
             </h1>
             <p className="text-muted-foreground text-sm">
-              Generate and export detailed attendance reports
+              {t?.reports?.export ??
+                "Generate and export detailed attendance reports"}
             </p>
           </div>
         </div>
@@ -237,7 +238,7 @@ export function ReportsContent({
             <RefreshCw
               className={cn("me-2 h-4 w-4", refreshing && "animate-spin")}
             />
-            Refresh
+            {t?.emptyStates?.refresh ?? "Refresh"}
           </Button>
           <AttendanceReportExportButton
             filters={{
@@ -258,19 +259,22 @@ export function ReportsContent({
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Total Records
+                {t?.reports?.summary ?? "Total Records"}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.total}</div>
               <p className="text-muted-foreground text-xs">
-                {stats.attendanceRate}% attendance rate
+                {stats.attendanceRate}%{" "}
+                {t?.stats?.attendanceRate ?? "attendance rate"}
               </p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Present</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {t?.status?.PRESENT ?? "Present"}
+              </CardTitle>
               <CircleCheck className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
@@ -281,7 +285,9 @@ export function ReportsContent({
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Late</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {t?.status?.LATE ?? "Late"}
+              </CardTitle>
               <Clock className="h-4 w-4 text-yellow-500" />
             </CardHeader>
             <CardContent>
@@ -292,7 +298,9 @@ export function ReportsContent({
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Absent</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {t?.status?.ABSENT ?? "Absent"}
+              </CardTitle>
               <CircleX className="h-4 w-4 text-red-500" />
             </CardHeader>
             <CardContent>
@@ -309,13 +317,15 @@ export function ReportsContent({
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <ListFilter className="h-4 w-4" />
-            Filters
+            {t?.export?.dateRange ?? "Filters"}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-4">
             <div className="flex items-center gap-2">
-              <label className="text-sm font-medium">Date Range:</label>
+              <label className="text-sm font-medium">
+                {t?.export?.dateRange ?? "Date Range"}:
+              </label>
               <DateRangePicker
                 from={dateRange.from}
                 to={dateRange.to}
@@ -340,7 +350,9 @@ export function ReportsContent({
                 <SelectValue placeholder="Select class" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Classes</SelectItem>
+                <SelectItem value="all">
+                  {t?.reportsFilter?.allClasses ?? "All Classes"}
+                </SelectItem>
                 {classes.map((cls) => (
                   <SelectItem key={cls.id} value={cls.id}>
                     {cls.name}
@@ -356,21 +368,37 @@ export function ReportsContent({
               }}
             >
               <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Select status" />
+                <SelectValue
+                  placeholder={t?.form?.selectStatus ?? "Select status"}
+                />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="PRESENT">Present</SelectItem>
-                <SelectItem value="ABSENT">Absent</SelectItem>
-                <SelectItem value="LATE">Late</SelectItem>
-                <SelectItem value="EXCUSED">Excused</SelectItem>
-                <SelectItem value="SICK">Sick</SelectItem>
+                <SelectItem value="all">
+                  {t?.reportsFilter?.allStatuses ?? "All Statuses"}
+                </SelectItem>
+                <SelectItem value="PRESENT">
+                  {t?.status?.PRESENT ?? "Present"}
+                </SelectItem>
+                <SelectItem value="ABSENT">
+                  {t?.status?.ABSENT ?? "Absent"}
+                </SelectItem>
+                <SelectItem value="LATE">
+                  {t?.status?.LATE ?? "Late"}
+                </SelectItem>
+                <SelectItem value="EXCUSED">
+                  {t?.status?.EXCUSED ?? "Excused"}
+                </SelectItem>
+                <SelectItem value="SICK">
+                  {t?.status?.SICK ?? "Sick"}
+                </SelectItem>
               </SelectContent>
             </Select>
             <div className="relative min-w-[200px] flex-1">
               <Search className="text-muted-foreground absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 transform" />
               <Input
-                placeholder="Search student or class..."
+                placeholder={
+                  t?.form?.selectStudent ?? "Search student or class..."
+                }
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="ps-9"
@@ -385,7 +413,7 @@ export function ReportsContent({
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Attendance Records</CardTitle>
+              <CardTitle>{t?.title ?? "Attendance Records"}</CardTitle>
               <CardDescription>
                 Showing {filteredRecords.length} of {total} records
               </CardDescription>
@@ -397,7 +425,7 @@ export function ReportsContent({
                 disabled={page <= 1}
                 onClick={() => setPage((p) => p - 1)}
               >
-                Previous
+                {t?.form?.cancel ?? "Previous"}
               </Button>
               <span className="text-muted-foreground text-sm">
                 Page {page} of {totalPages}
@@ -408,7 +436,7 @@ export function ReportsContent({
                 disabled={page >= totalPages}
                 onClick={() => setPage((p) => p + 1)}
               >
-                Next
+                {t?.form?.submit ?? "Next"}
               </Button>
             </div>
           </div>
@@ -421,9 +449,10 @@ export function ReportsContent({
           ) : filteredRecords.length === 0 ? (
             <div className="text-muted-foreground py-12 text-center">
               <FileSpreadsheet className="mx-auto mb-3 h-12 w-12 opacity-50" />
-              <p>No records found</p>
+              <p>{t?.table?.noRecords ?? "No records found"}</p>
               <p className="text-sm">
-                Adjust filters or date range to see data
+                {t?.stats?.selectClassAndDate ??
+                  "Adjust filters or date range to see data"}
               </p>
             </div>
           ) : (
@@ -431,14 +460,14 @@ export function ReportsContent({
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Student</TableHead>
-                    <TableHead>Class</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Method</TableHead>
-                    <TableHead>Check-in</TableHead>
-                    <TableHead>Check-out</TableHead>
-                    <TableHead>Notes</TableHead>
+                    <TableHead>{t?.table?.date ?? "Date"}</TableHead>
+                    <TableHead>{t?.table?.student ?? "Student"}</TableHead>
+                    <TableHead>{t?.table?.class ?? "Class"}</TableHead>
+                    <TableHead>{t?.table?.status ?? "Status"}</TableHead>
+                    <TableHead>{t?.table?.method ?? "Method"}</TableHead>
+                    <TableHead>{t?.table?.time ?? "Check-in"}</TableHead>
+                    <TableHead>{t?.table?.time ?? "Check-out"}</TableHead>
+                    <TableHead>{t?.table?.notes ?? "Notes"}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

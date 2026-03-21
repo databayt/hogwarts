@@ -123,6 +123,8 @@ export async function GET(request: NextRequest) {
 
       const amount = assignment.finalAmount.toString()
       const feeName = assignment.feeStructure.name
+      const lang = school?.preferredLanguage ?? "ar"
+      const isAr = lang === "ar"
 
       // Collect all recipient userIds (student + guardians)
       const recipientIds: string[] = []
@@ -141,11 +143,13 @@ export async function GET(request: NextRequest) {
           schoolId: assignment.schoolId,
           userId,
           type: "fee_overdue",
-          title: "Overdue Payment Notice",
-          body: `Fee payment of ${amount} for "${feeName}" is overdue. Please make payment immediately.`,
+          title: isAr ? "إشعار دفعة متأخرة" : "Overdue Payment Notice",
+          body: isAr
+            ? `دفعة ${amount} لـ "${feeName}" متأخرة. يرجى الدفع فوراً.`
+            : `Fee payment of ${amount} for "${feeName}" is overdue. Please make payment immediately.`,
           priority: "urgent",
           channels: ["in_app", "email"],
-          lang: school?.preferredLanguage ?? "ar",
+          lang,
           metadata: {
             feeAssignmentId: assignment.id,
             url: "/finance/fees",

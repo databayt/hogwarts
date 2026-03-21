@@ -25,6 +25,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { useToast } from "@/components/ui/use-toast"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { deleteProgressSchedule, generateProgressReports } from "./actions"
 import type { ProgressScheduleSummary } from "./types"
@@ -41,6 +42,9 @@ export function ProgressScheduleList({
   const { toast } = useToast()
   const [generatingId, setGeneratingId] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const { dictionary } = useDictionary()
+  const p = dictionary?.school?.exams?.progress
+  const t = p?.schedule
 
   const handleGenerate = async (scheduleId: string) => {
     setGeneratingId(scheduleId)
@@ -48,22 +52,22 @@ export function ProgressScheduleList({
       const result = await generateProgressReports(scheduleId)
       if (result.success) {
         toast({
-          title: "Success",
+          title: p?.toast?.success ?? "Success",
           description: `Generated ${result.data?.generated} reports${
             result.data?.failed ? `, ${result.data.failed} failed` : ""
           }`,
         })
       } else {
         toast({
-          title: "Error",
+          title: p?.toast?.error ?? "Error",
           description: result.error,
           variant: "destructive",
         })
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to generate reports",
+        title: p?.toast?.error ?? "Error",
+        description: t?.toast?.generateFailed ?? "Failed to generate reports",
         variant: "destructive",
       })
     } finally {
@@ -72,27 +76,33 @@ export function ProgressScheduleList({
   }
 
   const handleDelete = async (scheduleId: string) => {
-    if (!confirm("Are you sure you want to delete this schedule?")) return
+    if (
+      !confirm(
+        t?.toast?.deleteConfirm ??
+          "Are you sure you want to delete this schedule?"
+      )
+    )
+      return
 
     setDeletingId(scheduleId)
     try {
       const result = await deleteProgressSchedule(scheduleId)
       if (result.success) {
         toast({
-          title: "Success",
-          description: "Schedule deleted successfully",
+          title: p?.toast?.success ?? "Success",
+          description: t?.toast?.deleted ?? "Schedule deleted successfully",
         })
       } else {
         toast({
-          title: "Error",
+          title: p?.toast?.error ?? "Error",
           description: result.error,
           variant: "destructive",
         })
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to delete schedule",
+        title: p?.toast?.error ?? "Error",
+        description: t?.toast?.deleteFailed ?? "Failed to delete schedule",
         variant: "destructive",
       })
     } finally {
@@ -104,9 +114,10 @@ export function ProgressScheduleList({
     return (
       <Card>
         <CardHeader>
-          <CardTitle>No Schedules</CardTitle>
+          <CardTitle>{t?.noSchedules ?? "No Schedules"}</CardTitle>
           <CardDescription>
-            Create a schedule to start generating automated progress reports.
+            {t?.noSchedules ??
+              "Create a schedule to start generating automated progress reports."}
           </CardDescription>
         </CardHeader>
       </Card>
@@ -116,7 +127,7 @@ export function ProgressScheduleList({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Report Schedules</CardTitle>
+        <CardTitle>{t?.title ?? "Report Schedules"}</CardTitle>
         <CardDescription>
           Manage automated progress report generation
         </CardDescription>
@@ -125,13 +136,15 @@ export function ProgressScheduleList({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Class</TableHead>
-              <TableHead>Frequency</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Last Run</TableHead>
-              <TableHead>Next Run</TableHead>
-              <TableHead>Reports</TableHead>
-              {canManage && <TableHead>Actions</TableHead>}
+              <TableHead>{t?.headers?.class ?? "Class"}</TableHead>
+              <TableHead>{t?.headers?.frequency ?? "Frequency"}</TableHead>
+              <TableHead>{t?.headers?.status ?? "Status"}</TableHead>
+              <TableHead>{t?.headers?.lastRun ?? "Last Run"}</TableHead>
+              <TableHead>{t?.headers?.nextRun ?? "Next Run"}</TableHead>
+              <TableHead>{t?.headers?.reports ?? "Reports"}</TableHead>
+              {canManage && (
+                <TableHead>{t?.headers?.actions ?? "Actions"}</TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -149,9 +162,11 @@ export function ProgressScheduleList({
                 </TableCell>
                 <TableCell>
                   {schedule.isActive ? (
-                    <Badge variant="default">Active</Badge>
+                    <Badge variant="default">{t?.active ?? "Active"}</Badge>
                   ) : (
-                    <Badge variant="secondary">Inactive</Badge>
+                    <Badge variant="secondary">
+                      {t?.inactive ?? "Inactive"}
+                    </Badge>
                   )}
                 </TableCell>
                 <TableCell>

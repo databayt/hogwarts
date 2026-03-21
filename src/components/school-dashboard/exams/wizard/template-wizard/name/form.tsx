@@ -10,6 +10,7 @@ import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { InputField, SelectField, TextareaField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { updateTemplateName } from "./actions"
 import { nameSchema, type NameFormData } from "./validation"
@@ -31,6 +32,8 @@ interface NameFormProps {
 
 export const NameForm = forwardRef<WizardFormRef, NameFormProps>(
   ({ templateId, initialData, onValidChange }, ref) => {
+    const { dictionary } = useDictionary()
+    const t = dictionary?.school?.exams?.wizard?.templateWizard?.name
     const [isPending, startTransition] = useTransition()
 
     const form = useForm<NameFormData>({
@@ -83,14 +86,16 @@ export const NameForm = forwardRef<WizardFormRef, NameFormProps>(
           <InputField
             name="name"
             label="Template Name"
-            placeholder="Enter template name"
+            placeholder={t?.namePlaceholder ?? "Enter template name"}
             required
             disabled={isPending}
           />
           <TextareaField
             name="description"
             label="Description"
-            placeholder="Describe this exam template"
+            placeholder={
+              t?.descriptionPlaceholder ?? "Describe this exam template"
+            }
             disabled={isPending}
           />
           <SelectField

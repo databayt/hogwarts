@@ -540,5 +540,85 @@
     "generateQR": "إنشاء رمز QR",
     "loading": "جارٍ التحميل...",
     "noResults": "لا توجد نتائج."
+  },
+  "barcodeCards": {
+    "title": "بطاقات تعريف الطلاب",
+    "description": "إدارة تعيينات الباركود لتعريف الطلاب",
+    "addCard": "إضافة بطاقة",
+    "export": "تصدير",
+    "generate": "إنشاء",
+    "searchPlaceholder": "البحث برقم الطالب أو الاسم أو الباركود...",
+    "totalCards": "إجمالي البطاقات",
+    "active": "نشطة",
+    "inactive": "غير نشطة",
+    "expired": "منتهية الصلاحية",
+    "studentId": "رقم الطالب",
+    "studentIdPlaceholder": "أدخل رقم الطالب...",
+    "barcodeLabel": "الباركود",
+    "barcodePlaceholder": "أدخل أو أنشئ باركود...",
+    "expiryDate": "تاريخ الانتهاء (اختياري)",
+    "dialogTitle": "إضافة بطاقة طالب",
+    "dialogDescription": "تعيين باركود لطالب لتتبع الحضور",
+    "cancel": "إلغاء",
+    "fillRequired": "يرجى ملء جميع الحقول المطلوبة",
+    "cardAdded": "تمت إضافة البطاقة بنجاح",
+    "cardRemoved": "تمت إزالة البطاقة بنجاح",
+    "addFailed": "فشل إضافة البطاقة",
+    "removeFailed": "فشل إزالة البطاقة",
+    "printCard": "جاري طباعة بطاقة {name}"
+  },
+  "qrActions": {
+    "downloaded": "تم التنزيل",
+    "savedToDevice": "تم حفظ رمز QR على جهازك",
+    "copied": "تم النسخ",
+    "copiedToClipboard": "تم نسخ بيانات QR إلى الحافظة",
+    "notSupported": "غير مدعوم",
+    "sharingNotSupported": "المشاركة غير مدعومة على هذا الجهاز",
+    "attendanceQRCode": "رمز QR للحضور",
+    "scanToMark": "امسح رمز QR لتسجيل الحضور",
+    "displayForStudents": "اعرض رمز QR هذا ليقوم الطلاب بمسحه",
+    "scanDescription": "يمكن للطلاب مسح رمز QR بأجهزتهم المحمولة لتسجيل حضورهم تلقائياً لهذه الجلسة.",
+    "scanFailed": "فشل المسح",
+    "fileUpload": "رفع ملف",
+    "fileUploadNotImplemented": "رفع ملف رمز QR غير متاح بعد",
+    "uploadCSV": "رفع ملف CSV",
+    "csvContains": "يجب أن يحتوي ملف CSV على أعمدة رقم الطالب والحالة",
+    "csvFormatTitle": "مثال على تنسيق CSV:"
+  },
+  "deviceAccess": {
+    "scannerError": "خطأ في الماسح",
+    "initFailed": "فشل تهيئة ماسح الباركود",
+    "cameraPermissionDenied": "تم رفض إذن الكاميرا",
+    "allowCameraAccess": "يرجى السماح بالوصول إلى الكاميرا لمسح الرموز",
+    "locationError": "خطأ في الموقع",
+    "backOnline": "عدت للاتصال",
+    "syncing": "جاري مزامنة البيانات...",
+    "offlineMode": "وضع عدم الاتصال",
+    "syncWhenRestored": "سيتم مزامنة البيانات عند استعادة الاتصال"
+  },
+  "contextActions": {
+    "attendanceDeleted": "تم حذف سجل الحضور",
+    "identifierAdded": "تمت إضافة المعرف بنجاح",
+    "identifierRemoved": "تمت إزالة المعرف",
+    "bulkMarked": "تم تسجيل حضور {count} طالب"
+  },
+  "reportsFilter": {
+    "allClasses": "جميع الفصول",
+    "allStatuses": "جميع الحالات"
+  },
+  "geofenceActions": {
+    "deleteTitle": "حذف السياج الجغرافي",
+    "deleteDescription": "لا يمكن التراجع عن هذا الإجراء. سيتم حذف هذا السياج الجغرافي نهائياً.",
+    "cancel": "إلغاء",
+    "delete": "حذف"
+  },
+  "analyticsTab": {
+    "overview": "نظرة عامة",
+    "calendar": "التقويم",
+    "trends": "الاتجاهات",
+    "patterns": "الأنماط",
+    "methods": "الطرق",
+    "classes": "الفصول",
+    "atRisk": "المعرضون للخطر"
   }
 }

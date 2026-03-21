@@ -620,7 +620,7 @@ export function DepartmentsContent({ dictionary, lang }: Props) {
                 >
                   {t.viewDetails}
                   <ChevronRight
-                    className={`h-4 w-4 transition-transform ${expandedDepartment === dept.id ? "rotate-90" : ""}`}
+                    className={`h-4 w-4 transition-transform rtl:rotate-180 ${expandedDepartment === dept.id ? "rotate-90" : ""}`}
                   />
                 </Button>
 

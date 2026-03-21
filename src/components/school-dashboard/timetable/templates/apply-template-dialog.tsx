@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { applyTemplateToTerm, getTermsForCopy } from "../actions"
 
@@ -59,15 +60,14 @@ export function ApplyTemplateDialog({
   onOpenChange,
   template,
   onSuccess,
-  dictionary,
 }: ApplyTemplateDialogProps) {
   const [targetTermId, setTargetTermId] = useState("")
   const [clearExisting, setClearExisting] = useState(false)
   const [terms, setTerms] = useState<Term[]>([])
   const [isPending, startTransition] = useTransition()
   const { toast } = useToast()
-
-  const t = dictionary?.templates || {}
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.timetable?.templatesUi
 
   useEffect(() => {
     if (open) {
@@ -80,8 +80,8 @@ export function ApplyTemplateDialog({
   const handleApply = useCallback(() => {
     if (!targetTermId) {
       toast({
-        title: "Error",
-        description: "Please select a target term",
+        title: t?.error ?? "Error",
+        description: t?.selectTarget ?? "Please select a target term",
         variant: "destructive",
       })
       return
@@ -96,7 +96,7 @@ export function ApplyTemplateDialog({
         })
 
         toast({
-          title: t.success || "Template Applied",
+          title: t?.applySuccess ?? "Template Applied",
           description: `Created ${result.slotsCreated} slots${
             result.conflictsFound > 0
               ? ` (${result.conflictsFound} conflicts)`
@@ -108,8 +108,8 @@ export function ApplyTemplateDialog({
         onSuccess()
       } catch (error) {
         toast({
-          title: "Error",
-          description: "Failed to apply template",
+          title: t?.error ?? "Error",
+          description: t?.applyFailed ?? "Failed to apply template",
           variant: "destructive",
         })
       }
@@ -121,7 +121,7 @@ export function ApplyTemplateDialog({
     onOpenChange,
     onSuccess,
     toast,
-    t.success,
+    t?.applySuccess,
   ])
 
   return (
@@ -129,10 +129,13 @@ export function ApplyTemplateDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {t.applyTitle || `Apply Template: ${template.name}`}
+            {(t?.applyTitle ?? `Apply Template: ${template.name}`).replace(
+              "{name}",
+              template.name
+            )}
           </DialogTitle>
           <DialogDescription>
-            {t.applyDescription ||
+            {t?.applyDescription ??
               "Apply this template to another term. This will create timetable slots based on the template configuration."}
           </DialogDescription>
         </DialogHeader>
@@ -141,7 +144,9 @@ export function ApplyTemplateDialog({
           {/* Template Info */}
           <Alert>
             <Info className="h-4 w-4" />
-            <AlertTitle>Template Contents</AlertTitle>
+            <AlertTitle>
+              {t?.templateContents ?? "Template Contents"}
+            </AlertTitle>
             <AlertDescription>
               {template.stats.totalSlots} slots, {template.stats.classCount}{" "}
               classes, {template.stats.teacherCount} teachers
@@ -150,10 +155,10 @@ export function ApplyTemplateDialog({
 
           {/* Target Term Selection */}
           <div className="space-y-2">
-            <Label htmlFor="targetTerm">{t.targetTerm || "Target Term"}</Label>
+            <Label htmlFor="targetTerm">{t?.targetTerm ?? "Target Term"}</Label>
             <Select value={targetTermId} onValueChange={setTargetTermId}>
               <SelectTrigger>
-                <SelectValue placeholder={t.selectTerm || "Select term"} />
+                <SelectValue placeholder={t?.selectTerm ?? "Select term"} />
               </SelectTrigger>
               <SelectContent>
                 {terms.map((term) => (
@@ -177,10 +182,10 @@ export function ApplyTemplateDialog({
                 htmlFor="clearExisting"
                 className="cursor-pointer font-medium"
               >
-                {t.clearExisting || "Clear existing timetable"}
+                {t?.clearExisting ?? "Clear existing timetable"}
               </Label>
               <p className="text-muted-foreground text-sm">
-                {t.clearExistingDescription ||
+                {t?.clearDescription ??
                   "Remove all existing slots in the target term before applying"}
               </p>
             </div>
@@ -190,9 +195,9 @@ export function ApplyTemplateDialog({
           {clearExisting && (
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>{t.warning || "Warning"}</AlertTitle>
+              <AlertTitle>{t?.warning ?? "Warning"}</AlertTitle>
               <AlertDescription>
-                {t.warningDescription ||
+                {t?.clearWarning ??
                   "This will permanently delete all existing timetable slots in the target term."}
               </AlertDescription>
             </Alert>
@@ -201,14 +206,16 @@ export function ApplyTemplateDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            {t.cancel || "Cancel"}
+            {t?.cancel ?? "Cancel"}
           </Button>
           <Button
             onClick={handleApply}
             disabled={isPending || !targetTermId}
             variant={clearExisting ? "destructive" : "default"}
           >
-            {isPending ? "Applying..." : t.apply || "Apply Template"}
+            {isPending
+              ? (t?.applying ?? "Applying...")
+              : (t?.applyTemplate ?? "Apply Template")}
           </Button>
         </DialogFooter>
       </DialogContent>

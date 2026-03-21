@@ -134,6 +134,18 @@ function DocumentCard({
               alt={label}
               className="h-full w-full object-cover"
             />
+          ) : /\.pdf$/i.test(fileUrl) || mimeType === "application/pdf" ? (
+            <object
+              data={`${fileUrl}#page=1&view=FitH`}
+              type="application/pdf"
+              className="pointer-events-none h-full w-full"
+              aria-label={label}
+            >
+              <div className="flex flex-1 flex-col items-center justify-center gap-1">
+                <CheckCircle className="h-8 w-8 text-green-500" />
+                <p className="text-muted-foreground text-xs">PDF</p>
+              </div>
+            </object>
           ) : (
             <div className="flex flex-1 flex-col items-center justify-center gap-1">
               <CheckCircle className="h-8 w-8 text-green-500" />

@@ -20,10 +20,13 @@ export async function generateMetadata({
   params,
 }: NotificationPreferencesPageProps) {
   const { lang } = await params
+  const dict = await getDictionary(lang)
 
   return {
-    title: `Notification Preferences | Hogwarts`,
-    description: "Manage your notification preferences and settings",
+    title: dict.notifications?.preferences?.title ?? "Notification Preferences",
+    description:
+      dict.notifications?.preferences?.description ??
+      "Manage your notification preferences and settings",
   }
 }
 

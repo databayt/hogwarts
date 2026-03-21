@@ -1,0 +1,360 @@
+---
+title: "Library"
+description: "School library management -- global-first catalog, borrowing system, community contributions, admin tools, and RBAC authorization"
+---
+
+## Overview
+
+The Library block provides a complete library management system for schools. It uses a **global-first architecture** where all schools see the same published CatalogBook catalog out of the box -- no setup, no onboarding wiring, no admin action required. Schools can hide individual books, and borrowing is tracked via lazily-provisioned school-scoped Book records.
+
+### Architecture
+
+```
++-------------------------------------------------------------+
+|                    GLOBAL CATALOG                            |
+|  (No schoolId -- platform-wide)                             |
+|                                                             |
+|  CatalogBook (published + approved)                         |
+|    All schools see these by default                         |
+|                                                             |
++--------------------------+----------------------------------+
+                           |
+                   Opt-out Layer (schoolId-scoped)
+                           |
++--------------------------+----------------------------------+
+|  SchoolBookSelection                                        |
+|    isActive: false = book hidden for this school            |
+|    No record = book visible (default)                       |
+|                                                             |
++--------------------------+----------------------------------+
+                           |
+                   Lazy Provisioning
+                           |
++--------------------------+----------------------------------+
+|  Book (school-scoped, auto-created on detail page visit)    |
+|    - Created from CatalogBook data on first access          |
+|    - Used for borrow/return tracking only                   |
+|                                                             |
+|  BorrowRecord (school-scoped)                               |
+|    - userId, bookId, borrowDate, dueDate, status            |
+|    - BORROWED / RETURNED / OVERDUE                          |
++-------------------------------------------------------------+
+```
+
+### Why Global-First
+
+| Approach                   | Setup required         | Data for 100 schools x 90 books | Content sharing               |
+| -------------------------- | ---------------------- | ------------------------------- | ----------------------------- |
+| Per-school provisioning    | Admin must add books   | 9,000 Book records              | None                          |
+| Onboarding wiring          | Auto but school-scoped | 9,000 Book records              | None                          |
+| **Global-first (current)** | **Zero**               | **90 CatalogBooks** (shared)    | **Every book visible to all** |
+
+**Benefits:**
+
+- **Zero setup** -- new schools see the full catalog immediately after onboarding
+- **No data duplication** -- one CatalogBook serves all schools
+- **School autonomy** -- admins can hide unwanted books without affecting others
+- **Lazy efficiency** -- school Book records only created when a user actually visits a detail page
+- **Community contributions** -- teachers submit books, SaaS approves, all schools benefit
+
+## User Flows
+
+### 1. Student Browsing and Borrowing
+
+```
+Student visits /library
+  |
+  v
+Library Home (content.tsx)
+  - Queries CatalogBook directly (global)
+  - Excludes books hidden by school (SchoolBookSelection.isActive = false)
+  - Categorizes into rows: Latest, Featured, Literature, Science
+  |
+  v
+Clicks a book card
+  |
+  v
+Book Detail (book-detail/content.tsx)
+  - Loads CatalogBook by ID
+  - Checks school hasn't hidden it
+  - Finds or creates school-scoped Book (lazy provisioning)
+  - Shows: cover, description, details, video, rating
+  - Shows: borrow status, copy availability
+  - Shows: "More by Author" and "Similar Books" (from CatalogBook)
+  |
+  v
+Clicks "Borrow Book"
+  |
+  v
+borrowBook() server action
+  - Validates school Book exists + has available copies
+  - Creates BorrowRecord in transaction
+  - Decrements availableCopies
+  |
+  v
+Student reads, then clicks "Return Book"
+  |
+  v
+returnBook() server action
+  - Validates BorrowRecord belongs to school
+  - Updates status to RETURNED
+  - Increments availableCopies
+```
+
+### 2. Admin Managing Library
+
+```
+Admin visits /library/catalog
+  |
+  v
+Browse Global Catalog
+  - See all approved CatalogBooks
+  - Select/deselect books for school
+  - Adjust copy counts, shelf locations
+  |
+  v
+Admin visits /library/admin
+  |
+  v
+Admin Dashboard
+  - Books management table (school-scoped Books)
+  - Add new book (from catalog only)
+  - Edit book details, upload covers
+  - Delete books (blocked if active borrows)
+```
+
+### 3. Teacher Contributing a Book
+
+```
+Teacher visits /library/contribute
+  |
+  v
+Submit new book to global catalog
+  - Creates CatalogBook with PENDING + DRAFT status
+  - Sets contributedBy + contributedSchoolId
+  |
+  v
+SaaS admin reviews at /catalog/approvals
+  - Approve → APPROVED + PUBLISHED (visible to all schools)
+  - Reject → REJECTED + reason
+```
+
+## Routes
+
+| Route                      | Purpose                         | Auth                      |
+| -------------------------- | ------------------------------- | ------------------------- |
+| `/library`                 | Library home (hero + book rows) | All roles                 |
+| `/library/books`           | All books with search/filter    | All roles                 |
+| `/library/books/[id]`      | Book detail + borrow/return     | All roles                 |
+| `/library/catalog`         | Browse global catalog           | ADMIN, DEVELOPER          |
+| `/library/admin`           | Admin dashboard                 | ADMIN, DEVELOPER          |
+| `/library/admin/books`     | Manage books table              | ADMIN, DEVELOPER          |
+| `/library/admin/books/new` | Add book from catalog           | ADMIN, DEVELOPER          |
+| `/library/contribute`      | Submit book contribution        | ADMIN, TEACHER, DEVELOPER |
+| `/library/contributions`   | My contributions history        | ADMIN, TEACHER, DEVELOPER |
+| `/library/my-profile`      | Borrow history + stats          | All roles                 |
+
+## Data Flow Details
+
+### Library Home Query
+
+The library homepage queries CatalogBook directly -- no school-scoped tables involved:
+
+```typescript
+// Get books hidden by this school
+const hiddenSelections = await db.schoolBookSelection.findMany({
+  where: { schoolId, isActive: false },
+  select: { catalogBookId: true },
+})
+const hiddenBookIds = new Set(hiddenSelections.map((s) => s.catalogBookId))
+
+// Query global catalog, excluding hidden
+const catalogBooks = await db.catalogBook.findMany({
+  where: {
+    status: "PUBLISHED",
+    approvalStatus: "APPROVED",
+    visibility: { in: ["PUBLIC", "SCHOOL"] },
+    ...(hiddenBookIds.size > 0
+      ? { id: { notIn: Array.from(hiddenBookIds) } }
+      : {}),
+  },
+  orderBy: [{ rating: "desc" }, { createdAt: "desc" }],
+})
+```
+
+### Lazy Book Provisioning
+
+When a user visits a book detail page, the system finds or creates a school-scoped Book:
+
+```typescript
+// Load CatalogBook (global)
+const catalogBook = await db.catalogBook.findFirst({
+  where: { id: bookId, status: "PUBLISHED", approvalStatus: "APPROVED" },
+})
+
+// Find or create school Book (for borrowing)
+let schoolBook = await db.book.findFirst({
+  where: { schoolId, catalogBookId: bookId },
+})
+
+if (!schoolBook) {
+  schoolBook = await db.book.create({
+    data: {
+      schoolId,
+      catalogBookId: catalogBook.id,
+      title: catalogBook.title,
+      author: catalogBook.author,
+      // ... copies CatalogBook fields
+      totalCopies: 3,
+      availableCopies: 3,
+    },
+  })
+}
+```
+
+This means:
+
+- **Browsing** uses CatalogBook (zero school data needed)
+- **Borrowing** uses school Book (created on demand)
+- **No bulk provisioning** -- Books appear as users discover them
+
+### Hide Mechanism
+
+Schools opt out of individual books via SchoolBookSelection:
+
+```typescript
+// Admin hides a book
+await db.schoolBookSelection.upsert({
+  where: { schoolId_catalogBookId: { schoolId, catalogBookId } },
+  create: { schoolId, catalogBookId, isActive: false },
+  update: { isActive: false },
+})
+```
+
+- **No record** = book visible (default for all schools)
+- **isActive: true** = explicitly selected (from catalog UI)
+- **isActive: false** = hidden for this school
+
+## Authorization (RBAC)
+
+The library uses 7 action types checked against 8 roles:
+
+| Role       | read | create | update | delete | borrow | return | manage |
+| ---------- | ---- | ------ | ------ | ------ | ------ | ------ | ------ |
+| DEVELOPER  | Y    | Y      | Y      | Y      | Y      | Y      | Y      |
+| ADMIN      | Y    | Y      | Y      | Y      | Y      | Y      | Y      |
+| TEACHER    | Y    | -      | -      | -      | Y      | Y      | -      |
+| STUDENT    | Y    | -      | -      | -      | Y      | Y      | -      |
+| GUARDIAN   | Y    | -      | -      | -      | Y      | Y      | -      |
+| STAFF      | Y    | -      | -      | -      | -      | -      | -      |
+| ACCOUNTANT | Y    | -      | -      | -      | -      | -      | -      |
+| USER       | -    | -      | -      | -      | -      | -      | -      |
+
+Authorization is enforced via `checkLibraryPermission(role, action)` in `authorization.ts`. Cross-school access is always denied.
+
+## Server Actions
+
+### Book CRUD (`actions.ts`)
+
+| Action | Function             | Notes                                              |
+| ------ | -------------------- | -------------------------------------------------- |
+| Create | `createBook(params)` | Requires `catalogBookId` -- no standalone creation |
+| Update | `updateBook(params)` | Partial updates, verifies school ownership         |
+| Delete | `deleteBook(params)` | Blocked when active borrows exist                  |
+
+### Borrow/Return (`actions.ts`)
+
+| Action  | Function                                   | Notes                                               |
+| ------- | ------------------------------------------ | --------------------------------------------------- |
+| Borrow  | `borrowBook({ bookId, userId, schoolId })` | Transaction: create BorrowRecord + decrement copies |
+| Return  | `returnBook({ borrowRecordId, schoolId })` | Transaction: update status + increment copies       |
+| Overdue | `markOverdueBooks()`                       | Batch: BORROWED past due date to OVERDUE            |
+
+### Catalog Selection (`catalog/actions.ts`)
+
+| Action   | Function                                   | Notes                                        |
+| -------- | ------------------------------------------ | -------------------------------------------- |
+| Select   | `selectCatalogBook(catalogBookId, copies)` | Creates bridge + Book in transaction         |
+| Deselect | `deselectCatalogBook(catalogBookId)`       | Removes bridge, nullifies Book.catalogBookId |
+| Toggle   | `toggleBookSelection(selectionId)`         | Flips isActive (show/hide)                   |
+| Update   | `updateBookSelection(selectionId, data)`   | Adjust copies, shelf location                |
+
+## Validation Schemas
+
+| Schema             | Key Fields                                         | Constraints                                  |
+| ------------------ | -------------------------------------------------- | -------------------------------------------- |
+| `bookSchema`       | title, author, genre, rating, coverUrl, coverColor | rating 0-5, coverColor hex, totalCopies >= 1 |
+| `borrowBookSchema` | bookId, userId, schoolId, dueDate                  | dueDate must be future                       |
+| `returnBookSchema` | borrowRecordId, schoolId                           | Both required                                |
+| `updateBookSchema` | bookId + partial book fields                       | At least one field required                  |
+| `deleteBookSchema` | bookId, schoolId                                   | Both required                                |
+
+## Types
+
+```typescript
+// Lightweight type for list/card display
+interface BookListItem {
+  id: string
+  title: string
+  author: string
+  genre: string
+  coverUrl: string
+  coverColor: string | null
+  rating: number
+  createdAt: Date
+}
+
+// Full school-scoped Book
+interface Book extends BookListItem {
+  description: string
+  totalCopies: number
+  availableCopies: number
+  summary: string
+  gradeLevel: string
+  schoolId: string
+  // ... optional: isbn, publisher, publicationYear, language, pageCount, videoUrl
+}
+```
+
+`BookListItem` is compatible with both CatalogBook query results and Book records. Used by BookList and BookCard components.
+
+## Testing
+
+```bash
+# All library tests (160 tests)
+pnpm vitest run src/components/library/ --reporter=verbose
+
+# Catalog setup tests including setupLibraryForSchool (54 tests)
+pnpm vitest run src/lib/__tests__/catalog-setup.test.ts --reporter=verbose
+```
+
+| Suite                                  | Tests | Coverage                                                               |
+| -------------------------------------- | ----- | ---------------------------------------------------------------------- |
+| `__tests__/actions.test.ts`            | 39    | All 6 server actions (create, update, delete, borrow, return, overdue) |
+| `__tests__/authorization.test.ts`      | 35    | 8 roles x 7 actions + cross-school denial + edge cases                 |
+| `__tests__/validation.test.ts`         | 46    | All 5 Zod schemas with valid/invalid inputs                            |
+| `catalog/__tests__/actions.test.ts`    | 33    | 4 catalog selection actions                                            |
+| `contribute/__tests__/actions.test.ts` | 7     | Contribution submission flow                                           |
+
+## Configuration
+
+Key constants in `config.ts`:
+
+| Constant              | Value     | Purpose                     |
+| --------------------- | --------- | --------------------------- |
+| `MAX_BORROW_DAYS`     | 14        | Default loan period         |
+| `MAX_BOOKS_PER_USER`  | 5         | Borrow limit per student    |
+| `BOOKS_PER_PAGE`      | 20        | Pagination size             |
+| `DEFAULT_COVER_COLOR` | `#000000` | Fallback for missing covers |
+
+## Relationship to Books Catalog
+
+The Library block is the **consumer** of the [Books Catalog](/docs/books-catalog). The catalog provides the global data layer (CatalogBook, SchoolBookSelection, seed data, SaaS CRUD, approval flow). The library provides the school-facing UI (browsing, borrowing, admin tools, contributions).
+
+| Concern          | Books Catalog             | Library                                       |
+| ---------------- | ------------------------- | --------------------------------------------- |
+| Data ownership   | CatalogBook model + seeds | Book model (school-scoped)                    |
+| SaaS dashboard   | `/catalog/books` (CRUD)   | -                                             |
+| School dashboard | -                         | `/library/*` (browse, borrow, admin)          |
+| Approval         | `approval-actions.ts`     | `contribute/actions.ts` (submits to approval) |
+| Authorization    | DEVELOPER only            | 8-role RBAC matrix                            |

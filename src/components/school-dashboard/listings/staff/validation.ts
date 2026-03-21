@@ -42,7 +42,9 @@ export const staffCreateSchema = z.object({
   profilePhotoUrl: z.string().optional(),
 })
 
-export const staffUpdateSchema = staffCreateSchema.partial()
+export const staffUpdateSchema = staffCreateSchema.partial().extend({
+  id: z.string().min(1, "Staff member ID is required"),
+})
 
 export type StaffCreateInput = z.infer<typeof staffCreateSchema>
 export type StaffUpdateInput = z.infer<typeof staffUpdateSchema>

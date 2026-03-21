@@ -34,6 +34,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import {
   deleteTemplate,
@@ -66,10 +67,7 @@ interface TemplatesContentProps {
   termId: string
 }
 
-export function TemplatesContent({
-  dictionary,
-  termId,
-}: TemplatesContentProps) {
+export function TemplatesContent({ termId }: TemplatesContentProps) {
   const [templates, setTemplates] = useState<Template[]>([])
   const [loading, setLoading] = useState(true)
   const [isPending, startTransition] = useTransition()
@@ -79,8 +77,8 @@ export function TemplatesContent({
     null
   )
   const { toast } = useToast()
-
-  const t = dictionary?.templates || {}
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.timetable?.templatesUi
 
   const loadTemplates = useCallback(async () => {
     try {
@@ -89,8 +87,8 @@ export function TemplatesContent({
       setTemplates(result.templates as Template[])
     } catch {
       toast({
-        title: "Error",
-        description: "Failed to load templates",
+        title: t?.error ?? "Error",
+        description: t?.loadFailed ?? "Failed to load templates",
         variant: "destructive",
       })
     } finally {
@@ -109,13 +107,16 @@ export function TemplatesContent({
           await setDefaultTemplate({ templateId: template.id })
           await loadTemplates()
           toast({
-            title: "Success",
-            description: `"${template.name}" is now the default template`,
+            title: t?.success ?? "Success",
+            description: (
+              t?.defaultSuccess ??
+              `"${template.name}" is now the default template`
+            ).replace("{name}", template.name),
           })
         } catch {
           toast({
-            title: "Error",
-            description: "Failed to set default template",
+            title: t?.error ?? "Error",
+            description: t?.defaultFailed ?? "Failed to set default template",
             variant: "destructive",
           })
         }
@@ -126,7 +127,14 @@ export function TemplatesContent({
 
   const handleDelete = useCallback(
     (template: Template) => {
-      if (!confirm(t.confirmDelete || `Delete template "${template.name}"?`)) {
+      if (
+        !confirm(
+          (t?.deleteConfirm ?? `Delete template "${template.name}"?`).replace(
+            "{name}",
+            template.name
+          )
+        )
+      ) {
         return
       }
 
@@ -135,19 +143,21 @@ export function TemplatesContent({
           await deleteTemplate({ templateId: template.id })
           await loadTemplates()
           toast({
-            title: "Deleted",
-            description: `Template "${template.name}" has been deleted`,
+            title: t?.deleted ?? "Deleted",
+            description: (
+              t?.deleteSuccess ?? `Template "${template.name}" has been deleted`
+            ).replace("{name}", template.name),
           })
         } catch {
           toast({
-            title: "Error",
-            description: "Failed to delete template",
+            title: t?.error ?? "Error",
+            description: t?.deleteFailed ?? "Failed to delete template",
             variant: "destructive",
           })
         }
       })
     },
-    [loadTemplates, toast, t.confirmDelete]
+    [loadTemplates, toast, t?.deleteConfirm]
   )
 
   const handleApply = useCallback((template: Template) => {
@@ -156,14 +166,13 @@ export function TemplatesContent({
   }, [])
 
   const getRotationLabel = (type: string) => {
-    const labels = t.rotationType || {}
     switch (type) {
       case "SINGLE_WEEK":
-        return labels.SINGLE_WEEK || "Single Week"
+        return t?.singleWeek ?? "Single Week"
       case "BIWEEKLY":
-        return labels.BIWEEKLY || "Bi-Weekly"
+        return t?.biWeekly ?? "Bi-Weekly"
       case "ROTATING":
-        return labels.ROTATING || "Rotating"
+        return t?.rotating ?? "Rotating"
       default:
         return type
     }
@@ -201,15 +210,15 @@ export function TemplatesContent({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2>{t.title || "Timetable Templates"}</h2>
+          <h2>{t?.title ?? "Timetable Templates"}</h2>
           <p className="text-muted-foreground">
-            {t.description ||
+            {t?.description ??
               "Save and reuse timetable configurations across terms"}
           </p>
         </div>
         <Button onClick={() => setCreateDialogOpen(true)}>
           <Plus className="me-2 h-4 w-4" />
-          {t.createNew || "Create Template"}
+          {t?.createTemplate ?? "Create Template"}
         </Button>
       </div>
 
@@ -218,14 +227,14 @@ export function TemplatesContent({
         <Card className="py-12 text-center">
           <CardContent>
             <FileText className="text-muted-foreground mx-auto h-12 w-12" />
-            <h3 className="mt-4">{t.noTemplates || "No Templates Yet"}</h3>
+            <h3 className="mt-4">{t?.noTemplates ?? "No Templates Yet"}</h3>
             <p className="text-muted-foreground mt-2">
-              {t.noTemplatesDescription ||
+              {t?.noTemplatesDesc ??
                 "Create your first template from an existing term schedule"}
             </p>
             <Button className="mt-4" onClick={() => setCreateDialogOpen(true)}>
               <Plus className="me-2 h-4 w-4" />
-              {t.createNew || "Create Template"}
+              {t?.createTemplate ?? "Create Template"}
             </Button>
           </CardContent>
         </Card>
@@ -236,7 +245,7 @@ export function TemplatesContent({
               {template.isDefault && (
                 <Badge className="absolute end-3 top-3" variant="secondary">
                   <Star className="me-1 h-3 w-3" />
-                  {t.defaultBadge || "Default"}
+                  {t?.default ?? "Default"}
                 </Badge>
               )}
 
@@ -258,7 +267,7 @@ export function TemplatesContent({
                       {template.stats.totalSlots}
                     </p>
                     <p className="text-muted-foreground text-xs">
-                      {t.slots || "Slots"}
+                      {t?.slots ?? "Slots"}
                     </p>
                   </div>
                   <div className="bg-muted rounded-md p-2">
@@ -266,7 +275,7 @@ export function TemplatesContent({
                       {template.stats.classCount}
                     </p>
                     <p className="text-muted-foreground text-xs">
-                      {t.classes || "Classes"}
+                      {t?.classes ?? "Classes"}
                     </p>
                   </div>
                   <div className="bg-muted rounded-md p-2">
@@ -274,7 +283,7 @@ export function TemplatesContent({
                       {template.stats.teacherCount}
                     </p>
                     <p className="text-muted-foreground text-xs">
-                      {t.teachers || "Teachers"}
+                      {t?.teachers ?? "Teachers"}
                     </p>
                   </div>
                 </div>
@@ -284,7 +293,7 @@ export function TemplatesContent({
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4" />
                     <span>
-                      {t.version || "Version"} {template.version}
+                      {t?.version ?? "Version"} {template.version}
                     </span>
                     <span className="mx-1">-</span>
                     <span>{getRotationLabel(template.rotationType)}</span>
@@ -294,7 +303,7 @@ export function TemplatesContent({
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4" />
                       <span>
-                        {t.sourceTerm || "From"} {template.source}
+                        {t?.from ?? "From"} {template.source}
                       </span>
                     </div>
                   )}
@@ -303,7 +312,7 @@ export function TemplatesContent({
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4" />
                       <span>
-                        {t.createdBy || "Created by"} {template.createdBy}
+                        {t?.createdBy ?? "Created by"} {template.createdBy}
                       </span>
                     </div>
                   )}
@@ -322,7 +331,7 @@ export function TemplatesContent({
                     onClick={() => handleApply(template)}
                   >
                     <Copy className="me-2 h-4 w-4" />
-                    {t.applyToTerm || "Apply"}
+                    {t?.apply ?? "Apply"}
                   </Button>
 
                   <DropdownMenu>
@@ -338,7 +347,7 @@ export function TemplatesContent({
                           disabled={isPending}
                         >
                           <Star className="me-2 h-4 w-4" />
-                          {t.setAsDefault || "Set as Default"}
+                          {t?.setAsDefault ?? "Set as Default"}
                         </DropdownMenuItem>
                       )}
                       <DropdownMenuSeparator />
@@ -348,7 +357,7 @@ export function TemplatesContent({
                         className="text-destructive"
                       >
                         <Trash2 className="me-2 h-4 w-4" />
-                        {t.delete || "Delete"}
+                        {t?.delete ?? "Delete"}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -365,7 +374,7 @@ export function TemplatesContent({
         onOpenChange={setCreateDialogOpen}
         onSuccess={loadTemplates}
         currentTermId={termId}
-        dictionary={dictionary}
+        dictionary={dictionary ?? undefined}
       />
 
       {selectedTemplate && (
@@ -374,7 +383,7 @@ export function TemplatesContent({
           onOpenChange={setApplyDialogOpen}
           template={selectedTemplate}
           onSuccess={loadTemplates}
-          dictionary={dictionary}
+          dictionary={dictionary ?? undefined}
         />
       )}
     </div>

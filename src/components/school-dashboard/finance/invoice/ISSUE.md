@@ -1,293 +1,159 @@
-# Invoice Components - Issues & Backlog
+# Invoice Block -- Issues & Backlog
 
 Status legend: [x] done, [~] in progress, [ ] todo
 
-## Critical Architecture Issues (Priority 1) 🔴
+## Recently Completed (2026-03-21)
 
-### Code Organization Cleanup
+### Architecture Cleanup
 
-- [ ] **CRITICAL**: Remove `_component/` legacy folder
-- [ ] **CRITICAL**: Clean up `actions/` legacy folder
-- [ ] Consolidate duplicate invoice creation logic
-- [ ] Standardize file naming to kebab-case
-- [ ] Move to proper mirror pattern structure
-
-### TypeScript Type Safety
-
-- [ ] Fix all `any` type usage in actions
-- [ ] Add proper error type definitions
-- [ ] Complete type definitions for complex objects
-- [ ] Create shared types in `type.ts`
-- [ ] Add type guards for external data
-
-## Standardization Issues (Priority 2) ⚠️
-
-### Missing Required Files
-
-- [ ] Create `config.ts` for invoice statuses and enums
-- [ ] Create `hooks.ts` for custom React hooks
-- [ ] Create `utils.ts` for calculation utilities
-- [ ] Reorganize `steps/` into proper structure
-- [ ] Create `card.tsx` for invoice cards
-- [ ] Create `all.tsx` for invoice list view
-- [ ] Create `detail.tsx` for invoice detail view
-
-### File Structure Standardization
-
-- [ ] Rename files to follow kebab-case convention
-- [ ] Organize components by feature
-- [ ] Separate client and server components
-- [ ] Create proper folder hierarchy
-
-## Performance Issues (Priority 3) 🚀
-
-### Server-Side Optimization
-
-- [ ] Move all filtering to server-side
-- [ ] Implement proper pagination
-- [ ] Add data caching strategy
-- [ ] Optimize database queries
-- [ ] Add indexes for frequently queried fields
-
-### Client-Side Optimization
-
-- [ ] Implement optimistic UI updates
-- [ ] Add React.memo for expensive components
-- [ ] Lazy load heavy components
-- [ ] Optimize bundle size
-- [ ] Add virtualization for large lists
-
-## Testing Requirements (Priority 4) 🧪
-
-### Unit Tests
-
-- [ ] Test invoice calculations
-- [ ] Test tax calculations
-- [ ] Test discount logic
-- [ ] Test date utilities
-- [ ] Test validation schemas
-
-### Integration Tests
-
-- [ ] Test invoice creation flow
-- [ ] Test invoice update flow
-- [ ] Test invoice deletion
-- [ ] Test email sending
-- [ ] Test PDF generation
-
-### E2E Tests
-
-- [ ] Test complete invoice workflow
-- [ ] Test multi-step form
-- [ ] Test search and filtering
-- [ ] Test pagination
-- [ ] Test status updates
-
-## Feature Implementation (Priority 5) 🛠️
-
-### Invoice Management
-
-- [ ] Implement recurring invoices
-- [ ] Add invoice templates
-- [ ] Create invoice duplication
-- [ ] Add batch operations
-- [ ] Implement invoice scheduling
-
-### Payment Integration
-
-- [ ] Add payment gateway integration
-- [ ] Implement payment reminders
-- [ ] Create payment history
-- [ ] Add partial payments
-- [ ] Implement refunds
-
-### Reporting & Analytics
-
-- [ ] Create invoice dashboard
-- [ ] Add revenue reports
-- [ ] Implement aging reports
-- [ ] Create client statements
-- [ ] Add export functionality
-
-### Multi-Currency Support
-
-- [ ] Add currency selection
-- [ ] Implement exchange rates
-- [ ] Create currency conversion
-- [ ] Add multi-currency reports
-
-## UI/UX Improvements (Priority 6) 🎨
-
-### Form Improvements
-
-- [ ] Enhance multi-step form UX
-- [ ] Add form validation feedback
-- [ ] Implement auto-save
-- [ ] Add keyboard shortcuts
-- [ ] Improve mobile experience
-
-### Table Enhancements
-
-- [ ] Add column customization
-- [ ] Implement bulk selection
-- [ ] Add advanced filters
-- [ ] Create saved filter sets
-- [ ] Add export options
-
-### Visual Enhancements
-
-- [ ] Create invoice preview
-- [ ] Add status timeline
-- [ ] Implement activity feed
-- [ ] Add visual indicators
-- [ ] Create better empty states
-
-## Accessibility (Priority 7) ♿
-
-### ARIA Support
-
-- [ ] Add proper ARIA labels
-- [ ] Implement focus management
-- [ ] Add keyboard navigation
-- [ ] Create skip links
-- [ ] Add screen reader support
-
-### Keyboard Navigation
-
-- [ ] Enable tab navigation
-- [ ] Add keyboard shortcuts
-- [ ] Implement focus trapping
-- [ ] Add escape key handling
-
-## Email & Notifications (Priority 8) 📧
-
-### Email Templates
-
-- [ ] Create HTML email templates
-- [ ] Add plain text fallback
-- [ ] Implement email customization
-- [ ] Add email preview
-- [ ] Create email tracking
-
-### Notifications
-
-- [ ] Add in-app notifications
-- [ ] Implement push notifications
-- [ ] Create notification preferences
-- [ ] Add notification history
-
-## PDF Generation (Priority 9) 📄
-
-### PDF Features
-
-- [ ] Implement PDF generation
-- [ ] Add custom PDF templates
-- [ ] Create PDF preview
-- [ ] Add digital signatures
-- [ ] Implement PDF customization
-
-## Security Enhancements (Priority 10) 🔒
-
-### Data Security
-
-- [ ] Implement field-level encryption
-- [ ] Add audit logging
-- [ ] Create access controls
-- [ ] Implement data retention policies
-- [ ] Add activity monitoring
+- [x] Remove 9 dead files (zod-schema.ts, types/invoice.ts, dashboard.ts, hooks.ts, auth.ts, email.ts, settings.ts, invoice.ts, actions/user.ts)
+- [x] Remove 5 unused functions from actions.ts (testInvoiceConnection, associateUserWithSchool, getCurrentUser, logout, ExtendedUser/ExtendedSession types)
+- [x] Relocate deleteCurrentUser to src/lib/actions/user.ts
 
 ### Multi-Tenant Safety
 
-- [ ] Verify schoolId scoping in all queries
-- [ ] Add cross-tenant protection
-- [ ] Implement data isolation tests
-- [ ] Create tenant-specific validations
+- [x] Replace raw `auth()` + session casting with `getTenantContext()` in all actions
+- [x] Add `requireAuthAndTenant()` + `isAuthError()` centralized auth helper
+- [x] Add RBAC via `checkCurrentUserPermission()` on create/update/delete/send
 
-## Documentation (Priority 11) 📚
+### Code Quality
 
-### Code Documentation
+- [x] Deduplicate createInvoice/createInvoiceWithAutoNumber via shared `createInvoiceCore()`
+- [x] Wrap create operations in `db.$transaction` (prevents orphan addresses)
+- [x] Fix deleteInvoice: returns `ActionResponse` instead of throwing
+- [x] Fix `revalidatePath("/invoice")` -> `"/finance/invoice"`
+- [x] Replace `any` types with `InvoiceSearchParams` interface
+- [x] All actions return `ActionResponse<T>`
 
-- [ ] Add JSDoc comments
-- [ ] Create API documentation
-- [ ] Write usage examples
-- [ ] Document business logic
-- [ ] Create troubleshooting guide
+### Type & Data Fixes
 
-### User Documentation
+- [x] Add `schoolId` and `wizardStep` to types.ts Invoice interface
+- [x] Fix util.ts: status enum aligned to Prisma (`PAID`/`UNPAID`/`OVERDUE`/`CANCELLED`)
+- [x] Fix util.ts: field names aligned to Prisma (`item_name` not `description`)
+- [x] Fix validation.ts: quantity `min(0)` -> `min(1)`
 
-- [ ] Create user guide
-- [ ] Add video tutorials
-- [ ] Write FAQ section
-- [ ] Create quick start guide
+### Test Coverage
 
-## Migration & Cleanup (Priority 12) 🧹
+- [x] actions.test.ts -- auth, RBAC, CRUD, email, dashboard stats (763 LOC)
+- [x] create-from-enrollment.test.ts -- admission integration (343 LOC)
+- [x] wizard-actions.test.ts -- wizard flow, tenant isolation (359 LOC)
+- [x] validation.test.ts -- Zod schema edge cases (254 LOC)
+- [x] util.test.ts -- all calculation/formatting utilities (340 LOC)
+- [x] 131 tests passing, 0 TypeScript errors
 
-### Legacy Code Removal
+---
 
-- [ ] Remove unused components
-- [ ] Clean up dead code
-- [ ] Update deprecated APIs
-- [ ] Remove console.logs
-- [ ] Clean up comments
+## Remaining Work
 
-### Data Migration
+### P1: PDF & Print (infrastructure exists at `file/generate/` and `file/print/`, needs wiring)
 
-- [ ] Create migration scripts
-- [ ] Add data validation
-- [ ] Implement rollback strategy
-- [ ] Create backup procedures
+- [ ] Create `mapInvoiceToGenerateData()` adapter function
+  - Maps `UserInvoice` (Prisma) → `InvoiceData` (`file/generate/types.ts`)
+  - Field mapping: `item_name` → `description`, `price` → `unitPrice`
+  - Fetches school data (name, logo, address) from `School` model
+  - Fetches logo from `UserInvoiceSettings.invoiceLogo`
+  - Fetches signature from `UserInvoiceSignature` (name + image)
+- [ ] Add "Download PDF" button to `invoice/view-content.tsx` using `useGenerate().generateInvoice()`
+- [ ] Add "Print" button to `invoice/view-content.tsx` using `usePrint().printById()`
+- [ ] Add PDF download action to DataTable action menu in `columns.tsx`
+- [ ] Wire school logo from `UserInvoiceSettings.invoiceLogo` into PDF `schoolLogo` field
+- [ ] Wire signature from `UserInvoiceSignature` into PDF footer section
+
+### P1: Email Template Upgrade
+
+- [ ] Add school name and logo to email header (fetch from `UserInvoiceSettings`)
+- [ ] Add itemized breakdown table to email body (currently only shows total)
+- [ ] Add signature image/name to email footer
+- [ ] Replace hardcoded sender `"Invoice App <onboarding@resend.dev>"` with school-specific email or verified domain
+- [ ] Add RTL support for Arabic recipients (direction, Rubik font)
+- [ ] Migrate from plain React JSX to React Email primitives (`@react-email/components`)
+
+### P1: Settings → Output Wiring
+
+- [ ] Fetch `UserInvoiceSettings` + `UserInvoiceSignature` in PDF generation flow
+- [ ] Fetch logo and signature in email sending flow (`sendInvoiceEmail`)
+- [ ] Display school logo in `invoice/view-content.tsx` header
+- [ ] Display signature in invoice view footer
+
+### P1: CSV Export Wiring
+
+- [ ] Wire Export button in `all.tsx` to `exportInvoiceToCSV()` from `util.ts`
+
+### P2: Stubs to Complete
+
+- [ ] Implement `bulk-generate.tsx` -- generate invoices from `FeeAssignment` records for a class/year
+- [ ] Complete or remove `content-enhanced.tsx` (currently stubbed placeholder)
+- [ ] Complete or remove `onboarding/actions.ts` (currently empty `export {}`)
+- [ ] Complete or remove `settings/actions.ts` (currently empty `export {}`)
+
+### P2: i18n Migration
+
+- [ ] Migrate `InvoiceSchemaZod` consumers to `createInvoiceSchema(dictionary)` (6 files: form.tsx, 3 steps/, actions.ts)
+- [ ] Migrate `onboardingSchema` consumers to `createOnboardingSchema(dictionary)` (2 files: onboarding/content.tsx, user-edit-profile.tsx)
+- [ ] Remove hardcoded English fallbacks in form.tsx toast messages
+- [ ] Add dictionary keys for all invoice UI text
+- [ ] Translate email template text via dictionary
+
+### P3: Missing Features
+
+- [ ] Recurring invoice scheduling (data model exists in util.ts `calculatePaymentSchedule`)
+- [ ] Partial payment tracking (amountPaid field exists in PDF template but not in Prisma model)
+- [ ] Invoice duplication (clone existing invoice)
+- [ ] Invoice preview before email send
+- [ ] Share invoice via link (generate public URL)
+
+### P4: UI Improvements
+
+- [ ] Mobile-responsive invoice form
+- [ ] Better empty states for invoice list
+- [ ] Column customization in DataTable
+- [ ] Bulk selection + batch status update
+
+### P5: Performance
+
+- [ ] Composite index already exists: `@@unique([schoolId, invoice_no])` -- verify query plans use it
+- [ ] Optimize `getDashboardStats` with materialized aggregations
+- [ ] Lazy load chart components
+- [ ] Add optimistic UI updates for status changes
+
+### P6: Notifications Integration
+
+- [ ] In-app notification on invoice creation (for recipient)
+- [ ] In-app notification on payment received
+- [ ] Email payment reminder automation (overdue invoices)
+- [ ] Email delivery tracking (open/click via Resend webhooks)
+
+### P7: Security Hardening
+
+- [ ] Audit logging for invoice mutations
+- [ ] Rate limiting on sendInvoiceEmail
+- [ ] Field-level encryption for sensitive financial data
+
+### P8: Testing Gaps
+
+- [ ] E2E tests for complete invoice workflow
+- [ ] Component tests for form.tsx multi-step flow
+- [ ] Component tests for table.tsx with mock data
+- [ ] Integration tests for wizard/ sub-module actions
 
 ## Acceptance Criteria
 
-All implementations must:
+All new implementations must:
 
-1. Follow the mirror pattern architecture
-2. Use Server Components by default
-3. Include proper TypeScript types
-4. Have comprehensive error handling
-5. Include loading and error states
-6. Be fully accessible
-7. Support multi-tenancy with schoolId
-8. Include appropriate tests
-9. Follow ShadCN UI patterns
-10. Be optimized for performance
-
-## Technical Debt
-
-### High Priority
-
-1. Remove `_component/` folder
-2. Clean up `actions/` folder
-3. Fix TypeScript `any` usage
-4. Standardize file naming
-
-### Medium Priority
-
-1. Consolidate duplicate logic
-2. Optimize database queries
-3. Add missing tests
-4. Improve error handling
-
-### Low Priority
-
-1. Add code comments
-2. Update documentation
-3. Optimize bundle size
-4. Add telemetry
+1. Use `getTenantContext()` for schoolId (not raw session)
+2. Check RBAC via `checkCurrentUserPermission()` for mutations
+3. Return `ActionResponse<T>` from all server actions
+4. Use `db.$transaction` for multi-record writes
+5. Include unit tests with mocked Prisma/auth/tenant
+6. Support both Arabic and English via dictionary
+7. Follow the existing patterns in `actions.ts` and `wizard/actions.ts`
 
 ## Dependencies
 
-- Next.js 15.4.4
-- React 19.1.0
-- ShadCN UI
-- React Hook Form
-- Zod
-- Prisma
-- @tanstack/react-table
-
-## References
-
-- [CLAUDE.md](../../../CLAUDE.md) - Architecture guidelines
-- [Server Actions](https://nextjs.org/docs/app/api-reference/functions/server-actions)
-- [Prisma Best Practices](https://www.prisma.io/docs/guides/performance-and-optimization)
-- [React Hook Form](https://react-hook-form.com/)
+- Next.js 16, React 19, Prisma 6, TypeScript 5
+- react-hook-form + zod (form validation)
+- @tanstack/react-table (DataTable)
+- @react-pdf/renderer (PDF generation -- installed, not wired)
+- nuqs (URL search params)
+- resend (email delivery)
+- date-fns (date formatting)

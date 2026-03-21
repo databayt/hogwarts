@@ -2,26 +2,27 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { format, formatDistanceToNow } from "date-fns"
+import { memo } from "react"
+import {
+  differenceInCalendarDays,
+  format,
+  isToday,
+  isYesterday,
+} from "date-fns"
 import { ar, enUS } from "date-fns/locale"
 import {
   Archive,
-  Building2,
-  EllipsisVertical,
-  Hash,
-  Megaphone,
-  MessageSquare,
+  Check,
+  CheckCheck,
+  ChevronDown,
   Pin,
   Trash2,
-  Users,
   Volume2,
   VolumeX,
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,7 +48,33 @@ export interface ConversationCardProps {
   className?: string
 }
 
-export function ConversationCard({
+/**
+ * WhatsApp-style short time format:
+ * - Today: "2:30 PM"
+ * - Yesterday: "Yesterday"
+ * - This week (< 7 days): Day name ("Tuesday")
+ * - Older: Short date ("12/15/2025")
+ */
+function formatConversationTime(
+  date: Date | string,
+  locale: "ar" | "en"
+): string {
+  const d = new Date(date)
+  const dateLocale = locale === "ar" ? ar : enUS
+
+  if (isToday(d)) {
+    return format(d, "p", { locale: dateLocale })
+  }
+  if (isYesterday(d)) {
+    return locale === "ar" ? "أمس" : "Yesterday"
+  }
+  if (differenceInCalendarDays(new Date(), d) < 7) {
+    return format(d, "EEEE", { locale: dateLocale })
+  }
+  return format(d, "P", { locale: dateLocale })
+}
+
+export const ConversationCard = memo(function ConversationCard({
   conversation,
   currentUserId,
   locale = "en",
@@ -61,28 +88,24 @@ export function ConversationCard({
 }: ConversationCardProps) {
   const { dictionary } = useDictionary()
   const m = dictionary?.messaging
-  const dateLocale = locale === "ar" ? ar : enUS
-  const config = CONVERSATION_TYPE_CONFIG[conversation.type]
-  const Icon = config.icon
 
-  // Get current user's participant info
+  // Current user's participant info
   const currentParticipant = conversation.participants?.find(
     (p) => p.userId === currentUserId
   )
   const isMuted = currentParticipant?.isMuted ?? false
   const isPinned = currentParticipant?.isPinned ?? false
 
-  // For direct conversations, get the other user's info
+  // For direct conversations, get the other user
   const otherUser =
     conversation.type === "direct"
       ? conversation.participants?.find((p) => p.userId !== currentUserId)?.user
       : null
 
-  // Determine display name and avatar
   const displayName =
     conversation.type === "direct" && otherUser
       ? otherUser.username || otherUser.email || m?.ui?.user_fallback || "User"
-      : conversation.title || config.label
+      : conversation.title || CONVERSATION_TYPE_CONFIG[conversation.type].label
 
   const avatarUrl =
     conversation.type === "direct" && otherUser
@@ -91,15 +114,12 @@ export function ConversationCard({
 
   const avatarFallback = displayName?.[0]?.toUpperCase() || "C"
 
-  // Format last message time
+  // WhatsApp-style short time
   const lastMessageTime = conversation.lastMessageAt
-    ? formatDistanceToNow(new Date(conversation.lastMessageAt), {
-        addSuffix: true,
-        locale: dateLocale,
-      })
+    ? formatConversationTime(conversation.lastMessageAt, locale)
     : null
 
-  // Get last message preview
+  // Last message preview
   const lastMessagePreview = conversation.lastMessage
     ? conversation.lastMessage.isDeleted
       ? m?.ui?.message_deleted || "Message deleted"
@@ -107,79 +127,44 @@ export function ConversationCard({
     : m?.ui?.no_messages || "No messages"
 
   const hasUnread = (conversation.unreadCount ?? 0) > 0
+  const isOwnLastMessage = conversation.lastMessage?.senderId === currentUserId
 
   return (
     <div
       onClick={() => onClick?.(conversation.id)}
       className={cn(
-        "group relative flex items-center gap-3 px-4 py-3",
-        "cursor-pointer transition-all duration-200",
-        "border-border border-b",
-        // iMessage-style hover and active states
-        "hover:bg-accent",
-        isActive && "bg-accent",
+        "group flex h-[72px] cursor-pointer items-center gap-3 px-3 transition-colors",
+        "hover:bg-msg-hover",
+        isActive && "bg-msg-hover",
         className
       )}
     >
-      {/* iMessage-style unread indicator (purple dot on left) */}
-      {hasUnread && (
-        <div className="absolute start-2 top-1/2 -translate-y-1/2">
-          <div className="bg-chart-5 h-2 w-2 animate-pulse rounded-full" />
-        </div>
-      )}
+      {/* Avatar — 49px circle */}
+      <Avatar className="h-[49px] w-[49px] flex-shrink-0">
+        <AvatarImage src={avatarUrl} alt={displayName} />
+        <AvatarFallback className="bg-muted text-muted-foreground">
+          {avatarFallback}
+        </AvatarFallback>
+      </Avatar>
 
-      {/* Avatar */}
-      <div className="relative ms-2 flex-shrink-0">
-        <Avatar
-          className={cn(
-            "transition-all",
-            hasUnread
-              ? "h-12 w-12 sm:h-14 sm:w-14"
-              : "h-11 w-11 sm:h-12 sm:w-12"
-          )}
-        >
-          <AvatarImage src={avatarUrl} alt={displayName} />
-          <AvatarFallback className="bg-muted text-muted-foreground">
-            {avatarFallback}
-          </AvatarFallback>
-        </Avatar>
-
-        {/* Conversation type indicator */}
-        {conversation.type !== "direct" && (
-          <div
+      {/* Content — inset bottom border (starts at text, not avatar) */}
+      <div className="border-border flex min-w-0 flex-1 flex-col justify-center border-b py-3">
+        {/* Row 1: Name + Time */}
+        <div className="flex items-center justify-between gap-2">
+          <span
             className={cn(
-              "absolute -end-1 -bottom-1 flex h-5 w-5 items-center justify-center rounded-full",
-              "bg-background border-border border"
+              "text-foreground truncate text-[15px]",
+              hasUnread ? "font-medium" : "font-normal"
             )}
           >
-            <Icon className="text-muted-foreground h-3 w-3" />
-          </div>
-        )}
-      </div>
-
-      {/* Content */}
-      <div className="min-w-0 flex-1">
-        <div className="mb-0.5 flex items-center justify-between gap-2">
-          <div className="flex min-w-0 flex-1 items-center gap-2">
-            <h3
-              className={cn(
-                "text-foreground truncate",
-                hasUnread ? "font-bold" : "font-semibold"
-              )}
-            >
-              {displayName}
-            </h3>
-            {isMuted && (
-              <VolumeX className="text-muted-foreground h-3.5 w-3.5 flex-shrink-0" />
-            )}
-          </div>
-
+            {displayName}
+          </span>
           {lastMessageTime && (
             <span
               className={cn(
                 "flex-shrink-0 text-xs",
                 hasUnread
-                  ? "text-foreground font-semibold"
+                  ? "text-msg-unread-badge font-medium"
                   : "text-muted-foreground"
               )}
             >
@@ -188,54 +173,50 @@ export function ConversationCard({
           )}
         </div>
 
-        <div className="flex items-center gap-2">
-          <p
-            className={cn(
-              "flex-1 truncate text-sm",
-              hasUnread
-                ? "text-foreground font-semibold"
-                : "text-muted-foreground"
-            )}
-          >
-            {conversation.lastMessage?.senderId === currentUserId && (
-              <span
-                className={cn(
-                  hasUnread ? "text-foreground/70" : "text-muted-foreground"
+        {/* Row 2: Last message preview + badges */}
+        <div className="mt-0.5 flex items-center justify-between gap-2">
+          <p className="text-muted-foreground flex min-w-0 flex-1 items-center gap-1 truncate text-sm">
+            {/* Delivery status for own messages */}
+            {isOwnLastMessage && conversation.lastMessage && (
+              <span className="flex-shrink-0">
+                {conversation.lastMessage.status === "read" ? (
+                  <CheckCheck className="text-msg-read-check h-4 w-4" />
+                ) : conversation.lastMessage.status === "delivered" ? (
+                  <CheckCheck className="text-muted-foreground h-4 w-4" />
+                ) : (
+                  <Check className="text-muted-foreground h-4 w-4" />
                 )}
-              >
-                {m?.ui?.you_prefix || "You: "}
               </span>
             )}
-            {lastMessagePreview}
+            <span className="truncate">{lastMessagePreview}</span>
           </p>
-        </div>
 
-        {/* Participant count for group conversations */}
-        {conversation.type !== "direct" &&
-          conversation.participantCount > 0 && (
-            <div className="mt-1 flex items-center gap-1">
-              <Users className="text-muted-foreground h-3 w-3" />
-              <span className="text-muted-foreground text-xs">
-                {conversation.participantCount}{" "}
-                {m?.ui?.members_label || "members"}
+          {/* Right badges */}
+          <div className="flex flex-shrink-0 items-center gap-1.5">
+            {isPinned && <Pin className="text-muted-foreground h-3.5 w-3.5" />}
+            {isMuted && (
+              <VolumeX className="text-muted-foreground h-3.5 w-3.5" />
+            )}
+            {hasUnread && (
+              <span className="bg-msg-unread-badge flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[11px] font-bold text-white">
+                {(conversation.unreadCount ?? 0) > 99
+                  ? "99+"
+                  : conversation.unreadCount}
               </span>
-            </div>
-          )}
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* Actions menu */}
+      {/* Hover dropdown — WhatsApp chevron */}
       <div className="absolute end-3 top-3 opacity-0 transition-opacity group-hover:opacity-100">
         <DropdownMenu>
           <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="bg-background border-border h-8 w-8 border"
-            >
-              <EllipsisVertical className="h-4 w-4" />
-            </Button>
+            <button className="bg-msg-sidebar-bg flex h-6 w-6 items-center justify-center rounded-full shadow-sm">
+              <ChevronDown className="text-muted-foreground h-4 w-4" />
+            </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" className="w-44">
             <DropdownMenuItem
               onClick={(e) => {
                 e.stopPropagation()
@@ -290,15 +271,18 @@ export function ConversationCard({
       </div>
     </div>
   )
-}
+})
 
 export function ConversationCardSkeleton() {
   return (
-    <div className="flex items-start gap-3 p-3">
-      <div className="bg-muted h-12 w-12 animate-pulse rounded-full" />
-      <div className="flex-1 space-y-2">
-        <div className="bg-muted h-4 w-32 animate-pulse rounded" />
-        <div className="bg-muted h-3 w-48 animate-pulse rounded" />
+    <div className="flex h-[72px] items-center gap-3 px-3">
+      <div className="bg-muted h-[49px] w-[49px] animate-pulse rounded-full" />
+      <div className="border-border flex-1 space-y-2 border-b py-3">
+        <div className="flex items-center justify-between">
+          <div className="bg-muted h-4 w-28 animate-pulse rounded" />
+          <div className="bg-muted h-3 w-12 animate-pulse rounded" />
+        </div>
+        <div className="bg-muted h-3 w-44 animate-pulse rounded" />
       </div>
     </div>
   )

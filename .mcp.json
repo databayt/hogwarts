@@ -1,39 +1,5 @@
 {
   "mcpServers": {
-    "vercel": {
-      "type": "http",
-      "url": "https://mcp.vercel.com/",
-      "description": "Manage deployments, analyze logs, monitor performance"
-    },
-    "sentry": {
-      "type": "http",
-      "url": "https://mcp.sentry.dev/mcp",
-      "description": "Monitor errors, debug production issues"
-    },
-    "figma": {
-      "type": "http",
-      "url": "http://127.0.0.1:3845/mcp",
-      "description": "Access designs, export assets (requires Figma Desktop)"
-    },
-    "linear": {
-      "type": "sse",
-      "url": "https://mcp.linear.app/sse",
-      "description": "Issue tracking and project management"
-    },
-    "github": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-github"],
-      "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
-      },
-      "description": "GitHub repositories, issues, and pull requests"
-    },
-    "stripe": {
-      "type": "http",
-      "url": "https://mcp.stripe.com",
-      "description": "Payment processing, subscription management"
-    },
     "postgres-dev": {
       "type": "stdio",
       "command": "npx",
@@ -42,88 +8,6 @@
         "DATABASE_URL": "${DATABASE_URL}"
       },
       "description": "Development database queries and management"
-    },
-    "ref": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "ref-tools-mcp@latest"],
-      "env": {
-        "REF_API_KEY": "${REF_API_KEY}"
-      },
-      "description": "Search documentation, prevent hallucinations with curated technical docs"
-    },
-    "posthog": {
-      "type": "http",
-      "url": "https://mcp.posthog.com",
-      "env": {
-        "POSTHOG_API_KEY": "${POSTHOG_API_KEY}",
-        "POSTHOG_PROJECT_ID": "${POSTHOG_PROJECT_ID}"
-      },
-      "description": "Product analytics, feature flags, A/B testing, user insights"
-    },
-    "notion": {
-      "type": "http",
-      "url": "https://mcp.notion.so",
-      "env": {
-        "NOTION_API_KEY": "${NOTION_API_KEY}"
-      },
-      "description": "Documentation sync, knowledge base integration, collaborative docs"
-    },
-    "memory-bank": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "@memory-bank/mcp-server@latest"],
-      "description": "Persistent context across sessions, knowledge retention, learning from past interactions"
-    },
-    "slack": {
-      "type": "http",
-      "url": "https://mcp.slack.com",
-      "env": {
-        "SLACK_BOT_TOKEN": "${SLACK_BOT_TOKEN}",
-        "SLACK_WORKSPACE_ID": "${SLACK_WORKSPACE_ID}"
-      },
-      "description": "Team notifications, deployment alerts, error reporting, collaboration"
-    },
-    "shadcn": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["shadcn@latest", "mcp"],
-      "description": "shadcn/ui component registry - discover, install, and generate UI components with natural language"
-    },
-    "a11y": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["a11y-mcp"],
-      "description": "Accessibility audits with axe-core for WCAG 2.1 AA compliance - automates UI Factory quality gate #3"
-    },
-    "storybook": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "storybook-mcp"],
-      "env": {
-        "STORYBOOK_URL": "http://localhost:6006/index.json"
-      },
-      "description": "Component documentation and visual testing - auto-generate stories and capture screenshots"
-    },
-    "browser": {
-      "type": "stdio",
-      "command": "npx",
-      "args": [
-        "@playwright/mcp@latest",
-        "--browser",
-        "chromium",
-        "--timeout-action",
-        "10000",
-        "--timeout-navigation",
-        "30000"
-      ],
-      "description": "Official Microsoft Playwright MCP - browser automation via accessibility snapshots"
-    },
-    "design-system-analyzer": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "@yajihum/design-system-mcp"],
-      "description": "Analyze React components and design tokens for accurate component properties and styling recommendations"
     },
     "svg-tools": {
       "type": "stdio",

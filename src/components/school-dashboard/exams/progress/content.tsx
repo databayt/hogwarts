@@ -7,14 +7,23 @@ import { Calendar, FileText, Plus, Settings } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 
 import { getProgressSchedules } from "./actions"
 import { ProgressScheduleList } from "./schedule-list"
 
-export async function ProgressReportContent() {
+export async function ProgressReportContent({
+  lang = "ar",
+}: {
+  lang?: Locale
+}) {
   const session = await auth()
   const schoolId = session?.user?.schoolId
   if (!schoolId) return null
+
+  const dictionary = await getDictionary(lang)
+  const t = dictionary?.school?.exams?.progress
 
   const schedules = await getProgressSchedules()
 
@@ -29,7 +38,7 @@ export async function ProgressReportContent() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">
-            Progress Reports
+            {(t as any)?.schedule?.title ?? "Progress Reports"}
           </h2>
           <p className="text-muted-foreground">
             Schedule automated progress reports for students and parents
@@ -49,7 +58,7 @@ export async function ProgressReportContent() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Total Schedules
+              {(t as any)?.schedule?.title ?? "Total Schedules"}
             </CardTitle>
             <Settings className="text-muted-foreground h-4 w-4" />
           </CardHeader>
@@ -73,7 +82,7 @@ export async function ProgressReportContent() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Reports Generated
+              {(t as any)?.schedule?.title ?? "Reports Generated"}
             </CardTitle>
             <FileText className="text-muted-foreground h-4 w-4" />
           </CardHeader>

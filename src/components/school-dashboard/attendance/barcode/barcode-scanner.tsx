@@ -57,6 +57,7 @@ export function BarcodeScanner({
   dictionary,
   locale = "en",
 }: BarcodeScannerProps) {
+  const t = dictionary?.attendance
   const scannerRef = useRef<HTMLDivElement>(null)
   const [scanning, setScanning] = useState(false)
   const [lastScan, setLastScan] = useState<string | null>(null)
@@ -117,8 +118,10 @@ export function BarcodeScanner({
       if (err) {
         console.error("Quagga init error:", err)
         toast({
-          title: "Scanner Error",
-          description: "Failed to initialize barcode scanner",
+          title: t?.deviceAccess?.scannerError ?? "Scanner Error",
+          description:
+            t?.deviceAccess?.initFailed ??
+            "Failed to initialize barcode scanner",
         })
         return
       }

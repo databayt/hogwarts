@@ -26,9 +26,11 @@ type ViewType = "admin" | "teacher" | "student" | "guardian"
 
 interface PersonalizedData {
   viewType: ViewType
+  editable?: boolean
   filterData: {
     teacherId?: string
     classId?: string
+    classIds?: string[]
     childrenIds?: string[]
   }
   termInfo: {
@@ -131,7 +133,9 @@ export default function RoleRouter({ dictionary, lang, defaultTab }: Props) {
 
   switch (viewData.viewType) {
     case "admin":
-      return <AdminView {...commonProps} />
+      return (
+        <AdminView {...commonProps} editable={viewData.editable !== false} />
+      )
 
     case "teacher":
       return (
@@ -147,6 +151,7 @@ export default function RoleRouter({ dictionary, lang, defaultTab }: Props) {
         <StudentView
           {...commonProps}
           classId={viewData.filterData.classId}
+          classIds={viewData.filterData.classIds}
           defaultTab={defaultTab}
         />
       )
@@ -166,6 +171,7 @@ export default function RoleRouter({ dictionary, lang, defaultTab }: Props) {
         <StudentView
           {...commonProps}
           classId={viewData.filterData.classId}
+          classIds={viewData.filterData.classIds}
           defaultTab={defaultTab}
         />
       )

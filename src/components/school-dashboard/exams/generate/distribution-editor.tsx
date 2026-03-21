@@ -6,6 +6,7 @@ import { DifficultyLevel, QuestionType } from "@prisma/client"
 
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { DIFFICULTY_LEVELS, QUESTION_TYPES } from "./config"
 import type { TemplateDistribution } from "./types"
@@ -23,6 +24,10 @@ export function DistributionEditor({
   totalMarks,
   disabled = false,
 }: DistributionEditorProps) {
+  const { dictionary } = useDictionary()
+  const t = (
+    dictionary?.school?.exams?.generateUi as Record<string, any> | undefined
+  )?.distribution as Record<string, any> | undefined
   const updateCell = (
     questionType: QuestionType,
     difficulty: DifficultyLevel,
@@ -50,7 +55,9 @@ export function DistributionEditor({
     <div className="overflow-hidden rounded-lg border">
       {/* Header */}
       <div className="bg-muted/50 grid grid-cols-4 border-b">
-        <div className="p-3 text-sm font-medium">Question Type</div>
+        <div className="p-3 text-sm font-medium">
+          {t?.questionType ?? "Question Type"}
+        </div>
         {DIFFICULTY_LEVELS.map((level) => (
           <div
             key={level.value}
@@ -116,7 +123,9 @@ export function DistributionEditor({
 
       {/* Totals Row */}
       <div className="bg-muted/30 grid grid-cols-4 border-t-2">
-        <div className="p-3 text-sm font-semibold">Total per Difficulty</div>
+        <div className="p-3 text-sm font-semibold">
+          {t?.totalPerDifficulty ?? "Total per Difficulty"}
+        </div>
         {DIFFICULTY_LEVELS.map((difficulty) => {
           const total = QUESTION_TYPES.reduce((sum, qt) => {
             return sum + getCellValue(qt.value, difficulty.value)
@@ -135,7 +144,9 @@ export function DistributionEditor({
 
       {/* Column Totals */}
       <div className="bg-muted/50 flex justify-between border-t p-3 text-sm">
-        <span className="font-semibold">Total Questions by Type:</span>
+        <span className="font-semibold">
+          {t?.totalByType ?? "Total Questions by Type"}:
+        </span>
         <div className="flex gap-4">
           {QUESTION_TYPES.map((qt) => {
             const total = DIFFICULTY_LEVELS.reduce((sum, dl) => {

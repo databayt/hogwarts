@@ -36,6 +36,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { getCatalogSubjectsForBrowse } from "../qbank/actions/catalog-browse"
 import {
@@ -65,6 +66,10 @@ const EXAM_TYPE_COLORS: Record<string, string> = {
 }
 
 export function CatalogExamBrowseTab() {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.exams?.generateUi?.catalog as
+    | Record<string, any>
+    | undefined
   const [exams, setExams] = useState<CatalogExamRow[]>([])
   const [total, setTotal] = useState(0)
   const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([])
@@ -111,7 +116,7 @@ export function CatalogExamBrowseTab() {
         <div className="relative min-w-[200px] flex-1">
           <Search className="text-muted-foreground absolute start-3 top-2.5 size-4" />
           <Input
-            placeholder="Search catalog exams..."
+            placeholder={t?.searchPlaceholder ?? "Search catalog exams..."}
             className="ps-9"
             onChange={(e) => {
               setPage(0)
@@ -130,10 +135,12 @@ export function CatalogExamBrowseTab() {
           }}
         >
           <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="All subjects" />
+            <SelectValue placeholder={t?.allSubjects ?? "All subjects"} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All subjects</SelectItem>
+            <SelectItem value="all">
+              {t?.allSubjects ?? "All subjects"}
+            </SelectItem>
             {subjects.map((s) => (
               <SelectItem key={s.id} value={s.id}>
                 {s.name}
@@ -152,15 +159,21 @@ export function CatalogExamBrowseTab() {
           }}
         >
           <SelectTrigger className="w-[160px]">
-            <SelectValue placeholder="Exam type" />
+            <SelectValue placeholder={t?.examType ?? "Exam type"} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All types</SelectItem>
-            <SelectItem value="final">Final</SelectItem>
-            <SelectItem value="midterm">Midterm</SelectItem>
-            <SelectItem value="chapter_test">Chapter Test</SelectItem>
-            <SelectItem value="quiz">Quiz</SelectItem>
-            <SelectItem value="practice">Practice</SelectItem>
+            <SelectItem value="all">{t?.allTypes ?? "All types"}</SelectItem>
+            <SelectItem value="final">{t?.types?.final ?? "Final"}</SelectItem>
+            <SelectItem value="midterm">
+              {t?.types?.midterm ?? "Midterm"}
+            </SelectItem>
+            <SelectItem value="chapter_test">
+              {t?.types?.chapterTest ?? "Chapter Test"}
+            </SelectItem>
+            <SelectItem value="quiz">{t?.types?.quiz ?? "Quiz"}</SelectItem>
+            <SelectItem value="practice">
+              {t?.types?.practice ?? "Practice"}
+            </SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -172,7 +185,7 @@ export function CatalogExamBrowseTab() {
         </div>
       ) : exams.length === 0 ? (
         <div className="text-muted-foreground py-12 text-center">
-          No catalog exams found
+          {t?.noExamsFound ?? "No catalog exams found"}
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -185,7 +198,7 @@ export function CatalogExamBrowseTab() {
                     className="bg-green-100 text-green-800"
                   >
                     <Check className="me-1 size-3" />
-                    Adopted
+                    {t?.adopted ?? "Adopted"}
                   </Badge>
                 </div>
               )}
@@ -243,12 +256,12 @@ export function CatalogExamBrowseTab() {
                     onClick={() => handlePreview(exam.id)}
                   >
                     <Eye className="me-1 size-4" />
-                    Preview
+                    {t?.preview ?? "Preview"}
                   </Button>
                   {!exam.isAdopted && (
                     <Button size="sm" className="flex-1">
                       <Download className="me-1 size-4" />
-                      Adopt
+                      {t?.adopt ?? "Adopt"}
                     </Button>
                   )}
                 </div>
@@ -261,7 +274,9 @@ export function CatalogExamBrowseTab() {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
-          <p className="text-muted-foreground text-sm">{total} exams total</p>
+          <p className="text-muted-foreground text-sm">
+            {total} {t?.examsTotal ?? "exams total"}
+          </p>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -269,7 +284,7 @@ export function CatalogExamBrowseTab() {
               disabled={page === 0}
               onClick={() => setPage((p) => p - 1)}
             >
-              Previous
+              {t?.previous ?? "Previous"}
             </Button>
             <Button
               size="sm"
@@ -277,7 +292,7 @@ export function CatalogExamBrowseTab() {
               disabled={page >= totalPages - 1}
               onClick={() => setPage((p) => p + 1)}
             >
-              Next
+              {t?.next ?? "Next"}
             </Button>
           </div>
         </div>
@@ -288,7 +303,9 @@ export function CatalogExamBrowseTab() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {loadingPreview ? "Loading..." : previewExam?.title}
+              {loadingPreview
+                ? (t?.loading ?? "Loading...")
+                : previewExam?.title}
             </DialogTitle>
             <DialogDescription>
               {previewExam?.catalogSubjectName}
@@ -306,7 +323,9 @@ export function CatalogExamBrowseTab() {
               {/* Exam Info */}
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="text-muted-foreground">Type</p>
+                  <p className="text-muted-foreground">
+                    {t?.detailType ?? "Type"}
+                  </p>
                   <Badge
                     className={EXAM_TYPE_COLORS[previewExam.examType] ?? ""}
                   >
@@ -315,33 +334,49 @@ export function CatalogExamBrowseTab() {
                   </Badge>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Duration</p>
-                  <p>{previewExam.durationMinutes ?? "-"} minutes</p>
+                  <p className="text-muted-foreground">
+                    {t?.detailDuration ?? "Duration"}
+                  </p>
+                  <p>
+                    {previewExam.durationMinutes ?? "-"}{" "}
+                    {t?.minutes ?? "minutes"}
+                  </p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Total Marks</p>
+                  <p className="text-muted-foreground">
+                    {t?.detailTotalMarks ?? "Total Marks"}
+                  </p>
                   <p>
-                    {previewExam.totalMarks ?? "-"} (pass:{" "}
+                    {previewExam.totalMarks ?? "-"} ({t?.pass ?? "pass"}:{" "}
                     {previewExam.passingMarks ?? "-"})
                   </p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Questions</p>
+                  <p className="text-muted-foreground">
+                    {t?.detailQuestions ?? "Questions"}
+                  </p>
                   <p>{previewExam.totalQuestions ?? "-"}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Usage</p>
-                  <p>{previewExam.usageCount} schools</p>
+                  <p className="text-muted-foreground">
+                    {t?.detailUsage ?? "Usage"}
+                  </p>
+                  <p>
+                    {previewExam.usageCount} {t?.schools ?? "schools"}
+                  </p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Avg Score</p>
+                  <p className="text-muted-foreground">
+                    {t?.detailAvgScore ?? "Avg Score"}
+                  </p>
                   <p>{previewExam.averageScore}%</p>
                 </div>
               </div>
 
               {previewExam.variantCount > 0 && (
                 <p className="text-muted-foreground text-sm">
-                  {previewExam.variantCount} variant(s) available
+                  {previewExam.variantCount}{" "}
+                  {t?.variantsAvailable ?? "variant(s) available"}
                 </p>
               )}
 
@@ -349,8 +384,8 @@ export function CatalogExamBrowseTab() {
               {previewExam.sampleQuestions.length > 0 && (
                 <div>
                   <h4 className="mb-2 font-medium">
-                    Sample Questions (first {previewExam.sampleQuestions.length}
-                    )
+                    {t?.sampleQuestions ?? "Sample Questions"} (
+                    {t?.first ?? "first"} {previewExam.sampleQuestions.length})
                   </h4>
                   <div className="space-y-2">
                     {previewExam.sampleQuestions.map((q, i) => (
@@ -386,12 +421,12 @@ export function CatalogExamBrowseTab() {
               {/* Adopt CTA */}
               <div className="flex justify-end gap-2 pt-2">
                 <Button variant="outline" onClick={() => setPreviewOpen(false)}>
-                  Close
+                  {t?.close ?? "Close"}
                 </Button>
                 {!previewExam.isAdopted && (
                   <Button>
                     <Download className="me-1 size-4" />
-                    Adopt This Exam
+                    {t?.adoptThisExam ?? "Adopt This Exam"}
                   </Button>
                 )}
               </div>

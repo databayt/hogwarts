@@ -3,12 +3,23 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
+import { cookies } from "next/headers"
 import { auth } from "@/auth"
 
 import { env } from "@/env.mjs"
 import { db } from "@/lib/db"
-import { i18n } from "@/components/internationalization/config"
+import { i18n, type Locale } from "@/components/internationalization/config"
 import { sendCompletionEmail } from "@/components/stream/shared/email-service"
+
+/** Resolve the user's locale from cookie */
+async function resolveLocale(): Promise<Locale> {
+  const cookieStore = await cookies()
+  const localeCookie = cookieStore.get("NEXT_LOCALE")?.value
+  if (localeCookie && i18n.locales.includes(localeCookie as Locale)) {
+    return localeCookie as Locale
+  }
+  return i18n.defaultLocale
+}
 
 type ApiResponse = {
   status: "success" | "error"
@@ -29,7 +40,7 @@ export async function markLessonComplete(
   }
 
   try {
-    // Verify user has access to this lesson through enrollment
+    // Verify user has access to this lesson through enrollment + school scope
     const lesson = await db.streamLesson.findUnique({
       where: { id: lessonId },
       select: {
@@ -45,7 +56,7 @@ export async function markLessonComplete(
                     userId: session.user.id,
                     isActive: true,
                   },
-                  select: { id: true },
+                  select: { id: true, schoolId: true },
                 },
               },
             },
@@ -61,11 +72,25 @@ export async function markLessonComplete(
       }
     }
 
-    // Check if user is enrolled (or is admin/teacher)
-    const isEnrolled = lesson.chapter.course.enrollments.length > 0
+    // Verify school context for multi-tenant safety
+    const courseSchoolId = lesson.chapter.course.schoolId
     const isAdmin = ["ADMIN", "TEACHER", "DEVELOPER"].includes(
       session.user.role || ""
     )
+
+    // Non-DEVELOPER users must belong to the same school
+    if (
+      session.user.role !== "DEVELOPER" &&
+      session.user.schoolId !== courseSchoolId
+    ) {
+      return {
+        status: "error",
+        message: "Access denied: school context mismatch",
+      }
+    }
+
+    // Check if user is enrolled (or is admin/teacher)
+    const isEnrolled = lesson.chapter.course.enrollments.length > 0
 
     if (!isEnrolled && !isAdmin) {
       return {
@@ -172,7 +197,7 @@ export async function markLessonComplete(
 
         // Send completion email with certificate (fire and forget)
         if (user?.email && course) {
-          const locale = i18n.defaultLocale
+          const locale = await resolveLocale()
           sendCompletionEmail({
             to: user.email,
             studentName: user.username || "Student",
@@ -220,6 +245,50 @@ export async function markLessonIncomplete(
   }
 
   try {
+    // Verify enrollment or admin role before allowing progress changes
+    const lesson = await db.streamLesson.findUnique({
+      where: { id: lessonId },
+      select: {
+        chapter: {
+          select: {
+            course: {
+              select: {
+                schoolId: true,
+                enrollments: {
+                  where: { userId: session.user.id, isActive: true },
+                  select: { id: true },
+                },
+              },
+            },
+          },
+        },
+      },
+    })
+
+    if (!lesson) {
+      return { status: "error", message: "Lesson not found" }
+    }
+
+    const isAdmin = ["ADMIN", "TEACHER", "DEVELOPER"].includes(
+      session.user.role || ""
+    )
+    const isEnrolled = lesson.chapter.course.enrollments.length > 0
+
+    if (!isEnrolled && !isAdmin) {
+      return { status: "error", message: "Access denied" }
+    }
+
+    // School scope check
+    if (
+      session.user.role !== "DEVELOPER" &&
+      session.user.schoolId !== lesson.chapter.course.schoolId
+    ) {
+      return {
+        status: "error",
+        message: "Access denied: school context mismatch",
+      }
+    }
+
     await db.streamLessonProgress.updateMany({
       where: {
         userId: session.user.id,
@@ -254,6 +323,27 @@ export async function getLessonProgress(lessonId: string): Promise<{
   const session = await auth()
 
   if (!session?.user) {
+    return { isCompleted: false, watchedSeconds: 0, totalSeconds: null }
+  }
+
+  // Verify user has access to this lesson's school
+  const lesson = await db.streamLesson.findUnique({
+    where: { id: lessonId },
+    select: {
+      chapter: {
+        select: { course: { select: { schoolId: true } } },
+      },
+    },
+  })
+
+  if (!lesson) {
+    return { isCompleted: false, watchedSeconds: 0, totalSeconds: null }
+  }
+
+  if (
+    session.user.role !== "DEVELOPER" &&
+    session.user.schoolId !== lesson.chapter.course.schoolId
+  ) {
     return { isCompleted: false, watchedSeconds: 0, totalSeconds: null }
   }
 
@@ -297,6 +387,47 @@ export async function updateLessonProgress(data: {
   }
 
   try {
+    // Verify enrollment or admin access before saving progress
+    const lesson = await db.streamLesson.findUnique({
+      where: { id: data.lessonId },
+      select: {
+        chapter: {
+          select: {
+            course: {
+              select: {
+                schoolId: true,
+                enrollments: {
+                  where: { userId: session.user.id, isActive: true },
+                  select: { id: true },
+                },
+              },
+            },
+          },
+        },
+      },
+    })
+
+    if (!lesson) {
+      return { status: "error", message: "Lesson not found" }
+    }
+
+    // School scope check
+    if (
+      session.user.role !== "DEVELOPER" &&
+      session.user.schoolId !== lesson.chapter.course.schoolId
+    ) {
+      return { status: "error", message: "Access denied" }
+    }
+
+    const isAdmin = ["ADMIN", "TEACHER", "DEVELOPER"].includes(
+      session.user.role || ""
+    )
+    const isEnrolled = lesson.chapter.course.enrollments.length > 0
+
+    if (!isEnrolled && !isAdmin) {
+      return { status: "error", message: "Enrollment required" }
+    }
+
     // Upsert lesson progress with video position
     await db.streamLessonProgress.upsert({
       where: {

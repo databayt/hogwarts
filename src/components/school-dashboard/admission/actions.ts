@@ -316,6 +316,18 @@ export async function getApplications(params: {
   }
 }
 
+// Valid status transitions — prevents arbitrary jumps (e.g., DRAFT→ADMITTED)
+const VALID_TRANSITIONS: Record<string, string[]> = {
+  SUBMITTED: ["UNDER_REVIEW", "WITHDRAWN"],
+  UNDER_REVIEW: ["SHORTLISTED", "REJECTED", "WITHDRAWN"],
+  SHORTLISTED: ["SELECTED", "WAITLISTED", "REJECTED", "WITHDRAWN"],
+  SELECTED: ["WAITLISTED", "REJECTED", "WITHDRAWN"],
+  WAITLISTED: ["SELECTED", "REJECTED", "WITHDRAWN"],
+  REJECTED: [],
+  WITHDRAWN: [],
+  // ADMITTED is only reachable via confirmEnrollment, never via status dropdown
+}
+
 export async function updateApplicationStatus(params: {
   id: string
   status: string
@@ -330,6 +342,22 @@ export async function updateApplicationStatus(params: {
 
     assertAdmissionPermission(session.user.role, "updateStatus")
 
+    // Validate status transition
+    const current = await db.application.findUnique({
+      where: { id: params.id, schoolId },
+      select: { status: true },
+    })
+    if (!current) {
+      return { success: false, error: "Application not found" }
+    }
+    const allowed = VALID_TRANSITIONS[current.status]
+    if (!allowed || !allowed.includes(params.status)) {
+      return {
+        success: false,
+        error: `Cannot transition from ${current.status} to ${params.status}`,
+      }
+    }
+
     const data: Record<string, unknown> = {
       status: params.status as AdmissionApplicationStatus,
       reviewedAt: new Date(),
@@ -340,7 +368,14 @@ export async function updateApplicationStatus(params: {
     if (params.status === "SELECTED") {
       data.admissionOffered = true
       data.offerDate = new Date()
-      data.offerExpiryDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
+      const settings = await db.admissionSettings.findUnique({
+        where: { schoolId },
+        select: { offerExpiryDays: true },
+      })
+      const expiryDays = settings?.offerExpiryDays ?? 14
+      data.offerExpiryDate = new Date(
+        Date.now() + expiryDays * 24 * 60 * 60 * 1000
+      )
     }
 
     await db.application.update({
@@ -384,8 +419,8 @@ export async function updateApplicationStatus(params: {
           applicationId: params.id,
           status: params.status,
           url:
-            params.status === "SELECTED" && application.campaignId
-              ? `/application/${application.campaignId}/payment`
+            params.status === "SELECTED"
+              ? `/application/${params.id}/payment`
               : "/admission",
         },
         actorId: session.user?.id,
@@ -575,10 +610,24 @@ export async function confirmEnrollment(params: {
       return { success: false, error: "Application not found" }
     }
 
+    if (application.status === "ADMITTED") {
+      return { success: false, error: "Application is already enrolled" }
+    }
+
+    if (
+      application.offerExpiryDate &&
+      new Date(application.offerExpiryDate) < new Date()
+    ) {
+      return {
+        success: false,
+        error: "Admission offer has expired. Please extend the offer first.",
+      }
+    }
+
     const enrollmentNumber = `ENR-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
     let enrolledStudentId: string | null = null
 
-    await db.$transaction(async (tx) => {
+    const txUserId = await db.$transaction(async (tx) => {
       // 2. Update application status to ADMITTED
       await tx.application.update({
         where: { id: params.id, schoolId },
@@ -593,16 +642,26 @@ export async function confirmEnrollment(params: {
       // 3. Resolve userId — create a User for guest applications
       let userId = application.userId
       if (!userId) {
-        const guestUser = await tx.user.create({
-          data: {
-            email: application.email,
-            username: `${application.firstName} ${application.lastName}`,
-            role: "STUDENT",
-            schoolId,
-            emailVerified: new Date(),
-          },
+        // Find existing user by email to avoid unique constraint violation
+        const existingUser = await tx.user.findFirst({
+          where: { email: application.email },
+          select: { id: true },
         })
-        userId = guestUser.id
+
+        if (existingUser) {
+          userId = existingUser.id
+        } else {
+          const guestUser = await tx.user.create({
+            data: {
+              email: application.email,
+              username: `${application.firstName} ${application.lastName}`,
+              role: "STUDENT",
+              schoolId,
+              emailVerified: new Date(),
+            },
+          })
+          userId = guestUser.id
+        }
 
         // Link the application to the new user
         await tx.application.update({
@@ -1016,11 +1075,13 @@ export async function confirmEnrollment(params: {
 
         enrolledStudentId = student.id
       }
+
+      return userId
     })
 
     // 6b. Auto-generate invoice from fee assignments (non-fatal, outside transaction)
     try {
-      if (enrolledStudentId && application.userId) {
+      if (enrolledStudentId && (txUserId || application.userId)) {
         const feeAssignments = await db.feeAssignment.findMany({
           where: {
             schoolId,
@@ -1041,7 +1102,7 @@ export async function confirmEnrollment(params: {
 
           await createInvoiceFromEnrollment({
             schoolId,
-            userId: application.userId,
+            userId: txUserId || application.userId!,
             studentName: `${application.firstName} ${application.lastName}`,
             studentEmail: application.email,
             schoolName: school?.name ?? "School",
@@ -1114,18 +1175,23 @@ export async function confirmEnrollment(params: {
     }
 
     // Notify student about enrollment confirmation (non-blocking)
-    if (application.userId) {
-      const schoolLang = await db.school.findFirst({
-        where: { id: schoolId },
-        select: { preferredLanguage: true },
-      })
+    const schoolLang =
+      (
+        await db.school.findFirst({
+          where: { id: schoolId },
+          select: { preferredLanguage: true },
+        })
+      )?.preferredLanguage ?? "ar"
+
+    const effectiveUserId = txUserId || application.userId
+    if (effectiveUserId) {
       dispatchNotification({
         schoolId,
-        userId: application.userId,
+        userId: effectiveUserId,
         type: "account_created",
         title: "تم تأكيد القبول",
         body: `تهانينا! تم تأكيد تسجيلك بالمدرسة. رقم التسجيل: ${enrollmentNumber}`,
-        lang: schoolLang?.preferredLanguage ?? "ar",
+        lang: schoolLang,
         priority: "high",
         channels: ["in_app", "email"],
         metadata: {
@@ -1136,6 +1202,84 @@ export async function confirmEnrollment(params: {
       }).catch((err) =>
         console.error("[confirmEnrollment] Notification error:", err)
       )
+    }
+
+    // Dispatch fee_due notifications for auto-assigned fees (non-fatal)
+    try {
+      if (enrolledStudentId && effectiveUserId) {
+        const pendingFees = await db.feeAssignment.findMany({
+          where: {
+            schoolId,
+            studentId: enrolledStudentId,
+            status: "PENDING",
+          },
+          select: { finalAmount: true },
+        })
+        if (pendingFees.length > 0) {
+          const totalAmount = pendingFees.reduce(
+            (sum, fa) => sum + Number(fa.finalAmount),
+            0
+          )
+          dispatchNotification({
+            schoolId,
+            userId: effectiveUserId,
+            type: "fee_due",
+            title: "رسوم دراسية جديدة",
+            body: `تم تعيين ${pendingFees.length} رسوم بقيمة ${totalAmount.toLocaleString()} لحسابك`,
+            lang: schoolLang,
+            priority: "high",
+            channels: ["in_app", "email"],
+            metadata: {
+              studentId: enrolledStudentId,
+              feeCount: pendingFees.length,
+              totalAmount,
+              url: "/finance/fees",
+            },
+            actorId: session.user?.id,
+          }).catch((err) =>
+            console.error("[confirmEnrollment] Fee notification error:", err)
+          )
+        }
+      }
+    } catch {
+      // Non-critical: fee notification is best-effort
+    }
+
+    // Notify guardians about enrollment (non-blocking)
+    try {
+      if (enrolledStudentId) {
+        const guardianLinks = await db.studentGuardian.findMany({
+          where: { studentId: enrolledStudentId, schoolId },
+          select: { guardian: { select: { userId: true } } },
+        })
+        for (const link of guardianLinks) {
+          if (link.guardian?.userId) {
+            dispatchNotification({
+              schoolId,
+              userId: link.guardian.userId,
+              type: "account_created",
+              title: "تم تأكيد القبول",
+              body: `تم تأكيد تسجيل ${application.firstName} ${application.lastName} في المدرسة`,
+              lang: schoolLang,
+              priority: "high",
+              channels: ["in_app", "email"],
+              metadata: {
+                applicationId: params.id,
+                enrollmentNumber,
+                studentName: `${application.firstName} ${application.lastName}`,
+                url: "/",
+              },
+            }).catch((err) =>
+              console.error(
+                "[confirmEnrollment] Guardian notification error:",
+                err
+              )
+            )
+          }
+        }
+      }
+    } catch {
+      // Non-critical: guardian notification is best-effort
     }
 
     revalidatePath("/admission/enrollment")
@@ -1307,42 +1451,57 @@ export async function placeStudentInSection(params: {
       }
     }
 
-    // Check section capacity
-    const sectionData = await db.section.findFirst({
-      where: { id: params.sectionId, schoolId },
-      select: {
-        id: true,
-        name: true,
-        gradeId: true,
-        maxCapacity: true,
-        _count: { select: { students: true } },
-      },
+    // Check section capacity and assign atomically
+    const sectionData = await db.$transaction(async (tx) => {
+      const section = await tx.section.findFirst({
+        where: { id: params.sectionId, schoolId },
+        select: {
+          id: true,
+          name: true,
+          gradeId: true,
+          maxCapacity: true,
+          _count: { select: { students: true } },
+        },
+      })
+
+      if (!section) return null
+
+      if (section._count.students >= section.maxCapacity) {
+        return { ...section, full: true as const }
+      }
+
+      // Check if already in this section
+      if (student.sectionId === params.sectionId) {
+        return { ...section, alreadyPlaced: true as const }
+      }
+
+      // Assign student to section atomically with capacity check
+      await tx.student.update({
+        where: { id: student.id },
+        data: { sectionId: params.sectionId },
+      })
+
+      return { ...section, full: false as const, alreadyPlaced: false as const }
     })
 
     if (!sectionData) return { success: false, error: "Section not found" }
 
-    if (sectionData._count.students >= sectionData.maxCapacity) {
+    if ("full" in sectionData && sectionData.full) {
       return {
         success: false,
         error: `Section "${sectionData.name}" is at full capacity (${sectionData._count.students}/${sectionData.maxCapacity})`,
       }
     }
 
-    // Check if already in this section
-    if (student.sectionId === params.sectionId) {
+    if ("alreadyPlaced" in sectionData && sectionData.alreadyPlaced) {
       return {
         success: false,
         error: `${application.firstName} ${application.lastName} is already in "${sectionData.name}"`,
       }
     }
 
-    // Assign student to section and create StudentClass entries
+    // Create StudentClass entries
     let noClassesForGrade = false
-
-    await db.student.update({
-      where: { id: student.id },
-      data: { sectionId: params.sectionId },
-    })
 
     if (sectionData.gradeId) {
       const result = await enrollStudentInGradeClasses(

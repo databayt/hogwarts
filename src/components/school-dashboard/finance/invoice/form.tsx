@@ -151,12 +151,19 @@ export function InvoiceCreateForm({
               address2: to.address2 || "",
               address3: to.address3 || "",
             },
-            items: items.map((item) => ({
-              item_name: item.item_name,
-              quantity: item.quantity,
-              price: Number(item.price),
-              total: Number(item.total),
-            })),
+            items: items.map(
+              (item: {
+                item_name: string
+                quantity: number
+                price: number
+                total: number
+              }) => ({
+                item_name: item.item_name,
+                quantity: item.quantity,
+                price: Number(item.price),
+                total: Number(item.total),
+              })
+            ),
             sub_total: Number(rest.sub_total),
             discount: Number(rest.discount) || 0,
             tax_percentage: Number(rest.tax_percentage) || 0,

@@ -3,7 +3,6 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState, useTransition } from "react"
-import { toast } from "sonner"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -22,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { ErrorToast, InfoToast, SuccessToast } from "@/components/atom/toast"
 
 import {
   getAvailableSectionsForPlacement,
@@ -75,15 +75,15 @@ export function PlacementDialog({
       })
 
       if (result.success) {
-        toast.success(`${studentName} placed successfully`)
+        SuccessToast(`${studentName} placed successfully`)
         if (result.warning) {
-          toast.warning(result.warning)
+          InfoToast(result.warning)
         }
         onOpenChange(false)
         setSelectedSectionId("")
         onSuccess?.()
       } else {
-        toast.error(result.error || "Failed to place student")
+        ErrorToast(result.error || "Failed to place student")
       }
     })
   }

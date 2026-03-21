@@ -107,7 +107,7 @@ export function NotificationCenterClient({
       {!isConnected && (
         <div className="text-muted-foreground absolute end-0 top-0 flex items-center gap-2 text-xs">
           <span className="bg-muted-foreground h-2 w-2 animate-pulse rounded-full" />
-          <span>Connecting...</span>
+          <span>{dictionary.connection.connecting}</span>
         </div>
       )}
 
@@ -119,7 +119,7 @@ export function NotificationCenterClient({
         onDelete={handleNotificationDelete}
         onMarkAllRead={handleMarkAllAsRead}
         showFilters={showFilters}
-        emptyMessage="No notifications yet. You're all caught up!"
+        emptyMessage={dictionary.empty.noNotificationsDescription}
       />
     </div>
   )

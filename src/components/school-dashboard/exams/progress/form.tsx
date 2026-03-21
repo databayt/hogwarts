@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/components/ui/use-toast"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { createProgressSchedule, updateProgressSchedule } from "./actions"
 import type { ProgressScheduleSummary } from "./types"
@@ -36,22 +37,22 @@ interface ProgressReportFormProps {
 }
 
 const FREQUENCIES = [
-  { value: "WEEKLY", label: "Weekly" },
-  { value: "BIWEEKLY", label: "Biweekly" },
-  { value: "MONTHLY", label: "Monthly" },
-  { value: "TERM_END", label: "Term End" },
+  { value: "WEEKLY", label: "Weekly", key: "weekly" },
+  { value: "BIWEEKLY", label: "Biweekly", key: "biweekly" },
+  { value: "MONTHLY", label: "Monthly", key: "monthly" },
+  { value: "TERM_END", label: "Term End", key: "termEnd" },
 ]
 
 const RECIPIENT_TYPES = [
-  { value: "GUARDIAN", label: "Guardians" },
-  { value: "STUDENT", label: "Students" },
-  { value: "TEACHER", label: "Teachers" },
+  { value: "GUARDIAN", label: "Guardians", key: "guardians" },
+  { value: "STUDENT", label: "Students", key: "students" },
+  { value: "TEACHER", label: "Teachers", key: "teachers" },
 ]
 
 const CHANNELS = [
-  { value: "email", label: "Email" },
-  { value: "in_app", label: "In-App Notification" },
-  { value: "sms", label: "SMS" },
+  { value: "email", label: "Email", key: "email" },
+  { value: "in_app", label: "In-App Notification", key: "inApp" },
+  { value: "sms", label: "SMS", key: "sms" },
 ]
 
 export function ProgressReportForm({
@@ -61,6 +62,8 @@ export function ProgressReportForm({
   const router = useRouter()
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.exams?.progress
 
   const [formData, setFormData] = useState({
     classId: schedule?.classId || "",
@@ -89,24 +92,24 @@ export function ProgressReportForm({
 
       if (result.success) {
         toast({
-          title: "Success",
+          title: t?.toast?.success ?? "Success",
           description: schedule
-            ? "Schedule updated successfully"
-            : "Schedule created successfully",
+            ? (t?.toast?.success ?? "Schedule updated successfully")
+            : (t?.toast?.success ?? "Schedule created successfully"),
         })
         router.push("/exams/progress")
         router.refresh()
       } else {
         toast({
-          title: "Error",
+          title: t?.toast?.error ?? "Error",
           description: result.error,
           variant: "destructive",
         })
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "An unexpected error occurred",
+        title: t?.toast?.error ?? "Error",
+        description: t?.toast?.unexpected ?? "An unexpected error occurred",
         variant: "destructive",
       })
     } finally {
@@ -146,10 +149,12 @@ export function ProgressReportForm({
             }
           >
             <SelectTrigger>
-              <SelectValue placeholder="All classes" />
+              <SelectValue placeholder={t?.form?.allClasses ?? "All classes"} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All classes</SelectItem>
+              <SelectItem value="">
+                {t?.form?.allClasses ?? "All classes"}
+              </SelectItem>
               {classes.map((cls) => (
                 <SelectItem key={cls.id} value={cls.id}>
                   {cls.name}
@@ -178,7 +183,7 @@ export function ProgressReportForm({
             <SelectContent>
               {FREQUENCIES.map((freq) => (
                 <SelectItem key={freq.value} value={freq.value}>
-                  {freq.label}
+                  {(t?.frequency as any)?.[freq.key] ?? freq.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -186,7 +191,9 @@ export function ProgressReportForm({
         </div>
 
         <div className="space-y-4">
-          <h3 className="text-sm font-medium">Report Contents</h3>
+          <h3 className="text-sm font-medium">
+            {t?.form?.reportContents ?? "Report Contents"}
+          </h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <label htmlFor="includeExamResults" className="text-sm">
@@ -267,7 +274,7 @@ export function ProgressReportForm({
                   className="h-4 w-4 rounded border-gray-300"
                 />
                 <label htmlFor={`recipient-${type.value}`} className="text-sm">
-                  {type.label}
+                  {(t?.recipients as any)?.[type.key] ?? type.label}
                 </label>
               </div>
             ))}
@@ -290,7 +297,7 @@ export function ProgressReportForm({
                   className="h-4 w-4 rounded border-gray-300"
                 />
                 <label htmlFor={`channel-${channel.value}`} className="text-sm">
-                  {channel.label}
+                  {(t?.channels as any)?.[channel.key] ?? channel.label}
                 </label>
               </div>
             ))}

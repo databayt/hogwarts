@@ -64,6 +64,7 @@ interface Props {
   lunchAfterPeriod: number | null
   isLoading?: boolean
   classId?: string // Legacy prop - no longer needed
+  classIds?: string[] // All enrolled class IDs
   defaultTab?: "today" | "full"
 }
 
@@ -78,7 +79,8 @@ export default function StudentView({
   isLoading,
   defaultTab = "today",
 }: Props) {
-  const d = dictionary?.timetable
+  const d = dictionary?.timetable as Record<string, any> | undefined
+  const sv = (d as Record<string, any>)?.studentViewUi
   const isRTL = lang === "ar"
 
   const [isLoadingData, setIsLoadingData] = useState(false)
@@ -124,7 +126,11 @@ export default function StudentView({
       setTodaySchedule(todayResult.schedule)
       setCurrentDay(todayResult.dayOfWeek)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load schedule")
+      setError(
+        err instanceof Error
+          ? err.message
+          : (sv?.empty ?? "Failed to load schedule")
+      )
     } finally {
       setIsLoadingData(false)
     }
@@ -221,7 +227,7 @@ export default function StudentView({
             <div>
               <CardTitle className="flex items-center gap-2">
                 <GraduationCap className="h-5 w-5 print:hidden" />
-                {d?.title || "My Class Schedule"}
+                {sv?.title ?? d?.title ?? "My Class Schedule"}
               </CardTitle>
               <CardDescription>
                 {studentInfo ? (
@@ -235,7 +241,7 @@ export default function StudentView({
                     </span>
                   </>
                 ) : (
-                  "Loading..."
+                  (sv?.labels?.today ?? "Loading...")
                 )}
               </CardDescription>
             </div>
@@ -317,8 +323,8 @@ export default function StudentView({
               <div className="flex-1">
                 <p className="text-muted-foreground text-sm">
                   {currentClassInfo.type === "current"
-                    ? "Current Class"
-                    : "Next Up"}
+                    ? (sv?.labels?.nextClass ?? "Current Class")
+                    : (sv?.labels?.noMoreClasses ?? "Next Up")}
                 </p>
                 <p className="text-lg font-semibold">
                   {currentClassInfo.item.subject ||
@@ -352,7 +358,7 @@ export default function StudentView({
           <Card>
             <CardContent className="text-muted-foreground py-12 text-center">
               <Calendar className="mx-auto mb-4 h-12 w-12 opacity-50" />
-              <p>No classes scheduled for today</p>
+              <p>{sv?.empty ?? "No classes scheduled for today"}</p>
             </CardContent>
           </Card>
         ) : (
@@ -382,7 +388,7 @@ export default function StudentView({
                       <p className="font-medium">
                         {item.isBreak
                           ? item.periodName
-                          : item.subject || "Free Period"}
+                          : item.subject || (d?.freePeriod ?? "Free Period")}
                       </p>
                       {!item.isBreak && item.teacher && (
                         <p className="text-muted-foreground text-sm">
@@ -390,7 +396,9 @@ export default function StudentView({
                         </p>
                       )}
                     </div>
-                    {item.isBreak && <Badge variant="secondary">Break</Badge>}
+                    {item.isBreak && (
+                      <Badge variant="secondary">{d?.break ?? "Break"}</Badge>
+                    )}
                   </div>
                 </CardContent>
               </Card>

@@ -54,6 +54,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { SUBJECT_COLORS, WORKLOAD_LIMITS } from "./config"
 import {
@@ -91,6 +92,8 @@ export function AnalyticsReports({
   classrooms,
   dictionary = {},
 }: AnalyticsReportsProps) {
+  const { dictionary: dict } = useDictionary()
+  const t = dict?.school?.timetable?.analyticsReports
   const [selectedMetric, setSelectedMetric] = useState<
     "utilization" | "workload" | "distribution"
   >("utilization")
@@ -173,7 +176,10 @@ export function AnalyticsReports({
     const suggestions: string[] = []
     if (detectedConflicts.length > 0) {
       suggestions.push(
-        `Resolve ${detectedConflicts.length} scheduling conflicts`
+        (t?.resolveConflicts ?? "Resolve {count} scheduling conflicts").replace(
+          "{count}",
+          String(detectedConflicts.length)
+        )
       )
     }
 
@@ -182,7 +188,9 @@ export function AnalyticsReports({
     )
     if (underutilizedRooms.length > 0) {
       suggestions.push(
-        `Optimize usage of ${underutilizedRooms.length} underutilized rooms`
+        (
+          t?.optimizeRooms ?? "Optimize usage of {count} underutilized rooms"
+        ).replace("{count}", String(underutilizedRooms.length))
       )
     }
 
@@ -191,7 +199,9 @@ export function AnalyticsReports({
     )
     if (overworkedTeachers.length > 0) {
       suggestions.push(
-        `Rebalance workload for ${overworkedTeachers.length} teachers`
+        (
+          t?.rebalanceWorkload ?? "Rebalance workload for {count} teachers"
+        ).replace("{count}", String(overworkedTeachers.length))
       )
     }
 
@@ -240,14 +250,18 @@ export function AnalyticsReports({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle>
-              <h6>Total Slots</h6>
+              <h6>{t?.totalSlots ?? "Total Slots"}</h6>
             </CardTitle>
             <BarChart3 className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <h3 className="text-foreground">{analytics.totalSlots}</h3>
             <p className="muted">
-              <small>Across {workingDays.length} working days</small>
+              <small>
+                {(
+                  t?.acrossWorkingDays ?? "Across {count} working days"
+                ).replace("{count}", String(workingDays.length))}
+              </small>
             </p>
             <Progress value={analytics.utilizationRate} className="mt-2" />
           </CardContent>
@@ -256,14 +270,16 @@ export function AnalyticsReports({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle>
-              <h6>Utilization Rate</h6>
+              <h6>{t?.utilizationRate ?? "Utilization Rate"}</h6>
             </CardTitle>
             <Activity className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <h3 className="text-foreground">{analytics.utilizationRate}%</h3>
             <p className="muted">
-              <small>Room and teacher efficiency</small>
+              <small>
+                {t?.roomTeacherEfficiency ?? "Room and teacher efficiency"}
+              </small>
             </p>
             <Badge
               variant={
@@ -276,10 +292,10 @@ export function AnalyticsReports({
               className="mt-2"
             >
               {analytics.utilizationRate > 80
-                ? "Optimal"
+                ? (t?.optimal ?? "Optimal")
                 : analytics.utilizationRate > 60
-                  ? "Good"
-                  : "Low"}
+                  ? (t?.good ?? "Good")
+                  : (t?.low ?? "Low")}
             </Badge>
           </CardContent>
         </Card>
@@ -287,18 +303,20 @@ export function AnalyticsReports({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle>
-              <h6>Active Conflicts</h6>
+              <h6>{t?.activeConflicts ?? "Active Conflicts"}</h6>
             </CardTitle>
             <TriangleAlert className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <h3 className="text-foreground">{conflicts.length}</h3>
             <p className="muted">
-              <small>Scheduling conflicts detected</small>
+              <small>
+                {t?.conflictsDetected ?? "Scheduling conflicts detected"}
+              </small>
             </p>
             {conflicts.length > 0 && (
               <Button size="sm" variant="destructive" className="mt-2 h-7">
-                Resolve
+                {t?.resolve ?? "Resolve"}
               </Button>
             )}
           </CardContent>
@@ -307,7 +325,7 @@ export function AnalyticsReports({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle>
-              <h6>Avg Workload</h6>
+              <h6>{t?.avgWorkload ?? "Avg Workload"}</h6>
             </CardTitle>
             <Users className="text-muted-foreground h-4 w-4" />
           </CardHeader>
@@ -322,7 +340,7 @@ export function AnalyticsReports({
               h/week
             </h3>
             <p className="muted">
-              <small>Per teacher average</small>
+              <small>{t?.perTeacher ?? "Per teacher average"}</small>
             </p>
           </CardContent>
         </Card>
@@ -334,20 +352,29 @@ export function AnalyticsReports({
         onValueChange={(v) => setSelectedMetric(v as any)}
       >
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="utilization">Room Utilization</TabsTrigger>
-          <TabsTrigger value="workload">Teacher Workload</TabsTrigger>
-          <TabsTrigger value="distribution">Subject Distribution</TabsTrigger>
+          <TabsTrigger value="utilization">
+            {t?.tabRoomUtilization ?? "Room Utilization"}
+          </TabsTrigger>
+          <TabsTrigger value="workload">
+            {t?.tabTeacherWorkload ?? "Teacher Workload"}
+          </TabsTrigger>
+          <TabsTrigger value="distribution">
+            {t?.tabSubjectDistribution ?? "Subject Distribution"}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="utilization" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>
-                <h4>Room Utilization Analysis</h4>
+                <h4>
+                  {t?.roomUtilizationTitle ?? "Room Utilization Analysis"}
+                </h4>
               </CardTitle>
               <CardDescription>
                 <p className="muted">
-                  Percentage of time each room is occupied
+                  {t?.roomUtilizationDesc ??
+                    "Percentage of time each room is occupied"}
                 </p>
               </CardDescription>
             </CardHeader>
@@ -368,7 +395,7 @@ export function AnalyticsReports({
             <Card>
               <CardHeader>
                 <CardTitle>
-                  <h5>Top Utilized Rooms</h5>
+                  <h5>{t?.topRooms ?? "Top Utilized Rooms"}</h5>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -403,7 +430,7 @@ export function AnalyticsReports({
             <Card>
               <CardHeader>
                 <CardTitle>
-                  <h5>Day Distribution</h5>
+                  <h5>{t?.dayDistribution ?? "Day Distribution"}</h5>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -425,11 +452,14 @@ export function AnalyticsReports({
           <Card>
             <CardHeader>
               <CardTitle>
-                <h4>Teacher Workload Distribution</h4>
+                <h4>
+                  {t?.teacherWorkloadTitle ?? "Teacher Workload Distribution"}
+                </h4>
               </CardTitle>
               <CardDescription>
                 <p className="muted">
-                  Weekly hours per teacher vs recommended limits
+                  {t?.teacherWorkloadDesc ??
+                    "Weekly hours per teacher vs recommended limits"}
                 </p>
               </CardDescription>
             </CardHeader>
@@ -441,11 +471,15 @@ export function AnalyticsReports({
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="hours" fill="#8B5CF6" name="Actual Hours" />
+                  <Bar
+                    dataKey="hours"
+                    fill="#8B5CF6"
+                    name={t?.actualHours ?? "Actual Hours"}
+                  />
                   <Bar
                     dataKey="limit"
                     fill="#EF4444"
-                    name="Max Limit"
+                    name={t?.maxLimit ?? "Max Limit"}
                     opacity={0.3}
                   />
                 </BarChart>
@@ -502,10 +536,14 @@ export function AnalyticsReports({
             <Card>
               <CardHeader>
                 <CardTitle>
-                  <h4>Subject Hours Distribution</h4>
+                  <h4>
+                    {t?.subjectHoursTitle ?? "Subject Hours Distribution"}
+                  </h4>
                 </CardTitle>
                 <CardDescription>
-                  <p className="muted">Total hours allocated per subject</p>
+                  <p className="muted">
+                    {t?.subjectHoursDesc ?? "Total hours allocated per subject"}
+                  </p>
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -543,10 +581,13 @@ export function AnalyticsReports({
             <Card>
               <CardHeader>
                 <CardTitle>
-                  <h4>Subject Coverage</h4>
+                  <h4>{t?.subjectCoverageTitle ?? "Subject Coverage"}</h4>
                 </CardTitle>
                 <CardDescription>
-                  <p className="muted">Classes covered by each subject</p>
+                  <p className="muted">
+                    {t?.subjectCoverageDesc ??
+                      "Classes covered by each subject"}
+                  </p>
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -593,7 +634,7 @@ export function AnalyticsReports({
             <CardTitle>
               <h5 className="flex items-center gap-2">
                 <Target className="h-5 w-5" />
-                Optimization Suggestions
+                {t?.optimizationSuggestions ?? "Optimization Suggestions"}
               </h5>
             </CardTitle>
           </CardHeader>

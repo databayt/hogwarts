@@ -73,8 +73,12 @@ vi.mock("@/lib/db", () => ({
     },
     user: {
       findUnique: vi.fn(),
+      findFirst: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
+    },
+    admissionSettings: {
+      findUnique: vi.fn().mockResolvedValue(null),
     },
     yearLevel: {
       findFirst: vi.fn(),
@@ -90,6 +94,27 @@ vi.mock("@/lib/db", () => ({
     },
     feeAssignment: {
       upsert: vi.fn(),
+      findMany: vi.fn().mockResolvedValue([]),
+    },
+    school: {
+      findFirst: vi.fn().mockResolvedValue({ preferredLanguage: "ar" }),
+    },
+    guardianType: {
+      upsert: vi.fn(),
+    },
+    guardian: {
+      findFirst: vi.fn(),
+      create: vi.fn(),
+    },
+    studentGuardian: {
+      create: vi.fn(),
+      findMany: vi.fn().mockResolvedValue([]),
+    },
+    guardianPhoneNumber: {
+      create: vi.fn(),
+    },
+    studentDocument: {
+      create: vi.fn(),
     },
     $transaction: vi.fn(),
   },
@@ -101,6 +126,14 @@ vi.mock("@/auth", () => ({
 
 vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
+}))
+
+vi.mock("@/lib/dispatch-notification", () => ({
+  dispatchNotification: vi.fn().mockResolvedValue("notif-1"),
+}))
+
+vi.mock("@/components/school-dashboard/finance/invoice/actions", () => ({
+  createInvoiceFromEnrollment: vi.fn().mockResolvedValue({ success: true }),
 }))
 
 vi.mock("../queries", () => ({
@@ -514,6 +547,9 @@ describe("Admission Actions", () => {
 
   describe("updateApplicationStatus", () => {
     it("updates the application status with reviewer info", async () => {
+      vi.mocked(db.application.findUnique).mockResolvedValue({
+        status: "UNDER_REVIEW",
+      } as any)
       vi.mocked(db.application.update).mockResolvedValue({} as any)
 
       const result = await updateApplicationStatus({
@@ -533,6 +569,9 @@ describe("Admission Actions", () => {
     })
 
     it("returns error when update fails", async () => {
+      vi.mocked(db.application.findUnique).mockResolvedValue({
+        status: "UNDER_REVIEW",
+      } as any)
       vi.mocked(db.application.update).mockRejectedValue(
         new Error("Record not found")
       )
@@ -788,10 +827,10 @@ describe("Admission Actions", () => {
           status: "ACTIVE",
         }),
       })
-      // Verify user role promoted to STUDENT
+      // Verify user role promoted to STUDENT with schoolId
       expect(db.user.update).toHaveBeenCalledWith({
         where: { id: "user-applicant" },
-        data: { role: "STUDENT" },
+        data: expect.objectContaining({ role: "STUDENT" }),
       })
     })
 
@@ -937,6 +976,7 @@ describe("Admission Actions", () => {
         userId: null,
       } as any)
       vi.mocked(db.application.update).mockResolvedValue({} as any)
+      vi.mocked(db.user.findFirst).mockResolvedValue(null) // No existing user by email
       vi.mocked(db.user.create).mockResolvedValue({
         id: "guest-user-1",
       } as any)

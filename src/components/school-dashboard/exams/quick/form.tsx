@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/components/ui/use-toast"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { createQuickAssessment } from "./actions"
 import { quickAssessmentCreateSchema } from "./validation"
@@ -44,6 +45,8 @@ export function QuickAssessmentForm({
 }: QuickAssessmentFormProps) {
   const router = useRouter()
   const { toast } = useToast()
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.exams?.quick
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   type FormValues = z.output<typeof quickAssessmentCreateSchema>
@@ -69,21 +72,22 @@ export function QuickAssessmentForm({
 
       if (result.success) {
         toast({
-          title: "Success",
-          description: "Quick assessment created successfully",
+          title: t?.toast?.success ?? "Success",
+          description:
+            t?.toast?.created ?? "Quick assessment created successfully",
         })
         router.push("/exams/quick")
       } else {
         toast({
-          title: "Error",
+          title: t?.toast?.error ?? "Error",
           description: result.error || "Failed to create assessment",
           variant: "destructive",
         })
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "An unexpected error occurred",
+        title: t?.toast?.error ?? "Error",
+        description: t?.toast?.unexpected ?? "An unexpected error occurred",
         variant: "destructive",
       })
     } finally {
@@ -99,7 +103,7 @@ export function QuickAssessmentForm({
           name="title"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Title</FormLabel>
+              <FormLabel>{t?.form?.title ?? "Title"}</FormLabel>
               <FormControl>
                 <Input placeholder="e.g., Exit Ticket - Lesson 3" {...field} />
               </FormControl>
@@ -114,24 +118,36 @@ export function QuickAssessmentForm({
             name="type"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Assessment Type</FormLabel>
+                <FormLabel>{t?.form?.type ?? "Assessment Type"}</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
+                      <SelectValue
+                        placeholder={t?.form?.selectType ?? "Select type"}
+                      />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="EXIT_TICKET">Exit Ticket</SelectItem>
-                    <SelectItem value="POLL">Poll</SelectItem>
-                    <SelectItem value="WARM_UP">Warm-Up</SelectItem>
-                    <SelectItem value="CHECK_IN">Check-In</SelectItem>
+                    <SelectItem value="EXIT_TICKET">
+                      {t?.form?.types?.exitTicket ?? "Exit Ticket"}
+                    </SelectItem>
+                    <SelectItem value="POLL">
+                      {t?.form?.types?.poll ?? "Poll"}
+                    </SelectItem>
+                    <SelectItem value="WARM_UP">
+                      {t?.form?.types?.warmUp ?? "Warm-Up"}
+                    </SelectItem>
+                    <SelectItem value="CHECK_IN">
+                      {t?.form?.types?.checkIn ?? "Check-In"}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
-                <FormDescription>Type of formative assessment</FormDescription>
+                <FormDescription>
+                  {t?.form?.typeDescription ?? "Type of formative assessment"}
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -142,7 +158,9 @@ export function QuickAssessmentForm({
             name="duration"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Duration (minutes)</FormLabel>
+                <FormLabel>
+                  {t?.form?.duration ?? "Duration (minutes)"}
+                </FormLabel>
                 <FormControl>
                   <Input
                     type="number"
@@ -154,7 +172,9 @@ export function QuickAssessmentForm({
                     }
                   />
                 </FormControl>
-                <FormDescription>Time limit in minutes</FormDescription>
+                <FormDescription>
+                  {t?.form?.durationDescription ?? "Time limit in minutes"}
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -167,14 +187,16 @@ export function QuickAssessmentForm({
             name="classId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Class</FormLabel>
+                <FormLabel>{t?.form?.class ?? "Class"}</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select class" />
+                      <SelectValue
+                        placeholder={t?.form?.selectClass ?? "Select class"}
+                      />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -195,14 +217,16 @@ export function QuickAssessmentForm({
             name="subjectId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Subject</FormLabel>
+                <FormLabel>{t?.form?.subject ?? "Subject"}</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select subject" />
+                      <SelectValue
+                        placeholder={t?.form?.selectSubject ?? "Select subject"}
+                      />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -224,10 +248,13 @@ export function QuickAssessmentForm({
           name="questionIds"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Question IDs</FormLabel>
+              <FormLabel>{t?.form?.questionIds ?? "Question IDs"}</FormLabel>
               <FormControl>
                 <Input
-                  placeholder="Enter question IDs separated by commas"
+                  placeholder={
+                    t?.form?.questionIdsPlaceholder ??
+                    "Enter question IDs separated by commas"
+                  }
                   value={field.value.join(", ")}
                   onChange={(e) =>
                     field.onChange(
@@ -240,7 +267,8 @@ export function QuickAssessmentForm({
                 />
               </FormControl>
               <FormDescription>
-                Enter question IDs from QBank, separated by commas
+                {t?.form?.questionIdsPlaceholder ??
+                  "Enter question IDs from QBank, separated by commas"}
               </FormDescription>
               <FormMessage />
             </FormItem>

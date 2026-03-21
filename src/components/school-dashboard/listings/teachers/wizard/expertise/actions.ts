@@ -67,22 +67,25 @@ export async function updateTeacherExpertise(
 
     const parsed = expertiseSchema.parse(input)
 
-    await db.$transaction(async (tx) => {
-      await tx.teacherSubjectExpertise.deleteMany({
-        where: { teacherId, schoolId },
-      })
-
-      if (parsed.subjectExpertise.length > 0) {
-        await tx.teacherSubjectExpertise.createMany({
-          data: parsed.subjectExpertise.map((item) => ({
-            schoolId,
-            teacherId,
-            subjectId: item.subjectId,
-            expertiseLevel: item.expertiseLevel,
-          })),
+    await db.$transaction(
+      async (tx) => {
+        await tx.teacherSubjectExpertise.deleteMany({
+          where: { teacherId, schoolId },
         })
-      }
-    })
+
+        if (parsed.subjectExpertise.length > 0) {
+          await tx.teacherSubjectExpertise.createMany({
+            data: parsed.subjectExpertise.map((item) => ({
+              schoolId,
+              teacherId,
+              subjectId: item.subjectId,
+              expertiseLevel: item.expertiseLevel,
+            })),
+          })
+        }
+      },
+      { timeout: 15000 }
+    )
 
     return { success: true }
   } catch (error) {

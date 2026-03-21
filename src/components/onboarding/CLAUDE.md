@@ -9,11 +9,11 @@
 1. Read `README.md` here for routes, file structure, and integration points
 2. Read `ISSUE.md` here for P0/P1/P2 priorities and MVP checklist
 3. Read `config.ts` and `config.client.ts` for step definitions
-4. Read `host-footer.tsx` for step ordering (source of truth for navigation)
+4. Read `config.ts` for step ordering (source of truth for navigation)
 
 ## Key Decisions
 
-- Step ordering lives in `host-footer.tsx` HOSTING_STEPS array (also duplicated in `config.client.ts` and `config.ts` -- P2 to consolidate)
+- Step ordering lives in `config.ts` ONBOARDING_STEPS array (also duplicated in `config.client.ts` -- P2 to consolidate)
 - `ListingProvider` context injected at layout level (`src/app/[lang]/onboarding/[id]/layout.tsx`), not per-step
 - Auth uses `getAuthContext()` from local `auth.ts`, NOT `getTenantContext()` -- school may not exist yet
 - School creation is atomic via `$transaction` in `src/lib/school-access.ts` with idempotent responses
@@ -22,7 +22,7 @@
 
 ## Danger Zones
 
-- `host-footer.tsx` step ordering -- changing the array order breaks all wizard navigation
+- `config.ts` step ordering -- changing the array order breaks all wizard navigation
 - `actions.ts` (root) -- shared server actions with excessive `console.log` (P0 to fix)
 - `use-listing.tsx` ListingProvider -- shared state for all steps; breaking this breaks everything
 - Step names must match between route segments, config arrays, and step subdirectory names

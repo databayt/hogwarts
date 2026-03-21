@@ -44,6 +44,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 
 import { toast } from "@/components/ui/use-toast"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import type {
   AttendanceFilters,
@@ -60,6 +61,8 @@ import { calculateAttendanceStats, checkDeviceSupport } from "./utils"
  * Auto-calculates stats when attendance array changes
  */
 export function useAttendance() {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.attendance
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([])
   const [stats, setStats] = useState<AttendanceStats | null>(null)
   const [loading, setLoading] = useState(false)
@@ -84,8 +87,9 @@ export function useAttendance() {
         } as AttendanceRecord
         setAttendance((prev) => [...prev, newRecord])
         toast({
-          title: "Success",
-          description: "Attendance marked successfully",
+          title: dictionary?.common?.success ?? "Success",
+          description:
+            t?.success?.attendanceMarked ?? "Attendance marked successfully",
         })
         return newRecord
       } catch (err) {
@@ -93,7 +97,7 @@ export function useAttendance() {
           err instanceof Error ? err.message : "Failed to mark attendance"
         setError(message)
         toast({
-          title: "Error",
+          title: dictionary?.common?.error ?? "Error",
           description: message,
         })
         throw err
@@ -116,15 +120,16 @@ export function useAttendance() {
           )
         )
         toast({
-          title: "Success",
-          description: "Attendance updated successfully",
+          title: dictionary?.common?.success ?? "Success",
+          description:
+            t?.success?.attendanceUpdated ?? "Attendance updated successfully",
         })
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Failed to update attendance"
         setError(message)
         toast({
-          title: "Error",
+          title: dictionary?.common?.error ?? "Error",
           description: message,
         })
         throw err
@@ -135,25 +140,28 @@ export function useAttendance() {
     []
   )
 
-  const fetchAttendance = useCallback(async (filters?: AttendanceFilters) => {
-    setLoading(true)
-    setError(null)
-    try {
-      // API call would go here
-      // For now, return mock data
-      setAttendance([])
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Failed to fetch attendance"
-      setError(message)
-      toast({
-        title: "Error",
-        description: message,
-      })
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+  const fetchAttendance = useCallback(
+    async (filters?: AttendanceFilters) => {
+      setLoading(true)
+      setError(null)
+      try {
+        // API call would go here
+        // For now, return mock data
+        setAttendance([])
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Failed to fetch attendance"
+        setError(message)
+        toast({
+          title: dictionary?.common?.error ?? "Error",
+          description: message,
+        })
+      } finally {
+        setLoading(false)
+      }
+    },
+    [dictionary]
+  )
 
   return {
     attendance,
@@ -170,6 +178,8 @@ export function useAttendance() {
  * Hook for device camera access
  */
 export function useCamera() {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.attendance
   const [hasPermission, setHasPermission] = useState<boolean | null>(null)
   const [stream, setStream] = useState<MediaStream | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -189,8 +199,11 @@ export function useCamera() {
     } catch (err) {
       setHasPermission(false)
       toast({
-        title: "Camera Permission Denied",
-        description: "Please allow camera access to scan codes",
+        title:
+          t?.deviceAccess?.cameraPermissionDenied ?? "Camera Permission Denied",
+        description:
+          t?.deviceAccess?.allowCameraAccess ??
+          "Please allow camera access to scan codes",
       })
     }
   }, [])
@@ -221,6 +234,8 @@ export function useCamera() {
  * Hook for geolocation access
  */
 export function useGeolocation(options?: PositionOptions) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.attendance
   const [location, setLocation] = useState<GeolocationPosition | null>(null)
   const [error, setError] = useState<GeolocationPositionError | null>(null)
   const [loading, setLoading] = useState(false)
@@ -239,7 +254,7 @@ export function useGeolocation(options?: PositionOptions) {
         setError(err)
         setLoading(false)
         toast({
-          title: "Location Error",
+          title: t?.deviceAccess?.locationError ?? "Location Error",
           description: err.message,
         })
       },
@@ -524,6 +539,8 @@ export function useCountdown(initialTime: number, onExpire?: () => void) {
  * Hook for handling offline queue
  */
 export function useOfflineQueue<T>() {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.attendance
   const [queue, setQueue] = useState<T[]>([])
   const [isOnline, setIsOnline] = useState(navigator.onLine)
 
@@ -531,16 +548,18 @@ export function useOfflineQueue<T>() {
     const handleOnline = () => {
       setIsOnline(true)
       toast({
-        title: "Back Online",
-        description: "Syncing offline data...",
+        title: t?.deviceAccess?.backOnline ?? "Back Online",
+        description: t?.deviceAccess?.syncing ?? "Syncing offline data...",
       })
     }
 
     const handleOffline = () => {
       setIsOnline(false)
       toast({
-        title: "Offline Mode",
-        description: "Data will be synced when connection is restored",
+        title: t?.deviceAccess?.offlineMode ?? "Offline Mode",
+        description:
+          t?.deviceAccess?.syncWhenRestored ??
+          "Data will be synced when connection is restored",
       })
     }
 

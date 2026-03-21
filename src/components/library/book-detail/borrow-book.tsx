@@ -46,7 +46,7 @@ export default function BorrowBook({
         toast.success(result.message)
         router.refresh()
       } else {
-        toast.error(result.error || "Failed to borrow book")
+        toast.error(result.message || "Failed to borrow book")
       }
     } catch {
       toast.error("An unexpected error occurred")
@@ -70,7 +70,7 @@ export default function BorrowBook({
         toast.success(result.message)
         router.refresh()
       } else {
-        toast.error(result.error || "Failed to return book")
+        toast.error(result.message || "Failed to return book")
       }
     } catch {
       toast.error("An unexpected error occurred")

@@ -5,7 +5,6 @@
 import { useCallback, useState } from "react"
 import { CheckCircle2, FileText, Image, Upload, X } from "lucide-react"
 import { useFormContext } from "react-hook-form"
-import { toast } from "sonner"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -24,6 +23,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -103,12 +103,12 @@ export default function StepDocuments({ dictionary, lang, campaign }: Props) {
     ) => {
       // Validate file
       if (!ALLOWED_TYPES.includes(file.type)) {
-        toast.error(dict.fileTypeNotSupported || "File type not supported")
+        ErrorToast(dict.fileTypeNotSupported || "File type not supported")
         return
       }
 
       if (file.size > MAX_FILE_SIZE) {
-        toast.error(dict.fileTooLarge || "File too large (max 5MB)")
+        ErrorToast(dict.fileTooLarge || "File too large (max 5MB)")
         return
       }
 
@@ -142,9 +142,9 @@ export default function StepDocuments({ dictionary, lang, campaign }: Props) {
           setValue("documents", [...updatedDocs, newDoc])
         }
 
-        toast.success(dict.fileUploaded || "File uploaded successfully")
+        SuccessToast(dict.fileUploaded || "File uploaded successfully")
       } catch (error) {
-        toast.error(dict.failedToUpload || "Failed to upload file")
+        ErrorToast(dict.failedToUpload || "Failed to upload file")
       } finally {
         setUploading(null)
       }

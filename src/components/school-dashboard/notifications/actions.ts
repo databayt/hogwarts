@@ -21,13 +21,11 @@ import {
   createNotificationBatchSchema,
   createNotificationSchema,
   deleteNotificationSchema,
-  getNotificationsSchema,
   markAllNotificationsReadSchema,
   markNotificationReadSchema,
   notificationPreferenceSchema,
   notificationSubscriptionSchema,
   updateNotificationPreferencesSchema,
-  updateNotificationSchema,
   updateNotificationSubscriptionSchema,
 } from "./validation"
 

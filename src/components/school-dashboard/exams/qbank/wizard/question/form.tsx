@@ -17,6 +17,7 @@ import { ErrorToast } from "@/components/atom/toast"
 import { InputField, SelectField, TextareaField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardTabs, type WizardTab } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import {
   BLOOM_LEVEL_OPTIONS,
@@ -29,10 +30,16 @@ import {
   type QuestionDetailsFormData,
 } from "./validation"
 
-const TABS: WizardTab[] = [
-  { id: "question", label: "Question" },
-  { id: "details", label: "Details" },
-]
+function useWizardTabs(): WizardTab[] {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.exams?.qbankUi?.wizard?.question as
+    | Record<string, string>
+    | undefined
+  return [
+    { id: "question", label: t?.tabQuestion ?? "Question" },
+    { id: "details", label: t?.tabDetails ?? "Details" },
+  ]
+}
 
 interface QuestionFormProps {
   questionId: string
@@ -43,6 +50,11 @@ interface QuestionFormProps {
 
 export const QuestionForm = forwardRef<WizardFormRef, QuestionFormProps>(
   ({ questionId, initialData, onValidChange, onTabChange }, ref) => {
+    const { dictionary } = useDictionary()
+    const t = dictionary?.school?.exams?.qbankUi?.wizard?.question as
+      | Record<string, string>
+      | undefined
+    const TABS = useWizardTabs()
     const [isPending, startTransition] = useTransition()
     const [subjectOptions, setSubjectOptions] = useState<
       { label: string; value: string }[]
@@ -98,13 +110,16 @@ export const QuestionForm = forwardRef<WizardFormRef, QuestionFormProps>(
               const data = form.getValues()
               const result = await updateQuestionDetails(questionId, data)
               if (!result.success) {
-                ErrorToast(result.error || "Failed to save")
+                ErrorToast(result.error || (t?.saveFailed ?? "Failed to save"))
                 reject(new Error(result.error))
                 return
               }
               resolve()
             } catch (err) {
-              const msg = err instanceof Error ? err.message : "Failed to save"
+              const msg =
+                err instanceof Error
+                  ? err.message
+                  : (t?.saveFailed ?? "Failed to save")
               ErrorToast(msg)
               reject(err)
             }
@@ -121,29 +136,32 @@ export const QuestionForm = forwardRef<WizardFormRef, QuestionFormProps>(
                 <div className="space-y-6">
                   <SelectField
                     name="subjectId"
-                    label="Subject"
+                    label={t?.subject ?? "Subject"}
                     options={subjectOptions}
                     required
                     disabled={isPending}
                   />
                   <TextareaField
                     name="questionText"
-                    label="Question Text"
-                    placeholder="Enter the question (minimum 10 characters)"
+                    label={t?.questionText ?? "Question Text"}
+                    placeholder={
+                      t?.questionTextPlaceholder ??
+                      "Enter the question (minimum 10 characters)"
+                    }
                     required
                     disabled={isPending}
                   />
                   <div className="grid gap-4 sm:grid-cols-2">
                     <SelectField
                       name="questionType"
-                      label="Question Type"
+                      label={t?.questionType ?? "Question Type"}
                       options={[...QUESTION_TYPE_OPTIONS]}
                       required
                       disabled={isPending}
                     />
                     <SelectField
                       name="difficulty"
-                      label="Difficulty"
+                      label={t?.difficulty ?? "Difficulty"}
                       options={[...DIFFICULTY_OPTIONS]}
                       required
                       disabled={isPending}
@@ -155,14 +173,14 @@ export const QuestionForm = forwardRef<WizardFormRef, QuestionFormProps>(
                   <div className="grid gap-4 sm:grid-cols-2">
                     <SelectField
                       name="bloomLevel"
-                      label="Bloom's Level"
+                      label={t?.bloomLevel ?? "Bloom's Level"}
                       options={[...BLOOM_LEVEL_OPTIONS]}
                       required
                       disabled={isPending}
                     />
                     <InputField
                       name="points"
-                      label="Points"
+                      label={t?.points ?? "Points"}
                       type="number"
                       placeholder="1"
                       required
@@ -171,27 +189,32 @@ export const QuestionForm = forwardRef<WizardFormRef, QuestionFormProps>(
                   </div>
                   <InputField
                     name="timeEstimate"
-                    label="Time Estimate (minutes)"
+                    label={t?.timeEstimate ?? "Time Estimate (minutes)"}
                     type="number"
-                    placeholder="Optional"
+                    placeholder={t?.optional ?? "Optional"}
                     disabled={isPending}
                   />
                   <InputField
                     name="tags"
-                    label="Tags"
-                    placeholder="Enter comma-separated tags"
+                    label={t?.tags ?? "Tags"}
+                    placeholder={
+                      t?.tagsPlaceholder ?? "Enter comma-separated tags"
+                    }
                     disabled={isPending}
                   />
                   <TextareaField
                     name="explanation"
-                    label="Explanation"
-                    placeholder="Explain the correct answer (optional)"
+                    label={t?.explanation ?? "Explanation"}
+                    placeholder={
+                      t?.explanationPlaceholder ??
+                      "Explain the correct answer (optional)"
+                    }
                     disabled={isPending}
                   />
                   <InputField
                     name="imageUrl"
-                    label="Image URL"
-                    placeholder="Optional image URL"
+                    label={t?.imageUrl ?? "Image URL"}
+                    placeholder={t?.imageUrlPlaceholder ?? "Optional image URL"}
                     disabled={isPending}
                   />
                 </div>

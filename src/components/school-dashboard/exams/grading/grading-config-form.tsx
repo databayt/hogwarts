@@ -49,38 +49,49 @@ import {
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { Slider } from "@/components/ui/slider"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { saveGradingConfig } from "./actions"
 import { gradingConfigSchema, type GradingConfigInput } from "./validation"
 
-// Grading system options
+// Grading system options - labels are fallbacks; dictionary overrides at render
 const GRADING_SYSTEMS = [
-  { value: "PERCENTAGE", label: "Percentage (0-100%)" },
-  { value: "GPA_4", label: "GPA 4.0 Scale" },
-  { value: "GPA_5", label: "GPA 5.0 Scale" },
-  { value: "LETTER", label: "Letter Grades (A-F)" },
-  { value: "CGPA", label: "Cumulative GPA" },
-  { value: "CCE", label: "CCE (Continuous and Comprehensive Evaluation)" },
-  { value: "CBSE", label: "CBSE Pattern" },
-  { value: "ICSE", label: "ICSE Pattern" },
+  { value: "PERCENTAGE", label: "Percentage (0-100%)", key: "percentage" },
+  { value: "GPA_4", label: "GPA 4.0 Scale", key: "gpa4" },
+  { value: "GPA_5", label: "GPA 5.0 Scale", key: "gpa5" },
+  { value: "LETTER", label: "Letter Grades (A-F)", key: "letter" },
+  { value: "CGPA", label: "Cumulative GPA", key: "cumulative" },
+  {
+    value: "CCE",
+    label: "CCE (Continuous and Comprehensive Evaluation)",
+    key: "cce",
+  },
+  { value: "CBSE", label: "CBSE Pattern", key: "cbse" },
+  { value: "ICSE", label: "ICSE Pattern", key: "icse" },
 ] as const
 
-// Retake policy options
+// Retake policy options - labels are fallbacks; dictionary overrides at render
 const RETAKE_POLICIES = [
   {
     value: "best",
     label: "Best Score",
     description: "Use highest score from all attempts",
+    key: "best",
+    descKey: "bestDesc",
   },
   {
     value: "latest",
     label: "Latest Score",
     description: "Use most recent attempt",
+    key: "latest",
+    descKey: "latestDesc",
   },
   {
     value: "average",
     label: "Average Score",
     description: "Average all attempts",
+    key: "average",
+    descKey: "averageDesc",
   },
 ] as const
 
@@ -113,6 +124,8 @@ export function GradingConfigForm({
 }: GradingConfigFormProps) {
   const { toast } = useToast()
   const [isPending, startTransition] = React.useTransition()
+  const { dictionary: dict } = useDictionary()
+  const t = dict?.school?.exams?.grading
 
   const d = dictionary?.grading
 
@@ -142,16 +155,17 @@ export function GradingConfigForm({
       try {
         await saveGradingConfig(data)
         toast({
-          title: "Success",
-          description: "Grading configuration saved successfully",
+          title: t?.toast?.success ?? "Success",
+          description:
+            t?.toast?.saved ?? "Grading configuration saved successfully",
         })
       } catch (error) {
         toast({
-          title: "Error",
+          title: t?.toast?.error ?? "Error",
           description:
             error instanceof Error
               ? error.message
-              : "Failed to save configuration",
+              : (t?.toast?.saveFailed ?? "Failed to save configuration"),
           variant: "destructive",
         })
       }
@@ -185,13 +199,17 @@ export function GradingConfigForm({
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select grading system" />
+                        <SelectValue
+                          placeholder={
+                            t?.form?.selectSystem ?? "Select grading system"
+                          }
+                        />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {GRADING_SYSTEMS.map((system) => (
                         <SelectItem key={system.value} value={system.value}>
-                          {system.label}
+                          {(t?.systems as any)?.[system.key] ?? system.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -213,7 +231,11 @@ export function GradingConfigForm({
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select GPA scale" />
+                        <SelectValue
+                          placeholder={
+                            t?.form?.selectGpaScale ?? "Select GPA scale"
+                          }
+                        />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -339,7 +361,7 @@ export function GradingConfigForm({
                 name="cgpaWeighting.midterm"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Midterm</FormLabel>
+                    <FormLabel>{t?.form?.midterm ?? "Midterm"}</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -362,7 +384,7 @@ export function GradingConfigForm({
                 name="cgpaWeighting.final"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Final</FormLabel>
+                    <FormLabel>{t?.form?.final ?? "Final"}</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -385,7 +407,7 @@ export function GradingConfigForm({
                 name="cgpaWeighting.quiz"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Quiz</FormLabel>
+                    <FormLabel>{t?.form?.quiz ?? "Quiz"}</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -408,7 +430,7 @@ export function GradingConfigForm({
                 name="cgpaWeighting.assignment"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Assignment</FormLabel>
+                    <FormLabel>{t?.form?.assignment ?? "Assignment"}</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -443,23 +465,33 @@ export function GradingConfigForm({
               name="retakePolicy"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Retake Scoring Method</FormLabel>
+                  <FormLabel>
+                    {t?.form?.retakeMethod ?? "Retake Scoring Method"}
+                  </FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select retake policy" />
+                        <SelectValue
+                          placeholder={
+                            t?.form?.selectRetake ?? "Select retake policy"
+                          }
+                        />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {RETAKE_POLICIES.map((policy) => (
                         <SelectItem key={policy.value} value={policy.value}>
                           <div className="flex flex-col">
-                            <span>{policy.label}</span>
+                            <span>
+                              {(t?.retakePolicy as any)?.[policy.key] ??
+                                policy.label}
+                            </span>
                             <span className="text-muted-foreground text-xs">
-                              {policy.description}
+                              {(t?.retakePolicy as any)?.[policy.descKey] ??
+                                policy.description}
                             </span>
                           </div>
                         </SelectItem>

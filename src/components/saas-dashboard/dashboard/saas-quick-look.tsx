@@ -96,7 +96,7 @@ export function SaasQuickLook({ locale, totals }: SaasQuickLookProps) {
                   <div className={cn("rounded-lg p-2", item.bgColor)}>
                     <Icon className={cn("h-5 w-5", item.color)} />
                   </div>
-                  <ChevronRight className="text-muted-foreground h-4 w-4 opacity-0 transition-opacity group-hover:opacity-100" />
+                  <ChevronRight className="text-muted-foreground h-4 w-4 opacity-0 transition-opacity group-hover:opacity-100 rtl:rotate-180" />
                 </div>
                 <div className="mt-3">
                   <p className="text-2xl font-bold">{item.count}</p>

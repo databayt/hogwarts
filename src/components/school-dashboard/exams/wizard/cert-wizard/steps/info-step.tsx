@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { WizardCard } from "../../atoms/wizard-card"
 import { useCertWizard } from "../context/cert-wizard-provider"
@@ -38,6 +39,8 @@ const THEME_STYLES = [
 
 export function InfoStep({ lang }: { lang: string }) {
   const { state, dispatch } = useCertWizard()
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.exams?.wizard?.certWizard
   const isAr = lang === "ar"
 
   function update(payload: Record<string, unknown>) {
@@ -265,7 +268,7 @@ export function InfoStep({ lang }: { lang: string }) {
             <Input
               value={state.verificationPrefix}
               onChange={(e) => update({ verificationPrefix: e.target.value })}
-              placeholder="CERT-"
+              placeholder={t?.verificationPrefix ?? "CERT-"}
             />
           </div>
         )}
@@ -320,7 +323,9 @@ export function InfoStep({ lang }: { lang: string }) {
         ))}
         {state.signatures.length === 0 && (
           <p className="text-muted-foreground text-center text-xs">
-            {isAr ? "لم تتم إضافة توقيعات بعد" : "No signatures added yet"}
+            {isAr
+              ? "لم تتم إضافة توقيعات بعد"
+              : (t?.noSignatures ?? "No signatures added yet")}
           </p>
         )}
       </WizardCard>

@@ -17,15 +17,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { getExamResults } from "./actions"
 import type { ExamResultRow } from "./actions/types"
 
 interface Props {
   examId: string
+  dictionary?: Dictionary
 }
 
-export async function ExamResultsList({ examId }: Props) {
+export async function ExamResultsList({ examId, dictionary }: Props) {
+  const t = dictionary?.school?.exams?.manage?.resultsList
   const response = await getExamResults({ examId })
   const results = response.success && response.data ? response.data : []
 
@@ -33,8 +36,10 @@ export async function ExamResultsList({ examId }: Props) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Exam Results</CardTitle>
-          <CardDescription>Student performance overview</CardDescription>
+          <CardTitle>{t?.title ?? "Exam Results"}</CardTitle>
+          <CardDescription>
+            {t?.description ?? "Student performance overview"}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground py-8 text-center">
@@ -48,7 +53,7 @@ export async function ExamResultsList({ examId }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Exam Results</CardTitle>
+        <CardTitle>{t?.title ?? "Exam Results"}</CardTitle>
         <CardDescription>
           Showing {results.length} student{results.length !== 1 ? "s" : ""}
         </CardDescription>
@@ -58,13 +63,23 @@ export async function ExamResultsList({ examId }: Props) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[80px]">Rank</TableHead>
-                <TableHead className="w-[120px]">Student ID</TableHead>
-                <TableHead>Student Name</TableHead>
-                <TableHead className="w-[120px]">Marks</TableHead>
-                <TableHead className="w-[120px]">Percentage</TableHead>
-                <TableHead className="w-[100px]">Grade</TableHead>
-                <TableHead className="w-[100px]">Status</TableHead>
+                <TableHead className="w-[80px]">#</TableHead>
+                <TableHead className="w-[120px]">ID</TableHead>
+                <TableHead>
+                  {t?.headers?.studentName ?? "Student Name"}
+                </TableHead>
+                <TableHead className="w-[120px]">
+                  {dictionary?.school?.exams?.marks ?? "Marks"}
+                </TableHead>
+                <TableHead className="w-[120px]">
+                  {dictionary?.school?.exams?.percentage ?? "Percentage"}
+                </TableHead>
+                <TableHead className="w-[100px]">
+                  {dictionary?.school?.exams?.grade ?? "Grade"}
+                </TableHead>
+                <TableHead className="w-[100px]">
+                  {dictionary?.school?.exams?.status ?? "Status"}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -100,13 +115,15 @@ export async function ExamResultsList({ examId }: Props) {
                   </TableCell>
                   <TableCell>
                     {result.isAbsent ? (
-                      <Badge variant="destructive">Absent</Badge>
+                      <Badge variant="destructive">
+                        {t?.absent ?? "Absent"}
+                      </Badge>
                     ) : result.percentage >= 50 ? (
                       <Badge variant="default" className="bg-green-600">
-                        Pass
+                        {dictionary?.school?.exams?.passed ?? "Pass"}
                       </Badge>
                     ) : (
-                      <Badge variant="destructive">Fail</Badge>
+                      <Badge variant="destructive">{t?.fail ?? "Fail"}</Badge>
                     )}
                   </TableCell>
                 </TableRow>

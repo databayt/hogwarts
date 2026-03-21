@@ -1642,27 +1642,3 @@ export async function fetchSearchSuggestions(input: {
     }
   }
 }
-
-// Export all actions
-export const messagingActions = {
-  createConversation,
-  updateConversation,
-  archiveConversation,
-  sendMessage,
-  editMessage,
-  deleteMessage,
-  markMessageAsRead,
-  markConversationAsRead,
-  addParticipant,
-  removeParticipant,
-  addReaction,
-  removeReaction,
-  loadMoreMessages,
-  pinConversation,
-  muteConversation,
-  unmuteConversation,
-  leaveConversation,
-  searchMessaging,
-  searchConversationMessages,
-  fetchSearchSuggestions,
-} as const

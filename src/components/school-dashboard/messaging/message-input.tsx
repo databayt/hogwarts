@@ -3,7 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useActionState, useEffect, useRef, useState } from "react"
-import { Paperclip, Send, Smile, X } from "lucide-react"
+import { Mic, Paperclip, Send, Smile, X } from "lucide-react"
 import { useFormStatus } from "react-dom"
 
 import { cn } from "@/lib/utils"
@@ -34,7 +34,6 @@ export interface MessageInputProps {
   disabled?: boolean
   maxLength?: number
   onCancelReply?: () => void
-  /** Called when files are uploaded successfully with file IDs and URLs */
   onFileUpload?: (files: UploadedFileResult[]) => void
   onTypingStart?: () => void
   onTypingStop?: () => void
@@ -42,24 +41,6 @@ export interface MessageInputProps {
   className?: string
 }
 
-/**
- * MessageInput with React 19 useActionState pattern
- *
- * **Modern Patterns**:
- * - useActionState for form state management (no useState for content/loading)
- * - useFormStatus for loading states
- * - Uncontrolled inputs with ref
- * - Form auto-reset on success
- * - Direct server action integration
- *
- * **Retained Features**:
- * - Emoji picker
- * - File upload
- * - Typing indicators
- * - Reply context
- * - Auto-resize textarea
- * - Character count
- */
 export function MessageInput({
   conversationId,
   locale = "en",
@@ -80,23 +61,21 @@ export function MessageInput({
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const [showFileUpload, setShowFileUpload] = useState(false)
+  const [hasContent, setHasContent] = useState(false)
 
   const [state, formAction] = useActionState<MessageFormState, FormData>(
     sendMessageFromForm,
     { success: false }
   )
 
-  // Wrap formAction to add optimistic message before submission
   const handleFormAction = async (formData: FormData) => {
     const content = formData.get("content") as string
     const replyToId = formData.get("replyToId") as string | null
 
-    // Add optimistic message
     if (content?.trim()) {
       onOptimisticSend?.(content.trim(), replyToId || undefined)
     }
 
-    // Call the actual server action
     return formAction(formData)
   }
 
@@ -106,15 +85,14 @@ export function MessageInput({
   useEffect(() => {
     if (state.success && state.messageId) {
       formRef.current?.reset()
+      setHasContent(false)
       onCancelReply?.()
       textareaRef.current?.focus()
 
-      // Reset textarea height
       if (textareaRef.current) {
         textareaRef.current.style.height = "auto"
       }
 
-      // Stop typing indicator
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current)
       }
@@ -137,18 +115,14 @@ export function MessageInput({
     e.target.style.height = "auto"
     e.target.style.height = `${e.target.scrollHeight}px`
 
-    // Typing indicators
-    const hasContent = e.target.value.trim().length > 0
+    const contentExists = e.target.value.trim().length > 0
+    setHasContent(contentExists)
 
-    if (hasContent) {
+    if (contentExists) {
       onTypingStart?.()
-
-      // Clear existing timeout
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current)
       }
-
-      // Set new timeout (3 seconds of inactivity)
       typingTimeoutRef.current = setTimeout(() => {
         onTypingStop?.()
       }, 3000)
@@ -163,12 +137,8 @@ export function MessageInput({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
-
-      // Get form data and validate
       const content = textareaRef.current?.value.trim()
       if (!content) return
-
-      // Submit form (optimistic message will be added by handleFormAction)
       formRef.current?.requestSubmit()
     }
   }
@@ -202,12 +172,11 @@ export function MessageInput({
       currentValue.substring(0, start) + emoji + currentValue.substring(end)
 
     textarea.value = newValue
+    setHasContent(newValue.trim().length > 0)
 
-    // Trigger change event for auto-resize and typing indicators
     const event = new Event("change", { bubbles: true })
     textarea.dispatchEvent(event)
 
-    // Reset cursor position
     setTimeout(() => {
       textarea.focus()
       textarea.setSelectionRange(start + emoji.length, start + emoji.length)
@@ -269,53 +238,61 @@ export function MessageInput({
     <form
       ref={formRef}
       action={handleFormAction}
-      className={cn("border-border bg-background border-t", className)}
+      className={cn("bg-msg-header-bg border-border border-t", className)}
     >
       {/* Hidden inputs */}
       <input type="hidden" name="conversationId" value={conversationId} />
       {replyTo && <input type="hidden" name="replyToId" value={replyTo.id} />}
 
-      {/* Reply context */}
+      {/* Reply context — WhatsApp style with colored left border */}
       {replyTo && (
-        <div className="bg-muted/50 border-border flex items-center justify-between border-b px-4 py-2">
-          <div className="min-w-0 flex-1">
-            <p className="text-foreground text-sm font-medium">
-              {m?.ui?.replying_to || "Replying to"}{" "}
-              {replyTo.sender.username || replyTo.sender.email}
-            </p>
-            <p className="text-muted-foreground truncate text-sm">
-              {replyTo.isDeleted
-                ? m?.ui?.message_deleted || "Message deleted"
-                : replyTo.content}
-            </p>
+        <div className="mx-3 mt-2">
+          <div className="bg-msg-incoming border-msg-unread-badge flex items-center justify-between rounded-lg border-s-4 px-3 py-2">
+            <div className="min-w-0 flex-1">
+              <p className="text-msg-unread-badge truncate text-sm font-medium">
+                {replyTo.sender.username || replyTo.sender.email}
+              </p>
+              <p className="text-muted-foreground truncate text-sm">
+                {replyTo.isDeleted
+                  ? m?.ui?.message_deleted || "Message deleted"
+                  : replyTo.content}
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={onCancelReply}
+              className="h-7 w-7 flex-shrink-0"
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={onCancelReply}
-            className="flex-shrink-0"
-          >
-            <X className="h-4 w-4" />
-          </Button>
         </div>
       )}
 
-      {/* Input area */}
-      <div className="flex items-end gap-2 p-4">
-        {/* File upload button */}
+      {/* Input area — WhatsApp layout: [Emoji] [Paperclip] [Input] [Send/Mic] */}
+      <div className="flex items-end gap-1.5 px-3 py-2">
+        {/* Emoji picker */}
+        <EmojiPickerButton
+          emojis={commonEmojis}
+          onEmojiClick={handleEmojiClick}
+          disabled={disabled}
+        />
+
+        {/* File upload */}
         <Button
           type="button"
           variant="ghost"
           size="icon"
           onClick={() => setShowFileUpload(true)}
           disabled={disabled}
-          className="flex-shrink-0"
+          className="h-10 w-10 flex-shrink-0 rounded-full"
         >
-          <Paperclip className="h-5 w-5" />
+          <Paperclip className="text-muted-foreground h-5 w-5" />
         </Button>
 
-        {/* Text input */}
+        {/* Text input — WhatsApp pill shape */}
         <div className="relative flex-1">
           <Textarea
             ref={textareaRef}
@@ -327,21 +304,27 @@ export function MessageInput({
             maxLength={maxLength}
             rows={1}
             className={cn(
-              "max-h-[200px] min-h-[40px] resize-none pe-10",
+              "bg-msg-input-bg max-h-[120px] min-h-[42px] resize-none rounded-[21px] border-none px-4 py-2.5 text-sm",
+              "focus-visible:ring-0 focus-visible:ring-offset-0",
               locale === "ar" && "text-end"
             )}
           />
         </div>
 
-        {/* Emoji picker */}
-        <EmojiPickerButton
-          emojis={commonEmojis}
-          onEmojiClick={handleEmojiClick}
-          disabled={disabled}
-        />
-
-        {/* Send button */}
-        <SubmitButton locale={locale} disabled={disabled} />
+        {/* Send / Mic toggle */}
+        {hasContent ? (
+          <SubmitButton locale={locale} disabled={disabled} />
+        ) : (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            disabled={disabled}
+            className="h-10 w-10 flex-shrink-0 rounded-full"
+          >
+            <Mic className="text-muted-foreground h-5 w-5" />
+          </Button>
+        )}
       </div>
 
       {/* File upload dialog */}
@@ -356,7 +339,7 @@ export function MessageInput({
             accept={ACCEPT_ALL}
             maxFiles={5}
             multiple={true}
-            maxSize={50 * 1024 * 1024} // 50MB max
+            maxSize={50 * 1024 * 1024}
             optimizeImages={true}
             onUploadComplete={handleUploadComplete}
             onUploadError={handleUploadError}
@@ -367,9 +350,7 @@ export function MessageInput({
   )
 }
 
-/**
- * Submit button with useFormStatus for loading state
- */
+// Green circular send button (WhatsApp style)
 function SubmitButton({
   locale,
   disabled,
@@ -384,10 +365,10 @@ function SubmitButton({
       type="submit"
       disabled={disabled || pending}
       size="icon"
-      className="flex-shrink-0"
+      className="bg-msg-unread-badge hover:bg-msg-unread-badge/90 h-10 w-10 flex-shrink-0 rounded-full text-white"
     >
       {pending ? (
-        <div className="border-primary-foreground/30 border-t-primary-foreground h-5 w-5 animate-spin rounded-full border-2" />
+        <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
       ) : (
         <Send className="h-5 w-5" />
       )}
@@ -395,9 +376,7 @@ function SubmitButton({
   )
 }
 
-/**
- * Emoji picker button with dropdown
- */
+// Emoji picker button
 function EmojiPickerButton({
   emojis,
   onEmojiClick,
@@ -417,21 +396,19 @@ function EmojiPickerButton({
         size="icon"
         onClick={() => setShowPicker(!showPicker)}
         disabled={disabled}
+        className="h-10 w-10 rounded-full"
       >
-        <Smile className="h-5 w-5" />
+        <Smile className="text-muted-foreground h-5 w-5" />
       </Button>
 
-      {/* Emoji picker */}
       {showPicker && (
         <>
-          {/* Backdrop */}
           <div
             className="fixed inset-0 z-10"
             onClick={() => setShowPicker(false)}
           />
-          {/* Picker */}
-          <div className="bg-background border-border absolute end-0 bottom-full z-20 mb-2 w-64 rounded-lg border p-2 shadow-lg">
-            <div className="grid max-h-48 grid-cols-8 gap-1 overflow-y-auto">
+          <div className="bg-card border-border absolute end-0 bottom-full z-20 mb-2 w-72 rounded-xl border p-3 shadow-lg">
+            <div className="grid max-h-52 grid-cols-8 gap-0.5 overflow-y-auto">
               {emojis.map((emoji) => (
                 <button
                   key={emoji}
@@ -440,7 +417,7 @@ function EmojiPickerButton({
                     onEmojiClick(emoji)
                     setShowPicker(false)
                   }}
-                  className="hover:bg-muted rounded p-2 text-xl transition-colors"
+                  className="hover:bg-muted flex items-center justify-center rounded-lg p-1.5 text-xl transition-colors"
                 >
                   {emoji}
                 </button>

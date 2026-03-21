@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 type Props = {
   open: boolean
@@ -42,6 +43,8 @@ export function SlotEditor({
   initialTeacherId,
   initialClassroomId,
 }: Props) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.timetable?.slotEditor
   const [days, setDays] = useState<number[]>([0, 1, 2, 3, 4])
   const [periods, setPeriods] = useState<Array<{ id: string; name: string }>>(
     []
@@ -138,11 +141,11 @@ export function SlotEditor({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[520px]">
         <DialogHeader>
-          <DialogTitle>Create/Update slot</DialogTitle>
+          <DialogTitle>{t?.addTitle ?? "Create/Update slot"}</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4">
           <div className="grid gap-2">
-            <Label>Day</Label>
+            <Label>{t?.dayOfWeek ?? "Day"}</Label>
             <Select value={dayOfWeek} onValueChange={setDayOfWeek}>
               <SelectTrigger className="w-[220px]">
                 <SelectValue />
@@ -157,7 +160,7 @@ export function SlotEditor({
             </Select>
           </div>
           <div className="grid gap-2">
-            <Label>Period</Label>
+            <Label>{t?.period ?? "Period"}</Label>
             <Select value={periodId} onValueChange={setPeriodId}>
               <SelectTrigger className="w-[220px]">
                 <SelectValue />
@@ -172,7 +175,7 @@ export function SlotEditor({
             </Select>
           </div>
           <div className="grid gap-2">
-            <Label>Class</Label>
+            <Label>{t?.class ?? "Class"}</Label>
             <Select value={classId} onValueChange={setClassId}>
               <SelectTrigger className="w-[300px]">
                 <SelectValue />
@@ -187,7 +190,7 @@ export function SlotEditor({
             </Select>
           </div>
           <div className="grid gap-2">
-            <Label>Teacher</Label>
+            <Label>{t?.teacher ?? "Teacher"}</Label>
             <Select value={teacherId} onValueChange={setTeacherId}>
               <SelectTrigger className="w-[300px]">
                 <SelectValue />
@@ -202,7 +205,7 @@ export function SlotEditor({
             </Select>
           </div>
           <div className="grid gap-2">
-            <Label>Classroom</Label>
+            <Label>{t?.classroom ?? "Classroom"}</Label>
             <Select value={classroomId} onValueChange={setClassroomId}>
               <SelectTrigger className="w-[300px]">
                 <SelectValue />
@@ -219,7 +222,9 @@ export function SlotEditor({
         </div>
         {suggestions.length > 0 && (
           <div className="mt-4">
-            <p className="muted mb-2">Suggested free slots</p>
+            <p className="muted mb-2">
+              {t?.suggestFreeSlots ?? "Suggested free slots"}
+            </p>
             <ul className="muted max-h-40 list-disc overflow-auto ps-5">
               {suggestions.map((s, idx) => (
                 <li key={`${s.dayOfWeek}:${s.periodId}:${idx}`}>
@@ -231,10 +236,10 @@ export function SlotEditor({
         )}
         <DialogFooter>
           <Button variant="outline" onClick={onSuggest} disabled={!termId}>
-            Suggest
+            {t?.suggest ?? "Suggest"}
           </Button>
           <Button onClick={onSave} disabled={!termId}>
-            Save slot
+            {t?.saveSlot ?? "Save slot"}
           </Button>
         </DialogFooter>
       </DialogContent>

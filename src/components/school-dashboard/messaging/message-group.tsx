@@ -3,7 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { MessageBubble, type MessageBubbleProps } from "./message-bubble"
-import type { MessageDTO } from "./types"
+import type { ConversationType, MessageDTO } from "./types"
 
 export interface MessageGroupProps extends Omit<
   MessageBubbleProps,
@@ -11,24 +11,26 @@ export interface MessageGroupProps extends Omit<
   | "showAvatar"
   | "showSenderName"
   | "showTimestamp"
+  | "showTail"
   | "isFirstInGroup"
   | "isLastInGroup"
 > {
   messages: MessageDTO[]
+  conversationType?: ConversationType
 }
 
 /**
- * MessageGroup component groups consecutive messages from the same sender
- * following iMessage-style visual patterns:
- * - Shows sender name only on first message
- * - Shows avatar only on last message
- * - Shows timestamp only on last message
- * - Reduces vertical spacing between messages in same group
+ * MessageGroup — WhatsApp-style consecutive message grouping:
+ * - Tail on FIRST message in group
+ * - Avatar on FIRST message (group chats only, not direct)
+ * - Sender name on FIRST, timestamp on LAST
+ * - Tight vertical spacing within group
  */
 export function MessageGroup({
   messages,
   currentUserId,
   locale,
+  conversationType,
   onReply,
   onEdit,
   onDelete,
@@ -36,6 +38,8 @@ export function MessageGroup({
   onRemoveReaction,
 }: MessageGroupProps) {
   if (messages.length === 0) return null
+
+  const isGroupChat = conversationType !== "direct"
 
   return (
     <div className="flex flex-col">
@@ -49,9 +53,10 @@ export function MessageGroup({
             message={message}
             currentUserId={currentUserId}
             locale={locale}
-            showAvatar={isLast}
-            showSenderName={isFirst}
+            showAvatar={isGroupChat}
+            showSenderName={isGroupChat && isFirst}
             showTimestamp={isLast}
+            showTail={isFirst}
             isFirstInGroup={isFirst}
             isLastInGroup={isLast}
             onReply={onReply}
@@ -67,15 +72,7 @@ export function MessageGroup({
 }
 
 /**
- * Groups messages by sender and time proximity
- *
- * Messages are grouped if:
- * 1. They are from the same sender
- * 2. They are less than 5 minutes apart
- * 3. They are consecutive in the message list
- *
- * @param messages Array of messages to group
- * @returns Array of message groups (each group is an array of messages)
+ * Groups messages by sender and time proximity (5 minutes)
  */
 export function groupMessages(messages: MessageDTO[]): MessageDTO[][] {
   if (messages.length === 0) return []
@@ -83,15 +80,11 @@ export function groupMessages(messages: MessageDTO[]): MessageDTO[][] {
   const groups: MessageDTO[][] = []
   let currentGroup: MessageDTO[] = []
 
-  const TIME_THRESHOLD = 5 * 60 * 1000 // 5 minutes in milliseconds
+  const TIME_THRESHOLD = 5 * 60 * 1000
 
   messages.forEach((message, index) => {
     const prevMessage = messages[index - 1]
 
-    // Start new group if:
-    // 1. First message
-    // 2. Different sender
-    // 3. More than 5 minutes apart
     const shouldStartNewGroup =
       !prevMessage ||
       prevMessage.senderId !== message.senderId ||
@@ -109,7 +102,6 @@ export function groupMessages(messages: MessageDTO[]): MessageDTO[][] {
     }
   })
 
-  // Push last group
   if (currentGroup.length > 0) {
     groups.push(currentGroup)
   }

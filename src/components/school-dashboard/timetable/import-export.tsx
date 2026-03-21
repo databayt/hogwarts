@@ -43,6 +43,7 @@ import {
 } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/components/ui/use-toast"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import {
   ClassInfo,
@@ -77,9 +78,11 @@ export function ImportExportDialog({
   classrooms,
   classes,
   onImport,
-  dictionary = {},
+  dictionary: _dictionary = {},
 }: ImportExportProps) {
   const { toast } = useToast()
+  const { dictionary: dict } = useDictionary()
+  const t = dict?.school?.timetable?.importExport
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [showDialog, setShowDialog] = useState(false)
   const [activeTab, setActiveTab] = useState<"import" | "export">("export")
@@ -127,15 +130,20 @@ export function ImportExportDialog({
       }
 
       toast({
-        title: "Export Successful",
-        description: `Timetable exported as ${exportFormat.toUpperCase()}`,
+        title: t?.exportSuccess ?? "Export Successful",
+        description: (
+          t?.exportSuccessDesc ??
+          `Timetable exported as ${exportFormat.toUpperCase()}`
+        ).replace("{format}", exportFormat.toUpperCase()),
       })
       setShowDialog(false)
     } catch (error) {
       toast({
-        title: "Export Failed",
+        title: t?.exportFailed ?? "Export Failed",
         description:
-          error instanceof Error ? error.message : "Failed to export timetable",
+          error instanceof Error
+            ? error.message
+            : (t?.exportFailedDesc ?? "Failed to export timetable"),
       })
     } finally {
       setIsProcessing(false)
@@ -347,8 +355,8 @@ X-WR-TIMEZONE:UTC
       setProgress(100)
     } catch (error) {
       toast({
-        title: "Preview Failed",
-        description: "Failed to preview import file",
+        title: t?.previewFailed ?? "Preview Failed",
+        description: t?.previewFailedDesc ?? "Failed to preview import file",
       })
     } finally {
       setIsProcessing(false)
@@ -394,15 +402,19 @@ X-WR-TIMEZONE:UTC
       setProgress(100)
 
       toast({
-        title: "Import Successful",
-        description: `Imported ${data.length} timetable slots`,
+        title: t?.importSuccess ?? "Import Successful",
+        description: (
+          t?.importSuccessDesc ?? `Imported ${data.length} timetable slots`
+        ).replace("{count}", String(data.length)),
       })
       setShowDialog(false)
     } catch (error) {
       toast({
-        title: "Import Failed",
+        title: t?.importFailed ?? "Import Failed",
         description:
-          error instanceof Error ? error.message : "Failed to import timetable",
+          error instanceof Error
+            ? error.message
+            : (t?.importFailedDesc ?? "Failed to import timetable"),
       })
     } finally {
       setIsProcessing(false)
@@ -468,19 +480,19 @@ X-WR-TIMEZONE:UTC
         className="gap-2"
       >
         <FileSpreadsheet className="h-4 w-4" />
-        Import/Export
+        {t?.button ?? "Import/Export"}
       </Button>
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>
-              <h4>Import/Export Timetable</h4>
+              <h4>{t?.title ?? "Import/Export Timetable"}</h4>
             </DialogTitle>
             <DialogDescription>
               <p className="muted">
-                Import timetable data from a file or export the current
-                timetable
+                {t?.description ??
+                  "Import timetable data from a file or export the current timetable"}
               </p>
             </DialogDescription>
           </DialogHeader>
@@ -492,18 +504,18 @@ X-WR-TIMEZONE:UTC
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="export" className="gap-2">
                 <Download className="h-4 w-4" />
-                Export
+                {t?.tabExport ?? "Export"}
               </TabsTrigger>
               <TabsTrigger value="import" className="gap-2">
                 <Upload className="h-4 w-4" />
-                Import
+                {t?.tabImport ?? "Import"}
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="export" className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Export Format</Label>
+                  <Label>{t?.exportFormat ?? "Export Format"}</Label>
                   <Select
                     value={exportFormat}
                     onValueChange={(value) =>
@@ -517,31 +529,31 @@ X-WR-TIMEZONE:UTC
                       <SelectItem value="pdf">
                         <div className="flex items-center gap-2">
                           <FileText className="h-4 w-4" />
-                          PDF Document
+                          {t?.pdfDocument ?? "PDF Document"}
                         </div>
                       </SelectItem>
                       <SelectItem value="excel">
                         <div className="flex items-center gap-2">
                           <FileSpreadsheet className="h-4 w-4" />
-                          Excel Spreadsheet
+                          {t?.excelSpreadsheet ?? "Excel Spreadsheet"}
                         </div>
                       </SelectItem>
                       <SelectItem value="csv">
                         <div className="flex items-center gap-2">
                           <FileText className="h-4 w-4" />
-                          CSV File
+                          {t?.csvFile ?? "CSV File"}
                         </div>
                       </SelectItem>
                       <SelectItem value="image">
                         <div className="flex items-center gap-2">
                           <Image className="h-4 w-4" />
-                          PNG Image
+                          {t?.pngImage ?? "PNG Image"}
                         </div>
                       </SelectItem>
                       <SelectItem value="ical">
                         <div className="flex items-center gap-2">
                           <Calendar className="h-4 w-4" />
-                          Calendar (iCal)
+                          {t?.calendarICal ?? "Calendar (iCal)"}
                         </div>
                       </SelectItem>
                     </SelectContent>
@@ -549,7 +561,7 @@ X-WR-TIMEZONE:UTC
                 </div>
 
                 <div className="space-y-2">
-                  <Label>View Type</Label>
+                  <Label>{t?.viewType ?? "View Type"}</Label>
                   <Select
                     value={exportViewType}
                     onValueChange={(value) =>
@@ -562,10 +574,18 @@ X-WR-TIMEZONE:UTC
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="class">Class View</SelectItem>
-                      <SelectItem value="teacher">Teacher View</SelectItem>
-                      <SelectItem value="room">Room View</SelectItem>
-                      <SelectItem value="student">Student View</SelectItem>
+                      <SelectItem value="class">
+                        {t?.classView ?? "Class View"}
+                      </SelectItem>
+                      <SelectItem value="teacher">
+                        {t?.teacherView ?? "Teacher View"}
+                      </SelectItem>
+                      <SelectItem value="room">
+                        {t?.roomView ?? "Room View"}
+                      </SelectItem>
+                      <SelectItem value="student">
+                        {t?.studentView ?? "Student View"}
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -581,7 +601,7 @@ X-WR-TIMEZONE:UTC
                     }
                   />
                   <Label htmlFor="include-substitutes">
-                    Include substitute teachers
+                    {t?.includeSubstitutes ?? "Include substitute teachers"}
                   </Label>
                 </div>
                 <div className="flex items-center gap-2">
@@ -593,7 +613,7 @@ X-WR-TIMEZONE:UTC
                     }
                   />
                   <Label htmlFor="include-notes">
-                    Include notes and comments
+                    {t?.includeNotes ?? "Include notes and comments"}
                   </Label>
                 </div>
               </div>
@@ -602,7 +622,12 @@ X-WR-TIMEZONE:UTC
                 <div className="space-y-2">
                   <Progress value={progress} className="w-full" />
                   <p className="muted text-center">
-                    <small>Exporting... {progress}%</small>
+                    <small>
+                      {(t?.exporting ?? "Exporting... {percent}%").replace(
+                        "{percent}",
+                        String(progress)
+                      )}
+                    </small>
                   </p>
                 </div>
               )}
@@ -611,7 +636,7 @@ X-WR-TIMEZONE:UTC
             <TabsContent value="import" className="space-y-4">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Import Format</Label>
+                  <Label>{t?.importFormat ?? "Import Format"}</Label>
                   <Select
                     value={importFormat}
                     onValueChange={(value) =>
@@ -622,15 +647,21 @@ X-WR-TIMEZONE:UTC
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="excel">Excel (.xlsx)</SelectItem>
-                      <SelectItem value="csv">CSV (.csv)</SelectItem>
-                      <SelectItem value="json">JSON (.json)</SelectItem>
+                      <SelectItem value="excel">
+                        {t?.excelXlsx ?? "Excel (.xlsx)"}
+                      </SelectItem>
+                      <SelectItem value="csv">
+                        {t?.csvCsv ?? "CSV (.csv)"}
+                      </SelectItem>
+                      <SelectItem value="json">
+                        {t?.jsonJson ?? "JSON (.json)"}
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Select File</Label>
+                  <Label>{t?.selectFile ?? "Select File"}</Label>
                   <div className="flex gap-2">
                     <Input
                       type="file"
@@ -651,7 +682,7 @@ X-WR-TIMEZONE:UTC
                       onClick={downloadTemplate}
                     >
                       <FileDown className="me-2 h-4 w-4" />
-                      Template
+                      {t?.template ?? "Template"}
                     </Button>
                   </div>
                 </div>
@@ -666,7 +697,7 @@ X-WR-TIMEZONE:UTC
                       }
                     />
                     <Label htmlFor="overwrite">
-                      Overwrite existing timetable
+                      {t?.overwriteExisting ?? "Overwrite existing timetable"}
                     </Label>
                   </div>
                   <div className="flex items-center gap-2">
@@ -677,13 +708,15 @@ X-WR-TIMEZONE:UTC
                         setValidateConflicts(checked as boolean)
                       }
                     />
-                    <Label htmlFor="validate">Validate for conflicts</Label>
+                    <Label htmlFor="validate">
+                      {t?.validateConflicts ?? "Validate for conflicts"}
+                    </Label>
                   </div>
                 </div>
 
                 {importPreview.length > 0 && (
                   <div className="space-y-2">
-                    <Label>Preview (first 5 rows)</Label>
+                    <Label>{t?.previewRows ?? "Preview (first 5 rows)"}</Label>
                     <div className="max-h-40 overflow-auto rounded-lg border p-2">
                       <pre>
                         <small>{JSON.stringify(importPreview, null, 2)}</small>
@@ -696,7 +729,12 @@ X-WR-TIMEZONE:UTC
                   <div className="space-y-2">
                     <Progress value={progress} className="w-full" />
                     <p className="muted text-center">
-                      <small>Processing... {progress}%</small>
+                      <small>
+                        {(t?.processing ?? "Processing... {percent}%").replace(
+                          "{percent}",
+                          String(progress)
+                        )}
+                      </small>
                     </p>
                   </div>
                 )}
@@ -705,8 +743,9 @@ X-WR-TIMEZONE:UTC
                   <Alert>
                     <CircleCheck className="h-4 w-4" />
                     <AlertDescription>
-                      File selected: {importFile.name} (
-                      {(importFile.size / 1024).toFixed(2)} KB)
+                      {(t?.fileSelected ?? "File selected: {name} ({size} KB)")
+                        .replace("{name}", importFile.name)
+                        .replace("{size}", (importFile.size / 1024).toFixed(2))}
                     </AlertDescription>
                   </Alert>
                 )}
@@ -716,12 +755,12 @@ X-WR-TIMEZONE:UTC
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDialog(false)}>
-              Cancel
+              {t?.cancel ?? "Cancel"}
             </Button>
             {activeTab === "export" ? (
               <Button onClick={handleExport} disabled={isProcessing}>
                 <Download className="me-2 h-4 w-4" />
-                Export
+                {t?.export ?? "Export"}
               </Button>
             ) : (
               <Button
@@ -729,7 +768,7 @@ X-WR-TIMEZONE:UTC
                 disabled={!importFile || isProcessing}
               >
                 <Upload className="me-2 h-4 w-4" />
-                Import
+                {t?.import ?? "Import"}
               </Button>
             )}
           </DialogFooter>

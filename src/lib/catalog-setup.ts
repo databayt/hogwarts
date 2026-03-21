@@ -986,52 +986,185 @@ export async function autoProvisionSections(schoolId: string) {
 
   const letters = "ABCDEFGHIJ".split("")
 
-  // Batch all upserts in a single transaction to reduce connection overhead
-  return db.$transaction(
-    async (tx) => {
-      let classroomCount = 0
-      let sectionCount = 0
+  // Process each grade in its own transaction to avoid P2028 timeout
+  // on Neon (single transaction with 48+ sequential upserts exceeds 30s)
+  let classroomCount = 0
+  let sectionCount = 0
 
-      for (const grade of grades) {
-        for (let i = 0; i < sectionsPerGrade; i++) {
-          const letter = letters[i]
-          const roomName = `Grade ${grade.gradeNumber}-${letter}`
+  for (const grade of grades) {
+    const result = await db.$transaction(async (tx) => {
+      let gradeClassrooms = 0
+      let gradeSections = 0
 
-          const classroom = await tx.classroom.upsert({
-            where: { schoolId_roomName: { schoolId, roomName } },
-            create: {
-              schoolId,
-              roomName,
-              capacity: studentsPerSection,
-              typeId: classroomType.id,
-              gradeId: grade.id,
-            },
-            update: {},
-          })
-          classroomCount++
+      for (let i = 0; i < sectionsPerGrade; i++) {
+        const letter = letters[i]
+        const roomName = `Grade ${grade.gradeNumber}-${letter}`
 
-          await tx.section.upsert({
-            where: {
-              schoolId_gradeId_letter: { schoolId, gradeId: grade.id, letter },
-            },
-            create: {
-              schoolId,
-              gradeId: grade.id,
-              name: roomName,
-              letter,
-              classroomId: classroom.id,
-              maxCapacity: studentsPerSection,
-            },
-            update: {},
-          })
-          sectionCount++
-        }
+        const classroom = await tx.classroom.upsert({
+          where: { schoolId_roomName: { schoolId, roomName } },
+          create: {
+            schoolId,
+            roomName,
+            capacity: studentsPerSection,
+            typeId: classroomType.id,
+            gradeId: grade.id,
+          },
+          update: {},
+        })
+        gradeClassrooms++
+
+        await tx.section.upsert({
+          where: {
+            schoolId_gradeId_letter: { schoolId, gradeId: grade.id, letter },
+          },
+          create: {
+            schoolId,
+            gradeId: grade.id,
+            name: roomName,
+            letter,
+            classroomId: classroom.id,
+            maxCapacity: studentsPerSection,
+          },
+          update: {},
+        })
+        gradeSections++
       }
 
-      return { classrooms: classroomCount, sections: sectionCount }
+      return { classrooms: gradeClassrooms, sections: gradeSections }
+    })
+
+    classroomCount += result.classrooms
+    sectionCount += result.sections
+  }
+
+  return { classrooms: classroomCount, sections: sectionCount }
+}
+
+// ============================================================================
+// setupLibraryForSchool — Auto-provision catalog books for a new school
+// ============================================================================
+
+const DEFAULT_COPIES_PER_BOOK = 3
+
+/**
+ * Auto-provision library books from the global catalog for a new school.
+ * Creates SchoolBookSelection + Book records for all public, approved catalog books.
+ * Idempotent — skips if school already has books.
+ *
+ * Called during school onboarding or manually from SaaS dashboard.
+ */
+export async function setupLibraryForSchool(schoolId: string) {
+  // Idempotent: skip if school already has books
+  const existingBooks = await db.book.count({ where: { schoolId } })
+  if (existingBooks > 0) {
+    return {
+      skipped: true,
+      books: 0,
+      message: "School already has library books",
+    }
+  }
+
+  // Get all public, approved, published catalog books
+  const catalogBooks = await db.catalogBook.findMany({
+    where: {
+      status: "PUBLISHED",
+      approvalStatus: "APPROVED",
+      visibility: "PUBLIC",
     },
-    { timeout: 30000 }
+    select: {
+      id: true,
+      title: true,
+      author: true,
+      genre: true,
+      description: true,
+      summary: true,
+      coverUrl: true,
+      coverColor: true,
+      rating: true,
+      videoUrl: true,
+      isbn: true,
+      publisher: true,
+      publicationYear: true,
+      language: true,
+      pageCount: true,
+      gradeLevel: true,
+    },
+  })
+
+  if (catalogBooks.length === 0) {
+    return { skipped: true, books: 0, message: "No catalog books available" }
+  }
+
+  const result = await db.$transaction(
+    async (tx) => {
+      let bookCount = 0
+
+      for (const cb of catalogBooks) {
+        // Check for existing selection to prevent unique constraint violation
+        const existingSelection = await tx.schoolBookSelection.findFirst({
+          where: { schoolId, catalogBookId: cb.id },
+        })
+        if (existingSelection) continue
+
+        await tx.schoolBookSelection.create({
+          data: {
+            schoolId,
+            catalogBookId: cb.id,
+            totalCopies: DEFAULT_COPIES_PER_BOOK,
+            availableCopies: DEFAULT_COPIES_PER_BOOK,
+            isActive: true,
+          },
+        })
+
+        await tx.book.create({
+          data: {
+            schoolId,
+            catalogBookId: cb.id,
+            title: cb.title,
+            author: cb.author,
+            genre: cb.genre,
+            description: cb.description ?? "",
+            summary: cb.summary ?? "",
+            coverUrl: cb.coverUrl ?? "",
+            coverColor: cb.coverColor,
+            rating: Math.round(cb.rating),
+            totalCopies: DEFAULT_COPIES_PER_BOOK,
+            availableCopies: DEFAULT_COPIES_PER_BOOK,
+            videoUrl: cb.videoUrl,
+            isbn: cb.isbn,
+            publisher: cb.publisher,
+            publicationYear: cb.publicationYear,
+            language: cb.language,
+            pageCount: cb.pageCount,
+            gradeLevel: cb.gradeLevel,
+          },
+        })
+
+        bookCount++
+      }
+
+      return bookCount
+    },
+    { timeout: 60000 }
   )
+
+  // Update usage counts outside transaction (non-critical metadata)
+  try {
+    const catalogBookIds = catalogBooks.map((cb) => cb.id)
+    for (const catalogBookId of catalogBookIds) {
+      const usageCount = await db.schoolBookSelection.count({
+        where: { catalogBookId },
+      })
+      await db.catalogBook.update({
+        where: { id: catalogBookId },
+        data: { usageCount },
+      })
+    }
+  } catch {
+    // Non-critical: usage count is just metadata
+  }
+
+  return { skipped: false, books: result }
 }
 
 /** @internal Exported for testing only */

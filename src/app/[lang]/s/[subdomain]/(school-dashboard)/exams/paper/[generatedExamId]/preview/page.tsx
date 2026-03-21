@@ -47,7 +47,7 @@ export default async function ExamPaperPreviewPage({
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" asChild>
             <Link href={`/${lang}/exams/paper/${generatedExamId}`}>
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
             </Link>
           </Button>
           <div>

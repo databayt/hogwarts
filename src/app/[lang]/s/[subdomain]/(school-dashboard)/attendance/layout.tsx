@@ -18,18 +18,20 @@ const STAFF_ROLES = ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"]
 export default async function AttendanceLayout({ children, params }: Props) {
   const [{ lang }, session] = await Promise.all([params, auth()])
   const dictionary = await getDictionary(lang as Locale)
-  const d = dictionary?.school?.attendance
+  const d = dictionary?.school?.attendance as Record<string, any> | undefined
 
   const role = session?.user?.role ?? ""
   const isStaff = STAFF_ROLES.includes(role)
+  const isAdmin = role === "ADMIN" || role === "DEVELOPER"
 
   const basePath = `/${lang}/attendance`
 
   // Role-based tab visibility:
   // - Overview: always visible
-  // - Mark, QR Code, Barcode: staff only
+  // - Mark, QR Code: staff only (attendance methods)
   // - Records: student/guardian only (staff uses Reports)
   // - Excuses: always visible (different modes per role)
+  // - Early Warning, Interventions: staff only (student support)
   // - Analytics, Reports: staff only
   // - Settings: admin/developer only
   const attendancePages: PageNavItem[] = [
@@ -51,6 +53,16 @@ export default async function AttendanceLayout({ children, params }: Props) {
     },
     { name: d?.excuses || "Excuses", href: `${basePath}/excuses` },
     {
+      name: d?.earlyWarning || "Early Warning",
+      href: `${basePath}/early-warning`,
+      hidden: !isStaff,
+    },
+    {
+      name: d?.interventions || "Interventions",
+      href: `${basePath}/interventions`,
+      hidden: !isStaff,
+    },
+    {
       name: d?.analytics || "Analytics",
       href: `${basePath}/analytics`,
       hidden: !isStaff,
@@ -63,7 +75,7 @@ export default async function AttendanceLayout({ children, params }: Props) {
     {
       name: d?.settings || "Settings",
       href: `${basePath}/settings`,
-      hidden: role !== "ADMIN" && role !== "DEVELOPER",
+      hidden: !isAdmin,
     },
   ]
 

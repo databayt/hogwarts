@@ -88,7 +88,7 @@ export default function BookForm({
         router.push("/library/admin/books")
         router.refresh()
       } else {
-        toast.error(result.error || t.library.messages.bookNotFound)
+        toast.error(result.message || t.library.messages.bookNotFound)
       }
     } catch (error) {
       toast.error(t.common.messages.errorOccurred)

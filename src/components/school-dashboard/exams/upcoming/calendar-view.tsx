@@ -103,7 +103,7 @@ export function CalendarView({ exams }: CalendarViewProps) {
             size="icon"
             onClick={() => setCurrentMonth((m) => subMonths(m, 1))}
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
           </Button>
           <h3 className="text-lg font-semibold">
             {format(currentMonth, "MMMM yyyy")}
@@ -113,7 +113,7 @@ export function CalendarView({ exams }: CalendarViewProps) {
             size="icon"
             onClick={() => setCurrentMonth((m) => addMonths(m, 1))}
           >
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-4 w-4 rtl:rotate-180" />
           </Button>
         </div>
       </CardHeader>

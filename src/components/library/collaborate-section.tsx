@@ -8,9 +8,16 @@ import { buttonVariants } from "@/components/ui/button"
 
 interface CollaborateSectionProps {
   lang?: string
+  dictionary?: Record<string, unknown>
 }
 
-export function CollaborateSection({ lang = "en" }: CollaborateSectionProps) {
+export function CollaborateSection({
+  lang = "en",
+  dictionary,
+}: CollaborateSectionProps) {
+  const lib = (dictionary as Record<string, Record<string, unknown>>)?.school
+    ?.library as Record<string, string> | undefined
+
   return (
     <section className="dark:bg-muted/50 w-full max-w-full overflow-hidden rounded-2xl bg-[#F5F5F0]">
       <div className="flex flex-col lg:flex-row">
@@ -18,7 +25,7 @@ export function CollaborateSection({ lang = "en" }: CollaborateSectionProps) {
         <div className="relative aspect-[4/3] lg:aspect-auto lg:w-1/2">
           <Image
             src="/site/harry-potter.png"
-            alt="Students in the library"
+            alt={lib?.featuredBookAlt || "Featured book"}
             fill
             className="object-cover"
             sizes="(max-width: 1024px) 100vw, 50vw"
@@ -28,19 +35,22 @@ export function CollaborateSection({ lang = "en" }: CollaborateSectionProps) {
         {/* Content - Right side */}
         <div className="flex flex-col justify-center p-8 lg:w-1/2 lg:p-12">
           <h2 className="mb-2 text-3xl font-semibold tracking-tight lg:text-4xl">
-            Harry Potter and the Philosopher&apos;s Stone
+            {lib?.featuredBookTitle ||
+              "Harry Potter and the Philosopher\u2019s Stone"}
           </h2>
-          <p className="text-muted-foreground mb-4 text-lg">By J.K. Rowling</p>
+          <p className="text-muted-foreground mb-4 text-lg">
+            {lib?.featuredBookAuthor || "By J.K. Rowling"}
+          </p>
           <p className="text-muted-foreground mb-6">
-            Harry Potter has never even heard of Hogwarts when the letters start
-            dropping on the doormat at number four, Privet Drive.
+            {lib?.featuredBookDescription ||
+              "Harry Potter has never even heard of Hogwarts when the letters start dropping on the doormat at number four, Privet Drive."}
           </p>
           <div>
             <Link
               href={`/${lang}/library/books`}
               className={buttonVariants({ variant: "outline", size: "lg" })}
             >
-              Get book
+              {lib?.getBook || "Get book"}
             </Link>
           </div>
         </div>

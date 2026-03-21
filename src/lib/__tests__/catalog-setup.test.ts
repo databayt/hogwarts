@@ -12,6 +12,7 @@ import {
   recordVideoView,
   setupCatalogForSchool,
   setupDefaultsForSchool,
+  setupLibraryForSchool,
   teardownCatalogForSchool,
 } from "../catalog-setup"
 
@@ -77,7 +78,21 @@ vi.mock("@/lib/db", () => ({
       findFirst: vi.fn(),
       create: vi.fn(),
     },
+    book: {
+      count: vi.fn(),
+      create: vi.fn(),
+    },
+    catalogBook: {
+      findMany: vi.fn(),
+      update: vi.fn(),
+    },
+    schoolBookSelection: {
+      findFirst: vi.fn(),
+      create: vi.fn(),
+      count: vi.fn(),
+    },
     $transaction: vi.fn(),
+    $executeRawUnsafe: vi.fn(),
   },
 }))
 
@@ -671,7 +686,7 @@ describe("Catalog Setup", () => {
             })),
           },
           academicStream: { create: vi.fn() },
-          schoolSubjectSelection: { create: vi.fn() },
+          schoolSubjectSelection: { create: vi.fn(), createMany: vi.fn() },
           catalogSubject: { update: vi.fn() },
         }
         return callback(tx)
@@ -717,7 +732,7 @@ describe("Catalog Setup", () => {
             })),
           },
           academicStream: { create: vi.fn() },
-          schoolSubjectSelection: { create: vi.fn() },
+          schoolSubjectSelection: { create: vi.fn(), createMany: vi.fn() },
           catalogSubject: { update: vi.fn() },
         }
         return callback(tx)
@@ -762,7 +777,7 @@ describe("Catalog Setup", () => {
               return { id: `stream-${streamCount}` }
             }),
           },
-          schoolSubjectSelection: { create: vi.fn() },
+          schoolSubjectSelection: { create: vi.fn(), createMany: vi.fn() },
           catalogSubject: { update: vi.fn() },
         }
         return callback(tx)
@@ -940,6 +955,204 @@ describe("Catalog Setup", () => {
         where: { id: "v1" },
         data: { viewCount: { increment: 1 } },
       })
+    })
+  })
+
+  // ========================================================================
+  // setupLibraryForSchool
+  // ========================================================================
+
+  describe("setupLibraryForSchool", () => {
+    const mockCatalogBooks = [
+      {
+        id: "cb-1",
+        title: "Book One",
+        author: "Author A",
+        genre: "Fiction",
+        description: "A great book about fiction",
+        summary: "Summary of the book one",
+        coverUrl: "https://example.com/cover1.jpg",
+        coverColor: "#FF0000",
+        rating: 4.5,
+        videoUrl: null,
+        isbn: "978-0-1234-5678-0",
+        publisher: "Publisher A",
+        publicationYear: 2020,
+        language: "en",
+        pageCount: 300,
+        gradeLevel: "GENERAL",
+      },
+      {
+        id: "cb-2",
+        title: "Book Two",
+        author: "Author B",
+        genre: "Science",
+        description: null,
+        summary: null,
+        coverUrl: null,
+        coverColor: "#0000FF",
+        rating: 3.7,
+        videoUrl: "https://example.com/video.mp4",
+        isbn: null,
+        publisher: null,
+        publicationYear: null,
+        language: null,
+        pageCount: null,
+        gradeLevel: "PRIMARY",
+      },
+    ]
+
+    it("creates books from catalog for a new school", async () => {
+      vi.mocked(db.book.count).mockResolvedValue(0)
+      vi.mocked(db.catalogBook.findMany).mockResolvedValue(
+        mockCatalogBooks as any
+      )
+      vi.mocked(db.$transaction).mockImplementation(async (cb: any) => {
+        const tx = {
+          schoolBookSelection: {
+            findFirst: vi.fn().mockResolvedValue(null),
+            create: vi.fn(),
+          },
+          book: { create: vi.fn() },
+        }
+        await cb(tx)
+        return mockCatalogBooks.length
+      })
+      vi.mocked(db.schoolBookSelection.count).mockResolvedValue(1)
+      vi.mocked(db.catalogBook.update).mockResolvedValue({} as any)
+
+      const result = await setupLibraryForSchool(schoolId)
+
+      expect(result).toEqual({ skipped: false, books: 2 })
+      expect(db.book.count).toHaveBeenCalledWith({
+        where: { schoolId },
+      })
+      expect(db.catalogBook.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            status: "PUBLISHED",
+            approvalStatus: "APPROVED",
+            visibility: "PUBLIC",
+          },
+        })
+      )
+    })
+
+    it("skips if school already has books (idempotent)", async () => {
+      vi.mocked(db.book.count).mockResolvedValue(10)
+
+      const result = await setupLibraryForSchool(schoolId)
+
+      expect(result).toEqual({
+        skipped: true,
+        books: 0,
+        message: "School already has library books",
+      })
+      expect(db.catalogBook.findMany).not.toHaveBeenCalled()
+      expect(db.$transaction).not.toHaveBeenCalled()
+    })
+
+    it("skips when no catalog books exist", async () => {
+      vi.mocked(db.book.count).mockResolvedValue(0)
+      vi.mocked(db.catalogBook.findMany).mockResolvedValue([])
+
+      const result = await setupLibraryForSchool(schoolId)
+
+      expect(result).toEqual({
+        skipped: true,
+        books: 0,
+        message: "No catalog books available",
+      })
+      expect(db.$transaction).not.toHaveBeenCalled()
+    })
+
+    it("creates SchoolBookSelection and Book for each catalog book", async () => {
+      vi.mocked(db.book.count).mockResolvedValue(0)
+      vi.mocked(db.catalogBook.findMany).mockResolvedValue(
+        mockCatalogBooks as any
+      )
+
+      const txSelectionCreate = vi.fn()
+      const txBookCreate = vi.fn()
+      vi.mocked(db.$transaction).mockImplementation(async (cb: any) => {
+        const tx = {
+          schoolBookSelection: {
+            findFirst: vi.fn().mockResolvedValue(null),
+            create: txSelectionCreate,
+          },
+          book: { create: txBookCreate },
+        }
+        await cb(tx)
+        return mockCatalogBooks.length
+      })
+      vi.mocked(db.schoolBookSelection.count).mockResolvedValue(1)
+      vi.mocked(db.catalogBook.update).mockResolvedValue({} as any)
+
+      await setupLibraryForSchool(schoolId)
+
+      // Should create 2 selections and 2 books
+      expect(txSelectionCreate).toHaveBeenCalledTimes(2)
+      expect(txBookCreate).toHaveBeenCalledTimes(2)
+
+      // Verify first book data
+      expect(txBookCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            schoolId,
+            catalogBookId: "cb-1",
+            title: "Book One",
+            rating: 5, // Math.round(4.5) = 5
+            totalCopies: 3,
+            availableCopies: 3,
+          }),
+        })
+      )
+
+      // Verify null coercion for second book
+      expect(txBookCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            schoolId,
+            catalogBookId: "cb-2",
+            description: "", // null → ""
+            summary: "", // null → ""
+            coverUrl: "", // null → ""
+            rating: 4, // Math.round(3.7) = 4
+          }),
+        })
+      )
+    })
+
+    it("skips catalog books that already have a selection", async () => {
+      vi.mocked(db.book.count).mockResolvedValue(0)
+      vi.mocked(db.catalogBook.findMany).mockResolvedValue(
+        mockCatalogBooks as any
+      )
+
+      const txSelectionCreate = vi.fn()
+      const txBookCreate = vi.fn()
+      vi.mocked(db.$transaction).mockImplementation(async (cb: any) => {
+        const tx = {
+          schoolBookSelection: {
+            findFirst: vi
+              .fn()
+              .mockResolvedValueOnce({ id: "existing" }) // First book already selected
+              .mockResolvedValueOnce(null), // Second book not selected
+            create: txSelectionCreate,
+          },
+          book: { create: txBookCreate },
+        }
+        await cb(tx)
+        return 1
+      })
+      vi.mocked(db.schoolBookSelection.count).mockResolvedValue(1)
+      vi.mocked(db.catalogBook.update).mockResolvedValue({} as any)
+
+      await setupLibraryForSchool(schoolId)
+
+      // Only 1 selection + 1 book created (second one)
+      expect(txSelectionCreate).toHaveBeenCalledTimes(1)
+      expect(txBookCreate).toHaveBeenCalledTimes(1)
     })
   })
 })

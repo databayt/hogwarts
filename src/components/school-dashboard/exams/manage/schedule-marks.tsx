@@ -19,12 +19,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { TIME_SLOTS } from "./config"
 import { ExamFormStepProps } from "./types"
 import { examCreateSchema } from "./validation"
 
 export function ScheduleMarksStep({ form, isView }: ExamFormStepProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.exams?.manage?.schedule
   return (
     <div className="w-full space-y-6">
       {/* Exam Date */}
@@ -65,7 +68,7 @@ export function ScheduleMarksStep({ form, isView }: ExamFormStepProps) {
               >
                 <FormControl>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Start time" />
+                    <SelectValue placeholder={t?.startTime ?? "Start time"} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -93,7 +96,7 @@ export function ScheduleMarksStep({ form, isView }: ExamFormStepProps) {
               >
                 <FormControl>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="End time" />
+                    <SelectValue placeholder={t?.endTime ?? "End time"} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -119,7 +122,7 @@ export function ScheduleMarksStep({ form, isView }: ExamFormStepProps) {
             <FormControl>
               <Input
                 type="number"
-                placeholder="Duration (minutes)"
+                placeholder={t?.duration ?? "Duration (minutes)"}
                 disabled={isView}
                 {...field}
                 onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
@@ -140,7 +143,7 @@ export function ScheduleMarksStep({ form, isView }: ExamFormStepProps) {
               <FormControl>
                 <Input
                   type="number"
-                  placeholder="Total marks"
+                  placeholder={t?.totalMarks ?? "Total marks"}
                   disabled={isView}
                   {...field}
                   onChange={(e) =>
@@ -161,7 +164,7 @@ export function ScheduleMarksStep({ form, isView }: ExamFormStepProps) {
               <FormControl>
                 <Input
                   type="number"
-                  placeholder="Passing marks"
+                  placeholder={t?.passingMarks ?? "Passing marks"}
                   disabled={isView}
                   {...field}
                   onChange={(e) =>

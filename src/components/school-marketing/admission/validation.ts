@@ -47,7 +47,11 @@ export function createApplicationStepSchemas(dictionary?: Dictionary) {
         .optional()
         .or(z.literal("")),
       lastName: z.string().min(1, v.required()).max(50, v.maxLength(50)),
-      dateOfBirth: z.string().min(1, v.required()),
+      dateOfBirth: z
+        .string()
+        .min(1, v.required())
+        .refine((val) => !isNaN(new Date(val).getTime()), v.invalidDate())
+        .refine((val) => new Date(val) < new Date(), v.futureDateNotAllowed()),
       gender: z.enum(["MALE", "FEMALE", "OTHER"]),
       nationality: z.string().min(1, v.required()),
       religion: z.string().optional().or(z.literal("")),

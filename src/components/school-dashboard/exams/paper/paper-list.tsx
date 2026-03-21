@@ -69,7 +69,7 @@ export function PaperList({ papers, locale }: PaperListProps) {
         router.refresh()
       } else {
         toast({
-          title: "Error",
+          title: dictionary?.school?.exams?.paper?.error ?? "Error",
           description: result.error,
           variant: "destructive",
         })

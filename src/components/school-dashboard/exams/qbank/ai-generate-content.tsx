@@ -33,6 +33,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import {
   generateQuestionsAI,
@@ -74,6 +75,8 @@ const BLOOM_LABELS: Record<string, string> = {
 
 export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
   const router = useRouter()
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.exams?.qbankUi?.aiGenerate
 
   // Form state
   const [subjectId, setSubjectId] = useState("")
@@ -117,7 +120,7 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
       // Select all by default
       setSelectedIndices(new Set(result.data.map((_, i) => i)))
     } else if (!result.success) {
-      setError(result.error || "Generation failed")
+      setError(result.error || (t?.generateFailed ?? "Generation failed"))
     }
 
     setIsGenerating(false)
@@ -158,7 +161,7 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
     if (result.success && result.data) {
       setSavedCount(result.data.savedCount)
     } else if (!result.success) {
-      setError(result.error || "Failed to save")
+      setError(result.error || (t?.saveFailed ?? "Failed to save"))
     }
 
     setIsSaving(false)
@@ -180,10 +183,12 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label>Subject</Label>
+              <Label>{t?.subject ?? "Subject"}</Label>
               <Select value={subjectId} onValueChange={setSubjectId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select subject" />
+                  <SelectValue
+                    placeholder={t?.selectSubject ?? "Select subject"}
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {subjects.map((s) => (
@@ -196,7 +201,7 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
             </div>
 
             <div className="space-y-2">
-              <Label>Topic</Label>
+              <Label>{t?.topic ?? "Topic"}</Label>
               <Input
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
@@ -205,7 +210,7 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
             </div>
 
             <div className="space-y-2">
-              <Label>Question Type</Label>
+              <Label>{t?.questionType ?? "Question Type"}</Label>
               <Select value={questionType} onValueChange={setQuestionType}>
                 <SelectTrigger>
                   <SelectValue />
@@ -223,7 +228,7 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
             </div>
 
             <div className="space-y-2">
-              <Label>Difficulty</Label>
+              <Label>{t?.difficulty ?? "Difficulty"}</Label>
               <Select value={difficulty} onValueChange={setDifficulty}>
                 <SelectTrigger>
                   <SelectValue />
@@ -239,7 +244,7 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
             </div>
 
             <div className="space-y-2">
-              <Label>Bloom&apos;s Level</Label>
+              <Label>{t?.bloomLevel ?? "Bloom\u2019s Level"}</Label>
               <Select value={bloomLevel} onValueChange={setBloomLevel}>
                 <SelectTrigger>
                   <SelectValue />
@@ -255,7 +260,7 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
             </div>
 
             <div className="space-y-2">
-              <Label>Number of Questions</Label>
+              <Label>{t?.numQuestions ?? "Number of Questions"}</Label>
               <Input
                 type="number"
                 min={1}
@@ -271,7 +276,10 @@ export function AIGenerateContent({ subjects }: AIGenerateContentProps) {
           </div>
 
           <div className="space-y-2">
-            <Label>Additional Instructions (optional)</Label>
+            <Label>
+              {t?.additionalInstructions ??
+                "Additional Instructions (optional)"}
+            </Label>
             <Textarea
               value={additionalInstructions}
               onChange={(e) => setAdditionalInstructions(e.target.value)}

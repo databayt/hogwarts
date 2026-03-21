@@ -48,6 +48,7 @@ import {
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { DAYS_OF_WEEK, SUBJECT_COLORS } from "./config"
 import {
@@ -109,6 +110,8 @@ export function SlotEditorDialog({
   onSave,
   dictionary = {},
 }: SlotEditorDialogProps) {
+  const { dictionary: dict } = useDictionary()
+  const t = dict?.school?.timetable?.slotEditor
   const [isLoading, setIsLoading] = useState(false)
   const [validationErrors, setValidationErrors] = useState<string[]>([])
   const [selectedSubject, setSelectedSubject] = useState<SubjectInfo | null>(
@@ -242,7 +245,9 @@ export function SlotEditorDialog({
       form.reset()
     } catch (error) {
       console.error("Failed to save slot:", error)
-      setValidationErrors(["Failed to save slot. Please try again."])
+      setValidationErrors([
+        t?.saveFailed ?? "Failed to save slot. Please try again.",
+      ])
     } finally {
       setIsLoading(false)
     }
@@ -255,14 +260,13 @@ export function SlotEditorDialog({
           <DialogTitle>
             <h4>
               {slot
-                ? dictionary.editSlot || "Pencil Timetable Slot"
-                : dictionary.addSlot || "Add Timetable Slot"}
+                ? (t?.editTitle ?? "Edit Timetable Slot")
+                : (t?.addTitle ?? "Add Timetable Slot")}
             </h4>
           </DialogTitle>
           <DialogDescription>
             <p className="muted">
-              {dictionary.slotDescription ||
-                "Configure the timetable slot details"}
+              {t?.description ?? "Configure the timetable slot details"}
             </p>
           </DialogDescription>
         </DialogHeader>
@@ -276,7 +280,7 @@ export function SlotEditorDialog({
               <Alert variant="destructive">
                 <CircleAlert className="h-4 w-4" />
                 <AlertTitle>
-                  <h5>Validation Error</h5>
+                  <h5>{t?.validationError ?? "Validation Error"}</h5>
                 </AlertTitle>
                 <AlertDescription>
                   <ul className="list-disc ps-5">
@@ -292,9 +296,15 @@ export function SlotEditorDialog({
 
             <Tabs defaultValue="basic" className="w-full">
               <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="basic">Basic Info</TabsTrigger>
-                <TabsTrigger value="assignment">Assignment</TabsTrigger>
-                <TabsTrigger value="options">Options</TabsTrigger>
+                <TabsTrigger value="basic">
+                  {t?.tabBasicInfo ?? "Basic Info"}
+                </TabsTrigger>
+                <TabsTrigger value="assignment">
+                  {t?.tabAssignment ?? "Assignment"}
+                </TabsTrigger>
+                <TabsTrigger value="options">
+                  {t?.tabOptions ?? "Options"}
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="basic" className="space-y-4">
@@ -306,7 +316,7 @@ export function SlotEditorDialog({
                       <FormItem>
                         <FormLabel>
                           <Calendar className="me-2 inline h-4 w-4" />
-                          Day of Week
+                          {t?.dayOfWeek ?? "Day of Week"}
                         </FormLabel>
                         <Select
                           onValueChange={(value) =>
@@ -316,7 +326,9 @@ export function SlotEditorDialog({
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select day" />
+                              <SelectValue
+                                placeholder={t?.selectDay ?? "Select day"}
+                              />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -339,7 +351,7 @@ export function SlotEditorDialog({
                       <FormItem>
                         <FormLabel>
                           <Clock className="me-2 inline h-4 w-4" />
-                          Period
+                          {t?.period ?? "Period"}
                         </FormLabel>
                         <Select
                           onValueChange={field.onChange}
@@ -347,7 +359,9 @@ export function SlotEditorDialog({
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select period" />
+                              <SelectValue
+                                placeholder={t?.selectPeriod ?? "Select period"}
+                              />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -376,7 +390,7 @@ export function SlotEditorDialog({
                     <FormItem>
                       <FormLabel>
                         <Users className="me-2 inline h-4 w-4" />
-                        Class
+                        {t?.class ?? "Class"}
                       </FormLabel>
                       <Select
                         onValueChange={field.onChange}
@@ -384,7 +398,9 @@ export function SlotEditorDialog({
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select class" />
+                            <SelectValue
+                              placeholder={t?.selectClass ?? "Select class"}
+                            />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -393,8 +409,7 @@ export function SlotEditorDialog({
                               <div className="flex w-full items-center justify-between">
                                 <span>{cls.name}</span>
                                 <Badge variant="secondary" className="ms-2">
-                                  {cls.currentEnrollment}/{cls.capacity}{" "}
-                                  students
+                                  {cls.currentEnrollment}/{cls.capacity}
                                 </Badge>
                               </div>
                             </SelectItem>
@@ -415,7 +430,7 @@ export function SlotEditorDialog({
                     <FormItem>
                       <FormLabel>
                         <BookOpen className="me-2 inline h-4 w-4" />
-                        Subject
+                        {t?.subject ?? "Subject"}
                       </FormLabel>
                       <Select
                         onValueChange={field.onChange}
@@ -423,7 +438,9 @@ export function SlotEditorDialog({
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select subject" />
+                            <SelectValue
+                              placeholder={t?.selectSubject ?? "Select subject"}
+                            />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -445,7 +462,7 @@ export function SlotEditorDialog({
                       </Select>
                       <FormDescription>
                         {selectedSubject &&
-                          `${selectedSubject.hoursPerWeek} hours/week required`}
+                          `${selectedSubject.hoursPerWeek} ${t?.hoursRequired ?? "hours/week required"}`}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -459,7 +476,7 @@ export function SlotEditorDialog({
                     <FormItem>
                       <FormLabel>
                         <User className="me-2 inline h-4 w-4" />
-                        Teacher
+                        {t?.teacher ?? "Teacher"}
                       </FormLabel>
                       <Select
                         onValueChange={field.onChange}
@@ -467,7 +484,9 @@ export function SlotEditorDialog({
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select teacher" />
+                            <SelectValue
+                              placeholder={t?.selectTeacher ?? "Select teacher"}
+                            />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -496,7 +515,8 @@ export function SlotEditorDialog({
                       </Select>
                       {selectedTeacher && (
                         <FormDescription>
-                          Teaches: {selectedTeacher.subjects.join(", ")}
+                          {t?.teaches ?? "Teaches:"}{" "}
+                          {selectedTeacher.subjects.join(", ")}
                         </FormDescription>
                       )}
                       <FormMessage />
@@ -511,7 +531,7 @@ export function SlotEditorDialog({
                     <FormItem>
                       <FormLabel>
                         <MapPin className="me-2 inline h-4 w-4" />
-                        Classroom
+                        {t?.classroom ?? "Classroom"}
                       </FormLabel>
                       <Select
                         onValueChange={field.onChange}
@@ -519,7 +539,11 @@ export function SlotEditorDialog({
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select classroom" />
+                            <SelectValue
+                              placeholder={
+                                t?.selectClassroom ?? "Select classroom"
+                              }
+                            />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -531,7 +555,7 @@ export function SlotEditorDialog({
                                   <Badge variant="secondary">{room.type}</Badge>
                                   {!room.isAvailable && (
                                     <Badge variant="destructive">
-                                      Occupied
+                                      {t?.occupied ?? "Occupied"}
                                     </Badge>
                                   )}
                                 </div>
@@ -549,9 +573,12 @@ export function SlotEditorDialog({
               <TabsContent value="options" className="space-y-4">
                 <div className="flex items-center justify-between rounded-lg border p-3">
                   <div className="space-y-0.5">
-                    <h6>Substitute Teacher</h6>
+                    <h6>{t?.substituteTeacher ?? "Substitute Teacher"}</h6>
                     <p className="muted">
-                      <small>Assign a substitute teacher for this slot</small>
+                      <small>
+                        {t?.substituteDescription ??
+                          "Assign a substitute teacher for this slot"}
+                      </small>
                     </p>
                   </div>
                   <Switch
@@ -566,14 +593,20 @@ export function SlotEditorDialog({
                     name="substituteTeacherId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Substitute Teacher</FormLabel>
+                        <FormLabel>
+                          {t?.substituteTeacher ?? "Substitute Teacher"}
+                        </FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select substitute" />
+                              <SelectValue
+                                placeholder={
+                                  t?.selectSubstitute ?? "Select substitute"
+                                }
+                              />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -598,9 +631,12 @@ export function SlotEditorDialog({
                   render={({ field }) => (
                     <FormItem className="flex items-center justify-between rounded-lg border p-3">
                       <div className="space-y-0.5">
-                        <FormLabel>Recurring Slot</FormLabel>
+                        <FormLabel>
+                          {t?.recurringSlot ?? "Recurring Slot"}
+                        </FormLabel>
                         <FormDescription>
-                          Create this slot for multiple weeks
+                          {t?.recurringDescription ??
+                            "Create this slot for multiple weeks"}
                         </FormDescription>
                       </div>
                       <FormControl>
@@ -619,7 +655,9 @@ export function SlotEditorDialog({
                     name="recurringWeeks"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Number of Weeks</FormLabel>
+                        <FormLabel>
+                          {t?.numberOfWeeks ?? "Number of Weeks"}
+                        </FormLabel>
                         <FormControl>
                           <Input
                             type="number"
@@ -632,7 +670,8 @@ export function SlotEditorDialog({
                           />
                         </FormControl>
                         <FormDescription>
-                          How many weeks should this slot repeat?
+                          {t?.weeksDescription ??
+                            "How many weeks should this slot repeat?"}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -645,16 +684,19 @@ export function SlotEditorDialog({
                   name="notes"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Notes</FormLabel>
+                      <FormLabel>{t?.notes ?? "Notes"}</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="Add any additional notes..."
+                          placeholder={
+                            t?.notesPlaceholder ?? "Add any additional notes..."
+                          }
                           className="resize-none"
                           {...field}
                         />
                       </FormControl>
                       <FormDescription>
-                        Optional notes about this timetable slot
+                        {t?.notesDescription ??
+                          "Optional notes about this timetable slot"}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -670,10 +712,14 @@ export function SlotEditorDialog({
                 onClick={() => onOpenChange(false)}
                 disabled={isLoading}
               >
-                Cancel
+                {t?.cancel ?? "Cancel"}
               </Button>
               <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Saving..." : slot ? "Update" : "Create"}
+                {isLoading
+                  ? (t?.saving ?? "Saving...")
+                  : slot
+                    ? (t?.update ?? "Update")
+                    : (t?.create ?? "Create")}
               </Button>
             </DialogFooter>
           </form>

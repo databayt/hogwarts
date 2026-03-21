@@ -81,7 +81,7 @@ export function ExportButton({
       if (result.success && result.data) {
         setData(result.data as AssignmentExportData[])
       } else {
-        setError("error" in result ? result.error : "Failed to fetch data")
+        setError(result.error ?? "Failed to fetch data")
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch data")

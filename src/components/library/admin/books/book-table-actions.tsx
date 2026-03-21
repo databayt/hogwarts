@@ -39,7 +39,7 @@ export default function BookTableActions({
         toast.success(result.message)
         router.refresh()
       } else {
-        toast.error(result.error || t.library.messages.bookNotFound)
+        toast.error(result.message || t.library.messages.bookNotFound)
       }
     } catch (error) {
       toast.error(t.common.messages.errorOccurred)

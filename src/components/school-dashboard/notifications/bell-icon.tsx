@@ -100,7 +100,7 @@ export function NotificationBellIcon({
                 >
                   <Badge
                     variant="destructive"
-                    className="flex h-5 min-w-5 items-center justify-center px-1 text-xs font-semibold"
+                    className="flex h-4 min-w-4 items-center justify-center px-0.5 text-[10px] font-semibold"
                   >
                     {unreadCount > 99 ? "99+" : unreadCount}
                   </Badge>

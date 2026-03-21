@@ -7,6 +7,7 @@ import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 
 import { assertStaffPermission, getAuthContext } from "./authorization"
 import { staffCreateSchema, staffUpdateSchema } from "./validation"
@@ -29,7 +30,7 @@ export async function createStaff(
       return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
-    const schoolId = authContext.schoolId
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
@@ -81,7 +82,7 @@ export async function updateStaff(
       return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
-    const schoolId = authContext.schoolId
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
@@ -139,7 +140,7 @@ export async function deleteStaff(id: string): Promise<ActionResponse<void>> {
       return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
-    const schoolId = authContext.schoolId
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
@@ -204,7 +205,7 @@ export async function bulkDeleteStaff(
       }
     }
 
-    const schoolId = authContext.schoolId
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
@@ -262,13 +263,14 @@ export async function getStaffForExport(): Promise<ActionResponse<any[]>> {
       }
     }
 
-    const schoolId = authContext.schoolId
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const staff = await db.staffMember.findMany({
       where: { schoolId },
+      take: 10000,
       select: {
         id: true,
         employeeId: true,

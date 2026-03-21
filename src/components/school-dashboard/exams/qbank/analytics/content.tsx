@@ -64,6 +64,7 @@ import {
   TooltipTrigger,
   Tooltip as UITooltip,
 } from "@/components/ui/tooltip"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { getAnalyticsDashboard } from "./actions"
 import {
@@ -120,6 +121,8 @@ interface DashboardData {
 }
 
 export function AnalyticsDashboard() {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.exams?.qbankUi?.analytics
   const [data, setData] = useState<DashboardData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -131,7 +134,7 @@ export function AnalyticsDashboard() {
     if (result.success && result.data) {
       setData(result.data as DashboardData)
     } else {
-      setError(result.error || "Failed to load analytics")
+      setError(result.error || (t?.loadFailed ?? "Failed to load analytics"))
     }
     setIsLoading(false)
   }
@@ -152,7 +155,7 @@ export function AnalyticsDashboard() {
     return (
       <Alert variant="destructive">
         <AlertTriangle className="h-4 w-4" />
-        <AlertTitle>Error</AlertTitle>
+        <AlertTitle>{t?.error ?? "Error"}</AlertTitle>
         <AlertDescription>{error}</AlertDescription>
       </Alert>
     )
@@ -258,7 +261,9 @@ export function AnalyticsDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{data.summary.needsRevise}</div>
-            <p className="text-muted-foreground text-xs">Consider updating</p>
+            <p className="text-muted-foreground text-xs">
+              {t?.considerUpdating ?? "Consider updating"}
+            </p>
           </CardContent>
         </Card>
 
@@ -269,7 +274,9 @@ export function AnalyticsDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{data.summary.needsRetire}</div>
-            <p className="text-muted-foreground text-xs">Remove or replace</p>
+            <p className="text-muted-foreground text-xs">
+              {t?.removeOrReplace ?? "Remove or replace"}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -303,7 +310,10 @@ export function AnalyticsDashboard() {
                     <HelpCircle className="text-muted-foreground h-4 w-4" />
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Proportion of students answering correctly (p-value)</p>
+                    <p>
+                      {t?.difficultyDescription ??
+                        "Proportion of students answering correctly (p-value)"}
+                    </p>
                   </TooltipContent>
                 </UITooltip>
               </TooltipProvider>
@@ -329,7 +339,10 @@ export function AnalyticsDashboard() {
                     <HelpCircle className="text-muted-foreground h-4 w-4" />
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Difference between high and low performers (D-index)</p>
+                    <p>
+                      {t?.discriminationDescription ??
+                        "Difference between high and low performers (D-index)"}
+                    </p>
                   </TooltipContent>
                 </UITooltip>
               </TooltipProvider>
@@ -350,7 +363,9 @@ export function AnalyticsDashboard() {
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Difficulty Distribution</CardTitle>
+            <CardTitle>
+              {t?.difficultyDistribution ?? "Difficulty Distribution"}
+            </CardTitle>
             <CardDescription>
               Spread of question difficulty across the bank
             </CardDescription>
@@ -380,7 +395,9 @@ export function AnalyticsDashboard() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Quality Distribution</CardTitle>
+            <CardTitle>
+              {t?.qualityDistribution ?? "Quality Distribution"}
+            </CardTitle>
             <CardDescription>
               Overall item quality based on psychometric analysis
             </CardDescription>
@@ -419,13 +436,15 @@ export function AnalyticsDashboard() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Question</TableHead>
-                  <TableHead>Subject</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Quality</TableHead>
-                  <TableHead>Difficulty</TableHead>
-                  <TableHead>Issues</TableHead>
-                  <TableHead>Action</TableHead>
+                  <TableHead>{t?.headers?.question ?? "Question"}</TableHead>
+                  <TableHead>{t?.headers?.subject ?? "Subject"}</TableHead>
+                  <TableHead>{t?.headers?.type ?? "Type"}</TableHead>
+                  <TableHead>{t?.headers?.quality ?? "Quality"}</TableHead>
+                  <TableHead>
+                    {t?.headers?.difficulty ?? "Difficulty"}
+                  </TableHead>
+                  <TableHead>{t?.headers?.issues ?? "Issues"}</TableHead>
+                  <TableHead>{t?.headers?.action ?? "Action"}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

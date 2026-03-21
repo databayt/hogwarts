@@ -580,7 +580,7 @@ export async function detectTimetableConflicts(input?: unknown) {
   await requirePermission("manage_conflicts")
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   // Log action for audit trail
   await logTimetableAction("manage_conflicts", {
@@ -784,7 +784,7 @@ export async function getTermsForSelection() {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   const termModel = getModel("term")
   if (!termModel) return { terms: [] as Array<{ id: string; label: string }> }
@@ -808,7 +808,7 @@ export async function getClassesForSelection(input: unknown) {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   const timetableModel = getModel("timetable")
   if (timetableModel && validatedInput?.termId) {
@@ -843,7 +843,7 @@ export async function getTeachersForSelection(input: unknown) {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   const rows = await db.teacher.findMany({
     where: { schoolId },
@@ -867,7 +867,7 @@ export async function upsertTimetableSlot(input: unknown) {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   // P0 FIX: Validate teacher-subject expertise before assignment
   // Get the class's subject to check teacher qualification
@@ -900,10 +900,7 @@ export async function upsertTimetableSlot(input: unknown) {
         : "Selected teacher"
       const name = classInfo.subject?.name || "this subject"
 
-      throw new Error(
-        `${teacherName} is not qualified to teach ${name}. ` +
-          `Please assign a teacher with subject expertise or add this subject to the teacher's qualifications.`
-      )
+      throw new Error("TEACHER_NOT_QUALIFIED")
     }
   }
 
@@ -970,7 +967,7 @@ export async function upsertSchoolWeekConfig(input: unknown) {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   const schoolWeekConfigModel = getModelOrThrow("schoolWeekConfig")
   const row = await schoolWeekConfigModel.upsert({
@@ -1021,7 +1018,7 @@ export async function moveTimetableSlot(input: {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   // Get the existing slot
   const existingSlot = await db.timetable.findFirst({
@@ -1034,7 +1031,7 @@ export async function moveTimetableSlot(input: {
   })
 
   if (!existingSlot) {
-    throw new Error("Slot not found")
+    throw new Error("SLOT_NOT_FOUND")
   }
 
   const targetClassroomId = input.targetClassroomId ?? existingSlot.classroomId
@@ -1222,7 +1219,7 @@ export async function suggestFreeSlots(input: unknown) {
   await requirePermission("edit")
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   if (!validatedInput.teacherId && !validatedInput.classId) {
     return {
@@ -1317,7 +1314,7 @@ export async function getScheduleConfig(
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   // Try per-term config then school default
   const schoolWeekConfigModel = getModel("schoolWeekConfig")
@@ -1361,7 +1358,7 @@ export async function getWeeklyTimetable(input: unknown): Promise<{
   await requireReadAccess()
 
   const { schoolId, role } = await getPermissionContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   const weekOffset = validatedInput.weekOffset ?? 0
 
@@ -1375,7 +1372,7 @@ export async function getWeeklyTimetable(input: unknown): Promise<{
     where: { id: validatedInput.termId, schoolId },
     select: { yearId: true },
   })
-  if (!term) throw new Error("Invalid term")
+  if (!term) throw new Error("INVALID_TERM")
 
   const periodModel = getModelOrThrow("period")
   const periods = await periodModel.findMany({
@@ -1396,23 +1393,37 @@ export async function getWeeklyTimetable(input: unknown): Promise<{
   if (role === "TEACHER") {
     // Teacher can only view their own timetable
     const session = await auth()
-    const teacherId = session?.user?.id // Assuming user ID maps to teacher ID
-    if (teacherId) {
-      whereBase.teacherId = teacherId
+    const userId = session?.user?.id
+    if (userId) {
+      // Resolve teacher record from user ID (user.id !== teacher.id)
+      const teacher = await db.teacher.findFirst({
+        where: { userId, schoolId },
+        select: { id: true },
+      })
+      if (teacher) {
+        whereBase.teacherId = teacher.id
+      }
     }
   } else if (role === "STUDENT") {
-    // Student can only view their class timetable
+    // Student can only view their enrolled classes' timetable
     const session = await auth()
-    const studentId = session?.user?.id
-    if (studentId) {
-      // Get student's class
-      const studentModel = getModel("student")
-      const student = await studentModel?.findFirst({
-        where: { id: studentId, schoolId },
-        select: { classId: true },
+    const userId = session?.user?.id
+    if (userId) {
+      // Resolve student record from user ID
+      const student = await db.student.findFirst({
+        where: { userId, schoolId },
+        select: { id: true },
       })
-      if (student?.classId) {
-        whereBase.classId = student.classId
+      if (student) {
+        // Get ALL enrolled class IDs (not just one)
+        const enrollments = await db.studentClass.findMany({
+          where: { studentId: student.id, schoolId },
+          select: { classId: true },
+        })
+        const classIds = enrollments.map((e) => e.classId)
+        if (classIds.length > 0) {
+          whereBase.classId = { in: classIds }
+        }
       }
     }
   } else {
@@ -1498,7 +1509,7 @@ export async function getRoomsForSelection() {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   const rows = await db.classroom.findMany({
     where: { schoolId },
@@ -1526,7 +1537,7 @@ export async function getTimetableByClass(input: {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   const { config } = await getScheduleConfig({ termId: input.termId })
 
@@ -1534,7 +1545,7 @@ export async function getTimetableByClass(input: {
     where: { id: input.termId, schoolId },
     select: { yearId: true },
   })
-  if (!term) throw new Error("Invalid term")
+  if (!term) throw new Error("INVALID_TERM")
 
   const periods = await db.period.findMany({
     where: { schoolId, yearId: term.yearId },
@@ -1605,6 +1616,78 @@ export async function getTimetableByClass(input: {
 }
 
 /**
+ * Internal helper: get timetable for multiple class IDs (student/guardian views)
+ */
+async function getTimetableByClassIds(input: {
+  termId: string
+  classIds: string[]
+  weekOffset?: 0 | 1
+}) {
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
+
+  const { config } = await getScheduleConfig({ termId: input.termId })
+
+  const term = await db.term.findFirst({
+    where: { id: input.termId, schoolId },
+    select: { yearId: true },
+  })
+  if (!term) throw new Error("INVALID_TERM")
+
+  const periods = await db.period.findMany({
+    where: { schoolId, yearId: term.yearId },
+    orderBy: { startTime: "asc" },
+    select: { id: true, name: true, startTime: true, endTime: true },
+  })
+
+  const slots = await db.timetable.findMany({
+    where: {
+      schoolId,
+      termId: input.termId,
+      classId: { in: input.classIds },
+      weekOffset: input.weekOffset ?? 0,
+    },
+    include: {
+      teacher: { select: { id: true, givenName: true, surname: true } },
+      classroom: { select: { id: true, roomName: true } },
+      class: {
+        select: {
+          id: true,
+          name: true,
+          subject: { select: { name: true } },
+        },
+      },
+      period: {
+        select: { id: true, name: true, startTime: true, endTime: true },
+      },
+    },
+  })
+
+  return {
+    workingDays: config.workingDays,
+    periods: periods.map((p) => ({
+      id: p.id,
+      name: p.name,
+      startTime: p.startTime,
+      endTime: p.endTime,
+    })),
+    slots: slots.map((s) => ({
+      id: s.id,
+      dayOfWeek: s.dayOfWeek,
+      periodId: s.periodId,
+      periodName: s.period.name,
+      teacher: s.teacher ? `${s.teacher.givenName} ${s.teacher.surname}` : "",
+      teacherId: s.teacherId,
+      room: s.classroom?.roomName || "",
+      roomId: s.classroomId,
+      subject: s.class?.subject?.name || s.class?.name || "",
+      classId: s.classId,
+    })),
+    lunchAfterPeriod: config.defaultLunchAfterPeriod,
+  }
+}
+
+/**
  * Get full weekly timetable for a student based on their grade level
  * Returns all subjects scheduled for the student's homeroom (e.g., "Grade 10")
  */
@@ -1615,11 +1698,11 @@ export async function getTimetableByStudentGrade(input: {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   const session = await auth()
   const userId = session?.user?.id
-  if (!userId) throw new Error("Not authenticated")
+  if (!userId) throw new Error("NOT_AUTHENTICATED")
 
   // Get student record with their enrolled classes via StudentClass relation
   const student = await db.student.findFirst({
@@ -1644,7 +1727,7 @@ export async function getTimetableByStudentGrade(input: {
       },
     },
   })
-  if (!student) throw new Error("Student not found")
+  if (!student) throw new Error("STUDENT_NOT_FOUND")
 
   // Get student's current year level for display
   const studentYearLevel = await db.studentYearLevel.findFirst({
@@ -1702,7 +1785,7 @@ export async function getTimetableByStudentGrade(input: {
     where: { id: input.termId, schoolId },
     select: { yearId: true },
   })
-  if (!term) throw new Error("Invalid term")
+  if (!term) throw new Error("INVALID_TERM")
 
   // Get school name for PDF export
   const school = await db.school.findFirst({
@@ -1789,7 +1872,7 @@ export async function getTimetableByGradeLevel(input: {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   // Get all classes for this grade level
   const gradeClasses = await db.class.findMany({
@@ -1814,7 +1897,7 @@ export async function getTimetableByGradeLevel(input: {
     where: { id: input.termId, schoolId },
     select: { yearId: true },
   })
-  if (!term) throw new Error("Invalid term")
+  if (!term) throw new Error("INVALID_TERM")
 
   const periods = await db.period.findMany({
     where: { schoolId, yearId: term.yearId },
@@ -1897,7 +1980,7 @@ export async function getGradeLevelsForSelection(input?: { termId?: string }) {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   // Get year levels that have classes in the specified term
   const yearLevels = await db.yearLevel.findMany({
@@ -1960,7 +2043,7 @@ export async function getTimetableByTeacher(input: {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   const { config } = await getScheduleConfig({ termId: input.termId })
 
@@ -1968,7 +2051,7 @@ export async function getTimetableByTeacher(input: {
     where: { id: input.termId, schoolId },
     select: { yearId: true },
   })
-  if (!term) throw new Error("Invalid term")
+  if (!term) throw new Error("INVALID_TERM")
 
   const periods = await db.period.findMany({
     where: { schoolId, yearId: term.yearId },
@@ -2053,7 +2136,7 @@ export async function getTimetableByRoom(input: {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   const { config } = await getScheduleConfig({ termId: input.termId })
 
@@ -2061,7 +2144,7 @@ export async function getTimetableByRoom(input: {
     where: { id: input.termId, schoolId },
     select: { yearId: true },
   })
-  if (!term) throw new Error("Invalid term")
+  if (!term) throw new Error("INVALID_TERM")
 
   const periods = await db.period.findMany({
     where: { schoolId, yearId: term.yearId },
@@ -2147,7 +2230,7 @@ export async function getTimetableAnalytics(input: { termId: string }) {
   await requirePermission("view_analytics")
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   const { config } = await getScheduleConfig({ termId: input.termId })
 
@@ -2155,7 +2238,7 @@ export async function getTimetableAnalytics(input: { termId: string }) {
     where: { id: input.termId, schoolId },
     select: { yearId: true },
   })
-  if (!term) throw new Error("Invalid term")
+  if (!term) throw new Error("INVALID_TERM")
 
   const periods = await db.period.findMany({
     where: { schoolId, yearId: term.yearId },
@@ -2294,7 +2377,7 @@ export async function deleteTimetableSlot(input: {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   // Fetch slot info before deletion for notification
   const slotToDelete = await db.timetable.findFirst({
@@ -2365,13 +2448,13 @@ export async function getPeriodsForTerm(input: { termId: string }) {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   const term = await db.term.findFirst({
     where: { id: input.termId, schoolId },
     select: { yearId: true },
   })
-  if (!term) throw new Error("Invalid term")
+  if (!term) throw new Error("INVALID_TERM")
 
   const periods = await db.period.findMany({
     where: { schoolId, yearId: term.yearId },
@@ -2405,7 +2488,7 @@ export async function getActiveTerm() {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   const { term, source } = await resolveActiveTerm(schoolId)
 
@@ -2439,7 +2522,7 @@ export async function setActiveTerm(input: { termId: string }) {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   // Deactivate all terms for this school
   await db.term.updateMany({
@@ -2475,18 +2558,20 @@ export async function getPersonalizedTimetable(input: {
   await requireReadAccess()
 
   const { schoolId, role } = await getPermissionContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   const session = await auth()
   const userId = session?.user?.id
 
-  if (!userId) throw new Error("Not authenticated")
+  if (!userId) throw new Error("NOT_AUTHENTICATED")
 
   // Determine view type based on role
   let viewType: ViewType = "admin"
+  let editable = true
   let filterData: {
     teacherId?: string
     classId?: string
+    classIds?: string[]
     childrenIds?: string[]
   } = {}
 
@@ -2511,20 +2596,20 @@ export async function getPersonalizedTimetable(input: {
 
     case "STUDENT": {
       viewType = "student"
-      // Get student record and their class
+      // Get student record and ALL enrolled classes
       const student = await db.student.findFirst({
         where: { userId, schoolId },
         select: { id: true },
       })
       if (student) {
-        // Get current class enrollment
-        const enrollment = await db.studentClass.findFirst({
+        // Get ALL class enrollments (not just one)
+        const enrollments = await db.studentClass.findMany({
           where: { studentId: student.id, schoolId },
-          orderBy: { createdAt: "desc" },
           select: { classId: true },
         })
-        if (enrollment) {
-          filterData.classId = enrollment.classId
+        const classIds = enrollments.map((e) => e.classId)
+        if (classIds.length > 0) {
+          filterData.classIds = classIds
         }
       }
       break
@@ -2559,6 +2644,7 @@ export async function getPersonalizedTimetable(input: {
     case "ACCOUNTANT":
     case "STAFF":
       viewType = "admin"
+      editable = false
       break
 
     default:
@@ -2576,7 +2662,7 @@ export async function getPersonalizedTimetable(input: {
       schoolYear: { select: { yearName: true } },
     },
   })
-  if (!term) throw new Error("Invalid term")
+  if (!term) throw new Error("INVALID_TERM")
 
   const periods = await db.period.findMany({
     where: { schoolId, yearId: term.yearId },
@@ -2586,6 +2672,7 @@ export async function getPersonalizedTimetable(input: {
 
   return {
     viewType,
+    editable,
     filterData,
     termInfo: {
       id: input.termId,
@@ -2615,12 +2702,12 @@ export async function getGuardianChildren() {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   const session = await auth()
   const userId = session?.user?.id
 
-  if (!userId) throw new Error("Not authenticated")
+  if (!userId) throw new Error("NOT_AUTHENTICATED")
 
   // Get guardian record with linked students in a single query (fixes N+1)
   // Include student classes and year levels for complete data
@@ -2707,13 +2794,13 @@ export async function getChildTimetable(input: {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   const session = await auth()
   const userId = session?.user?.id
   const role = session?.user?.role
 
-  if (!userId) throw new Error("Not authenticated")
+  if (!userId) throw new Error("NOT_AUTHENTICATED")
 
   // Verify guardian has access to this child (unless admin)
   if (role !== "DEVELOPER" && role !== "ADMIN") {
@@ -2732,19 +2819,18 @@ export async function getChildTimetable(input: {
       })
 
       if (!hasAccess) {
-        throw new Error("Access denied to this student")
+        throw new Error("ACCESS_DENIED")
       }
     }
   }
 
-  // Get student's class
-  const enrollment = await db.studentClass.findFirst({
+  // Get ALL student's enrolled classes
+  const enrollments = await db.studentClass.findMany({
     where: { studentId: input.childId, schoolId },
-    orderBy: { createdAt: "desc" },
     select: { classId: true },
   })
 
-  if (!enrollment) {
+  if (enrollments.length === 0) {
     return {
       studentInfo: null,
       slots: [],
@@ -2760,10 +2846,11 @@ export async function getChildTimetable(input: {
     select: { id: true, givenName: true, surname: true },
   })
 
-  // Use existing getTimetableByClass
-  const timetableData = await getTimetableByClass({
+  // Get timetable slots for ALL enrolled classes
+  const classIds = enrollments.map((e) => e.classId)
+  const timetableData = await getTimetableByClassIds({
     termId: input.termId,
-    classId: enrollment.classId,
+    classIds,
     weekOffset: input.weekOffset,
   })
 
@@ -2785,12 +2872,12 @@ export async function getTodaySchedule(input?: { date?: Date }) {
   await requireReadAccess()
 
   const { schoolId, role } = await getPermissionContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   const session = await auth()
   const userId = session?.user?.id
 
-  if (!userId) throw new Error("Not authenticated")
+  if (!userId) throw new Error("NOT_AUTHENTICATED")
 
   const targetDate = input?.date || new Date()
   const dayOfWeek = targetDate.getDay() // 0 = Sunday
@@ -2915,7 +3002,7 @@ export async function getTeacherConstraints(input: {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   const constraint = await db.teacherConstraint.findFirst({
     where: {
@@ -2980,7 +3067,7 @@ export async function upsertTeacherConstraints(input: {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   const data = {
     schoolId,
@@ -3042,7 +3129,7 @@ export async function addTeacherUnavailableBlock(input: {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   const block = await db.teacherUnavailableBlock.create({
     data: {
@@ -3068,7 +3155,7 @@ export async function removeTeacherUnavailableBlock(input: {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   await db.teacherUnavailableBlock.delete({
     where: { id: input.blockId, schoolId },
@@ -3091,7 +3178,7 @@ export async function getRoomConstraints(input: {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   const constraint = await db.roomConstraint.findFirst({
     where: {
@@ -3158,7 +3245,7 @@ export async function upsertRoomConstraints(input: {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   const data = {
     schoolId,
@@ -3216,7 +3303,7 @@ export async function listTimetableTemplates() {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   const templates = await db.timetableTemplate.findMany({
     where: { schoolId, isActive: true },
@@ -3275,7 +3362,7 @@ export async function createTemplateFromTerm(input: {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   const session = await auth()
   const userId = session?.user?.id
@@ -3357,7 +3444,7 @@ export async function applyTemplateToTerm(input: {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   const session = await auth()
   const userId = session?.user?.id
@@ -3368,7 +3455,7 @@ export async function applyTemplateToTerm(input: {
     select: { slotPatterns: true, workingDays: true },
   })
 
-  if (!template) throw new Error("Template not found")
+  if (!template) throw new Error("TEMPLATE_NOT_FOUND")
 
   // Clear existing slots if requested
   if (input.clearExisting) {
@@ -3452,7 +3539,7 @@ export async function deleteTemplate(input: { templateId: string }) {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   // Soft delete by marking inactive
   await db.timetableTemplate.update({
@@ -3475,7 +3562,7 @@ export async function setDefaultTemplate(input: { templateId: string }) {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   // Remove default from all templates
   await db.timetableTemplate.updateMany({
@@ -3530,14 +3617,14 @@ export async function generateTimetablePreview(input: {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   // Get term info
   const term = await db.term.findFirst({
     where: { id: input.termId, schoolId },
     select: { yearId: true },
   })
-  if (!term) throw new Error("Invalid term")
+  if (!term) throw new Error("INVALID_TERM")
 
   // Get schedule config
   const { config: scheduleConfig } = await getScheduleConfig({
@@ -3812,66 +3899,37 @@ export async function applyGeneratedTimetable(input: {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   const errors: string[] = []
   let createdCount = 0
 
   try {
-    await db.$transaction(async (tx) => {
-      // Clear existing slots if requested
-      if (input.clearExisting) {
-        await tx.timetable.deleteMany({
-          where: { schoolId, termId: input.termId },
-        })
-      }
+    // Clear existing slots if requested
+    if (input.clearExisting) {
+      await db.timetable.deleteMany({
+        where: { schoolId, termId: input.termId },
+      })
+    }
 
-      // Insert new slots
-      for (const slot of input.slots) {
-        try {
-          await tx.timetable.create({
-            data: {
-              schoolId,
-              termId: input.termId,
-              dayOfWeek: slot.dayOfWeek,
-              periodId: slot.periodId,
-              classId: slot.classId,
-              teacherId: slot.teacherId,
-              classroomId: slot.classroomId,
-              weekOffset: 0,
-              constraintViolations: slot.violations,
-            },
-          })
-          createdCount++
-        } catch (error) {
-          // Handle unique constraint violation (slot already exists)
-          if (
-            error instanceof Error &&
-            error.message.includes("Unique constraint")
-          ) {
-            // Update existing slot instead
-            await tx.timetable.updateMany({
-              where: {
-                schoolId,
-                termId: input.termId,
-                dayOfWeek: slot.dayOfWeek,
-                periodId: slot.periodId,
-                classId: slot.classId,
-                weekOffset: 0,
-              },
-              data: {
-                teacherId: slot.teacherId,
-                classroomId: slot.classroomId,
-                constraintViolations: slot.violations,
-              },
-            })
-            createdCount++
-          } else {
-            throw error
-          }
-        }
-      }
+    // Batch insert all slots using createMany (skip duplicates)
+    const slotData = input.slots.map((slot) => ({
+      schoolId,
+      termId: input.termId,
+      dayOfWeek: slot.dayOfWeek,
+      periodId: slot.periodId,
+      classId: slot.classId,
+      teacherId: slot.teacherId,
+      classroomId: slot.classroomId,
+      weekOffset: 0,
+      constraintViolations: slot.violations,
+    }))
+
+    const result = await db.timetable.createMany({
+      data: slotData,
+      skipDuplicates: true,
     })
+    createdCount = result.count
 
     await logTimetableAction("apply_generated", {
       entityType: "generation",
@@ -3909,7 +3967,7 @@ export async function importTimetableSlots(input: {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   const result: ImportResult = {
     success: false,
@@ -4151,12 +4209,12 @@ export async function createPeriod(input: {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   // Validate time format
   const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/
   if (!timeRegex.test(input.startTime) || !timeRegex.test(input.endTime)) {
-    throw new Error("Invalid time format. Use HH:MM")
+    throw new Error("INVALID_TIME_FORMAT")
   }
 
   // Parse times to Date objects (using UTC for consistency)
@@ -4167,7 +4225,7 @@ export async function createPeriod(input: {
   const endTime = new Date(Date.UTC(1970, 0, 1, endHour, endMin))
 
   if (startTime >= endTime) {
-    throw new Error("Start time must be before end time")
+    throw new Error("INVALID_TIME_RANGE")
   }
 
   // Check for overlapping periods
@@ -4186,9 +4244,7 @@ export async function createPeriod(input: {
       (endTime > existStart && endTime <= existEnd) ||
       (startTime <= existStart && endTime >= existEnd)
     ) {
-      throw new Error(
-        `Time overlaps with existing period "${existing.name}" (${formatTimeOnly(existStart)}-${formatTimeOnly(existEnd)})`
-      )
+      throw new Error("PERIOD_TIME_OVERLAP")
     }
   }
 
@@ -4228,14 +4284,14 @@ export async function updatePeriod(input: {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   // Get existing period
   const existing = await db.period.findFirst({
     where: { id: input.periodId, schoolId },
     select: { id: true, yearId: true, startTime: true, endTime: true },
   })
-  if (!existing) throw new Error("Period not found")
+  if (!existing) throw new Error("PERIOD_NOT_FOUND")
 
   const updateData: { name?: string; startTime?: Date; endTime?: Date } = {}
 
@@ -4246,7 +4302,7 @@ export async function updatePeriod(input: {
   if (input.startTime) {
     const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/
     if (!timeRegex.test(input.startTime)) {
-      throw new Error("Invalid start time format. Use HH:MM")
+      throw new Error("INVALID_TIME_FORMAT")
     }
     const [hour, min] = input.startTime.split(":").map(Number)
     updateData.startTime = new Date(Date.UTC(1970, 0, 1, hour, min))
@@ -4255,7 +4311,7 @@ export async function updatePeriod(input: {
   if (input.endTime) {
     const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/
     if (!timeRegex.test(input.endTime)) {
-      throw new Error("Invalid end time format. Use HH:MM")
+      throw new Error("INVALID_TIME_FORMAT")
     }
     const [hour, min] = input.endTime.split(":").map(Number)
     updateData.endTime = new Date(Date.UTC(1970, 0, 1, hour, min))
@@ -4266,7 +4322,7 @@ export async function updatePeriod(input: {
   const newEnd = updateData.endTime || new Date(existing.endTime)
 
   if (newStart >= newEnd) {
-    throw new Error("Start time must be before end time")
+    throw new Error("INVALID_TIME_RANGE")
   }
 
   // Check for overlapping periods (excluding this one)
@@ -4284,9 +4340,7 @@ export async function updatePeriod(input: {
       (newEnd > existStart && newEnd <= existEnd) ||
       (newStart <= existStart && newEnd >= existEnd)
     ) {
-      throw new Error(
-        `Time overlaps with period "${other.name}" (${formatTimeOnly(existStart)}-${formatTimeOnly(existEnd)})`
-      )
+      throw new Error("PERIOD_TIME_OVERLAP")
     }
   }
 
@@ -4314,7 +4368,7 @@ export async function deletePeriod(input: {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   // Check if period is used in any timetable slots
   const usageCount = await db.timetable.count({
@@ -4322,9 +4376,7 @@ export async function deletePeriod(input: {
   })
 
   if (usageCount > 0) {
-    throw new Error(
-      `Cannot delete period - it is used in ${usageCount} timetable slots. Remove or reassign slots first.`
-    )
+    throw new Error("PERIOD_IN_USE")
   }
 
   await db.period.delete({
@@ -4350,7 +4402,7 @@ export async function copyPeriodsToYear(input: {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   // Get source periods
   const sourcePeriods = await db.period.findMany({
@@ -4359,14 +4411,14 @@ export async function copyPeriodsToYear(input: {
   })
 
   if (sourcePeriods.length === 0) {
-    throw new Error("No periods found in source year")
+    throw new Error("NO_PERIODS_IN_SOURCE")
   }
 
   // Check target year exists
   const targetYear = await db.schoolYear.findFirst({
     where: { id: input.targetYearId, schoolId },
   })
-  if (!targetYear) throw new Error("Target school year not found")
+  if (!targetYear) throw new Error("TARGET_YEAR_NOT_FOUND")
 
   // Get existing target periods
   const existingTargetPeriods = await db.period.findMany({
@@ -4389,9 +4441,7 @@ export async function copyPeriodsToYear(input: {
     })
 
     if (usedPeriods.length > 0) {
-      throw new Error(
-        `Cannot overwrite - ${usedPeriods.length} periods are used in timetable slots`
-      )
+      throw new Error("PERIODS_IN_USE")
     }
 
     await db.period.deleteMany({
@@ -4442,7 +4492,7 @@ export async function getSchoolYearsForSelection(): Promise<{
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   const years = await db.schoolYear.findMany({
     where: { schoolId },
@@ -4476,7 +4526,7 @@ export async function createDefaultPeriods(input: {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   // Check if periods already exist
   const existing = await db.period.count({
@@ -4484,9 +4534,7 @@ export async function createDefaultPeriods(input: {
   })
 
   if (existing > 0) {
-    throw new Error(
-      "Periods already exist for this year. Delete existing periods first."
-    )
+    throw new Error("PERIODS_ALREADY_EXIST")
   }
 
   const templates: Record<
@@ -4527,7 +4575,7 @@ export async function createDefaultPeriods(input: {
 
   const selectedTemplate = templates[input.template]
   if (!selectedTemplate) {
-    throw new Error("Invalid template")
+    throw new Error("INVALID_TEMPLATE")
   }
 
   let createdCount = 0
@@ -4568,7 +4616,7 @@ export async function applyTimetableStructure(input: {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   // Import dynamically to avoid circular dependency with "use server"
   const { getStructureBySlug, LEGACY_TEMPLATE_MAP } =
@@ -4577,7 +4625,7 @@ export async function applyTimetableStructure(input: {
   // Support legacy template names
   const slug = LEGACY_TEMPLATE_MAP[input.structureSlug] || input.structureSlug
   const structure = getStructureBySlug(slug)
-  if (!structure) throw new Error("Unknown timetable structure: " + slug)
+  if (!structure) throw new Error("UNKNOWN_STRUCTURE")
 
   // Check existing periods
   const existing = await db.period.count({
@@ -4590,9 +4638,7 @@ export async function applyTimetableStructure(input: {
         where: { schoolId, yearId: input.yearId },
       })
     } else {
-      throw new Error(
-        "Periods already exist for this year. Set replaceExisting to replace them."
-      )
+      throw new Error("PERIODS_ALREADY_EXIST")
     }
   }
 
@@ -4657,7 +4703,7 @@ export async function getTermDetails(input: { termId: string }) {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   const term = await db.term.findFirst({
     where: { id: input.termId, schoolId },
@@ -4673,7 +4719,7 @@ export async function getTermDetails(input: { termId: string }) {
     },
   })
 
-  if (!term) throw new Error("Term not found")
+  if (!term) throw new Error("TERM_NOT_FOUND")
 
   return term
 }
@@ -4689,18 +4735,18 @@ export async function updateTermDates(input: {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   // Validate dates
   if (input.startDate >= input.endDate) {
-    throw new Error("Start date must be before end date")
+    throw new Error("INVALID_DATE_RANGE")
   }
 
   // Verify ownership (defense-in-depth)
   const existing = await db.term.findFirst({
     where: { id: input.termId, schoolId },
   })
-  if (!existing) throw new Error("Term not found")
+  if (!existing) throw new Error("TERM_NOT_FOUND")
 
   // Defense-in-depth: scope update by schoolId
   await db.term.updateMany({
@@ -4730,7 +4776,7 @@ export async function getScheduleExceptions(input: { termId: string }) {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   const exceptions = await db.scheduleException.findMany({
     where: {
@@ -4774,11 +4820,11 @@ export async function createScheduleException(input: {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   // Validate dates
   if (input.startDate > input.endDate) {
-    throw new Error("Start date must be before or equal to end date")
+    throw new Error("INVALID_DATE_RANGE")
   }
 
   const exception = await db.scheduleException.create({
@@ -4829,20 +4875,20 @@ export async function updateScheduleException(input: {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   // Verify ownership
   const existing = await db.scheduleException.findFirst({
     where: { id: input.id, schoolId },
   })
 
-  if (!existing) throw new Error("Schedule exception not found")
+  if (!existing) throw new Error("EXCEPTION_NOT_FOUND")
 
   // Validate dates if provided
   const startDate = input.startDate ?? existing.startDate
   const endDate = input.endDate ?? existing.endDate
   if (startDate > endDate) {
-    throw new Error("Start date must be before or equal to end date")
+    throw new Error("INVALID_DATE_RANGE")
   }
 
   // Defense-in-depth: scope update by schoolId
@@ -4877,14 +4923,14 @@ export async function deleteScheduleException(input: { id: string }) {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   // Verify ownership
   const existing = await db.scheduleException.findFirst({
     where: { id: input.id, schoolId },
   })
 
-  if (!existing) throw new Error("Schedule exception not found")
+  if (!existing) throw new Error("EXCEPTION_NOT_FOUND")
 
   // Defense-in-depth: scope delete by schoolId
   await db.scheduleException.deleteMany({
@@ -4911,7 +4957,7 @@ export async function copyScheduleSettings(input: {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   // Get source config
   const sourceConfig = await db.schoolWeekConfig.findFirst({
@@ -4919,7 +4965,7 @@ export async function copyScheduleSettings(input: {
   })
 
   if (!sourceConfig) {
-    throw new Error("Source term has no schedule configuration")
+    throw new Error("SOURCE_TERM_NO_CONFIG")
   }
 
   // Upsert target config
@@ -4987,7 +5033,7 @@ export async function getTermsForCopy() {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   const terms = await db.term.findMany({
     where: { schoolId },
@@ -5031,7 +5077,7 @@ export async function createTeacherAbsence(input: {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   // Verify teacher exists in this school
   const teacher = await db.teacher.findFirst({
@@ -5039,7 +5085,7 @@ export async function createTeacherAbsence(input: {
     select: { id: true, givenName: true, surname: true },
   })
 
-  if (!teacher) throw new Error("Teacher not found")
+  if (!teacher) throw new Error("TEACHER_NOT_FOUND")
 
   // Check for overlapping absences
   const existing = await db.teacherAbsence.findFirst({
@@ -5057,7 +5103,7 @@ export async function createTeacherAbsence(input: {
   })
 
   if (existing) {
-    throw new Error("Overlapping absence already exists for this teacher")
+    throw new Error("OVERLAPPING_ABSENCE")
   }
 
   const absence = await db.teacherAbsence.create({
@@ -5105,7 +5151,7 @@ export async function updateTeacherAbsence(input: {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   const session = await auth()
   const userId = session?.user?.id
@@ -5114,7 +5160,7 @@ export async function updateTeacherAbsence(input: {
     where: { id: input.id, schoolId },
   })
 
-  if (!existing) throw new Error("Absence not found")
+  if (!existing) throw new Error("ABSENCE_NOT_FOUND")
 
   const updateData: Record<string, unknown> = {}
   if (input.status) {
@@ -5158,7 +5204,7 @@ export async function getTeacherAbsences(input: {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   const where: Record<string, unknown> = { schoolId }
   if (input.teacherId) where.teacherId = input.teacherId
@@ -5246,7 +5292,7 @@ export async function findAvailableSubstitutes(input: {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   // Get all active teachers except the absent one
   const teachers = await db.teacher.findMany({
@@ -5356,7 +5402,7 @@ export async function assignSubstitute(input: {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   // Verify absence exists
   const absence = await db.teacherAbsence.findFirst({
@@ -5364,7 +5410,7 @@ export async function assignSubstitute(input: {
     include: { teacher: { select: { givenName: true, surname: true } } },
   })
 
-  if (!absence) throw new Error("Absence not found")
+  if (!absence) throw new Error("ABSENCE_NOT_FOUND")
 
   // Verify original slot
   const originalSlot = await db.timetable.findFirst({
@@ -5378,7 +5424,7 @@ export async function assignSubstitute(input: {
     },
   })
 
-  if (!originalSlot) throw new Error("Timetable slot not found")
+  if (!originalSlot) throw new Error("TIMETABLE_SLOT_NOT_FOUND")
 
   // Verify substitute teacher
   const substitute = await db.teacher.findFirst({
@@ -5386,7 +5432,7 @@ export async function assignSubstitute(input: {
     select: { id: true, givenName: true, surname: true },
   })
 
-  if (!substitute) throw new Error("Substitute teacher not found")
+  if (!substitute) throw new Error("SUBSTITUTE_TEACHER_NOT_FOUND")
 
   // Check if substitution already exists for this slot on this date
   const existing = await db.substitutionRecord.findFirst({
@@ -5399,7 +5445,7 @@ export async function assignSubstitute(input: {
   })
 
   if (existing) {
-    throw new Error("A substitution already exists for this slot on this date")
+    throw new Error("DUPLICATE_SUBSTITUTION")
   }
 
   // Create substitution record
@@ -5477,15 +5523,15 @@ export async function respondToSubstitution(input: {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   const record = await db.substitutionRecord.findFirst({
     where: { id: input.id, schoolId },
   })
 
-  if (!record) throw new Error("Substitution record not found")
+  if (!record) throw new Error("SUBSTITUTION_NOT_FOUND")
   if (record.status !== "PENDING") {
-    throw new Error("Can only respond to pending substitutions")
+    throw new Error("SUBSTITUTION_NOT_PENDING")
   }
 
   const updateData: Record<string, unknown> = {
@@ -5562,7 +5608,7 @@ export async function getSubstitutionRecords(input: {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   const where: Record<string, unknown> = { schoolId }
   if (input.absenceId) where.absenceId = input.absenceId
@@ -5660,15 +5706,15 @@ export async function cancelSubstitution(input: {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   const record = await db.substitutionRecord.findFirst({
     where: { id: input.id, schoolId },
   })
 
-  if (!record) throw new Error("Substitution record not found")
+  if (!record) throw new Error("SUBSTITUTION_NOT_FOUND")
   if (record.status === "COMPLETED") {
-    throw new Error("Cannot cancel a completed substitution")
+    throw new Error("SUBSTITUTION_ALREADY_COMPLETED")
   }
 
   // Defense-in-depth: scope update by schoolId
@@ -5728,10 +5774,10 @@ export async function getMyUpcomingSubstitutions(input: { limit?: number }) {
   const session = await auth()
   const userId = session?.user?.id
 
-  if (!userId) throw new Error("Not authenticated")
+  if (!userId) throw new Error("NOT_AUTHENTICATED")
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   // Find teacher by user ID
   const teacher = await db.teacher.findFirst({
@@ -5791,7 +5837,7 @@ export async function getSlotsNeedingSubstitutes(input: {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   // Get the absence details
   const absence = await db.teacherAbsence.findFirst({
@@ -5804,7 +5850,7 @@ export async function getSlotsNeedingSubstitutes(input: {
     },
   })
 
-  if (!absence) throw new Error("Absence not found")
+  if (!absence) throw new Error("ABSENCE_NOT_FOUND")
 
   // Get the teacher's timetable slots
   const slots = await db.timetable.findMany({
@@ -5917,7 +5963,7 @@ export async function getSlotsNeedingSubstitutes(input: {
 export async function getSubjectsForSlotEditor(input: { termId: string }) {
   await requireReadAccess()
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   const classes = await db.class.findMany({
     where: { schoolId, termId: input.termId },
@@ -5974,7 +6020,7 @@ export async function getSubjectsForSlotEditor(input: { termId: string }) {
 export async function getTeachersForSlotEditor(input: { termId: string }) {
   await requireReadAccess()
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   const teachers = await db.teacher.findMany({
     where: { schoolId, employmentStatus: "ACTIVE" },

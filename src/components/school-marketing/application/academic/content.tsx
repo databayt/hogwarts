@@ -11,6 +11,8 @@ import { useLocale } from "@/components/internationalization/use-locale"
 
 import { useApplySession } from "../application-context"
 import { submitApplicationAction } from "../submit-action"
+import type { SubmitActionResult } from "../submit-action"
+import ApplicationSuccessModal from "../success-modal"
 import type { AcademicStepData } from "../types"
 import { useApplyValidation } from "../validation-context"
 import { ACADEMIC_STEP_CONFIG } from "./config"
@@ -36,6 +38,10 @@ export default function AcademicContent({ dictionary }: Props) {
   sessionRef.current = session
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [submitResult, setSubmitResult] = useState<SubmitActionResult | null>(
+    null
+  )
 
   const initialData = getStepData("academic")
 
@@ -80,16 +86,40 @@ export default function AcademicContent({ dictionary }: Props) {
         }
       }
 
+      // Build documents array from individual attachment URLs
+      const attachments = currentSession.formData.attachments
+      const extractUrl = (v: unknown): string =>
+        typeof v === "string" ? v : (v as { url?: string })?.url || ""
+      const documentSlots = [
+        { key: "degreeUrl" as const, type: "degree", name: "Degree" },
+        {
+          key: "transcriptUrl" as const,
+          type: "transcript",
+          name: "Transcript",
+        },
+        { key: "idUrl" as const, type: "id", name: "ID" },
+        { key: "resumeUrl" as const, type: "resume", name: "Resume" },
+        { key: "otherUrl" as const, type: "other", name: "Other" },
+      ]
+      const documents = documentSlots
+        .map((slot) => ({
+          type: slot.type,
+          name: slot.name,
+          url: extractUrl(attachments?.[slot.key]),
+          uploadedAt: new Date().toISOString(),
+        }))
+        .filter((doc) => doc.url.length > 0)
+
       // Build flat form data and submit
       const formData = {
         campaignId: id,
-        ...currentSession.formData.attachments,
         ...personal,
         ...contact,
         ...currentSession.formData.location,
         ...guardian,
         ...academic,
-        photoUrl: currentSession.formData.attachments?.profilePhotoUrl,
+        photoUrl: extractUrl(attachments?.profilePhotoUrl),
+        ...(documents.length > 0 ? { documents } : {}),
       }
 
       const result = await submitApplicationAction(
@@ -108,9 +138,9 @@ export default function AcademicContent({ dictionary }: Props) {
           `/${locale}/application/${result.data.applicationId}/payment?number=${result.data.applicationNumber}`
         )
       } else {
-        router.push(
-          `/${locale}/application/${result.data.applicationId}/success?number=${result.data.applicationNumber}`
-        )
+        setSubmitResult(result.data)
+        setShowSuccessModal(true)
+        setIsSubmitting(false)
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to submit")
@@ -142,26 +172,42 @@ export default function AcademicContent({ dictionary }: Props) {
   const dict = ((dictionary as Record<string, Record<string, string>> | null)
     ?.apply?.academic ?? {}) as Record<string, string>
 
+  const applicantEmail = session.formData.contact?.email
+
   return (
-    <FormLayout>
-      <FormHeading
-        title={dict.title || ACADEMIC_STEP_CONFIG.label(isRTL)}
-        description={
-          dict.description || ACADEMIC_STEP_CONFIG.description(isRTL)
-        }
-      />
-      <div className="space-y-6">
-        {error && (
-          <Alert variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-        <AcademicForm
-          ref={academicFormRef}
-          initialData={initialData as AcademicStepData}
-          dictionary={dictionary}
+    <>
+      <FormLayout>
+        <FormHeading
+          title={dict.title || ACADEMIC_STEP_CONFIG.label(isRTL)}
+          description={
+            dict.description || ACADEMIC_STEP_CONFIG.description(isRTL)
+          }
         />
-      </div>
-    </FormLayout>
+        <div className="space-y-6">
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          <AcademicForm
+            ref={academicFormRef}
+            initialData={initialData as AcademicStepData}
+            dictionary={dictionary}
+          />
+        </div>
+      </FormLayout>
+      {submitResult && (
+        <ApplicationSuccessModal
+          applicationNumber={submitResult.applicationNumber}
+          applicantEmail={applicantEmail}
+          password={submitResult.accessToken}
+          schoolUrl={`${subdomain}.databayt.org`}
+          showModal={showSuccessModal}
+          setShowModal={setShowSuccessModal}
+          isRTL={isRTL}
+          locale={locale}
+        />
+      )}
+    </>
   )
 }

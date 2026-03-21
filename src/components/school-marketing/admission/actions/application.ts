@@ -506,7 +506,7 @@ export async function resumeApplicationSession(sessionToken: string): Promise<
 /**
  * Generate unique application number
  */
-function generateApplicationNumber(schoolId: string): string {
+function generateApplicationNumber(): string {
   const year = new Date().getFullYear()
   const random = Math.random().toString(36).substring(2, 8).toUpperCase()
   return `APP-${year}-${random}`
@@ -592,7 +592,7 @@ export async function submitApplication(
     let applicationNumber: string
     let attempts = 0
     do {
-      applicationNumber = generateApplicationNumber(schoolId)
+      applicationNumber = generateApplicationNumber()
       const exists = await db.application.findUnique({
         where: { applicationNumber },
       })

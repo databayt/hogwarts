@@ -280,10 +280,9 @@ A **Class** is a subject offering: Subject + Teacher + Term + Room + Grade. This
 2. Select the active term from the dropdown
 3. Click **"Generate Classes for All Grades"**
 
-This reads `SchoolSubjectSelection` records and creates:
+This reads `SchoolSubjectSelection` records and creates a `Class` record per active subject per grade, linking `CatalogSubject` + teacher + term + room + grade directly (no school-scoped Subject intermediate).
 
-- A school-scoped `Subject` record per catalog subject
-- A `Class` record linking subject + teacher + term + room + grade
+**Teacher assignment**: The algorithm matches teachers to subjects via `TeacherSubjectExpertise` records. Teachers with expertise in a subject are assigned first (round-robin within matched teachers). Teachers without a match fall back to a round-robin across all teachers. Review and adjust assignments after generation.
 
 ### Customizing Classes
 
@@ -351,7 +350,7 @@ The expertise form lets you add subject qualifications with an expertise level (
 | ---------------- | ------ | -------------------------------------- |
 | `schoolId`       | String | Tenant isolation                       |
 | `teacherId`      | String | FK to Teacher                          |
-| `subjectId`      | String | FK to Subject (school-scoped)          |
+| `subjectId`      | String | FK to CatalogSubject                   |
 | `expertiseLevel` | Enum   | `PRIMARY`, `SECONDARY`, or `CERTIFIED` |
 
 ### Recommendation
@@ -374,7 +373,7 @@ All of these must exist before generation:
 | Periods                   | Auto-provisioning | Yes       |
 | Working days (WeekConfig) | Auto-provisioning | Yes       |
 | Teachers                  | CSV import        | Semi-auto |
-| Subjects (school-scoped)  | Class generation  | Manual    |
+| CatalogSubject selections | Auto-provisioning | Yes       |
 | Classes                   | Class generation  | Manual    |
 | Classrooms                | Auto-provisioning | Yes       |
 | Teacher expertise         | Manual config     | **No**    |
@@ -409,17 +408,20 @@ Three-phase process:
 
 ### Views
 
-| View         | Shows                         | Who Uses It        |
-| ------------ | ----------------------------- | ------------------ |
-| Admin grid   | All classes × all periods     | School admin       |
-| Class view   | One class's weekly schedule   | Section teachers   |
-| Teacher view | One teacher's weekly schedule | Individual teacher |
-| Room view    | One room's weekly occupancy   | Facility manager   |
+| View           | Shows                                 | Who Uses It               |
+| -------------- | ------------------------------------- | ------------------------- |
+| Admin grid     | All classes × all periods (editable)  | ADMIN, DEVELOPER          |
+| Admin readonly | All classes × all periods (read-only) | ACCOUNTANT, STAFF         |
+| Teacher view   | Personal schedule + workload stats    | TEACHER                   |
+| Student view   | All enrolled subjects (grade-based)   | STUDENT                   |
+| Guardian view  | Per-child schedule (multi-child)      | GUARDIAN                  |
+| Room view      | One room's weekly occupancy           | Admin (via room selector) |
 
 ### Known Limitations
 
 - **Lab subjects**: The algorithm sets `requiresLab: true` for subjects with "lab" in the name. Without a lab-type room, these classes get 0 slots. **Fix**: Create a classroom with type "lab" before generating.
 - **Hours per week**: Defaults to 3 periods per subject per week. Customize via `weeklyPeriods` on `SchoolSubjectSelection`.
+- **Back-to-back constraint**: When `preventBackToBack` is enabled, the algorithm blocks consecutive periods for the same teacher. This reduces placement rate but prevents teacher fatigue.
 
 ---
 
@@ -541,12 +543,21 @@ Issues discovered during E2E testing (March 2026). Items marked ~~strikethrough~
 
 ### Fixed (March 2026)
 
-| Gap                               | Fix                                                               |
-| --------------------------------- | ----------------------------------------------------------------- |
-| ~~`requiresLab` blocks Science~~  | Only subjects with "lab" in name require lab rooms, not "science" |
-| ~~Pagination "Page 1 of -1"~~     | Attendance table now calculates correct page count from data      |
-| ~~No TeacherSubjectExpertise UI~~ | Full UI exists at Teachers > Wizard > Expertise tab               |
-| ~~Term 2 inactive~~               | Terms auto-activate based on current date (not a bug)             |
+| Gap                                                 | Fix                                                                                      |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| ~~`requiresLab` blocks Science~~                    | Only subjects with "lab" in name require lab rooms, not "science"                        |
+| ~~Pagination "Page 1 of -1"~~                       | Attendance table now calculates correct page count from data                             |
+| ~~No TeacherSubjectExpertise UI~~                   | Full UI exists at Teachers > Wizard > Expertise tab                                      |
+| ~~Term 2 inactive~~                                 | Terms auto-activate based on current date (not a bug)                                    |
+| ~~Teacher assignment assigns first teacher to all~~ | Expertise-based matching with round-robin fallback                                       |
+| ~~Transaction timeouts on Neon~~                    | Replaced `$transaction` + individual creates with `createMany({ skipDuplicates: true })` |
+| ~~Student timetable shows only 1 class~~            | `findFirst` replaced with `findMany` for all enrollment lookups                          |
+| ~~Teacher timetable uses user.id as teacherId~~     | Now resolves Teacher record via `db.teacher.findFirst({ where: { userId } })`            |
+| ~~Student timetable uses nonexistent classId~~      | Now uses `StudentClass.findMany` to get all enrolled class IDs                           |
+| ~~ACCOUNTANT/STAFF can edit timetable~~             | AdminView accepts `editable` prop; ACCOUNTANT/STAFF get `editable={false}`               |
+| ~~Guardian sees only 1 child class~~                | `getChildTimetable()` now uses `findMany` + `getTimetableByClassIds()` for all classes   |
+| ~~Guardian filter compares student vs class IDs~~   | `filterTimetableByRole()` now resolves student IDs to class IDs via StudentClass         |
+| ~~`preventBackToBack` not enforced~~                | Algorithm now returns `false` to reject consecutive slots when constraint is enabled     |
 
 ---
 
@@ -572,8 +583,7 @@ School (onboarding)
   ├── Student (import)                From CSV or manual
   │     └── academicGradeId (manual)  Grade assignment
   │
-  ├── Subject (class generation)      School-scoped from catalog
-  ├── Class (class generation)        Subject + Teacher + Term + Room
+  ├── Class (class generation)        CatalogSubject + Teacher + Term + Room + Grade
   │     └── StudentClass (enrollment) Student × Class
   │
   ├── Timetable (generation)          Day × Period × Class × Teacher × Room

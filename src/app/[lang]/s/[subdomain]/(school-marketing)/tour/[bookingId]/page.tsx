@@ -117,7 +117,7 @@ export default async function BookingPage({ params }: BookingPageProps) {
           href={`/${lang}/tour`}
           className="text-muted-foreground hover:text-foreground mb-6 inline-flex items-center text-sm"
         >
-          <ArrowLeft className="me-2 h-4 w-4" />
+          <ArrowLeft className="me-2 h-4 w-4 rtl:rotate-180" />
           {isRTL ? "العودة إلى حجز الجولات" : "Back to Tour Booking"}
         </Link>
 

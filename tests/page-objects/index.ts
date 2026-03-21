@@ -71,3 +71,9 @@ export {
   type InternalOnboardingStep,
   type JoinRole,
 } from "./join-onboarding.page"
+
+// Lifecycle test page objects
+export { AttendanceMarkingPage } from "./attendance-marking.page"
+export { ClassroomConfigurePage } from "./classroom-configure.page"
+export { TeacherExpertisePage } from "./teacher-expertise.page"
+export { TimetableGeneratePage } from "./timetable-generate.page"

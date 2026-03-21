@@ -40,6 +40,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface Exam {
   id: string
@@ -91,6 +92,8 @@ export function ExamCalendar({
   onExamClick,
   onDateClick,
 }: ExamCalendarProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.exams?.manage?.calendar
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [viewType, setViewType] = useState<"month" | "week" | "day">("month")
@@ -183,8 +186,10 @@ export function ExamCalendar({
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Exam Calendar</CardTitle>
-              <CardDescription>View and manage scheduled exams</CardDescription>
+              <CardTitle>{t?.title ?? "Exam Calendar"}</CardTitle>
+              <CardDescription>
+                {t?.description ?? "View and manage scheduled exams"}
+              </CardDescription>
             </div>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={handlePrevMonth}>
@@ -377,8 +382,16 @@ export function ExamCalendar({
                             </div>
 
                             <div className="flex items-center gap-4 text-sm">
-                              <span>Duration: {exam.duration} mins</span>
-                              <span>Total Marks: {exam.totalMarks}</span>
+                              <span>
+                                {(
+                                  t?.duration ?? "Duration: {value} mins"
+                                ).replace("{value}", String(exam.duration))}
+                              </span>
+                              <span>
+                                {(
+                                  t?.totalMarks ?? "Total Marks: {value}"
+                                ).replace("{value}", String(exam.totalMarks))}
+                              </span>
                             </div>
                           </div>
                         </div>

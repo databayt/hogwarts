@@ -12,6 +12,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 type Conflict = {
   type: "TEACHER" | "ROOM"
@@ -34,6 +35,8 @@ export function ConflictsDrawer({
   onOpenChange,
   onApplySuggestion,
 }: Props) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.timetable?.conflictsDrawer
   const [conflicts, setConflicts] = useState<Conflict[]>([])
   const [loading, setLoading] = useState(false)
   const [suggestions, setSuggestions] = useState<
@@ -75,13 +78,13 @@ export function ConflictsDrawer({
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent className="h-[65%]">
         <DrawerHeader>
-          <DrawerTitle>Conflicts</DrawerTitle>
+          <DrawerTitle>{t?.title ?? "Conflicts"}</DrawerTitle>
         </DrawerHeader>
         <div className="h-full overflow-auto px-4 pb-6">
           {loading ? (
-            <p className="muted">Loading…</p>
+            <p className="muted">{t?.loading ?? "Loading..."}</p>
           ) : conflicts.length === 0 ? (
-            <p className="muted">No conflicts</p>
+            <p className="muted">{t?.noConflicts ?? "No conflicts"}</p>
           ) : (
             <ul className="space-y-4">
               {conflicts.map((c, idx) => {
@@ -90,8 +93,10 @@ export function ConflictsDrawer({
                 return (
                   <li key={key} className="rounded-md border p-3">
                     <h6 className="mb-1">
-                      {c.type === "TEACHER" ? "Teacher" : "Room"}:{" "}
-                      {c.teacher?.name || c.room?.name || ""}
+                      {c.type === "TEACHER"
+                        ? (t?.teacher ?? "Teacher")
+                        : (t?.room ?? "Room")}
+                      : {c.teacher?.name || c.room?.name || ""}
                     </h6>
                     <p className="muted mb-2">
                       {c.classA.name} vs {c.classB.name}
@@ -108,7 +113,7 @@ export function ConflictsDrawer({
                           )
                         }
                       >
-                        Suggest for teacher
+                        {t?.suggestForTeacher ?? "Suggest for teacher"}
                       </Button>
                       <Button
                         variant="outline"
@@ -121,13 +126,13 @@ export function ConflictsDrawer({
                           )
                         }
                       >
-                        Suggest for room
+                        {t?.suggestForRoom ?? "Suggest for room"}
                       </Button>
                     </div>
                     {sug.length > 0 && (
                       <div>
                         <p className="mb-1">
-                          <small>Suggestions:</small>
+                          <small>{t?.suggestions ?? "Suggestions:"}</small>
                         </p>
                         <ul className="max-h-28 list-disc space-y-1 overflow-auto ps-5">
                           {sug.map((s) => (
@@ -147,7 +152,7 @@ export function ConflictsDrawer({
                                   })
                                 }
                               >
-                                Apply
+                                {t?.apply ?? "Apply"}
                               </Button>
                             </li>
                           ))}

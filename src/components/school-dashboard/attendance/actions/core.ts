@@ -10,6 +10,7 @@ import { z } from "zod"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
+import { dispatchNotification } from "@/lib/dispatch-notification"
 import { isChannelAvailable, sendAttendanceSMS } from "@/lib/notifications/sms"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
@@ -122,25 +123,23 @@ async function triggerAbsenceNotification(
       const hasSMS = smsAvailable && !!primaryPhone
 
       // Create in-app notification (and email via notification system)
-      await db.notification.create({
-        data: {
-          schoolId,
-          userId: guardian.userId,
-          type: "attendance_alert",
-          priority: "high",
-          title: `تنبيه غياب: ${studentName}`,
-          body: `تم تسجيل غياب ${studentName} من ${className} في ${dateStrAr}. إذا كان هذا غير متوقع، يرجى التواصل مع المدرسة.`,
-          metadata: {
-            studentId,
-            studentName,
-            classId,
-            className,
-            date: date.toISOString(),
-            dateFormatted: dateStrAr,
-            markedBy,
-          },
-          actorId: markedBy,
+      await dispatchNotification({
+        schoolId,
+        userId: guardian.userId,
+        type: "attendance_alert",
+        priority: "high",
+        title: `تنبيه غياب: ${studentName}`,
+        body: `تم تسجيل غياب ${studentName} من ${className} في ${dateStrAr}. إذا كان هذا غير متوقع، يرجى التواصل مع المدرسة.`,
+        metadata: {
+          studentId,
+          studentName,
+          classId,
+          className,
+          date: date.toISOString(),
+          dateFormatted: dateStrAr,
+          markedBy,
         },
+        actorId: markedBy,
       })
 
       // Send SMS if available and guardian has phone number
@@ -229,54 +228,76 @@ export async function markAttendance(
       approvedIntentions.map((i) => i.studentId)
     )
 
+    // Batch fetch all existing daily attendance records (1 query instead of N)
+    const allStudentIds = parsed.records.map((r) => r.studentId)
+    const existingRecords = await db.attendance.findMany({
+      where: {
+        schoolId,
+        studentId: { in: allStudentIds },
+        classId: parsed.classId,
+        date: attendanceDate,
+        periodId: null,
+      },
+      select: { id: true, studentId: true },
+    })
+    const existingMap = new Map(existingRecords.map((r) => [r.studentId, r.id]))
+
+    // Resolve final statuses (auto-excuse logic)
+    const now = new Date()
+    const toUpdate: { id: string; status: AttendanceStatus }[] = []
+    const toCreate: Prisma.AttendanceCreateManyInput[] = []
+
     for (const rec of parsed.records) {
-      // Auto-excuse: if student has approved intention and is marked absent
       let finalStatus = statusMap[rec.status]
       if (rec.status === "absent" && excusedStudentIds.has(rec.studentId)) {
         finalStatus = "EXCUSED"
       }
 
-      // Find existing daily attendance (where periodId is null)
-      const existing = await db.attendance.findFirst({
-        where: {
+      const existingId = existingMap.get(rec.studentId)
+      if (existingId) {
+        toUpdate.push({ id: existingId, status: finalStatus })
+      } else {
+        toCreate.push({
           schoolId,
           studentId: rec.studentId,
           classId: parsed.classId,
           date: attendanceDate,
-          periodId: null,
-        },
-      })
-
-      if (existing) {
-        await db.attendance.updateMany({
-          where: { id: existing.id, schoolId },
-          data: {
-            status: finalStatus,
-            markedBy: session?.user?.id,
-            markedAt: new Date(),
-          },
-        })
-      } else {
-        await db.attendance.create({
-          data: {
-            schoolId,
-            studentId: rec.studentId,
-            classId: parsed.classId,
-            date: attendanceDate,
-            status: finalStatus,
-            method: "MANUAL",
-            markedBy: session?.user?.id,
-            markedAt: new Date(),
-            checkInTime: new Date(),
-          },
+          status: finalStatus,
+          method: "MANUAL",
+          markedBy: session?.user?.id,
+          markedAt: now,
+          checkInTime: now,
         })
       }
       results.push(rec.studentId)
 
-      // Track absent students for notification (not excused ones)
       if (rec.status === "absent" && !excusedStudentIds.has(rec.studentId)) {
         absentStudents.push(rec.studentId)
       }
+    }
+
+    // Batch update existing records (1 query per distinct status)
+    const updatesByStatus = new Map<AttendanceStatus, string[]>()
+    for (const u of toUpdate) {
+      const ids = updatesByStatus.get(u.status) ?? []
+      ids.push(u.id)
+      updatesByStatus.set(u.status, ids)
+    }
+    await Promise.all(
+      Array.from(updatesByStatus.entries()).map(([status, ids]) =>
+        db.attendance.updateMany({
+          where: { id: { in: ids }, schoolId },
+          data: { status, markedBy: session?.user?.id, markedAt: now },
+        })
+      )
+    )
+
+    // Batch create new records (1 query)
+    if (toCreate.length > 0) {
+      await db.attendance.createMany({
+        data: toCreate,
+        skipDuplicates: true,
+      })
     }
 
     // Send absence notifications to guardians (non-blocking)
@@ -687,55 +708,60 @@ export async function quickMarkAllPresent(input: {
     // Extract students from StudentClass join table
     const students = classData.studentClasses.map((sc) => sc.student)
 
-    // Mark all students present
+    // Mark all students present — batch operations instead of N individual queries
     const now = new Date()
-    const results = []
+    const studentIds = students.map((s) => s.id)
 
-    for (const student of students) {
-      // Check if already marked
-      const existing = await db.attendance.findFirst({
-        where: {
+    // Batch fetch existing records (1 query instead of N)
+    const existingRecords = await db.attendance.findMany({
+      where: {
+        schoolId,
+        studentId: { in: studentIds },
+        classId: input.classId,
+        date,
+        periodId: null,
+      },
+      select: { id: true, studentId: true },
+    })
+    const existingStudentIds = new Set(existingRecords.map((r) => r.studentId))
+    const existingIds = existingRecords.map((r) => r.id)
+
+    // Batch update existing records to PRESENT (1 query)
+    if (existingIds.length > 0) {
+      await db.attendance.updateMany({
+        where: { id: { in: existingIds }, schoolId },
+        data: {
+          status: "PRESENT",
+          markedBy: session.user.id,
+          markedAt: now,
+        },
+      })
+    }
+
+    // Batch create new records for students without existing attendance (1 query)
+    const newStudents = students.filter((s) => !existingStudentIds.has(s.id))
+    if (newStudents.length > 0) {
+      await db.attendance.createMany({
+        data: newStudents.map((student) => ({
           schoolId,
           studentId: student.id,
           classId: input.classId,
           date,
-          periodId: null,
-        },
-      })
-
-      if (existing) {
-        // Update to present (scoped by schoolId)
-        await db.attendance.updateMany({
-          where: { id: existing.id, schoolId },
-          data: {
-            status: "PRESENT",
-            markedBy: session.user.id,
-            markedAt: now,
-          },
-        })
-      } else {
-        // Create new
-        await db.attendance.create({
-          data: {
-            schoolId,
-            studentId: student.id,
-            classId: input.classId,
-            date,
-            status: "PRESENT",
-            method: "MANUAL",
-            markedBy: session.user.id,
-            markedAt: now,
-            checkInTime: now,
-          },
-        })
-      }
-
-      results.push({
-        id: student.id,
-        name: `${student.givenName} ${student.surname}`,
-        status: "PRESENT" as const,
+          status: "PRESENT" as const,
+          method: "MANUAL" as const,
+          markedBy: session.user.id,
+          markedAt: now,
+          checkInTime: now,
+        })),
+        skipDuplicates: true,
       })
     }
+
+    const results = students.map((student) => ({
+      id: student.id,
+      name: `${student.givenName} ${student.surname}`,
+      status: "PRESENT" as const,
+    }))
 
     revalidatePath("/attendance")
 

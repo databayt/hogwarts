@@ -4,7 +4,6 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState, useTransition } from "react"
 import { Check } from "lucide-react"
-import { toast } from "sonner"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -24,6 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 
 import {
   getAvailableSectionsForPlacement,
@@ -128,10 +128,10 @@ export function BulkPlacement({ students, onComplete }: BulkPlacementProps) {
       setPlacedCount((prev) => prev + successCount)
 
       if (successCount > 0) {
-        toast.success(`${successCount} student(s) placed successfully`)
+        SuccessToast(`${successCount} student(s) placed successfully`)
       }
       if (errorCount > 0) {
-        toast.error(`${errorCount} student(s) failed to place`)
+        ErrorToast(`${errorCount} student(s) failed to place`)
       }
 
       setSelectedStudents(new Set())

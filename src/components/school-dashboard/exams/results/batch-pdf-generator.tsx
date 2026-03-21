@@ -34,6 +34,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import {
   cancelBatchJob,
@@ -56,6 +57,10 @@ export function BatchPDFGenerator({
   totalStudents,
   onComplete,
 }: BatchPDFGeneratorProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.exams?.resultsUi?.batchPdf as
+    | Record<string, any>
+    | undefined
   const [isOpen, setIsOpen] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [batchId, setBatchId] = useState<string | null>(null)
@@ -91,8 +96,8 @@ export function BatchPDFGenerator({
 
             if (result.data.status === "completed") {
               toast({
-                title: "PDFs Generated Successfully",
-                description: `Generated ${result.data.result?.successCount} out of ${result.data.total} PDFs`,
+                title: t?.toastSuccess ?? "PDFs Generated Successfully",
+                description: `${t?.generated ?? "Generated"} ${result.data.result?.successCount} ${t?.outOf ?? "out of"} ${result.data.total} PDFs`,
               })
 
               if (onComplete) {
@@ -100,7 +105,7 @@ export function BatchPDFGenerator({
               }
             } else {
               toast({
-                title: "Generation Failed",
+                title: t?.toastFailed ?? "Generation Failed",
                 description: result.data.message,
               })
             }
@@ -127,12 +132,13 @@ export function BatchPDFGenerator({
       if (result.success && result.data) {
         setBatchId(result.data.batchId)
         toast({
-          title: "Generation Started",
-          description: "Generating PDFs in the background...",
+          title: t?.toastStarted ?? "Generation Started",
+          description:
+            t?.toastStartedDesc ?? "Generating PDFs in the background...",
         })
       } else {
         toast({
-          title: "Failed to Start",
+          title: t?.toastFailedStart ?? "Failed to Start",
           description:
             ("error" in result ? result.error : null) ||
             "Unknown error occurred",

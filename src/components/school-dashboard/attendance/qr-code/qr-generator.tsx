@@ -54,6 +54,7 @@ export function QRGenerator({
   dictionary,
   locale = "en",
 }: QRGeneratorProps) {
+  const t = dictionary?.attendance?.qrActions
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [qrCode, setQRCode] = useState<string>("")
   const [qrData, setQRData] = useState<string>("")
@@ -145,24 +146,25 @@ export function QRGenerator({
     link.click()
 
     toast({
-      title: "Downloaded",
-      description: "QR code saved to your device",
+      title: t?.downloaded ?? "Downloaded",
+      description: t?.savedToDevice ?? "QR code saved to your device",
     })
   }
 
   const copyQRData = () => {
     navigator.clipboard.writeText(qrData)
     toast({
-      title: "Copied",
-      description: "QR data copied to clipboard",
+      title: t?.copied ?? "Copied",
+      description: t?.copiedToClipboard ?? "QR data copied to clipboard",
     })
   }
 
   const shareQR = async () => {
     if (!navigator.share) {
       toast({
-        title: "Not Supported",
-        description: "Sharing is not supported on this device",
+        title: t?.notSupported ?? "Not Supported",
+        description:
+          t?.sharingNotSupported ?? "Sharing is not supported on this device",
       })
       return
     }

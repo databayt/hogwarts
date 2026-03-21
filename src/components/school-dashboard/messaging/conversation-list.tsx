@@ -2,9 +2,9 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import {
-  ListFilter,
+  EllipsisVertical,
   LoaderCircle,
   MessageSquarePlus,
   Search,
@@ -12,16 +12,13 @@ import {
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { ConversationCard, ConversationCardSkeleton } from "./conversation-card"
@@ -43,6 +40,8 @@ export interface ConversationListProps {
   className?: string
 }
 
+type FilterType = "all" | "unread" | "groups" | "direct"
+
 export function ConversationList({
   conversations,
   currentUserId,
@@ -60,8 +59,7 @@ export function ConversationList({
   const { dictionary } = useDictionary()
   const m = dictionary?.messaging
   const [searchQuery, setSearchQuery] = useState("")
-  const [filter, setFilter] = useState<"all" | "unread" | "pinned">("all")
-  const [typeFilter, setTypeFilter] = useState<ConversationType | "all">("all")
+  const [filter, setFilter] = useState<FilterType>("all")
 
   // Filter conversations
   const filteredConversations = conversations.filter((conversation) => {
@@ -73,7 +71,6 @@ export function ConversationList({
         .toLowerCase()
         .includes(query)
 
-      // For direct conversations, search in participant names
       const matchesParticipant =
         conversation.type === "direct" &&
         conversation.participants?.some(
@@ -88,23 +85,14 @@ export function ConversationList({
       }
     }
 
-    // Unread filter
+    // Tab filters
     if (filter === "unread" && (conversation.unreadCount ?? 0) === 0) {
       return false
     }
-
-    // Pinned filter
-    if (filter === "pinned") {
-      const currentParticipant = conversation.participants?.find(
-        (p) => p.userId === currentUserId
-      )
-      if (!currentParticipant?.isPinned) {
-        return false
-      }
+    if (filter === "groups" && conversation.type === "direct") {
+      return false
     }
-
-    // Type filter
-    if (typeFilter !== "all" && conversation.type !== typeFilter) {
+    if (filter === "direct" && conversation.type !== "direct") {
       return false
     }
 
@@ -116,11 +104,9 @@ export function ConversationList({
     const aParticipant = a.participants?.find((p) => p.userId === currentUserId)
     const bParticipant = b.participants?.find((p) => p.userId === currentUserId)
 
-    // Pinned conversations first
     if (aParticipant?.isPinned && !bParticipant?.isPinned) return -1
     if (!aParticipant?.isPinned && bParticipant?.isPinned) return 1
 
-    // Then by last message time
     const aTime = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0
     const bTime = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0
     return bTime - aTime
@@ -129,108 +115,101 @@ export function ConversationList({
   const unreadCount = conversations.filter(
     (c) => (c.unreadCount ?? 0) > 0
   ).length
-  const pinnedCount = conversations.filter(
-    (c) => c.participants?.find((p) => p.userId === currentUserId)?.isPinned
-  ).length
+
+  const filterOptions: { value: FilterType; label: string }[] = [
+    { value: "all", label: m?.ui?.all_filter || "All" },
+    {
+      value: "unread",
+      label:
+        unreadCount > 0
+          ? `${m?.ui?.unread_filter || "Unread"} (${unreadCount})`
+          : m?.ui?.unread_filter || "Unread",
+    },
+    { value: "groups", label: m?.types?.group_short || "Groups" },
+    { value: "direct", label: m?.types?.direct_short || "Direct" },
+  ]
 
   return (
-    <div
-      className={cn("border-border flex h-full flex-col border-e", className)}
-    >
-      {/* Header */}
-      <div className="border-border space-y-3 border-b p-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-foreground text-lg font-semibold">
-            {m?.ui?.title || "Messages"}
-          </h2>
+    <div className={cn("flex h-full flex-col", className)}>
+      {/* Header — WhatsApp style: 60px, title + action icons */}
+      <div className="bg-msg-header-bg flex h-[60px] flex-shrink-0 items-center justify-between px-4">
+        <h2 className="text-foreground text-xl font-bold">
+          {m?.ui?.title || "Chats"}
+        </h2>
+        <div className="flex items-center gap-1">
           <Button
             variant="ghost"
             size="icon"
             onClick={onNewConversation}
-            className="flex-shrink-0"
+            className="h-10 w-10 rounded-full"
+            aria-label={m?.ui?.new_conversation || "New conversation"}
           >
             <MessageSquarePlus className="h-5 w-5" />
           </Button>
-        </div>
-
-        {/* Search */}
-        <div className="relative">
-          <Search className="text-muted-foreground absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2" />
-          <Input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={m?.ui?.search_dots || "Search..."}
-            className="ps-9"
-          />
-        </div>
-
-        {/* Filters */}
-        <div className="flex items-center gap-2">
-          <Tabs
-            value={filter}
-            onValueChange={(v) => setFilter(v as typeof filter)}
-            className="flex-1"
-          >
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="all">
-                {m?.ui?.all_filter || "All"}
-              </TabsTrigger>
-              <TabsTrigger value="unread">
-                {m?.ui?.unread_filter || "Unread"}
-                {unreadCount > 0 && (
-                  <span className="ms-1 text-xs">({unreadCount})</span>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="pinned">
-                {m?.ui?.pinned_filter || "Pinned"}
-                {pinnedCount > 0 && (
-                  <span className="ms-1 text-xs">({pinnedCount})</span>
-                )}
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-
-          <Select
-            value={typeFilter}
-            onValueChange={(v) => setTypeFilter(v as typeof typeFilter)}
-          >
-            <SelectTrigger className="w-[100px]">
-              <ListFilter className="h-4 w-4" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">
-                {m?.ui?.all_types || "All types"}
-              </SelectItem>
-              <SelectItem value="direct">
-                {m?.types?.direct_short || "Direct"}
-              </SelectItem>
-              <SelectItem value="group">
-                {m?.types?.group_short || "Group"}
-              </SelectItem>
-              <SelectItem value="class">
-                {m?.types?.class_short || "Class"}
-              </SelectItem>
-              <SelectItem value="department">
-                {m?.types?.department_short || "Department"}
-              </SelectItem>
-              <SelectItem value="announcement">
-                {m?.types?.announcement_short || "Announcement"}
-              </SelectItem>
-            </SelectContent>
-          </Select>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-10 w-10 rounded-full"
+              >
+                <EllipsisVertical className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>
+                {(m?.ui as Record<string, string>)?.archived || "Archived"}
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                {(m?.ui as Record<string, string>)?.starred ||
+                  "Starred messages"}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
-      {/* Conversation list */}
+      {/* Search — WhatsApp pill shape */}
+      <div className="px-3 py-2">
+        <div className="bg-msg-input-bg relative flex items-center rounded-[21px]">
+          <Search className="text-muted-foreground absolute start-3 h-4 w-4" />
+          <input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={m?.ui?.search_dots || "Search..."}
+            className="placeholder:text-muted-foreground w-full bg-transparent py-2 ps-9 pe-4 text-sm outline-none"
+          />
+        </div>
+      </div>
+
+      {/* Filter chips — horizontal scrollable pills */}
+      <div className="no-scrollbar flex gap-1.5 overflow-x-auto px-3 pb-2">
+        {filterOptions.map((opt) => (
+          <button
+            key={opt.value}
+            onClick={() => setFilter(opt.value)}
+            className={cn(
+              "flex-shrink-0 rounded-full px-3 py-1 text-sm transition-colors",
+              filter === opt.value
+                ? "bg-msg-unread-badge font-medium text-white"
+                : "bg-msg-hover text-foreground hover:bg-msg-hover/80"
+            )}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Conversation list — flat, no gaps */}
       <ScrollArea className="flex-1">
         {isLoading ? (
-          <div className="space-y-2 p-2">
+          <div>
             {Array.from({ length: 8 }).map((_, i) => (
               <ConversationCardSkeleton key={i} />
             ))}
           </div>
         ) : sortedConversations.length === 0 ? (
-          searchQuery || filter !== "all" || typeFilter !== "all" ? (
+          searchQuery || filter !== "all" ? (
             <div className="flex h-64 flex-col items-center justify-center p-4 text-center">
               <Search className="text-muted-foreground/50 mb-3 h-8 w-8" />
               <p className="text-muted-foreground">
@@ -248,7 +227,7 @@ export function ConversationList({
             />
           )
         ) : (
-          <div className="space-y-1 p-2">
+          <div className="relative">
             {sortedConversations.map((conversation) => (
               <ConversationCard
                 key={conversation.id}

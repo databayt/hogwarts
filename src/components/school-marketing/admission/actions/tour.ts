@@ -173,10 +173,14 @@ export async function createTourBooking(
       }
     }
 
-    if (slot.currentBookings >= slot.maxCapacity) {
+    if (slot.currentBookings + validated.numberOfAttendees > slot.maxCapacity) {
+      const remaining = slot.maxCapacity - slot.currentBookings
       return {
         success: false,
-        error: "This time slot is fully booked. Please select another time.",
+        error:
+          remaining <= 0
+            ? "This time slot is fully booked. Please select another time."
+            : `Only ${remaining} spot(s) remaining. Please reduce attendees or select another time.`,
       }
     }
 
@@ -236,7 +240,7 @@ export async function createTourBooking(
       db.admissionTimeSlot.update({
         where: { id: validated.slotId },
         data: {
-          currentBookings: { increment: 1 },
+          currentBookings: { increment: validated.numberOfAttendees },
         },
       }),
     ])

@@ -141,6 +141,7 @@ export const assignmentDetailSelect = {
     },
   },
   submissions: {
+    take: 50,
     include: {
       student: {
         select: {

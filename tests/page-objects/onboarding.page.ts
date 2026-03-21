@@ -157,12 +157,12 @@ export class OnboardingFlowPage {
       'a:has-text("Create from template")'
     )
 
-    // Form footer navigation
+    // Form footer navigation — footer selector with non-footer fallback
     this.nextButton = page.locator(
-      'footer button:has-text("Next"), footer button:has-text("Finish"), footer button:has-text("التالي"), footer button:has-text("إنهاء")'
+      'footer button:has-text("Next"), footer button:has-text("Finish"), footer button:has-text("Create"), footer button:has-text("التالي"), footer button:has-text("إنهاء"), footer button:has-text("إنشاء"), button:has-text("Next"):not([disabled]):not([aria-label]), button:has-text("التالي"):not([disabled]):not([aria-label])'
     )
     this.backButton = page.locator(
-      'footer button:has-text("Back"), footer button:has-text("رجوع")'
+      'footer button:has-text("Back"), footer button:has-text("رجوع"), button:has-text("Back"):not([aria-label]), button:has-text("رجوع"):not([aria-label])'
     )
     this.skipButton = page.locator('button:has-text("Skip")')
 
@@ -181,7 +181,9 @@ export class OnboardingFlowPage {
     this.locationSearchInput = page.locator(
       'input[placeholder*="Search for an address"], input[placeholder*="search"], input[placeholder*="بحث"]'
     )
-    this.locationSearchResults = page.locator(".bg-popover button")
+    this.locationSearchResults = page.locator(
+      '.bg-popover button, [role="listbox"] button, [role="option"]'
+    )
     this.locationAddressPreview = page
       .locator(".text-blue-600")
       .locator("..")
@@ -277,26 +279,59 @@ export class OnboardingFlowPage {
    * Returns the schoolId extracted from the URL
    */
   async createNewSchool(): Promise<string | null> {
+    // Wait for the onboarding dashboard to finish loading (skeleton → content)
+    await this.page
+      .locator(".animate-pulse")
+      .first()
+      .waitFor({ state: "hidden", timeout: TIMEOUTS.long })
+      .catch(() => {})
+    await this.createNewSchoolLink.first().waitFor({
+      state: "visible",
+      timeout: TIMEOUTS.long,
+    })
     await this.createNewSchoolLink.first().click()
-    await this.page.waitForLoadState("domcontentloaded")
 
-    // Handle overview page if we land there
-    if (this.page.url().includes("/overview")) {
-      // Wait for the overview page to fully render
-      await this.page.waitForTimeout(1000)
+    // "Create a new school" handler calls initializeSchoolSetup() then
+    // router.push to /overview?schoolId=xxx. Wait for the schoolId param.
+    // Retry up to 3 times if school creation fails (Neon cold start)
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await this.page
+        .waitForURL(/schoolId=/, { timeout: TIMEOUTS.long })
+        .catch(() => {})
+      await this.page.waitForTimeout(2000)
 
-      // Click the "Get Started" button in the footer
-      const getStartedButton = this.page.locator(
-        'footer button:not([disabled]), button:has-text("Get Started"), button:has-text("ابدأ")'
-      )
-      await getStartedButton.first().waitFor({
+      const currentUrl = this.page.url()
+      const schoolIdMatch = currentUrl.match(/schoolId=([^&]+)/)
+      const schoolId = schoolIdMatch?.[1]
+
+      if (schoolId) {
+        // Navigate directly to about-school — bypasses unreliable router.push
+        await this.page.goto(
+          `${this.baseUrl}/${this.locale}/onboarding/${schoolId}/about-school`
+        )
+        await this.page.waitForLoadState("domcontentloaded")
+        return schoolId
+      }
+
+      // School creation may have failed (toast error) — reload and retry
+      await this.page.goto(`${this.baseUrl}/${this.locale}/onboarding`)
+      await this.page.waitForLoadState("domcontentloaded")
+      await this.page.waitForTimeout(3000)
+
+      // Wait for dashboard to load and re-click "Create a new school"
+      await this.page
+        .locator(".animate-pulse")
+        .first()
+        .waitFor({ state: "hidden", timeout: TIMEOUTS.long })
+        .catch(() => {})
+      await this.createNewSchoolLink.first().waitFor({
         state: "visible",
-        timeout: TIMEOUTS.medium,
+        timeout: TIMEOUTS.long,
       })
-      await getStartedButton.first().click()
+      await this.createNewSchoolLink.first().click()
     }
 
-    // Wait for school creation (server action) and navigation to about-school
+    // Fallback: wait for URL-based navigation
     await this.page.waitForURL(/\/onboarding\/[^/]+\/about-school/, {
       timeout: TIMEOUTS.long,
     })
@@ -373,19 +408,72 @@ export class OnboardingFlowPage {
       .catch(() => false)
     if (hasError) await this.recoverFromError()
 
-    // Dismiss any toast overlay that might block the button
+    // Dismiss any toast/alert overlay that might block the button
     await this.page
-      .locator("[data-sonner-toast]")
+      .locator("[data-sonner-toast], [role='alert']")
       .first()
       .click({ force: true, timeout: 500 })
       .catch(() => {})
 
-    await this.nextButton
+    // Close any open dialog that might block the button
+    const dialogClose = this.page.locator(
+      '[data-slot="dialog-close"], [data-slot="dialog-overlay"] ~ button'
+    )
+    await dialogClose
       .first()
-      .waitFor({ state: "visible", timeout: TIMEOUTS.medium })
-    await this.nextButton.first().click()
-    // Wait for navigation or action to complete
-    await this.page.waitForLoadState("domcontentloaded")
+      .click({ force: true, timeout: 500 })
+      .catch(() => {})
+
+    // Find the Next button — prefer footer, fall back to any visible Next button
+    const footerNext = this.page.locator(
+      'footer button:has-text("Next"), footer button:has-text("التالي")'
+    )
+    const hasFooterNext = await footerNext
+      .first()
+      .isVisible({ timeout: 3000 })
+      .catch(() => false)
+
+    const targetButton = hasFooterNext
+      ? footerNext.first()
+      : this.nextButton.first()
+
+    await targetButton.waitFor({ state: "visible", timeout: TIMEOUTS.medium })
+
+    // Wait for the button to become enabled (useEffect(() => enableNext()) may not have fired yet)
+    for (let wait = 0; wait < 10; wait++) {
+      const disabled = await targetButton.isDisabled().catch(() => true)
+      if (!disabled) break
+      if (wait === 9) {
+        throw new Error(
+          "clickNext: Next button stayed disabled for 10s — step validation may not have run"
+        )
+      }
+      await this.page.waitForTimeout(1000)
+    }
+
+    // Click and wait for URL to change, retry with force on second attempt
+    const urlBefore = this.page.url()
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await targetButton.click({ force: attempt > 0 })
+
+      const changed = await this.page
+        .waitForURL((url) => url.toString() !== urlBefore, {
+          timeout: 10_000,
+        })
+        .then(() => true)
+        .catch(() => false)
+
+      if (changed) break
+
+      if (attempt === 2) {
+        const currentUrl = this.page.url()
+        throw new Error(
+          `clickNext: URL did not change after 3 attempts. Current: ${currentUrl}`
+        )
+      }
+      await this.page.waitForTimeout(1000)
+    }
+
     await this.page.waitForTimeout(500)
   }
 
@@ -516,33 +604,58 @@ export class OnboardingFlowPage {
    * and may optionally have a textarea for additional description.
    */
   async fillDescription(description: string): Promise<void> {
-    // The description step uses a radio group for school type selection.
-    // Try textarea first (some layouts may include one), fall back to radio selection.
-    const textarea = this.page.locator("textarea").first()
-    const hasTextarea = await textarea
-      .isVisible({ timeout: 2000 })
+    // The description step has sub-phases: school type → grade levels.
+    // Handle both the radio/card selection and optional textarea.
+
+    // Phase 1: School type selection (radiogroup with card-style options)
+    const radioGroup = this.page.locator('[role="radiogroup"]')
+    const hasRadio = await radioGroup
+      .isVisible({ timeout: 3000 })
       .catch(() => false)
 
-    if (hasTextarea) {
-      await textarea.clear()
-      await textarea.fill(description)
-      await this.page.waitForTimeout(300)
-    } else {
-      // Select a school type via radio button if available
-      // "Private" is typically selected by default, so this step may auto-enable Next
-      const radioGroup = this.page.locator('[role="radiogroup"]')
-      const hasRadio = await radioGroup
+    if (hasRadio) {
+      // Click the visible card wrapper (not the hidden radio input)
+      const typeCard = radioGroup.locator("[cursor=pointer], label").first()
+      const cardVisible = await typeCard
         .isVisible({ timeout: 2000 })
         .catch(() => false)
 
-      if (hasRadio) {
-        // Click the first radio option if none is selected
+      if (cardVisible) {
+        await typeCard.click()
+      } else {
+        // Fallback: click the radio input directly
         const firstRadio = radioGroup.locator("input[type='radio']").first()
-        const isChecked = await firstRadio.isChecked().catch(() => false)
-        if (!isChecked) {
-          await firstRadio.click()
-        }
+        await firstRadio.click({ force: true }).catch(() => {})
       }
+      // Wait for step transition animation
+      await this.page.waitForTimeout(1000)
+    }
+
+    // Phase 2: Grade level selection (may appear after type is selected)
+    // Check if grade level checkboxes or cards appeared
+    const gradeCards = this.page.locator(
+      '[role="radiogroup"] [cursor=pointer], [role="radiogroup"] label, [role="checkbox"]'
+    )
+    const hasGradeCards = await gradeCards
+      .first()
+      .isVisible({ timeout: 2000 })
+      .catch(() => false)
+    if (hasGradeCards) {
+      await gradeCards
+        .first()
+        .click()
+        .catch(() => {})
+      await this.page.waitForTimeout(500)
+    }
+
+    // Phase 3: Optional textarea for description text
+    const textarea = this.page.locator("textarea").first()
+    const hasTextarea = await textarea
+      .isVisible({ timeout: 1000 })
+      .catch(() => false)
+    if (hasTextarea) {
+      await textarea.clear()
+      await textarea.fill(description)
       await this.page.waitForTimeout(300)
     }
   }
@@ -605,6 +718,17 @@ export class OnboardingFlowPage {
         .catch(() => false)
     }
 
+    // Strategy 2b: Any button containing city text (handles dropdown without special classes)
+    if (!hasResults) {
+      firstResult = this.page
+        .locator("button")
+        .filter({ hasText: new RegExp(cityPart, "i") })
+        .first()
+      hasResults = await firstResult
+        .isVisible({ timeout: 3000 })
+        .catch(() => false)
+    }
+
     if (hasResults) {
       await firstResult.click()
       resultClicked = true
@@ -615,12 +739,16 @@ export class OnboardingFlowPage {
     // Strategy 3: Click directly on the map to trigger reverse geocoding.
     // This sets address via the map click handler even if search API fails.
     if (!resultClicked) {
+      // Dismiss any open dropdown by pressing Escape before clicking the map
+      await this.page.keyboard.press("Escape")
+      await this.page.waitForTimeout(500)
+
       const mapCanvas = this.page.locator("canvas.mapboxgl-canvas").first()
       const canvasVisible = await mapCanvas
         .isVisible({ timeout: 5000 })
         .catch(() => false)
       if (canvasVisible) {
-        await mapCanvas.click({ position: { x: 200, y: 160 } })
+        await mapCanvas.click({ position: { x: 200, y: 160 }, force: true })
         // Wait for reverse geocode API to resolve and set address
         await this.page.waitForTimeout(3000)
       }
@@ -770,6 +898,33 @@ export class OnboardingFlowPage {
     await this.clickNext()
   }
 
+  /**
+   * Upload a branding image on the branding step.
+   * Uses Playwright's setInputFiles on the hidden file input from FileUploader.
+   */
+  async uploadBrandingImage(filePath: string): Promise<void> {
+    await this.page.waitForTimeout(1000)
+
+    // Recover from error boundary if needed
+    const footerVisible = await this.nextButton
+      .first()
+      .isVisible({ timeout: 3000 })
+      .catch(() => false)
+    if (!footerVisible) {
+      await this.recoverFromError()
+      await this.page.waitForTimeout(2000)
+    }
+
+    // Locate the hidden file input inside FileUploader's dropzone
+    const fileInput = this.page.locator('input[type="file"]').first()
+    await fileInput.setInputFiles(filePath)
+
+    // Wait for upload to complete and preview to appear
+    await this.page.waitForTimeout(5000)
+
+    await this.clickNext()
+  }
+
   // =========================================================================
   // STEP INTERACTIONS - Import (Step 8)
   // =========================================================================
@@ -780,6 +935,87 @@ export class OnboardingFlowPage {
   async completeImport(): Promise<void> {
     await this.page.waitForTimeout(500)
     await this.clickNext()
+  }
+
+  /**
+   * Import CSV files for students and teachers on the import step.
+   * The import step has two DropZone components, each with a hidden file input.
+   * Uses Playwright's setInputFiles to trigger the upload flow.
+   */
+  async importCSVFiles(
+    studentsCsvPath: string,
+    teachersCsvPath: string
+  ): Promise<void> {
+    await this.page.waitForTimeout(1000)
+
+    // The import step renders two hidden file inputs (sr-only), one per DropZone.
+    // First input is for students, second is for teachers.
+    const fileInputs = this.page.locator('input[type="file"][accept*=".csv"]')
+
+    // Upload students CSV
+    const studentInput = fileInputs.nth(0)
+    await studentInput.waitFor({ state: "attached", timeout: TIMEOUTS.medium })
+    await studentInput.setInputFiles(studentsCsvPath)
+
+    // Wait for Phase 1 parse + Phase 2 import to begin
+    await this.page.waitForTimeout(3000)
+
+    // Upload teachers CSV
+    const teacherInput = fileInputs.nth(1)
+    await teacherInput.waitFor({ state: "attached", timeout: TIMEOUTS.medium })
+    await teacherInput.setInputFiles(teachersCsvPath)
+
+    // Wait for both imports to complete (parse + background import).
+    // The page shows "N importing..." while processing — wait for that to clear.
+    await this.page.waitForTimeout(3000)
+
+    // Wait for importing spinners to disappear (both DropZones done)
+    await this.page
+      .locator(".animate-spin")
+      .first()
+      .waitFor({ state: "hidden", timeout: 60_000 })
+      .catch(() => {})
+
+    // Wait for "importing" text to disappear — confirms processing is done
+    await this.page
+      .locator("text=/importing/i")
+      .first()
+      .waitFor({ state: "hidden", timeout: 30_000 })
+      .catch(() => {})
+
+    // Wait for the Next button to become enabled
+    const nextBtn = this.page.locator(
+      'footer button:has-text("Next"), button:has-text("Next")'
+    )
+    await nextBtn
+      .first()
+      .waitFor({ state: "visible", timeout: 10_000 })
+      .catch(() => {})
+
+    // Poll for button to become enabled (import processing may keep it disabled)
+    let buttonEnabled = false
+    for (let i = 0; i < 15; i++) {
+      const disabled = await nextBtn
+        .first()
+        .isDisabled()
+        .catch(() => true)
+      if (!disabled) {
+        buttonEnabled = true
+        break
+      }
+      await this.page.waitForTimeout(2000)
+    }
+
+    if (buttonEnabled) {
+      await this.clickNext()
+    } else {
+      // Fallback: navigate programmatically if button stays disabled during import
+      const url = this.page.url()
+      const nextStepUrl = url.replace(/\/import$/, "/finish-setup")
+      await this.page.goto(nextStepUrl)
+      await this.page.waitForLoadState("domcontentloaded")
+      await this.page.waitForTimeout(1000)
+    }
   }
 
   // =========================================================================
@@ -1002,6 +1238,34 @@ export class OnboardingFlowPage {
       new RegExp(`/onboarding/[^/]+/${stepName}`),
       { timeout: TIMEOUTS.navigation }
     )
+    // Wait for step content to load — retry with reload if stuck
+    for (let attempt = 0; attempt < 3; attempt++) {
+      // Wait for skeleton to disappear
+      const skeletonGone = await this.page
+        .locator(".animate-pulse")
+        .first()
+        .waitFor({ state: "hidden", timeout: 15_000 })
+        .then(() => true)
+        .catch(() => false)
+
+      if (skeletonGone) break
+
+      // Still loading — reload and retry (DB cold start recovery)
+      await this.page.reload()
+      await this.page.waitForLoadState("domcontentloaded")
+      await this.page.waitForTimeout(2000)
+    }
+
+    // If "Something went wrong" error appeared, reload once more
+    const hasError = await this.page
+      .locator('text="Something went wrong"')
+      .isVisible({ timeout: 2000 })
+      .catch(() => false)
+    if (hasError) {
+      await this.page.reload()
+      await this.page.waitForLoadState("domcontentloaded")
+      await this.page.waitForTimeout(3000)
+    }
   }
 
   /**

@@ -96,6 +96,7 @@ type SchoolYear = { id: string; name: string; isCurrent: boolean }
 
 export default function TimetableSettingsContent({ dictionary, lang }: Props) {
   const d = dictionary?.timetable
+  const s = d?.settings as Record<string, string> | undefined
   const getDayLabel = (value: number, label: string) => {
     const dayKeys = [
       "sunday",
@@ -160,7 +161,7 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
         setSelectedTerm(fetchedTerms[0].id)
       }
     } catch {
-      setError("Failed to load terms")
+      setError(s?.error ?? "Failed to load terms")
     }
   }
 
@@ -193,7 +194,11 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
           // Periods are year-scoped, so extract yearId from the context
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load settings")
+        setError(
+          err instanceof Error
+            ? err.message
+            : (s?.error ?? "Failed to load settings")
+        )
       }
     })
   }, [selectedTerm])
@@ -220,7 +225,11 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
       })
       setSuccess(d?.settings?.settingsSaved || "Settings saved successfully")
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save settings")
+      setError(
+        err instanceof Error
+          ? err.message
+          : (s?.error ?? "Failed to save settings")
+      )
     } finally {
       setIsSaving(false)
     }
@@ -235,8 +244,8 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
   const handleAddPeriod = async () => {
     if (!newPeriod.name || !newPeriod.startTime || !newPeriod.endTime) {
       toast({
-        title: "Validation Error",
-        description: "Please fill in all fields",
+        title: s?.validationError ?? "Validation Error",
+        description: s?.fillAllFields ?? "Please fill in all fields",
         variant: "destructive",
       })
       return
@@ -270,8 +279,9 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
       loadConfig()
     } catch (err) {
       toast({
-        title: "Error",
-        description: err instanceof Error ? err.message : "Failed to create",
+        title: s?.error ?? "Error",
+        description:
+          err instanceof Error ? err.message : (s?.error ?? "Failed to create"),
         variant: "destructive",
       })
     }
@@ -293,8 +303,9 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
       loadConfig()
     } catch (err) {
       toast({
-        title: "Error",
-        description: err instanceof Error ? err.message : "Failed to update",
+        title: s?.error ?? "Error",
+        description:
+          err instanceof Error ? err.message : (s?.error ?? "Failed to update"),
         variant: "destructive",
       })
     }
@@ -303,7 +314,8 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
   const handleDeletePeriod = async (periodId: string, periodName: string) => {
     if (
       !confirm(
-        `Are you sure you want to delete "${periodName}"? This cannot be undone.`
+        s?.deleteConfirm ??
+          `Are you sure you want to delete "${periodName}"? This cannot be undone.`
       )
     ) {
       return
@@ -311,12 +323,13 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
 
     try {
       await deletePeriod({ periodId })
-      toast({ title: "Period Deleted" })
+      toast({ title: s?.periodDeleted ?? "Period Deleted" })
       loadConfig()
     } catch (err) {
       toast({
-        title: "Error",
-        description: err instanceof Error ? err.message : "Failed to delete",
+        title: s?.error ?? "Error",
+        description:
+          err instanceof Error ? err.message : (s?.error ?? "Failed to delete"),
         variant: "destructive",
       })
     }
@@ -339,8 +352,9 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
       setIsCopyDialogOpen(false)
     } catch (err) {
       toast({
-        title: "Error",
-        description: err instanceof Error ? err.message : "Failed to copy",
+        title: s?.error ?? "Error",
+        description:
+          err instanceof Error ? err.message : (s?.error ?? "Failed to copy"),
         variant: "destructive",
       })
     }
@@ -373,8 +387,9 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
       loadConfig()
     } catch (err) {
       toast({
-        title: "Error",
-        description: err instanceof Error ? err.message : "Failed to apply",
+        title: s?.error ?? "Error",
+        description:
+          err instanceof Error ? err.message : (s?.error ?? "Failed to apply"),
         variant: "destructive",
       })
     }
@@ -626,7 +641,7 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
                         {periods.length > 0 && (
                           <Alert>
                             <AlertCircle className="h-4 w-4" />
-                            <AlertTitle>{"Warning"}</AlertTitle>
+                            <AlertTitle>{s?.warning ?? "Warning"}</AlertTitle>
                             <AlertDescription>
                               {d?.settings?.replaceWarning ||
                                 "This will replace all existing periods for this year."}

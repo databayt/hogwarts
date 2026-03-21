@@ -90,6 +90,26 @@ interface TimetableBuilderProps {
   onSave: (entries: TimetableEntry[]) => Promise<void>
 }
 
+const DAYS_OF_WEEK_KEYS = [
+  "sunday",
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+] as const
+
+const DAYS_OF_WEEK_FALLBACK = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+]
+
 const DAYS_OF_WEEK = [
   { id: 0, name: "Sunday" },
   { id: 1, name: "Monday" },
@@ -197,12 +217,14 @@ function TimetableCell({
   entry,
   onDrop,
   onRemove,
+  dropSubjectText,
 }: {
   day: number
   timeSlot: TimeSlot
   entry?: TimetableEntry
   onDrop: (dayOfWeek: number, timeSlotId: string, subject: Subject) => void
   onRemove: (entryId: string) => void
+  dropSubjectText?: string
 }) {
   const { setNodeRef, isOver } = useSortable({
     id: `cell-${day}-${timeSlot.id}`,
@@ -260,7 +282,7 @@ function TimetableCell({
         </div>
       ) : (
         <div className="text-muted-foreground flex h-full items-center justify-center text-xs">
-          Drop subject here
+          {dropSubjectText ?? "Drop subject here"}
         </div>
       )}
     </div>
@@ -276,7 +298,7 @@ export function TimetableBuilder({
   onSave,
 }: TimetableBuilderProps) {
   const { dictionary } = useDictionary()
-  const t = dictionary?.messages?.toast
+  const t = dictionary?.school?.timetable?.visualBuilder
   const [entries, setEntries] = useState<Map<string, TimetableEntry>>(
     new Map(initialEntries.map((e) => [`${e.dayOfWeek}-${e.timeSlotId}`, e]))
   )
@@ -339,7 +361,7 @@ export function TimetableBuilder({
     }
 
     setEntries((prev) => new Map(prev).set(key, newEntry))
-    toast.success(t?.success?.updated || `Added ${subject.name} to timetable`)
+    toast.success(t?.added ?? `Added ${subject.name} to timetable`)
   }
 
   const handleRemoveEntry = (entryId: string) => {
@@ -353,7 +375,7 @@ export function TimetableBuilder({
       }
       return newEntries
     })
-    toast.success(t?.success?.deleted || "Removed from timetable")
+    toast.success(t?.removed ?? "Removed from timetable")
   }
 
   const handleSave = async () => {
@@ -361,9 +383,9 @@ export function TimetableBuilder({
     try {
       const entriesArray = Array.from(entries.values())
       await onSave(entriesArray)
-      toast.success(t?.success?.saved || "Timetable saved successfully")
+      toast.success(t?.saved ?? "Timetable saved successfully")
     } catch (error) {
-      toast.error(t?.error?.saveFailed || "Failed to save timetable")
+      toast.error(t?.saveFailed ?? "Failed to save timetable")
     } finally {
       setSaving(false)
     }
@@ -392,20 +414,23 @@ export function TimetableBuilder({
           data.map((e) => [`${e.dayOfWeek}-${e.timeSlotId}`, e])
         )
         setEntries(newEntries)
-        toast.success(
-          t?.success?.importCompleted || "Timetable imported successfully"
-        )
+        toast.success(t?.imported ?? "Timetable imported successfully")
       } catch (error) {
-        toast.error(t?.error?.importFailed || "Failed to import timetable")
+        toast.error(t?.importFailed ?? "Failed to import timetable")
       }
     }
     reader.readAsText(file)
   }
 
   const handleClearAll = () => {
-    if (confirm("Are you sure you want to clear the entire timetable?")) {
+    if (
+      confirm(
+        t?.clearConfirm ??
+          "Are you sure you want to clear the entire timetable?"
+      )
+    ) {
       setEntries(new Map())
-      toast.success(t?.success?.deleted || "Timetable cleared")
+      toast.success(t?.cleared ?? "Timetable cleared")
     }
   }
 
@@ -447,20 +472,22 @@ export function TimetableBuilder({
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Visual Timetable Builder</CardTitle>
+                <CardTitle>{t?.title ?? "Visual Timetable Builder"}</CardTitle>
                 <CardDescription>
-                  Drag subjects to time slots to create your weekly schedule for{" "}
-                  {className}
+                  {(
+                    t?.description ??
+                    "Drag subjects to time slots to create your weekly schedule for {className}"
+                  ).replace("{className}", className)}
                 </CardDescription>
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={handleClearAll}>
                   <Trash className="me-2 h-4 w-4" />
-                  Clear All
+                  {t?.clearAll ?? "Clear All"}
                 </Button>
                 <Button variant="outline" size="sm" onClick={handleExport}>
                   <Download className="me-2 h-4 w-4" />
-                  Export
+                  {t?.export ?? "Export"}
                 </Button>
                 <div>
                   <input
@@ -476,13 +503,13 @@ export function TimetableBuilder({
                       className="cursor-pointer"
                     >
                       <Upload className="me-2 h-4 w-4" />
-                      Import
+                      {t?.import ?? "Import"}
                     </label>
                   </Button>
                 </div>
                 <Button onClick={handleSave} disabled={saving}>
                   <Save className="me-2 h-4 w-4" />
-                  {saving ? "Saving..." : "Save"}
+                  {saving ? (t?.saving ?? "Saving...") : (t?.save ?? "Save")}
                 </Button>
               </div>
             </div>
@@ -494,9 +521,11 @@ export function TimetableBuilder({
           <div className="col-span-3">
             <Card className="sticky top-4">
               <CardHeader>
-                <CardTitle className="text-sm">Subjects</CardTitle>
+                <CardTitle className="text-sm">
+                  {t?.subjects ?? "Subjects"}
+                </CardTitle>
                 <CardDescription className="text-xs">
-                  Drag subjects to the timetable
+                  {t?.dragSubjects ?? "Drag subjects to the timetable"}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -515,15 +544,19 @@ export function TimetableBuilder({
 
                 {/* Statistics */}
                 <div className="mt-4 space-y-2 border-t pt-4">
-                  <div className="text-sm font-medium">Statistics</div>
+                  <div className="text-sm font-medium">
+                    {t?.statistics ?? "Statistics"}
+                  </div>
                   <div className="space-y-1 text-xs">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Fill Rate:</span>
+                      <span className="text-muted-foreground">
+                        {t?.fillRate ?? "Fill Rate:"}
+                      </span>
                       <span className="font-medium">{stats.fillRate}%</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">
-                        Periods Filled:
+                        {t?.periodsFilled ?? "Periods Filled:"}
                       </span>
                       <span className="font-medium">
                         {stats.filledPeriods}/{stats.totalPeriods}
@@ -532,7 +565,9 @@ export function TimetableBuilder({
                   </div>
 
                   <div className="space-y-1 pt-2 text-xs">
-                    <div className="mb-1 font-medium">Hours per Subject:</div>
+                    <div className="mb-1 font-medium">
+                      {t?.hoursPerSubject ?? "Hours per Subject:"}
+                    </div>
                     {Array.from(stats.subjectHours).map(([subject, hours]) => (
                       <div key={subject} className="flex justify-between">
                         <span className="text-muted-foreground">
@@ -555,13 +590,16 @@ export function TimetableBuilder({
                   <table className="w-full border-collapse">
                     <thead>
                       <tr className="bg-muted">
-                        <th className="border p-2 text-xs font-medium">Time</th>
+                        <th className="border p-2 text-xs font-medium">
+                          {t?.time ?? "Time"}
+                        </th>
                         {DAYS_OF_WEEK.map((day) => (
                           <th
                             key={day.id}
                             className="border p-2 text-xs font-medium"
                           >
-                            {day.name}
+                            {t?.[DAYS_OF_WEEK_KEYS[day.id]] ??
+                              DAYS_OF_WEEK_FALLBACK[day.id]}
                           </th>
                         ))}
                       </tr>
@@ -583,6 +621,7 @@ export function TimetableBuilder({
                                 entry={entries.get(`${day.id}-${timeSlot.id}`)}
                                 onDrop={handleAddEntry}
                                 onRemove={handleRemoveEntry}
+                                dropSubjectText={t?.dropSubject}
                               />
                             </td>
                           ))}

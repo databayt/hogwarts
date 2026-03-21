@@ -9,6 +9,7 @@ import { Clock, Medal, TrendingUp } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 export interface AttemptItem {
   id: string
@@ -33,6 +34,9 @@ export function AttemptHistory({
   attempts,
   title = "My Attempts",
 }: AttemptHistoryProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.exams?.shared
+
   if (attempts.length === 0) return null
 
   const bestScore = Math.max(...attempts.map((a) => a.percentage))
@@ -65,15 +69,19 @@ export function AttemptHistory({
         {/* Summary stats */}
         <div className="mt-2 grid grid-cols-3 gap-3">
           <div className="bg-muted/50 rounded-md p-2 text-center">
-            <p className="text-muted-foreground text-xs">Best</p>
+            <p className="text-muted-foreground text-xs">{t?.best ?? "Best"}</p>
             <p className="text-sm font-bold">{Math.round(bestScore)}%</p>
           </div>
           <div className="bg-muted/50 rounded-md p-2 text-center">
-            <p className="text-muted-foreground text-xs">Average</p>
+            <p className="text-muted-foreground text-xs">
+              {t?.average ?? "Average"}
+            </p>
             <p className="text-sm font-bold">{Math.round(avgScore)}%</p>
           </div>
           <div className="bg-muted/50 rounded-md p-2 text-center">
-            <p className="text-muted-foreground text-xs">Attempts</p>
+            <p className="text-muted-foreground text-xs">
+              {t?.attempts ?? "Attempts"}
+            </p>
             <p className="text-sm font-bold">{attempts.length}</p>
           </div>
         </div>
@@ -99,7 +107,10 @@ export function AttemptHistory({
               </div>
               <div className="text-muted-foreground mt-0.5 flex items-center gap-2 text-xs">
                 {attempt.name && <span>{attempt.name}</span>}
-                <span>Attempt #{attempt.attemptNumber}</span>
+                <span>
+                  {t?.attemptNumber ?? "Attempt #"}
+                  {attempt.attemptNumber}
+                </span>
                 {attempt.submittedAt && (
                   <span className="flex items-center gap-0.5">
                     <Clock className="h-3 w-3" />

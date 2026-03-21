@@ -36,6 +36,8 @@ export interface Invoice {
   notes?: string | null
   status: InvoiceStatus
   userId: string
+  schoolId: string
+  wizardStep?: string | null
   createdAt: Date
   updatedAt: Date
 }

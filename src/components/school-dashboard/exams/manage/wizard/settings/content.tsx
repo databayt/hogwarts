@@ -9,23 +9,29 @@ import { FormHeading, FormLayout } from "@/components/form"
 import { useWizardValidation } from "@/components/form/template/wizard-validation-context"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { completeExamWizard } from "../actions"
 import { useExamWizard } from "../use-exam-wizard"
 import { SettingsForm } from "./form"
 
-const TAB_HEADINGS: Record<string, { title: string; description: string }> = {
-  proctoring: {
-    title: "Proctoring",
-    description: "Configure exam security and monitoring settings.",
-  },
-  attempts: {
-    title: "Attempts & Submission",
-    description: "Configure attempt limits and late submission rules.",
-  },
-}
-
 export default function SettingsContent() {
+  const { dictionary } = useDictionary()
+  const tw = dictionary?.school?.exams?.wizard?.examWizard?.settings
+
+  const TAB_HEADINGS: Record<string, { title: string; description: string }> = {
+    proctoring: {
+      title: tw?.proctoring ?? "Proctoring",
+      description:
+        tw?.proctoringDescription ?? "Configure exam security settings.",
+    },
+    attempts: {
+      title: tw?.attempts ?? "Attempts & Submission",
+      description:
+        tw?.attemptsDescription ??
+        "Configure attempt limits and submission rules.",
+    },
+  }
   const params = useParams()
   const router = useRouter()
   const examId = params.id as string

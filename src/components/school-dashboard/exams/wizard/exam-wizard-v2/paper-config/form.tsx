@@ -15,10 +15,12 @@ import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { CheckboxField, InputField, SelectField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { updatePaperConfig } from "./actions"
 import { paperConfigSchema, type PaperConfigFormData } from "./validation"
 
+// Static labels - dictionary applied at render time via useDictionary
 const TEMPLATE_OPTIONS = [
   { label: "Classic", value: "CLASSIC" },
   { label: "Modern", value: "MODERN" },
@@ -39,6 +41,8 @@ interface PaperConfigFormProps {
 
 export const PaperConfigForm = forwardRef<WizardFormRef, PaperConfigFormProps>(
   ({ generatedExamId, initialData, onValidChange }, ref) => {
+    const { dictionary } = useDictionary()
+    const t = dictionary?.school?.exams?.wizard?.examWizard?.paperConfig
     const [isPending, startTransition] = useTransition()
 
     const form = useForm<PaperConfigFormData>({
@@ -95,13 +99,21 @@ export const PaperConfigForm = forwardRef<WizardFormRef, PaperConfigFormProps>(
             <SelectField
               name="template"
               label="Paper Template"
-              options={TEMPLATE_OPTIONS}
+              options={[
+                { label: t?.styles?.classic ?? "Classic", value: "CLASSIC" },
+                { label: t?.styles?.modern ?? "Modern", value: "MODERN" },
+                { label: t?.styles?.formal ?? "Formal", value: "FORMAL" },
+                { label: t?.styles?.custom ?? "Custom", value: "CUSTOM" },
+              ]}
               disabled={isPending}
             />
             <SelectField
               name="pageSize"
               label="Page Size"
-              options={PAGE_SIZE_OPTIONS}
+              options={[
+                { label: t?.sizes?.a4 ?? "A4", value: "A4" },
+                { label: t?.sizes?.letter ?? "Letter", value: "Letter" },
+              ]}
               disabled={isPending}
             />
           </div>

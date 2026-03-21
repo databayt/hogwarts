@@ -6,8 +6,6 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { X } from "lucide-react"
 
-import { Badge } from "@/components/ui/badge"
-
 interface BannerApplication {
   id: string
   applicationNumber: string
@@ -21,117 +19,110 @@ interface ApplicationStatusBannerClientProps {
   locale: string
 }
 
-const STATUS_LABELS: Record<string, Record<string, string>> = {
-  SUBMITTED: { ar: "تم التقديم", en: "Submitted" },
-  UNDER_REVIEW: { ar: "قيد المراجعة", en: "Under Review" },
-  SHORTLISTED: { ar: "في القائمة المختصرة", en: "Shortlisted" },
-  ENTRANCE_SCHEDULED: { ar: "موعد اختبار القبول", en: "Entrance Scheduled" },
-  INTERVIEW_SCHEDULED: { ar: "موعد المقابلة", en: "Interview Scheduled" },
-  SELECTED: { ar: "تم القبول", en: "Accepted" },
-  WAITLISTED: { ar: "قائمة الانتظار", en: "Waitlisted" },
-  REJECTED: { ar: "مرفوض", en: "Not Selected" },
-  ADMITTED: { ar: "تم التسجيل", en: "Enrolled" },
-  WITHDRAWN: { ar: "تم السحب", en: "Withdrawn" },
-}
-
-const STATUS_BADGE_VARIANT: Record<
-  string,
-  "outline" | "secondary" | "default" | "destructive"
-> = {
-  SUBMITTED: "outline",
-  UNDER_REVIEW: "outline",
-  SHORTLISTED: "secondary",
-  ENTRANCE_SCHEDULED: "secondary",
-  INTERVIEW_SCHEDULED: "secondary",
-  SELECTED: "default",
-  WAITLISTED: "outline",
-  REJECTED: "destructive",
-  ADMITTED: "default",
-  WITHDRAWN: "destructive",
-}
-
-// Timeline steps for the progress indicator
-const TIMELINE_STEPS = ["SUBMITTED", "UNDER_REVIEW", "SELECTED", "ADMITTED"]
-
-function getTimelineIndex(status: string): number {
-  if (status === "SUBMITTED") return 0
-  if (
-    status === "UNDER_REVIEW" ||
-    status === "SHORTLISTED" ||
-    status === "ENTRANCE_SCHEDULED" ||
-    status === "INTERVIEW_SCHEDULED"
-  )
-    return 1
-  if (status === "SELECTED") return 2
-  if (status === "ADMITTED") return 3
-  return -1 // REJECTED, WAITLISTED, WITHDRAWN — not on the happy path
-}
-
-function StatusMessage({
+function BannerMessage({
   status,
   applicationNumber,
   applicationFeePaid,
+  applicationId,
   locale,
 }: {
   status: string
   applicationNumber: string
   applicationFeePaid: boolean
+  applicationId: string
   locale: string
 }) {
   const isAr = locale === "ar"
 
+  // SUBMITTED / UNDER_REVIEW / SHORTLISTED / ENTRANCE_SCHEDULED / INTERVIEW_SCHEDULED
+  if (
+    status === "SUBMITTED" ||
+    status === "UNDER_REVIEW" ||
+    status === "SHORTLISTED" ||
+    status === "ENTRANCE_SCHEDULED" ||
+    status === "INTERVIEW_SCHEDULED"
+  ) {
+    return (
+      <span className="text-sm text-white">
+        {isAr ? "طلب رقم" : "Application"}{" "}
+        <span className="font-mono font-medium">{applicationNumber}</span>
+        {" — "}
+        {isAr ? "بانتظار الموافقة" : "waiting for approval"}
+      </span>
+    )
+  }
+
+  // SELECTED (approved) — needs payment
+  if (status === "SELECTED" && !applicationFeePaid) {
+    return (
+      <span className="flex items-center gap-2 text-sm text-white">
+        {isAr ? "طلب رقم" : "Application"}{" "}
+        <span className="font-mono font-medium">{applicationNumber}</span>
+        {" — "}
+        {isAr ? "تمت الموافقة، أكمل الدفع" : "approved, continue with payment"}
+        <Link
+          href={`/${locale}/application/${applicationId}/payment`}
+          className="rounded-md bg-white px-3 py-1 text-sm font-medium text-[#E8704E] hover:bg-white/90"
+        >
+          {isAr ? "ادفع الآن" : "Pay Now"}
+        </Link>
+      </span>
+    )
+  }
+
+  // SELECTED + paid
   if (status === "SELECTED" && applicationFeePaid) {
     return (
       <span className="text-sm text-white">
-        {isAr
-          ? "تهانينا! تم قبولك — تم الدفع"
-          : "Congratulations! Accepted — Payment received"}
+        {isAr ? "طلب رقم" : "Application"}{" "}
+        <span className="font-mono font-medium">{applicationNumber}</span>
+        {" — "}
+        {isAr ? "تمت الموافقة، تم الدفع" : "approved, payment received"}
       </span>
     )
   }
 
-  if (status === "SELECTED") {
-    return (
-      <span className="text-sm text-white">
-        {isAr ? "تهانينا! تم قبولك" : "Congratulations! You've been accepted"}
-      </span>
-    )
-  }
-
+  // ADMITTED
   if (status === "ADMITTED") {
     return (
       <span className="text-sm text-white">
-        {isAr ? "مرحبًا! تم تأكيد التسجيل" : "Welcome! Enrollment confirmed"}
+        {isAr ? "طلب رقم" : "Application"}{" "}
+        <span className="font-mono font-medium">{applicationNumber}</span>
+        {" — "}
+        {isAr ? "تم التسجيل" : "enrolled"}
       </span>
     )
   }
 
-  const label = STATUS_LABELS[status]?.[locale] ?? status
+  // REJECTED / WITHDRAWN / WAITLISTED
+  if (status === "REJECTED") {
+    return (
+      <span className="text-sm text-white/80">
+        {isAr ? "طلب رقم" : "Application"}{" "}
+        <span className="font-mono font-medium">{applicationNumber}</span>
+        {" — "}
+        {isAr ? "لم يتم القبول" : "not accepted"}
+      </span>
+    )
+  }
+
+  if (status === "WITHDRAWN") {
+    return (
+      <span className="text-sm text-white/80">
+        {isAr ? "طلب رقم" : "Application"}{" "}
+        <span className="font-mono font-medium">{applicationNumber}</span>
+        {" — "}
+        {isAr ? "تم السحب" : "withdrawn"}
+      </span>
+    )
+  }
+
+  // Fallback
   return (
     <span className="text-sm text-white">
       {isAr ? "طلب رقم" : "Application"}{" "}
       <span className="font-mono font-medium">{applicationNumber}</span>
-      {" — "}
-      {label}
     </span>
-  )
-}
-
-function TimelineIndicator({ status }: { status: string }) {
-  const currentIndex = getTimelineIndex(status)
-  if (currentIndex < 0) return null
-
-  return (
-    <div className="hidden items-center gap-1 sm:flex">
-      {TIMELINE_STEPS.map((_, i) => (
-        <div
-          key={i}
-          className={`h-1.5 w-6 rounded-full transition-colors ${
-            i <= currentIndex ? "bg-white" : "bg-white/30"
-          }`}
-        />
-      ))}
-    </div>
   )
 }
 
@@ -151,54 +142,21 @@ export function ApplicationStatusBannerClient({
 
   if (dismissed) return null
 
-  const { status, applicationNumber, campaignId, applicationFeePaid } =
-    application
-  const variant = STATUS_BADGE_VARIANT[status] ?? "outline"
-
-  const needsPayment = status === "SELECTED" && !applicationFeePaid
-  const isAdmitted = status === "ADMITTED"
-  const selectedAndPaid = status === "SELECTED" && applicationFeePaid
-
   const handleDismiss = () => {
     localStorage.setItem(storageKey, "true")
     setDismissed(true)
   }
 
   return (
-    <div className="w-full bg-[#E8704E] px-4 py-2.5">
-      <div className="mx-auto flex max-w-7xl items-center justify-center gap-4">
-        <StatusMessage
-          status={status}
-          applicationNumber={applicationNumber}
-          applicationFeePaid={applicationFeePaid}
+    <div className="relative left-1/2 w-screen -translate-x-1/2 bg-[#E8704E]">
+      <div className="mx-auto flex items-center justify-center gap-3 py-2.5">
+        <BannerMessage
+          status={application.status}
+          applicationNumber={application.applicationNumber}
+          applicationFeePaid={application.applicationFeePaid}
+          applicationId={application.id}
           locale={locale}
         />
-
-        <Badge variant={variant} className="hidden sm:inline-flex">
-          {STATUS_LABELS[status]?.[locale] ?? status}
-        </Badge>
-
-        <TimelineIndicator status={status} />
-
-        <div className="flex items-center gap-2 text-sm">
-          {needsPayment && (
-            <Link
-              href={`/${locale}/application/${campaignId}/payment`}
-              className="rounded-md bg-white px-3 py-1 text-sm font-medium text-[#E8704E] hover:bg-white/90"
-            >
-              {locale === "ar" ? "إكمال الدفع" : "Complete Payment"}
-            </Link>
-          )}
-
-          {(isAdmitted || selectedAndPaid) && (
-            <Link
-              href={`/${locale}/dashboard`}
-              className="rounded-md bg-white px-3 py-1 text-sm font-medium text-[#E8704E] hover:bg-white/90"
-            >
-              {locale === "ar" ? "لوحة التحكم" : "Go to Dashboard"}
-            </Link>
-          )}
-        </div>
 
         <button
           onClick={handleDismiss}

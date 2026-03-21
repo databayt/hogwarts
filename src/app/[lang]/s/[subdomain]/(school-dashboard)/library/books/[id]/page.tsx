@@ -37,6 +37,7 @@ export default async function LibraryBookDetail({ params }: Props) {
     <LibraryBookDetailContent
       bookId={id}
       userId={session.user.id}
+      lang={lang}
       dictionary={dictionary.school}
     />
   )

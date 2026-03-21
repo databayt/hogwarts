@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { headers } from "next/headers"
+import { cookies, headers } from "next/headers"
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import Stripe from "stripe"
@@ -11,12 +11,22 @@ import { env } from "@/env.mjs"
 import { db } from "@/lib/db"
 import { stripe } from "@/lib/stripe"
 import { getTenantContext } from "@/lib/tenant-context"
-import { i18n } from "@/components/internationalization/config"
+import { i18n, type Locale } from "@/components/internationalization/config"
 import {
   assertStreamPermission,
   getAuthContext,
 } from "@/components/stream/authorization"
 import { sendEnrollmentEmail } from "@/components/stream/shared/email-service"
+
+/** Resolve the user's locale from cookie or accept-language header */
+async function resolveLocale(): Promise<Locale> {
+  const cookieStore = await cookies()
+  const localeCookie = cookieStore.get("NEXT_LOCALE")?.value
+  if (localeCookie && i18n.locales.includes(localeCookie as Locale)) {
+    return localeCookie as Locale
+  }
+  return i18n.defaultLocale
+}
 
 /**
  * @deprecated Use catalog-actions.ts enrollInCatalogSubject() instead.
@@ -30,7 +40,7 @@ export async function enrollInCourseAction(courseId: string) {
   const headersList = await headers()
   const host = headersList.get("host") || ""
   const subdomain = host.split(".")[0]
-  const locale = i18n.defaultLocale
+  const locale = await resolveLocale()
 
   // Check authentication and enroll permission
   const authCtx = getAuthContext(session)
@@ -174,28 +184,43 @@ export async function enrollInCourseAction(courseId: string) {
         }
       }
 
-      // Create Stripe price if not exists
-      // We already checked stripe is not null above, but TypeScript doesn't track it across closure
-      const stripeProduct = await stripe!.products.create({
-        name: course.title,
-        metadata: {
+      // Reuse existing Stripe price from prior enrollments to avoid duplication
+      const existingWithPrice = await tx.streamEnrollment.findFirst({
+        where: {
           courseId: course.id,
           schoolId,
+          stripePriceId: { not: null },
         },
+        select: { stripePriceId: true },
       })
 
-      const stripePrice = await stripe!.prices.create({
-        product: stripeProduct.id,
-        unit_amount: Math.round(course.price * 100), // Convert to cents
-        currency: "usd",
-      })
+      let usePriceId = existingWithPrice?.stripePriceId ?? null
+
+      if (!usePriceId) {
+        // First paid enrollment — create Stripe product + price once
+        const stripeProduct = await stripe!.products.create({
+          name: course.title,
+          metadata: {
+            courseId: course.id,
+            schoolId,
+          },
+        })
+
+        const stripePrice = await stripe!.prices.create({
+          product: stripeProduct.id,
+          unit_amount: Math.round(course.price * 100), // Convert to cents
+          currency: "usd",
+        })
+
+        usePriceId = stripePrice.id
+      }
 
       // Create checkout session
       const checkoutSession = await stripe!.checkout.sessions.create({
         customer: stripeCustomerId,
         line_items: [
           {
-            price: stripePrice.id,
+            price: usePriceId,
             quantity: 1,
           },
         ],
@@ -210,12 +235,12 @@ export async function enrollInCourseAction(courseId: string) {
         },
       })
 
-      // Store checkout session ID
+      // Store checkout session ID and price reference
       await tx.streamEnrollment.update({
         where: { id: enrollment.id },
         data: {
           stripeCheckoutSessionId: checkoutSession.id,
-          stripePriceId: stripePrice.id,
+          stripePriceId: usePriceId,
         },
       })
 
@@ -372,12 +397,12 @@ export async function verifyPaymentAndActivateEnrollment(sessionId: string) {
 
     // Send enrollment confirmation email (fire and forget)
     if (user?.email) {
-      const locale = i18n.defaultLocale
+      const emailLocale = await resolveLocale()
       sendEnrollmentEmail({
         to: user.email,
         studentName: user.username || "Student",
         courseTitle: enrollment.course.title,
-        courseUrl: `${env.NEXT_PUBLIC_APP_URL}/${locale}/stream/dashboard/${enrollment.course.slug}`,
+        courseUrl: `${env.NEXT_PUBLIC_APP_URL}/${emailLocale}/stream/dashboard/${enrollment.course.slug}`,
         schoolName: school?.name || "School",
       }).catch((err) => console.error("Failed to send enrollment email:", err))
     }

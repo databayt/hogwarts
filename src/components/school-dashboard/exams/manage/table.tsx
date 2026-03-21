@@ -89,11 +89,11 @@ function ExamsTableInner({
         } else {
           // Revert on error
           refresh()
-          ErrorToast("Failed to delete exam")
+          ErrorToast(result.error || "FAILED_TO_DELETE_EXAM")
         }
       } catch (e) {
         refresh()
-        ErrorToast(e instanceof Error ? e.message : "Failed to delete")
+        ErrorToast(e instanceof Error ? e.message : "FAILED_TO_DELETE_EXAM")
       }
     },
     [refresh]

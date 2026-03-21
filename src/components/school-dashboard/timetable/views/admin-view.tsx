@@ -49,6 +49,7 @@ interface Props {
   dictionary: Dictionary["school"]
   lang: Locale
   termId: string
+  editable?: boolean
   termInfo: {
     id: string
     termNumber: number
@@ -74,12 +75,14 @@ export default function AdminView({
   dictionary,
   lang,
   termId,
+  editable: editableProp = true,
   workingDays,
   periods,
   lunchAfterPeriod,
   isLoading,
 }: Props) {
-  const d = dictionary?.timetable
+  const d = dictionary?.timetable as Record<string, any> | undefined
+  const av = (d as Record<string, any>)?.adminViewUi
   const isRTL = lang === "ar"
 
   const [viewMode, setViewMode] = useState<ViewMode>("classroom")
@@ -261,15 +264,17 @@ export default function AdminView({
             <Button variant="outline" className="w-[180px] justify-between">
               {selectedClassroom
                 ? rooms.find((r) => r.id === selectedClassroom)?.label
-                : "Select classroom"}
+                : (av?.labels?.lastPublished ?? "Select classroom")}
               <ChevronsUpDown className="opacity-50" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-[180px] p-0">
             <Command>
-              <CommandInput placeholder="Search..." />
+              <CommandInput
+                placeholder={av?.labels?.pendingChanges ?? "Search..."}
+              />
               <CommandList>
-                <CommandEmpty>No results.</CommandEmpty>
+                <CommandEmpty>{d?.noResults ?? "No results."}</CommandEmpty>
                 <CommandGroup>
                   {rooms.map((r) => (
                     <CommandItem
@@ -302,15 +307,17 @@ export default function AdminView({
             <Button variant="outline" className="w-[180px] justify-between">
               {selectedId
                 ? teachers.find((t) => t.id === selectedId)?.label
-                : d?.navigation?.byTeacher || "Select teacher"}
+                : (av?.title ?? d?.navigation?.byTeacher ?? "Select teacher")}
               <ChevronsUpDown className="opacity-50" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-[180px] p-0">
             <Command>
-              <CommandInput placeholder="Search..." />
+              <CommandInput
+                placeholder={av?.labels?.pendingChanges ?? "Search..."}
+              />
               <CommandList>
-                <CommandEmpty>No results.</CommandEmpty>
+                <CommandEmpty>{d?.noResults ?? "No results."}</CommandEmpty>
                 <CommandGroup>
                   {teachers.map((t) => (
                     <CommandItem
@@ -350,8 +357,8 @@ export default function AdminView({
               lunchAfterPeriod={lunchAfterPeriod}
               isRTL={isRTL}
               viewMode="room"
-              editable={true}
-              onSlotClick={handleSlotClick}
+              editable={editableProp}
+              onSlotClick={editableProp ? handleSlotClick : undefined}
             />
           ) : null}
         </>
@@ -366,9 +373,12 @@ export default function AdminView({
                 {entityInfo.name || entityInfo.label}
               </span>
               {entityInfo.email && <span>{entityInfo.email}</span>}
-              <Badge variant="secondary">{slots.length} periods/week</Badge>
+              <Badge variant="secondary">
+                {slots.length} {av?.labels?.pendingChanges ?? "periods/week"}
+              </Badge>
               <Badge variant="outline">
-                {new Set(slots.map((s: any) => s.classId)).size} classes
+                {new Set(slots.map((s: any) => s.classId)).size}{" "}
+                {av?.labels?.lastPublished ?? "classes"}
               </Badge>
             </div>
           )}
@@ -383,8 +393,8 @@ export default function AdminView({
               lunchAfterPeriod={lunchAfterPeriod}
               isRTL={isRTL}
               viewMode="teacher"
-              editable={true}
-              onSlotClick={handleSlotClick}
+              editable={editableProp}
+              onSlotClick={editableProp ? handleSlotClick : undefined}
             />
           ) : null}
         </>

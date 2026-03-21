@@ -1650,6 +1650,532 @@
       },
       "placeholders": {
         "exampleNationalDay": "e.g., National Day"
+      },
+      "substitutions": {
+        "title": "Substitution Management",
+        "description": "Manage teacher absences and substitute assignments",
+        "reportAbsence": "Report Absence",
+        "refresh": "Refresh",
+        "searchPlaceholder": "Search teachers or subjects...",
+        "filterByStatus": "Filter by status",
+        "allStatuses": "All Statuses",
+        "pending": "Pending",
+        "approved": "Approved",
+        "confirmed": "Confirmed",
+        "declined": "Declined",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "tabAbsences": "Absences",
+        "tabSubstitutions": "Substitutions",
+        "noAbsences": "No Absences",
+        "noAbsencesDesc": "No teacher absences have been reported yet",
+        "noRecords": "No Substitution Records",
+        "noRecordsDesc": "No substitutions have been assigned yet",
+        "substitutesAssigned": "Substitutes Assigned:",
+        "more": "+{count} more",
+        "reportTitle": "Report Teacher Absence",
+        "reportDescription": "Report a teacher absence to enable substitute assignment",
+        "teacher": "Teacher",
+        "selectTeacher": "Select teacher",
+        "absenceType": "Absence Type",
+        "startDate": "Start Date",
+        "endDate": "End Date",
+        "pickDate": "Pick date",
+        "reason": "Reason (Optional)",
+        "reasonPlaceholder": "Additional details about the absence...",
+        "cancel": "Cancel",
+        "submitting": "Submitting...",
+        "fillRequired": "Please fill in all required fields",
+        "endAfterStart": "End date must be after start date",
+        "absenceReported": "Absence reported successfully",
+        "reportFailed": "Failed to report absence",
+        "findSubstitute": "Find Substitute",
+        "noAvailable": "No Available Substitutes",
+        "noAvailableDesc": "No teachers are available for this time slot",
+        "workload": "Workload",
+        "periodsPerWeek": "periods/week",
+        "preferred": "Preferred",
+        "subjectMatch": "Subject Match",
+        "assigning": "Assigning...",
+        "assignSubstitute": "Assign Substitute",
+        "findFailed": "Failed to find substitutes",
+        "assignSuccess": "Substitute assigned successfully",
+        "assignFailed": "Failed to assign substitute",
+        "confirm": "Confirm",
+        "decline": "Decline",
+        "cancelSubstitution": "Cancel Substitution",
+        "declineReason": "Please provide a reason for declining:",
+        "declineReasonLabel": "Decline reason:",
+        "confirmedOn": "Confirmed on",
+        "confirmSuccess": "Substitution has been confirmed",
+        "confirmFailed": "Failed to confirm substitution",
+        "declineSuccess": "Substitution has been declined",
+        "declineFailed": "Failed to decline substitution",
+        "cancelConfirm": "Are you sure you want to cancel this substitution?",
+        "cancelSuccess": "Substitution has been cancelled",
+        "cancelFailed": "Failed to cancel substitution",
+        "loadFailed": "Failed to load data"
+      },
+      "templatesUi": {
+        "title": "Timetable Templates",
+        "description": "Save and reuse timetable configurations across terms",
+        "createTemplate": "Create Template",
+        "noTemplates": "No Templates Yet",
+        "noTemplatesDesc": "Create your first template from an existing term schedule",
+        "default": "Default",
+        "slots": "Slots",
+        "classes": "Classes",
+        "teachers": "Teachers",
+        "version": "Version",
+        "from": "From",
+        "createdBy": "Created by",
+        "apply": "Apply",
+        "setAsDefault": "Set as Default",
+        "delete": "Delete",
+        "singleWeek": "Single Week",
+        "biWeekly": "Bi-Weekly",
+        "rotating": "Rotating",
+        "createTitle": "Create Template",
+        "createDescription": "Save the current timetable as a reusable template",
+        "templateName": "Template Name",
+        "templateNamePlaceholder": "e.g., Fall 2024 Schedule",
+        "templateDescription": "Description (Optional)",
+        "templateDescPlaceholder": "Brief description of this template...",
+        "sourceTerm": "Source Term",
+        "selectTerm": "Select term",
+        "creating": "Creating...",
+        "nameRequired": "Template name is required",
+        "createSuccess": "Template \"{name}\" created successfully",
+        "createFailed": "Failed to create template",
+        "defaultSuccess": "\"{name}\" is now the default template",
+        "defaultFailed": "Failed to set default template",
+        "deleteConfirm": "Delete template \"{name}\"?",
+        "deleteSuccess": "Template \"{name}\" has been deleted",
+        "deleteFailed": "Failed to delete template",
+        "loadFailed": "Failed to load templates",
+        "applyTitle": "Apply Template: {name}",
+        "applyDescription": "Apply this template to another term",
+        "templateContents": "Template Contents",
+        "targetTerm": "Target Term",
+        "clearExisting": "Clear existing timetable",
+        "clearDescription": "Remove all existing slots in the target term before applying",
+        "warning": "Warning",
+        "clearWarning": "This will permanently delete all existing timetable slots in the target term",
+        "applying": "Applying...",
+        "applyTemplate": "Apply Template",
+        "selectTarget": "Please select a target term",
+        "applySuccess": "Template Applied",
+        "applyFailed": "Failed to apply template",
+        "cancel": "Cancel",
+        "error": "Error",
+        "success": "Success",
+        "deleted": "Deleted"
+      },
+      "importExport": {
+        "title": "Import/Export Timetable",
+        "description": "Import timetable data from a file or export the current timetable",
+        "button": "Import/Export",
+        "tabExport": "Export",
+        "tabImport": "Import",
+        "exportFormat": "Export Format",
+        "viewType": "View Type",
+        "pdfDocument": "PDF Document",
+        "excelSpreadsheet": "Excel Spreadsheet",
+        "csvFile": "CSV File",
+        "pngImage": "PNG Image",
+        "calendarICal": "Calendar (iCal)",
+        "classView": "Class View",
+        "teacherView": "Teacher View",
+        "roomView": "Room View",
+        "studentView": "Student View",
+        "includeSubstitutes": "Include substitute teachers",
+        "includeNotes": "Include notes and comments",
+        "exporting": "Exporting... {percent}%",
+        "importFormat": "Import Format",
+        "excelXlsx": "Excel (.xlsx)",
+        "csvCsv": "CSV (.csv)",
+        "jsonJson": "JSON (.json)",
+        "selectFile": "Select File",
+        "template": "Template",
+        "overwriteExisting": "Overwrite existing timetable",
+        "validateConflicts": "Validate for conflicts",
+        "previewRows": "Preview (first 5 rows)",
+        "processing": "Processing... {percent}%",
+        "fileSelected": "File selected: {name} ({size} KB)",
+        "cancel": "Cancel",
+        "export": "Export",
+        "import": "Import",
+        "exportSuccess": "Export Successful",
+        "exportSuccessDesc": "Timetable exported as {format}",
+        "exportFailed": "Export Failed",
+        "exportFailedDesc": "Failed to export timetable",
+        "importSuccess": "Import Successful",
+        "importSuccessDesc": "Imported {count} timetable slots",
+        "importFailed": "Import Failed",
+        "importFailedDesc": "Failed to import timetable",
+        "previewFailed": "Preview Failed",
+        "previewFailedDesc": "Failed to preview import file"
+      },
+      "visualBuilder": {
+        "title": "Visual Timetable Builder",
+        "description": "Drag subjects to time slots to create your weekly schedule for {className}",
+        "clearAll": "Clear All",
+        "export": "Export",
+        "import": "Import",
+        "save": "Save",
+        "saving": "Saving...",
+        "subjects": "Subjects",
+        "dragSubjects": "Drag subjects to the timetable",
+        "statistics": "Statistics",
+        "fillRate": "Fill Rate:",
+        "periodsFilled": "Periods Filled:",
+        "hoursPerSubject": "Hours per Subject:",
+        "time": "Time",
+        "dropSubject": "Drop subject here",
+        "clearConfirm": "Are you sure you want to clear the entire timetable?",
+        "sunday": "Sunday",
+        "monday": "Monday",
+        "tuesday": "Tuesday",
+        "wednesday": "Wednesday",
+        "thursday": "Thursday",
+        "friday": "Friday",
+        "saturday": "Saturday",
+        "added": "Added to timetable",
+        "removed": "Removed from timetable",
+        "saved": "Timetable saved successfully",
+        "saveFailed": "Failed to save timetable",
+        "imported": "Timetable imported successfully",
+        "importFailed": "Failed to import timetable",
+        "cleared": "Timetable cleared"
+      },
+      "slotEditor": {
+        "editTitle": "Pencil Timetable Slot",
+        "addTitle": "Add Timetable Slot",
+        "description": "Configure the timetable slot details",
+        "validationError": "Validation Error",
+        "tabBasicInfo": "Basic Info",
+        "tabAssignment": "Assignment",
+        "tabOptions": "Options",
+        "dayOfWeek": "Day of Week",
+        "selectDay": "Select day",
+        "period": "Period",
+        "selectPeriod": "Select period",
+        "class": "Class",
+        "selectClass": "Select class",
+        "subject": "Subject",
+        "selectSubject": "Select subject",
+        "teacher": "Teacher",
+        "selectTeacher": "Select teacher",
+        "classroom": "Classroom",
+        "selectClassroom": "Select classroom",
+        "occupied": "Occupied",
+        "students": "{count} students",
+        "hoursRequired": "{count} hours/week required",
+        "teaches": "Teaches: {subjects}",
+        "substituteTeacher": "Substitute Teacher",
+        "substituteDescription": "Assign a substitute teacher for this slot",
+        "selectSubstitute": "Select substitute",
+        "recurringSlot": "Recurring Slot",
+        "recurringDescription": "Create this slot for multiple weeks",
+        "numberOfWeeks": "Number of Weeks",
+        "weeksDescription": "How many weeks should this slot repeat?",
+        "notes": "Notes",
+        "notesPlaceholder": "Add any additional notes...",
+        "notesDescription": "Optional notes about this timetable slot",
+        "cancel": "Cancel",
+        "saving": "Saving...",
+        "update": "Update",
+        "create": "Create",
+        "saveFailed": "Failed to save slot. Please try again.",
+        "periodRequired": "Period is required",
+        "classRequired": "Class is required",
+        "subjectRequired": "Subject is required",
+        "teacherRequired": "Teacher is required",
+        "classroomRequired": "Classroom is required",
+        "suggestFreeSlots": "Suggested free slots",
+        "suggest": "Suggest",
+        "saveSlot": "Save slot"
+      },
+      "analyticsReports": {
+        "totalSlots": "Total Slots",
+        "acrossWorkingDays": "Across {count} working days",
+        "utilizationRate": "Utilization Rate",
+        "roomTeacherEfficiency": "Room and teacher efficiency",
+        "activeConflicts": "Active Conflicts",
+        "conflictsDetected": "Scheduling conflicts detected",
+        "resolve": "Resolve",
+        "avgWorkload": "Avg Workload",
+        "perTeacher": "Per teacher average",
+        "optimal": "Optimal",
+        "good": "Good",
+        "low": "Low",
+        "tabRoomUtilization": "Room Utilization",
+        "tabTeacherWorkload": "Teacher Workload",
+        "tabSubjectDistribution": "Subject Distribution",
+        "roomUtilizationTitle": "Room Utilization Analysis",
+        "roomUtilizationDesc": "Percentage of time each room is occupied",
+        "topRooms": "Top Utilized Rooms",
+        "dayDistribution": "Day Distribution",
+        "teacherWorkloadTitle": "Teacher Workload Distribution",
+        "teacherWorkloadDesc": "Weekly hours per teacher vs recommended limits",
+        "actualHours": "Actual Hours",
+        "maxLimit": "Max Limit",
+        "subjectHoursTitle": "Subject Hours Distribution",
+        "subjectHoursDesc": "Total hours allocated per subject",
+        "subjectCoverageTitle": "Subject Coverage",
+        "subjectCoverageDesc": "Classes covered by each subject",
+        "optimizationSuggestions": "Optimization Suggestions",
+        "resolveConflicts": "Resolve {count} scheduling conflicts",
+        "optimizeRooms": "Optimize usage of {count} underutilized rooms",
+        "rebalanceWorkload": "Rebalance workload for {count} teachers"
+      },
+      "configDialog": {
+        "settingsTitle": "Settings",
+        "settingsDescription": "Configure your class information.",
+        "school": "School",
+        "searchSchool": "Search school...",
+        "searchSchoolName": "Search school name...",
+        "selectGrade": "Select grade",
+        "selectClass": "Select class",
+        "grade": "Grade",
+        "class": "Class",
+        "gradeN": "Grade {n}",
+        "classN": "Class {n}",
+        "lunchAfterPeriod": "Lunch after period",
+        "selectLunchPeriod": "Select lunch period",
+        "afterPeriodN": "After period {n}",
+        "showAllSubjects": "Show all subjects in subject selection",
+        "showFallback": "Display fallback data when main data is unavailable",
+        "save": "Save",
+        "searching": "Searching...",
+        "noResults": "No results",
+        "noResultsFound": "No results found",
+        "noClassesFound": "No classes found for the selected grade",
+        "loadSchoolsFailed": "Failed to load school list",
+        "loadClassesFailed": "Failed to load class list"
+      },
+      "conflictsDrawer": {
+        "title": "Conflicts",
+        "loading": "Loading...",
+        "noConflicts": "No conflicts",
+        "teacher": "Teacher",
+        "room": "Room",
+        "suggestForTeacher": "Suggest for teacher",
+        "suggestForRoom": "Suggest for room",
+        "suggestions": "Suggestions:",
+        "apply": "Apply"
+      },
+      "timetableNav": {
+        "timetable": "Timetable",
+        "lunch": "Lunch",
+        "calendar": "Calendar",
+        "settings": "Settings",
+        "menu": "Menu",
+        "toggleNav": "Toggle navigation menu"
+      },
+      "timetableHeader": {
+        "term": "Term",
+        "view": "View",
+        "selectClass": "Select class",
+        "selectTeacher": "Select teacher",
+        "classView": "Class",
+        "teacherViewLabel": "Teacher",
+        "scheduleSettings": "Schedule settings",
+        "editSlots": "Pencil slots",
+        "conflicts": "{count} conflict(s)",
+        "allSubjects": "All Subjects",
+        "fallbackData": "Fallback Data"
+      },
+      "teacherViewUi": {
+        "title": "My Teaching Schedule",
+        "profileNotLinked": "Teacher profile not linked to your account",
+        "daysPerWeek": "days/week",
+        "periodsPerWeek": "periods/week",
+        "classes": "classes",
+        "currentlyTeaching": "Currently Teaching",
+        "nextClass": "Next Class",
+        "allClassrooms": "All Classrooms",
+        "allSubjects": "All Subjects",
+        "noClasses": "No classes scheduled for today ({day})",
+        "break": "Break",
+        "freePeriod": "Free Period"
+      },
+      "studentViewUi": {
+        "title": "My Class Schedule",
+        "loading": "Loading...",
+        "currentClass": "Current Class",
+        "nextUp": "Next Up",
+        "noClasses": "No classes scheduled for today",
+        "break": "Break",
+        "freePeriod": "Free Period"
+      },
+      "adminViewUi": {
+        "selectClassroom": "Select classroom",
+        "selectTeacher": "Select teacher",
+        "search": "Search...",
+        "noResults": "No results.",
+        "periodsPerWeek": "{count} periods/week",
+        "classCount": "{count} classes"
+      },
+      "subjectSelector": {
+        "title": "Pencil Subject",
+        "selectAvailable": "Select from available subjects",
+        "chooseSubject": "Choose a subject",
+        "useCustom": "Use custom subject name",
+        "customPlaceholder": "Enter custom subject name",
+        "allSubjectsShown": "All subjects are shown in the dropdown",
+        "customNote": "You can also enter a custom subject name",
+        "cancel": "Cancel",
+        "save": "Save"
+      },
+      "aboutInfo": {
+        "title": "About",
+        "clickSubject": "Click a subject cell to enter the teacher's name.",
+        "useSettings": "Use Settings to change school, grade, and class.",
+        "dataSource": "Data is loaded from NEIS API or local JSON (mock mode).",
+        "truncation": "Teacher names may be truncated; please edit manually if needed.",
+        "printHint": "Press Ctrl/Cmd + P to print with a clean layout.",
+        "localStorage": "Your inputs are stored locally in the browser.",
+        "madeBy": "Made by"
+      },
+      "substitutions": {
+        "title": "Substitution Management",
+        "description": "Manage teacher absences and substitute assignments",
+        "tabs": {
+          "active": "Active",
+          "history": "History",
+          "absences": "Absences"
+        },
+        "buttons": {
+          "reportAbsence": "Report Absence",
+          "findSubstitute": "Find Substitute",
+          "assign": "Assign",
+          "cancel": "Cancel",
+          "save": "Save",
+          "delete": "Delete",
+          "approve": "Approve",
+          "reject": "Reject",
+          "viewDetails": "View Details",
+          "exportReport": "Export Report"
+        },
+        "dialog": {
+          "reportAbsence": "Report Teacher Absence",
+          "reportAbsenceDescription": "Report a teacher absence to enable substitute assignment",
+          "findSubstitute": "Find Substitute",
+          "findSubstituteDescription": "Select a substitute teacher for the period",
+          "assignSubstitute": "Assign Substitute",
+          "confirmCancel": "Cancel Substitution",
+          "confirmDelete": "Delete Record"
+        },
+        "form": {
+          "teacher": "Teacher",
+          "selectTeacher": "Select teacher",
+          "date": "Date",
+          "pickDate": "Pick date",
+          "startDate": "Start Date",
+          "endDate": "End Date",
+          "startTime": "Start Time",
+          "endTime": "End Time",
+          "reason": "Reason (Optional)",
+          "reasonPlaceholder": "Additional details about the absence...",
+          "notes": "Notes",
+          "substitute": "Substitute Teacher",
+          "class": "Class",
+          "subject": "Subject",
+          "period": "Period",
+          "absenceType": "Absence Type"
+        },
+        "reasons": {
+          "sick": "Sick Leave",
+          "personal": "Personal Leave",
+          "training": "Training",
+          "emergency": "Emergency",
+          "other": "Other"
+        },
+        "status": {
+          "pending": "Pending",
+          "approved": "Approved",
+          "rejected": "Rejected",
+          "covered": "Covered",
+          "uncovered": "Uncovered",
+          "cancelled": "Cancelled",
+          "confirmed": "Confirmed",
+          "declined": "Declined",
+          "completed": "Completed"
+        },
+        "table": {
+          "teacher": "Teacher",
+          "date": "Date",
+          "time": "Time",
+          "reason": "Reason",
+          "status": "Status",
+          "substitute": "Substitute",
+          "actions": "Actions"
+        },
+        "toast": {
+          "absenceReported": "Absence reported successfully",
+          "substituteAssigned": "Substitute assigned successfully",
+          "substitutionCancelled": "Substitution has been cancelled",
+          "recordDeleted": "Record deleted",
+          "approved": "Substitution approved",
+          "rejected": "Substitution rejected",
+          "confirmed": "Substitution has been confirmed",
+          "declined": "Substitution has been declined",
+          "error": "An error occurred",
+          "errorRequiredFields": "Please fill in all required fields",
+          "errorEndDate": "End date must be after start date",
+          "errorReportAbsence": "Failed to report absence",
+          "errorFindSubstitutes": "Failed to find substitutes",
+          "errorAssignSubstitute": "Failed to assign substitute",
+          "errorConfirm": "Failed to confirm substitution",
+          "errorDecline": "Failed to decline substitution",
+          "errorCancel": "Failed to cancel substitution",
+          "errorLoadData": "Failed to load data",
+          "success": "Success",
+          "error_title": "Error"
+        },
+        "empty": {
+          "noActive": "No active substitutions",
+          "noHistory": "No substitution history",
+          "noAbsences": "No Absences",
+          "noAbsencesDescription": "No teacher absences have been reported yet",
+          "noRecords": "No Substitution Records",
+          "noRecordsDescription": "No substitutions have been assigned yet",
+          "noSubstitutes": "No Available Substitutes",
+          "noSubstitutesDescription": "No teachers are available for this time slot"
+        },
+        "confirm": {
+          "cancelMessage": "Are you sure you want to cancel this substitution?",
+          "deleteMessage": "This action cannot be undone.",
+          "declinePrompt": "Please provide a reason for declining:"
+        },
+        "finder": {
+          "workload": "Workload",
+          "periodsPerWeek": "periods/week",
+          "preferred": "Preferred",
+          "subjectMatch": "Subject Match",
+          "assigning": "Assigning...",
+          "assignSubstitute": "Assign Substitute"
+        },
+        "list": {
+          "confirm": "Confirm",
+          "decline": "Decline",
+          "cancelSubstitution": "Cancel Substitution",
+          "declineReason": "Decline reason:",
+          "confirmedOn": "Confirmed on",
+          "substitutesAssigned": "Substitutes Assigned:",
+          "more": "+{count} more"
+        },
+        "content": {
+          "refresh": "Refresh",
+          "newAbsence": "Report Absence",
+          "search": "Search teachers or subjects...",
+          "filterByStatus": "Filter by status",
+          "allStatuses": "All Statuses",
+          "absences": "Absences",
+          "records": "Substitutions",
+          "submitting": "Submitting..."
+        }
       }
     },
     "announcements": {
@@ -1985,6 +2511,7 @@
       "correctAnswer": "Correct Answer",
       "modelAnswer": "Model Answer",
       "backToMocks": "Back to Mock Exams",
+      "typeAnswer": "Type your answer...",
       "of": "of",
       "dashboard": {
         "title": "Examination Management",
@@ -2111,7 +2638,771 @@
         "totalMarks": "Total Marks",
         "createTemplate": "Create Template",
         "templateDescription": "Create a new exam template"
-      }
+      },
+      "certificates": {
+        "title": "Certificates",
+        "templates": "Templates",
+        "activeTemplates": "Active templates",
+        "active": "Active",
+        "tabs": { "certificates": "Certificates", "templates": "Templates" },
+        "noCertificates": "No certificates issued yet",
+        "batchIssue": {
+          "title": "Batch Issue Certificates",
+          "description": "Issue certificates to all eligible students",
+          "selectTemplate": "Select template",
+          "issued": "Issued",
+          "skipped": "Skipped",
+          "failed": "Failed",
+          "complete": "Certificates issued!",
+          "error": "Failed to issue certificates"
+        },
+        "list": {
+          "headers": {
+            "number": "Certificate #",
+            "student": "Student",
+            "exam": "Exam",
+            "score": "Score",
+            "type": "Type",
+            "status": "Status",
+            "issued": "Issued"
+          },
+          "toast": {
+            "shared": "Certificate shared",
+            "revoked": "Certificate revoked",
+            "error": "Error"
+          }
+        },
+        "config": {
+          "toast": {
+            "updated": "Template updated",
+            "created": "Template created",
+            "deleted": "Template deleted",
+            "error": "Error"
+          },
+          "form": {
+            "templateName": "Template Name",
+            "certificateType": "Certificate Type",
+            "types": {
+              "achievement": "Achievement",
+              "completion": "Completion",
+              "participation": "Participation",
+              "merit": "Merit (Top 10%)",
+              "excellence": "Excellence (Top 3%)",
+              "custom": "Custom"
+            },
+            "description": "Description",
+            "descriptionPlaceholder": "Optional description of this template",
+            "style": "Style",
+            "styles": {
+              "elegant": "Elegant",
+              "modern": "Modern",
+              "classic": "Classic",
+              "minimal": "Minimal"
+            },
+            "orientation": "Orientation",
+            "orientations": {
+              "landscape": "Landscape",
+              "portrait": "Portrait"
+            },
+            "borderStyle": "Border Style",
+            "borders": {
+              "gold": "Gold",
+              "silver": "Silver",
+              "blue": "Blue",
+              "custom": "Custom"
+            },
+            "titleEn": "Title Text (English)",
+            "titleAr": "Title Text (Arabic)",
+            "bodyEn": "Body Template (English)",
+            "bodyAr": "Body Template (Arabic)",
+            "bodyPlaceholder": "Use placeholders: {{studentName}}, {{score}}...",
+            "minPercentage": "Minimum Percentage",
+            "minGrade": "Minimum Grade",
+            "topPercentile": "Top Percentile (%)",
+            "signatures": "Signatures",
+            "signatureName": "Name",
+            "signatureTitle": "Title",
+            "useSchoolLogo": "Use School Logo",
+            "enableVerification": "Enable Verification",
+            "verificationPrefix": "Verification Prefix",
+            "expiryMonths": "Expiry (months)",
+            "expiryPlaceholder": "Leave empty for permanent"
+          },
+          "headers": {
+            "name": "Name",
+            "type": "Type",
+            "style": "Style",
+            "issued": "Issued",
+            "created": "Created"
+          }
+        }
+      },
+      "grading": {
+        "title": "Grading Configuration",
+        "systems": {
+          "percentage": "Percentage (0-100%)",
+          "gpa4": "GPA 4.0 Scale",
+          "gpa5": "GPA 5.0 Scale",
+          "letter": "Letter Grades (A-F)",
+          "cumulative": "Cumulative GPA",
+          "cce": "CCE (Continuous and Comprehensive Evaluation)",
+          "cbse": "CBSE Pattern",
+          "icse": "ICSE Pattern"
+        },
+        "retakePolicy": {
+          "best": "Best Score",
+          "latest": "Latest Score",
+          "average": "Average Score",
+          "bestDesc": "Highest score from all attempts",
+          "latestDesc": "Most recent attempt score",
+          "averageDesc": "Average of all attempts"
+        },
+        "toast": {
+          "success": "Success",
+          "saved": "Grading configuration saved successfully",
+          "error": "Error",
+          "saveFailed": "Failed to save configuration"
+        },
+        "form": {
+          "selectSystem": "Select grading system",
+          "selectGpaScale": "Select GPA scale",
+          "midterm": "Midterm",
+          "final": "Final",
+          "quiz": "Quiz",
+          "assignment": "Assignment",
+          "retakeMethod": "Retake Scoring Method",
+          "selectRetake": "Select retake policy"
+        },
+        "retake": {
+          "maxReached": "Maximum Retakes Reached",
+          "noAttempts": "No attempts yet"
+        }
+      },
+      "progress": {
+        "title": "Progress Reports",
+        "active": "Active",
+        "frequency": {
+          "weekly": "Weekly",
+          "biweekly": "Biweekly",
+          "monthly": "Monthly",
+          "termEnd": "Term End"
+        },
+        "recipients": {
+          "guardians": "Guardians",
+          "students": "Students",
+          "teachers": "Teachers"
+        },
+        "channels": {
+          "email": "Email",
+          "inApp": "In-App Notification",
+          "sms": "SMS"
+        },
+        "toast": {
+          "success": "Success",
+          "error": "Error",
+          "unexpected": "An unexpected error occurred"
+        },
+        "form": {
+          "allClasses": "All classes",
+          "reportContents": "Report Contents"
+        },
+        "schedule": {
+          "noSchedules": "No Schedules",
+          "title": "Report Schedules",
+          "headers": {
+            "class": "Class",
+            "frequency": "Frequency",
+            "status": "Status",
+            "lastRun": "Last Run",
+            "nextRun": "Next Run",
+            "reports": "Reports",
+            "actions": "Actions"
+          },
+          "active": "Active",
+          "inactive": "Inactive",
+          "toast": {
+            "generated": "Reports generated successfully",
+            "deleted": "Schedule deleted successfully",
+            "generateFailed": "Failed to generate reports",
+            "deleteFailed": "Failed to delete schedule",
+            "deleteConfirm": "Are you sure you want to delete this schedule?"
+          }
+        }
+      },
+      "quick": {
+        "title": "Quick Assessments",
+        "currentlyRunning": "Currently running",
+        "toast": {
+          "success": "Success",
+          "created": "Quick assessment created successfully",
+          "launched": "Assessment launched successfully",
+          "closed": "Assessment closed successfully",
+          "error": "Error",
+          "unexpected": "An unexpected error occurred"
+        },
+        "form": {
+          "title": "Title",
+          "type": "Assessment Type",
+          "selectType": "Select type",
+          "types": {
+            "exitTicket": "Exit Ticket",
+            "poll": "Poll",
+            "warmUp": "Warm-Up",
+            "checkIn": "Check-In"
+          },
+          "typeDescription": "Type of formative assessment",
+          "duration": "Duration (minutes)",
+          "durationDescription": "Time limit in minutes",
+          "class": "Class",
+          "selectClass": "Select class",
+          "subject": "Subject",
+          "selectSubject": "Select subject",
+          "questionIds": "Question IDs",
+          "questionIdsPlaceholder": "Enter question IDs separated by commas"
+        },
+        "list": {
+          "class": "Class:",
+          "subject": "Subject:",
+          "questions": "Questions:",
+          "duration": "Duration:",
+          "responses": "Responses:"
+        },
+        "take": {
+          "notAvailable": "Assessment Not Available",
+          "submitted": "Submitted!",
+          "answerPlaceholder": "Type your answer..."
+        }
+      },
+      "take": {
+        "unsupportedType": "Unsupported question type",
+        "answerPlaceholder": "Enter your answer...",
+        "essayPlaceholder": "Write your essay response here...",
+        "startingSession": "Starting exam session...",
+        "current": "Current",
+        "answered": "Answered",
+        "notAnswered": "Not answered",
+        "flaggedForReview": "Flagged for review",
+        "remaining": "Remaining",
+        "questions": "Questions",
+        "timeWarning": {
+          "title": "5 Minutes Remaining",
+          "description": "You have 5 minutes left. Please review and submit your answers.",
+          "continue": "Continue Exam"
+        },
+        "securityWarning": {
+          "title": "Security Warning",
+          "description": "Multiple suspicious activities detected. Further violations may result in automatic submission.",
+          "acknowledge": "I Understand"
+        },
+        "submitDialog": {
+          "title": "Submit Exam?",
+          "answeredCount": "You have answered {answered} out of {total} questions.",
+          "unansweredWarning": "Warning: {count} questions are unanswered.",
+          "flaggedWarning": "You have {count} flagged question(s).",
+          "finalWarning": "Once submitted, you cannot change your answers.",
+          "continue": "Continue Exam",
+          "submitting": "Submitting...",
+          "submit": "Submit Exam"
+        },
+        "submitFailed": "Failed to submit exam"
+      },
+      "manage": {
+        "toast": {
+          "updated": "Exam updated",
+          "created": "Exam created",
+          "updateFailed": "Failed to update exam",
+          "createFailed": "Failed to create exam",
+          "deleteFailed": "Failed to delete exam"
+        },
+        "form": {
+          "examTitle": "Exam title",
+          "examDescription": "Exam description (optional)",
+          "selectClass": "Select class",
+          "selectSubject": "Select subject",
+          "selectExamType": "Select exam type"
+        },
+        "marksEntry": {
+          "studentName": "Student Name",
+          "enterMarks": "Enter marks",
+          "loadFailed": "Failed to load exam data",
+          "saveFailed": "Failed to save marks",
+          "maxExceeded": "Marks cannot exceed {max}"
+        },
+        "resultsList": {
+          "title": "Exam Results",
+          "description": "Student performance overview",
+          "headers": { "studentName": "Student Name" },
+          "absent": "Absent",
+          "fail": "Fail"
+        },
+        "calendar": {
+          "title": "Exam Calendar",
+          "description": "View and manage scheduled exams",
+          "duration": "Duration: {value} mins",
+          "totalMarks": "Total Marks: {value}"
+        },
+        "analytics": { "gradeDistribution": "Grade Distribution" },
+        "schedule": {
+          "startTime": "Start time",
+          "endTime": "End time",
+          "duration": "Duration (minutes)",
+          "totalMarks": "Total marks",
+          "passingMarks": "Passing marks"
+        },
+        "standards": {
+          "headers": {
+            "status": "Status",
+            "code": "Code",
+            "standard": "Standard",
+            "subject": "Subject",
+            "questions": "Questions"
+          }
+        },
+        "instructions": {
+          "placeholder": "Exam instructions for students (optional)"
+        },
+        "additionalDetails": "Additional Details"
+      },
+      "mark": {
+        "questionDetails": "Question Details",
+        "question": "Question",
+        "image": "Image",
+        "subject": "Subject",
+        "bloomLevel": "Bloom's Level",
+        "usageStats": "Usage Statistics",
+        "timesUsed": "Times Used",
+        "responses": "Responses",
+        "quickActions": "Quick Actions",
+        "insights": "Question Bank Insights",
+        "answerKey": "Answer Key",
+        "acceptedAnswers": "Accepted answers:",
+        "caseInsensitive": "Case insensitive",
+        "sampleAnswer": "Sample Answer",
+        "rubric": "Rubric",
+        "bulkAutoGrade": {
+          "title": "Bulk Auto-Grade",
+          "complete": "Auto-grading complete",
+          "graded": "Graded",
+          "failed": "Failed",
+          "total": "Total",
+          "error": "Auto-grading failed",
+          "unexpected": "An unexpected error occurred"
+        },
+        "csvImport": {
+          "trigger": "Import CSV",
+          "title": "Import Marks from CSV",
+          "description": "Upload a CSV file with student marks. Download the template for the correct format.",
+          "downloadTemplate": "Download CSV Template",
+          "selectFile": "Click to select a CSV file",
+          "overwrite": "Update existing results (overwrite)",
+          "validationResults": "Validation Results"
+        },
+        "filters": {
+          "allTypes": "All Types",
+          "allLevels": "All Levels",
+          "allSubjects": "All Subjects"
+        }
+      },
+      "qbankUi": {
+        "form": {
+          "questionType": "Question Type",
+          "questionText": "Question Text",
+          "tags": "Tags",
+          "explanation": "Explanation (Optional)",
+          "explanationPlaceholder": "Explain the concept...",
+          "options": "Options",
+          "optionPlaceholder": "Enter option text",
+          "optionExplanation": "Optional explanation",
+          "acceptedAnswers": "Accepted Answers",
+          "enterAccepted": "Enter accepted answer",
+          "sampleAnswer": "Sample Answer",
+          "samplePlaceholder": "Provide a good sample answer...",
+          "gradingRubric": "Grading Rubric",
+          "rubricPlaceholder": "Describe key points for grading...",
+          "tagPlaceholder": "Type and press Enter",
+          "updated": "Question updated!",
+          "created": "Question created!",
+          "saveFailed": "Failed to save question"
+        },
+        "aiGenerate": {
+          "subject": "Subject",
+          "selectSubject": "Select subject",
+          "topic": "Topic",
+          "questionType": "Question Type",
+          "difficulty": "Difficulty",
+          "bloomLevel": "Bloom's Level",
+          "numQuestions": "Number of Questions",
+          "additionalInstructions": "Additional Instructions (optional)",
+          "generateFailed": "Generation failed",
+          "saveFailed": "Failed to save"
+        },
+        "catalog": {
+          "searchPlaceholder": "Search catalog questions...",
+          "allSubjects": "All subjects",
+          "difficulty": "Difficulty",
+          "difficultyAll": "All",
+          "difficultyEasy": "Easy",
+          "difficultyMedium": "Medium",
+          "difficultyHard": "Hard",
+          "type": "Type",
+          "typeAll": "All",
+          "typeMCQ": "MCQ",
+          "typeTrueFalse": "True/False",
+          "typeShortAnswer": "Short Answer",
+          "typeEssay": "Essay",
+          "headers": {
+            "question": "Question",
+            "subject": "Subject",
+            "type": "Type",
+            "difficulty": "Difficulty"
+          }
+        },
+        "analytics": {
+          "error": "Error",
+          "loadFailed": "Failed to load analytics",
+          "considerUpdating": "Consider updating",
+          "removeOrReplace": "Remove or replace",
+          "difficultyDescription": "Proportion of students answering correctly (p-value)",
+          "discriminationDescription": "Difference between high and low performers (D-index)",
+          "difficultyDistribution": "Difficulty Distribution",
+          "qualityDistribution": "Quality Distribution",
+          "headers": {
+            "question": "Question",
+            "subject": "Subject",
+            "type": "Type",
+            "quality": "Quality",
+            "difficulty": "Difficulty",
+            "issues": "Issues",
+            "action": "Action"
+          }
+        },
+        "config": {
+          "questionTypes": {
+            "mcq": "Multiple Choice",
+            "trueFalse": "True/False",
+            "fillBlank": "Fill in the Blank",
+            "shortAnswer": "Short Answer",
+            "essay": "Essay",
+            "matching": "Matching",
+            "ordering": "Ordering",
+            "multiSelect": "Multi Select"
+          },
+          "difficulty": { "easy": "Easy", "medium": "Medium", "hard": "Hard" },
+          "bloomLevels": {
+            "remember": "Remember",
+            "understand": "Understand",
+            "apply": "Apply",
+            "analyze": "Analyze",
+            "evaluate": "Evaluate",
+            "create": "Create"
+          },
+          "sources": {
+            "manual": "Manual",
+            "aiGenerated": "AI Generated",
+            "imported": "Imported"
+          }
+        },
+        "wizard": {
+          "question": {
+            "title": "Question",
+            "description": "Enter the question text, subject, and type.",
+            "detailsTitle": "Question Details",
+            "detailsDescription": "Set difficulty, points, tags, and explanation.",
+            "questionText": "Question Text",
+            "questionPlaceholder": "Enter the question (minimum 10 characters)",
+            "questionType": "Question Type",
+            "optionalPlaceholder": "Optional",
+            "tagsPlaceholder": "Enter comma-separated tags",
+            "explanationPlaceholder": "Explain the correct answer (optional)",
+            "imagePlaceholder": "Optional image URL"
+          },
+          "answers": {
+            "answerOptions": "Answer Options",
+            "enterOption": "Enter option text",
+            "optionalExplanation": "Optional explanation",
+            "markCorrect": "Mark as correct answer",
+            "selectCorrect": "Select the Correct Answer",
+            "acceptedAnswers": "Accepted Answers",
+            "enterAccepted": "Enter accepted answer",
+            "sampleAnswer": "Enter the expected sample answer",
+            "rubricPlaceholder": "Describe how to grade this answer (optional)",
+            "modelAnswer": "Enter a model answer (minimum 50 characters)",
+            "rubricCriteria": "Describe rubric criteria (minimum 20 characters)",
+            "matchingPairs": "Matching Pairs",
+            "enterLeft": "Enter left side item",
+            "enterRight": "Enter matching right side item",
+            "correctOrder": "Items in Correct Order",
+            "enterItem": "Enter item text"
+          }
+        },
+        "tabbedLayout": { "catalog": "Catalog" },
+        "deleteFailed": "Failed to delete"
+      },
+      "generateUi": {
+        "catalog": {
+          "searchPlaceholder": "Search catalog exams...",
+          "allSubjects": "All subjects",
+          "examType": "Exam type",
+          "allTypes": "All types",
+          "types": {
+            "final": "Final",
+            "midterm": "Midterm",
+            "chapter": "Chapter Test",
+            "quiz": "Quiz",
+            "practice": "Practice"
+          },
+          "loading": "Loading...",
+          "detail": {
+            "type": "Type",
+            "duration": "Duration",
+            "totalMarks": "Total Marks",
+            "questions": "Questions",
+            "usage": "Usage",
+            "avgScore": "Avg Score"
+          }
+        },
+        "content": {
+          "noTemplates": "No templates yet. Create your first template to get started.",
+          "noGenerated": "No generated exams yet. Create a template first, then generate an exam."
+        },
+        "versionLibrary": {
+          "title": "Version Library",
+          "questions": "Questions:",
+          "marks": "Marks:"
+        },
+        "distributionEditor": {
+          "questionType": "Question Type",
+          "totalPerDifficulty": "Total per Difficulty",
+          "totalByType": "Total Questions by Type:"
+        },
+        "saveFailed": "Failed to save template"
+      },
+      "resultsUi": {
+        "detail": {
+          "title": "Student Results",
+          "marks": "Marks",
+          "grade": "Grade",
+          "loadFailed": "Failed to load results"
+        },
+        "noResults": "No results yet",
+        "noGrouping": "No Grouping",
+        "batchPdf": {
+          "title": "Batch PDF Generation",
+          "template": "PDF Template",
+          "templates": {
+            "classic": "Classic",
+            "modern": "Modern",
+            "minimal": "Minimal"
+          },
+          "options": "Options",
+          "close": "Close",
+          "toast": {
+            "generated": "PDFs Generated Successfully",
+            "generationFailed": "Generation Failed",
+            "started": "Generation Started",
+            "startingDescription": "Generating PDFs in the background...",
+            "startFailed": "Failed to Start",
+            "downloadStarted": "Download Started",
+            "downloadDescription": "Your ZIP file is being downloaded",
+            "downloadFailed": "Download Failed",
+            "cancelled": "Cancelled",
+            "cancelledDescription": "PDF generation has been cancelled",
+            "error": "Error",
+            "startError": "Failed to start PDF generation",
+            "downloadError": "Failed to download ZIP file"
+          }
+        },
+        "analytics": { "performanceIndicators": "Performance Indicators" },
+        "templates": {
+          "classic": {
+            "description": "Traditional report card with formal layout"
+          },
+          "modern": {
+            "description": "Visual design with charts and progress indicators",
+            "bestFor": "Student engagement and parent communication"
+          },
+          "minimal": { "description": "Clean and simple text-based layout" }
+        }
+      },
+      "paper": {
+        "standards": {
+          "sudan": "Sudan National",
+          "saudi": "Saudi National",
+          "usK12": "US K-12 Standard",
+          "mena": "MENA Private/International"
+        },
+        "error": "Error",
+        "letter": "Letter",
+        "list": { "noPapers": "No papers have been generated yet" },
+        "content": { "error": "Error", "loadFailed": "Failed to load data" }
+      },
+      "quizUi": {
+        "title": "Quizzes",
+        "description": "Browse quizzes and diagnostics from the catalog by chapter and lesson",
+        "totalQuizzes": "Total Quizzes",
+        "availableQuizzes": "Available quizzes",
+        "questionPoolStat": "Question Pool",
+        "catalogQuestions": "Catalog questions",
+        "subjects": "Subjects",
+        "acrossSubjects": "Across subjects",
+        "avgQuestions": "Avg Questions",
+        "perQuiz": "Per quiz",
+        "allSubjects": "All Subjects",
+        "tabs": { "all": "All", "quiz": "Quiz", "diagnostic": "Diagnostic" },
+        "noQuizzes": "No quizzes match the selected filters.",
+        "startQuiz": "Start Quiz",
+        "questions": "questions",
+        "usageCount": "Used {count} times",
+        "questionPool": "Question Pool by Subject",
+        "myAttempts": "My Quiz Attempts"
+      },
+      "mockUi": {
+        "allSubjects": "All Subjects",
+        "tabs": {
+          "all": "All",
+          "final": "Final",
+          "midterm": "Midterm",
+          "chapter": "Chapter",
+          "practice": "Practice"
+        },
+        "catalog": "Catalog",
+        "school": "School",
+        "questions": "questions",
+        "startMock": "Start Mock",
+        "noMocks": "No mock exams found matching your filters.",
+        "marks": "marks"
+      },
+      "upcoming": {
+        "noExams": "No Upcoming Exams",
+        "noExamsDescription": "There are no exams scheduled in the near future.",
+        "labels": {
+          "today": "Today",
+          "tomorrow": "Tomorrow",
+          "daysLeft": "days",
+          "marks": "marks"
+        },
+        "stats": {
+          "total": "Upcoming",
+          "today": "Today",
+          "tomorrow": "Tomorrow",
+          "thisWeek": "This Week"
+        },
+        "sections": {
+          "today": "Today's Exams",
+          "tomorrow": "Tomorrow",
+          "thisWeek": "This Week",
+          "later": "Coming Up"
+        },
+        "actions": {
+          "viewDetails": "View Details",
+          "scheduleExam": "Schedule an Exam"
+        }
+      },
+      "termSelector": { "allTime": "All Time", "current": "Current" },
+      "examCard": {
+        "date": "Date",
+        "time": "Time",
+        "room": "Room",
+        "duration": "Duration"
+      },
+      "studentContent": {
+        "noRecord": "No student record found",
+        "contactAdmin": "Please contact school administration",
+        "noUpcoming": "No upcoming exams scheduled",
+        "noResults": "No results yet"
+      },
+      "teacherContent": {
+        "noRecord": "No teacher record found",
+        "contactAdmin": "Please contact school administration",
+        "examTemplates": "Exam templates"
+      },
+      "guardianContent": {
+        "noRecord": "No guardian record found",
+        "contactAdmin": "Please contact school administration",
+        "noLinkedStudents": "No linked students found",
+        "linkStudents": "Please contact school admin to link your children",
+        "noUpcoming": "No upcoming exams",
+        "noResults": "No results yet"
+      },
+      "shared": {
+        "best": "Best",
+        "average": "Average",
+        "attempts": "Attempts",
+        "attemptNumber": "Attempt #",
+        "viewingProgress": "Viewing progress for:",
+        "examsTaken": "Exams Taken",
+        "highestAverage": "Highest average",
+        "lowestAverage": "Lowest average",
+        "subjectTrends": "Subject Score Trends"
+      },
+      "wizard": {
+        "templateWizard": {
+          "print": {
+            "pageSize": "Page Size",
+            "letterSize": "Letter (8.5 x 11 in)",
+            "orientation": "Orientation",
+            "answerSheet": "Answer Sheet",
+            "columnLayout": "Column Layout"
+          },
+          "scoring": {
+            "passingScore": "Passing Score (%)",
+            "gradePlaceholder": "A+"
+          },
+          "targeting": {
+            "grades": "Grades",
+            "sections": "Sections",
+            "noSections": "No sections available for selected grades.",
+            "classrooms": "Classrooms",
+            "noClassrooms": "No classrooms available for selected grades."
+          },
+          "name": {
+            "namePlaceholder": "Enter template name",
+            "descriptionPlaceholder": "Describe this exam template"
+          }
+        },
+        "examWizard": {
+          "paperConfig": {
+            "styles": {
+              "classic": "Classic",
+              "modern": "Modern",
+              "formal": "Formal",
+              "custom": "Custom"
+            },
+            "sizes": { "a4": "A4", "letter": "Letter" }
+          },
+          "schedule": {
+            "title": "Schedule",
+            "description": "Set the exam date, time, and duration.",
+            "marksTitle": "Marks & Instructions",
+            "marksDescription": "Set the marks and exam instructions.",
+            "instructionsPlaceholder": "Enter exam instructions (optional)"
+          },
+          "settings": {
+            "proctoring": "Proctoring",
+            "proctoringDescription": "Configure exam security settings.",
+            "attempts": "Attempts & Submission",
+            "attemptsDescription": "Configure attempt limits and submission rules."
+          },
+          "information": {
+            "examTitle": "Exam Title",
+            "titlePlaceholder": "Enter exam title",
+            "descriptionPlaceholder": "Enter exam description (optional)",
+            "selectClass": "Select a class",
+            "selectSubject": "Select a subject",
+            "examType": "Exam Type"
+          }
+        },
+        "certWizard": {
+          "verificationPrefix": "CERT-",
+          "noSignatures": "No signatures added yet"
+        }
+      },
+      "columnExport": {
+        "type": "Type",
+        "status": "Status",
+        "average": "Average"
+      },
+      "mockTakePlaceholder": "Type your answer..."
     },
     "events": {
       "title": "Events",

@@ -63,7 +63,7 @@ export async function deleteCourse(courseId: string): Promise<ApiResponse> {
       },
     })
 
-    revalidatePath("/stream/admin/courses")
+    revalidatePath("/[lang]/s/[subdomain]/stream/admin/courses")
 
     return {
       status: "success",

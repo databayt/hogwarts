@@ -133,6 +133,7 @@ export const studentDetailSelect = {
     },
   },
   studentClasses: {
+    take: 50,
     include: {
       class: {
         select: {
@@ -143,6 +144,7 @@ export const studentDetailSelect = {
     },
   },
   studentGuardians: {
+    take: 10,
     include: {
       guardian: {
         select: {

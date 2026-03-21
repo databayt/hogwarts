@@ -24,13 +24,9 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import type { QuizItem, QuizQuestionStats, QuizSubjectFilter } from "./types"
-
-const QUIZ_TYPE_LABELS: Record<string, string> = {
-  quiz: "Quiz",
-  diagnostic: "Diagnostic",
-}
 
 interface QuizListProps {
   quizzes: QuizItem[]
@@ -39,6 +35,8 @@ interface QuizListProps {
 }
 
 export function QuizList({ quizzes, subjects, questionStats }: QuizListProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.exams?.quizUi
   const [subjectFilter, setSubjectFilter] = useState<string>("all")
   const [typeFilter, setTypeFilter] = useState<string>("all")
 
@@ -63,10 +61,12 @@ export function QuizList({ quizzes, subjects, questionStats }: QuizListProps) {
       <div className="flex flex-wrap items-center gap-3">
         <Select value={subjectFilter} onValueChange={setSubjectFilter}>
           <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="All Subjects" />
+            <SelectValue placeholder={t?.allSubjects ?? "All Subjects"} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Subjects</SelectItem>
+            <SelectItem value="all">
+              {t?.allSubjects ?? "All Subjects"}
+            </SelectItem>
             {subjects.map((s) => (
               <SelectItem key={s.id} value={s.slug}>
                 {s.name}
@@ -77,9 +77,11 @@ export function QuizList({ quizzes, subjects, questionStats }: QuizListProps) {
 
         <Tabs value={typeFilter} onValueChange={setTypeFilter}>
           <TabsList>
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="quiz">Quiz</TabsTrigger>
-            <TabsTrigger value="diagnostic">Diagnostic</TabsTrigger>
+            <TabsTrigger value="all">{t?.tabs?.all ?? "All"}</TabsTrigger>
+            <TabsTrigger value="quiz">{t?.tabs?.quiz ?? "Quiz"}</TabsTrigger>
+            <TabsTrigger value="diagnostic">
+              {t?.tabs?.diagnostic ?? "Diagnostic"}
+            </TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
@@ -88,7 +90,7 @@ export function QuizList({ quizzes, subjects, questionStats }: QuizListProps) {
         <Card>
           <CardContent className="flex min-h-[200px] items-center justify-center">
             <p className="text-muted-foreground">
-              No quizzes match the selected filters.
+              {t?.noQuizzes ?? "No quizzes match the selected filters."}
             </p>
           </CardContent>
         </Card>
@@ -117,7 +119,8 @@ export function QuizList({ quizzes, subjects, questionStats }: QuizListProps) {
                       {quiz.name}
                     </Badge>
                     <Badge variant="outline">
-                      {QUIZ_TYPE_LABELS[quiz.examType] ?? quiz.examType}
+                      {t?.tabs?.[quiz.examType as keyof typeof t.tabs] ??
+                        quiz.examType}
                     </Badge>
                   </div>
                 </div>

@@ -8,6 +8,7 @@
 
 import { auth } from "@/auth"
 
+import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
 // Import what we need from config
@@ -146,12 +147,19 @@ export async function filterTimetableByRole(
 
     case "GUARDIAN":
       // Can only see their children's timetables
+      // childIds are student IDs — resolve to class IDs via StudentClass
       if (options?.childIds && options.childIds.length > 0) {
+        const { schoolId } = await getPermissionContext()
+        const enrollments = await db.studentClass.findMany({
+          where: {
+            studentId: { in: options.childIds },
+            ...(schoolId ? { schoolId } : {}),
+          },
+          select: { classId: true },
+        })
+        const childClassIds = new Set(enrollments.map((e) => e.classId))
         return timetableData.filter((item: any) =>
-          options.childIds?.some(
-            (childId) =>
-              item.studentIds?.includes(childId) || item.classId === childId // Assuming childId might be classId
-          )
+          childClassIds.has(item.classId)
         )
       }
       return []

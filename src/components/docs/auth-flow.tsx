@@ -143,7 +143,7 @@ function FlowStep({
                 {isOpen ? (
                   <ChevronDown className="me-2 h-4 w-4" />
                 ) : (
-                  <ChevronRight className="me-2 h-4 w-4" />
+                  <ChevronRight className="me-2 h-4 w-4 rtl:rotate-180" />
                 )}
                 {step.branches.length} Possible Paths
               </Button>

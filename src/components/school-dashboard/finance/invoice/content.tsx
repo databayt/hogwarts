@@ -79,7 +79,7 @@ export async function InvoiceContent({ searchParams, lang = "ar" }: Props) {
     const result = await getInvoicesWithFilters(sp)
     if (result.success) {
       data = result.data
-      total = result.total
+      total = result.total ?? 0
     }
   } catch (error) {
     console.error("Failed to fetch invoices:", error)

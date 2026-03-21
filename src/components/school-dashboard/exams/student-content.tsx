@@ -55,14 +55,12 @@ export default async function StudentExamsContent({ dictionary, lang }: Props) {
         <CardContent className="flex flex-col items-center justify-center py-12">
           <GraduationCap className="text-muted-foreground mb-4 h-12 w-12" />
           <h3 className="mb-2 text-lg font-semibold">
-            {lang === "ar"
-              ? "لم يتم العثور على سجل طالب"
-              : "No student record found"}
+            {dictionary?.school?.exams?.studentContent?.noRecord ??
+              "No student record found"}
           </h3>
           <p className="text-muted-foreground text-sm">
-            {lang === "ar"
-              ? "يرجى التواصل مع إدارة المدرسة"
-              : "Please contact school administration"}
+            {dictionary?.school?.exams?.studentContent?.contactAdmin ??
+              "Please contact school administration"}
           </p>
         </CardContent>
       </Card>
@@ -235,9 +233,7 @@ export default async function StudentExamsContent({ dictionary, lang }: Props) {
             <CardContent className="flex flex-col items-center justify-center py-8">
               <Calendar className="text-muted-foreground mb-3 h-10 w-10" />
               <p className="text-muted-foreground text-sm">
-                {lang === "ar"
-                  ? "لا توجد امتحانات قادمة"
-                  : "No upcoming exams scheduled"}
+                {d?.studentContent?.noUpcoming ?? "No upcoming exams scheduled"}
               </p>
             </CardContent>
           </Card>
@@ -336,7 +332,7 @@ export default async function StudentExamsContent({ dictionary, lang }: Props) {
             <CardContent className="flex flex-col items-center justify-center py-8">
               <FileBarChart className="text-muted-foreground mb-3 h-10 w-10" />
               <p className="text-muted-foreground text-sm">
-                {lang === "ar" ? "لا توجد نتائج بعد" : "No results yet"}
+                {d?.studentContent?.noResults ?? "No results yet"}
               </p>
             </CardContent>
           </Card>

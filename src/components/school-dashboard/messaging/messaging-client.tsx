@@ -4,11 +4,10 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Menu, X } from "lucide-react"
+import { MessageSquarePlus } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import socketService from "@/lib/websocket/socket-service"
-import { Button } from "@/components/ui/button"
 import { toast } from "@/components/ui/use-toast"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
@@ -56,7 +55,6 @@ export function MessagingClient({
     useState<ConversationDTO | null>(initialActiveConversation)
   const [messages, setMessages] = useState<MessageDTO[]>(initialMessages)
   const [isConnected, setIsConnected] = useState(false)
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [showNewConversationDialog, setShowNewConversationDialog] =
     useState(false)
 
@@ -64,11 +62,7 @@ export function MessagingClient({
   useEffect(() => {
     const connect = async () => {
       try {
-        // Connection params will be handled by socket-service from session
-        // await socketService.connect(schoolId, currentUserId, userRole)
         setIsConnected(true)
-
-        // Subscribe to user's conversations
         socketService.subscribeToConversations(currentUserId)
       } catch (error) {
         console.error("Failed to connect to Socket.IO:", error)
@@ -89,7 +83,6 @@ export function MessagingClient({
     const unsubscribeConversationNew = socketService.on(
       "conversation:new",
       (data) => {
-        // Add new conversation to list
         setConversations((prev) => [
           {
             id: data.id,
@@ -134,8 +127,10 @@ export function MessagingClient({
 
   const handleConversationClick = (conversationId: string) => {
     router.push(`/messages?conversation=${conversationId}`)
-    // Close sidebar on mobile/tablet when conversation is selected
-    setIsSidebarOpen(false)
+  }
+
+  const handleBack = () => {
+    router.push("/messages")
   }
 
   const handleNewConversation = () => {
@@ -160,48 +155,34 @@ export function MessagingClient({
     if (!result.success) {
       throw new Error(result.error)
     }
-
-    // Message will be added via Socket.IO event
   }
 
   const handleEditMessage = async (messageId: string, content: string) => {
     const result = await editMessage({ messageId, content })
-
     if (!result.success) {
       throw new Error(result.error)
     }
-
-    // Update will be applied via Socket.IO event
   }
 
   const handleDeleteMessage = async (messageId: string) => {
     const result = await deleteMessage({ messageId })
-
     if (!result.success) {
       throw new Error(result.error)
     }
-
-    // Deletion will be applied via Socket.IO event
   }
 
   const handleReactToMessage = async (messageId: string, emoji: string) => {
     const result = await addReaction({ messageId, emoji })
-
     if (!result.success) {
       throw new Error(result.error)
     }
-
-    // Reaction will be added via Socket.IO event
   }
 
   const handleRemoveReaction = async (reactionId: string) => {
     const result = await removeReaction({ reactionId })
-
     if (!result.success) {
       throw new Error(result.error)
     }
-
-    // Reaction removal will be applied via Socket.IO event
   }
 
   const handleArchiveConversation = async (conversationId: string) => {
@@ -263,7 +244,6 @@ export function MessagingClient({
     })
 
     if (result.success) {
-      // Update local state
       setConversations((prev) =>
         prev.map((c) => {
           if (c.id === conversationId) {
@@ -308,7 +288,6 @@ export function MessagingClient({
     }
 
     if (result.success) {
-      // Update local state
       setConversations((prev) =>
         prev.map((c) => {
           if (c.id === conversationId) {
@@ -339,48 +318,15 @@ export function MessagingClient({
   }
 
   return (
-    <div className="bg-background relative flex h-[calc(100vh-4rem)]">
-      {/* Mobile/Tablet: Overlay backdrop */}
-      {isSidebarOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/50 md:hidden"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
-
-      {/* Conversations sidebar */}
-      {/* Mobile (<640px): Hidden unless sidebar open OR no active conversation */}
-      {/* Tablet (640-767px): Overlay when open */}
-      {/* Desktop (≥768px): Always visible, 430px fixed width */}
+    <div className="bg-msg-chat-bg relative flex h-[calc(100vh-4rem)]">
+      {/* Sidebar — hidden on mobile when conversation active */}
       <div
         className={cn(
-          // Base styles
-          "bg-background border-border flex-shrink-0 border-e",
-          // Mobile: full width overlay OR show when no conversation
-          "fixed z-50 md:relative md:z-0",
-          "h-full w-full sm:w-96 md:w-[430px]",
-          // Mobile: show sidebar if open OR if no active conversation
-          activeConversation
-            ? isSidebarOpen
-              ? "translate-x-0"
-              : "-translate-x-full md:translate-x-0 rtl:translate-x-full"
-            : "translate-x-0",
-          // Tablet: slide in from left when open
-          "transition-transform duration-300 ease-in-out"
+          "bg-msg-sidebar-bg border-border flex-shrink-0 border-e",
+          "w-full md:w-[420px] md:max-w-[35vw]",
+          activeConversation ? "hidden md:flex" : "flex"
         )}
       >
-        {/* Close button for mobile/tablet overlay */}
-        <div className="absolute end-4 top-4 z-10 md:hidden">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsSidebarOpen(false)}
-            className="h-8 w-8"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-
         <ConversationList
           conversations={conversations}
           currentUserId={currentUserId}
@@ -395,65 +341,44 @@ export function MessagingClient({
         />
       </div>
 
-      {/* Chat interface */}
-      {/* Mobile: Hidden when no conversation OR sidebar is open */}
-      {/* Desktop: Always visible, takes remaining space */}
+      {/* Chat area — hidden on mobile when no conversation */}
       <div
         className={cn(
           "flex flex-1 flex-col",
-          // Mobile: hide when no active conversation
-          !activeConversation && "hidden md:flex"
+          !activeConversation ? "hidden md:flex" : "flex"
         )}
       >
-        {/* Mobile/Tablet: Menu button to toggle sidebar (only show when conversation is active) */}
-        {activeConversation && (
-          <div className="border-border bg-background flex items-center gap-3 border-b px-4 py-3 md:hidden">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsSidebarOpen(true)}
-              className="h-8 w-8 flex-shrink-0"
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
-            <div className="min-w-0 flex-1">
-              <h2 className="text-foreground truncate font-semibold">
-                {activeConversation.type === "direct"
-                  ? activeConversation.participants?.find(
-                      (p) => p.userId !== currentUserId
-                    )?.user?.username ||
-                    m?.ui?.user_fallback ||
-                    "User"
-                  : activeConversation.title ||
-                    m?.ui?.conversation_fallback ||
-                    "Conversation"}
-              </h2>
-            </div>
-          </div>
+        {activeConversation ? (
+          <ChatInterface
+            conversation={activeConversation}
+            initialMessages={messages}
+            currentUserId={currentUserId}
+            locale={locale}
+            onSendMessage={handleSendMessage}
+            onEditMessage={handleEditMessage}
+            onDeleteMessage={handleDeleteMessage}
+            onReactToMessage={handleReactToMessage}
+            onRemoveReaction={handleRemoveReaction}
+            onBack={handleBack}
+          />
+        ) : (
+          <NoActiveConversation
+            locale={locale}
+            onNewConversation={handleNewConversation}
+          />
         )}
-
-        {/* Chat content */}
-        <div className="flex-1 overflow-hidden">
-          {activeConversation ? (
-            <ChatInterface
-              conversation={activeConversation}
-              initialMessages={messages}
-              currentUserId={currentUserId}
-              locale={locale}
-              onSendMessage={handleSendMessage}
-              onEditMessage={handleEditMessage}
-              onDeleteMessage={handleDeleteMessage}
-              onReactToMessage={handleReactToMessage}
-              onRemoveReaction={handleRemoveReaction}
-            />
-          ) : (
-            <NoActiveConversation
-              locale={locale}
-              onNewConversation={handleNewConversation}
-            />
-          )}
-        </div>
       </div>
+
+      {/* FAB — mobile only, when on conversation list */}
+      {!activeConversation && (
+        <button
+          onClick={handleNewConversation}
+          className="bg-msg-unread-badge fixed end-6 bottom-6 z-30 flex h-14 w-14 items-center justify-center rounded-full text-white shadow-lg transition-transform active:scale-95 md:hidden"
+          aria-label={m?.ui?.new_conversation || "New conversation"}
+        >
+          <MessageSquarePlus className="h-6 w-6" />
+        </button>
+      )}
 
       {/* New Conversation Dialog */}
       <NewConversationDialog

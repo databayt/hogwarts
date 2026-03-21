@@ -62,6 +62,7 @@ export function StudentCards({
   locale = "en",
   schoolId,
 }: StudentCardsProps) {
+  const t = dictionary?.attendance?.barcodeCards
   const [searchQuery, setSearchQuery] = useState("")
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [editingCard, setEditingCard] = useState<StudentIdentifier | null>(null)
@@ -92,7 +93,7 @@ export function StudentCards({
     if (!newCard.studentId || !newCard.barcode) {
       toast({
         title: "Error",
-        description: "Please fill in all required fields",
+        description: t?.fillRequired ?? "Please fill in all required fields",
       })
       return
     }
@@ -110,7 +111,7 @@ export function StudentCards({
 
       toast({
         title: "Success",
-        description: "Card added successfully",
+        description: t?.cardAdded ?? "Card added successfully",
       })
 
       setIsAddDialogOpen(false)
@@ -118,7 +119,7 @@ export function StudentCards({
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to add card",
+        description: t?.addFailed ?? "Failed to add card",
       })
     }
   }
@@ -128,12 +129,12 @@ export function StudentCards({
       await removeStudentIdentifier(cardId)
       toast({
         title: "Success",
-        description: "Card removed successfully",
+        description: t?.cardRemoved ?? "Card removed successfully",
       })
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to remove card",
+        description: t?.removeFailed ?? "Failed to remove card",
       })
     }
   }
@@ -201,35 +202,41 @@ export function StudentCards({
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Student ID Cards</CardTitle>
+              <CardTitle>{t?.title ?? "Student ID Cards"}</CardTitle>
               <CardDescription>
-                Manage barcode assignments for student identification
+                {t?.description ??
+                  "Manage barcode assignments for student identification"}
               </CardDescription>
             </div>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={exportCards}>
                 <Download className="me-2 h-4 w-4" />
-                Export
+                {t?.export ?? "Export"}
               </Button>
               <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                 <DialogTrigger asChild>
                   <Button size="sm">
                     <Plus className="me-2 h-4 w-4" />
-                    Add Card
+                    {t?.addCard ?? "Add Card"}
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Add Student Card</DialogTitle>
+                    <DialogTitle>
+                      {t?.dialogTitle ?? "Add Student Card"}
+                    </DialogTitle>
                     <DialogDescription>
-                      Assign a barcode to a student for attendance tracking
+                      {t?.dialogDescription ??
+                        "Assign a barcode to a student for attendance tracking"}
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4 py-4">
                     <div className="space-y-2">
-                      <Label>Student ID</Label>
+                      <Label>{t?.studentId ?? "Student ID"}</Label>
                       <Input
-                        placeholder="Enter student ID..."
+                        placeholder={
+                          t?.studentIdPlaceholder ?? "Enter student ID..."
+                        }
                         value={newCard.studentId}
                         onChange={(e) =>
                           setNewCard((prev) => ({
@@ -240,10 +247,13 @@ export function StudentCards({
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Barcode</Label>
+                      <Label>{t?.barcodeLabel ?? "Barcode"}</Label>
                       <div className="flex gap-2">
                         <Input
-                          placeholder="Enter or generate barcode..."
+                          placeholder={
+                            t?.barcodePlaceholder ??
+                            "Enter or generate barcode..."
+                          }
                           value={newCard.barcode}
                           onChange={(e) =>
                             setNewCard((prev) => ({
@@ -257,12 +267,12 @@ export function StudentCards({
                           variant="outline"
                           onClick={generateBarcode}
                         >
-                          Generate
+                          {t?.generate ?? "Generate"}
                         </Button>
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label>Expiry Date (Optional)</Label>
+                      <Label>{t?.expiryDate ?? "Expiry Date (Optional)"}</Label>
                       <Input
                         type="date"
                         value={newCard.expiryDate}
@@ -280,9 +290,11 @@ export function StudentCards({
                       variant="outline"
                       onClick={() => setIsAddDialogOpen(false)}
                     >
-                      Cancel
+                      {t?.cancel ?? "Cancel"}
                     </Button>
-                    <Button onClick={handleAddCard}>Add Card</Button>
+                    <Button onClick={handleAddCard}>
+                      {t?.addCard ?? "Add Card"}
+                    </Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
@@ -294,7 +306,10 @@ export function StudentCards({
           <div className="mb-4 flex items-center gap-2">
             <Search className="text-muted-foreground h-4 w-4" />
             <Input
-              placeholder="Search by student ID, name, or barcode..."
+              placeholder={
+                t?.searchPlaceholder ??
+                "Search by student ID, name, or barcode..."
+              }
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="max-w-sm"
@@ -305,19 +320,25 @@ export function StudentCards({
           <div className="mb-4 grid grid-cols-4 gap-4">
             <div className="bg-secondary rounded-lg p-3 text-center">
               <p className="text-2xl font-bold">{cards.length}</p>
-              <p className="text-muted-foreground text-xs">Total Cards</p>
+              <p className="text-muted-foreground text-xs">
+                {t?.totalCards ?? "Total Cards"}
+              </p>
             </div>
             <div className="bg-secondary rounded-lg p-3 text-center">
               <p className="text-2xl font-bold text-green-600">
                 {cards.filter((c) => c.isActive).length}
               </p>
-              <p className="text-muted-foreground text-xs">Active</p>
+              <p className="text-muted-foreground text-xs">
+                {t?.active ?? "Active"}
+              </p>
             </div>
             <div className="bg-secondary rounded-lg p-3 text-center">
               <p className="text-2xl font-bold text-red-600">
                 {cards.filter((c) => !c.isActive).length}
               </p>
-              <p className="text-muted-foreground text-xs">Inactive</p>
+              <p className="text-muted-foreground text-xs">
+                {t?.inactive ?? "Inactive"}
+              </p>
             </div>
             <div className="bg-secondary rounded-lg p-3 text-center">
               <p className="text-2xl font-bold text-orange-600">
@@ -327,7 +348,9 @@ export function StudentCards({
                   ).length
                 }
               </p>
-              <p className="text-muted-foreground text-xs">Expired</p>
+              <p className="text-muted-foreground text-xs">
+                {t?.expired ?? "Expired"}
+              </p>
             </div>
           </div>
 

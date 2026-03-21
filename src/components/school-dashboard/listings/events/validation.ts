@@ -6,7 +6,7 @@ import { z } from "zod"
 export const eventBaseSchema = z
   .object({
     title: z.string().min(1, "Title is required"),
-    description: z.string().optional(),
+    description: z.string().max(5000).optional(),
     eventType: z.enum([
       "ACADEMIC",
       "SPORTS",
@@ -19,16 +19,16 @@ export const eventBaseSchema = z
     eventDate: z.date(),
     startTime: z.string().min(1, "Start time is required"),
     endTime: z.string().min(1, "End time is required"),
-    location: z.string().optional(),
-    organizer: z.string().optional(),
-    targetAudience: z.string().optional(),
+    location: z.string().max(500).optional(),
+    organizer: z.string().max(200).optional(),
+    targetAudience: z.string().max(200).optional(),
     maxAttendees: z
       .number()
       .min(1, "Max attendees must be at least 1")
       .optional(),
     isPublic: z.boolean(),
     registrationRequired: z.boolean(),
-    notes: z.string().optional(),
+    notes: z.string().max(5000).optional(),
   })
   .superRefine((val, ctx) => {
     // Ensure end time is after start time

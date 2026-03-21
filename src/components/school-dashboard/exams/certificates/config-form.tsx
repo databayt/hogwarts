@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { createCertificateConfig, updateCertificateConfig } from "./actions"
 
@@ -60,6 +61,8 @@ export function CertificateConfigForm({ initialData }: ConfigFormProps) {
   const [signatures, setSignatures] = useState<Signature[]>(
     initialData?.signatures || [{ name: "", title: "" }]
   )
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.exams?.certificates?.config
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -106,12 +109,14 @@ export function CertificateConfigForm({ initialData }: ConfigFormProps) {
 
     if (result.success) {
       toast({
-        title: initialData ? "Template updated" : "Template created",
+        title: initialData
+          ? (t?.toast?.updated ?? "Template updated")
+          : (t?.toast?.created ?? "Template created"),
       })
       router.back()
     } else if (!result.success) {
       toast({
-        title: "Error",
+        title: t?.toast?.error ?? "Error",
         description: result.error,
         variant: "destructive",
       })
@@ -140,7 +145,9 @@ export function CertificateConfigForm({ initialData }: ConfigFormProps) {
     <form onSubmit={handleSubmit} className="space-y-8">
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="name">Template Name</Label>
+          <Label htmlFor="name">
+            {t?.form?.templateName ?? "Template Name"}
+          </Label>
           <Input
             id="name"
             name="name"
@@ -151,25 +158,41 @@ export function CertificateConfigForm({ initialData }: ConfigFormProps) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="type">Certificate Type</Label>
+          <Label htmlFor="type">
+            {t?.form?.certificateType ?? "Certificate Type"}
+          </Label>
           <Select name="type" defaultValue={initialData?.type || "ACHIEVEMENT"}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ACHIEVEMENT">Achievement</SelectItem>
-              <SelectItem value="COMPLETION">Completion</SelectItem>
-              <SelectItem value="PARTICIPATION">Participation</SelectItem>
-              <SelectItem value="MERIT">Merit (Top 10%)</SelectItem>
-              <SelectItem value="EXCELLENCE">Excellence (Top 3%)</SelectItem>
-              <SelectItem value="CUSTOM">Custom</SelectItem>
+              <SelectItem value="ACHIEVEMENT">
+                {t?.form?.types?.achievement ?? "Achievement"}
+              </SelectItem>
+              <SelectItem value="COMPLETION">
+                {t?.form?.types?.completion ?? "Completion"}
+              </SelectItem>
+              <SelectItem value="PARTICIPATION">
+                {t?.form?.types?.participation ?? "Participation"}
+              </SelectItem>
+              <SelectItem value="MERIT">
+                {t?.form?.types?.merit ?? "Merit (Top 10%)"}
+              </SelectItem>
+              <SelectItem value="EXCELLENCE">
+                {t?.form?.types?.excellence ?? "Excellence (Top 3%)"}
+              </SelectItem>
+              <SelectItem value="CUSTOM">
+                {t?.form?.types?.custom ?? "Custom"}
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
+        <Label htmlFor="description">
+          {t?.form?.description ?? "Description"}
+        </Label>
         <Textarea
           id="description"
           name="description"
@@ -180,7 +203,7 @@ export function CertificateConfigForm({ initialData }: ConfigFormProps) {
 
       <div className="grid gap-6 md:grid-cols-3">
         <div className="space-y-2">
-          <Label htmlFor="templateStyle">Style</Label>
+          <Label htmlFor="templateStyle">{t?.form?.style ?? "Style"}</Label>
           <Select
             name="templateStyle"
             defaultValue={initialData?.templateStyle || "elegant"}
@@ -189,16 +212,26 @@ export function CertificateConfigForm({ initialData }: ConfigFormProps) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="elegant">Elegant</SelectItem>
-              <SelectItem value="modern">Modern</SelectItem>
-              <SelectItem value="classic">Classic</SelectItem>
-              <SelectItem value="minimal">Minimal</SelectItem>
+              <SelectItem value="elegant">
+                {t?.form?.styles?.elegant ?? "Elegant"}
+              </SelectItem>
+              <SelectItem value="modern">
+                {t?.form?.styles?.modern ?? "Modern"}
+              </SelectItem>
+              <SelectItem value="classic">
+                {t?.form?.styles?.classic ?? "Classic"}
+              </SelectItem>
+              <SelectItem value="minimal">
+                {t?.form?.styles?.minimal ?? "Minimal"}
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="orientation">Orientation</Label>
+          <Label htmlFor="orientation">
+            {t?.form?.orientation ?? "Orientation"}
+          </Label>
           <Select
             name="orientation"
             defaultValue={initialData?.orientation || "landscape"}
@@ -207,14 +240,20 @@ export function CertificateConfigForm({ initialData }: ConfigFormProps) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="landscape">Landscape</SelectItem>
-              <SelectItem value="portrait">Portrait</SelectItem>
+              <SelectItem value="landscape">
+                {t?.form?.orientations?.landscape ?? "Landscape"}
+              </SelectItem>
+              <SelectItem value="portrait">
+                {t?.form?.orientations?.portrait ?? "Portrait"}
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="borderStyle">Border Style</Label>
+          <Label htmlFor="borderStyle">
+            {t?.form?.borderStyle ?? "Border Style"}
+          </Label>
           <Select
             name="borderStyle"
             defaultValue={initialData?.borderStyle || "gold"}
@@ -223,10 +262,18 @@ export function CertificateConfigForm({ initialData }: ConfigFormProps) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="gold">Gold</SelectItem>
-              <SelectItem value="silver">Silver</SelectItem>
-              <SelectItem value="blue">Blue</SelectItem>
-              <SelectItem value="custom">Custom</SelectItem>
+              <SelectItem value="gold">
+                {t?.form?.borders?.gold ?? "Gold"}
+              </SelectItem>
+              <SelectItem value="silver">
+                {t?.form?.borders?.silver ?? "Silver"}
+              </SelectItem>
+              <SelectItem value="blue">
+                {t?.form?.borders?.blue ?? "Blue"}
+              </SelectItem>
+              <SelectItem value="custom">
+                {t?.form?.borders?.custom ?? "Custom"}
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -234,7 +281,9 @@ export function CertificateConfigForm({ initialData }: ConfigFormProps) {
 
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="titleText">Title Text (English)</Label>
+          <Label htmlFor="titleText">
+            {t?.form?.titleEn ?? "Title Text (English)"}
+          </Label>
           <Input
             id="titleText"
             name="titleText"
@@ -244,7 +293,9 @@ export function CertificateConfigForm({ initialData }: ConfigFormProps) {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="titleTextAr">Title Text (Arabic)</Label>
+          <Label htmlFor="titleTextAr">
+            {t?.form?.titleAr ?? "Title Text (Arabic)"}
+          </Label>
           <Input
             id="titleTextAr"
             name="titleTextAr"
@@ -256,7 +307,9 @@ export function CertificateConfigForm({ initialData }: ConfigFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="bodyTemplate">Body Template (English)</Label>
+        <Label htmlFor="bodyTemplate">
+          {t?.form?.bodyEn ?? "Body Template (English)"}
+        </Label>
         <Textarea
           id="bodyTemplate"
           name="bodyTemplate"
@@ -275,7 +328,9 @@ export function CertificateConfigForm({ initialData }: ConfigFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="bodyTemplateAr">Body Template (Arabic)</Label>
+        <Label htmlFor="bodyTemplateAr">
+          {t?.form?.bodyAr ?? "Body Template (Arabic)"}
+        </Label>
         <Textarea
           id="bodyTemplateAr"
           name="bodyTemplateAr"
@@ -287,7 +342,9 @@ export function CertificateConfigForm({ initialData }: ConfigFormProps) {
 
       <div className="grid gap-6 md:grid-cols-3">
         <div className="space-y-2">
-          <Label htmlFor="minPercentage">Minimum Percentage</Label>
+          <Label htmlFor="minPercentage">
+            {t?.form?.minPercentage ?? "Minimum Percentage"}
+          </Label>
           <Input
             id="minPercentage"
             name="minPercentage"
@@ -299,7 +356,9 @@ export function CertificateConfigForm({ initialData }: ConfigFormProps) {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="minGrade">Minimum Grade</Label>
+          <Label htmlFor="minGrade">
+            {t?.form?.minGrade ?? "Minimum Grade"}
+          </Label>
           <Input
             id="minGrade"
             name="minGrade"
@@ -308,7 +367,9 @@ export function CertificateConfigForm({ initialData }: ConfigFormProps) {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="topPercentile">Top Percentile (%)</Label>
+          <Label htmlFor="topPercentile">
+            {t?.form?.topPercentile ?? "Top Percentile (%)"}
+          </Label>
           <Input
             id="topPercentile"
             name="topPercentile"
@@ -323,7 +384,7 @@ export function CertificateConfigForm({ initialData }: ConfigFormProps) {
 
       <div>
         <div className="mb-4 flex items-center justify-between">
-          <Label>Signatures</Label>
+          <Label>{t?.form?.signatures ?? "Signatures"}</Label>
           <Button
             type="button"
             variant="outline"
@@ -338,12 +399,12 @@ export function CertificateConfigForm({ initialData }: ConfigFormProps) {
           {signatures.map((sig, i) => (
             <div key={i} className="flex gap-4">
               <Input
-                placeholder="Name"
+                placeholder={t?.form?.signatureName ?? "Name"}
                 value={sig.name}
                 onChange={(e) => updateSignature(i, "name", e.target.value)}
               />
               <Input
-                placeholder="Title"
+                placeholder={t?.form?.signatureTitle ?? "Title"}
                 value={sig.title}
                 onChange={(e) => updateSignature(i, "title", e.target.value)}
               />
@@ -369,7 +430,9 @@ export function CertificateConfigForm({ initialData }: ConfigFormProps) {
             name="useSchoolLogo"
             defaultChecked={initialData?.useSchoolLogo ?? true}
           />
-          <Label htmlFor="useSchoolLogo">Use School Logo</Label>
+          <Label htmlFor="useSchoolLogo">
+            {t?.form?.useSchoolLogo ?? "Use School Logo"}
+          </Label>
         </div>
         <div className="flex items-center space-x-2 rtl:space-x-reverse">
           <Switch
@@ -377,13 +440,17 @@ export function CertificateConfigForm({ initialData }: ConfigFormProps) {
             name="enableVerification"
             defaultChecked={initialData?.enableVerification ?? true}
           />
-          <Label htmlFor="enableVerification">Enable Verification</Label>
+          <Label htmlFor="enableVerification">
+            {t?.form?.enableVerification ?? "Enable Verification"}
+          </Label>
         </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="verificationPrefix">Verification Prefix</Label>
+          <Label htmlFor="verificationPrefix">
+            {t?.form?.verificationPrefix ?? "Verification Prefix"}
+          </Label>
           <Input
             id="verificationPrefix"
             name="verificationPrefix"
@@ -392,14 +459,18 @@ export function CertificateConfigForm({ initialData }: ConfigFormProps) {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="expiryMonths">Expiry (months)</Label>
+          <Label htmlFor="expiryMonths">
+            {t?.form?.expiryMonths ?? "Expiry (months)"}
+          </Label>
           <Input
             id="expiryMonths"
             name="expiryMonths"
             type="number"
             min={1}
             defaultValue={initialData?.expiryMonths ?? ""}
-            placeholder="Leave empty for permanent"
+            placeholder={
+              t?.form?.expiryPlaceholder ?? "Leave empty for permanent"
+            }
           />
         </div>
       </div>

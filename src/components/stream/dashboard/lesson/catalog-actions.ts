@@ -3,12 +3,23 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
+import { cookies } from "next/headers"
 import { auth } from "@/auth"
 
 import { env } from "@/env.mjs"
 import { db } from "@/lib/db"
-import { i18n } from "@/components/internationalization/config"
+import { i18n, type Locale } from "@/components/internationalization/config"
 import { sendCompletionEmail } from "@/components/stream/shared/email-service"
+
+/** Resolve the user's locale from cookie */
+async function resolveLocale(): Promise<Locale> {
+  const cookieStore = await cookies()
+  const localeCookie = cookieStore.get("NEXT_LOCALE")?.value
+  if (localeCookie && i18n.locales.includes(localeCookie as Locale)) {
+    return localeCookie as Locale
+  }
+  return i18n.defaultLocale
+}
 
 type ApiResponse = {
   status: "success" | "error"
@@ -89,7 +100,12 @@ export async function markCatalogLessonComplete(
       select: { id: true, schoolId: true },
     })
 
-    // Upsert lesson progress
+    // Upsert lesson progress — skip if no enrollment (admin/teacher without enrollment)
+    if (!enrollment) {
+      // Admin/teacher can view but we can't track progress without a valid enrollment FK
+      return { status: "success", message: "Progress noted (no enrollment)" }
+    }
+
     await db.lessonProgress.upsert({
       where: {
         userId_catalogLessonId: {
@@ -105,7 +121,7 @@ export async function markCatalogLessonComplete(
       create: {
         userId: session.user.id,
         catalogLessonId: lessonId,
-        enrollmentId: enrollment?.id ?? "",
+        enrollmentId: enrollment.id,
         isCompleted: true,
         completedAt: new Date(),
         lastWatchedAt: new Date(),
@@ -180,7 +196,7 @@ export async function markCatalogLessonComplete(
           : null
 
         if (user?.email) {
-          const locale = i18n.defaultLocale
+          const locale = await resolveLocale()
           sendCompletionEmail({
             to: user.email,
             studentName: user.username || "Student",
@@ -308,6 +324,11 @@ export async function updateCatalogLessonProgress(data: {
         })
       : null
 
+    // Skip progress tracking if no enrollment (admin/teacher without enrollment)
+    if (!enrollment) {
+      return { status: "success", message: "Progress noted (no enrollment)" }
+    }
+
     await db.lessonProgress.upsert({
       where: {
         userId_catalogLessonId: {
@@ -324,7 +345,7 @@ export async function updateCatalogLessonProgress(data: {
       create: {
         userId: session.user.id,
         catalogLessonId: data.lessonId,
-        enrollmentId: enrollment?.id ?? "",
+        enrollmentId: enrollment.id,
         watchedSeconds: data.watchedSeconds,
         totalSeconds: data.totalSeconds,
         lastWatchedAt: new Date(),

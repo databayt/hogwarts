@@ -5,6 +5,7 @@
 import { revalidatePath } from "next/cache"
 
 import { db } from "@/lib/db"
+import { dispatchNotification } from "@/lib/dispatch-notification"
 import { sendEmail } from "@/lib/email"
 import { normalizePhoneNumber, sendSMS } from "@/lib/notifications/sms"
 
@@ -396,18 +397,18 @@ export async function submitInternalOnboarding(
         select: { id: true },
       })
       if (admins.length > 0) {
-        await db.notification.createMany({
-          data: admins.map((admin) => ({
-            schoolId,
-            userId: admin.id,
-            type: "account_created" as const,
-            priority: "high" as const,
-            title: `New ${data.role} application`,
-            body: `${data.personal.givenName} ${data.personal.surname} has applied to join as ${data.role}. Review pending.`,
-            channels: ["in_app" as const],
-            read: false,
-          })),
-        })
+        await Promise.all(
+          admins.map((admin) =>
+            dispatchNotification({
+              schoolId,
+              userId: admin.id,
+              type: "account_created",
+              priority: "high",
+              title: `New ${data.role} application`,
+              body: `${data.personal.givenName} ${data.personal.surname} has applied to join as ${data.role}. Review pending.`,
+            })
+          )
+        )
       }
     } catch {
       console.error("[InternalOnboarding] Failed to notify admins")

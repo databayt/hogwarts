@@ -1,8 +1,8 @@
 # Attendance -- Production Readiness Tracker
 
 **Status:** IN PROGRESS
-**Completion:** 70%
-**Last Updated:** 2026-03-19
+**Completion:** 85%
+**Last Updated:** 2026-03-21
 
 ---
 
@@ -20,8 +20,8 @@
 - [x] Class selection dropdown
 - [x] Server actions with Zod validation (48+ actions)
 - [x] Period-by-period tracking for secondary schools
-- [ ] Route pages created in app directory (BLOCKER)
-- [ ] Sidebar navigation entry added
+- [ ] Route pages created in app directory (BLOCKER — no `src/app/.../attendance/` directory)
+- [ ] Sidebar navigation entry added (blocked by above)
 
 ### Advanced Features
 
@@ -74,7 +74,7 @@
 
 ### P0 -- Critical
 
-1. **No route pages exist** -- Components are built but `src/app/[lang]/s/[subdomain]/(school-dashboard)/attendance/` directory does not exist. No page.tsx files wired.
+1. **No route pages exist** -- Components are built but `src/app/[lang]/s/[subdomain]/(school-dashboard)/attendance/` directory does not exist. No page.tsx files wired. This is the only blocker to ship.
 
 ### P1 -- High
 
@@ -88,6 +88,13 @@
 3. **Bulk upload error handling** -- Transaction rollback on validation failure missing
 4. **Rate limiting** -- No rate limiting for failed barcode/QR scans
 5. **Audit logging** -- No audit log for attendance modifications
+
+### Recently Fixed (2026-03-21)
+
+1. **N+1 in `markAttendance()`** -- Was 2N DB calls per class, now ~4 (batch findMany + grouped updateMany + createMany)
+2. **N+1 in `quickMarkAllPresent()`** -- Was 2N DB calls, now ~3 (batch fetch + updateMany + createMany)
+3. **N+1 in `getClassComparisonStats()`** -- Was 3N parallel count queries, now 1 groupBy query
+4. **24 stale `.bak` files removed** -- Leftover from prior refactoring
 
 ---
 
@@ -103,4 +110,4 @@
 
 ---
 
-**Last Review:** 2026-03-19
+**Last Review:** 2026-03-21

@@ -14,6 +14,7 @@ import { auth } from "@/auth"
 import type { Prisma } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { dispatchNotification } from "@/lib/dispatch-notification"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import {
@@ -510,22 +511,19 @@ async function notifyIntentionSubmission(
         .filter((id): id is string => !!id)
 
       for (const userId of new Set(teacherUserIds)) {
-        await db.notification.create({
-          data: {
-            schoolId,
-            userId,
-            type: "absence_intention",
-            priority: "normal",
-            title: `Absence Intention: ${studentName}`,
-            body: `${studentName} has submitted an absence intention for ${dateRange} (${intention.daysCount} day${intention.daysCount > 1 ? "s" : ""}). Reason: ${intention.reason}`,
-            metadata: {
-              intentionId,
-              studentName,
-              dateFrom: intention.dateFrom.toISOString(),
-              dateTo: intention.dateTo.toISOString(),
-              reason: intention.reason,
-            },
-            channels: ["in_app"],
+        await dispatchNotification({
+          schoolId,
+          userId,
+          type: "absence_intention",
+          priority: "normal",
+          title: `Absence Intention: ${studentName}`,
+          body: `${studentName} has submitted an absence intention for ${dateRange} (${intention.daysCount} day${intention.daysCount > 1 ? "s" : ""}). Reason: ${intention.reason}`,
+          metadata: {
+            intentionId,
+            studentName,
+            dateFrom: intention.dateFrom.toISOString(),
+            dateTo: intention.dateTo.toISOString(),
+            reason: intention.reason,
           },
         })
       }
@@ -567,22 +565,20 @@ async function notifyIntentionDecision(
 
     const statusText = status === "APPROVED" ? "approved" : "rejected"
 
-    await db.notification.create({
-      data: {
-        schoolId,
-        userId: intention.submittedBy,
-        type: "absence_intention_decision",
-        priority: status === "APPROVED" ? "low" : "normal",
-        title: `Absence Intention ${statusText.charAt(0).toUpperCase() + statusText.slice(1)}`,
-        body: `Your absence intention for ${studentName} (${dateRange}) has been ${statusText}.${intention.reviewNotes ? ` Note: ${intention.reviewNotes}` : ""}`,
-        metadata: {
-          intentionId,
-          studentName,
-          status,
-          reviewNotes: intention.reviewNotes,
-        },
-        channels: ["in_app", "email"],
+    await dispatchNotification({
+      schoolId,
+      userId: intention.submittedBy,
+      type: "absence_intention_decision",
+      priority: status === "APPROVED" ? "low" : "normal",
+      title: `Absence Intention ${statusText.charAt(0).toUpperCase() + statusText.slice(1)}`,
+      body: `Your absence intention for ${studentName} (${dateRange}) has been ${statusText}.${intention.reviewNotes ? ` Note: ${intention.reviewNotes}` : ""}`,
+      metadata: {
+        intentionId,
+        studentName,
+        status,
+        reviewNotes: intention.reviewNotes,
       },
+      channels: ["in_app", "email"],
     })
   } catch (error) {
     console.error("[notifyIntentionDecision] Error:", error)

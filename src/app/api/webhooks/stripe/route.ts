@@ -101,8 +101,27 @@ export async function POST(req: Request) {
     ) {
       if (session.payment_status === "paid") {
         try {
+          // Idempotency: skip if already processed
+          const existing = await db.application.findFirst({
+            where: {
+              id: session.metadata.applicationId,
+              ...(session.metadata.schoolId && {
+                schoolId: session.metadata.schoolId,
+              }),
+            },
+            select: { applicationFeePaid: true },
+          })
+          if (existing?.applicationFeePaid) {
+            return new Response(null, { status: 200 })
+          }
+
           await db.application.update({
-            where: { id: session.metadata.applicationId },
+            where: {
+              id: session.metadata.applicationId,
+              ...(session.metadata.schoolId && {
+                schoolId: session.metadata.schoolId,
+              }),
+            },
             data: {
               applicationFeePaid: true,
               paymentId: (session.payment_intent as string) ?? null,
@@ -113,6 +132,38 @@ export async function POST(req: Request) {
           console.log(
             `[Webhook] Application fee paid: ${session.metadata.applicationId}`
           )
+
+          // Send payment confirmation notification (non-fatal)
+          try {
+            const app = await db.application.findFirst({
+              where: { id: session.metadata.applicationId },
+              select: {
+                userId: true,
+                applicationNumber: true,
+                schoolId: true,
+              },
+            })
+            if (app?.userId && app.schoolId) {
+              const { dispatchNotification } =
+                await import("@/lib/dispatch-notification")
+              await dispatchNotification({
+                schoolId: app.schoolId,
+                userId: app.userId,
+                type: "fee_paid",
+                title: "تم استلام الدفع",
+                body: `تم تأكيد دفع رسوم الطلب ${app.applicationNumber} بنجاح`,
+                lang: "ar",
+                priority: "normal",
+                channels: ["in_app", "email"],
+                metadata: {
+                  applicationId: session.metadata.applicationId,
+                  paymentType: "application_fee",
+                },
+              })
+            }
+          } catch (notifError) {
+            console.error("[Webhook] Payment notification failed:", notifError)
+          }
         } catch (error) {
           console.error("[Webhook] Failed to record application fee:", error)
         }
@@ -131,7 +182,12 @@ export async function POST(req: Request) {
       if (session.payment_status === "paid") {
         try {
           await db.enrollment.update({
-            where: { id: session.metadata.enrollmentId },
+            where: {
+              id: session.metadata.enrollmentId,
+              ...(session.metadata.schoolId && {
+                schoolId: session.metadata.schoolId,
+              }),
+            },
             data: {
               isActive: true,
               status: "ACTIVE",

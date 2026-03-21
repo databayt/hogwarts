@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useCallback, useState, useTransition } from "react"
+import { useCallback, useEffect, useState, useTransition } from "react"
 import {
   AlertCircle,
   Calendar,
@@ -105,6 +105,7 @@ const DAY_NAMES_AR = [
 
 export default function GenerateTimetableContent({ dictionary, lang }: Props) {
   const d = dictionary?.timetable
+  const g = d?.generate as Record<string, string> | undefined
   const { toast } = useToast()
   const [isPending, startTransition] = useTransition()
 
@@ -148,17 +149,17 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
       }
     } catch (error) {
       toast({
-        title: d?.generate?.errors || "Error",
-        description: "Failed to load terms",
+        title: g?.errors || "Error",
+        description: g?.errors ?? "Failed to load terms",
         variant: "destructive",
       })
     }
   }, [selectedTermId, toast])
 
-  // Load terms once
-  useState(() => {
+  // Load terms once on mount
+  useEffect(() => {
     loadTerms()
-  })
+  }, [loadTerms])
 
   // Generate preview
   const handleGenerate = () => {
@@ -203,7 +204,9 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
         toast({
           title: d?.generate?.generationFailed || "Generation Failed",
           description:
-            error instanceof Error ? error.message : "Unknown error occurred",
+            error instanceof Error
+              ? error.message
+              : (g?.errors ?? "Unknown error occurred"),
           variant: "destructive",
         })
       }
@@ -241,7 +244,9 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
       toast({
         title: d?.generate?.applicationFailed || "Application Failed",
         description:
-          error instanceof Error ? error.message : "Unknown error occurred",
+          error instanceof Error
+            ? error.message
+            : (g?.errors ?? "Unknown error occurred"),
         variant: "destructive",
       })
     } finally {
@@ -378,7 +383,7 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
                 {isConfigOpen ? (
                   <ChevronDown className="h-5 w-5" />
                 ) : (
-                  <ChevronRight className="h-5 w-5" />
+                  <ChevronRight className="h-5 w-5 rtl:rotate-180" />
                 )}
               </div>
             </CollapsibleTrigger>
@@ -632,8 +637,9 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
               {d?.generate?.generationResults || "Generation Results"}
             </CardTitle>
             <CardDescription>
-              Generated in {stats.generationTimeMs.toFixed(0)}ms with{" "}
-              {stats.iterations} iterations
+              {g?.generatedIn ?? "Generated in"}{" "}
+              {stats.generationTimeMs.toFixed(0)}ms - {stats.iterations}{" "}
+              {g?.iterations ?? "iterations"}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -731,7 +737,9 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
                 {errors.length > 0 && (
                   <Alert variant="destructive">
                     <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>Errors ({errors.length})</AlertTitle>
+                    <AlertTitle>
+                      {g?.errors ?? "Errors"} ({errors.length})
+                    </AlertTitle>
                     <AlertDescription>
                       <ul className="mt-2 list-inside list-disc">
                         {errors.slice(0, 5).map((error, i) => (
@@ -747,7 +755,9 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
                 {warnings.length > 0 && (
                   <Alert>
                     <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>Warnings ({warnings.length})</AlertTitle>
+                    <AlertTitle>
+                      {g?.warnings ?? "Warnings"} ({warnings.length})
+                    </AlertTitle>
                     <AlertDescription>
                       <ul className="mt-2 list-inside list-disc">
                         {warnings.slice(0, 5).map((warning, i) => (
@@ -768,11 +778,12 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
               <Alert variant="destructive">
                 <Users className="h-4 w-4" />
                 <AlertTitle>
-                  Unplaced Classes ({unplacedClasses.length})
+                  {g?.unplacedClasses ?? "Unplaced Classes"} (
+                  {unplacedClasses.length})
                 </AlertTitle>
                 <AlertDescription>
-                  These classes could not be fully scheduled. Check teacher
-                  availability and room capacity.
+                  {g?.unplacedClassesDesc ??
+                    "These classes could not be fully scheduled. Check teacher availability and room capacity."}
                 </AlertDescription>
               </Alert>
             )}

@@ -140,6 +140,7 @@ export const classDetailSelect = {
     },
   },
   studentClasses: {
+    take: 50,
     include: {
       student: {
         select: {
@@ -151,6 +152,7 @@ export const classDetailSelect = {
     },
   },
   subjectTeachers: {
+    take: 50,
     include: {
       teacher: {
         select: {

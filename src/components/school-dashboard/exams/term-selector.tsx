@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface TermOption {
   id: string
@@ -25,6 +26,8 @@ interface TermSelectorProps {
 }
 
 export function TermSelector({ terms, currentTermId }: TermSelectorProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.exams?.termSelector
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -46,14 +49,14 @@ export function TermSelector({ terms, currentTermId }: TermSelectorProps) {
     <Select value={value} onValueChange={handleChange}>
       <SelectTrigger className="w-[200px]">
         <CalendarDays className="me-2 h-4 w-4" />
-        <SelectValue placeholder="All Time" />
+        <SelectValue placeholder={t?.allTime ?? "All Time"} />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="all">All Time</SelectItem>
+        <SelectItem value="all">{t?.allTime ?? "All Time"}</SelectItem>
         {terms.map((term) => (
           <SelectItem key={term.id} value={term.id}>
             {term.label}
-            {term.isActive && " (Current)"}
+            {term.isActive && ` (${t?.current ?? "Current"})`}
           </SelectItem>
         ))}
       </SelectContent>

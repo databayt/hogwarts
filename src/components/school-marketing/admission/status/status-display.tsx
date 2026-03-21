@@ -41,22 +41,27 @@ interface Props {
   onBack: () => void
 }
 
-const STATUS_COLORS = {
-  PENDING:
+const STATUS_COLORS: Record<string, string> = {
+  DRAFT: "bg-slate-100 text-slate-700 dark:bg-slate-900/30 dark:text-slate-300",
+  SUBMITTED:
     "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300",
   UNDER_REVIEW:
     "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
+  SHORTLISTED:
+    "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300",
+  ENTRANCE_SCHEDULED:
+    "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300",
   INTERVIEW_SCHEDULED:
     "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300",
-  DOCUMENTS_REQUESTED:
-    "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300",
+  SELECTED:
+    "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
   WAITLISTED:
     "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-300",
-  APPROVED:
-    "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
   REJECTED: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
-  ENROLLED:
+  ADMITTED:
     "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300",
+  WITHDRAWN:
+    "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300",
 }
 
 const getChecklistIcon = (type: ChecklistItem["type"]) => {
@@ -93,24 +98,30 @@ export default function StatusDisplay({
 
   const getStatusLabel = (statusValue: string) => {
     const dictKeys: Record<string, string> = {
-      PENDING: "pendingReview",
+      DRAFT: "draft",
+      SUBMITTED: "submitted",
       UNDER_REVIEW: "underReview",
+      SHORTLISTED: "shortlisted",
+      ENTRANCE_SCHEDULED: "entranceScheduled",
       INTERVIEW_SCHEDULED: "interviewScheduled",
-      DOCUMENTS_REQUESTED: "documentsRequested",
+      SELECTED: "selected",
       WAITLISTED: "waitlisted",
-      APPROVED: "approved",
       REJECTED: "rejected",
-      ENROLLED: "enrolled",
+      ADMITTED: "admitted",
+      WITHDRAWN: "withdrawn",
     }
     const fallbacks: Record<string, string> = {
-      PENDING: "Pending Review",
+      DRAFT: "Draft",
+      SUBMITTED: "Submitted",
       UNDER_REVIEW: "Under Review",
+      SHORTLISTED: "Shortlisted",
+      ENTRANCE_SCHEDULED: "Entrance Scheduled",
       INTERVIEW_SCHEDULED: "Interview Scheduled",
-      DOCUMENTS_REQUESTED: "Documents Requested",
+      SELECTED: "Selected",
       WAITLISTED: "Waitlisted",
-      APPROVED: "Approved",
       REJECTED: "Rejected",
-      ENROLLED: "Enrolled",
+      ADMITTED: "Admitted",
+      WITHDRAWN: "Withdrawn",
     }
     const key = dictKeys[statusValue]
     return (
@@ -142,7 +153,8 @@ export default function StatusDisplay({
             </div>
             <Badge
               className={
-                STATUS_COLORS[status.status as keyof typeof STATUS_COLORS]
+                STATUS_COLORS[status.status] ??
+                "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-300"
               }
             >
               {getStatusLabel(status.status)}

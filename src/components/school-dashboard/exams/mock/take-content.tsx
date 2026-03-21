@@ -21,6 +21,7 @@ import { Progress } from "@/components/ui/progress"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import type { MockExamData, MockQuestionWithAnswer } from "./take-actions"
 import { submitMockExam } from "./take-actions"
@@ -184,7 +185,7 @@ export function MockExamTaking({ exam, dictionary }: MockExamTakingProps) {
           disabled={currentIndex === 0}
           onClick={() => setCurrentIndex((i) => i - 1)}
         >
-          <ChevronLeft className="me-1 h-4 w-4" />
+          <ChevronLeft className="me-1 h-4 w-4 rtl:rotate-180" />
           {d?.previous || "Previous"}
         </Button>
 
@@ -211,7 +212,7 @@ export function MockExamTaking({ exam, dictionary }: MockExamTakingProps) {
         ) : (
           <Button onClick={() => setCurrentIndex((i) => i + 1)}>
             {d?.next || "Next"}
-            <ChevronRight className="ms-1 h-4 w-4" />
+            <ChevronRight className="ms-1 h-4 w-4 rtl:rotate-180" />
           </Button>
         )}
       </div>
@@ -228,6 +229,7 @@ function QuestionInput({
   value: string | string[] | undefined
   onChange: (val: string | string[]) => void
 }) {
+  const { dictionary: qDict } = useDictionary()
   const selectedValue = typeof value === "string" ? value : value?.[0] || ""
 
   if (
@@ -237,7 +239,10 @@ function QuestionInput({
     return (
       <RadioGroup value={selectedValue} onValueChange={onChange}>
         {question.options.map((opt) => (
-          <div key={opt.id} className="flex items-center space-x-2">
+          <div
+            key={opt.id}
+            className="flex items-center space-x-2 rtl:space-x-reverse"
+          >
             <RadioGroupItem value={opt.id} id={`${question.id}-${opt.id}`} />
             <Label
               htmlFor={`${question.id}-${opt.id}`}
@@ -255,7 +260,7 @@ function QuestionInput({
     <Textarea
       value={selectedValue}
       onChange={(e) => onChange(e.target.value)}
-      placeholder="Type your answer..."
+      placeholder={qDict?.school?.exams?.typeAnswer ?? "Type your answer..."}
       rows={question.questionType === "ESSAY" ? 8 : 3}
     />
   )

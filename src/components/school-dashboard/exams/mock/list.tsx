@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import type { MockExamItem, MockSubjectFilter, SchoolMockItem } from "./types"
 
@@ -32,18 +33,13 @@ interface MockExamListProps {
   schoolMocks?: SchoolMockItem[]
 }
 
-const EXAM_TYPE_LABELS: Record<string, string> = {
-  final: "Final",
-  midterm: "Midterm",
-  chapter_test: "Chapter Test",
-  practice: "Practice",
-}
-
 export function MockExamList({
   exams,
   subjects,
   schoolMocks = [],
 }: MockExamListProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.exams?.mockUi
   const [subjectFilter, setSubjectFilter] = useState<string>("all")
   const [typeFilter, setTypeFilter] = useState<string>("all")
   const [mockSource, setMockSource] = useState<string>("catalog")
@@ -63,9 +59,11 @@ export function MockExamList({
       {schoolMocks.length > 0 && (
         <Tabs value={mockSource} onValueChange={setMockSource}>
           <TabsList>
-            <TabsTrigger value="catalog">Catalog ({exams.length})</TabsTrigger>
+            <TabsTrigger value="catalog">
+              {t?.catalog ?? "Catalog"} ({exams.length})
+            </TabsTrigger>
             <TabsTrigger value="school">
-              School ({schoolMocks.length})
+              {t?.school ?? "School"} ({schoolMocks.length})
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -90,7 +88,7 @@ export function MockExamList({
                 <div className="text-muted-foreground grid grid-cols-2 gap-2 text-sm">
                   <div className="flex items-center gap-1">
                     <FileText className="h-3.5 w-3.5" />
-                    {mock.totalQuestions} questions
+                    {mock.totalQuestions} {t?.questions ?? "questions"}
                   </div>
                   {mock.templateName && (
                     <div className="flex items-center gap-1">
@@ -109,7 +107,7 @@ export function MockExamList({
                 >
                   <Link href={`exams/${mock.examId}/take`}>
                     <Play className="h-3.5 w-3.5" />
-                    Start Mock
+                    {t?.startMock ?? "Start Mock"}
                   </Link>
                 </Button>
               </CardFooter>
@@ -121,10 +119,12 @@ export function MockExamList({
           <div className="flex flex-wrap items-center gap-3">
             <Select value={subjectFilter} onValueChange={setSubjectFilter}>
               <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="All Subjects" />
+                <SelectValue placeholder={t?.allSubjects ?? "All Subjects"} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Subjects</SelectItem>
+                <SelectItem value="all">
+                  {t?.allSubjects ?? "All Subjects"}
+                </SelectItem>
                 {subjects.map((s) => (
                   <SelectItem key={s.id} value={s.slug}>
                     {s.name}
@@ -135,11 +135,19 @@ export function MockExamList({
 
             <Tabs value={typeFilter} onValueChange={setTypeFilter}>
               <TabsList>
-                <TabsTrigger value="all">All</TabsTrigger>
-                <TabsTrigger value="final">Final</TabsTrigger>
-                <TabsTrigger value="midterm">Midterm</TabsTrigger>
-                <TabsTrigger value="chapter_test">Chapter</TabsTrigger>
-                <TabsTrigger value="practice">Practice</TabsTrigger>
+                <TabsTrigger value="all">{t?.tabs?.all ?? "All"}</TabsTrigger>
+                <TabsTrigger value="final">
+                  {t?.tabs?.final ?? "Final"}
+                </TabsTrigger>
+                <TabsTrigger value="midterm">
+                  {t?.tabs?.midterm ?? "Midterm"}
+                </TabsTrigger>
+                <TabsTrigger value="chapter_test">
+                  {t?.tabs?.chapter ?? "Chapter"}
+                </TabsTrigger>
+                <TabsTrigger value="practice">
+                  {t?.tabs?.practice ?? "Practice"}
+                </TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
@@ -148,7 +156,7 @@ export function MockExamList({
             <Card>
               <CardContent className="flex min-h-[200px] items-center justify-center">
                 <p className="text-muted-foreground">
-                  No mock exams found matching your filters.
+                  {t?.noMocks ?? "No mock exams found matching your filters."}
                 </p>
               </CardContent>
             </Card>
@@ -179,7 +187,8 @@ export function MockExamList({
                         {exam.name}
                       </Badge>
                       <Badge variant="secondary">
-                        {EXAM_TYPE_LABELS[exam.examType] ?? exam.examType}
+                        {t?.tabs?.[exam.examType as keyof typeof t.tabs] ??
+                          exam.examType}
                       </Badge>
                     </div>
                   </CardHeader>
@@ -202,13 +211,13 @@ export function MockExamList({
                       {exam.totalMarks && (
                         <div className="flex items-center gap-1">
                           <Target className="h-3.5 w-3.5" />
-                          {exam.totalMarks} marks
+                          {exam.totalMarks} {t?.marks ?? "marks"}
                         </div>
                       )}
                       {exam.totalQuestions && (
                         <div className="flex items-center gap-1">
                           <FileText className="h-3.5 w-3.5" />
-                          {exam.totalQuestions} questions
+                          {exam.totalQuestions} {t?.questions ?? "questions"}
                         </div>
                       )}
                     </div>
@@ -217,7 +226,7 @@ export function MockExamList({
                     <Button asChild size="sm" className="w-full gap-1">
                       <Link href={`mock/${exam.id}/take`}>
                         <Play className="h-3.5 w-3.5" />
-                        Start Mock
+                        {t?.startMock ?? "Start Mock"}
                       </Link>
                     </Button>
                   </CardFooter>

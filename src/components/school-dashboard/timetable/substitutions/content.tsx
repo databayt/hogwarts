@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { getSubstitutionRecords, getTeacherAbsences } from "../actions"
 import { ABSENCE_TYPES } from "../constants"
@@ -43,8 +44,6 @@ import { AbsenceFormDialog } from "./absence-form"
 import { SubstitutionList } from "./substitution-list"
 
 interface SubstitutionsContentProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  dictionary?: Record<string, any>
   termId: string
 }
 
@@ -91,10 +90,7 @@ interface SubstitutionRecord {
   absence: { type: string; reason: string | null }
 }
 
-export function SubstitutionsContent({
-  dictionary,
-  termId,
-}: SubstitutionsContentProps) {
+export function SubstitutionsContent({ termId }: SubstitutionsContentProps) {
   const [absences, setAbsences] = useState<Absence[]>([])
   const [records, setRecords] = useState<SubstitutionRecord[]>([])
   const [loading, setLoading] = useState(true)
@@ -104,8 +100,9 @@ export function SubstitutionsContent({
   const [searchQuery, setSearchQuery] = useState("")
   const [absenceDialogOpen, setAbsenceDialogOpen] = useState(false)
   const { toast } = useToast()
+  const { dictionary } = useDictionary()
 
-  const t = dictionary?.substitutions || {}
+  const t = dictionary?.school?.timetable?.substitutions
 
   const loadData = useCallback(async () => {
     try {
@@ -122,8 +119,8 @@ export function SubstitutionsContent({
       setRecords(recordsResult.records as SubstitutionRecord[])
     } catch {
       toast({
-        title: "Error",
-        description: "Failed to load data",
+        title: t?.toast?.error_title ?? "Error",
+        description: t?.toast?.errorLoadData ?? "Failed to load data",
         variant: "destructive",
       })
     } finally {
@@ -229,9 +226,9 @@ export function SubstitutionsContent({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2>{t.title || "Substitution Management"}</h2>
+          <h2>{t?.title ?? "Substitution Management"}</h2>
           <p className="text-muted-foreground">
-            {t.description ||
+            {t?.description ??
               "Manage teacher absences and substitute assignments"}
           </p>
         </div>
@@ -244,11 +241,11 @@ export function SubstitutionsContent({
             <RefreshCw
               className={`me-2 h-4 w-4 ${isPending ? "animate-spin" : ""}`}
             />
-            {t.refresh || "Refresh"}
+            {t?.content?.refresh ?? "Refresh"}
           </Button>
           <Button onClick={() => setAbsenceDialogOpen(true)}>
             <Plus className="me-2 h-4 w-4" />
-            {t.newAbsence || "Report Absence"}
+            {t?.content?.newAbsence ?? "Report Absence"}
           </Button>
         </div>
       </div>
@@ -258,7 +255,7 @@ export function SubstitutionsContent({
         <div className="relative flex-1">
           <Search className="text-muted-foreground absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2" />
           <Input
-            placeholder={t.search || "Search teachers or subjects..."}
+            placeholder={t?.content?.search ?? "Search teachers or subjects..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="ps-9"
@@ -266,23 +263,31 @@ export function SubstitutionsContent({
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder={t.filterByStatus || "Filter by status"} />
+            <SelectValue
+              placeholder={t?.content?.filterByStatus ?? "Filter by status"}
+            />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">
-              {t.allStatuses || "All Statuses"}
+              {t?.content?.allStatuses ?? "All Statuses"}
             </SelectItem>
-            <SelectItem value="PENDING">{t.pending || "Pending"}</SelectItem>
-            <SelectItem value="APPROVED">{t.approved || "Approved"}</SelectItem>
+            <SelectItem value="PENDING">
+              {t?.status?.pending ?? "Pending"}
+            </SelectItem>
+            <SelectItem value="APPROVED">
+              {t?.status?.approved ?? "Approved"}
+            </SelectItem>
             <SelectItem value="CONFIRMED">
-              {t.confirmed || "Confirmed"}
+              {t?.status?.confirmed ?? "Confirmed"}
             </SelectItem>
-            <SelectItem value="DECLINED">{t.declined || "Declined"}</SelectItem>
+            <SelectItem value="DECLINED">
+              {t?.status?.declined ?? "Declined"}
+            </SelectItem>
             <SelectItem value="COMPLETED">
-              {t.completed || "Completed"}
+              {t?.status?.completed ?? "Completed"}
             </SelectItem>
             <SelectItem value="CANCELLED">
-              {t.cancelled || "Cancelled"}
+              {t?.status?.cancelled ?? "Cancelled"}
             </SelectItem>
           </SelectContent>
         </Select>
@@ -293,7 +298,7 @@ export function SubstitutionsContent({
         <TabsList>
           <TabsTrigger value="absences" className="flex items-center gap-2">
             <UserMinus className="h-4 w-4" />
-            {t.absences || "Absences"}
+            {t?.content?.absences ?? "Absences"}
             {absences.length > 0 && (
               <Badge variant="secondary" className="ms-1">
                 {absences.length}
@@ -302,7 +307,7 @@ export function SubstitutionsContent({
           </TabsTrigger>
           <TabsTrigger value="records" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
-            {t.records || "Substitutions"}
+            {t?.content?.records ?? "Substitutions"}
             {records.length > 0 && (
               <Badge variant="secondary" className="ms-1">
                 {records.length}
@@ -316,9 +321,12 @@ export function SubstitutionsContent({
             <Card className="py-12 text-center">
               <CardContent>
                 <UserMinus className="text-muted-foreground mx-auto h-12 w-12" />
-                <h3 className="mt-4">{t.noAbsences || "No Absences"}</h3>
+                <h3 className="mt-4">
+                  {t?.empty?.noAbsences ?? "No Absences"}
+                </h3>
                 <p className="text-muted-foreground mt-2">
-                  No teacher absences have been reported yet
+                  {t?.empty?.noAbsencesDescription ??
+                    "No teacher absences have been reported yet"}
                 </p>
               </CardContent>
             </Card>
@@ -334,7 +342,9 @@ export function SubstitutionsContent({
                           <Badge
                             variant={getStatusBadgeVariant(absence.status)}
                           >
-                            {absence.status}
+                            {t?.status?.[
+                              absence.status.toLowerCase() as keyof typeof t.status
+                            ] ?? absence.status}
                           </Badge>
                         </CardTitle>
                         <CardDescription className="mt-1">
@@ -354,7 +364,9 @@ export function SubstitutionsContent({
                     <CardContent>
                       <div className="space-y-2">
                         <p className="text-muted-foreground text-sm font-medium">
-                          Substitutes Assigned: {absence.substitutions.length}
+                          {t?.list?.substitutesAssigned ??
+                            "Substitutes Assigned:"}{" "}
+                          {absence.substitutions.length}
                         </p>
                         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                           {absence.substitutions.slice(0, 6).map((sub) => (
@@ -385,7 +397,10 @@ export function SubstitutionsContent({
                         </div>
                         {absence.substitutions.length > 6 && (
                           <p className="text-muted-foreground text-xs">
-                            +{absence.substitutions.length - 6} more
+                            {(t?.list?.more ?? "+{count} more").replace(
+                              "{count}",
+                              String(absence.substitutions.length - 6)
+                            )}
                           </p>
                         )}
                       </div>
@@ -398,11 +413,7 @@ export function SubstitutionsContent({
         </TabsContent>
 
         <TabsContent value="records" className="mt-4">
-          <SubstitutionList
-            records={filteredRecords}
-            onRefresh={loadData}
-            dictionary={dictionary}
-          />
+          <SubstitutionList records={filteredRecords} onRefresh={loadData} />
         </TabsContent>
       </Tabs>
 
@@ -411,7 +422,6 @@ export function SubstitutionsContent({
         open={absenceDialogOpen}
         onOpenChange={setAbsenceDialogOpen}
         onSuccess={loadData}
-        dictionary={dictionary}
       />
     </div>
   )

@@ -4,6 +4,7 @@
 import { NextResponse } from "next/server"
 
 import { db } from "@/lib/db"
+import { dispatchNotification } from "@/lib/dispatch-notification"
 
 /**
  * Cron job to process scheduled attendance reports
@@ -75,22 +76,19 @@ export async function GET(request: Request) {
 
         // Create in-app notification for each recipient
         for (const user of recipientUsers) {
-          await db.notification.create({
-            data: {
-              schoolId: report.schoolId,
-              userId: user.id,
-              type: "report_ready",
-              priority: "normal",
-              title: `Attendance Report: ${report.name}`,
-              body: `Your scheduled ${report.frequency.toLowerCase()} attendance report "${report.name}" is ready to view.`,
-              metadata: {
-                entityType: "attendanceReport",
-                reportId: report.id,
-                reportName: report.name,
-                reportType: report.type,
-                generatedAt: now.toISOString(),
-              },
-              channels: ["in_app"],
+          await dispatchNotification({
+            schoolId: report.schoolId,
+            userId: user.id,
+            type: "report_ready",
+            priority: "normal",
+            title: `Attendance Report: ${report.name}`,
+            body: `Your scheduled ${report.frequency.toLowerCase()} attendance report "${report.name}" is ready to view.`,
+            metadata: {
+              entityType: "attendanceReport",
+              reportId: report.id,
+              reportName: report.name,
+              reportType: report.type,
+              generatedAt: now.toISOString(),
             },
           })
 

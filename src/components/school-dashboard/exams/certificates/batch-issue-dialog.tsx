@@ -27,6 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { batchGenerateCertificates, getCertificateConfigs } from "./actions"
 import type { CertificateConfigSummary } from "./actions/types"
@@ -52,6 +53,8 @@ export function BatchIssueDialog({
   } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.exams?.certificates?.batchIssue
 
   useEffect(() => {
     startTransition(async () => {
@@ -85,7 +88,7 @@ export function BatchIssueDialog({
         setError(response.error)
       }
     } catch {
-      setError("Failed to issue certificates")
+      setError(t?.error ?? "Failed to issue certificates")
     } finally {
       setIsIssuing(false)
     }
@@ -96,7 +99,7 @@ export function BatchIssueDialog({
       <AlertDialogTrigger asChild>
         <Button variant="outline" size="sm" className="gap-1.5">
           <Award className="h-4 w-4" />
-          Issue Certificates
+          {t?.title ?? "Issue Certificates"}
           {eligibleCount > 0 && (
             <Badge variant="secondary" className="ms-1 text-xs">
               {eligibleCount}
@@ -106,9 +109,12 @@ export function BatchIssueDialog({
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Batch Issue Certificates</AlertDialogTitle>
+          <AlertDialogTitle>
+            {t?.title ?? "Batch Issue Certificates"}
+          </AlertDialogTitle>
           <AlertDialogDescription>
-            Issue certificates for eligible students in &quot;{examTitle}&quot;.
+            {t?.description ??
+              `Issue certificates for eligible students in "${examTitle}".`}
           </AlertDialogDescription>
         </AlertDialogHeader>
 
@@ -116,26 +122,34 @@ export function BatchIssueDialog({
           <div className="space-y-3 py-4">
             <div className="flex items-center gap-2 text-emerald-600">
               <CheckCircle className="h-5 w-5" />
-              <span className="font-medium">Certificates issued!</span>
+              <span className="font-medium">
+                {t?.complete ?? "Certificates issued!"}
+              </span>
             </div>
             <div className="bg-muted/50 grid grid-cols-3 gap-3 rounded-md p-3">
               <div className="text-center">
                 <p className="text-lg font-bold text-emerald-600">
                   {result.generated}
                 </p>
-                <p className="text-muted-foreground text-xs">Issued</p>
+                <p className="text-muted-foreground text-xs">
+                  {t?.issued ?? "Issued"}
+                </p>
               </div>
               <div className="text-center">
                 <p className="text-lg font-bold text-yellow-600">
                   {result.skipped}
                 </p>
-                <p className="text-muted-foreground text-xs">Skipped</p>
+                <p className="text-muted-foreground text-xs">
+                  {t?.skipped ?? "Skipped"}
+                </p>
               </div>
               <div className="text-center">
                 <p className="text-lg font-bold text-red-600">
                   {result.failed}
                 </p>
-                <p className="text-muted-foreground text-xs">Failed</p>
+                <p className="text-muted-foreground text-xs">
+                  {t?.failed ?? "Failed"}
+                </p>
               </div>
             </div>
           </div>
@@ -143,7 +157,7 @@ export function BatchIssueDialog({
           <div className="space-y-4 py-4">
             <div>
               <label className="text-sm font-medium">
-                Certificate Template
+                {t?.selectTemplate ?? "Certificate Template"}
               </label>
               {isPending ? (
                 <div className="flex items-center gap-2 py-2">
@@ -163,7 +177,9 @@ export function BatchIssueDialog({
                   onValueChange={setSelectedConfig}
                 >
                   <SelectTrigger className="mt-1.5">
-                    <SelectValue placeholder="Select template" />
+                    <SelectValue
+                      placeholder={t?.selectTemplate ?? "Select template"}
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {configs.map((config) => (
@@ -207,7 +223,7 @@ export function BatchIssueDialog({
                   Issuing...
                 </>
               ) : (
-                "Issue Certificates"
+                (t?.title ?? "Issue Certificates")
               )}
             </AlertDialogAction>
           )}

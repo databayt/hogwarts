@@ -35,14 +35,23 @@ export default async function LibraryMyProfileContent({
     )
   }
 
-  // Fetch user's borrow records
+  // Fetch user's borrow records (include catalogBookId for correct linking)
   const borrowRecords = await db.borrowRecord.findMany({
     where: {
       userId,
       schoolId,
     },
     include: {
-      book: true,
+      book: {
+        select: {
+          id: true,
+          title: true,
+          author: true,
+          coverUrl: true,
+          coverColor: true,
+          catalogBookId: true,
+        },
+      },
     },
     orderBy: {
       borrowDate: "desc",
@@ -80,13 +89,26 @@ export default async function LibraryMyProfileContent({
             {activeBorrows.map((record) => (
               <div key={record.id} className="library-profile-card">
                 <div className="library-profile-card-image">
-                  <Image
-                    src={record.book.coverUrl}
-                    alt={record.book.title}
-                    width={150}
-                    height={225}
-                    className="rounded"
-                  />
+                  {record.book.coverUrl ? (
+                    <Image
+                      src={record.book.coverUrl}
+                      alt={record.book.title}
+                      width={150}
+                      height={225}
+                      className="rounded"
+                    />
+                  ) : (
+                    <div
+                      className="flex h-[225px] w-[150px] items-center justify-center rounded p-2 text-center"
+                      style={{
+                        backgroundColor: record.book.coverColor || "#1a1a2e",
+                      }}
+                    >
+                      <p className="line-clamp-3 text-sm font-bold text-white">
+                        {record.book.title}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="library-profile-card-content">
@@ -113,7 +135,9 @@ export default async function LibraryMyProfileContent({
                   </div>
 
                   <Button asChild size="sm" className="mt-2">
-                    <Link href={`/library/books/${record.book.id}`}>
+                    <Link
+                      href={`/library/books/${record.book.catalogBookId || record.book.id}`}
+                    >
                       {lib?.viewBook || "View Book"}
                     </Link>
                   </Button>
@@ -139,13 +163,26 @@ export default async function LibraryMyProfileContent({
             {borrowHistory.map((record) => (
               <div key={record.id} className="library-profile-history-item">
                 <div className="library-profile-history-image">
-                  <Image
-                    src={record.book.coverUrl}
-                    alt={record.book.title}
-                    width={80}
-                    height={120}
-                    className="rounded"
-                  />
+                  {record.book.coverUrl ? (
+                    <Image
+                      src={record.book.coverUrl}
+                      alt={record.book.title}
+                      width={80}
+                      height={120}
+                      className="rounded"
+                    />
+                  ) : (
+                    <div
+                      className="flex h-[120px] w-[80px] items-center justify-center rounded p-1 text-center"
+                      style={{
+                        backgroundColor: record.book.coverColor || "#1a1a2e",
+                      }}
+                    >
+                      <p className="line-clamp-2 text-xs font-bold text-white">
+                        {record.book.title}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="library-profile-history-content">
@@ -169,7 +206,9 @@ export default async function LibraryMyProfileContent({
                 </div>
 
                 <Button asChild variant="outline" size="sm">
-                  <Link href={`/library/books/${record.book.id}`}>
+                  <Link
+                    href={`/library/books/${record.book.catalogBookId || record.book.id}`}
+                  >
                     {lib?.viewBook || "View"}
                   </Link>
                 </Button>

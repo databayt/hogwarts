@@ -3,12 +3,23 @@
 
 import { auth } from "@/auth"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { z } from "zod"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
-// Mock the dependencies before importing actions
+// Import actual server actions
+import {
+  createNotification,
+  createNotificationBatch,
+  deleteNotification,
+  markAllNotificationsAsRead,
+  markNotificationAsRead,
+  subscribeToEntityNotifications,
+  unsubscribeFromEntityNotifications,
+  updateNotificationPreferences,
+} from "../actions"
+
+// Mock dependencies
 vi.mock("@/lib/db", () => ({
   db: {
     notification: {
@@ -22,15 +33,16 @@ vi.mock("@/lib/db", () => ({
       findMany: vi.fn(),
       count: vi.fn(),
     },
-    $transaction: vi.fn((callback) =>
-      callback({
-        notification: {
-          create: vi.fn(),
-          updateMany: vi.fn(),
-          deleteMany: vi.fn(),
-        },
-      })
-    ),
+    notificationBatch: {
+      create: vi.fn(),
+    },
+    notificationPreference: {
+      upsert: vi.fn(),
+    },
+    notificationSubscription: {
+      upsert: vi.fn(),
+      updateMany: vi.fn(),
+    },
   },
 }))
 
@@ -49,7 +61,7 @@ vi.mock("next/cache", () => ({
 
 describe("Notification Actions", () => {
   const mockSchoolId = "school-123"
-  const mockUserId = "user-123"
+  const mockUserId = "user-456"
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -64,218 +76,389 @@ describe("Notification Actions", () => {
     } as any)
   })
 
-  describe("Notification Schema Validation", () => {
-    const notificationSchema = z.object({
-      title: z.string().min(1, "Title is required"),
-      message: z.string().min(1, "Message is required"),
-      type: z
-        .enum(["INFO", "WARNING", "ERROR", "SUCCESS", "ANNOUNCEMENT"])
-        .default("INFO"),
-      priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).default("MEDIUM"),
-      recipientId: z.string().optional(),
-      recipientRole: z
-        .enum(["ADMIN", "TEACHER", "STUDENT", "GUARDIAN", "STAFF", "ALL"])
-        .optional(),
-      expiresAt: z.string().optional(),
-      actionUrl: z.string().url().optional(),
-      metadata: z.record(z.string()).optional(),
-    })
+  // ============================================================================
+  // createNotification
+  // ============================================================================
 
-    it("validates complete notification data", () => {
-      const validData = {
-        title: "Important Update",
-        message: "Please review the new schedule",
-        type: "ANNOUNCEMENT",
-        priority: "HIGH",
-        recipientRole: "ALL",
-        actionUrl: "https://school.edu/schedule",
-      }
-
-      const result = notificationSchema.safeParse(validData)
-      expect(result.success).toBe(true)
-    })
-
-    it("requires title and message", () => {
-      const missingTitle = {
-        message: "Message content",
-      }
-
-      const missingMessage = {
-        title: "Title",
-      }
-
-      expect(notificationSchema.safeParse(missingTitle).success).toBe(false)
-      expect(notificationSchema.safeParse(missingMessage).success).toBe(false)
-    })
-
-    it("validates notification type enum", () => {
-      const validTypes = ["INFO", "WARNING", "ERROR", "SUCCESS", "ANNOUNCEMENT"]
-
-      validTypes.forEach((type) => {
-        const data = { title: "Test", message: "Test", type }
-        expect(notificationSchema.safeParse(data).success).toBe(true)
-      })
-    })
-
-    it("validates priority enum", () => {
-      const validPriorities = ["LOW", "MEDIUM", "HIGH", "URGENT"]
-
-      validPriorities.forEach((priority) => {
-        const data = { title: "Test", message: "Test", priority }
-        expect(notificationSchema.safeParse(data).success).toBe(true)
-      })
-    })
-
-    it("validates action URL format", () => {
-      const validUrl = {
-        title: "Test",
-        message: "Test",
-        actionUrl: "https://example.com/path",
-      }
-
-      const invalidUrl = {
-        title: "Test",
-        message: "Test",
-        actionUrl: "not-a-url",
-      }
-
-      expect(notificationSchema.safeParse(validUrl).success).toBe(true)
-      expect(notificationSchema.safeParse(invalidUrl).success).toBe(false)
-    })
-
-    it("applies defaults", () => {
-      const minimal = { title: "Test", message: "Test" }
-      const result = notificationSchema.parse(minimal)
-
-      expect(result.type).toBe("INFO")
-      expect(result.priority).toBe("MEDIUM")
-    })
-  })
-
-  describe("Multi-tenant Isolation", () => {
-    it("creates notification with schoolId scope", async () => {
-      const mockNotification = {
+  describe("createNotification", () => {
+    it("creates notification with correct schoolId scope", async () => {
+      vi.mocked(db.notification.create).mockResolvedValue({
         id: "notif-1",
-        title: "Test",
-        message: "Test message",
         schoolId: mockSchoolId,
+      } as any)
+
+      const result = await createNotification({
+        userId: "target-user",
+        type: "announcement",
+        title: "Test Announcement",
+        body: "This is a test",
+      })
+
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.id).toBe("notif-1")
       }
-
-      vi.mocked(db.notification.create).mockResolvedValue(
-        mockNotification as any
+      expect(db.notification.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            schoolId: mockSchoolId,
+            userId: "target-user",
+            type: "announcement",
+            title: "Test Announcement",
+            body: "This is a test",
+          }),
+        })
       )
+    })
 
-      // Simulating action behavior
-      const notification = await db.notification.create({
-        data: {
-          title: "Test",
-          message: "Test message",
-          schoolId: mockSchoolId,
-          type: "INFO",
-          priority: "MEDIUM",
-        },
+    it("fails without authentication", async () => {
+      vi.mocked(auth).mockResolvedValue(null as any)
+
+      const result = await createNotification({
+        userId: "target-user",
+        type: "announcement",
+        title: "Test",
+        body: "Test body",
+      })
+
+      expect(result.success).toBe(false)
+    })
+
+    it("fails without school context", async () => {
+      vi.mocked(getTenantContext).mockResolvedValue({
+        schoolId: null as any,
+        subdomain: "",
+        role: "ADMIN",
+        locale: "en",
+      })
+
+      const result = await createNotification({
+        userId: "target-user",
+        type: "announcement",
+        title: "Test",
+        body: "Test body",
+      })
+
+      expect(result.success).toBe(false)
+    })
+
+    it("applies default priority when not specified", async () => {
+      vi.mocked(db.notification.create).mockResolvedValue({
+        id: "notif-2",
+      } as any)
+
+      await createNotification({
+        userId: "target-user",
+        type: "system_alert",
+        title: "Alert",
+        body: "Body",
       })
 
       expect(db.notification.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
-            schoolId: mockSchoolId,
+            priority: "normal",
           }),
         })
       )
     })
 
-    it("fetches notifications scoped to schoolId", async () => {
-      const mockNotifications = [
-        { id: "1", title: "Notif 1", schoolId: mockSchoolId },
-        { id: "2", title: "Notif 2", schoolId: mockSchoolId },
-      ]
+    it("applies default channels when not specified", async () => {
+      vi.mocked(db.notification.create).mockResolvedValue({
+        id: "notif-3",
+      } as any)
 
-      vi.mocked(db.notification.findMany).mockResolvedValue(
-        mockNotifications as any
-      )
-
-      await db.notification.findMany({
-        where: { schoolId: mockSchoolId, recipientId: mockUserId },
-        orderBy: { createdAt: "desc" },
+      await createNotification({
+        userId: "target-user",
+        type: "announcement",
+        title: "Test",
+        body: "Body",
       })
 
-      expect(db.notification.findMany).toHaveBeenCalledWith(
+      expect(db.notification.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            channels: ["in_app"],
+          }),
+        })
+      )
+    })
+
+    it("rejects unauthorized notification types for role", async () => {
+      vi.mocked(auth).mockResolvedValue({
+        user: { id: mockUserId, schoolId: mockSchoolId, role: "STUDENT" },
+      } as any)
+
+      const result = await createNotification({
+        userId: "target-user",
+        type: "announcement",
+        title: "Test",
+        body: "Body",
+      })
+
+      expect(result.success).toBe(false)
+    })
+  })
+
+  // ============================================================================
+  // markNotificationAsRead
+  // ============================================================================
+
+  describe("markNotificationAsRead", () => {
+    it("marks notification as read with schoolId scope", async () => {
+      vi.mocked(db.notification.findFirst).mockResolvedValue({
+        id: "notif-1",
+        userId: mockUserId,
+        read: false,
+      } as any)
+      vi.mocked(db.notification.updateMany).mockResolvedValue({ count: 1 })
+
+      const result = await markNotificationAsRead({
+        notificationId: "notif-1",
+      })
+
+      expect(result.success).toBe(true)
+      expect(db.notification.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             schoolId: mockSchoolId,
+            userId: mockUserId,
+          }),
+          data: expect.objectContaining({
+            read: true,
           }),
         })
       )
     })
 
-    it("marks notifications as read with schoolId scope", async () => {
+    it("skips if already read", async () => {
+      vi.mocked(db.notification.findFirst).mockResolvedValue({
+        id: "notif-1",
+        userId: mockUserId,
+        read: true,
+      } as any)
+
+      const result = await markNotificationAsRead({
+        notificationId: "notif-1",
+      })
+
+      expect(result.success).toBe(true)
+      expect(db.notification.updateMany).not.toHaveBeenCalled()
+    })
+
+    it("fails if notification not found", async () => {
+      vi.mocked(db.notification.findFirst).mockResolvedValue(null)
+
+      const result = await markNotificationAsRead({
+        notificationId: "nonexistent",
+      })
+
+      expect(result.success).toBe(false)
+    })
+  })
+
+  // ============================================================================
+  // markAllNotificationsAsRead
+  // ============================================================================
+
+  describe("markAllNotificationsAsRead", () => {
+    it("marks all unread notifications for user", async () => {
       vi.mocked(db.notification.updateMany).mockResolvedValue({ count: 5 })
 
-      await db.notification.updateMany({
-        where: {
-          schoolId: mockSchoolId,
-          recipientId: mockUserId,
-          isRead: false,
-        },
-        data: { isRead: true, readAt: new Date() },
+      const result = await markAllNotificationsAsRead({
+        userId: mockUserId,
+      })
+
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.count).toBe(5)
+      }
+      expect(db.notification.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            schoolId: mockSchoolId,
+            userId: mockUserId,
+            read: false,
+          }),
+        })
+      )
+    })
+
+    it("rejects marking other users notifications", async () => {
+      const result = await markAllNotificationsAsRead({
+        userId: "other-user",
+      })
+
+      expect(result.success).toBe(false)
+    })
+
+    it("supports type filter", async () => {
+      vi.mocked(db.notification.updateMany).mockResolvedValue({ count: 2 })
+
+      await markAllNotificationsAsRead({
+        userId: mockUserId,
+        type: "announcement",
       })
 
       expect(db.notification.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            schoolId: mockSchoolId,
-            recipientId: mockUserId,
-          }),
-        })
-      )
-    })
-
-    it("deletes notifications with schoolId scope", async () => {
-      vi.mocked(db.notification.deleteMany).mockResolvedValue({ count: 3 })
-
-      await db.notification.deleteMany({
-        where: {
-          schoolId: mockSchoolId,
-          recipientId: mockUserId,
-          id: { in: ["n1", "n2", "n3"] },
-        },
-      })
-
-      expect(db.notification.deleteMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({
-            schoolId: mockSchoolId,
+            type: "announcement",
           }),
         })
       )
     })
   })
 
-  describe("Bulk Operations", () => {
-    it("sends bulk notifications with schoolId", async () => {
-      const recipientIds = ["user-1", "user-2", "user-3"]
-      const notificationData = {
-        title: "Bulk Notification",
-        message: "Message to multiple users",
-        type: "INFO" as const,
-      }
+  // ============================================================================
+  // deleteNotification
+  // ============================================================================
 
-      vi.mocked(db.notification.createMany).mockResolvedValue({ count: 3 })
+  describe("deleteNotification", () => {
+    it("deletes notification with schoolId scope", async () => {
+      vi.mocked(db.notification.findFirst).mockResolvedValue({
+        id: "notif-1",
+        userId: mockUserId,
+      } as any)
+      vi.mocked(db.notification.deleteMany).mockResolvedValue({ count: 1 })
 
-      await db.notification.createMany({
-        data: recipientIds.map((recipientId) => ({
-          ...notificationData,
-          recipientId,
-          schoolId: mockSchoolId,
-        })),
+      const result = await deleteNotification({
+        notificationId: "notif-1",
       })
 
-      expect(db.notification.createMany).toHaveBeenCalledWith(
+      expect(result.success).toBe(true)
+      expect(db.notification.deleteMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.arrayContaining([
-            expect.objectContaining({ schoolId: mockSchoolId }),
-          ]),
+          where: expect.objectContaining({
+            schoolId: mockSchoolId,
+            userId: mockUserId,
+          }),
+        })
+      )
+    })
+
+    it("fails if notification not found", async () => {
+      vi.mocked(db.notification.findFirst).mockResolvedValue(null)
+
+      const result = await deleteNotification({
+        notificationId: "nonexistent",
+      })
+
+      expect(result.success).toBe(false)
+    })
+  })
+
+  // ============================================================================
+  // createNotificationBatch
+  // ============================================================================
+
+  describe("createNotificationBatch", () => {
+    it("creates batch with schoolId", async () => {
+      vi.mocked(db.notificationBatch.create).mockResolvedValue({
+        id: "batch-1",
+      } as any)
+
+      const result = await createNotificationBatch({
+        type: "announcement",
+        title: "Batch Title",
+        body: "Batch Body",
+        targetRole: "STUDENT",
+      })
+
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.batchId).toBe("batch-1")
+      }
+      expect(db.notificationBatch.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            schoolId: mockSchoolId,
+            type: "announcement",
+            createdBy: mockUserId,
+            status: "pending",
+          }),
+        })
+      )
+    })
+  })
+
+  // ============================================================================
+  // updateNotificationPreferences
+  // ============================================================================
+
+  describe("updateNotificationPreferences", () => {
+    it("upserts preferences with schoolId", async () => {
+      vi.mocked(db.notificationPreference.upsert).mockResolvedValue({} as any)
+
+      const result = await updateNotificationPreferences([
+        {
+          type: "announcement",
+          channel: "email",
+          enabled: true,
+        },
+      ])
+
+      expect(result.success).toBe(true)
+      expect(db.notificationPreference.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          create: expect.objectContaining({
+            schoolId: mockSchoolId,
+            userId: mockUserId,
+          }),
+        })
+      )
+    })
+  })
+
+  // ============================================================================
+  // subscribeToEntityNotifications
+  // ============================================================================
+
+  describe("subscribeToEntityNotifications", () => {
+    it("creates subscription with schoolId", async () => {
+      vi.mocked(db.notificationSubscription.upsert).mockResolvedValue({
+        id: "sub-1",
+      } as any)
+
+      const result = await subscribeToEntityNotifications({
+        entityType: "class",
+        entityId: "class-1",
+      })
+
+      expect(result.success).toBe(true)
+      expect(db.notificationSubscription.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          create: expect.objectContaining({
+            schoolId: mockSchoolId,
+            userId: mockUserId,
+          }),
+        })
+      )
+    })
+  })
+
+  // ============================================================================
+  // unsubscribeFromEntityNotifications
+  // ============================================================================
+
+  describe("unsubscribeFromEntityNotifications", () => {
+    it("updates subscription with schoolId scope", async () => {
+      vi.mocked(db.notificationSubscription.updateMany).mockResolvedValue({
+        count: 1,
+      })
+
+      const result = await unsubscribeFromEntityNotifications({
+        subscriptionId: "sub-1",
+        active: false,
+      })
+
+      expect(result.success).toBe(true)
+      expect(db.notificationSubscription.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            schoolId: mockSchoolId,
+            userId: mockUserId,
+          }),
         })
       )
     })

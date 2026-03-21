@@ -30,6 +30,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { cancelSubstitution, respondToSubstitution } from "../actions"
 
@@ -57,31 +58,17 @@ interface SubstitutionRecord {
 interface SubstitutionListProps {
   records: SubstitutionRecord[]
   onRefresh: () => void
-  dictionary?: {
-    substitutions?: {
-      noRecords?: string
-      confirm?: string
-      decline?: string
-      cancel?: string
-      viewDetails?: string
-      pending?: string
-      confirmed?: string
-      declined?: string
-      completed?: string
-      cancelled?: string
-    }
-  }
 }
 
 export function SubstitutionList({
   records,
   onRefresh,
-  dictionary,
 }: SubstitutionListProps) {
   const [isPending, startTransition] = useTransition()
   const { toast } = useToast()
+  const { dictionary } = useDictionary()
 
-  const t = dictionary?.substitutions || {}
+  const t = dictionary?.school?.timetable?.substitutions
 
   const handleConfirm = useCallback(
     (record: SubstitutionRecord) => {
@@ -92,14 +79,16 @@ export function SubstitutionList({
             response: "CONFIRMED",
           })
           toast({
-            title: "Confirmed",
-            description: "Substitution has been confirmed",
+            title: t?.status?.confirmed ?? "Confirmed",
+            description:
+              t?.toast?.confirmed ?? "Substitution has been confirmed",
           })
           onRefresh()
         } catch {
           toast({
-            title: "Error",
-            description: "Failed to confirm substitution",
+            title: t?.toast?.error_title ?? "Error",
+            description:
+              t?.toast?.errorConfirm ?? "Failed to confirm substitution",
             variant: "destructive",
           })
         }
@@ -110,7 +99,9 @@ export function SubstitutionList({
 
   const handleDecline = useCallback(
     (record: SubstitutionRecord) => {
-      const reason = prompt("Please provide a reason for declining:")
+      const reason = prompt(
+        t?.confirm?.declinePrompt ?? "Please provide a reason for declining:"
+      )
       if (reason === null) return
 
       startTransition(async () => {
@@ -121,14 +112,15 @@ export function SubstitutionList({
             declineReason: reason || undefined,
           })
           toast({
-            title: "Declined",
-            description: "Substitution has been declined",
+            title: t?.status?.declined ?? "Declined",
+            description: t?.toast?.declined ?? "Substitution has been declined",
           })
           onRefresh()
         } catch {
           toast({
-            title: "Error",
-            description: "Failed to decline substitution",
+            title: t?.toast?.error_title ?? "Error",
+            description:
+              t?.toast?.errorDecline ?? "Failed to decline substitution",
             variant: "destructive",
           })
         }
@@ -139,7 +131,12 @@ export function SubstitutionList({
 
   const handleCancel = useCallback(
     (record: SubstitutionRecord) => {
-      if (!confirm("Are you sure you want to cancel this substitution?")) {
+      if (
+        !confirm(
+          t?.confirm?.cancelMessage ??
+            "Are you sure you want to cancel this substitution?"
+        )
+      ) {
         return
       }
 
@@ -147,14 +144,17 @@ export function SubstitutionList({
         try {
           await cancelSubstitution({ id: record.id })
           toast({
-            title: "Cancelled",
-            description: "Substitution has been cancelled",
+            title: t?.status?.cancelled ?? "Cancelled",
+            description:
+              t?.toast?.substitutionCancelled ??
+              "Substitution has been cancelled",
           })
           onRefresh()
         } catch {
           toast({
-            title: "Error",
-            description: "Failed to cancel substitution",
+            title: t?.toast?.error_title ?? "Error",
+            description:
+              t?.toast?.errorCancel ?? "Failed to cancel substitution",
             variant: "destructive",
           })
         }
@@ -210,9 +210,12 @@ export function SubstitutionList({
       <Card className="py-12 text-center">
         <CardContent>
           <Calendar className="text-muted-foreground mx-auto h-12 w-12" />
-          <h3 className="mt-4">{t.noRecords || "No Substitution Records"}</h3>
+          <h3 className="mt-4">
+            {t?.empty?.noRecords ?? "No Substitution Records"}
+          </h3>
           <p className="text-muted-foreground mt-2">
-            No substitutions have been assigned yet
+            {t?.empty?.noRecordsDescription ??
+              "No substitutions have been assigned yet"}
           </p>
         </CardContent>
       </Card>
@@ -240,7 +243,11 @@ export function SubstitutionList({
               <div className="flex items-center gap-2">
                 <Badge variant={getStatusBadgeVariant(record.status)}>
                   {getStatusIcon(record.status)}
-                  <span className="ms-1">{record.status}</span>
+                  <span className="ms-1">
+                    {t?.status?.[
+                      record.status.toLowerCase() as keyof typeof t.status
+                    ] ?? record.status}
+                  </span>
                 </Badge>
 
                 {(record.status === "PENDING" ||
@@ -263,13 +270,13 @@ export function SubstitutionList({
                             onClick={() => handleConfirm(record)}
                           >
                             <Check className="me-2 h-4 w-4 text-green-600" />
-                            {t.confirm || "Confirm"}
+                            {t?.list?.confirm ?? "Confirm"}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => handleDecline(record)}
                           >
                             <X className="me-2 h-4 w-4 text-red-600" />
-                            {t.decline || "Decline"}
+                            {t?.list?.decline ?? "Decline"}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                         </>
@@ -278,7 +285,7 @@ export function SubstitutionList({
                         onClick={() => handleCancel(record)}
                         className="text-destructive"
                       >
-                        {t.cancel || "Cancel Substitution"}
+                        {t?.list?.cancelSubstitution ?? "Cancel Substitution"}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -323,13 +330,15 @@ export function SubstitutionList({
 
             {record.declineReason && (
               <p className="mt-2 text-sm text-red-600">
-                Decline reason: {record.declineReason}
+                {t?.list?.declineReason ?? "Decline reason:"}{" "}
+                {record.declineReason}
               </p>
             )}
 
             {record.confirmedAt && (
               <p className="text-muted-foreground mt-2 text-xs">
-                Confirmed on {new Date(record.confirmedAt).toLocaleString()}
+                {t?.list?.confirmedOn ?? "Confirmed on"}{" "}
+                {new Date(record.confirmedAt).toLocaleString()}
               </p>
             )}
           </CardContent>

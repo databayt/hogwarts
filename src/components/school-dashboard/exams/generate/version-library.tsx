@@ -6,6 +6,7 @@ import { Download, FileText, Loader2, Plus, Trash2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import {
   createExamVersion,
@@ -19,6 +20,10 @@ interface VersionLibraryProps {
 }
 
 export function VersionLibrary({ examId }: VersionLibraryProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.exams?.generateUi?.versionLibrary as
+    | Record<string, any>
+    | undefined
   const [versions, setVersions] = useState<ExamVersion[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -38,7 +43,7 @@ export function VersionLibrary({ examId }: VersionLibraryProps) {
     if (result.success && result.data) {
       setVersions(result.data.versions)
     } else {
-      setError(result.error || "Failed to load versions")
+      setError(result.error || (t?.loadFailed ?? "Failed to load versions"))
     }
 
     setLoading(false)
@@ -50,7 +55,9 @@ export function VersionLibrary({ examId }: VersionLibraryProps) {
       if (result.success) {
         await loadVersions()
       } else {
-        setError(result.error || "Failed to create version")
+        setError(
+          result.error || (t?.createFailed ?? "Failed to create version")
+        )
       }
     })
   }
@@ -63,7 +70,7 @@ export function VersionLibrary({ examId }: VersionLibraryProps) {
     if (result.success) {
       await loadVersions()
     } else {
-      setError(result.error || "Failed to delete version")
+      setError(result.error || (t?.deleteFailed ?? "Failed to delete version"))
     }
 
     setDeletingId(null)
@@ -85,7 +92,7 @@ export function VersionLibrary({ examId }: VersionLibraryProps) {
       <div className="flex items-center justify-center py-12">
         <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
         <span className="text-muted-foreground ms-2 text-sm">
-          Loading versions...
+          {t?.loadingVersions ?? "Loading versions..."}
         </span>
       </div>
     )
@@ -97,7 +104,7 @@ export function VersionLibrary({ examId }: VersionLibraryProps) {
       <div className="flex flex-col items-center justify-center gap-4 py-12">
         <p className="text-muted-foreground text-sm">{error}</p>
         <Button variant="outline" size="sm" onClick={loadVersions}>
-          Try Again
+          {t?.tryAgain ?? "Try Again"}
         </Button>
       </div>
     )
@@ -109,21 +116,24 @@ export function VersionLibrary({ examId }: VersionLibraryProps) {
       <div className="flex flex-col items-center justify-center gap-4 py-12">
         <FileText className="text-muted-foreground h-12 w-12" />
         <div className="text-center">
-          <p className="font-medium">No versions generated yet</p>
+          <p className="font-medium">
+            {t?.noVersions ?? "No versions generated yet"}
+          </p>
           <p className="text-muted-foreground text-sm">
-            Generate your first exam version to get started.
+            {t?.noVersionsDesc ??
+              "Generate your first exam version to get started."}
           </p>
         </div>
         <Button onClick={handleCreate} disabled={isCreating}>
           {isCreating ? (
             <>
               <Loader2 className="me-2 h-4 w-4 animate-spin" />
-              Generating...
+              {t?.generating ?? "Generating..."}
             </>
           ) : (
             <>
               <Plus className="me-2 h-4 w-4" />
-              Generate Version
+              {t?.generateVersion ?? "Generate Version"}
             </>
           )}
         </Button>
@@ -136,7 +146,7 @@ export function VersionLibrary({ examId }: VersionLibraryProps) {
       {/* Header with create button */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="font-semibold">Version Library</h3>
+          <h3 className="font-semibold">{t?.title ?? "Version Library"}</h3>
           <p className="text-muted-foreground text-sm">
             {versions.length} version{versions.length !== 1 ? "s" : ""}{" "}
             generated
@@ -146,12 +156,12 @@ export function VersionLibrary({ examId }: VersionLibraryProps) {
           {isCreating ? (
             <>
               <Loader2 className="me-2 h-4 w-4 animate-spin" />
-              Generating...
+              {t?.generating ?? "Generating..."}
             </>
           ) : (
             <>
               <Plus className="me-2 h-4 w-4" />
-              New Version
+              {t?.newVersion ?? "New Version"}
             </>
           )}
         </Button>
@@ -173,7 +183,7 @@ export function VersionLibrary({ examId }: VersionLibraryProps) {
                 <CardTitle className="text-base">{version.title}</CardTitle>
                 {version.isActive && (
                   <Badge variant="default" className="ms-2 shrink-0">
-                    Active
+                    {t?.active ?? "Active"}
                   </Badge>
                 )}
               </div>
@@ -185,12 +195,16 @@ export function VersionLibrary({ examId }: VersionLibraryProps) {
               {/* Stats */}
               <div className="flex items-center gap-4 text-sm">
                 <div>
-                  <span className="text-muted-foreground">Questions:</span>{" "}
+                  <span className="text-muted-foreground">
+                    {t?.questions ?? "Questions"}:
+                  </span>{" "}
                   <span className="font-medium">{version.questionCount}</span>
                 </div>
                 {version.totalMarks !== null && (
                   <div>
-                    <span className="text-muted-foreground">Marks:</span>{" "}
+                    <span className="text-muted-foreground">
+                      {t?.marks ?? "Marks"}:
+                    </span>{" "}
                     <span className="font-medium">{version.totalMarks}</span>
                   </div>
                 )}
@@ -211,7 +225,7 @@ export function VersionLibrary({ examId }: VersionLibraryProps) {
                       rel="noopener noreferrer"
                     >
                       <Download className="me-2 h-3.5 w-3.5" />
-                      Download Paper
+                      {t?.downloadPaper ?? "Download Paper"}
                     </a>
                   </Button>
                 ) : (
@@ -222,7 +236,7 @@ export function VersionLibrary({ examId }: VersionLibraryProps) {
                     disabled
                   >
                     <FileText className="me-2 h-3.5 w-3.5" />
-                    No Paper
+                    {t?.noPaper ?? "No Paper"}
                   </Button>
                 )}
 
@@ -234,8 +248,9 @@ export function VersionLibrary({ examId }: VersionLibraryProps) {
                   onClick={() => handleDelete(version.id)}
                   title={
                     versions.length <= 1
-                      ? "Cannot delete the only version"
-                      : "Delete version"
+                      ? (t?.cannotDeleteOnly ??
+                        "Cannot delete the only version")
+                      : (t?.deleteVersion ?? "Delete version")
                   }
                 >
                   {deletingId === version.id ? (

@@ -337,11 +337,15 @@ export async function generateClassesForGrade(
       return { success: false, error: "Term not found" }
     }
 
-    // Find required defaults: a teacher and period range
-    const [defaultTeacher, periods] = await Promise.all([
-      db.teacher.findFirst({
+    // Find required defaults: all teachers, expertise map, and period range
+    const [allTeachers, expertiseRecords, periods] = await Promise.all([
+      db.teacher.findMany({
         where: { schoolId },
         select: { id: true },
+      }),
+      db.teacherSubjectExpertise.findMany({
+        where: { schoolId },
+        select: { subjectId: true, teacherId: true },
       }),
       db.period.findMany({
         where: { schoolId },
@@ -351,13 +355,25 @@ export async function generateClassesForGrade(
       }),
     ])
 
-    if (!defaultTeacher) {
+    if (allTeachers.length === 0) {
       return {
         success: false,
         error:
           "No teachers found. Create at least one teacher before generating classes.",
       }
     }
+
+    // Build expertise lookup: subjectId -> teacherId[]
+    const expertiseMap = new Map<string, string[]>()
+    for (const e of expertiseRecords) {
+      const teachers = expertiseMap.get(e.subjectId) ?? []
+      teachers.push(e.teacherId)
+      expertiseMap.set(e.subjectId, teachers)
+    }
+
+    // Round-robin counters for fair distribution
+    const expertiseRoundRobin = new Map<string, number>()
+    let fallbackIndex = 0
 
     if (periods.length < 2) {
       return {
@@ -373,133 +389,143 @@ export async function generateClassesForGrade(
     let totalCreated = 0
     const details: string[] = []
 
-    await db.$transaction(async (tx) => {
-      for (const gradeId of parsed.gradeIds) {
-        const grade = await tx.academicGrade.findFirst({
-          where: { id: gradeId, schoolId },
-          select: { id: true, name: true, gradeNumber: true },
-        })
-        if (!grade) continue
+    // Ensure default department exists (outside per-grade loop)
+    let defaultDept = await db.department.findFirst({
+      where: { schoolId },
+      select: { id: true },
+    })
+    if (!defaultDept) {
+      defaultDept = await db.department.create({
+        data: { schoolId, departmentName: "General" },
+      })
+    }
 
-        // Get subject selections for this grade (relation name is 'subject' -> CatalogSubject)
-        const selections = await tx.schoolSubjectSelection.findMany({
-          where: { schoolId, gradeId, isActive: true },
-          include: {
-            subject: {
-              select: { id: true, name: true },
-            },
-          },
-        })
+    // Process each grade in its own transaction to avoid Neon timeout
+    for (const gradeId of parsed.gradeIds) {
+      const grade = await db.academicGrade.findFirst({
+        where: { id: gradeId, schoolId },
+        select: { id: true, name: true, gradeNumber: true },
+      })
+      if (!grade) continue
 
-        if (selections.length === 0) {
-          details.push(`${grade.name}: no active subject selections found`)
-          continue
-        }
+      const selections = await db.schoolSubjectSelection.findMany({
+        where: { schoolId, gradeId, isActive: true },
+        include: {
+          subject: { select: { id: true, name: true } },
+        },
+      })
 
-        // Get or create a default department for auto-generated subjects
-        let defaultDept = await tx.department.findFirst({
+      if (selections.length === 0) {
+        details.push(`${grade.name}: no active subject selections found`)
+        continue
+      }
+
+      // Check which classes already exist for this grade+term
+      const existingClasses = await db.class.findMany({
+        where: { schoolId, gradeId, termId: term.id },
+        select: { subjectId: true },
+      })
+      const existingSubjectIds = new Set(
+        existingClasses.map((c) => c.subjectId)
+      )
+
+      // Get classrooms for this grade
+      const classrooms = await db.classroom.findMany({
+        where: { schoolId, gradeId },
+        select: { id: true },
+        orderBy: { roomName: "asc" },
+      })
+
+      // Ensure at least one classroom exists for this grade
+      let gradeClassrooms = classrooms
+      if (gradeClassrooms.length === 0) {
+        let defaultType = await db.classroomType.findFirst({
           where: { schoolId },
           select: { id: true },
         })
-        if (!defaultDept) {
-          defaultDept = await tx.department.create({
-            data: { schoolId, departmentName: "General" },
+        if (!defaultType) {
+          defaultType = await db.classroomType.create({
+            data: { schoolId, name: "Classroom" },
           })
         }
-
-        // Get classrooms for this grade (round-robin assignment)
-        const classrooms = await tx.classroom.findMany({
-          where: { schoolId, gradeId },
-          select: { id: true },
-          orderBy: { roomName: "asc" },
-        })
-
-        let created = 0
-        for (let i = 0; i < selections.length; i++) {
-          const sel = selections[i]
-          const catalogSubjectName =
-            sel.subject?.name ?? sel.customName ?? "Unknown"
-
-          // Class.subjectId now points directly to CatalogSubject
-          const subjectId = sel.catalogSubjectId
-
-          const className = `${catalogSubjectName} - ${grade.name}`
-
-          // Upsert to be idempotent
-          const existing = await tx.class.findFirst({
-            where: {
+        const defaultRoom = await db.classroom.upsert({
+          where: {
+            schoolId_roomName: {
               schoolId,
-              subjectId,
-              gradeId,
-              termId: term.id,
+              roomName: `${grade.name} - Default`,
             },
-            select: { id: true },
-          })
+          },
+          create: {
+            schoolId,
+            roomName: `${grade.name} - Default`,
+            typeId: defaultType.id,
+            gradeId,
+            capacity: 30,
+          },
+          update: {},
+        })
+        gradeClassrooms = [{ id: defaultRoom.id }]
+      }
 
-          if (!existing) {
-            const roomId =
-              classrooms.length > 0
-                ? classrooms[i % classrooms.length].id
-                : classrooms[0]?.id
+      // Build batch of new classes to create
+      const newClasses: {
+        schoolId: string
+        name: string
+        subjectId: string
+        gradeId: string
+        termId: string
+        teacherId: string
+        classroomId: string
+        startPeriodId: string
+        endPeriodId: string
+      }[] = []
 
-            // roomId is required — if no classrooms exist, create a default one
-            let assignedRoomId = roomId
-            if (!assignedRoomId) {
-              // Get or create default classroom type
-              let defaultType = await tx.classroomType.findFirst({
-                where: { schoolId },
-                select: { id: true },
-              })
-              if (!defaultType) {
-                defaultType = await tx.classroomType.create({
-                  data: { schoolId, name: "Classroom" },
-                })
-              }
+      for (let i = 0; i < selections.length; i++) {
+        const sel = selections[i]
+        const subjectId = sel.catalogSubjectId
 
-              const defaultRoom = await tx.classroom.upsert({
-                where: {
-                  schoolId_roomName: {
-                    schoolId,
-                    roomName: `${grade.name} - Default`,
-                  },
-                },
-                create: {
-                  schoolId,
-                  roomName: `${grade.name} - Default`,
-                  typeId: defaultType.id,
-                  gradeId,
-                  capacity: 30,
-                },
-                update: {},
-              })
-              assignedRoomId = defaultRoom.id
-            }
+        if (existingSubjectIds.has(subjectId)) continue
 
-            await tx.class.create({
-              data: {
-                schoolId,
-                name: className,
-                subjectId,
-                gradeId,
-                termId: term.id,
-                teacherId: defaultTeacher.id,
-                classroomId: assignedRoomId,
-                startPeriodId,
-                endPeriodId,
-              },
-            })
-            created++
-            totalCreated++
-          }
+        const catalogSubjectName =
+          sel.subject?.name ?? sel.customName ?? "Unknown"
+        const className = `${catalogSubjectName} - ${grade.name}`
+
+        // Pick teacher: expertise match first, round-robin fallback
+        let assignedTeacherId: string
+        const matchedTeachers = expertiseMap.get(subjectId)
+        if (matchedTeachers && matchedTeachers.length > 0) {
+          const idx =
+            (expertiseRoundRobin.get(subjectId) ?? 0) % matchedTeachers.length
+          assignedTeacherId = matchedTeachers[idx]
+          expertiseRoundRobin.set(subjectId, idx + 1)
+        } else {
+          assignedTeacherId = allTeachers[fallbackIndex % allTeachers.length].id
+          fallbackIndex++
         }
 
-        details.push(
-          created > 0
-            ? `${grade.name}: created ${created} class${created !== 1 ? "es" : ""}`
-            : `${grade.name}: all classes already exist`
-        )
+        newClasses.push({
+          schoolId,
+          name: className,
+          subjectId,
+          gradeId,
+          termId: term.id,
+          teacherId: assignedTeacherId,
+          classroomId: gradeClassrooms[i % gradeClassrooms.length].id,
+          startPeriodId,
+          endPeriodId,
+        })
       }
-    })
+
+      if (newClasses.length > 0) {
+        await db.class.createMany({ data: newClasses })
+        totalCreated += newClasses.length
+        details.push(
+          `${grade.name}: created ${newClasses.length} class${newClasses.length !== 1 ? "es" : ""}`
+        )
+      } else {
+        details.push(`${grade.name}: all classes already exist`)
+      }
+    }
 
     revalidatePath("/classrooms")
     revalidatePath("/classes")
@@ -582,30 +608,19 @@ export async function bulkEnrollStudentsInClasses(input: {
         continue
       }
 
-      // Batch upsert all student×class pairs
-      let gradeEnrolled = 0
-      await db.$transaction(async (tx) => {
-        for (const student of students) {
-          for (const cls of classes) {
-            await tx.studentClass.upsert({
-              where: {
-                schoolId_studentId_classId: {
-                  schoolId,
-                  studentId: student.id,
-                  classId: cls.id,
-                },
-              },
-              create: {
-                schoolId,
-                studentId: student.id,
-                classId: cls.id,
-              },
-              update: {},
-            })
-            gradeEnrolled++
-          }
-        }
+      // Batch create all student×class pairs (skipDuplicates for idempotency)
+      const pairs = students.flatMap((student) =>
+        classes.map((cls) => ({
+          schoolId,
+          studentId: student.id,
+          classId: cls.id,
+        }))
+      )
+      const result = await db.studentClass.createMany({
+        data: pairs,
+        skipDuplicates: true,
       })
+      const gradeEnrolled = result.count
 
       totalEnrolled += gradeEnrolled
       details.push(

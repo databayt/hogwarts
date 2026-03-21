@@ -23,7 +23,12 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 import { AnalyticsData, getStreamAnalytics } from "./actions"
 
-export function StreamAnalyticsContent() {
+interface Props {
+  dictionary?: Record<string, any>
+}
+
+export function StreamAnalyticsContent({ dictionary }: Props = {}) {
+  const d = dictionary?.stream?.analytics
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -54,7 +59,9 @@ export function StreamAnalyticsContent() {
   if (!analytics) {
     return (
       <div className="py-12 text-center">
-        <p className="text-muted-foreground">Failed to load analytics data</p>
+        <p className="text-muted-foreground">
+          {d?.failedToLoad || "Failed to load analytics data"}
+        </p>
       </div>
     )
   }
@@ -67,7 +74,7 @@ export function StreamAnalyticsContent() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-muted-foreground text-sm font-medium">
-                Total Courses
+                {d?.totalCourses || "Total Courses"}
               </p>
               <h3 className="mt-2 text-2xl font-bold">
                 {analytics.totalCourses}
@@ -83,7 +90,7 @@ export function StreamAnalyticsContent() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-muted-foreground text-sm font-medium">
-                Total Enrollments
+                {d?.totalEnrollments || "Total Enrollments"}
               </p>
               <h3 className="mt-2 text-2xl font-bold">
                 {analytics.totalEnrollments}
@@ -99,7 +106,7 @@ export function StreamAnalyticsContent() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-muted-foreground text-sm font-medium">
-                Total Revenue
+                {d?.totalRevenue || "Total Revenue"}
               </p>
               <h3 className="mt-2 text-2xl font-bold">
                 ${analytics.totalRevenue.toFixed(2)}
@@ -115,7 +122,7 @@ export function StreamAnalyticsContent() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-muted-foreground text-sm font-medium">
-                Active Students
+                {d?.activeStudents || "Active Students"}
               </p>
               <h3 className="mt-2 text-2xl font-bold">
                 {analytics.activeStudents}
@@ -131,7 +138,7 @@ export function StreamAnalyticsContent() {
       {/* Enrollment Trend Chart */}
       <Card className="p-6">
         <h3 className="mb-4 text-lg font-semibold">
-          Enrollment Trend (Last 7 Days)
+          {d?.enrollmentTrend || "Enrollment Trend (Last 7 Days)"}
         </h3>
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={analytics.enrollmentTrend}>
@@ -151,7 +158,7 @@ export function StreamAnalyticsContent() {
               dataKey="count"
               stroke="#3b82f6"
               strokeWidth={2}
-              name="Enrollments"
+              name={d?.enrollments || "Enrollments"}
             />
           </LineChart>
         </ResponsiveContainer>
@@ -161,7 +168,7 @@ export function StreamAnalyticsContent() {
         {/* Top Courses */}
         <Card className="p-6">
           <h3 className="mb-4 text-lg font-semibold">
-            Top Courses by Enrollment
+            {d?.topCoursesByEnrollment || "Top Courses by Enrollment"}
           </h3>
           <div className="space-y-4">
             {analytics.topCourses.map((course, index) => (
@@ -176,7 +183,7 @@ export function StreamAnalyticsContent() {
                   <div>
                     <p className="font-medium">{course.title}</p>
                     <p className="text-muted-foreground text-sm">
-                      {course.enrollments} students
+                      {course.enrollments} {d?.students || "students"}
                     </p>
                   </div>
                 </div>
@@ -191,7 +198,7 @@ export function StreamAnalyticsContent() {
         {/* Revenue by Month */}
         <Card className="p-6">
           <h3 className="mb-4 text-lg font-semibold">
-            Revenue Trend (Last 6 Months)
+            {d?.revenueTrend || "Revenue Trend (Last 6 Months)"}
           </h3>
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={analytics.revenueByMonth}>
@@ -200,7 +207,11 @@ export function StreamAnalyticsContent() {
               <YAxis />
               <Tooltip />
               <Legend />
-              <Bar dataKey="revenue" fill="#10b981" name="Revenue ($)" />
+              <Bar
+                dataKey="revenue"
+                fill="#10b981"
+                name={d?.revenue || "Revenue ($)"}
+              />
             </BarChart>
           </ResponsiveContainer>
         </Card>

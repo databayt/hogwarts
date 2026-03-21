@@ -61,6 +61,7 @@ export async function createBook(
       data: {
         ...validatedData,
         schoolId,
+        catalogBookId: data.catalogBookId,
         availableCopies: validatedData.totalCopies,
       },
     })
@@ -160,6 +161,22 @@ export async function borrowBook(
 
     const schoolId = contextSchoolId
     const { bookId, userId } = data
+
+    // Check borrow limit
+    const activeBorrowCount = await db.borrowRecord.count({
+      where: {
+        userId,
+        schoolId,
+        status: "BORROWED",
+      },
+    })
+
+    if (activeBorrowCount >= LIBRARY_CONFIG.MAX_BOOKS_PER_USER) {
+      return {
+        success: false,
+        message: `Borrow limit reached (max ${LIBRARY_CONFIG.MAX_BOOKS_PER_USER} books)`,
+      }
+    }
 
     // Verify the user exists
     const user = await db.user.findUnique({

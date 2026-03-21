@@ -6,7 +6,6 @@ import { useEffect, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2 } from "lucide-react"
 import { useForm } from "react-hook-form"
-import { toast } from "sonner"
 import { z } from "zod"
 
 import { Button } from "@/components/ui/button"
@@ -27,6 +26,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import { AnthropicIcons } from "@/components/icons"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -113,14 +113,14 @@ export default function StatusTrackerContent({
         setStatus(result.data)
         setStep("display")
       } else {
-        toast.error(
+        ErrorToast(
           result.error || dict.failedToFetch || "Failed to fetch status"
         )
         setAccessToken(null)
         setStep("request")
       }
     } catch (error) {
-      toast.error(dict.failedToFetch || "Failed to fetch status")
+      ErrorToast(dict.failedToFetch || "Failed to fetch status")
       setAccessToken(null)
       setStep("request")
     } finally {
@@ -141,14 +141,14 @@ export default function StatusTrackerContent({
         setApplicationNumber(data.applicationNumber)
         setEmail(data.email)
         setStep("verify")
-        toast.success(
+        SuccessToast(
           dict.codeSentSuccess || "Verification code sent to your email"
         )
       } else {
-        toast.error(result.error || dict.failedToSend || "Failed to send code")
+        ErrorToast(result.error || dict.failedToSend || "Failed to send code")
       }
     } catch (error) {
-      toast.error(dict.failedToSend || "Failed to send code")
+      ErrorToast(dict.failedToSend || "Failed to send code")
     } finally {
       setIsLoading(false)
     }
@@ -167,12 +167,12 @@ export default function StatusTrackerContent({
         setAccessToken(result.data.accessToken)
         await fetchStatus(result.data.accessToken)
       } else {
-        toast.error(
+        ErrorToast(
           result.error || dict.invalidCode || "Invalid verification code"
         )
       }
     } catch (error) {
-      toast.error(dict.verificationFailed || "Verification failed")
+      ErrorToast(dict.verificationFailed || "Verification failed")
     } finally {
       setIsLoading(false)
     }
@@ -184,12 +184,12 @@ export default function StatusTrackerContent({
       const result = await requestStatusOTP(subdomain, applicationNumber, email)
 
       if (result.success) {
-        toast.success(dict.newCodeSent || "New code sent")
+        SuccessToast(dict.newCodeSent || "New code sent")
       } else {
-        toast.error(result.error || dict.failedToResend || "Failed to resend")
+        ErrorToast(result.error || dict.failedToResend || "Failed to resend")
       }
     } catch (error) {
-      toast.error(dict.failedToResend || "Failed to resend")
+      ErrorToast(dict.failedToResend || "Failed to resend")
     } finally {
       setIsLoading(false)
     }

@@ -45,122 +45,98 @@ export async function getStreamAnalytics(): Promise<AnalyticsData | null> {
 
     const schoolFilter = schoolId ? { schoolId } : {}
 
-    // Get total counts using catalog models
-    const [totalCourses, totalEnrollments, enrollments] = await Promise.all([
-      // Active subjects for this school (via bridge table)
+    const sevenDaysAgo = new Date()
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+    const sixMonthsAgo = new Date()
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
+
+    // Parallel aggregate queries — no full-table loads
+    const [
+      totalCourses,
+      totalEnrollments,
+      activeStudentsResult,
+      revenueResult,
+      topSubjects,
+      recentEnrollments,
+      revenueEnrollments,
+    ] = await Promise.all([
       db.schoolSubjectSelection.count({
-        where: {
-          ...schoolFilter,
-          isActive: true,
-        },
+        where: { ...schoolFilter, isActive: true },
       }),
-      // Active enrollments (catalog-based)
       db.enrollment.count({
-        where: {
-          ...schoolFilter,
-          isActive: true,
-        },
+        where: { ...schoolFilter, isActive: true },
       }),
-      // All active enrollments with subject details
+      // Distinct active user count
+      db.enrollment.groupBy({
+        by: ["userId"],
+        where: { ...schoolFilter, isActive: true },
+      }),
+      // Sum revenue via subject prices (aggregate on enrollment → subject)
       db.enrollment.findMany({
-        where: {
-          ...schoolFilter,
-          isActive: true,
-        },
-        include: {
-          subject: {
-            select: {
-              id: true,
-              name: true,
-              price: true,
-            },
-          },
-          user: {
-            select: {
-              id: true,
-            },
-          },
-        },
-        orderBy: { createdAt: "desc" },
+        where: { ...schoolFilter, isActive: true },
+        select: { subject: { select: { price: true } } },
+      }),
+      // Top 5 subjects by enrollment count
+      db.enrollment.groupBy({
+        by: ["catalogSubjectId"],
+        where: { ...schoolFilter, isActive: true },
+        _count: { catalogSubjectId: true },
+      }),
+      // Last 7 days — just dates
+      db.enrollment.findMany({
+        where: { ...schoolFilter, createdAt: { gte: sevenDaysAgo } },
+        select: { createdAt: true },
+      }),
+      // Last 6 months — dates + subject price
+      db.enrollment.findMany({
+        where: { ...schoolFilter, createdAt: { gte: sixMonthsAgo } },
+        select: { createdAt: true, subject: { select: { price: true } } },
       }),
     ])
 
-    // Calculate total revenue from subject prices
-    const totalRevenue = enrollments.reduce(
-      (sum, enrollment) => sum + (Number(enrollment.subject.price) || 0),
+    const activeStudents = activeStudentsResult.length
+    const totalRevenue = revenueResult.reduce(
+      (sum, e) => sum + (Number(e.subject.price) || 0),
       0
     )
 
-    // Get unique active students
-    const activeStudents = new Set(enrollments.map((e) => e.userId)).size
+    // Resolve top subject names
+    const catalogSubjectIds = topSubjects.map((s) => s.catalogSubjectId)
+    const subjects =
+      catalogSubjectIds.length > 0
+        ? await db.catalogSubject.findMany({
+            where: { id: { in: catalogSubjectIds } },
+            select: { id: true, name: true, price: true },
+          })
+        : []
+    const subjectMap = new Map(subjects.map((s) => [s.id, s]))
 
-    // Calculate enrollment trend (last 7 days)
-    const sevenDaysAgo = new Date()
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+    const topCourses = topSubjects
+      .map((s) => {
+        const sub = subjectMap.get(s.catalogSubjectId)
+        const count = s._count.catalogSubjectId
+        return {
+          id: s.catalogSubjectId,
+          title: sub?.name ?? "Unknown",
+          enrollments: count,
+          revenue: (sub?.price ? Number(sub.price) : 0) * count,
+        }
+      })
+      .sort((a, b) => b.enrollments - a.enrollments)
+      .slice(0, 5)
 
-    const recentEnrollments = await db.enrollment.findMany({
-      where: {
-        ...schoolFilter,
-        createdAt: { gte: sevenDaysAgo },
-      },
-      select: { createdAt: true },
-    })
-
+    // Enrollment trend (last 7 days)
     const enrollmentTrend = Array.from({ length: 7 }, (_, i) => {
       const date = new Date()
       date.setDate(date.getDate() - (6 - i))
       const dateStr = date.toISOString().split("T")[0]
-
-      const count = recentEnrollments.filter((e) => {
-        const enrollDate = e.createdAt.toISOString().split("T")[0]
-        return enrollDate === dateStr
-      }).length
-
+      const count = recentEnrollments.filter(
+        (e) => e.createdAt.toISOString().split("T")[0] === dateStr
+      ).length
       return { date: dateStr, count }
     })
 
-    // Get top subjects by enrollment
-    const subjectCounts = enrollments.reduce(
-      (acc, enrollment) => {
-        const subjectId = enrollment.subject.id
-        if (!acc[subjectId]) {
-          acc[subjectId] = {
-            id: subjectId,
-            title: enrollment.subject.name,
-            enrollments: 0,
-            revenue: 0,
-          }
-        }
-        acc[subjectId].enrollments++
-        acc[subjectId].revenue += Number(enrollment.subject.price) || 0
-        return acc
-      },
-      {} as Record<
-        string,
-        { id: string; title: string; enrollments: number; revenue: number }
-      >
-    )
-
-    const topCourses = Object.values(subjectCounts)
-      .sort((a, b) => b.enrollments - a.enrollments)
-      .slice(0, 5)
-
-    // Calculate revenue by month (last 6 months)
-    const sixMonthsAgo = new Date()
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
-
-    const revenueData = await db.enrollment.findMany({
-      where: {
-        ...schoolFilter,
-        createdAt: { gte: sixMonthsAgo },
-      },
-      include: {
-        subject: {
-          select: { price: true },
-        },
-      },
-    })
-
+    // Revenue by month (last 6 months)
     const revenueByMonth = Array.from({ length: 6 }, (_, i) => {
       const date = new Date()
       date.setMonth(date.getMonth() - (5 - i))
@@ -168,17 +144,15 @@ export async function getStreamAnalytics(): Promise<AnalyticsData | null> {
         month: "short",
         year: "numeric",
       })
-
-      const monthRevenue = revenueData
-        .filter((e) => {
-          const enrollMonth = e.createdAt.toLocaleDateString("en-US", {
-            month: "short",
-            year: "numeric",
-          })
-          return enrollMonth === monthStr
-        })
+      const monthRevenue = revenueEnrollments
+        .filter(
+          (e) =>
+            e.createdAt.toLocaleDateString("en-US", {
+              month: "short",
+              year: "numeric",
+            }) === monthStr
+        )
         .reduce((sum, e) => sum + (Number(e.subject.price) || 0), 0)
-
       return { month: monthStr, revenue: monthRevenue }
     })
 

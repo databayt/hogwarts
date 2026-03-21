@@ -4,6 +4,7 @@
 import { NextResponse } from "next/server"
 
 import { db } from "@/lib/db"
+import { dispatchNotification } from "@/lib/dispatch-notification"
 
 /**
  * Cron job to evaluate attendance policies and create triggers for students
@@ -146,22 +147,19 @@ export async function GET(request: Request) {
 
               // Create notification for admins
               for (const admin of admins) {
-                await db.notification.create({
-                  data: {
-                    schoolId: school.id,
-                    userId: admin.id,
-                    type: "attendance_alert",
-                    priority: threshold.tier >= 3 ? "high" : "normal",
-                    title: "Attendance Policy Triggered",
-                    body: `Student has reached ${absenceCount} absences (Tier ${threshold.tier} - ${threshold.action})`,
-                    metadata: {
-                      entityType: "policyTrigger",
-                      studentId,
-                      tier: threshold.tier,
-                      absenceCount,
-                      action: threshold.action,
-                    },
-                    channels: ["in_app"],
+                await dispatchNotification({
+                  schoolId: school.id,
+                  userId: admin.id,
+                  type: "attendance_alert",
+                  priority: threshold.tier >= 3 ? "high" : "normal",
+                  title: "Attendance Policy Triggered",
+                  body: `Student has reached ${absenceCount} absences (Tier ${threshold.tier} - ${threshold.action})`,
+                  metadata: {
+                    entityType: "policyTrigger",
+                    studentId,
+                    tier: threshold.tier,
+                    absenceCount,
+                    action: threshold.action,
                   },
                 })
               }

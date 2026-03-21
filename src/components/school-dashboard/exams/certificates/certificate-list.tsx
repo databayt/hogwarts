@@ -29,6 +29,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { revokeCertificate, shareCertificate } from "./actions"
 
@@ -60,6 +61,8 @@ export function CertificateList({
 }) {
   const { toast } = useToast()
   const [loading, setLoading] = useState<string | null>(null)
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.exams?.certificates?.list
 
   async function handleShare(id: string) {
     setLoading(id)
@@ -72,12 +75,12 @@ export function CertificateList({
 
     if (result.success && result.data) {
       toast({
-        title: "Certificate shared",
+        title: t?.toast?.shared ?? "Certificate shared",
         description: `Share URL: ${result.data.shareUrl}`,
       })
     } else if (!result.success) {
       toast({
-        title: "Error",
+        title: t?.toast?.error ?? "Error",
         description: result.error,
         variant: "destructive",
       })
@@ -93,10 +96,10 @@ export function CertificateList({
     setLoading(null)
 
     if (result.success) {
-      toast({ title: "Certificate revoked" })
+      toast({ title: t?.toast?.revoked ?? "Certificate revoked" })
     } else if (!result.success) {
       toast({
-        title: "Error",
+        title: t?.toast?.error ?? "Error",
         description: result.error,
         variant: "destructive",
       })
@@ -119,13 +122,13 @@ export function CertificateList({
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Certificate #</TableHead>
-          <TableHead>Student</TableHead>
-          <TableHead>Exam</TableHead>
-          <TableHead>Score</TableHead>
-          <TableHead>Type</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Issued</TableHead>
+          <TableHead>{t?.headers?.number ?? "Certificate #"}</TableHead>
+          <TableHead>{t?.headers?.student ?? "Student"}</TableHead>
+          <TableHead>{t?.headers?.exam ?? "Exam"}</TableHead>
+          <TableHead>{t?.headers?.score ?? "Score"}</TableHead>
+          <TableHead>{t?.headers?.type ?? "Type"}</TableHead>
+          <TableHead>{t?.headers?.status ?? "Status"}</TableHead>
+          <TableHead>{t?.headers?.issued ?? "Issued"}</TableHead>
           {canManage && <TableHead className="w-[50px]" />}
         </TableRow>
       </TableHeader>
@@ -171,7 +174,7 @@ export function CertificateList({
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => handleShare(cert.id)}>
                       <Share2 className="me-2 h-4 w-4" />
-                      Share
+                      {t?.toast?.shared ?? "Share"}
                     </DropdownMenuItem>
                     {cert.isPublic && (
                       <DropdownMenuItem asChild>
@@ -191,7 +194,7 @@ export function CertificateList({
                         onClick={() => handleRevoke(cert.id)}
                       >
                         <XCircle className="me-2 h-4 w-4" />
-                        Revoke
+                        {t?.toast?.revoked ?? "Revoke"}
                       </DropdownMenuItem>
                     )}
                   </DropdownMenuContent>

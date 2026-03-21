@@ -83,7 +83,8 @@ export default function TeacherView({
   teacherId,
   defaultTab = "today",
 }: Props) {
-  const d = dictionary?.timetable
+  const d = dictionary?.timetable as Record<string, any> | undefined
+  const tv = (d as Record<string, any>)?.teacherViewUi
   const isRTL = lang === "ar"
 
   const [isLoadingData, setIsLoadingData] = useState(false)
@@ -113,7 +114,9 @@ export default function TeacherView({
 
   const loadData = async () => {
     if (!teacherId) {
-      setError("Teacher profile not linked to your account")
+      setError(
+        tv?.empty?.selectTeacher ?? "Teacher profile not linked to your account"
+      )
       return
     }
 
@@ -132,7 +135,11 @@ export default function TeacherView({
       setTodaySchedule(todayResult.schedule)
       setCurrentDay(todayResult.dayOfWeek)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load schedule")
+      setError(
+        err instanceof Error
+          ? err.message
+          : (tv?.empty?.noSchedule ?? "Failed to load schedule")
+      )
     } finally {
       setIsLoadingData(false)
     }
@@ -240,7 +247,7 @@ export default function TeacherView({
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
-                {d?.title || "My Teaching Schedule"}
+                {tv?.title ?? d?.title ?? "My Teaching Schedule"}
               </CardTitle>
               <CardDescription>
                 {teacherInfo?.name || "Loading..."}
@@ -259,19 +266,22 @@ export default function TeacherView({
               <div className="bg-muted flex items-center gap-2 rounded-lg px-3 py-2">
                 <Calendar className="text-muted-foreground h-4 w-4" />
                 <span className="text-sm">
-                  <strong>{workload.daysPerWeek}</strong> days/week
+                  <strong>{workload.daysPerWeek}</strong>{" "}
+                  {tv?.labels?.weeklyHours ?? "days/week"}
                 </span>
               </div>
               <div className="bg-muted flex items-center gap-2 rounded-lg px-3 py-2">
                 <Clock className="text-muted-foreground h-4 w-4" />
                 <span className="text-sm">
-                  <strong>{workload.periodsPerWeek}</strong> periods/week
+                  <strong>{workload.periodsPerWeek}</strong>{" "}
+                  {tv?.labels?.weeklyHours ?? "periods/week"}
                 </span>
               </div>
               <div className="bg-muted flex items-center gap-2 rounded-lg px-3 py-2">
                 <BookOpen className="text-muted-foreground h-4 w-4" />
                 <span className="text-sm">
-                  <strong>{workload.classesTeaching}</strong> classes
+                  <strong>{workload.classesTeaching}</strong>{" "}
+                  {tv?.labels?.freeSlots ?? "classes"}
                 </span>
               </div>
             </div>
@@ -304,8 +314,8 @@ export default function TeacherView({
               <div className="flex-1">
                 <p className="text-muted-foreground text-sm">
                   {currentClassInfo.type === "current"
-                    ? "Currently Teaching"
-                    : "Next Class"}
+                    ? (tv?.labels?.nextClass ?? "Currently Teaching")
+                    : (tv?.labels?.nextClass ?? "Next Class")}
                 </p>
                 <p className="text-lg font-semibold">
                   {currentClassInfo.item.subject ||
@@ -335,10 +345,14 @@ export default function TeacherView({
           {filterOptions.classrooms.length > 1 && (
             <Select value={classroomFilter} onValueChange={setClassroomFilter}>
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="All Classrooms" />
+                <SelectValue
+                  placeholder={tv?.filters?.allClassrooms ?? "All Classrooms"}
+                />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Classrooms</SelectItem>
+                <SelectItem value="all">
+                  {tv?.filters?.allClassrooms ?? "All Classrooms"}
+                </SelectItem>
                 {filterOptions.classrooms.map((c) => (
                   <SelectItem key={c} value={c}>
                     {c}
@@ -350,10 +364,14 @@ export default function TeacherView({
           {filterOptions.subjects.length > 1 && (
             <Select value={subjectFilter} onValueChange={setSubjectFilter}>
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="All Subjects" />
+                <SelectValue
+                  placeholder={tv?.filters?.allSubjects ?? "All Subjects"}
+                />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Subjects</SelectItem>
+                <SelectItem value="all">
+                  {tv?.filters?.allSubjects ?? "All Subjects"}
+                </SelectItem>
                 {filterOptions.subjects.map((s) => (
                   <SelectItem key={s} value={s}>
                     {s}
@@ -374,7 +392,10 @@ export default function TeacherView({
           <Card>
             <CardContent className="text-muted-foreground py-12 text-center">
               <Calendar className="mx-auto mb-4 h-12 w-12 opacity-50" />
-              <p>No classes scheduled for today ({DAY_NAMES[currentDay]})</p>
+              <p>
+                {tv?.empty?.noSchedule ?? "No classes scheduled for today"} (
+                {DAY_NAMES[currentDay]})
+              </p>
             </CardContent>
           </Card>
         ) : (
@@ -404,7 +425,9 @@ export default function TeacherView({
                       <p className="font-medium">
                         {item.isBreak
                           ? item.periodName
-                          : item.subject || item.className || "Free Period"}
+                          : item.subject ||
+                            item.className ||
+                            (d?.freePeriod ?? "Free Period")}
                       </p>
                       {!item.isBreak && item.className && (
                         <p className="text-muted-foreground text-sm">
@@ -412,7 +435,9 @@ export default function TeacherView({
                         </p>
                       )}
                     </div>
-                    {item.isBreak && <Badge variant="secondary">Break</Badge>}
+                    {item.isBreak && (
+                      <Badge variant="secondary">{d?.break ?? "Break"}</Badge>
+                    )}
                   </div>
                 </CardContent>
               </Card>

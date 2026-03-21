@@ -3,13 +3,14 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState, useTransition } from "react"
-import { NotificationType } from "@prisma/client"
+import Link from "next/link"
 import { AnimatePresence, motion } from "framer-motion"
 import { Bell, CheckCheck, Loader2 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -29,6 +30,27 @@ interface NotificationListProps {
   loading?: boolean
 }
 
+/**
+ * Skeleton loader matching Airbnb notification item layout
+ */
+function NotificationSkeleton({ count = 4 }: { count?: number }) {
+  return (
+    <div>
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="flex gap-3 border-b px-3 py-2.5">
+          <Skeleton className="h-10 w-10 flex-shrink-0 rounded-full" />
+          <div className="min-w-0 flex-1 space-y-1.5">
+            <Skeleton className="h-3.5 w-4/5" />
+            <Skeleton className="h-3.5 w-3/5" />
+            <Skeleton className="h-3 w-20" />
+          </div>
+          <Skeleton className="h-5 w-5 flex-shrink-0 rounded" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export function NotificationList({
   notifications,
   locale = "en",
@@ -44,7 +66,6 @@ export function NotificationList({
   const [filter, setFilter] = useState<"all" | "unread">("all")
   const [isPending, startTransition] = useTransition()
 
-  // Filter notifications with defensive check
   const filteredNotifications = (notifications ?? []).filter((notification) => {
     if (filter === "unread" && notification.read) return false
     return true
@@ -59,11 +80,7 @@ export function NotificationList({
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
-      </div>
-    )
+    return <NotificationSkeleton count={5} />
   }
 
   if ((notifications?.length ?? 0) === 0) {
@@ -137,7 +154,7 @@ export function NotificationList({
         </motion.div>
       ) : (
         <AnimatePresence mode="popLayout">
-          <div className="space-y-2">
+          <div>
             {filteredNotifications.map((notification) =>
               compact ? (
                 <NotificationCardCompact
@@ -167,7 +184,7 @@ export function NotificationList({
 }
 
 /**
- * Notification list with scroll area for dropdowns/popovers
+ * Airbnb-inspired notification list for bell dropdown
  */
 export function NotificationListScrollable({
   notifications,
@@ -176,7 +193,8 @@ export function NotificationListScrollable({
   onRead,
   onDelete,
   onMarkAllRead,
-  maxHeight = 400,
+  maxHeight = 450,
+  loading = false,
 }: NotificationListProps & { maxHeight?: number }) {
   const [isPending, startTransition] = useTransition()
   const unreadCount = (notifications ?? []).filter((n) => !n.read).length
@@ -189,46 +207,32 @@ export function NotificationListScrollable({
 
   return (
     <div className="w-full">
-      {/* Header */}
-      <div className="bg-card border-b px-4 py-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-semibold">
-              {dictionary.notificationCenter}
-            </h3>
-            {unreadCount > 0 && (
-              <p className="text-muted-foreground text-xs">
-                {unreadCount > 1
-                  ? dictionary.unreadCount_other.replace(
-                      "{{count}}",
-                      unreadCount.toString()
-                    )
-                  : dictionary.unreadCount_one.replace("{{count}}", "1")}
-              </p>
+      {/* Header - clean Airbnb style */}
+      <div className="flex items-center justify-between border-b px-4 py-3">
+        <h3 className="text-base font-semibold">{dictionary.title}</h3>
+        {unreadCount > 0 && onMarkAllRead && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleMarkAllRead}
+            disabled={isPending}
+            className="text-muted-foreground hover:text-foreground h-auto px-2 py-1 text-xs"
+          >
+            {isPending ? (
+              <Loader2 className="me-1 h-3 w-3 animate-spin" />
+            ) : (
+              <CheckCheck className="me-1 h-3 w-3" />
             )}
-          </div>
-          {unreadCount > 0 && onMarkAllRead && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleMarkAllRead}
-              disabled={isPending}
-              className="h-8 text-xs"
-            >
-              {isPending ? (
-                <Loader2 className="me-1 h-3 w-3 animate-spin" />
-              ) : (
-                <CheckCheck className="me-1 h-3 w-3" />
-              )}
-              {dictionary.markAllAsRead}
-            </Button>
-          )}
-        </div>
+            {dictionary.markAllAsRead}
+          </Button>
+        )}
       </div>
 
       {/* Scrollable List */}
       <ScrollArea className="h-full" style={{ maxHeight }}>
-        {(notifications?.length ?? 0) === 0 ? (
+        {loading ? (
+          <NotificationSkeleton count={4} />
+        ) : (notifications?.length ?? 0) === 0 ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -243,7 +247,7 @@ export function NotificationListScrollable({
           </motion.div>
         ) : (
           <AnimatePresence mode="popLayout">
-            <div className="space-y-1 p-2">
+            <div>
               {(notifications ?? []).map((notification) => (
                 <NotificationCardCompact
                   key={notification.id}
@@ -261,9 +265,14 @@ export function NotificationListScrollable({
 
       {/* Footer */}
       {(notifications?.length ?? 0) > 0 && (
-        <div className="bg-card border-t px-4 py-3">
-          <Button variant="ghost" size="sm" className="w-full text-xs" asChild>
-            <a href={`/${locale}/notifications`}>{dictionary.viewAll}</a>
+        <div className="border-t px-4 py-2.5">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-foreground w-full text-xs"
+            asChild
+          >
+            <Link href={`/${locale}/notifications`}>{dictionary.viewAll}</Link>
           </Button>
         </div>
       )}
@@ -281,7 +290,6 @@ export function NotificationListGrouped({
   onRead,
   onDelete,
 }: Omit<NotificationListProps, "onMarkAllRead" | "compact">) {
-  // Group by date with defensive check
   const grouped = (notifications ?? []).reduce(
     (acc, notification) => {
       const date = new Date(notification.createdAt)
@@ -326,7 +334,6 @@ export function NotificationListGrouped({
     )
   }
 
-  // Map group keys to dictionary labels
   const groupLabels: Record<string, string> = {
     Today: dictionary.grouping.today,
     Yesterday: dictionary.grouping.yesterday,
@@ -334,19 +341,18 @@ export function NotificationListGrouped({
   }
 
   return (
-    <div className="space-y-6">
+    <div>
       <AnimatePresence mode="popLayout">
         {sortedGroups.map((group) => (
           <motion.div
             key={group}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="space-y-2"
           >
-            <h4 className="text-muted-foreground bg-background sticky top-0 py-1 text-sm font-medium">
+            <h4 className="text-muted-foreground bg-background sticky top-0 px-4 py-2 text-xs font-medium tracking-wider uppercase">
               {groupLabels[group]}
             </h4>
-            <div className="space-y-2">
+            <div>
               {grouped[group].map((notification) => (
                 <NotificationCard
                   key={notification.id}
@@ -364,3 +370,5 @@ export function NotificationListGrouped({
     </div>
   )
 }
+
+export { NotificationSkeleton }

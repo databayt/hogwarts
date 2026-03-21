@@ -4,35 +4,19 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
-import {
-  Bell,
-  Calendar,
-  ChevronLeft,
-  ChevronRight,
-  Inbox,
-  Settings,
-  TrendingUp,
-} from "lucide-react"
+import { ChevronLeft, ChevronRight, Settings } from "lucide-react"
 
 import { getTenantContext } from "@/lib/tenant-context"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { Locale } from "@/components/internationalization/config"
 import { getNotificationDictionary } from "@/components/internationalization/dictionaries"
 
 import { NotificationCenterClient } from "./notification-center-client"
-import { getNotificationsList, getNotificationStats } from "./queries"
+import { getNotificationsList } from "./queries"
 import type { NotificationListFilters } from "./queries"
 import type { NotificationDTO } from "./types"
 
-// Helper function to safely serialize dates
 function safeSerializeDate(date: Date | null | undefined): string {
   if (!date) return new Date().toISOString()
   try {
@@ -69,10 +53,8 @@ export async function NotificationCenterContent({
     redirect(`/${locale}/dashboard`)
   }
 
-  // Load dictionary
   const dict = await getNotificationDictionary(locale as Locale)
 
-  // Parse search params
   const page = parseInt(searchParams.page || "1", 10)
   const perPage = parseInt(searchParams.perPage || "20", 10)
   const filters: NotificationListFilters = {
@@ -82,31 +64,18 @@ export async function NotificationCenterContent({
     search: searchParams.search,
   }
 
-  // Fetch notifications and stats with error handling
   let notifications: any[] = []
   let totalCount = 0
-  let stats = {
-    total: 0,
-    unread: 0,
-    today: 0,
-    thisWeek: 0,
-    byType: {} as Record<any, number>,
-    byPriority: {} as Record<any, number>,
-  }
 
   try {
-    const [notificationsResult, statsResult] = await Promise.all([
-      getNotificationsList(schoolId, session.user.id, {
-        page,
-        perPage,
-        ...filters,
-      }),
-      getNotificationStats(schoolId, session.user.id),
-    ])
+    const result = await getNotificationsList(schoolId, session.user.id, {
+      page,
+      perPage,
+      ...filters,
+    })
 
-    notifications = notificationsResult.rows
-    totalCount = notificationsResult.count
-    stats = statsResult
+    notifications = result.rows
+    totalCount = result.count
   } catch (error) {
     console.error(
       "[NotificationCenterContent] Error fetching notifications:",
@@ -118,131 +87,42 @@ export async function NotificationCenterContent({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-          <h1 className="scroll-m-20 text-3xl font-bold tracking-tight">
-            {dict.notifications.title}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {dict.notifications.subtitle}
-          </p>
-        </div>
+      {/* Header - Airbnb style: large title + settings gear */}
+      <div className="flex items-center justify-between">
+        <h1 className="scroll-m-20 text-3xl font-bold tracking-tight">
+          {dict.notifications.title}
+        </h1>
 
-        <Button variant="outline" size="sm" asChild>
+        <Button variant="ghost" size="icon" asChild>
           <Link href={`/${locale}/notifications/preferences`}>
-            <Settings className="me-2 h-4 w-4" />
-            {dict.notifications.preferences.title}
+            <Settings className="h-5 w-5" />
+            <span className="sr-only">
+              {dict.notifications.preferences.title}
+            </span>
           </Link>
         </Button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="transition-shadow hover:shadow-md">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {dict.notifications.statistics.totalReceived}
-            </CardTitle>
-            <div className="bg-muted rounded-full p-2">
-              <Inbox className="text-muted-foreground h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
-            <p className="text-muted-foreground mt-1 text-xs">
-              {dict.notifications.tabs.all}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="transition-shadow hover:shadow-md">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {dict.notifications.tabs.unread}
-            </CardTitle>
-            <div className="bg-destructive/10 rounded-full p-2">
-              <Bell className="text-destructive h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.unread}</div>
-            <p className="text-muted-foreground mt-1 text-xs">
-              {dict.notifications.statistics.totalUnread}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="transition-shadow hover:shadow-md">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {dict.notifications.grouping.today}
-            </CardTitle>
-            <div className="bg-muted rounded-full p-2">
-              <Calendar className="text-muted-foreground h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.today}</div>
-            <p className="text-muted-foreground mt-1 text-xs">
-              {dict.notifications.grouping.today}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="transition-shadow hover:shadow-md">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {dict.notifications.statistics.thisWeek}
-            </CardTitle>
-            <div className="bg-muted rounded-full p-2">
-              <TrendingUp className="text-muted-foreground h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.thisWeek}</div>
-            <p className="text-muted-foreground mt-1 text-xs">
-              {dict.notifications.grouping.thisWeek}
-            </p>
-          </CardContent>
-        </Card>
+      {/* Notification List - flat, no card wrapper */}
+      <div className="rounded-lg border">
+        <NotificationCenterClient
+          initialNotifications={
+            (notifications ?? []).map((n) => ({
+              ...n,
+              createdAt: safeSerializeDate(n?.createdAt),
+              updatedAt: safeSerializeDate(n?.updatedAt),
+              readAt: n?.readAt ? safeSerializeDate(n.readAt) : null,
+              emailSentAt: n?.emailSentAt
+                ? safeSerializeDate(n.emailSentAt)
+                : null,
+              metadata: (n?.metadata as Record<string, unknown> | null) ?? null,
+            })) as NotificationDTO[]
+          }
+          locale={locale}
+          dictionary={dict.notifications}
+          showFilters={true}
+        />
       </div>
-
-      {/* Notification List with Client-side Updates */}
-      <Card>
-        <CardHeader className="pb-4">
-          <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
-            <div>
-              <CardTitle>{dict.notifications.tabs.all}</CardTitle>
-              <CardDescription className="mt-1">
-                {totalCount > 0
-                  ? `${dict.notifications.common.showing} ${(page - 1) * perPage + 1}-${Math.min(page * perPage, totalCount)} ${dict.notifications.common.of} ${totalCount}`
-                  : dict.notifications.empty.noNotifications}
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <NotificationCenterClient
-            initialNotifications={
-              (notifications ?? []).map((n) => ({
-                ...n,
-                createdAt: safeSerializeDate(n?.createdAt),
-                updatedAt: safeSerializeDate(n?.updatedAt),
-                readAt: n?.readAt ? safeSerializeDate(n.readAt) : null,
-                emailSentAt: n?.emailSentAt
-                  ? safeSerializeDate(n.emailSentAt)
-                  : null,
-                metadata:
-                  (n?.metadata as Record<string, unknown> | null) ?? null,
-              })) as NotificationDTO[]
-            }
-            locale={locale}
-            dictionary={dict.notifications}
-            showFilters={true}
-          />
-        </CardContent>
-      </Card>
 
       {/* Pagination */}
       {totalPages > 1 && (
@@ -262,12 +142,12 @@ export async function NotificationCenterContent({
                 }).toString()}`}
               >
                 <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
-                Previous
+                {dict.notifications.pagination.previous}
               </Link>
             ) : (
               <span>
                 <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
-                Previous
+                {dict.notifications.pagination.previous}
               </span>
             )}
           </Button>
@@ -324,12 +204,12 @@ export async function NotificationCenterContent({
                   page: String(page + 1),
                 }).toString()}`}
               >
-                Next
+                {dict.notifications.pagination.next}
                 <ChevronRight className="h-4 w-4 rtl:rotate-180" />
               </Link>
             ) : (
               <span>
-                Next
+                {dict.notifications.pagination.next}
                 <ChevronRight className="h-4 w-4 rtl:rotate-180" />
               </span>
             )}
@@ -341,55 +221,31 @@ export async function NotificationCenterContent({
 }
 
 /**
- * Loading state for notification center
+ * Loading state - Airbnb-inspired skeleton
  */
 export function NotificationCenterSkeleton() {
   return (
     <div className="space-y-6">
       {/* Header Skeleton */}
       <div className="flex items-center justify-between">
-        <div className="space-y-2">
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-4 w-64" />
-        </div>
-        <Skeleton className="h-10 w-32" />
-      </div>
-
-      {/* Stats Skeleton */}
-      <div className="grid gap-4 md:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Card key={i}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <Skeleton className="h-4 w-16" />
-              <Skeleton className="h-4 w-4 rounded-full" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="mb-2 h-8 w-12" />
-              <Skeleton className="h-3 w-24" />
-            </CardContent>
-          </Card>
-        ))}
+        <Skeleton className="h-9 w-48" />
+        <Skeleton className="h-9 w-9 rounded-md" />
       </div>
 
       {/* List Skeleton */}
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-6 w-48" />
-          <Skeleton className="h-4 w-64" />
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="flex gap-4 rounded-lg border p-4">
-              <Skeleton className="h-10 w-10 rounded-full" />
-              <div className="flex-1 space-y-2">
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-3 w-full" />
-                <Skeleton className="h-3 w-1/4" />
-              </div>
+      <div className="rounded-lg border">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="flex gap-3 border-b px-4 py-3">
+            <Skeleton className="h-12 w-12 flex-shrink-0 rounded-full" />
+            <div className="min-w-0 flex-1 space-y-2">
+              <Skeleton className="h-4 w-4/5" />
+              <Skeleton className="h-4 w-3/5" />
+              <Skeleton className="h-3 w-24" />
             </div>
-          ))}
-        </CardContent>
-      </Card>
+            <Skeleton className="h-5 w-5 flex-shrink-0" />
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

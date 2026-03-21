@@ -3,7 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useMemo } from "react"
-import { Bell, Mail } from "lucide-react"
+import { Mail } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import {
@@ -97,12 +97,7 @@ export default function SaasHeader() {
           <SpotlightSearch surface="saas-dashboard" />
           <LanguageSwitcher variant="toggle" />
           <ModeSwitcher />
-          <Button variant="link" size="icon" className="size-7">
-            <Bell className="h-4 w-4" />
-            <span className="sr-only">
-              {dictionary?.operator?.common?.notifications || "Notifications"}
-            </span>
-          </Button>
+          {/* TODO: Restore when operator notification system is implemented */}
           <Button variant="link" size="icon" className="size-7">
             <Mail className="h-4 w-4" />
             <span className="sr-only">

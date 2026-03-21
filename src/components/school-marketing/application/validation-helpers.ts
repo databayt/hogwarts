@@ -10,6 +10,7 @@ import type {
   AcademicStepData,
   ContactStepData,
   GuardianStepData,
+  LocationStepData,
   PersonalStepData,
 } from "./types"
 
@@ -32,20 +33,24 @@ export function validatePersonalStep(
 
 /**
  * Validate contact step data
- * Required: email, phone, address, city, state, country
+ * Required: email, phone
  */
 export function validateContactStep(
   data: ContactStepData | undefined
 ): boolean {
   if (!data) return false
-  return !!(
-    data.email &&
-    data.phone &&
-    data.address &&
-    data.city &&
-    data.state &&
-    data.country
-  )
+  return !!(data.email && data.phone)
+}
+
+/**
+ * Validate location step data
+ * Required: address, city, state, country
+ */
+export function validateLocationStep(
+  data: LocationStepData | undefined
+): boolean {
+  if (!data) return false
+  return !!(data.address && data.city && data.state && data.country)
 }
 
 /**
@@ -76,12 +81,14 @@ export function validateAcademicStep(
 export function validateAllSteps(formData: {
   personal?: PersonalStepData
   contact?: ContactStepData
+  location?: LocationStepData
   guardian?: GuardianStepData
   academic?: AcademicStepData
 }): boolean {
   return (
     validatePersonalStep(formData.personal) &&
     validateContactStep(formData.contact) &&
+    validateLocationStep(formData.location) &&
     validateGuardianStep(formData.guardian) &&
     validateAcademicStep(formData.academic)
   )
@@ -93,12 +100,14 @@ export function validateAllSteps(formData: {
 export function getStepValidationStatus(formData: {
   personal?: PersonalStepData
   contact?: ContactStepData
+  location?: LocationStepData
   guardian?: GuardianStepData
   academic?: AcademicStepData
 }): Record<string, boolean> {
   return {
     personal: validatePersonalStep(formData.personal),
     contact: validateContactStep(formData.contact),
+    location: validateLocationStep(formData.location),
     guardian: validateGuardianStep(formData.guardian),
     academic: validateAcademicStep(formData.academic),
   }

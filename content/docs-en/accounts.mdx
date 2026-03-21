@@ -275,6 +275,44 @@ Bulk accounts use `generatePersonalEmail()` which produces `firstname-lastname{i
 
 ---
 
+## Role Protection
+
+### Protected Accounts
+
+The `dev@databayt.org` account has an **immutable DEVELOPER role** that must never be changed by any automated process. This is enforced at multiple levels:
+
+| Layer            | Mechanism                                           | File                                     |
+| ---------------- | --------------------------------------------------- | ---------------------------------------- |
+| Seed scripts     | `PROTECTED_EMAILS` exclusion in bulk `updateMany`   | `prisma/seeds/reset-test-user.ts`        |
+| OAuth adapter    | Returns `role` field to prevent JWT role loss       | `src/lib/multi-tenant-prisma-adapter.ts` |
+| Claude Code rule | Path-scoped rule warns when touching auth/seed code | `.claude/rules/accounts.md`              |
+| PostToolUse hook | Detects unguarded bulk role changes in written code | `.claude/hooks/check-roles.sh`           |
+
+### Resettable Accounts
+
+These accounts are designed to be manually reset for fresh testing:
+
+- **`user@databayt.org`** — Reset via `pnpm db:reset-test-user` after onboarding wizard testing
+- **`applicant@databayt.org`** — Reset via `pnpm db:reset-test-applicant` after application wizard testing
+
+### The `PROTECTED_EMAILS` Pattern
+
+Any seed script or server action that performs bulk role updates must exclude protected emails:
+
+```typescript
+const PROTECTED_EMAILS = ["dev@databayt.org"]
+
+await prisma.user.updateMany({
+  where: {
+    schoolId: { in: schoolIds },
+    email: { notIn: PROTECTED_EMAILS },
+  },
+  data: { role: "USER" },
+})
+```
+
+---
+
 ## Known Gaps
 
 - **No second school** for cross-tenant testing (only Demo Academy exists)

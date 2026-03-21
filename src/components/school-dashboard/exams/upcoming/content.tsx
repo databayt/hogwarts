@@ -163,34 +163,39 @@ export default async function UpcomingExamsContent({
     )
   }
 
-  // Use exams dictionary - upcoming keys may not exist, use fallbacks
+  // Use exams dictionary
   const examDict = dictionary?.school?.exams
+  const u = examDict?.upcoming
   const d = {
     labels: {
-      today: "Today",
-      tomorrow: "Tomorrow",
-      daysLeft: "days",
-      marks: "marks",
+      today: u?.labels?.today ?? "Today",
+      tomorrow: u?.labels?.tomorrow ?? "Tomorrow",
+      daysLeft: u?.labels?.daysLeft ?? "days",
+      marks: u?.labels?.marks ?? "marks",
     },
     stats: {
-      total: examDict?.upcomingExams || "Upcoming",
-      today: "Today",
-      tomorrow: "Tomorrow",
-      thisWeek: "This Week",
+      total: u?.stats?.total ?? examDict?.upcomingExams ?? "Upcoming",
+      today: u?.stats?.today ?? "Today",
+      tomorrow: u?.stats?.tomorrow ?? "Tomorrow",
+      thisWeek: u?.stats?.thisWeek ?? "This Week",
     },
     empty: {
-      title: "No Upcoming Exams",
-      description: "There are no exams scheduled in the near future.",
+      title: u?.noExams ?? "No Upcoming Exams",
+      description:
+        u?.noExamsDescription ??
+        "There are no exams scheduled in the near future.",
     },
     sections: {
-      today: "Today's Exams",
-      tomorrow: "Tomorrow",
-      thisWeek: "This Week",
-      later: "Coming Up",
+      today: u?.sections?.today ?? "Today's Exams",
+      tomorrow: u?.sections?.tomorrow ?? "Tomorrow",
+      thisWeek: u?.sections?.thisWeek ?? "This Week",
+      later: u?.sections?.later ?? "Coming Up",
     },
     actions: {
-      viewDetails: "View Details",
-      scheduleExam: examDict?.createExam || "Schedule an Exam",
+      viewDetails:
+        u?.actions?.viewDetails ?? examDict?.viewDetails ?? "View Details",
+      scheduleExam:
+        u?.actions?.scheduleExam ?? examDict?.createExam ?? "Schedule an Exam",
     },
   }
 

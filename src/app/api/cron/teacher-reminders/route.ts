@@ -4,6 +4,7 @@
 import { NextResponse } from "next/server"
 
 import { db } from "@/lib/db"
+import { dispatchNotification } from "@/lib/dispatch-notification"
 
 /**
  * Cron job to check for unmarked attendance and send reminders to teachers
@@ -104,21 +105,18 @@ export async function GET(request: Request) {
 
         // 5. If no attendance record exists, create notification
         if (!attendanceExists && entry.teacher.userId) {
-          await db.notification.create({
-            data: {
-              schoolId: school.id,
-              userId: entry.teacher.userId,
-              type: "attendance_alert",
-              priority: "normal",
-              title: "Attendance Reminder",
-              body: `Reminder: Attendance not yet marked for ${entry.class.name} - ${entry.period.name}`,
-              metadata: {
-                entityType: "attendance",
-                classId: entry.classId,
-                periodId: entry.periodId,
-                date: todayDate.toISOString(),
-              },
-              channels: ["in_app"],
+          await dispatchNotification({
+            schoolId: school.id,
+            userId: entry.teacher.userId,
+            type: "attendance_alert",
+            priority: "normal",
+            title: "Attendance Reminder",
+            body: `Reminder: Attendance not yet marked for ${entry.class.name} - ${entry.period.name}`,
+            metadata: {
+              entityType: "attendance",
+              classId: entry.classId,
+              periodId: entry.periodId,
+              date: todayDate.toISOString(),
             },
           })
 

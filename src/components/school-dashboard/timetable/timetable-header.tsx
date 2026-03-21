@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { ConflictsDrawer } from "@/components/school-dashboard/timetable/conflicts-drawer"
 import { ScheduleSettingsDialog } from "@/components/school-dashboard/timetable/schedule-settings-dialog"
 import { SlotEditor } from "@/components/school-dashboard/timetable/slot-editor"
@@ -45,6 +46,9 @@ export function TimetableHeader({
   isWeekChangeLoading,
   onWeekChange,
 }: TimetableHeaderProps) {
+  const { dictionary } = useDictionary()
+  const th = (dictionary?.school?.timetable as Record<string, any>)
+    ?.timetableHeader
   const { loadWeekly } = useTimetableStore()
   const [termId, setTermId] = useState<string>("")
   const [terms, setTerms] = useState<Array<{ id: string; label: string }>>([])
@@ -134,7 +138,7 @@ export function TimetableHeader({
       <div className="mb-4 flex flex-wrap items-center gap-2 print:hidden">
         <Select value={termId} onValueChange={setTermId}>
           <SelectTrigger className="w-[140px]">
-            <SelectValue placeholder="Term" />
+            <SelectValue placeholder={th?.filters?.selectWeek ?? "Term"} />
           </SelectTrigger>
           <SelectContent>
             {terms.map((t) => (
@@ -150,18 +154,22 @@ export function TimetableHeader({
           onValueChange={(v) => setViewMode(v as "class" | "teacher")}
         >
           <SelectTrigger className="w-[130px]">
-            <SelectValue placeholder="View" />
+            <SelectValue placeholder={th?.viewBy ?? "View"} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="class">Class</SelectItem>
-            <SelectItem value="teacher">Teacher</SelectItem>
+            <SelectItem value="class">{th?.views?.class ?? "Class"}</SelectItem>
+            <SelectItem value="teacher">
+              {th?.views?.teacher ?? "Teacher"}
+            </SelectItem>
           </SelectContent>
         </Select>
 
         {viewMode === "class" ? (
           <Select value={selectedClass} onValueChange={setSelectedClass}>
             <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Select class" />
+              <SelectValue
+                placeholder={th?.filters?.selectClass ?? "Select class"}
+              />
             </SelectTrigger>
             <SelectContent>
               {classes.map((c) => (
@@ -174,7 +182,9 @@ export function TimetableHeader({
         ) : (
           <Select value={selectedTeacher} onValueChange={setSelectedTeacher}>
             <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Select teacher" />
+              <SelectValue
+                placeholder={th?.views?.teacher ?? "Select teacher"}
+              />
             </SelectTrigger>
             <SelectContent>
               {teachers.map((t) => (
@@ -230,10 +240,10 @@ export function TimetableHeader({
           className="ms-2"
           onClick={() => setOpenSettings(true)}
         >
-          Schedule settings
+          {th?.actions?.settings ?? "Schedule settings"}
         </Button>
         <Button variant="ghost" onClick={() => setOpenSlot(true)}>
-          Pencil slots
+          {th?.actions?.generate ?? "Pencil slots"}
         </Button>
         {conflicts != null && (
           <button
@@ -243,7 +253,9 @@ export function TimetableHeader({
             )}
             onClick={() => setOpenConflicts(true)}
           >
-            <small>{conflicts} conflict(s)</small>
+            <small>
+              {conflicts} {th?.filters?.currentWeek ?? "conflict(s)"}
+            </small>
           </button>
         )}
 
@@ -251,12 +263,12 @@ export function TimetableHeader({
         <div className="ms-4 flex items-center gap-2">
           {useTimetableStore.getState().classConfig?.showAllSubjects && (
             <div className="bg-chart-1 text-chart-1 rounded-full px-2 py-1">
-              <small>All Subjects</small>
+              <small>{th?.actions?.export ?? "All Subjects"}</small>
             </div>
           )}
           {useTimetableStore.getState().classConfig?.displayFallbackData && (
             <div className="bg-chart-2 text-chart-2 rounded-full px-2 py-1">
-              <small>Fallback Data</small>
+              <small>{th?.actions?.print ?? "Fallback Data"}</small>
             </div>
           )}
         </div>

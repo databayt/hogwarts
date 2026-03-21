@@ -9,7 +9,6 @@ import { format } from "date-fns"
 import { ar, enUS } from "date-fns/locale"
 import { Loader2 } from "lucide-react"
 import { useForm } from "react-hook-form"
-import { toast } from "sonner"
 import { z } from "zod"
 
 import { Button } from "@/components/ui/button"
@@ -38,6 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import { AnthropicIcons } from "@/components/icons"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -124,7 +124,7 @@ export default function TourBookingContent({
         setAvailableSlots([])
       }
     } catch (error) {
-      toast.error(
+      ErrorToast(
         tour?.errors?.failedToFetchSlots || "Failed to fetch available slots"
       )
       setAvailableSlots([])
@@ -135,7 +135,7 @@ export default function TourBookingContent({
 
   const onSubmit = async (data: BookingFormData) => {
     if (!selectedSlot) {
-      toast.error(tour?.errors?.pleaseSelectSlot || "Please select a time slot")
+      ErrorToast(tour?.errors?.pleaseSelectSlot || "Please select a time slot")
       return
     }
 
@@ -156,18 +156,18 @@ export default function TourBookingContent({
 
       if (result.success && result.data) {
         setConfirmation(result.data)
-        toast.success(
+        SuccessToast(
           tour?.errors?.tourBookedSuccess || "Tour booked successfully"
         )
       } else {
-        toast.error(
+        ErrorToast(
           result.error ||
             tour?.errors?.failedToBookTour ||
             "Failed to book tour"
         )
       }
     } catch (error) {
-      toast.error(tour?.errors?.failedToBookTour || "Failed to book tour")
+      ErrorToast(tour?.errors?.failedToBookTour || "Failed to book tour")
     } finally {
       setIsSubmitting(false)
     }

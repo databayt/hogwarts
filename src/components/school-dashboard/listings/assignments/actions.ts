@@ -3,10 +3,16 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
 import { z } from "zod"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
+import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
-import { dispatchNotificationsToAudience } from "@/lib/dispatch-notification"
+import {
+  dispatchNotification,
+  dispatchNotificationsToAudience,
+} from "@/lib/dispatch-notification"
 import { getModelOrThrow } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
 import { arrayToCSV } from "@/components/file"
@@ -16,13 +22,7 @@ import {
   getAssignmentsSchema,
 } from "@/components/school-dashboard/listings/assignments/validation"
 
-// ============================================================================
-// Types
-// ============================================================================
-
-export type ActionResponse<T = void> =
-  | { success: true; data: T }
-  | { success: false; error: string }
+import { assertAssignmentPermission, getAuthContext } from "./authorization"
 
 type AssignmentSelectResult = {
   id: string
@@ -59,10 +59,14 @@ export async function createAssignment(
   input: z.infer<typeof assignmentCreateSchema>
 ): Promise<ActionResponse<{ id: string }>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+
     const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return { success: false, error: "Missing school context" }
-    }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+
+    assertAssignmentPermission(authContext, "create", { schoolId })
 
     const parsed = assignmentCreateSchema.parse(input)
 
@@ -131,10 +135,14 @@ export async function updateAssignment(
   input: z.infer<typeof assignmentUpdateSchema>
 ): Promise<ActionResponse<void>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+
     const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return { success: false, error: "Missing school context" }
-    }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+
+    assertAssignmentPermission(authContext, "update", { schoolId })
 
     const parsed = assignmentUpdateSchema.parse(input)
     const { id, ...rest } = parsed
@@ -189,10 +197,14 @@ export async function deleteAssignment(input: {
   id: string
 }): Promise<ActionResponse<void>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+
     const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return { success: false, error: "Missing school context" }
-    }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+
+    assertAssignmentPermission(authContext, "delete", { schoolId })
 
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
@@ -229,6 +241,100 @@ export async function deleteAssignment(input: {
   }
 }
 
+export async function gradeSubmission(input: {
+  submissionId: string
+  score: number
+  feedback?: string
+}): Promise<ActionResponse<void>> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+
+    assertAssignmentPermission(authContext, "grade", { schoolId })
+
+    const parsed = z
+      .object({
+        submissionId: z.string().min(1),
+        score: z.number().min(0),
+        feedback: z.string().optional(),
+      })
+      .parse(input)
+
+    // Verify submission exists and belongs to this school
+    const submission = await db.assignmentSubmission.findFirst({
+      where: { id: parsed.submissionId, schoolId },
+      select: {
+        id: true,
+        studentId: true,
+        assignment: {
+          select: { id: true, title: true, totalPoints: true },
+        },
+        student: {
+          select: { userId: true },
+        },
+      },
+    })
+
+    if (!submission) {
+      return { success: false, error: "Submission not found" }
+    }
+
+    await db.assignmentSubmission.updateMany({
+      where: { id: parsed.submissionId, schoolId },
+      data: {
+        score: parsed.score,
+        feedback: parsed.feedback || null,
+        status: "GRADED",
+        gradedAt: new Date(),
+      },
+    })
+
+    // Notify the student that their assignment was graded (non-blocking)
+    if (submission.student.userId) {
+      dispatchNotification({
+        schoolId,
+        userId: submission.student.userId,
+        type: "assignment_graded",
+        title: `تم تصحيح الواجب: ${submission.assignment.title}`,
+        body: `حصلت على ${parsed.score}/${submission.assignment.totalPoints} في "${submission.assignment.title}"`,
+        priority: "normal",
+        channels: ["in_app"],
+        metadata: {
+          assignmentId: submission.assignment.id,
+          submissionId: parsed.submissionId,
+          score: parsed.score,
+          totalPoints: submission.assignment.totalPoints,
+          url: `/assignments/${submission.assignment.id}`,
+        },
+      }).catch((err) =>
+        console.error("[gradeSubmission] Notification error:", err)
+      )
+    }
+
+    revalidatePath(ASSIGNMENTS_PATH)
+    return { success: true, data: undefined }
+  } catch (error) {
+    console.error("[gradeSubmission] Error:", error)
+
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
+    }
+
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to grade submission",
+    }
+  }
+}
+
 // ============================================================================
 // Queries
 // ============================================================================
@@ -237,10 +343,14 @@ export async function getAssignment(input: {
   id: string
 }): Promise<ActionResponse<AssignmentSelectResult | null>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+
     const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return { success: false, error: "Missing school context" }
-    }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+
+    assertAssignmentPermission(authContext, "read", { schoolId })
 
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
@@ -287,10 +397,14 @@ export async function getAssignments(
   input: Partial<z.infer<typeof getAssignmentsSchema>>
 ): Promise<ActionResponse<{ rows: AssignmentListResult[]; total: number }>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+
     const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return { success: false, error: "Missing school context" }
-    }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+
+    assertAssignmentPermission(authContext, "read", { schoolId })
 
     const sp = getAssignmentsSchema.parse(input ?? {})
 
@@ -363,10 +477,14 @@ export async function getAssignmentsCSV(
   input?: Partial<z.infer<typeof getAssignmentsSchema>>
 ): Promise<ActionResponse<string>> {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+
     const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return { success: false, error: "Missing school context" }
-    }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+
+    assertAssignmentPermission(authContext, "export", { schoolId })
 
     const sp = getAssignmentsSchema.parse(input ?? {})
 
@@ -384,6 +502,7 @@ export async function getAssignmentsCSV(
     // Fetch ALL assignments matching filters (no pagination for export)
     const assignments = await assignmentModel.findMany({
       where,
+      take: 10000,
       include: {
         class: {
           select: {
@@ -476,10 +595,14 @@ export async function getAssignmentsExportData(
   >
 > {
   try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+
     const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return { success: false, error: "Missing school context" }
-    }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+
+    assertAssignmentPermission(authContext, "export", { schoolId })
 
     const sp = getAssignmentsSchema.parse(input ?? {})
 
@@ -497,6 +620,7 @@ export async function getAssignmentsExportData(
     // Fetch ALL assignments matching filters (no pagination for export)
     const assignments = await assignmentModel.findMany({
       where,
+      take: 10000,
       include: {
         class: {
           select: {

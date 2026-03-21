@@ -24,6 +24,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { Locale } from "@/components/internationalization/config"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 
 import { deleteCertificateConfig } from "./actions"
@@ -37,6 +38,8 @@ export function CertificateConfigList({
   const { toast } = useToast()
   const { locale } = useLocale()
   const [loading, setLoading] = useState<string | null>(null)
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.exams?.certificates?.config
 
   async function handleDelete(id: string) {
     setLoading(id)
@@ -44,10 +47,10 @@ export function CertificateConfigList({
     setLoading(null)
 
     if (result.success) {
-      toast({ title: "Template deleted" })
+      toast({ title: t?.toast?.deleted ?? "Template deleted" })
     } else if (!result.success) {
       toast({
-        title: "Error",
+        title: t?.toast?.error ?? "Error",
         description: result.error,
         variant: "destructive",
       })
@@ -69,11 +72,11 @@ export function CertificateConfigList({
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Name</TableHead>
-          <TableHead>Type</TableHead>
-          <TableHead>Style</TableHead>
-          <TableHead>Issued</TableHead>
-          <TableHead>Created</TableHead>
+          <TableHead>{t?.headers?.name ?? "Name"}</TableHead>
+          <TableHead>{t?.headers?.type ?? "Type"}</TableHead>
+          <TableHead>{t?.headers?.style ?? "Style"}</TableHead>
+          <TableHead>{t?.headers?.issued ?? "Issued"}</TableHead>
+          <TableHead>{t?.headers?.created ?? "Created"}</TableHead>
           <TableHead className="w-[50px]" />
         </TableRow>
       </TableHeader>

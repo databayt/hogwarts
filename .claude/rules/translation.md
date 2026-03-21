@@ -39,6 +39,7 @@ For user-generated DB content (announcements, subjects, student names, etc.):
 - Hardcode button text: `<Button>Save</Button>`
 - Hardcode validation messages: `z.string().min(1, "Required")`
 - Use bilingual field names: `titleAr`, `nameEn`, `descriptionAr`
+- Hardcode placeholder text: `<Input placeholder="Enter name" />`
 
 ## ALWAYS Do These
 
@@ -49,6 +50,7 @@ For user-generated DB content (announcements, subjects, student names, etc.):
 - Use ErrorHelper or error codes in server actions: `return { success: false, errorCode: "NOT_AUTHENTICATED" }`
 - Pass `lang` (current locale) when creating/updating content: `prepareContentData(data, lang)`
 - Use `getDisplayText()` when displaying DB content that may be in a different language
+- Use dictionary for placeholders: `<Input placeholder={d.form.namePlaceholder} />`
 - Include `lang` field in Prisma creates for content models
 
 ## Pattern: Server Action Errors (Error Code Pattern)

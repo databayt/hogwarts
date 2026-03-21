@@ -31,6 +31,8 @@ export async function GET(
     }
 
     const { schoolId } = await getTenantContext()
+
+    // Non-DEVELOPER roles must have schoolId for multi-tenant safety
     if (!schoolId && session.user.role !== "DEVELOPER") {
       return NextResponse.json(
         { error: "School context required" },
@@ -43,7 +45,7 @@ export async function GET(
     const course = await db.streamCourse.findFirst({
       where: {
         id: courseId,
-        schoolId: schoolId || undefined,
+        ...(schoolId ? { schoolId } : {}),
       },
       include: {
         category: true,

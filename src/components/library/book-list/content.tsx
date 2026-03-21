@@ -9,11 +9,11 @@ import { Button } from "@/components/ui/button"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { BookCover } from "../book-cover"
-import type { Book } from "../types"
+import type { BookListItem } from "../types"
 
 interface Props {
   title: string
-  books: Book[]
+  books: BookListItem[]
   containerClassName?: string
   showViewAll?: boolean
 }

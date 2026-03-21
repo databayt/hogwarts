@@ -700,8 +700,8 @@ function isTeacherAvailable(
         if (periodIndex > 0) {
           const prevPeriod = config.periodsPerDay[periodIndex - 1]
           if (daySchedule.includes(prevPeriod)) {
-            // Would create consecutive - check if same room
-            // For now, allow it but flag
+            // Back-to-back detected — reject this slot
+            return false
           }
         }
       }

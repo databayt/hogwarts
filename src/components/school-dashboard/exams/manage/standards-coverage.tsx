@@ -15,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface StandardCoverage {
   id: string
@@ -30,6 +31,8 @@ interface StandardsCoverageProps {
 }
 
 export function StandardsCoverage({ examId }: StandardsCoverageProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.exams?.manage?.standards?.headers
   const [loading, setLoading] = useState(true)
   const [standards, setStandards] = useState<StandardCoverage[]>([])
   const [totalStandards, setTotalStandards] = useState(0)
@@ -114,11 +117,11 @@ export function StandardsCoverage({ examId }: StandardsCoverageProps) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Status</TableHead>
-            <TableHead>Code</TableHead>
-            <TableHead>Standard</TableHead>
-            <TableHead>Subject</TableHead>
-            <TableHead>Questions</TableHead>
+            <TableHead>{t?.status ?? "Status"}</TableHead>
+            <TableHead>{t?.code ?? "Code"}</TableHead>
+            <TableHead>{t?.standard ?? "Standard"}</TableHead>
+            <TableHead>{t?.subject ?? "Subject"}</TableHead>
+            <TableHead>{t?.questions ?? "Questions"}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

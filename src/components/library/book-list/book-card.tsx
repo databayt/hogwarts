@@ -7,10 +7,10 @@ import Image from "next/image"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 
-import type { Book } from "../types"
+import type { BookListItem } from "../types"
 
 interface Props {
-  book: Book
+  book: BookListItem
 }
 
 export default function BookCard({ book }: Props) {

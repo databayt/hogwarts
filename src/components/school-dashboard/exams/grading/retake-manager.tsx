@@ -48,6 +48,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 
 import { applyRetakePenalty } from "./cgpa-calculator"
@@ -105,6 +106,8 @@ export function RetakeManager({
   dictionary,
 }: RetakeManagerProps) {
   const { locale } = useLocale()
+  const { dictionary: dict } = useDictionary()
+  const t = dict?.school?.exams?.grading?.retake
   const d = dictionary?.retake
 
   // Calculate stats
@@ -215,7 +218,7 @@ export function RetakeManager({
       {hasReachedMax && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Maximum Retakes Reached</AlertTitle>
+          <AlertTitle>{t?.maxReached ?? "Maximum Retakes Reached"}</AlertTitle>
           <AlertDescription>
             You have used all available retake attempts for this exam. Your
             final score will be calculated based on the &ldquo;{config.policy}
@@ -236,7 +239,7 @@ export function RetakeManager({
           {attempts.length === 0 ? (
             <div className="text-muted-foreground flex flex-col items-center justify-center py-8">
               <Clock className="mb-2 h-8 w-8" />
-              <p>{d?.noAttempts ?? "No attempts yet"}</p>
+              <p>{t?.noAttempts ?? d?.noAttempts ?? "No attempts yet"}</p>
             </div>
           ) : (
             <Table>

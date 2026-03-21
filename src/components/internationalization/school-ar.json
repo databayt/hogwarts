@@ -1660,6 +1660,532 @@
       },
       "placeholders": {
         "exampleNationalDay": "مثال: اليوم الوطني"
+      },
+      "substitutions": {
+        "title": "إدارة الاستبدال",
+        "description": "إدارة غياب المعلمين وتعيين البدلاء",
+        "reportAbsence": "الإبلاغ عن غياب",
+        "refresh": "تحديث",
+        "searchPlaceholder": "البحث عن معلمين أو مواد...",
+        "filterByStatus": "تصفية حسب الحالة",
+        "allStatuses": "جميع الحالات",
+        "pending": "قيد الانتظار",
+        "approved": "موافق عليه",
+        "confirmed": "مؤكد",
+        "declined": "مرفوض",
+        "completed": "مكتمل",
+        "cancelled": "ملغى",
+        "tabAbsences": "حالات الغياب",
+        "tabSubstitutions": "الاستبدالات",
+        "noAbsences": "لا يوجد غياب",
+        "noAbsencesDesc": "لم يتم الإبلاغ عن أي غياب للمعلمين بعد",
+        "noRecords": "لا توجد سجلات استبدال",
+        "noRecordsDesc": "لم يتم تعيين أي بدلاء بعد",
+        "substitutesAssigned": "البدلاء المعيّنون:",
+        "more": "+{count} المزيد",
+        "reportTitle": "الإبلاغ عن غياب معلم",
+        "reportDescription": "الإبلاغ عن غياب معلم لتمكين تعيين بديل",
+        "teacher": "المعلم",
+        "selectTeacher": "اختر معلماً",
+        "absenceType": "نوع الغياب",
+        "startDate": "تاريخ البداية",
+        "endDate": "تاريخ النهاية",
+        "pickDate": "اختر تاريخاً",
+        "reason": "السبب (اختياري)",
+        "reasonPlaceholder": "تفاصيل إضافية عن الغياب...",
+        "cancel": "إلغاء",
+        "submitting": "جارٍ الإرسال...",
+        "fillRequired": "يرجى ملء جميع الحقول المطلوبة",
+        "endAfterStart": "تاريخ النهاية يجب أن يكون بعد تاريخ البداية",
+        "absenceReported": "تم الإبلاغ عن الغياب بنجاح",
+        "reportFailed": "فشل الإبلاغ عن الغياب",
+        "findSubstitute": "البحث عن بديل",
+        "noAvailable": "لا يوجد بدلاء متاحون",
+        "noAvailableDesc": "لا يوجد معلمون متاحون لهذه الحصة",
+        "workload": "عبء العمل",
+        "periodsPerWeek": "حصص/أسبوع",
+        "preferred": "مفضّل",
+        "subjectMatch": "تطابق المادة",
+        "assigning": "جارٍ التعيين...",
+        "assignSubstitute": "تعيين بديل",
+        "findFailed": "فشل البحث عن بدلاء",
+        "assignSuccess": "تم تعيين البديل بنجاح",
+        "assignFailed": "فشل تعيين البديل",
+        "confirm": "تأكيد",
+        "decline": "رفض",
+        "cancelSubstitution": "إلغاء الاستبدال",
+        "declineReason": "يرجى تقديم سبب الرفض:",
+        "declineReasonLabel": "سبب الرفض:",
+        "confirmedOn": "تم التأكيد في",
+        "confirmSuccess": "تم تأكيد الاستبدال",
+        "confirmFailed": "فشل تأكيد الاستبدال",
+        "declineSuccess": "تم رفض الاستبدال",
+        "declineFailed": "فشل رفض الاستبدال",
+        "cancelConfirm": "هل أنت متأكد من إلغاء هذا الاستبدال؟",
+        "cancelSuccess": "تم إلغاء الاستبدال",
+        "cancelFailed": "فشل إلغاء الاستبدال",
+        "loadFailed": "فشل تحميل البيانات"
+      },
+      "templatesUi": {
+        "title": "قوالب الجدول الدراسي",
+        "description": "حفظ وإعادة استخدام تكوينات الجدول عبر الفصول الدراسية",
+        "createTemplate": "إنشاء قالب",
+        "noTemplates": "لا توجد قوالب بعد",
+        "noTemplatesDesc": "أنشئ أول قالب من جدول فصل دراسي موجود",
+        "default": "افتراضي",
+        "slots": "الحصص",
+        "classes": "الفصول",
+        "teachers": "المعلمون",
+        "version": "الإصدار",
+        "from": "من",
+        "createdBy": "أنشأه",
+        "apply": "تطبيق",
+        "setAsDefault": "تعيين كافتراضي",
+        "delete": "حذف",
+        "singleWeek": "أسبوع واحد",
+        "biWeekly": "كل أسبوعين",
+        "rotating": "دوري",
+        "createTitle": "إنشاء قالب",
+        "createDescription": "حفظ الجدول الحالي كقالب قابل لإعادة الاستخدام",
+        "templateName": "اسم القالب",
+        "templateNamePlaceholder": "مثال: جدول خريف 2024",
+        "templateDescription": "الوصف (اختياري)",
+        "templateDescPlaceholder": "وصف مختصر لهذا القالب...",
+        "sourceTerm": "الفصل المصدر",
+        "selectTerm": "اختر فصلاً",
+        "creating": "جارٍ الإنشاء...",
+        "nameRequired": "اسم القالب مطلوب",
+        "createSuccess": "تم إنشاء القالب \"{name}\" بنجاح",
+        "createFailed": "فشل إنشاء القالب",
+        "defaultSuccess": "\"{name}\" هو الآن القالب الافتراضي",
+        "defaultFailed": "فشل تعيين القالب الافتراضي",
+        "deleteConfirm": "حذف القالب \"{name}\"؟",
+        "deleteSuccess": "تم حذف القالب \"{name}\"",
+        "deleteFailed": "فشل حذف القالب",
+        "loadFailed": "فشل تحميل القوالب",
+        "applyTitle": "تطبيق القالب: {name}",
+        "applyDescription": "تطبيق هذا القالب على فصل دراسي آخر",
+        "templateContents": "محتويات القالب",
+        "targetTerm": "الفصل المستهدف",
+        "clearExisting": "مسح الجدول الحالي",
+        "clearDescription": "إزالة جميع الحصص الموجودة في الفصل المستهدف قبل التطبيق",
+        "warning": "تحذير",
+        "clearWarning": "سيتم حذف جميع حصص الجدول الموجودة في الفصل المستهدف نهائياً",
+        "applying": "جارٍ التطبيق...",
+        "applyTemplate": "تطبيق القالب",
+        "selectTarget": "يرجى اختيار فصل مستهدف",
+        "applySuccess": "تم تطبيق القالب",
+        "applyFailed": "فشل تطبيق القالب",
+        "cancel": "إلغاء",
+        "error": "خطأ",
+        "success": "نجاح",
+        "deleted": "تم الحذف"
+      },
+      "importExport": {
+        "title": "استيراد/تصدير الجدول",
+        "description": "استيراد بيانات الجدول من ملف أو تصدير الجدول الحالي",
+        "button": "استيراد/تصدير",
+        "tabExport": "تصدير",
+        "tabImport": "استيراد",
+        "exportFormat": "صيغة التصدير",
+        "viewType": "نوع العرض",
+        "pdfDocument": "مستند PDF",
+        "excelSpreadsheet": "جدول بيانات Excel",
+        "csvFile": "ملف CSV",
+        "pngImage": "صورة PNG",
+        "calendarICal": "تقويم (iCal)",
+        "classView": "عرض الفصل",
+        "teacherView": "عرض المعلم",
+        "roomView": "عرض الغرفة",
+        "studentView": "عرض الطالب",
+        "includeSubstitutes": "تضمين المعلمين البدلاء",
+        "includeNotes": "تضمين الملاحظات والتعليقات",
+        "exporting": "جارٍ التصدير... {percent}%",
+        "importFormat": "صيغة الاستيراد",
+        "excelXlsx": "Excel (.xlsx)",
+        "csvCsv": "CSV (.csv)",
+        "jsonJson": "JSON (.json)",
+        "selectFile": "اختر ملفاً",
+        "template": "قالب",
+        "overwriteExisting": "استبدال الجدول الحالي",
+        "validateConflicts": "التحقق من التعارضات",
+        "previewRows": "معاينة (أول 5 صفوف)",
+        "processing": "جارٍ المعالجة... {percent}%",
+        "fileSelected": "الملف المحدد: {name} ({size} كيلوبايت)",
+        "cancel": "إلغاء",
+        "export": "تصدير",
+        "import": "استيراد",
+        "exportSuccess": "تم التصدير بنجاح",
+        "exportSuccessDesc": "تم تصدير الجدول بصيغة {format}",
+        "exportFailed": "فشل التصدير",
+        "exportFailedDesc": "فشل تصدير الجدول",
+        "importSuccess": "تم الاستيراد بنجاح",
+        "importSuccessDesc": "تم استيراد {count} حصة",
+        "importFailed": "فشل الاستيراد",
+        "importFailedDesc": "فشل استيراد الجدول",
+        "previewFailed": "فشل المعاينة",
+        "previewFailedDesc": "فشل معاينة ملف الاستيراد"
+      },
+      "visualBuilder": {
+        "title": "منشئ الجدول المرئي",
+        "description": "اسحب المواد إلى خانات الوقت لإنشاء جدولك الأسبوعي لـ {className}",
+        "clearAll": "مسح الكل",
+        "export": "تصدير",
+        "import": "استيراد",
+        "save": "حفظ",
+        "saving": "جارٍ الحفظ...",
+        "subjects": "المواد",
+        "dragSubjects": "اسحب المواد إلى الجدول",
+        "statistics": "الإحصائيات",
+        "fillRate": "نسبة الملء:",
+        "periodsFilled": "الحصص المملوءة:",
+        "hoursPerSubject": "ساعات لكل مادة:",
+        "time": "الوقت",
+        "dropSubject": "أفلت المادة هنا",
+        "clearConfirm": "هل أنت متأكد من مسح الجدول بالكامل؟",
+        "sunday": "الأحد",
+        "monday": "الاثنين",
+        "tuesday": "الثلاثاء",
+        "wednesday": "الأربعاء",
+        "thursday": "الخميس",
+        "friday": "الجمعة",
+        "saturday": "السبت",
+        "added": "تمت الإضافة إلى الجدول",
+        "removed": "تمت الإزالة من الجدول",
+        "saved": "تم حفظ الجدول بنجاح",
+        "saveFailed": "فشل حفظ الجدول",
+        "imported": "تم استيراد الجدول بنجاح",
+        "importFailed": "فشل استيراد الجدول",
+        "cleared": "تم مسح الجدول"
+      },
+      "slotEditor": {
+        "editTitle": "تعديل حصة الجدول",
+        "addTitle": "إضافة حصة جدول",
+        "description": "تكوين تفاصيل حصة الجدول",
+        "validationError": "خطأ في التحقق",
+        "tabBasicInfo": "المعلومات الأساسية",
+        "tabAssignment": "التعيين",
+        "tabOptions": "الخيارات",
+        "dayOfWeek": "يوم الأسبوع",
+        "selectDay": "اختر يوماً",
+        "period": "الحصة",
+        "selectPeriod": "اختر حصة",
+        "class": "الفصل",
+        "selectClass": "اختر فصلاً",
+        "subject": "المادة",
+        "selectSubject": "اختر مادة",
+        "teacher": "المعلم",
+        "selectTeacher": "اختر معلماً",
+        "classroom": "الفصل الدراسي",
+        "selectClassroom": "اختر فصلاً دراسياً",
+        "occupied": "مشغول",
+        "students": "{count} طالب",
+        "hoursRequired": "{count} ساعات/أسبوع مطلوبة",
+        "teaches": "يدرّس: {subjects}",
+        "substituteTeacher": "معلم بديل",
+        "substituteDescription": "تعيين معلم بديل لهذه الحصة",
+        "selectSubstitute": "اختر بديلاً",
+        "recurringSlot": "حصة متكررة",
+        "recurringDescription": "إنشاء هذه الحصة لعدة أسابيع",
+        "numberOfWeeks": "عدد الأسابيع",
+        "weeksDescription": "كم أسبوعاً يجب أن تتكرر هذه الحصة؟",
+        "notes": "ملاحظات",
+        "notesPlaceholder": "أضف أي ملاحظات إضافية...",
+        "notesDescription": "ملاحظات اختيارية حول هذه الحصة",
+        "cancel": "إلغاء",
+        "saving": "جارٍ الحفظ...",
+        "update": "تحديث",
+        "create": "إنشاء",
+        "saveFailed": "فشل حفظ الحصة. يرجى المحاولة مرة أخرى.",
+        "periodRequired": "الحصة مطلوبة",
+        "classRequired": "الفصل مطلوب",
+        "subjectRequired": "المادة مطلوبة",
+        "teacherRequired": "المعلم مطلوب",
+        "classroomRequired": "الفصل الدراسي مطلوب",
+        "suggestFreeSlots": "حصص شاغرة مقترحة",
+        "suggest": "اقتراح",
+        "saveSlot": "حفظ الحصة"
+      },
+      "analyticsReports": {
+        "totalSlots": "إجمالي الحصص",
+        "acrossWorkingDays": "عبر {count} أيام عمل",
+        "utilizationRate": "معدل الاستخدام",
+        "roomTeacherEfficiency": "كفاءة الغرف والمعلمين",
+        "activeConflicts": "التعارضات النشطة",
+        "conflictsDetected": "تم اكتشاف تعارضات في الجدولة",
+        "resolve": "حل",
+        "avgWorkload": "متوسط عبء العمل",
+        "perTeacher": "متوسط لكل معلم",
+        "optimal": "مثالي",
+        "good": "جيد",
+        "low": "منخفض",
+        "tabRoomUtilization": "استخدام الغرف",
+        "tabTeacherWorkload": "عبء عمل المعلمين",
+        "tabSubjectDistribution": "توزيع المواد",
+        "roomUtilizationTitle": "تحليل استخدام الغرف",
+        "roomUtilizationDesc": "نسبة الوقت الذي تكون فيه كل غرفة مشغولة",
+        "topRooms": "أكثر الغرف استخداماً",
+        "dayDistribution": "التوزيع اليومي",
+        "teacherWorkloadTitle": "توزيع عبء عمل المعلمين",
+        "teacherWorkloadDesc": "الساعات الأسبوعية لكل معلم مقابل الحدود الموصى بها",
+        "actualHours": "الساعات الفعلية",
+        "maxLimit": "الحد الأقصى",
+        "subjectHoursTitle": "توزيع ساعات المواد",
+        "subjectHoursDesc": "إجمالي الساعات المخصصة لكل مادة",
+        "subjectCoverageTitle": "تغطية المواد",
+        "subjectCoverageDesc": "الفصول التي تغطيها كل مادة",
+        "optimizationSuggestions": "اقتراحات التحسين",
+        "resolveConflicts": "حل {count} تعارضات في الجدولة",
+        "optimizeRooms": "تحسين استخدام {count} غرف غير مستغلة بالكامل",
+        "rebalanceWorkload": "إعادة توازن عبء العمل لـ {count} معلمين"
+      },
+      "configDialog": {
+        "settingsTitle": "الإعدادات",
+        "settingsDescription": "تكوين معلومات الفصل الخاص بك.",
+        "school": "المدرسة",
+        "searchSchool": "البحث عن مدرسة...",
+        "searchSchoolName": "البحث عن اسم المدرسة...",
+        "selectGrade": "اختر الصف",
+        "selectClass": "اختر الفصل",
+        "grade": "الصف",
+        "class": "الفصل",
+        "gradeN": "الصف {n}",
+        "classN": "الفصل {n}",
+        "lunchAfterPeriod": "الغداء بعد الحصة",
+        "selectLunchPeriod": "اختر حصة الغداء",
+        "afterPeriodN": "بعد الحصة {n}",
+        "showAllSubjects": "عرض جميع المواد في اختيار المادة",
+        "showFallback": "عرض البيانات الاحتياطية عند عدم توفر البيانات الرئيسية",
+        "save": "حفظ",
+        "searching": "جارٍ البحث...",
+        "noResults": "لا توجد نتائج",
+        "noResultsFound": "لم يتم العثور على نتائج",
+        "noClassesFound": "لا توجد فصول للصف المحدد",
+        "loadSchoolsFailed": "فشل تحميل قائمة المدارس",
+        "loadClassesFailed": "فشل تحميل قائمة الفصول"
+      },
+      "conflictsDrawer": {
+        "title": "التعارضات",
+        "loading": "جارٍ التحميل...",
+        "noConflicts": "لا توجد تعارضات",
+        "teacher": "المعلم",
+        "room": "الغرفة",
+        "suggestForTeacher": "اقتراح للمعلم",
+        "suggestForRoom": "اقتراح للغرفة",
+        "suggestions": "الاقتراحات:",
+        "apply": "تطبيق"
+      },
+      "timetableNav": {
+        "timetable": "الجدول",
+        "lunch": "الغداء",
+        "calendar": "التقويم",
+        "settings": "الإعدادات",
+        "menu": "القائمة",
+        "toggleNav": "تبديل قائمة التنقل"
+      },
+      "timetableHeader": {
+        "term": "الفصل",
+        "view": "العرض",
+        "selectClass": "اختر فصلاً",
+        "selectTeacher": "اختر معلماً",
+        "classView": "الفصل",
+        "teacherViewLabel": "المعلم",
+        "scheduleSettings": "إعدادات الجدولة",
+        "editSlots": "تعديل الحصص",
+        "conflicts": "{count} تعارض(ات)",
+        "allSubjects": "جميع المواد",
+        "fallbackData": "بيانات احتياطية"
+      },
+      "teacherViewUi": {
+        "title": "جدولي التدريسي",
+        "profileNotLinked": "ملف المعلم غير مرتبط بحسابك",
+        "daysPerWeek": "أيام/أسبوع",
+        "periodsPerWeek": "حصص/أسبوع",
+        "classes": "فصول",
+        "currentlyTeaching": "يُدرّس حالياً",
+        "nextClass": "الحصة التالية",
+        "allClassrooms": "جميع الفصول الدراسية",
+        "allSubjects": "جميع المواد",
+        "noClasses": "لا توجد حصص مجدولة لليوم ({day})",
+        "break": "استراحة",
+        "freePeriod": "حصة فارغة"
+      },
+      "studentViewUi": {
+        "title": "جدول فصلي",
+        "loading": "جارٍ التحميل...",
+        "currentClass": "الحصة الحالية",
+        "nextUp": "التالي",
+        "noClasses": "لا توجد حصص مجدولة لليوم",
+        "break": "استراحة",
+        "freePeriod": "حصة فارغة"
+      },
+      "adminViewUi": {
+        "selectClassroom": "اختر فصلاً دراسياً",
+        "selectTeacher": "اختر معلماً",
+        "search": "بحث...",
+        "noResults": "لا توجد نتائج.",
+        "periodsPerWeek": "{count} حصص/أسبوع",
+        "classCount": "{count} فصول"
+      },
+      "subjectSelector": {
+        "title": "تعديل المادة",
+        "selectAvailable": "اختر من المواد المتاحة",
+        "chooseSubject": "اختر مادة",
+        "useCustom": "استخدام اسم مادة مخصص",
+        "customPlaceholder": "أدخل اسم المادة المخصص",
+        "allSubjectsShown": "جميع المواد معروضة في القائمة المنسدلة",
+        "customNote": "يمكنك أيضاً إدخال اسم مادة مخصص",
+        "cancel": "إلغاء",
+        "save": "حفظ"
+      },
+      "aboutInfo": {
+        "title": "حول",
+        "clickSubject": "انقر على خلية المادة لإدخال اسم المعلم.",
+        "useSettings": "استخدم الإعدادات لتغيير المدرسة والصف والفصل.",
+        "dataSource": "يتم تحميل البيانات من واجهة NEIS أو ملف JSON محلي (وضع المحاكاة).",
+        "truncation": "قد يتم اختصار أسماء المعلمين؛ يرجى التعديل يدوياً عند الحاجة.",
+        "printHint": "اضغط Ctrl/Cmd + P للطباعة بتنسيق نظيف.",
+        "localStorage": "يتم تخزين مدخلاتك محلياً في المتصفح.",
+        "madeBy": "صنع بواسطة"
+      },
+      "substitutions": {
+        "title": "إدارة الاستبدال",
+        "description": "إدارة غياب المعلمين وتعيين البدلاء",
+        "tabs": {
+          "active": "النشطة",
+          "history": "السجل",
+          "absences": "الغياب"
+        },
+        "buttons": {
+          "reportAbsence": "الإبلاغ عن غياب",
+          "findSubstitute": "البحث عن بديل",
+          "assign": "تعيين",
+          "cancel": "إلغاء",
+          "save": "حفظ",
+          "delete": "حذف",
+          "approve": "موافقة",
+          "reject": "رفض",
+          "viewDetails": "عرض التفاصيل",
+          "exportReport": "تصدير التقرير"
+        },
+        "dialog": {
+          "reportAbsence": "الإبلاغ عن غياب معلم",
+          "reportAbsenceDescription": "أبلغ عن غياب معلم لتمكين تعيين بديل",
+          "findSubstitute": "البحث عن بديل",
+          "findSubstituteDescription": "اختر معلماً بديلاً للحصة",
+          "assignSubstitute": "تعيين بديل",
+          "confirmCancel": "إلغاء الاستبدال",
+          "confirmDelete": "حذف السجل"
+        },
+        "form": {
+          "teacher": "المعلم",
+          "selectTeacher": "اختر معلماً",
+          "date": "التاريخ",
+          "pickDate": "اختر التاريخ",
+          "startDate": "تاريخ البداية",
+          "endDate": "تاريخ النهاية",
+          "startTime": "وقت البداية",
+          "endTime": "وقت النهاية",
+          "reason": "السبب (اختياري)",
+          "reasonPlaceholder": "تفاصيل إضافية عن الغياب...",
+          "notes": "ملاحظات",
+          "substitute": "المعلم البديل",
+          "class": "الفصل",
+          "subject": "المادة",
+          "period": "الحصة",
+          "absenceType": "نوع الغياب"
+        },
+        "reasons": {
+          "sick": "إجازة مرضية",
+          "personal": "إجازة شخصية",
+          "training": "تدريب",
+          "emergency": "طوارئ",
+          "other": "أخرى"
+        },
+        "status": {
+          "pending": "قيد الانتظار",
+          "approved": "معتمد",
+          "rejected": "مرفوض",
+          "covered": "مغطى",
+          "uncovered": "غير مغطى",
+          "cancelled": "ملغى",
+          "confirmed": "مؤكد",
+          "declined": "مرفوض",
+          "completed": "مكتمل"
+        },
+        "table": {
+          "teacher": "المعلم",
+          "date": "التاريخ",
+          "time": "الوقت",
+          "reason": "السبب",
+          "status": "الحالة",
+          "substitute": "البديل",
+          "actions": "الإجراءات"
+        },
+        "toast": {
+          "absenceReported": "تم الإبلاغ عن الغياب بنجاح",
+          "substituteAssigned": "تم تعيين البديل بنجاح",
+          "substitutionCancelled": "تم إلغاء الاستبدال",
+          "recordDeleted": "تم حذف السجل",
+          "approved": "تمت الموافقة على الاستبدال",
+          "rejected": "تم رفض الاستبدال",
+          "confirmed": "تم تأكيد الاستبدال",
+          "declined": "تم رفض الاستبدال",
+          "error": "حدث خطأ",
+          "errorRequiredFields": "يرجى ملء جميع الحقول المطلوبة",
+          "errorEndDate": "يجب أن يكون تاريخ النهاية بعد تاريخ البداية",
+          "errorReportAbsence": "فشل في الإبلاغ عن الغياب",
+          "errorFindSubstitutes": "فشل في البحث عن بدلاء",
+          "errorAssignSubstitute": "فشل في تعيين البديل",
+          "errorConfirm": "فشل في تأكيد الاستبدال",
+          "errorDecline": "فشل في رفض الاستبدال",
+          "errorCancel": "فشل في إلغاء الاستبدال",
+          "errorLoadData": "فشل في تحميل البيانات",
+          "success": "نجاح",
+          "error_title": "خطأ"
+        },
+        "empty": {
+          "noActive": "لا توجد استبدالات نشطة",
+          "noHistory": "لا يوجد سجل استبدالات",
+          "noAbsences": "لا يوجد غياب",
+          "noAbsencesDescription": "لم يتم الإبلاغ عن أي غياب للمعلمين بعد",
+          "noRecords": "لا توجد سجلات استبدال",
+          "noRecordsDescription": "لم يتم تعيين أي بدلاء بعد",
+          "noSubstitutes": "لا يوجد بدلاء متاحون",
+          "noSubstitutesDescription": "لا يوجد معلمون متاحون لهذه الحصة"
+        },
+        "confirm": {
+          "cancelMessage": "هل أنت متأكد من إلغاء هذا الاستبدال؟",
+          "deleteMessage": "لا يمكن التراجع عن هذا الإجراء.",
+          "declinePrompt": "يرجى تقديم سبب الرفض:"
+        },
+        "finder": {
+          "workload": "عبء العمل",
+          "periodsPerWeek": "حصص/أسبوع",
+          "preferred": "مفضل",
+          "subjectMatch": "تطابق المادة",
+          "assigning": "جارٍ التعيين...",
+          "assignSubstitute": "تعيين بديل"
+        },
+        "list": {
+          "confirm": "تأكيد",
+          "decline": "رفض",
+          "cancelSubstitution": "إلغاء الاستبدال",
+          "declineReason": "سبب الرفض:",
+          "confirmedOn": "تم التأكيد في",
+          "substitutesAssigned": "البدلاء المعينون:",
+          "more": "+{count} إضافي"
+        },
+        "content": {
+          "refresh": "تحديث",
+          "newAbsence": "الإبلاغ عن غياب",
+          "search": "البحث عن معلمين أو مواد...",
+          "filterByStatus": "تصفية حسب الحالة",
+          "allStatuses": "جميع الحالات",
+          "absences": "الغياب",
+          "records": "الاستبدالات",
+          "submitting": "جارٍ الإرسال..."
+        }
       }
     },
     "announcements": {
@@ -1995,6 +2521,7 @@
       "correctAnswer": "الإجابة الصحيحة",
       "modelAnswer": "الإجابة النموذجية",
       "backToMocks": "العودة للاختبارات التجريبية",
+      "typeAnswer": "اكتب إجابتك...",
       "of": "من",
       "dashboard": {
         "title": "إدارة الامتحانات",
@@ -2121,7 +2648,768 @@
         "totalMarks": "الدرجة الكلية",
         "createTemplate": "إنشاء قالب",
         "templateDescription": "إنشاء قالب امتحان جديد"
-      }
+      },
+      "certificates": {
+        "title": "الشهادات",
+        "templates": "القوالب",
+        "activeTemplates": "القوالب النشطة",
+        "active": "نشط",
+        "tabs": { "certificates": "الشهادات", "templates": "القوالب" },
+        "noCertificates": "لم يتم إصدار شهادات بعد",
+        "batchIssue": {
+          "title": "إصدار شهادات جماعي",
+          "description": "إصدار شهادات لجميع الطلاب المؤهلين",
+          "selectTemplate": "اختر القالب",
+          "issued": "تم الإصدار",
+          "skipped": "تم التخطي",
+          "failed": "فشل",
+          "complete": "تم إصدار الشهادات!",
+          "error": "فشل إصدار الشهادات"
+        },
+        "list": {
+          "headers": {
+            "number": "رقم الشهادة",
+            "student": "الطالب",
+            "exam": "الامتحان",
+            "score": "الدرجة",
+            "type": "النوع",
+            "status": "الحالة",
+            "issued": "تاريخ الإصدار"
+          },
+          "toast": {
+            "shared": "تم مشاركة الشهادة",
+            "revoked": "تم إلغاء الشهادة",
+            "error": "خطأ"
+          }
+        },
+        "config": {
+          "toast": {
+            "updated": "تم تحديث القالب",
+            "created": "تم إنشاء القالب",
+            "deleted": "تم حذف القالب",
+            "error": "خطأ"
+          },
+          "form": {
+            "templateName": "اسم القالب",
+            "certificateType": "نوع الشهادة",
+            "types": {
+              "achievement": "إنجاز",
+              "completion": "إتمام",
+              "participation": "مشاركة",
+              "merit": "تفوق (أعلى 10%)",
+              "excellence": "امتياز (أعلى 3%)",
+              "custom": "مخصص"
+            },
+            "description": "الوصف",
+            "descriptionPlaceholder": "وصف اختياري لهذا القالب",
+            "style": "النمط",
+            "styles": {
+              "elegant": "أنيق",
+              "modern": "عصري",
+              "classic": "كلاسيكي",
+              "minimal": "بسيط"
+            },
+            "orientation": "الاتجاه",
+            "orientations": { "landscape": "أفقي", "portrait": "عمودي" },
+            "borderStyle": "نمط الإطار",
+            "borders": {
+              "gold": "ذهبي",
+              "silver": "فضي",
+              "blue": "أزرق",
+              "custom": "مخصص"
+            },
+            "titleEn": "نص العنوان (إنجليزي)",
+            "titleAr": "نص العنوان (عربي)",
+            "bodyEn": "قالب النص (إنجليزي)",
+            "bodyAr": "قالب النص (عربي)",
+            "bodyPlaceholder": "استخدم العناصر النائبة: {{studentName}}، {{score}}...",
+            "minPercentage": "الحد الأدنى للنسبة",
+            "minGrade": "الحد الأدنى للدرجة",
+            "topPercentile": "أعلى نسبة مئوية (%)",
+            "signatures": "التوقيعات",
+            "signatureName": "الاسم",
+            "signatureTitle": "المسمى الوظيفي",
+            "useSchoolLogo": "استخدام شعار المدرسة",
+            "enableVerification": "تفعيل التحقق",
+            "verificationPrefix": "بادئة التحقق",
+            "expiryMonths": "الصلاحية (أشهر)",
+            "expiryPlaceholder": "اتركه فارغاً للدوام"
+          },
+          "headers": {
+            "name": "الاسم",
+            "type": "النوع",
+            "style": "النمط",
+            "issued": "الصادرة",
+            "created": "تاريخ الإنشاء"
+          }
+        }
+      },
+      "grading": {
+        "title": "إعداد التقييم",
+        "systems": {
+          "percentage": "نسبة مئوية (0-100%)",
+          "gpa4": "مقياس GPA 4.0",
+          "gpa5": "مقياس GPA 5.0",
+          "letter": "درجات حرفية (A-F)",
+          "cumulative": "المعدل التراكمي",
+          "cce": "التقييم الشامل والمستمر (CCE)",
+          "cbse": "نمط CBSE",
+          "icse": "نمط ICSE"
+        },
+        "retakePolicy": {
+          "best": "أفضل درجة",
+          "latest": "آخر درجة",
+          "average": "متوسط الدرجات",
+          "bestDesc": "أعلى درجة من جميع المحاولات",
+          "latestDesc": "درجة أحدث محاولة",
+          "averageDesc": "متوسط جميع المحاولات"
+        },
+        "toast": {
+          "success": "نجاح",
+          "saved": "تم حفظ إعدادات التقييم بنجاح",
+          "error": "خطأ",
+          "saveFailed": "فشل حفظ الإعدادات"
+        },
+        "form": {
+          "selectSystem": "اختر نظام التقييم",
+          "selectGpaScale": "اختر مقياس GPA",
+          "midterm": "نصفي",
+          "final": "نهائي",
+          "quiz": "اختبار قصير",
+          "assignment": "واجب",
+          "retakeMethod": "طريقة احتساب الإعادة",
+          "selectRetake": "اختر سياسة الإعادة"
+        },
+        "retake": {
+          "maxReached": "تم بلوغ الحد الأقصى للإعادة",
+          "noAttempts": "لا توجد محاولات بعد"
+        }
+      },
+      "progress": {
+        "title": "تقارير التقدم",
+        "active": "نشط",
+        "frequency": {
+          "weekly": "أسبوعي",
+          "biweekly": "كل أسبوعين",
+          "monthly": "شهري",
+          "termEnd": "نهاية الفصل"
+        },
+        "recipients": {
+          "guardians": "أولياء الأمور",
+          "students": "الطلاب",
+          "teachers": "المعلمون"
+        },
+        "channels": {
+          "email": "بريد إلكتروني",
+          "inApp": "إشعار داخلي",
+          "sms": "رسالة نصية"
+        },
+        "toast": {
+          "success": "نجاح",
+          "error": "خطأ",
+          "unexpected": "حدث خطأ غير متوقع"
+        },
+        "form": {
+          "allClasses": "جميع الفصول",
+          "reportContents": "محتويات التقرير"
+        },
+        "schedule": {
+          "noSchedules": "لا توجد جداول",
+          "title": "جداول التقارير",
+          "headers": {
+            "class": "الفصل",
+            "frequency": "التكرار",
+            "status": "الحالة",
+            "lastRun": "آخر تشغيل",
+            "nextRun": "التشغيل التالي",
+            "reports": "التقارير",
+            "actions": "الإجراءات"
+          },
+          "active": "نشط",
+          "inactive": "غير نشط",
+          "toast": {
+            "generated": "تم إنشاء التقارير بنجاح",
+            "deleted": "تم حذف الجدول بنجاح",
+            "generateFailed": "فشل إنشاء التقارير",
+            "deleteFailed": "فشل حذف الجدول",
+            "deleteConfirm": "هل أنت متأكد أنك تريد حذف هذا الجدول؟"
+          }
+        }
+      },
+      "quick": {
+        "title": "التقييمات السريعة",
+        "currentlyRunning": "قيد التشغيل حالياً",
+        "toast": {
+          "success": "نجاح",
+          "created": "تم إنشاء التقييم السريع بنجاح",
+          "launched": "تم إطلاق التقييم بنجاح",
+          "closed": "تم إغلاق التقييم بنجاح",
+          "error": "خطأ",
+          "unexpected": "حدث خطأ غير متوقع"
+        },
+        "form": {
+          "title": "العنوان",
+          "type": "نوع التقييم",
+          "selectType": "اختر النوع",
+          "types": {
+            "exitTicket": "بطاقة خروج",
+            "poll": "استطلاع",
+            "warmUp": "إحماء",
+            "checkIn": "تسجيل حضور"
+          },
+          "typeDescription": "نوع التقييم التكويني",
+          "duration": "المدة (دقائق)",
+          "durationDescription": "الحد الزمني بالدقائق",
+          "class": "الفصل",
+          "selectClass": "اختر الفصل",
+          "subject": "المادة",
+          "selectSubject": "اختر المادة",
+          "questionIds": "أرقام الأسئلة",
+          "questionIdsPlaceholder": "أدخل أرقام الأسئلة مفصولة بفواصل"
+        },
+        "list": {
+          "class": "الفصل:",
+          "subject": "المادة:",
+          "questions": "الأسئلة:",
+          "duration": "المدة:",
+          "responses": "الإجابات:"
+        },
+        "take": {
+          "notAvailable": "التقييم غير متاح",
+          "submitted": "تم التسليم!",
+          "answerPlaceholder": "اكتب إجابتك..."
+        }
+      },
+      "take": {
+        "unsupportedType": "نوع سؤال غير مدعوم",
+        "answerPlaceholder": "أدخل إجابتك...",
+        "essayPlaceholder": "اكتب إجابتك المقالية هنا...",
+        "startingSession": "جارٍ بدء جلسة الامتحان...",
+        "current": "الحالي",
+        "answered": "تمت الإجابة",
+        "notAnswered": "لم تتم الإجابة",
+        "flaggedForReview": "مُعلَّم للمراجعة",
+        "remaining": "المتبقي",
+        "questions": "الأسئلة",
+        "timeWarning": {
+          "title": "5 دقائق متبقية",
+          "description": "لديك 5 دقائق متبقية. يرجى مراجعة إجاباتك وتسليمها.",
+          "continue": "متابعة الامتحان"
+        },
+        "securityWarning": {
+          "title": "تحذير أمني",
+          "description": "تم اكتشاف أنشطة مشبوهة متعددة. قد تؤدي المخالفات الإضافية إلى تسليم تلقائي.",
+          "acknowledge": "فهمت"
+        },
+        "submitDialog": {
+          "title": "تسليم الامتحان؟",
+          "answeredCount": "لقد أجبت على {answered} من أصل {total} سؤال.",
+          "unansweredWarning": "تحذير: {count} أسئلة لم تتم الإجابة عليها.",
+          "flaggedWarning": "لديك {count} سؤال/أسئلة مُعلَّمة.",
+          "finalWarning": "بمجرد التسليم، لا يمكنك تغيير إجاباتك.",
+          "continue": "متابعة الامتحان",
+          "submitting": "جارٍ التسليم...",
+          "submit": "تسليم الامتحان"
+        },
+        "submitFailed": "فشل تسليم الامتحان"
+      },
+      "manage": {
+        "toast": {
+          "updated": "تم تحديث الامتحان",
+          "created": "تم إنشاء الامتحان",
+          "updateFailed": "فشل تحديث الامتحان",
+          "createFailed": "فشل إنشاء الامتحان",
+          "deleteFailed": "فشل حذف الامتحان"
+        },
+        "form": {
+          "examTitle": "عنوان الامتحان",
+          "examDescription": "وصف الامتحان (اختياري)",
+          "selectClass": "اختر الفصل",
+          "selectSubject": "اختر المادة",
+          "selectExamType": "اختر نوع الامتحان"
+        },
+        "marksEntry": {
+          "studentName": "اسم الطالب",
+          "enterMarks": "أدخل الدرجات",
+          "loadFailed": "فشل تحميل بيانات الامتحان",
+          "saveFailed": "فشل حفظ الدرجات",
+          "maxExceeded": "لا يمكن أن تتجاوز الدرجات {max}"
+        },
+        "resultsList": {
+          "title": "نتائج الامتحان",
+          "description": "نظرة عامة على أداء الطلاب",
+          "headers": { "studentName": "اسم الطالب" },
+          "absent": "غائب",
+          "fail": "راسب"
+        },
+        "calendar": {
+          "title": "تقويم الامتحانات",
+          "description": "عرض وإدارة الامتحانات المجدولة",
+          "duration": "المدة: {value} دقيقة",
+          "totalMarks": "الدرجة الكلية: {value}"
+        },
+        "analytics": { "gradeDistribution": "توزيع الدرجات" },
+        "schedule": {
+          "startTime": "وقت البدء",
+          "endTime": "وقت الانتهاء",
+          "duration": "المدة (دقائق)",
+          "totalMarks": "الدرجة الكلية",
+          "passingMarks": "درجة النجاح"
+        },
+        "standards": {
+          "headers": {
+            "status": "الحالة",
+            "code": "الرمز",
+            "standard": "المعيار",
+            "subject": "المادة",
+            "questions": "الأسئلة"
+          }
+        },
+        "instructions": { "placeholder": "تعليمات الامتحان للطلاب (اختياري)" },
+        "additionalDetails": "تفاصيل إضافية"
+      },
+      "mark": {
+        "questionDetails": "تفاصيل السؤال",
+        "question": "السؤال",
+        "image": "الصورة",
+        "subject": "المادة",
+        "bloomLevel": "مستوى بلوم",
+        "usageStats": "إحصائيات الاستخدام",
+        "timesUsed": "مرات الاستخدام",
+        "responses": "الإجابات",
+        "quickActions": "إجراءات سريعة",
+        "insights": "تحليلات بنك الأسئلة",
+        "answerKey": "مفتاح الإجابة",
+        "acceptedAnswers": "الإجابات المقبولة:",
+        "caseInsensitive": "غير حساس لحالة الأحرف",
+        "sampleAnswer": "إجابة نموذجية",
+        "rubric": "معايير التقييم",
+        "bulkAutoGrade": {
+          "title": "تصحيح تلقائي جماعي",
+          "complete": "اكتمل التصحيح التلقائي",
+          "graded": "تم التصحيح",
+          "failed": "فشل",
+          "total": "الإجمالي",
+          "error": "فشل التصحيح التلقائي",
+          "unexpected": "حدث خطأ غير متوقع"
+        },
+        "csvImport": {
+          "trigger": "استيراد CSV",
+          "title": "استيراد الدرجات من CSV",
+          "description": "ارفع ملف CSV بدرجات الطلاب. حمّل القالب للتنسيق الصحيح.",
+          "downloadTemplate": "تحميل قالب CSV",
+          "selectFile": "انقر لاختيار ملف CSV",
+          "overwrite": "تحديث النتائج الموجودة (الكتابة فوقها)",
+          "validationResults": "نتائج التحقق"
+        },
+        "filters": {
+          "allTypes": "جميع الأنواع",
+          "allLevels": "جميع المستويات",
+          "allSubjects": "جميع المواد"
+        }
+      },
+      "qbankUi": {
+        "form": {
+          "questionType": "نوع السؤال",
+          "questionText": "نص السؤال",
+          "tags": "الوسوم",
+          "explanation": "الشرح (اختياري)",
+          "explanationPlaceholder": "اشرح المفهوم...",
+          "options": "الخيارات",
+          "optionPlaceholder": "أدخل نص الخيار",
+          "optionExplanation": "شرح اختياري",
+          "acceptedAnswers": "الإجابات المقبولة",
+          "enterAccepted": "أدخل الإجابة المقبولة",
+          "sampleAnswer": "إجابة نموذجية",
+          "samplePlaceholder": "قدم إجابة نموذجية جيدة...",
+          "gradingRubric": "معايير التقييم",
+          "rubricPlaceholder": "صف النقاط الرئيسية للتقييم...",
+          "tagPlaceholder": "اكتب واضغط Enter",
+          "updated": "تم تحديث السؤال!",
+          "created": "تم إنشاء السؤال!",
+          "saveFailed": "فشل حفظ السؤال"
+        },
+        "aiGenerate": {
+          "subject": "المادة",
+          "selectSubject": "اختر المادة",
+          "topic": "الموضوع",
+          "questionType": "نوع السؤال",
+          "difficulty": "الصعوبة",
+          "bloomLevel": "مستوى بلوم",
+          "numQuestions": "عدد الأسئلة",
+          "additionalInstructions": "تعليمات إضافية (اختياري)",
+          "generateFailed": "فشل الإنشاء",
+          "saveFailed": "فشل الحفظ"
+        },
+        "catalog": {
+          "searchPlaceholder": "البحث في أسئلة الكتالوج...",
+          "allSubjects": "جميع المواد",
+          "difficulty": "الصعوبة",
+          "difficultyAll": "الكل",
+          "difficultyEasy": "سهل",
+          "difficultyMedium": "متوسط",
+          "difficultyHard": "صعب",
+          "type": "النوع",
+          "typeAll": "الكل",
+          "typeMCQ": "اختيار من متعدد",
+          "typeTrueFalse": "صح/خطأ",
+          "typeShortAnswer": "إجابة قصيرة",
+          "typeEssay": "مقالي",
+          "headers": {
+            "question": "السؤال",
+            "subject": "المادة",
+            "type": "النوع",
+            "difficulty": "الصعوبة"
+          }
+        },
+        "analytics": {
+          "error": "خطأ",
+          "loadFailed": "فشل تحميل التحليلات",
+          "considerUpdating": "يُنصح بالتحديث",
+          "removeOrReplace": "إزالة أو استبدال",
+          "difficultyDescription": "نسبة الطلاب الذين أجابوا بشكل صحيح (قيمة p)",
+          "discriminationDescription": "الفرق بين الأداء العالي والمنخفض (مؤشر D)",
+          "difficultyDistribution": "توزيع الصعوبة",
+          "qualityDistribution": "توزيع الجودة",
+          "headers": {
+            "question": "السؤال",
+            "subject": "المادة",
+            "type": "النوع",
+            "quality": "الجودة",
+            "difficulty": "الصعوبة",
+            "issues": "المشاكل",
+            "action": "الإجراء"
+          }
+        },
+        "config": {
+          "questionTypes": {
+            "mcq": "اختيار من متعدد",
+            "trueFalse": "صح/خطأ",
+            "fillBlank": "إكمال الفراغ",
+            "shortAnswer": "إجابة قصيرة",
+            "essay": "مقالي",
+            "matching": "مطابقة",
+            "ordering": "ترتيب",
+            "multiSelect": "اختيار متعدد"
+          },
+          "difficulty": { "easy": "سهل", "medium": "متوسط", "hard": "صعب" },
+          "bloomLevels": {
+            "remember": "التذكر",
+            "understand": "الفهم",
+            "apply": "التطبيق",
+            "analyze": "التحليل",
+            "evaluate": "التقييم",
+            "create": "الإبداع"
+          },
+          "sources": {
+            "manual": "يدوي",
+            "aiGenerated": "إنشاء بالذكاء الاصطناعي",
+            "imported": "مستورد"
+          }
+        },
+        "wizard": {
+          "question": {
+            "title": "السؤال",
+            "description": "أدخل نص السؤال والمادة والنوع.",
+            "detailsTitle": "تفاصيل السؤال",
+            "detailsDescription": "حدد الصعوبة والنقاط والوسوم والشرح.",
+            "questionText": "نص السؤال",
+            "questionPlaceholder": "أدخل السؤال (10 أحرف على الأقل)",
+            "questionType": "نوع السؤال",
+            "optionalPlaceholder": "اختياري",
+            "tagsPlaceholder": "أدخل الوسوم مفصولة بفواصل",
+            "explanationPlaceholder": "اشرح الإجابة الصحيحة (اختياري)",
+            "imagePlaceholder": "رابط صورة اختياري"
+          },
+          "answers": {
+            "answerOptions": "خيارات الإجابة",
+            "enterOption": "أدخل نص الخيار",
+            "optionalExplanation": "شرح اختياري",
+            "markCorrect": "تحديد كإجابة صحيحة",
+            "selectCorrect": "اختر الإجابة الصحيحة",
+            "acceptedAnswers": "الإجابات المقبولة",
+            "enterAccepted": "أدخل الإجابة المقبولة",
+            "sampleAnswer": "أدخل الإجابة النموذجية المتوقعة",
+            "rubricPlaceholder": "صف كيفية تقييم هذه الإجابة (اختياري)",
+            "modelAnswer": "أدخل إجابة نموذجية (50 حرفاً على الأقل)",
+            "rubricCriteria": "صف معايير التقييم (20 حرفاً على الأقل)",
+            "matchingPairs": "أزواج المطابقة",
+            "enterLeft": "أدخل العنصر الأيسر",
+            "enterRight": "أدخل العنصر المطابق الأيمن",
+            "correctOrder": "العناصر بالترتيب الصحيح",
+            "enterItem": "أدخل نص العنصر"
+          }
+        },
+        "tabbedLayout": { "catalog": "الكتالوج" },
+        "deleteFailed": "فشل الحذف"
+      },
+      "generateUi": {
+        "catalog": {
+          "searchPlaceholder": "البحث في امتحانات الكتالوج...",
+          "allSubjects": "جميع المواد",
+          "examType": "نوع الامتحان",
+          "allTypes": "جميع الأنواع",
+          "types": {
+            "final": "نهائي",
+            "midterm": "نصفي",
+            "chapter": "اختبار فصل",
+            "quiz": "اختبار قصير",
+            "practice": "تدريب"
+          },
+          "loading": "جارٍ التحميل...",
+          "detail": {
+            "type": "النوع",
+            "duration": "المدة",
+            "totalMarks": "الدرجة الكلية",
+            "questions": "الأسئلة",
+            "usage": "الاستخدام",
+            "avgScore": "متوسط الدرجة"
+          }
+        },
+        "content": {
+          "noTemplates": "لا توجد قوالب بعد. أنشئ أول قالب للبدء.",
+          "noGenerated": "لا توجد امتحانات مُنشأة بعد. أنشئ قالباً أولاً ثم أنشئ امتحاناً."
+        },
+        "versionLibrary": {
+          "title": "مكتبة الإصدارات",
+          "questions": "الأسئلة:",
+          "marks": "الدرجات:"
+        },
+        "distributionEditor": {
+          "questionType": "نوع السؤال",
+          "totalPerDifficulty": "الإجمالي حسب الصعوبة",
+          "totalByType": "إجمالي الأسئلة حسب النوع:"
+        },
+        "saveFailed": "فشل حفظ القالب"
+      },
+      "resultsUi": {
+        "detail": {
+          "title": "نتائج الطلاب",
+          "marks": "الدرجات",
+          "grade": "التقدير",
+          "loadFailed": "فشل تحميل النتائج"
+        },
+        "noResults": "لا توجد نتائج بعد",
+        "noGrouping": "بدون تجميع",
+        "batchPdf": {
+          "title": "إنشاء PDF جماعي",
+          "template": "قالب PDF",
+          "templates": {
+            "classic": "كلاسيكي",
+            "modern": "عصري",
+            "minimal": "بسيط"
+          },
+          "options": "الخيارات",
+          "close": "إغلاق",
+          "toast": {
+            "generated": "تم إنشاء ملفات PDF بنجاح",
+            "generationFailed": "فشل الإنشاء",
+            "started": "بدأ الإنشاء",
+            "startingDescription": "جارٍ إنشاء ملفات PDF في الخلفية...",
+            "startFailed": "فشل البدء",
+            "downloadStarted": "بدأ التحميل",
+            "downloadDescription": "جارٍ تحميل ملف ZIP",
+            "downloadFailed": "فشل التحميل",
+            "cancelled": "تم الإلغاء",
+            "cancelledDescription": "تم إلغاء إنشاء PDF",
+            "error": "خطأ",
+            "startError": "فشل بدء إنشاء PDF",
+            "downloadError": "فشل تحميل ملف ZIP"
+          }
+        },
+        "analytics": { "performanceIndicators": "مؤشرات الأداء" },
+        "templates": {
+          "classic": { "description": "بطاقة تقرير تقليدية بتنسيق رسمي" },
+          "modern": {
+            "description": "تصميم بصري مع رسوم بيانية ومؤشرات تقدم",
+            "bestFor": "مشاركة الطلاب والتواصل مع أولياء الأمور"
+          },
+          "minimal": { "description": "تنسيق نصي بسيط ونظيف" }
+        }
+      },
+      "paper": {
+        "standards": {
+          "sudan": "المعيار السوداني",
+          "saudi": "المعيار السعودي",
+          "usK12": "المعيار الأمريكي K-12",
+          "mena": "خاص/دولي - منطقة الشرق الأوسط"
+        },
+        "error": "خطأ",
+        "letter": "Letter",
+        "list": { "noPapers": "لم يتم إنشاء أوراق امتحان بعد" },
+        "content": { "error": "خطأ", "loadFailed": "فشل تحميل البيانات" }
+      },
+      "quizUi": {
+        "title": "الاختبارات القصيرة",
+        "description": "تصفح الاختبارات القصيرة والتشخيصية من الكتالوج حسب الفصل والدرس",
+        "totalQuizzes": "إجمالي الاختبارات",
+        "availableQuizzes": "الاختبارات المتاحة",
+        "questionPoolStat": "مجموعة الأسئلة",
+        "catalogQuestions": "أسئلة الكتالوج",
+        "subjects": "المواد",
+        "acrossSubjects": "عبر المواد",
+        "avgQuestions": "متوسط الأسئلة",
+        "perQuiz": "لكل اختبار",
+        "allSubjects": "جميع المواد",
+        "tabs": {
+          "all": "الكل",
+          "quiz": "اختبار قصير",
+          "diagnostic": "تشخيصي"
+        },
+        "noQuizzes": "لا توجد اختبارات تطابق الفلاتر المحددة.",
+        "startQuiz": "بدء الاختبار",
+        "questions": "أسئلة",
+        "usageCount": "استُخدم {count} مرات",
+        "questionPool": "مجموعة الأسئلة حسب المادة",
+        "myAttempts": "محاولاتي في الاختبارات"
+      },
+      "mockUi": {
+        "allSubjects": "جميع المواد",
+        "tabs": {
+          "all": "الكل",
+          "final": "نهائي",
+          "midterm": "نصفي",
+          "chapter": "فصل",
+          "practice": "تدريب"
+        },
+        "catalog": "الكتالوج",
+        "school": "المدرسة",
+        "questions": "أسئلة",
+        "startMock": "بدء الاختبار التجريبي",
+        "noMocks": "لا توجد اختبارات تجريبية تطابق الفلاتر.",
+        "marks": "درجات"
+      },
+      "upcoming": {
+        "noExams": "لا توجد امتحانات قادمة",
+        "noExamsDescription": "لا توجد امتحانات مجدولة في المستقبل القريب.",
+        "labels": {
+          "today": "اليوم",
+          "tomorrow": "غداً",
+          "daysLeft": "أيام",
+          "marks": "درجات"
+        },
+        "stats": {
+          "total": "القادمة",
+          "today": "اليوم",
+          "tomorrow": "غداً",
+          "thisWeek": "هذا الأسبوع"
+        },
+        "sections": {
+          "today": "امتحانات اليوم",
+          "tomorrow": "غداً",
+          "thisWeek": "هذا الأسبوع",
+          "later": "قادمة"
+        },
+        "actions": {
+          "viewDetails": "عرض التفاصيل",
+          "scheduleExam": "جدولة امتحان"
+        }
+      },
+      "termSelector": { "allTime": "كل الأوقات", "current": "الحالي" },
+      "examCard": {
+        "date": "التاريخ",
+        "time": "الوقت",
+        "room": "القاعة",
+        "duration": "المدة"
+      },
+      "studentContent": {
+        "noRecord": "لم يتم العثور على سجل الطالب",
+        "contactAdmin": "يرجى التواصل مع إدارة المدرسة",
+        "noUpcoming": "لا توجد امتحانات قادمة مجدولة",
+        "noResults": "لا توجد نتائج بعد"
+      },
+      "teacherContent": {
+        "noRecord": "لم يتم العثور على سجل المعلم",
+        "contactAdmin": "يرجى التواصل مع إدارة المدرسة",
+        "examTemplates": "قوالب الامتحانات"
+      },
+      "guardianContent": {
+        "noRecord": "لم يتم العثور على سجل ولي الأمر",
+        "contactAdmin": "يرجى التواصل مع إدارة المدرسة",
+        "noLinkedStudents": "لم يتم العثور على طلاب مرتبطين",
+        "linkStudents": "يرجى التواصل مع إدارة المدرسة لربط أبنائكم",
+        "noUpcoming": "لا توجد امتحانات قادمة",
+        "noResults": "لا توجد نتائج بعد"
+      },
+      "shared": {
+        "best": "الأفضل",
+        "average": "المتوسط",
+        "attempts": "المحاولات",
+        "attemptNumber": "المحاولة #",
+        "viewingProgress": "عرض تقدم:",
+        "examsTaken": "الامتحانات المُؤداة",
+        "highestAverage": "أعلى متوسط",
+        "lowestAverage": "أدنى متوسط",
+        "subjectTrends": "اتجاهات الدرجات حسب المادة"
+      },
+      "wizard": {
+        "templateWizard": {
+          "print": {
+            "pageSize": "حجم الصفحة",
+            "letterSize": "Letter (8.5 x 11 بوصة)",
+            "orientation": "الاتجاه",
+            "answerSheet": "ورقة الإجابة",
+            "columnLayout": "تخطيط الأعمدة"
+          },
+          "scoring": {
+            "passingScore": "درجة النجاح (%)",
+            "gradePlaceholder": "A+"
+          },
+          "targeting": {
+            "grades": "المراحل",
+            "sections": "الشُعب",
+            "noSections": "لا توجد شُعب متاحة للمراحل المحددة.",
+            "classrooms": "الفصول",
+            "noClassrooms": "لا توجد فصول متاحة للمراحل المحددة."
+          },
+          "name": {
+            "namePlaceholder": "أدخل اسم القالب",
+            "descriptionPlaceholder": "صف قالب الامتحان هذا"
+          }
+        },
+        "examWizard": {
+          "paperConfig": {
+            "styles": {
+              "classic": "كلاسيكي",
+              "modern": "عصري",
+              "formal": "رسمي",
+              "custom": "مخصص"
+            },
+            "sizes": { "a4": "A4", "letter": "Letter" }
+          },
+          "schedule": {
+            "title": "الجدولة",
+            "description": "حدد تاريخ ووقت ومدة الامتحان.",
+            "marksTitle": "الدرجات والتعليمات",
+            "marksDescription": "حدد الدرجات وتعليمات الامتحان.",
+            "instructionsPlaceholder": "أدخل تعليمات الامتحان (اختياري)"
+          },
+          "settings": {
+            "proctoring": "المراقبة",
+            "proctoringDescription": "إعدادات أمان الامتحان.",
+            "attempts": "المحاولات والتسليم",
+            "attemptsDescription": "إعدادات حدود المحاولات وقواعد التسليم."
+          },
+          "information": {
+            "examTitle": "عنوان الامتحان",
+            "titlePlaceholder": "أدخل عنوان الامتحان",
+            "descriptionPlaceholder": "أدخل وصف الامتحان (اختياري)",
+            "selectClass": "اختر الفصل",
+            "selectSubject": "اختر المادة",
+            "examType": "نوع الامتحان"
+          }
+        },
+        "certWizard": {
+          "verificationPrefix": "CERT-",
+          "noSignatures": "لم تتم إضافة توقيعات بعد"
+        }
+      },
+      "columnExport": {
+        "type": "النوع",
+        "status": "الحالة",
+        "average": "المتوسط"
+      },
+      "mockTakePlaceholder": "اكتب إجابتك..."
     },
     "events": {
       "title": "الفعاليات",

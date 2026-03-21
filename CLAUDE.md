@@ -7,7 +7,7 @@ This file provides guidance to Claude Code when working with this repository.
 **Hogwarts** - Multi-tenant school automation platform (Next.js 16, React 19, Prisma, NextAuth v5)
 
 ```bash
-pnpm install && pnpm prisma generate && pnpm db:seed && pnpm dev
+pnpm install && pnpm prisma generate && pnpm dev
 ```
 
 ### The 8 Critical Rules
@@ -166,10 +166,11 @@ pnpm db:seed:single --list        # List available seeds
 6. **Table Overflow** - Platform layout: `overflow-x-hidden`, DataTable: `overflow-x-auto`
 7. **OAuth Redirects** - Callback URL preserved via httpOnly cookies
 8. **Vercel Deployments** - Requires up-to-date pnpm lockfile
-9. **Onboarding Flow** - Exact sequence in `host-footer.tsx`
+9. **Onboarding Flow** - Exact sequence in `src/components/onboarding/config.ts`
 10. **Server-Side Exceptions** - Hooks in server components, missing error.tsx boundaries; run `/diagnose-sse`
 11. **Subdomain Paths** - Client-facing paths use `/${lang}/path` WITHOUT `/s/${subdomain}/`. The `/s/` segment is internal only — middleware maps clean URLs to file-system routes. `redirect()`, `Link href`, `router.push()` must NEVER include `/s/${subdomain}/`. Only `revalidatePath()` and `proxy.ts` should reference `/s/`. Example: use `redirect(\`/${lang}/dashboard\`)` not `redirect(\`/${lang}/s/${subdomain}/dashboard\`)`.
 12. **Hardcoded Strings** - ALL UI text must use dictionary keys. Use `ValidationHelper` for Zod, `ToastHelper` for toasts, error codes for server actions. Never hardcode English strings in JSX, toasts, or error returns. See `.claude/rules/translation.md`.
+13. **Protected Test Accounts** - `dev@databayt.org` role is DEVELOPER and must never be reset. Bulk `updateMany` with `role:` must exclude protected emails. See `.claude/rules/accounts.md`.
 
 ---
 

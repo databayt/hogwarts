@@ -14,7 +14,6 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: "10mb",
     },
-    webpackMemoryOptimizations: true,
     optimizePackageImports: [
       "@assistant-ui/react",
       "@radix-ui/react-icons",

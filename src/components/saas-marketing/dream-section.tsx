@@ -189,7 +189,7 @@ export function DreamSection({ dictionary, lang = "en" }: DreamSectionProps) {
           <div className="relative w-[clamp(6rem,15vw,13rem)] flex-shrink-0 self-start">
             {/* Animated ? box - absolutely positioned so height expansion doesn't affect layout */}
             <motion.div
-              className="absolute top-0 left-0 flex w-full flex-col items-center justify-center overflow-hidden rounded-lg will-change-transform"
+              className="absolute start-0 top-0 flex w-full flex-col items-center justify-center overflow-hidden rounded-lg will-change-transform"
               style={{
                 y: boxY,
                 height: boxHeight,
@@ -291,7 +291,7 @@ export function DreamSection({ dictionary, lang = "en" }: DreamSectionProps) {
                     ease: "easeOut",
                     zIndex: { delay: 0.15 },
                   }}
-                  className="pointer-events-none absolute top-[250px] -left-48 h-[30rem] w-80"
+                  className="pointer-events-none absolute -start-48 top-[250px] h-[30rem] w-80"
                 >
                   <Image
                     src={tagImages[hoveredTag]}
@@ -306,7 +306,7 @@ export function DreamSection({ dictionary, lang = "en" }: DreamSectionProps) {
 
           {/* YOUR BOOST - animated container */}
           <motion.div
-            className="-ml-3 flex flex-grow items-center justify-end"
+            className="-ms-3 flex flex-grow items-center justify-end"
             style={{ x: textX }}
           >
             {/* YOUR - Vertical text */}
@@ -323,7 +323,7 @@ export function DreamSection({ dictionary, lang = "en" }: DreamSectionProps) {
 
             {/* BOOST */}
             <motion.span
-              className="-ml-3 text-[clamp(2.5rem,12vw,10rem)] leading-[0.8] font-black"
+              className="-ms-3 text-[clamp(2.5rem,12vw,10rem)] leading-[0.8] font-black"
               style={{ color: textColor }}
             >
               BOOST
@@ -347,7 +347,7 @@ export function DreamSection({ dictionary, lang = "en" }: DreamSectionProps) {
         </div>
 
         {/* Subtitle - mobile: centered, desktop: aligned with YOUR at half screen */}
-        <p className="text-foreground mb-5 pr-0 text-center text-lg font-black md:mb-8 md:ml-[50%] md:pr-4 md:text-left md:text-2xl lg:text-3xl">
+        <p className="text-foreground mb-5 pe-0 text-center text-lg font-black md:ms-[50%] md:mb-8 md:pe-4 md:text-start md:text-2xl lg:text-3xl">
           {dreamDict.subtitle.split("features").map((part, i, arr) => (
             <span key={i}>
               {part}
@@ -361,7 +361,7 @@ export function DreamSection({ dictionary, lang = "en" }: DreamSectionProps) {
         </p>
 
         {/* Hashtag Tag Cloud - mobile: centered, desktop: aligned with YOUR at half screen */}
-        <div className="pr-0 md:ml-[50%] md:pr-8 lg:pr-16 xl:pr-24">
+        <div className="pe-0 md:ms-[50%] md:pe-8 lg:pe-16 xl:pe-24">
           <div className="flex flex-wrap justify-center gap-2.5 md:justify-start">
             {tags.map((tag) => {
               const isSelected = selectedTags.has(tag.id)

@@ -7,6 +7,7 @@ import Link from "next/link"
 import { ArrowRight, Repeat2 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface ExamInfo {
   label: string
@@ -24,18 +25,31 @@ interface ExamCardFlipProps {
 }
 
 export function ExamCardFlip({
-  title = "Next Exam",
-  subtitle = "Mathematics Final",
-  description = "Your upcoming examination",
-  examDetails = [
-    { label: "Date", value: "Dec 15, 2025" },
-    { label: "Time", value: "09:00 AM" },
-    { label: "Room", value: "Hall A" },
-    { label: "Duration", value: "2 hours" },
-  ],
-  ctaText = "View Details",
+  title,
+  subtitle,
+  description,
+  examDetails,
+  ctaText,
   ctaHref = "/exams",
 }: ExamCardFlipProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.exams?.examCard
+  const resolvedTitle =
+    title ?? dictionary?.school?.exams?.upcomingExams ?? "Next Exam"
+  const resolvedSubtitle = subtitle ?? "Mathematics Final"
+  const resolvedDescription =
+    description ??
+    dictionary?.school?.exams?.upcomingDescription ??
+    "Your upcoming examination"
+  const resolvedDetails = examDetails ?? [
+    { label: t?.date ?? "Date", value: "Dec 15, 2025" },
+    { label: t?.time ?? "Time", value: "09:00 AM" },
+    { label: t?.room ?? "Room", value: "Hall A" },
+    { label: t?.duration ?? "Duration", value: "2 hours" },
+  ]
+  const resolvedCtaText =
+    ctaText ?? dictionary?.school?.exams?.viewDetails ?? "View Details"
+
   const [isFlipped, setIsFlipped] = useState(false)
 
   return (
@@ -95,10 +109,10 @@ export function ExamCardFlip({
             <div className="flex items-center justify-between gap-3">
               <div className="space-y-1.5">
                 <h3 className="text-foreground text-lg leading-snug font-semibold tracking-tighter transition-all duration-500 ease-out group-hover:translate-y-[-4px]">
-                  {title}
+                  {resolvedTitle}
                 </h3>
                 <p className="text-muted-foreground line-clamp-2 text-sm tracking-tight transition-all delay-[50ms] duration-500 ease-out group-hover:translate-y-[-4px]">
-                  {subtitle}
+                  {resolvedSubtitle}
                 </p>
               </div>
               <div className="group/icon relative">
@@ -130,15 +144,15 @@ export function ExamCardFlip({
           <div className="flex-1 space-y-6">
             <div className="space-y-2">
               <h3 className="text-foreground text-lg leading-snug font-semibold tracking-tight transition-all duration-500 ease-out group-hover:translate-y-[-2px]">
-                {title}
+                {resolvedTitle}
               </h3>
               <p className="text-muted-foreground line-clamp-2 text-sm tracking-tight transition-all duration-500 ease-out group-hover:translate-y-[-2px]">
-                {description}
+                {resolvedDescription}
               </p>
             </div>
 
             <div className="space-y-2">
-              {examDetails.map((detail, index) => (
+              {resolvedDetails.map((detail, index) => (
                 <div
                   key={detail.label}
                   className="flex items-center justify-between text-sm transition-all duration-500"
@@ -182,7 +196,7 @@ export function ExamCardFlip({
               )}
             >
               <span className="text-foreground group-hover/start:text-primary text-sm font-medium transition-colors duration-300">
-                {ctaText}
+                {resolvedCtaText}
               </span>
               <div className="group/icon relative">
                 <div

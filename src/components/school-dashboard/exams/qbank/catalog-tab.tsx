@@ -21,6 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import {
   adoptCatalogQuestion,
@@ -48,6 +49,10 @@ const TYPE_LABELS: Record<string, string> = {
 }
 
 export function CatalogBrowseTab() {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.exams?.qbankUi?.catalog as
+    | Record<string, any>
+    | undefined
   const [questions, setQuestions] = useState<CatalogQuestionRow[]>([])
   const [total, setTotal] = useState(0)
   const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([])
@@ -95,7 +100,7 @@ export function CatalogBrowseTab() {
         <div className="relative min-w-[200px] flex-1">
           <Search className="text-muted-foreground absolute start-3 top-2.5 size-4" />
           <Input
-            placeholder="Search catalog questions..."
+            placeholder={t?.searchPlaceholder ?? "Search catalog questions..."}
             className="ps-9"
             onChange={(e) => {
               setPage(0)
@@ -114,10 +119,12 @@ export function CatalogBrowseTab() {
           }}
         >
           <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="All subjects" />
+            <SelectValue placeholder={t?.allSubjects ?? "All subjects"} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All subjects</SelectItem>
+            <SelectItem value="all">
+              {t?.allSubjects ?? "All subjects"}
+            </SelectItem>
             {subjects.map((s) => (
               <SelectItem key={s.id} value={s.id}>
                 {s.name}
@@ -136,13 +143,15 @@ export function CatalogBrowseTab() {
           }}
         >
           <SelectTrigger className="w-[140px]">
-            <SelectValue placeholder="Difficulty" />
+            <SelectValue placeholder={t?.difficulty ?? "Difficulty"} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All</SelectItem>
-            <SelectItem value="EASY">Easy</SelectItem>
-            <SelectItem value="MEDIUM">Medium</SelectItem>
-            <SelectItem value="HARD">Hard</SelectItem>
+            <SelectItem value="all">{t?.difficultyAll ?? "All"}</SelectItem>
+            <SelectItem value="EASY">{t?.difficultyEasy ?? "Easy"}</SelectItem>
+            <SelectItem value="MEDIUM">
+              {t?.difficultyMedium ?? "Medium"}
+            </SelectItem>
+            <SelectItem value="HARD">{t?.difficultyHard ?? "Hard"}</SelectItem>
           </SelectContent>
         </Select>
 
@@ -156,14 +165,20 @@ export function CatalogBrowseTab() {
           }}
         >
           <SelectTrigger className="w-[140px]">
-            <SelectValue placeholder="Type" />
+            <SelectValue placeholder={t?.type ?? "Type"} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All</SelectItem>
-            <SelectItem value="MULTIPLE_CHOICE">MCQ</SelectItem>
-            <SelectItem value="TRUE_FALSE">True/False</SelectItem>
-            <SelectItem value="SHORT_ANSWER">Short Answer</SelectItem>
-            <SelectItem value="ESSAY">Essay</SelectItem>
+            <SelectItem value="all">{t?.typeAll ?? "All"}</SelectItem>
+            <SelectItem value="MULTIPLE_CHOICE">
+              {t?.typeMCQ ?? "MCQ"}
+            </SelectItem>
+            <SelectItem value="TRUE_FALSE">
+              {t?.typeTrueFalse ?? "True/False"}
+            </SelectItem>
+            <SelectItem value="SHORT_ANSWER">
+              {t?.typeShortAnswer ?? "Short Answer"}
+            </SelectItem>
+            <SelectItem value="ESSAY">{t?.typeEssay ?? "Essay"}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -173,12 +188,18 @@ export function CatalogBrowseTab() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[50%]">Question</TableHead>
-              <TableHead>Subject</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Difficulty</TableHead>
-              <TableHead className="text-center">Used</TableHead>
-              <TableHead className="text-end">Action</TableHead>
+              <TableHead className="w-[50%]">
+                {t?.headers?.question ?? "Question"}
+              </TableHead>
+              <TableHead>{t?.headers?.subject ?? "Subject"}</TableHead>
+              <TableHead>{t?.headers?.type ?? "Type"}</TableHead>
+              <TableHead>{t?.headers?.difficulty ?? "Difficulty"}</TableHead>
+              <TableHead className="text-center">
+                {t?.headers?.used ?? "Used"}
+              </TableHead>
+              <TableHead className="text-end">
+                {t?.headers?.action ?? "Action"}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

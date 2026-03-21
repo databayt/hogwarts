@@ -542,28 +542,44 @@ export async function getClassComparisonStats(input?: {
     },
   })
 
-  const stats = await Promise.all(
-    classes.map(async (cls) => {
-      const classWhere = { ...where, classId: cls.id, deletedAt: null }
-      const [total, present, late] = await Promise.all([
-        db.attendance.count({ where: classWhere }),
-        db.attendance.count({
-          where: { ...classWhere, status: "PRESENT" },
-        }),
-        db.attendance.count({
-          where: { ...classWhere, status: "LATE" },
-        }),
-      ])
+  // Single groupBy query instead of 3N individual counts
+  const classIds = classes.map((c) => c.id)
+  const grouped = await db.attendance.groupBy({
+    by: ["classId", "status"],
+    where: { ...where, classId: { in: classIds }, deletedAt: null },
+    _count: { _all: true },
+  })
 
-      return {
-        classId: cls.id,
-        className: cls.name,
-        studentCount: cls._count.studentClasses,
-        totalRecords: total,
-        rate: total > 0 ? Math.round(((present + late) / total) * 100) : 0,
-      }
-    })
-  )
+  // Build lookup: classId → { total, present, late }
+  const countMap = new Map<
+    string,
+    { total: number; present: number; late: number }
+  >()
+  for (const row of grouped) {
+    const entry = countMap.get(row.classId) ?? {
+      total: 0,
+      present: 0,
+      late: 0,
+    }
+    entry.total += row._count._all
+    if (row.status === "PRESENT") entry.present += row._count._all
+    if (row.status === "LATE") entry.late += row._count._all
+    countMap.set(row.classId, entry)
+  }
+
+  const stats = classes.map((cls) => {
+    const counts = countMap.get(cls.id) ?? { total: 0, present: 0, late: 0 }
+    return {
+      classId: cls.id,
+      className: cls.name,
+      studentCount: cls._count.studentClasses,
+      totalRecords: counts.total,
+      rate:
+        counts.total > 0
+          ? Math.round(((counts.present + counts.late) / counts.total) * 100)
+          : 0,
+    }
+  })
 
   return { stats: stats.sort((a, b) => b.rate - a.rate) }
 }

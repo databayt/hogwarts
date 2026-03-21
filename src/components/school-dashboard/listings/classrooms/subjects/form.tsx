@@ -102,7 +102,7 @@ export function SubjectRoomForm({ grades }: SubjectRoomFormProps) {
           >
             {grade.gradeName}
             {grade.classes.length > 0 && (
-              <span className="ml-1 opacity-60">({grade.classes.length})</span>
+              <span className="ms-1 opacity-60">({grade.classes.length})</span>
             )}
           </Badge>
         ))}

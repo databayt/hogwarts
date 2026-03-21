@@ -376,12 +376,16 @@ export default function AnalyticsContent({
     [stats]
   )
 
+  const t = dictionary?.attendance
+
   if (loading && !stats) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
         <div className="text-center">
           <LoaderCircle className="text-muted-foreground mx-auto mb-4 h-8 w-8 animate-spin" />
-          <p className="text-muted-foreground">Loading analytics...</p>
+          <p className="text-muted-foreground">
+            {t?.loading?.records ?? "Loading analytics..."}
+          </p>
         </div>
       </div>
     )
@@ -397,10 +401,11 @@ export default function AnalyticsContent({
           </div>
           <div>
             <h1 className="scroll-m-20 text-2xl font-semibold tracking-tight">
-              Attendance Analytics
+              {t?.title ?? "Attendance Analytics"}
             </h1>
             <p className="text-muted-foreground text-sm">
-              Comprehensive insights and trends for attendance tracking
+              {t?.subtitle ??
+                "Comprehensive insights and trends for attendance tracking"}
             </p>
           </div>
         </div>
@@ -414,7 +419,7 @@ export default function AnalyticsContent({
             <RefreshCw
               className={cn("me-2 h-4 w-4", refreshing && "animate-spin")}
             />
-            Refresh
+            {t?.emptyStates?.refresh ?? "Refresh"}
           </Button>
         </div>
       </div>
@@ -422,12 +427,16 @@ export default function AnalyticsContent({
       {/* Filters */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Filters</CardTitle>
+          <CardTitle className="text-base">
+            {t?.export?.dateRange ?? "Filters"}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-4">
             <div className="flex items-center gap-2">
-              <label className="text-sm font-medium">Date Range:</label>
+              <label className="text-sm font-medium">
+                {t?.export?.dateRange ?? "Date Range"}:
+              </label>
               <DateRangePicker
                 from={dateRange.from}
                 to={dateRange.to}
@@ -445,7 +454,9 @@ export default function AnalyticsContent({
                 <SelectValue placeholder="Select class" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Classes</SelectItem>
+                <SelectItem value="all">
+                  {t?.reportsFilter?.allClasses ?? "All Classes"}
+                </SelectItem>
                 {classes.map((cls) => (
                   <SelectItem key={cls.id} value={cls.id}>
                     {cls.name}
@@ -461,7 +472,9 @@ export default function AnalyticsContent({
       <div className="grid gap-4 md:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Overall Rate</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t?.stats?.overallAttendanceRate ?? "Overall Rate"}
+            </CardTitle>
             <TrendingUp className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
@@ -469,13 +482,15 @@ export default function AnalyticsContent({
               {stats?.attendanceRate || 0}%
             </div>
             <p className="text-muted-foreground text-xs">
-              {stats?.total || 0} total records
+              {stats?.total || 0} {t?.reports?.summary ?? "total records"}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Present</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t?.status?.PRESENT ?? "Present"}
+            </CardTitle>
             <Users className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
@@ -486,13 +501,15 @@ export default function AnalyticsContent({
               {stats?.total
                 ? Math.round((stats.present / stats.total) * 100)
                 : 0}
-              % of total
+              % {t?.stats?.vsLastPeriod ?? "of total"}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Late</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t?.status?.LATE ?? "Late"}
+            </CardTitle>
             <Calendar className="h-4 w-4 text-yellow-500" />
           </CardHeader>
           <CardContent>
@@ -501,13 +518,15 @@ export default function AnalyticsContent({
             </div>
             <p className="text-muted-foreground text-xs">
               {stats?.total ? Math.round((stats.late / stats.total) * 100) : 0}%
-              of total
+              {t?.stats?.vsLastPeriod ?? "of total"}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Absent</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t?.status?.ABSENT ?? "Absent"}
+            </CardTitle>
             <Activity className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
@@ -518,13 +537,15 @@ export default function AnalyticsContent({
               {stats?.total
                 ? Math.round((stats.absent / stats.total) * 100)
                 : 0}
-              % of total
+              % {t?.stats?.vsLastPeriod ?? "of total"}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">At Risk</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t?.earlyWarning?.atRisk ?? "At Risk"}
+            </CardTitle>
             <TriangleAlert className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
@@ -532,7 +553,7 @@ export default function AnalyticsContent({
               {atRiskStudents.length}
             </div>
             <p className="text-muted-foreground text-xs">
-              Below 80% attendance
+              {t?.earlyWarning?.threshold ?? "Below 80% attendance"}
             </p>
           </CardContent>
         </Card>
@@ -541,13 +562,27 @@ export default function AnalyticsContent({
       {/* Charts */}
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList className="grid w-full grid-cols-7">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="calendar">Calendar</TabsTrigger>
-          <TabsTrigger value="trends">Trends</TabsTrigger>
-          <TabsTrigger value="patterns">Patterns</TabsTrigger>
-          <TabsTrigger value="methods">Methods</TabsTrigger>
-          <TabsTrigger value="classes">Classes</TabsTrigger>
-          <TabsTrigger value="students">At Risk</TabsTrigger>
+          <TabsTrigger value="overview">
+            {t?.analyticsTab?.overview ?? "Overview"}
+          </TabsTrigger>
+          <TabsTrigger value="calendar">
+            {t?.analyticsTab?.calendar ?? "Calendar"}
+          </TabsTrigger>
+          <TabsTrigger value="trends">
+            {t?.analyticsTab?.trends ?? "Trends"}
+          </TabsTrigger>
+          <TabsTrigger value="patterns">
+            {t?.analyticsTab?.patterns ?? "Patterns"}
+          </TabsTrigger>
+          <TabsTrigger value="methods">
+            {t?.analyticsTab?.methods ?? "Methods"}
+          </TabsTrigger>
+          <TabsTrigger value="classes">
+            {t?.analyticsTab?.classes ?? "Classes"}
+          </TabsTrigger>
+          <TabsTrigger value="students">
+            {t?.analyticsTab?.atRisk ?? "At Risk"}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
@@ -603,9 +638,12 @@ export default function AnalyticsContent({
             <MethodUsagePieChart data={methodChartData} />
             <Card>
               <CardHeader>
-                <CardTitle>Method Details</CardTitle>
+                <CardTitle>
+                  {t?.analyticsTab?.methods ?? "Method Details"}
+                </CardTitle>
                 <CardDescription>
-                  Breakdown of attendance marking methods
+                  {t?.stats?.trackingMethodDistribution ??
+                    "Breakdown of attendance marking methods"}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -636,9 +674,11 @@ export default function AnalyticsContent({
           <ClassComparisonChart data={classChartData} />
           <Card>
             <CardHeader>
-              <CardTitle>Class Rankings</CardTitle>
+              <CardTitle>
+                {t?.analyticsTab?.classes ?? "Class Rankings"}
+              </CardTitle>
               <CardDescription>
-                All classes sorted by attendance rate
+                {t?.reports?.byClass ?? "All classes sorted by attendance rate"}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -687,19 +727,21 @@ export default function AnalyticsContent({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TriangleAlert className="h-5 w-5 text-orange-500" />
-                Students At Risk
+                {t?.earlyWarning?.atRisk ?? "Students At Risk"}
               </CardTitle>
               <CardDescription>
-                Students with attendance below 80% who need attention
+                {t?.earlyWarning?.chronicAbsence ??
+                  "Students with attendance below 80% who need attention"}
               </CardDescription>
             </CardHeader>
             <CardContent>
               {atRiskStudents.length === 0 ? (
                 <div className="text-muted-foreground py-8 text-center">
                   <Users className="mx-auto mb-3 h-12 w-12 opacity-50" />
-                  <p>No students at risk</p>
+                  <p>{t?.ai?.no_at_risk_students ?? "No students at risk"}</p>
                   <p className="text-sm">
-                    All students have attendance above 80%
+                    {t?.stats?.aboveTarget ??
+                      "All students have attendance above 80%"}
                   </p>
                 </div>
               ) : (

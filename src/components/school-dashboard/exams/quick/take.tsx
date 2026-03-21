@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface QuestionData {
   id: string
@@ -25,6 +26,9 @@ interface QuickAssessmentTakeProps {
 export function QuickAssessmentTake({
   assessmentId,
 }: QuickAssessmentTakeProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.exams?.quick?.take
+
   const [assessment, setAssessment] = useState<{
     id: string
     title: string
@@ -111,9 +115,11 @@ export function QuickAssessmentTake({
   if (!assessment || assessment.status !== "ACTIVE") {
     return (
       <div className="flex min-h-[400px] flex-col items-center justify-center gap-4">
-        <h2 className="text-xl font-semibold">Assessment Not Available</h2>
+        <h2 className="text-xl font-semibold">
+          {t?.notAvailable ?? "Assessment Not Available"}
+        </h2>
         <p className="text-muted-foreground text-sm">
-          This assessment is no longer active.
+          {t?.notAvailable ?? "This assessment is no longer active."}
         </p>
       </div>
     )
@@ -125,9 +131,11 @@ export function QuickAssessmentTake({
         <div className="rounded-full bg-green-100 p-4">
           <CheckCircle className="h-8 w-8 text-green-600" />
         </div>
-        <h2 className="text-xl font-semibold">Submitted!</h2>
+        <h2 className="text-xl font-semibold">
+          {t?.submitted ?? "Submitted!"}
+        </h2>
         <p className="text-muted-foreground text-sm">
-          Thank you for completing this assessment.
+          {t?.submitted ?? "Thank you for completing this assessment."}
         </p>
       </div>
     )
@@ -190,7 +198,7 @@ export function QuickAssessmentTake({
                 </RadioGroup>
               ) : (
                 <Textarea
-                  placeholder="Type your answer..."
+                  placeholder={t?.answerPlaceholder ?? "Type your answer..."}
                   value={answers[q.id] || ""}
                   onChange={(e) =>
                     setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))

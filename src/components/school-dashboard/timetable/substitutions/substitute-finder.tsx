@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { assignSubstitute, findAvailableSubstitutes } from "../actions"
 
@@ -47,20 +48,6 @@ interface SubstituteFinderProps {
   className?: string
   name?: string
   onSuccess: () => void
-  dictionary?: {
-    substitutions?: {
-      findSubstitute?: string
-      findSubstituteDescription?: string
-      searching?: string
-      noSubstitutes?: string
-      preferredMatch?: string
-      subjectMatch?: string
-      workload?: string
-      periods?: string
-      assign?: string
-      cancel?: string
-    }
-  }
 }
 
 export function SubstituteFinder({
@@ -78,15 +65,15 @@ export function SubstituteFinder({
   className,
   name,
   onSuccess,
-  dictionary,
 }: SubstituteFinderProps) {
   const [substitutes, setSubstitutes] = useState<Substitute[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const { toast } = useToast()
+  const { dictionary } = useDictionary()
 
-  const t = dictionary?.substitutions || {}
+  const t = dictionary?.school?.timetable?.substitutions
 
   useEffect(() => {
     if (open) {
@@ -105,8 +92,9 @@ export function SubstituteFinder({
         })
         .catch(() => {
           toast({
-            title: "Error",
-            description: "Failed to find substitutes",
+            title: t?.toast?.error_title ?? "Error",
+            description:
+              t?.toast?.errorFindSubstitutes ?? "Failed to find substitutes",
             variant: "destructive",
           })
         })
@@ -138,19 +126,21 @@ export function SubstituteFinder({
         })
 
         toast({
-          title: "Success",
-          description: "Substitute assigned successfully",
+          title: t?.toast?.success ?? "Success",
+          description:
+            t?.toast?.substituteAssigned ?? "Substitute assigned successfully",
         })
 
         onOpenChange(false)
         onSuccess()
       } catch (error) {
         toast({
-          title: "Error",
+          title: t?.toast?.error_title ?? "Error",
           description:
             error instanceof Error
               ? error.message
-              : "Failed to assign substitute",
+              : (t?.toast?.errorAssignSubstitute ??
+                "Failed to assign substitute"),
           variant: "destructive",
         })
       }
@@ -161,9 +151,11 @@ export function SubstituteFinder({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{t.findSubstitute || "Find Substitute"}</DialogTitle>
+          <DialogTitle>
+            {t?.dialog?.findSubstitute ?? "Find Substitute"}
+          </DialogTitle>
           <DialogDescription>
-            {t.findSubstituteDescription ||
+            {t?.dialog?.findSubstituteDescription ??
               `Select a substitute for ${periodName}${
                 name ? ` - ${name}` : ""
               }${className ? ` (${className})` : ""}`}
@@ -181,10 +173,11 @@ export function SubstituteFinder({
             <div className="py-8 text-center">
               <Search className="text-muted-foreground mx-auto h-12 w-12" />
               <h4 className="mt-4">
-                {t.noSubstitutes || "No Available Substitutes"}
+                {t?.empty?.noSubstitutes ?? "No Available Substitutes"}
               </h4>
               <p className="text-muted-foreground mt-2 text-sm">
-                No teachers are available for this time slot
+                {t?.empty?.noSubstitutesDescription ??
+                  "No teachers are available for this time slot"}
               </p>
             </div>
           ) : (
@@ -209,8 +202,9 @@ export function SubstituteFinder({
                         <div>
                           <p className="font-medium">{sub.name}</p>
                           <p className="text-muted-foreground text-sm">
-                            {t.workload || "Workload"}: {sub.currentWorkload}{" "}
-                            {t.periods || "periods/week"}
+                            {t?.finder?.workload ?? "Workload"}:{" "}
+                            {sub.currentWorkload}{" "}
+                            {t?.finder?.periodsPerWeek ?? "periods/week"}
                           </p>
                         </div>
                       </div>
@@ -221,12 +215,12 @@ export function SubstituteFinder({
                             className="bg-yellow-500 text-xs"
                           >
                             <Star className="me-1 h-3 w-3" />
-                            {t.preferredMatch || "Preferred"}
+                            {t?.finder?.preferred ?? "Preferred"}
                           </Badge>
                         )}
                         {sub.hasSubjectExpertise && !sub.isPreferred && (
                           <Badge variant="secondary" className="text-xs">
-                            {t.subjectMatch || "Subject Match"}
+                            {t?.finder?.subjectMatch ?? "Subject Match"}
                           </Badge>
                         )}
                         {selectedId === sub.id && (
@@ -243,10 +237,12 @@ export function SubstituteFinder({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            {t.cancel || "Cancel"}
+            {t?.buttons?.cancel ?? "Cancel"}
           </Button>
           <Button onClick={handleAssign} disabled={isPending || !selectedId}>
-            {isPending ? "Assigning..." : t.assign || "Assign Substitute"}
+            {isPending
+              ? (t?.finder?.assigning ?? "Assigning...")
+              : (t?.finder?.assignSubstitute ?? "Assign Substitute")}
           </Button>
         </DialogFooter>
       </DialogContent>

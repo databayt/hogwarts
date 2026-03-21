@@ -56,14 +56,12 @@ export default async function GuardianExamsContent({
         <CardContent className="flex flex-col items-center justify-center py-12">
           <Users className="text-muted-foreground mb-4 h-12 w-12" />
           <h3 className="mb-2 text-lg font-semibold">
-            {lang === "ar"
-              ? "لم يتم العثور على سجل ولي أمر"
-              : "No guardian record found"}
+            {dictionary?.school?.exams?.guardianContent?.noRecord ??
+              "No guardian record found"}
           </h3>
           <p className="text-muted-foreground text-sm">
-            {lang === "ar"
-              ? "يرجى التواصل مع إدارة المدرسة"
-              : "Please contact school administration"}
+            {dictionary?.school?.exams?.guardianContent?.contactAdmin ??
+              "Please contact school administration"}
           </p>
         </CardContent>
       </Card>
@@ -93,14 +91,12 @@ export default async function GuardianExamsContent({
         <CardContent className="flex flex-col items-center justify-center py-12">
           <Users className="text-muted-foreground mb-4 h-12 w-12" />
           <h3 className="mb-2 text-lg font-semibold">
-            {lang === "ar"
-              ? "لا يوجد طلاب مرتبطون"
-              : "No linked students found"}
+            {dictionary?.school?.exams?.guardianContent?.noLinkedStudents ??
+              "No linked students found"}
           </h3>
           <p className="text-muted-foreground text-sm">
-            {lang === "ar"
-              ? "يرجى التواصل مع إدارة المدرسة لربط أبنائك"
-              : "Please contact school admin to link your children"}
+            {dictionary?.school?.exams?.guardianContent?.linkStudents ??
+              "Please contact school admin to link your children"}
           </p>
         </CardContent>
       </Card>
@@ -308,7 +304,7 @@ export default async function GuardianExamsContent({
             <CardContent className="flex flex-col items-center justify-center py-8">
               <Calendar className="text-muted-foreground mb-3 h-10 w-10" />
               <p className="text-muted-foreground text-sm">
-                {lang === "ar" ? "لا توجد امتحانات قادمة" : "No upcoming exams"}
+                {d?.guardianContent?.noUpcoming ?? "No upcoming exams"}
               </p>
             </CardContent>
           </Card>
@@ -393,7 +389,7 @@ export default async function GuardianExamsContent({
             <CardContent className="flex flex-col items-center justify-center py-8">
               <FileBarChart className="text-muted-foreground mb-3 h-10 w-10" />
               <p className="text-muted-foreground text-sm">
-                {lang === "ar" ? "لا توجد نتائج بعد" : "No results yet"}
+                {d?.guardianContent?.noResults ?? "No results yet"}
               </p>
             </CardContent>
           </Card>

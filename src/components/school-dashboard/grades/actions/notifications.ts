@@ -6,6 +6,7 @@ import { auth } from "@/auth"
 
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { dispatchNotification } from "@/lib/dispatch-notification"
 import { getTenantContext } from "@/lib/tenant-context"
 
 // ============================================================================
@@ -83,23 +84,24 @@ export async function sendGradeNotification(input: {
 
     const notifications = await Promise.all(
       recipients.map((userId) =>
-        db.notification.create({
-          data: {
-            schoolId,
-            userId,
-            title: `Grade Posted: ${name}`,
-            body: `${studentName} received ${result.grade || `${result.score}/${result.maxScore}`} in ${name}`,
-            type: "grade_posted",
-            metadata: {
-              resultId: input.resultId,
-              studentId: result.studentId,
-            },
+        dispatchNotification({
+          schoolId,
+          userId,
+          title: `Grade Posted: ${name}`,
+          body: `${studentName} received ${result.grade || `${result.score}/${result.maxScore}`} in ${name}`,
+          type: "grade_posted",
+          metadata: {
+            resultId: input.resultId,
+            studentId: result.studentId,
           },
         })
       )
     )
 
-    return { success: true, data: { count: notifications.length } }
+    return {
+      success: true,
+      data: { count: notifications.filter(Boolean).length },
+    }
   } catch (error) {
     return {
       success: false,
@@ -187,21 +189,19 @@ export async function sendBatchGradeNotifications(input: {
       recipients.push(...guardianIds)
 
       for (const userId of recipients) {
-        await db.notification.create({
-          data: {
-            schoolId,
-            userId,
-            title: titleText,
-            body: bodyFn(studentName),
-            type: input.type,
-            metadata: {
-              batchId: batch.id,
-              studentId: rc.studentId,
-              termId: input.termId,
-            },
+        const id = await dispatchNotification({
+          schoolId,
+          userId,
+          title: titleText,
+          body: bodyFn(studentName),
+          type: input.type,
+          metadata: {
+            batchId: batch.id,
+            studentId: rc.studentId,
+            termId: input.termId,
           },
         })
-        count++
+        if (id) count++
       }
     }
 

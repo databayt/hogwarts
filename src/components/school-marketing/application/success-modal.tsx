@@ -18,6 +18,7 @@ import { Modal } from "@/components/atom/modal"
 interface ApplicationSuccessModalProps {
   applicationNumber: string
   applicantEmail?: string
+  password?: string
   schoolUrl?: string
   showModal: boolean
   setShowModal: Dispatch<SetStateAction<boolean>>
@@ -28,6 +29,7 @@ interface ApplicationSuccessModalProps {
 export default function ApplicationSuccessModal({
   applicationNumber,
   applicantEmail,
+  password,
   schoolUrl,
   showModal,
   setShowModal,
@@ -51,6 +53,9 @@ export default function ApplicationSuccessModal({
     if (applicantEmail) {
       lines.push(`${isRTL ? "البريد" : "Email"}: ${applicantEmail}`)
     }
+    if (password) {
+      lines.push(`${isRTL ? "كلمة المرور" : "Password"}: ${password}`)
+    }
     if (schoolUrl) {
       lines.push(`${isRTL ? "الموقع" : "School"}: ${schoolUrl}`)
     }
@@ -60,7 +65,7 @@ export default function ApplicationSuccessModal({
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     })
-  }, [applicationNumber, applicantEmail, schoolUrl, isRTL])
+  }, [applicationNumber, applicantEmail, password, schoolUrl, isRTL])
 
   return (
     <Modal
@@ -79,9 +84,7 @@ export default function ApplicationSuccessModal({
 
         {/* Success Message */}
         <p className="text-muted-foreground mb-6">
-          {isRTL
-            ? "تم تقديم طلبك بنجاح، سنتواصل معك قريبًا"
-            : "Your application is submitted successfully, we shall get back to you shortly"}
+          {isRTL ? "تم تقديم الطلب" : "Application submitted"}
         </p>
 
         {/* Copy details */}

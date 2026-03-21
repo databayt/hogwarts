@@ -235,7 +235,7 @@ function ChapterRow({
           {open ? (
             <ChevronDown className="h-4 w-4 shrink-0" />
           ) : (
-            <ChevronRight className="h-4 w-4 shrink-0" />
+            <ChevronRight className="h-4 w-4 shrink-0 rtl:rotate-180" />
           )}
           <span
             className={cn(

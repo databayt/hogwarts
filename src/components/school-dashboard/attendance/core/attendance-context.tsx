@@ -12,6 +12,7 @@ import React, {
 import { useRouter } from "next/navigation"
 
 import { toast } from "@/components/ui/use-toast"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import {
   addStudentIdentifier as addIdentifierAction,
@@ -189,6 +190,8 @@ export function AttendanceProvider({
   userPermissions?: AttendancePermissions
 }) {
   const router = useRouter()
+  const { dictionary } = useDictionary()
+  const t = dictionary?.attendance
 
   // State
   const [currentMethod, setCurrentMethod] =
@@ -315,8 +318,9 @@ export function AttendanceProvider({
         setAttendance((prev) => [...prev, fullRecord])
 
         toast({
-          title: "Success",
-          description: "Attendance marked successfully",
+          title: dictionary?.common?.success ?? "Success",
+          description:
+            t?.success?.attendanceMarked ?? "Attendance marked successfully",
         })
 
         return fullRecord
@@ -325,7 +329,7 @@ export function AttendanceProvider({
           err instanceof Error ? err.message : "Failed to mark attendance"
         setError(message)
         toast({
-          title: "Error",
+          title: dictionary?.common?.error ?? "Error",
           description: message,
         })
         throw err
@@ -333,7 +337,7 @@ export function AttendanceProvider({
         setLoading(false)
       }
     },
-    [currentMethod, selectedDate]
+    [currentMethod, selectedDate, dictionary, t]
   )
 
   // Mark bulk attendance
@@ -378,15 +382,18 @@ export function AttendanceProvider({
         setAttendance((prev) => [...prev, ...fullRecords])
 
         toast({
-          title: "Success",
-          description: `Marked attendance for ${records.length} students`,
+          title: dictionary?.common?.success ?? "Success",
+          description: (
+            t?.contextActions?.bulkMarked ??
+            "Marked attendance for {count} students"
+          ).replace("{count}", String(records.length)),
         })
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Failed to mark bulk attendance"
         setError(message)
         toast({
-          title: "Error",
+          title: dictionary?.common?.error ?? "Error",
           description: message,
         })
         throw err
@@ -394,7 +401,7 @@ export function AttendanceProvider({
         setLoading(false)
       }
     },
-    [currentMethod, selectedDate]
+    [currentMethod, selectedDate, dictionary, t]
   )
 
   // Update attendance record
@@ -441,15 +448,16 @@ export function AttendanceProvider({
         )
 
         toast({
-          title: "Success",
-          description: "Attendance updated successfully",
+          title: dictionary?.common?.success ?? "Success",
+          description:
+            t?.success?.attendanceUpdated ?? "Attendance updated successfully",
         })
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Failed to update attendance"
         setError(message)
         toast({
-          title: "Error",
+          title: dictionary?.common?.error ?? "Error",
           description: message,
         })
         throw err
@@ -457,7 +465,7 @@ export function AttendanceProvider({
         setLoading(false)
       }
     },
-    [currentMethod, selectedDate]
+    [currentMethod, selectedDate, dictionary, t]
   )
 
   // Delete attendance record
@@ -474,15 +482,16 @@ export function AttendanceProvider({
       setAttendance((prev) => prev.filter((record) => record.id !== id))
 
       toast({
-        title: "Success",
-        description: "Attendance record deleted",
+        title: dictionary?.common?.success ?? "Success",
+        description:
+          t?.contextActions?.attendanceDeleted ?? "Attendance record deleted",
       })
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to delete attendance"
       setError(message)
       toast({
-        title: "Error",
+        title: dictionary?.common?.error ?? "Error",
         description: message,
       })
       throw err
@@ -492,59 +501,62 @@ export function AttendanceProvider({
   }, [])
 
   // Fetch attendance records
-  const fetchAttendance = useCallback(async (filters?: AttendanceFilters) => {
-    setLoading(true)
-    setError(null)
-    try {
-      const result = await getRecentAttendance({
-        limit: 100,
-        classId: filters?.classId,
-      })
+  const fetchAttendance = useCallback(
+    async (filters?: AttendanceFilters) => {
+      setLoading(true)
+      setError(null)
+      try {
+        const result = await getRecentAttendance({
+          limit: 100,
+          classId: filters?.classId,
+        })
 
-      const records: AttendanceRecord[] = result.records.map((r) => ({
-        id: r.id,
-        schoolId: "", // Will be filled by server context
-        studentId: r.studentId,
-        studentName: r.studentName,
-        classId: r.classId,
-        date: r.date,
-        status: r.status.toLowerCase() as AttendanceStatus,
-        method: r.method as AttendanceMethod,
-        markedAt: r.markedAt,
-        checkInTime: r.checkInTime,
-      }))
+        const records: AttendanceRecord[] = result.records.map((r) => ({
+          id: r.id,
+          schoolId: "", // Will be filled by server context
+          studentId: r.studentId,
+          studentName: r.studentName,
+          classId: r.classId,
+          date: r.date,
+          status: r.status.toLowerCase() as AttendanceStatus,
+          method: r.method as AttendanceMethod,
+          markedAt: r.markedAt,
+          checkInTime: r.checkInTime,
+        }))
 
-      setAttendance(records)
+        setAttendance(records)
 
-      // Refresh stats
-      const statsResult = await getAttendanceStats({
-        classId: filters?.classId,
-        dateFrom: filters?.dateFrom ? String(filters.dateFrom) : undefined,
-        dateTo: filters?.dateTo ? String(filters.dateTo) : undefined,
-      })
+        // Refresh stats
+        const statsResult = await getAttendanceStats({
+          classId: filters?.classId,
+          dateFrom: filters?.dateFrom ? String(filters.dateFrom) : undefined,
+          dateTo: filters?.dateTo ? String(filters.dateTo) : undefined,
+        })
 
-      setStats({
-        total: statsResult.total,
-        present: statsResult.present,
-        absent: statsResult.absent,
-        late: statsResult.late,
-        holiday: statsResult.holiday || 0,
-        excused: statsResult.excused || 0,
-        sick: statsResult.sick || 0,
-        attendanceRate: statsResult.attendanceRate,
-      })
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Failed to fetch attendance"
-      setError(message)
-      toast({
-        title: "Error",
-        description: message,
-      })
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+        setStats({
+          total: statsResult.total,
+          present: statsResult.present,
+          absent: statsResult.absent,
+          late: statsResult.late,
+          holiday: statsResult.holiday || 0,
+          excused: statsResult.excused || 0,
+          sick: statsResult.sick || 0,
+          attendanceRate: statsResult.attendanceRate,
+        })
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Failed to fetch attendance"
+        setError(message)
+        toast({
+          title: dictionary?.common?.error ?? "Error",
+          description: message,
+        })
+      } finally {
+        setLoading(false)
+      }
+    },
+    [dictionary]
+  )
 
   // Fetch student identifiers
   const fetchStudentIdentifiers = useCallback(async (studentId?: string) => {
@@ -631,15 +643,17 @@ export function AttendanceProvider({
         setStudentIdentifiers((prev) => [...prev, newIdentifier])
 
         toast({
-          title: "Success",
-          description: "Identifier added successfully",
+          title: dictionary?.common?.success ?? "Success",
+          description:
+            t?.contextActions?.identifierAdded ??
+            "Identifier added successfully",
         })
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Failed to add identifier"
         setError(message)
         toast({
-          title: "Error",
+          title: dictionary?.common?.error ?? "Error",
           description: message,
         })
         throw err
@@ -647,7 +661,7 @@ export function AttendanceProvider({
         setLoading(false)
       }
     },
-    []
+    [dictionary, t]
   )
 
   // Remove student identifier
@@ -664,15 +678,16 @@ export function AttendanceProvider({
       setStudentIdentifiers((prev) => prev.filter((i) => i.id !== id))
 
       toast({
-        title: "Success",
-        description: "Identifier removed",
+        title: dictionary?.common?.success ?? "Success",
+        description:
+          t?.contextActions?.identifierRemoved ?? "Identifier removed",
       })
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to remove identifier"
       setError(message)
       toast({
-        title: "Error",
+        title: dictionary?.common?.error ?? "Error",
         description: message,
       })
       throw err

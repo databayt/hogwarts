@@ -1,8 +1,11 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import Link from "next/link"
+
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { Button } from "@/components/ui/button"
 
 import BookList from "./book-list/content"
 import { CollaborateSection } from "./collaborate-section"
@@ -14,12 +17,19 @@ interface Props {
   lang?: string
 }
 
+// Common filter for visible catalog books
+const CATALOG_VISIBLE = {
+  status: "PUBLISHED" as const,
+  approvalStatus: "APPROVED" as const,
+  visibility: { in: ["PUBLIC" as const, "SCHOOL" as const] },
+}
+
 export default async function LibraryContent({
   userId,
   dictionary,
   lang,
 }: Props) {
-  const { schoolId } = await getTenantContext()
+  const { schoolId, role } = await getTenantContext()
   const lib = (dictionary as Record<string, Record<string, unknown>>)?.school
     ?.library as Record<string, string> | undefined
 
@@ -37,70 +47,69 @@ export default async function LibraryContent({
     )
   }
 
-  // First try to get Harry Potter specifically
-  let heroBook = await db.book.findFirst({
+  // Get hidden book IDs for this school (books explicitly deactivated)
+  const hiddenSelections = await db.schoolBookSelection.findMany({
+    where: { schoolId, isActive: false },
+    select: { catalogBookId: true },
+  })
+  const hiddenBookIds = new Set(hiddenSelections.map((s) => s.catalogBookId))
+
+  // Query global catalog books (visible to all schools)
+  const catalogBooks = await db.catalogBook.findMany({
     where: {
-      schoolId,
-      title: { contains: "Harry Potter" },
+      ...CATALOG_VISIBLE,
+      ...(hiddenBookIds.size > 0
+        ? { id: { notIn: Array.from(hiddenBookIds) } }
+        : {}),
+    },
+    orderBy: [{ rating: "desc" }, { createdAt: "desc" }],
+    select: {
+      id: true,
+      title: true,
+      author: true,
+      genre: true,
+      coverUrl: true,
+      coverColor: true,
+      rating: true,
+      createdAt: true,
     },
   })
 
-  // Fallback to most recent if Harry Potter not found
-  if (!heroBook) {
-    heroBook = await db.book.findFirst({
-      where: { schoolId },
-      orderBy: { createdAt: "desc" },
-    })
-  }
+  // Map CatalogBook to the shape BookCard/BookList expects
+  const books = catalogBooks.map((cb) => ({
+    id: cb.id,
+    title: cb.title,
+    author: cb.author,
+    genre: cb.genre,
+    coverUrl: cb.coverUrl ?? "",
+    coverColor: cb.coverColor,
+    rating: Math.round(cb.rating),
+    createdAt: cb.createdAt,
+  }))
 
-  // Fetch other books in parallel
-  const [latestBooks, featuredBooks, literatureBooks, scienceBooks] =
-    await Promise.all([
-      // Latest Books - exclude Harry Potter (hero), get 12 books
-      db.book.findMany({
-        where: {
-          schoolId,
-          NOT: { title: { contains: "Harry Potter" } },
-        },
-        orderBy: { createdAt: "desc" },
-        take: 12,
-      }),
-      // Featured - skip latest 13 to show different ones
-      db.book.findMany({
-        where: { schoolId },
-        orderBy: { createdAt: "desc" },
-        skip: 13,
-        take: 12,
-      }),
-      // Literature - fiction, classic, drama, poetry genres
-      db.book.findMany({
-        where: {
-          schoolId,
-          OR: [
-            { genre: { contains: "Fiction" } },
-            { genre: { contains: "Classic" } },
-            { genre: { contains: "Drama" } },
-            { genre: { contains: "أدب" } },
-            { genre: { contains: "شعر" } },
-          ],
-        },
-        take: 12,
-      }),
-      // Science - science, history genres
-      db.book.findMany({
-        where: {
-          schoolId,
-          OR: [
-            { genre: { contains: "Science" } },
-            { genre: { contains: "History" } },
-            { genre: { contains: "فلسفة" } },
-          ],
-        },
-        take: 12,
-      }),
-    ])
+  const heroBook = books[0] || null
+  const restBooks = books.slice(1)
 
-  const hasBooks = heroBook || latestBooks.length > 0
+  // Categorize books
+  const latestBooks = restBooks.slice(0, 12)
+  const featuredBooks = restBooks.slice(12, 24)
+
+  const literatureBooks = restBooks
+    .filter((b) =>
+      ["Fiction", "Classic", "Drama", "أدب", "شعر"].some((g) =>
+        b.genre.includes(g)
+      )
+    )
+    .slice(0, 12)
+
+  const scienceBooks = restBooks
+    .filter((b) =>
+      ["Science", "History", "فلسفة"].some((g) => b.genre.includes(g))
+    )
+    .slice(0, 12)
+
+  const hasBooks = books.length > 0
+  const isAdmin = role === "ADMIN" || role === "DEVELOPER"
 
   if (!hasBooks) {
     return (
@@ -127,6 +136,13 @@ export default async function LibraryContent({
           {lib?.emptyLibrary ||
             "The library is empty. Check back later or contact your library administrator to add books."}
         </p>
+        {isAdmin && (
+          <Button asChild className="mt-6" variant="outline">
+            <Link href="/library/catalog">
+              {lib?.browseCatalog || "Browse Catalog & Add Books"}
+            </Link>
+          </Button>
+        )}
       </div>
     )
   }
@@ -137,7 +153,7 @@ export default async function LibraryContent({
       <LibraryHero lang={lang} dictionary={dictionary} />
 
       {/* Collaborate Section */}
-      <CollaborateSection lang={lang} />
+      <CollaborateSection lang={lang} dictionary={dictionary} />
 
       {/* Row 1: Latest Books */}
       {latestBooks.length > 0 && (

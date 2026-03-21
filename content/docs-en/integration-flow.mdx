@@ -128,18 +128,21 @@ The capacity step collects section-based inputs that drive computed plan limits:
 | `maxClasses`   | `grades × sectionsPerGrade`       | Total `Class` records the school can create |
 | `maxStudents`  | `maxClasses × studentsPerSection` | Total student records the plan allows       |
 
-Key distinction: `maxClasses` limits `Class` records (course sections), NOT physical `Classroom` records. No `Classroom` records are created during onboarding, but a default `ClassroomType` is auto-created so the Configure tab works immediately.
+Key distinction: `maxClasses` limits `Class` records (course sections), NOT physical `Classroom` records. Classroom + Section records **are** auto-created during onboarding by `autoProvisionSections()`.
 
 ### The Onboarding Completion Action
 
-When the user accepts terms on the legal step, `completeOnboarding()` in `legal/actions.ts` runs. It sets `isPublished: true` and `onboardingCompletedAt`, making the school live and accessible via its subdomain. It then triggers four non-blocking provisioning steps:
+When the user accepts terms on the legal step, `completeOnboarding()` in `legal/actions.ts` runs. It sets `isPublished: true` and `onboardingCompletedAt`, making the school live and accessible via its subdomain. It then triggers seven non-blocking provisioning steps via `provisionSchoolDefaults()` (run in background via `after()`):
 
 1. **`setupDefaultsForSchool()`** -- creates YearLevels (filtered by schoolLevel), Departments (6 universal), and ScoreRanges (A+ through F)
 2. **`setupCatalogForSchool()`** -- creates academic structure (Layer 3) and subject selections (Layer 4)
 3. **`applyTimetableStructureForNewSchool()`** -- creates the school year, terms, periods, and week config
 4. **Default `ClassroomType` upsert** -- creates a "Classroom" type so the Configure tab works immediately
+5. **`autoProvisionSections()`** -- creates Classroom + Section records for every AcademicGrade (N per grade, where N = `School.sectionsPerGrade`, default 2). Naming: "Grade N-A", "Grade N-B" for both rooms and sections.
+6. **`generateUniqueJoinCode()`** -- sets `School.joinCode` for the internal onboarding join page
+7. **`syncStudentGrades()`** -- links any students with raw yearLevel strings to the newly created AcademicGrade records
 
-All are wrapped in try/catch so that provisioning failures do not block onboarding completion.
+Each step has its own `.catch()` block -- a failure in any step does NOT abort subsequent steps. The entire `provisionSchoolDefaults` is fire-and-forget (the user never sees these errors).
 
 The `congratulations/actions.ts` file contains `publishSchool()` as an admin-only fallback for manual re-provisioning. It calls both `setupCatalogForSchool()` and `applyTimetableStructureForNewSchool()`, each wrapped in its own try/catch so that a failure in one does not block the other.
 
@@ -495,7 +498,29 @@ See: [Admission](/docs/admission)
 
 ## Layer 6: Classroom Configuration
 
-Physical rooms are set up and configured with types, capacities, and scheduling constraints.
+Physical rooms and sections are **auto-provisioned** during onboarding by `autoProvisionSections()`. The Configure tab provides additional manual actions for class generation and student enrollment.
+
+### Auto-Provisioned vs Manual
+
+| Record        | Auto-Provisioned? | How                                                    |
+| ------------- | ----------------- | ------------------------------------------------------ |
+| ClassroomType | Yes               | `completeOnboarding()` upserts "Classroom" type        |
+| Classroom     | Yes               | `autoProvisionSections()` creates N rooms per grade    |
+| Section       | Yes               | `autoProvisionSections()` creates N sections per grade |
+| Class         | **No**            | Admin must run "Generate Classes" in Configure tab     |
+| StudentClass  | **No**            | Admin must run "Enroll Students" in Configure tab      |
+
+### Admin Post-Onboarding Steps (Configure Tab)
+
+After onboarding completes and teachers/students are added, the admin uses the Configure tab (`/classrooms/configure`) to complete the pipeline:
+
+```
+Step 1: "Generate Sections" (optional) -- add more sections beyond auto-provisioned ones
+Step 2: "Generate Classes"  -- creates 1 Class per subject-per-grade-per-term
+Step 3: "Enroll Students"   -- creates StudentClass for every student x class per grade
+```
+
+These three actions bridge the gap between "school has subjects and grades" and "timetable can be generated."
 
 ### Classroom Model
 
@@ -623,7 +648,7 @@ AcademicGrade (e.g., Grade 7)
     +--> Class
     |      name: "Math - Grade 7 A"
     |      gradeId     --> AcademicGrade (which grade)
-    |      subjectId   --> Subject (what is taught)
+    |      subjectId   --> CatalogSubject (what is taught)
     |      teacherId   --> Teacher (who teaches)
     |      classroomId --> Classroom (where it happens)
     |      termId      --> Term (when it runs)
@@ -645,18 +670,18 @@ Key points:
 
 ### When to Configure Classrooms
 
-Classrooms have **no schema dependency** on other layers -- they can be created at any time. But they **must exist before**:
+Classrooms are **auto-provisioned during onboarding** by `autoProvisionSections()`. They must exist before:
 
-- **Creating `Class` records** (Layer 5a/5b) -- `classroomId` is a required FK on `Class`
-- **Creating timetable slots** (Layer 7) -- `classroomId` is a required FK on `Timetable`
+- **Creating `Class` records** -- `classroomId` is a required FK on `Class`
+- **Creating timetable slots** -- `classroomId` is a required FK on `Timetable`
 
 Current state:
 
-- Unified `/classrooms` route with tabs: All, Rooms, Configure, Capacity, Subjects, Schedule, Settings
-- Auto-provisioning via Configure tab creates both `Classroom` + `Section` records atomically (wrapped in `db.$transaction`)
+- Unified `/classrooms` route with tabs: Rooms, Configure, Capacity, Subjects, Schedule
+- **Auto-provisioned**: `autoProvisionSections()` creates Classroom + Section pairs per grade during onboarding (N per grade, where N = `School.sectionsPerGrade`)
+- **Manual via Configure tab**: `generateSections()` creates additional Classroom + Section pairs on demand (wrapped in `db.$transaction`)
 - `maxClasses` plan limit enforced in both `createClass` and `generateSections`
 - The demo school has 28 rooms seeded across 5 buildings
-- The onboarding capacity step does **not** create `Classroom` records (only saves `maxClasses` limit)
 - The `maxClasses` value from onboarding limits `Class` records, not `Classroom` records
 
 ### Classrooms RBAC
@@ -673,7 +698,7 @@ Access to classroom CRUD operations is controlled by `classrooms/authorization.t
 
 ADMIN access is scoped to their own school via `schoolId` matching.
 
-**Depends on:** Independent of Layers 3-5 (rooms can be created at any time), but must exist before Layer 7.
+**Depends on:** Auto-provisioned during onboarding (Layer 2). Class generation (6b) depends on Layers 4, 5a, and 6. Student enrollment (6c) depends on Layers 5b and 6b.
 
 See: [Classrooms](/docs/classrooms)
 
@@ -834,8 +859,6 @@ Admin triggers evaluation → PromotionBatch created
     → Notifications sent
 ```
 
-See: [Grades](/docs/grades)
-
 ---
 
 ## Dependency Matrix
@@ -848,7 +871,9 @@ See: [Grades](/docs/grades)
 | 4     | Subject Selection  | Layers 1, 3           | Yes       | --                       |
 | 5a    | Teacher Assignment | Layer 4               | Yes       | Layer 5b                 |
 | 5b    | Student Enrollment | Layers 3, 4           | Yes       | Layer 5a                 |
-| 6     | Classroom Setup    | Nothing\*             | Yes       | Layers 3, 4, 5a, 5b      |
+| 6     | Classroom Setup    | Auto (Layer 2)\*      | Yes       | Layers 3, 4, 5a, 5b      |
+| 6b    | Class Generation   | Layers 4, 5a, 6       | Yes       | --                       |
+| 6c    | Student Enrollment | Layers 5b, 6b         | Yes       | --                       |
 | 7     | Timetable          | All above             | --        | --                       |
 | 8     | Exams & Assessment | Layers 3, 4, 5a, 5b   | No        | --                       |
 | 9a    | Certificates       | Layer 8               | No        | Layer 9b                 |
@@ -857,7 +882,7 @@ See: [Grades](/docs/grades)
 | 9d    | Notifications      | Layers 9a, 9b, 9e     | No        | --                       |
 | 9e    | Promotion          | Layer 9b + Attendance | Yes       | --                       |
 
-\*Classrooms have no schema dependency on other layers, but practically rooms should be set up before timetable creation.
+\*Classrooms + Sections are auto-provisioned during onboarding by `autoProvisionSections()`. Class records (6b) and student enrollment (6c) are manual admin steps via the Configure tab.
 
 ### What Blocks What
 
@@ -866,9 +891,10 @@ No Catalog          --> No subject selection     --> No teacher assignment
 No Onboarding       --> No academic structure    --> No grades or streams
 No Academic Structure --> No subject selection   --> No class sections
 No Terms             --> No timetable slots      (termId is required)
-No Teacher Assignment --> No timetable slots     (teacherId is required)
-No Student Enrollment --> Timetable works but no students see it
-No Classrooms        --> No timetable slots      (classroomId is required)
+No Teachers          --> No Class records        (teacherId is required on Class)
+No Class Records     --> No timetable slots      (classId is required on Timetable)
+No StudentClass      --> Timetable works but no students see it
+No Classrooms        --> No Class records        (classroomId is required on Class)
 No Exams/Results     --> No report cards         --> No transcripts
 No Report Cards      --> No promotion evaluation (GPA required)
 No Attendance Data   --> Promotion runs without attendance check
@@ -887,7 +913,7 @@ Known integration issues between layers:
 | ~~`country` format mismatch~~                    | 1 --> 4   | Fixed   | All models, seeds, and validation now use ISO 2-letter codes. Mapbox returns `short_code`, onboarding validates `^[A-Z]{2}$`.                                                                                                                   |
 | ~~Head of Department not in schema~~             | 5a        | Fixed   | `TeacherDepartment.isDepartmentHead` added. Toggle UI in department content. Seeded with one head per department.                                                                                                                               |
 | ~~No auto-placement after ADMITTED~~             | 5b --> 7  | Fixed   | Placement dialog (per-student) and bulk placement (batch) UI. `placeStudentInSection` action validates section capacity and auto-creates StudentClass records.                                                                                  |
-| ~~Classroom setup not in onboarding~~            | 2 --> 6   | Fixed   | `completeOnboarding()` now auto-creates a default `ClassroomType` ("Classroom") via upsert, removing the Configure tab blocker. Capacity step saves `maxClasses` count; rooms and sections are generated post-onboarding via the Configure tab. |
+| ~~Classroom setup not in onboarding~~            | 2 --> 6   | Fixed   | `autoProvisionSections()` now creates Classroom + Section records per grade during onboarding. `ClassroomType` upserted. Capacity step saves `maxClasses` count.                                                                                |
 | ~~Onboarding `facilities` not persisted~~        | 2 --> 6   | Fixed   | Removed from capacity form, validation, and types. No longer collected.                                                                                                                                                                         |
 | ~~`allowedSubjectTypes` unused~~                 | 6 --> 7   | Fixed   | Timetable algorithm now checks `RoomConstraint.allowedSubjectTypes` during slot generation.                                                                                                                                                     |
 | ~~Dashboard mock room data~~                     | 7         | Fixed   | `getUpcomingClass()` server action queries real timetable data (day, period, class, room).                                                                                                                                                      |
@@ -899,13 +925,22 @@ Known integration issues between layers:
 | ~~SchoolWeekConfig not created~~                 | 2 --> 7   | Fixed   | `applyTimetableStructureForNewSchool()` now creates a `SchoolWeekConfig` record with working days and lunch config from the selected structure.                                                                                                 |
 | ~~Only Sudan timetable structures~~              | 2         | Fixed   | Now 10 structures: 5 SD, 2 GULF, 1 MENA, 1 US, 1 wildcard. `getRecommendedStructures()` uses scoring system with country/region/wildcard/schoolType/schoolLevel signals.                                                                        |
 | ~~Subjects are level-based, not grade-specific~~ | 1         | Fixed   | 62 level-based subjects replaced by ~220 grade-specific subjects. Each has `grades: [N]` and slug `us-{subject}-grade-{N}`. Chapters/lessons duplicated per grade.                                                                              |
-| ~~`Subject` model has no `catalogSubjectId`~~    | 4         | Fixed   | Optional FK `Subject.catalogSubjectId` added, bridging school-scoped classroom subjects to global LMS catalog content.                                                                                                                          |
+| ~~`Subject` model removed~~                      | 4         | Fixed   | School-scoped `Subject` model removed entirely. `Class.subjectId` now points directly to `CatalogSubject.id`. Schools bridge to catalog via `SchoolSubjectSelection`.                                                                           |
 | ~~CatalogBook disconnected from subjects~~       | 1         | Fixed   | `CatalogBook.catalogSubjectId` now links books to grade-specific `CatalogSubject`. `SchoolBookSelection.gradeId` enables grade-scoped book assignments.                                                                                         |
 | ~~`getUpcomingClass()` missing termId~~          | 7         | Fixed   | `getUpcomingClass()` now looks up the active `Term` and filters timetable entries by `termId`.                                                                                                                                                  |
 | ~~Two disconnected enrollment systems~~          | 5b        | Fixed   | `syncStudentClassToEnrollment()` in `src/lib/enrollment-sync.ts` auto-creates an `Enrollment` record when a `StudentClass` is created. Wired into class enrollment and admission placement actions. Non-blocking (logs failures, never throws). |
 | No Academic Year Setup Wizard                    | 2 --> 7   | Partial | Auto-created during onboarding. Congratulations page now includes "Review Academic Year" card directing admins to Settings > Academic. Full CRUD exists. No guided year-rollover wizard yet.                                                    |
 | ~~Stream-specific subjects not auto-assigned~~   | 4         | Fixed   | `setupCatalogForSchool()` now uses name-based heuristics to assign stream-specific subjects (Physics/Chemistry/Biology → Science, Philosophy → Arts) to the correct `AcademicStream` for grades 10-12. Shared subjects remain unscoped.         |
 | `generateSections()` placeholder teacher         | 5a        | Noted   | By design: sections use first available teacher/subject. Configure tab and post-generation toast now warn admins to reassign in the Classes view.                                                                                               |
+| `generateClassesForGrade()` placeholder teacher  | 6b        | Open    | Assigns the FIRST teacher in the school to ALL generated classes. Should match `TeacherSubjectExpertise.subjectId` against `Class.subjectId` for smarter auto-assignment, falling back to round-robin.                                          |
+| `getWeeklyTimetable()` STUDENT broken            | 7         | Open    | References nonexistent `Student.classId` field (should use `StudentClass` bridge). Also uses `user.id` as student `id` instead of looking up via `userId`. (`timetable/actions.ts:1406-1417`)                                                   |
+| `getWeeklyTimetable()` TEACHER broken            | 7         | Open    | Uses `session.user.id` directly as `teacherId` (different entities). Should look up Teacher record by `userId` first. (`timetable/actions.ts:1396-1402`)                                                                                        |
+| ACCOUNTANT/STAFF get edit access                 | 7         | Open    | Routed to `AdminView` with hardcoded `editable={true}`. Should be read-only. (`timetable/actions.ts:2559`, `admin-view.tsx:353`)                                                                                                                |
+| `getChildTimetable()` shows only 1 class         | 7         | Open    | Uses `findFirst` on `StudentClass` -- returns only the most recent enrollment. Should use `findMany` to get all enrolled classes. (`timetable/actions.ts:2741`)                                                                                 |
+| `getPersonalizedTimetable()` STUDENT 1 class     | 7         | Open    | Same `findFirst` issue as `getChildTimetable()`. (`timetable/actions.ts:2521`)                                                                                                                                                                  |
+| `filterTimetableByRole()` GUARDIAN broken        | 7         | Open    | Compares student IDs against class IDs (`permissions.ts:153`). Latent bug -- guardian view bypasses this via direct `getChildTimetable()` call.                                                                                                 |
+| `preventBackToBack` not enforced                 | 7         | Open    | Detected but empty block body -- no violation returned. (`algorithm.ts:698-705`)                                                                                                                                                                |
+| `AdminView` hardcodes `editable={true}`          | 7         | Open    | No prop override possible. Combined with ACCOUNTANT/STAFF routing, these roles get full edit UI. (`admin-view.tsx:353,388`)                                                                                                                     |
 
 ---
 

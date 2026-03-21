@@ -1379,7 +1379,7 @@ function SortableChapterItem({
             {open ? (
               <ChevronDown className="h-4 w-4 shrink-0" />
             ) : (
-              <ChevronRight className="h-4 w-4 shrink-0" />
+              <ChevronRight className="h-4 w-4 shrink-0 rtl:rotate-180" />
             )}
             <span className="font-medium">{chapter.name}</span>
             <Badge variant="outline" className="ms-auto text-xs">

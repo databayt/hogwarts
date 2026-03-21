@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import type { NotificationPriority, NotificationType } from "@prisma/client"
 import { useSession } from "next-auth/react"
 
@@ -69,8 +69,6 @@ export function useNotifications(
   const [recentNotifications, setRecentNotifications] = useState<
     NotificationDTO[]
   >([])
-  const unsubscribers = useRef<Array<() => void>>([])
-
   const connect = useCallback(async () => {
     if (!session?.user) {
       console.warn("No session available for WebSocket connection")
@@ -325,14 +323,6 @@ export function useNotifications(
     options.onNotificationRead,
     options.onNotificationDeleted,
   ])
-
-  // Cleanup all subscriptions on unmount
-  useEffect(() => {
-    return () => {
-      unsubscribers.current.forEach((unsubscribe) => unsubscribe())
-      unsubscribers.current = []
-    }
-  }, [])
 
   return {
     isConnected,

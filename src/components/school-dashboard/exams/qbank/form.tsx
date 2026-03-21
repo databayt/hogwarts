@@ -33,6 +33,7 @@ import { useModal } from "@/components/atom/modal/context"
 import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import { Icons } from "@/components/icons"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { createQuestion, updateQuestion } from "./actions"
 import {
@@ -64,6 +65,10 @@ export function QuestionBankForm({
 }: QuestionBankFormProps) {
   // Default dictionary fallback for when component is used without i18n
   const dict = dictionary?.generate || {}
+  const { dictionary: hookDict } = useDictionary()
+  const t = hookDict?.school?.exams?.qbankUi?.form as
+    | Record<string, string>
+    | undefined
   const { closeModal } = useModal()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedType, setSelectedType] = useState<QuestionType>(
@@ -156,7 +161,9 @@ export function QuestionBankForm({
 
       if (result.success) {
         SuccessToast(
-          initialData?.id ? "Question updated!" : "Question created!"
+          initialData?.id
+            ? (t?.updated ?? "Question updated!")
+            : (t?.created ?? "Question created!")
         )
         closeModal()
         // Use callback for optimistic update instead of page reload
@@ -168,7 +175,9 @@ export function QuestionBankForm({
       }
     } catch (error) {
       ErrorToast(
-        error instanceof Error ? error.message : "Failed to save question"
+        error instanceof Error
+          ? error.message
+          : (t?.saveFailed ?? "Failed to save question")
       )
     } finally {
       setIsSubmitting(false)
@@ -219,7 +228,7 @@ export function QuestionBankForm({
             name="questionType"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{"Question Type"}</FormLabel>
+                <FormLabel>{t?.questionType ?? "Question Type"}</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
@@ -255,7 +264,7 @@ export function QuestionBankForm({
             name="questionText"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{"Question Text"}</FormLabel>
+                <FormLabel>{t?.questionText ?? "Question Text"}</FormLabel>
                 <FormControl>
                   <Textarea
                     placeholder={"Enter your question here..."}
@@ -276,7 +285,7 @@ export function QuestionBankForm({
               name="difficulty"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{"Difficulty"}</FormLabel>
+                  <FormLabel>{t?.difficulty ?? "Difficulty"}</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
@@ -310,7 +319,7 @@ export function QuestionBankForm({
               name="bloomLevel"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{"Bloom Level"}</FormLabel>
+                  <FormLabel>{t?.bloomLevel ?? "Bloom Level"}</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
@@ -342,7 +351,7 @@ export function QuestionBankForm({
               name="points"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{"Points"}</FormLabel>
+                  <FormLabel>{t?.points ?? "Points"}</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
@@ -369,7 +378,9 @@ export function QuestionBankForm({
               name="timeEstimate"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{"Time Estimate (min)"}</FormLabel>
+                  <FormLabel>
+                    {t?.timeEstimate ?? "Time Estimate (min)"}
+                  </FormLabel>
                   <FormControl>
                     <Input
                       type="number"
@@ -383,7 +394,7 @@ export function QuestionBankForm({
                       ref={field.ref}
                     />
                   </FormControl>
-                  <FormDescription>{"Optional"}</FormDescription>
+                  <FormDescription>{t?.optional ?? "Optional"}</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -415,7 +426,7 @@ export function QuestionBankForm({
             name="tags"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Tags</FormLabel>
+                <FormLabel>{t?.tags ?? "Tags"}</FormLabel>
                 <FormControl>
                   <TagsInput
                     value={field.value || []}
@@ -424,7 +435,8 @@ export function QuestionBankForm({
                   />
                 </FormControl>
                 <FormDescription>
-                  Press Enter to add tags (e.g., algebra, geometry)
+                  {t?.tagPlaceholder ??
+                    "Press Enter to add tags (e.g., algebra, geometry)"}
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -437,10 +449,15 @@ export function QuestionBankForm({
             name="explanation"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Explanation (Optional)</FormLabel>
+                <FormLabel>
+                  {t?.explanation ?? "Explanation (Optional)"}
+                </FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder="Explain the concept or provide additional context..."
+                    placeholder={
+                      t?.explanationPlaceholder ??
+                      "Explain the concept or provide additional context..."
+                    }
                     disabled={isView}
                     {...field}
                   />
@@ -485,6 +502,10 @@ function MultipleChoiceFields({
   isView: boolean
   type: QuestionType
 }) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.exams?.qbankUi?.form as
+    | Record<string, string>
+    | undefined
   const options = form.watch("options") || []
   const isTrueFalse = type === QuestionType.TRUE_FALSE
 
@@ -508,7 +529,7 @@ function MultipleChoiceFields({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <FormLabel>Options</FormLabel>
+        <FormLabel>{t?.options ?? "Options"}</FormLabel>
         {!isTrueFalse && !isView && options.length < 6 && (
           <Button type="button" variant="outline" size="sm" onClick={addOption}>
             <Icons.plus className="me-2 h-4 w-4" />
@@ -535,7 +556,11 @@ function MultipleChoiceFields({
             />
             <div className="flex-1 space-y-2">
               <Input
-                placeholder={`Option ${index + 1}`}
+                placeholder={
+                  t?.optionPlaceholder
+                    ? `${t.optionPlaceholder} ${index + 1}`
+                    : `Option ${index + 1}`
+                }
                 value={option.text}
                 onChange={(e) => {
                   const current = form.getValues("options")
@@ -545,7 +570,7 @@ function MultipleChoiceFields({
                 disabled={isView}
               />
               <Input
-                placeholder="Explanation (optional)"
+                placeholder={t?.optionExplanation ?? "Explanation (optional)"}
                 value={option.explanation || ""}
                 onChange={(e) => {
                   const current = form.getValues("options")
@@ -581,6 +606,10 @@ function FillBlankFields({
   form: UseFormReturn<any>
   isView: boolean
 }) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.exams?.qbankUi?.form as
+    | Record<string, string>
+    | undefined
   const answers = form.watch("acceptedAnswers") || [""]
 
   const addAnswer = () => {
@@ -600,7 +629,7 @@ function FillBlankFields({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <FormLabel>Accepted Answers</FormLabel>
+        <FormLabel>{t?.acceptedAnswers ?? "Accepted Answers"}</FormLabel>
         {!isView && (
           <Button type="button" variant="outline" size="sm" onClick={addAnswer}>
             <Icons.plus className="me-2 h-4 w-4" />
@@ -613,7 +642,11 @@ function FillBlankFields({
         {answers.map((answer: string, index: number) => (
           <div key={index} className="flex gap-2">
             <Input
-              placeholder={`Answer ${index + 1}`}
+              placeholder={
+                t?.enterAccepted
+                  ? `${t.enterAccepted} ${index + 1}`
+                  : `Answer ${index + 1}`
+              }
               value={answer}
               onChange={(e) => {
                 const current = form.getValues("acceptedAnswers")
@@ -648,7 +681,9 @@ function FillBlankFields({
                 disabled={isView}
               />
             </FormControl>
-            <FormLabel className="!mt-0">Case sensitive</FormLabel>
+            <FormLabel className="!mt-0">
+              {t?.caseSensitive ?? "Case sensitive"}
+            </FormLabel>
           </FormItem>
         )}
       />
@@ -664,6 +699,10 @@ function SubjectiveFields({
   form: UseFormReturn<any>
   isView: boolean
 }) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.exams?.qbankUi?.form as
+    | Record<string, string>
+    | undefined
   return (
     <div className="space-y-4">
       <FormField
@@ -671,10 +710,12 @@ function SubjectiveFields({
         name="sampleAnswer"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Sample Answer</FormLabel>
+            <FormLabel>{t?.sampleAnswer ?? "Sample Answer"}</FormLabel>
             <FormControl>
               <Textarea
-                placeholder="Provide a good sample answer..."
+                placeholder={
+                  t?.samplePlaceholder ?? "Provide a good sample answer..."
+                }
                 className="min-h-[100px]"
                 disabled={isView}
                 {...field}
@@ -690,16 +731,19 @@ function SubjectiveFields({
         name="gradingRubric"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Grading Rubric</FormLabel>
+            <FormLabel>{t?.gradingRubric ?? "Grading Rubric"}</FormLabel>
             <FormControl>
               <Textarea
-                placeholder="Describe key points for grading..."
+                placeholder={
+                  t?.rubricPlaceholder ?? "Describe key points for grading..."
+                }
                 disabled={isView}
                 {...field}
               />
             </FormControl>
             <FormDescription>
-              List the criteria for grading this question
+              {t?.rubricDescription ??
+                "List the criteria for grading this question"}
             </FormDescription>
             <FormMessage />
           </FormItem>
@@ -719,6 +763,10 @@ function TagsInput({
   onChange: (tags: string[]) => void
   disabled?: boolean
 }) {
+  const { dictionary: tagDict } = useDictionary()
+  const t2 = tagDict?.school?.exams?.qbankUi?.form as
+    | Record<string, string>
+    | undefined
   const [input, setInput] = useState("")
 
   const addTag = () => {
@@ -745,7 +793,7 @@ function TagsInput({
               addTag()
             }
           }}
-          placeholder="Type and press Enter"
+          placeholder={t2?.tagInputPlaceholder ?? "Type and press Enter"}
           disabled={disabled}
         />
         <Button
@@ -755,7 +803,7 @@ function TagsInput({
           onClick={addTag}
           disabled={disabled}
         >
-          Add
+          {t2?.add ?? "Add"}
         </Button>
       </div>
       {value.length > 0 && (

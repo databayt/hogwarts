@@ -42,6 +42,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Switch } from "@/components/ui/switch"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { deleteGeofence, updateGeofenceStatus } from "./actions"
 
@@ -98,6 +99,8 @@ const typeConfig: Record<
 }
 
 export function GeofenceList({ geofences, onRefresh }: GeofenceListProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.attendance
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedGeofence, setSelectedGeofence] = useState<Geofence | null>(
     null
@@ -110,14 +113,18 @@ export function GeofenceList({ geofences, onRefresh }: GeofenceListProps) {
       const result = await updateGeofenceStatus(geofence.id, !geofence.isActive)
       if (result.success) {
         toast.success(
-          `Geofence ${geofence.isActive ? "deactivated" : "activated"}`
+          t?.success?.geofenceCreated ??
+            `Geofence ${geofence.isActive ? "deactivated" : "activated"}`
         )
         onRefresh?.()
       } else {
-        toast.error(result.error || "Failed to update geofence")
+        toast.error(
+          result.error ||
+            (t?.errors?.serverError ?? "Failed to update geofence")
+        )
       }
     } catch (error) {
-      toast.error("Failed to update geofence")
+      toast.error(t?.errors?.serverError ?? "Failed to update geofence")
     } finally {
       setIsUpdating(null)
     }
@@ -129,13 +136,18 @@ export function GeofenceList({ geofences, onRefresh }: GeofenceListProps) {
     try {
       const result = await deleteGeofence(selectedGeofence.id)
       if (result.success) {
-        toast.success("Geofence deleted")
+        toast.success(
+          t?.contextActions?.attendanceDeleted ?? "Geofence deleted"
+        )
         onRefresh?.()
       } else {
-        toast.error(result.error || "Failed to delete geofence")
+        toast.error(
+          result.error ||
+            (t?.errors?.serverError ?? "Failed to delete geofence")
+        )
       }
     } catch (error) {
-      toast.error("Failed to delete geofence")
+      toast.error(t?.errors?.serverError ?? "Failed to delete geofence")
     } finally {
       setDeleteDialogOpen(false)
       setSelectedGeofence(null)
@@ -147,10 +159,12 @@ export function GeofenceList({ geofences, onRefresh }: GeofenceListProps) {
       <Card>
         <CardContent className="flex flex-col items-center justify-center py-12">
           <MapPin className="text-muted-foreground mb-4 h-12 w-12" />
-          <h3 className="mb-2 text-lg font-semibold">No Geofences Created</h3>
+          <h3 className="mb-2 text-lg font-semibold">
+            {t?.geofenceForm?.createGeofence ?? "No Geofences Created"}
+          </h3>
           <p className="text-muted-foreground mb-4 text-center text-sm">
-            Create your first geofence to enable automatic attendance tracking
-            when students enter designated areas.
+            {t?.geofenceForm?.dialogDescription ??
+              "Create your first geofence to enable automatic attendance tracking when students enter designated areas."}
           </p>
         </CardContent>
       </Card>
@@ -194,7 +208,11 @@ export function GeofenceList({ geofences, onRefresh }: GeofenceListProps) {
                       </CardTitle>
                       <CardDescription className="text-xs">
                         <Badge variant="secondary" className={config.color}>
-                          {config.label}
+                          {(
+                            t?.geofence?.zoneType as
+                              | Record<string, string>
+                              | undefined
+                          )?.[geofence.type] ?? config.label}
                         </Badge>
                       </CardDescription>
                     </div>
@@ -213,12 +231,12 @@ export function GeofenceList({ geofences, onRefresh }: GeofenceListProps) {
                         {geofence.isActive ? (
                           <>
                             <PowerOff className="me-2 h-4 w-4" />
-                            Deactivate
+                            {t?.mtss?.pending ?? "Deactivate"}
                           </>
                         ) : (
                           <>
                             <Power className="me-2 h-4 w-4" />
-                            Activate
+                            {t?.gamification?.active ?? "Activate"}
                           </>
                         )}
                       </DropdownMenuItem>
@@ -231,7 +249,7 @@ export function GeofenceList({ geofences, onRefresh }: GeofenceListProps) {
                         className="text-red-600"
                       >
                         <Trash2 className="me-2 h-4 w-4" />
-                        Delete
+                        {t?.geofenceActions?.delete ?? "Delete"}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -242,11 +260,15 @@ export function GeofenceList({ geofences, onRefresh }: GeofenceListProps) {
                 {geofence.centerLat && geofence.centerLon && (
                   <div className="text-muted-foreground space-y-1 text-xs">
                     <p>
-                      Center: {geofence.centerLat.toFixed(4)},{" "}
+                      {t?.geofenceForm?.latitude ?? "Center"}:{" "}
+                      {geofence.centerLat.toFixed(4)},{" "}
                       {geofence.centerLon.toFixed(4)}
                     </p>
                     {geofence.radiusMeters && (
-                      <p>Radius: {geofence.radiusMeters}m</p>
+                      <p>
+                        {t?.geofenceForm?.radius ?? "Radius"}:{" "}
+                        {geofence.radiusMeters}m
+                      </p>
                     )}
                   </div>
                 )}
@@ -260,7 +282,9 @@ export function GeofenceList({ geofences, onRefresh }: GeofenceListProps) {
                       }`}
                     />
                     <span className="text-sm">
-                      {geofence.isActive ? "Active" : "Inactive"}
+                      {geofence.isActive
+                        ? (t?.gamification?.active ?? "Active")
+                        : (t?.barcodeCards?.inactive ?? "Inactive")}
                     </span>
                   </div>
                   <Switch
@@ -274,7 +298,10 @@ export function GeofenceList({ geofences, onRefresh }: GeofenceListProps) {
                 {geofence.type === "SCHOOL_GROUNDS" && geofence.isActive && (
                   <div className="flex items-center gap-2 rounded-lg bg-green-50 p-2 text-xs text-green-700">
                     <CircleAlert className="h-3 w-3" />
-                    <span>Auto-marks attendance on entry (6-10 AM)</span>
+                    <span>
+                      {t?.geofenceForm?.typeDescription ??
+                        "Auto-marks attendance on entry (6-10 AM)"}
+                    </span>
                   </div>
                 )}
               </CardContent>
@@ -287,20 +314,23 @@ export function GeofenceList({ geofences, onRefresh }: GeofenceListProps) {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Geofence</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t?.geofenceActions?.deleteTitle ?? "Delete Geofence"}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete &quot;{selectedGeofence?.name}
-              &quot;? This action cannot be undone and will also delete all
-              associated events.
+              {t?.geofenceActions?.deleteDescription ??
+                `Are you sure you want to delete "${selectedGeofence?.name}"? This action cannot be undone and will also delete all associated events.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>
+              {t?.geofenceActions?.cancel ?? "Cancel"}
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-red-600 hover:bg-red-700"
             >
-              Delete
+              {t?.geofenceActions?.delete ?? "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -64,6 +64,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { useExamSession, useProctor } from "./hooks"
 import { ProctorGuard } from "./proctor-guard"
@@ -94,6 +95,9 @@ export function ExamPlayer({
   locale,
 }: ExamPlayerProps) {
   const router = useRouter()
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.exams?.take
+  const exams = dictionary?.school?.exams
   const [showSubmitDialog, setShowSubmitDialog] = useState(false)
   const [showTimeWarning, setShowTimeWarning] = useState(false)
   const [showSecurityWarning, setShowSecurityWarning] = useState(false)
@@ -237,7 +241,9 @@ export function ExamPlayer({
         return renderEssay(question, currentAnswer)
       default:
         return (
-          <p className="text-muted-foreground">Unsupported question type</p>
+          <p className="text-muted-foreground">
+            {t?.unsupportedType ?? "Unsupported question type"}
+          </p>
         )
     }
   }
@@ -348,7 +354,7 @@ export function ExamPlayer({
     return (
       <div className="space-y-4">
         <Input
-          placeholder="Enter your answer..."
+          placeholder={t?.answerPlaceholder ?? "Enter your answer..."}
           value={answer?.answerText || ""}
           onChange={(e) =>
             handleAnswerChange(question.id, { answerText: e.target.value })
@@ -367,7 +373,7 @@ export function ExamPlayer({
     return (
       <div className="space-y-4">
         <Textarea
-          placeholder="Enter your answer..."
+          placeholder={t?.answerPlaceholder ?? "Enter your answer..."}
           value={answer?.answerText || ""}
           onChange={(e) =>
             handleAnswerChange(question.id, { answerText: e.target.value })
@@ -389,7 +395,9 @@ export function ExamPlayer({
     return (
       <div className="space-y-4">
         <Textarea
-          placeholder="Write your essay response here..."
+          placeholder={
+            t?.essayPlaceholder ?? "Write your essay response here..."
+          }
           value={answer?.answerText || ""}
           onChange={(e) =>
             handleAnswerChange(question.id, { answerText: e.target.value })
@@ -413,7 +421,9 @@ export function ExamPlayer({
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
           <div className="border-primary mx-auto h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" />
-          <p className="text-muted-foreground mt-4">Starting exam session...</p>
+          <p className="text-muted-foreground mt-4">
+            {t?.startingSession ?? "Starting exam session..."}
+          </p>
         </div>
       </div>
     )
@@ -461,7 +471,7 @@ export function ExamPlayer({
             {isSaving && (
               <Badge variant="secondary" className="gap-1">
                 <Save className="h-3 w-3 animate-pulse" />
-                Saving...
+                {t?.submitDialog?.submitting ?? "Saving..."}
               </Badge>
             )}
 
@@ -481,7 +491,7 @@ export function ExamPlayer({
               disabled={isSubmitting}
             >
               <Send className="me-2 h-4 w-4" />
-              Submit
+              {exams?.submit ?? "Submit"}
             </Button>
           </div>
         </div>
@@ -491,7 +501,8 @@ export function ExamPlayer({
           <div className="flex items-center gap-2">
             <Progress value={progress} className="flex-1" />
             <span className="text-muted-foreground text-sm">
-              {answeredIndices.size}/{totalQuestions} answered
+              {answeredIndices.size}/{totalQuestions}{" "}
+              {t?.answered ?? "answered"}
             </span>
           </div>
         </div>
@@ -600,14 +611,14 @@ export function ExamPlayer({
                       disabled={currentQuestionIndex === 0}
                     >
                       <ChevronLeft className="me-2 h-4 w-4 rtl:rotate-180" />
-                      Previous
+                      {exams?.previous ?? "Previous"}
                     </Button>
 
                     <Button
                       onClick={() => goToQuestion(currentQuestionIndex + 1)}
                       disabled={currentQuestionIndex === totalQuestions - 1}
                     >
-                      Next
+                      {exams?.next ?? "Next"}
                       <ChevronRight className="ms-2 h-4 w-4 rtl:rotate-180" />
                     </Button>
                   </div>
@@ -623,16 +634,18 @@ export function ExamPlayer({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-yellow-500" />5 Minutes
-              Remaining
+              <AlertTriangle className="h-5 w-5 text-yellow-500" />
+              {t?.timeWarning?.title ?? "5 Minutes Remaining"}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              You have 5 minutes left to complete and submit your exam. Make
-              sure to review your answers before the time runs out.
+              {t?.timeWarning?.description ??
+                "You have 5 minutes left to complete and submit your exam. Make sure to review your answers before the time runs out."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction>Continue Exam</AlertDialogAction>
+            <AlertDialogAction>
+              {t?.timeWarning?.continue ?? "Continue Exam"}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -646,16 +659,17 @@ export function ExamPlayer({
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <ShieldAlert className="text-destructive h-5 w-5" />
-              Security Warning
+              {t?.securityWarning?.title ?? "Security Warning"}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Multiple suspicious activities have been detected during this exam
-              session. Your activity is being logged and may be reviewed by your
-              instructor.
+              {t?.securityWarning?.description ??
+                "Multiple suspicious activities have been detected during this exam session. Your activity is being logged and may be reviewed by your instructor."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction>I Understand</AlertDialogAction>
+            <AlertDialogAction>
+              {t?.securityWarning?.acknowledge ?? "I Understand"}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -664,33 +678,51 @@ export function ExamPlayer({
       <AlertDialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Submit Exam?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t?.submitDialog?.title ?? "Submit Exam?"}
+            </AlertDialogTitle>
             <AlertDialogDescription className="space-y-2">
               <p>
-                You have answered {answeredIndices.size} out of {totalQuestions}{" "}
-                questions.
+                {(
+                  t?.submitDialog?.answeredCount ??
+                  "You have answered {answered} out of {total} questions."
+                )
+                  .replace("{answered}", String(answeredIndices.size))
+                  .replace("{total}", String(totalQuestions))}
               </p>
               {answeredIndices.size < totalQuestions && (
                 <p className="text-yellow-600 dark:text-yellow-400">
-                  Warning: {totalQuestions - answeredIndices.size} questions are
-                  unanswered.
+                  {(
+                    t?.submitDialog?.unansweredWarning ??
+                    "Warning: {count} questions are unanswered."
+                  ).replace(
+                    "{count}",
+                    String(totalQuestions - answeredIndices.size)
+                  )}
                 </p>
               )}
               {flaggedQuestions.size > 0 && (
                 <p className="text-yellow-600 dark:text-yellow-400">
-                  You have {flaggedQuestions.size} flagged question(s) for
-                  review.
+                  {(
+                    t?.submitDialog?.flaggedWarning ??
+                    "You have {count} flagged question(s)."
+                  ).replace("{count}", String(flaggedQuestions.size))}
                 </p>
               )}
-              <p>Once submitted, you cannot change your answers.</p>
+              <p>
+                {t?.submitDialog?.finalWarning ??
+                  "Once submitted, you cannot change your answers."}
+              </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isSubmitting}>
-              Continue Exam
+              {t?.submitDialog?.continue ?? "Continue Exam"}
             </AlertDialogCancel>
             <AlertDialogAction onClick={handleSubmit} disabled={isSubmitting}>
-              {isSubmitting ? "Submitting..." : "Submit Exam"}
+              {isSubmitting
+                ? (t?.submitDialog?.submitting ?? "Submitting...")
+                : (t?.submitDialog?.submit ?? "Submit Exam")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

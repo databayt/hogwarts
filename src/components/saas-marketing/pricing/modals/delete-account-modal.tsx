@@ -5,11 +5,11 @@ import { Dispatch, SetStateAction, useCallback, useMemo, useState } from "react"
 import { signOut, useSession } from "next-auth/react"
 import { toast } from "sonner"
 
+import { deleteCurrentUser } from "@/lib/actions/user"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Modal } from "@/components/atom/modal"
 import { UserAvatar } from "@/components/saas-marketing/pricing/shared/user-avatar"
-import { deleteCurrentUser } from "@/components/school-dashboard/finance/invoice/actions/user"
 
 function DeleteAccountModal({
   showDeleteAccountModal,

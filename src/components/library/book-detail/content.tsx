@@ -22,15 +22,19 @@ import BookVideo from "./book-video"
 import BorrowBook from "./borrow-book"
 import { StarRating } from "./star-rating"
 
+const DEFAULT_COPIES = 3
+
 interface Props {
   bookId: string
   userId: string
+  lang?: string
   dictionary?: Record<string, unknown>
 }
 
 export default async function LibraryBookDetailContent({
   bookId,
   userId,
+  lang = "ar",
   dictionary,
 }: Props) {
   const { schoolId } = await getTenantContext()
@@ -41,15 +45,60 @@ export default async function LibraryBookDetailContent({
     notFound()
   }
 
-  const book = await db.book.findFirst({
-    where: { id: bookId, schoolId },
+  // Load from global CatalogBook (works for all schools out of the box)
+  const catalogBook = await db.catalogBook.findFirst({
+    where: {
+      id: bookId,
+      status: "PUBLISHED",
+      approvalStatus: "APPROVED",
+    },
   })
 
-  if (!book) {
+  if (!catalogBook) {
     notFound()
   }
 
-  // Parallel queries: borrow record, borrow stats, related books
+  // Check if school has hidden this book
+  const hiddenSelection = await db.schoolBookSelection.findUnique({
+    where: { schoolId_catalogBookId: { schoolId, catalogBookId: bookId } },
+    select: { isActive: true },
+  })
+  if (hiddenSelection && !hiddenSelection.isActive) {
+    notFound()
+  }
+
+  // Find or lazily create school-scoped Book for borrowing
+  let schoolBook = await db.book.findFirst({
+    where: { schoolId, catalogBookId: bookId },
+  })
+
+  if (!schoolBook) {
+    schoolBook = await db.book.create({
+      data: {
+        schoolId,
+        catalogBookId: catalogBook.id,
+        title: catalogBook.title,
+        author: catalogBook.author,
+        genre: catalogBook.genre,
+        description: catalogBook.description ?? "",
+        summary: catalogBook.summary ?? "",
+        coverUrl: catalogBook.coverUrl ?? "",
+        coverColor: catalogBook.coverColor,
+        rating: Math.round(catalogBook.rating),
+        totalCopies: DEFAULT_COPIES,
+        availableCopies: DEFAULT_COPIES,
+        videoUrl: catalogBook.videoUrl,
+        isbn: catalogBook.isbn,
+        publisher: catalogBook.publisher,
+        publicationYear: catalogBook.publicationYear,
+        language: catalogBook.language,
+        pageCount: catalogBook.pageCount,
+        gradeLevel: catalogBook.gradeLevel,
+      },
+    })
+  }
+
+  // Parallel queries: borrow record, borrow stats, related catalog books
   const [
     activeBorrowRecord,
     totalBorrows,
@@ -58,14 +107,27 @@ export default async function LibraryBookDetailContent({
     similarBooks,
   ] = await Promise.all([
     db.borrowRecord.findFirst({
-      where: { bookId: book.id, userId, schoolId, status: "BORROWED" },
+      where: {
+        bookId: schoolBook.id,
+        userId,
+        schoolId,
+        status: "BORROWED",
+      },
     }),
-    db.borrowRecord.count({ where: { bookId: book.id, schoolId } }),
     db.borrowRecord.count({
-      where: { bookId: book.id, schoolId, status: "BORROWED" },
+      where: { bookId: schoolBook.id, schoolId },
     }),
-    db.book.findMany({
-      where: { schoolId, author: book.author, id: { not: bookId } },
+    db.borrowRecord.count({
+      where: { bookId: schoolBook.id, schoolId, status: "BORROWED" },
+    }),
+    db.catalogBook.findMany({
+      where: {
+        author: catalogBook.author,
+        id: { not: bookId },
+        status: "PUBLISHED",
+        approvalStatus: "APPROVED",
+        visibility: { in: ["PUBLIC", "SCHOOL"] },
+      },
       take: 8,
       select: {
         id: true,
@@ -76,12 +138,14 @@ export default async function LibraryBookDetailContent({
         rating: true,
       },
     }),
-    db.book.findMany({
+    db.catalogBook.findMany({
       where: {
-        schoolId,
-        genre: book.genre,
+        genre: catalogBook.genre,
         id: { not: bookId },
-        author: { not: book.author },
+        author: { not: catalogBook.author },
+        status: "PUBLISHED",
+        approvalStatus: "APPROVED",
+        visibility: { in: ["PUBLIC", "SCHOOL"] },
       },
       take: 8,
       select: {
@@ -96,11 +160,11 @@ export default async function LibraryBookDetailContent({
   ])
 
   const hasDetails =
-    book.pageCount ||
-    book.language ||
-    book.publicationYear ||
-    book.isbn ||
-    book.publisher
+    catalogBook.pageCount ||
+    catalogBook.language ||
+    catalogBook.publicationYear ||
+    catalogBook.isbn ||
+    catalogBook.publisher
 
   return (
     <div className="mx-auto max-w-2xl space-y-8">
@@ -109,13 +173,13 @@ export default async function LibraryBookDetailContent({
         <div className="shrink-0">
           <div
             className="aspect-[2/3] w-48 overflow-hidden rounded shadow-lg"
-            style={{ backgroundColor: book.coverColor || "#1a1a2e" }}
+            style={{ backgroundColor: catalogBook.coverColor || "#1a1a2e" }}
           >
             <BookCover
-              coverUrl={book.coverUrl}
-              coverColor={book.coverColor}
-              title={book.title}
-              author={book.author}
+              coverUrl={catalogBook.coverUrl}
+              coverColor={catalogBook.coverColor}
+              title={catalogBook.title}
+              author={catalogBook.author}
               width={192}
               height={288}
               priority
@@ -125,33 +189,36 @@ export default async function LibraryBookDetailContent({
         </div>
 
         <div className="flex-1 space-y-3">
-          <h1 className="text-foreground text-2xl font-bold">{book.title}</h1>
+          <h1 className="text-foreground text-2xl font-bold">
+            {catalogBook.title}
+          </h1>
           <p className="text-muted-foreground">
-            {lib?.by || "by"} {book.author}
+            {lib?.by || "by"} {catalogBook.author}
           </p>
 
-          <StarRating rating={book.rating} />
+          <StarRating rating={Math.round(catalogBook.rating)} />
 
           <div className="flex flex-wrap items-center gap-2">
-            {book.gradeLevel && book.gradeLevel !== "GENERAL" && (
-              <Badge variant="outline">{book.gradeLevel}</Badge>
+            {catalogBook.gradeLevel && catalogBook.gradeLevel !== "GENERAL" && (
+              <Badge variant="outline">{catalogBook.gradeLevel}</Badge>
             )}
-            <Badge variant="secondary">{book.genre}</Badge>
+            <Badge variant="secondary">{catalogBook.genre}</Badge>
           </div>
 
           <p
-            className={`text-sm ${book.availableCopies > 0 ? "text-green-600" : "text-red-600"}`}
+            className={`text-sm ${schoolBook.availableCopies > 0 ? "text-green-600" : "text-red-600"}`}
           >
-            {book.availableCopies} {lib?.of || "of"} {book.totalCopies}{" "}
+            {schoolBook.availableCopies} {lib?.of || "of"}{" "}
+            {schoolBook.totalCopies}{" "}
             {lib?.copiesAvailable || "copies available"}
           </p>
 
           <div className="pt-2">
             <BorrowBook
-              bookId={book.id}
+              bookId={schoolBook.id}
               userId={userId}
               schoolId={schoolId}
-              availableCopies={book.availableCopies}
+              availableCopies={schoolBook.availableCopies}
               hasBorrowedBook={!!activeBorrowRecord}
               borrowRecordId={activeBorrowRecord?.id}
               dictionary={lib}
@@ -161,14 +228,16 @@ export default async function LibraryBookDetailContent({
       </div>
 
       {/* Description */}
-      <div>
-        <h3 className="text-foreground mb-2 font-semibold">
-          {lib?.description || "Description"}
-        </h3>
-        <p className="text-muted-foreground text-sm leading-relaxed">
-          {book.description}
-        </p>
-      </div>
+      {catalogBook.description && (
+        <div>
+          <h3 className="text-foreground mb-2 font-semibold">
+            {lib?.description || "Description"}
+          </h3>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            {catalogBook.description}
+          </p>
+        </div>
+      )}
 
       {/* Book Details Table */}
       {hasDetails && (
@@ -177,7 +246,7 @@ export default async function LibraryBookDetailContent({
             {lib?.bookDetails || "Book Details"}
           </h3>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {book.pageCount && (
+            {catalogBook.pageCount && (
               <div className="bg-muted/50 flex items-start gap-2 rounded-lg p-3">
                 <FileText className="text-muted-foreground mt-0.5 size-4 shrink-0" />
                 <div>
@@ -185,12 +254,12 @@ export default async function LibraryBookDetailContent({
                     {lib?.pages || "Pages"}
                   </p>
                   <p className="text-foreground text-sm font-medium">
-                    {book.pageCount}
+                    {catalogBook.pageCount}
                   </p>
                 </div>
               </div>
             )}
-            {book.language && (
+            {catalogBook.language && (
               <div className="bg-muted/50 flex items-start gap-2 rounded-lg p-3">
                 <Globe className="text-muted-foreground mt-0.5 size-4 shrink-0" />
                 <div>
@@ -198,12 +267,12 @@ export default async function LibraryBookDetailContent({
                     {lib?.language || "Language"}
                   </p>
                   <p className="text-foreground text-sm font-medium">
-                    {book.language}
+                    {catalogBook.language}
                   </p>
                 </div>
               </div>
             )}
-            {book.publicationYear && (
+            {catalogBook.publicationYear && (
               <div className="bg-muted/50 flex items-start gap-2 rounded-lg p-3">
                 <Calendar className="text-muted-foreground mt-0.5 size-4 shrink-0" />
                 <div>
@@ -211,31 +280,31 @@ export default async function LibraryBookDetailContent({
                     {lib?.year || "Year"}
                   </p>
                   <p className="text-foreground text-sm font-medium">
-                    {book.publicationYear}
+                    {catalogBook.publicationYear}
                   </p>
                 </div>
               </div>
             )}
-            {book.isbn && (
+            {catalogBook.isbn && (
               <div className="bg-muted/50 flex items-start gap-2 rounded-lg p-3">
                 <Hash className="text-muted-foreground mt-0.5 size-4 shrink-0" />
                 <div>
                   <p className="text-muted-foreground text-xs">ISBN</p>
                   <p className="text-foreground text-sm font-medium">
-                    {book.isbn}
+                    {catalogBook.isbn}
                   </p>
                 </div>
               </div>
             )}
           </div>
-          {book.publisher && (
+          {catalogBook.publisher && (
             <div className="bg-muted/50 mt-3 flex items-center gap-2 rounded-lg p-3">
               <Building2 className="text-muted-foreground size-4 shrink-0" />
               <p className="text-muted-foreground text-xs">
                 {lib?.publisher || "Publisher"}:
               </p>
               <p className="text-foreground text-sm font-medium">
-                {book.publisher}
+                {catalogBook.publisher}
               </p>
             </div>
           )}
@@ -259,21 +328,24 @@ export default async function LibraryBookDetailContent({
       )}
 
       {/* Summary */}
-      {book.summary && (
+      {catalogBook.summary && (
         <div>
           <h3 className="text-foreground mb-2 font-semibold">
             {lib?.summary || "Summary"}
           </h3>
           <p className="text-muted-foreground text-sm leading-relaxed">
-            {book.summary}
+            {catalogBook.summary}
           </p>
         </div>
       )}
 
       {/* Video */}
-      {book.videoUrl && (
+      {catalogBook.videoUrl && (
         <div>
-          <BookVideo videoUrl={book.videoUrl} title={book.title} />
+          <BookVideo
+            videoUrl={catalogBook.videoUrl}
+            title={catalogBook.title}
+          />
         </div>
       )}
 
@@ -283,13 +355,13 @@ export default async function LibraryBookDetailContent({
           <Separator />
           <div>
             <h3 className="text-foreground mb-4 font-semibold">
-              {lib?.moreBy || "More by"} {book.author}
+              {lib?.moreBy || "More by"} {catalogBook.author}
             </h3>
             <div className="grid grid-cols-4 gap-3">
               {moreByAuthor.map((related) => (
                 <Link
                   key={related.id}
-                  href={`library/books/${related.id}`}
+                  href={`/${lang}/library/books/${related.id}`}
                   className="group"
                 >
                   <div
@@ -330,7 +402,7 @@ export default async function LibraryBookDetailContent({
               {similarBooks.map((related) => (
                 <Link
                   key={related.id}
-                  href={`library/books/${related.id}`}
+                  href={`/${lang}/library/books/${related.id}`}
                   className="group"
                 >
                   <div

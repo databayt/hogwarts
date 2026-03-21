@@ -102,6 +102,7 @@ export function QRScanner({
   dictionary,
   locale = "en",
 }: QRScannerProps) {
+  const t = dictionary?.attendance
   const [scanning, setScanning] = useState(false)
   const [lastScan, setLastScan] = useState<string | null>(null)
   const [processing, setProcessing] = useState(false)
@@ -229,7 +230,8 @@ export function QRScanner({
 
         toast({
           title: "Success",
-          description: "Your attendance has been marked",
+          description:
+            t?.qrCode?.scanSuccess ?? "Your attendance has been marked",
         })
 
         onScanSuccess?.(qrData)
@@ -253,7 +255,7 @@ export function QRScanner({
         })
 
         toast({
-          title: "Scan Failed",
+          title: t?.qrActions?.scanFailed ?? "Scan Failed",
           description: message,
         })
 
@@ -300,8 +302,10 @@ export function QRScanner({
     reader.onload = (e) => {
       // In production, you would decode the QR from image
       toast({
-        title: "File Upload",
-        description: "QR code file upload is not yet implemented",
+        title: t?.qrActions?.fileUpload ?? "File Upload",
+        description:
+          t?.qrActions?.fileUploadNotImplemented ??
+          "QR code file upload is not yet implemented",
       })
     }
     reader.readAsDataURL(file)

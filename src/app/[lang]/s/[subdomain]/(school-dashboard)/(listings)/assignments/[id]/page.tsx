@@ -17,7 +17,7 @@ export default async function AssignmentDetailPage({ params }: Props) {
 
   return (
     <AssignmentDetailContent
-      data={result.success ? result.data : null}
+      data={(result.success ? result.data : null) ?? null}
       error={result.success ? null : result.error}
       dictionary={dictionary}
       lang={lang}

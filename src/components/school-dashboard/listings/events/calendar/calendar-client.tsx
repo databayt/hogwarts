@@ -119,7 +119,7 @@ export function EventCalendarClient({
                 size="icon"
                 onClick={() => navigateMonth(-1)}
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
               </Button>
               <span className="min-w-[140px] text-center font-medium">
                 {MONTH_NAMES[month - 1]} {year}
@@ -129,7 +129,7 @@ export function EventCalendarClient({
                 size="icon"
                 onClick={() => navigateMonth(1)}
               >
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-4 w-4 rtl:rotate-180" />
               </Button>
             </div>
           </div>

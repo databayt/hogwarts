@@ -64,7 +64,7 @@ src/components/school-dashboard/finance/
 
 ### Status
 
-**Completion:** 75% | **Blockers:** Invoice sub-block has legacy code needing cleanup; no test coverage across all sub-blocks
+**Completion:** 80% | **Blockers:** Invoice sub-block optimized (90%, 131 tests); other sub-blocks still need test coverage
 
 ### Design Principles
 

@@ -8,19 +8,31 @@ import { useParams } from "next/navigation"
 import { FormHeading, FormLayout } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { useQuestionWizard } from "../use-question-wizard"
 import { QuestionForm } from "./form"
 
-const TAB_HEADINGS: Record<string, { title: string; description: string }> = {
-  question: {
-    title: "Question",
-    description: "Enter the question text, subject, and type.",
-  },
-  details: {
-    title: "Question Details",
-    description: "Set difficulty, points, tags, and explanation.",
-  },
+function useTabHeadings(): Record<
+  string,
+  { title: string; description: string }
+> {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.exams?.qbankUi?.wizard?.question as
+    | Record<string, string>
+    | undefined
+  return {
+    question: {
+      title: t?.tabQuestion ?? "Question",
+      description:
+        t?.tabQuestionDesc ?? "Enter the question text, subject, and type.",
+    },
+    details: {
+      title: t?.tabDetailsTitle ?? "Question Details",
+      description:
+        t?.tabDetailsDesc ?? "Set difficulty, points, tags, and explanation.",
+    },
+  }
 }
 
 export default function QuestionContent() {
@@ -28,6 +40,7 @@ export default function QuestionContent() {
   const questionId = params.id as string
   const formRef = useRef<WizardFormRef>(null)
   const { data, isLoading } = useQuestionWizard()
+  const TAB_HEADINGS = useTabHeadings()
   const [isValid, setIsValid] = useState(false)
   const [heading, setHeading] = useState(TAB_HEADINGS.question)
 

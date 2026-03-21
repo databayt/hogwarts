@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { createTemplateFromTerm, getTermsForCopy } from "../actions"
 
@@ -39,20 +40,8 @@ interface CreateTemplateDialogProps {
   onOpenChange: (open: boolean) => void
   onSuccess: () => void
   currentTermId: string
-  dictionary?: {
-    templates?: {
-      createTitle?: string
-      createDescription?: string
-      name?: string
-      namePlaceholder?: string
-      description?: string
-      descriptionPlaceholder?: string
-      sourceTerm?: string
-      selectTerm?: string
-      create?: string
-      cancel?: string
-    }
-  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  dictionary?: Record<string, any>
 }
 
 export function CreateTemplateDialog({
@@ -60,7 +49,6 @@ export function CreateTemplateDialog({
   onOpenChange,
   onSuccess,
   currentTermId,
-  dictionary,
 }: CreateTemplateDialogProps) {
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
@@ -68,8 +56,8 @@ export function CreateTemplateDialog({
   const [terms, setTerms] = useState<Term[]>([])
   const [isPending, startTransition] = useTransition()
   const { toast } = useToast()
-
-  const t = dictionary?.templates || {}
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.timetable?.templatesUi
 
   useEffect(() => {
     if (open) {
@@ -81,8 +69,8 @@ export function CreateTemplateDialog({
   const handleSubmit = useCallback(() => {
     if (!name.trim()) {
       toast({
-        title: "Error",
-        description: "Template name is required",
+        title: t?.error ?? "Error",
+        description: t?.nameRequired ?? "Template name is required",
         variant: "destructive",
       })
       return
@@ -97,8 +85,10 @@ export function CreateTemplateDialog({
         })
 
         toast({
-          title: "Success",
-          description: `Template "${name}" created successfully`,
+          title: t?.success ?? "Success",
+          description: (
+            t?.createSuccess ?? `Template "${name}" created successfully`
+          ).replace("{name}", name),
         })
 
         onOpenChange(false)
@@ -107,8 +97,8 @@ export function CreateTemplateDialog({
         setDescription("")
       } catch (error) {
         toast({
-          title: "Error",
-          description: "Failed to create template",
+          title: t?.error ?? "Error",
+          description: t?.createFailed ?? "Failed to create template",
           variant: "destructive",
         })
       }
@@ -119,34 +109,36 @@ export function CreateTemplateDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{t.createTitle || "Create Template"}</DialogTitle>
+          <DialogTitle>{t?.createTitle ?? "Create Template"}</DialogTitle>
           <DialogDescription>
-            {t.createDescription ||
+            {t?.createDescription ??
               "Save the current timetable as a reusable template"}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="name">{t.name || "Template Name"}</Label>
+            <Label htmlFor="name">{t?.templateName ?? "Template Name"}</Label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder={t.namePlaceholder || "e.g., Fall 2024 Schedule"}
+              placeholder={
+                t?.templateNamePlaceholder ?? "e.g., Fall 2024 Schedule"
+              }
             />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="description">
-              {t.description || "Description (Optional)"}
+              {t?.templateDescription ?? "Description (Optional)"}
             </Label>
             <Textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder={
-                t.descriptionPlaceholder ||
+                t?.templateDescPlaceholder ??
                 "Brief description of this template..."
               }
               rows={3}
@@ -154,10 +146,10 @@ export function CreateTemplateDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="sourceTerm">{t.sourceTerm || "Source Term"}</Label>
+            <Label htmlFor="sourceTerm">{t?.sourceTerm ?? "Source Term"}</Label>
             <Select value={sourceTermId} onValueChange={setSourceTermId}>
               <SelectTrigger>
-                <SelectValue placeholder={t.selectTerm || "Select term"} />
+                <SelectValue placeholder={t?.selectTerm ?? "Select term"} />
               </SelectTrigger>
               <SelectContent>
                 {terms.map((term) => (
@@ -172,10 +164,12 @@ export function CreateTemplateDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            {t.cancel || "Cancel"}
+            {t?.cancel ?? "Cancel"}
           </Button>
           <Button onClick={handleSubmit} disabled={isPending || !name.trim()}>
-            {isPending ? "Creating..." : t.create || "Create Template"}
+            {isPending
+              ? (t?.creating ?? "Creating...")
+              : (t?.createTemplate ?? "Create Template")}
           </Button>
         </DialogFooter>
       </DialogContent>

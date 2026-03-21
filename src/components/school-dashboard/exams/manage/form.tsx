@@ -13,6 +13,7 @@ import { Form } from "@/components/ui/form"
 import { useModal } from "@/components/atom/modal/context"
 import { ModalFooter } from "@/components/atom/modal/modal-footer"
 import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 
 import { createExam, getExam, updateExam } from "./actions"
@@ -29,6 +30,8 @@ interface ExamCreateFormProps {
 
 export function ExamCreateForm({ onSuccess }: ExamCreateFormProps) {
   const { locale } = useLocale()
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.exams?.manage
   const { modal, closeModal } = useModal()
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
@@ -103,7 +106,11 @@ export function ExamCreateForm({ onSuccess }: ExamCreateFormProps) {
       : await createExam(values)
 
     if (res?.success) {
-      toast.success(currentId ? "Exam updated" : "Exam created")
+      toast.success(
+        currentId
+          ? (t?.toast?.updated ?? "Exam updated")
+          : (t?.toast?.created ?? "Exam created")
+      )
       closeModal()
       // Use callback for optimistic update, fallback to router.refresh()
       if (onSuccess) {
@@ -112,7 +119,11 @@ export function ExamCreateForm({ onSuccess }: ExamCreateFormProps) {
         router.refresh()
       }
     } else {
-      toast.error(currentId ? "Failed to update exam" : "Failed to create exam")
+      toast.error(
+        currentId
+          ? (t?.toast?.updateFailed ?? "Failed to update exam")
+          : (t?.toast?.createFailed ?? "Failed to create exam")
+      )
     }
   }
 

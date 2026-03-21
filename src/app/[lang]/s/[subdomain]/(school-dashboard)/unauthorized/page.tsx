@@ -50,7 +50,7 @@ export default async function UnauthorizedPage({
       <div className="flex gap-4">
         <Button variant="outline" className="gap-2" asChild>
           <Link href={`/${lang}/dashboard`}>
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
             {dictionary?.common?.back || "Back"}{" "}
             {lang === "ar" ? "للوحة التحكم" : "to Dashboard"}
           </Link>

@@ -35,8 +35,8 @@
       "WebFetch(domain:vitest.dev)",
       "WebFetch(domain:playwright.dev)",
       "WebFetch(domain:zod.dev)",
-      "mcp__Ref__ref_search_documentation",
-      "mcp__Ref__ref_read_url"
+      "mcp__ref__ref_search_documentation",
+      "mcp__ref__ref_read_url"
     ],
     "deny": [
       "Bash(pnpm db:seed)",
@@ -57,15 +57,12 @@
     "PROJECT_NAME": "Hogwarts School Automation Platform",
     "PROJECT_TYPE": "nextjs-prisma-multiTenant",
     "MULTI_TENANT": "true",
-    "I18N_LANGUAGES": "en,ar",
     "BMAD_ENABLED": "true",
     "AUTOMATION_LEVEL": "maximum",
     "TDD_ENFORCE": "true",
-    "ORCHESTRATOR_MODEL": "claude-opus-4-1-20250805",
+    "ORCHESTRATOR_MODEL": "opus",
     "DEFAULT_MODEL": "opus",
-    "COVERAGE_TARGET": "95",
-    "ERROR_PATTERNS": "204",
-    "AGENT_COUNT": "34"
+    "COVERAGE_TARGET": "95"
   },
   "hooks": {
     "PreToolUse": [
@@ -74,7 +71,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "INPUT=\"$CLAUDE_TOOL_INPUT\"; if echo \"$INPUT\" | grep -qE '(migrate reset|db execute|db push|accept-data-loss|DROP TABLE|TRUNCATE|DELETE FROM|ALTER TABLE.*DROP)'; then echo '🚫 BLOCKED: Destructive database command detected'; echo 'This command can wipe production data.'; echo 'If you really need this, ask the user to run it manually.'; exit 1; fi; exit 0"
+            "command": "INPUT=\"$CLAUDE_TOOL_INPUT\"; if echo \"$INPUT\" | grep -qE '(migrate reset|db execute|db push|accept-data-loss|DROP TABLE|TRUNCATE|ALTER TABLE.*DROP)'; then echo '🚫 BLOCKED: Destructive database command detected'; echo 'This command can wipe production data.'; echo 'If you really need this, ask the user to run it manually.'; exit 1; fi; exit 0"
           }
         ]
       },
@@ -112,7 +109,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "npx prettier --write \"$CLAUDE_TOOL_ARGS\" --log-level silent || exit 0"
+            "command": "npx prettier --write \"$CLAUDE_FILE_PATH\" --log-level silent || exit 0"
           },
           {
             "type": "command",
@@ -121,6 +118,10 @@
           {
             "type": "command",
             "command": "bash .claude/hooks/check-i18n.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/check-roles.sh"
           }
         ]
       },
@@ -129,7 +130,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "npx prettier --write \"$CLAUDE_TOOL_ARGS\" --log-level silent || exit 0"
+            "command": "npx prettier --write \"$CLAUDE_FILE_PATH\" --log-level silent || exit 0"
           },
           {
             "type": "command",
@@ -138,6 +139,10 @@
           {
             "type": "command",
             "command": "bash .claude/hooks/check-i18n.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/check-roles.sh"
           }
         ]
       },
@@ -157,7 +162,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo '🚀 HOGWARTS - MANUAL DEPLOY MODE'; echo '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'; echo 'Stack: Next.js 15 + React 19 + Prisma + TypeScript'; echo ''; BRANCH=$(git branch --show-current 2>/dev/null); echo \"📊 Branch: $BRANCH\"; echo ''; echo '📝 WORKFLOW:'; echo '  • Edits: Prettier auto-formats (no push)'; echo '  • When ready: Say \"push\" to deploy'; echo '  • Checklist → Commit → Push → Vercel'; echo ''; exit 0"
+            "command": "echo '🚀 HOGWARTS - MANUAL DEPLOY MODE'; echo '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'; echo 'Stack: Next.js 16 + React 19 + Prisma + TypeScript'; echo ''; BRANCH=$(git branch --show-current 2>/dev/null); echo \"📊 Branch: $BRANCH\"; echo ''; echo '📝 WORKFLOW:'; echo '  • Edits: Prettier auto-formats (no push)'; echo '  • When ready: Say \"push\" to deploy'; echo '  • Checklist → Commit → Push → Vercel'; echo ''; exit 0"
           }
         ]
       }
@@ -179,7 +184,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo \"🚨 Error Detection Hook Activated\"; TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S' 2>/dev/null || echo 'timestamp unavailable'); echo \"Event occurred at: $TIMESTAMP\"; if [ ! -d .claude ]; then mkdir -p .claude; fi; echo \"[$TIMESTAMP] Tool or operation stopped/failed\" >> .claude/error.log 2>/dev/null || true; echo \"💡 Common fixes:\"; echo \"  - TypeScript errors: Run 'pnpm tsc --noEmit' to see details\"; echo \"  - Missing dependencies: Run 'pnpm install'\"; echo \"  - Prisma errors: Run 'pnpm prisma generate'\"; echo \"  - Linting errors: Run 'pnpm lint --fix'\"; echo \"Event logged to .claude/error.log\"; exit 0"
+            "command": "echo \"💡 Common fixes:\"; echo \"  - TypeScript errors: Run 'pnpm tsc --noEmit' to see details\"; echo \"  - Missing dependencies: Run 'pnpm install'\"; echo \"  - Prisma errors: Run 'pnpm prisma generate'\"; echo \"  - Linting errors: Run 'pnpm lint --fix'\"; exit 0"
           }
         ]
       }

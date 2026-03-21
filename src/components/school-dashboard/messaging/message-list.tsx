@@ -15,12 +15,13 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { AutoScroller, useIsAtBottom } from "./auto-scroller"
 import { ChatEmpty } from "./empty-state"
 import { groupMessages, MessageGroup } from "./message-group"
-import type { MessageDTO } from "./types"
+import type { ConversationType, MessageDTO } from "./types"
 
 export interface MessageListProps {
   messages: MessageDTO[]
   currentUserId: string
   locale?: "ar" | "en"
+  conversationType?: ConversationType
   isLoading?: boolean
   hasMore?: boolean
   onLoadMore?: () => void
@@ -30,7 +31,7 @@ export interface MessageListProps {
   onReact?: (messageId: string, emoji: string) => void
   onRemoveReaction?: (reactionId: string) => void
   className?: string
-  enableVirtualization?: boolean // Toggle for virtual scrolling
+  enableVirtualization?: boolean
 }
 
 // Virtual list item types
@@ -48,6 +49,7 @@ export function MessageList({
   messages,
   currentUserId,
   locale = "en",
+  conversationType,
   isLoading = false,
   hasMore = false,
   onLoadMore,
@@ -57,7 +59,7 @@ export function MessageList({
   onReact,
   onRemoveReaction,
   className,
-  enableVirtualization = true, // Default to enabled for performance
+  enableVirtualization = true,
 }: MessageListProps) {
   const { dictionary } = useDictionary()
   const m = dictionary?.messaging
@@ -69,7 +71,7 @@ export function MessageList({
   const [hasScrolledUp, setHasScrolledUp] = useState(false)
   const dateLocale = locale === "ar" ? ar : enUS
 
-  // Group messages by date first
+  // Group messages by date
   const messagesByDate = useMemo(() => {
     return messages.reduce(
       (groups, message) => {
@@ -101,21 +103,17 @@ export function MessageList({
   const virtualListItems = useMemo<VirtualListItem[]>(() => {
     const items: VirtualListItem[] = []
 
-    // Top loader
     if (isLoading && hasMore) {
       items.push({ type: "loader", position: "top" })
     }
 
-    // Date groups with message groups
     Object.entries(messagesByDate).forEach(([dateKey, dayMessages]) => {
-      // Add date separator
       items.push({
         type: "date-separator",
         dateKey,
         label: getDateLabel(dateKey),
       })
 
-      // Add message groups for this date
       const messageGroups = groupMessages(dayMessages)
       messageGroups.forEach((group, groupIndex) => {
         items.push({
@@ -127,7 +125,6 @@ export function MessageList({
       })
     })
 
-    // Bottom loader
     if (isLoading && !hasMore) {
       items.push({ type: "loader", position: "bottom" })
     }
@@ -141,12 +138,11 @@ export function MessageList({
     getScrollElement: () => scrollContainerRef.current,
     estimateSize: (index) => {
       const item = virtualListItems[index]
-      if (item.type === "date-separator") return 60 // Date separator height
-      if (item.type === "loader") return 40 // Loader height
-      // Message group: estimate based on message count (avg 80px per message)
-      return item.messages.length * 80
+      if (item.type === "date-separator") return 40
+      if (item.type === "loader") return 36
+      return item.messages.length * 50
     },
-    overscan: 5, // Render 5 extra items above/below viewport
+    overscan: 5,
     enabled: enableVirtualization,
   })
 
@@ -159,7 +155,6 @@ export function MessageList({
 
   const scrollToBottom = () => {
     if (enableVirtualization) {
-      // For virtualized list, scroll to last item
       virtualizer.scrollToIndex(virtualListItems.length - 1, {
         align: "end",
         behavior: "smooth",
@@ -172,14 +167,13 @@ export function MessageList({
     }
   }
 
-  // Auto-scroll to bottom on new messages (virtualized)
+  // Auto-scroll to bottom on new messages
   useEffect(() => {
     if (
       enableVirtualization &&
       virtualListItems.length > 0 &&
       (isAtBottom || !hasScrolledUp)
     ) {
-      // Scroll to bottom when new messages arrive
       virtualizer.scrollToIndex(virtualListItems.length - 1, { align: "end" })
     }
   }, [virtualListItems.length, enableVirtualization, isAtBottom, hasScrolledUp])
@@ -195,13 +189,12 @@ export function MessageList({
   // Render virtualized list
   if (enableVirtualization) {
     return (
-      <div className={cn("bg-background relative flex-1", className)}>
+      <div className={cn("bg-msg-chat-bg relative flex-1", className)}>
         <div
           ref={scrollContainerRef}
           className="h-full flex-1 overflow-x-hidden overflow-y-auto"
           onScroll={handleScrollToTop}
         >
-          {/* Virtual list container */}
           <div
             style={{
               height: `${virtualizer.getTotalSize()}px`,
@@ -209,7 +202,6 @@ export function MessageList({
               position: "relative",
             }}
           >
-            {/* Render only visible items */}
             {virtualizer.getVirtualItems().map((virtualItem) => {
               const item = virtualListItems[virtualItem.index]
 
@@ -233,19 +225,20 @@ export function MessageList({
                   )}
 
                   {item.type === "date-separator" && (
-                    <div className="my-6 flex items-center justify-center">
-                      <div className="bg-muted/50 text-muted-foreground rounded-full px-4 py-1.5 text-xs font-medium backdrop-blur-sm">
+                    <div className="my-3 flex items-center justify-center">
+                      <span className="bg-msg-date-pill text-foreground/80 rounded-lg px-3 py-1 text-[12.5px] font-medium shadow-sm">
                         {item.label}
-                      </div>
+                      </span>
                     </div>
                   )}
 
                   {item.type === "message-group" && (
-                    <div className="mb-6">
+                    <div className="mb-1">
                       <MessageGroup
                         messages={item.messages}
                         currentUserId={currentUserId}
                         locale={locale}
+                        conversationType={conversationType}
                         onReply={onReply}
                         onEdit={onEdit}
                         onDelete={onDelete}
@@ -260,16 +253,16 @@ export function MessageList({
           </div>
         </div>
 
-        {/* Scroll to bottom button - appears when user scrolls up */}
+        {/* Scroll to bottom — WhatsApp circular button */}
         {!isAtBottom && messages.length > 0 && (
           <div className="absolute end-4 bottom-4 z-10">
             <Button
               variant="secondary"
               size="icon"
-              className="animate-in fade-in slide-in-from-bottom-2 h-10 w-10 rounded-full shadow-lg"
+              className="bg-card border-border h-10 w-10 rounded-full border shadow-md"
               onClick={scrollToBottom}
             >
-              <ArrowDown className="h-5 w-5" />
+              <ArrowDown className="text-muted-foreground h-5 w-5" />
             </Button>
           </div>
         )}
@@ -277,45 +270,43 @@ export function MessageList({
     )
   }
 
-  // Non-virtualized rendering (fallback)
+  // Non-virtualized fallback
   return (
-    <div className={cn("bg-background relative flex-1", className)}>
+    <div className={cn("bg-msg-chat-bg relative flex-1", className)}>
       <AutoScroller
         ref={scrollContainerRef}
         className="h-full flex-1 overflow-x-hidden overflow-y-auto"
         enabled={isAtBottom || !hasScrolledUp}
         onScrollToTop={handleScrollToTop}
       >
-        <div className="space-y-6 py-4">
-          {/* Loading indicator at top */}
+        <div className="py-3">
           {isLoading && hasMore && (
             <div className="flex justify-center py-2">
               <LoaderCircle className="text-muted-foreground h-5 w-5 animate-spin" />
             </div>
           )}
 
-          {/* Messages grouped by date */}
           {Object.entries(messagesByDate).map(([dateKey, dayMessages]) => {
-            // Group messages by sender and time within each day
             const messageGroups = groupMessages(dayMessages)
 
             return (
-              <div key={dateKey} className="space-y-4">
-                {/* Date separator - iMessage style */}
-                <div className="my-6 flex items-center justify-center">
-                  <div className="bg-muted/50 text-muted-foreground rounded-full px-4 py-1.5 text-xs font-medium backdrop-blur-sm">
+              <div key={dateKey}>
+                {/* Date separator — WhatsApp pill */}
+                <div className="my-3 flex items-center justify-center">
+                  <span className="bg-msg-date-pill text-foreground/80 rounded-lg px-3 py-1 text-[12.5px] font-medium shadow-sm">
                     {getDateLabel(dateKey)}
-                  </div>
+                  </span>
                 </div>
 
-                {/* Message groups for this day */}
-                <div className="space-y-6">
+                {/* Message groups */}
+                <div className="space-y-1">
                   {messageGroups.map((group, groupIndex) => (
                     <MessageGroup
                       key={`group-${dateKey}-${groupIndex}`}
                       messages={group}
                       currentUserId={currentUserId}
                       locale={locale}
+                      conversationType={conversationType}
                       onReply={onReply}
                       onEdit={onEdit}
                       onDelete={onDelete}
@@ -328,7 +319,6 @@ export function MessageList({
             )
           })}
 
-          {/* Loading indicator at bottom */}
           {isLoading && !hasMore && (
             <div className="flex justify-center py-2">
               <LoaderCircle className="text-muted-foreground h-5 w-5 animate-spin" />
@@ -337,16 +327,15 @@ export function MessageList({
         </div>
       </AutoScroller>
 
-      {/* Scroll to bottom button - appears when user scrolls up */}
       {!isAtBottom && messages.length > 0 && (
         <div className="absolute end-4 bottom-4 z-10">
           <Button
             variant="secondary"
             size="icon"
-            className="animate-in fade-in slide-in-from-bottom-2 h-10 w-10 rounded-full shadow-lg"
+            className="bg-card border-border h-10 w-10 rounded-full border shadow-md"
             onClick={scrollToBottom}
           >
-            <ArrowDown className="h-5 w-5" />
+            <ArrowDown className="text-muted-foreground h-5 w-5" />
           </Button>
         </div>
       )}
@@ -360,64 +349,36 @@ export function MessageListSkeleton({
   locale?: "ar" | "en"
 }) {
   return (
-    <div className="bg-background flex-1 space-y-6 px-4 py-4">
-      {/* Date separator skeleton */}
-      <div className="my-6 flex items-center justify-center">
-        <div className="bg-muted/50 h-6 w-24 animate-pulse rounded-full" />
+    <div className="bg-msg-chat-bg flex-1 px-4 py-4">
+      {/* Date pill skeleton */}
+      <div className="my-3 flex items-center justify-center">
+        <div className="bg-msg-date-pill h-6 w-20 animate-pulse rounded-lg" />
       </div>
 
       {/* Message group skeletons */}
       {Array.from({ length: 3 }).map((_, groupIndex) => (
-        <div key={groupIndex} className="space-y-1">
+        <div key={groupIndex} className="mb-2 space-y-[2px]">
           {Array.from({ length: 2 + (groupIndex % 2) }).map((_, msgIndex) => (
             <div
               key={msgIndex}
               className={cn(
-                "flex w-full px-4 py-1",
+                "flex w-full px-4 py-[1px]",
                 groupIndex % 2 === 0 ? "justify-end" : "justify-start"
               )}
             >
               <div
                 className={cn(
-                  "flex max-w-[65%] gap-2",
-                  groupIndex % 2 === 0 ? "flex-row-reverse" : "flex-row"
+                  "animate-pulse rounded-lg",
+                  groupIndex % 2 === 0
+                    ? "bg-msg-outgoing rounded-se-sm"
+                    : "bg-msg-incoming rounded-ss-sm",
+                  msgIndex % 3 === 0
+                    ? "h-10 w-44"
+                    : msgIndex % 3 === 1
+                      ? "h-12 w-56"
+                      : "h-8 w-48"
                 )}
-              >
-                {/* Avatar skeleton - only on last message */}
-                {groupIndex % 2 === 1 && msgIndex === 0 && (
-                  <div className="bg-muted h-7 w-7 flex-shrink-0 animate-pulse rounded-full" />
-                )}
-                {groupIndex % 2 === 1 && msgIndex !== 0 && (
-                  <div className="h-7 w-7 flex-shrink-0" />
-                )}
-
-                <div className="flex flex-col gap-1">
-                  {/* Sender name skeleton - only on first message */}
-                  {groupIndex % 2 === 1 && msgIndex === 0 && (
-                    <div className="bg-muted ms-3 mb-1 h-3 w-20 animate-pulse rounded" />
-                  )}
-
-                  {/* Message bubble skeleton */}
-                  <div
-                    className={cn(
-                      "bg-muted animate-pulse rounded-[18px]",
-                      groupIndex % 2 === 0
-                        ? "rounded-se-[4px]"
-                        : "rounded-ss-[4px]",
-                      msgIndex % 3 === 0
-                        ? "h-16 w-48"
-                        : msgIndex % 3 === 1
-                          ? "h-20 w-64"
-                          : "h-12 w-56"
-                    )}
-                  />
-
-                  {/* Timestamp skeleton - only on last message */}
-                  {msgIndex === 1 + (groupIndex % 2) && (
-                    <div className="bg-muted mt-1 h-2 w-16 animate-pulse rounded" />
-                  )}
-                </div>
-              </div>
+              />
             </div>
           ))}
         </div>

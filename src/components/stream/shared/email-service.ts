@@ -9,7 +9,17 @@ import { logger } from "@/lib/logger"
 import { CompletionEmail } from "../emails/completion-email"
 import { EnrollmentEmail } from "../emails/enrollment-email"
 
-const resend = new Resend(env.RESEND_API_KEY)
+// Lazy-init to avoid crashing on import if RESEND_API_KEY is not set
+let _resend: Resend | null = null
+function getResend(): Resend {
+  if (!_resend) {
+    if (!env.RESEND_API_KEY) {
+      throw new Error("RESEND_API_KEY is not configured")
+    }
+    _resend = new Resend(env.RESEND_API_KEY)
+  }
+  return _resend
+}
 
 interface SendEnrollmentEmailParams {
   to: string
@@ -39,7 +49,7 @@ export async function sendEnrollmentEmail({
   schoolName,
 }: SendEnrollmentEmailParams) {
   try {
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await getResend().emails.send({
       from: env.EMAIL_FROM ?? "no-reply@databayt.org",
       to: process.env.NODE_ENV === "development" ? "delivered@resend.dev" : to,
       subject: `Enrollment Confirmed: ${courseTitle}`,
@@ -92,7 +102,7 @@ export async function sendCompletionEmail({
   completionDate,
 }: SendCompletionEmailParams) {
   try {
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await getResend().emails.send({
       from: env.EMAIL_FROM ?? "no-reply@databayt.org",
       to: process.env.NODE_ENV === "development" ? "delivered@resend.dev" : to,
       subject: `Congratulations! You've completed ${courseTitle}`,

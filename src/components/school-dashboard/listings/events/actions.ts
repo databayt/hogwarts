@@ -8,6 +8,7 @@ import { type Prisma } from "@prisma/client"
 import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
+import type { ActionResponse } from "@/lib/action-response"
 import { getDisplayFields } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -20,14 +21,6 @@ import {
   eventUpdateSchema,
   getEventsSchema,
 } from "@/components/school-dashboard/listings/events/validation"
-
-// ============================================================================
-// Types
-// ============================================================================
-
-export type ActionResponse<T = void> =
-  | { success: true; data: T }
-  | { success: false; error: string }
 
 type EventSelectResult = {
   id: string
@@ -697,8 +690,8 @@ export async function registerForEvent(input: {
 
     // Increment counter if registered (not waitlisted)
     if (status === "REGISTERED") {
-      await db.event.update({
-        where: { id: eventId },
+      await db.event.updateMany({
+        where: { id: eventId, schoolId },
         data: { currentAttendees: { increment: 1 } },
       })
     }
@@ -756,8 +749,8 @@ export async function cancelEventRegistration(input: {
 
     // Decrement counter only if was registered (not waitlisted)
     if (wasRegistered) {
-      await db.event.update({
-        where: { id: eventId },
+      await db.event.updateMany({
+        where: { id: eventId, schoolId },
         data: { currentAttendees: { decrement: 1 } },
       })
     }

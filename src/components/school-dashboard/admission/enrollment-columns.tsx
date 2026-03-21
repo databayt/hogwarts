@@ -6,7 +6,6 @@ import { useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { ColumnDef } from "@tanstack/react-table"
 import { Check, Clock, Ellipsis, X } from "lucide-react"
-import { toast } from "sonner"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -18,6 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
@@ -77,6 +77,102 @@ const getOfferBadge = (
     variant: "secondary" as const,
     icon: null,
   }
+}
+
+function EnrollmentActionsCell({
+  enrollment,
+  dictionary,
+}: {
+  enrollment: EnrollmentRow
+  dictionary: Dictionary["school"]["admission"]
+}) {
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
+  const t = dictionary
+
+  const onView = () => {
+    router.push(`/admission/applications/${enrollment.id}`)
+  }
+
+  const onRecordPayment = () => {
+    startTransition(async () => {
+      const result = await recordPayment({
+        id: enrollment.id,
+        paymentId: `CASH-${Date.now()}`,
+      })
+      if (result.success) {
+        SuccessToast(t?.enrollment?.paymentRecorded || "Payment recorded")
+      } else {
+        ErrorToast(result.error || "Failed to record payment")
+      }
+    })
+  }
+
+  const onConfirmEnrollment = () => {
+    startTransition(async () => {
+      const result = await confirmEnrollment({ id: enrollment.id })
+      if (result.success) {
+        SuccessToast(
+          t?.enrollment?.enrollmentConfirmed || "Enrollment confirmed"
+        )
+      } else {
+        ErrorToast(result.error || "Failed to confirm enrollment")
+      }
+    })
+  }
+
+  const onVerifyDocuments = () => {
+    router.push(`/admission/applications/${enrollment.id}`)
+  }
+
+  const onSendReminder = () => {
+    const name = enrollment.applicantName || enrollment.firstName
+    const subject = encodeURIComponent(
+      `Enrollment Reminder - ${enrollment.applicationNumber}`
+    )
+    const body = encodeURIComponent(
+      `Dear ${name},\n\nThis is a reminder regarding your enrollment application (${enrollment.applicationNumber}).\n\nPlease complete any outstanding steps at your earliest convenience.\n\nThank you.`
+    )
+    window.open(`mailto:?subject=${subject}&body=${body}`, "_blank")
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="h-8 w-8 p-0" disabled={isPending}>
+          <Ellipsis className="h-4 w-4" />
+          <span className="sr-only">Open menu</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>
+          {t?.columns?.actions || "Actions"}
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={onView}>
+          {t?.applications?.viewDetails || "View Details"}
+        </DropdownMenuItem>
+        {!enrollment.applicationFeePaid && (
+          <DropdownMenuItem onClick={onRecordPayment} disabled={isPending}>
+            {t?.enrollment?.recordPayment || "Record Payment"}
+          </DropdownMenuItem>
+        )}
+        {!enrollment.hasDocuments && (
+          <DropdownMenuItem onClick={onVerifyDocuments}>
+            {t?.enrollment?.verifyDocuments || "Verify Documents"}
+          </DropdownMenuItem>
+        )}
+        {enrollment.admissionOffered && !enrollment.admissionConfirmed && (
+          <DropdownMenuItem onClick={onConfirmEnrollment} disabled={isPending}>
+            {t?.enrollment?.confirmEnrollment || "Confirm Enrollment"}
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuItem onClick={onSendReminder}>
+          {t?.enrollment?.sendReminder || "Send Reminder"}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
 }
 
 export const getEnrollmentColumns = (
@@ -228,108 +324,12 @@ export const getEnrollmentColumns = (
       header: () => (
         <span className="sr-only">{t?.columns?.actions || "Actions"}</span>
       ),
-      cell: ({ row }) => {
-        const enrollment = row.original
-        const router = useRouter()
-        const [isPending, startTransition] = useTransition()
-
-        const onView = () => {
-          router.push(`/admission/applications/${enrollment.id}`)
-        }
-
-        const onRecordPayment = () => {
-          startTransition(async () => {
-            const result = await recordPayment({
-              id: enrollment.id,
-              paymentId: `CASH-${Date.now()}`,
-            })
-            if (result.success) {
-              toast.success(
-                t?.enrollment?.paymentRecorded || "Payment recorded"
-              )
-            } else {
-              toast.error(result.error || "Failed to record payment")
-            }
-          })
-        }
-
-        const onConfirmEnrollment = () => {
-          startTransition(async () => {
-            const result = await confirmEnrollment({ id: enrollment.id })
-            if (result.success) {
-              toast.success(
-                t?.enrollment?.enrollmentConfirmed || "Enrollment confirmed"
-              )
-            } else {
-              toast.error(result.error || "Failed to confirm enrollment")
-            }
-          })
-        }
-
-        const onVerifyDocuments = () => {
-          router.push(`/admission/applications/${enrollment.id}`)
-        }
-
-        const onSendReminder = () => {
-          const name = enrollment.applicantName || enrollment.firstName
-          const subject = encodeURIComponent(
-            `Enrollment Reminder - ${enrollment.applicationNumber}`
-          )
-          const body = encodeURIComponent(
-            `Dear ${name},\n\nThis is a reminder regarding your enrollment application (${enrollment.applicationNumber}).\n\nPlease complete any outstanding steps at your earliest convenience.\n\nThank you.`
-          )
-          window.open(`mailto:?subject=${subject}&body=${body}`, "_blank")
-        }
-
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="h-8 w-8 p-0"
-                disabled={isPending}
-              >
-                <Ellipsis className="h-4 w-4" />
-                <span className="sr-only">Open menu</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>
-                {t?.columns?.actions || "Actions"}
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onView}>
-                {t?.applications?.viewDetails || "View Details"}
-              </DropdownMenuItem>
-              {!enrollment.applicationFeePaid && (
-                <DropdownMenuItem
-                  onClick={onRecordPayment}
-                  disabled={isPending}
-                >
-                  {t?.enrollment?.recordPayment || "Record Payment"}
-                </DropdownMenuItem>
-              )}
-              {!enrollment.hasDocuments && (
-                <DropdownMenuItem onClick={onVerifyDocuments}>
-                  {t?.enrollment?.verifyDocuments || "Verify Documents"}
-                </DropdownMenuItem>
-              )}
-              {enrollment.admissionOffered &&
-                !enrollment.admissionConfirmed && (
-                  <DropdownMenuItem
-                    onClick={onConfirmEnrollment}
-                    disabled={isPending}
-                  >
-                    {t?.enrollment?.confirmEnrollment || "Confirm Enrollment"}
-                  </DropdownMenuItem>
-                )}
-              <DropdownMenuItem onClick={onSendReminder}>
-                {t?.enrollment?.sendReminder || "Send Reminder"}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )
-      },
+      cell: ({ row }) => (
+        <EnrollmentActionsCell
+          enrollment={row.original}
+          dictionary={dictionary}
+        />
+      ),
       enableSorting: false,
       enableColumnFilter: false,
     },

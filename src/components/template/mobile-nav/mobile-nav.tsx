@@ -5,7 +5,7 @@
 import * as React from "react"
 import Link, { LinkProps } from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { Bell, Mail } from "lucide-react"
+import { Mail } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -19,6 +19,7 @@ import type { Role } from "@/components/atom/generic-command-menu/types"
 import { UserButton } from "@/components/auth/user-button"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { LanguageSwitcher } from "@/components/internationalization/language-switcher"
+import { NotificationBellIconCompact } from "@/components/school-dashboard/notifications/bell-icon"
 import type { School } from "@/components/school-marketing/types"
 import { siteConfig } from "@/components/template/marketing-header/config"
 import { Icons } from "@/components/template/marketing-header/icons"
@@ -137,21 +138,11 @@ export function MobileNav({
                 />
                 <LanguageSwitcher variant="toggle" />
                 <ModeSwitcher />
-                {notificationsUrl && (
-                  <Button
-                    variant="link"
-                    size="icon"
-                    className="size-8 cursor-pointer transition-opacity hover:opacity-70"
-                    asChild
-                    onClick={() => setOpen(false)}
-                  >
-                    <Link href={notificationsUrl}>
-                      <Bell className="h-4 w-4" />
-                      <span className="sr-only">
-                        {dictionary?.platform?.notifications || "Notifications"}
-                      </span>
-                    </Link>
-                  </Button>
+                {notificationsUrl && dictionary?.notifications && (
+                  <NotificationBellIconCompact
+                    locale={locale as "ar" | "en"}
+                    dictionary={dictionary.notifications}
+                  />
                 )}
                 {messagesUrl && (
                   <Button

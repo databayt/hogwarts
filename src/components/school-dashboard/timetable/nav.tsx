@@ -17,18 +17,22 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { AboutHoverCard } from "./about-hover-card"
 import { ConfigDialog } from "./config-dialog"
 import { useTimetableStore } from "./timetable"
 
-const links = [
-  { href: "/", label: "Timetable", icon: Clock },
-  { href: "/lunch", label: "Lunch", icon: Utensils },
-  { href: "/calendar", label: "Calendar", icon: Calendar },
-]
-
 export function Nav() {
+  const { dictionary } = useDictionary()
+  const tn = (dictionary?.school?.timetable as Record<string, any>)
+    ?.timetableNav
+
+  const links = [
+    { href: "/", label: tn?.overview ?? "Timetable", icon: Clock },
+    { href: "/lunch", label: tn?.substitutions ?? "Lunch", icon: Utensils },
+    { href: "/calendar", label: tn?.templates ?? "Calendar", icon: Calendar },
+  ]
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
   const { showConfig, setShowConfig, classConfig, setTempConfig, saveConfig } =
@@ -51,13 +55,15 @@ export function Nav() {
                 className="hover:bg-muted/80 sm:hidden"
               >
                 <Menu className="h-6 w-6" />
-                <span className="sr-only">Toggle navigation menu</span>
+                <span className="sr-only">
+                  {tn?.overview ?? "Toggle navigation menu"}
+                </span>
               </Button>
             </DrawerTrigger>
             <DrawerContent className="h-[50%]">
               <VisuallyHidden asChild>
                 <DrawerHeader>
-                  <DrawerTitle>Menu</DrawerTitle>
+                  <DrawerTitle>{tn?.overview ?? "Menu"}</DrawerTitle>
                 </DrawerHeader>
               </VisuallyHidden>
               <div className="px-4 py-6">
@@ -119,7 +125,9 @@ export function Nav() {
             )}
           >
             <Settings className="h-5 w-5" />
-            <span className="hidden sm:inline">Settings</span>
+            <span className="hidden sm:inline">
+              {tn?.settings ?? "Settings"}
+            </span>
           </button>
         </div>
       </div>

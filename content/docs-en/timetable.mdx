@@ -55,13 +55,15 @@ The Timetable module handles school schedule management end-to-end: choosing a t
 
 Role-based access via `permissions-config.ts`:
 
-| Role      | Access Level | Can Modify | Can Export | Can Manage Conflicts | Can Configure Settings |
-| --------- | ------------ | ---------- | ---------- | -------------------- | ---------------------- |
-| DEVELOPER | Full         | Yes        | Yes        | Yes                  | Yes                    |
-| ADMIN     | Full         | Yes        | Yes        | Yes                  | Yes                    |
-| TEACHER   | Read + Own   | No         | Yes        | No                   | No                     |
-| STUDENT   | Read Only    | No         | Yes        | No                   | No                     |
-| GUARDIAN  | Read Only    | No         | No         | No                   | No                     |
+| Role       | Access Level           | Can Modify | Can Export | Can Manage Conflicts | Can Configure Settings |
+| ---------- | ---------------------- | ---------- | ---------- | -------------------- | ---------------------- |
+| DEVELOPER  | Full                   | Yes        | Yes        | Yes                  | Yes                    |
+| ADMIN      | Full                   | Yes        | Yes        | Yes                  | Yes                    |
+| ACCOUNTANT | Read Only (Admin grid) | No         | No         | No                   | No                     |
+| STAFF      | Read Only (Admin grid) | No         | No         | No                   | No                     |
+| TEACHER    | Read + Own             | No         | Yes        | No                   | No                     |
+| STUDENT    | Read Only              | No         | Yes        | No                   | No                     |
+| GUARDIAN   | Read Only              | No         | No         | No                   | No                     |
 
 All operations are tenant-scoped by `schoolId`.
 
@@ -69,26 +71,24 @@ All operations are tenant-scoped by `schoolId`.
 
 Traffic-light summary of the timetable module's production state:
 
-| Status         | Area                                      | Notes                                                                        |
-| -------------- | ----------------------------------------- | ---------------------------------------------------------------------------- |
-| **Working**    | Admin view (room/teacher modes)           | Selectors, grid, slot editor all functional                                  |
-| **Working**    | Student view (grade-based)                | Uses `StudentClass` enrollment chain correctly                               |
-| **Working**    | Teacher view (personal schedule)          | Stats, current/next class, full week grid                                    |
-| **Working**    | Guardian view (multi-child selector)      | Child selector UI works correctly                                            |
-| **Working**    | Structure catalog + onboarding            | 10 structures, scoring, auto-recommend                                       |
-| **Working**    | Conflict detection + resolution           | SQL-based server-side + client-side O(n^2)                                   |
-| **Working**    | Substitution workflow                     | Absence recording, substitute finder, assignment                             |
-| **Working**    | PDF export + browser print                | Arabic/English fonts, A4 styling                                             |
-| **Needs Work** | Guardian data fetch                       | `getChildTimetable()` uses `findFirst` — returns only 1 class per child      |
-| **Needs Work** | `getWeeklyTimetable()` Student branch     | References non-existent `Student.classId` field                              |
-| **Needs Work** | `getWeeklyTimetable()` Teacher branch     | Uses `user.id` as `teacherId` instead of looking up Teacher record           |
-| **Needs Work** | ACCOUNTANT/STAFF routing                  | Routed to AdminView with `editable={true}` — should be read-only             |
-| **Needs Work** | Admin view filtering                      | No class/grade filter mode — only room and teacher                           |
-| **Needs Work** | Orphaned routes                           | `by-class`, `by-teacher`, `by-room`, `templates` exist but have no nav links |
-| **Needs Work** | Schedule exceptions                       | Model + CRUD exists but timetable queries don't check exceptions             |
-| **Needs Work** | Attendance integration                    | No connection between timetable slots and attendance records                 |
-| **Broken**     | `filterTimetableByRole()` GUARDIAN branch | Compares student IDs against class IDs                                       |
-| **Broken**     | Algorithm `preventBackToBack`             | Detected but not enforced (`algorithm.ts:698-705`)                           |
+| Status         | Area                                 | Notes                                                                        |
+| -------------- | ------------------------------------ | ---------------------------------------------------------------------------- |
+| **Working**    | Admin view (room/teacher modes)      | Selectors, grid, slot editor all functional                                  |
+| **Working**    | Admin readonly (ACCOUNTANT/STAFF)    | Same grid but `editable={false}`, no slot editor on click                    |
+| **Working**    | Student view (grade-based)           | Uses `StudentClass.findMany` enrollment chain for all enrolled classes       |
+| **Working**    | Teacher view (personal schedule)     | Resolves Teacher by userId, stats, current/next class, full week grid        |
+| **Working**    | Guardian view (multi-child selector) | Child selector + all enrolled classes per child via `getTimetableByClassIds` |
+| **Working**    | `getWeeklyTimetable()` all roles     | Student/Teacher branches use correct userId→record lookups                   |
+| **Working**    | `filterTimetableByRole()` all roles  | GUARDIAN resolves student IDs to class IDs via StudentClass                  |
+| **Working**    | Algorithm `preventBackToBack`        | Returns `false` to reject consecutive slots when constraint enabled          |
+| **Working**    | Structure catalog + onboarding       | 10 structures, scoring, auto-recommend                                       |
+| **Working**    | Conflict detection + resolution      | SQL-based server-side + client-side O(n^2)                                   |
+| **Working**    | Substitution workflow                | Absence recording, substitute finder, assignment                             |
+| **Working**    | PDF export + browser print           | Arabic/English fonts, A4 styling                                             |
+| **Needs Work** | Admin view filtering                 | No class/grade filter mode — only room and teacher                           |
+| **Needs Work** | Orphaned routes                      | `by-class`, `by-teacher`, `by-room`, `templates` exist but have no nav links |
+| **Needs Work** | Schedule exceptions                  | Model + CRUD exists but timetable queries don't check exceptions             |
+| **Needs Work** | Attendance integration               | No connection between timetable slots and attendance records                 |
 
 ---
 
@@ -133,27 +133,23 @@ The production entry point is `content-production.tsx` which wraps `RoleRouter` 
 
 ### Data Flow Per Role
 
-| Role       | View Component | Data Function                                  | What They See                                         | Known Bugs                                               |
-| ---------- | -------------- | ---------------------------------------------- | ----------------------------------------------------- | -------------------------------------------------------- |
-| DEVELOPER  | `AdminView`    | `getTimetableByRoom` / `getTimetableByTeacher` | Room/Teacher grid, editable slots, slot editor        | No class/grade filter mode                               |
-| ADMIN      | `AdminView`    | Same as DEVELOPER                              | Same as DEVELOPER                                     | Same                                                     |
-| TEACHER    | `TeacherView`  | `getTimetableByTeacher`                        | Personal schedule, workload stats, current/next class | No export button (despite `canExport` permission)        |
-| STUDENT    | `StudentView`  | `getTimetableByStudentGrade`                   | Grade-level all-subjects view, PDF export, print      | Works correctly                                          |
-| GUARDIAN   | `GuardianView` | `getChildTimetable`                            | Child selector + per-child schedule                   | **Bug**: `findFirst` returns only 1 class enrollment     |
-| ACCOUNTANT | `AdminView`    | Same as ADMIN                                  | Full admin view with edit UI                          | **Bug**: `editable={true}` despite read-only permissions |
-| STAFF      | `AdminView`    | Same as ADMIN                                  | Full admin view with edit UI                          | **Bug**: Same as ACCOUNTANT                              |
+| Role       | View Component | Data Function                                  | What They See                                         | Known Bugs                                        |
+| ---------- | -------------- | ---------------------------------------------- | ----------------------------------------------------- | ------------------------------------------------- |
+| DEVELOPER  | `AdminView`    | `getTimetableByRoom` / `getTimetableByTeacher` | Room/Teacher grid, editable slots, slot editor        | No class/grade filter mode                        |
+| ADMIN      | `AdminView`    | Same as DEVELOPER                              | Same as DEVELOPER                                     | Same                                              |
+| TEACHER    | `TeacherView`  | `getTimetableByTeacher`                        | Personal schedule, workload stats, current/next class | No export button (despite `canExport` permission) |
+| STUDENT    | `StudentView`  | `getTimetableByStudentGrade`                   | All enrolled subjects (grade-based), PDF export       | None                                              |
+| GUARDIAN   | `GuardianView` | `getChildTimetable`                            | Child selector + all enrolled classes per child       | None                                              |
+| ACCOUNTANT | `AdminView`    | Same as ADMIN                                  | Full admin view, read-only (`editable={false}`)       | None                                              |
+| STAFF      | `AdminView`    | Same as ADMIN                                  | Full admin view, read-only (`editable={false}`)       | None                                              |
 
 ### How Routing Works
 
-1. `getPersonalizedTimetable()` reads the user's role from session (`actions.ts:2400`)
-2. Role → `viewType` mapping in a switch statement (`actions.ts:2422`)
-3. ACCOUNTANT and STAFF **fall through to default** — `viewType` stays initialized as `"admin"` (`actions.ts:2415`)
-4. `RoleRouter` renders the matching view component (`role-router.tsx:132`)
-5. `AdminView` always renders `SimpleGrid` with `editable={true}` (`admin-view.tsx:353`)
-
-### ACCOUNTANT/STAFF Bug Detail
-
-The `permissions-config.ts` correctly defines ACCOUNTANT and STAFF as read-only (no `edit`, `create`, `delete` permissions). But `getPersonalizedTimetable()` has no cases for these roles, so they default to `viewType = "admin"`, and `AdminView` hardcodes `editable={true}`. The slot editor dialog opens on click and allows saves — the permission check only happens server-side in `upsertTimetableSlot()`.
+1. `getPersonalizedTimetable()` reads the user's role from session
+2. Role → `viewType` mapping in a switch statement, plus `editable` flag (default `true`)
+3. ACCOUNTANT and STAFF get `viewType = "admin"` with `editable = false`
+4. `RoleRouter` renders the matching view component, passing `editable` to `AdminView`
+5. `AdminView` passes `editable` prop to `SimpleGrid` and conditionally disables `onSlotClick`
 
 ---
 
@@ -166,9 +162,9 @@ The student view resolves a student's timetable through enrollment records:
 ```
 User (session)
   → Student (db.student.findFirst where userId)
-    → StudentClass (db.studentClass.findFirst where studentId)
-      → classId
-        → Timetable (db.timetable.findMany where classId IN [...])
+    → StudentClass (db.studentClass.findMany where studentId)
+      → classIds[]
+        → Timetable (db.timetable.findMany where classId IN classIds)
 ```
 
 Grade name comes from a separate chain:
@@ -179,19 +175,21 @@ Student → StudentYearLevel → YearLevel.levelName
 
 ### Where Grade Filtering Works
 
-- **`getTimetableByStudentGrade()`**: Correctly uses `StudentClass` bridge table with `findMany` to get all enrolled class IDs, then queries timetable with `classId: { in: classIds }`. This is the function used by `StudentView`.
+All grade-based filtering now works correctly:
 
-- **`getPersonalizedTimetable()` STUDENT branch**: Uses `StudentClass.findFirst` — returns only the most recent enrollment. Works for the simple case but misses multi-class enrollments.
+- **`getTimetableByStudentGrade()`**: Uses `StudentClass.findMany` to get all enrolled class IDs, then queries timetable with `classId: { in: classIds }`. Used by `StudentView`.
 
-### Where Grade Filtering Is Broken
+- **`getPersonalizedTimetable()` STUDENT branch**: Uses `StudentClass.findMany` to collect all enrolled `classIds`, passed to the view as an array.
 
-- **`getWeeklyTimetable()` STUDENT branch** (`actions.ts:1377-1383`): References `Student.classId` — a field that **does not exist** on the Student model. Students are enrolled via the `StudentClass` bridge table. This always returns `undefined`, so no `classId` filter is applied and the student sees **all slots for the school**.
+- **`getWeeklyTimetable()` STUDENT branch**: Resolves `Student` by `userId`, then uses `StudentClass.findMany` to get all enrolled class IDs. Filters timetable with `classId: { in: classIds }`.
 
-- **`getWeeklyTimetable()` TEACHER branch** (`actions.ts:1367`): Uses `session.user.id` (User model ID) directly as `teacherId` (Teacher model ID). These are different entities — the correct approach is to look up the Teacher record by `userId` first, as `getPersonalizedTimetable()` does.
+- **`getWeeklyTimetable()` TEACHER branch**: Resolves `Teacher` by `userId` via `db.teacher.findFirst({ where: { userId, schoolId } })`, then filters by `teacher.id`.
 
-- **`getChildTimetable()`** (`actions.ts:2670`): Uses `findFirst` on `StudentClass` — returns only 1 class enrollment per child. In this system, `Class = course section` (not homeroom), so a student enrolled in 6 subjects has 6 class enrollments. The guardian only sees the schedule for the most recent one.
+- **`getChildTimetable()`**: Uses `StudentClass.findMany` + `getTimetableByClassIds()` to return all enrolled classes per child.
 
-- **Admin view**: Has no class/grade filter mode at all — only room and teacher selectors. To view a specific class schedule, admins must use the orphaned `/timetable/by-class` route.
+### Remaining Gaps
+
+- **Admin view**: Has no class/grade filter mode — only room and teacher selectors. To view a specific class schedule, admins must use the orphaned `/timetable/by-class` route.
 
 ---
 
@@ -203,7 +201,7 @@ Each view component's UI features (see [Role-Based Experience](#role-based-exper
 
 - **Classroom/Teacher selectors**: Searchable comboboxes (Popover + Command) with type-to-filter
 - **Two view modes**: Classroom view (timetable by room) and Teacher view (timetable by teacher)
-- **Editable grid**: `SimpleGrid` with `editable={true}`, clicking a slot opens `SlotEditorDialog`
+- **Editable grid**: `SimpleGrid` with `editable` prop (default `true`). When editable, clicking a slot opens `SlotEditorDialog`. ACCOUNTANT/STAFF get `editable={false}` — grid is read-only with no click handler.
 - **Teacher info**: When in teacher mode, shows name, email, period count, class count badges
 
 ### Teacher View (`teacher-view.tsx`)
@@ -443,7 +441,7 @@ A 3-phase approach:
 
 The 3-phase algorithm has known gaps:
 
-- **`preventBackToBack` detected but not enforced**: The code at `algorithm.ts:698-705` detects consecutive period conflicts but comments `// For now, allow it but flag` — no violation is returned and the slot is placed anyway.
+- **`preventBackToBack` now enforced**: When `config.constraints.preventBackToBack` is enabled, the algorithm returns `false` to reject consecutive period assignments for the same teacher. This reduces placement rate but prevents teacher fatigue.
 - **No lunch break enforcement**: The algorithm doesn't reserve lunch periods. A teacher can be assigned straight through lunch.
 - **No multi-period blocks**: Double periods (e.g., 2-hour lab sessions) aren't supported. Each slot is a single period.
 - **No rotating schedules**: A/B week or day rotation patterns aren't modeled.
@@ -916,17 +914,17 @@ Both `school-en.json` and `school-ar.json` include the `timetable` key with tran
 
 ## Known Issues
 
-### Critical
+### Critical — All Fixed (March 2026)
 
-Issues that produce incorrect data or security-relevant behavior in production.
+All critical role-based view bugs have been resolved:
 
-| #   | Issue                                                                                                                                                                                                                          | Location                                | Impact                               |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------- | ------------------------------------ |
-| 1   | `getChildTimetable()` uses `findFirst` on `StudentClass` — returns only 1 class enrollment per child. Since Class = course section, a student in 6 subjects has 6 enrollments. Guardian sees only 1.                           | `actions.ts:2670`                       | Guardian sees incomplete schedule    |
-| 2   | `getWeeklyTimetable()` Student branch reads `Student.classId` — a field that does not exist on the Student model. Students enroll via `StudentClass` bridge table. Result: `classId` is always `undefined`, no filter applied. | `actions.ts:1378-1383`                  | Students see all school slots        |
-| 3   | `getWeeklyTimetable()` Teacher branch uses `session.user.id` (User ID) as `teacherId` (Teacher ID). These are different entities. The Teacher record must be looked up by `userId` first.                                      | `actions.ts:1367`                       | Teachers see no data (ID mismatch)   |
-| 4   | `filterTimetableByRole()` GUARDIAN branch compares `childId` (student ID) against `item.classId` (class ID) — mixing entity types. The comment says `// Assuming childId might be classId`.                                    | `permissions.ts:149-153`                | Guardian filter always returns empty |
-| 5   | ACCOUNTANT and STAFF are routed to `AdminView` with `editable={true}` because `getPersonalizedTimetable()` has no cases for these roles (falls through to default `viewType = "admin"`).                                       | `actions.ts:2415`, `admin-view.tsx:353` | Read-only roles see edit UI          |
+| #   | Issue (Fixed)                                                          | Fix                                                                                             |
+| --- | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| 1   | ~~`getChildTimetable()` returns only 1 class per child~~               | Uses `findMany` + `getTimetableByClassIds()` for all enrolled classes                           |
+| 2   | ~~`getWeeklyTimetable()` Student reads nonexistent `Student.classId`~~ | Resolves student by `userId`, then `StudentClass.findMany` for all `classIds`                   |
+| 3   | ~~`getWeeklyTimetable()` Teacher uses `user.id` as `teacherId`~~       | Resolves teacher via `db.teacher.findFirst({ where: { userId, schoolId } })`                    |
+| 4   | ~~`filterTimetableByRole()` GUARDIAN compares student vs class IDs~~   | Resolves student IDs to class IDs via `StudentClass.findMany`                                   |
+| 5   | ~~ACCOUNTANT/STAFF get `editable={true}` admin view~~                  | `getPersonalizedTimetable()` returns `editable: false`; `AdminView` passes prop to `SimpleGrid` |
 
 ### High
 
@@ -946,7 +944,7 @@ Issues that affect maintainability, performance, or edge cases.
 
 | #   | Issue                                                                                                                         | Location               |
 | --- | ----------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
-| 11  | `preventBackToBack` constraint is detected but not enforced — code comments `// For now, allow it but flag`                   | `algorithm.ts:698-705` |
+| 11  | ~~`preventBackToBack` not enforced~~ — **Fixed**: now returns `false` to reject consecutive slots                             | `algorithm.ts:698-705` |
 | 12  | No lunch break enforcement in the generation algorithm                                                                        | `algorithm.ts`         |
 | 13  | `actions.ts` at ~5800 lines with 80+ functions is a candidate for splitting into domain-specific files                        | `actions.ts`           |
 | 14  | Multiple sequential `await` calls in `getPersonalizedTimetable()` — periods, week config, and term info could be parallelized | `actions.ts:2400+`     |

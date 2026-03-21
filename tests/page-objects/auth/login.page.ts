@@ -82,20 +82,32 @@ export class LoginPage extends BasePage {
       state: "visible",
       timeout: TIMEOUTS.medium,
     })
-    await this.emailInput.clear()
-    await this.emailInput.fill(email)
 
-    // Wait for value to be set
-    await this.page.waitForFunction(
-      (expectedEmail) => {
-        const input = document.querySelector(
-          'input[name="email"]'
-        ) as HTMLInputElement
-        return input && input.value === expectedEmail
-      },
-      email,
-      { timeout: TIMEOUTS.short }
-    )
+    // Wait for hydration to complete before filling
+    await this.page.waitForTimeout(500)
+
+    // Retry fill up to 3 times in case hydration resets the value
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await this.emailInput.clear()
+      await this.emailInput.fill(email)
+
+      const ok = await this.page
+        .waitForFunction(
+          (expectedEmail) => {
+            const input = document.querySelector(
+              'input[name="email"]'
+            ) as HTMLInputElement
+            return input && input.value === expectedEmail
+          },
+          email,
+          { timeout: 3000 }
+        )
+        .then(() => true)
+        .catch(() => false)
+
+      if (ok) return
+      await this.page.waitForTimeout(500)
+    }
   }
 
   /**

@@ -1,11 +1,31 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { InvoiceStatus } from "@prisma/client"
+
 /**
  * Utility functions for Invoice components
- *
- * Helper functions for invoice calculations, formatting, and management.
  */
+
+// Types aligned with Prisma model
+interface InvoiceItem {
+  id: string
+  item_name: string
+  quantity: number
+  price: number
+}
+
+interface InvoiceData {
+  from: { name: string }
+  to: { name: string; email?: string | null }
+  items: InvoiceItem[]
+  sub_total?: number
+  discount?: number
+  tax_percentage?: number
+  total?: number
+  due_date?: Date | string
+  status: InvoiceStatus
+}
 
 /**
  * Calculate invoice subtotal
@@ -100,9 +120,10 @@ export function generateInvoiceNumber(
  */
 export function isInvoiceOverdue(
   dueDate: Date | string,
-  status: string
+  status: InvoiceStatus | string
 ): boolean {
-  if (status === "paid" || status === "void") return false
+  if (status === InvoiceStatus.PAID || status === InvoiceStatus.CANCELLED)
+    return false
 
   const due = typeof dueDate === "string" ? new Date(dueDate) : dueDate
   return new Date() > due
@@ -134,10 +155,10 @@ export function getDaysUntilDue(dueDate: Date | string): number {
  */
 export function formatDueStatus(
   dueDate: Date | string,
-  status: string
+  status: InvoiceStatus | string
 ): string {
-  if (status === "paid") return "Paid"
-  if (status === "void") return "Void"
+  if (status === InvoiceStatus.PAID) return "Paid"
+  if (status === InvoiceStatus.CANCELLED) return "Cancelled"
 
   const daysUntil = getDaysUntilDue(dueDate)
 
@@ -152,16 +173,14 @@ export function formatDueStatus(
 /**
  * Get invoice status color
  */
-export function getInvoiceStatusColor(status: string): string {
-  const colors: Record<string, string> = {
-    draft: "gray",
-    pending: "blue",
-    sent: "cyan",
-    overdue: "red",
-    paid: "green",
-    void: "gray",
+export function getInvoiceStatusColor(status: InvoiceStatus | string): string {
+  const colors: Record<InvoiceStatus, string> = {
+    PAID: "green",
+    UNPAID: "blue",
+    OVERDUE: "red",
+    CANCELLED: "gray",
   }
-  return colors[status] || "gray"
+  return colors[status as InvoiceStatus] ?? "gray"
 }
 
 /**
@@ -170,11 +189,11 @@ export function getInvoiceStatusColor(status: string): string {
 export function validateInvoiceData(data: Partial<InvoiceData>): string[] {
   const errors: string[] = []
 
-  if (!data.clientName || data.clientName.trim() === "") {
+  if (!data.to?.name || data.to.name.trim() === "") {
     errors.push("Client name is required")
   }
 
-  if (!data.clientEmail || !isValidEmail(data.clientEmail)) {
+  if (!data.to?.email || !isValidEmail(data.to.email)) {
     errors.push("Valid client email is required")
   }
 
@@ -183,8 +202,8 @@ export function validateInvoiceData(data: Partial<InvoiceData>): string[] {
   }
 
   data.items?.forEach((item, index) => {
-    if (!item.description || item.description.trim() === "") {
-      errors.push(`Item ${index + 1}: Description is required`)
+    if (!item.item_name || item.item_name.trim() === "") {
+      errors.push(`Item ${index + 1}: Name is required`)
     }
     if (item.quantity <= 0) {
       errors.push(`Item ${index + 1}: Quantity must be greater than 0`)
@@ -194,7 +213,7 @@ export function validateInvoiceData(data: Partial<InvoiceData>): string[] {
     }
   })
 
-  if (data.dueDate && new Date(data.dueDate) < new Date()) {
+  if (data.due_date && new Date(data.due_date) < new Date()) {
     errors.push("Due date cannot be in the past")
   }
 
@@ -213,9 +232,9 @@ function isValidEmail(email: string): boolean {
  * Export invoice data to CSV
  */
 export function exportInvoiceToCSV(invoice: InvoiceData): string {
-  const headers = ["Description", "Quantity", "Price", "Amount"]
+  const headers = ["Item", "Quantity", "Price", "Amount"]
   const rows = invoice.items.map((item) => [
-    item.description,
+    item.item_name,
     item.quantity.toString(),
     formatCurrency(item.price),
     formatCurrency(item.quantity * item.price),
@@ -225,9 +244,9 @@ export function exportInvoiceToCSV(invoice: InvoiceData): string {
     headers.join(","),
     ...rows.map((row) => row.map((cell) => `"${cell}"`).join(",")),
     "",
-    `Subtotal,,, ${formatCurrency(invoice.subtotal || 0)}`,
+    `Subtotal,,, ${formatCurrency(invoice.sub_total || 0)}`,
     `Discount,,, ${formatCurrency(invoice.discount || 0)}`,
-    `Tax,,, ${formatCurrency(invoice.tax || 0)}`,
+    `Tax,,, ${formatCurrency(invoice.tax_percentage || 0)}`,
     `Total,,, ${formatCurrency(invoice.total || 0)}`,
   ].join("\n")
 
@@ -265,23 +284,4 @@ export function calculatePaymentSchedule(
   }
 
   return dates
-}
-
-// Types
-interface InvoiceItem {
-  id: string
-  description: string
-  quantity: number
-  price: number
-}
-
-interface InvoiceData {
-  clientName: string
-  clientEmail: string
-  items: InvoiceItem[]
-  subtotal?: number
-  discount?: number
-  tax?: number
-  total?: number
-  dueDate?: Date | string
 }

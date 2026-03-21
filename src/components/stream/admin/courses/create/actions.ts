@@ -7,7 +7,6 @@ import { auth } from "@/auth"
 import slugify from "slugify"
 
 import { db } from "@/lib/db"
-import { stripe } from "@/lib/stripe"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
   assertStreamPermission,
@@ -49,47 +48,21 @@ export async function createCourseAction(
       throw new Error("Course title is required")
     }
 
-    // Generate slug
+    // Generate slug with random suffix to prevent race conditions
     const baseSlug = slugify(title, { lower: true, strict: true })
+    const randomSuffix = Math.random().toString(36).slice(2, 6)
 
-    // Check for existing slug in the same school
+    // Try base slug first, fall back to suffixed slug on conflict
     let slug = baseSlug
-    let counter = 1
-    while (
-      await db.streamCourse.findFirst({
-        where: {
-          slug,
-          schoolId,
-        },
-      })
-    ) {
-      slug = `${baseSlug}-${counter}`
-      counter++
+    const existing = await db.streamCourse.findFirst({
+      where: { slug, schoolId },
+      select: { id: true },
+    })
+    if (existing) {
+      slug = `${baseSlug}-${randomSuffix}`
     }
 
-    // Create Stripe product if price is set
-    let stripePriceId: string | null = null
-    if (price && price > 0) {
-      if (!stripe) {
-        throw new Error("Stripe is not configured")
-      }
-      const stripeProduct = await stripe.products.create({
-        name: title,
-        description: description || undefined,
-        metadata: {
-          schoolId,
-          userId: authCtx.userId,
-        },
-        default_price_data: {
-          currency: "usd",
-          unit_amount: Math.round(price * 100), // Convert to cents
-        },
-      })
-
-      stripePriceId = stripeProduct.default_price as string
-    }
-
-    // Create course in database
+    // Create course in database FIRST (before Stripe) to avoid orphaned products
     const course = await db.streamCourse.create({
       data: {
         title,
@@ -103,6 +76,9 @@ export async function createCourseAction(
         isPublished: false, // Courses start as draft
       },
     })
+
+    // Note: Stripe product/price is created lazily on first paid enrollment
+    // (see enrollment/actions.ts) to avoid orphaned Stripe objects
 
     // Revalidate paths
     revalidatePath(`/[lang]/s/[subdomain]/stream/admin/courses`)

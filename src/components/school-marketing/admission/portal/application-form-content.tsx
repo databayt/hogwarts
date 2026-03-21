@@ -6,7 +6,6 @@ import { useCallback, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { FormProvider, useForm } from "react-hook-form"
-import { toast } from "sonner"
 import { z } from "zod"
 
 import { Button } from "@/components/ui/button"
@@ -18,6 +17,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
+import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import { AnthropicIcons, Icons } from "@/components/icons"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -226,7 +226,7 @@ export default function ApplicationFormContent({
   // Manual save
   const handleSave = async () => {
     if (!formData.email) {
-      toast.error(
+      ErrorToast(
         dictionary?.marketing?.site?.admission?.portal?.errorSaving ||
           "Please enter your email to save"
       )
@@ -249,15 +249,15 @@ export default function ApplicationFormContent({
       if (result.success && result.data) {
         setSessionToken(result.data.sessionToken)
         setLastSaved(new Date())
-        toast.success(
+        SuccessToast(
           dictionary?.marketing?.site?.admission?.portal?.saved ||
             "Application saved"
         )
       } else {
-        toast.error(result.error || "Failed to save")
+        ErrorToast(result.error || "Failed to save")
       }
     } catch (error) {
-      toast.error(
+      ErrorToast(
         dictionary?.marketing?.site?.admission?.portal?.failedToSave ||
           "Failed to save"
       )
@@ -285,10 +285,10 @@ export default function ApplicationFormContent({
           `/${lang}/application/success?number=${result.data.applicationNumber}&token=${result.data.accessToken}`
         )
       } else {
-        toast.error(result.error || "Failed to submit application")
+        ErrorToast(result.error || "Failed to submit application")
       }
     } catch (error) {
-      toast.error(
+      ErrorToast(
         dictionary?.marketing?.site?.admission?.portal?.failedToSubmit ||
           "Failed to submit application"
       )
@@ -439,7 +439,7 @@ export default function ApplicationFormContent({
                 <Button type="button" onClick={handleNext} className="group">
                   {dictionary?.marketing?.site?.admission?.portal?.next ||
                     "Next"}
-                  <AnthropicIcons.ArrowRight className="ms-2 h-4 w-4 transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
+                  <AnthropicIcons.ArrowRight className="ms-2 h-4 w-4 transition-transform group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" />
                 </Button>
               )}
             </div>

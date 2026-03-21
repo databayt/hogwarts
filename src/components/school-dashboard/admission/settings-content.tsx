@@ -4,7 +4,6 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState, useTransition } from "react"
 import { Bell, Calculator, CreditCard, Save, Settings } from "lucide-react"
-import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -19,6 +18,7 @@ import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
+import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -77,7 +77,7 @@ export default function SettingsContent({ dictionary, lang }: Props) {
       settings.entranceWeight +
       settings.interviewWeight
     if (totalWeight !== 100) {
-      toast.error(
+      ErrorToast(
         isRTL
           ? "يجب أن يكون مجموع أوزان الجدارة 100%"
           : "Merit weights must sum to 100%"
@@ -99,11 +99,11 @@ export default function SettingsContent({ dictionary, lang }: Props) {
       })
 
       if (result.success) {
-        toast.success(
+        SuccessToast(
           isRTL ? "تم حفظ الإعدادات بنجاح" : "Settings saved successfully"
         )
       } else {
-        toast.error(result.error)
+        ErrorToast(result.error || "Failed to save settings")
       }
     })
   }

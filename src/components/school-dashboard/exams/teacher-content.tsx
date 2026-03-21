@@ -56,14 +56,12 @@ export default async function TeacherExamsContent({ dictionary, lang }: Props) {
         <CardContent className="flex flex-col items-center justify-center py-12">
           <GraduationCap className="text-muted-foreground mb-4 h-12 w-12" />
           <h3 className="mb-2 text-lg font-semibold">
-            {lang === "ar"
-              ? "لم يتم العثور على سجل معلم"
-              : "No teacher record found"}
+            {dictionary?.school?.exams?.teacherContent?.noRecord ??
+              "No teacher record found"}
           </h3>
           <p className="text-muted-foreground text-sm">
-            {lang === "ar"
-              ? "يرجى التواصل مع إدارة المدرسة"
-              : "Please contact school administration"}
+            {dictionary?.school?.exams?.teacherContent?.contactAdmin ??
+              "Please contact school administration"}
           </p>
         </CardContent>
       </Card>
@@ -264,7 +262,7 @@ export default async function TeacherExamsContent({ dictionary, lang }: Props) {
               {myTemplatesCount}
             </p>
             <p className="text-muted-foreground mt-4 text-sm">
-              {lang === "ar" ? "قوالب اختبارات" : "Exam templates"}
+              {d?.teacherContent?.examTemplates ?? "Exam templates"}
             </p>
           </CardContent>
         </Card>

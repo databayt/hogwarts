@@ -540,5 +540,85 @@
     "generateQR": "Generate QR Code",
     "loading": "Loading...",
     "noResults": "No results."
+  },
+  "barcodeCards": {
+    "title": "Student ID Cards",
+    "description": "Manage barcode assignments for student identification",
+    "addCard": "Add Card",
+    "export": "Export",
+    "generate": "Generate",
+    "searchPlaceholder": "Search by student ID, name, or barcode...",
+    "totalCards": "Total Cards",
+    "active": "Active",
+    "inactive": "Inactive",
+    "expired": "Expired",
+    "studentId": "Student ID",
+    "studentIdPlaceholder": "Enter student ID...",
+    "barcodeLabel": "Barcode",
+    "barcodePlaceholder": "Enter or generate barcode...",
+    "expiryDate": "Expiry Date (Optional)",
+    "dialogTitle": "Add Student Card",
+    "dialogDescription": "Assign a barcode to a student for attendance tracking",
+    "cancel": "Cancel",
+    "fillRequired": "Please fill in all required fields",
+    "cardAdded": "Card added successfully",
+    "cardRemoved": "Card removed successfully",
+    "addFailed": "Failed to add card",
+    "removeFailed": "Failed to remove card",
+    "printCard": "Printing card for {name}"
+  },
+  "qrActions": {
+    "downloaded": "Downloaded",
+    "savedToDevice": "QR code saved to your device",
+    "copied": "Copied",
+    "copiedToClipboard": "QR data copied to clipboard",
+    "notSupported": "Not Supported",
+    "sharingNotSupported": "Sharing is not supported on this device",
+    "attendanceQRCode": "Attendance QR Code",
+    "scanToMark": "Scan this QR code to mark attendance",
+    "displayForStudents": "Display this QR code for students to scan",
+    "scanDescription": "Students can scan the QR code with their mobile devices to automatically mark their attendance for this session.",
+    "scanFailed": "Scan Failed",
+    "fileUpload": "File Upload",
+    "fileUploadNotImplemented": "QR code file upload is not yet implemented",
+    "uploadCSV": "Upload CSV File",
+    "csvContains": "CSV should contain Student ID and Status columns",
+    "csvFormatTitle": "CSV Format Example:"
+  },
+  "deviceAccess": {
+    "scannerError": "Scanner Error",
+    "initFailed": "Failed to initialize barcode scanner",
+    "cameraPermissionDenied": "Camera Permission Denied",
+    "allowCameraAccess": "Please allow camera access to scan codes",
+    "locationError": "Location Error",
+    "backOnline": "Back Online",
+    "syncing": "Syncing offline data...",
+    "offlineMode": "Offline Mode",
+    "syncWhenRestored": "Data will be synced when connection is restored"
+  },
+  "contextActions": {
+    "attendanceDeleted": "Attendance record deleted",
+    "identifierAdded": "Identifier added successfully",
+    "identifierRemoved": "Identifier removed",
+    "bulkMarked": "Marked attendance for {count} students"
+  },
+  "reportsFilter": {
+    "allClasses": "All Classes",
+    "allStatuses": "All Statuses"
+  },
+  "geofenceActions": {
+    "deleteTitle": "Delete Geofence",
+    "deleteDescription": "This action cannot be undone. This will permanently delete this geofence zone.",
+    "cancel": "Cancel",
+    "delete": "Delete"
+  },
+  "analyticsTab": {
+    "overview": "Overview",
+    "calendar": "Calendar",
+    "trends": "Trends",
+    "patterns": "Patterns",
+    "methods": "Methods",
+    "classes": "Classes",
+    "atRisk": "At Risk"
   }
 }

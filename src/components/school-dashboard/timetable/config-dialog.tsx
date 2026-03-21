@@ -43,6 +43,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import config from "./config.json"
 import { useMediaQuery } from "./use-media-query"
@@ -102,6 +103,8 @@ export function ConfigDialog({
   onConfigChange,
   onSave,
 }: ConfigDialogProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.timetable?.configDialog
   const [tempConfig, setTempConfig] = useState(classConfig)
   const [schools, setSchools] = useState<School[]>([])
   const [openCombobox, setOpenCombobox] = useState(false)
@@ -212,11 +215,12 @@ export function ConfigDialog({
           ? `/timetable/classes.json`
           : `${API_URL}/classes?grade=${grade}&schoolcode=${schoolCode}`
       )
-      if (!response.ok) throw new Error("Failed to load class list")
+      if (!response.ok)
+        throw new Error(t?.loadClassesFailed ?? "Failed to load class list")
       const data = await response.json()
       setAvailableClasses(Array.isArray(data) ? data : [])
       if (Array.isArray(data) && data.length === 0) {
-        setError("No classes found for the selected grade")
+        setError(t?.noClassesFound ?? "No classes found for the selected grade")
       }
     } catch (error) {
       console.error("Error fetching classes:", error)
@@ -224,7 +228,7 @@ export function ConfigDialog({
       setError(
         error instanceof Error
           ? error.message
-          : "An error occurred while loading classes"
+          : (t?.loadClassesFailed ?? "An error occurred while loading classes")
       )
     }
   }
@@ -251,12 +255,15 @@ export function ConfigDialog({
               ? `/timetable/schools.json`
               : `${API_URL}/school?schoolname=${encodeURIComponent(query)}`
           )
-          if (!response.ok) throw new Error("Failed to load school list")
+          if (!response.ok)
+            throw new Error(
+              t?.loadSchoolsFailed ?? "Failed to load school list"
+            )
           const data = await response.json()
           log("Search results received:", data)
           setSchools(Array.isArray(data) ? data : [])
           if (Array.isArray(data) && data.length === 0) {
-            setError("No results found")
+            setError(t?.noResultsFound ?? "No results found")
           }
         } catch (error) {
           console.error("Error fetching schools:", error)
@@ -264,7 +271,8 @@ export function ConfigDialog({
           setError(
             error instanceof Error
               ? error.message
-              : "An error occurred while loading schools"
+              : (t?.loadSchoolsFailed ??
+                  "An error occurred while loading schools")
           )
         } finally {
           setIsLoading(false)
@@ -278,7 +286,7 @@ export function ConfigDialog({
   const ConfigContent = () => (
     <div className="grid gap-4 py-4">
       <div className="flex flex-col gap-2">
-        <Label>School</Label>
+        <Label>{t?.school ?? "School"}</Label>
         <Popover
           open={openCombobox}
           onOpenChange={(open) => {
@@ -295,7 +303,7 @@ export function ConfigDialog({
                 setOpenCombobox(true)
               }}
             >
-              {searchValue || "Search school..."}
+              {searchValue || (t?.searchSchool ?? "Search school...")}
               <ChevronsUpDown className="ms-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
@@ -305,7 +313,7 @@ export function ConfigDialog({
           >
             <Command filter={() => 1} shouldFilter={false}>
               <CommandInput
-                placeholder="Search school name..."
+                placeholder={t?.searchSchoolName ?? "Search school name..."}
                 value={searchValue}
                 onValueChange={handleSearchValueChange}
               />
@@ -318,9 +326,13 @@ export function ConfigDialog({
                     학교 이름을 입력하세요
                   </CommandEmpty>
                 ) : isLoading ? (
-                  <p className="muted py-6 text-center">Searching...</p>
+                  <p className="muted py-6 text-center">
+                    {t?.searching ?? "Searching..."}
+                  </p>
                 ) : schools.length === 0 ? (
-                  <p className="muted py-6 text-center">No results</p>
+                  <p className="muted py-6 text-center">
+                    {t?.noResults ?? "No results"}
+                  </p>
                 ) : (
                   <CommandGroup>
                     {schools.map((school) => (
@@ -354,7 +366,7 @@ export function ConfigDialog({
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label>Grade</Label>
+          <Label>{t?.grade ?? "Grade"}</Label>
           <Select
             disabled={!tempConfig.school || isSearching}
             value={tempConfig.grade}
@@ -363,13 +375,13 @@ export function ConfigDialog({
             }
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select grade" />
+              <SelectValue placeholder={t?.selectGrade ?? "Select grade"} />
             </SelectTrigger>
             <SelectContent>
               {tempConfig.school &&
                 getAvailableGrades(tempConfig.school).map((grade) => (
                   <SelectItem key={grade} value={grade}>
-                    Grade {grade}
+                    {t?.grade ?? "Grade"} {grade}
                   </SelectItem>
                 ))}
             </SelectContent>
@@ -377,7 +389,7 @@ export function ConfigDialog({
         </div>
 
         <div>
-          <Label>Class</Label>
+          <Label>{t?.class ?? "Class"}</Label>
           <Select
             disabled={!tempConfig.school || !tempConfig.grade || isSearching}
             value={tempConfig.class}
@@ -386,12 +398,12 @@ export function ConfigDialog({
             }
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select class" />
+              <SelectValue placeholder={t?.selectClass ?? "Select class"} />
             </SelectTrigger>
             <SelectContent>
               {availableClasses.map((classNum) => (
                 <SelectItem key={classNum} value={classNum}>
-                  Class {classNum}
+                  {t?.class ?? "Class"} {classNum}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -400,7 +412,7 @@ export function ConfigDialog({
       </div>
 
       <div>
-        <Label>Lunch after period</Label>
+        <Label>{t?.lunchAfterPeriod ?? "Lunch after period"}</Label>
         <Select
           disabled={
             !tempConfig.school ||
@@ -414,12 +426,14 @@ export function ConfigDialog({
           }
         >
           <SelectTrigger>
-            <SelectValue placeholder="Select lunch period" />
+            <SelectValue
+              placeholder={t?.selectLunchPeriod ?? "Select lunch period"}
+            />
           </SelectTrigger>
           <SelectContent>
             {[3, 4, 5].map((period) => (
               <SelectItem key={period} value={period.toString()}>
-                After period {period}
+                {t?.afterPeriodN ?? "After period"} {period}
               </SelectItem>
             ))}
           </SelectContent>
@@ -441,7 +455,7 @@ export function ConfigDialog({
             className="border-border bg-background text-primary focus:ring-primary h-4 w-4 rounded"
           />
           <Label htmlFor="showAllSubjects">
-            Show all subjects in subject selection
+            {t?.showAllSubjects ?? "Show all subjects in subject selection"}
           </Label>
         </div>
 
@@ -459,7 +473,8 @@ export function ConfigDialog({
             className="border-border bg-background text-primary focus:ring-primary h-4 w-4 rounded"
           />
           <Label htmlFor="displayFallbackData">
-            Display fallback data when main data is unavailable
+            {t?.showFallback ??
+              "Display fallback data when main data is unavailable"}
           </Label>
         </div>
       </div>
@@ -474,7 +489,7 @@ export function ConfigDialog({
         }
         className="w-full sm:w-auto"
       >
-        Save
+        {t?.save ?? "Save"}
       </Button>
     </div>
   )
@@ -484,9 +499,9 @@ export function ConfigDialog({
       <Drawer open={open} onOpenChange={onOpenChange}>
         <DrawerContent className="h-[85%]">
           <DrawerHeader>
-            <DrawerTitle>Settings</DrawerTitle>
+            <DrawerTitle>{t?.settingsTitle ?? "Settings"}</DrawerTitle>
             <DrawerDescription>
-              Configure your class information.
+              {t?.settingsDescription ?? "Configure your class information."}
             </DrawerDescription>
           </DrawerHeader>
           <div className="px-4 pb-4">
@@ -512,9 +527,9 @@ export function ConfigDialog({
         )}
       >
         <DialogHeader>
-          <DialogTitle>Settings</DialogTitle>
+          <DialogTitle>{t?.settingsTitle ?? "Settings"}</DialogTitle>
           <DialogDescription>
-            Configure your class information.
+            {t?.settingsDescription ?? "Configure your class information."}
           </DialogDescription>
         </DialogHeader>
         <ConfigContent />

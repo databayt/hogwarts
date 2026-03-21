@@ -86,7 +86,7 @@ export default async function GradingPage({
         <div className="flex items-center justify-between">
           <Button variant="ghost" asChild>
             <Link href={`/${lang}/exams/mark`}>
-              <ArrowLeft className="me-2 h-4 w-4" />
+              <ArrowLeft className="me-2 h-4 w-4 rtl:rotate-180" />
               {dict.buttons.back}
             </Link>
           </Button>

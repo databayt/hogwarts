@@ -6,7 +6,6 @@ import { useState } from "react"
 import Link from "next/link"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
-import { toast } from "sonner"
 import { z } from "zod"
 
 import { Button } from "@/components/ui/button"
@@ -35,6 +34,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import { AnthropicIcons, Icons } from "@/components/icons"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -116,14 +116,14 @@ export default function InquiryFormContent({
 
       if (result.success) {
         setIsSubmitted(true)
-        toast.success(dict.inquirySubmitted || "Inquiry submitted successfully")
+        SuccessToast(dict.inquirySubmitted || "Inquiry submitted successfully")
       } else {
-        toast.error(
+        ErrorToast(
           result.error || dict.failedToSubmit || "Failed to submit inquiry"
         )
       }
     } catch (error) {
-      toast.error(dict.failedToSubmit || "Failed to submit inquiry")
+      ErrorToast(dict.failedToSubmit || "Failed to submit inquiry")
     } finally {
       setIsSubmitting(false)
     }
@@ -456,7 +456,7 @@ export default function InquiryFormContent({
                   >
                     <AnthropicIcons.Book className="me-2 h-4 w-4" />
                     {dict.applyForAdmission || "Apply Now"}
-                    <AnthropicIcons.ArrowRight className="ms-auto h-3 w-3 opacity-0 transition-opacity group-hover:opacity-100" />
+                    <AnthropicIcons.ArrowRight className="ms-auto h-3 w-3 opacity-0 transition-opacity group-hover:opacity-100 rtl:rotate-180" />
                   </Button>
                 </Link>
                 <Link href={`/${lang}/tour`}>
@@ -466,7 +466,7 @@ export default function InquiryFormContent({
                   >
                     <AnthropicIcons.CalendarChart className="me-2 h-4 w-4" />
                     {dict.scheduleTour || "Schedule a Tour"}
-                    <AnthropicIcons.ArrowRight className="ms-auto h-3 w-3 opacity-0 transition-opacity group-hover:opacity-100" />
+                    <AnthropicIcons.ArrowRight className="ms-auto h-3 w-3 opacity-0 transition-opacity group-hover:opacity-100 rtl:rotate-180" />
                   </Button>
                 </Link>
               </div>

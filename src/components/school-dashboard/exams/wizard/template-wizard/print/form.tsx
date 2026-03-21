@@ -23,6 +23,7 @@ import { Switch } from "@/components/ui/switch"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { ErrorToast } from "@/components/atom/toast"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import type { DecorationConfig } from "../../types"
 import { DEFAULT_DECORATIONS } from "../../types"
@@ -42,6 +43,8 @@ interface PrintFormProps {
 
 export const PrintForm = forwardRef<WizardFormRef, PrintFormProps>(
   ({ templateId, initialData, onValidChange }, ref) => {
+    const { dictionary } = useDictionary()
+    const t = dictionary?.school?.exams?.wizard?.templateWizard?.print
     const [pageSize, setPageSize] = useState<"A4" | "LETTER">(
       initialData?.pageSize ?? "A4"
     )
@@ -107,7 +110,7 @@ export const PrintForm = forwardRef<WizardFormRef, PrintFormProps>(
           <div className="grid gap-4 sm:grid-cols-2">
             {/* Page size */}
             <div className="space-y-2">
-              <Label>Page Size</Label>
+              <Label>{t?.pageSize ?? "Page Size"}</Label>
               <Select
                 value={pageSize}
                 onValueChange={(v) => setPageSize(v as "A4" | "LETTER")}
@@ -117,14 +120,16 @@ export const PrintForm = forwardRef<WizardFormRef, PrintFormProps>(
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="A4">A4 (210 x 297 mm)</SelectItem>
-                  <SelectItem value="LETTER">Letter (8.5 x 11 in)</SelectItem>
+                  <SelectItem value="LETTER">
+                    {t?.letterSize ?? "Letter (8.5 x 11 in)"}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {/* Orientation */}
             <div className="space-y-2">
-              <Label>Orientation</Label>
+              <Label>{t?.orientation ?? "Orientation"}</Label>
               <ToggleGroup
                 type="single"
                 value={orientation}
@@ -144,7 +149,7 @@ export const PrintForm = forwardRef<WizardFormRef, PrintFormProps>(
 
             {/* Answer sheet type */}
             <div className="space-y-2">
-              <Label>Answer Sheet</Label>
+              <Label>{t?.answerSheet ?? "Answer Sheet"}</Label>
               <ToggleGroup
                 type="single"
                 value={answerSheetType}
@@ -167,7 +172,7 @@ export const PrintForm = forwardRef<WizardFormRef, PrintFormProps>(
 
             {/* Layout */}
             <div className="space-y-2">
-              <Label>Column Layout</Label>
+              <Label>{t?.columnLayout ?? "Column Layout"}</Label>
               <ToggleGroup
                 type="single"
                 value={layout}

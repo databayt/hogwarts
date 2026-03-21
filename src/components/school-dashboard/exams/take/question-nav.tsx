@@ -29,6 +29,7 @@ import {
 import { Progress } from "@/components/ui/progress"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface QuestionNavProps {
   /** Total number of questions */
@@ -56,6 +57,9 @@ export function QuestionNav({
   onToggleFlag,
   className,
 }: QuestionNavProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.exams?.take
+
   const progress = useMemo(() => {
     return (answeredIndices.size / totalQuestions) * 100
   }, [answeredIndices.size, totalQuestions])
@@ -63,9 +67,10 @@ export function QuestionNav({
   return (
     <Card className={cn("sticky top-32", className)}>
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm">Questions</CardTitle>
+        <CardTitle className="text-sm">{t?.questions ?? "Questions"}</CardTitle>
         <CardDescription className="text-xs">
-          {answeredIndices.size} of {totalQuestions} answered
+          {answeredIndices.size} {dictionary?.school?.exams?.of ?? "of"}{" "}
+          {totalQuestions} {t?.answered ?? "answered"}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -114,20 +119,20 @@ export function QuestionNav({
         <div className="space-y-2 text-xs">
           <div className="flex items-center gap-2">
             <div className="bg-primary h-4 w-4 rounded" />
-            <span>Current</span>
+            <span>{t?.current ?? "Current"}</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="h-4 w-4 rounded bg-green-100 dark:bg-green-900/50" />
-            <span>Answered</span>
+            <span>{t?.answered ?? "Answered"}</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="h-4 w-4 rounded border" />
-            <span>Not answered</span>
+            <span>{t?.notAnswered ?? "Not answered"}</span>
           </div>
           {flaggedIndices.size > 0 && (
             <div className="flex items-center gap-2">
               <div className="h-4 w-4 rounded border ring-2 ring-yellow-500" />
-              <span>Flagged for review</span>
+              <span>{t?.flaggedForReview ?? "Flagged for review"}</span>
             </div>
           )}
         </div>
@@ -138,13 +143,17 @@ export function QuestionNav({
             <div className="text-lg font-semibold text-green-600 dark:text-green-400">
               {answeredIndices.size}
             </div>
-            <div className="text-muted-foreground">Answered</div>
+            <div className="text-muted-foreground">
+              {t?.answered ?? "Answered"}
+            </div>
           </div>
           <div className="bg-muted rounded p-2">
             <div className="text-lg font-semibold text-orange-600 dark:text-orange-400">
               {totalQuestions - answeredIndices.size}
             </div>
-            <div className="text-muted-foreground">Remaining</div>
+            <div className="text-muted-foreground">
+              {t?.remaining ?? "Remaining"}
+            </div>
           </div>
         </div>
       </CardContent>

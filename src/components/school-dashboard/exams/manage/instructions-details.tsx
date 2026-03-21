@@ -12,11 +12,14 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Textarea } from "@/components/ui/textarea"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { ExamFormStepProps } from "./types"
 import { examCreateSchema } from "./validation"
 
 export function InstructionsDetailsStep({ form, isView }: ExamFormStepProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.exams?.manage
   return (
     <div className="w-full space-y-6">
       {/* Instructions */}
@@ -27,7 +30,10 @@ export function InstructionsDetailsStep({ form, isView }: ExamFormStepProps) {
           <FormItem>
             <FormControl>
               <Textarea
-                placeholder="Exam instructions for students (optional)"
+                placeholder={
+                  t?.instructions?.placeholder ??
+                  "Exam instructions for students (optional)"
+                }
                 disabled={isView}
                 {...field}
                 rows={8}
@@ -41,7 +47,9 @@ export function InstructionsDetailsStep({ form, isView }: ExamFormStepProps) {
 
       {/* Additional Notes Section */}
       <div className="space-y-4">
-        <h3 className="text-lg font-medium">Additional Information</h3>
+        <h3 className="text-lg font-medium">
+          {t?.additionalDetails ?? "Additional Details"}
+        </h3>
         <div className="text-muted-foreground space-y-2 text-sm">
           <p>• Students should arrive 15 minutes before the exam starts</p>
           <p>• Bring necessary stationery and calculators if allowed</p>

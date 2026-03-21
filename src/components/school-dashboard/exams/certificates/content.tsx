@@ -17,15 +17,20 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 
 import { getCertificateConfigs, getCertificates } from "./actions"
 import { CertificateList } from "./certificate-list"
 import { CertificateConfigList } from "./config-list"
 
-export async function CertificateContent() {
+export async function CertificateContent({ lang = "ar" }: { lang?: Locale }) {
   const session = await auth()
   const schoolId = session?.user?.schoolId
   if (!schoolId) return null
+
+  const dictionary = await getDictionary(lang)
+  const t = dictionary?.school?.exams?.certificates
 
   const role = session.user.role || "USER"
   const canManage = ["DEVELOPER", "ADMIN"].includes(role)
@@ -74,11 +79,13 @@ export async function CertificateContent() {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">My Certificates</h2>
+          <h2 className="text-2xl font-bold tracking-tight">
+            {t?.tabs?.certificates ?? "My Certificates"}
+          </h2>
           <p className="text-muted-foreground">
             {activeCerts.length > 0
-              ? `You have ${activeCerts.length} certificate${activeCerts.length === 1 ? "" : "s"}`
-              : "No certificates issued yet"}
+              ? `${activeCerts.length} ${t?.noCertificates ?? "certificates"}`
+              : (t?.noCertificates ?? "No certificates issued yet")}
           </p>
         </div>
 
@@ -87,10 +94,11 @@ export async function CertificateContent() {
             <CardContent className="flex flex-col items-center justify-center py-12">
               <Award className="text-muted-foreground mb-4 h-12 w-12" />
               <h3 className="mb-2 text-lg font-semibold">
-                No certificates yet
+                {t?.noCertificates ?? "No certificates yet"}
               </h3>
               <p className="text-muted-foreground text-sm">
-                Certificates will appear here when they are issued to you
+                {t?.noCertificates ??
+                  "Certificates will appear here when they are issued to you"}
               </p>
             </CardContent>
           </Card>
@@ -161,9 +169,12 @@ export async function CertificateContent() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Certificates</h2>
+          <h2 className="text-2xl font-bold tracking-tight">
+            {t?.tabs?.certificates ?? "Certificates"}
+          </h2>
           <p className="text-muted-foreground">
-            Manage certificate templates and issue certificates to students
+            {t?.tabs?.templates ??
+              "Manage certificate templates and issue certificates to students"}
           </p>
         </div>
         {canManage && (
@@ -217,8 +228,14 @@ export async function CertificateContent() {
 
       <Tabs defaultValue="certificates">
         <TabsList>
-          <TabsTrigger value="certificates">Certificates</TabsTrigger>
-          {canManage && <TabsTrigger value="templates">Templates</TabsTrigger>}
+          <TabsTrigger value="certificates">
+            {t?.tabs?.certificates ?? "Certificates"}
+          </TabsTrigger>
+          {canManage && (
+            <TabsTrigger value="templates">
+              {t?.tabs?.templates ?? "Templates"}
+            </TabsTrigger>
+          )}
         </TabsList>
         <TabsContent value="certificates" className="space-y-4">
           <CertificateList

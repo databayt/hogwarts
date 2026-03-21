@@ -5,7 +5,6 @@
 import { useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { ChevronDown, Printer } from "lucide-react"
-import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -14,6 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { confirmEnrollment, updateApplicationStatus } from "./actions"
@@ -62,10 +62,10 @@ export default function ApplicationDetailActions({
         status,
       })
       if (result.success) {
-        toast.success(t?.applicationDetail?.statusUpdated || "Status updated")
+        SuccessToast(t?.applicationDetail?.statusUpdated || "Status updated")
         router.refresh()
       } else {
-        toast.error(result.error || "Failed to update status")
+        ErrorToast(result.error || "Failed to update status")
       }
     })
   }
@@ -74,12 +74,12 @@ export default function ApplicationDetailActions({
     startTransition(async () => {
       const result = await confirmEnrollment({ id: applicationId })
       if (result.success) {
-        toast.success(
+        SuccessToast(
           t?.enrollment?.enrollmentConfirmed || "Enrollment confirmed"
         )
         router.refresh()
       } else {
-        toast.error(result.error || "Failed to confirm enrollment")
+        ErrorToast(result.error || "Failed to confirm enrollment")
       }
     })
   }
@@ -101,7 +101,7 @@ export default function ApplicationDetailActions({
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-col gap-2">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
@@ -126,7 +126,12 @@ export default function ApplicationDetailActions({
       </DropdownMenu>
 
       {currentStatus === "SELECTED" && (
-        <Button size="sm" onClick={onConfirmEnrollment} disabled={isPending}>
+        <Button
+          variant="outline"
+          onClick={onConfirmEnrollment}
+          disabled={isPending}
+          className="h-9 w-52"
+        >
           {t?.enrollment?.confirmEnrollment || "Confirm Enrollment"}
         </Button>
       )}

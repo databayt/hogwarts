@@ -78,6 +78,7 @@ export function StreamLessonContent({
   quizQuestions,
 }: StreamLessonContentProps) {
   const router = useRouter()
+  const d = (dictionary as Record<string, any>)?.stream?.lesson
   const [showHero, setShowHero] = useState(true)
   const [isCompleted, setIsCompleted] = useState(
     lesson.progress?.isCompleted ?? false
@@ -125,7 +126,7 @@ export function StreamLessonContent({
             return
           }
           setIsCompleted(false)
-          toast.success("Marked as incomplete")
+          toast.success(d?.markedIncomplete || "Marked as incomplete")
         } else {
           const result = await markLessonComplete(
             lesson.id,
@@ -136,10 +137,10 @@ export function StreamLessonContent({
             return
           }
           setIsCompleted(true)
-          toast.success("Marked as complete!")
+          toast.success(d?.markedComplete || "Marked as complete!")
         }
       } catch {
-        toast.error("Failed to update progress")
+        toast.error(d?.failedToUpdateProgress || "Failed to update progress")
       }
     })
   }
@@ -171,9 +172,9 @@ export function StreamLessonContent({
           return
         }
         setIsCompleted(true)
-        toast.success("Lesson completed!")
+        toast.success(d?.lessonCompleted || "Lesson completed!")
       } catch {
-        toast.error("Failed to mark lesson as complete")
+        toast.error(d?.failedToComplete || "Failed to mark lesson as complete")
       }
     })
   }, [isCompleted, lesson.id, lesson.chapter.course.slug])
@@ -262,7 +263,7 @@ export function StreamLessonContent({
                   onClick={() => setShowDescDialog(true)}
                   className="shrink-0 rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-medium text-white/80 backdrop-blur-sm transition-colors hover:bg-white/25"
                 >
-                  MORE
+                  {d?.more || "MORE"}
                 </button>
               </div>
 
@@ -295,7 +296,10 @@ export function StreamLessonContent({
                 {lesson.availableVideos.length > 1 && (
                   <>
                     <span>&middot;</span>
-                    <span>{lesson.availableVideos.length} instructors</span>
+                    <span>
+                      {lesson.availableVideos.length}{" "}
+                      {d?.instructors || "instructors"}
+                    </span>
                   </>
                 )}
                 {lesson.attachments.length > 0 && (
@@ -353,7 +357,7 @@ export function StreamLessonContent({
                     className="inline-flex h-10 items-center gap-2 rounded-full bg-white px-6 font-medium text-black transition-opacity hover:opacity-90 disabled:opacity-40"
                   >
                     <Play className="size-4 fill-current" />
-                    Play
+                    {d?.play || "Play"}
                   </button>
                 )}
 
@@ -387,7 +391,7 @@ export function StreamLessonContent({
                   {/* Done pill — top-right */}
                   <DialogClose asChild>
                     <button className="absolute end-4 top-3 rounded-full bg-neutral-200 px-2.5 py-0.5 text-xs font-light text-gray-500 dark:bg-neutral-700 dark:text-gray-400">
-                      Done
+                      {d?.done || "Done"}
                     </button>
                   </DialogClose>
 
@@ -408,6 +412,7 @@ export function StreamLessonContent({
                   <p className="text-xs leading-relaxed text-gray-500 dark:text-gray-400">
                     {lesson.description ||
                       lesson.chapter.course.description ||
+                      d?.exploreLesson ||
                       "Explore this lesson and discover new concepts."}
                   </p>
 
@@ -441,13 +446,13 @@ export function StreamLessonContent({
                   {/* ── Information ── */}
                   <div className="mt-5 pt-4">
                     <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400">
-                      Information
+                      {d?.information || "Information"}
                     </h3>
                     <div className="mt-3 space-y-3">
                       {lesson.year && (
                         <div>
                           <p className="text-[11px] text-gray-400 dark:text-gray-500">
-                            Released
+                            {d?.released || "Released"}
                           </p>
                           <p className="text-xs text-gray-600 dark:text-gray-300">
                             {lesson.year}
@@ -456,7 +461,7 @@ export function StreamLessonContent({
                       )}
                       <div>
                         <p className="text-[11px] text-gray-400 dark:text-gray-500">
-                          Course
+                          {d?.course || "Course"}
                         </p>
                         <p className="text-xs text-gray-600 dark:text-gray-300">
                           {lesson.chapter.course.title}
@@ -464,7 +469,7 @@ export function StreamLessonContent({
                       </div>
                       <div>
                         <p className="text-[11px] text-gray-400 dark:text-gray-500">
-                          Chapter
+                          {d?.chapter || "Chapter"}
                         </p>
                         <p className="text-xs text-gray-600 dark:text-gray-300">
                           {lesson.chapter.title}
@@ -473,11 +478,13 @@ export function StreamLessonContent({
                       {lesson.chapter.course.grades.length > 0 && (
                         <div>
                           <p className="text-[11px] text-gray-400 dark:text-gray-500">
-                            Grade
+                            {d?.grade || "Grade"}
                           </p>
                           <p className="text-xs text-gray-600 dark:text-gray-300">
                             {lesson.chapter.course.grades
-                              .map((g) => `Grade ${gradeWord(g)}`)
+                              .map(
+                                (g) => `${d?.grade || "Grade"} ${gradeWord(g)}`
+                              )
                               .join(", ")}
                           </p>
                         </div>
@@ -485,7 +492,7 @@ export function StreamLessonContent({
                       {lesson.availableVideos.length > 0 && (
                         <div>
                           <p className="text-[11px] text-gray-400 dark:text-gray-500">
-                            Instructors
+                            {d?.instructors || "Instructors"}
                           </p>
                           <p className="text-xs text-gray-600 dark:text-gray-300">
                             {lesson.availableVideos
@@ -504,13 +511,13 @@ export function StreamLessonContent({
                     lesson.chapter.course.targetAudience) && (
                     <div className="mt-5 pt-4">
                       <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400">
-                        About this Course
+                        {d?.aboutThisCourse || "About this Course"}
                       </h3>
                       <div className="mt-3 space-y-3">
                         {lesson.chapter.course.description && (
                           <div>
                             <p className="text-[11px] text-gray-400 dark:text-gray-500">
-                              Description
+                              {d?.description || "Description"}
                             </p>
                             <p className="text-xs leading-relaxed text-gray-600 dark:text-gray-300">
                               {lesson.chapter.course.description}
@@ -520,7 +527,7 @@ export function StreamLessonContent({
                         {lesson.chapter.course.objectives.length > 0 && (
                           <div>
                             <p className="text-[11px] text-gray-400 dark:text-gray-500">
-                              Objectives
+                              {d?.objectives || "Objectives"}
                             </p>
                             <p className="text-xs leading-relaxed text-gray-600 dark:text-gray-300">
                               {lesson.chapter.course.objectives.join(", ")}
@@ -530,7 +537,7 @@ export function StreamLessonContent({
                         {lesson.chapter.course.prerequisites && (
                           <div>
                             <p className="text-[11px] text-gray-400 dark:text-gray-500">
-                              Prerequisites
+                              {d?.prerequisites || "Prerequisites"}
                             </p>
                             <p className="text-xs text-gray-600 dark:text-gray-300">
                               {lesson.chapter.course.prerequisites}
@@ -540,7 +547,7 @@ export function StreamLessonContent({
                         {lesson.chapter.course.targetAudience && (
                           <div>
                             <p className="text-[11px] text-gray-400 dark:text-gray-500">
-                              Target Audience
+                              {d?.targetAudience || "Target Audience"}
                             </p>
                             <p className="text-xs text-gray-600 dark:text-gray-300">
                               {lesson.chapter.course.targetAudience}
@@ -555,11 +562,11 @@ export function StreamLessonContent({
                   {lesson.description && (
                     <div className="mt-5 pt-4">
                       <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400">
-                        Current Lesson
+                        {d?.currentLesson || "Current Lesson"}
                       </h3>
                       <div className="mt-3">
                         <p className="text-[11px] text-gray-400 dark:text-gray-500">
-                          Description
+                          {d?.description || "Description"}
                         </p>
                         <p className="text-xs leading-relaxed text-gray-600 dark:text-gray-300">
                           {lesson.description}
@@ -578,8 +585,8 @@ export function StreamLessonContent({
                   <Bookmark className="h-16 w-10 text-gray-700 dark:text-gray-300" />
                   <p className="text-sm font-semibold text-gray-900 dark:text-gray-50">
                     {wishlistDialog === "added"
-                      ? "Added to Watchlist"
-                      : "Removed"}
+                      ? d?.addedToWatchlist || "Added to Watchlist"
+                      : d?.removed || "Removed"}
                   </p>
                 </div>
               </div>
@@ -609,7 +616,7 @@ export function StreamLessonContent({
       {lesson.siblingLessons.length > 0 && (
         <div className="space-y-3">
           <h2 className="text-lg font-semibold">
-            More from {lesson.chapter.course.title}
+            {d?.moreFrom || "More from"} {lesson.chapter.course.title}
           </h2>
           <div className="no-scrollbar -mx-1 flex gap-3 overflow-x-auto px-1 pb-2">
             {lesson.siblingLessons.map((sibling) => (
@@ -654,7 +661,10 @@ export function StreamLessonContent({
                       <Play className="size-3 fill-current" />
                       {sibling.watchedMinutes != null &&
                       sibling.watchedMinutes > 0 ? (
-                        <span>{sibling.watchedMinutes} min watched</span>
+                        <span>
+                          {sibling.watchedMinutes}{" "}
+                          {d?.minWatched || "min watched"}
+                        </span>
                       ) : (
                         <>
                           <span>
@@ -677,7 +687,9 @@ export function StreamLessonContent({
       {/* Instructors — real data from availableVideos */}
       {lesson.availableVideos.length > 0 && (
         <div className="space-y-2">
-          <h2 className="text-lg font-semibold">Instructors</h2>
+          <h2 className="text-lg font-semibold">
+            {d?.instructors || "Instructors"}
+          </h2>
           <div className="flex flex-wrap gap-3">
             {lesson.availableVideos.map((video) => (
               <button
@@ -731,7 +743,9 @@ export function StreamLessonContent({
       {quizQuestions && quizQuestions.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Practice Quiz</CardTitle>
+            <CardTitle className="text-lg">
+              {d?.practiceQuiz || "Practice Quiz"}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {quizQuestions.map((q, idx) => (
@@ -749,7 +763,9 @@ export function StreamLessonContent({
               <div className="flex items-center gap-2">
                 <CardTitle className="text-xl">{lesson.title}</CardTitle>
                 {lesson.isFree && (
-                  <Badge variant="secondary">Free Preview</Badge>
+                  <Badge variant="secondary">
+                    {d?.freePreview || "Free Preview"}
+                  </Badge>
                 )}
               </div>
               <p className="text-muted-foreground text-sm">
@@ -769,7 +785,9 @@ export function StreamLessonContent({
               ) : (
                 <Circle className="me-2 size-4" />
               )}
-              {isCompleted ? "Completed" : "Mark as Complete"}
+              {isCompleted
+                ? d?.completed || "Completed"
+                : d?.markAsComplete || "Mark as Complete"}
             </Button>
           </div>
         </CardHeader>
@@ -784,7 +802,7 @@ export function StreamLessonContent({
           {/* Duration */}
           {(lesson.videoDuration || lesson.duration) && (
             <p className="text-muted-foreground mb-4 text-sm">
-              Duration:{" "}
+              {d?.duration || "Duration"}:{" "}
               {lesson.videoDuration
                 ? `${Math.floor(lesson.videoDuration / 60)}m ${Math.floor(lesson.videoDuration % 60)}s`
                 : `${lesson.duration} minutes`}
@@ -796,7 +814,9 @@ export function StreamLessonContent({
       {/* Resources */}
       {lesson.attachments.length > 0 && (
         <div className="space-y-2">
-          <h2 className="text-lg font-semibold">Resources</h2>
+          <h2 className="text-lg font-semibold">
+            {d?.resources || "Resources"}
+          </h2>
           <div className="grid gap-2 sm:grid-cols-2">
             {lesson.attachments.map((attachment) => (
               <a
@@ -820,7 +840,9 @@ export function StreamLessonContent({
           <Link href={`${baseUrl}/${lesson.previousLesson.id}`}>
             <Button variant="outline">
               <ChevronLeft className="me-2 size-4 rtl:rotate-180" />
-              <span className="hidden sm:inline">Previous:</span>{" "}
+              <span className="hidden sm:inline">
+                {d?.previous || "Previous"}:
+              </span>{" "}
               <span className="max-w-[150px] truncate">
                 {lesson.previousLesson.title}
               </span>
@@ -833,7 +855,7 @@ export function StreamLessonContent({
         {lesson.nextLesson ? (
           <Link href={`${baseUrl}/${lesson.nextLesson.id}`}>
             <Button>
-              <span className="hidden sm:inline">Next:</span>{" "}
+              <span className="hidden sm:inline">{d?.next || "Next"}:</span>{" "}
               <span className="max-w-[150px] truncate">
                 {lesson.nextLesson.title}
               </span>
@@ -843,7 +865,7 @@ export function StreamLessonContent({
         ) : (
           <Link href={baseUrl}>
             <Button>
-              Back to Course
+              {d?.backToCourse || "Back to Course"}
               <ChevronRight className="ms-2 size-4 rtl:rotate-180" />
             </Button>
           </Link>

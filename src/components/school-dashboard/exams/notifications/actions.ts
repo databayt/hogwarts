@@ -16,6 +16,7 @@
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { dispatchNotification } from "@/lib/dispatch-notification"
 import { formatDate, formatDateTime } from "@/lib/i18n-format"
 
 import type {
@@ -80,23 +81,21 @@ export async function sendExamNotification(
     targetRecipients.map(async (recipient) => {
       const { title, body } = formatNotification(data, recipient.type)
 
-      return db.notification.create({
-        data: {
-          schoolId,
-          userId: recipient.userId,
-          title,
-          body,
-          type: "grade_posted", // Using existing notification type for exam results
-          metadata: {
-            notificationType: data.type,
-            examId: data.examId,
-          },
+      return dispatchNotification({
+        schoolId,
+        userId: recipient.userId,
+        title,
+        body,
+        type: "grade_posted", // Using existing notification type for exam results
+        metadata: {
+          notificationType: data.type,
+          examId: data.examId,
         },
       })
     })
   )
 
-  return { success: true, count: notifications.length }
+  return { success: true, count: notifications.filter(Boolean).length }
 }
 
 /**

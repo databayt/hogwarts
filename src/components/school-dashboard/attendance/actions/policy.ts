@@ -7,6 +7,7 @@ import { auth } from "@/auth"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { dispatchNotification } from "@/lib/dispatch-notification"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import type { ActionResponse } from "./core"
@@ -164,24 +165,22 @@ export async function evaluatePolicies(schoolId: string): Promise<
 
                 await Promise.all(
                   policy.alertRecipients.map((recipientId) =>
-                    db.notification.create({
-                      data: {
-                        schoolId,
-                        userId: recipientId,
-                        type: "attendance_alert",
-                        priority: tier >= 3 ? "high" : "normal",
-                        title: `تنبيه سياسة الحضور: ${studentName}`,
-                        body: `تجاوز ${studentName} حد الغياب (${absenceCount} غياب). الإجراء المطلوب: ${action}`,
-                        metadata: {
-                          studentId,
-                          studentName,
-                          policyId: policy.id,
-                          policyName: policy.name,
-                          tier,
-                          absenceCount,
-                          action,
-                          termId: term.id,
-                        },
+                    dispatchNotification({
+                      schoolId,
+                      userId: recipientId,
+                      type: "attendance_alert",
+                      priority: tier >= 3 ? "high" : "normal",
+                      title: `تنبيه سياسة الحضور: ${studentName}`,
+                      body: `تجاوز ${studentName} حد الغياب (${absenceCount} غياب). الإجراء المطلوب: ${action}`,
+                      metadata: {
+                        studentId,
+                        studentName,
+                        policyId: policy.id,
+                        policyName: policy.name,
+                        tier,
+                        absenceCount,
+                        action,
+                        termId: term.id,
                       },
                     })
                   )

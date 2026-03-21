@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ErrorToast } from "@/components/atom/toast"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { getTier, GradeRow } from "../../atoms"
 import type { GradeBoundary } from "../../types"
@@ -34,6 +35,8 @@ interface ScoringFormProps {
 
 export const ScoringForm = forwardRef<WizardFormRef, ScoringFormProps>(
   ({ templateId, initialData, onValidChange }, ref) => {
+    const { dictionary } = useDictionary()
+    const t = dictionary?.school?.exams?.wizard?.templateWizard?.scoring
     const [passingScore, setPassingScore] = useState(
       initialData?.passingScore ?? 50
     )
@@ -115,7 +118,9 @@ export const ScoringForm = forwardRef<WizardFormRef, ScoringFormProps>(
       <div className="space-y-6">
         {/* Passing score */}
         <div className="space-y-2">
-          <Label htmlFor="passing-score">Passing Score (%)</Label>
+          <Label htmlFor="passing-score">
+            {t?.passingScore ?? "Passing Score (%)"}
+          </Label>
           <Input
             id="passing-score"
             type="number"
@@ -175,7 +180,7 @@ export const ScoringForm = forwardRef<WizardFormRef, ScoringFormProps>(
                     updateBoundary(index, "label", e.target.value)
                   }
                   className="h-7 w-16 text-center text-sm font-medium"
-                  placeholder="A+"
+                  placeholder={t?.gradePlaceholder ?? "A+"}
                 />
                 <div className="flex flex-1 items-center gap-2">
                   <span className="text-muted-foreground text-xs">Min %</span>

@@ -11,6 +11,7 @@ import { ErrorToast } from "@/components/atom/toast"
 import { DateField, InputField, TextareaField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardTabs, type WizardTab } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { updateExamSchedule } from "./actions"
 import { scheduleSchema, type ScheduleFormData } from "./validation"
@@ -29,6 +30,8 @@ interface ScheduleFormProps {
 
 export const ScheduleForm = forwardRef<WizardFormRef, ScheduleFormProps>(
   ({ examId, initialData, onValidChange, onTabChange }, ref) => {
+    const { dictionary } = useDictionary()
+    const tw = dictionary?.school?.exams?.wizard?.examWizard?.schedule
     const [isPending, startTransition] = useTransition()
 
     const form = useForm<ScheduleFormData>({
@@ -155,7 +158,10 @@ export const ScheduleForm = forwardRef<WizardFormRef, ScheduleFormProps>(
                   <TextareaField
                     name="instructions"
                     label="Instructions"
-                    placeholder="Enter exam instructions (optional)"
+                    placeholder={
+                      tw?.instructionsPlaceholder ??
+                      "Enter exam instructions (optional)"
+                    }
                     disabled={isPending}
                   />
                 </div>

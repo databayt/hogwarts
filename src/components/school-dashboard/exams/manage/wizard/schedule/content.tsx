@@ -8,22 +8,26 @@ import { useParams } from "next/navigation"
 import { FormHeading, FormLayout } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { useExamWizard } from "../use-exam-wizard"
 import { ScheduleForm } from "./form"
 
-const TAB_HEADINGS: Record<string, { title: string; description: string }> = {
-  schedule: {
-    title: "Schedule",
-    description: "Set the exam date, time, and duration.",
-  },
-  marks: {
-    title: "Marks & Instructions",
-    description: "Set the marks and exam instructions.",
-  },
-}
-
 export default function ScheduleContent() {
+  const { dictionary } = useDictionary()
+  const tw = dictionary?.school?.exams?.wizard?.examWizard?.schedule
+
+  const TAB_HEADINGS: Record<string, { title: string; description: string }> = {
+    schedule: {
+      title: tw?.title ?? "Schedule",
+      description: tw?.description ?? "Set the exam date, time, and duration.",
+    },
+    marks: {
+      title: tw?.marksTitle ?? "Marks & Instructions",
+      description:
+        tw?.marksDescription ?? "Set the marks and exam instructions.",
+    },
+  }
   const params = useParams()
   const examId = params.id as string
   const formRef = useRef<WizardFormRef>(null)

@@ -65,8 +65,8 @@ export async function createSubject(
     if (existing) {
       // Reactivate if inactive
       if (!existing.isActive) {
-        await db.schoolSubjectSelection.update({
-          where: { id: existing.id },
+        await db.schoolSubjectSelection.updateMany({
+          where: { id: existing.id, schoolId },
           data: { isActive: true },
         })
         revalidatePath("/subjects")
@@ -155,8 +155,8 @@ export async function updateSubject(
       data.weeklyPeriods = rest.weeklyPeriods
     if (typeof rest.isActive !== "undefined") data.isActive = rest.isActive
 
-    await db.schoolSubjectSelection.update({
-      where: { id },
+    await db.schoolSubjectSelection.updateMany({
+      where: { id, schoolId },
       data,
     })
 
@@ -217,8 +217,8 @@ export async function deleteSubject(input: {
     }
 
     // Soft-delete by deactivating
-    await db.schoolSubjectSelection.update({
-      where: { id },
+    await db.schoolSubjectSelection.updateMany({
+      where: { id, schoolId },
       data: { isActive: false },
     })
 

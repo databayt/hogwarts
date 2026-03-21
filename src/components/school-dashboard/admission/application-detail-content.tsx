@@ -133,12 +133,11 @@ export default async function ApplicationDetailContent({
     t?.status?.[application.status as keyof typeof t.status] ||
     application.status
 
-  // Get school's content language for translation
-  const school = await db.school.findUnique({
-    where: { id: schoolId },
-    select: { preferredLanguage: true },
-  })
-  const contentLang = (school?.preferredLanguage || "ar") as "ar" | "en"
+  // Detect content language from the data itself
+  // Application has no `lang` field, so we detect from a known text field
+  const sampleText = application.applyingForClass || application.firstName || ""
+  const hasArabic = /[\u0600-\u06FF]/.test(sampleText)
+  const contentLang: "ar" | "en" = hasArabic ? "ar" : "en"
 
   // Translate display fields if viewer lang differs from content lang
   const translatableFields = [
@@ -173,9 +172,10 @@ export default async function ApplicationDetailContent({
 
   // Helper to get translated value or fall back to original
   const d = (field: string): string | null => {
-    const val =
-      translated[field] || (application as Record<string, unknown>)[field]
-    return typeof val === "string" ? val : null
+    const t_val = translated[field]
+    if (t_val !== undefined && t_val !== "") return t_val
+    const raw = (application as Record<string, unknown>)[field]
+    return typeof raw === "string" ? raw : null
   }
 
   const fullName = [d("firstName"), d("middleName"), d("lastName")]

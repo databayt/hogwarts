@@ -132,13 +132,41 @@ export const ApplySessionProvider: React.FC<ApplySessionProviderProps> = ({
           `${STORAGE_KEY}_${campaignId}`
         )
         if (storedSession) {
-          const parsed = JSON.parse(storedSession)
-          setSession((prev) => ({
-            ...prev,
-            ...parsed,
-            campaignId,
-            isLoading: false,
-          }))
+          try {
+            const parsed = JSON.parse(storedSession)
+            // Validate parsed data has expected shape before spreading
+            if (
+              parsed &&
+              typeof parsed === "object" &&
+              !Array.isArray(parsed)
+            ) {
+              setSession((prev) => ({
+                ...prev,
+                ...parsed,
+                campaignId,
+                isLoading: false,
+              }))
+            } else {
+              // Invalid stored data — start fresh
+              setSession((prev) => ({
+                ...prev,
+                campaignId,
+                formData: {},
+                currentStep: "attachments",
+                isLoading: false,
+              }))
+            }
+          } catch {
+            // Corrupted localStorage — start fresh
+            localStorage.removeItem(`${STORAGE_KEY}_${campaignId}`)
+            setSession((prev) => ({
+              ...prev,
+              campaignId,
+              formData: {},
+              currentStep: "attachments",
+              isLoading: false,
+            }))
+          }
         } else {
           setSession((prev) => ({
             ...prev,

@@ -6,7 +6,6 @@ import { useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { ColumnDef } from "@tanstack/react-table"
 import { Ellipsis } from "lucide-react"
-import { toast } from "sonner"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -18,6 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
@@ -52,6 +52,69 @@ const getStatusVariant = (status: string) => {
     default:
       return "outline"
   }
+}
+
+function MeritActionsCell({
+  merit,
+  dictionary,
+}: {
+  merit: MeritRow
+  dictionary: Dictionary["school"]["admission"]
+}) {
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
+  const t = dictionary
+
+  const onView = () => {
+    router.push(`/admission/applications/${merit.id}`)
+  }
+
+  const onStatusChange = (status: string) => {
+    startTransition(async () => {
+      const result = await updateApplicationStatus({
+        id: merit.id,
+        status,
+      })
+      if (result.success) {
+        SuccessToast("Status updated successfully")
+        router.refresh()
+      } else {
+        ErrorToast(result.error || "Failed to update status")
+      }
+    })
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="h-8 w-8 p-0" disabled={isPending}>
+          <Ellipsis className="h-4 w-4" />
+          <span className="sr-only">Open menu</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>
+          {t?.columns?.actions || "Actions"}
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={onView}>
+          {t?.meritList?.viewApplication || "View Application"}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onStatusChange("SELECTED")}>
+          {t?.meritList?.markSelected || "Mark as Selected"}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onStatusChange("WAITLISTED")}>
+          {t?.meritList?.markWaitlisted || "Mark as Waitlisted"}
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="text-destructive"
+          onClick={() => onStatusChange("REJECTED")}
+        >
+          {t?.meritList?.markRejected || "Mark as Rejected"}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
 }
 
 export const getMeritColumns = (
@@ -213,66 +276,9 @@ export const getMeritColumns = (
       header: () => (
         <span className="sr-only">{t?.columns?.actions || "Actions"}</span>
       ),
-      cell: ({ row }) => {
-        const merit = row.original
-        const router = useRouter()
-        const [isPending, startTransition] = useTransition()
-
-        const onView = () => {
-          router.push(`/admission/applications/${merit.id}`)
-        }
-
-        const onStatusChange = (status: string) => {
-          startTransition(async () => {
-            const result = await updateApplicationStatus({
-              id: merit.id,
-              status,
-            })
-            if (result.success) {
-              toast.success("Status updated successfully")
-              router.refresh()
-            } else {
-              toast.error(result.error || "Failed to update status")
-            }
-          })
-        }
-
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="h-8 w-8 p-0"
-                disabled={isPending}
-              >
-                <Ellipsis className="h-4 w-4" />
-                <span className="sr-only">Open menu</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>
-                {t?.columns?.actions || "Actions"}
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onView}>
-                {t?.meritList?.viewApplication || "View Application"}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onStatusChange("SELECTED")}>
-                {t?.meritList?.markSelected || "Mark as Selected"}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onStatusChange("WAITLISTED")}>
-                {t?.meritList?.markWaitlisted || "Mark as Waitlisted"}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-destructive"
-                onClick={() => onStatusChange("REJECTED")}
-              >
-                {t?.meritList?.markRejected || "Mark as Rejected"}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )
-      },
+      cell: ({ row }) => (
+        <MeritActionsCell merit={row.original} dictionary={dictionary} />
+      ),
       enableSorting: false,
       enableColumnFilter: false,
     },

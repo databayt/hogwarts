@@ -9,7 +9,6 @@ import { format } from "date-fns"
 import { ar, enUS } from "date-fns/locale"
 import { ArrowLeft, Check, Loader2 } from "lucide-react"
 import { useForm } from "react-hook-form"
-import { toast } from "sonner"
 import { z } from "zod"
 
 import { Button } from "@/components/ui/button"
@@ -31,6 +30,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { ErrorToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -133,7 +133,7 @@ export function TourWizard({
           setAvailableSlots([])
         }
       } catch {
-        toast.error(
+        ErrorToast(
           tour?.errors?.failedToFetchSlots || "Failed to fetch available slots"
         )
         setAvailableSlots([])
@@ -184,14 +184,14 @@ export function TourWizard({
         setConfirmation(result.data)
         goTo("confirm")
       } else {
-        toast.error(
+        ErrorToast(
           result.error ||
             tour?.errors?.failedToBookTour ||
             "Failed to book tour"
         )
       }
     } catch {
-      toast.error(tour?.errors?.failedToBookTour || "Failed to book tour")
+      ErrorToast(tour?.errors?.failedToBookTour || "Failed to book tour")
     } finally {
       setIsSubmitting(false)
     }

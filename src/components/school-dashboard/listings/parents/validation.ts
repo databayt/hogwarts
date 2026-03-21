@@ -55,6 +55,7 @@ export const parentBaseSchema = z.object({
     .email("Valid email is required")
     .optional()
     .or(z.literal("")),
+  phoneNumber: z.string().optional(),
   userId: z.string().optional(),
   profilePhotoUrl: z.string().optional(),
 })

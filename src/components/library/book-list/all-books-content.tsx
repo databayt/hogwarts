@@ -7,6 +7,7 @@ import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import { BOOK_GRADE_LEVELS, LIBRARY_CONFIG } from "../config"
+import type { BookListItem } from "../types"
 import BookCard from "./book-card"
 import BooksToolbar from "./books-toolbar"
 
@@ -56,24 +57,24 @@ export default async function AllBooksContent({
   const gradeLevel = searchParams?.gradeLevel || ""
   const perPage = LIBRARY_CONFIG.BOOKS_PER_PAGE
 
-  // Build where clause — only show catalog books with active selections, plus legacy books
+  // Get hidden book IDs for this school
+  const hiddenSelections = await db.schoolBookSelection.findMany({
+    where: { schoolId, isActive: false },
+    select: { catalogBookId: true },
+  })
+  const hiddenBookIds = new Set(hiddenSelections.map((s) => s.catalogBookId))
+
+  // Build where clause — query global CatalogBook, exclude hidden
   const where: Record<string, unknown> = {
-    schoolId,
-    OR: [
-      // Catalog books: only if selection is active
-      {
-        catalogBookId: { not: null },
-        catalogBook: {
-          schoolSelections: { some: { schoolId, isActive: true } },
-        },
-      },
-      // Legacy books: always show during transition
-      { catalogBookId: null },
-    ],
+    status: "PUBLISHED",
+    approvalStatus: "APPROVED",
+    visibility: { in: ["PUBLIC", "SCHOOL"] },
+    ...(hiddenBookIds.size > 0
+      ? { id: { notIn: Array.from(hiddenBookIds) } }
+      : {}),
   }
 
   if (search) {
-    // Wrap existing OR with AND to combine with search
     where.AND = [
       {
         OR: [
@@ -92,21 +93,49 @@ export default async function AllBooksContent({
     where.gradeLevel = gradeLevel
   }
 
-  // Parallel fetch: books + count + distinct genres
-  const [books, totalCount, distinctGenres] = await Promise.all([
-    db.book.findMany({
+  // Parallel fetch: catalog books + count + distinct genres
+  const catalogSelect = {
+    id: true,
+    title: true,
+    author: true,
+    genre: true,
+    coverUrl: true,
+    coverColor: true,
+    rating: true,
+    createdAt: true,
+  }
+
+  const [catalogBooks, totalCount, distinctGenres] = await Promise.all([
+    db.catalogBook.findMany({
       where,
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * perPage,
       take: perPage,
+      select: catalogSelect,
     }),
-    db.book.count({ where }),
-    db.book.findMany({
-      where: { schoolId },
+    db.catalogBook.count({ where }),
+    db.catalogBook.findMany({
+      where: {
+        status: "PUBLISHED",
+        approvalStatus: "APPROVED",
+        visibility: { in: ["PUBLIC", "SCHOOL"] },
+      },
       select: { genre: true },
       distinct: ["genre"],
     }),
   ])
+
+  // Map to BookListItem shape
+  const books: BookListItem[] = catalogBooks.map((cb) => ({
+    id: cb.id,
+    title: cb.title,
+    author: cb.author,
+    genre: cb.genre,
+    coverUrl: cb.coverUrl ?? "",
+    coverColor: cb.coverColor,
+    rating: Math.round(cb.rating),
+    createdAt: cb.createdAt,
+  }))
 
   const totalPages = Math.ceil(totalCount / perPage)
   const genres = distinctGenres.map((g) => g.genre)

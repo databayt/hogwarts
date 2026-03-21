@@ -63,10 +63,15 @@ async function verifyCourseAccess(
   if (!authCtx) throw new Error("Unauthorized")
   authCtx.schoolId = schoolId
 
+  // Non-DEVELOPER roles must have schoolId for multi-tenant safety
+  if (!schoolId && authCtx.role !== "DEVELOPER") {
+    throw new Error("School context required")
+  }
+
   const course = await db.streamCourse.findFirst({
     where: {
       id: courseId,
-      schoolId: schoolId || undefined,
+      ...(schoolId ? { schoolId } : {}),
     },
   })
 

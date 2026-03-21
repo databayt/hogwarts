@@ -40,8 +40,10 @@ export default async function LibraryAdminContent({
       db.borrowRecord.count({
         where: {
           schoolId,
-          status: "BORROWED",
-          dueDate: { lt: new Date() },
+          OR: [
+            { status: "OVERDUE" },
+            { status: "BORROWED", dueDate: { lt: new Date() } },
+          ],
         },
       }),
     ])

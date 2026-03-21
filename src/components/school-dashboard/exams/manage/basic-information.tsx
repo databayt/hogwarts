@@ -20,12 +20,15 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { EXAM_TYPES } from "./config"
 import { ExamFormStepProps } from "./types"
 import { examCreateSchema } from "./validation"
 
 export function BasicInformationStep({ form, isView }: ExamFormStepProps) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.exams?.manage?.form
   return (
     <div className="w-full space-y-6">
       {/* Title */}
@@ -35,7 +38,11 @@ export function BasicInformationStep({ form, isView }: ExamFormStepProps) {
         render={({ field }) => (
           <FormItem>
             <FormControl>
-              <Input placeholder="Exam title" disabled={isView} {...field} />
+              <Input
+                placeholder={t?.examTitle ?? "Exam title"}
+                disabled={isView}
+                {...field}
+              />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -50,7 +57,9 @@ export function BasicInformationStep({ form, isView }: ExamFormStepProps) {
           <FormItem>
             <FormControl>
               <Textarea
-                placeholder="Exam description (optional)"
+                placeholder={
+                  t?.examDescription ?? "Exam description (optional)"
+                }
                 disabled={isView}
                 {...field}
                 rows={3}
@@ -75,7 +84,9 @@ export function BasicInformationStep({ form, isView }: ExamFormStepProps) {
               >
                 <FormControl>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select class" />
+                    <SelectValue
+                      placeholder={t?.selectClass ?? "Select class"}
+                    />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -102,7 +113,9 @@ export function BasicInformationStep({ form, isView }: ExamFormStepProps) {
               >
                 <FormControl>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select subject" />
+                    <SelectValue
+                      placeholder={t?.selectSubject ?? "Select subject"}
+                    />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -131,7 +144,9 @@ export function BasicInformationStep({ form, isView }: ExamFormStepProps) {
             >
               <FormControl>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select exam type" />
+                  <SelectValue
+                    placeholder={t?.selectExamType ?? "Select exam type"}
+                  />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>

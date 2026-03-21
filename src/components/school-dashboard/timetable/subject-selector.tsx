@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { getAllSubjects } from "./fallback-data"
 
@@ -41,6 +42,9 @@ export function SubjectSelector({
   showAllSubjects = false,
   availableSubjects = [],
 }: SubjectSelectorProps) {
+  const { dictionary } = useDictionary()
+  const ss = (dictionary?.school?.timetable as Record<string, any>)
+    ?.subjectSelector
   const [selectedSubject, setSelectedSubject] = useState(currentSubject)
   const [customSubject, setCustomSubject] = useState("")
   const [useCustomSubject, setUseCustomSubject] = useState(false)
@@ -74,11 +78,11 @@ export function SubjectSelector({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Pencil Subject</DialogTitle>
+          <DialogTitle>{ss?.title ?? "Pencil Subject"}</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <Label>Select from available subjects</Label>
+            <Label>{ss?.search ?? "Select from available subjects"}</Label>
             <Select
               value={selectedSubject}
               onValueChange={(value) => {
@@ -88,7 +92,7 @@ export function SubjectSelector({
               disabled={useCustomSubject}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Choose a subject" />
+                <SelectValue placeholder={ss?.search ?? "Choose a subject"} />
               </SelectTrigger>
               <SelectContent>
                 {uniqueSubjects.map((subject) => (
@@ -109,12 +113,14 @@ export function SubjectSelector({
                 onChange={(e) => setUseCustomSubject(e.target.checked)}
                 className="border-border bg-background text-primary focus:ring-primary h-4 w-4 rounded"
               />
-              <Label htmlFor="useCustomSubject">Use custom subject name</Label>
+              <Label htmlFor="useCustomSubject">
+                {ss?.categories?.elective ?? "Use custom subject name"}
+              </Label>
             </div>
 
             {useCustomSubject && (
               <Input
-                placeholder="Enter custom subject name"
+                placeholder={ss?.search ?? "Enter custom subject name"}
                 value={customSubject}
                 onChange={(e) => setCustomSubject(e.target.value)}
                 className="mt-2"
@@ -124,20 +130,28 @@ export function SubjectSelector({
 
           {showAllSubjects && (
             <div className="muted dark:text-neutral-400">
-              <p>• All subjects are shown in the dropdown</p>
-              <p>• You can also enter a custom subject name</p>
+              <p>
+                •{" "}
+                {ss?.categories?.core ??
+                  "All subjects are shown in the dropdown"}
+              </p>
+              <p>
+                •{" "}
+                {ss?.categories?.activity ??
+                  "You can also enter a custom subject name"}
+              </p>
             </div>
           )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={handleCancel}>
-            Cancel
+            {ss?.buttons?.cancel ?? "Cancel"}
           </Button>
           <Button
             onClick={handleSave}
             disabled={useCustomSubject && !customSubject.trim()}
           >
-            Save
+            {ss?.buttons?.confirm ?? "Save"}
           </Button>
         </DialogFooter>
       </DialogContent>

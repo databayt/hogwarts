@@ -22,6 +22,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useToast } from "@/components/ui/use-toast"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { closeQuickAssessment, launchQuickAssessment } from "./actions"
 import type { QuickAssessmentSummary } from "./actions/types"
@@ -37,6 +38,8 @@ export function QuickAssessmentList({
 }: QuickAssessmentListProps) {
   const router = useRouter()
   const { toast } = useToast()
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.exams?.quick
   const [isLoading, setIsLoading] = useState<string | null>(null)
 
   const handleLaunch = async (id: string) => {
@@ -45,21 +48,21 @@ export function QuickAssessmentList({
       const result = await launchQuickAssessment(id)
       if (result.success) {
         toast({
-          title: "Success",
-          description: "Assessment launched successfully",
+          title: t?.toast?.success ?? "Success",
+          description: t?.toast?.launched ?? "Assessment launched successfully",
         })
         router.refresh()
       } else {
         toast({
-          title: "Error",
+          title: t?.toast?.error ?? "Error",
           description: result.error || "Failed to launch assessment",
           variant: "destructive",
         })
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "An unexpected error occurred",
+        title: t?.toast?.error ?? "Error",
+        description: t?.toast?.unexpected ?? "An unexpected error occurred",
         variant: "destructive",
       })
     } finally {
@@ -73,21 +76,21 @@ export function QuickAssessmentList({
       const result = await closeQuickAssessment(id)
       if (result.success) {
         toast({
-          title: "Success",
-          description: "Assessment closed successfully",
+          title: t?.toast?.success ?? "Success",
+          description: t?.toast?.closed ?? "Assessment closed successfully",
         })
         router.refresh()
       } else {
         toast({
-          title: "Error",
+          title: t?.toast?.error ?? "Error",
           description: result.error || "Failed to close assessment",
           variant: "destructive",
         })
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "An unexpected error occurred",
+        title: t?.toast?.error ?? "Error",
+        description: t?.toast?.unexpected ?? "An unexpected error occurred",
         variant: "destructive",
       })
     } finally {
@@ -194,22 +197,33 @@ export function QuickAssessmentList({
           <CardContent className="space-y-2">
             <div className="text-muted-foreground grid grid-cols-2 gap-2 text-sm">
               <div>
-                <span className="font-medium">Class:</span>{" "}
+                <span className="font-medium">
+                  {t?.list?.class ?? "Class:"}
+                </span>{" "}
                 {assessment.className}
               </div>
               <div>
-                <span className="font-medium">Subject:</span> {assessment.name}
+                <span className="font-medium">
+                  {t?.list?.subject ?? "Subject:"}
+                </span>{" "}
+                {assessment.name}
               </div>
               <div>
-                <span className="font-medium">Questions:</span>{" "}
+                <span className="font-medium">
+                  {t?.list?.questions ?? "Questions:"}
+                </span>{" "}
                 {assessment.questionCount}
               </div>
               <div>
-                <span className="font-medium">Duration:</span>{" "}
+                <span className="font-medium">
+                  {t?.list?.duration ?? "Duration:"}
+                </span>{" "}
                 {assessment.duration}m
               </div>
               <div className="col-span-2">
-                <span className="font-medium">Responses:</span>{" "}
+                <span className="font-medium">
+                  {t?.list?.responses ?? "Responses:"}
+                </span>{" "}
                 {assessment.responseCount}
               </div>
             </div>

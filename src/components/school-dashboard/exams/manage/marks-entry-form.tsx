@@ -64,7 +64,7 @@ const marksEntrySchema = z.object({
 
 export function MarksEntryForm({ examId }: Props) {
   const { dictionary } = useDictionary()
-  const t = dictionary?.messages?.toast
+  const t = dictionary?.school?.exams?.manage?.marksEntry
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [exam, setExam] = useState<ExamInfo | null>(null)
@@ -103,7 +103,7 @@ export function MarksEntryForm({ examId }: Props) {
           )
         }
       } catch (error) {
-        toast.error(t?.error?.generic || "Failed to load exam data")
+        toast.error(t?.loadFailed ?? "Failed to load exam data")
         console.error(error)
       } finally {
         setLoading(false)
@@ -120,12 +120,10 @@ export function MarksEntryForm({ examId }: Props) {
         marks: data.marks,
       })
       if (result.success && result.data) {
-        toast.success(
-          t?.success?.saved || `Saved marks for ${result.data.count} students`
-        )
+        toast.success(`Saved marks for ${result.data.count} students`)
       }
     } catch (error) {
-      toast.error(t?.error?.saveFailed || "Failed to save marks")
+      toast.error(t?.saveFailed ?? "Failed to save marks")
       console.error(error)
     } finally {
       setSaving(false)
@@ -135,7 +133,12 @@ export function MarksEntryForm({ examId }: Props) {
   const handleMarksChange = (index: number, value: string) => {
     const numValue = value === "" ? null : parseFloat(value)
     if (numValue !== null && exam && numValue > exam.totalMarks) {
-      toast.error(t?.error?.generic || `Marks cannot exceed ${exam.totalMarks}`)
+      toast.error(
+        (t?.maxExceeded ?? "Marks cannot exceed {max}").replace(
+          "{max}",
+          String(exam.totalMarks)
+        )
+      )
       return
     }
     setValue(`marks.${index}.marksObtained`, numValue)
@@ -181,11 +184,20 @@ export function MarksEntryForm({ examId }: Props) {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[100px]">Student ID</TableHead>
-                  <TableHead>Student Name</TableHead>
-                  <TableHead className="w-[150px]">Marks Obtained</TableHead>
-                  <TableHead className="w-[100px]">Absent</TableHead>
-                  <TableHead className="w-[100px]">Percentage</TableHead>
+                  <TableHead className="w-[100px]">
+                    {dictionary?.school?.exams?.status ?? "Student ID"}
+                  </TableHead>
+                  <TableHead>{t?.studentName ?? "Student Name"}</TableHead>
+                  <TableHead className="w-[150px]">
+                    {dictionary?.school?.exams?.marks ?? "Marks Obtained"}
+                  </TableHead>
+                  <TableHead className="w-[100px]">
+                    {dictionary?.school?.exams?.manage?.resultsList?.absent ??
+                      "Absent"}
+                  </TableHead>
+                  <TableHead className="w-[100px]">
+                    {dictionary?.school?.exams?.percentage ?? "Percentage"}
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -231,7 +243,7 @@ export function MarksEntryForm({ examId }: Props) {
                               handleMarksChange(index, e.target.value)
                             }
                             className="w-full"
-                            placeholder="Enter marks"
+                            placeholder={t?.enterMarks ?? "Enter marks"}
                           />
                         </TableCell>
                         <TableCell>

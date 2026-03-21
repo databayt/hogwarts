@@ -16,6 +16,7 @@ import {
   ErrorToast,
 } from "@/components/atom/toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { DataTable } from "@/components/table/data-table"
 import { DataTableToolbar } from "@/components/table/data-table-toolbar"
 import { useDataTable } from "@/components/table/use-data-table"
@@ -44,6 +45,8 @@ function QuestionBankTableInner({
   subjectOptions,
 }: QuestionBankTableProps) {
   const router = useRouter()
+  const { dictionary: hookDict } = useDictionary()
+  const t = hookDict?.school?.exams?.qbankUi
 
   // State for incremental loading
   const [data, setData] = useState<QuestionBankRow[]>(initialData)
@@ -78,11 +81,15 @@ function QuestionBankTableInner({
         } else {
           // Revert on error
           refresh()
-          ErrorToast(result.error || "Failed to delete")
+          ErrorToast(result.error || (t?.deleteFailed ?? "Failed to delete"))
         }
       } catch (e) {
         refresh()
-        ErrorToast(e instanceof Error ? e.message : "Failed to delete")
+        ErrorToast(
+          e instanceof Error
+            ? e.message
+            : (t?.deleteFailed ?? "Failed to delete")
+        )
       }
     },
     [refresh]

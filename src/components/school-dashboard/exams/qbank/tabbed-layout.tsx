@@ -4,6 +4,7 @@ import type { ReactNode } from "react"
 import { BookOpen, Database } from "lucide-react"
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { CatalogBrowseTab } from "./catalog-tab"
 
@@ -12,6 +13,8 @@ interface Props {
 }
 
 export function QBankTabbedLayout({ children }: Props) {
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.exams?.qbankUi?.tabbedLayout
   return (
     <Tabs defaultValue="my-questions" className="w-full">
       <TabsList>
@@ -21,7 +24,7 @@ export function QBankTabbedLayout({ children }: Props) {
         </TabsTrigger>
         <TabsTrigger value="catalog" className="gap-2">
           <BookOpen className="size-4" />
-          <span className="hidden sm:inline">Catalog</span>
+          <span className="hidden sm:inline">{t?.catalog ?? "Catalog"}</span>
         </TabsTrigger>
       </TabsList>
       <TabsContent value="my-questions">{children}</TabsContent>

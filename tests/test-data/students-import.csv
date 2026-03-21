@@ -1,0 +1,11 @@
+name,email,studentId,yearLevel,gender,dateOfBirth,guardianName,guardianEmail,guardianPhone
+Ali Mohammed,ali.m@school.local,STD001,Grade 7,male,2012-03-15,Khalid Mohammed,khalid@parent.local,+249912345001
+Sara Ahmed,sara.a@school.local,STD002,Grade 7,female,2012-06-22,Hassan Ahmed,hassan@parent.local,+249912345002
+Musa Omer,musa.o@school.local,STD003,Grade 7,male,2012-01-10,Omer Abdi,omer@parent.local,+249912345003
+Huda Salim,huda.s@school.local,STD004,Grade 7,female,2012-09-05,Salim Hassan,salim@parent.local,+249912345004
+Tariq Nour,tariq.n@school.local,STD005,Grade 7,male,2012-11-18,Nour Amin,nour@parent.local,+249912345005
+Layla Yusuf,layla.y@school.local,STD006,Grade 8,female,2011-04-12,Yusuf Ali,yusuf.p@parent.local,+249912345006
+Hamza Bakri,hamza.b@school.local,STD007,Grade 8,male,2011-08-30,Bakri Osman,bakri@parent.local,+249912345007
+Amira Fadl,amira.f@school.local,STD008,Grade 8,female,2011-02-14,Fadl Hassan,fadl@parent.local,+249912345008
+Ibrahim Taha,ibrahim.t@school.local,STD009,Grade 8,male,2011-07-25,Taha Ibrahim,taha@parent.local,+249912345009
+Reem Mustafa,reem.m@school.local,STD010,Grade 8,female,2011-12-01,Mustafa Ali,mustafa@parent.local,+249912345010

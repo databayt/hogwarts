@@ -2,256 +2,15 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { ArrowRight, MessageSquare, Plus, Search, Users } from "lucide-react"
+import { MessageSquare, MessageSquarePlus } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
-interface EmptyStateProps {
-  type: "no-conversations" | "no-messages" | "no-active"
-  locale?: "ar" | "en"
-  onNewConversation?: () => void
-  className?: string
-}
-
-export function EmptyState({
-  type,
-  locale = "en",
-  onNewConversation,
-  className,
-}: EmptyStateProps) {
-  const { dictionary } = useDictionary()
-  const m = dictionary?.messaging
-  const isRTL = locale === "ar"
-
-  if (type === "no-conversations") {
-    return (
-      <div
-        className={cn(
-          "flex h-full flex-col items-center justify-center px-6 py-12",
-          "text-center",
-          className
-        )}
-      >
-        {/* Animated illustration */}
-        <div className="relative mb-8">
-          {/* Background circles - animated */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div
-              className="bg-primary/5 h-32 w-32 animate-ping rounded-full"
-              style={{ animationDuration: "3s" }}
-            />
-          </div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="bg-primary/10 h-24 w-24 animate-pulse rounded-full" />
-          </div>
-
-          {/* Main icon */}
-          <div className="from-primary/20 to-primary/5 relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br">
-            <MessageSquare className="text-primary h-10 w-10" />
-          </div>
-
-          {/* Floating decorative elements */}
-          <div
-            className="bg-chart-2 absolute -end-2 -top-2 h-4 w-4 animate-bounce rounded-full"
-            style={{ animationDelay: "0.5s" }}
-          />
-          <div
-            className="bg-chart-3 absolute -start-3 -bottom-1 h-3 w-3 animate-bounce rounded-full"
-            style={{ animationDelay: "1s" }}
-          />
-        </div>
-
-        {/* Content */}
-        <h3 className="text-foreground mb-2 text-xl font-semibold">
-          {m?.ui?.welcome_title || "Welcome to Messages"}
-        </h3>
-        <p className="text-muted-foreground mb-6 max-w-xs">
-          {m?.ui?.welcome_description ||
-            "Start a conversation with your colleagues and teachers. Stay connected with your school community."}
-        </p>
-
-        {/* CTA Button */}
-        {onNewConversation && (
-          <Button
-            onClick={onNewConversation}
-            size="lg"
-            className="gap-2 shadow-lg transition-all hover:shadow-xl"
-          >
-            <Plus className="h-5 w-5" />
-            {m?.ui?.new_conversation || "New Conversation"}
-          </Button>
-        )}
-
-        {/* Quick tips */}
-        <div className="mt-8 grid w-full max-w-sm gap-3">
-          <QuickTip
-            icon={<Users className="h-4 w-4" />}
-            text={
-              m?.ui?.create_group_tip || "Create a group for your class or team"
-            }
-            locale={locale}
-          />
-          <QuickTip
-            icon={<MessageSquare className="h-4 w-4" />}
-            text={m?.ui?.send_direct_tip || "Send a direct message to any user"}
-            locale={locale}
-          />
-        </div>
-      </div>
-    )
-  }
-
-  if (type === "no-messages") {
-    return (
-      <div
-        className={cn(
-          "flex h-full flex-col items-center justify-center px-6 py-12",
-          "text-center",
-          className
-        )}
-      >
-        {/* Animated illustration */}
-        <div className="relative mb-8">
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="bg-muted/50 h-20 w-20 animate-pulse rounded-full" />
-          </div>
-          <div className="from-muted to-background border-border relative flex h-16 w-16 items-center justify-center rounded-full border bg-gradient-to-br">
-            <MessageSquare className="text-muted-foreground h-8 w-8" />
-          </div>
-        </div>
-
-        <h3 className="text-foreground mb-2 text-lg font-semibold">
-          {m?.ui?.no_messages || "No messages yet"}
-        </h3>
-        <p className="text-muted-foreground max-w-xs text-sm">
-          {m?.ui?.no_messages_description ||
-            "Start the conversation by sending a message. You can attach photos and documents too!"}
-        </p>
-
-        {/* Animated typing indicator preview */}
-        <div className="mt-6 flex gap-1">
-          <div
-            className="bg-primary/60 h-2 w-2 animate-bounce rounded-full"
-            style={{ animationDelay: "0ms" }}
-          />
-          <div
-            className="bg-primary/60 h-2 w-2 animate-bounce rounded-full"
-            style={{ animationDelay: "150ms" }}
-          />
-          <div
-            className="bg-primary/60 h-2 w-2 animate-bounce rounded-full"
-            style={{ animationDelay: "300ms" }}
-          />
-        </div>
-      </div>
-    )
-  }
-
-  if (type === "no-active") {
-    return (
-      <div
-        className={cn(
-          "flex h-full flex-col items-center justify-center px-6 py-12",
-          "from-muted/20 to-background bg-gradient-to-b text-center",
-          className
-        )}
-      >
-        {/* Animated illustration */}
-        <div className="relative mb-8">
-          {/* Chat bubbles illustration */}
-          <div className="relative flex items-end gap-2">
-            <div className="bg-muted h-12 w-20 animate-pulse rounded-2xl rounded-es-md" />
-            <div
-              className="bg-primary/30 h-10 w-16 animate-pulse rounded-2xl rounded-ee-md"
-              style={{ animationDelay: "0.5s" }}
-            />
-          </div>
-          <div
-            className={cn(
-              "absolute -top-3 flex items-end gap-2",
-              isRTL ? "-end-4" : "-start-4"
-            )}
-          >
-            <div
-              className="bg-muted/50 h-8 w-14 animate-pulse rounded-2xl rounded-es-md"
-              style={{ animationDelay: "1s" }}
-            />
-          </div>
-        </div>
-
-        {/* Content */}
-        <h3 className="text-foreground mb-2 text-lg font-semibold">
-          {m?.ui?.select_conversation_title || "Select a Conversation"}
-        </h3>
-        <p className="text-muted-foreground mb-6 max-w-xs text-sm">
-          {m?.ui?.select_conversation_description ||
-            "Choose a conversation from the list or start a new one to connect."}
-        </p>
-
-        {/* CTA */}
-        {onNewConversation && (
-          <Button
-            variant="outline"
-            onClick={onNewConversation}
-            className="gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            {m?.ui?.new_conversation || "New Conversation"}
-          </Button>
-        )}
-      </div>
-    )
-  }
-
-  return null
-}
-
-function QuickTip({
-  icon,
-  text,
-  locale,
-}: {
-  icon: React.ReactNode
-  text: string
-  locale: "ar" | "en"
-}) {
-  return (
-    <div
-      className={cn(
-        "bg-muted/50 flex items-center gap-3 rounded-lg p-3",
-        "text-muted-foreground text-sm"
-      )}
-    >
-      <div className="bg-background border-border flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border">
-        {icon}
-      </div>
-      <span className="flex-1 text-start">{text}</span>
-      <ArrowRight className="h-4 w-4 flex-shrink-0 rtl:rotate-180" />
-    </div>
-  )
-}
-
-export function ConversationListEmpty({
-  locale = "en",
-  onNewConversation,
-}: {
-  locale?: "ar" | "en"
-  onNewConversation?: () => void
-}) {
-  return (
-    <EmptyState
-      type="no-conversations"
-      locale={locale}
-      onNewConversation={onNewConversation}
-    />
-  )
-}
-
-export function ChatEmpty({ locale = "en" }: { locale?: "ar" | "en" }) {
-  return <EmptyState type="no-messages" locale={locale} />
-}
+/* ------------------------------------------------------------------ */
+/*  No Active Conversation — Desktop right panel                       */
+/* ------------------------------------------------------------------ */
 
 export function NoActiveConversation({
   locale = "en",
@@ -260,11 +19,108 @@ export function NoActiveConversation({
   locale?: "ar" | "en"
   onNewConversation?: () => void
 }) {
+  const { dictionary } = useDictionary()
+  const m = dictionary?.messaging
+
   return (
-    <EmptyState
-      type="no-active"
-      locale={locale}
-      onNewConversation={onNewConversation}
-    />
+    <div className="bg-msg-chat-bg flex h-full flex-col items-center justify-center text-center">
+      {/* WhatsApp-style centered icon */}
+      <div className="bg-msg-date-pill mb-6 flex h-20 w-20 items-center justify-center rounded-full">
+        <MessageSquare className="text-muted-foreground h-10 w-10" />
+      </div>
+
+      <h2 className="text-foreground mb-2 text-xl font-light">
+        {m?.ui?.welcome_title || "Hogwarts Messages"}
+      </h2>
+      <p className="text-muted-foreground max-w-sm text-sm">
+        {m?.ui?.select_conversation_description ||
+          "Send and receive messages from your school community. Select a conversation or start a new one."}
+      </p>
+
+      {onNewConversation && (
+        <Button
+          variant="outline"
+          onClick={onNewConversation}
+          className="mt-6 gap-2 rounded-full"
+        >
+          <MessageSquarePlus className="h-4 w-4" />
+          {m?.ui?.new_conversation || "New Conversation"}
+        </Button>
+      )}
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/*  No Conversations — Empty sidebar list                              */
+/* ------------------------------------------------------------------ */
+
+export function ConversationListEmpty({
+  locale = "en",
+  onNewConversation,
+}: {
+  locale?: "ar" | "en"
+  onNewConversation?: () => void
+}) {
+  const { dictionary } = useDictionary()
+  const m = dictionary?.messaging
+
+  return (
+    <div className="flex h-64 flex-col items-center justify-center p-6 text-center">
+      <MessageSquare className="text-muted-foreground/40 mb-3 h-10 w-10" />
+      <p className="text-foreground mb-1 font-medium">
+        {(m?.ui as Record<string, string>)?.no_conversations ||
+          "No conversations yet"}
+      </p>
+      <p className="text-muted-foreground mb-4 max-w-[240px] text-sm">
+        {m?.ui?.welcome_description ||
+          "Start a conversation with your school community."}
+      </p>
+      {onNewConversation && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onNewConversation}
+          className="gap-2 rounded-full"
+        >
+          <MessageSquarePlus className="h-4 w-4" />
+          {m?.ui?.new_conversation || "New Conversation"}
+        </Button>
+      )}
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/*  Chat Empty — No messages in a conversation                         */
+/* ------------------------------------------------------------------ */
+
+export function ChatEmpty({ locale = "en" }: { locale?: "ar" | "en" }) {
+  const { dictionary } = useDictionary()
+  const m = dictionary?.messaging
+
+  return (
+    <div className="bg-msg-chat-bg flex h-full flex-col items-center justify-center text-center">
+      {/* WhatsApp-style date pill */}
+      <span className="bg-msg-date-pill mb-4 rounded-lg px-3 py-1 text-[12.5px] shadow-sm">
+        {m?.ui?.today || "Today"}
+      </span>
+
+      {/* Typing dots animation */}
+      <div className="bg-msg-incoming inline-flex items-center gap-1 rounded-lg px-4 py-3 shadow-sm">
+        {[0, 150, 300].map((delay) => (
+          <div
+            key={delay}
+            className="bg-msg-typing-dot h-2 w-2 animate-bounce rounded-full"
+            style={{ animationDelay: `${delay}ms` }}
+          />
+        ))}
+      </div>
+
+      <p className="text-muted-foreground mt-4 text-sm">
+        {m?.ui?.no_messages_description ||
+          "Say something to start the conversation"}
+      </p>
+    </div>
   )
 }

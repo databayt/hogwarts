@@ -49,7 +49,7 @@ interface AvailableCourse {
 }
 
 interface Props {
-  dictionary: any
+  dictionary: Record<string, any>
   lang: string
   schoolId: string | null
   userId: string

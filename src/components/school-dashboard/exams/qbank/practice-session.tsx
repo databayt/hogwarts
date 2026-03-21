@@ -633,7 +633,7 @@ export function PracticeSession({
           onClick={prevQuestion}
           disabled={currentIndex === 0}
         >
-          <ChevronLeft className="me-1 h-4 w-4" />
+          <ChevronLeft className="me-1 h-4 w-4 rtl:rotate-180" />
           {isAr ? "السابق" : "Previous"}
         </Button>
 
@@ -652,7 +652,9 @@ export function PracticeSession({
               : isAr
                 ? "التالي"
                 : "Next"}
-            {!isLastQuestion && <ChevronRight className="ms-1 h-4 w-4" />}
+            {!isLastQuestion && (
+              <ChevronRight className="ms-1 h-4 w-4 rtl:rotate-180" />
+            )}
           </Button>
         </div>
       </div>

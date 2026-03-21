@@ -17,11 +17,13 @@
  */
 
 import type {
+  AdmissionApplicationStatus,
   Announcement,
   Attendance,
   CatalogSubject,
   Class,
   Exam,
+  Gender,
   School,
   Student,
   Teacher,
@@ -382,6 +384,127 @@ export function createMockExam(overrides?: Partial<Exam>): Exam {
     status: overrides?.status ?? "PLANNED",
     createdAt: overrides?.createdAt ?? new Date("2024-01-01"),
     updatedAt: overrides?.updatedAt ?? new Date("2024-01-01"),
+  }
+}
+
+/**
+ * Mock Application Factory (admission)
+ */
+export function createMockApplication(overrides?: Record<string, unknown>) {
+  const id = (overrides?.id as string) ?? generateId("app")
+  return {
+    id,
+    schoolId: (overrides?.schoolId as string) ?? "s1",
+    campaignId: (overrides?.campaignId as string) ?? "camp1",
+    applicationNumber:
+      (overrides?.applicationNumber as string) ?? `APP-2026-${id}`,
+    userId: (overrides?.userId as string) ?? "u1",
+    firstName: (overrides?.firstName as string) ?? "Ahmed",
+    middleName: (overrides?.middleName as string) ?? null,
+    lastName: (overrides?.lastName as string) ?? "Hassan",
+    dateOfBirth: (overrides?.dateOfBirth as Date) ?? new Date("2010-05-15"),
+    gender: (overrides?.gender as Gender) ?? "MALE",
+    nationality: (overrides?.nationality as string) ?? "Sudan",
+    email: (overrides?.email as string) ?? `applicant-${id}@test.com`,
+    phone: (overrides?.phone as string) ?? "+249123456789",
+    address: (overrides?.address as string) ?? "123 Test St",
+    city: (overrides?.city as string) ?? "Khartoum",
+    state: (overrides?.state as string) ?? "Khartoum",
+    postalCode: (overrides?.postalCode as string) ?? "11111",
+    country: (overrides?.country as string) ?? "SD",
+    fatherName: (overrides?.fatherName as string) ?? "Hassan Ahmed",
+    motherName: (overrides?.motherName as string) ?? "Fatima Ali",
+    applyingForClass: (overrides?.applyingForClass as string) ?? "Grade 1",
+    status: (overrides?.status as AdmissionApplicationStatus) ?? "SUBMITTED",
+    applicationFeePaid: (overrides?.applicationFeePaid as boolean) ?? false,
+    admissionOffered: (overrides?.admissionOffered as boolean) ?? false,
+    admissionConfirmed: (overrides?.admissionConfirmed as boolean) ?? false,
+    documents: (overrides?.documents as unknown) ?? null,
+    createdAt: (overrides?.createdAt as Date) ?? new Date("2024-01-01"),
+    updatedAt: (overrides?.updatedAt as Date) ?? new Date("2024-01-01"),
+    ...overrides,
+  }
+}
+
+/**
+ * Mock AdmissionCampaign Factory
+ */
+export function createMockCampaign(overrides?: Record<string, unknown>) {
+  const id = (overrides?.id as string) ?? generateId("camp")
+  return {
+    id,
+    schoolId: (overrides?.schoolId as string) ?? "s1",
+    name: (overrides?.name as string) ?? `Fall 2026 Admissions`,
+    academicYear: (overrides?.academicYear as string) ?? "2026-2027",
+    startDate: (overrides?.startDate as Date) ?? new Date("2026-03-01"),
+    endDate: (overrides?.endDate as Date) ?? new Date("2026-06-30"),
+    status: (overrides?.status as string) ?? "OPEN",
+    totalSeats: (overrides?.totalSeats as number) ?? 100,
+    applicationFee: (overrides?.applicationFee as number) ?? 500,
+    description: (overrides?.description as string) ?? null,
+    createdAt: (overrides?.createdAt as Date) ?? new Date("2024-01-01"),
+    updatedAt: (overrides?.updatedAt as Date) ?? new Date("2024-01-01"),
+    ...overrides,
+  }
+}
+
+/**
+ * Mock AdmissionSettings Factory
+ */
+export function createMockAdmissionSettings(
+  overrides?: Record<string, unknown>
+) {
+  return {
+    id: (overrides?.id as string) ?? generateId("as"),
+    schoolId: (overrides?.schoolId as string) ?? "s1",
+    offerExpiryDays: (overrides?.offerExpiryDays as number) ?? 14,
+    enablePublicPortal: (overrides?.enablePublicPortal as boolean) ?? true,
+    enableInquiryForm: (overrides?.enableInquiryForm as boolean) ?? true,
+    enableTourBooking: (overrides?.enableTourBooking as boolean) ?? true,
+    enableStatusTracker: (overrides?.enableStatusTracker as boolean) ?? true,
+    createdAt: (overrides?.createdAt as Date) ?? new Date("2024-01-01"),
+    updatedAt: (overrides?.updatedAt as Date) ?? new Date("2024-01-01"),
+    ...overrides,
+  }
+}
+
+/**
+ * Mock FeeStructure Factory
+ */
+export function createMockFeeStructure(overrides?: Record<string, unknown>) {
+  const id = (overrides?.id as string) ?? generateId("fs")
+  return {
+    id,
+    schoolId: (overrides?.schoolId as string) ?? "s1",
+    name: (overrides?.name as string) ?? `Tuition Fee ${id}`,
+    totalAmount: (overrides?.totalAmount as number) ?? 5000,
+    academicYear: (overrides?.academicYear as string) ?? "2026-2027",
+    isActive: (overrides?.isActive as boolean) ?? true,
+    createdAt: (overrides?.createdAt as Date) ?? new Date("2024-01-01"),
+    updatedAt: (overrides?.updatedAt as Date) ?? new Date("2024-01-01"),
+    ...overrides,
+  }
+}
+
+/**
+ * Mock FeeAssignment Factory
+ */
+export function createMockFeeAssignment(overrides?: Record<string, unknown>) {
+  const id = (overrides?.id as string) ?? generateId("fa")
+  return {
+    id,
+    schoolId: (overrides?.schoolId as string) ?? "s1",
+    studentId: (overrides?.studentId as string) ?? "st1",
+    feeStructureId: (overrides?.feeStructureId as string) ?? "fs1",
+    finalAmount: (overrides?.finalAmount as number) ?? 5000,
+    status: (overrides?.status as string) ?? "PENDING",
+    academicYear: (overrides?.academicYear as string) ?? "2026-2027",
+    feeStructure: (overrides?.feeStructure as Record<string, unknown>) ?? {
+      name: "Tuition Fee",
+    },
+    createdAt: (overrides?.createdAt as Date) ?? new Date("2024-01-01"),
+    updatedAt: (overrides?.updatedAt as Date) ?? new Date("2024-01-01"),
+    ...overrides,
   }
 }
 

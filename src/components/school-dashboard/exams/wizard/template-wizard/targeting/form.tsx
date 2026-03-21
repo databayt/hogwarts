@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { ErrorToast } from "@/components/atom/toast"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { updateTemplateTargeting } from "./actions"
 import type { TargetingFormData } from "./validation"
@@ -38,6 +39,8 @@ export const TargetingForm = forwardRef<WizardFormRef, TargetingFormProps>(
     },
     ref
   ) => {
+    const { dictionary } = useDictionary()
+    const t = dictionary?.school?.exams?.wizard?.templateWizard?.targeting
     const [isPending, startTransition] = useTransition()
     const [gradeIds, setGradeIds] = React.useState<string[]>(
       initialData?.gradeIds ?? []
@@ -104,7 +107,7 @@ export const TargetingForm = forwardRef<WizardFormRef, TargetingFormProps>(
       <div className="space-y-6">
         {/* Grades */}
         <div className="space-y-2">
-          <Label>Grades</Label>
+          <Label>{t?.grades ?? "Grades"}</Label>
           {gradeOptions.length === 0 ? (
             <p className="text-muted-foreground text-sm">
               No grades available.
@@ -127,12 +130,13 @@ export const TargetingForm = forwardRef<WizardFormRef, TargetingFormProps>(
 
         {/* Sections */}
         <div className="space-y-2">
-          <Label>Sections</Label>
+          <Label>{t?.sections ?? "Sections"}</Label>
           {sectionOptions.length === 0 ? (
             <p className="text-muted-foreground text-sm">
               {gradeIds.length === 0
                 ? "Select grades to see sections."
-                : "No sections available for selected grades."}
+                : (t?.noSections ??
+                  "No sections available for selected grades.")}
             </p>
           ) : (
             <div className="flex flex-wrap gap-2">
@@ -152,12 +156,13 @@ export const TargetingForm = forwardRef<WizardFormRef, TargetingFormProps>(
 
         {/* Classrooms */}
         <div className="space-y-2">
-          <Label>Classrooms</Label>
+          <Label>{t?.classrooms ?? "Classrooms"}</Label>
           {classroomOptions.length === 0 ? (
             <p className="text-muted-foreground text-sm">
               {gradeIds.length === 0
                 ? "Select grades to see classrooms."
-                : "No classrooms available for selected grades."}
+                : (t?.noClassrooms ??
+                  "No classrooms available for selected grades.")}
             </p>
           ) : (
             <div className="flex flex-wrap gap-2">

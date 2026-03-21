@@ -63,7 +63,7 @@ export function createInvoiceSchema(dictionary: Dictionary) {
             .max(100, { message: v.maxLength(100) }),
           quantity: z
             .number()
-            .min(0, { message: v.get("quantityCantBeNegative") }),
+            .min(1, { message: v.get("quantityCantBeNegative") }),
           price: z.number().min(0, { message: v.get("pricePositive") }),
           total: z.number().min(0, { message: v.get("totalRequired") }),
         })
@@ -85,7 +85,7 @@ export function createInvoiceSchema(dictionary: Dictionary) {
 }
 
 // ============================================================================
-// Legacy Schemas (for backward compatibility - will be deprecated)
+// Legacy Schemas (used by onboarding + form.tsx + steps/)
 // ============================================================================
 
 export const onboardingSchema = z.object({
@@ -132,7 +132,7 @@ export const InvoiceSchemaZod = z.object({
           .string()
           .min(3, { message: "Item name is required" })
           .max(100, { message: "Max character will be 100" }),
-        quantity: z.number().min(0, { message: "Quantity can't be negative" }),
+        quantity: z.number().min(1, { message: "Quantity must be at least 1" }),
         price: z.number().min(0, { message: "Price can't be negative" }),
         total: z.number().min(0, { message: "Total is required" }),
       })
