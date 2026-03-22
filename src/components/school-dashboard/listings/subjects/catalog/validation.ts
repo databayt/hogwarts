@@ -15,8 +15,15 @@ export const subjectSelectionSchema = z.object({
 export const contentOverrideSchema = z.object({
   catalogChapterId: z.string().optional().nullable(),
   catalogLessonId: z.string().optional().nullable(),
+  lessonVideoId: z.string().optional().nullable(),
   isHidden: z.boolean().default(true),
   reason: z.string().optional(),
+})
+
+export const instructorPreferenceSchema = z.object({
+  catalogSubjectId: z.string().min(1),
+  preferredSchoolId: z.string().optional().nullable(),
+  preferredUserId: z.string().optional().nullable(),
 })
 
 export const subjectSelectionUpdateSchema = z.object({
@@ -31,3 +38,6 @@ export type SubjectSelectionUpdateInput = z.infer<
   typeof subjectSelectionUpdateSchema
 >
 export type ContentOverrideInput = z.infer<typeof contentOverrideSchema>
+export type InstructorPreferenceInput = z.infer<
+  typeof instructorPreferenceSchema
+>

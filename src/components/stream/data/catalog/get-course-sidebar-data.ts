@@ -22,10 +22,28 @@ export async function getCatalogCourseSidebarData(
     },
     include: {
       chapters: {
-        where: { status: "PUBLISHED" },
+        where: {
+          status: "PUBLISHED",
+          ...(schoolId
+            ? {
+                NOT: {
+                  overrides: { some: { schoolId, isHidden: true } },
+                },
+              }
+            : {}),
+        },
         include: {
           lessons: {
-            where: { status: "PUBLISHED" },
+            where: {
+              status: "PUBLISHED",
+              ...(schoolId
+                ? {
+                    NOT: {
+                      overrides: { some: { schoolId, isHidden: true } },
+                    },
+                  }
+                : {}),
+            },
             orderBy: { sequenceOrder: "asc" },
             select: {
               id: true,

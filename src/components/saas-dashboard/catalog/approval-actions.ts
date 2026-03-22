@@ -25,7 +25,11 @@ type ContentType =
 
 export async function approveContent(
   contentType: ContentType,
-  id: string
+  id: string,
+  options?: {
+    visibility?: "PRIVATE" | "SCHOOL" | "PUBLIC"
+    isFeatured?: boolean
+  }
 ): Promise<ActionResponse> {
   try {
     const session = await requireDeveloper()
@@ -148,6 +152,10 @@ export async function approveContent(
             approvedBy: userId,
             approvedAt: new Date(),
             rejectionReason: null,
+            ...(options?.visibility ? { visibility: options.visibility } : {}),
+            ...(options?.isFeatured !== undefined
+              ? { isFeatured: options.isFeatured }
+              : {}),
           },
         })
         break

@@ -602,6 +602,23 @@ export async function setupCatalogForSchool(
       }
       const selectionCount = selectionData.length
 
+      // Create default instructor preferences (platform/Hogwarts as default)
+      // Use unique subject IDs from selections
+      const uniqueSubjectIds = [
+        ...new Set(selectionData.map((s) => s.catalogSubjectId)),
+      ]
+      if (uniqueSubjectIds.length > 0) {
+        await tx.schoolInstructorPreference.createMany({
+          data: uniqueSubjectIds.map((catalogSubjectId) => ({
+            schoolId,
+            catalogSubjectId,
+            preferredSchoolId: null,
+            preferredUserId: null,
+          })),
+          skipDuplicates: true,
+        })
+      }
+
       return {
         skipped: false,
         levels: levelRecords.length,

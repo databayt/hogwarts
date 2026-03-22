@@ -11,6 +11,7 @@ import { getTenantContext } from "@/lib/tenant-context"
 
 import {
   contentOverrideSchema,
+  instructorPreferenceSchema,
   subjectSelectionUpdateSchema,
 } from "./validation"
 
@@ -234,6 +235,7 @@ export async function updateSubjectSelection(
 export async function toggleContentOverride(input: {
   catalogChapterId?: string | null
   catalogLessonId?: string | null
+  lessonVideoId?: string | null
   isHidden: boolean
   reason?: string
 }): Promise<ActionResponse> {
@@ -249,10 +251,14 @@ export async function toggleContentOverride(input: {
 
     const validated = contentOverrideSchema.parse(input)
 
-    if (!validated.catalogChapterId && !validated.catalogLessonId) {
+    if (
+      !validated.catalogChapterId &&
+      !validated.catalogLessonId &&
+      !validated.lessonVideoId
+    ) {
       return {
         success: false,
-        error: "Must specify either a chapter or lesson",
+        error: "Must specify a chapter, lesson, or video",
       }
     }
 
@@ -262,6 +268,7 @@ export async function toggleContentOverride(input: {
         schoolId,
         catalogChapterId: validated.catalogChapterId ?? null,
         catalogLessonId: validated.catalogLessonId ?? null,
+        lessonVideoId: validated.lessonVideoId ?? null,
       },
     })
 
@@ -287,6 +294,7 @@ export async function toggleContentOverride(input: {
           schoolId,
           catalogChapterId: validated.catalogChapterId ?? null,
           catalogLessonId: validated.catalogLessonId ?? null,
+          lessonVideoId: validated.lessonVideoId ?? null,
           isHidden: true,
           reason: validated.reason,
           overriddenBy: userId,
@@ -358,6 +366,188 @@ export async function getSchoolCatalogSelections(): Promise<ActionResponse> {
         error instanceof Error
           ? error.message
           : "Failed to fetch catalog selections",
+    }
+  }
+}
+
+// ============================================================================
+// Instructor preferences (set default video source per subject)
+// ============================================================================
+
+export async function setInstructorPreference(input: {
+  catalogSubjectId: string
+  preferredSchoolId?: string | null
+  preferredUserId?: string | null
+}): Promise<ActionResponse> {
+  try {
+    const authResult = await requireSchoolAdmin()
+    if (!authResult.ok) return { success: false, error: authResult.error }
+    const { schoolId } = authResult
+
+    const validated = instructorPreferenceSchema.parse(input)
+
+    await db.schoolInstructorPreference.upsert({
+      where: {
+        schoolId_catalogSubjectId: {
+          schoolId,
+          catalogSubjectId: validated.catalogSubjectId,
+        },
+      },
+      update: {
+        preferredSchoolId: validated.preferredSchoolId ?? null,
+        preferredUserId: validated.preferredUserId ?? null,
+      },
+      create: {
+        schoolId,
+        catalogSubjectId: validated.catalogSubjectId,
+        preferredSchoolId: validated.preferredSchoolId ?? null,
+        preferredUserId: validated.preferredUserId ?? null,
+      },
+    })
+
+    revalidatePath("/", "layout")
+    return { success: true }
+  } catch (error) {
+    console.error("[setInstructorPreference] Error:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to set instructor preference",
+    }
+  }
+}
+
+export async function getInstructorPreference(
+  catalogSubjectId: string
+): Promise<ActionResponse> {
+  try {
+    const authResult = await requireSchoolAdmin()
+    if (!authResult.ok) return { success: false, error: authResult.error }
+    const { schoolId } = authResult
+
+    const preference = await db.schoolInstructorPreference.findUnique({
+      where: {
+        schoolId_catalogSubjectId: {
+          schoolId,
+          catalogSubjectId,
+        },
+      },
+    })
+
+    return { success: true, data: preference }
+  } catch (error) {
+    console.error("[getInstructorPreference] Error:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch instructor preference",
+    }
+  }
+}
+
+/**
+ * Get available instructor sources for a subject.
+ * Groups approved videos by school/user and returns video counts.
+ */
+export async function getAvailableInstructors(
+  catalogSubjectId: string
+): Promise<ActionResponse> {
+  try {
+    const authResult = await requireSchoolAdmin()
+    if (!authResult.ok) return { success: false, error: authResult.error }
+    const { schoolId } = authResult
+
+    // Get all approved videos for lessons in this subject
+    const videos = await db.lessonVideo.findMany({
+      where: {
+        lesson: { chapter: { subjectId: catalogSubjectId } },
+        approvalStatus: "APPROVED",
+        OR: [{ schoolId }, { visibility: "PUBLIC" }],
+      },
+      select: {
+        schoolId: true,
+        isFeatured: true,
+        viewCount: true,
+        school: { select: { id: true, name: true } },
+        user: { select: { id: true, username: true, image: true } },
+      },
+    })
+
+    // Group by source (school or individual teacher)
+    const sourceMap = new Map<
+      string,
+      {
+        type: "platform" | "school" | "teacher"
+        id: string | null
+        name: string
+        image: string | null
+        videoCount: number
+        totalViews: number
+      }
+    >()
+
+    for (const v of videos) {
+      const key =
+        v.isFeatured && !v.schoolId
+          ? "platform"
+          : v.schoolId
+            ? `school:${v.schoolId}`
+            : `teacher:${v.user.id}`
+
+      const existing = sourceMap.get(key)
+      if (existing) {
+        existing.videoCount++
+        existing.totalViews += v.viewCount
+      } else {
+        sourceMap.set(key, {
+          type:
+            v.isFeatured && !v.schoolId
+              ? "platform"
+              : v.schoolId
+                ? "school"
+                : "teacher",
+          id: v.schoolId ?? v.user.id,
+          name:
+            v.isFeatured && !v.schoolId
+              ? "Hogwarts"
+              : (v.school?.name ?? v.user.username ?? "Unknown"),
+          image: v.user.image,
+          videoCount: 1,
+          totalViews: v.viewCount,
+        })
+      }
+    }
+
+    // Get current preference
+    const preference = await db.schoolInstructorPreference.findUnique({
+      where: {
+        schoolId_catalogSubjectId: { schoolId, catalogSubjectId },
+      },
+    })
+
+    const instructors = Array.from(sourceMap.values()).sort(
+      (a, b) => b.videoCount - a.videoCount
+    )
+
+    return {
+      success: true,
+      data: {
+        instructors,
+        currentPreference: preference,
+      },
+    }
+  } catch (error) {
+    console.error("[getAvailableInstructors] Error:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch available instructors",
     }
   }
 }

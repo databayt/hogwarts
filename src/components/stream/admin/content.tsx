@@ -9,6 +9,7 @@ import {
   BookOpen,
   DollarSign,
   TrendingUp,
+  UserCog,
   Users,
 } from "lucide-react"
 
@@ -197,6 +198,17 @@ export function StreamAdminDashboardContent({
           </div>
         </CardContent>
       </Card>
+
+      {/* Quick Actions */}
+      <div className="flex gap-3">
+        <Link
+          className={buttonVariants({ variant: "outline" })}
+          href={`/${lang}/stream/admin/instructors`}
+        >
+          <UserCog className="mr-2 size-4" />
+          {d?.instructorSettings || "Instructor Settings"}
+        </Link>
+      </div>
 
       {/* Recent Courses Section */}
       <Card>

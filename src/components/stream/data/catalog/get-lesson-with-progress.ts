@@ -183,12 +183,18 @@ export async function getCatalogLessonWithProgress(
   })
 
   // Get ALL approved videos for this lesson (multi-instructor support)
+  // Excludes videos hidden by the school via SchoolContentOverride
   const videos = await db.lessonVideo.findMany({
     where: {
       catalogLessonId: lessonId,
       approvalStatus: "APPROVED",
       ...(schoolId
-        ? { OR: [{ schoolId }, { visibility: "PUBLIC" }] }
+        ? {
+            OR: [{ schoolId }, { visibility: "PUBLIC" }],
+            NOT: {
+              overrides: { some: { schoolId, isHidden: true } },
+            },
+          }
         : { visibility: "PUBLIC" }),
     },
     orderBy: [{ isFeatured: "desc" }, { viewCount: "desc" }],
@@ -215,16 +221,62 @@ export async function getCatalogLessonWithProgress(
     },
   })
 
-  // Use the first (highest-ranked) video as default
+  // Resolve instructor preference: re-sort videos to prioritize preferred source
+  if (schoolId && videos.length > 1) {
+    const preference = await db.schoolInstructorPreference.findUnique({
+      where: {
+        schoolId_catalogSubjectId: {
+          schoolId,
+          catalogSubjectId: lesson.chapter.subject.id,
+        },
+      },
+    })
+
+    if (preference) {
+      videos.sort((a, b) => {
+        const aMatch = preference.preferredSchoolId
+          ? a.schoolId === preference.preferredSchoolId
+          : preference.preferredUserId
+            ? a.user.id === preference.preferredUserId
+            : a.isFeatured && !a.schoolId // null preference = platform default
+        const bMatch = preference.preferredSchoolId
+          ? b.schoolId === preference.preferredSchoolId
+          : preference.preferredUserId
+            ? b.user.id === preference.preferredUserId
+            : b.isFeatured && !b.schoolId
+
+        if (aMatch && !bMatch) return -1
+        if (!aMatch && bMatch) return 1
+        return 0 // Keep original ranking for non-preferred
+      })
+    }
+  }
+
+  // Use the first (highest-ranked or preferred) video as default
   const video = videos[0] ?? null
 
   // Get all lessons in the subject for navigation
+  // Excludes hidden chapters and lessons via SchoolContentOverride
   const allLessons = await db.catalogLesson.findMany({
     where: {
       chapter: {
         subjectId: lesson.chapter.subject.id,
+        ...(schoolId
+          ? {
+              NOT: {
+                overrides: { some: { schoolId, isHidden: true } },
+              },
+            }
+          : {}),
       },
       status: "PUBLISHED",
+      ...(schoolId
+        ? {
+            NOT: {
+              overrides: { some: { schoolId, isHidden: true } },
+            },
+          }
+        : {}),
     },
     select: {
       id: true,
@@ -288,8 +340,11 @@ export async function getCatalogLessonWithProgress(
       source,
       instructor: {
         id: v.user.id,
-        name: v.schoolId === null ? "Hogwarts" : v.user.username,
-        image: v.schoolId === null ? "/logo.png" : v.user.image,
+        name:
+          v.isFeatured && !v.schoolId
+            ? "Hogwarts"
+            : (v.school?.name ?? v.user.username),
+        image: v.isFeatured && !v.schoolId ? "/logo.png" : v.user.image,
       },
       school: {
         id: v.school?.id ?? null,
