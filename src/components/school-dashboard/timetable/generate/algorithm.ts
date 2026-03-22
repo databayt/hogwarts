@@ -768,13 +768,14 @@ function addSlot(slot: GeneratedSlot, state: AlgorithmState): void {
   const key = `${slot.dayOfWeek}:${slot.periodId}:${slot.classId}`
   state.slots.set(key, slot)
 
+  const dayStr = slot.dayOfWeek.toString()
+
   // Update teacher schedule (skip if unassigned)
   if (slot.teacherId) {
     if (!state.teacherSchedule.has(slot.teacherId)) {
       state.teacherSchedule.set(slot.teacherId, new Map())
     }
     const teacherSchedule = state.teacherSchedule.get(slot.teacherId)!
-    const dayStr = slot.dayOfWeek.toString()
     if (!teacherSchedule.has(dayStr)) {
       teacherSchedule.set(dayStr, [])
     }
