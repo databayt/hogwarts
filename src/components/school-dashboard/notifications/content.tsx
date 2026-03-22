@@ -6,6 +6,7 @@ import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import { ChevronLeft, ChevronRight, Settings } from "lucide-react"
 
+import { getDisplayText } from "@/lib/content-display"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -107,16 +108,31 @@ export async function NotificationCenterContent({
       <div className="rounded-lg border">
         <NotificationCenterClient
           initialNotifications={
-            (notifications ?? []).map((n) => ({
-              ...n,
-              createdAt: safeSerializeDate(n?.createdAt),
-              updatedAt: safeSerializeDate(n?.updatedAt),
-              readAt: n?.readAt ? safeSerializeDate(n.readAt) : null,
-              emailSentAt: n?.emailSentAt
-                ? safeSerializeDate(n.emailSentAt)
-                : null,
-              metadata: (n?.metadata as Record<string, unknown> | null) ?? null,
-            })) as NotificationDTO[]
+            (await Promise.all(
+              (notifications ?? []).map(async (n) => ({
+                ...n,
+                title: await getDisplayText(
+                  n?.title,
+                  (n?.lang as "ar" | "en") || "ar",
+                  locale,
+                  schoolId!
+                ),
+                body: await getDisplayText(
+                  n?.body,
+                  (n?.lang as "ar" | "en") || "ar",
+                  locale,
+                  schoolId!
+                ),
+                createdAt: safeSerializeDate(n?.createdAt),
+                updatedAt: safeSerializeDate(n?.updatedAt),
+                readAt: n?.readAt ? safeSerializeDate(n.readAt) : null,
+                emailSentAt: n?.emailSentAt
+                  ? safeSerializeDate(n.emailSentAt)
+                  : null,
+                metadata:
+                  (n?.metadata as Record<string, unknown> | null) ?? null,
+              }))
+            )) as NotificationDTO[]
           }
           locale={locale}
           dictionary={dict.notifications}

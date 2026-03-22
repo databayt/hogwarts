@@ -3,6 +3,7 @@
 
 import { auth } from "@/auth"
 
+import { getDisplayText } from "@/lib/content-display"
 import { getModel } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
@@ -61,7 +62,33 @@ export async function StaffContent({
       : undefined,
   })
 
-  const data = rows.map(transformStaffToRow)
+  const rawData = rows.map(transformStaffToRow)
+
+  // Translate text fields for display
+  const data = await Promise.all(
+    rawData.map(async (row, i) => {
+      const staffLang = ((rows[i] as any).lang as "ar" | "en") || "ar"
+      const deptLang =
+        ((rows[i] as any).department?.lang as "ar" | "en") || "ar"
+      return {
+        ...row,
+        name: await getDisplayText(row.name, staffLang, locale, schoolId!),
+        position: await getDisplayText(
+          row.position,
+          staffLang,
+          locale,
+          schoolId!
+        ),
+        departmentName: await getDisplayText(
+          row.departmentName,
+          deptLang,
+          locale,
+          schoolId!
+        ),
+      }
+    })
+  )
+
   const pageCount = Math.ceil(count / perPage)
 
   return <StaffTable data={data} pageCount={pageCount} locale={locale} />

@@ -44,7 +44,8 @@ export class TeacherExpertisePage extends SchoolBasePage {
    */
   async gotoExpertise(teacherId: string): Promise<void> {
     await this.page.goto(
-      `http://localhost:3000/en/s/${this.subdomain}/teachers/add/${teacherId}/expertise`
+      `http://localhost:3000/en/s/${this.subdomain}/teachers/add/${teacherId}/expertise`,
+      { timeout: 30_000 }
     )
     await this.page.waitForLoadState("domcontentloaded")
     await this.page.waitForTimeout(3000)

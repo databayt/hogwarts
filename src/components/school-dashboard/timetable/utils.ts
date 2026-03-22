@@ -418,7 +418,11 @@ export function getSlotDisplayInfo(
 
   return {
     subject: subject?.name || "Unknown",
-    teacher: teacher ? `${teacher.firstName} ${teacher.lastName}` : "TBA",
+    teacher: teacher
+      ? `${teacher.firstName} ${teacher.lastName}`
+      : slot.teacherId
+        ? "TBA"
+        : "Unassigned",
     color: subject?.color || SUBJECT_COLORS.default,
     isSubstitute: !!slot.isSubstitute,
   }

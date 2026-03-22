@@ -208,9 +208,11 @@ export default async function StudentsContent({
         uniqueClassrooms.add(s.section.classroom.roomName)
       const gl = gradeEnglishLabel(s.academicGrade)
       if (gl) uniqueGradeLabels.add(gl)
-      if (s.lang && s.lang !== lang) {
-        const rawName = `${s.givenName} ${s.surname}`.trim()
-        uniqueNames.set(rawName, s.lang)
+      // Detect actual content language from text when lang field is missing/wrong
+      const rawName = `${s.givenName} ${s.surname}`.trim()
+      const contentLang = s.lang || (hasLatin(rawName) ? "en" : "ar")
+      if (contentLang !== lang) {
+        uniqueNames.set(rawName, contentLang)
       }
     }
 
@@ -267,8 +269,9 @@ export default async function StudentsContent({
 
     data = (rows as any[]).map((s) => {
       const rawName = `${s.givenName} ${s.surname}`.trim()
+      const contentLang = s.lang || (hasLatin(rawName) ? "en" : "ar")
       const name =
-        s.lang && s.lang !== lang
+        contentLang !== lang
           ? nameTranslations.get(rawName) || rawName
           : rawName
 

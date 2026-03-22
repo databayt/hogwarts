@@ -7,7 +7,7 @@ model Timetable {
   dayOfWeek   Int // 0 = Sun ... 6 = Sat
   periodId    String
   classId     String
-  teacherId   String
+  teacherId   String?
   classroomId String
   weekOffset  Int    @default(0) // 0 current, 1 next
 
@@ -22,7 +22,7 @@ model Timetable {
   term      Term      @relation(fields: [termId], references: [id])
   period    Period    @relation(fields: [periodId], references: [id])
   class     Class     @relation(fields: [classId], references: [id])
-  teacher   Teacher   @relation(fields: [teacherId], references: [id])
+  teacher   Teacher?  @relation(fields: [teacherId], references: [id])
   classroom Classroom @relation(fields: [classroomId], references: [id])
 
   // Substitution records where this slot is the original
@@ -32,7 +32,8 @@ model Timetable {
   updatedAt DateTime @updatedAt
 
   @@unique([schoolId, termId, dayOfWeek, periodId, classId, weekOffset])
-  @@unique([schoolId, termId, dayOfWeek, periodId, teacherId, weekOffset])
+  // Teacher uniqueness only when assigned (NULL teacherId = unassigned slot)
+  @@index([schoolId, termId, dayOfWeek, periodId, teacherId])
   @@unique([schoolId, termId, dayOfWeek, periodId, classroomId, weekOffset])
   // Performance indexes for common queries
   @@index([schoolId, termId, dayOfWeek])

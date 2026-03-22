@@ -288,10 +288,15 @@ function getNextStep(school: {
 }
 
 export async function updateOnboardingStep(schoolId: string, step: string) {
-  await db.school.update({
-    where: { id: schoolId },
-    data: { onboardingStep: step },
-  })
+  try {
+    await db.school.update({
+      where: { id: schoolId },
+      data: { onboardingStep: step },
+    })
+  } catch {
+    // Silently ignore — school may not exist yet during initial creation,
+    // or a transient DB error shouldn't crash navigation
+  }
 }
 
 export async function proceedToTitle(schoolId: string) {

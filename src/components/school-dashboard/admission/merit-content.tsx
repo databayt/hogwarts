@@ -3,6 +3,7 @@
 
 import { SearchParams } from "nuqs/server"
 
+import { getDisplayText } from "@/lib/content-display"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -47,22 +48,34 @@ export default async function MeritContent({
         getMeritStats(schoolId, sp.campaignId || undefined),
       ])
 
-      data = listResult.rows.map((a) => ({
-        id: a.id,
-        applicationNumber: a.applicationNumber,
-        applicantName: `${a.firstName} ${a.lastName}`,
-        firstName: a.firstName,
-        lastName: a.lastName,
-        applyingForClass: a.applyingForClass,
-        category: a.category,
-        status: a.status,
-        meritScore: a.meritScore?.toString() ?? null,
-        meritRank: a.meritRank,
-        entranceScore: a.entranceScore?.toString() ?? null,
-        interviewScore: a.interviewScore?.toString() ?? null,
-        campaignName: a.campaign.name,
-        campaignId: a.campaign.id,
-      }))
+      data = await Promise.all(
+        listResult.rows.map(async (a) => ({
+          id: a.id,
+          applicationNumber: a.applicationNumber,
+          applicantName: await getDisplayText(
+            `${a.firstName} ${a.lastName}`,
+            "ar",
+            lang,
+            schoolId!
+          ),
+          firstName: a.firstName,
+          lastName: a.lastName,
+          applyingForClass: a.applyingForClass,
+          category: a.category,
+          status: a.status,
+          meritScore: a.meritScore?.toString() ?? null,
+          meritRank: a.meritRank,
+          entranceScore: a.entranceScore?.toString() ?? null,
+          interviewScore: a.interviewScore?.toString() ?? null,
+          campaignName: await getDisplayText(
+            a.campaign.name,
+            "ar",
+            lang,
+            schoolId!
+          ),
+          campaignId: a.campaign.id,
+        }))
+      )
 
       total = listResult.count
       stats = statsResult

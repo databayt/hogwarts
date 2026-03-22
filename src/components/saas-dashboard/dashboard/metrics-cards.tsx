@@ -71,7 +71,6 @@ export function MetricsCards({ totals }: { totals: Totals }) {
         delta={deltas?.users}
         trend={KPI_SUPPORTING.totalUsers.trend}
         supportingText={KPI_SUPPORTING.totalUsers.supporting}
-        footerHint={KPI_SUPPORTING.totalUsers.hint}
       />
 
       <KpiCard

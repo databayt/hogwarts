@@ -3919,7 +3919,7 @@ export async function applyGeneratedTimetable(input: {
       dayOfWeek: slot.dayOfWeek,
       periodId: slot.periodId,
       classId: slot.classId,
-      teacherId: slot.teacherId,
+      teacherId: slot.teacherId ?? undefined,
       classroomId: slot.classroomId,
       weekOffset: 0,
       constraintViolations: slot.violations,

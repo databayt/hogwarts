@@ -3,6 +3,7 @@
 
 import { SearchParams } from "nuqs/server"
 
+import { getDisplayText } from "@/lib/content-display"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -54,34 +55,46 @@ export default async function EnrollmentContent({
         getEnrollmentStats(schoolId, sp.campaignId || undefined),
       ])
 
-      data = listResult.rows.map((a) => ({
-        id: a.id,
-        applicationNumber: a.applicationNumber,
-        applicantName: `${a.firstName} ${a.lastName}`,
-        firstName: a.firstName,
-        lastName: a.lastName,
-        applyingForClass: a.applyingForClass,
-        status: a.status,
-        meritRank: a.meritRank,
-        admissionOffered: a.admissionOffered,
-        offerDate: a.offerDate ? new Date(a.offerDate).toISOString() : null,
-        offerExpiryDate: a.offerExpiryDate
-          ? new Date(a.offerExpiryDate).toISOString()
-          : null,
-        admissionConfirmed: a.admissionConfirmed,
-        confirmationDate: a.confirmationDate
-          ? new Date(a.confirmationDate).toISOString()
-          : null,
-        applicationFeePaid: a.applicationFeePaid,
-        paymentDate: a.paymentDate
-          ? new Date(a.paymentDate).toISOString()
-          : null,
-        hasDocuments:
-          a.documents != null &&
-          (Array.isArray(a.documents) ? a.documents.length > 0 : true),
-        campaignName: a.campaign.name,
-        campaignId: a.campaign.id,
-      }))
+      data = await Promise.all(
+        listResult.rows.map(async (a) => ({
+          id: a.id,
+          applicationNumber: a.applicationNumber,
+          applicantName: await getDisplayText(
+            `${a.firstName} ${a.lastName}`,
+            "ar",
+            lang,
+            schoolId!
+          ),
+          firstName: a.firstName,
+          lastName: a.lastName,
+          applyingForClass: a.applyingForClass,
+          status: a.status,
+          meritRank: a.meritRank,
+          admissionOffered: a.admissionOffered,
+          offerDate: a.offerDate ? new Date(a.offerDate).toISOString() : null,
+          offerExpiryDate: a.offerExpiryDate
+            ? new Date(a.offerExpiryDate).toISOString()
+            : null,
+          admissionConfirmed: a.admissionConfirmed,
+          confirmationDate: a.confirmationDate
+            ? new Date(a.confirmationDate).toISOString()
+            : null,
+          applicationFeePaid: a.applicationFeePaid,
+          paymentDate: a.paymentDate
+            ? new Date(a.paymentDate).toISOString()
+            : null,
+          hasDocuments:
+            a.documents != null &&
+            (Array.isArray(a.documents) ? a.documents.length > 0 : true),
+          campaignName: await getDisplayText(
+            a.campaign.name,
+            "ar",
+            lang,
+            schoolId!
+          ),
+          campaignId: a.campaign.id,
+        }))
+      )
 
       total = listResult.count
       stats = statsResult

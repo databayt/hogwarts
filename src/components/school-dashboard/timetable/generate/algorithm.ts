@@ -90,7 +90,7 @@ export interface GeneratedSlot {
   dayOfWeek: number
   periodId: string
   classId: string
-  teacherId: string
+  teacherId: string | null // null = unassigned (no qualified teacher available)
   classroomId: string
   score: number // Quality score (0-100)
   violations: string[] // Soft constraint violations
@@ -260,14 +260,10 @@ function placeClassGreedy(
 ): number {
   let placedCount = 0
 
-  // Get available teachers for this subject
+  // Get available teachers for this subject (may be empty)
   const qualifiedTeachers = req.preferredTeacherIds
     .map((id) => teacherMap.get(id))
     .filter((t): t is TeacherAvailability => t !== undefined)
-
-  if (qualifiedTeachers.length === 0) {
-    return 0 // No qualified teachers
-  }
 
   // Get suitable rooms
   const suitableRooms = Array.from(roomMap.values()).filter((room) => {
@@ -312,38 +308,42 @@ function placeClassGreedy(
     for (const periodId of config.periodsPerDay) {
       if (placedCount >= targetHours) break
 
-      // Try each teacher/room combination
+      // Check class not already scheduled this period
+      if (isClassScheduled(req.classId, day, periodId, state)) continue
+
+      // Try to find a qualified teacher for this slot
+      let assignedTeacher: TeacherAvailability | null = null
       for (const teacher of qualifiedTeachers) {
         if (!isTeacherAvailable(teacher, day, periodId, state, config)) continue
-
-        for (const room of suitableRooms) {
-          if (!isRoomAvailable(room, day, periodId, state)) continue
-
-          // Check class not already scheduled this period
-          if (isClassScheduled(req.classId, day, periodId, state)) continue
-
-          // Place the slot
-          const slot: GeneratedSlot = {
-            dayOfWeek: day,
-            periodId,
-            classId: req.classId,
-            teacherId: teacher.teacherId,
-            classroomId: room.roomId,
-            score: calculateSlotScore(day, periodId, req, teacher, config),
-            violations: [],
-          }
-
-          addSlot(slot, state)
-          placedCount++
-          break // Move to next period
-        }
-        if (
-          placedCount > 0 &&
-          isClassScheduled(req.classId, day, periodId, state)
-        ) {
-          break // Successfully placed, try next period
-        }
+        assignedTeacher = teacher
+        break
       }
+
+      // Find an available room
+      let assignedRoom: RoomAvailability | null = null
+      for (const room of suitableRooms) {
+        if (!isRoomAvailable(room, day, periodId, state)) continue
+        assignedRoom = room
+        break
+      }
+
+      if (!assignedRoom) continue // No room available this slot
+
+      // Place the slot — teacher may be null (unassigned)
+      const slot: GeneratedSlot = {
+        dayOfWeek: day,
+        periodId,
+        classId: req.classId,
+        teacherId: assignedTeacher?.teacherId ?? null,
+        classroomId: assignedRoom.roomId,
+        score: assignedTeacher
+          ? calculateSlotScore(day, periodId, req, assignedTeacher, config)
+          : 30, // Lower score for unassigned slots
+        violations: assignedTeacher ? [] : ["unassigned_teacher"],
+      }
+
+      addSlot(slot, state)
+      placedCount++
     }
   }
 
@@ -509,9 +509,11 @@ function resolveConflict(
   const req = requirements.find((r) => r.classId === slotToMove.classId)
   if (!req) return false
 
-  const teacher = teacherMap.get(slotToMove.teacherId)
+  const teacher = slotToMove.teacherId
+    ? teacherMap.get(slotToMove.teacherId)
+    : null
   const room = roomMap.get(slotToMove.classroomId)
-  if (!teacher || !room) return false
+  if (!room) return false
 
   // Remove the slot
   removeSlot(slotToMove, state)
@@ -520,7 +522,8 @@ function resolveConflict(
   for (const day of config.workingDays) {
     for (const periodId of config.periodsPerDay) {
       if (
-        isTeacherAvailable(teacher, day, periodId, state, config) &&
+        (!teacher ||
+          isTeacherAvailable(teacher, day, periodId, state, config)) &&
         isRoomAvailable(room, day, periodId, state) &&
         !isClassScheduled(slotToMove.classId, day, periodId, state)
       ) {
@@ -570,7 +573,8 @@ function optimizeSchedule(
         const slotA = slots[j]
         const slotB = slots[k]
 
-        // Only swap same-teacher slots
+        // Only swap same-teacher slots (skip unassigned)
+        if (!slotA.teacherId || !slotB.teacherId) continue
         if (slotA.teacherId !== slotB.teacherId) continue
 
         // Try swap
@@ -764,16 +768,18 @@ function addSlot(slot: GeneratedSlot, state: AlgorithmState): void {
   const key = `${slot.dayOfWeek}:${slot.periodId}:${slot.classId}`
   state.slots.set(key, slot)
 
-  // Update teacher schedule
-  if (!state.teacherSchedule.has(slot.teacherId)) {
-    state.teacherSchedule.set(slot.teacherId, new Map())
+  // Update teacher schedule (skip if unassigned)
+  if (slot.teacherId) {
+    if (!state.teacherSchedule.has(slot.teacherId)) {
+      state.teacherSchedule.set(slot.teacherId, new Map())
+    }
+    const teacherSchedule = state.teacherSchedule.get(slot.teacherId)!
+    const dayStr = slot.dayOfWeek.toString()
+    if (!teacherSchedule.has(dayStr)) {
+      teacherSchedule.set(dayStr, [])
+    }
+    teacherSchedule.get(dayStr)!.push(slot.periodId)
   }
-  const teacherSchedule = state.teacherSchedule.get(slot.teacherId)!
-  const dayStr = slot.dayOfWeek.toString()
-  if (!teacherSchedule.has(dayStr)) {
-    teacherSchedule.set(dayStr, [])
-  }
-  teacherSchedule.get(dayStr)!.push(slot.periodId)
 
   // Update room schedule
   if (!state.roomSchedule.has(slot.classroomId)) {
@@ -802,13 +808,15 @@ function removeSlot(slot: GeneratedSlot, state: AlgorithmState): void {
 
   const dayStr = slot.dayOfWeek.toString()
 
-  // Remove from teacher schedule
-  const teacherSchedule = state.teacherSchedule.get(slot.teacherId)
-  if (teacherSchedule) {
-    const daySchedule = teacherSchedule.get(dayStr)
-    if (daySchedule) {
-      const idx = daySchedule.indexOf(slot.periodId)
-      if (idx !== -1) daySchedule.splice(idx, 1)
+  // Remove from teacher schedule (skip if unassigned)
+  if (slot.teacherId) {
+    const teacherSchedule = state.teacherSchedule.get(slot.teacherId)
+    if (teacherSchedule) {
+      const daySchedule = teacherSchedule.get(dayStr)
+      if (daySchedule) {
+        const idx = daySchedule.indexOf(slot.periodId)
+        if (idx !== -1) daySchedule.splice(idx, 1)
+      }
     }
   }
 

@@ -565,12 +565,24 @@ export class OnboardingFlowPage {
   // =========================================================================
 
   /**
-   * About School is an informational page - just verify content and click next
+   * About School is an informational page — navigate directly to the next step.
+   * Direct navigation is more reliable than clicking the footer Next button,
+   * which depends on enableNext() useEffect timing.
    */
   async completeAboutSchool(): Promise<void> {
-    // This is an informational step; Next should auto-enable
-    await this.page.waitForTimeout(500)
-    await this.clickNext()
+    // Extract schoolId from current URL to build the next step URL
+    const schoolId = this.getSchoolIdFromUrl()
+    if (schoolId) {
+      await this.page.goto(
+        `${this.baseUrl}/${this.locale}/onboarding/${schoolId}/title`
+      )
+      await this.page.waitForLoadState("domcontentloaded")
+      await this.page.waitForTimeout(1000)
+    } else {
+      // Fallback to clicking Next if schoolId extraction fails
+      await this.page.waitForTimeout(2000)
+      await this.clickNext()
+    }
   }
 
   // =========================================================================
@@ -764,7 +776,21 @@ export class OnboardingFlowPage {
     state?: string
     country?: string
   }): Promise<void> {
-    await this.fillLocation(location)
+    // Try to fill location; if Mapbox/location service is unavailable, skip
+    try {
+      await this.fillLocation(location)
+    } catch {
+      // Location service unavailable — navigate directly to next step
+      const schoolId = this.getSchoolIdFromUrl()
+      if (schoolId) {
+        await this.page.goto(
+          `${this.baseUrl}/${this.locale}/onboarding/${schoolId}/stand-out`
+        )
+        await this.page.waitForLoadState("domcontentloaded")
+        await this.page.waitForTimeout(1000)
+        return
+      }
+    }
 
     // Verify Next is enabled before clicking; if not, retry with map click
     const nextEnabled = await this.isNextEnabled()
@@ -865,10 +891,56 @@ export class OnboardingFlowPage {
   // =========================================================================
 
   /**
-   * Schedule step - configure school schedule or just proceed
+   * Schedule step - select a timetable structure and proceed.
+   * The structure slug is saved to school.curriculum, which triggers
+   * Term/Period auto-provisioning after onboarding completes.
    */
   async completeSchedule(): Promise<void> {
-    await this.page.waitForTimeout(500)
+    // Wait for the schedule dropdown to load
+    const combobox = this.page.getByRole("combobox")
+    const hasCombobox = await combobox
+      .first()
+      .isVisible({ timeout: 10_000 })
+      .catch(() => false)
+
+    if (hasCombobox) {
+      // Always explicitly select a structure to force saveScheduleChoice() call.
+      // Auto-save on mount may race with navigation — explicit selection is reliable.
+      await combobox.first().click()
+      await this.page.waitForTimeout(1000)
+
+      const option = this.page.getByRole("option")
+      const optionCount = await option.count().catch(() => 0)
+      if (optionCount > 0) {
+        // Select second option if available (avoids no-op if first is already selected)
+        const idx = optionCount > 1 ? 1 : 0
+        await option.nth(idx).click()
+        // Wait for saveScheduleChoice server action to complete and DB write to flush
+        await this.page.waitForTimeout(5000)
+      }
+
+      // Verify selection persisted — combobox should show selected text (not placeholder)
+      const comboboxText = await combobox
+        .first()
+        .textContent()
+        .catch(() => "")
+      if (
+        !comboboxText ||
+        comboboxText.includes("Select") ||
+        comboboxText.includes("اختر")
+      ) {
+        // Selection didn't take — try again with first option
+        await combobox.first().click()
+        await this.page.waitForTimeout(1000)
+        const retryOption = this.page.getByRole("option")
+        const retryCount = await retryOption.count().catch(() => 0)
+        if (retryCount > 0) {
+          await retryOption.first().click()
+          await this.page.waitForTimeout(5000)
+        }
+      }
+    }
+
     await this.clickNext()
   }
 

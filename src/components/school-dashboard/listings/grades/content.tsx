@@ -3,6 +3,7 @@
 
 import { SearchParams } from "nuqs/server"
 
+import { getDisplayText } from "@/lib/content-display"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
@@ -45,8 +46,36 @@ export default async function GradesContent({
         sort: sp.sort,
       })
 
-      // Map results using helper function from queries.ts
-      data = rows.map((r) => formatResultRow(r))
+      // Map results and translate text fields for display
+      const rawData = rows.map((r) => formatResultRow(r))
+      data = await Promise.all(
+        rawData.map(async (row, i) => {
+          const r = rows[i]
+          const studentLang = (r.student?.lang as "ar" | "en") || "ar"
+          const classLang = (r.class?.lang as "ar" | "en") || "ar"
+          return {
+            ...row,
+            studentName: await getDisplayText(
+              row.studentName,
+              studentLang,
+              lang,
+              schoolId!
+            ),
+            assignmentTitle: await getDisplayText(
+              row.assignmentTitle,
+              "ar",
+              lang,
+              schoolId!
+            ),
+            className: await getDisplayText(
+              row.className,
+              classLang,
+              lang,
+              schoolId!
+            ),
+          }
+        })
+      )
       total = count
     } catch (error) {
       // Log error for debugging but don't crash the page

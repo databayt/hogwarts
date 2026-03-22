@@ -6,6 +6,7 @@ import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 
 import { getCatalogImageUrl } from "@/lib/catalog-image-url"
+import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
@@ -33,6 +34,7 @@ async function getAdminCatalogSubjects(schoolId: string) {
         select: {
           id: true,
           name: true,
+          lang: true,
           slug: true,
           description: true,
           imageKey: true,
@@ -103,7 +105,7 @@ async function getAdminCatalogSubjects(schoolId: string) {
           "original"
         ),
         price: null as number | null,
-        lang: "en",
+        lang: (subject.lang as "ar" | "en") || "ar",
         isPublished: subject.status === "PUBLISHED",
         level: "",
         status: subject.status,
@@ -155,7 +157,22 @@ export default async function StreamAdminCoursesPage({ params }: Props) {
     )
   }
 
-  const { rows, count } = await getAdminCatalogSubjects(schoolId)
+  const { rows: rawRows, count } = await getAdminCatalogSubjects(schoolId)
+
+  // Translate text fields for display
+  const rows = await Promise.all(
+    rawRows.map(async (r) => ({
+      ...r,
+      title: await getDisplayText(r.title, r.lang, lang, schoolId),
+      description: await getDisplayText(r.description, r.lang, lang, schoolId),
+      category: r.category
+        ? {
+            ...r.category,
+            name: await getDisplayText(r.category.name, r.lang, lang, schoolId),
+          }
+        : r.category,
+    }))
+  )
 
   // Get unique departments as categories
   const categories = [

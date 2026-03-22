@@ -3,6 +3,7 @@
 
 import { SearchParams } from "nuqs/server"
 
+import { getDisplayText } from "@/lib/content-display"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -40,24 +41,26 @@ export default async function CampaignsContent({
         sort: sp.sort,
       })
 
-      data = rows.map((c) => ({
-        id: c.id,
-        name: c.name,
-        academicYear: c.academicYear,
-        startDate: c.startDate
-          ? new Date(c.startDate).toISOString()
-          : new Date().toISOString(),
-        endDate: c.endDate
-          ? new Date(c.endDate).toISOString()
-          : new Date().toISOString(),
-        status: c.status,
-        totalSeats: c.totalSeats,
-        applicationFee: c.applicationFee?.toString() ?? null,
-        applicationsCount: c._count.applications,
-        createdAt: c.createdAt
-          ? new Date(c.createdAt).toISOString()
-          : new Date().toISOString(),
-      }))
+      data = await Promise.all(
+        rows.map(async (c) => ({
+          id: c.id,
+          name: await getDisplayText(c.name, "ar", lang, schoolId!),
+          academicYear: c.academicYear,
+          startDate: c.startDate
+            ? new Date(c.startDate).toISOString()
+            : new Date().toISOString(),
+          endDate: c.endDate
+            ? new Date(c.endDate).toISOString()
+            : new Date().toISOString(),
+          status: c.status,
+          totalSeats: c.totalSeats,
+          applicationFee: c.applicationFee?.toString() ?? null,
+          applicationsCount: c._count.applications,
+          createdAt: c.createdAt
+            ? new Date(c.createdAt).toISOString()
+            : new Date().toISOString(),
+        }))
+      )
 
       total = count
     } catch (error) {

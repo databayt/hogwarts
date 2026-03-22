@@ -52,6 +52,7 @@ export const staffListSelect = {
   employeeId: true,
   givenName: true,
   surname: true,
+  lang: true,
   emailAddress: true,
   gender: true,
   position: true,
@@ -63,6 +64,7 @@ export const staffListSelect = {
     select: {
       id: true,
       departmentName: true,
+      lang: true,
     },
   },
 } as const

@@ -3,6 +3,7 @@
 
 import { SearchParams } from "nuqs/server"
 
+import { getDisplayText } from "@/lib/content-display"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -41,27 +42,39 @@ export default async function ApplicationsContent({
         sort: sp.sort,
       })
 
-      data = rows.map((a) => ({
-        id: a.id,
-        applicationNumber: a.applicationNumber,
-        applicantName: `${a.firstName} ${a.lastName}`,
-        firstName: a.firstName,
-        lastName: a.lastName,
-        email: a.email,
-        phone: a.phone,
-        applyingForClass: a.applyingForClass,
-        status: a.status,
-        meritScore: a.meritScore?.toString() ?? null,
-        meritRank: a.meritRank,
-        campaignName: a.campaign.name,
-        campaignId: a.campaign.id,
-        submittedAt: a.submittedAt
-          ? new Date(a.submittedAt).toISOString()
-          : null,
-        createdAt: a.createdAt
-          ? new Date(a.createdAt).toISOString()
-          : new Date().toISOString(),
-      }))
+      data = await Promise.all(
+        rows.map(async (a) => ({
+          id: a.id,
+          applicationNumber: a.applicationNumber,
+          applicantName: await getDisplayText(
+            `${a.firstName} ${a.lastName}`,
+            "ar",
+            lang,
+            schoolId!
+          ),
+          firstName: a.firstName,
+          lastName: a.lastName,
+          email: a.email,
+          phone: a.phone,
+          applyingForClass: a.applyingForClass,
+          status: a.status,
+          meritScore: a.meritScore?.toString() ?? null,
+          meritRank: a.meritRank,
+          campaignName: await getDisplayText(
+            a.campaign.name,
+            "ar",
+            lang,
+            schoolId!
+          ),
+          campaignId: a.campaign.id,
+          submittedAt: a.submittedAt
+            ? new Date(a.submittedAt).toISOString()
+            : null,
+          createdAt: a.createdAt
+            ? new Date(a.createdAt).toISOString()
+            : new Date().toISOString(),
+        }))
+      )
 
       total = count
     } catch (error) {

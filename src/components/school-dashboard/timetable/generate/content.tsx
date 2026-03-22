@@ -833,7 +833,11 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
                             <TableCell>P{slot.periodId.slice(-1)}</TableCell>
                             <TableCell>{slot.classId.slice(0, 8)}...</TableCell>
                             <TableCell>
-                              {slot.teacherId.slice(0, 8)}...
+                              {slot.teacherId ? (
+                                `${slot.teacherId.slice(0, 8)}...`
+                              ) : (
+                                <Badge variant="outline">Unassigned</Badge>
+                              )}
                             </TableCell>
                             <TableCell>
                               {slot.classroomId.slice(0, 8)}...

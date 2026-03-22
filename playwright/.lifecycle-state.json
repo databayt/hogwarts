@@ -1,14 +1,14 @@
 {
-  "schoolId": "cmn0yjzn90004sdge63gvyb68",
+  "schoolId": "cmn1331co0004sd2izdm4djma",
   "schoolSubdomain": "lifctest",
   "teacherIds": [
-    "971a09db-89ac-410a-9d9d-37ac21cf7674",
-    "483987ce-8cfd-4013-89a0-8b037e045bb3",
-    "95495b60-a2c4-4649-a4d0-ebd207f1efef",
-    "8f7411c7-955f-4696-b933-e86bc429f87c",
-    "a133c3a6-196b-48ed-845b-e3252bdc21e1"
+    "06f0cea5-b8a4-42cd-a4ca-861ba2a12600",
+    "57741360-e396-4e56-9f6c-f863e67cc365",
+    "2f02e4fd-e0a6-4b3e-87ab-1f13af884dbe",
+    "4f3392f0-635d-4278-9518-051ec9480d5d",
+    "8c97edb2-aa51-4793-b7fc-fed3c014d15a"
   ],
   "studentCount": 10,
   "teacherCount": 5,
-  "phase": "timetable"
+  "phase": "provisioned"
 }

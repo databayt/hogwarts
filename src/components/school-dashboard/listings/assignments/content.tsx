@@ -3,6 +3,8 @@
 
 import { SearchParams } from "nuqs/server"
 
+import { getDisplayText } from "@/lib/content-display"
+import { detectLanguage } from "@/lib/i18n-content"
 import { getModel } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
@@ -60,14 +62,16 @@ export default async function AssignmentsContent({
       }),
       assignmentModel.count({ where }),
     ])
-    data = rows.map((a: any) => ({
-      id: a.id,
-      title: a.title,
-      type: a.type,
-      totalPoints: a.totalPoints,
-      dueDate: (a.dueDate as Date).toISOString(),
-      createdAt: (a.createdAt as Date).toISOString(),
-    }))
+    data = await Promise.all(
+      rows.map(async (a: any) => ({
+        id: a.id,
+        title: await getDisplayText(a.title, "ar", lang, schoolId!),
+        type: a.type,
+        totalPoints: a.totalPoints,
+        dueDate: (a.dueDate as Date).toISOString(),
+        createdAt: (a.createdAt as Date).toISOString(),
+      }))
+    )
     total = count as number
   }
   return (

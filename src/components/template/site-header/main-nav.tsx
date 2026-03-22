@@ -56,11 +56,11 @@ export function MainNav({
       >
         <div className="pt-0.5">
           <Image
-            src="/logo.png"
+            src={school.logoUrl || "/logo.png"}
             alt={`${displayName} Logo`}
             width={18}
             height={18}
-            className="dark:invert"
+            className={school.logoUrl ? "" : "dark:invert"}
           />
         </div>
         <h6 className="hidden font-bold lg:inline-block">{displayName}</h6>

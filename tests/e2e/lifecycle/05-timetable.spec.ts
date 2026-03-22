@@ -102,8 +102,13 @@ test.describe
       return
     }
 
-    // Check if button is enabled (disabled = missing teacher expertise or class data)
-    const btnEnabled = !(await generateBtn.isDisabled().catch(() => true))
+    // Wait for button to become enabled (useEffect loads terms asynchronously)
+    let btnEnabled = false
+    for (let wait = 0; wait < 10; wait++) {
+      btnEnabled = !(await generateBtn.isDisabled().catch(() => true))
+      if (btnEnabled) break
+      await page.waitForTimeout(1000)
+    }
     if (!btnEnabled) {
       test.skip(
         true,

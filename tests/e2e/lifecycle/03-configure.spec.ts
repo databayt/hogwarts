@@ -94,6 +94,16 @@ test.describe
       .catch(() => false)
 
     if (!btnVisible) {
+      // Diagnostic: capture page content to understand why button is missing
+      const bodyText = await page
+        .locator("body")
+        .textContent()
+        .catch(() => "")
+      const hasSetupTypes = bodyText?.includes("set up classroom types")
+      console.log(
+        `LC-014 DIAGNOSTIC: setupTypes=${hasSetupTypes}, url=${page.url()}, body=${bodyText?.slice(0, 300)}`
+      )
+      await page.screenshot({ path: "playwright/lc-014-diagnostic.png" })
       test.skip(
         true,
         "Generate Classes button not visible -- terms/grades may be missing"

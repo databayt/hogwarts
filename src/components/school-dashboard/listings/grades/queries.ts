@@ -70,12 +70,14 @@ export const resultListSelect = {
       id: true,
       givenName: true,
       surname: true,
+      lang: true,
     },
   },
   class: {
     select: {
       id: true,
       name: true,
+      lang: true,
     },
   },
   assignment: {
@@ -96,6 +98,7 @@ export const resultListSelect = {
     select: {
       id: true,
       name: true,
+      lang: true,
     },
   },
 } as const
