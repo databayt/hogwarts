@@ -4,6 +4,7 @@
 import { SearchParams } from "nuqs/server"
 
 import { getDisplayText } from "@/lib/content-display"
+import { detectLanguage } from "@/lib/i18n-content"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
@@ -51,8 +52,10 @@ export default async function GradesContent({
       data = await Promise.all(
         rawData.map(async (row, i) => {
           const r = rows[i]
-          const studentLang = (r.student?.lang as "ar" | "en") || "ar"
-          const classLang = (r.class?.lang as "ar" | "en") || "ar"
+          const studentLang =
+            (r.student?.lang as "ar" | "en") || detectLanguage(row.studentName)
+          const classLang =
+            (r.class?.lang as "ar" | "en") || detectLanguage(row.className)
           return {
             ...row,
             studentName: await getDisplayText(
@@ -63,7 +66,7 @@ export default async function GradesContent({
             ),
             assignmentTitle: await getDisplayText(
               row.assignmentTitle,
-              "ar",
+              detectLanguage(row.assignmentTitle),
               lang,
               schoolId!
             ),

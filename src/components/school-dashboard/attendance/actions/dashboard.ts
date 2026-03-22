@@ -1149,8 +1149,10 @@ export async function getUnmarkedClasses(): Promise<
         classId: entry.class.id,
         className: entry.class.name,
         periodName: entry.period.name,
-        teacherId: entry.teacher.id,
-        teacherName: `${entry.teacher.givenName} ${entry.teacher.surname}`,
+        teacherId: entry.teacher?.id ?? "",
+        teacherName: entry.teacher
+          ? `${entry.teacher.givenName} ${entry.teacher.surname}`
+          : "",
         scheduledTime: `${entry.period.startTime} - ${entry.period.endTime}`,
       }))
 

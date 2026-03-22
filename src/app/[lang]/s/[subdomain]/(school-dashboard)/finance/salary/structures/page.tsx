@@ -2,6 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { getDisplayText } from "@/lib/content-display"
+import { detectLanguage } from "@/lib/i18n-content"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { type SalaryStructureRow } from "@/components/school-dashboard/finance/salary/columns"
@@ -32,7 +33,9 @@ export default async function SalaryStructuresPage({ params }: Props) {
       id: s.id,
       teacherName: await getDisplayText(
         [s.teacher?.givenName, s.teacher?.surname].filter(Boolean).join(" "),
-        "ar",
+        detectLanguage(
+          [s.teacher?.givenName, s.teacher?.surname].filter(Boolean).join(" ")
+        ),
         lang,
         schoolId
       ),

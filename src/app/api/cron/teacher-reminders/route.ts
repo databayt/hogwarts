@@ -104,7 +104,7 @@ export async function GET(request: Request) {
         })
 
         // 5. If no attendance record exists, create notification
-        if (!attendanceExists && entry.teacher.userId) {
+        if (!attendanceExists && entry.teacher?.userId) {
           await dispatchNotification({
             schoolId: school.id,
             userId: entry.teacher.userId,
@@ -122,7 +122,7 @@ export async function GET(request: Request) {
 
           stats.remindersCreated++
           console.log(
-            `[Cron] Created reminder for teacher ${entry.teacher.givenName} ${entry.teacher.surname} - ${entry.class.name}`
+            `[Cron] Created reminder for teacher ${entry.teacher?.givenName} ${entry.teacher?.surname} - ${entry.class.name}`
           )
         }
       }

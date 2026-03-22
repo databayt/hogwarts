@@ -412,8 +412,8 @@ export async function getRoomTimetable(input: {
       gradeName: s.class.grade?.name ?? null,
       gradeId: s.class.grade?.id ?? null,
       subject: s.class.subject?.name ?? "",
-      teacher: `${s.teacher.givenName} ${s.teacher.surname}`,
-      teacherId: s.teacher.id,
+      teacher: s.teacher ? `${s.teacher.givenName} ${s.teacher.surname}` : "",
+      teacherId: s.teacher?.id ?? "",
     })),
     workingDays: weekConfig?.workingDays ?? [0, 1, 2, 3, 4],
     periods: periods.map((p) => ({

@@ -65,7 +65,12 @@ export default async function AssignmentsContent({
     data = await Promise.all(
       rows.map(async (a: any) => ({
         id: a.id,
-        title: await getDisplayText(a.title, "ar", lang, schoolId!),
+        title: await getDisplayText(
+          a.title,
+          detectLanguage(a.title || ""),
+          lang,
+          schoolId!
+        ),
         type: a.type,
         totalPoints: a.totalPoints,
         dueDate: (a.dueDate as Date).toISOString(),

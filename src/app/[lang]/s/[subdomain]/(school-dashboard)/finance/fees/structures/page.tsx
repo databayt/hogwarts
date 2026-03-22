@@ -2,6 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { getDisplayText } from "@/lib/content-display"
+import { detectLanguage } from "@/lib/i18n-content"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
@@ -33,10 +34,20 @@ export default async function FeeStructuresPage({ params }: Props) {
   const data: FeeStructureRow[] = await Promise.all(
     rows.map(async (fs) => ({
       id: fs.id,
-      name: await getDisplayText(fs.name, "ar", lang, schoolId),
+      name: await getDisplayText(
+        fs.name,
+        detectLanguage(fs.name),
+        lang,
+        schoolId
+      ),
       academicYear: fs.academicYear,
       className: fs.class?.name
-        ? await getDisplayText(fs.class.name, "ar", lang, schoolId)
+        ? await getDisplayText(
+            fs.class.name,
+            detectLanguage(fs.class.name),
+            lang,
+            schoolId
+          )
         : null,
       totalAmount: Number(fs.totalAmount),
       installments: fs.installments,

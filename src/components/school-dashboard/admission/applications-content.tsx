@@ -4,6 +4,7 @@
 import { SearchParams } from "nuqs/server"
 
 import { getDisplayText } from "@/lib/content-display"
+import { detectLanguage } from "@/lib/i18n-content"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -48,7 +49,7 @@ export default async function ApplicationsContent({
           applicationNumber: a.applicationNumber,
           applicantName: await getDisplayText(
             `${a.firstName} ${a.lastName}`,
-            "ar",
+            detectLanguage(`${a.firstName} ${a.lastName}`),
             lang,
             schoolId!
           ),
@@ -62,7 +63,7 @@ export default async function ApplicationsContent({
           meritRank: a.meritRank,
           campaignName: await getDisplayText(
             a.campaign.name,
-            "ar",
+            detectLanguage(a.campaign.name),
             lang,
             schoolId!
           ),

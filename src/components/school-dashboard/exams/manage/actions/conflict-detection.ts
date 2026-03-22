@@ -210,8 +210,10 @@ export async function checkExamConflicts(
         if (timeRangesOverlap(startTime, endTime, periodStart, periodEnd)) {
           conflicts.push({
             type: "teacher",
-            entityId: entry.teacherId,
-            entityName: `${entry.teacher.givenName} ${entry.teacher.surname}`,
+            entityId: entry.teacherId ?? "",
+            entityName: entry.teacher
+              ? `${entry.teacher.givenName} ${entry.teacher.surname}`
+              : "",
             conflictingEvent: `Teaching ${entry.class.name} - ${entry.period.name}`,
             conflictTime: `${periodStart} - ${periodEnd}`,
             severity: "medium",

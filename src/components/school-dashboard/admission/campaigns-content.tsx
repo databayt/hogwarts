@@ -4,6 +4,7 @@
 import { SearchParams } from "nuqs/server"
 
 import { getDisplayText } from "@/lib/content-display"
+import { detectLanguage } from "@/lib/i18n-content"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -44,7 +45,12 @@ export default async function CampaignsContent({
       data = await Promise.all(
         rows.map(async (c) => ({
           id: c.id,
-          name: await getDisplayText(c.name, "ar", lang, schoolId!),
+          name: await getDisplayText(
+            c.name,
+            detectLanguage(c.name),
+            lang,
+            schoolId!
+          ),
           academicYear: c.academicYear,
           startDate: c.startDate
             ? new Date(c.startDate).toISOString()

@@ -1040,7 +1040,7 @@ export async function moveTimetableSlot(input: {
   const validation = await validateSlotConstraints({
     schoolId,
     termId: existingSlot.termId,
-    teacherId: existingSlot.teacherId,
+    teacherId: existingSlot.teacherId ?? "",
     classroomId: targetClassroomId,
     classId: existingSlot.classId,
     dayOfWeek: input.targetDayOfWeek,
@@ -1606,9 +1606,9 @@ export async function getTimetableByClass(input: {
       periodId: s.periodId,
       periodName: s.period.name,
       teacher: s.teacher ? `${s.teacher.givenName} ${s.teacher.surname}` : "",
-      teacherId: s.teacherId,
+      teacherId: s.teacherId ?? undefined,
       room: s.classroom?.roomName || "",
-      roomId: s.classroomId,
+      roomId: s.classroomId ?? undefined,
       subject: s.class?.subject?.name || s.class?.name || "",
     })),
     lunchAfterPeriod: config.defaultLunchAfterPeriod,
@@ -2272,7 +2272,7 @@ export async function getTimetableAnalytics(input: { termId: string }) {
   >()
   for (const slot of slots) {
     if (slot.teacher) {
-      const key = slot.teacherId
+      const key = slot.teacherId ?? ""
       const existing = teacherWorkload.get(key) || {
         name: `${slot.teacher.givenName} ${slot.teacher.surname}`,
         periods: 0,
@@ -5454,7 +5454,7 @@ export async function assignSubstitute(input: {
       schoolId,
       absenceId: input.absenceId,
       originalSlotId: input.originalSlotId,
-      originalTeacherId: originalSlot.teacherId,
+      originalTeacherId: originalSlot.teacherId ?? "",
       substituteTeacherId: input.substituteTeacherId,
       slotDate: input.slotDate,
       status: "PENDING",
