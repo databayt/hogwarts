@@ -53,10 +53,11 @@ model LessonVideo {
   tags       String[] @default([])
 
   // Relations
-  lesson   CatalogLesson    @relation(fields: [catalogLessonId], references: [id], onDelete: Cascade)
-  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  school   School?          @relation(fields: [schoolId], references: [id], onDelete: SetNull)
-  progress LessonProgress[]
+  lesson    CatalogLesson          @relation(fields: [catalogLessonId], references: [id], onDelete: Cascade)
+  user      User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  school    School?                @relation(fields: [schoolId], references: [id], onDelete: SetNull)
+  progress  LessonProgress[]
+  overrides SchoolContentOverride[] @relation("VideoOverrides")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

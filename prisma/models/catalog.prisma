@@ -62,9 +62,9 @@ model CatalogSubject {
   // Relations
   chapters          CatalogChapter[]
   exams             CatalogExam[]
-  schoolSelections          SchoolSubjectSelection[]
+  schoolSelections            SchoolSubjectSelection[]
   schoolInstructorPreferences SchoolInstructorPreference[]
-  enrollments               Enrollment[]
+  enrollments                Enrollment[]
   certificates      SubjectCertificate[]
 
   // Content relations

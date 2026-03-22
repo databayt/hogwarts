@@ -336,10 +336,11 @@ model School {
   membershipRequests     MembershipRequest[]
 
   // Catalog Bridge relations
-  schoolSubjectSelections SchoolSubjectSelection[]
-  schoolContentOverrides  SchoolContentOverride[]
-  schoolBookSelections    SchoolBookSelection[]
-  catalogProposals        CatalogProposal[]
+  schoolSubjectSelections    SchoolSubjectSelection[]
+  schoolContentOverrides     SchoolContentOverride[]
+  schoolInstructorPreferences SchoolInstructorPreference[]
+  schoolBookSelections       SchoolBookSelection[]
+  catalogProposals           CatalogProposal[]
 
   // Enrollment relations (catalog)
   catalogEnrollments     Enrollment[]
