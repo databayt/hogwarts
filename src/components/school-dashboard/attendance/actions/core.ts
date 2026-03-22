@@ -234,7 +234,9 @@ export async function markAttendance(
       where: {
         schoolId,
         studentId: { in: allStudentIds },
-        classId: parsed.classId,
+        ...(parsed.sectionId
+          ? { sectionId: parsed.sectionId }
+          : { classId: parsed.classId }),
         date: attendanceDate,
         periodId: null,
       },
@@ -260,7 +262,8 @@ export async function markAttendance(
         toCreate.push({
           schoolId,
           studentId: rec.studentId,
-          classId: parsed.classId,
+          classId: parsed.classId || undefined,
+          sectionId: parsed.sectionId || undefined,
           date: attendanceDate,
           status: finalStatus,
           method: "MANUAL",
@@ -306,7 +309,7 @@ export async function markAttendance(
         triggerAbsenceNotification(
           schoolId,
           studentId,
-          parsed.classId,
+          parsed.classId || parsed.sectionId || "",
           attendanceDate,
           session?.user?.id
         )
@@ -433,10 +436,11 @@ export async function markSingleAttendance(input: {
 }
 
 /**
- * Get attendance list for a class on a specific date
+ * Get attendance list for a section (or legacy class) on a specific date
  */
 export async function getAttendanceList(input: {
-  classId: string
+  classId?: string
+  sectionId?: string
   date: string
   lang?: string
 }): Promise<
@@ -458,14 +462,34 @@ export async function getAttendanceList(input: {
 
     const parsed = z
       .object({
-        classId: z.string().min(1),
+        classId: z.string().optional(),
+        sectionId: z.string().optional(),
         date: z.string().min(1),
         lang: z.string().optional(),
       })
+      .refine((data) => data.classId || data.sectionId, {
+        message: "Either classId or sectionId must be provided",
+      })
       .parse(input)
 
-    const [enrollments, marks, school] = await Promise.all([
-      db.studentClass.findMany({
+    // Dual path: section-based (preferred) or legacy class-based
+    let students: Array<{
+      id: string
+      givenName: string
+      surname: string
+      userId: string | null
+    }>
+
+    if (parsed.sectionId) {
+      // Section-based: query students directly from section
+      students = await db.student.findMany({
+        where: { schoolId, sectionId: parsed.sectionId },
+        select: { id: true, givenName: true, surname: true, userId: true },
+        orderBy: { givenName: "asc" },
+      })
+    } else if (parsed.classId) {
+      // Legacy: query through StudentClass join table
+      const enrollments = await db.studentClass.findMany({
         where: { schoolId, classId: parsed.classId },
         include: {
           student: {
@@ -477,11 +501,20 @@ export async function getAttendanceList(input: {
             },
           },
         },
-      }),
+      })
+      students = enrollments.map((e) => e.student)
+    } else {
+      return { success: true, data: { rows: [] } }
+    }
+
+    // Fetch attendance marks using sectionId or classId
+    const [marks, school] = await Promise.all([
       db.attendance.findMany({
         where: {
           schoolId,
-          classId: parsed.classId,
+          ...(parsed.sectionId
+            ? { sectionId: parsed.sectionId }
+            : { classId: parsed.classId }),
           date: new Date(parsed.date),
           deletedAt: null, // Exclude soft-deleted records
         },
@@ -511,25 +544,21 @@ export async function getAttendanceList(input: {
     })
 
     const rows = await Promise.all(
-      enrollments.map(async (e) => {
-        const rawName = [e.student?.givenName, e.student?.surname]
-          .filter(Boolean)
-          .join(" ")
+      students.map(async (s) => {
+        const rawName = [s.givenName, s.surname].filter(Boolean).join(" ")
 
         const name = needsTranslation
           ? await getDisplayText(rawName, contentLang, displayLang, schoolId)
           : rawName
 
         return {
-          studentId: e.studentId,
+          studentId: s.id,
           name,
           status:
-            (statusByStudent[e.studentId]?.status as
-              | "present"
-              | "absent"
-              | "late") || "present",
-          checkInTime: statusByStudent[e.studentId]?.checkInTime,
-          method: statusByStudent[e.studentId]?.method,
+            (statusByStudent[s.id]?.status as "present" | "absent" | "late") ||
+            "present",
+          checkInTime: statusByStudent[s.id]?.checkInTime,
+          method: statusByStudent[s.id]?.method,
         }
       })
     )
@@ -543,6 +572,106 @@ export async function getAttendanceList(input: {
         error instanceof Error
           ? error.message
           : "Failed to get attendance list",
+    }
+  }
+}
+
+/**
+ * Get sections for selection dropdown.
+ * Teachers see only their homeroom sections or sections where they have timetable slots; admins see all.
+ * Accepts optional gradeId for filtering.
+ */
+export async function getSectionsForSelection(gradeId?: string): Promise<
+  ActionResponse<{
+    sections: Array<{
+      id: string
+      name: string
+      gradeName: string
+      gradeId: string
+      teacher: string | null
+      studentCount: number
+    }>
+  }>
+> {
+  try {
+    const session = await auth()
+    if (!session?.user?.id) return { success: true, data: { sections: [] } }
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) return { success: true, data: { sections: [] } }
+
+    // Teacher scoping: if teacher, only show sections where they are homeroom teacher
+    // or where they have timetable slots
+    const role = session.user.role
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sectionFilter: any = { schoolId }
+
+    if (gradeId) sectionFilter.gradeId = gradeId
+
+    if (role === "TEACHER") {
+      const teacher = await db.teacher.findFirst({
+        where: { schoolId, userId: session.user.id },
+        select: { id: true },
+      })
+      if (!teacher) return { success: true, data: { sections: [] } }
+
+      // Find sections where teacher is homeroom or has timetable slots
+      const timetableSlots = await db.timetable.findMany({
+        where: {
+          schoolId,
+          teacherId: teacher.id,
+          sectionId: { not: null },
+        },
+        select: { sectionId: true },
+        distinct: ["sectionId"],
+      })
+      const sectionIds = timetableSlots
+        .map((s) => s.sectionId)
+        .filter((id): id is string => id !== null)
+
+      sectionFilter.OR = [
+        { homeroomTeacherId: teacher.id },
+        { id: { in: sectionIds } },
+      ]
+    }
+
+    const sections = await db.section.findMany({
+      where: sectionFilter,
+      select: {
+        id: true,
+        name: true,
+        letter: true,
+        gradeId: true,
+        grade: { select: { name: true } },
+        homeroomTeacher: { select: { givenName: true, surname: true } },
+        _count: { select: { students: true } },
+      },
+      orderBy: { name: "asc" },
+    })
+
+    return {
+      success: true,
+      data: {
+        sections: sections.map((s) => ({
+          id: s.id,
+          name: s.name,
+          gradeName: s.grade.name,
+          gradeId: s.gradeId,
+          teacher: s.homeroomTeacher
+            ? `${s.homeroomTeacher.givenName} ${s.homeroomTeacher.surname}`
+            : null,
+          studentCount: s._count.students,
+        })),
+      },
+    }
+  } catch (error) {
+    console.error("[getSectionsForSelection] Error:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to get sections for selection",
     }
   }
 }

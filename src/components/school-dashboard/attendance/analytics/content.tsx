@@ -73,6 +73,7 @@ import {
   getDayWisePatterns,
   getMethodUsageStats,
   getRecentAttendance,
+  getSectionsForSelection,
   getStudentsAtRisk,
 } from "../actions"
 import { AttendanceExport } from "../core/attendance-export"
@@ -162,6 +163,7 @@ export default function AnalyticsContent({
     to: new Date(),
   })
   const [selectedClass, setSelectedClass] = useState<string>("all")
+  const [selectedSection, setSelectedSection] = useState<string>("all")
   const [refreshing, setRefreshing] = useState(false)
   const [loading, setLoading] = useState(true)
 
@@ -173,6 +175,16 @@ export default function AnalyticsContent({
   const [classStats, setClassStats] = useState<ClassStats[]>([])
   const [atRiskStudents, setAtRiskStudents] = useState<AtRiskStudent[]>([])
   const [classes, setClasses] = useState<ClassOption[]>([])
+  const [sections, setSections] = useState<
+    {
+      id: string
+      name: string
+      gradeName: string
+      gradeId: string
+      teacher: string | null
+      studentCount: number
+    }[]
+  >([])
   const [calendarData, setCalendarData] = useState<CalendarData | null>(null)
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | null>(
     null
@@ -193,6 +205,8 @@ export default function AnalyticsContent({
       const dateFrom = dateRange.from.toISOString()
       const dateTo = dateRange.to.toISOString()
       const classFilter = selectedClass !== "all" ? selectedClass : undefined
+      const sectionFilter =
+        selectedSection !== "all" ? selectedSection : undefined
 
       // Fetch all datasets in parallel for performance
       // Using Promise.all means if one fails, we handle it below without crashing
@@ -204,14 +218,31 @@ export default function AnalyticsContent({
         classResult,
         riskResult,
         classesResult,
+        sectionsResult,
       ] = await Promise.all([
-        getAttendanceStats({ dateFrom, dateTo, classId: classFilter }),
-        getAttendanceTrends({ dateFrom, dateTo, classId: classFilter }),
+        getAttendanceStats({
+          dateFrom,
+          dateTo,
+          classId: classFilter,
+          sectionId: sectionFilter,
+        }),
+        getAttendanceTrends({
+          dateFrom,
+          dateTo,
+          classId: classFilter,
+          sectionId: sectionFilter,
+        }),
         getMethodUsageStats({ dateFrom, dateTo }),
-        getDayWisePatterns({ dateFrom, dateTo, classId: classFilter }),
+        getDayWisePatterns({
+          dateFrom,
+          dateTo,
+          classId: classFilter,
+          sectionId: sectionFilter,
+        }),
         getClassComparisonStats({ dateFrom, dateTo }),
         getStudentsAtRisk({ threshold: 80, dateFrom, dateTo }),
         getClassesForSelection(),
+        getSectionsForSelection(),
       ])
 
       // IMPORTANT: Response formats are inconsistent across actions (legacy code)
@@ -256,12 +287,21 @@ export default function AnalyticsContent({
       ) {
         setClasses(classesResult.data.classes)
       }
+
+      // sectionsResult uses standard ActionResponse<{ sections: ... }> pattern
+      if (
+        sectionsResult &&
+        sectionsResult.success &&
+        sectionsResult.data?.sections
+      ) {
+        setSections(sectionsResult.data.sections)
+      }
     } catch (error) {
       console.error("Error fetching analytics data:", error)
     } finally {
       setLoading(false)
     }
-  }, [dateRange, selectedClass])
+  }, [dateRange, selectedClass, selectedSection])
 
   // Fetch calendar data separately (can change independently of date range)
   const fetchCalendarData = useCallback(async () => {
@@ -449,6 +489,19 @@ export default function AnalyticsContent({
                 placeholder="Select date range"
               />
             </div>
+            <Select value={selectedSection} onValueChange={setSelectedSection}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Select section" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Sections</SelectItem>
+                {sections.map((sec) => (
+                  <SelectItem key={sec.id} value={sec.id}>
+                    {sec.gradeName} - {sec.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Select value={selectedClass} onValueChange={setSelectedClass}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Select class" />

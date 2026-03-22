@@ -2,12 +2,14 @@
 
 ### Overview
 
-The Attendance block provides a comprehensive student attendance management system with daily/period-by-period tracking, QR code and geofence-based marking, excuse and intervention workflows, and analytics. Components are fully built but routes are not yet wired.
+The Attendance block provides a comprehensive student attendance management system with daily/period-by-period tracking, QR code and geofence-based marking, excuse and intervention workflows, and analytics.
+
+**Section-based roster:** Attendance is taken by section (Grade 1-A, Grade 7-B). The student roster comes from `Student.sectionId` — all students enrolled in a section appear in the attendance list. This replaces the previous class-based approach that used the `StudentClass` join table.
 
 ### Capabilities by Role
 
-- **Admin**: Mark attendance for any class, review excuses, manage interventions, view analytics, configure geofence zones, export reports
-- **Teacher**: Mark attendance for assigned classes, use QR code/barcode scanning, view class stats, submit intervention requests
+- **Admin**: Mark attendance for any section, review excuses, manage interventions, view analytics, configure geofence zones, export reports
+- **Teacher**: Mark attendance for homeroom section or assigned sections (via timetable), use QR code/barcode scanning, view section stats, submit intervention requests
 - **Guardian**: View child's attendance, submit excuses with documentation
 - **Student**: View own attendance history
 

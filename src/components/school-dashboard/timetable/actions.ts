@@ -79,12 +79,15 @@ import { ABSENCE_TYPES, SUBSTITUTION_STATUS } from "./constants"
 // ============================================================================
 
 import {
+  generateSectionTimetable,
   generateTimetable as runGenerationAlgorithm,
   type ClassRequirement,
   type GeneratedSlot,
   type GenerationConfig,
   type GenerationResult,
   type RoomAvailability,
+  type SectionRequirement,
+  type SubjectAllocation,
   type TeacherAvailability,
 } from "./generate/algorithm"
 import {
@@ -1041,8 +1044,8 @@ export async function moveTimetableSlot(input: {
     schoolId,
     termId: existingSlot.termId,
     teacherId: existingSlot.teacherId ?? "",
-    classroomId: targetClassroomId,
-    classId: existingSlot.classId,
+    classroomId: targetClassroomId ?? "",
+    classId: existingSlot.classId ?? "",
     dayOfWeek: input.targetDayOfWeek,
     periodId: input.targetPeriodId,
     weekOffset: existingSlot.weekOffset,
@@ -1440,6 +1443,19 @@ export async function getWeeklyTimetable(input: unknown): Promise<{
     select: {
       dayOfWeek: true,
       periodId: true,
+      sectionId: true,
+      subjectId: true,
+      section: {
+        select: {
+          id: true,
+          name: true,
+          letter: true,
+          grade: { select: { name: true } },
+        },
+      },
+      subject: {
+        select: { id: true, name: true, color: true },
+      },
       class: {
         select: {
           id: true,
@@ -1478,7 +1494,9 @@ export async function getWeeklyTimetable(input: unknown): Promise<{
         [row.class?.teacher?.givenName, row.class?.teacher?.surname]
           .filter(Boolean)
           .join(" ")
-      const name = row.class?.subject?.name ?? row.class?.name ?? ""
+      // Prefer section-based subject name, fall back to class-based for backward compat
+      const name =
+        row.subject?.name ?? row.class?.subject?.name ?? row.class?.name ?? ""
       return {
         period: idx + 1,
         subject: name,
@@ -2280,7 +2298,7 @@ export async function getTimetableAnalytics(input: { termId: string }) {
         subjects: new Set(),
       }
       existing.periods++
-      existing.classes.add(slot.classId)
+      if (slot.classId) existing.classes.add(slot.classId)
       if (slot.class?.subject?.name)
         existing.subjects.add(slot.class.subject.name)
       teacherWorkload.set(key, existing)
@@ -2326,7 +2344,7 @@ export async function getTimetableAnalytics(input: { termId: string }) {
       classes: new Set(),
     }
     existing.periods++
-    existing.classes.add(slot.classId)
+    if (slot.classId) existing.classes.add(slot.classId)
     subjectDist.set(subject, existing)
   }
 
@@ -3613,6 +3631,8 @@ export async function generateTimetablePreview(input: {
   unplacedClasses: string[]
   warnings: string[]
   errors: string[]
+  sectionNames: Record<string, string>
+  subjectNames: Record<string, string>
 }> {
   await requireAdminAccess()
 
@@ -3674,50 +3694,54 @@ export async function generateTimetablePreview(input: {
     },
   }
 
-  // Get class requirements (classes to schedule)
-  const classes = await db.class.findMany({
-    where: { schoolId, termId: input.termId },
+  // Get sections with their grade and classroom
+  const sectionsData = await db.section.findMany({
+    where: { schoolId },
     select: {
       id: true,
       name: true,
-      subjectId: true,
       gradeId: true,
-      subject: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-      _count: { select: { studentClasses: true } },
+      classroomId: true,
+      maxCapacity: true,
+      _count: { select: { students: true } },
     },
   })
 
-  // Get weeklyPeriods from SchoolSubjectSelection (bridges catalog subjects to school config)
+  // Get subject selections for each grade (links CatalogSubjects to grades with weeklyPeriods)
   const subjectSelections = await db.schoolSubjectSelection.findMany({
     where: { schoolId, isActive: true },
     select: {
       catalogSubjectId: true,
       gradeId: true,
       weeklyPeriods: true,
-      subject: { select: { name: true } },
+      isRequired: true,
+      subject: { select: { id: true, name: true } },
     },
   })
 
-  // Build lookup: (normalizedSubjectName, gradeId) -> weeklyPeriods
-  const weeklyPeriodsMap = new Map<string, number>()
+  // Build lookup: gradeId -> subject allocations
+  const gradeSubjectsMap = new Map<
+    string,
+    Array<{
+      subjectId: string
+      subjectName: string
+      hoursPerWeek: number
+      isRequired: boolean
+    }>
+  >()
   for (const sel of subjectSelections) {
-    if (sel.weeklyPeriods && sel.subject?.name) {
-      const key = `${sel.subject.name.toLowerCase().trim()}:${sel.gradeId}`
-      weeklyPeriodsMap.set(key, sel.weeklyPeriods)
-      // Also store without grade as fallback
-      const nameKey = sel.subject.name.toLowerCase().trim()
-      if (!weeklyPeriodsMap.has(nameKey)) {
-        weeklyPeriodsMap.set(nameKey, sel.weeklyPeriods)
-      }
-    }
+    if (!sel.subject) continue
+    const list = gradeSubjectsMap.get(sel.gradeId) || []
+    list.push({
+      subjectId: sel.catalogSubjectId,
+      subjectName: sel.subject.name,
+      hoursPerWeek: sel.weeklyPeriods ?? 3,
+      isRequired: sel.isRequired,
+    })
+    gradeSubjectsMap.set(sel.gradeId, list)
   }
 
-  // Get teacher expertise mapping
+  // Get teacher expertise mapping (subjectId -> teacherIds[])
   const teacherExpertise = await db.teacherSubjectExpertise.findMany({
     where: { schoolId },
     select: { teacherId: true, subjectId: true },
@@ -3731,32 +3755,25 @@ export async function generateTimetablePreview(input: {
     subjectTeachers.get(te.subjectId)!.push(te.teacherId)
   }
 
-  const requirements: ClassRequirement[] = classes.map((c) => {
-    const name = c.subject?.name || c.name
-    const normalizedName = name.toLowerCase().trim()
+  // Build SectionRequirement[] for the algorithm
+  const sectionRequirements: SectionRequirement[] = sectionsData.map((s) => {
+    const gradeSubjects = gradeSubjectsMap.get(s.gradeId) || []
 
-    // Look up weeklyPeriods: try (name, gradeId) first, then name-only, fallback to 3
-    let hoursPerWeek = 3
-    if (c.gradeId) {
-      const gradeKey = `${normalizedName}:${c.gradeId}`
-      hoursPerWeek =
-        weeklyPeriodsMap.get(gradeKey) ??
-        weeklyPeriodsMap.get(normalizedName) ??
-        3
-    } else {
-      hoursPerWeek = weeklyPeriodsMap.get(normalizedName) ?? 3
-    }
+    const subjects: SubjectAllocation[] = gradeSubjects.map((gs) => ({
+      subjectId: gs.subjectId,
+      subjectName: gs.subjectName,
+      hoursPerWeek: gs.hoursPerWeek,
+      requiresLab: gs.subjectName.toLowerCase().includes("lab"),
+      preferredTeacherIds: subjectTeachers.get(gs.subjectId) || [],
+    }))
 
     return {
-      classId: c.id,
-      className: c.name,
-      subjectId: c.subjectId || "",
-      name,
-      hoursPerWeek,
-      preferredTeacherIds: subjectTeachers.get(c.subjectId || "") || [],
-      requiresLab: name.toLowerCase().includes("lab"),
-      yearLevelId: "",
-      studentCount: c._count.studentClasses,
+      sectionId: s.id,
+      sectionName: s.name,
+      gradeId: s.gradeId,
+      classroomId: s.classroomId,
+      studentCount: s._count.students,
+      subjects,
     }
   })
 
@@ -3860,13 +3877,18 @@ export async function generateTimetablePreview(input: {
     }
   })
 
-  // Run generation algorithm
-  const result = runGenerationAlgorithm(requirements, teachers, rooms, {
-    schoolId,
-    termId: input.termId,
-    yearId: term.yearId,
-    config: generationConfig,
-  })
+  // Run section-based generation algorithm
+  const result = generateSectionTimetable(
+    sectionRequirements,
+    teachers,
+    rooms,
+    {
+      schoolId,
+      termId: input.termId,
+      yearId: term.yearId,
+      config: generationConfig,
+    }
+  )
 
   await logTimetableAction("generate_preview", {
     entityType: "generation",
@@ -3878,6 +3900,16 @@ export async function generateTimetablePreview(input: {
     },
   })
 
+  // Build name lookup maps from the section requirements for the preview UI
+  const sectionNames: Record<string, string> = {}
+  const subjectNames: Record<string, string> = {}
+  for (const sec of sectionRequirements) {
+    sectionNames[sec.sectionId] = sec.sectionName
+    for (const sub of sec.subjects) {
+      subjectNames[sub.subjectId] = sub.subjectName
+    }
+  }
+
   return {
     success: result.success,
     preview: result.slots,
@@ -3885,6 +3917,8 @@ export async function generateTimetablePreview(input: {
     unplacedClasses: result.unplacedClasses,
     warnings: result.warnings,
     errors: result.errors,
+    sectionNames,
+    subjectNames,
   }
 }
 
@@ -3918,7 +3952,9 @@ export async function applyGeneratedTimetable(input: {
       termId: input.termId,
       dayOfWeek: slot.dayOfWeek,
       periodId: slot.periodId,
-      classId: slot.classId,
+      sectionId: slot.sectionId || undefined,
+      subjectId: slot.subjectId || undefined,
+      classId: slot.classId || undefined, // Empty string → undefined for section-based
       teacherId: slot.teacherId ?? undefined,
       classroomId: slot.classroomId,
       weekOffset: 0,

@@ -50,6 +50,7 @@ import {
   getAttendanceReport,
   getAttendanceStats,
   getClassesForSelection,
+  getSectionsForSelection,
 } from "../actions"
 import { AttendanceReportExportButton } from "./export-button"
 
@@ -103,6 +104,16 @@ export function ReportsContent({
 }: Props) {
   const [records, setRecords] = useState<ReportRecord[]>([])
   const [classes, setClasses] = useState<{ id: string; name: string }[]>([])
+  const [sections, setSections] = useState<
+    {
+      id: string
+      name: string
+      gradeName: string
+      gradeId: string
+      teacher: string | null
+      studentCount: number
+    }[]
+  >([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
 
@@ -116,6 +127,7 @@ export function ReportsContent({
   const [selectedClass, setSelectedClass] = useState<string>(
     initialFilters?.classId || "all"
   )
+  const [selectedSection, setSelectedSection] = useState<string>("all")
   const [selectedStatus, setSelectedStatus] = useState<string>(
     initialFilters?.status || "all"
   )
@@ -140,23 +152,30 @@ export function ReportsContent({
     try {
       setLoading(true)
 
-      const [reportResult, classesResult, statsResult] = await Promise.all([
-        getAttendanceReport({
-          dateFrom: dateRange.from.toISOString(),
-          dateTo: dateRange.to.toISOString(),
-          classId: selectedClass !== "all" ? selectedClass : undefined,
-          status:
-            selectedStatus !== "all" ? [selectedStatus as any] : undefined,
-          limit: pageSize,
-          offset: (page - 1) * pageSize,
-        }),
-        getClassesForSelection(),
-        getAttendanceStats({
-          dateFrom: dateRange.from.toISOString(),
-          dateTo: dateRange.to.toISOString(),
-          classId: selectedClass !== "all" ? selectedClass : undefined,
-        }),
-      ])
+      const sectionFilter =
+        selectedSection !== "all" ? selectedSection : undefined
+
+      const [reportResult, classesResult, sectionsResult, statsResult] =
+        await Promise.all([
+          getAttendanceReport({
+            dateFrom: dateRange.from.toISOString(),
+            dateTo: dateRange.to.toISOString(),
+            classId: selectedClass !== "all" ? selectedClass : undefined,
+            sectionId: sectionFilter,
+            status:
+              selectedStatus !== "all" ? [selectedStatus as any] : undefined,
+            limit: pageSize,
+            offset: (page - 1) * pageSize,
+          }),
+          getClassesForSelection(),
+          getSectionsForSelection(),
+          getAttendanceStats({
+            dateFrom: dateRange.from.toISOString(),
+            dateTo: dateRange.to.toISOString(),
+            classId: selectedClass !== "all" ? selectedClass : undefined,
+            sectionId: sectionFilter,
+          }),
+        ])
 
       // Handle mixed return types
       if (
@@ -171,6 +190,8 @@ export function ReportsContent({
       }
       if (classesResult.success && classesResult.data)
         setClasses(classesResult.data.classes)
+      if (sectionsResult.success && sectionsResult.data)
+        setSections(sectionsResult.data.sections)
       // statsResult returns raw data on success
       if (!("success" in statsResult && !statsResult.success))
         setStats(statsResult as any)
@@ -179,7 +200,7 @@ export function ReportsContent({
     } finally {
       setLoading(false)
     }
-  }, [dateRange, selectedClass, selectedStatus, page])
+  }, [dateRange, selectedClass, selectedSection, selectedStatus, page])
 
   useEffect(() => {
     fetchData()
@@ -339,6 +360,25 @@ export function ReportsContent({
                 placeholder="Select date range"
               />
             </div>
+            <Select
+              value={selectedSection}
+              onValueChange={(v) => {
+                setSelectedSection(v)
+                setPage(1)
+              }}
+            >
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Select section" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Sections</SelectItem>
+                {sections.map((sec) => (
+                  <SelectItem key={sec.id} value={sec.id}>
+                    {sec.gradeName} - {sec.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Select
               value={selectedClass}
               onValueChange={(v) => {

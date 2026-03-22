@@ -44,6 +44,8 @@ model Section {
   homeroomTeacher Teacher?       @relation("HomeroomTeacher", fields: [homeroomTeacherId], references: [id], onDelete: SetNull)
   classroom       Classroom?     @relation(fields: [classroomId], references: [id], onDelete: SetNull)
   students        Student[]
+  timetables      Timetable[]
+  attendances     Attendance[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

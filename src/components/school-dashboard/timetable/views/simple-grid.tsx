@@ -26,6 +26,8 @@ interface Slot {
   roomId?: string
   teacherId?: string
   classId?: string
+  sectionName?: string
+  subjectName?: string
 }
 
 interface Period {
@@ -101,22 +103,33 @@ export default function SimpleGrid({
 
   // Get display text based on view mode
   const getSlotDisplay = (slot: Slot) => {
+    // Prefer subjectName (denormalized from section-based data) over subject
+    const subjectLabel = slot.subjectName || slot.subject || ""
+    const sectionLabel = slot.sectionName
+
     switch (viewMode) {
       case "teacher":
+        // Teacher view: show subject (+ section) as primary, room as secondary
         return {
-          primary: slot.className || slot.subject || "",
+          primary: sectionLabel
+            ? `${subjectLabel} - ${sectionLabel}`
+            : slot.className || subjectLabel,
           secondary: slot.room || "",
         }
       case "room":
         return {
-          primary: slot.subject || slot.className || "",
-          secondary: slot.teacher || "",
+          primary: subjectLabel || slot.className || "",
+          secondary: sectionLabel
+            ? `${slot.teacher || ""} ${slot.teacher && sectionLabel ? "·" : ""} ${sectionLabel}`.trim()
+            : slot.teacher || "",
         }
       case "class":
       default:
         return {
-          primary: slot.subject || "",
-          secondary: slot.teacher || "",
+          primary: subjectLabel,
+          secondary: sectionLabel
+            ? `${slot.teacher || ""} ${slot.teacher && sectionLabel ? "·" : ""} ${sectionLabel}`.trim()
+            : slot.teacher || "",
         }
     }
   }

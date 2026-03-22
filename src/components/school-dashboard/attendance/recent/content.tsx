@@ -40,6 +40,7 @@ import {
   getAttendanceStats,
   getClassesForSelection,
   getRecentAttendance,
+  getSectionsForSelection,
 } from "../actions"
 
 interface Props {
@@ -74,6 +75,15 @@ interface ClassOption {
   id: string
   name: string
   teacher: string | null
+}
+
+interface SectionOption {
+  id: string
+  name: string
+  gradeName: string
+  gradeId: string
+  teacher: string | null
+  studentCount: number
 }
 
 // Safe date formatting helpers
@@ -174,20 +184,33 @@ export function RecentActivityContent({
   const [records, setRecords] = React.useState<AttendanceRecord[]>([])
   const [stats, setStats] = React.useState<Stats | null>(null)
   const [classes, setClasses] = React.useState<ClassOption[]>([])
+  const [sections, setSections] = React.useState<SectionOption[]>([])
   const [filter, setFilter] = React.useState<string>("all")
   const [selectedClass, setSelectedClass] = React.useState<string>("all")
+  const [selectedSection, setSelectedSection] = React.useState<string>("all")
   const [loading, setLoading] = React.useState(true)
   const [refreshing, setRefreshing] = React.useState(false)
 
   const fetchData = React.useCallback(async () => {
     try {
       const classFilter = selectedClass !== "all" ? selectedClass : undefined
+      const sectionFilter =
+        selectedSection !== "all" ? selectedSection : undefined
 
-      const [recordsResult, statsResult, classesResult] = await Promise.all([
-        getRecentAttendance({ limit: 100, classId: classFilter }),
-        getAttendanceStats({ classId: classFilter }),
-        getClassesForSelection(),
-      ])
+      const [recordsResult, statsResult, classesResult, sectionsResult] =
+        await Promise.all([
+          getRecentAttendance({
+            limit: 100,
+            classId: classFilter,
+            sectionId: sectionFilter,
+          }),
+          getAttendanceStats({
+            classId: classFilter,
+            sectionId: sectionFilter,
+          }),
+          getClassesForSelection(),
+          getSectionsForSelection(),
+        ])
 
       // Map the results to match our interface types (mixed return types)
       if (
@@ -207,12 +230,14 @@ export function RecentActivityContent({
         setStats(statsResult as any)
       if (classesResult.success && classesResult.data)
         setClasses(classesResult.data.classes)
+      if (sectionsResult.success && sectionsResult.data)
+        setSections(sectionsResult.data.sections)
     } catch (error) {
       console.error("Error fetching recent attendance:", error)
     } finally {
       setLoading(false)
     }
-  }, [selectedClass])
+  }, [selectedClass, selectedSection])
 
   React.useEffect(() => {
     fetchData()
@@ -360,6 +385,22 @@ export function RecentActivityContent({
               </CardDescription>
             </div>
             <div className="flex flex-wrap items-center gap-2">
+              <Select
+                value={selectedSection}
+                onValueChange={setSelectedSection}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select section" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Sections</SelectItem>
+                  {sections.map((sec) => (
+                    <SelectItem key={sec.id} value={sec.id}>
+                      {sec.gradeName} - {sec.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Select value={selectedClass} onValueChange={setSelectedClass}>
                 <SelectTrigger className="w-[150px]">
                   <SelectValue placeholder="Select class" />

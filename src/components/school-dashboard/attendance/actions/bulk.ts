@@ -248,6 +248,7 @@ export async function getAttendanceReport(
 
   // Apply optional filters
   if (parsed.classId) where.classId = parsed.classId
+  if (parsed.sectionId) where.sectionId = parsed.sectionId
   if (parsed.studentId) where.studentId = parsed.studentId
 
   // Status filter (handle both single and array)
@@ -298,7 +299,7 @@ export async function getAttendanceReport(
       studentId: r.studentId,
       studentName: `${r.student.givenName} ${r.student.surname}`,
       classId: r.classId,
-      className: r.class.name,
+      className: r.class?.name ?? "",
       status: r.status,
       method: r.method,
       checkInTime: r.checkInTime?.toISOString(),
@@ -404,7 +405,7 @@ export async function getAttendanceReportCsv(input: {
         r.studentId,
         `"${r.student.givenName} ${r.student.surname}"`,
         r.classId,
-        `"${r.class.name}"`,
+        `"${r.class?.name ?? ""}"`,
         String(r.status),
         String(r.method),
         r.checkInTime?.toISOString() || "",
@@ -462,7 +463,9 @@ export async function getRecentBulkUploads(limit = 5): Promise<{
   }
 
   // Get class names for all uploaded classes
-  const classIds = [...new Set(recentUploads.map((u) => u.classId))]
+  const classIds = [...new Set(recentUploads.map((u) => u.classId))].filter(
+    (id): id is string => id !== null
+  )
   const classes = await db.class.findMany({
     where: { id: { in: classIds }, schoolId },
     select: { id: true, name: true },
@@ -484,8 +487,10 @@ export async function getRecentBulkUploads(limit = 5): Promise<{
 
       return {
         date: upload.date,
-        classId: upload.classId,
-        className: classMap.get(upload.classId) || "Unknown Class",
+        classId: upload.classId ?? "",
+        className:
+          (upload.classId ? classMap.get(upload.classId) : null) ||
+          "Unknown Class",
         total: upload._count._all,
         successful: successCount,
         failed: upload._count._all - successCount,

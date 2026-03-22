@@ -322,8 +322,9 @@ export default function TeacherView({
                     currentClassInfo.item.className}
                 </p>
                 <p className="text-muted-foreground text-sm">
-                  {currentClassInfo.item.className} •{" "}
-                  {currentClassInfo.item.room}
+                  {currentClassInfo.item.sectionName
+                    ? `${currentClassInfo.item.sectionName} · ${currentClassInfo.item.room || ""}`
+                    : `${currentClassInfo.item.className || ""} · ${currentClassInfo.item.room || ""}`}
                 </p>
               </div>
               <div className="text-end">
@@ -429,11 +430,13 @@ export default function TeacherView({
                             item.className ||
                             (d?.freePeriod ?? "Free Period")}
                       </p>
-                      {!item.isBreak && item.className && (
-                        <p className="text-muted-foreground text-sm">
-                          {item.className} {item.room && `• ${item.room}`}
-                        </p>
-                      )}
+                      {!item.isBreak &&
+                        (item.className || item.sectionName) && (
+                          <p className="text-muted-foreground text-sm">
+                            {item.sectionName || item.className}{" "}
+                            {item.room && `· ${item.room}`}
+                          </p>
+                        )}
                     </div>
                     {item.isBreak && (
                       <Badge variant="secondary">{d?.break ?? "Break"}</Badge>

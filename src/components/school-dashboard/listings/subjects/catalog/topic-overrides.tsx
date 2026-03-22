@@ -38,11 +38,20 @@ import { uploadLessonVideo } from "@/components/stream/admin/courses/edit/video-
 
 import { toggleContentOverride } from "./actions"
 
+interface LessonVideo {
+  id: string
+  title: string
+  instructorName: string
+  source: "own-school" | "featured" | "other-school"
+  isHidden: boolean
+}
+
 interface Lesson {
   id: string
   name: string
   isHidden: boolean
   videoCount?: number
+  videos?: LessonVideo[]
 }
 
 interface Chapter {
@@ -92,6 +101,15 @@ export function TopicOverrides({ chapters, lang }: Props) {
     startTransition(async () => {
       await toggleContentOverride({
         catalogLessonId: lessonId,
+        isHidden: !currentlyHidden,
+      })
+    })
+  }
+
+  function handleToggleVideo(videoId: string, currentlyHidden: boolean) {
+    startTransition(async () => {
+      await toggleContentOverride({
+        lessonVideoId: videoId,
         isHidden: !currentlyHidden,
       })
     })
@@ -157,6 +175,7 @@ export function TopicOverrides({ chapters, lang }: Props) {
             t={t}
             onToggleChapter={handleToggleChapter}
             onToggleLesson={handleToggleLesson}
+            onToggleVideo={handleToggleVideo}
             onUploadVideo={handleOpenVideoUpload}
             isPending={isPending}
           />
@@ -216,6 +235,7 @@ function ChapterRow({
   t,
   onToggleChapter,
   onToggleLesson,
+  onToggleVideo,
   onUploadVideo,
   isPending,
 }: {
@@ -223,6 +243,7 @@ function ChapterRow({
   t: Record<string, string>
   onToggleChapter: (id: string, hidden: boolean) => void
   onToggleLesson: (id: string, hidden: boolean) => void
+  onToggleVideo: (videoId: string, hidden: boolean) => void
   onUploadVideo: (lessonId: string, lessonName: string) => void
   isPending: boolean
 }) {
@@ -271,49 +292,97 @@ function ChapterRow({
       <CollapsibleContent>
         <div className="ms-6 space-y-0.5 border-s py-1 ps-4">
           {chapter.lessons.map((lesson) => (
-            <div
-              key={lesson.id}
-              className="group flex items-center gap-2 py-1 text-sm"
-            >
-              <BookOpen className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
-              <span
-                className={cn(
-                  "text-muted-foreground flex-1",
-                  lesson.isHidden && "line-through opacity-50"
-                )}
-              >
-                {lesson.name}
-              </span>
-              {(lesson.videoCount ?? 0) > 0 && (
-                <Badge variant="outline" className="text-xs">
-                  {lesson.videoCount} video{lesson.videoCount !== 1 ? "s" : ""}
-                </Badge>
-              )}
-              <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 w-6 p-0"
-                  disabled={isPending}
-                  onClick={() => onUploadVideo(lesson.id, lesson.name)}
-                  title="Upload video"
-                >
-                  <Video className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 w-6 p-0"
-                  disabled={isPending}
-                  onClick={() => onToggleLesson(lesson.id, lesson.isHidden)}
-                >
-                  {lesson.isHidden ? (
-                    <Eye className="h-3.5 w-3.5" />
-                  ) : (
-                    <EyeOff className="h-3.5 w-3.5" />
+            <div key={lesson.id}>
+              <div className="group flex items-center gap-2 py-1 text-sm">
+                <BookOpen className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
+                <span
+                  className={cn(
+                    "text-muted-foreground flex-1",
+                    lesson.isHidden && "line-through opacity-50"
                   )}
-                </Button>
+                >
+                  {lesson.name}
+                </span>
+                {(lesson.videoCount ?? 0) > 0 && (
+                  <Badge variant="outline" className="text-xs">
+                    {lesson.videoCount} video
+                    {lesson.videoCount !== 1 ? "s" : ""}
+                  </Badge>
+                )}
+                <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0"
+                    disabled={isPending}
+                    onClick={() => onUploadVideo(lesson.id, lesson.name)}
+                    title="Upload video"
+                  >
+                    <Video className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0"
+                    disabled={isPending}
+                    onClick={() => onToggleLesson(lesson.id, lesson.isHidden)}
+                  >
+                    {lesson.isHidden ? (
+                      <Eye className="h-3.5 w-3.5" />
+                    ) : (
+                      <EyeOff className="h-3.5 w-3.5" />
+                    )}
+                  </Button>
+                </div>
               </div>
+              {/* Per-video hide/show */}
+              {lesson.videos && lesson.videos.length > 0 && (
+                <div className="ms-8 space-y-0.5 border-s py-0.5 ps-3">
+                  {lesson.videos.map((video) => (
+                    <div
+                      key={video.id}
+                      className="group/video flex items-center gap-2 py-0.5 text-xs"
+                    >
+                      <Video className="text-muted-foreground h-3 w-3 shrink-0" />
+                      <span
+                        className={cn(
+                          "text-muted-foreground flex-1",
+                          video.isHidden && "line-through opacity-50"
+                        )}
+                      >
+                        {video.title}
+                      </span>
+                      <Badge
+                        variant="outline"
+                        className="px-1 py-0 text-[10px]"
+                      >
+                        {video.instructorName}
+                      </Badge>
+                      {video.isHidden && (
+                        <Badge
+                          variant="secondary"
+                          className="px-1 py-0 text-[10px]"
+                        >
+                          {t.hidden}
+                        </Badge>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-5 w-5 p-0 opacity-0 group-hover/video:opacity-100"
+                        disabled={isPending}
+                        onClick={() => onToggleVideo(video.id, video.isHidden)}
+                      >
+                        {video.isHidden ? (
+                          <Eye className="h-3 w-3" />
+                        ) : (
+                          <EyeOff className="h-3 w-3" />
+                        )}
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
           {chapter.lessons.length === 0 && (

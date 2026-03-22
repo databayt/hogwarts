@@ -8,7 +8,10 @@ export interface TimetableSlot {
   dayOfWeek: number // 0 = Sun ... 6 = Sat
   periodId: string
   classId: string
+  sectionId?: string
+  sectionName?: string
   subjectId?: string
+  subjectName?: string
   teacherId?: string
   classroomId?: string
   weekOffset: number // 0 current, 1 next

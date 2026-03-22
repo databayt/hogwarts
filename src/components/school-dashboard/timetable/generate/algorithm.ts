@@ -2,20 +2,16 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 /**
- * AI-Powered Timetable Generation Algorithm
+ * Section-Based Timetable Generation Algorithm
  *
- * Implements a constraint-based scheduler with three phases:
- * 1. Greedy Assignment - Fast initial slot placement
- * 2. Constraint Satisfaction - Resolve conflicts and enforce rules
+ * Schedules by section (Grade 1-A, Grade 7-B) — each section gets a complete
+ * weekly schedule with all its subjects distributed across periods.
+ *
+ * Three phases:
+ * 1. Greedy Assignment - Fill each section's week with subjects
+ * 2. Constraint Satisfaction - Resolve teacher/room conflicts
  * 3. Optimization - Balance workload and improve quality
- *
- * Benchmarked against industry leaders:
- * - aSc Timetables: Evaluates 5M+ combinations using genetic algorithm
- * - PowerSchool: Serves 60M+ students with enterprise scaling
- * - Classter: AI-driven automation with predictive analytics
  */
-
-import type { Prisma } from "@prisma/client"
 
 // ============================================================================
 // Types
@@ -36,33 +32,56 @@ export interface GenerationConfig {
 }
 
 export interface ConstraintConfig {
-  enforceTeacherExpertise: boolean // Teacher must have subject expertise
-  enforceRoomCapacity: boolean // Class size <= room capacity
-  maxTeacherPeriodsPerDay: number // Default 6
-  maxTeacherPeriodsPerWeek: number // Default 25
-  maxConsecutivePeriods: number // Default 3
-  requireLunchBreak: boolean // Enforce lunch period
-  preventBackToBack: boolean // Different rooms consecutive periods
+  enforceTeacherExpertise: boolean
+  enforceRoomCapacity: boolean
+  maxTeacherPeriodsPerDay: number
+  maxTeacherPeriodsPerWeek: number
+  maxConsecutivePeriods: number
+  requireLunchBreak: boolean
+  preventBackToBack: boolean
 }
 
 export interface PreferenceConfig {
-  balanceSubjectDistribution: boolean // Spread subjects across week
-  preferMorningForCore: boolean // Core subjects in morning periods
-  avoidLastPeriodForLab: boolean // Lab activities not at end of day
-  groupSameSubjectDays: boolean // Same subject on alternating days
+  balanceSubjectDistribution: boolean
+  preferMorningForCore: boolean
+  avoidLastPeriodForLab: boolean
+  groupSameSubjectDays: boolean
 }
+
+// --- Section-based types ---
+
+export interface SectionRequirement {
+  sectionId: string
+  sectionName: string // "Grade 1-A"
+  gradeId: string
+  classroomId: string | null // Homeroom classroom
+  studentCount: number
+  subjects: SubjectAllocation[]
+}
+
+export interface SubjectAllocation {
+  subjectId: string
+  subjectName: string
+  hoursPerWeek: number
+  requiresLab: boolean
+  preferredTeacherIds: string[] // Teachers qualified for this subject
+}
+
+// --- Legacy class-based types (kept for backward compat) ---
 
 export interface ClassRequirement {
   classId: string
   className: string
   subjectId: string
   name: string
-  hoursPerWeek: number // Required periods per week
-  preferredTeacherIds: string[] // Teachers qualified for this subject
+  hoursPerWeek: number
+  preferredTeacherIds: string[]
   requiresLab: boolean
   yearLevelId: string
   studentCount: number
 }
+
+// --- Shared types ---
 
 export interface TeacherAvailability {
   teacherId: string
@@ -89,18 +108,20 @@ export interface RoomAvailability {
 export interface GeneratedSlot {
   dayOfWeek: number
   periodId: string
-  classId: string
-  teacherId: string | null // null = unassigned (no qualified teacher available)
+  sectionId: string // Section being scheduled
+  subjectId: string // CatalogSubject taught
+  classId: string // Legacy compat — empty for section-based
+  teacherId: string | null // null = unassigned
   classroomId: string
-  score: number // Quality score (0-100)
-  violations: string[] // Soft constraint violations
+  score: number // 0-100
+  violations: string[]
 }
 
 export interface GenerationResult {
   success: boolean
   slots: GeneratedSlot[]
   stats: GenerationStats
-  unplacedClasses: string[] // Class IDs that couldn't be scheduled
+  unplacedClasses: string[] // Section IDs with incomplete schedules
   warnings: string[]
   errors: string[]
 }
@@ -109,9 +130,9 @@ export interface GenerationStats {
   totalSlots: number
   placedSlots: number
   conflictsResolved: number
-  optimizationScore: number // 0-100
-  teacherWorkloadBalance: number // 0-100 (100 = perfectly balanced)
-  roomUtilization: number // 0-100
+  optimizationScore: number
+  teacherWorkloadBalance: number
+  roomUtilization: number
   generationTimeMs: number
   iterations: number
 }
@@ -121,19 +142,19 @@ export interface GenerationStats {
 // ============================================================================
 
 interface AlgorithmState {
-  slots: Map<string, GeneratedSlot> // key: "day:period:class"
+  slots: Map<string, GeneratedSlot> // key: "day:period:section"
   teacherSchedule: Map<string, Map<string, string[]>> // teacherId -> day -> [periodIds]
   roomSchedule: Map<string, Map<string, string[]>> // roomId -> day -> [periodIds]
-  classSchedule: Map<string, Map<string, string[]>> // classId -> day -> [periodIds]
-  subjectCounts: Map<string, Map<string, number>> // classId -> subjectId -> count
+  sectionSchedule: Map<string, Map<string, string[]>> // sectionId -> day -> [periodIds]
+  subjectCounts: Map<string, Map<string, number>> // sectionId -> subjectId -> placed count
 }
 
 // ============================================================================
-// Main Generation Function
+// Main Generation Function (Section-Based)
 // ============================================================================
 
-export function generateTimetable(
-  requirements: ClassRequirement[],
+export function generateSectionTimetable(
+  sections: SectionRequirement[],
   teachers: TeacherAvailability[],
   rooms: RoomAvailability[],
   input: GenerationInput
@@ -141,48 +162,68 @@ export function generateTimetable(
   const startTime = performance.now()
   const { config } = input
 
-  // Initialize algorithm state
   const state: AlgorithmState = {
     slots: new Map(),
     teacherSchedule: new Map(),
     roomSchedule: new Map(),
-    classSchedule: new Map(),
+    sectionSchedule: new Map(),
     subjectCounts: new Map(),
   }
 
   const warnings: string[] = []
   const errors: string[] = []
-  const unplacedClasses: string[] = []
+  const unplacedSections: string[] = []
 
-  // Build lookup maps for efficiency
   const teacherMap = new Map(teachers.map((t) => [t.teacherId, t]))
   const roomMap = new Map(rooms.map((r) => [r.roomId, r]))
 
   // =========================================================================
-  // Phase 1: Greedy Assignment
+  // Phase 1: Greedy Assignment — fill each section's week
   // =========================================================================
 
-  // Sort requirements by constraint difficulty (most constrained first)
-  const sortedRequirements = [...requirements].sort((a, b) => {
-    // Prioritize: fewer teachers > requires lab > more hours
-    const aScore =
-      a.preferredTeacherIds.length * 10 +
-      (a.requiresLab ? 100 : 0) +
-      (10 - a.hoursPerWeek)
-    const bScore =
-      b.preferredTeacherIds.length * 10 +
-      (b.requiresLab ? 100 : 0) +
-      (10 - b.hoursPerWeek)
-    return aScore - bScore // Lower score = more constrained = first
-  })
+  // Sort sections: larger sections first (more constrained)
+  const sortedSections = [...sections].sort(
+    (a, b) => b.studentCount - a.studentCount
+  )
 
-  for (const req of sortedRequirements) {
-    const placed = placeClassGreedy(req, state, config, teacherMap, roomMap)
-    if (placed < req.hoursPerWeek) {
-      unplacedClasses.push(req.classId)
-      warnings.push(
-        `Could only place ${placed}/${req.hoursPerWeek} periods for ${req.className}`
+  for (const section of sortedSections) {
+    // Sort subjects: most constrained first (fewer teachers, more hours, lab)
+    const sortedSubjects = [...section.subjects].sort((a, b) => {
+      const aScore =
+        a.preferredTeacherIds.length * 10 +
+        (a.requiresLab ? 100 : 0) +
+        (10 - a.hoursPerWeek)
+      const bScore =
+        b.preferredTeacherIds.length * 10 +
+        (b.requiresLab ? 100 : 0) +
+        (10 - b.hoursPerWeek)
+      return aScore - bScore
+    })
+
+    let totalNeeded = 0
+    let totalPlaced = 0
+
+    for (const subject of sortedSubjects) {
+      totalNeeded += subject.hoursPerWeek
+      const placed = placeSectionSubject(
+        section,
+        subject,
+        state,
+        config,
+        teacherMap,
+        roomMap
       )
+      totalPlaced += placed
+
+      if (placed < subject.hoursPerWeek) {
+        warnings.push(
+          `${section.sectionName}: placed ${placed}/${subject.hoursPerWeek} for ${subject.subjectName}`
+        )
+      }
+    }
+
+    if (totalPlaced < totalNeeded) {
+      unplacedSections.push(section.sectionId)
     }
   }
 
@@ -204,11 +245,9 @@ export function generateTimetable(
         config,
         teacherMap,
         roomMap,
-        requirements
+        sections
       )
-      if (resolved) {
-        conflictsResolved++
-      }
+      if (resolved) conflictsResolved++
     }
   }
 
@@ -221,18 +260,21 @@ export function generateTimetable(
     config,
     teacherMap,
     roomMap,
-    requirements
+    sections
   )
 
-  // Build final result
   const slots = Array.from(state.slots.values())
   const endTime = performance.now()
 
   return {
-    success: unplacedClasses.length === 0 && errors.length === 0,
+    success: unplacedSections.length === 0 && errors.length === 0,
     slots,
     stats: {
-      totalSlots: requirements.reduce((sum, r) => sum + r.hoursPerWeek, 0),
+      totalSlots: sections.reduce(
+        (sum, s) =>
+          sum + s.subjects.reduce((ss, sub) => ss + sub.hoursPerWeek, 0),
+        0
+      ),
       placedSlots: slots.length,
       conflictsResolved,
       optimizationScore: optimizationResult.score,
@@ -241,18 +283,47 @@ export function generateTimetable(
       generationTimeMs: endTime - startTime,
       iterations: maxIterations,
     },
-    unplacedClasses,
+    unplacedClasses: unplacedSections,
     warnings,
     errors,
   }
 }
 
+// Legacy wrapper — converts ClassRequirement[] to SectionRequirement[] and calls section-based
+export function generateTimetable(
+  requirements: ClassRequirement[],
+  teachers: TeacherAvailability[],
+  rooms: RoomAvailability[],
+  input: GenerationInput
+): GenerationResult {
+  // Group by classId → create one pseudo-section per class
+  const sections: SectionRequirement[] = requirements.map((req) => ({
+    sectionId: req.classId, // Use classId as sectionId for legacy
+    sectionName: req.className,
+    gradeId: req.yearLevelId,
+    classroomId: null,
+    studentCount: req.studentCount,
+    subjects: [
+      {
+        subjectId: req.subjectId,
+        subjectName: req.name,
+        hoursPerWeek: req.hoursPerWeek,
+        requiresLab: req.requiresLab,
+        preferredTeacherIds: req.preferredTeacherIds,
+      },
+    ],
+  }))
+
+  return generateSectionTimetable(sections, teachers, rooms, input)
+}
+
 // ============================================================================
-// Phase 1: Greedy Assignment
+// Phase 1: Greedy Placement (Section + Subject)
 // ============================================================================
 
-function placeClassGreedy(
-  req: ClassRequirement,
+function placeSectionSubject(
+  section: SectionRequirement,
+  subject: SubjectAllocation,
   state: AlgorithmState,
   config: GenerationConfig,
   teacherMap: Map<string, TeacherAvailability>,
@@ -260,43 +331,19 @@ function placeClassGreedy(
 ): number {
   let placedCount = 0
 
-  // Get available teachers for this subject (may be empty)
-  const qualifiedTeachers = req.preferredTeacherIds
+  // Get qualified teachers
+  const qualifiedTeachers = subject.preferredTeacherIds
     .map((id) => teacherMap.get(id))
     .filter((t): t is TeacherAvailability => t !== undefined)
 
-  // Get suitable rooms
-  const suitableRooms = Array.from(roomMap.values()).filter((room) => {
-    if (
-      config.constraints.enforceRoomCapacity &&
-      room.capacity < req.studentCount
-    ) {
-      return false
-    }
-    if (req.requiresLab && room.roomType !== "lab") {
-      return false
-    }
-    // Enforce allowedSubjectTypes: if set, the class's subject must match
-    if (room.allowedSubjectTypes.length > 0) {
-      const subjectLower = req.name.toLowerCase()
-      const isAllowed = room.allowedSubjectTypes.some(
-        (t) =>
-          subjectLower.includes(t.toLowerCase()) ||
-          t.toLowerCase().includes(subjectLower)
-      )
-      if (!isAllowed) return false
-    }
-    return true
-  })
+  // Find suitable rooms: lab for lab subjects, homeroom for regular
+  const suitableRooms = getSuitableRooms(section, subject, config, roomMap)
 
-  if (suitableRooms.length === 0) {
-    return 0 // No suitable rooms
-  }
+  if (suitableRooms.length === 0) return 0
 
-  // Try to place required hours
-  const targetHours = req.hoursPerWeek
+  const targetHours = subject.hoursPerWeek
   const daysToUse = selectDaysForSubject(
-    req,
+    subject,
     config.workingDays,
     targetHours,
     config.preferences
@@ -308,10 +355,10 @@ function placeClassGreedy(
     for (const periodId of config.periodsPerDay) {
       if (placedCount >= targetHours) break
 
-      // Check class not already scheduled this period
-      if (isClassScheduled(req.classId, day, periodId, state)) continue
+      // Section can't be double-booked
+      if (isSectionScheduled(section.sectionId, day, periodId, state)) continue
 
-      // Try to find a qualified teacher for this slot
+      // Try to find a teacher
       let assignedTeacher: TeacherAvailability | null = null
       for (const teacher of qualifiedTeachers) {
         if (!isTeacherAvailable(teacher, day, periodId, state, config)) continue
@@ -327,18 +374,19 @@ function placeClassGreedy(
         break
       }
 
-      if (!assignedRoom) continue // No room available this slot
+      if (!assignedRoom) continue
 
-      // Place the slot — teacher may be null (unassigned)
       const slot: GeneratedSlot = {
         dayOfWeek: day,
         periodId,
-        classId: req.classId,
+        sectionId: section.sectionId,
+        subjectId: subject.subjectId,
+        classId: "", // Section-based, no legacy classId
         teacherId: assignedTeacher?.teacherId ?? null,
         classroomId: assignedRoom.roomId,
         score: assignedTeacher
-          ? calculateSlotScore(day, periodId, req, assignedTeacher, config)
-          : 30, // Lower score for unassigned slots
+          ? calculateSlotScore(day, periodId, subject, assignedTeacher, config)
+          : 30,
         violations: assignedTeacher ? [] : ["unassigned_teacher"],
       }
 
@@ -350,8 +398,60 @@ function placeClassGreedy(
   return placedCount
 }
 
+function getSuitableRooms(
+  section: SectionRequirement,
+  subject: SubjectAllocation,
+  config: GenerationConfig,
+  roomMap: Map<string, RoomAvailability>
+): RoomAvailability[] {
+  const rooms: RoomAvailability[] = []
+
+  // For lab subjects, find lab rooms
+  if (subject.requiresLab) {
+    for (const room of roomMap.values()) {
+      if (room.roomType !== "lab") continue
+      if (
+        config.constraints.enforceRoomCapacity &&
+        room.capacity < section.studentCount
+      )
+        continue
+      rooms.push(room)
+    }
+    return rooms
+  }
+
+  // For regular subjects, prefer the section's homeroom first
+  if (section.classroomId) {
+    const homeroom = roomMap.get(section.classroomId)
+    if (homeroom) rooms.push(homeroom)
+  }
+
+  // Add other regular rooms as fallback
+  for (const room of roomMap.values()) {
+    if (room.roomId === section.classroomId) continue // Already added
+    if (room.roomType === "lab") continue // Labs only for lab subjects
+    if (
+      config.constraints.enforceRoomCapacity &&
+      room.capacity < section.studentCount
+    )
+      continue
+    if (room.allowedSubjectTypes.length > 0) {
+      const subjectLower = subject.subjectName.toLowerCase()
+      const isAllowed = room.allowedSubjectTypes.some(
+        (t) =>
+          subjectLower.includes(t.toLowerCase()) ||
+          t.toLowerCase().includes(subjectLower)
+      )
+      if (!isAllowed) continue
+    }
+    rooms.push(room)
+  }
+
+  return rooms
+}
+
 function selectDaysForSubject(
-  req: ClassRequirement,
+  subject: SubjectAllocation,
   workingDays: number[],
   hoursNeeded: number,
   preferences: PreferenceConfig
@@ -359,7 +459,6 @@ function selectDaysForSubject(
   const days: number[] = []
 
   if (preferences.groupSameSubjectDays && hoursNeeded >= 2) {
-    // Alternate days (e.g., Sun/Tue/Thu or Mon/Wed)
     const alternating = workingDays.filter((_, i) => i % 2 === 0)
     days.push(...alternating)
     if (days.length < hoursNeeded) {
@@ -367,11 +466,10 @@ function selectDaysForSubject(
       days.push(...remaining)
     }
   } else {
-    // Distribute across all days
     days.push(...workingDays)
   }
 
-  return days.slice(0, Math.ceil(hoursNeeded * 1.5)) // Extra days for flexibility
+  return days.slice(0, Math.ceil(hoursNeeded * 1.5))
 }
 
 // ============================================================================
@@ -382,6 +480,7 @@ interface Conflict {
   type:
     | "teacher_double_book"
     | "room_double_book"
+    | "section_double_book"
     | "workload_exceeded"
     | "consecutive"
   day: number
@@ -397,7 +496,7 @@ function detectConflicts(
 ): Conflict[] {
   const conflicts: Conflict[] = []
 
-  // Check teacher double-booking
+  // Teacher double-booking
   for (const [teacherId, schedule] of state.teacherSchedule) {
     for (const [dayStr, periods] of schedule) {
       const day = parseInt(dayStr)
@@ -427,7 +526,7 @@ function detectConflicts(
     }
   }
 
-  // Check room double-booking
+  // Room double-booking
   for (const [roomId, schedule] of state.roomSchedule) {
     for (const [dayStr, periods] of schedule) {
       const day = parseInt(dayStr)
@@ -457,7 +556,7 @@ function detectConflicts(
     }
   }
 
-  // Check teacher workload
+  // Teacher workload
   for (const [teacherId, schedule] of state.teacherSchedule) {
     const teacher = teacherMap.get(teacherId)
     if (!teacher) continue
@@ -498,16 +597,11 @@ function resolveConflict(
   config: GenerationConfig,
   teacherMap: Map<string, TeacherAvailability>,
   roomMap: Map<string, RoomAvailability>,
-  requirements: ClassRequirement[]
+  sections: SectionRequirement[]
 ): boolean {
   if (conflict.affectedSlots.length < 2) return false
 
-  // Try to move one of the conflicting slots
-  const slotToMove = conflict.affectedSlots[1] // Keep first, move second
-
-  // Find alternative time
-  const req = requirements.find((r) => r.classId === slotToMove.classId)
-  if (!req) return false
+  const slotToMove = conflict.affectedSlots[1]
 
   const teacher = slotToMove.teacherId
     ? teacherMap.get(slotToMove.teacherId)
@@ -515,30 +609,28 @@ function resolveConflict(
   const room = roomMap.get(slotToMove.classroomId)
   if (!room) return false
 
-  // Remove the slot
   removeSlot(slotToMove, state)
 
-  // Try to find new placement
   for (const day of config.workingDays) {
     for (const periodId of config.periodsPerDay) {
-      if (
-        (!teacher ||
-          isTeacherAvailable(teacher, day, periodId, state, config)) &&
-        isRoomAvailable(room, day, periodId, state) &&
-        !isClassScheduled(slotToMove.classId, day, periodId, state)
-      ) {
-        const newSlot: GeneratedSlot = {
-          ...slotToMove,
-          dayOfWeek: day,
-          periodId,
-        }
-        addSlot(newSlot, state)
-        return true
+      if (isSectionScheduled(slotToMove.sectionId, day, periodId, state))
+        continue
+      if (teacher && !isTeacherAvailable(teacher, day, periodId, state, config))
+        continue
+      if (!teacher && slotToMove.teacherId) continue // Had a teacher, keep looking
+      if (!isRoomAvailable(room, day, periodId, state)) continue
+
+      const newSlot: GeneratedSlot = {
+        ...slotToMove,
+        dayOfWeek: day,
+        periodId,
       }
+      addSlot(newSlot, state)
+      return true
     }
   }
 
-  // Could not resolve, add back original (creates known conflict)
+  // Could not resolve — add back
   addSlot(slotToMove, state)
   return false
 }
@@ -557,14 +649,13 @@ function optimizeSchedule(
   config: GenerationConfig,
   teacherMap: Map<string, TeacherAvailability>,
   roomMap: Map<string, RoomAvailability>,
-  requirements: ClassRequirement[]
+  sections: SectionRequirement[]
 ): OptimizationResult {
   const improvements: string[] = []
-  let score = calculateOverallScore(state, config, teacherMap, requirements)
+  let score = calculateOverallScore(state, config, teacherMap, sections)
 
   const maxIterations = 50
   for (let i = 0; i < maxIterations; i++) {
-    // Try swapping slots to improve score
     const slots = Array.from(state.slots.values())
     let improved = false
 
@@ -573,23 +664,17 @@ function optimizeSchedule(
         const slotA = slots[j]
         const slotB = slots[k]
 
-        // Only swap same-teacher slots (skip unassigned)
+        // Only swap if same teacher and assigned
         if (!slotA.teacherId || !slotB.teacherId) continue
         if (slotA.teacherId !== slotB.teacherId) continue
 
-        // Try swap
         const tempDay = slotA.dayOfWeek
         const tempPeriod = slotA.periodId
 
-        // Check if swap is valid
-        const teacherA = teacherMap.get(slotA.teacherId)
-        const teacherB = teacherMap.get(slotB.teacherId)
         const roomA = roomMap.get(slotA.classroomId)
         const roomB = roomMap.get(slotB.classroomId)
+        if (!roomA || !roomB) continue
 
-        if (!teacherA || !teacherB || !roomA || !roomB) continue
-
-        // Temporarily swap
         removeSlot(slotA, state)
         removeSlot(slotB, state)
 
@@ -604,7 +689,6 @@ function optimizeSchedule(
           periodId: tempPeriod,
         }
 
-        // Check validity
         const validA =
           isRoomAvailable(
             roomA,
@@ -612,8 +696,8 @@ function optimizeSchedule(
             swappedA.periodId,
             state
           ) &&
-          !isClassScheduled(
-            slotA.classId,
+          !isSectionScheduled(
+            slotA.sectionId,
             swappedA.dayOfWeek,
             swappedA.periodId,
             state
@@ -625,8 +709,8 @@ function optimizeSchedule(
             swappedB.periodId,
             state
           ) &&
-          !isClassScheduled(
-            slotB.classId,
+          !isSectionScheduled(
+            slotB.sectionId,
             swappedB.dayOfWeek,
             swappedB.periodId,
             state
@@ -640,28 +724,26 @@ function optimizeSchedule(
             state,
             config,
             teacherMap,
-            requirements
+            sections
           )
           if (newScore > score) {
             score = newScore
             improved = true
-            improvements.push(`Swapped slots for better distribution`)
+            improvements.push("Swapped slots for better distribution")
           } else {
-            // Revert
             removeSlot(swappedA, state)
             removeSlot(swappedB, state)
             addSlot(slotA, state)
             addSlot(slotB, state)
           }
         } else {
-          // Revert
           addSlot(slotA, state)
           addSlot(slotB, state)
         }
       }
     }
 
-    if (!improved) break // No more improvements possible
+    if (!improved) break
   }
 
   return { score, improvements }
@@ -678,7 +760,6 @@ function isTeacherAvailable(
   state: AlgorithmState,
   config: GenerationConfig
 ): boolean {
-  // Check unavailable blocks
   if (
     teacher.unavailableBlocks.some(
       (b) => b.dayOfWeek === day && b.periodId === periodId
@@ -687,32 +768,23 @@ function isTeacherAvailable(
     return false
   }
 
-  // Check existing schedule
   const schedule = state.teacherSchedule.get(teacher.teacherId)
   if (schedule) {
     const daySchedule = schedule.get(day.toString())
     if (daySchedule) {
-      // Already teaching this period
       if (daySchedule.includes(periodId)) return false
-
-      // Check max periods per day
       if (daySchedule.length >= teacher.maxPeriodsPerDay) return false
 
-      // Check consecutive periods
       if (config.constraints.preventBackToBack) {
         const periodIndex = config.periodsPerDay.indexOf(periodId)
         if (periodIndex > 0) {
           const prevPeriod = config.periodsPerDay[periodIndex - 1]
-          if (daySchedule.includes(prevPeriod)) {
-            // Back-to-back detected — reject this slot
-            return false
-          }
+          if (daySchedule.includes(prevPeriod)) return false
         }
       }
     }
   }
 
-  // Check weekly total
   let weeklyTotal = 0
   if (schedule) {
     for (const [, periods] of schedule) {
@@ -730,7 +802,6 @@ function isRoomAvailable(
   periodId: string,
   state: AlgorithmState
 ): boolean {
-  // Check reserved blocks
   if (
     room.reservedBlocks.some(
       (b) => b.dayOfWeek === day && b.periodId === periodId
@@ -739,38 +810,44 @@ function isRoomAvailable(
     return false
   }
 
-  // Check existing schedule
   const schedule = state.roomSchedule.get(room.roomId)
   if (schedule) {
     const daySchedule = schedule.get(day.toString())
-    if (daySchedule && daySchedule.includes(periodId)) {
-      return false
-    }
+    if (daySchedule && daySchedule.includes(periodId)) return false
   }
 
   return true
 }
 
+function isSectionScheduled(
+  sectionId: string,
+  day: number,
+  periodId: string,
+  state: AlgorithmState
+): boolean {
+  const schedule = state.sectionSchedule.get(sectionId)
+  if (!schedule) return false
+  const daySchedule = schedule.get(day.toString())
+  return daySchedule?.includes(periodId) ?? false
+}
+
+// Legacy compat
 function isClassScheduled(
   classId: string,
   day: number,
   periodId: string,
   state: AlgorithmState
 ): boolean {
-  const schedule = state.classSchedule.get(classId)
-  if (!schedule) return false
-
-  const daySchedule = schedule.get(day.toString())
-  return daySchedule?.includes(periodId) ?? false
+  return isSectionScheduled(classId, day, periodId, state)
 }
 
 function addSlot(slot: GeneratedSlot, state: AlgorithmState): void {
-  const key = `${slot.dayOfWeek}:${slot.periodId}:${slot.classId}`
+  const key = `${slot.dayOfWeek}:${slot.periodId}:${slot.sectionId}`
   state.slots.set(key, slot)
 
   const dayStr = slot.dayOfWeek.toString()
 
-  // Update teacher schedule (skip if unassigned)
+  // Update teacher schedule
   if (slot.teacherId) {
     if (!state.teacherSchedule.has(slot.teacherId)) {
       state.teacherSchedule.set(slot.teacherId, new Map())
@@ -792,24 +869,33 @@ function addSlot(slot: GeneratedSlot, state: AlgorithmState): void {
   }
   roomSchedule.get(dayStr)!.push(slot.periodId)
 
-  // Update class schedule
-  if (!state.classSchedule.has(slot.classId)) {
-    state.classSchedule.set(slot.classId, new Map())
+  // Update section schedule
+  if (!state.sectionSchedule.has(slot.sectionId)) {
+    state.sectionSchedule.set(slot.sectionId, new Map())
   }
-  const classSchedule = state.classSchedule.get(slot.classId)!
-  if (!classSchedule.has(dayStr)) {
-    classSchedule.set(dayStr, [])
+  const sectionSchedule = state.sectionSchedule.get(slot.sectionId)!
+  if (!sectionSchedule.has(dayStr)) {
+    sectionSchedule.set(dayStr, [])
   }
-  classSchedule.get(dayStr)!.push(slot.periodId)
+  sectionSchedule.get(dayStr)!.push(slot.periodId)
+
+  // Track subject counts per section
+  if (!state.subjectCounts.has(slot.sectionId)) {
+    state.subjectCounts.set(slot.sectionId, new Map())
+  }
+  const sectionSubjects = state.subjectCounts.get(slot.sectionId)!
+  sectionSubjects.set(
+    slot.subjectId,
+    (sectionSubjects.get(slot.subjectId) || 0) + 1
+  )
 }
 
 function removeSlot(slot: GeneratedSlot, state: AlgorithmState): void {
-  const key = `${slot.dayOfWeek}:${slot.periodId}:${slot.classId}`
+  const key = `${slot.dayOfWeek}:${slot.periodId}:${slot.sectionId}`
   state.slots.delete(key)
 
   const dayStr = slot.dayOfWeek.toString()
 
-  // Remove from teacher schedule (skip if unassigned)
   if (slot.teacherId) {
     const teacherSchedule = state.teacherSchedule.get(slot.teacherId)
     if (teacherSchedule) {
@@ -821,7 +907,6 @@ function removeSlot(slot: GeneratedSlot, state: AlgorithmState): void {
     }
   }
 
-  // Remove from room schedule
   const roomSchedule = state.roomSchedule.get(slot.classroomId)
   if (roomSchedule) {
     const daySchedule = roomSchedule.get(dayStr)
@@ -831,13 +916,23 @@ function removeSlot(slot: GeneratedSlot, state: AlgorithmState): void {
     }
   }
 
-  // Remove from class schedule
-  const classSchedule = state.classSchedule.get(slot.classId)
-  if (classSchedule) {
-    const daySchedule = classSchedule.get(dayStr)
+  const sectionSchedule = state.sectionSchedule.get(slot.sectionId)
+  if (sectionSchedule) {
+    const daySchedule = sectionSchedule.get(dayStr)
     if (daySchedule) {
       const idx = daySchedule.indexOf(slot.periodId)
       if (idx !== -1) daySchedule.splice(idx, 1)
+    }
+  }
+
+  // Decrement subject count
+  const sectionSubjects = state.subjectCounts.get(slot.sectionId)
+  if (sectionSubjects) {
+    const count = sectionSubjects.get(slot.subjectId) || 0
+    if (count > 1) {
+      sectionSubjects.set(slot.subjectId, count - 1)
+    } else {
+      sectionSubjects.delete(slot.subjectId)
     }
   }
 }
@@ -845,13 +940,12 @@ function removeSlot(slot: GeneratedSlot, state: AlgorithmState): void {
 function calculateSlotScore(
   day: number,
   periodId: string,
-  req: ClassRequirement,
+  subject: SubjectAllocation,
   teacher: TeacherAvailability,
   config: GenerationConfig
 ): number {
-  let score = 50 // Base score
+  let score = 50
 
-  // Preferred period bonus
   if (
     teacher.preferredPeriods.some(
       (p) => p.dayOfWeek === day && p.periodId === periodId
@@ -860,7 +954,6 @@ function calculateSlotScore(
     score += 20
   }
 
-  // Avoided period penalty
   if (
     teacher.avoidedPeriods.some(
       (p) => p.dayOfWeek === day && p.periodId === periodId
@@ -869,16 +962,14 @@ function calculateSlotScore(
     score -= 15
   }
 
-  // Morning preference for core subjects
   const periodIndex = config.periodsPerDay.indexOf(periodId)
   if (config.preferences.preferMorningForCore && periodIndex < 3) {
     score += 10
   }
 
-  // Avoid last period for lab
   if (
     config.preferences.avoidLastPeriodForLab &&
-    req.requiresLab &&
+    subject.requiresLab &&
     periodIndex === config.periodsPerDay.length - 1
   ) {
     score -= 20
@@ -891,7 +982,7 @@ function calculateOverallScore(
   state: AlgorithmState,
   config: GenerationConfig,
   teacherMap: Map<string, TeacherAvailability>,
-  requirements: ClassRequirement[]
+  sections: SectionRequirement[]
 ): number {
   let score = 0
   let maxScore = 0
@@ -901,13 +992,19 @@ function calculateOverallScore(
     maxScore += 100
   }
 
-  // Penalize unplaced requirements
-  const placedClasses = new Set(
-    Array.from(state.slots.values()).map((s) => s.classId)
-  )
-  for (const req of requirements) {
-    if (!placedClasses.has(req.classId)) {
-      score -= 50 * req.hoursPerWeek
+  // Penalize sections with incomplete schedules
+  for (const section of sections) {
+    const totalNeeded = section.subjects.reduce(
+      (s, sub) => s + sub.hoursPerWeek,
+      0
+    )
+    const sectionSubjects = state.subjectCounts.get(section.sectionId)
+    const totalPlaced = sectionSubjects
+      ? Array.from(sectionSubjects.values()).reduce((s, c) => s + c, 0)
+      : 0
+
+    if (totalPlaced < totalNeeded) {
+      score -= 50 * (totalNeeded - totalPlaced)
     }
   }
 
@@ -940,9 +1037,6 @@ function calculateWorkloadBalance(
     workloads.length
   const stdDev = Math.sqrt(variance)
 
-  // Lower std dev = better balance
-  // If avg is 20 periods and stdDev is 0, score = 100
-  // If stdDev is 10, score ≈ 50
   const balance = Math.max(0, 100 - stdDev * 5)
   return Math.round(balance)
 }
@@ -974,6 +1068,7 @@ function calculateRoomUtilization(
 export const __testing = {
   isTeacherAvailable,
   isRoomAvailable,
+  isSectionScheduled,
   isClassScheduled,
   addSlot,
   removeSlot,

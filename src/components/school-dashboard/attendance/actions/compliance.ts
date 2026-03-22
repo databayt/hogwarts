@@ -286,7 +286,9 @@ export async function getComplianceReport(input?: {
     })
 
     // Get class names
-    const classIds = [...new Set(attendanceByClass.map((a) => a.classId))]
+    const classIds = [
+      ...new Set(attendanceByClass.map((a) => a.classId)),
+    ].filter((id): id is string => id !== null)
     const classes = await db.class.findMany({
       where: { id: { in: classIds }, schoolId },
       select: { id: true, name: true },
@@ -302,7 +304,10 @@ export async function getComplianceReport(input?: {
     })
 
     const studentCountMap = new Map(
-      studentCounts.map((s) => [s.classId, s._count.studentId])
+      studentCounts.map((s) => [
+        s.classId,
+        typeof s._count === "object" ? s._count.studentId : 0,
+      ])
     )
 
     // Calculate class statistics
@@ -313,6 +318,7 @@ export async function getComplianceReport(input?: {
 
     attendanceByClass.forEach((record) => {
       const classId = record.classId
+      if (!classId) return
       if (!classSummary.has(classId)) {
         classSummary.set(classId, { total: 0, present: 0, absent: 0 })
       }

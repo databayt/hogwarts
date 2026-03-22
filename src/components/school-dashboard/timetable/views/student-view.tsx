@@ -332,8 +332,10 @@ export default function StudentView({
                 </p>
                 <p className="text-muted-foreground text-sm">
                   {currentClassInfo.item.teacher &&
-                    `${currentClassInfo.item.teacher} • `}
-                  {currentClassInfo.item.room}
+                    `${currentClassInfo.item.teacher} · `}
+                  {currentClassInfo.item.sectionName
+                    ? `${currentClassInfo.item.sectionName} · ${currentClassInfo.item.room || ""}`
+                    : currentClassInfo.item.room || ""}
                 </p>
               </div>
               <div className="text-end">

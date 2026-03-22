@@ -407,6 +407,7 @@ export function getSlotDisplayInfo(
   teachers: TeacherInfo[]
 ): {
   subject: string
+  section: string | undefined
   teacher: string
   color: string
   isSubstitute: boolean
@@ -416,8 +417,12 @@ export function getSlotDisplayInfo(
     (t) => t.id === (slot.substituteTeacherId || slot.teacherId)
   )
 
+  // Prefer slot.subjectName (denormalized) over subjects lookup
+  const subjectName = slot.subjectName || subject?.name || "Unknown"
+
   return {
-    subject: subject?.name || "Unknown",
+    subject: subjectName,
+    section: slot.sectionName,
     teacher: teacher
       ? `${teacher.firstName} ${teacher.lastName}`
       : slot.teacherId

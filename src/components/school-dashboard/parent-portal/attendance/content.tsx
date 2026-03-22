@@ -104,8 +104,8 @@ export async function ParentAttendanceContent() {
       id: a.id,
       date: a.date,
       status: a.status,
-      classId: a.classId,
-      className: a.class.subject.name,
+      classId: a.classId ?? "",
+      className: a.class?.subject?.name ?? "",
       notes: a.notes,
     })),
   }))

@@ -3,16 +3,21 @@
 
 import { z } from "zod"
 
-export const markAttendanceSchema = z.object({
-  classId: z.string().min(1),
-  date: z.string().min(1),
-  records: z.array(
-    z.object({
-      studentId: z.string().min(1),
-      status: z.enum(["present", "absent", "late"]),
-    })
-  ),
-})
+export const markAttendanceSchema = z
+  .object({
+    classId: z.string().optional(), // Legacy class reference (optional for section-based)
+    sectionId: z.string().optional(), // Section-based reference (preferred)
+    date: z.string().min(1),
+    records: z.array(
+      z.object({
+        studentId: z.string().min(1),
+        status: z.enum(["present", "absent", "late"]),
+      })
+    ),
+  })
+  .refine((data) => data.classId || data.sectionId, {
+    message: "Either classId or sectionId must be provided",
+  })
 
 export type MarkAttendanceInput = z.infer<typeof markAttendanceSchema>
 

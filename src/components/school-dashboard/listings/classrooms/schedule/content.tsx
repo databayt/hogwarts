@@ -67,7 +67,7 @@ export default async function RoomScheduleOverview({ lang }: Props) {
 
   for (const slot of timetableSlots) {
     const cls = slot.class
-    if (!cls.gradeId || !cls.grade) continue
+    if (!cls || !cls.gradeId || !cls.grade) continue
 
     const grade = cls.grade
     if (!gradeMap.has(grade.id)) {
@@ -90,10 +90,12 @@ export default async function RoomScheduleOverview({ lang }: Props) {
 
   // Fallback: classes exist in timetable but have no gradeId
   if (gradesWithClasses.length === 0) {
-    const ungradedClasses = timetableSlots.map((s) => ({
-      id: s.class.id,
-      name: s.class.name,
-    }))
+    const ungradedClasses = timetableSlots
+      .filter((s) => s.class != null)
+      .map((s) => ({
+        id: s.class!.id,
+        name: s.class!.name,
+      }))
 
     if (ungradedClasses.length > 0) {
       gradesWithClasses.push({

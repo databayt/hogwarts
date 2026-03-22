@@ -38,6 +38,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   getClassesForSelection,
+  getSectionsForSelection,
   getStudentsByRiskLevel,
   type AttendanceRiskLevel,
 } from "@/components/school-dashboard/attendance/actions"
@@ -121,22 +122,39 @@ export function EarlyWarningContent({
     AttendanceRiskLevel | "all"
   >("all")
   const [selectedClassId, setSelectedClassId] = useState<string>("all")
+  const [selectedSectionId, setSelectedSectionId] = useState<string>("all")
   const [classes, setClasses] = useState<Array<{ id: string; name: string }>>(
     []
   )
+  const [sections, setSections] = useState<
+    Array<{
+      id: string
+      name: string
+      gradeName: string
+      gradeId: string
+      teacher: string | null
+      studentCount: number
+    }>
+  >([])
   const [isPending, startTransition] = useTransition()
 
   const isArabic = locale === "ar"
 
-  // Fetch classes for filter
+  // Fetch classes and sections for filter
   useEffect(() => {
-    const fetchClasses = async () => {
-      const result = await getClassesForSelection()
-      if (result.success && result.data) {
-        setClasses(result.data.classes)
+    const fetchClassesAndSections = async () => {
+      const [classesResult, sectionsResult] = await Promise.all([
+        getClassesForSelection(),
+        getSectionsForSelection(),
+      ])
+      if (classesResult.success && classesResult.data) {
+        setClasses(classesResult.data.classes)
+      }
+      if (sectionsResult.success && sectionsResult.data) {
+        setSections(sectionsResult.data.sections)
       }
     }
-    fetchClasses()
+    fetchClassesAndSections()
   }, [])
 
   // Fetch students by risk level
@@ -145,6 +163,7 @@ export function EarlyWarningContent({
       setIsLoading(true)
       const result = await getStudentsByRiskLevel({
         classId: selectedClassId !== "all" ? selectedClassId : undefined,
+        sectionId: selectedSectionId !== "all" ? selectedSectionId : undefined,
         riskLevel: selectedRiskLevel !== "all" ? selectedRiskLevel : undefined,
       })
       if (result.success && result.data) {
@@ -154,7 +173,7 @@ export function EarlyWarningContent({
       setIsLoading(false)
     }
     fetchStudents()
-  }, [selectedClassId, selectedRiskLevel])
+  }, [selectedClassId, selectedSectionId, selectedRiskLevel])
 
   const getTrendIcon = (trend: string) => {
     switch (trend) {
@@ -311,6 +330,25 @@ export function EarlyWarningContent({
                 <SelectItem value="SATISFACTORY">
                   {isArabic ? "مرضي" : "Satisfactory"}
                 </SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={selectedSectionId}
+              onValueChange={setSelectedSectionId}
+            >
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder={isArabic ? "الشعبة" : "Section"} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">
+                  {isArabic ? "جميع الشعب" : "All Sections"}
+                </SelectItem>
+                {sections.map((sec) => (
+                  <SelectItem key={sec.id} value={sec.id}>
+                    {sec.gradeName} - {sec.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
 

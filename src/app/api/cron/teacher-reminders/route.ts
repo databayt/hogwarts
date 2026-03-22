@@ -111,7 +111,7 @@ export async function GET(request: Request) {
             type: "attendance_alert",
             priority: "normal",
             title: "Attendance Reminder",
-            body: `Reminder: Attendance not yet marked for ${entry.class.name} - ${entry.period.name}`,
+            body: `Reminder: Attendance not yet marked for ${entry.class?.name ?? "Unknown Class"} - ${entry.period.name}`,
             metadata: {
               entityType: "attendance",
               classId: entry.classId,
@@ -122,7 +122,7 @@ export async function GET(request: Request) {
 
           stats.remindersCreated++
           console.log(
-            `[Cron] Created reminder for teacher ${entry.teacher?.givenName} ${entry.teacher?.surname} - ${entry.class.name}`
+            `[Cron] Created reminder for teacher ${entry.teacher?.givenName} ${entry.teacher?.surname} - ${entry.class?.name ?? "Unknown Class"}`
           )
         }
       }

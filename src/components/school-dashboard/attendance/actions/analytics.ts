@@ -21,6 +21,7 @@ import { getClassIdsByGrade, getTeacherClassIds } from "./helpers"
  */
 export async function getAttendanceStats(input?: {
   classId?: string
+  sectionId?: string
   dateFrom?: string
   dateTo?: string
   studentId?: string
@@ -55,6 +56,7 @@ export async function getAttendanceStats(input?: {
   const where: Prisma.AttendanceWhereInput = { schoolId, deletedAt: null }
 
   if (input?.classId) where.classId = input.classId
+  if (input?.sectionId) where.sectionId = input.sectionId
   if (input?.studentId) where.studentId = input.studentId
   if (input?.dateFrom || input?.dateTo) {
     where.date = {}
@@ -93,6 +95,7 @@ export async function getAttendanceTrends(input: {
   dateFrom: string
   dateTo: string
   classId?: string
+  sectionId?: string
   groupBy?: "day" | "week" | "month"
 }): Promise<
   ActionResponse<{
@@ -122,6 +125,7 @@ export async function getAttendanceTrends(input: {
     }
 
     if (input.classId) where.classId = input.classId
+    if (input.sectionId) where.sectionId = input.sectionId
 
     const attendance = await db.attendance.findMany({
       where,
@@ -215,6 +219,7 @@ export async function getDayWisePatterns(input?: {
   dateFrom?: string
   dateTo?: string
   classId?: string
+  sectionId?: string
 }) {
   const { schoolId } = await getTenantContext()
   if (!schoolId) {
@@ -224,6 +229,7 @@ export async function getDayWisePatterns(input?: {
   const where: Prisma.AttendanceWhereInput = { schoolId, deletedAt: null }
 
   if (input?.classId) where.classId = input.classId
+  if (input?.sectionId) where.sectionId = input.sectionId
   if (input?.dateFrom || input?.dateTo) {
     where.date = {}
     if (input.dateFrom) where.date.gte = new Date(input.dateFrom)
@@ -556,6 +562,7 @@ export async function getClassComparisonStats(input?: {
     { total: number; present: number; late: number }
   >()
   for (const row of grouped) {
+    if (!row.classId) continue
     const entry = countMap.get(row.classId) ?? {
       total: 0,
       present: 0,
@@ -685,6 +692,7 @@ export async function getStudentsAtRisk(input?: {
 export async function getRecentAttendance(input?: {
   limit?: number
   classId?: string
+  sectionId?: string
 }) {
   const { schoolId } = await getTenantContext()
 
@@ -697,6 +705,7 @@ export async function getRecentAttendance(input?: {
 
   const where: Prisma.AttendanceWhereInput = { schoolId, deletedAt: null }
   if (input?.classId) where.classId = input.classId
+  if (input?.sectionId) where.sectionId = input.sectionId
 
   const records = await db.attendance.findMany({
     where,
@@ -718,7 +727,7 @@ export async function getRecentAttendance(input?: {
       studentId: r.studentId,
       studentName: `${r.student.givenName} ${r.student.surname}`,
       classId: r.classId,
-      className: r.class.name,
+      className: r.class?.name ?? "",
       date: r.date.toISOString(),
       status: r.status,
       method: r.method,

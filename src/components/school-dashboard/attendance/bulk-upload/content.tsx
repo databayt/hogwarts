@@ -78,6 +78,7 @@ import {
   bulkUploadAttendance,
   getClassesForSelection,
   getRecentBulkUploads,
+  getSectionsForSelection,
 } from "../actions"
 import { useAttendanceContext } from "../core/attendance-context"
 
@@ -121,9 +122,20 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
     }
   } | null>(null)
 
-  // Class and date selection
+  // Class/section and date selection
   const [classes, setClasses] = useState<{ id: string; name: string }[]>([])
+  const [sections, setSections] = useState<
+    {
+      id: string
+      name: string
+      gradeName: string
+      gradeId: string
+      teacher: string | null
+      studentCount: number
+    }[]
+  >([])
   const [selectedClass, setSelectedClass] = useState<string>("")
+  const [selectedSection, setSelectedSection] = useState<string>("")
   const [selectedDate, setSelectedDate] = useState<string>(
     new Date().toISOString().split("T")[0]
   )
@@ -135,16 +147,20 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
   // Dictionary shorthand
   const d = dictionary?.school?.attendance?.bulkUpload
 
-  // Fetch classes and recent uploads on mount
+  // Fetch classes, sections, and recent uploads on mount
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [classesResult, uploadsResult] = await Promise.all([
-          getClassesForSelection(),
-          getRecentBulkUploads(5),
-        ])
+        const [classesResult, sectionsResult, uploadsResult] =
+          await Promise.all([
+            getClassesForSelection(),
+            getSectionsForSelection(),
+            getRecentBulkUploads(5),
+          ])
         if (classesResult.success && classesResult.data)
           setClasses(classesResult.data.classes)
+        if (sectionsResult.success && sectionsResult.data)
+          setSections(sectionsResult.data.sections)
         // uploadsResult returns raw data on success
         if (
           !("success" in uploadsResult && !uploadsResult.success) &&
@@ -285,6 +301,7 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
     try {
       const result = await bulkUploadAttendance({
         classId: selectedClass,
+        sectionId: selectedSection || undefined,
         date: selectedDate,
         method: "BULK_UPLOAD",
         records: parsedRecords,
@@ -416,8 +433,43 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Class and Date Selection */}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {/* Section, Class, and Date Selection */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="space-y-2">
+              <Label htmlFor="section-select">
+                {d?.upload?.selectSection || "Select Section"}
+              </Label>
+              <Select
+                value={selectedSection}
+                onValueChange={setSelectedSection}
+              >
+                <SelectTrigger id="section-select">
+                  <SelectValue
+                    placeholder={
+                      d?.upload?.selectSectionPlaceholder ||
+                      "Choose a section..."
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {loadingData ? (
+                    <SelectItem value="_loading" disabled>
+                      Loading...
+                    </SelectItem>
+                  ) : sections.length === 0 ? (
+                    <SelectItem value="_empty" disabled>
+                      No sections found
+                    </SelectItem>
+                  ) : (
+                    sections.map((sec) => (
+                      <SelectItem key={sec.id} value={sec.id}>
+                        {sec.gradeName} - {sec.name}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="class-select">
                 {d?.upload?.selectClass || "Select Class"}

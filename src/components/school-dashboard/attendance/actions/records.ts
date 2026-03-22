@@ -232,7 +232,7 @@ export async function getGuardianChildrenAttendance(): Promise<
         date: a.date,
         status: a.status,
         classId: a.classId,
-        className: a.class.subject.name,
+        className: a.class?.subject?.name ?? "",
         notes: a.notes,
       })),
     }))

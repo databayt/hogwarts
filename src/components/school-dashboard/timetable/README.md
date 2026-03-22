@@ -2,7 +2,9 @@
 
 ### Overview
 
-The Timetable block provides school-wide weekly schedule building, conflict detection, and multi-view display. Administrators create and manage schedules per term, while teachers and students view their personalized timetables. Supports flexible working days, configurable lunch breaks, and A4-ready printing.
+The Timetable block provides school-wide weekly schedule building, conflict detection, and multi-view display. Schedules are **section-based** — each section (Grade 1-A, Grade 7-B) gets a complete weekly timetable with subjects distributed across periods. Teachers and classrooms are assigned per slot, with unassigned slots shown as "Unassigned" for later teacher assignment.
+
+**Data Model:** `Timetable` has `sectionId` (which section), `subjectId` (what subject), `classroomId` (where), `teacherId` (who, nullable). Legacy `classId` is kept for backward compatibility but new generation always uses sections.
 
 ### Capabilities by Role
 
@@ -102,10 +104,31 @@ src/components/school-dashboard/timetable/
 
 **Completion:** 90% | **Blockers:** None
 
+### Architecture: Section-Based Scheduling
+
+```
+Student → Section (Grade 1-A) → Timetable slots per period/day
+  Section.classroomId = homeroom (main classroom)
+  Timetable slot = section + period + day → subject + classroom + teacher
+
+  Regular subjects → homeroom classroom
+  Lab subjects → lab/gym/common classroom
+  Teacher nullable → "Unassigned" until assigned
+```
+
+**Generation flow:** `generateSectionTimetable()` in `generate/algorithm.ts`
+
+1. Queries sections with their grade's subject allocations (`SchoolSubjectSelection.hoursPerWeek`)
+2. For each section, fills the week with all subjects
+3. Assigns teachers from `TeacherSubjectExpertise` (nullable if none available)
+4. Assigns homeroom for regular subjects, finds lab rooms for lab subjects
+5. Prevents section double-booking (Grade 1-A can't have two subjects same period)
+
 ### Integration Points
 
-- **Classes**: Timetable slots reference Class entities; class selection by grade with sections (A/B/C/D)
-- **Teachers**: Teacher view shows full teaching load; free period identification for meetings
-- **Attendance**: Attendance module uses timetable for period-by-period roster
-- **Lessons**: Lesson plans link to timetable slots for preparation context
+- **Sections**: Timetable slots reference sections (Grade 1-A, Grade 7-B); each section has a homeroom classroom
+- **CatalogSubjects**: Subjects come from the catalog, linked via `SchoolSubjectSelection` per grade
+- **Teachers**: Teacher assignment is optional; unassigned slots show "Unassigned"
+- **Classrooms**: Homeroom for regular subjects, common rooms (lab, gym) for specialized subjects
+- **Attendance**: Attendance module uses sections for roster (Section.students) instead of StudentClass
 - **Academic Settings**: Term selector depends on academic year/term configuration

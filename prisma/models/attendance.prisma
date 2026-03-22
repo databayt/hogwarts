@@ -59,7 +59,8 @@ model Attendance {
   id           String           @id @default(cuid())
   schoolId     String
   studentId    String
-  classId      String
+  classId      String? // Legacy: subject-class reference (nullable for section-based records)
+  sectionId    String? // Section (Grade 1-A) — primary reference for new records
   date         DateTime         @db.Date
   status       AttendanceStatus
   notes        String?
@@ -80,23 +81,26 @@ model Attendance {
 
   school  School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   student Student           @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  class   Class             @relation(fields: [classId], references: [id], onDelete: Cascade)
+  class   Class?            @relation(fields: [classId], references: [id], onDelete: Cascade)
+  section Section?          @relation(fields: [sectionId], references: [id])
   excuse  AttendanceExcuse? // Optional excuse submission
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Updated unique constraint to include optional periodId
-  // When periodId is null, allows one record per student/class/date (daily tracking)
-  // When periodId is set, allows multiple records per day (period-by-period tracking)
+  // Section-based: one record per student per section per date per period
+  @@unique([schoolId, studentId, sectionId, date, periodId])
+  // Legacy class-based uniqueness (kept for existing data)
   @@unique([schoolId, studentId, classId, date, periodId])
   @@index([date])
   @@index([status])
   @@index([studentId])
   @@index([classId])
+  @@index([sectionId])
   @@index([method])
   @@index([periodId])
   @@index([schoolId, date, periodId])
+  @@index([schoolId, sectionId, date])
   @@index([deletedAt])
   @@map("attendances")
 }

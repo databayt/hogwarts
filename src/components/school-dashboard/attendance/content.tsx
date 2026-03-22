@@ -21,8 +21,8 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import {
   getAttendanceList,
   getAttendanceReportCsv,
-  getClassesForSelection,
   getCurrentPeriod,
+  getSectionsForSelection,
   markAttendance,
 } from "@/components/school-dashboard/attendance/actions"
 
@@ -45,23 +45,30 @@ interface Props {
 
 export function AttendanceContent({ dictionary, lang }: Props) {
   const [submitting, setSubmitting] = useState(false)
-  const [classId, setClassId] = useState("")
+  const [sectionId, setSectionId] = useState("")
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
-  const [classes, setClasses] = useState<Array<{ id: string; name: string }>>(
-    []
-  )
+  const [sections, setSections] = useState<
+    Array<{
+      id: string
+      name: string
+      gradeName: string
+      gradeId: string
+      teacher: string | null
+      studentCount: number
+    }>
+  >([])
   const [rows, setRows] = useState<AttendanceRow[]>([])
   const [isLoading, setIsLoading] = useState(false)
-  const [classesLoading, setClassesLoading] = useState(true)
+  const [sectionsLoading, setSectionsLoading] = useState(true)
 
-  // Smart class selection from timetable
+  // Smart section selection from timetable
   const [currentPeriodInfo, setCurrentPeriodInfo] = useState<{
-    classId: string | null
+    sectionId: string | null
     periodName: string | null
     name: string | null
     isAutoSelected: boolean
   }>({
-    classId: null,
+    sectionId: null,
     periodName: null,
     name: null,
     isAutoSelected: false,
@@ -70,56 +77,56 @@ export function AttendanceContent({ dictionary, lang }: Props) {
   const load = useCallback(async () => {
     setIsLoading(true)
     try {
-      if (!classId) {
+      if (!sectionId) {
         setRows([])
         return
       }
-      const result = await getAttendanceList({ classId, date, lang })
+      const result = await getAttendanceList({ sectionId, date, lang })
       if (result.success && result.data) {
         setRows(result.data.rows)
       }
     } finally {
       setIsLoading(false)
     }
-  }, [classId, date, lang])
+  }, [sectionId, date, lang])
 
   useEffect(() => {
     void load()
   }, [load])
 
-  // Load classes and auto-select based on current timetable period
+  // Load sections and auto-select based on current timetable period
   useEffect(() => {
     ;(async () => {
       try {
-        const [classesRes, periodRes] = await Promise.all([
-          getClassesForSelection(),
+        const [sectionsRes, periodRes] = await Promise.all([
+          getSectionsForSelection(),
           getCurrentPeriod(),
         ])
 
-        if (!classesRes.success || !classesRes.data) return
-        setClasses(classesRes.data.classes)
+        if (!sectionsRes.success || !sectionsRes.data) return
+        setSections(sectionsRes.data.sections)
 
-        // Smart selection: Use current period's class if available
+        // Smart selection: Use current period's section if available
         if (
           periodRes.success &&
-          periodRes.data?.currentPeriod?.classId &&
-          classesRes.data.classes.some(
-            (c) => c.id === periodRes.data?.currentPeriod?.classId
+          periodRes.data?.currentPeriod?.sectionId &&
+          sectionsRes.data.sections.some(
+            (s) => s.id === periodRes.data?.currentPeriod?.sectionId
           )
         ) {
-          setClassId(periodRes.data.currentPeriod.classId)
+          setSectionId(periodRes.data.currentPeriod.sectionId)
           setCurrentPeriodInfo({
-            classId: periodRes.data.currentPeriod.classId,
+            sectionId: periodRes.data.currentPeriod.sectionId,
             periodName: periodRes.data.currentPeriod.periodName,
             name: periodRes.data.currentPeriod.name,
             isAutoSelected: true,
           })
-        } else if (!classId && classesRes.data.classes[0]) {
-          // Fallback to first class if no current period
-          setClassId(classesRes.data.classes[0].id)
+        } else if (!sectionId && sectionsRes.data.sections[0]) {
+          // Fallback to first section if no current period
+          setSectionId(sectionsRes.data.sections[0].id)
         }
       } finally {
-        setClassesLoading(false)
+        setSectionsLoading(false)
       }
     })()
   }, [])
@@ -134,7 +141,7 @@ export function AttendanceContent({ dictionary, lang }: Props) {
         status,
       }))
       await markAttendance({
-        classId,
+        sectionId,
         date: new Date(date).toISOString(),
         records,
       })
@@ -228,9 +235,9 @@ export function AttendanceContent({ dictionary, lang }: Props) {
   }, [onSubmit, rows])
   return (
     <AttendanceErrorBoundary>
-      {isLoading || classesLoading ? (
+      {isLoading || sectionsLoading ? (
         <AttendanceTableSkeleton rows={10} />
-      ) : classes.length === 0 ? (
+      ) : sections.length === 0 ? (
         <NoClassesEmptyState dictionary={dictionary?.attendance} />
       ) : (
         <div className="space-y-3">
@@ -240,11 +247,11 @@ export function AttendanceContent({ dictionary, lang }: Props) {
             className="flex w-full flex-wrap items-center gap-2 p-1"
           >
             <Select
-              value={classId}
+              value={sectionId}
               onValueChange={(val) => {
-                setClassId(val)
+                setSectionId(val)
                 // Clear auto-selected flag when user manually changes
-                if (val !== currentPeriodInfo.classId) {
+                if (val !== currentPeriodInfo.sectionId) {
                   setCurrentPeriodInfo((prev) => ({
                     ...prev,
                     isAutoSelected: false,
@@ -257,11 +264,11 @@ export function AttendanceContent({ dictionary, lang }: Props) {
                 <SelectValue placeholder={dict.selectClass} />
               </SelectTrigger>
               <SelectContent>
-                {classes.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
+                {sections.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
                     <span className="flex items-center gap-2">
-                      {c.name}
-                      {c.id === currentPeriodInfo.classId && (
+                      {s.name}
+                      {s.id === currentPeriodInfo.sectionId && (
                         <Clock className="h-3 w-3 text-blue-500" />
                       )}
                     </span>
@@ -271,7 +278,7 @@ export function AttendanceContent({ dictionary, lang }: Props) {
             </Select>
             {/* Smart selection indicator */}
             {currentPeriodInfo.isAutoSelected &&
-              classId === currentPeriodInfo.classId && (
+              sectionId === currentPeriodInfo.sectionId && (
                 <Badge
                   variant="secondary"
                   className="flex h-6 items-center gap-1 bg-blue-100 text-xs text-blue-700"
@@ -357,7 +364,7 @@ export function AttendanceContent({ dictionary, lang }: Props) {
               </Button>
             </div>
           </div>
-          {rows.length === 0 && classId && !isLoading ? (
+          {rows.length === 0 && sectionId && !isLoading ? (
             <NoStudentsEmptyState dictionary={dictionary?.attendance} />
           ) : (
             <AttendanceTable

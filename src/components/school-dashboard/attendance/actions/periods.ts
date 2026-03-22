@@ -127,7 +127,7 @@ export async function getPeriodsForClass(input: {
           startTime: entry.period.startTime.toISOString(),
           endTime: entry.period.endTime.toISOString(),
           timetableId: entry.id,
-          name: entry.class.subject?.name || null,
+          name: entry.class?.subject?.name || null,
           teacherName: entry.teacher
             ? `${entry.teacher.givenName} ${entry.teacher.surname}`
             : null,
@@ -159,6 +159,7 @@ export async function getCurrentPeriod(classId?: string): Promise<
       startTime: string
       endTime: string
       classId: string | null
+      sectionId: string | null
       className: string | null
       name: string | null
     } | null
@@ -214,7 +215,12 @@ export async function getCurrentPeriod(classId?: string): Promise<
 
       if (currentTime >= startTime && currentTime <= endTime) {
         // Found current period - get timetable entry if classId provided
-        let classInfo = null
+        let classInfo: {
+          classId: string | null
+          sectionId: string | null
+          className: string
+          name: string | null
+        } | null = null
         if (classId) {
           const timetableEntry = await db.timetable.findFirst({
             where: {
@@ -237,8 +243,42 @@ export async function getCurrentPeriod(classId?: string): Promise<
           if (timetableEntry) {
             classInfo = {
               classId: timetableEntry.classId,
-              className: timetableEntry.class.name,
-              name: timetableEntry.class.subject?.name || null,
+              sectionId: timetableEntry.sectionId,
+              className: timetableEntry.class?.name ?? "",
+              name: timetableEntry.class?.subject?.name || null,
+            }
+          }
+        }
+
+        // If no classId-based match, try to find section-based timetable slot
+        // for the current teacher
+        if (!classInfo && session?.user?.id) {
+          const teacher = await db.teacher.findFirst({
+            where: { schoolId, userId: session.user.id },
+            select: { id: true },
+          })
+          if (teacher) {
+            const sectionSlot = await db.timetable.findFirst({
+              where: {
+                schoolId,
+                teacherId: teacher.id,
+                sectionId: { not: null },
+                termId: activeTerm.id,
+                dayOfWeek,
+                periodId: period.id,
+              },
+              include: {
+                section: { select: { id: true, name: true } },
+                subject: { select: { name: true } },
+              },
+            })
+            if (sectionSlot?.section) {
+              classInfo = {
+                classId: sectionSlot.classId,
+                sectionId: sectionSlot.sectionId,
+                className: sectionSlot.section.name,
+                name: sectionSlot.subject?.name || null,
+              }
             }
           }
         }
@@ -249,6 +289,7 @@ export async function getCurrentPeriod(classId?: string): Promise<
           startTime: period.startTime.toISOString(),
           endTime: period.endTime.toISOString(),
           classId: classInfo?.classId || null,
+          sectionId: classInfo?.sectionId || null,
           className: classInfo?.className || null,
           name: classInfo?.name || null,
         }
@@ -717,8 +758,8 @@ export async function getStudentDayAttendance(input: {
         periods: attendances.map((a) => ({
           periodId: a.periodId,
           periodName: a.periodName || "All Day",
-          className: a.class.name,
-          name: a.class.subject?.name || null,
+          className: a.class?.name ?? "",
+          name: a.class?.subject?.name || null,
           status: a.status,
           checkInTime: a.checkInTime?.toISOString() || null,
           notes: a.notes,

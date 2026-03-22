@@ -160,7 +160,7 @@ export async function calculateTeacherWorkload(
   const totalPeriodsPerWeek = timetableEntries.length
   const uniqueClassIds = new Set(timetableEntries.map((t) => t.classId))
   const uniqueSubjectIds = new Set(
-    timetableEntries.map((t) => t.class.subjectId)
+    timetableEntries.map((t) => t.class?.subjectId).filter(Boolean)
   )
 
   // Get total periods in a week to calculate free periods

@@ -119,6 +119,8 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
   const [warnings, setWarnings] = useState<string[]>([])
   const [errors, setErrors] = useState<string[]>([])
   const [isApplying, setIsApplying] = useState(false)
+  const [sectionNames, setSectionNames] = useState<Record<string, string>>({})
+  const [subjectNames, setSubjectNames] = useState<Record<string, string>>({})
 
   // Configuration state
   const [config, setConfig] = useState<Partial<GenerationConfig>>({
@@ -186,6 +188,8 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
         setUnplacedClasses(result.unplacedClasses)
         setWarnings(result.warnings)
         setErrors(result.errors)
+        setSectionNames(result.sectionNames)
+        setSubjectNames(result.subjectNames)
         setIsConfigOpen(false)
 
         if (result.success) {
@@ -811,7 +815,8 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
                   <TableRow>
                     <TableHead>{d?.generate?.day || "Day"}</TableHead>
                     <TableHead>{d?.generate?.period || "Period"}</TableHead>
-                    <TableHead>{d?.generate?.class || "Class"}</TableHead>
+                    <TableHead>{g?.section || "Section"}</TableHead>
+                    <TableHead>{g?.subject || "Subject"}</TableHead>
                     <TableHead>{d?.generate?.teacher || "Teacher"}</TableHead>
                     <TableHead>{d?.generate?.room || "Room"}</TableHead>
                     <TableHead>{d?.generate?.score || "Score"}</TableHead>
@@ -831,7 +836,24 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
                               </Badge>
                             </TableCell>
                             <TableCell>P{slot.periodId.slice(-1)}</TableCell>
-                            <TableCell>{slot.classId.slice(0, 8)}...</TableCell>
+                            <TableCell>
+                              {slot.sectionId ? (
+                                sectionNames[slot.sectionId] ||
+                                slot.sectionId.slice(0, 8) + "..."
+                              ) : slot.classId ? (
+                                slot.classId.slice(0, 8) + "..."
+                              ) : (
+                                <Badge variant="outline">--</Badge>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {slot.subjectId ? (
+                                subjectNames[slot.subjectId] ||
+                                slot.subjectId.slice(0, 8) + "..."
+                              ) : (
+                                <Badge variant="outline">--</Badge>
+                              )}
+                            </TableCell>
                             <TableCell>
                               {slot.teacherId ? (
                                 `${slot.teacherId.slice(0, 8)}...`

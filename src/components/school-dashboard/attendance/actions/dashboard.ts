@@ -50,6 +50,7 @@ function calculateRiskLevel(rate: number): AttendanceRiskLevel {
  */
 export async function getStudentsByRiskLevel(input?: {
   classId?: string
+  sectionId?: string
   riskLevel?: AttendanceRiskLevel
   dateFrom?: string
   dateTo?: string
@@ -91,7 +92,9 @@ export async function getStudentsByRiskLevel(input?: {
 
     // Get all students with their attendance
     const where: Prisma.StudentWhereInput = { schoolId }
-    if (input?.classId) {
+    if (input?.sectionId) {
+      where.sectionId = input.sectionId
+    } else if (input?.classId) {
       where.studentClasses = { some: { classId: input.classId } }
     } else if (teacherClassIds) {
       where.studentClasses = {
@@ -104,7 +107,9 @@ export async function getStudentsByRiskLevel(input?: {
       schoolId,
       deletedAt: null,
     }
-    if (teacherClassIds) {
+    if (input?.sectionId) {
+      attendanceWhere.sectionId = input.sectionId
+    } else if (teacherClassIds) {
       attendanceWhere.classId = { in: teacherClassIds }
     }
 
@@ -342,7 +347,7 @@ export async function getStudentEarlyWarningDetails(studentId: string): Promise<
       .slice(0, 10)
       .map((a) => ({
         date: a.date.toISOString(),
-        className: a.class.name,
+        className: a.class?.name ?? "",
         hasExcuse: !!a.excuse && a.excuse.status === "APPROVED",
       }))
 
@@ -623,7 +628,7 @@ export async function getTodaysDashboard(): Promise<
       if (!studentAbsences.has(key)) {
         studentAbsences.set(key, {
           name: `${absence.student.givenName} ${absence.student.surname}`,
-          className: absence.class.name,
+          className: absence.class?.name ?? "",
           dates: [],
         })
       }
@@ -671,7 +676,7 @@ export async function getTodaysDashboard(): Promise<
     const recentActivity = todayAttendance.slice(0, 10).map((a) => ({
       id: a.id,
       studentName: `${a.student.givenName} ${a.student.surname}`,
-      className: a.class.name,
+      className: a.class?.name ?? "",
       status: a.status,
       time: a.markedAt.toLocaleTimeString("en-US", {
         hour: "2-digit",
@@ -924,7 +929,7 @@ export async function getFollowUpStudents(input?: { limit?: number }): Promise<
       if (!studentAbsenceMap.has(absence.studentId)) {
         studentAbsenceMap.set(absence.studentId, {
           name: `${absence.student.givenName} ${absence.student.surname}`,
-          className: absence.class.name,
+          className: absence.class?.name ?? "",
           dates: [],
         })
       }
@@ -984,7 +989,7 @@ export async function getFollowUpStudents(input?: { limit?: number }): Promise<
       results.push({
         studentId: excuse.attendance.studentId,
         studentName: `${excuse.attendance.student.givenName} ${excuse.attendance.student.surname}`,
-        className: excuse.attendance.class.name,
+        className: excuse.attendance.class?.name ?? "",
         issue: "unexcused_pending",
         severity: "info",
         details: `Excuse pending review since ${formatDate(excuse.attendance.date, "ar")}`,
@@ -1146,8 +1151,8 @@ export async function getUnmarkedClasses(): Promise<
         return !markedPeriodClasses.has(key)
       })
       .map((entry) => ({
-        classId: entry.class.id,
-        className: entry.class.name,
+        classId: entry.class?.id ?? "",
+        className: entry.class?.name ?? "",
         periodName: entry.period.name,
         teacherId: entry.teacher?.id ?? "",
         teacherName: entry.teacher
@@ -1326,7 +1331,7 @@ export async function getParentAttendanceSummary(): Promise<
           recentAbsences: recentAbsences.map((a) => ({
             date: a.date.toISOString().split("T")[0],
             status: a.status,
-            className: a.class.name,
+            className: a.class?.name ?? "",
           })),
         }
       })

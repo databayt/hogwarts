@@ -62,8 +62,9 @@ model CatalogSubject {
   // Relations
   chapters          CatalogChapter[]
   exams             CatalogExam[]
-  schoolSelections  SchoolSubjectSelection[]
-  enrollments       Enrollment[]
+  schoolSelections          SchoolSubjectSelection[]
+  schoolInstructorPreferences SchoolInstructorPreference[]
+  enrollments               Enrollment[]
   certificates      SubjectCertificate[]
 
   // Content relations
@@ -74,6 +75,7 @@ model CatalogSubject {
   catalogExamTemplates  CatalogExamTemplate[]
 
   // School-scoped reverse relations (direct FK from school models)
+  timetableSlots      Timetable[]
   schoolClasses       Class[]
   schoolExams         Exam[]
   schoolExamTemplates ExamTemplate[]

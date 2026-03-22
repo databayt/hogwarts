@@ -273,10 +273,12 @@ export async function getChildTimetable(input: { studentId: string }) {
       periodName: entry.period.name,
       startTime: entry.period.startTime.toISOString(),
       endTime: entry.period.endTime.toISOString(),
-      className: entry.class.name,
-      name: entry.class.subject.name,
-      teacherName: `${entry.class.teacher.givenName} ${entry.class.teacher.surname}`,
-      roomName: entry.class.classroom?.roomName || "TBA",
+      className: entry.class?.name ?? "",
+      name: entry.class?.subject?.name ?? "",
+      teacherName: entry.class?.teacher
+        ? `${entry.class.teacher.givenName} ${entry.class.teacher.surname}`
+        : "",
+      roomName: entry.class?.classroom?.roomName || "TBA",
     })),
   }
 }

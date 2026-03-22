@@ -126,9 +126,16 @@ const DraggableSlot: React.FC<{
       }}
     >
       <div className="mb-1 flex items-start justify-between">
-        <h6 className="truncate" style={{ color: displayInfo.color }}>
-          {displayInfo.subject}
-        </h6>
+        <div className="min-w-0 flex-1">
+          <h6 className="truncate" style={{ color: displayInfo.color }}>
+            {displayInfo.subject}
+          </h6>
+          {displayInfo.section && (
+            <p className="muted truncate">
+              <small>{displayInfo.section}</small>
+            </p>
+          )}
+        </div>
         {editable && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

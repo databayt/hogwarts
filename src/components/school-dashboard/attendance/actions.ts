@@ -27,6 +27,7 @@ export {
   markSingleAttendance,
   getAttendanceList,
   getClassesForSelection,
+  getSectionsForSelection,
   quickMarkAllPresent,
   checkOutStudent,
   bulkCheckOut,

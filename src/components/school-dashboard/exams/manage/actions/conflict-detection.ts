@@ -151,8 +151,8 @@ export async function checkExamConflicts(
       if (timeRangesOverlap(startTime, endTime, periodStart, periodEnd)) {
         conflicts.push({
           type: "class",
-          entityId: entry.classId,
-          entityName: entry.class.name,
+          entityId: entry.classId ?? "",
+          entityName: entry.class?.name ?? "",
           conflictingEvent: `Scheduled class period: ${entry.period.name}`,
           conflictTime: `${periodStart} - ${periodEnd}`,
           severity: "high",
@@ -214,7 +214,7 @@ export async function checkExamConflicts(
             entityName: entry.teacher
               ? `${entry.teacher.givenName} ${entry.teacher.surname}`
               : "",
-            conflictingEvent: `Teaching ${entry.class.name} - ${entry.period.name}`,
+            conflictingEvent: `Teaching ${entry.class?.name ?? "Unknown"} - ${entry.period.name}`,
             conflictTime: `${periodStart} - ${periodEnd}`,
             severity: "medium",
           })
@@ -288,7 +288,7 @@ export async function checkExamConflicts(
             type: "classroom",
             entityId: entry.classroomId,
             entityName: entry.classroom.roomName,
-            conflictingEvent: `Occupied by ${entry.class.name} - ${entry.period.name}`,
+            conflictingEvent: `Occupied by ${entry.class?.name ?? "Unknown"} - ${entry.period.name}`,
             conflictTime: `${periodStart} - ${periodEnd}`,
             severity: "medium",
           })

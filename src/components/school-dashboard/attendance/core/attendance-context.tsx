@@ -253,7 +253,7 @@ export function AttendanceProvider({
           schoolId: "", // Will be filled by server context
           studentId: r.studentId,
           studentName: r.studentName,
-          classId: r.classId,
+          classId: r.classId ?? "",
           date: r.date,
           status: r.status as AttendanceStatus,
           method: r.method as AttendanceMethod,
@@ -516,7 +516,7 @@ export function AttendanceProvider({
           schoolId: "", // Will be filled by server context
           studentId: r.studentId,
           studentName: r.studentName,
-          classId: r.classId,
+          classId: r.classId ?? "",
           date: r.date,
           status: r.status.toLowerCase() as AttendanceStatus,
           method: r.method as AttendanceMethod,
