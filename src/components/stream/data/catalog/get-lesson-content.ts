@@ -24,26 +24,38 @@ export async function getLessonContent(
 ): Promise<LessonContent> {
   const { schoolId } = await getTenantContext()
 
-  // Fetch approved questions for this lesson
-  const questions = await db.catalogQuestion.findMany({
-    where: {
-      catalogLessonId,
-      approvalStatus: "APPROVED",
-      OR: [
-        { visibility: "PUBLIC" },
-        ...(schoolId ? [{ contributedSchoolId: schoolId }] : []),
-      ],
-    },
-    select: {
-      id: true,
-      questionText: true,
-      questionType: true,
-      options: true,
-      sampleAnswer: true,
-    },
-    orderBy: { createdAt: "asc" },
-    take: 10, // Limit practice quiz to 10 questions
-  })
+  try {
+    // Fetch approved questions for this lesson
+    const questions = await db.catalogQuestion.findMany({
+      where: {
+        catalogLessonId,
+        approvalStatus: "APPROVED",
+        OR: [
+          { visibility: "PUBLIC" },
+          ...(schoolId ? [{ contributedSchoolId: schoolId }] : []),
+        ],
+      },
+      select: {
+        id: true,
+        questionText: true,
+        questionType: true,
+        options: true,
+        sampleAnswer: true,
+      },
+      orderBy: { createdAt: "asc" },
+      take: 10, // Limit practice quiz to 10 questions
+    })
 
-  return { questions }
+    return { questions }
+  } catch (error) {
+    console.error("[getLessonContent] Prisma error:", {
+      name: (error as Error)?.constructor?.name,
+      code: (error as Record<string, unknown>)?.code,
+      message: (error as Error)?.message,
+      meta: (error as Record<string, unknown>)?.meta,
+      catalogLessonId,
+      schoolId,
+    })
+    throw error
+  }
 }

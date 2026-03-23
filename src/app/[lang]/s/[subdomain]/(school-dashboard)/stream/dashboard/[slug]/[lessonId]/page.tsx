@@ -24,11 +24,14 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lessonId } = await params
-  const lesson = await getCatalogLessonWithProgress(lessonId)
-
-  return {
-    title: lesson?.title || "Lesson",
-    description: lesson?.description || "Course lesson content",
+  try {
+    const lesson = await getCatalogLessonWithProgress(lessonId)
+    return {
+      title: lesson?.title || "Lesson",
+      description: lesson?.description || "Course lesson content",
+    }
+  } catch {
+    return { title: "Lesson", description: "Course lesson content" }
   }
 }
 
