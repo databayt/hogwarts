@@ -152,7 +152,7 @@ function ResultsTableInner({
     if (result.success && result.data) {
       router.push(`/${lang}/grades/add/${result.data.id}/selection`)
     } else {
-      ErrorToast(result.error || "Failed to create")
+      ErrorToast(result.error || t.failedToCreateResult)
     }
   }, [router, lang])
 
@@ -208,12 +208,12 @@ function ResultsTableInner({
 
   // Toolbar translations
   const toolbarTranslations = {
-    search: t.studentName || "Search results...",
-    create: t.addGrade || "Add",
-    reset: "Reset",
-    export: "Export",
-    exportCSV: t.exportCSV || "Export CSV",
-    exporting: "Exporting...",
+    search: t.searchResults || t.studentName,
+    create: t.addGrade,
+    reset: t.reset,
+    export: t.export,
+    exportCSV: t.exportCSV,
+    exporting: t.exporting,
   }
 
   return (
@@ -224,7 +224,7 @@ function ResultsTableInner({
         onToggleView={toggleView}
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
-        searchPlaceholder="Search results..."
+        searchPlaceholder={t.searchResults}
         onCreate={handleCreate}
         getCSV={handleExportCSV}
         entityName="grades"
@@ -243,8 +243,8 @@ function ResultsTableInner({
         <>
           {data.length === 0 ? (
             <GridEmptyState
-              title={t.allResults || "All Results"}
-              description={t.recordNewResult || "Record a new grade result"}
+              title={t.allResults}
+              description={t.recordNewResult}
               icon={
                 <Image
                   src="/anthropic/graduation-cap.svg"
@@ -277,7 +277,7 @@ function ResultsTableInner({
                 disabled={isLoading}
                 className="hover:bg-accent rounded-md border px-4 py-2 text-sm disabled:opacity-50"
               >
-                {isLoading ? "Loading..." : "Load More"}
+                {isLoading ? t.loading : t.loadMore}
               </button>
             </div>
           )}

@@ -24,6 +24,7 @@ export async function ProgressReportContent({
 
   const dictionary = await getDictionary(lang)
   const t = dictionary?.school?.exams?.progress
+  const pc = dictionary?.school?.exams?.progressContent
 
   const schedules = await getProgressSchedules()
 
@@ -38,17 +39,18 @@ export async function ProgressReportContent({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">
-            {(t as any)?.schedule?.title ?? "Progress Reports"}
+            {pc?.title ?? "Progress Reports"}
           </h2>
           <p className="text-muted-foreground">
-            Schedule automated progress reports for students and parents
+            {pc?.description ??
+              "Schedule automated progress reports for students and parents"}
           </p>
         </div>
         {canManage && (
           <Button asChild>
             <Link href="progress/new">
               <Plus className="me-2 h-4 w-4" />
-              New Schedule
+              {pc?.newSchedule ?? "New Schedule"}
             </Link>
           </Button>
         )}
@@ -58,37 +60,46 @@ export async function ProgressReportContent({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {(t as any)?.schedule?.title ?? "Total Schedules"}
+              {pc?.totalSchedules ?? "Total Schedules"}
             </CardTitle>
             <Settings className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{schedules.length}</div>
             <p className="text-muted-foreground text-xs">
-              {activeSchedules.length} active
+              {(pc?.activeCount ?? "{count} active").replace(
+                "{count}",
+                String(activeSchedules.length)
+              )}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {pc?.activeLabel ?? "Active"}
+            </CardTitle>
             <Calendar className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{activeSchedules.length}</div>
-            <p className="text-muted-foreground text-xs">Running schedules</p>
+            <p className="text-muted-foreground text-xs">
+              {pc?.runningSchedules ?? "Running schedules"}
+            </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {(t as any)?.schedule?.title ?? "Reports Generated"}
+              {pc?.reportsGenerated ?? "Reports Generated"}
             </CardTitle>
             <FileText className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalReports}</div>
-            <p className="text-muted-foreground text-xs">All time</p>
+            <p className="text-muted-foreground text-xs">
+              {pc?.allTime ?? "All time"}
+            </p>
           </CardContent>
         </Card>
       </div>

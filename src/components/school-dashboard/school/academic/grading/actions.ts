@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache"
 import { Decimal } from "@prisma/client/runtime/library"
 import { z } from "zod"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -33,10 +34,10 @@ export async function createScoreRange(
   try {
     const { schoolId, role } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
     if (role !== "ADMIN" && role !== "DEVELOPER") {
-      return { success: false, error: "Insufficient permissions" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const parsed = scoreRangeCreateSchema.parse(input)
@@ -48,10 +49,7 @@ export async function createScoreRange(
     })
 
     if (existingGrade) {
-      return {
-        success: false,
-        error: `Grade "${parsed.grade}" already exists in grading scale`,
-      }
+      return actionError(ACTION_ERRORS.ALREADY_EXISTS)
     }
 
     // Check for overlapping ranges
@@ -69,10 +67,7 @@ export async function createScoreRange(
         (parsed.maxScore >= existingMin && parsed.maxScore <= existingMax) ||
         (parsed.minScore <= existingMin && parsed.maxScore >= existingMax)
       ) {
-        return {
-          success: false,
-          error: `Score range ${parsed.minScore}-${parsed.maxScore} overlaps with existing grade "${range.grade}" (${existingMin}-${existingMax})`,
-        }
+        return actionError(ACTION_ERRORS.ALREADY_EXISTS)
       }
     }
 

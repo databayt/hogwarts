@@ -37,7 +37,7 @@ export async function FinanceDashboardContent({
 }: { lang?: string } = {}) {
   const session = await auth()
   if (!session?.user) {
-    return <div>Unauthorized</div>
+    return <div>{/* Unauthorized - handled by layout redirect */}</div>
   }
 
   const dictionary = await getDictionary(lang as Locale)

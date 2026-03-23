@@ -16,6 +16,7 @@ import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { NumberField, SelectField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import {
   getClassroomsForClass,
@@ -34,6 +35,8 @@ interface ScheduleFormProps {
 export const ScheduleForm = forwardRef<WizardFormRef, ScheduleFormProps>(
   ({ classId, initialData, onValidChange }, ref) => {
     const [isPending, startTransition] = useTransition()
+    const { dictionary } = useDictionary()
+    const d = dictionary?.school?.classes?.wizard?.schedule
     const [termOptions, setTermOptions] = useState<
       { label: string; value: string }[]
     >([])
@@ -118,36 +121,36 @@ export const ScheduleForm = forwardRef<WizardFormRef, ScheduleFormProps>(
         <form className="space-y-6">
           <SelectField
             name="termId"
-            label="Term"
+            label={d?.term || "Term"}
             options={termOptions}
             required
             disabled={isPending}
           />
           <SelectField
             name="startPeriodId"
-            label="Start Period"
+            label={d?.startPeriod || "Start Period"}
             options={periodOptions}
             required
             disabled={isPending}
           />
           <SelectField
             name="endPeriodId"
-            label="End Period"
+            label={d?.endPeriod || "End Period"}
             options={periodOptions}
             required
             disabled={isPending}
           />
           <SelectField
             name="classroomId"
-            label="Classroom"
+            label={d?.classroom || "Classroom"}
             options={classroomOptions}
             required
             disabled={isPending}
           />
           <NumberField
             name="duration"
-            label="Duration (weeks)"
-            placeholder="e.g. 16"
+            label={d?.duration || "Duration (weeks)"}
+            placeholder={d?.durationPlaceholder || "e.g. 16"}
             disabled={isPending}
           />
         </form>

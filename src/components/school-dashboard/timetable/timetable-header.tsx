@@ -138,7 +138,7 @@ export function TimetableHeader({
       <div className="mb-4 flex flex-wrap items-center gap-2 print:hidden">
         <Select value={termId} onValueChange={setTermId}>
           <SelectTrigger className="w-[140px]">
-            <SelectValue placeholder={th?.filters?.selectWeek ?? "Term"} />
+            <SelectValue placeholder={th?.term ?? "Term"} />
           </SelectTrigger>
           <SelectContent>
             {terms.map((t) => (
@@ -154,12 +154,12 @@ export function TimetableHeader({
           onValueChange={(v) => setViewMode(v as "class" | "teacher")}
         >
           <SelectTrigger className="w-[130px]">
-            <SelectValue placeholder={th?.viewBy ?? "View"} />
+            <SelectValue placeholder={th?.view ?? "View"} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="class">{th?.views?.class ?? "Class"}</SelectItem>
+            <SelectItem value="class">{th?.classView ?? "Class"}</SelectItem>
             <SelectItem value="teacher">
-              {th?.views?.teacher ?? "Teacher"}
+              {th?.teacherViewLabel ?? "Teacher"}
             </SelectItem>
           </SelectContent>
         </Select>
@@ -167,9 +167,7 @@ export function TimetableHeader({
         {viewMode === "class" ? (
           <Select value={selectedClass} onValueChange={setSelectedClass}>
             <SelectTrigger className="w-[200px]">
-              <SelectValue
-                placeholder={th?.filters?.selectClass ?? "Select class"}
-              />
+              <SelectValue placeholder={th?.selectClass ?? "Select class"} />
             </SelectTrigger>
             <SelectContent>
               {classes.map((c) => (
@@ -183,7 +181,7 @@ export function TimetableHeader({
           <Select value={selectedTeacher} onValueChange={setSelectedTeacher}>
             <SelectTrigger className="w-[200px]">
               <SelectValue
-                placeholder={th?.views?.teacher ?? "Select teacher"}
+                placeholder={th?.selectTeacher ?? "Select teacher"}
               />
             </SelectTrigger>
             <SelectContent>
@@ -240,10 +238,10 @@ export function TimetableHeader({
           className="ms-2"
           onClick={() => setOpenSettings(true)}
         >
-          {th?.actions?.settings ?? "Schedule settings"}
+          {th?.scheduleSettings ?? "Schedule settings"}
         </Button>
         <Button variant="ghost" onClick={() => setOpenSlot(true)}>
-          {th?.actions?.generate ?? "Pencil slots"}
+          {th?.editSlots ?? "Pencil slots"}
         </Button>
         {conflicts != null && (
           <button
@@ -254,7 +252,8 @@ export function TimetableHeader({
             onClick={() => setOpenConflicts(true)}
           >
             <small>
-              {conflicts} {th?.filters?.currentWeek ?? "conflict(s)"}
+              {th?.conflicts?.replace("{count}", String(conflicts)) ??
+                `${conflicts} conflict(s)`}
             </small>
           </button>
         )}
@@ -263,12 +262,12 @@ export function TimetableHeader({
         <div className="ms-4 flex items-center gap-2">
           {useTimetableStore.getState().classConfig?.showAllSubjects && (
             <div className="bg-chart-1 text-chart-1 rounded-full px-2 py-1">
-              <small>{th?.actions?.export ?? "All Subjects"}</small>
+              <small>{th?.allSubjects ?? "All Subjects"}</small>
             </div>
           )}
           {useTimetableStore.getState().classConfig?.displayFallbackData && (
             <div className="bg-chart-2 text-chart-2 rounded-full px-2 py-1">
-              <small>{th?.actions?.print ?? "Fallback Data"}</small>
+              <small>{th?.fallbackData ?? "Fallback Data"}</small>
             </div>
           )}
         </div>

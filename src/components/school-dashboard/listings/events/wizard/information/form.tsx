@@ -10,7 +10,11 @@ import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { InputField, SelectField, TextareaField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
-import { EVENT_TYPE_OPTIONS } from "@/components/school-dashboard/listings/events/wizard/config"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
+import {
+  EVENT_TYPE_OPTIONS,
+  getEventTypeOptions,
+} from "@/components/school-dashboard/listings/events/wizard/config"
 
 import { updateEventInformation } from "./actions"
 import { informationSchema, type InformationFormData } from "./validation"
@@ -24,6 +28,11 @@ interface InformationFormProps {
 export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
   ({ eventId, initialData, onValidChange }, ref) => {
     const [isPending, startTransition] = useTransition()
+    const { dictionary } = useDictionary()
+    const wi = dictionary?.school?.events?.wizard?.information as
+      | Record<string, string>
+      | undefined
+    const typeOptions = getEventTypeOptions(dictionary?.school?.events)
 
     const form = useForm<InformationFormData>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -76,33 +85,37 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
         <form className="space-y-6">
           <InputField
             name="title"
-            label="Title"
-            placeholder="Enter event title"
+            label={wi?.titleLabel || "Title"}
+            placeholder={wi?.titlePlaceholder || "Enter event title"}
             required
             disabled={isPending}
           />
           <TextareaField
             name="description"
-            label="Description"
-            placeholder="Enter event description"
+            label={wi?.descriptionLabel || "Description"}
+            placeholder={
+              wi?.descriptionPlaceholder || "Enter event description"
+            }
             disabled={isPending}
           />
           <SelectField
             name="eventType"
-            label="Event Type"
-            options={[...EVENT_TYPE_OPTIONS]}
+            label={wi?.eventTypeLabel || "Event Type"}
+            options={[...typeOptions]}
             disabled={isPending}
           />
           <InputField
             name="organizer"
-            label="Organizer"
-            placeholder="Enter organizer name"
+            label={wi?.organizerLabel || "Organizer"}
+            placeholder={wi?.organizerPlaceholder || "Enter organizer name"}
             disabled={isPending}
           />
           <InputField
             name="targetAudience"
-            label="Target Audience"
-            placeholder="e.g. Students, Parents, Staff"
+            label={wi?.targetAudienceLabel || "Target Audience"}
+            placeholder={
+              wi?.targetAudiencePlaceholder || "e.g. Students, Parents, Staff"
+            }
             disabled={isPending}
           />
         </form>

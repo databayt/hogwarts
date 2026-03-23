@@ -13,3 +13,19 @@ export const informationSchema = z.object({
 })
 
 export type InformationFormData = z.infer<typeof informationSchema>
+
+/** Creates a localized information schema */
+export function createInformationSchema(v?: {
+  nameRequired?: string
+  subjectRequired?: string
+  teacherRequired?: string
+}) {
+  return z.object({
+    name: z.string().min(1, v?.nameRequired || "Class name is required"),
+    subjectId: z.string().min(1, v?.subjectRequired || "Subject is required"),
+    teacherId: z.string().min(1, v?.teacherRequired || "Teacher is required"),
+    gradeId: z.string().optional(),
+    courseCode: z.string().optional(),
+    evaluationType: z.enum(["NORMAL", "GPA", "CWA", "CCE"]).default("NORMAL"),
+  })
+}

@@ -55,6 +55,7 @@ export function BatchIssueDialog({
   const [isPending, startTransition] = useTransition()
   const { dictionary } = useDictionary()
   const t = dictionary?.school?.exams?.certificates?.batchIssue
+  const bd = dictionary?.school?.exams?.batchIssueDialog
 
   useEffect(() => {
     startTransition(async () => {
@@ -163,13 +164,13 @@ export function BatchIssueDialog({
                 <div className="flex items-center gap-2 py-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   <span className="text-muted-foreground text-sm">
-                    Loading templates...
+                    {bd?.loadingTemplates ?? "Loading templates..."}
                   </span>
                 </div>
               ) : configs.length === 0 ? (
                 <p className="text-muted-foreground py-2 text-sm">
-                  No certificate templates configured. Create one in certificate
-                  settings first.
+                  {bd?.noTemplatesConfigured ??
+                    "No certificate templates configured. Create one in certificate settings first."}
                 </p>
               ) : (
                 <Select
@@ -194,12 +195,14 @@ export function BatchIssueDialog({
 
             <div className="bg-muted/50 rounded-md p-3">
               <p className="text-sm">
-                <strong>{eligibleCount}</strong> students are eligible based on
-                the selected template criteria.
+                {(
+                  bd?.eligibleStudents ??
+                  "{count} students are eligible based on the selected template criteria."
+                ).replace("{count}", String(eligibleCount))}
               </p>
               <p className="text-muted-foreground mt-1 text-xs">
-                Students who already have a certificate for this exam or were
-                absent will be skipped.
+                {bd?.skipInfo ??
+                  "Students who already have a certificate for this exam or were absent will be skipped."}
               </p>
             </div>
 
@@ -208,7 +211,9 @@ export function BatchIssueDialog({
         )}
 
         <AlertDialogFooter>
-          <AlertDialogCancel>{result ? "Close" : "Cancel"}</AlertDialogCancel>
+          <AlertDialogCancel>
+            {result ? (bd?.close ?? "Close") : (bd?.cancel ?? "Cancel")}
+          </AlertDialogCancel>
           {!result && (
             <AlertDialogAction
               onClick={(e) => {
@@ -220,7 +225,7 @@ export function BatchIssueDialog({
               {isIssuing ? (
                 <>
                   <Loader2 className="me-2 h-4 w-4 animate-spin" />
-                  Issuing...
+                  {bd?.issuing ?? "Issuing..."}
                 </>
               ) : (
                 (t?.title ?? "Issue Certificates")

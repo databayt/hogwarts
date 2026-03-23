@@ -40,3 +40,63 @@ export const BLOOM_LEVEL_OPTIONS = [
   { label: "Evaluate", value: "EVALUATE" },
   { label: "Create", value: "CREATE" },
 ] as const
+
+// --- Dictionary-based factory functions ---
+// These accept the exams dictionary section (Record<string, any>)
+// and fall back to English defaults when dictionary is not yet loaded.
+
+type ExamsDict = Record<string, any> | undefined
+
+export const getQuestionWizardGroupLabels = (d?: ExamsDict) => {
+  const w = d?.qbankUi?.wizard as Record<string, any> | undefined
+  return [
+    w?.question?.detailsTitle || "Question Details",
+    w?.answers?.answerOptions || "Answer Options",
+  ]
+}
+
+export const getQuestionWizardFinalLabel = (d?: ExamsDict) => {
+  const w = d?.qbankUi?.wizard as Record<string, any> | undefined
+  return w?.saveQuestion || "Save Question"
+}
+
+export const getQuestionTypeOptionsDynamic = (d?: ExamsDict) => {
+  const qt = d?.qbankUi?.config?.questionTypes as
+    | Record<string, string>
+    | undefined
+  return [
+    { value: "MULTIPLE_CHOICE", label: qt?.mcq || "Multiple Choice" },
+    { value: "TRUE_FALSE", label: qt?.trueFalse || "True / False" },
+    { value: "FILL_BLANK", label: qt?.fillBlank || "Fill in the Blank" },
+    { value: "SHORT_ANSWER", label: qt?.shortAnswer || "Short Answer" },
+    { value: "ESSAY", label: qt?.essay || "Essay" },
+    { value: "MATCHING", label: qt?.matching || "Matching" },
+    { value: "ORDERING", label: qt?.ordering || "Ordering" },
+    { value: "MULTI_SELECT", label: qt?.multiSelect || "Multi Select" },
+  ]
+}
+
+export const getDifficultyOptionsDynamic = (d?: ExamsDict) => {
+  const dl = d?.qbankUi?.config?.difficulty as
+    | Record<string, string>
+    | undefined
+  return [
+    { value: "EASY", label: dl?.easy || "Easy" },
+    { value: "MEDIUM", label: dl?.medium || "Medium" },
+    { value: "HARD", label: dl?.hard || "Hard" },
+  ]
+}
+
+export const getBloomLevelOptionsDynamic = (d?: ExamsDict) => {
+  const bl = d?.qbankUi?.config?.bloomLevels as
+    | Record<string, string>
+    | undefined
+  return [
+    { value: "REMEMBER", label: bl?.remember || "Remember" },
+    { value: "UNDERSTAND", label: bl?.understand || "Understand" },
+    { value: "APPLY", label: bl?.apply || "Apply" },
+    { value: "ANALYZE", label: bl?.analyze || "Analyze" },
+    { value: "EVALUATE", label: bl?.evaluate || "Evaluate" },
+    { value: "CREATE", label: bl?.create || "Create" },
+  ]
+}

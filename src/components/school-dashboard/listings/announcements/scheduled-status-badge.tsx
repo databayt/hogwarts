@@ -12,6 +12,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface ScheduledStatusBadgeProps {
   published: boolean
@@ -26,6 +27,11 @@ export function ScheduledStatusBadge({
   expiresAt,
   className,
 }: ScheduledStatusBadgeProps) {
+  const { dictionary } = useDictionary()
+  const ss = (dictionary?.school?.announcements as any)?.scheduledStatus as
+    | Record<string, string>
+    | undefined
+
   const now = new Date()
   const scheduledDate = scheduledFor ? new Date(scheduledFor) : null
   const expiresDate = expiresAt ? new Date(expiresAt) : null
@@ -41,30 +47,30 @@ export function ScheduledStatusBadge({
     // Expired
     status = "expired"
     icon = <CircleX className="h-3 w-3" />
-    label = "Expired"
+    label = ss?.expired || "Expired"
     variant = "destructive"
-    tooltipText = `Expired on ${expiresDate.toLocaleString()}`
+    tooltipText = `${ss?.expiredOn || "Expired on"} ${expiresDate.toLocaleString()}`
   } else if (published) {
     // Published
     status = "published"
     icon = <CircleCheck className="h-3 w-3" />
-    label = "Published"
+    label = ss?.published || "Published"
     variant = "default"
-    tooltipText = "Currently published"
+    tooltipText = ss?.currentlyPublished || "Currently published"
   } else if (scheduledDate && scheduledDate > now) {
     // Scheduled for future
     status = "scheduled"
     icon = <Calendar className="h-3 w-3" />
-    label = "Scheduled"
+    label = ss?.scheduled || "Scheduled"
     variant = "secondary"
-    tooltipText = `Scheduled for ${scheduledDate.toLocaleString()}`
+    tooltipText = `${ss?.scheduledFor || "Scheduled for"} ${scheduledDate.toLocaleString()}`
   } else {
     // Draft
     status = "draft"
     icon = <Clock className="h-3 w-3" />
-    label = "Draft"
+    label = ss?.draft || "Draft"
     variant = "outline"
-    tooltipText = "Not yet published"
+    tooltipText = ss?.notYetPublished || "Not yet published"
   }
 
   return (
@@ -88,7 +94,7 @@ export function ScheduledStatusBadge({
           <p>{tooltipText}</p>
           {expiresDate && status !== "expired" && (
             <p className="text-muted-foreground mt-1 text-xs">
-              Expires: {expiresDate.toLocaleString()}
+              {ss?.expires || "Expires"}: {expiresDate.toLocaleString()}
             </p>
           )}
         </TooltipContent>

@@ -47,14 +47,15 @@ const COVERAGE_TYPE_COLORS: Record<string, string> = {
 }
 
 export const getScholarshipColumns = (
-  lang?: string
+  lang?: string,
+  col?: Record<string, string>
 ): ColumnDef<ScholarshipRow>[] => {
   return [
     {
       accessorKey: "name",
       id: "name",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Name" />
+        <DataTableColumnHeader column={column} title={col?.name || "Name"} />
       ),
       cell: ({ row }) => {
         const scholarship = row.original
@@ -67,14 +68,14 @@ export const getScholarshipColumns = (
           </Link>
         )
       },
-      meta: { label: "Name", variant: "text" },
+      meta: { label: col?.name || "Name", variant: "text" },
       enableColumnFilter: true,
     },
     {
       accessorKey: "coverageType",
       id: "coverageType",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Type" />
+        <DataTableColumnHeader column={column} title={col?.type || "Type"} />
       ),
       cell: ({ getValue }) => {
         const type = getValue<string>()
@@ -86,15 +87,15 @@ export const getScholarshipColumns = (
         )
       },
       meta: {
-        label: "Type",
+        label: col?.type || "Type",
         variant: "select",
         options: [
-          { label: "Full", value: "FULL" },
-          { label: "Partial", value: "PARTIAL" },
-          { label: "Merit Based", value: "MERIT_BASED" },
-          { label: "Need Based", value: "NEED_BASED" },
-          { label: "Sports", value: "SPORTS" },
-          { label: "Academic", value: "ACADEMIC" },
+          { label: col?.full || "Full", value: "FULL" },
+          { label: col?.partial || "Partial", value: "PARTIAL" },
+          { label: col?.meritBased || "Merit Based", value: "MERIT_BASED" },
+          { label: col?.needBased || "Need Based", value: "NEED_BASED" },
+          { label: col?.sports || "Sports", value: "SPORTS" },
+          { label: col?.academic || "Academic", value: "ACADEMIC" },
         ],
       },
       enableColumnFilter: true,
@@ -103,28 +104,40 @@ export const getScholarshipColumns = (
       accessorKey: "coverageAmount",
       id: "coverageAmount",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Coverage Amount" />
+        <DataTableColumnHeader
+          column={column}
+          title={col?.coverageAmount || "Coverage Amount"}
+        />
       ),
       cell: ({ getValue }) => (
         <span className="text-end font-medium tabular-nums">
           {formatCurrency(getValue<number>(), (lang || "en") as Locale)}
         </span>
       ),
-      meta: { label: "Coverage Amount", variant: "text" },
+      meta: {
+        label: col?.coverageAmount || "Coverage Amount",
+        variant: "text",
+      },
     },
     {
       accessorKey: "academicYear",
       id: "academicYear",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Academic Year" />
+        <DataTableColumnHeader
+          column={column}
+          title={col?.academicYear || "Academic Year"}
+        />
       ),
-      meta: { label: "Academic Year", variant: "text" },
+      meta: { label: col?.academicYear || "Academic Year", variant: "text" },
     },
     {
       accessorKey: "startDate",
       id: "startDate",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Start Date" />
+        <DataTableColumnHeader
+          column={column}
+          title={col?.startDate || "Start Date"}
+        />
       ),
       cell: ({ getValue }) => (
         <span className="text-muted-foreground text-xs tabular-nums">
@@ -133,13 +146,16 @@ export const getScholarshipColumns = (
           )}
         </span>
       ),
-      meta: { label: "Start Date", variant: "text" },
+      meta: { label: col?.startDate || "Start Date", variant: "text" },
     },
     {
       accessorKey: "endDate",
       id: "endDate",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="End Date" />
+        <DataTableColumnHeader
+          column={column}
+          title={col?.endDate || "End Date"}
+        />
       ),
       cell: ({ getValue }) => (
         <span className="text-muted-foreground text-xs tabular-nums">
@@ -148,13 +164,16 @@ export const getScholarshipColumns = (
           )}
         </span>
       ),
-      meta: { label: "End Date", variant: "text" },
+      meta: { label: col?.endDate || "End Date", variant: "text" },
     },
     {
       accessorKey: "currentBeneficiaries",
       id: "currentBeneficiaries",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Beneficiaries" />
+        <DataTableColumnHeader
+          column={column}
+          title={col?.beneficiaries || "Beneficiaries"}
+        />
       ),
       cell: ({ row }) => {
         const scholarship = row.original
@@ -167,42 +186,48 @@ export const getScholarshipColumns = (
           </Badge>
         )
       },
-      meta: { label: "Beneficiaries", variant: "text" },
+      meta: { label: col?.beneficiaries || "Beneficiaries", variant: "text" },
     },
     {
       accessorKey: "applicationCount",
       id: "applicationCount",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Applications" />
+        <DataTableColumnHeader
+          column={column}
+          title={col?.applications || "Applications"}
+        />
       ),
       cell: ({ getValue }) => (
         <Badge variant="outline" className="tabular-nums">
           {getValue<number>()}
         </Badge>
       ),
-      meta: { label: "Applications", variant: "text" },
+      meta: { label: col?.applications || "Applications", variant: "text" },
     },
     {
       accessorKey: "isActive",
       id: "isActive",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Status" />
+        <DataTableColumnHeader
+          column={column}
+          title={col?.status || "Status"}
+        />
       ),
       cell: ({ getValue }) => {
         const active = getValue<boolean>()
         const color = active ? STATUS_COLORS.ACTIVE : STATUS_COLORS.INACTIVE
         return (
           <Badge variant="outline" className={color}>
-            {active ? "Active" : "Inactive"}
+            {active ? col?.active || "Active" : col?.inactive || "Inactive"}
           </Badge>
         )
       },
       meta: {
-        label: "Status",
+        label: col?.status || "Status",
         variant: "select",
         options: [
-          { label: "Active", value: "true" },
-          { label: "Inactive", value: "false" },
+          { label: col?.active || "Active", value: "true" },
+          { label: col?.inactive || "Inactive", value: "false" },
         ],
       },
       enableColumnFilter: true,
@@ -211,7 +236,10 @@ export const getScholarshipColumns = (
       accessorKey: "createdAt",
       id: "createdAt",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Created" />
+        <DataTableColumnHeader
+          column={column}
+          title={col?.created || "Created"}
+        />
       ),
       cell: ({ getValue }) => (
         <span className="text-muted-foreground text-xs tabular-nums">
@@ -220,11 +248,13 @@ export const getScholarshipColumns = (
           )}
         </span>
       ),
-      meta: { label: "Created", variant: "text" },
+      meta: { label: col?.created || "Created", variant: "text" },
     },
     {
       id: "actions",
-      header: () => <span className="sr-only">Actions</span>,
+      header: () => (
+        <span className="sr-only">{col?.actions || "Actions"}</span>
+      ),
       cell: ({ row }) => {
         const scholarship = row.original
         return (
@@ -232,24 +262,24 @@ export const getScholarshipColumns = (
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8 p-0">
                 <Ellipsis className="h-4 w-4" />
-                <span className="sr-only">Actions</span>
+                <span className="sr-only">{col?.actions || "Actions"}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuLabel>{col?.actions || "Actions"}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link
                   href={`/${lang}/finance/fees/scholarships/${scholarship.id}`}
                 >
-                  View
+                  {col?.view || "View"}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link
                   href={`/${lang}/finance/fees/scholarships/${scholarship.id}/edit`}
                 >
-                  Edit
+                  {col?.edit || "Edit"}
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuContent>

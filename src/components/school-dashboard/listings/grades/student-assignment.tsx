@@ -127,7 +127,9 @@ export function StudentAssignmentStep({
                 <SelectTrigger className="w-full">
                   <SelectValue
                     placeholder={
-                      isLoading ? "Loading..." : dictionary.selectStudent
+                      isLoading
+                        ? (dictionary as any).loading || "Loading..."
+                        : dictionary.selectStudent
                     }
                   />
                 </SelectTrigger>
@@ -160,7 +162,9 @@ export function StudentAssignmentStep({
                 <SelectTrigger className="w-full">
                   <SelectValue
                     placeholder={
-                      isLoading ? "Loading..." : dictionary.selectAssignment
+                      isLoading
+                        ? (dictionary as any).loading || "Loading..."
+                        : dictionary.selectAssignment
                     }
                   />
                 </SelectTrigger>

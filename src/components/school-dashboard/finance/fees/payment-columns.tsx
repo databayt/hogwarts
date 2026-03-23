@@ -47,57 +47,75 @@ const PAYMENT_METHOD_COLORS: Record<string, string> = {
   OTHER: "bg-gray-500/10 text-gray-500",
 }
 
-export const getPaymentColumns = (lang?: string): ColumnDef<PaymentRow>[] => {
+export const getPaymentColumns = (
+  lang?: string,
+  col?: Record<string, string>
+): ColumnDef<PaymentRow>[] => {
   return [
     {
       accessorKey: "paymentNumber",
       id: "paymentNumber",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Payment #" />
+        <DataTableColumnHeader
+          column={column}
+          title={col?.paymentNumber || "Payment #"}
+        />
       ),
       cell: ({ getValue }) => (
         <span className="font-mono text-sm">{getValue<string>()}</span>
       ),
-      meta: { label: "Payment #", variant: "text" },
+      meta: { label: col?.paymentNumber || "Payment #", variant: "text" },
     },
     {
       accessorKey: "studentName",
       id: "studentName",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Student" />
+        <DataTableColumnHeader
+          column={column}
+          title={col?.student || "Student"}
+        />
       ),
       cell: ({ getValue }) => (
         <span className="font-medium">{getValue<string>()}</span>
       ),
-      meta: { label: "Student", variant: "text" },
+      meta: { label: col?.student || "Student", variant: "text" },
       enableColumnFilter: true,
     },
     {
       accessorKey: "feeStructureName",
       id: "feeStructureName",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Fee Structure" />
+        <DataTableColumnHeader
+          column={column}
+          title={col?.feeStructure || "Fee Structure"}
+        />
       ),
-      meta: { label: "Fee Structure", variant: "text" },
+      meta: { label: col?.feeStructure || "Fee Structure", variant: "text" },
     },
     {
       accessorKey: "amount",
       id: "amount",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Amount" />
+        <DataTableColumnHeader
+          column={column}
+          title={col?.amount || "Amount"}
+        />
       ),
       cell: ({ getValue }) => (
         <span className="text-end font-medium tabular-nums">
           {formatCurrency(getValue<number>(), (lang || "en") as Locale)}
         </span>
       ),
-      meta: { label: "Amount", variant: "text" },
+      meta: { label: col?.amount || "Amount", variant: "text" },
     },
     {
       accessorKey: "paymentDate",
       id: "paymentDate",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Payment Date" />
+        <DataTableColumnHeader
+          column={column}
+          title={col?.paymentDate || "Payment Date"}
+        />
       ),
       cell: ({ getValue }) => (
         <span className="text-muted-foreground text-xs tabular-nums">
@@ -106,13 +124,16 @@ export const getPaymentColumns = (lang?: string): ColumnDef<PaymentRow>[] => {
           )}
         </span>
       ),
-      meta: { label: "Payment Date", variant: "text" },
+      meta: { label: col?.paymentDate || "Payment Date", variant: "text" },
     },
     {
       accessorKey: "paymentMethod",
       id: "paymentMethod",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Method" />
+        <DataTableColumnHeader
+          column={column}
+          title={col?.method || "Method"}
+        />
       ),
       cell: ({ getValue }) => {
         const method = getValue<string>()
@@ -124,18 +145,21 @@ export const getPaymentColumns = (lang?: string): ColumnDef<PaymentRow>[] => {
         )
       },
       meta: {
-        label: "Method",
+        label: col?.method || "Method",
         variant: "select",
         options: [
-          { label: "Cash", value: "CASH" },
-          { label: "Cheque", value: "CHEQUE" },
-          { label: "Bank Transfer", value: "BANK_TRANSFER" },
-          { label: "Credit Card", value: "CREDIT_CARD" },
-          { label: "Debit Card", value: "DEBIT_CARD" },
-          { label: "UPI", value: "UPI" },
-          { label: "Net Banking", value: "NET_BANKING" },
-          { label: "Wallet", value: "WALLET" },
-          { label: "Other", value: "OTHER" },
+          { label: col?.cash || "Cash", value: "CASH" },
+          { label: col?.cheque || "Cheque", value: "CHEQUE" },
+          {
+            label: col?.bankTransfer || "Bank Transfer",
+            value: "BANK_TRANSFER",
+          },
+          { label: col?.creditCard || "Credit Card", value: "CREDIT_CARD" },
+          { label: col?.debitCard || "Debit Card", value: "DEBIT_CARD" },
+          { label: col?.upi || "UPI", value: "UPI" },
+          { label: col?.netBanking || "Net Banking", value: "NET_BANKING" },
+          { label: col?.wallet || "Wallet", value: "WALLET" },
+          { label: col?.other || "Other", value: "OTHER" },
         ],
       },
       enableColumnFilter: true,
@@ -144,7 +168,10 @@ export const getPaymentColumns = (lang?: string): ColumnDef<PaymentRow>[] => {
       accessorKey: "status",
       id: "status",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Status" />
+        <DataTableColumnHeader
+          column={column}
+          title={col?.status || "Status"}
+        />
       ),
       cell: ({ getValue }) => {
         const status = getValue<string>()
@@ -156,14 +183,14 @@ export const getPaymentColumns = (lang?: string): ColumnDef<PaymentRow>[] => {
         )
       },
       meta: {
-        label: "Status",
+        label: col?.status || "Status",
         variant: "select",
         options: [
-          { label: "Pending", value: "PENDING" },
-          { label: "Success", value: "SUCCESS" },
-          { label: "Failed", value: "FAILED" },
-          { label: "Cancelled", value: "CANCELLED" },
-          { label: "Refunded", value: "REFUNDED" },
+          { label: col?.pending || "Pending", value: "PENDING" },
+          { label: col?.success || "Success", value: "SUCCESS" },
+          { label: col?.failed || "Failed", value: "FAILED" },
+          { label: col?.cancelled || "Cancelled", value: "CANCELLED" },
+          { label: col?.refunded || "Refunded", value: "REFUNDED" },
         ],
       },
       enableColumnFilter: true,
@@ -172,7 +199,10 @@ export const getPaymentColumns = (lang?: string): ColumnDef<PaymentRow>[] => {
       accessorKey: "receiptNumber",
       id: "receiptNumber",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Receipt #" />
+        <DataTableColumnHeader
+          column={column}
+          title={col?.receiptNumber || "Receipt #"}
+        />
       ),
       cell: ({ getValue }) => {
         const val = getValue<string>()
@@ -182,11 +212,13 @@ export const getPaymentColumns = (lang?: string): ColumnDef<PaymentRow>[] => {
           <span className="text-muted-foreground">-</span>
         )
       },
-      meta: { label: "Receipt #", variant: "text" },
+      meta: { label: col?.receiptNumber || "Receipt #", variant: "text" },
     },
     {
       id: "actions",
-      header: () => <span className="sr-only">Actions</span>,
+      header: () => (
+        <span className="sr-only">{col?.actions || "Actions"}</span>
+      ),
       cell: ({ row }) => {
         const payment = row.original
         return (
@@ -194,22 +226,22 @@ export const getPaymentColumns = (lang?: string): ColumnDef<PaymentRow>[] => {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8 p-0">
                 <Ellipsis className="h-4 w-4" />
-                <span className="sr-only">Actions</span>
+                <span className="sr-only">{col?.actions || "Actions"}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuLabel>{col?.actions || "Actions"}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link href={`/${lang}/finance/fees/payments/${payment.id}`}>
-                  View
+                  {col?.view || "View"}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link
                   href={`/${lang}/finance/fees/payments/${payment.id}/receipt`}
                 >
-                  View Receipt
+                  {col?.viewReceipt || "View Receipt"}
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuContent>

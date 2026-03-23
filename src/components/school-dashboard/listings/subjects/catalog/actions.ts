@@ -51,7 +51,7 @@ export async function toggleSubjectSelection(
     if (!authResult.ok) return { success: false, error: authResult.error }
     const { schoolId } = authResult
 
-    // Check if already selected
+    // Verify subject is PUBLISHED before allowing selection
     const existing = await db.schoolSubjectSelection.findFirst({
       where: {
         schoolId,
@@ -60,6 +60,19 @@ export async function toggleSubjectSelection(
         streamId: streamId ?? null,
       },
     })
+
+    if (!existing) {
+      const subject = await db.catalogSubject.findFirst({
+        where: { id: catalogSubjectId, status: "PUBLISHED" },
+        select: { id: true },
+      })
+      if (!subject) {
+        return {
+          success: false,
+          error: "Subject is not available for selection",
+        }
+      }
+    }
 
     if (existing) {
       // Remove selection
@@ -126,44 +139,28 @@ export async function bulkSelectSubjects(
     if (!authResult.ok) return { success: false, error: authResult.error }
     const { schoolId } = authResult
 
-    let added = 0
-    const affectedSubjectIds: string[] = []
+    // Batch insert with skipDuplicates instead of N+1 find+create loop
+    const { count: added } = await db.schoolSubjectSelection.createMany({
+      data: catalogSubjectIds.map((catalogSubjectId) => ({
+        schoolId,
+        catalogSubjectId,
+        gradeId,
+        streamId: null,
+        isRequired: true,
+        isActive: true,
+      })),
+      skipDuplicates: true,
+    })
 
-    for (const catalogSubjectId of catalogSubjectIds) {
-      const existing = await db.schoolSubjectSelection.findFirst({
-        where: {
-          schoolId,
-          catalogSubjectId,
-          gradeId,
-          streamId: null,
-        },
-      })
-
-      if (!existing) {
-        await db.schoolSubjectSelection.create({
-          data: {
-            schoolId,
-            catalogSubjectId,
-            gradeId,
-            streamId: null,
-            isRequired: true,
-            isActive: true,
-          },
-        })
-        affectedSubjectIds.push(catalogSubjectId)
-        added++
-      }
-    }
-
-    // Update usageCount for all affected subjects
-    for (const catalogSubjectId of affectedSubjectIds) {
-      const usageCount = await db.schoolSubjectSelection.count({
-        where: { catalogSubjectId },
-      })
-      await db.catalogSubject.update({
-        where: { id: catalogSubjectId },
-        data: { usageCount },
-      })
+    // Batch update usage counts with single raw query
+    if (added > 0) {
+      await db.$executeRawUnsafe(
+        `UPDATE catalog_subjects SET "usageCount" = (
+          SELECT COUNT(*) FROM school_subject_selections
+          WHERE school_subject_selections."catalogSubjectId" = catalog_subjects.id
+        ) WHERE id = ANY($1::text[])`,
+        catalogSubjectIds
+      )
     }
 
     revalidatePath("/", "layout")
@@ -259,6 +256,26 @@ export async function toggleContentOverride(input: {
       return {
         success: false,
         error: "Must specify a chapter, lesson, or video",
+      }
+    }
+
+    // Verify the school has selected the parent subject for this content
+    if (validated.catalogChapterId) {
+      const chapter = await db.catalogChapter.findFirst({
+        where: { id: validated.catalogChapterId },
+        select: { subjectId: true },
+      })
+      if (chapter) {
+        const hasSelection = await db.schoolSubjectSelection.findFirst({
+          where: { schoolId, catalogSubjectId: chapter.subjectId },
+          select: { id: true },
+        })
+        if (!hasSelection) {
+          return {
+            success: false,
+            error: "School has not selected this subject",
+          }
+        }
       }
     }
 

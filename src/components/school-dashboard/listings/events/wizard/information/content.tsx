@@ -8,6 +8,7 @@ import { useParams } from "next/navigation"
 import { FormHeading, FormLayout } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { useEventWizard } from "../use-event-wizard"
 import { InformationForm } from "./form"
@@ -18,6 +19,10 @@ export default function InformationContent() {
   const formRef = useRef<WizardFormRef>(null)
   const { data, isLoading } = useEventWizard()
   const [isValid, setIsValid] = useState(false)
+  const { dictionary } = useDictionary()
+  const wi = dictionary?.school?.events?.wizard?.information as
+    | Record<string, string>
+    | undefined
 
   // Set initial validity from loaded data
   useEffect(() => {
@@ -36,8 +41,10 @@ export default function InformationContent() {
     >
       <FormLayout>
         <FormHeading
-          title="Event Information"
-          description="Enter the basic details for this event."
+          title={wi?.title || "Event Information"}
+          description={
+            wi?.description || "Enter the basic details for this event."
+          }
         />
         <InformationForm
           ref={formRef}

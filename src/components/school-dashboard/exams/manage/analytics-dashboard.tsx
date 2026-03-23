@@ -37,7 +37,7 @@ export async function ExamAnalyticsDashboard({ examId, dictionary }: Props) {
       <Card>
         <CardContent className="py-12">
           <p className="text-muted-foreground text-center">
-            Analytics not available
+            {t?.notAvailable ?? "Analytics not available"}
           </p>
         </CardContent>
       </Card>
@@ -67,7 +67,15 @@ export async function ExamAnalyticsDashboard({ examId, dictionary }: Props) {
       <div>
         <h2>{examTitle}</h2>
         <p className="muted">
-          Total Marks: {totalMarks} • Passing Marks: {passingMarks}
+          {(t?.totalMarksLabel ?? "Total Marks: {value}").replace(
+            "{value}",
+            String(totalMarks)
+          )}{" "}
+          •{" "}
+          {(t?.passingMarksLabel ?? "Passing Marks: {value}").replace(
+            "{value}",
+            String(passingMarks)
+          )}
         </p>
       </div>
 
@@ -76,21 +84,24 @@ export async function ExamAnalyticsDashboard({ examId, dictionary }: Props) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Total Students
+              {t?.totalStudents ?? "Total Students"}
             </CardTitle>
             <Users className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalStudents}</div>
             <p className="text-muted-foreground text-xs">
-              {presentStudents} present • {absentStudents} absent
+              {presentStudents} {t?.present ?? "present"} • {absentStudents}{" "}
+              {t?.absent ?? "absent"}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pass Rate</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t?.passRate ?? "Pass Rate"}
+            </CardTitle>
             {passPercentage >= 70 ? (
               <TrendingUp className="h-4 w-4 text-green-600" />
             ) : (
@@ -107,7 +118,9 @@ export async function ExamAnalyticsDashboard({ examId, dictionary }: Props) {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Passed</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t?.passed ?? "Passed"}
+            </CardTitle>
             <UserCheck className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
@@ -118,14 +131,16 @@ export async function ExamAnalyticsDashboard({ examId, dictionary }: Props) {
               {presentStudents > 0
                 ? ((passedStudents / presentStudents) * 100).toFixed(1)
                 : 0}
-              % of present
+              % {t?.ofPresent ?? "of present"}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Failed</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t?.failed ?? "Failed"}
+            </CardTitle>
             <UserX className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
@@ -136,7 +151,7 @@ export async function ExamAnalyticsDashboard({ examId, dictionary }: Props) {
               {presentStudents > 0
                 ? ((failedStudents / presentStudents) * 100).toFixed(1)
                 : 0}
-              % of present
+              % {t?.ofPresent ?? "of present"}
             </p>
           </CardContent>
         </Card>
@@ -146,20 +161,25 @@ export async function ExamAnalyticsDashboard({ examId, dictionary }: Props) {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Average Marks</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t?.averageMarks ?? "Average Marks"}
+            </CardTitle>
             <BarChart3 className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{averageMarks}</div>
             <p className="text-muted-foreground text-xs">
-              {averagePercentage.toFixed(2)}% average percentage
+              {averagePercentage.toFixed(2)}%{" "}
+              {t?.averagePercentage ?? "average percentage"}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Highest Marks</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t?.highestMarks ?? "Highest Marks"}
+            </CardTitle>
             <Award className="h-4 w-4 text-yellow-600" />
           </CardHeader>
           <CardContent>
@@ -174,7 +194,9 @@ export async function ExamAnalyticsDashboard({ examId, dictionary }: Props) {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Lowest Marks</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t?.lowestMarks ?? "Lowest Marks"}
+            </CardTitle>
             <TrendingDown className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
@@ -194,7 +216,7 @@ export async function ExamAnalyticsDashboard({ examId, dictionary }: Props) {
               {t?.gradeDistribution ?? "Grade Distribution"}
             </CardTitle>
             <CardDescription>
-              Number of students in each grade category
+              {t?.gradeDistDesc ?? "Number of students in each grade category"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -209,10 +231,18 @@ export async function ExamAnalyticsDashboard({ examId, dictionary }: Props) {
                     <div key={grade} className="space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium">
-                          Grade {grade}
+                          {(t?.grade ?? "Grade {grade}").replace(
+                            "{grade}",
+                            grade
+                          )}
                         </span>
                         <span className="text-muted-foreground text-sm">
-                          {countNum} students ({percentage.toFixed(1)}%)
+                          {(
+                            t?.studentsCount ??
+                            "{count} students ({percentage}%)"
+                          )
+                            .replace("{count}", String(countNum))
+                            .replace("{percentage}", percentage.toFixed(1))}
                         </span>
                       </div>
                       <Progress value={percentage} />

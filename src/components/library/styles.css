@@ -266,15 +266,15 @@
 
 /* Loading States */
 .library-loading-skeleton {
-  @apply animate-pulse;
+  @apply animate-shimmer from-accent via-accent/40 to-accent bg-gradient-to-r bg-[length:200%_100%];
 }
 
 .library-loading-skeleton-text {
-  @apply h-4 rounded bg-gray-200 dark:bg-gray-700;
+  @apply bg-accent h-4 rounded;
 }
 
 .library-loading-skeleton-box {
-  @apply rounded bg-gray-200 dark:bg-gray-700;
+  @apply bg-accent rounded;
 }
 
 /* Empty States */

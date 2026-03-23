@@ -185,7 +185,9 @@ function GuardianExcusesView({ locale }: { locale: Locale }) {
     )
   }
 
-  const isArabic = locale === "ar"
+  const ex = (dictionary?.school?.attendance as any)?.excusesExtra as
+    | Record<string, string>
+    | undefined
 
   return (
     <div className="space-y-6">
@@ -198,9 +200,7 @@ function GuardianExcusesView({ locale }: { locale: Locale }) {
               {d?.pendingExcuses || "Unexcused Absences"}
             </CardTitle>
             <CardDescription>
-              {isArabic
-                ? "هذه الغيابات تحتاج إلى تقديم عذر"
-                : "These absences need an excuse submitted"}
+              {ex?.needsExcuse || "These absences need an excuse submitted"}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -229,7 +229,7 @@ function GuardianExcusesView({ locale }: { locale: Locale }) {
           <CardContent className="py-8 text-center">
             <FileText className="text-muted-foreground mx-auto mb-3 h-12 w-12 opacity-50" />
             <p className="text-muted-foreground">
-              {isArabic ? "لا توجد غيابات بدون عذر" : "No unexcused absences"}
+              {ex?.noUnexcused || "No unexcused absences"}
             </p>
           </CardContent>
         </Card>
@@ -239,11 +239,9 @@ function GuardianExcusesView({ locale }: { locale: Locale }) {
       {excuseHistory.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>{isArabic ? "سجل الأعذار" : "Excuse History"}</CardTitle>
+            <CardTitle>{ex?.excuseHistory || "Excuse History"}</CardTitle>
             <CardDescription>
-              {isArabic
-                ? "الأعذار المقدمة سابقاً"
-                : "Previously submitted excuses"}
+              {ex?.previouslySubmitted || "Previously submitted excuses"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -267,7 +265,7 @@ function GuardianExcusesView({ locale }: { locale: Locale }) {
                     </p>
                     {excuse.reviewNotes && (
                       <p className="text-xs italic">
-                        {isArabic ? "ملاحظة:" : "Note:"} {excuse.reviewNotes}
+                        {ex?.note || "Note:"} {excuse.reviewNotes}
                       </p>
                     )}
                   </div>

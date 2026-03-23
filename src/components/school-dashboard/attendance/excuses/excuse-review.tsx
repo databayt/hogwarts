@@ -43,21 +43,33 @@ import {
 } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Textarea } from "@/components/ui/textarea"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import {
   getExcuseById,
   getPendingExcuses,
   reviewExcuse,
 } from "@/components/school-dashboard/attendance/actions"
 
-// Excuse reason labels
-const EXCUSE_REASON_LABELS: Record<string, { en: string; ar: string }> = {
-  MEDICAL: { en: "Medical", ar: "طبي" },
-  FAMILY_EMERGENCY: { en: "Family Emergency", ar: "طوارئ عائلية" },
-  RELIGIOUS: { en: "Religious", ar: "ديني" },
-  SCHOOL_ACTIVITY: { en: "School Activity", ar: "نشاط مدرسي" },
-  TRANSPORTATION: { en: "Transportation", ar: "مواصلات" },
-  WEATHER: { en: "Weather", ar: "طقس" },
-  OTHER: { en: "Other", ar: "أخرى" },
+// Fallback labels when dictionary is not loaded
+const EXCUSE_REASON_FALLBACK: Record<string, string> = {
+  MEDICAL: "Medical",
+  FAMILY_EMERGENCY: "Family Emergency",
+  RELIGIOUS: "Religious",
+  SCHOOL_ACTIVITY: "School Activity",
+  TRANSPORTATION: "Transportation",
+  WEATHER: "Weather",
+  OTHER: "Other",
+}
+
+// Map reason codes to dictionary keys
+const EXCUSE_REASON_KEY_MAP: Record<string, string> = {
+  MEDICAL: "medical",
+  FAMILY_EMERGENCY: "familyEmergency",
+  RELIGIOUS: "religious",
+  SCHOOL_ACTIVITY: "schoolActivity",
+  TRANSPORTATION: "transportation",
+  WEATHER: "weather",
+  OTHER: "other",
 }
 
 interface PendingExcuse {
@@ -94,7 +106,11 @@ export function ExcuseReviewList({
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
-  const isArabic = locale === "ar"
+  const { dictionary } = useDictionary()
+  const t = (dictionary?.school?.attendance as any)?.excuseReview as
+    | Record<string, any>
+    | undefined
+  const reasonsDict = t?.excuseReasons as Record<string, string> | undefined
 
   // Fetch pending excuses
   useEffect(() => {
@@ -139,7 +155,7 @@ export function ExcuseReviewList({
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr)
-    return isArabic
+    return locale === "ar"
       ? date.toLocaleDateString(locale, {
           year: "numeric",
           month: "long",
@@ -171,12 +187,11 @@ export function ExcuseReviewList({
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>
-                {isArabic ? "طلبات الأعذار المعلقة" : "Pending Excuse Requests"}
+                {t?.pendingRequests || "Pending Excuse Requests"}
               </CardTitle>
               <CardDescription>
-                {isArabic
-                  ? "راجع طلبات الأعذار المقدمة من أولياء الأمور"
-                  : "Review excuse requests submitted by parents"}
+                {t?.reviewDescription ||
+                  "Review excuse requests submitted by parents"}
               </CardDescription>
             </div>
             {excuses.length > 0 && (
@@ -190,11 +205,7 @@ export function ExcuseReviewList({
           {excuses.length === 0 ? (
             <div className="text-muted-foreground py-8 text-center">
               <CheckCircle className="mx-auto mb-3 h-12 w-12 text-green-500 opacity-50" />
-              <p>
-                {isArabic
-                  ? "لا توجد طلبات أعذار معلقة"
-                  : "No pending excuse requests"}
-              </p>
+              <p>{t?.noRequests || "No pending excuse requests"}</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -219,9 +230,11 @@ export function ExcuseReviewList({
                       <div className="flex items-center gap-2">
                         <FileText className="text-muted-foreground h-4 w-4" />
                         <Badge>
-                          {EXCUSE_REASON_LABELS[excuse.reason]?.[
-                            isArabic ? "ar" : "en"
-                          ] || excuse.reason}
+                          {reasonsDict?.[
+                            EXCUSE_REASON_KEY_MAP[excuse.reason]
+                          ] ||
+                            EXCUSE_REASON_FALLBACK[excuse.reason] ||
+                            excuse.reason}
                         </Badge>
                       </div>
                       {excuse.description && (
@@ -233,18 +246,22 @@ export function ExcuseReviewList({
                         <div className="text-muted-foreground flex items-center gap-1 text-sm">
                           <Paperclip className="h-3 w-3" />
                           <span>
-                            {excuse.attachments.length}{" "}
-                            {isArabic ? "مرفق" : "attachment(s)"}
+                            {(
+                              t?.attachmentCount || "{count} attachment(s)"
+                            ).replace(
+                              "{count}",
+                              String(excuse.attachments.length)
+                            )}
                           </span>
                         </div>
                       )}
                     </div>
                     <Button onClick={() => handleReview(excuse)} size="sm">
-                      {isArabic ? "مراجعة" : "Review"}
+                      {t?.review || "Review"}
                     </Button>
                   </div>
                   <div className="text-muted-foreground mt-2 border-t pt-2 text-xs">
-                    {isArabic ? "مقدم من:" : "Submitted by:"}{" "}
+                    {t?.submittedBy || "Submitted by:"}{" "}
                     {excuse.submitterName || "Unknown"} -{" "}
                     {formatDate(excuse.submittedAt)}
                   </div>
@@ -259,16 +276,14 @@ export function ExcuseReviewList({
       <Dialog open={isReviewDialogOpen} onOpenChange={setIsReviewDialogOpen}>
         <DialogContent
           className="sm:max-w-[500px]"
-          dir={isArabic ? "rtl" : "ltr"}
+          dir={locale === "ar" ? "rtl" : "ltr"}
         >
           <DialogHeader>
             <DialogTitle>
-              {isArabic ? "مراجعة طلب العذر" : "Review Excuse Request"}
+              {t?.reviewTitle || "Review Excuse Request"}
             </DialogTitle>
             <DialogDescription>
-              {isArabic
-                ? "راجع التفاصيل وقرر الموافقة أو الرفض"
-                : "Review the details and decide to approve or reject"}
+              {"Review the details and decide to approve or reject"}
             </DialogDescription>
           </DialogHeader>
 
@@ -284,19 +299,19 @@ export function ExcuseReviewList({
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-muted-foreground">
-                    {isArabic ? "الطالب:" : "Student:"}
+                    {t?.student || "Student:"}
                   </span>
                   <p className="font-medium">{selectedExcuse.studentName}</p>
                 </div>
                 <div>
                   <span className="text-muted-foreground">
-                    {isArabic ? "الفصل:" : "Class:"}
+                    {t?.class || "Class:"}
                   </span>
                   <p className="font-medium">{selectedExcuse.className}</p>
                 </div>
                 <div>
                   <span className="text-muted-foreground">
-                    {isArabic ? "تاريخ الغياب:" : "Absence Date:"}
+                    {t?.absenceDate || "Absence Date:"}
                   </span>
                   <p className="font-medium">
                     {formatDate(selectedExcuse.date)}
@@ -304,12 +319,14 @@ export function ExcuseReviewList({
                 </div>
                 <div>
                   <span className="text-muted-foreground">
-                    {isArabic ? "السبب:" : "Reason:"}
+                    {t?.reason || "Reason:"}
                   </span>
                   <p className="font-medium">
-                    {EXCUSE_REASON_LABELS[selectedExcuse.reason]?.[
-                      isArabic ? "ar" : "en"
-                    ] || selectedExcuse.reason}
+                    {reasonsDict?.[
+                      EXCUSE_REASON_KEY_MAP[selectedExcuse.reason]
+                    ] ||
+                      EXCUSE_REASON_FALLBACK[selectedExcuse.reason] ||
+                      selectedExcuse.reason}
                   </p>
                 </div>
               </div>
@@ -317,7 +334,7 @@ export function ExcuseReviewList({
               {selectedExcuse.description && (
                 <div>
                   <span className="text-muted-foreground text-sm">
-                    {isArabic ? "الوصف:" : "Description:"}
+                    {t?.description || "Description:"}
                   </span>
                   <p className="bg-muted mt-1 rounded-lg p-3 text-sm">
                     {selectedExcuse.description}
@@ -328,7 +345,7 @@ export function ExcuseReviewList({
               {selectedExcuse.attachments.length > 0 && (
                 <div>
                   <span className="text-muted-foreground text-sm">
-                    {isArabic ? "المرفقات:" : "Attachments:"}
+                    {t?.attachments || "Attachments:"}
                   </span>
                   <div className="mt-1 flex flex-wrap gap-2">
                     {selectedExcuse.attachments.map((url, i) => (
@@ -340,7 +357,7 @@ export function ExcuseReviewList({
                         className="text-primary flex items-center gap-1 text-sm hover:underline"
                       >
                         <Paperclip className="h-3 w-3" />
-                        {isArabic ? `مرفق ${i + 1}` : `Attachment ${i + 1}`}
+                        {t?.attachment || "Attachment"} {i + 1}
                       </a>
                     ))}
                   </div>
@@ -349,17 +366,14 @@ export function ExcuseReviewList({
 
               <div>
                 <span className="text-muted-foreground text-sm">
-                  {isArabic
-                    ? "ملاحظات المراجعة (اختياري):"
-                    : "Review Notes (Optional):"}
+                  {t?.reviewNotes || "Review Notes (Optional):"}
                 </span>
                 <Textarea
                   value={reviewNotes}
                   onChange={(e) => setReviewNotes(e.target.value)}
                   placeholder={
-                    isArabic
-                      ? "أضف ملاحظات للمراجعة..."
-                      : "Add notes for the review..."
+                    t?.reviewNotesPlaceholder ||
+                    "Add notes about your review decision..."
                   }
                   className="mt-1"
                   rows={3}
@@ -374,7 +388,7 @@ export function ExcuseReviewList({
               onClick={() => setIsReviewDialogOpen(false)}
               disabled={isPending}
             >
-              {isArabic ? "إلغاء" : "Cancel"}
+              {t?.cancel || "Cancel"}
             </Button>
             <Button
               variant="destructive"
@@ -386,7 +400,7 @@ export function ExcuseReviewList({
               ) : (
                 <>
                   <XCircle className="me-2 h-4 w-4" />
-                  {isArabic ? "رفض" : "Reject"}
+                  {t?.rejectExcuse || "Reject"}
                 </>
               )}
             </Button>
@@ -400,7 +414,7 @@ export function ExcuseReviewList({
               ) : (
                 <>
                   <CheckCircle className="me-2 h-4 w-4" />
-                  {isArabic ? "موافقة" : "Approve"}
+                  {t?.approveExcuse || "Approve"}
                 </>
               )}
             </Button>

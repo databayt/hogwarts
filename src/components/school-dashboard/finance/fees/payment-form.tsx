@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import type { Locale } from "@/components/internationalization/config"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { recordPayment } from "./actions"
 
@@ -37,21 +38,28 @@ interface Props {
   assignments: Assignment[]
 }
 
-const PAYMENT_METHODS = [
-  { value: "CASH", label: "Cash" },
-  { value: "CHEQUE", label: "Cheque" },
-  { value: "BANK_TRANSFER", label: "Bank Transfer" },
-  { value: "CREDIT_CARD", label: "Credit Card" },
-  { value: "DEBIT_CARD", label: "Debit Card" },
-  { value: "UPI", label: "UPI" },
-  { value: "NET_BANKING", label: "Net Banking" },
-  { value: "WALLET", label: "Wallet" },
-  { value: "OTHER", label: "Other" },
+const getPaymentMethods = (pf?: Record<string, string>) => [
+  { value: "CASH", label: pf?.cash || "Cash" },
+  { value: "CHEQUE", label: pf?.cheque || "Cheque" },
+  { value: "BANK_TRANSFER", label: pf?.bankTransfer || "Bank Transfer" },
+  { value: "CREDIT_CARD", label: pf?.creditCard || "Credit Card" },
+  { value: "DEBIT_CARD", label: pf?.debitCard || "Debit Card" },
+  { value: "UPI", label: pf?.upi || "UPI" },
+  { value: "NET_BANKING", label: pf?.netBanking || "Net Banking" },
+  { value: "WALLET", label: pf?.wallet || "Wallet" },
+  { value: "OTHER", label: pf?.other || "Other" },
 ]
 
 export default function PaymentForm({ lang, assignments }: Props) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+  const { dictionary } = useDictionary()
+  const pf = (dictionary as any)?.finance?.paymentForm as
+    | Record<string, string>
+    | undefined
+  const fc = (dictionary as any)?.finance?.common as
+    | Record<string, string>
+    | undefined
   const [selectedId, setSelectedId] = useState("")
   const [amount, setAmount] = useState("")
   const [amountError, setAmountError] = useState("")
@@ -70,16 +78,24 @@ export default function PaymentForm({ lang, assignments }: Props) {
     (value: string) => {
       const num = parseFloat(value)
       if (!value || isNaN(num)) {
-        setAmountError("Amount is required")
+        setAmountError(pf?.amountIsRequired || "Amount is required")
         return false
       }
       if (num <= 0) {
-        setAmountError("Amount must be greater than 0")
+        setAmountError(
+          pf?.amountMustBePositive || "Amount must be greater than 0"
+        )
         return false
       }
       if (selected && num > selected.remaining) {
         setAmountError(
-          `Amount cannot exceed remaining balance (${formatCurrency(selected.remaining, lang as Locale)})`
+          (
+            pf?.amountExceedsRemaining ||
+            "Amount cannot exceed remaining balance ({amount})"
+          ).replace(
+            "{amount}",
+            formatCurrency(selected.remaining, lang as Locale)
+          )
         )
         return false
       }
@@ -101,7 +117,9 @@ export default function PaymentForm({ lang, assignments }: Props) {
   const handleSubmit = useCallback(
     async (formData: FormData) => {
       if (!selectedId) {
-        toast.error("Please select a fee assignment")
+        toast.error(
+          pf?.selectAssignmentFirst || "Please select a fee assignment"
+        )
         return
       }
       if (!validateAmount(amount)) return
@@ -109,10 +127,16 @@ export default function PaymentForm({ lang, assignments }: Props) {
       startTransition(async () => {
         const result = await recordPayment(formData)
         if (result.success) {
-          toast.success("Payment recorded successfully")
+          toast.success(
+            pf?.paymentRecordedSuccessfully || "Payment recorded successfully"
+          )
           router.push(`/${lang}/finance/fees/payments`)
         } else {
-          toast.error(result.error || "Failed to record payment")
+          toast.error(
+            result.error ||
+              pf?.failedRecordPayment ||
+              "Failed to record payment"
+          )
         }
       })
     },
@@ -124,11 +148,13 @@ export default function PaymentForm({ lang, assignments }: Props) {
       {/* Fee Assignment Selection */}
       <Card>
         <CardHeader>
-          <CardTitle>Fee Assignment</CardTitle>
+          <CardTitle>{pf?.feeAssignment || "Fee Assignment"}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="feeAssignmentId">Select Fee Assignment *</Label>
+            <Label htmlFor="feeAssignmentId">
+              {pf?.selectFeeAssignment || "Select Fee Assignment *"}
+            </Label>
             <Select
               name="feeAssignmentId"
               value={selectedId}
@@ -139,13 +165,19 @@ export default function PaymentForm({ lang, assignments }: Props) {
               }}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select a fee assignment" />
+                <SelectValue
+                  placeholder={
+                    pf?.selectFeeAssignmentPlaceholder ||
+                    "Select a fee assignment"
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
                 {assignments.map((a) => (
                   <SelectItem key={a.id} value={a.id}>
                     {a.studentName} — {a.feeStructureName} —{" "}
-                    {formatCurrency(a.remaining, lang as Locale)} remaining
+                    {formatCurrency(a.remaining, lang as Locale)}{" "}
+                    {pf?.remaining || "remaining"}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -155,19 +187,25 @@ export default function PaymentForm({ lang, assignments }: Props) {
           {selected && (
             <div className="bg-muted grid gap-2 rounded-md p-4 sm:grid-cols-3">
               <div>
-                <p className="text-muted-foreground text-sm">Total Amount</p>
+                <p className="text-muted-foreground text-sm">
+                  {pf?.totalAmount || "Total Amount"}
+                </p>
                 <p className="font-medium">
                   {formatCurrency(selected.finalAmount, lang as Locale)}
                 </p>
               </div>
               <div>
-                <p className="text-muted-foreground text-sm">Total Paid</p>
+                <p className="text-muted-foreground text-sm">
+                  {pf?.totalPaid || "Total Paid"}
+                </p>
                 <p className="font-medium">
                   {formatCurrency(selected.totalPaid, lang as Locale)}
                 </p>
               </div>
               <div>
-                <p className="text-muted-foreground text-sm">Remaining</p>
+                <p className="text-muted-foreground text-sm">
+                  {pf?.remainingBalance || "Remaining"}
+                </p>
                 <p className="font-medium">
                   {formatCurrency(selected.remaining, lang as Locale)}
                 </p>
@@ -180,11 +218,11 @@ export default function PaymentForm({ lang, assignments }: Props) {
       {/* Payment Details */}
       <Card>
         <CardHeader>
-          <CardTitle>Payment Details</CardTitle>
+          <CardTitle>{pf?.paymentDetails || "Payment Details"}</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="amount">Amount *</Label>
+            <Label htmlFor="amount">{pf?.amountRequired || "Amount *"}</Label>
             <Input
               id="amount"
               name="amount"
@@ -195,7 +233,7 @@ export default function PaymentForm({ lang, assignments }: Props) {
               required
               value={amount}
               onChange={(e) => handleAmountChange(e.target.value)}
-              placeholder="0.00"
+              placeholder={pf?.amountPlaceholder || "0.00"}
             />
             {amountError && (
               <p className="text-destructive text-sm">{amountError}</p>
@@ -203,13 +241,17 @@ export default function PaymentForm({ lang, assignments }: Props) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="paymentMethod">Payment Method *</Label>
+            <Label htmlFor="paymentMethod">
+              {pf?.paymentMethod || "Payment Method *"}
+            </Label>
             <Select name="paymentMethod" defaultValue="CASH">
               <SelectTrigger>
-                <SelectValue placeholder="Select method" />
+                <SelectValue
+                  placeholder={pf?.selectMethod || "Select method"}
+                />
               </SelectTrigger>
               <SelectContent>
-                {PAYMENT_METHODS.map((m) => (
+                {getPaymentMethods(pf).map((m) => (
                   <SelectItem key={m.value} value={m.value}>
                     {m.label}
                   </SelectItem>
@@ -219,7 +261,9 @@ export default function PaymentForm({ lang, assignments }: Props) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="paymentDate">Payment Date *</Label>
+            <Label htmlFor="paymentDate">
+              {pf?.paymentDate || "Payment Date *"}
+            </Label>
             <Input
               id="paymentDate"
               name="paymentDate"
@@ -230,17 +274,25 @@ export default function PaymentForm({ lang, assignments }: Props) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="transactionId">Transaction ID</Label>
+            <Label htmlFor="transactionId">
+              {pf?.transactionId || "Transaction ID"}
+            </Label>
             <Input
               id="transactionId"
               name="transactionId"
-              placeholder="Optional reference number"
+              placeholder={
+                pf?.optionalReferenceNumber || "Optional reference number"
+              }
             />
           </div>
 
           <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="remarks">Remarks</Label>
-            <Input id="remarks" name="remarks" placeholder="Optional notes" />
+            <Label htmlFor="remarks">{pf?.remarks || "Remarks"}</Label>
+            <Input
+              id="remarks"
+              name="remarks"
+              placeholder={pf?.optionalNotes || "Optional notes"}
+            />
           </div>
         </CardContent>
       </Card>
@@ -248,10 +300,12 @@ export default function PaymentForm({ lang, assignments }: Props) {
       {/* Actions */}
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={() => router.back()}>
-          Cancel
+          {fc?.cancel || "Cancel"}
         </Button>
         <Button type="submit" disabled={isPending || !selectedId}>
-          {isPending ? "Recording..." : "Record Payment"}
+          {isPending
+            ? pf?.recording || "Recording..."
+            : pf?.recordPayment || "Record Payment"}
         </Button>
       </div>
     </form>

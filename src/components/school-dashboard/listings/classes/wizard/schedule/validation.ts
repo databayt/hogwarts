@@ -12,3 +12,25 @@ export const scheduleSchema = z.object({
 })
 
 export type ScheduleFormData = z.infer<typeof scheduleSchema>
+
+/** Creates a localized schedule schema */
+export function createScheduleSchema(v?: {
+  termRequired?: string
+  startPeriodRequired?: string
+  endPeriodRequired?: string
+  classroomRequired?: string
+}) {
+  return z.object({
+    termId: z.string().min(1, v?.termRequired || "Term is required"),
+    startPeriodId: z
+      .string()
+      .min(1, v?.startPeriodRequired || "Start period is required"),
+    endPeriodId: z
+      .string()
+      .min(1, v?.endPeriodRequired || "End period is required"),
+    classroomId: z
+      .string()
+      .min(1, v?.classroomRequired || "Classroom is required"),
+    duration: z.coerce.number().int().positive().optional(),
+  })
+}

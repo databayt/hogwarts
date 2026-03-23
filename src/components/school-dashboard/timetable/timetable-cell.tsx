@@ -5,6 +5,7 @@
 import { memo, useState } from "react"
 
 import { cn } from "@/lib/utils"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { getSubjectTailwind } from "./config"
 import { SubjectSelector } from "./subject-selector"
@@ -39,6 +40,8 @@ function TimetableCellComponent({
   availableSubjects = [],
   isLastColumn = false,
 }: TimetableCellProps) {
+  const { dictionary } = useDictionary()
+  const cl = (dictionary?.school?.timetable as Record<string, any>)?.cell
   const [showSubjectSelector, setShowSubjectSelector] = useState(false)
   const info = getTeacherInfo(subject)
   const isEmpty = subject === ""
@@ -70,7 +73,11 @@ function TimetableCellComponent({
           "print:py-4"
         )}
         onDoubleClick={handleDoubleClick}
-        title={onSubjectChange ? "Double-click to add subject" : ""}
+        title={
+          onSubjectChange
+            ? (cl?.doubleClickAdd ?? "Double-click to add subject")
+            : ""
+        }
       >
         <span className="text-muted-foreground/50">-</span>
       </div>
@@ -91,8 +98,8 @@ function TimetableCellComponent({
         onDoubleClick={handleDoubleClick}
         title={
           onSubjectChange
-            ? "Double-click to edit subject"
-            : "Click for teacher info"
+            ? (cl?.doubleClickEdit ?? "Double-click to edit subject")
+            : (cl?.clickTeacherInfo ?? "Click for teacher info")
         }
       >
         <TeacherInfoPopup
@@ -112,7 +119,8 @@ function TimetableCellComponent({
 
             {isReplaced && originalSubject && (
               <span className="text-destructive mt-0.5 text-xs">
-                (was: {originalSubject})
+                {cl?.wasOriginal?.replace("{subject}", originalSubject) ??
+                  `(was: ${originalSubject})`}
               </span>
             )}
 

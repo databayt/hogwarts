@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 type CalendarEvent = {
@@ -37,9 +38,10 @@ interface Props {
   year: number
   month: number
   dictionary: Dictionary["school"]
+  lang?: Locale
 }
 
-const MONTH_NAMES = [
+const MONTH_NAMES_EN = [
   "January",
   "February",
   "March",
@@ -54,7 +56,23 @@ const MONTH_NAMES = [
   "December",
 ]
 
-const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+const MONTH_NAMES_AR = [
+  "يناير",
+  "فبراير",
+  "مارس",
+  "أبريل",
+  "مايو",
+  "يونيو",
+  "يوليو",
+  "أغسطس",
+  "سبتمبر",
+  "أكتوبر",
+  "نوفمبر",
+  "ديسمبر",
+]
+
+const DAY_NAMES_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+const DAY_NAMES_AR = ["أحد", "اثنين", "ثلاثاء", "أربعاء", "خميس", "جمعة", "سبت"]
 
 export function EventCalendarClient({
   events,
@@ -62,7 +80,11 @@ export function EventCalendarClient({
   year,
   month,
   dictionary,
+  lang = "en",
 }: Props) {
+  const isAr = lang === "ar"
+  const MONTH_NAMES = isAr ? MONTH_NAMES_AR : MONTH_NAMES_EN
+  const DAY_NAMES = isAr ? DAY_NAMES_AR : DAY_NAMES_EN
   const router = useRouter()
   const searchParams = useSearchParams()
 

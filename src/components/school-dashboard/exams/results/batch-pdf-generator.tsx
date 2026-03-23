@@ -61,6 +61,7 @@ export function BatchPDFGenerator({
   const t = dictionary?.school?.exams?.resultsUi?.batchPdf as
     | Record<string, any>
     | undefined
+  const a = dictionary?.school?.exams?.resultsUi?.analytics
   const [isOpen, setIsOpen] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [batchId, setBatchId] = useState<string | null>(null)
@@ -148,8 +149,8 @@ export function BatchPDFGenerator({
     } catch (error) {
       console.error("Error starting generation:", error)
       toast({
-        title: "Error",
-        description: "Failed to start PDF generation",
+        title: t?.toast?.error ?? "Error",
+        description: t?.toast?.startError ?? "Failed to start PDF generation",
       })
       setIsGenerating(false)
     }
@@ -183,22 +184,24 @@ export function BatchPDFGenerator({
         window.URL.revokeObjectURL(url)
 
         toast({
-          title: "Download Started",
-          description: "Your ZIP file is being downloaded",
+          title: t?.toast?.downloadStarted ?? "Download Started",
+          description:
+            t?.toast?.downloadDescription ??
+            "Your ZIP file is being downloaded",
         })
       } else {
         toast({
-          title: "Download Failed",
+          title: t?.toast?.downloadFailed ?? "Download Failed",
           description:
             ("error" in result ? result.error : null) ||
-            "Failed to download ZIP file",
+            (t?.toast?.downloadError ?? "Failed to download ZIP file"),
         })
       }
     } catch (error) {
       console.error("Error downloading ZIP:", error)
       toast({
-        title: "Error",
-        description: "Failed to download ZIP file",
+        title: t?.toast?.error ?? "Error",
+        description: t?.toast?.downloadError ?? "Failed to download ZIP file",
       })
     }
   }
@@ -214,8 +217,10 @@ export function BatchPDFGenerator({
         setProgress(null)
         setBatchId(null)
         toast({
-          title: "Cancelled",
-          description: "PDF generation has been cancelled",
+          title: t?.toast?.cancelled ?? "Cancelled",
+          description:
+            t?.toast?.cancelledDescription ??
+            "PDF generation has been cancelled",
         })
       }
     } catch (error) {
@@ -231,23 +236,29 @@ export function BatchPDFGenerator({
     <>
       <Button onClick={() => setIsOpen(true)} variant="outline" size="sm">
         <Download className="me-2 h-4 w-4" />
-        Batch Download
+        {a?.batchDownload ?? "Batch Download"}
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="sm:max-w-[525px]">
           <DialogHeader>
-            <DialogTitle>Batch PDF Generation</DialogTitle>
+            <DialogTitle>
+              {a?.batchPdfTitle ?? "Batch PDF Generation"}
+            </DialogTitle>
             <DialogDescription>
-              Generate and download PDF results for all students in "{examTitle}
-              "
+              {(
+                a?.batchPdfDesc ??
+                'Generate and download PDF results for all students in "{title}"'
+              ).replace("{title}", examTitle)}
             </DialogDescription>
           </DialogHeader>
 
           {!isGenerating && !progress ? (
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="template">PDF Template</Label>
+                <Label htmlFor="template">
+                  {a?.pdfTemplate ?? "PDF Template"}
+                </Label>
                 <Select
                   value={template}
                   onValueChange={(v: any) => setTemplate(v)}
@@ -256,15 +267,21 @@ export function BatchPDFGenerator({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="classic">Classic</SelectItem>
-                    <SelectItem value="modern">Modern</SelectItem>
-                    <SelectItem value="minimal">Minimal</SelectItem>
+                    <SelectItem value="classic">
+                      {t?.templates?.classic ?? "Classic"}
+                    </SelectItem>
+                    <SelectItem value="modern">
+                      {t?.templates?.modern ?? "Modern"}
+                    </SelectItem>
+                    <SelectItem value="minimal">
+                      {t?.templates?.minimal ?? "Minimal"}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-3">
-                <Label>Options</Label>
+                <Label>{t?.options ?? "Options"}</Label>
 
                 <div className="flex items-center gap-2">
                   <Checkbox
@@ -278,7 +295,7 @@ export function BatchPDFGenerator({
                     }
                   />
                   <Label htmlFor="logo" className="font-normal">
-                    Include school logo
+                    {a?.includeSchoolLogo ?? "Include school logo"}
                   </Label>
                 </div>
 
@@ -294,7 +311,7 @@ export function BatchPDFGenerator({
                     }
                   />
                   <Label htmlFor="rank" className="font-normal">
-                    Include class rank
+                    {a?.includeClassRank ?? "Include class rank"}
                   </Label>
                 </div>
 
@@ -310,7 +327,7 @@ export function BatchPDFGenerator({
                     }
                   />
                   <Label htmlFor="distribution" className="font-normal">
-                    Include grade distribution
+                    {a?.includeGradeDist ?? "Include grade distribution"}
                   </Label>
                 </div>
 
@@ -326,7 +343,8 @@ export function BatchPDFGenerator({
                     }
                   />
                   <Label htmlFor="breakdown" className="font-normal">
-                    Include question-wise breakdown
+                    {a?.includeQuestionBreakdown ??
+                      "Include question-wise breakdown"}
                   </Label>
                 </div>
 
@@ -342,7 +360,7 @@ export function BatchPDFGenerator({
                     }
                   />
                   <Label htmlFor="feedback" className="font-normal">
-                    Include teacher feedback
+                    {a?.includeTeacherFeedback ?? "Include teacher feedback"}
                   </Label>
                 </div>
 
@@ -358,14 +376,18 @@ export function BatchPDFGenerator({
                     }
                   />
                   <Label htmlFor="signatures" className="font-normal">
-                    Include signature fields
+                    {a?.includeSignatures ?? "Include signature fields"}
                   </Label>
                 </div>
               </div>
 
               <div className="text-muted-foreground flex items-center gap-2 text-sm">
                 <Users className="h-4 w-4" />
-                <span>This will generate {totalStudents} PDFs</span>
+                <span>
+                  {(
+                    a?.generateCount ?? "This will generate {count} PDFs"
+                  ).replace("{count}", String(totalStudents))}
+                </span>
               </div>
             </div>
           ) : (
@@ -384,9 +406,12 @@ export function BatchPDFGenerator({
                         <CircleX className="h-4 w-4 text-red-600" />
                       )}
                       <span className="text-sm font-medium">
-                        {progress.status === "processing" && "Generating..."}
-                        {progress.status === "completed" && "Completed"}
-                        {progress.status === "failed" && "Failed"}
+                        {progress.status === "processing" &&
+                          (a?.generating ?? "Generating...")}
+                        {progress.status === "completed" &&
+                          (a?.completed ?? "Completed")}
+                        {progress.status === "failed" &&
+                          (t?.toast?.generationFailed ?? "Failed")}
                       </span>
                     </div>
                     <span className="text-muted-foreground text-sm">
@@ -403,7 +428,9 @@ export function BatchPDFGenerator({
                   {progress.status === "completed" && progress.result && (
                     <div className="bg-muted space-y-3 rounded-lg p-3">
                       <div className="flex items-center justify-between text-sm">
-                        <span>Successfully generated:</span>
+                        <span>
+                          {a?.successGenerated ?? "Successfully generated:"}
+                        </span>
                         <span className="font-medium text-green-600">
                           {progress.result.successCount} PDFs
                         </span>
@@ -411,7 +438,7 @@ export function BatchPDFGenerator({
 
                       {progress.result.failureCount > 0 && (
                         <div className="flex items-center justify-between text-sm">
-                          <span>Failed:</span>
+                          <span>{a?.failedLabel ?? "Failed:"}</span>
                           <span className="font-medium text-red-600">
                             {progress.result.failureCount} PDFs
                           </span>
@@ -437,31 +464,33 @@ export function BatchPDFGenerator({
             {!isGenerating && !progress ? (
               <>
                 <Button variant="outline" onClick={() => setIsOpen(false)}>
-                  Cancel
+                  {t?.close ?? "Cancel"}
                 </Button>
                 <Button onClick={handleGenerate}>
                   <FileDown className="me-2 h-4 w-4" />
-                  Generate PDFs
+                  {a?.generatePdfs ?? "Generate PDFs"}
                 </Button>
               </>
             ) : progress?.status === "processing" ? (
               <>
                 <Button variant="outline" onClick={handleCancel}>
-                  Cancel Generation
+                  {a?.cancelGeneration ?? "Cancel Generation"}
                 </Button>
               </>
             ) : progress?.status === "completed" ? (
               <>
                 <Button variant="outline" onClick={() => setIsOpen(false)}>
-                  Close
+                  {t?.close ?? "Close"}
                 </Button>
                 <Button onClick={handleDownload}>
                   <Download className="me-2 h-4 w-4" />
-                  Download ZIP
+                  {a?.downloadZip ?? "Download ZIP"}
                 </Button>
               </>
             ) : (
-              <Button onClick={() => setIsOpen(false)}>Close</Button>
+              <Button onClick={() => setIsOpen(false)}>
+                {t?.close ?? "Close"}
+              </Button>
             )}
           </DialogFooter>
         </DialogContent>

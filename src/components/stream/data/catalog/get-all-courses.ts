@@ -5,7 +5,9 @@
 import { Prisma } from "@prisma/client"
 
 import { getCatalogImageUrl } from "@/lib/catalog-image-url"
+import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
+import type { SupportedLanguage } from "@/components/translation/types"
 
 /**
  * Fetches published catalog subjects available at a school with pagination.
@@ -31,6 +33,7 @@ export async function getAllCatalogCourses(
   const page = params.page ?? 1
   const perPage = params.perPage ?? 12
   const skip = (page - 1) * perPage
+  const displayLang = (params.lang || "en") as SupportedLanguage
 
   // Get catalog subjects that this school has selected
   const selections = await db.schoolSubjectSelection.findMany({
@@ -83,7 +86,11 @@ export async function getAllCatalogCourses(
     db.catalogSubject.count({ where }),
   ])
 
-  const rows = subjects.map((s) => toCourseShape(s, customNames.get(s.id)))
+  const rows = await Promise.all(
+    subjects.map((s) =>
+      toCourseShape(s, schoolId, displayLang, customNames.get(s.id))
+    )
+  )
 
   return { rows, count }
 }
@@ -109,8 +116,8 @@ const subjectSelect = {
   updatedAt: true,
 } as const
 
-/** Map CatalogSubject → PublicCourseType-compatible shape */
-function toCourseShape(
+/** Map CatalogSubject → PublicCourseType-compatible shape with translation */
+async function toCourseShape(
   subject: {
     id: string
     name: string
@@ -131,20 +138,29 @@ function toCourseShape(
     createdAt: Date
     updatedAt: Date
   },
+  schoolId: string,
+  displayLang: SupportedLanguage,
   customName?: string
 ) {
+  const srcLang = (subject.lang || "ar") as SupportedLanguage
+  const [title, description, departmentName] = await Promise.all([
+    getDisplayText(customName || subject.name, srcLang, displayLang, schoolId),
+    getDisplayText(subject.description, srcLang, displayLang, schoolId),
+    getDisplayText(subject.department, srcLang, displayLang, schoolId),
+  ])
+
   return {
     id: subject.id,
-    title: customName || subject.name,
+    title,
     slug: subject.slug,
-    description: subject.description,
+    description,
     imageUrl: getCatalogImageUrl(subject.thumbnailKey, subject.imageKey, "sm"),
     price: null as number | null,
     lang: subject.lang,
     createdAt: subject.createdAt,
     updatedAt: subject.updatedAt,
     category: {
-      name: subject.department,
+      name: departmentName,
     },
     _count: {
       chapters: subject.totalChapters,
@@ -163,4 +179,4 @@ function toCourseShape(
   }
 }
 
-export type CatalogCourseType = ReturnType<typeof toCourseShape>
+export type CatalogCourseType = Awaited<ReturnType<typeof toCourseShape>>

@@ -36,6 +36,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 
 // Define colors for charts
@@ -74,13 +75,19 @@ export function AttendanceTrendsChart({
   className,
 }: AttendanceTrendsChartProps) {
   const { locale } = useLocale()
+  const { dictionary } = useDictionary()
+  const ct = (dictionary?.school?.attendance as any)?.charts as
+    | Record<string, string>
+    | undefined
 
   if (!data || data.length === 0) {
     return (
       <Card className={className}>
         <CardHeader>
-          <CardTitle>Attendance Trends</CardTitle>
-          <CardDescription>Daily attendance rates over time</CardDescription>
+          <CardTitle>{ct?.attendanceTrends || "Attendance Trends"}</CardTitle>
+          <CardDescription>
+            {ct?.dailyRatesOverTime || "Daily attendance rates over time"}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-muted-foreground flex h-[350px] items-center justify-center">
@@ -94,8 +101,10 @@ export function AttendanceTrendsChart({
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle>Attendance Trends</CardTitle>
-        <CardDescription>Daily attendance rates over time</CardDescription>
+        <CardTitle>{ct?.attendanceTrends || "Attendance Trends"}</CardTitle>
+        <CardDescription>
+          {ct?.dailyRatesOverTime || "Daily attendance rates over time"}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={350}>
@@ -128,26 +137,26 @@ export function AttendanceTrendsChart({
               dataKey="present"
               stackId="a"
               fill={STATUS_COLORS.PRESENT}
-              name="Present"
+              name={ct?.present || "Present"}
             />
             <Bar
               dataKey="late"
               stackId="a"
               fill={STATUS_COLORS.LATE}
-              name="Late"
+              name={ct?.late || "Late"}
             />
             <Bar
               dataKey="absent"
               stackId="a"
               fill={STATUS_COLORS.ABSENT}
-              name="Absent"
+              name={ct?.absent || "Absent"}
             />
             <Line
               type="monotone"
               dataKey="rate"
               stroke={COLORS.primary}
               strokeWidth={2}
-              name="Attendance Rate %"
+              name={ct?.attendanceRatePercent || "Attendance Rate %"}
             />
           </ComposedChart>
         </ResponsiveContainer>
@@ -169,6 +178,10 @@ export function MethodUsagePieChart({
   data,
   className,
 }: MethodUsagePieChartProps) {
+  const { dictionary: dm } = useDictionary()
+  const ct = (dm?.school?.attendance as any)?.charts as
+    | Record<string, string>
+    | undefined
   const chartColors = [
     COLORS.primary,
     COLORS.secondary,
@@ -186,8 +199,12 @@ export function MethodUsagePieChart({
     return (
       <Card className={className}>
         <CardHeader>
-          <CardTitle>Method Distribution</CardTitle>
-          <CardDescription>How attendance is being tracked</CardDescription>
+          <CardTitle>
+            {ct?.methodDistribution || "Method Distribution"}
+          </CardTitle>
+          <CardDescription>
+            {ct?.howTracked || "How attendance is being tracked"}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-muted-foreground flex h-[350px] items-center justify-center">
@@ -201,8 +218,10 @@ export function MethodUsagePieChart({
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle>Method Distribution</CardTitle>
-        <CardDescription>How attendance is being tracked</CardDescription>
+        <CardTitle>{ct?.methodDistribution || "Method Distribution"}</CardTitle>
+        <CardDescription>
+          {ct?.howTracked || "How attendance is being tracked"}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={350}>
@@ -248,12 +267,20 @@ export function DayWisePatternChart({
   data,
   className,
 }: DayWisePatternChartProps) {
+  const { dictionary: dd } = useDictionary()
+  const ct = (dd?.school?.attendance as any)?.charts as
+    | Record<string, string>
+    | undefined
   if (!data || data.length === 0) {
     return (
       <Card className={className}>
         <CardHeader>
-          <CardTitle>Weekly Pattern Analysis</CardTitle>
-          <CardDescription>Attendance patterns by day of week</CardDescription>
+          <CardTitle>
+            {ct?.weeklyPattern || "Weekly Pattern Analysis"}
+          </CardTitle>
+          <CardDescription>
+            {ct?.patternsByDay || "Attendance patterns by day of week"}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-muted-foreground flex h-[300px] items-center justify-center">
@@ -267,8 +294,10 @@ export function DayWisePatternChart({
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle>Weekly Pattern Analysis</CardTitle>
-        <CardDescription>Attendance patterns by day of week</CardDescription>
+        <CardTitle>{ct?.weeklyPattern || "Weekly Pattern Analysis"}</CardTitle>
+        <CardDescription>
+          {ct?.patternsByDay || "Attendance patterns by day of week"}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
@@ -286,7 +315,7 @@ export function DayWisePatternChart({
               style={{ fontSize: 10 }}
             />
             <Radar
-              name="Attendance Rate"
+              name={ct?.attendanceRatePercent || "Attendance Rate"}
               dataKey="rate"
               stroke={COLORS.primary}
               fill={COLORS.primary}
@@ -315,6 +344,10 @@ export function TimeDistributionChart({
   data,
   className,
 }: TimeDistributionChartProps) {
+  const { dictionary: dt } = useDictionary()
+  const ct = (dt?.school?.attendance as any)?.charts as
+    | Record<string, string>
+    | undefined
   const hasData =
     data && data.some((d) => d.checkIns > 0 || d.onTime > 0 || d.late > 0)
 
@@ -322,8 +355,12 @@ export function TimeDistributionChart({
     return (
       <Card className={className}>
         <CardHeader>
-          <CardTitle>Check-in Time Distribution</CardTitle>
-          <CardDescription>When students are arriving</CardDescription>
+          <CardTitle>
+            {ct?.checkInTime || "Check-in Time Distribution"}
+          </CardTitle>
+          <CardDescription>
+            {ct?.whenArriving || "When students are arriving"}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-muted-foreground flex h-[300px] items-center justify-center">
@@ -337,8 +374,10 @@ export function TimeDistributionChart({
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle>Check-in Time Distribution</CardTitle>
-        <CardDescription>When students are arriving</CardDescription>
+        <CardTitle>{ct?.checkInTime || "Check-in Time Distribution"}</CardTitle>
+        <CardDescription>
+          {ct?.whenArriving || "When students are arriving"}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
@@ -363,7 +402,7 @@ export function TimeDistributionChart({
               stackId="1"
               stroke={STATUS_COLORS.PRESENT}
               fill={STATUS_COLORS.PRESENT}
-              name="On Time"
+              name={ct?.onTime || "On Time"}
             />
             <Area
               type="monotone"
@@ -371,7 +410,7 @@ export function TimeDistributionChart({
               stackId="1"
               stroke={STATUS_COLORS.LATE}
               fill={STATUS_COLORS.LATE}
-              name="Late"
+              name={ct?.late || "Late"}
             />
           </AreaChart>
         </ResponsiveContainer>
@@ -393,11 +432,17 @@ export function ClassComparisonChart({
   data,
   className,
 }: ClassComparisonChartProps) {
+  const { dictionary: dc } = useDictionary()
+  const ct = (dc?.school?.attendance as any)?.charts as
+    | Record<string, string>
+    | undefined
   if (!data || data.length === 0) {
     return (
       <Card className={className}>
         <CardHeader>
-          <CardTitle>Class Performance Comparison</CardTitle>
+          <CardTitle>
+            {ct?.classPerformance || "Class Performance Comparison"}
+          </CardTitle>
           <CardDescription>
             Attendance rates across different classes
           </CardDescription>
@@ -414,7 +459,9 @@ export function ClassComparisonChart({
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle>Class Performance Comparison</CardTitle>
+        <CardTitle>
+          {ct?.classPerformance || "Class Performance Comparison"}
+        </CardTitle>
         <CardDescription>
           Attendance rates across different classes
         </CardDescription>
@@ -448,7 +495,10 @@ export function ClassComparisonChart({
               }}
               formatter={(value: number) => `${value.toFixed(1)}%`}
             />
-            <Bar dataKey="rate" name="Attendance Rate">
+            <Bar
+              dataKey="rate"
+              name={ct?.attendanceRatePercent || "Attendance Rate"}
+            >
               {data.map((entry, index) => (
                 <Cell
                   key={`cell-${index}`}
@@ -485,12 +535,18 @@ export function StudentAttendanceHeatmap({
   data,
   className,
 }: StudentAttendanceHeatmapProps) {
+  const { dictionary: ds } = useDictionary()
+  const ct = (ds?.school?.attendance as any)?.charts as
+    | Record<string, string>
+    | undefined
   const days = ["monday", "tuesday", "wednesday", "thursday", "friday"]
 
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle>Student Attendance Heatmap</CardTitle>
+        <CardTitle>
+          {ct?.studentHeatmap || "Student Attendance Heatmap"}
+        </CardTitle>
         <CardDescription>
           Weekly attendance patterns per student
         </CardDescription>
@@ -499,7 +555,13 @@ export function StudentAttendanceHeatmap({
         <div className="space-y-2">
           <div className="grid grid-cols-6 gap-2 text-xs font-medium">
             <div></div>
-            {["Mon", "Tue", "Wed", "Thu", "Fri"].map((day) => (
+            {[
+              ct?.mon || "Mon",
+              ct?.tue || "Tue",
+              ct?.wed || "Wed",
+              ct?.thu || "Thu",
+              ct?.fri || "Fri",
+            ].map((day) => (
               <div key={day} className="text-center">
                 {day}
               </div>
@@ -551,10 +613,16 @@ export function MonthlyComparisonChart({
   data,
   className,
 }: MonthlyComparisonChartProps) {
+  const { dictionary: dm } = useDictionary()
+  const ct = (dm?.school?.attendance as any)?.charts as
+    | Record<string, string>
+    | undefined
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle>Year-over-Year Comparison</CardTitle>
+        <CardTitle>
+          {ct?.yearComparison || "Year-over-Year Comparison"}
+        </CardTitle>
         <CardDescription>
           Current year vs previous year attendance
         </CardDescription>
@@ -586,7 +654,7 @@ export function MonthlyComparisonChart({
               stroke={COLORS.primary}
               strokeWidth={2}
               dot={{ r: 4 }}
-              name="Current Year"
+              name={ct?.currentYear || "Current Year"}
             />
             <Line
               type="monotone"
@@ -595,7 +663,7 @@ export function MonthlyComparisonChart({
               strokeWidth={2}
               strokeDasharray="5 5"
               dot={{ r: 4 }}
-              name="Previous Year"
+              name={ct?.previousYear || "Previous Year"}
             />
           </LineChart>
         </ResponsiveContainer>
@@ -617,10 +685,16 @@ export function AbsenceReasonsChart({
   data,
   className,
 }: AbsenceReasonsChartProps) {
+  const { dictionary: da } = useDictionary()
+  const ct = (da?.school?.attendance as any)?.charts as
+    | Record<string, string>
+    | undefined
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle>Absence Reasons Breakdown</CardTitle>
+        <CardTitle>
+          {ct?.absenceReasons || "Absence Reasons Breakdown"}
+        </CardTitle>
         <CardDescription>Why students are missing classes</CardDescription>
       </CardHeader>
       <CardContent>
@@ -639,7 +713,7 @@ export function AbsenceReasonsChart({
                 borderRadius: "8px",
               }}
             />
-            <Bar dataKey="count" name="Number of Absences">
+            <Bar dataKey="count" name={ct?.absent || "Absent"}>
               {data.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.color} />
               ))}

@@ -122,6 +122,10 @@
           {
             "type": "command",
             "command": "bash .claude/hooks/check-roles.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/check-skeleton.sh"
           }
         ]
       },
@@ -143,6 +147,10 @@
           {
             "type": "command",
             "command": "bash .claude/hooks/check-roles.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/check-skeleton.sh"
           }
         ]
       },

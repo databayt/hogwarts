@@ -81,6 +81,9 @@ export function AttendanceOverviewContent({
 
   const basePath = `/${locale}/attendance`
   const d = dictionary?.school?.attendance
+  const ov = (dictionary?.school?.attendance as any)?.overviewExtras as
+    | Record<string, string>
+    | undefined
 
   useEffect(() => {
     loadData()
@@ -112,7 +115,8 @@ export function AttendanceOverviewContent({
         setLoadError(
           errorMsg
             ? String(errorMsg)
-            : "Unable to load attendance data. Please try again."
+            : ov?.unableToLoad ||
+                "Unable to load attendance data. Please try again."
         )
       }
     })
@@ -136,12 +140,12 @@ export function AttendanceOverviewContent({
                 {loadError}
               </p>
               <p className="text-muted-foreground text-sm">
-                Check that students are enrolled in classes and the school has
-                an active term configured.
+                {ov?.checkStudentsEnrolled ||
+                  "Check that students are enrolled in classes and that attendance has been taken."}
               </p>
             </div>
             <Button variant="outline" size="sm" onClick={() => loadData()}>
-              Retry
+              {ov?.retry || "Retry"}
             </Button>
           </CardContent>
         </Card>
@@ -244,7 +248,10 @@ export function AttendanceOverviewContent({
                   variant="outline"
                   className="dark:bg-background bg-white"
                 >
-                  +{unmarkedClasses.length - 8} more
+                  {(ov?.moreCount || "+{count} more").replace(
+                    "{count}",
+                    String(unmarkedClasses.length - 8)
+                  )}
                 </Badge>
               )}
             </div>
@@ -262,7 +269,10 @@ export function AttendanceOverviewContent({
               <span className="ms-2 inline-flex gap-1">
                 {followUp.summary.critical > 0 && (
                   <Badge variant="destructive" className="text-xs">
-                    {followUp.summary.critical} critical
+                    {(ov?.criticalCount || "{count} critical").replace(
+                      "{count}",
+                      String(followUp.summary.critical)
+                    )}
                   </Badge>
                 )}
                 {followUp.summary.warning > 0 && (
@@ -270,7 +280,10 @@ export function AttendanceOverviewContent({
                     variant="outline"
                     className="border-amber-500 text-xs text-amber-600"
                   >
-                    {followUp.summary.warning} warning
+                    {(ov?.warningCount || "{count} warning").replace(
+                      "{count}",
+                      String(followUp.summary.warning)
+                    )}
                   </Badge>
                 )}
               </span>

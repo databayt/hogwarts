@@ -10,6 +10,7 @@ import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { InputField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { updateParentInformation } from "./actions"
 import { informationSchema, type InformationFormData } from "./validation"
@@ -23,6 +24,8 @@ interface InformationFormProps {
 export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
   ({ parentId, initialData, onValidChange }, ref) => {
     const [isPending, startTransition] = useTransition()
+    const { dictionary } = useDictionary()
+    const d = dictionary?.school?.parents as Record<string, any> | undefined
 
     const form = useForm<InformationFormData>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -75,28 +78,28 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
         <form className="space-y-6">
           <InputField
             name="givenName"
-            label="Given Name"
-            placeholder="Enter given name"
+            label={d?.givenName || "Given Name"}
+            placeholder={d?.enterGivenName || "Enter given name"}
             required
             disabled={isPending}
           />
           <InputField
             name="surname"
-            label="Surname"
-            placeholder="Enter surname"
+            label={d?.surname || "Surname"}
+            placeholder={d?.enterSurname || "Enter surname"}
             required
             disabled={isPending}
           />
           <InputField
             name="emailAddress"
-            label="Email Address"
+            label={d?.emailAddress || "Email Address"}
             type="email"
             placeholder="parent@example.com"
             disabled={isPending}
           />
           <InputField
             name="profilePhotoUrl"
-            label="Profile Photo URL"
+            label={d?.profilePhotoUrl || "Profile Photo URL"}
             placeholder="https://..."
             disabled={isPending}
           />

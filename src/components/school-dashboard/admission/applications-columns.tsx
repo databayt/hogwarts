@@ -103,7 +103,18 @@ function ApplicationActionsCell({
     }
   }
 
-  const statusOptions = [
+  // Must match VALID_TRANSITIONS in actions.ts
+  const VALID_TRANSITIONS: Record<string, string[]> = {
+    SUBMITTED: ["UNDER_REVIEW", "WITHDRAWN"],
+    UNDER_REVIEW: ["SHORTLISTED", "REJECTED", "WITHDRAWN"],
+    SHORTLISTED: ["SELECTED", "WAITLISTED", "REJECTED", "WITHDRAWN"],
+    SELECTED: ["WAITLISTED", "REJECTED", "WITHDRAWN"],
+    WAITLISTED: ["SELECTED", "REJECTED", "WITHDRAWN"],
+    REJECTED: [],
+    WITHDRAWN: [],
+  }
+
+  const allStatusOptions = [
     {
       value: "UNDER_REVIEW",
       label: t?.status?.UNDER_REVIEW || "Under Review",
@@ -116,6 +127,10 @@ function ApplicationActionsCell({
     { value: "WAITLISTED", label: t?.status?.WAITLISTED || "Waitlisted" },
     { value: "REJECTED", label: t?.status?.REJECTED || "Rejected" },
   ]
+
+  const statusOptions = allStatusOptions.filter((opt) =>
+    VALID_TRANSITIONS[application.status]?.includes(opt.value)
+  )
 
   return (
     <DropdownMenu>
@@ -142,7 +157,6 @@ function ApplicationActionsCell({
               <DropdownMenuItem
                 key={opt.value}
                 onClick={() => onUpdateStatus(opt.value)}
-                disabled={application.status === opt.value}
               >
                 {opt.label}
               </DropdownMenuItem>

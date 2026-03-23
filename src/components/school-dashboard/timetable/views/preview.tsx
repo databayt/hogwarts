@@ -28,6 +28,8 @@ interface Props {
 }
 
 export default function TimetablePreview({ dictionary, lang }: Props) {
+  const d = dictionary?.timetable as Record<string, any> | undefined
+  const pv = (d as Record<string, any>)?.preview
   const isRTL = lang === "ar"
 
   const [isTeacherView, setIsTeacherView] = useState(false)
@@ -128,7 +130,7 @@ export default function TimetablePreview({ dictionary, lang }: Props) {
     return (
       <Card className="rounded-xl shadow-lg">
         <CardContent className="text-muted-foreground py-12 text-center">
-          No term configured. Create a term first.
+          {pv?.noTerm ?? "No term configured. Create a term first."}
         </CardContent>
       </Card>
     )
@@ -153,10 +155,12 @@ export default function TimetablePreview({ dictionary, lang }: Props) {
               </div>
               <div>
                 <p className="text-foreground font-medium">
-                  {isTeacherView ? "Teacher View" : "Student View"}
+                  {isTeacherView
+                    ? (pv?.teacherView ?? "Teacher View")
+                    : (pv?.studentView ?? "Student View")}
                 </p>
                 <p className="text-muted-foreground text-sm">
-                  {currentEntity?.label || "No data available"}
+                  {currentEntity?.label || (pv?.noData ?? "No data available")}
                 </p>
               </div>
             </div>
@@ -166,7 +170,7 @@ export default function TimetablePreview({ dictionary, lang }: Props) {
                 htmlFor="view-toggle"
                 className="text-muted-foreground text-sm"
               >
-                Student
+                {pv?.student ?? "Student"}
               </Label>
               <Switch
                 id="view-toggle"
@@ -177,7 +181,7 @@ export default function TimetablePreview({ dictionary, lang }: Props) {
                 htmlFor="view-toggle"
                 className="text-muted-foreground text-sm"
               >
-                Teacher
+                {pv?.teacher ?? "Teacher"}
               </Label>
             </div>
           </div>
@@ -186,10 +190,11 @@ export default function TimetablePreview({ dictionary, lang }: Props) {
           {isTeacherView && teacherWorkload && (
             <div className="mt-4 flex gap-2">
               <Badge variant="secondary" className="px-3 py-1">
-                {teacherWorkload.periodsPerWeek} periods/week
+                {teacherWorkload.periodsPerWeek}{" "}
+                {pv?.periodsPerWeek ?? "periods/week"}
               </Badge>
               <Badge variant="outline" className="px-3 py-1">
-                {teacherWorkload.classesTeaching} classes
+                {teacherWorkload.classesTeaching} {pv?.classes ?? "classes"}
               </Badge>
             </div>
           )}
@@ -210,14 +215,14 @@ export default function TimetablePreview({ dictionary, lang }: Props) {
       ) : (
         <Card className="border-border rounded-xl shadow-lg">
           <CardContent className="text-muted-foreground py-12 text-center">
-            No timetable data available
+            {pv?.noTimetableData ?? "No timetable data available"}
           </CardContent>
         </Card>
       )}
 
       {/* Footer info */}
       <div className="text-muted-foreground text-center text-sm">
-        <p>Timetable Preview</p>
+        <p>{pv?.title ?? "Timetable Preview"}</p>
       </div>
     </div>
   )

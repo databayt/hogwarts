@@ -41,18 +41,28 @@ interface ActivePass {
   hasConflict: boolean
 }
 
-const destinationLabels: Record<
-  HallPassDestination,
-  { en: string; ar: string }
-> = {
-  BATHROOM: { en: "Bathroom", ar: "دورة المياه" },
-  NURSE: { en: "Nurse", ar: "العيادة" },
-  OFFICE: { en: "Office", ar: "الإدارة" },
-  COUNSELOR: { en: "Counselor", ar: "المرشد" },
-  LIBRARY: { en: "Library", ar: "المكتبة" },
-  LOCKER: { en: "Locker", ar: "الخزانة" },
-  WATER_FOUNTAIN: { en: "Water Fountain", ar: "برادة الماء" },
-  OTHER: { en: "Other", ar: "أخرى" },
+// Fallback labels when dictionary is not loaded
+const destinationLabelsFallback: Record<HallPassDestination, string> = {
+  BATHROOM: "Bathroom",
+  NURSE: "Nurse",
+  OFFICE: "Office",
+  COUNSELOR: "Counselor",
+  LIBRARY: "Library",
+  LOCKER: "Locker",
+  WATER_FOUNTAIN: "Water Fountain",
+  OTHER: "Other",
+}
+
+// Map destination codes to dictionary keys
+const destinationKeyMap: Record<HallPassDestination, string> = {
+  BATHROOM: "bathroom",
+  NURSE: "nurse",
+  OFFICE: "office",
+  COUNSELOR: "counselor",
+  LIBRARY: "library",
+  LOCKER: "other",
+  WATER_FOUNTAIN: "other",
+  OTHER: "other",
 }
 
 const destinationIcons: Record<HallPassDestination, string> = {
@@ -73,7 +83,8 @@ interface HallPassContentProps {
 
 export function HallPassContent({ locale, classId }: HallPassContentProps) {
   const { dictionary } = useDictionary()
-  const t = dictionary?.attendance?.hallPass
+  const t = (dictionary?.school?.attendance as any)?.hallPass
+  const destinations = t?.destinations as Record<string, string> | undefined
   const isRTL = locale === "ar"
   const [passes, setPasses] = useState<ActivePass[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -227,7 +238,8 @@ export function HallPassContent({ locale, classId }: HallPassContentProps) {
                       {t?.destination || "Destination"}
                     </span>
                     <span className="font-medium">
-                      {destinationLabels[pass.destination][isRTL ? "ar" : "en"]}
+                      {destinations?.[destinationKeyMap[pass.destination]] ||
+                        destinationLabelsFallback[pass.destination]}
                     </span>
                   </div>
 

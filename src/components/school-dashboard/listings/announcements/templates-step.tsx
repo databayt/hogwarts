@@ -35,26 +35,26 @@ interface TemplatesStepProps {
   onTemplateSelect?: () => void
 }
 
-// Quick presets for common announcement types
-const QUICK_PRESETS = [
+// Quick presets structure (labels resolved from dictionary at render time)
+const QUICK_PRESETS_KEYS = [
   {
     id: "urgent-school",
     icon: AlertTriangle,
-    label: "عاجل للمدرسة",
+    labelKey: "urgentSchool" as const,
     scope: "school" as const,
     priority: "urgent" as const,
   },
   {
     id: "class-meeting",
     icon: Users,
-    label: "اجتماع الفصل",
+    labelKey: "classMeeting" as const,
     scope: "class" as const,
     priority: "normal" as const,
   },
   {
     id: "staff-notice",
     icon: Bell,
-    label: "إشعار الموظفين",
+    labelKey: "staffNotice" as const,
     scope: "role" as const,
     priority: "normal" as const,
     role: "STAFF" as const,
@@ -62,60 +62,75 @@ const QUICK_PRESETS = [
   {
     id: "parent-update",
     icon: UserCheck,
-    label: "تحديث أولياء الأمور",
+    labelKey: "parentUpdate" as const,
     scope: "role" as const,
     priority: "normal" as const,
     role: "GUARDIAN" as const,
   },
 ]
 
-// System templates for common announcement categories
-const SYSTEM_TEMPLATES = [
+// System templates structure (labels resolved from dictionary at render time)
+const SYSTEM_TEMPLATES_KEYS = [
   {
     type: "holiday",
     icon: Calendar,
-    label: "عطلة",
+    labelKey: "holiday" as const,
     color: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
   },
   {
     type: "exam",
     icon: GraduationCap,
-    label: "جدول الامتحانات",
+    labelKey: "examSchedule" as const,
     color:
       "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300",
   },
   {
     type: "event",
     icon: CalendarCheck,
-    label: "فعالية",
+    labelKey: "event" as const,
     color: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
   },
   {
     type: "meeting",
     icon: Users,
-    label: "اجتماع",
+    labelKey: "meeting" as const,
     color:
       "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300",
   },
   {
     type: "policy",
     icon: FileCheck,
-    label: "تحديث السياسة",
+    labelKey: "policyUpdate" as const,
     color: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
   },
   {
     type: "emergency",
     icon: AlertTriangle,
-    label: "طوارئ",
+    labelKey: "emergency" as const,
     color: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
   },
   {
     type: "general",
     icon: MessageSquare,
-    label: "عام",
+    labelKey: "general" as const,
     color: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
   },
 ]
+
+// Fallback labels (English defaults)
+const PRESET_FALLBACKS: Record<string, string> = {
+  urgentSchool: "Urgent for School",
+  classMeeting: "Class Meeting",
+  staffNotice: "Staff Notice",
+  parentUpdate: "Parent Update",
+  holiday: "Holiday",
+  examSchedule: "Exam Schedule",
+  event: "Event",
+  meeting: "Meeting",
+  policyUpdate: "Policy Update",
+  emergency: "Emergency",
+  general: "General",
+}
 
 export function TemplatesStep({
   form,
@@ -124,6 +139,9 @@ export function TemplatesStep({
 }: TemplatesStepProps) {
   const { dictionary } = useDictionary()
   const d = dictionary?.school?.announcements?.templates as
+    | Record<string, string>
+    | undefined
+  const ts = (dictionary?.school?.announcements as any)?.templatesStep as
     | Record<string, string>
     | undefined
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(
@@ -180,8 +198,12 @@ export function TemplatesStep({
     onTemplateSelect?.()
   }
 
+  // Resolve label from dictionary with fallback
+  const getPresetLabel = (key: string) =>
+    ts?.[key] || PRESET_FALLBACKS[key] || key
+
   // Apply quick preset
-  const applyPreset = (preset: (typeof QUICK_PRESETS)[0]) => {
+  const applyPreset = (preset: (typeof QUICK_PRESETS_KEYS)[0]) => {
     handleSelect(preset.id, {
       scope: preset.scope,
       priority: preset.priority,
@@ -190,7 +212,7 @@ export function TemplatesStep({
   }
 
   // Apply system template type
-  const applySystemTemplate = (template: (typeof SYSTEM_TEMPLATES)[0]) => {
+  const applySystemTemplate = (template: (typeof SYSTEM_TEMPLATES_KEYS)[0]) => {
     handleSelect(`system-${template.type}`, {
       scope: "school",
       priority: template.type === "emergency" ? "urgent" : "normal",
@@ -215,7 +237,7 @@ export function TemplatesStep({
       {/* Start from Scratch */}
       <div>
         <h4 className="mb-3 text-sm font-medium">
-          {d?.startFresh || "Start Fresh"}
+          {ts?.startFresh || d?.startFresh || "Start Fresh"}
         </h4>
         <Card
           className={cn(
@@ -231,15 +253,19 @@ export function TemplatesStep({
             </div>
             <div className="flex-1">
               <h5 className="font-medium">
-                {d?.newAnnouncement || "New Announcement"}
+                {ts?.newAnnouncement ||
+                  d?.newAnnouncement ||
+                  "New Announcement"}
               </h5>
               <p className="text-muted-foreground text-sm">
-                {d?.blankAnnouncement || "Start with a blank announcement"}
+                {ts?.blankAnnouncement ||
+                  d?.blankAnnouncement ||
+                  "Start with a blank announcement"}
               </p>
             </div>
             {selectedTemplate === "scratch" && (
               <Badge variant="default" className="shrink-0">
-                {d?.selected || "Selected"}
+                {ts?.selected || d?.selected || "Selected"}
               </Badge>
             )}
           </CardContent>
@@ -249,10 +275,10 @@ export function TemplatesStep({
       {/* Quick Presets */}
       <div>
         <h4 className="mb-3 text-sm font-medium">
-          {d?.quickPresets || "Quick Presets"}
+          {ts?.quickPresets || d?.quickPresets || "Quick Presets"}
         </h4>
         <div className="grid grid-cols-2 gap-3">
-          {QUICK_PRESETS.map((preset) => {
+          {QUICK_PRESETS_KEYS.map((preset) => {
             const Icon = preset.icon
             const isSelected = selectedTemplate === preset.id
             return (
@@ -270,7 +296,7 @@ export function TemplatesStep({
                   </div>
                   <div className="min-w-0 flex-1">
                     <h5 className="truncate text-sm font-medium">
-                      {preset.label}
+                      {getPresetLabel(preset.labelKey)}
                     </h5>
                   </div>
                 </CardContent>
@@ -283,10 +309,12 @@ export function TemplatesStep({
       {/* System Templates */}
       <div>
         <h4 className="mb-3 text-sm font-medium">
-          {d?.announcementTypes || "Announcement Types"}
+          {ts?.announcementTypes ||
+            d?.announcementTypes ||
+            "Announcement Types"}
         </h4>
         <div className="flex flex-wrap gap-2">
-          {SYSTEM_TEMPLATES.map((template) => {
+          {SYSTEM_TEMPLATES_KEYS.map((template) => {
             const Icon = template.icon
             const isSelected = selectedTemplate === `system-${template.type}`
             return (
@@ -301,7 +329,7 @@ export function TemplatesStep({
                 )}
               >
                 <Icon className="h-4 w-4" />
-                {template.label}
+                {getPresetLabel(template.labelKey)}
               </button>
             )
           })}
@@ -312,7 +340,9 @@ export function TemplatesStep({
       {(isLoading || userTemplates.length > 0) && (
         <div>
           <h4 className="mb-3 text-sm font-medium">
-            {d?.mySavedTemplates || "My Saved Templates"}
+            {ts?.mySavedTemplates ||
+              d?.mySavedTemplates ||
+              "My Saved Templates"}
           </h4>
           {isLoading ? (
             <div className="space-y-2">

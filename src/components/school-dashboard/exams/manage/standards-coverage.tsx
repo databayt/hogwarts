@@ -32,7 +32,8 @@ interface StandardsCoverageProps {
 
 export function StandardsCoverage({ examId }: StandardsCoverageProps) {
   const { dictionary } = useDictionary()
-  const t = dictionary?.school?.exams?.manage?.standards?.headers
+  const ts = dictionary?.school?.exams?.manage?.standards
+  const t = ts?.headers
   const [loading, setLoading] = useState(true)
   const [standards, setStandards] = useState<StandardCoverage[]>([])
   const [totalStandards, setTotalStandards] = useState(0)
@@ -68,8 +69,8 @@ export function StandardsCoverage({ examId }: StandardsCoverageProps) {
     return (
       <div className="flex flex-col items-center justify-center py-8 text-center">
         <p className="text-muted-foreground text-sm">
-          No curriculum standards configured. Link standards to questions to see
-          coverage.
+          {ts?.noStandards ??
+            "No curriculum standards configured. Link standards to questions to see coverage."}
         </p>
       </div>
     )
@@ -83,18 +84,24 @@ export function StandardsCoverage({ examId }: StandardsCoverageProps) {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Coverage</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {ts?.coverage ?? "Coverage"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{coveragePercent}%</div>
             <p className="text-muted-foreground text-xs">
-              {coveredCount} of {totalStandards} standards
+              {(ts?.ofStandards ?? "{covered} of {total} standards")
+                .replace("{covered}", String(coveredCount))
+                .replace("{total}", String(totalStandards))}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Covered</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {ts?.covered ?? "Covered"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
@@ -104,7 +111,9 @@ export function StandardsCoverage({ examId }: StandardsCoverageProps) {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Missing</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {ts?.missing ?? "Missing"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-destructive text-2xl font-bold">

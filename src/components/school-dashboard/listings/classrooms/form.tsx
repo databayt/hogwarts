@@ -95,7 +95,9 @@ export function ClassroomForm({ onSuccess }: ClassroomFormProps) {
         closeModal()
         onSuccess?.()
       } else {
-        ErrorToast(result.error || "Failed to save classroom")
+        ErrorToast(
+          result.error || d?.failedToSave || "Failed to save classroom"
+        )
       }
     })
   }
@@ -110,7 +112,10 @@ export function ClassroomForm({ onSuccess }: ClassroomFormProps) {
             <FormItem>
               <FormLabel>{d?.roomName || "Room Name"}</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., A101" {...field} />
+                <Input
+                  placeholder={d?.roomNamePlaceholder || "e.g., A101"}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

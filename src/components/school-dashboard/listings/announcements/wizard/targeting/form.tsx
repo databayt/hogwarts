@@ -18,6 +18,7 @@ import { ErrorToast } from "@/components/atom/toast"
 import { CheckboxField, DateField, SelectField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardTabs, type WizardTab } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { completeAnnouncementWizard } from "../actions"
 import {
@@ -25,26 +26,6 @@ import {
   updateAnnouncementTargeting,
 } from "./actions"
 import { targetingSchema, type TargetingFormData } from "./validation"
-
-const SCOPE_OPTIONS = [
-  { label: "School", value: "school" },
-  { label: "Class", value: "class" },
-  { label: "Role", value: "role" },
-]
-
-const ROLE_OPTIONS = [
-  { label: "Admin", value: "ADMIN" },
-  { label: "Teacher", value: "TEACHER" },
-  { label: "Student", value: "STUDENT" },
-  { label: "Guardian", value: "GUARDIAN" },
-  { label: "Staff", value: "STAFF" },
-  { label: "Accountant", value: "ACCOUNTANT" },
-]
-
-const TABS: WizardTab[] = [
-  { id: "audience", label: "Audience" },
-  { id: "publishing", label: "Publishing" },
-]
 
 interface TargetingFormProps {
   announcementId: string
@@ -60,6 +41,33 @@ export const TargetingForm = forwardRef<WizardFormRef, TargetingFormProps>(
     const [classOptions, setClassOptions] = useState<
       { label: string; value: string }[]
     >([])
+    const { dictionary } = useDictionary()
+    const wt = (dictionary?.school?.announcements as any)?.wizard?.targeting as
+      | Record<string, string>
+      | undefined
+    const w = (dictionary?.school?.announcements as any)?.wizard as
+      | Record<string, any>
+      | undefined
+
+    const SCOPE_OPTIONS = [
+      { label: wt?.scopeSchool || "School", value: "school" },
+      { label: wt?.scopeClass || "Class", value: "class" },
+      { label: wt?.scopeRole || "Role", value: "role" },
+    ]
+
+    const ROLE_OPTIONS = [
+      { label: wt?.roleAdmin || "Admin", value: "ADMIN" },
+      { label: wt?.roleTeacher || "Teacher", value: "TEACHER" },
+      { label: wt?.roleStudent || "Student", value: "STUDENT" },
+      { label: wt?.roleGuardian || "Guardian", value: "GUARDIAN" },
+      { label: wt?.roleStaff || "Staff", value: "STAFF" },
+      { label: wt?.roleAccountant || "Accountant", value: "ACCOUNTANT" },
+    ]
+
+    const TABS: WizardTab[] = [
+      { id: "audience", label: wt?.audience || "Audience" },
+      { id: "publishing", label: wt?.publishing || "Publishing" },
+    ]
 
     // Fetch class options on mount
     useEffect(() => {
@@ -110,7 +118,7 @@ export const TargetingForm = forwardRef<WizardFormRef, TargetingFormProps>(
                 data
               )
               if (!result.success) {
-                ErrorToast(result.error || "Failed to save")
+                ErrorToast(result.error || w?.failedToSave || "Failed to save")
                 reject(new Error(result.error))
                 return
               }
@@ -119,7 +127,11 @@ export const TargetingForm = forwardRef<WizardFormRef, TargetingFormProps>(
               const completeResult =
                 await completeAnnouncementWizard(announcementId)
               if (!completeResult.success) {
-                ErrorToast(completeResult.error || "Failed to complete")
+                ErrorToast(
+                  completeResult.error ||
+                    w?.failedToComplete ||
+                    "Failed to complete"
+                )
                 reject(new Error(completeResult.error))
                 return
               }
@@ -127,7 +139,10 @@ export const TargetingForm = forwardRef<WizardFormRef, TargetingFormProps>(
               router.push("/announcements")
               resolve()
             } catch (err) {
-              const msg = err instanceof Error ? err.message : "Failed to save"
+              const msg =
+                err instanceof Error
+                  ? err.message
+                  : w?.failedToSave || "Failed to save"
               ErrorToast(msg)
               reject(err)
             }
@@ -144,7 +159,7 @@ export const TargetingForm = forwardRef<WizardFormRef, TargetingFormProps>(
                 <div className="space-y-6">
                   <SelectField
                     name="scope"
-                    label="Scope"
+                    label={wt?.scopeLabel || "Scope"}
                     options={[...SCOPE_OPTIONS]}
                     required
                     disabled={isPending}
@@ -152,7 +167,7 @@ export const TargetingForm = forwardRef<WizardFormRef, TargetingFormProps>(
                   {scope === "class" && (
                     <SelectField
                       name="classId"
-                      label="Class"
+                      label={wt?.classLabel || "Class"}
                       options={[...classOptions]}
                       required
                       disabled={isPending}
@@ -161,7 +176,7 @@ export const TargetingForm = forwardRef<WizardFormRef, TargetingFormProps>(
                   {scope === "role" && (
                     <SelectField
                       name="role"
-                      label="Role"
+                      label={wt?.roleLabel || "Role"}
                       options={[...ROLE_OPTIONS]}
                       required
                       disabled={isPending}
@@ -172,27 +187,27 @@ export const TargetingForm = forwardRef<WizardFormRef, TargetingFormProps>(
                 <div className="space-y-6">
                   <CheckboxField
                     name="published"
-                    label="Published"
+                    label={wt?.publishedLabel || "Published"}
                     disabled={isPending}
                   />
                   <DateField
                     name="scheduledFor"
-                    label="Scheduled For"
+                    label={wt?.scheduledForLabel || "Scheduled For"}
                     disabled={isPending}
                   />
                   <DateField
                     name="expiresAt"
-                    label="Expires At"
+                    label={wt?.expiresAtLabel || "Expires At"}
                     disabled={isPending}
                   />
                   <CheckboxField
                     name="pinned"
-                    label="Pinned"
+                    label={wt?.pinnedLabel || "Pinned"}
                     disabled={isPending}
                   />
                   <CheckboxField
                     name="featured"
-                    label="Featured"
+                    label={wt?.featuredLabel || "Featured"}
                     disabled={isPending}
                   />
                 </div>

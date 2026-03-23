@@ -234,6 +234,27 @@
     "message_from": "رسالة من {sender}",
     "unread_indicator": "رسائل غير مقروءة أدناه"
   },
+  "contacts": {
+    "tab_chats": "المحادثات",
+    "tab_contacts": "جهات الاتصال",
+    "search_placeholder": "بحث في جهات الاتصال...",
+    "filter_all": "الكل",
+    "no_contacts": "لا توجد جهات اتصال",
+    "no_results": "لا توجد نتائج",
+    "start_chat": "بدء محادثة",
+    "categories": {
+      "teachers": "المعلمون",
+      "students": "الطلاب",
+      "parents": "أولياء الأمور",
+      "staff": "الموظفون",
+      "admin": "الإدارة",
+      "accountants": "المحاسبون",
+      "my_students": "طلابي",
+      "my_teachers": "معلمي",
+      "classmates": "زملاء الصف",
+      "my_children_teachers": "معلمو أبنائي"
+    }
+  },
   "search": {
     "title": "البحث",
     "placeholder": "البحث في الرسائل والمحادثات...",

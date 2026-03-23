@@ -30,21 +30,6 @@ export type SalaryStructureRow = {
   createdAt: string
 }
 
-const PAY_FREQUENCY_LABELS: Record<string, Record<string, string>> = {
-  ar: {
-    MONTHLY: "شهري",
-    BI_WEEKLY: "نصف شهري",
-    WEEKLY: "أسبوعي",
-    DAILY: "يومي",
-  },
-  en: {
-    MONTHLY: "Monthly",
-    BI_WEEKLY: "Bi-Weekly",
-    WEEKLY: "Weekly",
-    DAILY: "Daily",
-  },
-}
-
 const PAY_FREQUENCY_COLORS: Record<string, string> = {
   MONTHLY: "bg-blue-500/10 text-blue-500",
   BI_WEEKLY: "bg-purple-500/10 text-purple-500",
@@ -52,27 +37,44 @@ const PAY_FREQUENCY_COLORS: Record<string, string> = {
   DAILY: "bg-gray-500/10 text-gray-500",
 }
 
+type SalaryColumnsDict = {
+  teacher?: string
+  employeeId?: string
+  baseSalary?: string
+  payFrequency?: string
+  allowances?: string
+  deductions?: string
+  status?: string
+  active?: string
+  inactive?: string
+  effectiveFrom?: string
+  actions?: string
+  view?: string
+  edit?: string
+  payFrequencyOptions?: Record<string, string>
+}
+
 export const getSalaryStructureColumns = (
-  lang?: string
+  lang?: string,
+  d?: SalaryColumnsDict
 ): ColumnDef<SalaryStructureRow>[] => {
   const isAr = lang === "ar"
-  const freqLabels =
-    PAY_FREQUENCY_LABELS[lang || "en"] || PAY_FREQUENCY_LABELS.en
+  const freqLabels = d?.payFrequencyOptions || {}
 
   const t = {
-    teacher: isAr ? "المعلم" : "Teacher",
-    employeeId: isAr ? "رقم الموظف" : "Employee ID",
-    baseSalary: isAr ? "الراتب الأساسي" : "Base Salary",
-    payFrequency: isAr ? "دورة الدفع" : "Pay Frequency",
-    allowances: isAr ? "البدلات" : "Allowances",
-    deductions: isAr ? "الخصومات" : "Deductions",
-    status: isAr ? "الحالة" : "Status",
-    active: isAr ? "نشط" : "Active",
-    inactive: isAr ? "غير نشط" : "Inactive",
-    effectiveFrom: isAr ? "تاريخ السريان" : "Effective From",
-    actions: isAr ? "إجراءات" : "Actions",
-    view: isAr ? "عرض" : "View",
-    edit: isAr ? "تعديل" : "Edit",
+    teacher: d?.teacher || "Teacher",
+    employeeId: d?.employeeId || "Employee ID",
+    baseSalary: d?.baseSalary || "Base Salary",
+    payFrequency: d?.payFrequency || "Pay Frequency",
+    allowances: d?.allowances || "Allowances",
+    deductions: d?.deductions || "Deductions",
+    status: d?.status || "Status",
+    active: d?.active || "Active",
+    inactive: d?.inactive || "Inactive",
+    effectiveFrom: d?.effectiveFrom || "Effective From",
+    actions: d?.actions || "Actions",
+    view: d?.view || "View",
+    edit: d?.edit || "Edit",
   }
 
   return [
@@ -149,10 +151,10 @@ export const getSalaryStructureColumns = (
         label: t.payFrequency,
         variant: "select",
         options: [
-          { label: freqLabels.MONTHLY, value: "MONTHLY" },
-          { label: freqLabels.BI_WEEKLY, value: "BI_WEEKLY" },
-          { label: freqLabels.WEEKLY, value: "WEEKLY" },
-          { label: freqLabels.DAILY, value: "DAILY" },
+          { label: freqLabels.MONTHLY || "Monthly", value: "MONTHLY" },
+          { label: freqLabels.BI_WEEKLY || "Bi-Weekly", value: "BI_WEEKLY" },
+          { label: freqLabels.WEEKLY || "Weekly", value: "WEEKLY" },
+          { label: freqLabels.DAILY || "Daily", value: "DAILY" },
         ],
       },
       enableColumnFilter: true,

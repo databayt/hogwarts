@@ -270,66 +270,62 @@ export async function setupDefaultsForSchool(
   schoolId: string,
   schoolLevel: string = "both"
 ) {
-  // Idempotency reads outside transaction for performance
-  const [existingYearLevels, existingDepts, existingRanges] = await Promise.all(
-    [
-      db.yearLevel.count({ where: { schoolId } }),
-      db.department.count({ where: { schoolId } }),
-      db.scoreRange.count({ where: { schoolId } }),
-    ]
-  )
-
-  if (existingYearLevels > 0 && existingDepts > 0 && existingRanges > 0) {
-    return { yearLevels: 0, departments: 0, scoreRanges: 0 }
-  }
-
   return db.$transaction(
     async (tx) => {
       const results = { yearLevels: 0, departments: 0, scoreRanges: 0 }
 
-      // 1. YearLevels (filtered by schoolLevel)
+      // Idempotency checks INSIDE transaction to prevent race conditions
+      const [existingYearLevels, existingDepts, existingRanges] =
+        await Promise.all([
+          tx.yearLevel.count({ where: { schoolId } }),
+          tx.department.count({ where: { schoolId } }),
+          tx.scoreRange.count({ where: { schoolId } }),
+        ])
+
+      if (existingYearLevels > 0 && existingDepts > 0 && existingRanges > 0) {
+        return results
+      }
+
+      // 1. YearLevels (filtered by schoolLevel) — batch insert
       if (existingYearLevels === 0) {
         const applicable = YEAR_LEVEL_DEFAULTS.filter((yl) =>
           yl.schoolLevels.includes(schoolLevel)
         )
-        for (const yl of applicable) {
-          await tx.yearLevel.create({
-            data: {
-              schoolId,
-              levelName: yl.name,
-              levelOrder: yl.levelOrder,
-            },
-          })
-          results.yearLevels++
-        }
+        const { count } = await tx.yearLevel.createMany({
+          data: applicable.map((yl) => ({
+            schoolId,
+            levelName: yl.name,
+            levelOrder: yl.levelOrder,
+          })),
+          skipDuplicates: true,
+        })
+        results.yearLevels = count
       }
 
-      // 2. Departments
+      // 2. Departments — batch insert
       if (existingDepts === 0) {
-        for (const dept of DEPARTMENT_DEFAULTS) {
-          await tx.department.create({
-            data: {
-              schoolId,
-              departmentName: dept.name,
-            },
-          })
-          results.departments++
-        }
+        const { count } = await tx.department.createMany({
+          data: DEPARTMENT_DEFAULTS.map((dept) => ({
+            schoolId,
+            departmentName: dept.name,
+          })),
+          skipDuplicates: true,
+        })
+        results.departments = count
       }
 
-      // 3. ScoreRanges
+      // 3. ScoreRanges — batch insert
       if (existingRanges === 0) {
-        for (const range of SCORE_RANGE_DEFAULTS) {
-          await tx.scoreRange.create({
-            data: {
-              schoolId,
-              grade: range.grade,
-              minScore: range.minScore,
-              maxScore: range.maxScore,
-            },
-          })
-          results.scoreRanges++
-        }
+        const { count } = await tx.scoreRange.createMany({
+          data: SCORE_RANGE_DEFAULTS.map((range) => ({
+            schoolId,
+            grade: range.grade,
+            minScore: range.minScore,
+            maxScore: range.maxScore,
+          })),
+          skipDuplicates: true,
+        })
+        results.scoreRanges = count
       }
 
       return results
@@ -366,16 +362,6 @@ export async function setupCatalogForSchool(
   }
 ) {
   const { skipIfExists = true } = options ?? {}
-
-  // Skip if school already has academic structure
-  if (skipIfExists) {
-    const existingLevels = await db.academicLevel.count({
-      where: { schoolId },
-    })
-    if (existingLevels > 0) {
-      return { skipped: true, message: "School already has academic structure" }
-    }
-  }
 
   // Read school's actual country and level classification
   const school = await db.school.findUnique({
@@ -443,6 +429,19 @@ export async function setupCatalogForSchool(
 
   const result = await db.$transaction(
     async (tx) => {
+      // Idempotency check INSIDE transaction to prevent race conditions
+      if (skipIfExists) {
+        const existingLevels = await tx.academicLevel.count({
+          where: { schoolId },
+        })
+        if (existingLevels > 0) {
+          return {
+            skipped: true as const,
+            message: "School already has academic structure",
+          }
+        }
+      }
+
       // 1. Create academic levels (filtered by schoolLevel)
       const levelRecords: Array<{ id: string; level: string }> = []
       for (const levelConfig of applicableLevelConfig) {
@@ -602,23 +601,6 @@ export async function setupCatalogForSchool(
       }
       const selectionCount = selectionData.length
 
-      // Create default instructor preferences (platform/Hogwarts as default)
-      // Use unique subject IDs from selections
-      const uniqueSubjectIds = [
-        ...new Set(selectionData.map((s) => s.catalogSubjectId)),
-      ]
-      if (uniqueSubjectIds.length > 0) {
-        await tx.schoolInstructorPreference.createMany({
-          data: uniqueSubjectIds.map((catalogSubjectId) => ({
-            schoolId,
-            catalogSubjectId,
-            preferredSchoolId: null,
-            preferredUserId: null,
-          })),
-          skipDuplicates: true,
-        })
-      }
-
       return {
         skipped: false,
         levels: levelRecords.length,
@@ -626,10 +608,38 @@ export async function setupCatalogForSchool(
         streams: streamRecords.length,
         selections: selectionCount,
         subjects: catalogSubjects.length,
+        catalogSubjectIds: [
+          ...new Set(selectionData.map((s) => s.catalogSubjectId)),
+        ],
       }
     },
     { timeout: 60000 }
   )
+
+  // Create default instructor preferences outside the critical transaction
+  // Non-critical: should never crash grade/level creation
+  if (!("skipped" in result && result.skipped)) {
+    const subjectIds = (result as { catalogSubjectIds: string[] })
+      .catalogSubjectIds
+    if (subjectIds?.length > 0) {
+      try {
+        await db.schoolInstructorPreference.createMany({
+          data: subjectIds.map((catalogSubjectId) => ({
+            schoolId,
+            catalogSubjectId,
+            preferredSchoolId: null,
+            preferredUserId: null,
+          })),
+          skipDuplicates: true,
+        })
+      } catch (err) {
+        console.error(
+          `[setupCatalog] Instructor preferences failed (non-critical):`,
+          err
+        )
+      }
+    }
+  }
 
   // Update usage counts outside the main transaction to avoid timeout
   // This is non-critical metadata so it's OK if it partially fails
@@ -739,6 +749,24 @@ async function findCatalogSubjects(
  * Cascading deletes handle most cleanup via schema relations.
  */
 export async function teardownCatalogForSchool(schoolId: string) {
+  // Collect affected subject IDs before deletion for usage count decrement
+  const selections = await db.schoolSubjectSelection.findMany({
+    where: { schoolId },
+    select: { catalogSubjectId: true },
+    distinct: ["catalogSubjectId"],
+  })
+  const affectedSubjectIds = selections.map((s) => s.catalogSubjectId)
+
+  // Delete instructor preferences first (non-critical, outside transaction)
+  try {
+    await db.schoolInstructorPreference.deleteMany({ where: { schoolId } })
+  } catch (err) {
+    console.error(
+      `[teardownCatalog] Instructor preferences cleanup failed (non-critical):`,
+      err
+    )
+  }
+
   await db.$transaction(
     async (tx) => {
       // Delete bridge tables first
@@ -752,6 +780,18 @@ export async function teardownCatalogForSchool(schoolId: string) {
     },
     { timeout: 30000 }
   )
+
+  // Decrement usage counts (non-critical metadata)
+  if (affectedSubjectIds.length > 0) {
+    try {
+      await db.$executeRawUnsafe(
+        `UPDATE catalog_subjects SET "usageCount" = GREATEST("usageCount" - 1, 0) WHERE id = ANY($1::text[])`,
+        affectedSubjectIds
+      )
+    } catch {
+      // Non-critical: usage count is just metadata
+    }
+  }
 
   return { success: true }
 }

@@ -7,6 +7,7 @@ import { CalendarDays, Loader2 } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { getTimetableByClass } from "@/components/school-dashboard/timetable/actions"
 import SimpleGrid from "@/components/school-dashboard/timetable/views/simple-grid"
 
@@ -28,6 +29,8 @@ type TimetableData = Awaited<ReturnType<typeof getTimetableByClass>>
 
 export function ScheduleGrid({ lang, termId, grades }: ScheduleGridProps) {
   const isRTL = lang === "ar"
+  const { dictionary } = useDictionary()
+  const d = dictionary?.school?.classrooms
   const [activeGradeId, setActiveGradeId] = useState(grades[0]?.id ?? "")
   const [activeSectionId, setActiveSectionId] = useState(
     grades[0]?.sections[0]?.id ?? ""
@@ -121,7 +124,11 @@ export function ScheduleGrid({ lang, termId, grades }: ScheduleGridProps) {
                   highlightToday
                 />
               ) : (
-                <EmptyState />
+                <EmptyState
+                  message={
+                    d?.noTimetableData || "No timetable data for this class."
+                  }
+                />
               )}
             </TabsContent>
           ))}
@@ -145,7 +152,11 @@ export function ScheduleGrid({ lang, termId, grades }: ScheduleGridProps) {
               highlightToday
             />
           ) : (
-            <EmptyState />
+            <EmptyState
+              message={
+                d?.noTimetableData || "No timetable data for this class."
+              }
+            />
           )}
         </div>
       )}
@@ -153,11 +164,11 @@ export function ScheduleGrid({ lang, termId, grades }: ScheduleGridProps) {
   )
 }
 
-function EmptyState() {
+function EmptyState({ message }: { message: string }) {
   return (
     <div className="text-muted-foreground flex flex-col items-center py-16">
       <CalendarDays className="mb-3 h-10 w-10 opacity-50" />
-      <p>No timetable data for this class.</p>
+      <p>{message}</p>
     </div>
   )
 }

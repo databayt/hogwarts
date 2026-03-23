@@ -11,6 +11,7 @@ import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { DateField, InputField, TextareaField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { completeAssignmentWizard } from "../actions"
 import { updateAssignmentDetails } from "./actions"
@@ -26,6 +27,9 @@ export const DetailsForm = forwardRef<WizardFormRef, DetailsFormProps>(
   ({ assignmentId, initialData, onValidChange }, ref) => {
     const [isPending, startTransition] = useTransition()
     const router = useRouter()
+    const { dictionary } = useDictionary()
+    const fd = (dictionary?.school as Record<string, any>)?.assignments
+      ?.form as Record<string, any> | undefined
 
     const form = useForm<DetailsFormData>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -97,7 +101,7 @@ export const DetailsForm = forwardRef<WizardFormRef, DetailsFormProps>(
         <form className="space-y-6">
           <InputField
             name="totalPoints"
-            label="Total Points"
+            label={fd?.totalPoints || "Total Points"}
             type="number"
             placeholder="100"
             required
@@ -105,7 +109,7 @@ export const DetailsForm = forwardRef<WizardFormRef, DetailsFormProps>(
           />
           <InputField
             name="weight"
-            label="Weight (%)"
+            label={fd?.weightPercent || "Weight (%)"}
             type="number"
             placeholder="10"
             required
@@ -113,14 +117,16 @@ export const DetailsForm = forwardRef<WizardFormRef, DetailsFormProps>(
           />
           <DateField
             name="dueDate"
-            label="Due Date"
+            label={fd?.dueDate || "Due Date"}
             required
             disabled={isPending}
           />
           <TextareaField
             name="instructions"
-            label="Instructions"
-            placeholder="Enter assignment instructions"
+            label={fd?.instructions || "Instructions"}
+            placeholder={
+              fd?.enterInstructions || "Enter assignment instructions"
+            }
             disabled={isPending}
           />
         </form>

@@ -12,11 +12,15 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { ParentFormStepProps } from "./types"
 import { parentCreateSchema } from "./validation"
 
 export function ContactStep({ form, isView }: ParentFormStepProps) {
+  const { dictionary } = useDictionary()
+  const d = dictionary?.school?.parents as Record<string, any> | undefined
+
   return (
     <div className="mx-auto max-w-md space-y-4">
       <FormField
@@ -27,7 +31,9 @@ export function ContactStep({ form, isView }: ParentFormStepProps) {
             <FormControl>
               <Input
                 type="email"
-                placeholder="Email address (optional)"
+                placeholder={
+                  d?.emailAddressOptional || "Email address (optional)"
+                }
                 disabled={isView}
                 {...field}
               />
@@ -44,7 +50,7 @@ export function ContactStep({ form, isView }: ParentFormStepProps) {
           <FormItem>
             <FormControl>
               <Input
-                placeholder="User ID (optional)"
+                placeholder={d?.userIdOptional || "User ID (optional)"}
                 disabled={isView}
                 {...field}
               />

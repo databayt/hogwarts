@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { Decimal } from "@prisma/client/runtime/library"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -15,7 +16,7 @@ export async function getAssignmentDetails(
 ): Promise<ActionResponse<DetailsFormData>> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const assignment = await db.assignment.findFirst({
       where: { id: assignmentId, schoolId },
@@ -27,7 +28,7 @@ export async function getAssignmentDetails(
       },
     })
 
-    if (!assignment) return { success: false, error: "Assignment not found" }
+    if (!assignment) return actionError(ACTION_ERRORS.NOT_FOUND)
 
     return {
       success: true,
@@ -39,10 +40,10 @@ export async function getAssignmentDetails(
       },
     }
   } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to load",
-    }
+    return actionError(
+      ACTION_ERRORS.UNKNOWN,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -52,7 +53,7 @@ export async function updateAssignmentDetails(
 ): Promise<ActionResponse> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const parsed = detailsSchema.parse(input)
 
@@ -68,9 +69,9 @@ export async function updateAssignmentDetails(
 
     return { success: true }
   } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to save",
-    }
+    return actionError(
+      ACTION_ERRORS.UNKNOWN,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }

@@ -2,26 +2,16 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React, { useEffect, useRef, useState } from "react"
+import React, { useEffect, useMemo, useRef, useState } from "react"
 import { useParams } from "next/navigation"
 
 import { FormHeading, FormLayout } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { useAnnouncementWizard } from "../use-announcement-wizard"
 import { TargetingForm } from "./form"
-
-const TAB_HEADINGS: Record<string, { title: string; description: string }> = {
-  audience: {
-    title: "Audience",
-    description: "Choose who sees this announcement.",
-  },
-  publishing: {
-    title: "Publishing",
-    description: "Configure when and how the announcement is published.",
-  },
-}
 
 export default function TargetingContent() {
   const params = useParams()
@@ -29,6 +19,29 @@ export default function TargetingContent() {
   const formRef = useRef<WizardFormRef>(null)
   const { data, isLoading } = useAnnouncementWizard()
   const [isValid, setIsValid] = useState(true)
+  const { dictionary } = useDictionary()
+  const wt = (dictionary?.school?.announcements as any)?.wizard?.targeting as
+    | Record<string, string>
+    | undefined
+
+  const TAB_HEADINGS: Record<string, { title: string; description: string }> =
+    useMemo(
+      () => ({
+        audience: {
+          title: wt?.audience || "Audience",
+          description:
+            wt?.audienceDescription || "Choose who sees this announcement.",
+        },
+        publishing: {
+          title: wt?.publishing || "Publishing",
+          description:
+            wt?.publishingDescription ||
+            "Configure when and how the announcement is published.",
+        },
+      }),
+      [wt]
+    )
+
   const [heading, setHeading] = useState(TAB_HEADINGS.audience)
 
   const handleTabChange = (tabId: string) => {

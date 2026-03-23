@@ -129,7 +129,7 @@ export default function StudentView({
       setError(
         err instanceof Error
           ? err.message
-          : (sv?.empty ?? "Failed to load schedule")
+          : (sv?.noClasses ?? "Failed to load schedule")
       )
     } finally {
       setIsLoadingData(false)
@@ -241,7 +241,7 @@ export default function StudentView({
                     </span>
                   </>
                 ) : (
-                  (sv?.labels?.today ?? "Loading...")
+                  (sv?.loading ?? "Loading...")
                 )}
               </CardDescription>
             </div>
@@ -323,8 +323,8 @@ export default function StudentView({
               <div className="flex-1">
                 <p className="text-muted-foreground text-sm">
                   {currentClassInfo.type === "current"
-                    ? (sv?.labels?.nextClass ?? "Current Class")
-                    : (sv?.labels?.noMoreClasses ?? "Next Up")}
+                    ? (sv?.currentClass ?? "Current Class")
+                    : (sv?.nextUp ?? "Next Up")}
                 </p>
                 <p className="text-lg font-semibold">
                   {currentClassInfo.item.subject ||
@@ -360,7 +360,7 @@ export default function StudentView({
           <Card>
             <CardContent className="text-muted-foreground py-12 text-center">
               <Calendar className="mx-auto mb-4 h-12 w-12 opacity-50" />
-              <p>{sv?.empty ?? "No classes scheduled for today"}</p>
+              <p>{sv?.noClasses ?? "No classes scheduled for today"}</p>
             </CardContent>
           </Card>
         ) : (
@@ -390,7 +390,7 @@ export default function StudentView({
                       <p className="font-medium">
                         {item.isBreak
                           ? item.periodName
-                          : item.subject || (d?.freePeriod ?? "Free Period")}
+                          : item.subject || (sv?.freePeriod ?? "Free Period")}
                       </p>
                       {!item.isBreak && item.teacher && (
                         <p className="text-muted-foreground text-sm">
@@ -399,7 +399,7 @@ export default function StudentView({
                       )}
                     </div>
                     {item.isBreak && (
-                      <Badge variant="secondary">{d?.break ?? "Break"}</Badge>
+                      <Badge variant="secondary">{sv?.break ?? "Break"}</Badge>
                     )}
                   </div>
                 </CardContent>

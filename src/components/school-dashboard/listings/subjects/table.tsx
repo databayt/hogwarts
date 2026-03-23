@@ -141,11 +141,17 @@ function SubjectsTableInner({
         } else {
           // Revert on error
           refresh()
-          ErrorToast("Failed to delete subject")
+          ErrorToast(
+            (dictionary as any)?.failedToDelete || "Failed to delete subject"
+          )
         }
       } catch (e) {
         refresh()
-        ErrorToast(e instanceof Error ? e.message : "Failed to delete")
+        ErrorToast(
+          e instanceof Error
+            ? e.message
+            : (dictionary as any)?.failedToDelete || "Failed to delete"
+        )
       }
     },
     [optimisticRemove, refresh, lang, translations.delete]

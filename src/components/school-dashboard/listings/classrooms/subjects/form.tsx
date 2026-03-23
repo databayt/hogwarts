@@ -79,7 +79,11 @@ export function SubjectRoomForm({ grades }: SubjectRoomFormProps) {
         )
         setPendingChanges(new Map())
       } else {
-        toast.error(result.error || "Failed to update assignments")
+        toast.error(
+          result.error ||
+            d?.failedToUpdateAssignments ||
+            "Failed to update assignments"
+        )
       }
     })
   }
@@ -117,7 +121,7 @@ export function SubjectRoomForm({ grades }: SubjectRoomFormProps) {
                 <TableRow>
                   <TableHead>{d?.subject || "Subject"}</TableHead>
                   <TableHead>{d?.teacher || "Teacher"}</TableHead>
-                  <TableHead>{"Weekly Periods"}</TableHead>
+                  <TableHead>{d?.weeklyPeriods || "Weekly Periods"}</TableHead>
                   <TableHead>{d?.roomName || "Room"}</TableHead>
                   <TableHead>{d?.type || "Type"}</TableHead>
                 </TableRow>
@@ -202,15 +206,17 @@ export function SubjectRoomForm({ grades }: SubjectRoomFormProps) {
             >
               {isPending
                 ? d?.saving || "Saving..."
-                : `${d?.update || "Save"} ${pendingChanges.size > 0 ? `(${pendingChanges.size})` : ""}`}
+                : `${d?.save || "Save"} ${pendingChanges.size > 0 ? `(${pendingChanges.size})` : ""}`}
             </Button>
           </div>
         </>
       ) : (
         <div className="text-muted-foreground py-8 text-center">
           {selectedGrade
-            ? "No classes for this grade. Run Configure > Generate Classes first."
-            : "Select a grade to view subject assignments."}
+            ? d?.noClassesForGrade ||
+              "No classes for this grade. Run Configure > Generate Classes first."
+            : d?.selectGradeToView ||
+              "Select a grade to view subject assignments."}
         </div>
       )}
     </div>

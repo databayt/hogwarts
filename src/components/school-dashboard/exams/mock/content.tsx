@@ -7,6 +7,8 @@ import { BookOpen, Clock, FileText, GraduationCap } from "lucide-react"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 
 import { getEnrolledCatalogSubjectIds } from "../lib/scope"
 import { getStudentAttempts } from "../shared/attempt-actions"
@@ -18,10 +20,13 @@ import {
 } from "./actions"
 import { MockExamList } from "./list"
 
-export async function MockContent() {
+export async function MockContent({ lang = "ar" }: { lang?: Locale }) {
   const { schoolId } = await getTenantContext()
   const session = await auth()
   const role = session?.user?.role
+
+  const dictionary = await getDictionary(lang)
+  const mc = dictionary?.school?.exams?.mockContent
 
   // For students/guardians, scope to enrolled catalog subjects
   const enrolledCatalogSubjectIds =
@@ -94,59 +99,72 @@ export async function MockContent() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Mock Exams</h2>
+        <h2 className="text-2xl font-bold tracking-tight">
+          {mc?.title ?? "Mock Exams"}
+        </h2>
         <p className="text-muted-foreground">
-          Browse practice exams from the catalog by subject and chapter
+          {mc?.description ??
+            "Browse practice exams from the catalog by subject and chapter"}
         </p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Exams</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {mc?.totalExams ?? "Total Exams"}
+            </CardTitle>
             <FileText className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{exams.length}</div>
             <p className="text-muted-foreground text-xs">
-              Available mock exams
+              {mc?.availableMockExams ?? "Available mock exams"}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Subjects</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {mc?.subjects ?? "Subjects"}
+            </CardTitle>
             <GraduationCap className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{subjects.length}</div>
-            <p className="text-muted-foreground text-xs">Across subjects</p>
+            <p className="text-muted-foreground text-xs">
+              {mc?.acrossSubjects ?? "Across subjects"}
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Duration</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {mc?.avgDuration ?? "Avg Duration"}
+            </CardTitle>
             <Clock className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{avgDuration}m</div>
             <p className="text-muted-foreground text-xs">
-              Average exam duration
+              {mc?.averageExamDuration ?? "Average exam duration"}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Questions</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {mc?.questionsLabel ?? "Questions"}
+            </CardTitle>
             <BookOpen className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalQuestions}</div>
             <p className="text-muted-foreground text-xs">
-              Total questions across exams
+              {mc?.totalQuestionsAcrossExams ?? "Total questions across exams"}
             </p>
           </CardContent>
         </Card>

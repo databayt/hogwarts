@@ -486,3 +486,63 @@ export const DEFAULT_DASHBOARD_CONFIG = {
   recentActivitiesCount: 10,
   announcementsCount: 5,
 }
+
+// --- Dictionary-based factory functions ---
+
+type DashDict = Record<string, any> | undefined
+
+/** Get localized quick actions by role from dictionary */
+export function getLocalizedQuickActions(
+  role: string,
+  d?: DashDict,
+  subdomain?: string
+): QuickActionItem[] {
+  const actions = getQuickActionsByRole(role, subdomain)
+  const qa = d?.quickActions as
+    | Record<string, { label?: string; description?: string }>
+    | undefined
+  if (!qa) return actions
+  return actions.map((a) => ({
+    ...a,
+    label: qa[a.iconName]?.label ?? a.label,
+    description: qa[a.iconName]?.description ?? a.description,
+  }))
+}
+
+/** Get localized attendance chart config */
+export function getAttendanceChartConfig(d?: DashDict) {
+  const ac = d?.charts?.attendance as Record<string, string> | undefined
+  return {
+    present: {
+      ...attendanceChartConfig.present,
+      label: ac?.present ?? "Present",
+    },
+    absent: { ...attendanceChartConfig.absent, label: ac?.absent ?? "Absent" },
+    late: { ...attendanceChartConfig.late, label: ac?.late ?? "Late" },
+  }
+}
+
+/** Get localized grade chart config */
+export function getGradeChartConfig(d?: DashDict) {
+  const gc = d?.charts?.grades as Record<string, string> | undefined
+  return {
+    count: { label: gc?.students ?? "Students" },
+    A: { ...gradeChartConfig.A, label: gc?.A ?? "A" },
+    B: { ...gradeChartConfig.B, label: gc?.B ?? "B" },
+    C: { ...gradeChartConfig.C, label: gc?.C ?? "C" },
+    D: { ...gradeChartConfig.D, label: gc?.D ?? "D" },
+    F: { ...gradeChartConfig.F, label: gc?.F ?? "F" },
+  }
+}
+
+/** Get localized revenue chart config */
+export function getRevenueChartConfig(d?: DashDict) {
+  const rc = d?.charts?.revenue as Record<string, string> | undefined
+  return {
+    revenue: { ...revenueChartConfig.revenue, label: rc?.revenue ?? "Revenue" },
+    expenses: {
+      ...revenueChartConfig.expenses,
+      label: rc?.expenses ?? "Expenses",
+    },
+  }
+}

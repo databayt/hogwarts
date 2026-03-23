@@ -82,3 +82,62 @@ export const getExamTypes = (lang?: string) => [
   { value: "ASSIGNMENT", label: lang === "ar" ? "واجب" : "Assignment" },
   { value: "PROJECT", label: lang === "ar" ? "مشروع" : "Project" },
 ]
+
+// --- Dictionary-based factory functions ---
+// These accept the exams dictionary section (Record<string, any>)
+// and fall back to English defaults when dictionary is not yet loaded.
+
+type ExamsDict = Record<string, any> | undefined
+
+export const getStepLabels = (d?: ExamsDict) => {
+  const s = d?.manage?.form?.steps as Record<string, string> | undefined
+  return {
+    1: s?.basicInformation || "Basic Information",
+    2: s?.scheduleMarks || "Schedule & Marks",
+    3: s?.instructionsDetails || "Instructions & Details",
+  } as const
+}
+
+export const getExamStatusOptions = (d?: ExamsDict) => {
+  const st = d?.status as Record<string, string> | undefined
+  return [
+    { value: "PLANNED", label: st?.planned || "Planned" },
+    { value: "IN_PROGRESS", label: st?.inProgress || "In Progress" },
+    { value: "COMPLETED", label: st?.completed || "Completed" },
+    { value: "CANCELLED", label: st?.cancelled || "Cancelled" },
+  ]
+}
+
+export const getExamTypeOptions = (d?: ExamsDict) => {
+  const et = d as Record<string, string> | undefined
+  return [
+    { value: "MIDTERM", label: et?.midterm || "Midterm" },
+    { value: "FINAL", label: et?.final || "Final" },
+    { value: "QUIZ", label: et?.quiz || "Quiz" },
+    { value: "ASSIGNMENT", label: et?.assignment || "Assignment" },
+    { value: "PROJECT", label: et?.project || "Project" },
+  ]
+}
+
+/** Get exam status labels map for display */
+export const getExamStatusLabels = (d?: ExamsDict): Record<string, string> => {
+  const st = d?.status as Record<string, string> | undefined
+  return {
+    PLANNED: st?.planned || "Planned",
+    IN_PROGRESS: st?.inProgress || "In Progress",
+    COMPLETED: st?.completed || "Completed",
+    CANCELLED: st?.cancelled || "Cancelled",
+  }
+}
+
+/** Get exam type labels map for display */
+export const getExamTypeLabels = (d?: ExamsDict): Record<string, string> => {
+  const et = d as Record<string, string> | undefined
+  return {
+    MIDTERM: et?.midterm || "Midterm",
+    FINAL: et?.final || "Final",
+    QUIZ: et?.quiz || "Quiz",
+    ASSIGNMENT: et?.assignment || "Assignment",
+    PROJECT: et?.project || "Project",
+  }
+}

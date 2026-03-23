@@ -14,7 +14,12 @@ import {
 import { ActionMenu, ActionMenuItem } from "@/components/atom/action-menu"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
-import { getEmploymentStatusColor, getEmploymentTypeColor } from "./config"
+import {
+  getEmploymentStatusColor,
+  getEmploymentTypeColor,
+  getStatusLabels,
+  getTypeLabels,
+} from "./config"
 import { type StaffRow } from "./types"
 
 export type StaffColumnActions = {
@@ -25,55 +30,32 @@ export type StaffColumnActions = {
 
 export function getStaffColumns(
   actions?: StaffColumnActions,
-  lang?: string
+  lang?: string,
+  staffDict?: Record<string, any>
 ): ColumnDef<StaffRow>[] {
   const isAr = lang === "ar"
+  const col = staffDict?.columns as Record<string, string> | undefined
 
   const t = {
-    name: isAr ? "الاسم" : "Name",
-    position: isAr ? "المنصب" : "Position",
-    department: isAr ? "القسم" : "Department",
-    status: isAr ? "الحالة" : "Status",
-    type: isAr ? "النوع" : "Type",
-    account: isAr ? "الحساب" : "Account",
-    active: isAr ? "نشط" : "Active",
-    noAccount: isAr ? "بدون حساب" : "No Account",
-    actions: isAr ? "إجراءات" : "Actions",
-    view: isAr ? "عرض" : "View",
-    edit: isAr ? "تعديل" : "Edit",
-    delete: isAr ? "حذف" : "Delete",
-    selectAll: isAr ? "تحديد الكل" : "Select all",
-    selectRow: isAr ? "تحديد الصف" : "Select row",
-    openMenu: isAr ? "فتح القائمة" : "Open menu",
+    name: col?.name || "Name",
+    position: col?.position || "Position",
+    department: col?.department || "Department",
+    status: col?.status || "Status",
+    type: col?.type || "Type",
+    account: col?.account || "Account",
+    active: col?.active || "Active",
+    noAccount: col?.noAccount || "No Account",
+    actions: col?.actions || "Actions",
+    view: col?.view || "View",
+    edit: col?.edit || "Edit",
+    delete: col?.delete || "Delete",
+    selectAll: col?.selectAll || "Select all",
+    selectRow: col?.selectRow || "Select row",
+    openMenu: col?.openMenu || "Open menu",
   }
 
-  const statusLabels: Record<string, string> = isAr
-    ? {
-        ACTIVE: "نشط",
-        ON_LEAVE: "في إجازة",
-        TERMINATED: "منتهي",
-        RETIRED: "متقاعد",
-      }
-    : {
-        ACTIVE: "Active",
-        ON_LEAVE: "On Leave",
-        TERMINATED: "Terminated",
-        RETIRED: "Retired",
-      }
-
-  const typeLabels: Record<string, string> = isAr
-    ? {
-        FULL_TIME: "دوام كامل",
-        PART_TIME: "دوام جزئي",
-        CONTRACT: "عقد",
-        TEMPORARY: "مؤقت",
-      }
-    : {
-        FULL_TIME: "Full Time",
-        PART_TIME: "Part Time",
-        CONTRACT: "Contract",
-        TEMPORARY: "Temporary",
-      }
+  const statusLabels = getStatusLabels(staffDict)
+  const typeLabels = getTypeLabels(staffDict)
 
   return [
     {

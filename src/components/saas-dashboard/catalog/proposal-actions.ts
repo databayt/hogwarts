@@ -79,12 +79,21 @@ export async function getProposalsForReview(
 // ============================================================================
 
 function generateSlug(name: string): string {
-  return name
+  // First try ASCII-friendly slug
+  const ascii = name
     .toLowerCase()
     .replace(/[^\w\s-]/g, "")
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
     .slice(0, 80)
+
+  // If name is non-ASCII (e.g. Arabic), the ascii slug will be empty/meaningless
+  // Use a short random suffix to ensure uniqueness
+  if (!ascii || ascii === "-") {
+    const rand = Math.random().toString(36).slice(2, 10)
+    return `subject-${rand}`
+  }
+  return ascii
 }
 
 export async function approveProposal(
@@ -95,162 +104,176 @@ export async function approveProposal(
     const session = await requireDeveloper()
     const userId = session.user?.id
 
-    const proposal = await db.catalogProposal.findUnique({
-      where: { id },
-    })
+    // Entire approve flow in one transaction for atomicity + race protection
+    const catalogEntityId = await db.$transaction(
+      async (tx) => {
+        // Optimistic locking: fetch + check status inside transaction
+        const proposal = await tx.catalogProposal.findUnique({
+          where: { id },
+        })
 
-    if (!proposal) {
-      return { success: false, error: "Proposal not found" }
-    }
+        if (!proposal) {
+          throw new Error("Proposal not found")
+        }
 
-    if (proposal.status !== "SUBMITTED" && proposal.status !== "IN_REVIEW") {
-      return {
-        success: false,
-        error: `Cannot approve a proposal with status: ${proposal.status}`,
-      }
-    }
+        if (
+          proposal.status !== "SUBMITTED" &&
+          proposal.status !== "IN_REVIEW"
+        ) {
+          throw new Error(
+            `Cannot approve a proposal with status: ${proposal.status}`
+          )
+        }
 
-    const data = proposal.data as Record<string, any>
-    let catalogEntityId: string
+        const data = proposal.data as Record<string, any>
+        let entityId: string
 
-    switch (proposal.type) {
-      case "SUBJECT": {
-        // Wrap all subject operations in a transaction for atomicity
-        catalogEntityId = await db.$transaction(async (tx) => {
-          const baseSlug = generateSlug(data.name || "untitled")
-          let slug = baseSlug
-          let attempt = 0
-          while (await tx.catalogSubject.findUnique({ where: { slug } })) {
-            attempt++
-            slug = `${baseSlug}-${attempt}`
-          }
+        switch (proposal.type) {
+          case "SUBJECT": {
+            const baseSlug = generateSlug(data.name || "untitled")
+            let slug = baseSlug
+            let attempt = 0
+            while (await tx.catalogSubject.findUnique({ where: { slug } })) {
+              attempt++
+              slug = `${baseSlug}-${attempt}`
+            }
 
-          const subject = await tx.catalogSubject.create({
-            data: {
-              name: data.name,
-              slug,
-              department: data.department || "",
-              description: data.description || null,
-              grades: data.grades || [],
-              levels: data.levels || [],
-              country: data.country || "SD",
-              status: "PUBLISHED",
-            },
-          })
-
-          // Auto-bridge: create SchoolSubjectSelection for the proposing school
-          const firstGrade = await tx.academicGrade.findFirst({
-            where: { schoolId: proposal.schoolId },
-            select: { id: true },
-          })
-
-          if (firstGrade) {
-            await tx.schoolSubjectSelection.create({
+            const subject = await tx.catalogSubject.create({
               data: {
-                schoolId: proposal.schoolId,
-                catalogSubjectId: subject.id,
-                gradeId: firstGrade.id,
-                isRequired: false,
-                isActive: true,
+                name: data.name,
+                slug,
+                department: data.department || "",
+                description: data.description || null,
+                grades: data.grades || [],
+                levels: data.levels || [],
+                country: data.country || "SD",
+                status: "PUBLISHED",
               },
             })
-          }
 
-          return subject.id
-        })
-        break
-      }
-      case "CHAPTER": {
-        if (!proposal.parentSubjectId) {
-          return {
-            success: false,
-            error: "Chapter proposal missing parent subject",
+            // Auto-bridge: create SchoolSubjectSelection for ALL applicable grades
+            const proposalGrades: number[] = data.grades || []
+            let schoolGrades: Array<{ id: string; gradeNumber: number }>
+
+            if (proposalGrades.length > 0) {
+              schoolGrades = await tx.academicGrade.findMany({
+                where: {
+                  schoolId: proposal.schoolId,
+                  gradeNumber: { in: proposalGrades },
+                },
+                select: { id: true, gradeNumber: true },
+              })
+            } else {
+              // No specific grades — bridge to all school grades
+              schoolGrades = await tx.academicGrade.findMany({
+                where: { schoolId: proposal.schoolId },
+                select: { id: true, gradeNumber: true },
+              })
+            }
+
+            if (schoolGrades.length > 0) {
+              await tx.schoolSubjectSelection.createMany({
+                data: schoolGrades.map((g) => ({
+                  schoolId: proposal.schoolId,
+                  catalogSubjectId: subject.id,
+                  gradeId: g.id,
+                  isRequired: false,
+                  isActive: true,
+                })),
+                skipDuplicates: true,
+              })
+            }
+
+            entityId = subject.id
+            break
           }
+          case "CHAPTER": {
+            if (!proposal.parentSubjectId) {
+              throw new Error("Chapter proposal missing parent subject")
+            }
+
+            const baseSlug = generateSlug(data.name || "untitled")
+            let slug = baseSlug
+            let attempt = 0
+            while (
+              await tx.catalogChapter.findFirst({
+                where: {
+                  subjectId: proposal.parentSubjectId,
+                  slug,
+                },
+              })
+            ) {
+              attempt++
+              slug = `${baseSlug}-${attempt}`
+            }
+
+            const chapter = await tx.catalogChapter.create({
+              data: {
+                subjectId: proposal.parentSubjectId,
+                name: data.name,
+                slug,
+                description: data.description || null,
+                sequenceOrder: data.sequenceOrder || 0,
+                status: "PUBLISHED",
+              },
+            })
+            entityId = chapter.id
+            break
+          }
+          case "LESSON": {
+            if (!proposal.parentChapterId) {
+              throw new Error("Lesson proposal missing parent chapter")
+            }
+
+            const baseSlug = generateSlug(data.name || "untitled")
+            let slug = baseSlug
+            let attempt = 0
+            while (
+              await tx.catalogLesson.findFirst({
+                where: {
+                  chapterId: proposal.parentChapterId,
+                  slug,
+                },
+              })
+            ) {
+              attempt++
+              slug = `${baseSlug}-${attempt}`
+            }
+
+            const lesson = await tx.catalogLesson.create({
+              data: {
+                chapterId: proposal.parentChapterId,
+                name: data.name,
+                slug,
+                description: data.description || null,
+                sequenceOrder: data.sequenceOrder || 0,
+                durationMinutes: data.durationMinutes || null,
+                status: "PUBLISHED",
+              },
+            })
+            entityId = lesson.id
+            break
+          }
+          default:
+            throw new Error(`Unknown proposal type: ${proposal.type}`)
         }
 
-        const baseSlug = generateSlug(data.name || "untitled")
-        let slug = baseSlug
-        let attempt = 0
-        while (
-          await db.catalogChapter.findFirst({
-            where: {
-              subjectId: proposal.parentSubjectId,
-              slug,
-            },
-          })
-        ) {
-          attempt++
-          slug = `${baseSlug}-${attempt}`
-        }
-
-        const chapter = await db.catalogChapter.create({
+        // Update proposal status INSIDE the same transaction
+        await tx.catalogProposal.update({
+          where: { id },
           data: {
-            subjectId: proposal.parentSubjectId,
-            name: data.name,
-            slug,
-            description: data.description || null,
-            sequenceOrder: data.sequenceOrder || 0,
             status: "PUBLISHED",
+            reviewedBy: userId,
+            reviewedAt: new Date(),
+            reviewNotes: reviewNotes || null,
+            catalogEntityId: entityId,
           },
         })
-        catalogEntityId = chapter.id
-        break
-      }
-      case "LESSON": {
-        if (!proposal.parentChapterId) {
-          return {
-            success: false,
-            error: "Lesson proposal missing parent chapter",
-          }
-        }
 
-        const baseSlug = generateSlug(data.name || "untitled")
-        let slug = baseSlug
-        let attempt = 0
-        while (
-          await db.catalogLesson.findFirst({
-            where: {
-              chapterId: proposal.parentChapterId,
-              slug,
-            },
-          })
-        ) {
-          attempt++
-          slug = `${baseSlug}-${attempt}`
-        }
-
-        const lesson = await db.catalogLesson.create({
-          data: {
-            chapterId: proposal.parentChapterId,
-            name: data.name,
-            slug,
-            description: data.description || null,
-            sequenceOrder: data.sequenceOrder || 0,
-            durationMinutes: data.durationMinutes || null,
-            status: "PUBLISHED",
-          },
-        })
-        catalogEntityId = lesson.id
-        break
-      }
-      default:
-        return {
-          success: false,
-          error: `Unknown proposal type: ${proposal.type}`,
-        }
-    }
-
-    // Update proposal status
-    await db.catalogProposal.update({
-      where: { id },
-      data: {
-        status: "PUBLISHED",
-        reviewedBy: userId,
-        reviewedAt: new Date(),
-        reviewNotes: reviewNotes || null,
-        catalogEntityId,
+        return entityId
       },
-    })
+      { timeout: 30000 }
+    )
 
     revalidatePath("/catalog")
     revalidatePath("/catalog/proposals")

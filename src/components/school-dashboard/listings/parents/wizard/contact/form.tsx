@@ -18,17 +18,11 @@ import {
   SelectField,
 } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { completeParentWizard } from "../actions"
 import { updateParentContact } from "./actions"
 import { contactSchema, type ContactFormData } from "./validation"
-
-const PHONE_TYPE_OPTIONS = [
-  { label: "Mobile", value: "mobile" },
-  { label: "Home", value: "home" },
-  { label: "Work", value: "work" },
-  { label: "Emergency", value: "emergency" },
-]
 
 interface ContactFormProps {
   parentId: string
@@ -40,6 +34,15 @@ export const ContactForm = forwardRef<WizardFormRef, ContactFormProps>(
   ({ parentId, initialData, onValidChange }, ref) => {
     const [isPending, startTransition] = useTransition()
     const router = useRouter()
+    const { dictionary } = useDictionary()
+    const d = dictionary?.school?.parents as Record<string, any> | undefined
+
+    const PHONE_TYPE_OPTIONS = [
+      { label: d?.mobile || "Mobile", value: "mobile" },
+      { label: d?.home || "Home", value: "home" },
+      { label: d?.workPhone || "Work", value: "work" },
+      { label: d?.emergencyPhone || "Emergency", value: "emergency" },
+    ]
 
     const form = useForm<ContactFormData>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -104,7 +107,9 @@ export const ContactForm = forwardRef<WizardFormRef, ContactFormProps>(
         <form className="space-y-6">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h4 className="font-medium">Phone Numbers</h4>
+              <h4 className="font-medium">
+                {d?.phoneNumbers || "Phone Numbers"}
+              </h4>
               <Button
                 type="button"
                 variant="outline"
@@ -119,7 +124,7 @@ export const ContactForm = forwardRef<WizardFormRef, ContactFormProps>(
                 disabled={isPending}
               >
                 <Plus className="me-1 h-4 w-4" />
-                Add Phone
+                {d?.addPhone || "Add Phone"}
               </Button>
             </div>
 
@@ -131,7 +136,7 @@ export const ContactForm = forwardRef<WizardFormRef, ContactFormProps>(
                 <div className="flex items-start justify-between">
                   <SelectField
                     name={`phoneNumbers.${index}.phoneType`}
-                    label="Type"
+                    label={d?.phoneType || "Type"}
                     options={PHONE_TYPE_OPTIONS}
                     disabled={isPending}
                   />
@@ -147,15 +152,17 @@ export const ContactForm = forwardRef<WizardFormRef, ContactFormProps>(
                 </div>
                 <PhoneField
                   name={`phoneNumbers.${index}.phoneNumber`}
-                  label="Phone Number"
+                  label={d?.phoneNumber || "Phone Number"}
                   placeholder="+1234567890"
                   required
                   disabled={isPending}
                 />
                 <CheckboxField
                   name={`phoneNumbers.${index}.isPrimary`}
-                  label="Primary"
-                  checkboxLabel="Set as primary phone number"
+                  label={d?.primaryPhone || "Primary"}
+                  checkboxLabel={
+                    d?.setPrimaryPhone || "Set as primary phone number"
+                  }
                   disabled={isPending}
                 />
               </div>

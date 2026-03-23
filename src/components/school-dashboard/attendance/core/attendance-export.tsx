@@ -192,7 +192,7 @@ export function AttendanceExport({
 
     // In production, you'd convert CSV to actual Excel format
     toast({
-      title: "Note",
+      title: exportDict?.excelNote ? undefined : "Note",
       description:
         exportDict?.excelNote ||
         "Excel export is currently in CSV format. Open with Excel to convert.",
@@ -205,7 +205,7 @@ export function AttendanceExport({
     // This would typically use a library like jsPDF or react-pdf
     // For now, we'll show a message
     toast({
-      title: "PDF Export",
+      title: exportDict?.pdfNote ? undefined : "PDF Export",
       description:
         exportDict?.pdfNote ||
         "PDF export will be available soon. Please use CSV format for now.",

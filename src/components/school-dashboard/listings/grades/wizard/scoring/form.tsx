@@ -16,6 +16,7 @@ import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { InputField, TextareaField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { completeGradeWizard } from "../actions"
 import { updateGradeScoring } from "./actions"
@@ -32,6 +33,8 @@ export const ScoringForm = forwardRef<WizardFormRef, ScoringFormProps>(
     const [isPending, startTransition] = useTransition()
     const router = useRouter()
     const params = useParams()
+    const { dictionary: dict } = useDictionary()
+    const d = dict?.school?.grades as Record<string, any> | undefined
 
     const form = useForm<ScoringFormData>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -67,12 +70,12 @@ export const ScoringForm = forwardRef<WizardFormRef, ScoringFormProps>(
       const data = form.getValues()
       const saveResult = await updateGradeScoring(resultId, data)
       if (!saveResult.success) {
-        ErrorToast(saveResult.error || "Failed to save")
+        ErrorToast(saveResult.error || d?.failedToSave || "")
         throw new Error(saveResult.error)
       }
       const completeResult = await completeGradeWizard(resultId)
       if (!completeResult.success) {
-        ErrorToast(completeResult.error || "Failed to complete")
+        ErrorToast(completeResult.error || d?.failedToSave || "")
         throw new Error(completeResult.error)
       }
       router.push("/grades")
@@ -86,7 +89,8 @@ export const ScoringForm = forwardRef<WizardFormRef, ScoringFormProps>(
               await handleSaveAndComplete()
               resolve()
             } catch (err) {
-              const msg = err instanceof Error ? err.message : "Failed to save"
+              const msg =
+                err instanceof Error ? err.message : d?.failedToSave || ""
               ErrorToast(msg)
               reject(err)
             }
@@ -100,32 +104,35 @@ export const ScoringForm = forwardRef<WizardFormRef, ScoringFormProps>(
           <div className="grid gap-4 sm:grid-cols-2">
             <InputField
               name="score"
-              label="Score"
+              label={d?.score || "Score"}
               type="number"
-              placeholder="0"
+              placeholder={d?.scorePlaceholder || "0"}
               required
               disabled={isPending}
             />
             <InputField
               name="maxScore"
-              label="Max Score"
+              label={d?.maxScore || "Max Score"}
               type="number"
-              placeholder="100"
+              placeholder={d?.maxScorePlaceholder || "100"}
               required
               disabled={isPending}
             />
           </div>
           <InputField
             name="grade"
-            label="Grade"
-            placeholder="e.g. A+, B, C"
+            label={d?.grade || "Grade"}
+            placeholder={d?.gradePlaceholder || "e.g. A+, B, C"}
             required
             disabled={isPending}
           />
           <TextareaField
             name="feedback"
-            label="Feedback"
-            placeholder="Optional feedback for the student"
+            label={d?.feedback || "Feedback"}
+            placeholder={
+              d?.optionalFeedbackForStudent ||
+              "Optional feedback for the student"
+            }
             disabled={isPending}
           />
         </form>

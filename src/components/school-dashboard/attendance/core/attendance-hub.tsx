@@ -35,6 +35,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import type { AttendanceMethod } from "../shared/types"
 import {
@@ -67,6 +68,13 @@ export function AttendanceHub({
   dictionary,
   locale = "en",
 }: AttendanceHubProps) {
+  const { dictionary: dict } = useDictionary()
+  const hub = (dict?.school?.attendance as any)?.hub as
+    | Record<string, string>
+    | undefined
+  const methodNames = (dict?.school?.attendance as any)?.methodNames as
+    | Record<string, string>
+    | undefined
   const router = useRouter()
   const {
     currentMethod,
@@ -117,7 +125,7 @@ export function AttendanceHub({
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Total Students
+                {hub?.totalStudents || "Total Students"}
               </CardTitle>
               <Users className="text-muted-foreground h-4 w-4" />
             </CardHeader>
@@ -127,7 +135,9 @@ export function AttendanceHub({
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Present</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {hub?.present || "Present"}
+              </CardTitle>
               <CircleCheck className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
@@ -138,7 +148,9 @@ export function AttendanceHub({
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Absent</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {hub?.absent || "Absent"}
+              </CardTitle>
               <CircleAlert className="h-4 w-4 text-red-500" />
             </CardHeader>
             <CardContent>
@@ -149,7 +161,9 @@ export function AttendanceHub({
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Late</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {hub?.late || "Late"}
+              </CardTitle>
               <Clock className="h-4 w-4 text-yellow-500" />
             </CardHeader>
             <CardContent>
@@ -161,7 +175,7 @@ export function AttendanceHub({
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Attendance Rate
+                {hub?.attendanceRate || "Attendance Rate"}
               </CardTitle>
               <TrendingUp className="h-4 w-4 text-blue-500" />
             </CardHeader>
@@ -181,15 +195,15 @@ export function AttendanceHub({
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <CardTitle>Current Method</CardTitle>
-                <Badge variant="default">Active</Badge>
+                <CardTitle>{hub?.currentMethod || "Current Method"}</CardTitle>
+                <Badge variant="default">{hub?.active || "Active"}</Badge>
               </div>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => handleMethodSelect(currentMethod)}
               >
-                Continue
+                {hub?.continue || "Continue"}
                 <ChevronRight className="ms-1 h-4 w-4 rtl:rotate-180" />
               </Button>
             </div>
@@ -201,7 +215,8 @@ export function AttendanceHub({
               </div>
               <div>
                 <p className="font-semibold">
-                  {getMethodDisplayName(currentMethod)}
+                  {methodNames?.[currentMethod] ||
+                    getMethodDisplayName(currentMethod)}
                 </p>
                 <p className="text-muted-foreground text-sm">
                   {methods.find((m) => m.method === currentMethod)?.description}
@@ -248,9 +263,15 @@ export function AttendanceHub({
                         {METHOD_ICONS[method.method]}
                       </div>
                       {!isAvailable && (
-                        <Badge variant="secondary">Unavailable</Badge>
+                        <Badge variant="secondary">
+                          {hub?.unavailable || "Unavailable"}
+                        </Badge>
                       )}
-                      {isCurrent && <Badge variant="default">Current</Badge>}
+                      {isCurrent && (
+                        <Badge variant="default">
+                          {hub?.current || "Current"}
+                        </Badge>
+                      )}
                     </div>
                     <CardTitle className="mt-4">{method.name}</CardTitle>
                     <CardDescription>{method.description}</CardDescription>
@@ -260,7 +281,9 @@ export function AttendanceHub({
                       {method.requiresHardware && (
                         <div className="text-muted-foreground flex items-center gap-1">
                           <CircleAlert className="h-3 w-3" />
-                          <span>Requires hardware</span>
+                          <span>
+                            {hub?.requiresHardware || "Requires hardware"}
+                          </span>
                         </div>
                       )}
                       {method.supportedDevices.length > 0 && (

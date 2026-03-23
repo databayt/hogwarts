@@ -29,7 +29,7 @@ export async function generateBalanceSheet(
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return { success: false, error: "NOT_AUTHENTICATED" }
     }
 
     // Get account balances
@@ -93,10 +93,7 @@ export async function generateBalanceSheet(
     console.error("Error generating balance sheet:", error)
     return {
       success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to generate balance sheet",
+      error: error instanceof Error ? error.message : "UNKNOWN",
     }
   }
 }
@@ -109,7 +106,7 @@ export async function generateIncomeStatement(
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return { success: false, error: "NOT_AUTHENTICATED" }
     }
 
     const balances = await db.accountBalance.findMany({
@@ -162,10 +159,7 @@ export async function generateIncomeStatement(
     console.error("Error generating income statement:", error)
     return {
       success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to generate income statement",
+      error: error instanceof Error ? error.message : "UNKNOWN",
     }
   }
 }
@@ -176,7 +170,7 @@ export async function generateTrialBalance(
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return { success: false, error: "NOT_AUTHENTICATED" }
     }
 
     const balances = await db.accountBalance.findMany({
@@ -227,10 +221,7 @@ export async function generateTrialBalance(
     console.error("Error generating trial balance:", error)
     return {
       success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to generate trial balance",
+      error: error instanceof Error ? error.message : "UNKNOWN",
     }
   }
 }
@@ -239,33 +230,33 @@ export async function getAvailableReports() {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return { success: false, error: "NOT_AUTHENTICATED" }
     }
 
-    // Return list of available reports
+    // Return list of available reports (labels resolved via dictionary on client)
     const reports = [
       {
         id: "BALANCE_SHEET",
-        name: "Balance Sheet",
-        description: "Assets, liabilities, and equity",
+        nameKey: "balanceSheet",
+        descriptionKey: "balanceSheetDesc",
         category: "FINANCIAL_STATEMENTS",
       },
       {
         id: "INCOME_STATEMENT",
-        name: "Income Statement",
-        description: "Revenue and expenses",
+        nameKey: "incomeStatement",
+        descriptionKey: "incomeStatementDesc",
         category: "FINANCIAL_STATEMENTS",
       },
       {
         id: "CASH_FLOW",
-        name: "Cash Flow Statement",
-        description: "Cash inflows and outflows",
+        nameKey: "cashFlow",
+        descriptionKey: "cashFlowDesc",
         category: "FINANCIAL_STATEMENTS",
       },
       {
         id: "TRIAL_BALANCE",
-        name: "Trial Balance",
-        description: "Account balances verification",
+        nameKey: "trialBalance",
+        descriptionKey: "trialBalanceDesc",
         category: "ACCOUNTING",
       },
     ]
@@ -273,6 +264,6 @@ export async function getAvailableReports() {
     return { success: true, data: reports }
   } catch (error) {
     console.error("Error fetching available reports:", error)
-    return { success: false, error: "Failed to fetch reports" }
+    return { success: false, error: "UNKNOWN" }
   }
 }

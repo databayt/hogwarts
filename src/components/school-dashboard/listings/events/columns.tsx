@@ -23,56 +23,27 @@ export interface EventColumnCallbacks {
   onDelete?: (row: EventRow) => void
 }
 
-const getStatusBadge = (status: string, lang?: Locale) => {
-  const variants: Record<
-    string,
-    "default" | "secondary" | "destructive" | "outline"
-  > = {
-    PLANNED: "default",
-    IN_PROGRESS: "secondary",
-    COMPLETED: "outline",
-    CANCELLED: "destructive",
-  }
-
-  const labels: Record<string, { en: string; ar: string }> = {
-    PLANNED: { en: "Planned", ar: "مخطط" },
-    IN_PROGRESS: { en: "In Progress", ar: "قيد التنفيذ" },
-    COMPLETED: { en: "Completed", ar: "مكتمل" },
-    CANCELLED: { en: "Cancelled", ar: "ملغي" },
-  }
-
-  const label = labels[status]?.[lang || "en"] || status.replace("_", " ")
-
-  return <Badge variant={variants[status] || "default"}>{label}</Badge>
+const STATUS_VARIANTS: Record<
+  string,
+  "default" | "secondary" | "destructive" | "outline"
+> = {
+  PLANNED: "default",
+  IN_PROGRESS: "secondary",
+  COMPLETED: "outline",
+  CANCELLED: "destructive",
 }
 
-const getEventTypeBadge = (type: string, lang?: Locale) => {
-  const variants: Record<
-    string,
-    "default" | "secondary" | "destructive" | "outline"
-  > = {
-    ACADEMIC: "default",
-    SPORTS: "secondary",
-    CULTURAL: "outline",
-    PARENT_MEETING: "destructive",
-    CELEBRATION: "default",
-    WORKSHOP: "secondary",
-    OTHER: "outline",
-  }
-
-  const labels: Record<string, { en: string; ar: string }> = {
-    ACADEMIC: { en: "Academic", ar: "أكاديمي" },
-    SPORTS: { en: "Sports", ar: "رياضي" },
-    CULTURAL: { en: "Cultural", ar: "ثقافي" },
-    PARENT_MEETING: { en: "Parent Meeting", ar: "اجتماع أولياء الأمور" },
-    CELEBRATION: { en: "Celebration", ar: "احتفال" },
-    WORKSHOP: { en: "Workshop", ar: "ورشة عمل" },
-    OTHER: { en: "Other", ar: "أخرى" },
-  }
-
-  const label = labels[type]?.[lang || "en"] || type.replace("_", " ")
-
-  return <Badge variant={variants[type] || "default"}>{label}</Badge>
+const TYPE_VARIANTS: Record<
+  string,
+  "default" | "secondary" | "destructive" | "outline"
+> = {
+  ACADEMIC: "default",
+  SPORTS: "secondary",
+  CULTURAL: "outline",
+  PARENT_MEETING: "destructive",
+  CELEBRATION: "default",
+  WORKSHOP: "secondary",
+  OTHER: "outline",
 }
 
 export const getEventColumns = (
@@ -115,7 +86,14 @@ export const getEventColumns = (
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t.type} />
       ),
-      cell: ({ getValue }) => getEventTypeBadge(getValue<string>(), lang),
+      cell: ({ getValue }) => {
+        const val = getValue<string>()
+        return (
+          <Badge variant={TYPE_VARIANTS[val] || "default"}>
+            {types?.[val] || val.replace("_", " ")}
+          </Badge>
+        )
+      },
       meta: {
         label: t.type,
         variant: "select",
@@ -218,7 +196,14 @@ export const getEventColumns = (
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t.status} />
       ),
-      cell: ({ getValue }) => getStatusBadge(getValue<string>(), lang),
+      cell: ({ getValue }) => {
+        const val = getValue<string>()
+        return (
+          <Badge variant={STATUS_VARIANTS[val] || "default"}>
+            {statuses?.[val] || val.replace("_", " ")}
+          </Badge>
+        )
+      },
       meta: {
         label: t.status,
         variant: "select",

@@ -24,6 +24,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "@/components/ui/use-toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { useAttendanceContext } from "../core/attendance-context"
 import { AttendanceStats } from "../core/attendance-stats"
@@ -41,6 +42,11 @@ export default function BarcodeAttendanceContent({
   locale = "en",
   schoolId,
 }: BarcodeAttendanceContentProps) {
+  const { dictionary: dict } = useDictionary()
+  const t = (dict?.school?.attendance as any)?.barcode as
+    | Record<string, string>
+    | undefined
+
   const [activeTab, setActiveTab] = useState<"scan" | "cards" | "manage">(
     "scan"
   )
@@ -77,15 +83,17 @@ export default function BarcodeAttendanceContent({
             <Barcode className="h-6 w-6 text-orange-600" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold">Barcode Attendance</h2>
+            <h2 className="text-2xl font-bold">
+              {t?.title || "Barcode Attendance"}
+            </h2>
             <p className="text-muted-foreground">
-              Scan student ID cards for quick attendance
+              {t?.description || "Scan student ID cards for quick attendance"}
             </p>
           </div>
         </div>
         <Badge variant="outline" className="text-orange-600">
           <Barcode className="me-1 h-3 w-3" />
-          Barcode Mode
+          {t?.modeActive || "Barcode Mode"}
         </Badge>
       </div>
 
@@ -103,15 +111,15 @@ export default function BarcodeAttendanceContent({
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="scan">
             <Scan className="me-2 h-4 w-4" />
-            Scan Cards
+            {t?.scan || "Scan"}
           </TabsTrigger>
           <TabsTrigger value="cards">
             <CreditCard className="me-2 h-4 w-4" />
-            Card Management
+            {t?.studentCards || "Student Cards"}
           </TabsTrigger>
           <TabsTrigger value="manage">
             <Users className="me-2 h-4 w-4" />
-            Recent Scans
+            {t?.history || "History"}
           </TabsTrigger>
         </TabsList>
 
@@ -120,18 +128,17 @@ export default function BarcodeAttendanceContent({
           {!selectedClass ? (
             <Card>
               <CardHeader>
-                <CardTitle>No Class Selected</CardTitle>
+                <CardTitle>
+                  {t?.noClassSelected || "No Class Selected"}
+                </CardTitle>
                 <CardDescription>
-                  Please select a class from the dropdown above to start
-                  scanning
+                  {t?.selectClassMessage ||
+                    "Please select a class to start scanning"}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="py-4 text-center">
                   <CircleAlert className="text-muted-foreground mx-auto mb-3 h-12 w-12" />
-                  <p className="text-muted-foreground text-sm">
-                    Select a class to continue
-                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -140,8 +147,10 @@ export default function BarcodeAttendanceContent({
               classId={selectedClass}
               onScanSuccess={(data) => {
                 toast({
-                  title: "Card Scanned",
-                  description: `Attendance marked for student ${data.studentId}`,
+                  title: t?.cardScanned || "Card Scanned",
+                  description:
+                    t?.studentCheckedIn ||
+                    "Student has been checked in successfully",
                 })
               }}
               dictionary={dictionary}
@@ -163,9 +172,10 @@ export default function BarcodeAttendanceContent({
         <TabsContent value="manage" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Recent Barcode Scans</CardTitle>
+              <CardTitle>{t?.recentScans || "Recent Barcode Scans"}</CardTitle>
               <CardDescription>
-                Students who have scanned their cards today
+                {t?.scansWillAppear ||
+                  "Barcode scans will appear here as students check in"}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -173,10 +183,7 @@ export default function BarcodeAttendanceContent({
                 <div className="py-8 text-center">
                   <Users className="text-muted-foreground mx-auto mb-3 h-12 w-12" />
                   <p className="text-muted-foreground">
-                    No barcode scans recorded yet
-                  </p>
-                  <p className="text-muted-foreground mt-2 text-sm">
-                    Start scanning student ID cards
+                    {t?.noScansYet || "No barcode scans recorded yet"}
                   </p>
                 </div>
               ) : (
@@ -231,33 +238,40 @@ export default function BarcodeAttendanceContent({
           {/* Scanning Statistics */}
           <Card>
             <CardHeader>
-              <CardTitle>Scanning Statistics</CardTitle>
-              <CardDescription>
-                Performance metrics for barcode scanning
-              </CardDescription>
+              <CardTitle>{t?.scanningStats || "Scanning Statistics"}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-secondary rounded-lg p-4 text-center">
                   <p className="text-2xl font-bold">0</p>
-                  <p className="text-muted-foreground text-sm">Total Scans</p>
+                  <p className="text-muted-foreground text-sm">
+                    {t?.totalScans || "Total Scans"}
+                  </p>
                 </div>
                 <div className="bg-secondary rounded-lg p-4 text-center">
                   <p className="text-2xl font-bold">0</p>
-                  <p className="text-muted-foreground text-sm">Failed Scans</p>
+                  <p className="text-muted-foreground text-sm">
+                    {t?.failedScans || "Failed Scans"}
+                  </p>
                 </div>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">Success Rate</span>
+                  <span className="text-sm">
+                    {t?.successRate || "Success Rate"}
+                  </span>
                   <span className="text-sm font-medium">100%</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">Avg Scan Time</span>
+                  <span className="text-sm">
+                    {t?.avgScanTime || "Avg Scan Time"}
+                  </span>
                   <span className="text-sm font-medium">&lt; 1s</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">Cards in System</span>
+                  <span className="text-sm">
+                    {t?.cardsInSystem || "Cards in System"}
+                  </span>
                   <span className="text-sm font-medium">0</span>
                 </div>
               </div>

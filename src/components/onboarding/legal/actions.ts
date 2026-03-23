@@ -17,6 +17,7 @@ import {
 } from "@/lib/catalog-setup"
 import { db } from "@/lib/db"
 import { generateUniqueJoinCode } from "@/lib/join-code"
+import { dispatchSetupGuideNotifications } from "@/lib/setup-guide-notifications"
 import { syncStudentGrades } from "@/lib/sync-student-grades"
 
 import { requireSchoolOwnership } from "../auth-helpers"
@@ -31,7 +32,7 @@ export async function completeOnboarding(
   }
 ): Promise<ActionResponse> {
   try {
-    await requireSchoolOwnership(schoolId)
+    const authContext = await requireSchoolOwnership(schoolId)
 
     // Check domain exists BEFORE marking school active
     const schoolCheck = await db.school.findUnique({
@@ -70,7 +71,7 @@ export async function completeOnboarding(
     // (unlike fire-and-forget promises which get terminated on serverless).
     after(async () => {
       try {
-        await provisionSchoolDefaults(schoolId, school)
+        await provisionSchoolDefaults(schoolId, school, authContext.userId)
       } catch (err) {
         console.error(
           `[completeOnboarding] Provisioning failed for ${schoolId}:`,
@@ -103,7 +104,9 @@ async function provisionSchoolDefaults(
     curriculum: string | null
     schoolLevel: string | null
     schoolType: string | null
-  }
+    preferredLanguage: string | null
+  },
+  userId: string
 ) {
   // Step 1: Defaults MUST run first (creates YearLevels)
   // Step 2: Catalog reads YearLevels to set AcademicGrade.yearLevelId
@@ -196,6 +199,18 @@ async function provisionSchoolDefaults(
       `[provisionSchoolDefaults] Synced grades for ${syncResult.updated} students`
     )
   }
+
+  // Dispatch setup guide notifications to the admin
+  await dispatchSetupGuideNotifications(
+    schoolId,
+    userId,
+    school.preferredLanguage || "ar"
+  ).catch((err) => {
+    console.error(
+      `[provisionSchoolDefaults] Setup guide notifications failed for ${schoolId}:`,
+      err
+    )
+  })
 
   console.log(
     `[provisionSchoolDefaults] All provisioning complete for school ${schoolId}`

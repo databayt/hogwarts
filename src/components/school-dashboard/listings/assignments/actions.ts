@@ -117,17 +117,16 @@ export async function createAssignment(
     console.error("[createAssignment] Error:", error)
 
     if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      }
+      return actionError(
+        ACTION_ERRORS.VALIDATION_ERROR,
+        error.issues.map((e) => e.message).join(", ")
+      )
     }
 
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to create assignment",
-    }
+    return actionError(
+      ACTION_ERRORS.UNKNOWN,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -155,7 +154,7 @@ export async function updateAssignment(
     })
 
     if (!existing) {
-      return { success: false, error: "Assignment not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     const data: Record<string, unknown> = {}
@@ -179,17 +178,16 @@ export async function updateAssignment(
     console.error("[updateAssignment] Error:", error)
 
     if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      }
+      return actionError(
+        ACTION_ERRORS.VALIDATION_ERROR,
+        error.issues.map((e) => e.message).join(", ")
+      )
     }
 
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to update assignment",
-    }
+    return actionError(
+      ACTION_ERRORS.UNKNOWN,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -216,7 +214,7 @@ export async function deleteAssignment(input: {
     })
 
     if (!existing) {
-      return { success: false, error: "Assignment not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     await assignmentModel.deleteMany({ where: { id, schoolId } })
@@ -227,17 +225,16 @@ export async function deleteAssignment(input: {
     console.error("[deleteAssignment] Error:", error)
 
     if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      }
+      return actionError(
+        ACTION_ERRORS.VALIDATION_ERROR,
+        error.issues.map((e) => e.message).join(", ")
+      )
     }
 
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to delete assignment",
-    }
+    return actionError(
+      ACTION_ERRORS.UNKNOWN,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -280,7 +277,7 @@ export async function gradeSubmission(input: {
     })
 
     if (!submission) {
-      return { success: false, error: "Submission not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     await db.assignmentSubmission.updateMany({
@@ -321,17 +318,16 @@ export async function gradeSubmission(input: {
     console.error("[gradeSubmission] Error:", error)
 
     if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      }
+      return actionError(
+        ACTION_ERRORS.VALIDATION_ERROR,
+        error.issues.map((e) => e.message).join(", ")
+      )
     }
 
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to grade submission",
-    }
+    return actionError(
+      ACTION_ERRORS.UNKNOWN,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -379,17 +375,16 @@ export async function getAssignment(input: {
     console.error("[getAssignment] Error:", error)
 
     if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      }
+      return actionError(
+        ACTION_ERRORS.VALIDATION_ERROR,
+        error.issues.map((e) => e.message).join(", ")
+      )
     }
 
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to fetch assignment",
-    }
+    return actionError(
+      ACTION_ERRORS.UNKNOWN,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -456,17 +451,16 @@ export async function getAssignments(
     console.error("[getAssignments] Error:", error)
 
     if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      }
+      return actionError(
+        ACTION_ERRORS.VALIDATION_ERROR,
+        error.issues.map((e) => e.message).join(", ")
+      )
     }
 
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to fetch assignments",
-    }
+    return actionError(
+      ACTION_ERRORS.UNKNOWN,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -562,11 +556,10 @@ export async function getAssignmentsCSV(
   } catch (error) {
     console.error("[getAssignmentsCSV] Error:", error)
 
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to export assignments",
-    }
+    return actionError(
+      ACTION_ERRORS.UNKNOWN,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -677,12 +670,9 @@ export async function getAssignmentsExportData(
   } catch (error) {
     console.error("[getAssignmentsExportData] Error:", error)
 
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to fetch assignment export data",
-    }
+    return actionError(
+      ACTION_ERRORS.UNKNOWN,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }

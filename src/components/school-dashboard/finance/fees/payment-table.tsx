@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
 import type { Locale } from "@/components/internationalization/config"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { PlatformToolbar } from "@/components/school-dashboard/shared"
 import {
   BulkActionsToolbar,
@@ -38,6 +39,10 @@ function PaymentsTableInner({
   const [searchValue, setSearchValue] = useState("")
   const [isPending, startTransition] = useTransition()
   const { view, toggleView } = usePlatformView({ defaultView: "table" })
+  const { dictionary } = useDictionary()
+  const col = (dictionary as any)?.finance?.columns as
+    | Record<string, string>
+    | undefined
 
   const { data, isLoading, hasMore, loadMore } = usePlatformData<
     PaymentRow,
@@ -50,8 +55,8 @@ function PaymentsTableInner({
   })
 
   const columns = useMemo(
-    () => [getSelectColumn<PaymentRow>(), ...getPaymentColumns(lang)],
-    [lang]
+    () => [getSelectColumn<PaymentRow>(), ...getPaymentColumns(lang, col)],
+    [lang, col]
   )
 
   const { table } = useDataTable<PaymentRow>({

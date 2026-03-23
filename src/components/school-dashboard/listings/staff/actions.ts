@@ -62,7 +62,7 @@ export async function createStaff(
     console.error("[createStaff] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to create staff",
+      error: error instanceof Error ? error.message : "STAFF_CREATE_FAILED",
     }
   }
 }
@@ -94,7 +94,7 @@ export async function updateStaff(
     })
 
     if (!existingStaff) {
-      return { success: false, error: "Staff member not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     try {
@@ -123,7 +123,7 @@ export async function updateStaff(
     console.error("[updateStaff] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to update staff",
+      error: error instanceof Error ? error.message : "STAFF_UPDATE_FAILED",
     }
   }
 }
@@ -152,7 +152,7 @@ export async function deleteStaff(id: string): Promise<ActionResponse<void>> {
     })
 
     if (!existingStaff) {
-      return { success: false, error: "Staff member not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     try {
@@ -176,7 +176,7 @@ export async function deleteStaff(id: string): Promise<ActionResponse<void>> {
     console.error("[deleteStaff] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to delete staff",
+      error: error instanceof Error ? error.message : "STAFF_DELETE_FAILED",
     }
   }
 }
@@ -236,7 +236,7 @@ export async function bulkDeleteStaff(
     return {
       success: false,
       error:
-        error instanceof Error ? error.message : "Failed to bulk delete staff",
+        error instanceof Error ? error.message : "STAFF_BULK_DELETE_FAILED",
     }
   }
 }
@@ -309,7 +309,7 @@ export async function getStaffForExport(): Promise<ActionResponse<any[]>> {
     console.error("[getStaffForExport] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to export staff",
+      error: error instanceof Error ? error.message : "STAFF_EXPORT_FAILED",
     }
   }
 }

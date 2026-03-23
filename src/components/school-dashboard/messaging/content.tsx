@@ -30,9 +30,8 @@ export async function MessagingContent({
 }: MessagingContentProps) {
   const session = await auth()
   const dict = await getMessagingDictionary(locale)
-  const m = dict?.messaging as
-    | Record<string, Record<string, string>>
-    | undefined
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const m = dict?.messaging as Record<string, any> | undefined
 
   if (!session?.user?.id) {
     return (
@@ -107,6 +106,7 @@ export async function MessagingContent({
       initialActiveConversation={activeConversationData}
       initialMessages={messagesData}
       currentUserId={userId}
+      currentUserRole={session.user.role}
       locale={locale}
     />
   )

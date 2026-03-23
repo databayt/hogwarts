@@ -21,6 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { generateCSVFilename } from "@/components/file"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import {
   getAttendanceReport,
   getAttendanceReportCsv,
@@ -56,7 +57,10 @@ export function AttendanceReportExportButton({
   const [downloading, setDownloading] = React.useState<ExportFormat | null>(
     null
   )
-  const isArabic = locale === "ar"
+  const { dictionary } = useDictionary()
+  const t = (dictionary?.school?.attendance as any)?.exportButton as
+    | Record<string, string>
+    | undefined
 
   const getDateRange = () => {
     const from = filters.from
@@ -202,19 +206,13 @@ export function AttendanceReportExportButton({
           ) : (
             <Download className="me-2 h-4 w-4" />
           )}
-          {isLoading
-            ? isArabic
-              ? "جاري التصدير..."
-              : "Exporting..."
-            : isArabic
-              ? "تصدير"
-              : "Export"}
+          {isLoading ? t?.exporting || "Exporting..." : t?.export || "Export"}
           <ChevronDown className="ms-2 h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuLabel>
-          {isArabic ? "تنسيق التصدير" : "Export Format"}
+          {t?.exportFormat || "Export Format"}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem
@@ -225,10 +223,10 @@ export function AttendanceReportExportButton({
           {downloading === "csv" ? (
             <span className="flex items-center">
               <Loader2 className="me-2 h-3 w-3 animate-spin" />
-              {isArabic ? "جاري..." : "Loading..."}
+              {t?.loading || "Loading..."}
             </span>
           ) : (
-            <span>{isArabic ? "تصدير CSV" : "Export CSV"}</span>
+            <span>{t?.exportCsv || "Export CSV"}</span>
           )}
         </DropdownMenuItem>
         <DropdownMenuItem
@@ -239,10 +237,10 @@ export function AttendanceReportExportButton({
           {downloading === "excel" ? (
             <span className="flex items-center">
               <Loader2 className="me-2 h-3 w-3 animate-spin" />
-              {isArabic ? "جاري..." : "Loading..."}
+              {t?.loading || "Loading..."}
             </span>
           ) : (
-            <span>{isArabic ? "تصدير Excel" : "Export Excel"}</span>
+            <span>{t?.exportExcel || "Export Excel"}</span>
           )}
         </DropdownMenuItem>
         <DropdownMenuItem
@@ -253,10 +251,10 @@ export function AttendanceReportExportButton({
           {downloading === "pdf" ? (
             <span className="flex items-center">
               <Loader2 className="me-2 h-3 w-3 animate-spin" />
-              {isArabic ? "جاري..." : "Loading..."}
+              {t?.loading || "Loading..."}
             </span>
           ) : (
-            <span>{isArabic ? "تصدير PDF" : "Export PDF"}</span>
+            <span>{t?.exportPdf || "Export PDF"}</span>
           )}
         </DropdownMenuItem>
       </DropdownMenuContent>

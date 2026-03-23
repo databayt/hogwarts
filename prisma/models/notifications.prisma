@@ -25,6 +25,7 @@ enum NotificationType {
   login_alert // Unusual login detected
   document_shared // Document shared with user
   report_ready // Report generated
+  setup_guide // Post-onboarding setup step guide
 }
 
 // Notification priority levels

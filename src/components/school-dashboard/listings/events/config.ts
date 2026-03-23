@@ -1,12 +1,6 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-export const STEPS = {
-  1: "Basic Information",
-  2: "Schedule & Location",
-  3: "Details & Attendees",
-} as const
-
 export const STEP_FIELDS = {
   1: ["title", "description", "eventType"] as const,
   2: ["eventDate", "startTime", "endTime", "location"] as const,
@@ -26,21 +20,36 @@ export const TOTAL_FIELDS = [
   ...STEP_FIELDS[3],
 ].length
 
-export const EVENT_STATUSES = [
-  { label: "Planned", value: "PLANNED" },
-  { label: "In Progress", value: "IN_PROGRESS" },
-  { label: "Completed", value: "COMPLETED" },
-  { label: "Cancelled", value: "CANCELLED" },
+/** Event status values */
+export const EVENT_STATUS_VALUES = [
+  "PLANNED",
+  "IN_PROGRESS",
+  "COMPLETED",
+  "CANCELLED",
 ] as const
 
-export const EVENT_TYPES = [
-  { label: "Academic", value: "ACADEMIC" },
-  { label: "Sports", value: "SPORTS" },
-  { label: "Cultural", value: "CULTURAL" },
-  { label: "Parent Meeting", value: "PARENT_MEETING" },
-  { label: "Celebration", value: "CELEBRATION" },
-  { label: "Workshop", value: "WORKSHOP" },
-  { label: "Other", value: "OTHER" },
+/** Event type values */
+export const EVENT_TYPE_VALUES = [
+  "ACADEMIC",
+  "SPORTS",
+  "CULTURAL",
+  "PARENT_MEETING",
+  "CELEBRATION",
+  "WORKSHOP",
+  "OTHER",
+] as const
+
+/** Target audience values */
+export const TARGET_AUDIENCE_VALUES = [
+  "All Students",
+  "Primary Students",
+  "Secondary Students",
+  "Teachers Only",
+  "Parents Only",
+  "Staff Only",
+  "Public",
+  "Specific Class",
+  "Other",
 ] as const
 
 export const TIME_SLOTS = [
@@ -74,66 +83,50 @@ export const TIME_SLOTS = [
   "21:30",
 ] as const
 
-export const TARGET_AUDIENCES = [
-  "All Students",
-  "Primary Students",
-  "Secondary Students",
-  "Teachers Only",
-  "Parents Only",
-  "Staff Only",
-  "Public",
-  "Specific Class",
-  "Other",
-] as const
+// --- Dictionary-based factory functions ---
 
-// --- Bilingual factory functions ---
+type EventsDictionary = Record<string, any>
 
-export const getEventStatuses = (lang?: string) => [
-  { value: "PLANNED", label: lang === "ar" ? "مخطط" : "Planned" },
-  { value: "IN_PROGRESS", label: lang === "ar" ? "جاري" : "In Progress" },
-  { value: "COMPLETED", label: lang === "ar" ? "مكتمل" : "Completed" },
-  { value: "CANCELLED", label: lang === "ar" ? "ملغي" : "Cancelled" },
-]
+export const getEventStatuses = (d?: EventsDictionary) => {
+  const s = d?.statuses as Record<string, string> | undefined
+  return [
+    { value: "PLANNED", label: s?.PLANNED || "Planned" },
+    { value: "IN_PROGRESS", label: s?.IN_PROGRESS || "In Progress" },
+    { value: "COMPLETED", label: s?.COMPLETED || "Completed" },
+    { value: "CANCELLED", label: s?.CANCELLED || "Cancelled" },
+  ]
+}
 
-export const getEventTypes = (lang?: string) => [
-  { value: "ACADEMIC", label: lang === "ar" ? "أكاديمي" : "Academic" },
-  { value: "SPORTS", label: lang === "ar" ? "رياضي" : "Sports" },
-  { value: "CULTURAL", label: lang === "ar" ? "ثقافي" : "Cultural" },
-  {
-    value: "PARENT_MEETING",
-    label: lang === "ar" ? "اجتماع أولياء" : "Parent Meeting",
-  },
-  { value: "CELEBRATION", label: lang === "ar" ? "احتفال" : "Celebration" },
-  { value: "WORKSHOP", label: lang === "ar" ? "ورشة عمل" : "Workshop" },
-  { value: "OTHER", label: lang === "ar" ? "أخرى" : "Other" },
-]
+export const getEventTypes = (d?: EventsDictionary) => {
+  const t = d?.types as Record<string, string> | undefined
+  return [
+    { value: "ACADEMIC", label: t?.ACADEMIC || "Academic" },
+    { value: "SPORTS", label: t?.SPORTS || "Sports" },
+    { value: "CULTURAL", label: t?.CULTURAL || "Cultural" },
+    { value: "PARENT_MEETING", label: t?.PARENT_MEETING || "Parent Meeting" },
+    { value: "CELEBRATION", label: t?.CELEBRATION || "Celebration" },
+    { value: "WORKSHOP", label: t?.WORKSHOP || "Workshop" },
+    { value: "OTHER", label: t?.OTHER || "Other" },
+  ]
+}
 
-export const getTargetAudiences = (lang?: string) => [
-  {
-    value: "All Students",
-    label: lang === "ar" ? "جميع الطلاب" : "All Students",
-  },
-  {
-    value: "Primary Students",
-    label: lang === "ar" ? "طلاب المرحلة الابتدائية" : "Primary Students",
-  },
-  {
-    value: "Secondary Students",
-    label: lang === "ar" ? "طلاب المرحلة الثانوية" : "Secondary Students",
-  },
-  {
-    value: "Teachers Only",
-    label: lang === "ar" ? "المعلمين فقط" : "Teachers Only",
-  },
-  {
-    value: "Parents Only",
-    label: lang === "ar" ? "أولياء الأمور فقط" : "Parents Only",
-  },
-  { value: "Staff Only", label: lang === "ar" ? "الموظفون فقط" : "Staff Only" },
-  { value: "Public", label: lang === "ar" ? "عام" : "Public" },
-  {
-    value: "Specific Class",
-    label: lang === "ar" ? "فصل محدد" : "Specific Class",
-  },
-  { value: "Other", label: lang === "ar" ? "أخرى" : "Other" },
-]
+export const getTargetAudiences = (d?: EventsDictionary) => {
+  const a = d?.targetAudiences as Record<string, string> | undefined
+  return [
+    { value: "All Students", label: a?.allStudents || "All Students" },
+    {
+      value: "Primary Students",
+      label: a?.primaryStudents || "Primary Students",
+    },
+    {
+      value: "Secondary Students",
+      label: a?.secondaryStudents || "Secondary Students",
+    },
+    { value: "Teachers Only", label: a?.teachersOnly || "Teachers Only" },
+    { value: "Parents Only", label: a?.parentsOnly || "Parents Only" },
+    { value: "Staff Only", label: a?.staffOnly || "Staff Only" },
+    { value: "Public", label: a?.public || "Public" },
+    { value: "Specific Class", label: a?.specificClass || "Specific Class" },
+    { value: "Other", label: a?.other || "Other" },
+  ]
+}

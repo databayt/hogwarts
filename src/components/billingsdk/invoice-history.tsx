@@ -156,7 +156,7 @@ export function InvoiceHistory({
                           )
                         : onDownload?.(inv.id)
                     }
-                    aria-label={`Download invoice ${inv.id}`}
+                    aria-label={`${t?.downloadInvoice || "Download invoice"} ${inv.id}`}
                   >
                     <Download className="text-muted-foreground h-4 w-4" />
                   </button>

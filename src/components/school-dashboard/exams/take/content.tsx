@@ -119,6 +119,7 @@ export function ExamTakingContent({
   const router = useRouter()
   const t = dictionary?.school?.exams?.take
   const exams = dictionary?.school?.exams
+  const tc = dictionary?.school?.exams?.takeContent
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [answers, setAnswers] = useState<
     Map<string, { answerText?: string; selectedOptionIds?: string[] }>
@@ -234,10 +235,12 @@ export function ExamTakingContent({
       if (result.success) {
         router.push(`/exams/${exam.id}`)
       } else {
-        setError(result.error || "Failed to submit exam")
+        setError(
+          result.error || (tc?.errorSubmitting ?? "Failed to submit exam")
+        )
       }
     } catch (err) {
-      setError("An error occurred while submitting")
+      setError(tc?.errorSubmitting ?? "An error occurred while submitting")
     } finally {
       setIsSubmitting(false)
       setShowSubmitDialog(false)
@@ -355,13 +358,13 @@ export function ExamTakingContent({
           <div className="hover:bg-muted/50 flex cursor-pointer items-center gap-3 rounded-lg border p-4">
             <RadioGroupItem value="0" id="true" />
             <Label htmlFor="true" className="flex-1 cursor-pointer text-lg">
-              True
+              {tc?.true ?? "True"}
             </Label>
           </div>
           <div className="hover:bg-muted/50 flex cursor-pointer items-center gap-3 rounded-lg border p-4">
             <RadioGroupItem value="1" id="false" />
             <Label htmlFor="false" className="flex-1 cursor-pointer text-lg">
-              False
+              {tc?.false ?? "False"}
             </Label>
           </div>
         </div>
@@ -402,7 +405,7 @@ export function ExamTakingContent({
           className="min-h-[150px] text-base"
         />
         <p className="text-muted-foreground text-sm">
-          {(answer?.answerText || "").length} characters
+          {(answer?.answerText || "").length} {tc?.characters ?? "characters"}
         </p>
       </div>
     )
@@ -427,9 +430,11 @@ export function ExamTakingContent({
         <div className="text-muted-foreground flex justify-between text-sm">
           <span>
             {(answer?.answerText || "").split(/\s+/).filter(Boolean).length}{" "}
-            words
+            {tc?.words ?? "words"}
           </span>
-          <span>{(answer?.answerText || "").length} characters</span>
+          <span>
+            {(answer?.answerText || "").length} {tc?.characters ?? "characters"}
+          </span>
         </div>
       </div>
     )
@@ -451,7 +456,8 @@ export function ExamTakingContent({
           <div>
             <h1 className="font-semibold">{exam.title}</h1>
             <p className="text-muted-foreground text-sm">
-              Question {currentQuestionIndex + 1} of {totalQuestions}
+              {tc?.question ?? "Question"} {currentQuestionIndex + 1}{" "}
+              {tc?.ofLabel ?? "of"} {totalQuestions}
             </p>
           </div>
 
@@ -571,11 +577,14 @@ export function ExamTakingContent({
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <Badge variant="outline">
-                          Question {currentQuestionIndex + 1}
+                          {tc?.question ?? "Question"}{" "}
+                          {currentQuestionIndex + 1}
                         </Badge>
                         <Badge variant="secondary">
                           {currentQuestion.points}{" "}
-                          {currentQuestion.points === 1 ? "point" : "points"}
+                          {currentQuestion.points === 1
+                            ? (tc?.point ?? "point")
+                            : (tc?.points ?? "points")}
                         </Badge>
                         <Badge>
                           {currentQuestion.question.questionType.replace(
@@ -603,7 +612,7 @@ export function ExamTakingContent({
                     <div className="overflow-hidden rounded-lg border">
                       <img
                         src={currentQuestion.question.imageUrl}
-                        alt="Question image"
+                        alt={tc?.questionImage ?? "Question image"}
                         className="h-auto max-w-full"
                       />
                     </div>

@@ -38,6 +38,7 @@ type CatalogOption = {
 export function SubjectCreateForm({ onSuccess }: SubjectCreateFormProps) {
   const { dictionary: fullDict } = useDictionary()
   const t = fullDict?.messages?.toast
+  const d = fullDict?.school?.subjects
   const { modal, closeModal } = useModal()
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
@@ -159,7 +160,7 @@ export function SubjectCreateForm({ onSuccess }: SubjectCreateFormProps) {
             {!currentId && catalogOptions.length > 0 && (
               <div className="space-y-2">
                 <label className="text-sm font-medium">
-                  Select Subject from Catalog
+                  {d?.form?.selectFromCatalog || "Select Subject from Catalog"}
                 </label>
                 <select
                   className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
@@ -173,7 +174,10 @@ export function SubjectCreateForm({ onSuccess }: SubjectCreateFormProps) {
                   }}
                   disabled={isView}
                 >
-                  <option value="">-- Select a subject --</option>
+                  <option value="">
+                    {d?.form?.selectSubjectPlaceholder ||
+                      "-- Select a subject --"}
+                  </option>
                   {catalogOptions.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name} ({c.department})
@@ -181,7 +185,8 @@ export function SubjectCreateForm({ onSuccess }: SubjectCreateFormProps) {
                   ))}
                 </select>
                 <p className="text-muted-foreground text-xs">
-                  Select a subject from the catalog to add to your school.
+                  {d?.form?.selectFromCatalogHint ||
+                    "Select a subject from the catalog to add to your school."}
                 </p>
               </div>
             )}
@@ -199,14 +204,19 @@ export function SubjectCreateForm({ onSuccess }: SubjectCreateFormProps) {
       <form onSubmit={(e) => e.preventDefault()}>
         <ModalFormLayout
           title={
-            isView ? "View Subject" : currentId ? "Edit Subject" : "Add Subject"
+            isView
+              ? d?.viewSubject || "View Subject"
+              : currentId
+                ? d?.editSubject || "Edit Subject"
+                : d?.addSubject || "Add Subject"
           }
           description={
             isView
-              ? "View subject details"
+              ? d?.form?.viewSubjectDescription || "View subject details"
               : currentId
-                ? "Update subject settings"
-                : "Select a subject from the catalog to add to your school"
+                ? d?.form?.editSubjectDescription || "Update subject settings"
+                : d?.form?.addSubjectDescription ||
+                  "Select a subject from the catalog to add to your school"
           }
         >
           {renderCurrentStep()}
@@ -215,7 +225,7 @@ export function SubjectCreateForm({ onSuccess }: SubjectCreateFormProps) {
         <ModalFooter
           currentStep={currentStep}
           totalSteps={1}
-          stepLabel="Subject Details"
+          stepLabel={d?.form?.subjectDetails || "Subject Details"}
           isView={isView}
           isEdit={!!currentId}
           isDirty={form.formState.isDirty}

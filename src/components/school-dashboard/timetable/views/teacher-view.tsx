@@ -61,7 +61,7 @@ interface Props {
   defaultTab?: "today" | "full"
 }
 
-const DAY_NAMES = [
+const DAY_NAMES_EN = [
   "Sunday",
   "Monday",
   "Tuesday",
@@ -85,6 +85,7 @@ export default function TeacherView({
 }: Props) {
   const d = dictionary?.timetable as Record<string, any> | undefined
   const tv = (d as Record<string, any>)?.teacherViewUi
+  const dayNames: string[] = (d?.dayNames as string[]) ?? DAY_NAMES_EN
   const isRTL = lang === "ar"
 
   const [isLoadingData, setIsLoadingData] = useState(false)
@@ -115,7 +116,7 @@ export default function TeacherView({
   const loadData = async () => {
     if (!teacherId) {
       setError(
-        tv?.empty?.selectTeacher ?? "Teacher profile not linked to your account"
+        tv?.profileNotLinked ?? "Teacher profile not linked to your account"
       )
       return
     }
@@ -138,7 +139,7 @@ export default function TeacherView({
       setError(
         err instanceof Error
           ? err.message
-          : (tv?.empty?.noSchedule ?? "Failed to load schedule")
+          : (tv?.noClasses ?? "Failed to load schedule")
       )
     } finally {
       setIsLoadingData(false)
@@ -267,21 +268,21 @@ export default function TeacherView({
                 <Calendar className="text-muted-foreground h-4 w-4" />
                 <span className="text-sm">
                   <strong>{workload.daysPerWeek}</strong>{" "}
-                  {tv?.labels?.weeklyHours ?? "days/week"}
+                  {tv?.daysPerWeek ?? "days/week"}
                 </span>
               </div>
               <div className="bg-muted flex items-center gap-2 rounded-lg px-3 py-2">
                 <Clock className="text-muted-foreground h-4 w-4" />
                 <span className="text-sm">
                   <strong>{workload.periodsPerWeek}</strong>{" "}
-                  {tv?.labels?.weeklyHours ?? "periods/week"}
+                  {tv?.periodsPerWeek ?? "periods/week"}
                 </span>
               </div>
               <div className="bg-muted flex items-center gap-2 rounded-lg px-3 py-2">
                 <BookOpen className="text-muted-foreground h-4 w-4" />
                 <span className="text-sm">
                   <strong>{workload.classesTeaching}</strong>{" "}
-                  {tv?.labels?.freeSlots ?? "classes"}
+                  {tv?.classes ?? "classes"}
                 </span>
               </div>
             </div>
@@ -314,8 +315,8 @@ export default function TeacherView({
               <div className="flex-1">
                 <p className="text-muted-foreground text-sm">
                   {currentClassInfo.type === "current"
-                    ? (tv?.labels?.nextClass ?? "Currently Teaching")
-                    : (tv?.labels?.nextClass ?? "Next Class")}
+                    ? (tv?.currentlyTeaching ?? "Currently Teaching")
+                    : (tv?.nextClass ?? "Next Class")}
                 </p>
                 <p className="text-lg font-semibold">
                   {currentClassInfo.item.subject ||
@@ -347,12 +348,12 @@ export default function TeacherView({
             <Select value={classroomFilter} onValueChange={setClassroomFilter}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue
-                  placeholder={tv?.filters?.allClassrooms ?? "All Classrooms"}
+                  placeholder={tv?.allClassrooms ?? "All Classrooms"}
                 />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">
-                  {tv?.filters?.allClassrooms ?? "All Classrooms"}
+                  {tv?.allClassrooms ?? "All Classrooms"}
                 </SelectItem>
                 {filterOptions.classrooms.map((c) => (
                   <SelectItem key={c} value={c}>
@@ -365,13 +366,11 @@ export default function TeacherView({
           {filterOptions.subjects.length > 1 && (
             <Select value={subjectFilter} onValueChange={setSubjectFilter}>
               <SelectTrigger className="w-[180px]">
-                <SelectValue
-                  placeholder={tv?.filters?.allSubjects ?? "All Subjects"}
-                />
+                <SelectValue placeholder={tv?.allSubjects ?? "All Subjects"} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">
-                  {tv?.filters?.allSubjects ?? "All Subjects"}
+                  {tv?.allSubjects ?? "All Subjects"}
                 </SelectItem>
                 {filterOptions.subjects.map((s) => (
                   <SelectItem key={s} value={s}>
@@ -394,8 +393,8 @@ export default function TeacherView({
             <CardContent className="text-muted-foreground py-12 text-center">
               <Calendar className="mx-auto mb-4 h-12 w-12 opacity-50" />
               <p>
-                {tv?.empty?.noSchedule ?? "No classes scheduled for today"} (
-                {DAY_NAMES[currentDay]})
+                {tv?.noClasses?.replace("{day}", dayNames[currentDay]) ??
+                  `No classes scheduled for today (${dayNames[currentDay]})`}
               </p>
             </CardContent>
           </Card>
@@ -428,7 +427,7 @@ export default function TeacherView({
                           ? item.periodName
                           : item.subject ||
                             item.className ||
-                            (d?.freePeriod ?? "Free Period")}
+                            (tv?.freePeriod ?? "Free Period")}
                       </p>
                       {!item.isBreak &&
                         (item.className || item.sectionName) && (
@@ -439,7 +438,7 @@ export default function TeacherView({
                         )}
                     </div>
                     {item.isBreak && (
-                      <Badge variant="secondary">{d?.break ?? "Break"}</Badge>
+                      <Badge variant="secondary">{tv?.break ?? "Break"}</Badge>
                     )}
                   </div>
                 </CardContent>

@@ -11,12 +11,15 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { EvaluationTypeSelector } from "./evaluation-type-selector"
 import { PrerequisiteSelector } from "./prerequisite-selector"
 import { ClassFormStepProps } from "./types"
 
 export function CourseManagementStep({ form, isView }: ClassFormStepProps) {
+  const { dictionary } = useDictionary()
+  const d = dictionary?.school?.classes?.form
   // Note: 'id' field only exists in update schema, not in create schema
   // PrerequisiteSelector handles undefined currentClassId gracefully
   const currentClassId = undefined
@@ -29,17 +32,20 @@ export function CourseManagementStep({ form, isView }: ClassFormStepProps) {
           name="courseCode"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Course Code</FormLabel>
+              <FormLabel>{d?.courseCode || "Course Code"}</FormLabel>
               <FormControl>
                 <Input
-                  placeholder="e.g., CS101, MATH201"
+                  placeholder={
+                    d?.courseCodePlaceholder || "e.g., CS101, MATH201"
+                  }
                   disabled={isView}
                   {...field}
                   value={field.value || ""}
                 />
               </FormControl>
               <FormDescription>
-                Unique identifier for this course
+                {d?.courseCodeDescription ||
+                  "Unique identifier for this course"}
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -51,21 +57,22 @@ export function CourseManagementStep({ form, isView }: ClassFormStepProps) {
           name="credits"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Credit Hours</FormLabel>
+              <FormLabel>{d?.creditHours || "Credit Hours"}</FormLabel>
               <FormControl>
                 <Input
                   type="number"
                   step="0.01"
                   min="0"
                   max="999.99"
-                  placeholder="e.g., 3.0"
+                  placeholder={d?.creditHoursPlaceholder || "e.g., 3.0"}
                   disabled={isView}
                   {...field}
                   value={field.value || ""}
                 />
               </FormControl>
               <FormDescription>
-                Academic credits for this course
+                {d?.creditHoursDescription ||
+                  "Academic credits for this course"}
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -81,18 +88,20 @@ export function CourseManagementStep({ form, isView }: ClassFormStepProps) {
           name="minCapacity"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Min Students</FormLabel>
+              <FormLabel>{d?.minStudents || "Min Students"}</FormLabel>
               <FormControl>
                 <Input
                   type="number"
                   min="1"
-                  placeholder="e.g., 10"
+                  placeholder={d?.minStudentsPlaceholder || "e.g., 10"}
                   disabled={isView}
                   {...field}
                   value={field.value || ""}
                 />
               </FormControl>
-              <FormDescription>Minimum enrollment</FormDescription>
+              <FormDescription>
+                {d?.minEnrollment || "Minimum enrollment"}
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -103,18 +112,20 @@ export function CourseManagementStep({ form, isView }: ClassFormStepProps) {
           name="maxCapacity"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Max Students</FormLabel>
+              <FormLabel>{d?.maxStudents || "Max Students"}</FormLabel>
               <FormControl>
                 <Input
                   type="number"
                   min="1"
-                  placeholder="e.g., 50"
+                  placeholder={d?.maxStudentsPlaceholder || "e.g., 50"}
                   disabled={isView}
                   {...field}
                   value={field.value || ""}
                 />
               </FormControl>
-              <FormDescription>Maximum enrollment</FormDescription>
+              <FormDescription>
+                {d?.maxEnrollment || "Maximum enrollment"}
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -125,18 +136,20 @@ export function CourseManagementStep({ form, isView }: ClassFormStepProps) {
           name="duration"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Duration (weeks)</FormLabel>
+              <FormLabel>{d?.durationWeeks || "Duration (weeks)"}</FormLabel>
               <FormControl>
                 <Input
                   type="number"
                   min="1"
-                  placeholder="e.g., 16"
+                  placeholder={d?.durationPlaceholder || "e.g., 16"}
                   disabled={isView}
                   {...field}
                   value={field.value || ""}
                 />
               </FormControl>
-              <FormDescription>Course length</FormDescription>
+              <FormDescription>
+                {d?.courseLength || "Course length"}
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}

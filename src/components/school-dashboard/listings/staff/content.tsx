@@ -1,12 +1,11 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { auth } from "@/auth"
-
 import { getDisplayText } from "@/lib/content-display"
 import { getModel } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 
 import { getStaffList } from "./queries"
 import { StaffTable, transformStaffToRow } from "./table"
@@ -30,9 +29,13 @@ export async function StaffContent({
   searchParams,
 }: StaffContentProps) {
   const { schoolId } = await getTenantContext()
+  const dictionary = await getDictionary(locale)
+  const d = (dictionary?.school as any)?.staffListing as
+    | Record<string, any>
+    | undefined
 
   if (!schoolId) {
-    return <div>No school context</div>
+    return <div>{d?.noSchoolContext || "No school context"}</div>
   }
 
   const page = Number(searchParams.page) || 1
@@ -44,8 +47,8 @@ export async function StaffContent({
   if (!staffModel) {
     return (
       <div className="text-muted-foreground py-8 text-center">
-        Staff module requires database migration. Run `pnpm prisma migrate dev`
-        to enable.
+        {d?.migrationRequired ||
+          "Staff module requires database migration. Run `pnpm prisma migrate dev` to enable."}
       </div>
     )
   }

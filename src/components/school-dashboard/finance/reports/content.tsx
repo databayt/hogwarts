@@ -335,7 +335,10 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
           <CardContent className="space-y-2">
             <Button asChild className="w-full">
               <Link href={`/${lang}/finance/reports/all`}>
-                View All ({reportsCount})
+                {(rp?.viewAllCount || "View All ({count})").replace(
+                  "{count}",
+                  String(reportsCount)
+                )}
               </Link>
             </Button>
             <Button variant="outline" asChild className="w-full" size="sm">

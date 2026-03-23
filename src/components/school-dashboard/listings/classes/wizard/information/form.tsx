@@ -16,6 +16,7 @@ import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { InputField, SelectField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import {
   getGradesForClass,
@@ -24,13 +25,6 @@ import {
 } from "../actions"
 import { updateClassInformation } from "./actions"
 import { informationSchema, type InformationFormData } from "./validation"
-
-const EVALUATION_TYPE_OPTIONS = [
-  { label: "Normal (Percentage)", value: "NORMAL" },
-  { label: "GPA (Grade Point Average)", value: "GPA" },
-  { label: "CWA (Cumulative Weighted Average)", value: "CWA" },
-  { label: "CCE (Continuous Comprehensive Evaluation)", value: "CCE" },
-]
 
 interface InformationFormProps {
   classId: string
@@ -41,6 +35,8 @@ interface InformationFormProps {
 export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
   ({ classId, initialData, onValidChange }, ref) => {
     const [isPending, startTransition] = useTransition()
+    const { dictionary } = useDictionary()
+    const d = dictionary?.school?.classes?.wizard?.information
     const [subjectOptions, setSubjectOptions] = useState<
       { label: string; value: string }[]
     >([])
@@ -118,46 +114,69 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
         }),
     }))
 
+    const evaluationTypeOptions = [
+      {
+        label: d?.evaluationOptions?.normal || "Normal (Percentage)",
+        value: "NORMAL",
+      },
+      {
+        label: d?.evaluationOptions?.gpa || "GPA (Grade Point Average)",
+        value: "GPA",
+      },
+      {
+        label: d?.evaluationOptions?.cwa || "CWA (Cumulative Weighted Average)",
+        value: "CWA",
+      },
+      {
+        label:
+          d?.evaluationOptions?.cce ||
+          "CCE (Continuous Comprehensive Evaluation)",
+        value: "CCE",
+      },
+    ]
+
     return (
       <Form {...form}>
         <form className="space-y-6">
           <InputField
             name="name"
-            label="Class Name"
-            placeholder="e.g. Mathematics Grade 10 - Section A"
+            label={d?.className || "Class Name"}
+            placeholder={
+              d?.classNamePlaceholder || "e.g. Mathematics Grade 10 - Section A"
+            }
             required
             disabled={isPending}
           />
           <SelectField
             name="subjectId"
-            label="Subject"
+            label={d?.subject || "Subject"}
             options={subjectOptions}
             required
             disabled={isPending}
           />
           <SelectField
             name="teacherId"
-            label="Teacher"
+            label={d?.teacher || "Teacher"}
             options={teacherOptions}
             required
             disabled={isPending}
           />
           <SelectField
             name="gradeId"
-            label="Grade"
+            label={d?.grade || "Grade"}
             options={gradeOptions}
             disabled={isPending}
           />
           <InputField
             name="courseCode"
-            label="Course Code"
-            placeholder="e.g. MATH-101"
+            label={d?.courseCode || "Course Code"}
+            placeholder={d?.courseCodePlaceholder || "e.g. MATH-101"}
             disabled={isPending}
           />
           <SelectField
             name="evaluationType"
-            label="Evaluation Type"
-            options={[...EVALUATION_TYPE_OPTIONS]}
+            label={d?.evaluationType || "Evaluation Type"}
+            options={evaluationTypeOptions}
             disabled={isPending}
           />
         </form>

@@ -173,11 +173,11 @@ export function NoStudentsEmptyState({ dictionary }: { dictionary?: any }) {
           <CircleAlert className="h-10 w-10 text-orange-600" />
         </div>
         <h3 className="mb-2 text-lg font-semibold">
-          {dictionary?.noStudentsInClass || "No Students in This Class"}
+          {dictionary?.noStudentsInClass || "No Students in This Section"}
         </h3>
         <p className="text-muted-foreground mb-6 max-w-sm text-sm">
           {dictionary?.noStudentsInClassDesc ||
-            "This class doesn't have any enrolled students yet. Add students to start tracking their attendance."}
+            "This section doesn't have any enrolled students yet. Add students to start tracking their attendance."}
         </p>
         <div className="flex gap-3">
           <Link href="/students/enroll">

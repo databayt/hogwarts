@@ -65,7 +65,8 @@ function EventsTableInner({
     delete: dictionary?.delete || "Delete",
     allEvents: dictionary?.allEvents || "All Events",
     addNewEvent: dictionary?.addNewEvent || "Schedule a new school event",
-    search: dictionary?.search || "Search events...",
+    search:
+      dictionary?.searchPlaceholder || dictionary?.search || "Search events...",
     create: dictionary?.create || "Create",
     export: dictionary?.export || "Export",
     reset: dictionary?.reset || "Reset",
@@ -178,9 +179,11 @@ function EventsTableInner({
     if (result.success && result.data) {
       router.push(`/${lang}/events/add/${result.data.id}/information`)
     } else {
-      ErrorToast(result.error || "Failed to create")
+      ErrorToast(
+        result.error || dictionary?.failedToCreate || "Failed to create"
+      )
     }
-  }, [router, lang])
+  }, [router, lang, dictionary])
 
   // Handle edit
   const handleEdit = useCallback(

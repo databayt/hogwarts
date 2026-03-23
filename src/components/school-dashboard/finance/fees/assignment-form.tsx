@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { assignFee, bulkAssignFees } from "./actions"
 
@@ -35,6 +36,13 @@ export function FeeAssignmentForm({
 }: FeeAssignmentFormProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+  const { dictionary } = useDictionary()
+  const af = (dictionary as any)?.finance?.assignmentForm as
+    | Record<string, string>
+    | undefined
+  const fc = (dictionary as any)?.finance?.common as
+    | Record<string, string>
+    | undefined
 
   const [feeStructureId, setFeeStructureId] = useState("")
   const [finalAmount, setFinalAmount] = useState("")
@@ -70,12 +78,16 @@ export function FeeAssignmentForm({
     e.preventDefault()
 
     if (!feeStructureId || !academicYear || !finalAmount) {
-      toast.error("Please fill in all required fields")
+      toast.error(
+        af?.fillRequiredFields || "Please fill in all required fields"
+      )
       return
     }
 
     if (selectedStudentIds.length === 0) {
-      toast.error("Please select at least one student")
+      toast.error(
+        af?.selectAtLeastOneStudent || "Please select at least one student"
+      )
       return
     }
 
@@ -93,10 +105,14 @@ export function FeeAssignmentForm({
 
           const result = await assignFee(formData)
           if (!result.success) {
-            toast.error(result.error || "Failed to assign fee")
+            toast.error(
+              result.error || af?.failedAssignFee || "Failed to assign fee"
+            )
             return
           }
-          toast.success("Fee assigned successfully")
+          toast.success(
+            af?.feeAssignedSuccessfully || "Fee assigned successfully"
+          )
         } else {
           const formData = new FormData()
           formData.set("studentIds", JSON.stringify(selectedStudentIds))
@@ -106,17 +122,21 @@ export function FeeAssignmentForm({
 
           const result = await bulkAssignFees(formData)
           if (!result.success) {
-            toast.error(result.error || "Failed to assign fees")
+            toast.error(
+              result.error || af?.failedAssignFees || "Failed to assign fees"
+            )
             return
           }
           toast.success(
-            `Fees assigned to ${selectedStudentIds.length} students`
+            (
+              af?.feesAssignedToStudents || "Fees assigned to {count} students"
+            ).replace("{count}", String(selectedStudentIds.length))
           )
         }
 
         router.push(`/${lang}/finance/fees/assignments`)
       } catch {
-        toast.error("An unexpected error occurred")
+        toast.error(af?.unexpectedError || "An unexpected error occurred")
       }
     })
   }
@@ -125,17 +145,21 @@ export function FeeAssignmentForm({
     <form onSubmit={handleSubmit} className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Fee Details</CardTitle>
+          <CardTitle>{af?.feeDetails || "Fee Details"}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="feeStructure">Fee Structure</Label>
+            <Label htmlFor="feeStructure">
+              {af?.feeStructure || "Fee Structure"}
+            </Label>
             <Select
               value={feeStructureId}
               onValueChange={handleFeeStructureChange}
             >
               <SelectTrigger id="feeStructure">
-                <SelectValue placeholder="Select fee structure" />
+                <SelectValue
+                  placeholder={af?.selectFeeStructure || "Select fee structure"}
+                />
               </SelectTrigger>
               <SelectContent>
                 {feeStructures.map((fs) => (
@@ -148,18 +172,22 @@ export function FeeAssignmentForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="academicYear">Academic Year</Label>
+            <Label htmlFor="academicYear">
+              {af?.academicYear || "Academic Year"}
+            </Label>
             <Input
               id="academicYear"
               value={academicYear}
               onChange={(e) => setAcademicYear(e.target.value)}
-              placeholder="2025-2026"
+              placeholder={af?.academicYearPlaceholder || "2025-2026"}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="finalAmount">Final Amount</Label>
+              <Label htmlFor="finalAmount">
+                {af?.finalAmount || "Final Amount"}
+              </Label>
               <Input
                 id="finalAmount"
                 type="number"
@@ -171,13 +199,15 @@ export function FeeAssignmentForm({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="customAmount">Custom Amount (optional)</Label>
+              <Label htmlFor="customAmount">
+                {af?.customAmount || "Custom Amount (optional)"}
+              </Label>
               <Input
                 id="customAmount"
                 type="number"
                 value={customAmount}
                 onChange={(e) => setCustomAmount(e.target.value)}
-                placeholder="Override amount"
+                placeholder={af?.overrideAmount || "Override amount"}
                 min={0}
                 step="0.01"
               />
@@ -186,7 +216,9 @@ export function FeeAssignmentForm({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="totalDiscount">Discount (optional)</Label>
+              <Label htmlFor="totalDiscount">
+                {af?.discount || "Discount (optional)"}
+              </Label>
               <Input
                 id="totalDiscount"
                 type="number"
@@ -199,12 +231,14 @@ export function FeeAssignmentForm({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="scholarshipId">Scholarship ID (optional)</Label>
+              <Label htmlFor="scholarshipId">
+                {af?.scholarshipId || "Scholarship ID (optional)"}
+              </Label>
               <Input
                 id="scholarshipId"
                 value={scholarshipId}
                 onChange={(e) => setScholarshipId(e.target.value)}
-                placeholder="Optional"
+                placeholder={af?.optional || "Optional"}
               />
             </div>
           </div>
@@ -213,7 +247,7 @@ export function FeeAssignmentForm({
 
       <Card>
         <CardHeader>
-          <CardTitle>Select Students</CardTitle>
+          <CardTitle>{af?.selectStudents || "Select Students"}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex items-center gap-2 border-b pb-3">
@@ -226,7 +260,8 @@ export function FeeAssignmentForm({
               onCheckedChange={toggleAll}
             />
             <Label htmlFor="select-all" className="font-medium">
-              Select All ({selectedStudentIds.length}/{students.length})
+              {fc?.selectAll || "Select All"} ({selectedStudentIds.length}/
+              {students.length})
             </Label>
           </div>
 
@@ -256,14 +291,17 @@ export function FeeAssignmentForm({
           variant="outline"
           onClick={() => router.push(`/${lang}/finance/fees/assignments`)}
         >
-          Cancel
+          {fc?.cancel || "Cancel"}
         </Button>
         <Button type="submit" disabled={isPending}>
           {isPending
-            ? "Assigning..."
+            ? af?.assigning || "Assigning..."
             : selectedStudentIds.length > 1
-              ? `Assign to ${selectedStudentIds.length} Students`
-              : "Assign Fee"}
+              ? (af?.assignToStudents || "Assign to {count} Students").replace(
+                  "{count}",
+                  String(selectedStudentIds.length)
+                )
+              : af?.assignFee || "Assign Fee"}
         </Button>
       </div>
     </form>

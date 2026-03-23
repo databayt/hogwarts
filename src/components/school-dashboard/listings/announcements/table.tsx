@@ -80,7 +80,7 @@ function createGetAnnouncementsCSV(lang: Locale) {
       "Created At",
       "Created By",
     ]
-    const csvRows = rows.map((row) =>
+    const csvRows = rows.map((row: any) =>
       [
         row.id,
         `"${(row.title || "").replace(/"/g, '""')}"`,
@@ -250,7 +250,7 @@ function AnnouncementsTableInner({
     if (result.success && result.data) {
       router.push(`/${lang}/announcements/add/${result.data.id}/content`)
     } else {
-      ErrorToast(result.error || "Failed to create")
+      ErrorToast(result.error || t.failedToCreate)
     }
   }, [router, lang])
 
@@ -295,15 +295,15 @@ function AnnouncementsTableInner({
     search: t.announcementTitle,
     create: t.create,
     reset: t.cancel,
-    tableView: t.tableView || "Table View",
-    gridView: t.gridView || "Grid View",
-    export: t.export || "Export",
-    exportCSV: t.exportCSV || "Export CSV",
-    exporting: t.exporting || "Exporting...",
-    view: t.view || "View",
-    searchColumns: t.searchColumns || "Search columns...",
-    noColumns: t.noColumns || "No columns found.",
-    all: t.all || "All",
+    tableView: t.tableView,
+    gridView: t.gridView,
+    export: t.export,
+    exportCSV: t.exportCSV,
+    exporting: t.exporting,
+    view: t.view,
+    searchColumns: t.searchColumns,
+    noColumns: t.noColumns,
+    all: t.all,
   }
 
   return (
@@ -371,9 +371,7 @@ function AnnouncementsTableInner({
                 disabled={isLoading}
                 className="hover:bg-accent rounded-md border px-4 py-2 text-sm disabled:opacity-50"
               >
-                {isLoading
-                  ? t.loading || "Loading..."
-                  : t.loadMore || "Load More"}
+                {isLoading ? t.loading : t.loadMore}
               </button>
             </div>
           )}

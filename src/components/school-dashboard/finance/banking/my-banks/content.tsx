@@ -30,7 +30,9 @@ export default async function MyBanksContent(props: Props) {
   if (!props.user.id) {
     return (
       <div className="py-8">
-        <p className="text-muted-foreground">User ID not found</p>
+        <p className="text-muted-foreground">
+          {props.dictionary.userIdNotFound || "User ID not found"}
+        </p>
       </div>
     )
   }
@@ -113,7 +115,10 @@ export default async function MyBanksContent(props: Props) {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {formatTimeAgo(accounts[0]?.lastUpdated || new Date())}
+                  {formatTimeAgo(
+                    accounts[0]?.lastUpdated || new Date(),
+                    props.dictionary
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -141,7 +146,10 @@ function formatCurrency(amount: number, locale: string = "ar"): string {
   }).format(amount)
 }
 
-function formatTimeAgo(date: Date | string): string {
+function formatTimeAgo(
+  date: Date | string,
+  dict?: Record<string, any>
+): string {
   const now = new Date()
   const past = new Date(date)
   const diffMs = now.getTime() - past.getTime()
@@ -149,8 +157,8 @@ function formatTimeAgo(date: Date | string): string {
   const diffHours = Math.floor(diffMs / 3600000)
   const diffDays = Math.floor(diffMs / 86400000)
 
-  if (diffMins < 1) return "Just now"
-  if (diffMins < 60) return `${diffMins} mins ago`
-  if (diffHours < 24) return `${diffHours} hours ago`
-  return `${diffDays} days ago`
+  if (diffMins < 1) return dict?.justNow || "Just now"
+  if (diffMins < 60) return `${diffMins} ${dict?.minsAgo || "mins ago"}`
+  if (diffHours < 24) return `${diffHours} ${dict?.hoursAgo || "hours ago"}`
+  return `${diffDays} ${dict?.daysAgo || "days ago"}`
 }

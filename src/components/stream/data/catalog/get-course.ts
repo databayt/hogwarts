@@ -6,6 +6,7 @@ import { notFound } from "next/navigation"
 import { getCatalogImageUrl } from "@/lib/catalog-image-url"
 import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
+import type { SupportedLanguage } from "@/components/translation/types"
 
 /**
  * Fetches individual catalog subject with chapters and lessons.
@@ -137,12 +138,68 @@ export const getCatalogCourse = cache(async function getCatalogCourse(
     ).catch(() => "Hogwarts"),
   ])
 
+  // Translate all content names for the current locale
+  const srcLang = (subject.lang || "ar") as SupportedLanguage
+  const displayLang = (lang === "ar" ? "ar" : "en") as SupportedLanguage
+  const cacheSchoolId = schoolId || subject.id // fallback for cache key
+  const t = (text: string | null | undefined) =>
+    getDisplayText(text ?? "", srcLang, displayLang, cacheSchoolId)
+
+  const [title, description, departmentName] = await Promise.all([
+    t(subject.name),
+    t(subject.description),
+    t(subject.department),
+  ])
+
+  // Translate chapters and lessons in parallel
+  const translatedChapters = await Promise.all(
+    subject.chapters
+      .filter((c) => !hiddenChapterIds.has(c.id))
+      .map(async (chapter) => {
+        const [chTitle, translatedLessons] = await Promise.all([
+          t(chapter.name),
+          Promise.all(
+            chapter.lessons
+              .filter((l) => !hiddenLessonIds.has(l.id))
+              .map(async (lesson) => ({
+                id: lesson.id,
+                title: await t(lesson.name),
+                description: lesson.description,
+                position: lesson.sequenceOrder,
+                duration: lesson.durationMinutes,
+                isFree: true,
+                imageUrl: getCatalogImageUrl(
+                  lesson.thumbnailKey,
+                  lesson.imageKey,
+                  "md"
+                ),
+              }))
+          ),
+        ])
+        return {
+          id: chapter.id,
+          title: chTitle,
+          description: chapter.description,
+          position: chapter.sequenceOrder,
+          isPublished: true,
+          isFree: true,
+          imageUrl: getCatalogImageUrl(
+            chapter.thumbnailKey,
+            chapter.imageKey,
+            "sm"
+          ),
+          color: chapter.color,
+          lessons: translatedLessons,
+        }
+      })
+  )
+
   // Map to Stream-compatible shape
   return {
     id: subject.id,
-    title: subject.name,
+    title,
     slug: subject.slug,
-    description: subject.description,
+    description,
     objectives: subject.objectives,
     prerequisites: subject.prerequisites,
     targetAudience: subject.targetAudience,
@@ -160,39 +217,9 @@ export const getCatalogCourse = cache(async function getCatalogCourse(
     createdAt: subject.createdAt,
     updatedAt: subject.updatedAt,
     category: {
-      name: subject.department,
+      name: departmentName,
     },
-    chapters: subject.chapters
-      .filter((c) => !hiddenChapterIds.has(c.id))
-      .map((chapter) => ({
-        id: chapter.id,
-        title: chapter.name,
-        description: chapter.description,
-        position: chapter.sequenceOrder,
-        isPublished: true,
-        isFree: true,
-        imageUrl: getCatalogImageUrl(
-          chapter.thumbnailKey,
-          chapter.imageKey,
-          "sm"
-        ),
-        color: chapter.color,
-        lessons: chapter.lessons
-          .filter((l) => !hiddenLessonIds.has(l.id))
-          .map((lesson) => ({
-            id: lesson.id,
-            title: lesson.name,
-            description: lesson.description,
-            position: lesson.sequenceOrder,
-            duration: lesson.durationMinutes,
-            isFree: true,
-            imageUrl: getCatalogImageUrl(
-              lesson.thumbnailKey,
-              lesson.imageKey,
-              "md"
-            ),
-          })),
-      })),
+    chapters: translatedChapters,
     _count: {
       enrollments: enrollmentCount,
     },

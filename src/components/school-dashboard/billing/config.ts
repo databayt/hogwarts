@@ -396,3 +396,197 @@ export function getUsageSeverity(
 export function shouldShowUsageWarning(percentage: number): boolean {
   return percentage >= USAGE_THRESHOLDS.INFO
 }
+
+// --- Dictionary-based factory functions ---
+
+type BillDict = Record<string, any> | undefined
+
+/** Get localized payment method type labels from dictionary */
+export const getPaymentMethodTypeLabels = (
+  d?: BillDict
+): Record<string, string> => {
+  const pm = d?.paymentMethodTypes as Record<string, string> | undefined
+  return {
+    CARD: pm?.card || "Credit/Debit Card",
+    BANK_ACCOUNT: pm?.bankAccount || "Bank Account (ACH)",
+    PAYPAL: pm?.paypal || "PayPal",
+    GOOGLE_PAY: pm?.googlePay || "Google Pay",
+    APPLE_PAY: pm?.applePay || "Apple Pay",
+    MANUAL: pm?.manual || "Manual Payment",
+    OTHER: pm?.other || "Other",
+  }
+}
+
+/** Get localized billing event type labels from dictionary */
+export const getBillingEventTypeLabels = (
+  d?: BillDict
+): Record<string, string> => {
+  const ev = d?.eventTypes as Record<string, string> | undefined
+  return {
+    PAYMENT_SUCCESS: ev?.paymentSuccess || "Payment Successful",
+    PAYMENT_FAILED: ev?.paymentFailed || "Payment Failed",
+    REFUND: ev?.refund || "Refund Processed",
+    CREDIT_APPLIED: ev?.creditApplied || "Credit Applied",
+    SUBSCRIPTION_CREATED: ev?.subscriptionCreated || "Subscription Created",
+    SUBSCRIPTION_UPDATED: ev?.subscriptionUpdated || "Subscription Updated",
+    SUBSCRIPTION_CANCELLED:
+      ev?.subscriptionCancelled || "Subscription Cancelled",
+    SUBSCRIPTION_RENEWED: ev?.subscriptionRenewed || "Subscription Renewed",
+    INVOICE_CREATED: ev?.invoiceCreated || "Invoice Created",
+    INVOICE_PAID: ev?.invoicePaid || "Invoice Paid",
+    INVOICE_VOIDED: ev?.invoiceVoided || "Invoice Voided",
+    PAYMENT_METHOD_ADDED: ev?.paymentMethodAdded || "Payment Method Added",
+    PAYMENT_METHOD_UPDATED:
+      ev?.paymentMethodUpdated || "Payment Method Updated",
+    PAYMENT_METHOD_REMOVED:
+      ev?.paymentMethodRemoved || "Payment Method Removed",
+  }
+}
+
+/** Get localized billing status labels from dictionary */
+export const getBillingStatusLabels = (
+  d?: BillDict
+): Record<string, string> => {
+  const bs = d?.billingStatus as Record<string, string> | undefined
+  return {
+    SUCCESS: bs?.success || "Success",
+    FAILED: bs?.failed || "Failed",
+    PENDING: bs?.pending || "Pending",
+    CANCELLED: bs?.cancelled || "Cancelled",
+    PROCESSING: bs?.processing || "Processing",
+  }
+}
+
+/** Get localized invoice status labels from dictionary */
+export const getInvoiceStatusLabels = (
+  d?: BillDict
+): Record<string, string> => {
+  const is_ = d?.invoiceStatus as Record<string, string> | undefined
+  return {
+    draft: is_?.draft || "Draft",
+    open: is_?.open || "Open",
+    paid: is_?.paid || "Paid",
+    uncollectible: is_?.uncollectible || "Uncollectible",
+    void: is_?.void || "Void",
+  }
+}
+
+/** Get localized subscription status labels from dictionary */
+export const getSubscriptionStatusLabels = (
+  d?: BillDict
+): Record<string, string> => {
+  const ss = d?.subscriptionStatus as Record<string, string> | undefined
+  return {
+    active: ss?.active || "Active",
+    past_due: ss?.pastDue || "Past Due",
+    canceled: ss?.canceled || "Canceled",
+    cancelled: ss?.cancelled || "Cancelled",
+    incomplete: ss?.incomplete || "Incomplete",
+    incomplete_expired: ss?.incompleteExpired || "Incomplete Expired",
+    trialing: ss?.trialing || "Trial",
+    unpaid: ss?.unpaid || "Unpaid",
+    paused: ss?.paused || "Paused",
+  }
+}
+
+/** Get localized credit type labels from dictionary */
+export const getCreditTypeLabels = (d?: BillDict): Record<string, string> => {
+  const ct = d?.creditTypes as Record<string, string> | undefined
+  return {
+    REFUND: ct?.refund || "Refund",
+    PROMOTIONAL: ct?.promotional || "Promotional",
+    ADJUSTMENT: ct?.adjustment || "Adjustment",
+    GOODWILL: ct?.goodwill || "Goodwill",
+    COMPENSATION: ct?.compensation || "Compensation",
+    REFERRAL: ct?.referral || "Referral Bonus",
+  }
+}
+
+/** Get localized credit status labels from dictionary */
+export const getCreditStatusLabels = (d?: BillDict): Record<string, string> => {
+  const cs = d?.creditStatus as Record<string, string> | undefined
+  return {
+    ACTIVE: cs?.active || "Active",
+    EXPIRED: cs?.expired || "Expired",
+    FULLY_USED: cs?.fullyUsed || "Fully Used",
+    CANCELLED: cs?.cancelled || "Cancelled",
+  }
+}
+
+/** Get localized billing interval labels from dictionary */
+export const getBillingIntervalLabels = (
+  d?: BillDict
+): Record<string, { label: string; discount?: string }> => {
+  const bi = d?.billingIntervals as Record<string, any> | undefined
+  return {
+    monthly: { label: bi?.monthly?.label || "Monthly" },
+    annual: {
+      label: bi?.annual?.label || "Annual",
+      discount: bi?.annual?.discount || "Save 20%",
+    },
+  }
+}
+
+/** Get localized date range preset labels from dictionary */
+export const getDateRangePresetOptions = (d?: BillDict) => {
+  const dr = d?.dateRangePresets as Record<string, string> | undefined
+  return [
+    { label: dr?.last7Days || "Last 7 days", days: 7 },
+    { label: dr?.last30Days || "Last 30 days", days: 30 },
+    { label: dr?.last90Days || "Last 90 days", days: 90 },
+    { label: dr?.last6Months || "Last 6 months", days: 180 },
+    { label: dr?.lastYear || "Last year", days: 365 },
+  ]
+}
+
+/** Get localized alert severity labels from dictionary */
+export const getAlertSeverityLabels = (
+  d?: BillDict
+): Record<string, string> => {
+  const as_ = d?.alertSeverity as Record<string, string> | undefined
+  return {
+    INFO: as_?.info || "Info",
+    WARNING: as_?.warning || "Warning",
+    ERROR: as_?.error || "Error",
+  }
+}
+
+/** Get localized card brand labels from dictionary */
+export const getCardBrandLabels = (d?: BillDict): Record<string, string> => {
+  const cb = d?.cardBrands as Record<string, string> | undefined
+  return {
+    visa: cb?.visa || "Visa",
+    mastercard: cb?.mastercard || "Mastercard",
+    amex: cb?.amex || "American Express",
+    discover: cb?.discover || "Discover",
+    diners: cb?.diners || "Diners Club",
+    jcb: cb?.jcb || "JCB",
+    unionpay: cb?.unionpay || "UnionPay",
+    unknown: cb?.unknown || "Unknown",
+  }
+}
+
+/** Get localized currency display names from dictionary */
+export const getCurrencyNames = (d?: BillDict): Record<string, string> => {
+  const cn = d?.currencyNames as Record<string, string> | undefined
+  return {
+    USD: cn?.USD || "US Dollar",
+    EUR: cn?.EUR || "Euro",
+    GBP: cn?.GBP || "British Pound",
+    INR: cn?.INR || "Indian Rupee",
+    SAR: cn?.SAR || "Saudi Riyal",
+    AED: cn?.AED || "UAE Dirham",
+    CAD: cn?.CAD || "Canadian Dollar",
+    AUD: cn?.AUD || "Australian Dollar",
+  }
+}
+
+/** Get localized export format labels from dictionary */
+export const getExportFormatLabels = (d?: BillDict): Record<string, string> => {
+  const ef = d?.exportFormats as Record<string, string> | undefined
+  return {
+    CSV: ef?.csv || "CSV",
+    EXCEL: ef?.excel || "Excel",
+    PDF: ef?.pdf || "PDF",
+  }
+}

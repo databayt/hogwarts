@@ -11,6 +11,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface ReadCountIndicatorProps {
   totalReads: number
@@ -27,6 +28,11 @@ export function ReadCountIndicator({
   className,
   showIcon = true,
 }: ReadCountIndicatorProps) {
+  const { dictionary } = useDictionary()
+  const rc = (dictionary?.school?.announcements as any)?.readCount as
+    | Record<string, string>
+    | undefined
+
   return (
     <TooltipProvider>
       <Tooltip>
@@ -47,15 +53,20 @@ export function ReadCountIndicator({
         <TooltipContent side="top" className="space-y-1">
           <div className="flex items-center gap-2">
             <Users className="h-3.5 w-3.5" />
-            <span>{uniqueReaders} unique readers</span>
+            <span>
+              {uniqueReaders} {rc?.uniqueReaders || "unique readers"}
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <Eye className="h-3.5 w-3.5" />
-            <span>{totalReads} total views</span>
+            <span>
+              {totalReads} {rc?.totalViews || "total views"}
+            </span>
           </div>
           {readPercentage !== undefined && readPercentage > 0 && (
             <div className="text-muted-foreground text-xs">
-              {readPercentage.toFixed(1)}% of target audience
+              {readPercentage.toFixed(1)}%{" "}
+              {rc?.ofTargetAudience || "of target audience"}
             </div>
           )}
         </TooltipContent>

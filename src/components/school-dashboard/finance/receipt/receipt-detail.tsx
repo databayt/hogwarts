@@ -269,7 +269,9 @@ export function ReceiptDetail({ receipt, locale = "en" }: ReceiptDetailProps) {
 
                 {receipt.receiptSummary && (
                   <div className="space-y-1">
-                    <p className="text-sm font-medium">Summary</p>
+                    <p className="text-sm font-medium">
+                      {rd?.summary || "Summary"}
+                    </p>
                     <p className="text-muted-foreground text-sm">
                       {receipt.receiptSummary}
                     </p>
@@ -280,21 +282,23 @@ export function ReceiptDetail({ receipt, locale = "en" }: ReceiptDetailProps) {
               <div className="flex flex-col items-center justify-center p-12 text-center">
                 <LoaderCircle className="text-primary mb-4 h-8 w-8 animate-spin" />
                 <p className="text-muted-foreground text-sm">
-                  AI extraction in progress...
+                  {rd?.aiExtractionInProgress || "AI extraction in progress..."}
                 </p>
               </div>
             ) : receipt.status === "error" ? (
               <div className="flex flex-col items-center justify-center p-12 text-center">
                 <CircleAlert className="text-destructive mb-4 h-8 w-8" />
                 <p className="text-muted-foreground mb-4 text-sm">
-                  Extraction failed. Please retry.
+                  {rd?.extractionFailedRetry ||
+                    "Extraction failed. Please retry."}
                 </p>
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center p-12 text-center">
                 <Clock className="text-muted-foreground mb-4 h-8 w-8" />
                 <p className="text-muted-foreground text-sm">
-                  Waiting for extraction to start...
+                  {rd?.waitingForExtraction ||
+                    "Waiting for extraction to start..."}
                 </p>
               </div>
             )}
@@ -306,7 +310,7 @@ export function ReceiptDetail({ receipt, locale = "en" }: ReceiptDetailProps) {
       {items.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Line Items</CardTitle>
+            <CardTitle>{rd?.lineItems || "Line Items"}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -316,8 +320,8 @@ export function ReceiptDetail({ receipt, locale = "en" }: ReceiptDetailProps) {
                     <div className="flex-1">
                       <p className="text-sm font-medium">{item.name}</p>
                       <p className="text-muted-foreground text-xs">
-                        Qty: {item.quantity} × {receipt.currency || "USD"}{" "}
-                        {item.unitPrice.toFixed(2)}
+                        {rd?.qty || "Qty:"} {item.quantity} ×{" "}
+                        {receipt.currency || "USD"} {item.unitPrice.toFixed(2)}
                       </p>
                     </div>
                     <p className="text-sm font-semibold">
@@ -335,7 +339,7 @@ export function ReceiptDetail({ receipt, locale = "en" }: ReceiptDetailProps) {
       {/* Actions */}
       <div className="flex items-center justify-end gap-2">
         <Button variant="outline" onClick={() => router.push("..")}>
-          Back to List
+          {rd?.backToList || "Back to List"}
         </Button>
         <Button
           variant="destructive"
@@ -347,7 +351,7 @@ export function ReceiptDetail({ receipt, locale = "en" }: ReceiptDetailProps) {
           ) : (
             <>
               <Trash2 className="me-2 h-4 w-4" />
-              Delete
+              {rd?.delete || "Delete"}
             </>
           )}
         </Button>

@@ -51,10 +51,26 @@ export function InstructionsDetailsStep({ form, isView }: ExamFormStepProps) {
           {t?.additionalDetails ?? "Additional Details"}
         </h3>
         <div className="text-muted-foreground space-y-2 text-sm">
-          <p>• Students should arrive 15 minutes before the exam starts</p>
-          <p>• Bring necessary stationery and calculators if allowed</p>
-          <p>• Mobile phones and electronic devices are not permitted</p>
-          <p>• Read all instructions carefully before starting</p>
+          <p>
+            •{" "}
+            {t?.instructions?.tip1 ??
+              "Students should arrive 15 minutes before the exam starts"}
+          </p>
+          <p>
+            •{" "}
+            {t?.instructions?.tip2 ??
+              "Bring necessary stationery and calculators if allowed"}
+          </p>
+          <p>
+            •{" "}
+            {t?.instructions?.tip3 ??
+              "Mobile phones and electronic devices are not permitted"}
+          </p>
+          <p>
+            •{" "}
+            {t?.instructions?.tip4 ??
+              "Read all instructions carefully before starting"}
+          </p>
         </div>
       </div>
     </div>

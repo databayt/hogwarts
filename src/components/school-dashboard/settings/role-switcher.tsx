@@ -51,103 +51,137 @@ interface RoleSwitcherProps {
   dictionary?: Dictionary["school"]
 }
 
-const getRoleConfigs = (dictionary?: Dictionary["school"]) => [
-  {
-    value: "DEVELOPER",
-    label: "Developer",
-    icon: Code,
-    description: "Platform admin with full system access",
-    dashboardUrl: "/dashboard",
-    features: [
-      "Full system access",
-      "All school data",
-      "Platform settings",
-      "Debug tools",
-    ],
-    color: "text-purple-600",
-    bgColor: "bg-purple-50 dark:bg-purple-950/20",
-  },
-  {
-    value: "ADMIN",
-    label: "School Admin",
-    icon: Shield,
-    description: "School administrator with management access",
-    dashboardUrl: "/dashboard",
-    features: ["User management", "School settings", "Reports", "All modules"],
-    color: "text-blue-600",
-    bgColor: "bg-blue-50 dark:bg-blue-950/20",
-  },
-  {
-    value: "TEACHER",
-    label: "Teacher",
-    icon: BookOpen,
-    description: "Teaching staff with class management",
-    dashboardUrl: "/dashboard",
-    features: ["Class management", "Grades", "Attendance", "Assignments"],
-    color: "text-green-600",
-    bgColor: "bg-green-50 dark:bg-green-950/20",
-  },
-  {
-    value: "STUDENT",
-    label: "Student",
-    icon: GraduationCap,
-    description: "Student with academic access",
-    dashboardUrl: "/dashboard",
-    features: [
-      "View grades",
-      "Submit assignments",
-      "Timetable",
-      "Announcements",
-    ],
-    color: "text-yellow-600",
-    bgColor: "bg-yellow-50 dark:bg-yellow-950/20",
-  },
-  {
-    value: "GUARDIAN",
-    label: "Parent/Guardian",
-    icon: Users,
-    description: "Parent with child monitoring access",
-    dashboardUrl: "/dashboard",
-    features: ["Child progress", "Fee payments", "Attendance", "Communication"],
-    color: "text-orange-600",
-    bgColor: "bg-orange-50 dark:bg-orange-950/20",
-  },
-  {
-    value: "ACCOUNTANT",
-    label: "Accountant",
-    icon: DollarSign,
-    description: "Finance staff with financial access",
-    dashboardUrl: "/dashboard",
-    features: [
-      "Fee management",
-      "Financial reports",
-      "Budgets",
-      "Transactions",
-    ],
-    color: "text-emerald-600",
-    bgColor: "bg-emerald-50 dark:bg-emerald-950/20",
-  },
-  {
-    value: "STAFF",
-    label: "Staff",
-    icon: UserCheck,
-    description: "General staff with basic access",
-    dashboardUrl: "/dashboard",
-    features: ["Announcements", "Timetable", "Basic reports"],
-    color: "text-gray-600",
-    bgColor: "bg-gray-50 dark:bg-gray-950/20",
-  },
-  {
-    value: "USER",
-    label: "Basic User",
-    icon: Users,
-    description: "Basic user with minimal access",
-    dashboardUrl: "/dashboard",
-    features: ["View announcements", "Basic profile"],
-    color: "text-gray-500",
-    bgColor: "bg-gray-50 dark:bg-gray-950/20",
-  },
-]
+const getRoleConfigs = (dictionary?: Dictionary["school"]) => {
+  const r = dictionary?.settings?.roleSwitcher?.roleLabels as
+    | Record<string, string>
+    | undefined
+  const rd = dictionary?.settings?.roleSwitcher?.roleDescriptions as
+    | Record<string, string>
+    | undefined
+  const f = dictionary?.settings?.roleSwitcher?.roleFeatures as
+    | Record<string, string>
+    | undefined
+
+  return [
+    {
+      value: "DEVELOPER",
+      label: r?.developer || "Developer",
+      icon: Code,
+      description: rd?.developer || "Platform admin with full system access",
+      dashboardUrl: "/dashboard",
+      features: [
+        f?.fullSystemAccess || "Full system access",
+        f?.allSchoolData || "All school data",
+        f?.platformSettings || "Platform settings",
+        f?.debugTools || "Debug tools",
+      ],
+      color: "text-purple-600",
+      bgColor: "bg-purple-50 dark:bg-purple-950/20",
+    },
+    {
+      value: "ADMIN",
+      label: r?.admin || "School Admin",
+      icon: Shield,
+      description: rd?.admin || "School administrator with management access",
+      dashboardUrl: "/dashboard",
+      features: [
+        f?.userManagement || "User management",
+        f?.schoolSettings || "School settings",
+        f?.reports || "Reports",
+        f?.allModules || "All modules",
+      ],
+      color: "text-blue-600",
+      bgColor: "bg-blue-50 dark:bg-blue-950/20",
+    },
+    {
+      value: "TEACHER",
+      label: r?.teacher || "Teacher",
+      icon: BookOpen,
+      description: rd?.teacher || "Teaching staff with class management",
+      dashboardUrl: "/dashboard",
+      features: [
+        f?.classManagement || "Class management",
+        f?.grades || "Grades",
+        f?.attendance || "Attendance",
+        f?.assignments || "Assignments",
+      ],
+      color: "text-green-600",
+      bgColor: "bg-green-50 dark:bg-green-950/20",
+    },
+    {
+      value: "STUDENT",
+      label: r?.student || "Student",
+      icon: GraduationCap,
+      description: rd?.student || "Student with academic access",
+      dashboardUrl: "/dashboard",
+      features: [
+        f?.viewGrades || "View grades",
+        f?.submitAssignments || "Submit assignments",
+        f?.timetable || "Timetable",
+        f?.announcements || "Announcements",
+      ],
+      color: "text-yellow-600",
+      bgColor: "bg-yellow-50 dark:bg-yellow-950/20",
+    },
+    {
+      value: "GUARDIAN",
+      label: r?.guardian || "Parent/Guardian",
+      icon: Users,
+      description: rd?.guardian || "Parent with child monitoring access",
+      dashboardUrl: "/dashboard",
+      features: [
+        f?.childProgress || "Child progress",
+        f?.feePayments || "Fee payments",
+        f?.attendance || "Attendance",
+        f?.communication || "Communication",
+      ],
+      color: "text-orange-600",
+      bgColor: "bg-orange-50 dark:bg-orange-950/20",
+    },
+    {
+      value: "ACCOUNTANT",
+      label: r?.accountant || "Accountant",
+      icon: DollarSign,
+      description: rd?.accountant || "Finance staff with financial access",
+      dashboardUrl: "/dashboard",
+      features: [
+        f?.feeManagement || "Fee management",
+        f?.financialReports || "Financial reports",
+        f?.budgets || "Budgets",
+        f?.transactions || "Transactions",
+      ],
+      color: "text-emerald-600",
+      bgColor: "bg-emerald-50 dark:bg-emerald-950/20",
+    },
+    {
+      value: "STAFF",
+      label: r?.staff || "Staff",
+      icon: UserCheck,
+      description: rd?.staff || "General staff with basic access",
+      dashboardUrl: "/dashboard",
+      features: [
+        f?.announcements || "Announcements",
+        f?.timetable || "Timetable",
+        f?.basicReports || "Basic reports",
+      ],
+      color: "text-gray-600",
+      bgColor: "bg-gray-50 dark:bg-gray-950/20",
+    },
+    {
+      value: "USER",
+      label: r?.user || "Basic User",
+      icon: Users,
+      description: rd?.user || "Basic user with minimal access",
+      dashboardUrl: "/dashboard",
+      features: [
+        f?.viewAnnouncements || "View announcements",
+        f?.basicProfile || "Basic profile",
+      ],
+      color: "text-gray-500",
+      bgColor: "bg-gray-50 dark:bg-gray-950/20",
+    },
+  ]
+}
 
 export function RoleSwitcher({
   currentRole = "USER",
@@ -182,16 +216,25 @@ export function RoleSwitcher({
     localStorage.setItem("developer-mode", enabled.toString())
 
     if (enabled) {
-      InfoToast("Developer mode enabled - You now have access to all roles")
+      InfoToast(
+        dictionary?.settings?.roleSwitcher?.developerModeEnabled ||
+          "Developer mode enabled - You now have access to all roles"
+      )
     } else {
-      InfoToast("Developer mode disabled")
+      InfoToast(
+        dictionary?.settings?.roleSwitcher?.developerModeDisabled ||
+          "Developer mode disabled"
+      )
     }
   }
 
   // Handle role switch
   const handleRoleSwitch = async () => {
     if (!selectedRole || selectedRole === currentRole) {
-      ErrorToast("Please select a different role")
+      ErrorToast(
+        dictionary?.settings?.roleSwitcher?.selectDifferentRole ||
+          "Please select a different role"
+      )
       return
     }
 
@@ -206,7 +249,12 @@ export function RoleSwitcher({
       localStorage.setItem("preview-mode", "true")
       setIsPreviewMode(true)
 
-      SuccessToast(`Switched to ${selectedRole} role`)
+      SuccessToast(
+        (
+          dictionary?.settings?.roleSwitcher?.roleSwitched ||
+          "Switched to {role} role"
+        ).replace("{role}", selectedRole)
+      )
 
       // Redirect to lab with the new role
       setTimeout(() => {
@@ -214,7 +262,10 @@ export function RoleSwitcher({
         router.refresh()
       }, 1000)
     } catch (error) {
-      ErrorToast("Failed to switch role")
+      ErrorToast(
+        dictionary?.settings?.roleSwitcher?.failedSwitch ||
+          "Failed to switch role"
+      )
     } finally {
       setIsSwitching(false)
     }
@@ -231,10 +282,16 @@ export function RoleSwitcher({
       localStorage.removeItem("preview-mode")
       setIsPreviewMode(false)
 
-      SuccessToast("Exited preview mode")
+      SuccessToast(
+        dictionary?.settings?.roleSwitcher?.exitedPreview ||
+          "Exited preview mode"
+      )
       router.refresh()
     } catch (error) {
-      ErrorToast("Failed to exit preview mode")
+      ErrorToast(
+        dictionary?.settings?.roleSwitcher?.failedExit ||
+          "Failed to exit preview mode"
+      )
     }
   }
 

@@ -16,6 +16,7 @@ import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { SelectField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import {
   getAssignmentsForGrade,
@@ -67,6 +68,8 @@ export const SelectionForm = forwardRef<WizardFormRef, SelectionFormProps>(
     const [assignments, setAssignments] = useState<AssignmentOption[]>([])
     const [exams, setExams] = useState<ExamOption[]>([])
     const [subjects, setSubjects] = useState<SubjectOption[]>([])
+    const { dictionary: dict } = useDictionary()
+    const d = dict?.school?.grades as Record<string, any> | undefined
 
     const form = useForm<SelectionFormData>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -147,13 +150,14 @@ export const SelectionForm = forwardRef<WizardFormRef, SelectionFormProps>(
               const data = form.getValues()
               const result = await updateGradeSelection(resultId, data)
               if (!result.success) {
-                ErrorToast(result.error || "Failed to save")
+                ErrorToast(result.error || d?.failedToSave || "")
                 reject(new Error(result.error))
                 return
               }
               resolve()
             } catch (err) {
-              const msg = err instanceof Error ? err.message : "Failed to save"
+              const msg =
+                err instanceof Error ? err.message : d?.failedToSave || ""
               ErrorToast(msg)
               reject(err)
             }
@@ -191,33 +195,33 @@ export const SelectionForm = forwardRef<WizardFormRef, SelectionFormProps>(
         <form className="space-y-6">
           <SelectField
             name="studentId"
-            label="Student"
+            label={d?.student || "Student"}
             options={studentOptions}
             required
             disabled={isPending}
           />
           <SelectField
             name="classId"
-            label="Class"
+            label={d?.class || "Class"}
             options={classOptions}
             required
             disabled={isPending}
           />
           <SelectField
             name="assignmentId"
-            label="Assignment"
+            label={d?.assignment || "Assignment"}
             options={assignmentOptions}
             disabled={isPending || !classId}
           />
           <SelectField
             name="examId"
-            label="Exam"
+            label={d?.exam || "Exam"}
             options={examOptions}
             disabled={isPending || !classId}
           />
           <SelectField
             name="subjectId"
-            label="Subject"
+            label={d?.subject || "Subject"}
             options={subjectOptions}
             disabled={isPending}
           />

@@ -392,3 +392,176 @@ export function estimateExamDuration(
     return total + baseTime * difficultyMultiplier
   }, 0)
 }
+
+// --- Dictionary-based factory functions ---
+// These accept the exams dictionary section (Record<string, any>)
+// and fall back to English defaults when dictionary is not yet loaded.
+
+type ExamsDict = Record<string, any> | undefined
+
+export const getQuestionTypeOptions = (d?: ExamsDict) => {
+  const qt = d?.config?.questionTypes as Record<string, string> | undefined
+  return [
+    {
+      value: QuestionType.MULTIPLE_CHOICE,
+      label: qt?.mcq || "Multiple Choice",
+      icon: "CircleDot",
+      supportsAutoGrading: true,
+    },
+    {
+      value: QuestionType.TRUE_FALSE,
+      label: qt?.trueFalse || "True/False",
+      icon: "ToggleLeft",
+      supportsAutoGrading: true,
+    },
+    {
+      value: QuestionType.FILL_BLANK,
+      label: qt?.fillBlank || "Fill in the Blank",
+      icon: "Type",
+      supportsAutoGrading: true,
+    },
+    {
+      value: QuestionType.SHORT_ANSWER,
+      label: qt?.shortAnswer || "Short Answer",
+      icon: "FileText",
+      supportsAutoGrading: false,
+    },
+    {
+      value: QuestionType.ESSAY,
+      label: qt?.essay || "Essay",
+      icon: "BookOpen",
+      supportsAutoGrading: false,
+    },
+    {
+      value: QuestionType.MATCHING,
+      label: qt?.matching || "Matching",
+      icon: "ArrowLeftRight",
+      supportsAutoGrading: true,
+    },
+    {
+      value: QuestionType.ORDERING,
+      label: qt?.ordering || "Ordering",
+      icon: "ListOrdered",
+      supportsAutoGrading: true,
+    },
+    {
+      value: QuestionType.MULTI_SELECT,
+      label: qt?.multiSelect || "Multi Select",
+      icon: "CheckCheck",
+      supportsAutoGrading: true,
+    },
+  ]
+}
+
+export const getDifficultyLevelOptions = (d?: ExamsDict) => {
+  const dl = d?.config?.difficulty as Record<string, string> | undefined
+  return [
+    {
+      value: DifficultyLevel.EASY,
+      label: dl?.easy || "Easy",
+      color: "green" as const,
+      points: 1,
+    },
+    {
+      value: DifficultyLevel.MEDIUM,
+      label: dl?.medium || "Medium",
+      color: "yellow" as const,
+      points: 2,
+    },
+    {
+      value: DifficultyLevel.HARD,
+      label: dl?.hard || "Hard",
+      color: "red" as const,
+      points: 3,
+    },
+  ]
+}
+
+export const getBloomLevelOptions = (d?: ExamsDict) => {
+  const bl = d?.config?.bloomLevels as Record<string, string> | undefined
+  return [
+    { value: BloomLevel.REMEMBER, label: bl?.remember || "Remember", level: 1 },
+    {
+      value: BloomLevel.UNDERSTAND,
+      label: bl?.understand || "Understand",
+      level: 2,
+    },
+    { value: BloomLevel.APPLY, label: bl?.apply || "Apply", level: 3 },
+    { value: BloomLevel.ANALYZE, label: bl?.analyze || "Analyze", level: 4 },
+    { value: BloomLevel.EVALUATE, label: bl?.evaluate || "Evaluate", level: 5 },
+    { value: BloomLevel.CREATE, label: bl?.create || "Create", level: 6 },
+  ]
+}
+
+export const getQuestionSourceOptions = (d?: ExamsDict) => {
+  const qs = d?.config?.sources as Record<string, string> | undefined
+  return [
+    {
+      value: QuestionSource.MANUAL,
+      label: qs?.manual || "Manual",
+      icon: "User",
+    },
+    {
+      value: QuestionSource.AI,
+      label: qs?.aiGenerated || "AI Generated",
+      icon: "Sparkles",
+    },
+    {
+      value: QuestionSource.IMPORTED,
+      label: qs?.imported || "Imported",
+      icon: "Upload",
+    },
+  ]
+}
+
+/** Get question type labels map for display */
+export const getQuestionTypeLabels = (
+  d?: ExamsDict
+): Record<string, string> => {
+  const qt = d?.config?.questionTypes as Record<string, string> | undefined
+  return {
+    MULTIPLE_CHOICE: qt?.mcq || "Multiple Choice",
+    TRUE_FALSE: qt?.trueFalse || "True/False",
+    FILL_BLANK: qt?.fillBlank || "Fill in the Blank",
+    SHORT_ANSWER: qt?.shortAnswer || "Short Answer",
+    ESSAY: qt?.essay || "Essay",
+    MATCHING: qt?.matching || "Matching",
+    ORDERING: qt?.ordering || "Ordering",
+    MULTI_SELECT: qt?.multiSelect || "Multi Select",
+  }
+}
+
+/** Get difficulty labels map for display */
+export const getDifficultyLabels = (d?: ExamsDict): Record<string, string> => {
+  const dl = d?.config?.difficulty as Record<string, string> | undefined
+  return {
+    EASY: dl?.easy || "Easy",
+    MEDIUM: dl?.medium || "Medium",
+    HARD: dl?.hard || "Hard",
+  }
+}
+
+/** Get bloom level labels map for display */
+export const getBloomLevelLabels = (d?: ExamsDict): Record<string, string> => {
+  const bl = d?.config?.bloomLevels as Record<string, string> | undefined
+  return {
+    REMEMBER: bl?.remember || "Remember",
+    UNDERSTAND: bl?.understand || "Understand",
+    APPLY: bl?.apply || "Apply",
+    ANALYZE: bl?.analyze || "Analyze",
+    EVALUATE: bl?.evaluate || "Evaluate",
+    CREATE: bl?.create || "Create",
+  }
+}
+
+/** Get question source labels map for display */
+export const getQuestionSourceLabels = (
+  d?: ExamsDict
+): Record<string, string> => {
+  const qs = d?.config?.sources as Record<string, string> | undefined
+  return {
+    MANUAL: qs?.manual || "Manual",
+    AI: qs?.aiGenerated || "AI Generated",
+    IMPORTED: qs?.imported || "Imported",
+  }
+}

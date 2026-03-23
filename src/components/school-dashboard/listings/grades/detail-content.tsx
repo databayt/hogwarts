@@ -130,7 +130,7 @@ export function GradeDetailContent({
   // Format student name
   const studentName = grade.student
     ? `${grade.student.givenName} ${grade.student.surname}`
-    : "Unknown"
+    : t.unknown || "Unknown"
 
   // Get initials for avatar
   const initials = studentName
@@ -142,7 +142,7 @@ export function GradeDetailContent({
 
   // Get assignment/exam title
   const itemTitle =
-    grade.assignment?.title || grade.exam?.title || grade.title || "Grade"
+    grade.assignment?.title || grade.exam?.title || grade.title || t.grade
   const itemType = grade.assignment
     ? "assignment"
     : grade.exam
@@ -366,7 +366,11 @@ export function GradeDetailContent({
                 <div className="flex items-center justify-between">
                   <p className="font-semibold">{itemTitle}</p>
                   <Badge variant="outline" className="capitalize">
-                    {itemType}
+                    {itemType === "assignment"
+                      ? t.assignment
+                      : itemType === "exam"
+                        ? t.exam || "Exam"
+                        : t.grade}
                   </Badge>
                 </div>
                 {grade.subject && (
@@ -628,7 +632,7 @@ export function GradeDetailContent({
                         <Tooltip
                           formatter={(value: number) => [
                             value,
-                            t.studentsInClass?.split(" ")[0] || "Students",
+                            t.studentsInClass,
                           ]}
                         />
                         <Bar dataKey="count" radius={[0, 4, 4, 0]}>

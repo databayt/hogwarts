@@ -66,6 +66,8 @@ export default async function GenerateContent({
     examId: string
   }[] = []
 
+  const gc = dictionary?.school?.exams?.generateContent
+
   if (schoolId) {
     const [templateRows, generatedRows] = await Promise.all([
       db.examTemplate.findMany({
@@ -96,7 +98,7 @@ export default async function GenerateContent({
     templates = templateRows.map((t) => ({
       id: t.id,
       name: t.name,
-      subjectName: t.subject?.name ?? (lang === "ar" ? "غير محدد" : "Unknown"),
+      subjectName: t.subject?.name ?? gc?.unknown ?? "Unknown",
       duration: t.duration,
       totalMarks: Number(t.totalMarks),
       totalQuestions: calculateTotalQuestions(
@@ -110,14 +112,12 @@ export default async function GenerateContent({
       id: g.id,
       examTitle: g.exam.title,
       templateName: g.template?.name || null,
-      name: g.exam.subject?.name ?? (lang === "ar" ? "غير محدد" : "Unknown"),
+      name: g.exam.subject?.name ?? gc?.unknown ?? "Unknown",
       totalQuestions: g.totalQuestions,
       createdAt: g.createdAt.toISOString(),
       examId: g.examId,
     }))
   }
-
-  const isAr = lang === "ar"
 
   return (
     <div className="space-y-8">
@@ -133,18 +133,17 @@ export default async function GenerateContent({
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-lg font-semibold tracking-tight">
-              {isAr ? "قوالب الاختبارات" : "Exam Templates"}
+              {gc?.examTemplates ?? "Exam Templates"}
             </h2>
             <p className="text-muted-foreground text-sm">
-              {isAr
-                ? "قوالب قابلة لإعادة الاستخدام لإنشاء الاختبارات"
-                : "Reusable blueprints for exam generation"}
+              {gc?.reusableBlueprints ??
+                "Reusable blueprints for exam generation"}
             </p>
           </div>
           <Button asChild>
             <Link href={`/${lang}/exams/template/add`}>
               <Wand2 className="me-2 h-4 w-4" />
-              {isAr ? "قالب جديد" : "New Template"}
+              {gc?.newTemplate ?? "New Template"}
             </Link>
           </Button>
         </div>
@@ -154,14 +153,13 @@ export default async function GenerateContent({
             <CardContent className="flex flex-col items-center justify-center py-12">
               <FileText className="text-muted-foreground mb-4 h-10 w-10" />
               <p className="text-muted-foreground mb-4 text-sm">
-                {isAr
-                  ? "لا توجد قوالب بعد. أنشئ أول قالب للبدء."
-                  : "No templates yet. Create your first template to get started."}
+                {gc?.noTemplatesYet ??
+                  "No templates yet. Create your first template to get started."}
               </p>
               <Button asChild variant="outline">
                 <Link href={`/${lang}/exams/template/add`}>
                   <Plus className="me-2 h-4 w-4" />
-                  {isAr ? "إنشاء قالب" : "Create Template"}
+                  {gc?.createTemplate ?? "Create Template"}
                 </Link>
               </Button>
             </CardContent>
@@ -189,20 +187,20 @@ export default async function GenerateContent({
                     <div className="text-muted-foreground flex flex-wrap gap-3 text-sm">
                       <span className="flex items-center gap-1">
                         <Hash className="h-3.5 w-3.5" />
-                        {t.totalQuestions} {isAr ? "سؤال" : "Q"}
+                        {t.totalQuestions} {gc?.questions ?? "Q"}
                       </span>
                       <span className="flex items-center gap-1">
                         <Clock className="h-3.5 w-3.5" />
-                        {t.duration} {isAr ? "د" : "min"}
+                        {t.duration} {gc?.min ?? "min"}
                       </span>
                       <span>
-                        {t.totalMarks} {isAr ? "درجة" : "marks"}
+                        {t.totalMarks} {gc?.marks ?? "marks"}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground text-xs">
-                        {isAr ? "استخدم" : "Used"} {t.timesUsed}{" "}
-                        {isAr ? "مرة" : "times"}
+                        {gc?.used ?? "Used"} {t.timesUsed}{" "}
+                        {gc?.times ?? "times"}
                       </span>
                       <Button
                         variant="ghost"
@@ -213,7 +211,7 @@ export default async function GenerateContent({
                         <Link
                           href={`/${lang}/exams/template/add?configId=${t.id}`}
                         >
-                          {isAr ? "تخصيص" : "Customize"}
+                          {gc?.customize ?? "Customize"}
                         </Link>
                       </Button>
                     </div>

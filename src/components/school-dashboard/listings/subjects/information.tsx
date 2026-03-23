@@ -11,10 +11,13 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { SubjectFormStepProps } from "./types"
 
 export function InformationStep({ form, isView }: SubjectFormStepProps) {
+  const { dictionary } = useDictionary()
+  const d = dictionary?.school?.subjects
   return (
     <div className="w-full space-y-4">
       <FormField
@@ -22,10 +25,15 @@ export function InformationStep({ form, isView }: SubjectFormStepProps) {
         name="customName"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Custom Name (optional)</FormLabel>
+            <FormLabel>
+              {d?.form?.customName || "Custom Name (optional)"}
+            </FormLabel>
             <FormControl>
               <Input
-                placeholder="School-specific name override"
+                placeholder={
+                  d?.form?.customNamePlaceholder ||
+                  "School-specific name override"
+                }
                 disabled={isView}
                 {...field}
                 value={field.value ?? ""}
@@ -42,9 +50,12 @@ export function InformationStep({ form, isView }: SubjectFormStepProps) {
         render={({ field }) => (
           <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
             <div className="space-y-0.5">
-              <FormLabel>Required Subject</FormLabel>
+              <FormLabel>
+                {d?.form?.requiredSubject || "Required Subject"}
+              </FormLabel>
               <p className="text-muted-foreground text-xs">
-                Mark as core (required) or elective
+                {d?.form?.requiredSubjectHint ||
+                  "Mark as core (required) or elective"}
               </p>
             </div>
             <FormControl>
@@ -63,12 +74,17 @@ export function InformationStep({ form, isView }: SubjectFormStepProps) {
         name="weeklyPeriods"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Weekly Periods (optional)</FormLabel>
+            <FormLabel>
+              {d?.form?.weeklyPeriods || "Weekly Periods (optional)"}
+            </FormLabel>
             <FormControl>
               <Input
                 type="number"
                 min={1}
-                placeholder="Number of periods per week"
+                placeholder={
+                  d?.form?.weeklyPeriodsPlaceholder ||
+                  "Number of periods per week"
+                }
                 disabled={isView}
                 {...field}
                 value={field.value ?? ""}

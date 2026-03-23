@@ -1588,6 +1588,164 @@
     "allReports": "All Reports",
     "allReportsDesc": "View and manage all generated reports",
     "viewAll": "View All",
-    "scheduleReports": "Schedule Reports"
+    "scheduleReports": "Schedule Reports",
+    "viewAllCount": "View All ({count})"
+  },
+
+  "salaryConfig": {
+    "allowanceTypes": {
+      "HOUSING": "Housing Allowance",
+      "TRANSPORT": "Transport Allowance",
+      "MEDICAL": "Medical Allowance",
+      "EDUCATION": "Education Allowance",
+      "MEAL": "Meal Allowance",
+      "MOBILE": "Mobile Allowance",
+      "PERFORMANCE": "Performance Bonus",
+      "OVERTIME": "Overtime Pay",
+      "SPECIAL": "Special Allowance",
+      "OTHER": "Other"
+    },
+    "deductionTypes": {
+      "TAX": "Income Tax",
+      "SOCIAL_SECURITY": "Social Security",
+      "PENSION": "Pension Contribution",
+      "HEALTH_INSURANCE": "Health Insurance",
+      "LIFE_INSURANCE": "Life Insurance",
+      "LOAN": "Loan Repayment",
+      "ADVANCE": "Salary Advance",
+      "ABSENCE": "Absence Deduction",
+      "DISCIPLINARY": "Disciplinary Fine",
+      "OTHER": "Other"
+    },
+    "currencyOptions": {
+      "USD": "US Dollar",
+      "EUR": "Euro",
+      "GBP": "British Pound",
+      "SDG": "Sudanese Pound"
+    },
+    "searchPlaceholder": "Search salary structures...",
+    "deleteConfirm": "Delete {count} salary structure(s)?",
+    "csvHeader": "Teacher,Employee ID,Base Salary,Currency,Pay Frequency,Allowances,Deductions,Active"
+  },
+
+  "salaryColumns": {
+    "teacher": "Teacher",
+    "employeeId": "Employee ID",
+    "baseSalary": "Base Salary",
+    "payFrequency": "Pay Frequency",
+    "allowances": "Allowances",
+    "deductions": "Deductions",
+    "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive",
+    "effectiveFrom": "Effective From",
+    "actions": "Actions",
+    "view": "View",
+    "edit": "Edit",
+    "payFrequencyOptions": {
+      "MONTHLY": "Monthly",
+      "BI_WEEKLY": "Bi-Weekly",
+      "WEEKLY": "Weekly",
+      "DAILY": "Daily"
+    }
+  },
+
+  "payrollConfig": {
+    "frequencies": {
+      "MONTHLY": "Monthly",
+      "BI_WEEKLY": "Bi-Weekly",
+      "WEEKLY": "Weekly"
+    }
+  },
+
+  "timesheetConfig": {
+    "periodStatus": {
+      "OPEN": "Open",
+      "CLOSED": "Closed",
+      "LOCKED": "Locked"
+    },
+    "entryStatus": {
+      "DRAFT": "Draft",
+      "SUBMITTED": "Submitted",
+      "APPROVED": "Approved",
+      "REJECTED": "Rejected"
+    },
+    "taskTypes": {
+      "TEACHING": "Teaching",
+      "ADMINISTRATION": "Administration",
+      "MEETINGS": "Meetings",
+      "PREPARATION": "Lesson Preparation",
+      "GRADING": "Grading & Assessment",
+      "PROFESSIONAL_DEVELOPMENT": "Professional Development",
+      "SUPERVISION": "Student Supervision",
+      "OTHER": "Other"
+    }
+  },
+
+  "walletConfig": {
+    "walletTypes": {
+      "SCHOOL": "School Wallet",
+      "PARENT": "Parent Wallet",
+      "STUDENT": "Student Wallet"
+    },
+    "transactionTypes": {
+      "CREDIT": "Credit (Top-up)",
+      "DEBIT": "Debit (Payment)",
+      "TRANSFER": "Transfer"
+    },
+    "paymentMethods": {
+      "CASH": "Cash",
+      "CARD": "Credit/Debit Card",
+      "BANK_TRANSFER": "Bank Transfer",
+      "WALLET": "Wallet",
+      "OTHER": "Other"
+    }
+  },
+
+  "reportsConfig": {
+    "reportTypes": {
+      "BALANCE_SHEET": "Balance Sheet",
+      "INCOME_STATEMENT": "Income Statement (P&L)",
+      "CASH_FLOW": "Cash Flow Statement",
+      "TRIAL_BALANCE": "Trial Balance",
+      "GENERAL_LEDGER": "General Ledger",
+      "EXPENSE_ANALYSIS": "Expense Analysis",
+      "REVENUE_ANALYSIS": "Revenue Analysis",
+      "BUDGET_VARIANCE": "Budget Variance Report"
+    },
+    "reportDescriptions": {
+      "BALANCE_SHEET": "Assets, liabilities, and equity at a specific point in time",
+      "INCOME_STATEMENT": "Revenue and expenses over a period",
+      "CASH_FLOW": "Cash inflows and outflows from operating, investing, and financing activities",
+      "TRIAL_BALANCE": "List of all accounts with debit and credit balances",
+      "GENERAL_LEDGER": "Detailed transaction history for all accounts",
+      "EXPENSE_ANALYSIS": "Detailed breakdown of expenses by category and department",
+      "REVENUE_ANALYSIS": "Detailed breakdown of revenue by source",
+      "BUDGET_VARIANCE": "Comparison of actual spending vs budgeted amounts"
+    },
+    "exportFormats": {
+      "PDF": "PDF Document",
+      "EXCEL": "Excel Spreadsheet",
+      "CSV": "CSV File"
+    },
+    "dateRanges": {
+      "THIS_MONTH": "This Month",
+      "LAST_MONTH": "Last Month",
+      "THIS_QUARTER": "This Quarter",
+      "LAST_QUARTER": "Last Quarter",
+      "THIS_YEAR": "This Year",
+      "LAST_YEAR": "Last Year",
+      "CUSTOM": "Custom Range"
+    },
+    "availableReportsList": {
+      "balanceSheet": "Balance Sheet",
+      "balanceSheetDesc": "Assets, liabilities, and equity",
+      "incomeStatement": "Income Statement",
+      "incomeStatementDesc": "Revenue and expenses",
+      "cashFlow": "Cash Flow Statement",
+      "cashFlowDesc": "Cash inflows and outflows",
+      "trialBalance": "Trial Balance",
+      "trialBalanceDesc": "Account balances verification"
+    }
   }
 }

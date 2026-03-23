@@ -12,6 +12,7 @@ import { FormHeading, FormLayout } from "@/components/form"
 import { useWizardValidation } from "@/components/form/template/wizard-validation-context"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { completeClassWizard } from "../actions"
 import { useClassWizard } from "../use-class-wizard"
@@ -24,6 +25,8 @@ export default function ManagementContent() {
   const formRef = useRef<WizardFormRef>(null)
   const { data, isLoading } = useClassWizard()
   const { enableNext, disableNext, setCustomNavigation } = useWizardValidation()
+  const { dictionary } = useDictionary()
+  const d = dictionary?.school?.classes?.wizard?.management
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -87,8 +90,11 @@ export default function ManagementContent() {
     >
       <FormLayout>
         <FormHeading
-          title="Management & Review"
-          description="Set capacity and prerequisites, then review the class details."
+          title={d?.title || "Management & Review"}
+          description={
+            d?.description ||
+            "Set capacity and prerequisites, then review the class details."
+          }
         />
 
         {error && (
@@ -100,7 +106,7 @@ export default function ManagementContent() {
         {isSubmitting && (
           <div className="flex items-center justify-center gap-2 py-4">
             <Loader2 className="h-5 w-5 animate-spin" />
-            <span>Completing class setup...</span>
+            <span>{d?.completingSetup || "Completing class setup..."}</span>
           </div>
         )}
 
@@ -125,23 +131,37 @@ export default function ManagementContent() {
           <>
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Class Information</CardTitle>
+                <CardTitle className="text-lg">
+                  {d?.reviewClassInfo || "Class Information"}
+                </CardTitle>
               </CardHeader>
               <CardContent className="grid grid-cols-2 gap-4">
-                <ReviewField label="Class Name" value={data.name} />
-                <ReviewField label="Subject" value={data.subject?.name} />
                 <ReviewField
-                  label="Teacher"
+                  label={d?.reviewClassName || "Class Name"}
+                  value={data.name}
+                />
+                <ReviewField
+                  label={d?.reviewSubject || "Subject"}
+                  value={data.subject?.name}
+                />
+                <ReviewField
+                  label={d?.reviewTeacher || "Teacher"}
                   value={
                     data.teacher
                       ? `${data.teacher.givenName} ${data.teacher.surname}`
                       : null
                   }
                 />
-                <ReviewField label="Grade" value={data.grade?.name} />
-                <ReviewField label="Course Code" value={data.courseCode} />
                 <ReviewField
-                  label="Evaluation Type"
+                  label={d?.reviewGrade || "Grade"}
+                  value={data.grade?.name}
+                />
+                <ReviewField
+                  label={d?.reviewCourseCode || "Course Code"}
+                  value={data.courseCode}
+                />
+                <ReviewField
+                  label={d?.reviewEvaluationType || "Evaluation Type"}
                   value={data.evaluationType}
                 />
               </CardContent>
@@ -149,19 +169,34 @@ export default function ManagementContent() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Schedule</CardTitle>
+                <CardTitle className="text-lg">
+                  {d?.reviewSchedule || "Schedule"}
+                </CardTitle>
               </CardHeader>
               <CardContent className="grid grid-cols-2 gap-4">
-                <ReviewField label="Term" value={data.term?.name} />
                 <ReviewField
-                  label="Start Period"
+                  label={d?.reviewTerm || "Term"}
+                  value={data.term?.name}
+                />
+                <ReviewField
+                  label={d?.reviewStartPeriod || "Start Period"}
                   value={data.startPeriod?.name}
                 />
-                <ReviewField label="End Period" value={data.endPeriod?.name} />
-                <ReviewField label="Classroom" value={data.classroom?.name} />
                 <ReviewField
-                  label="Duration"
-                  value={data.duration ? `${data.duration} weeks` : null}
+                  label={d?.reviewEndPeriod || "End Period"}
+                  value={data.endPeriod?.name}
+                />
+                <ReviewField
+                  label={d?.reviewClassroom || "Classroom"}
+                  value={data.classroom?.name}
+                />
+                <ReviewField
+                  label={d?.reviewDuration || "Duration"}
+                  value={
+                    data.duration
+                      ? `${data.duration} ${d?.weeksUnit || "weeks"}`
+                      : null
+                  }
                 />
               </CardContent>
             </Card>

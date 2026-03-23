@@ -30,6 +30,14 @@ import {
   type SalarySlipInput,
 } from "./validation"
 
+// Error code constants for domain-specific payroll errors
+const PAYROLL_ERRORS = {
+  NOT_PENDING: "PAYROLL_NOT_PENDING_APPROVAL",
+  NOT_APPROVED: "PAYROLL_NOT_APPROVED",
+  INVALID_STATE: "PAYROLL_INVALID_STATE",
+  DRAFT_ONLY: "PAYROLL_DRAFT_ONLY_DELETE",
+} as const
+
 type ActionResult<T = void> = {
   success: boolean
   data?: T
@@ -70,7 +78,7 @@ export async function getPayrollRuns(
     return { success: true, data: payrollRuns }
   } catch (error) {
     console.error("Error fetching payroll runs:", error)
-    return { success: false, error: "Failed to fetch payroll runs" }
+    return actionError(ACTION_ERRORS.UNKNOWN)
   }
 }
 
@@ -105,13 +113,13 @@ export async function getPayrollRun(runId: string): Promise<ActionResult<any>> {
     })
 
     if (!payrollRun) {
-      return { success: false, error: "Payroll run not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     return { success: true, data: payrollRun }
   } catch (error) {
     console.error("Error fetching payroll run:", error)
-    return { success: false, error: "Failed to fetch payroll run" }
+    return actionError(ACTION_ERRORS.UNKNOWN)
   }
 }
 
@@ -155,7 +163,7 @@ export async function createPayrollRun(
     return { success: true, data: payrollRun.id }
   } catch (error) {
     console.error("Error creating payroll run:", error)
-    return { success: false, error: "Failed to create payroll run" }
+    return actionError(ACTION_ERRORS.UNKNOWN)
   }
 }
 
@@ -184,14 +192,11 @@ export async function generateSalarySlips(
     })
 
     if (!payrollRun) {
-      return { success: false, error: "Payroll run not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     if (payrollRun.status !== "DRAFT" && payrollRun.status !== "PROCESSING") {
-      return {
-        success: false,
-        error: "Payroll run is not in a valid state for generation",
-      }
+      return { success: false, error: PAYROLL_ERRORS.INVALID_STATE }
     }
 
     // Update status to PROCESSING
@@ -373,7 +378,7 @@ export async function generateSalarySlips(
       console.error("Error rolling back payroll status:", rollbackError)
     }
 
-    return { success: false, error: "Failed to generate salary slips" }
+    return actionError(ACTION_ERRORS.UNKNOWN)
   }
 }
 
@@ -402,11 +407,11 @@ export async function approvePayroll(
     })
 
     if (!payrollRun) {
-      return { success: false, error: "Payroll run not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     if (payrollRun.status !== "PENDING_APPROVAL") {
-      return { success: false, error: "Payroll run is not pending approval" }
+      return { success: false, error: PAYROLL_ERRORS.NOT_PENDING }
     }
 
     // Update payroll run status
@@ -450,7 +455,7 @@ export async function approvePayroll(
     return { success: true }
   } catch (error) {
     console.error("Error approving payroll:", error)
-    return { success: false, error: "Failed to approve payroll" }
+    return actionError(ACTION_ERRORS.UNKNOWN)
   }
 }
 
@@ -474,11 +479,11 @@ export async function rejectPayroll(
     })
 
     if (!payrollRun) {
-      return { success: false, error: "Payroll run not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     if (payrollRun.status !== "PENDING_APPROVAL") {
-      return { success: false, error: "Payroll run is not pending approval" }
+      return { success: false, error: PAYROLL_ERRORS.NOT_PENDING }
     }
 
     // Update status back to DRAFT for corrections
@@ -521,7 +526,7 @@ export async function rejectPayroll(
     return { success: true }
   } catch (error) {
     console.error("Error rejecting payroll:", error)
-    return { success: false, error: "Failed to reject payroll" }
+    return actionError(ACTION_ERRORS.UNKNOWN)
   }
 }
 
@@ -554,14 +559,11 @@ export async function processPayments(
     })
 
     if (!payrollRun) {
-      return { success: false, error: "Payroll run not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     if (payrollRun.status !== "APPROVED") {
-      return {
-        success: false,
-        error: "Payroll run must be approved before processing payments",
-      }
+      return { success: false, error: PAYROLL_ERRORS.NOT_APPROVED }
     }
 
     // Update all salary slips to PAID status
@@ -622,7 +624,7 @@ export async function processPayments(
     return { success: true, data: updateResult.count }
   } catch (error) {
     console.error("Error processing payments:", error)
-    return { success: false, error: "Failed to process payments" }
+    return actionError(ACTION_ERRORS.UNKNOWN)
   }
 }
 
@@ -664,7 +666,7 @@ export async function getTeacherSalarySlips(
     return { success: true, data: salarySlips }
   } catch (error) {
     console.error("Error fetching teacher salary slips:", error)
-    return { success: false, error: "Failed to fetch salary slips" }
+    return actionError(ACTION_ERRORS.UNKNOWN)
   }
 }
 
@@ -705,13 +707,13 @@ export async function getSalarySlip(
     })
 
     if (!salarySlip) {
-      return { success: false, error: "Salary slip not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     return { success: true, data: salarySlip }
   } catch (error) {
     console.error("Error fetching salary slip:", error)
-    return { success: false, error: "Failed to fetch salary slip" }
+    return actionError(ACTION_ERRORS.UNKNOWN)
   }
 }
 
@@ -757,7 +759,7 @@ export async function getPayrollSummary(): Promise<ActionResult<any>> {
     }
   } catch (error) {
     console.error("Error fetching payroll summary:", error)
-    return { success: false, error: "Failed to fetch summary" }
+    return actionError(ACTION_ERRORS.UNKNOWN)
   }
 }
 
@@ -778,11 +780,11 @@ export async function deletePayrollRun(runId: string): Promise<ActionResult> {
     })
 
     if (!payrollRun) {
-      return { success: false, error: "Payroll run not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     if (payrollRun.status !== "DRAFT") {
-      return { success: false, error: "Only draft payroll runs can be deleted" }
+      return { success: false, error: PAYROLL_ERRORS.DRAFT_ONLY }
     }
 
     await db.payrollRun.delete({
@@ -793,6 +795,6 @@ export async function deletePayrollRun(runId: string): Promise<ActionResult> {
     return { success: true }
   } catch (error) {
     console.error("Error deleting payroll run:", error)
-    return { success: false, error: "Failed to delete payroll run" }
+    return actionError(ACTION_ERRORS.UNKNOWN)
   }
 }

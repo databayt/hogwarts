@@ -35,13 +35,19 @@ export type FineRow = {
   createdAt: string
 }
 
-export const getFineColumns = (lang?: string): ColumnDef<FineRow>[] => {
+export const getFineColumns = (
+  lang?: string,
+  col?: Record<string, string>
+): ColumnDef<FineRow>[] => {
   return [
     {
       accessorKey: "studentName",
       id: "studentName",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Student" />
+        <DataTableColumnHeader
+          column={column}
+          title={col?.student || "Student"}
+        />
       ),
       cell: ({ row }) => {
         const fine = row.original
@@ -54,52 +60,64 @@ export const getFineColumns = (lang?: string): ColumnDef<FineRow>[] => {
           </Link>
         )
       },
-      meta: { label: "Student", variant: "text" },
+      meta: { label: col?.student || "Student", variant: "text" },
       enableColumnFilter: true,
     },
     {
       accessorKey: "fineType",
       id: "fineType",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Fine Type" />
+        <DataTableColumnHeader
+          column={column}
+          title={col?.fineType || "Fine Type"}
+        />
       ),
       cell: ({ getValue }) => (
         <Badge variant="outline">{getValue<string>().replace(/_/g, " ")}</Badge>
       ),
-      meta: { label: "Fine Type", variant: "text" },
+      meta: { label: col?.fineType || "Fine Type", variant: "text" },
       enableColumnFilter: true,
     },
     {
       accessorKey: "amount",
       id: "amount",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Amount" />
+        <DataTableColumnHeader
+          column={column}
+          title={col?.amount || "Amount"}
+        />
       ),
       cell: ({ getValue }) => (
         <span className="text-end font-medium tabular-nums">
           {formatCurrency(getValue<number>(), (lang || "en") as Locale)}
         </span>
       ),
-      meta: { label: "Amount", variant: "text" },
+      meta: { label: col?.amount || "Amount", variant: "text" },
     },
     {
       accessorKey: "reason",
       id: "reason",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Reason" />
+        <DataTableColumnHeader
+          column={column}
+          title={col?.reason || "Reason"}
+        />
       ),
       cell: ({ getValue }) => (
         <span className="max-w-[200px] truncate" title={getValue<string>()}>
           {getValue<string>()}
         </span>
       ),
-      meta: { label: "Reason", variant: "text" },
+      meta: { label: col?.reason || "Reason", variant: "text" },
     },
     {
       accessorKey: "dueDate",
       id: "dueDate",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Due Date" />
+        <DataTableColumnHeader
+          column={column}
+          title={col?.dueDate || "Due Date"}
+        />
       ),
       cell: ({ getValue }) => {
         const val = getValue<string>()
@@ -112,52 +130,54 @@ export const getFineColumns = (lang?: string): ColumnDef<FineRow>[] => {
           </span>
         )
       },
-      meta: { label: "Due Date", variant: "text" },
+      meta: { label: col?.dueDate || "Due Date", variant: "text" },
     },
     {
       id: "status",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Status" />
+        <DataTableColumnHeader
+          column={column}
+          title={col?.status || "Status"}
+        />
       ),
       cell: ({ row }) => {
         const fine = row.original
         if (fine.isWaived) {
           return (
             <Badge variant="outline" className={STATUS_COLORS.CANCELLED}>
-              Waived
+              {col?.waived || "Waived"}
             </Badge>
           )
         }
         if (fine.isPaid) {
           return (
             <Badge variant="outline" className={STATUS_COLORS.PAID}>
-              Paid
+              {col?.paid || "Paid"}
             </Badge>
           )
         }
-        // Check if overdue
         const isOverdue = fine.dueDate && new Date(fine.dueDate) < new Date()
         if (isOverdue) {
           return (
             <Badge variant="outline" className={STATUS_COLORS.OVERDUE}>
-              Overdue
+              {col?.overdue || "Overdue"}
             </Badge>
           )
         }
         return (
           <Badge variant="outline" className={STATUS_COLORS.PENDING}>
-            Pending
+            {col?.pending || "Pending"}
           </Badge>
         )
       },
       meta: {
-        label: "Status",
+        label: col?.status || "Status",
         variant: "select",
         options: [
-          { label: "Pending", value: "PENDING" },
-          { label: "Paid", value: "PAID" },
-          { label: "Waived", value: "WAIVED" },
-          { label: "Overdue", value: "OVERDUE" },
+          { label: col?.pending || "Pending", value: "PENDING" },
+          { label: col?.paid || "Paid", value: "PAID" },
+          { label: col?.waived || "Waived", value: "WAIVED" },
+          { label: col?.overdue || "Overdue", value: "OVERDUE" },
         ],
       },
       enableColumnFilter: true,
@@ -166,7 +186,10 @@ export const getFineColumns = (lang?: string): ColumnDef<FineRow>[] => {
       accessorKey: "createdAt",
       id: "createdAt",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Created" />
+        <DataTableColumnHeader
+          column={column}
+          title={col?.created || "Created"}
+        />
       ),
       cell: ({ getValue }) => (
         <span className="text-muted-foreground text-xs tabular-nums">
@@ -175,11 +198,13 @@ export const getFineColumns = (lang?: string): ColumnDef<FineRow>[] => {
           )}
         </span>
       ),
-      meta: { label: "Created", variant: "text" },
+      meta: { label: col?.created || "Created", variant: "text" },
     },
     {
       id: "actions",
-      header: () => <span className="sr-only">Actions</span>,
+      header: () => (
+        <span className="sr-only">{col?.actions || "Actions"}</span>
+      ),
       cell: ({ row }) => {
         const fine = row.original
         return (
@@ -187,20 +212,20 @@ export const getFineColumns = (lang?: string): ColumnDef<FineRow>[] => {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8 p-0">
                 <Ellipsis className="h-4 w-4" />
-                <span className="sr-only">Actions</span>
+                <span className="sr-only">{col?.actions || "Actions"}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuLabel>{col?.actions || "Actions"}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link href={`/${lang}/finance/fees/fines/${fine.id}`}>
-                  View
+                  {col?.view || "View"}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href={`/${lang}/finance/fees/fines/${fine.id}/edit`}>
-                  Edit
+                  {col?.edit || "Edit"}
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuContent>

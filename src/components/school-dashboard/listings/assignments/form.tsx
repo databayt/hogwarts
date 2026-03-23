@@ -170,9 +170,12 @@ export function AssignmentCreateForm({ onSuccess }: AssignmentCreateFormProps) {
     }
   }
 
+  const fd = (fullDict?.school as Record<string, any>)?.assignments?.form as
+    | Record<string, any>
+    | undefined
   const stepLabels: Record<number, string> = {
-    1: locale === "ar" ? "المعلومات الأساسية" : "Basic Information",
-    2: locale === "ar" ? "تفاصيل الواجب" : "Assignment Details",
+    1: fd?.basicInformation || "Basic Information",
+    2: fd?.assignmentDetails || "Assignment Details",
   }
 
   return (
@@ -181,17 +184,17 @@ export function AssignmentCreateForm({ onSuccess }: AssignmentCreateFormProps) {
         <ModalFormLayout
           title={
             isView
-              ? "View Assignment"
+              ? fd?.viewAssignment || "View Assignment"
               : currentId
-                ? "Edit Assignment"
-                : "Create Assignment"
+                ? fd?.editAssignment || "Edit Assignment"
+                : fd?.createAssignment || "Create Assignment"
           }
           description={
             isView
-              ? "View assignment details"
+              ? fd?.viewDetails || "View assignment details"
               : currentId
-                ? "Update assignment details"
-                : "Create a new assignment for your class"
+                ? fd?.updateDetails || "Update assignment details"
+                : fd?.createForClass || "Create a new assignment for your class"
           }
         >
           {renderCurrentStep()}

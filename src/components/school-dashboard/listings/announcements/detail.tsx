@@ -175,7 +175,7 @@ export function AnnouncementDetailContent({
               <p className="whitespace-pre-wrap">{body}</p>
             ) : (
               <p className="text-muted-foreground italic">
-                {d?.noContent || "No content"}
+                {d?.noContent || t.content}
               </p>
             )}
           </div>

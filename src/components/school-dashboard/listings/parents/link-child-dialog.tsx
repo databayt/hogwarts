@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import {
   confirmLinkChild,
@@ -48,6 +49,8 @@ export function LinkChildDialog({
   onOpenChange,
   onSuccess,
 }: LinkChildDialogProps) {
+  const { dictionary } = useDictionary()
+  const d = dictionary?.school?.parents as Record<string, any> | undefined
   const [step, setStep] = useState<Step>("enter-code")
   const [code, setCode] = useState("")
   const [error, setError] = useState<string | null>(null)
@@ -125,20 +128,22 @@ export function LinkChildDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Link Child</DialogTitle>
+          <DialogTitle>{d?.linkChild || "Link Child"}</DialogTitle>
           <DialogDescription>
-            Enter the access code provided by the school to link your account to
-            your child&apos;s profile.
+            {d?.linkChildDescription ||
+              "Enter the access code provided by the school to link your account to your child's profile."}
           </DialogDescription>
         </DialogHeader>
 
         {step === "enter-code" && (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="access-code">Access Code</Label>
+              <Label htmlFor="access-code">
+                {d?.accessCode || "Access Code"}
+              </Label>
               <Input
                 id="access-code"
-                placeholder="XXXX-XXXX-XXXX"
+                placeholder={d?.accessCodePlaceholder || "XXXX-XXXX-XXXX"}
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
                 className="text-center font-mono text-lg tracking-wider"
@@ -160,10 +165,10 @@ export function LinkChildDialog({
                 {isPending ? (
                   <>
                     <Loader2 className="me-2 h-4 w-4 animate-spin" />
-                    Validating...
+                    {d?.validating || "Validating..."}
                   </>
                 ) : (
-                  "Validate Code"
+                  d?.validateCode || "Validate Code"
                 )}
               </Button>
             </DialogFooter>
@@ -173,15 +178,21 @@ export function LinkChildDialog({
         {step === "confirm" && (
           <div className="space-y-4">
             <div className="rounded-lg border p-4">
-              <p className="text-muted-foreground text-sm">Student found:</p>
+              <p className="text-muted-foreground text-sm">
+                {d?.studentFound || "Student found:"}
+              </p>
               <p className="text-lg font-semibold">{studentName}</p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="guardian-type">Your relationship</Label>
+              <Label htmlFor="guardian-type">
+                {d?.yourRelationship || "Your relationship"}
+              </Label>
               <Select value={selectedTypeId} onValueChange={setSelectedTypeId}>
                 <SelectTrigger id="guardian-type">
-                  <SelectValue placeholder="Select relationship" />
+                  <SelectValue
+                    placeholder={d?.selectRelationship || "Select relationship"}
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {guardianTypes.map((type) => (
@@ -205,7 +216,7 @@ export function LinkChildDialog({
                 onClick={handleReset}
                 disabled={isPending}
               >
-                Back
+                {d?.back || "Back"}
               </Button>
               <Button
                 onClick={handleConfirm}
@@ -214,10 +225,10 @@ export function LinkChildDialog({
                 {isPending ? (
                   <>
                     <Loader2 className="me-2 h-4 w-4 animate-spin" />
-                    Linking...
+                    {d?.linking || "Linking..."}
                   </>
                 ) : (
-                  "Confirm Link"
+                  d?.confirmLink || "Confirm Link"
                 )}
               </Button>
             </DialogFooter>
@@ -231,15 +242,20 @@ export function LinkChildDialog({
                 <Check className="h-6 w-6 text-green-600" />
               </div>
               <p className="text-center text-lg font-semibold">
-                Successfully linked!
+                {d?.successfullyLinked || "Successfully linked!"}
               </p>
               <p className="text-muted-foreground text-center text-sm">
-                You are now linked to {studentName}&apos;s profile.
+                {(
+                  d?.linkedToProfile ||
+                  "You are now linked to {name}'s profile."
+                ).replace("{name}", studentName)}
               </p>
             </div>
 
             <DialogFooter>
-              <Button onClick={() => handleOpenChange(false)}>Done</Button>
+              <Button onClick={() => handleOpenChange(false)}>
+                {d?.done || "Done"}
+              </Button>
             </DialogFooter>
           </div>
         )}

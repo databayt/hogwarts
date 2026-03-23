@@ -97,6 +97,9 @@ export function SubmissionForm({
   onSubmit,
   onCancel,
 }: SubmissionFormProps) {
+  const { dictionary } = useDictionary()
+  const sf = (dictionary?.school as Record<string, any>)?.assignments
+    ?.submissionForm as Record<string, any> | undefined
   const [content, setContent] = useState(existingSubmission?.content || "")
   const [files, setFiles] = useState<FileUpload[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -154,13 +157,17 @@ export function SubmissionForm({
       for (const file of selectedFiles) {
         // Validate file size
         if (file.size > MAX_FILE_SIZE) {
-          toast.error(`${file.name} is too large. Maximum size is 10MB.`)
+          toast.error(
+            `${file.name} ${sf?.fileTooLarge || "is too large. Maximum size is 10MB."}`
+          )
           continue
         }
 
         // Validate file type
         if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-          toast.error(`${file.name} is not a supported file type.`)
+          toast.error(
+            `${file.name} ${sf?.unsupportedType || "is not a supported file type."}`
+          )
           continue
         }
 
@@ -168,7 +175,7 @@ export function SubmissionForm({
         try {
           await uploadFile(file)
         } catch (error) {
-          toast.error(`Failed to upload ${file.name}`)
+          toast.error(`${sf?.failedUpload || "Failed to upload"} ${file.name}`)
         }
       }
 
@@ -196,9 +203,9 @@ export function SubmissionForm({
         attachments: attachmentUrls,
         isDraft: true,
       })
-      toast.success("Draft saved successfully")
+      toast.success(sf?.draftSaved || "Draft saved successfully")
     } catch (error) {
-      toast.error("Failed to save draft")
+      toast.error(sf?.failedSaveDraft || "Failed to save draft")
     } finally {
       setIsSubmitting(false)
     }
@@ -206,7 +213,10 @@ export function SubmissionForm({
 
   const handleSubmit = async () => {
     if (!content.trim() && files.length === 0) {
-      toast.error("Please add content or attach files before submitting")
+      toast.error(
+        sf?.addContentFirst ||
+          "Please add content or attach files before submitting"
+      )
       return
     }
 
@@ -221,9 +231,9 @@ export function SubmissionForm({
         attachments: attachmentUrls,
         isDraft: false,
       })
-      toast.success("Assignment submitted successfully")
+      toast.success(sf?.submittedSuccess || "Assignment submitted successfully")
     } catch (error) {
-      toast.error("Failed to submit assignment")
+      toast.error(sf?.failedSubmit || "Failed to submit assignment")
     } finally {
       setIsSubmitting(false)
     }
@@ -265,13 +275,17 @@ export function SubmissionForm({
                 {assignment.class.subject.name} • {assignment.class.name}
               </CardDescription>
             </div>
-            <Badge variant="outline">{assignment.totalPoints} points</Badge>
+            <Badge variant="outline">
+              {assignment.totalPoints}{" "}
+              {(dictionary?.school as Record<string, any>)?.assignments
+                ?.studentView?.pointsLabel || "points"}
+            </Badge>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           {assignment.description && (
             <div>
-              <Label>Description</Label>
+              <Label>{sf?.description || "Description"}</Label>
               <p className="text-muted-foreground mt-1 text-sm">
                 {assignment.description}
               </p>
@@ -280,7 +294,7 @@ export function SubmissionForm({
 
           {assignment.instructions && (
             <div>
-              <Label>Instructions</Label>
+              <Label>{sf?.instructions || "Instructions"}</Label>
               <p className="text-muted-foreground mt-1 text-sm whitespace-pre-wrap">
                 {assignment.instructions}
               </p>
@@ -289,12 +303,18 @@ export function SubmissionForm({
 
           <div className="flex items-center gap-4 text-sm">
             <div>
-              <span className="text-muted-foreground">Due: </span>
+              <span className="text-muted-foreground">
+                {sf?.dueLabel || "Due:"}{" "}
+              </span>
               <span className={cn("font-medium", isPastDue && "text-red-600")}>
                 {format(dueDate, "MMM dd, yyyy at h:mm a")}
               </span>
             </div>
-            {isPastDue && <Badge variant="destructive">Late Submission</Badge>}
+            {isPastDue && (
+              <Badge variant="destructive">
+                {sf?.lateSubmission || "Late Submission"}
+              </Badge>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -302,31 +322,34 @@ export function SubmissionForm({
       {/* Submission Form */}
       <Card>
         <CardHeader>
-          <CardTitle>Your Submission</CardTitle>
+          <CardTitle>{sf?.yourSubmission || "Your Submission"}</CardTitle>
           <CardDescription>
-            Add your response and attach any required files
+            {sf?.addResponse ||
+              "Add your response and attach any required files"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {isPastDue && (
             <Alert variant="destructive">
               <Icons.circleAlert className="h-4 w-4" />
-              <AlertTitle>Late Submission</AlertTitle>
+              <AlertTitle>{sf?.lateSubmission || "Late Submission"}</AlertTitle>
               <AlertDescription>
-                This assignment is past due. Your submission will be marked as
-                late.
+                {sf?.lateWarning ||
+                  "This assignment is past due. Your submission will be marked as late."}
               </AlertDescription>
             </Alert>
           )}
 
           {/* Text Response */}
           <div>
-            <Label htmlFor="response">Written Response</Label>
+            <Label htmlFor="response">
+              {sf?.writtenResponse || "Written Response"}
+            </Label>
             <Textarea
               id="response"
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="Type your answer here..."
+              placeholder={sf?.typeAnswer || "Type your answer here..."}
               className="mt-2 min-h-[200px]"
               disabled={isSubmitting}
             />
@@ -336,7 +359,7 @@ export function SubmissionForm({
 
           {/* File Attachments */}
           <div>
-            <Label>File Attachments</Label>
+            <Label>{sf?.fileAttachments || "File Attachments"}</Label>
             <div className="mt-2 space-y-4">
               {/* Upload Area */}
               <div
@@ -358,10 +381,11 @@ export function SubmissionForm({
                 />
                 <Icons.upload className="text-muted-foreground mx-auto mb-3 h-10 w-10" />
                 <p className="text-sm font-medium">
-                  Click to upload or drag and drop
+                  {sf?.clickToUpload || "Click to upload or drag and drop"}
                 </p>
                 <p className="text-muted-foreground mt-1 text-xs">
-                  PDF, Word, Excel, PowerPoint, Images, Videos (max 10MB)
+                  {sf?.fileTypes ||
+                    "PDF, Word, Excel, PowerPoint, Images, Videos (max 10MB)"}
                 </p>
               </div>
 
@@ -369,7 +393,7 @@ export function SubmissionForm({
               {isUploading && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
-                    <span>Uploading files...</span>
+                    <span>{sf?.uploadingFiles || "Uploading files..."}</span>
                     <span>{Math.round(totalUploadProgress)}%</span>
                   </div>
                   <Progress value={totalUploadProgress} className="h-2" />
@@ -410,12 +434,12 @@ export function SubmissionForm({
                         )}
                         {file.status === "completed" && (
                           <Badge variant="outline" className="text-green-600">
-                            Uploaded
+                            {sf?.uploaded || "Uploaded"}
                           </Badge>
                         )}
                         {file.status === "error" && (
                           <Badge variant="outline" className="text-red-600">
-                            Failed
+                            {sf?.failed || "Failed"}
                           </Badge>
                         )}
                         <Button
@@ -436,7 +460,7 @@ export function SubmissionForm({
         </CardContent>
         <CardFooter className="gap-2">
           <Button variant="outline" onClick={onCancel} disabled={isSubmitting}>
-            Cancel
+            {sf?.cancel || "Cancel"}
           </Button>
           <Button
             variant="outline"
@@ -448,7 +472,7 @@ export function SubmissionForm({
             ) : (
               <Icons.save className="me-2 h-4 w-4" />
             )}
-            Save as Draft
+            {sf?.saveAsDraft || "Save as Draft"}
           </Button>
           <Button onClick={handleSubmit} disabled={isSubmitting || isUploading}>
             {isSubmitting ? (
@@ -456,7 +480,7 @@ export function SubmissionForm({
             ) : (
               <Send className="me-2 h-4 w-4" />
             )}
-            Submit Assignment
+            {sf?.submitAssignment || "Submit Assignment"}
           </Button>
         </CardFooter>
       </Card>

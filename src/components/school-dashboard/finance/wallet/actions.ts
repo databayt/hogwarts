@@ -25,7 +25,7 @@ export async function createWallet(
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return { success: false, error: "NOT_AUTHENTICATED" }
     }
 
     const data = {
@@ -55,7 +55,7 @@ export async function createWallet(
     console.error("Error creating wallet:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to create wallet",
+      error: "UNKNOWN",
     }
   }
 }
@@ -64,7 +64,7 @@ export async function topupWallet(formData: FormData) {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return { success: false, error: "NOT_AUTHENTICATED" }
     }
 
     const data = {
@@ -113,7 +113,7 @@ export async function topupWallet(formData: FormData) {
     console.error("Error topping up wallet:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to top-up wallet",
+      error: "UNKNOWN",
     }
   }
 }
@@ -122,7 +122,7 @@ export async function refundWallet(formData: FormData) {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return { success: false, error: "NOT_AUTHENTICATED" }
     }
 
     const data = {
@@ -142,11 +142,11 @@ export async function refundWallet(formData: FormData) {
     })
 
     if (!wallet) {
-      return { success: false, error: "Wallet not found" }
+      return { success: false, error: "NOT_FOUND" }
     }
 
     if (Number(wallet.balance) < validated.amount) {
-      return { success: false, error: "Insufficient balance" }
+      return { success: false, error: "INSUFFICIENT_BALANCE" }
     }
 
     const result = await db.$transaction(async (tx) => {
@@ -182,7 +182,7 @@ export async function refundWallet(formData: FormData) {
     console.error("Error refunding wallet:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to refund wallet",
+      error: "UNKNOWN",
     }
   }
 }
@@ -194,7 +194,7 @@ export async function getWallets(filters?: {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return { success: false, error: "NOT_AUTHENTICATED" }
     }
 
     const wallets = await db.wallet.findMany({
@@ -216,6 +216,6 @@ export async function getWallets(filters?: {
     return { success: true, data: wallets }
   } catch (error) {
     console.error("Error fetching wallets:", error)
-    return { success: false, error: "Failed to fetch wallets" }
+    return { success: false, error: "UNKNOWN" }
   }
 }

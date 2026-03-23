@@ -216,10 +216,10 @@ export function QuickAssessmentTake({
           {submitting ? (
             <>
               <Loader2 className="me-2 h-4 w-4 animate-spin" />
-              Submitting...
+              {t?.submitting ?? "Submitting..."}
             </>
           ) : (
-            "Submit"
+            (dictionary?.school?.exams?.submit ?? "Submit")
           )}
         </Button>
       </div>

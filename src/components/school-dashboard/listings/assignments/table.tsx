@@ -45,9 +45,10 @@ function AssignmentsTableInner({
   const router = useRouter()
 
   // Translations with fallbacks
+  const d = dictionary as Record<string, any> | undefined
   const t = {
-    create: dictionary?.create || "Create",
-    loading: "Loading...",
+    create: d?.create || "Create",
+    loading: d?.loading || "Loading...",
   }
 
   // Data management with optimistic updates
@@ -79,7 +80,9 @@ function AssignmentsTableInner({
   const handleDelete = useCallback(
     async (assignment: AssignmentRow) => {
       try {
-        const deleteMsg = `Delete "${assignment.title}"?`
+        const deleteLabel =
+          (common as Record<string, any>)?.actions?.delete || "Delete"
+        const deleteMsg = `${deleteLabel} "${assignment.title}"?`
         const ok = await confirmDeleteDialog(deleteMsg)
         if (!ok) return
 
@@ -92,11 +95,19 @@ function AssignmentsTableInner({
         } else {
           // Revert on error
           refresh()
-          ErrorToast("Failed to delete assignment")
+          ErrorToast(
+            (common as Record<string, any>)?.toast?.error?.delete ||
+              "Failed to delete"
+          )
         }
       } catch (e) {
         refresh()
-        ErrorToast(e instanceof Error ? e.message : "Failed to delete")
+        ErrorToast(
+          e instanceof Error
+            ? e.message
+            : (common as Record<string, any>)?.toast?.error?.delete ||
+                "Failed to delete"
+        )
       }
     },
     [optimisticRemove, refresh]
@@ -141,7 +152,11 @@ function AssignmentsTableInner({
     if (result.success && result.data) {
       router.push(`/${lang}/assignments/add/${result.data.id}/information`)
     } else {
-      ErrorToast(result.error || "Failed to create")
+      ErrorToast(
+        result.error ||
+          (common as Record<string, any>)?.toast?.error?.create ||
+          "Failed to create"
+      )
     }
   }, [router, lang])
 

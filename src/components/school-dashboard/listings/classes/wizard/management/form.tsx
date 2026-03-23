@@ -16,6 +16,7 @@ import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { NumberField, SelectField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { getClassesForPrerequisite } from "../actions"
 import { updateClassManagement } from "./actions"
@@ -30,6 +31,8 @@ interface ManagementFormProps {
 export const ManagementForm = forwardRef<WizardFormRef, ManagementFormProps>(
   ({ classId, initialData, onValidChange }, ref) => {
     const [isPending, startTransition] = useTransition()
+    const { dictionary } = useDictionary()
+    const d = dictionary?.school?.classes?.wizard?.management
     const [prerequisiteOptions, setPrerequisiteOptions] = useState<
       { label: string; value: string }[]
     >([])
@@ -91,25 +94,25 @@ export const ManagementForm = forwardRef<WizardFormRef, ManagementFormProps>(
         <form className="space-y-6">
           <NumberField
             name="credits"
-            label="Credits"
-            placeholder="e.g. 3.00"
+            label={d?.credits || "Credits"}
+            placeholder={d?.creditsPlaceholder || "e.g. 3.00"}
             disabled={isPending}
           />
           <NumberField
             name="minCapacity"
-            label="Minimum Capacity"
-            placeholder="e.g. 10"
+            label={d?.minCapacity || "Minimum Capacity"}
+            placeholder={d?.minCapacityPlaceholder || "e.g. 10"}
             disabled={isPending}
           />
           <NumberField
             name="maxCapacity"
-            label="Maximum Capacity"
-            placeholder="e.g. 50"
+            label={d?.maxCapacity || "Maximum Capacity"}
+            placeholder={d?.maxCapacityPlaceholder || "e.g. 50"}
             disabled={isPending}
           />
           <SelectField
             name="prerequisiteId"
-            label="Prerequisite Class"
+            label={d?.prerequisiteClass || "Prerequisite Class"}
             options={prerequisiteOptions}
             disabled={isPending}
           />

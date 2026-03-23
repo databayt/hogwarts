@@ -33,13 +33,24 @@ interface Props {
 // Status options
 // ---------------------------------------------------------------------------
 
-const STATUS_OPTIONS = [
+const ALL_STATUS_OPTIONS = [
   { value: "UNDER_REVIEW", fallback: "Under Review" },
   { value: "SHORTLISTED", fallback: "Shortlisted" },
   { value: "SELECTED", fallback: "Selected" },
   { value: "WAITLISTED", fallback: "Waitlisted" },
   { value: "REJECTED", fallback: "Rejected" },
 ] as const
+
+// Must match VALID_TRANSITIONS in actions.ts
+const VALID_TRANSITIONS: Record<string, string[]> = {
+  SUBMITTED: ["UNDER_REVIEW", "WITHDRAWN"],
+  UNDER_REVIEW: ["SHORTLISTED", "REJECTED", "WITHDRAWN"],
+  SHORTLISTED: ["SELECTED", "WAITLISTED", "REJECTED", "WITHDRAWN"],
+  SELECTED: ["WAITLISTED", "REJECTED", "WITHDRAWN"],
+  WAITLISTED: ["SELECTED", "REJECTED", "WITHDRAWN"],
+  REJECTED: [],
+  WITHDRAWN: [],
+}
 
 // ---------------------------------------------------------------------------
 // Component
@@ -113,11 +124,12 @@ export default function ApplicationDetailActions({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-52">
-          {STATUS_OPTIONS.map((opt) => (
+          {ALL_STATUS_OPTIONS.filter((opt) =>
+            VALID_TRANSITIONS[currentStatus]?.includes(opt.value)
+          ).map((opt) => (
             <DropdownMenuItem
               key={opt.value}
               onClick={() => onUpdateStatus(opt.value)}
-              disabled={currentStatus === opt.value}
             >
               {t?.status?.[opt.value as keyof typeof t.status] || opt.fallback}
             </DropdownMenuItem>

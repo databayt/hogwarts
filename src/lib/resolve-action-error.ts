@@ -35,6 +35,14 @@ export function resolveActionError(
     "Missing school context": ACTION_ERRORS.MISSING_SCHOOL,
     Unauthorized: ACTION_ERRORS.UNAUTHORIZED,
     "Not found": ACTION_ERRORS.NOT_FOUND,
+    "Failed to create": ACTION_ERRORS.CREATE_FAILED,
+    "Failed to update": ACTION_ERRORS.UPDATE_FAILED,
+    "Failed to delete": ACTION_ERRORS.DELETE_FAILED,
+    "Failed to save": ACTION_ERRORS.SAVE_FAILED,
+    "Payment failed": ACTION_ERRORS.PAYMENT_FAILED,
+    "Upload failed": ACTION_ERRORS.UPLOAD_FAILED,
+    "Export failed": ACTION_ERRORS.EXPORT_FAILED,
+    "Import failed": ACTION_ERRORS.IMPORT_FAILED,
   }
 
   const code = legacyMap[error]

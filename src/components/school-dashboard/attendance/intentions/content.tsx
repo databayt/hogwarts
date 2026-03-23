@@ -41,6 +41,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { getAbsenceIntentions, reviewAbsenceIntention } from "./actions"
 import { intentionStatusValues } from "./validation"
@@ -92,23 +93,15 @@ function getStatusVariant(
   }
 }
 
-// Get reason display label
-function getReasonLabel(reason: string): string {
-  const labels: Record<string, string> = {
-    MEDICAL: "Medical",
-    FAMILY_EMERGENCY: "Family Emergency",
-    RELIGIOUS: "Religious",
-    SCHOOL_ACTIVITY: "School Activity",
-    TRANSPORTATION: "Transportation",
-    WEATHER: "Weather",
-    OTHER: "Other",
-  }
-  return labels[reason] || reason
-}
-
 export default function IntentionsContent({
   locale = "en",
 }: IntentionsContentProps) {
+  const { dictionary } = useDictionary()
+  const t = (dictionary?.school?.attendance as any)?.intentions as
+    | Record<string, any>
+    | undefined
+  const reasons = t?.reasons as Record<string, string> | undefined
+
   const [intentions, setIntentions] = React.useState<Intention[]>([])
   const [loading, setLoading] = React.useState(true)
   const [statusFilter, setStatusFilter] = React.useState<string>("ALL")
@@ -120,6 +113,27 @@ export default function IntentionsContent({
     "APPROVED" | "REJECTED"
   >("APPROVED")
   const [processing, setProcessing] = React.useState(false)
+
+  // Get reason display label
+  function getReasonLabel(reason: string): string {
+    const defaultLabels: Record<string, string> = {
+      MEDICAL: "Medical",
+      FAMILY_EMERGENCY: "Family Emergency",
+      RELIGIOUS: "Religious",
+      SCHOOL_ACTIVITY: "School Activity",
+      TRANSPORTATION: "Transportation",
+      WEATHER: "Weather",
+      OTHER: "Other",
+    }
+    const key = reason.toLowerCase().replace(/_/g, "") as string
+    // Try dictionary reasons first (medical, family, travel, etc.)
+    if (reasons) {
+      const dictKey =
+        reason === "FAMILY_EMERGENCY" ? "family" : reason.toLowerCase()
+      if (reasons[dictKey]) return reasons[dictKey]
+    }
+    return defaultLabels[reason] || reason
+  }
 
   // Stats
   const pendingCount = intentions.filter((i) => i.status === "PENDING").length
@@ -196,10 +210,11 @@ export default function IntentionsContent({
           </div>
           <div>
             <h1 className="scroll-m-20 text-2xl font-semibold tracking-tight">
-              Absence Intentions
+              {t?.title || "Absence Intentions"}
             </h1>
             <p className="text-muted-foreground text-sm">
-              Review planned absence notifications from students and parents
+              {t?.description ||
+                "Review planned absence notifications from students and parents"}
             </p>
           </div>
         </div>
@@ -209,38 +224,50 @@ export default function IntentionsContent({
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t?.pending || "Pending"}
+            </CardTitle>
             <Clock className="h-4 w-4 text-yellow-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-600">
               {pendingCount}
             </div>
-            <p className="text-muted-foreground text-xs">Awaiting review</p>
+            <p className="text-muted-foreground text-xs">
+              {t?.awaitingReview || "Awaiting review"}
+            </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Approved</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t?.approved || "Approved"}
+            </CardTitle>
             <Check className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
               {approvedCount}
             </div>
-            <p className="text-muted-foreground text-xs">This period</p>
+            <p className="text-muted-foreground text-xs">
+              {t?.thisPeriod || "This period"}
+            </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Rejected</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t?.rejected || "Rejected"}
+            </CardTitle>
             <X className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
               {rejectedCount}
             </div>
-            <p className="text-muted-foreground text-xs">This period</p>
+            <p className="text-muted-foreground text-xs">
+              {t?.thisPeriod || "This period"}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -250,22 +277,28 @@ export default function IntentionsContent({
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <Filter className="h-4 w-4" />
-            Filters
+            {t?.filters || "Filters"}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-4">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Status" />
+                <SelectValue placeholder={t?.allStatuses || "All Statuses"} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">All</SelectItem>
-                {intentionStatusValues.map((status) => (
-                  <SelectItem key={status} value={status}>
-                    {status.charAt(0) + status.slice(1).toLowerCase()}
-                  </SelectItem>
-                ))}
+                <SelectItem value="ALL">
+                  {t?.allStatuses || "All Statuses"}
+                </SelectItem>
+                <SelectItem value="PENDING">
+                  {t?.statusPending || "Pending"}
+                </SelectItem>
+                <SelectItem value="APPROVED">
+                  {t?.statusApproved || "Approved"}
+                </SelectItem>
+                <SelectItem value="REJECTED">
+                  {t?.statusRejected || "Rejected"}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -275,18 +308,20 @@ export default function IntentionsContent({
       {/* Intentions List */}
       <Card>
         <CardHeader>
-          <CardTitle>Intentions</CardTitle>
-          <CardDescription>Pre-submitted absence notifications</CardDescription>
+          <CardTitle>{t?.intentionsLabel || "Intentions"}</CardTitle>
+          <CardDescription>
+            {t?.preSubmitted || "Pre-submitted absence notifications"}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="text-muted-foreground py-8 text-center">
-              Loading...
+              {t?.loading || "Loading..."}
             </div>
           ) : intentions.length === 0 ? (
             <div className="text-muted-foreground py-8 text-center">
               <FileText className="mx-auto mb-3 h-12 w-12 opacity-50" />
-              <p>No intentions found</p>
+              <p>{t?.noIntentions || "No intentions found"}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -327,7 +362,7 @@ export default function IntentionsContent({
                     )}
                     {intention.reviewNotes && (
                       <p className="text-muted-foreground text-xs italic">
-                        Note: {intention.reviewNotes}
+                        {intention.reviewNotes}
                       </p>
                     )}
                   </div>
@@ -340,7 +375,7 @@ export default function IntentionsContent({
                         onClick={() => handleReview(intention, "APPROVED")}
                       >
                         <Check className="me-1 h-4 w-4" />
-                        Approve
+                        {t?.approve || "Approve"}
                       </Button>
                       <Button
                         size="sm"
@@ -349,7 +384,7 @@ export default function IntentionsContent({
                         onClick={() => handleReview(intention, "REJECTED")}
                       >
                         <X className="me-1 h-4 w-4" />
-                        Reject
+                        {t?.reject || "Reject"}
                       </Button>
                     </div>
                   )}
@@ -366,32 +401,29 @@ export default function IntentionsContent({
           <DialogHeader>
             <DialogTitle>
               {reviewAction === "APPROVED"
-                ? "Approve Intention"
-                : "Reject Intention"}
+                ? t?.approveTitle || "Approve Intention"
+                : t?.rejectTitle || "Reject Intention"}
             </DialogTitle>
             <DialogDescription>
               {selectedIntention && (
                 <>
                   {reviewAction === "APPROVED"
-                    ? "Approve the absence intention for"
-                    : "Reject the absence intention for"}{" "}
-                  <strong>{selectedIntention.studentName}</strong> (
-                  {formatDate(selectedIntention.dateFrom, locale)}
-                  {selectedIntention.daysCount > 1 &&
-                    ` - ${formatDate(selectedIntention.dateTo, locale)}`}
-                  )
+                    ? t?.approveDescription ||
+                      "Are you sure you want to approve this absence intention?"
+                    : t?.rejectDescription ||
+                      "Are you sure you want to reject this absence intention?"}
                 </>
               )}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <label className="text-sm font-medium">Notes (optional)</label>
+            <label className="text-sm font-medium">
+              {t?.notesOptional || "Notes (optional)"}
+            </label>
             <Textarea
               className="mt-2"
               placeholder={
-                reviewAction === "APPROVED"
-                  ? "Any notes for the student/parent..."
-                  : "Reason for rejection..."
+                t?.notesPlaceholder || "Add any notes about your decision..."
               }
               value={reviewNotes}
               onChange={(e) => setReviewNotes(e.target.value)}
@@ -403,7 +435,7 @@ export default function IntentionsContent({
               onClick={() => setReviewDialogOpen(false)}
               disabled={processing}
             >
-              Cancel
+              {t?.cancel || "Cancel"}
             </Button>
             <Button
               onClick={confirmReview}
@@ -411,10 +443,10 @@ export default function IntentionsContent({
               variant={reviewAction === "APPROVED" ? "default" : "destructive"}
             >
               {processing
-                ? "Processing..."
+                ? t?.processing || "Processing..."
                 : reviewAction === "APPROVED"
-                  ? "Approve"
-                  : "Reject"}
+                  ? t?.confirmApprove || "Approve"
+                  : t?.confirmReject || "Reject"}
             </Button>
           </DialogFooter>
         </DialogContent>

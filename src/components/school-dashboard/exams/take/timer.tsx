@@ -19,6 +19,7 @@ import { AlertTriangle, Clock, Pause, Play } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface ExamTimerProps {
   /** Total duration in minutes */
@@ -43,6 +44,8 @@ export function ExamTimer({
   onWarning,
   className,
 }: ExamTimerProps) {
+  const { dictionary } = useDictionary()
+  const tc = dictionary?.school?.exams?.takeContent
   const [timeRemaining, setTimeRemaining] = useState<number>(() => {
     if (!startedAt) return duration * 60
     const elapsed = Math.floor((Date.now() - startedAt.getTime()) / 1000)
@@ -137,13 +140,13 @@ export function ExamTimer({
 
       {isPaused && (
         <Badge variant="secondary" className="ms-2">
-          Paused
+          {tc?.paused ?? "Paused"}
         </Badge>
       )}
 
       {urgency === "critical" && !isPaused && (
         <Badge variant="destructive" className="ms-2">
-          Hurry!
+          {tc?.hurry ?? "Hurry!"}
         </Badge>
       )}
     </div>

@@ -4,10 +4,13 @@
 import { notFound } from "next/navigation"
 
 import { getCatalogImageUrl } from "@/lib/catalog-image-url"
+import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 import { CatalogChaptersContent } from "@/components/school-dashboard/listings/subjects/catalog-chapters"
+import type { SupportedLanguage } from "@/components/translation/types"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string; slug: string }>
@@ -15,6 +18,16 @@ interface Props {
 
 export default async function CatalogChaptersPage({ params }: Props) {
   const { lang, slug } = await params
+  const { schoolId } = await getTenantContext()
+  const contentLang = (l: string | null | undefined) =>
+    (l || "ar") as SupportedLanguage
+  const t = (
+    text: string | null | undefined,
+    srcLang: string | null | undefined
+  ) =>
+    schoolId
+      ? getDisplayText(text ?? "", contentLang(srcLang), lang, schoolId)
+      : Promise.resolve(text ?? "")
 
   const subject = await db.catalogSubject.findUnique({
     where: { slug },
@@ -23,6 +36,7 @@ export default async function CatalogChaptersPage({ params }: Props) {
       slug: true,
       description: true,
       department: true,
+      lang: true,
       color: true,
       imageKey: true,
       thumbnailKey: true,
@@ -76,34 +90,47 @@ export default async function CatalogChaptersPage({ params }: Props) {
     "sm"
   )
 
-  const chapters = subject.chapters.map((ch) => ({
-    id: ch.id,
-    name: ch.name,
-    slug: ch.slug,
-    description: ch.description,
-    totalLessons: ch.totalLessons,
-    imageUrl: getCatalogImageUrl(ch.thumbnailKey, ch.imageKey, "sm"),
-    lessons: ch.lessons.map((l) => ({
-      id: l.id,
-      name: l.name,
-      slug: l.slug,
-      description: l.description,
-      durationMinutes: l.durationMinutes,
-      videoCount: l.videoCount,
-      resourceCount: l.resourceCount,
-      imageUrl: getCatalogImageUrl(l.thumbnailKey, l.imageKey, "md"),
-    })),
-  }))
+  // Translate all content names for the current locale
+  const sLang = subject.lang
+  const [subjectName, subjectDescription, subjectDepartment] =
+    await Promise.all([
+      t(subject.name, sLang),
+      t(subject.description, sLang),
+      t(subject.department, sLang),
+    ])
+
+  const chapters = await Promise.all(
+    subject.chapters.map(async (ch) => ({
+      id: ch.id,
+      name: await t(ch.name, sLang),
+      slug: ch.slug,
+      description: ch.description,
+      totalLessons: ch.totalLessons,
+      imageUrl: getCatalogImageUrl(ch.thumbnailKey, ch.imageKey, "sm"),
+      lessons: await Promise.all(
+        ch.lessons.map(async (l) => ({
+          id: l.id,
+          name: await t(l.name, sLang),
+          slug: l.slug,
+          description: l.description,
+          durationMinutes: l.durationMinutes,
+          videoCount: l.videoCount,
+          resourceCount: l.resourceCount,
+          imageUrl: getCatalogImageUrl(l.thumbnailKey, l.imageKey, "md"),
+        }))
+      ),
+    }))
+  )
 
   return (
     <>
       <PageHeadingSetter title="" />
       <CatalogChaptersContent
         subject={{
-          name: subject.name,
+          name: subjectName,
           slug: subject.slug,
-          description: subject.description,
-          department: subject.department,
+          description: subjectDescription,
+          department: subjectDepartment,
           color: subject.color,
           heroImageUrl,
           imageUrl,

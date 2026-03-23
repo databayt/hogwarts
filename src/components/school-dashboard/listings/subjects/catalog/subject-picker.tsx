@@ -209,6 +209,7 @@ export function SubjectPicker({
     if (!selectedGradeId) return
 
     const key = `${subjectId}:${selectedGradeId}`
+    const previousSelections = new Set(optimisticSelections)
     const newSet = new Set(optimisticSelections)
 
     if (newSet.has(key)) {
@@ -220,8 +221,12 @@ export function SubjectPicker({
     setPendingSubjectId(subjectId)
 
     startTransition(async () => {
-      await toggleSubjectSelection(subjectId, selectedGradeId)
+      const result = await toggleSubjectSelection(subjectId, selectedGradeId)
       setPendingSubjectId(null)
+      if (!result.success) {
+        // Revert optimistic state on server error
+        setOptimisticSelections(previousSelections)
+      }
     })
   }
 

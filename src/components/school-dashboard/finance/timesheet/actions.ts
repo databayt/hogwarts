@@ -25,7 +25,7 @@ export async function createTimesheet(
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return { success: false, error: "NOT_AUTHENTICATED" }
     }
 
     const data = {
@@ -53,8 +53,7 @@ export async function createTimesheet(
     console.error("Error creating timesheet:", error)
     return {
       success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to create timesheet",
+      error: "UNKNOWN",
     }
   }
 }
@@ -63,7 +62,7 @@ export async function addTimesheetEntry(formData: FormData) {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return { success: false, error: "NOT_AUTHENTICATED" }
     }
 
     const data = {
@@ -112,7 +111,7 @@ export async function addTimesheetEntry(formData: FormData) {
     console.error("Error adding timesheet entry:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to add entry",
+      error: "UNKNOWN",
     }
   }
 }
@@ -121,7 +120,7 @@ export async function submitTimesheet(timesheetId: string) {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return { success: false, error: "NOT_AUTHENTICATED" }
     }
 
     const timesheet = await db.timesheetPeriod.update({
@@ -145,8 +144,7 @@ export async function submitTimesheet(timesheetId: string) {
     console.error("Error submitting timesheet:", error)
     return {
       success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to submit timesheet",
+      error: "UNKNOWN",
     }
   }
 }
@@ -155,7 +153,7 @@ export async function approveTimesheet(formData: FormData) {
   try {
     const session = await auth()
     if (!session?.user?.schoolId || !session?.user?.id) {
-      return { success: false, error: "Unauthorized" }
+      return { success: false, error: "NOT_AUTHENTICATED" }
     }
 
     const data = {
@@ -187,8 +185,7 @@ export async function approveTimesheet(formData: FormData) {
     console.error("Error approving timesheet:", error)
     return {
       success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to approve timesheet",
+      error: "UNKNOWN",
     }
   }
 }
@@ -200,7 +197,7 @@ export async function getTimesheets(filters?: {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return { success: false, error: "NOT_AUTHENTICATED" }
     }
 
     const timesheets = await db.timesheetPeriod.findMany({
@@ -220,6 +217,6 @@ export async function getTimesheets(filters?: {
     return { success: true, data: timesheets }
   } catch (error) {
     console.error("Error fetching timesheets:", error)
-    return { success: false, error: "Failed to fetch timesheets" }
+    return { success: false, error: "UNKNOWN" }
   }
 }

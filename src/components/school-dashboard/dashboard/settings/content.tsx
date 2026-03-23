@@ -39,8 +39,14 @@ export default async function SettingsContent({
   return (
     <>
       <DashboardHeader
-        heading="Settings"
-        text="Manage account and website settings."
+        heading={
+          ((dictionary as any).school?.settings?.title as string) || "Settings"
+        }
+        text={
+          ((dictionary as any).school?.settings
+            ?.accountPageDescription as string) ||
+          "Manage account and website settings."
+        }
       />
       <div className="space-y-8 py-4 pb-10">
         <div className="bg-muted flex flex-col rounded-lg px-6">
@@ -54,6 +60,7 @@ export default async function SettingsContent({
           currentRole={user.role as UserRole}
           currentUserId={user.id}
           schoolId={user.schoolId || undefined}
+          dictionary={(dictionary as any).school}
         />
 
         <DeleteAccountSection />

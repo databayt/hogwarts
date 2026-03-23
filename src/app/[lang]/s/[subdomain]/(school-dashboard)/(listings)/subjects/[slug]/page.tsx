@@ -4,12 +4,15 @@
 import { notFound } from "next/navigation"
 
 import { getCatalogImageUrl } from "@/lib/catalog-image-url"
+import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import { BreadcrumbTitle } from "@/components/saas-dashboard/breadcrumb-title"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 import { CatalogContentSections } from "@/components/school-dashboard/listings/subjects/catalog-content-sections"
 import { CatalogDetailContent } from "@/components/school-dashboard/listings/subjects/catalog-detail"
+import type { SupportedLanguage } from "@/components/translation/types"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string; slug: string }>
@@ -17,6 +20,16 @@ interface Props {
 
 export default async function CatalogSubjectDetailPage({ params }: Props) {
   const { lang, subdomain, slug } = await params
+  const { schoolId } = await getTenantContext()
+  const contentLang = (l: string | null | undefined) =>
+    (l || "ar") as SupportedLanguage
+  const t = (
+    text: string | null | undefined,
+    srcLang: string | null | undefined
+  ) =>
+    schoolId
+      ? getDisplayText(text ?? "", contentLang(srcLang), lang, schoolId)
+      : Promise.resolve(text ?? "")
 
   // Try catalog slug first, then fallback to school subject by ID
   let subject = await db.catalogSubject.findUnique({
@@ -27,6 +40,7 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
       slug: true,
       description: true,
       department: true,
+      lang: true,
       color: true,
       imageKey: true,
       thumbnailKey: true,
@@ -81,6 +95,7 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
         slug: true,
         description: true,
         department: true,
+        lang: true,
         color: true,
         imageKey: true,
         thumbnailKey: true,
@@ -256,62 +271,97 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
     "sm"
   )
 
-  const chapters = subject.chapters.map((ch) => ({
-    id: ch.id,
-    name: ch.name,
-    slug: ch.slug,
-    description: ch.description,
-    totalLessons: ch.totalLessons,
-    imageUrl: getCatalogImageUrl(ch.thumbnailKey, ch.imageKey, "sm"),
-    lessons: ch.lessons.map((l) => ({
-      id: l.id,
-      name: l.name,
-      slug: l.slug,
-      description: l.description,
-      durationMinutes: l.durationMinutes,
-      videoCount: l.videoCount,
-      resourceCount: l.resourceCount,
-      imageUrl: getCatalogImageUrl(l.thumbnailKey, l.imageKey, "md"),
-    })),
-  }))
+  // Translate all content names for the current locale
+  const sLang = subject.lang
+  const [subjectName, subjectDescription, subjectDepartment] =
+    await Promise.all([
+      t(subject.name, sLang),
+      t(subject.description, sLang),
+      t(subject.department, sLang),
+    ])
 
-  // Build video cards from ALL lessons (matches stream dashboard "More from X")
-  const allLessons = subject.chapters.flatMap((ch) =>
-    ch.lessons.map((l) => ({
-      id: l.id,
-      title: l.name,
-      thumbnailUrl:
-        getCatalogImageUrl(l.thumbnailKey, l.imageKey, "original") ?? null,
-      durationSeconds: (l.durationMinutes ?? 0) * 60,
-      viewCount: 0,
-      isFeatured: false,
-      provider: "catalog",
-      catalogLessonId: l.id,
-      color: l.color ?? ch.color ?? null,
+  const chapters = await Promise.all(
+    subject.chapters.map(async (ch) => ({
+      id: ch.id,
+      name: await t(ch.name, sLang),
+      slug: ch.slug,
+      description: ch.description,
+      totalLessons: ch.totalLessons,
+      imageUrl: getCatalogImageUrl(ch.thumbnailKey, ch.imageKey, "sm"),
+      lessons: await Promise.all(
+        ch.lessons.map(async (l) => ({
+          id: l.id,
+          name: await t(l.name, sLang),
+          slug: l.slug,
+          description: l.description,
+          durationMinutes: l.durationMinutes,
+          videoCount: l.videoCount,
+          resourceCount: l.resourceCount,
+          imageUrl: getCatalogImageUrl(l.thumbnailKey, l.imageKey, "md"),
+        }))
+      ),
     }))
   )
 
+  // Build video cards from ALL lessons (matches stream dashboard "More from X")
+  const allLessons = await Promise.all(
+    subject.chapters.flatMap((ch) =>
+      ch.lessons.map(async (l) => ({
+        id: l.id,
+        title: await t(l.name, sLang),
+        thumbnailUrl:
+          getCatalogImageUrl(l.thumbnailKey, l.imageKey, "original") ?? null,
+        durationSeconds: (l.durationMinutes ?? 0) * 60,
+        viewCount: 0,
+        isFeatured: false,
+        provider: "catalog",
+        catalogLessonId: l.id,
+        color: l.color ?? ch.color ?? null,
+      }))
+    )
+  )
+
+  const [translatedMaterials, translatedExams, translatedAssignments] =
+    await Promise.all([
+      Promise.all(
+        materials.map(async (m) => ({
+          ...m,
+          title: await t(m.title, sLang),
+        }))
+      ),
+      Promise.all(
+        exams.map(async (e) => ({
+          ...e,
+          title: await t(e.title, sLang),
+        }))
+      ),
+      Promise.all(
+        assignments.map(async (a) => ({
+          ...a,
+          title: await t(a.title, sLang),
+          totalPoints: a.totalPoints ? Number(a.totalPoints) : null,
+        }))
+      ),
+    ])
+
   const contentSections = {
     videos: allLessons,
-    materials,
-    exams,
+    materials: translatedMaterials,
+    exams: translatedExams,
     questionStats,
-    assignments: assignments.map((a) => ({
-      ...a,
-      totalPoints: a.totalPoints ? Number(a.totalPoints) : null,
-    })),
+    assignments: translatedAssignments,
   }
 
   return (
     <>
       <PageHeadingSetter title="" />
-      <BreadcrumbTitle title={subject.name} />
+      <BreadcrumbTitle title={subjectName} />
       <CatalogDetailContent
         subject={{
-          name: subject.name,
+          name: subjectName,
           slug: subject.slug,
-          description: subject.description,
-          department: subject.department,
+          description: subjectDescription,
+          department: subjectDepartment,
           color: subject.color,
           heroImageUrl,
           imageUrl: subjectImageUrl,
@@ -330,7 +380,7 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
         data={contentSections}
         lang={lang}
         subjectColor={subject.color}
-        name={subject.name}
+        name={subjectName}
         subdomain={subdomain}
         subjectSlug={subject.slug}
         catalogSubjectId={subject.id}

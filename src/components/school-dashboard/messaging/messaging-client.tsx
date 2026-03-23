@@ -4,7 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { MessageSquarePlus } from "lucide-react"
+import { MessageSquarePlus, Users } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import socketService from "@/lib/websocket/socket-service"
@@ -14,6 +14,7 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 import {
   addReaction,
   archiveConversation,
+  createConversation,
   deleteMessage,
   editMessage,
   leaveConversation,
@@ -26,16 +27,20 @@ import {
   unmuteConversation,
 } from "./actions"
 import { ChatInterface, ChatInterfaceSkeleton } from "./chat-interface"
+import { ContactsPanel } from "./contacts/contacts-panel"
 import { ConversationList } from "./conversation-list"
 import { NoActiveConversation } from "./empty-state"
 import { NewConversationDialog } from "./new-conversation-dialog"
 import type { ConversationDTO, MessageDTO } from "./types"
+
+type SidebarTab = "chats" | "contacts"
 
 export interface MessagingClientProps {
   initialConversations: ConversationDTO[]
   initialActiveConversation: ConversationDTO | null
   initialMessages: MessageDTO[]
   currentUserId: string
+  currentUserRole: string
   locale?: "ar" | "en"
 }
 
@@ -44,6 +49,7 @@ export function MessagingClient({
   initialActiveConversation,
   initialMessages,
   currentUserId,
+  currentUserRole,
   locale = "en",
 }: MessagingClientProps) {
   const router = useRouter()
@@ -57,6 +63,7 @@ export function MessagingClient({
   const [isConnected, setIsConnected] = useState(false)
   const [showNewConversationDialog, setShowNewConversationDialog] =
     useState(false)
+  const [activeTab, setActiveTab] = useState<SidebarTab>("chats")
 
   // Connect to Socket.IO
   useEffect(() => {
@@ -317,28 +324,91 @@ export function MessagingClient({
     }
   }
 
+  const handleContactClick = async (userId: string) => {
+    try {
+      const result = await createConversation({
+        type: "direct",
+        participantIds: [userId],
+      })
+      if (result.success) {
+        setActiveTab("chats")
+        router.push(`/messages?conversation=${result.data.id}`)
+        router.refresh()
+      } else {
+        toast({
+          title: m?.notifications?.error || "Error",
+          description: result.error || "Failed to start conversation",
+        })
+      }
+    } catch {
+      toast({
+        title: m?.notifications?.error || "Error",
+        description: "Failed to start conversation",
+      })
+    }
+  }
+
   return (
     <div className="bg-msg-chat-bg relative flex h-[calc(100vh-4rem)]">
       {/* Sidebar — hidden on mobile when conversation active */}
       <div
         className={cn(
-          "bg-msg-sidebar-bg border-border flex-shrink-0 border-e",
+          "bg-msg-sidebar-bg border-border flex flex-shrink-0 flex-col border-e",
           "w-full md:w-[420px] md:max-w-[35vw]",
           activeConversation ? "hidden md:flex" : "flex"
         )}
       >
-        <ConversationList
-          conversations={conversations}
-          currentUserId={currentUserId}
-          locale={locale}
-          activeConversationId={activeConversation?.id}
-          onConversationClick={handleConversationClick}
-          onNewConversation={handleNewConversation}
-          onArchive={handleArchiveConversation}
-          onDelete={handleDeleteConversation}
-          onPin={handlePinConversation}
-          onMute={handleMuteConversation}
-        />
+        {/* Tab bar: Chats | Contacts */}
+        <div className="border-border flex shrink-0 border-b px-3 pt-3 pb-0">
+          <button
+            onClick={() => setActiveTab("chats")}
+            className={cn(
+              "flex flex-1 items-center justify-center gap-1.5 rounded-t-lg px-3 py-2 text-sm font-medium transition-colors",
+              activeTab === "chats"
+                ? "bg-msg-hover text-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <MessageSquarePlus className="h-4 w-4" />
+            {m?.contacts?.tab_chats ??
+              (locale === "ar" ? "المحادثات" : "Chats")}
+          </button>
+          <button
+            onClick={() => setActiveTab("contacts")}
+            className={cn(
+              "flex flex-1 items-center justify-center gap-1.5 rounded-t-lg px-3 py-2 text-sm font-medium transition-colors",
+              activeTab === "contacts"
+                ? "bg-msg-hover text-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Users className="h-4 w-4" />
+            {m?.contacts?.tab_contacts ??
+              (locale === "ar" ? "جهات الاتصال" : "Contacts")}
+          </button>
+        </div>
+
+        {/* Tab content */}
+        {activeTab === "chats" ? (
+          <ConversationList
+            conversations={conversations}
+            currentUserId={currentUserId}
+            locale={locale}
+            activeConversationId={activeConversation?.id}
+            onConversationClick={handleConversationClick}
+            onNewConversation={handleNewConversation}
+            onArchive={handleArchiveConversation}
+            onDelete={handleDeleteConversation}
+            onPin={handlePinConversation}
+            onMute={handleMuteConversation}
+          />
+        ) : (
+          <ContactsPanel
+            currentUserRole={currentUserRole}
+            locale={locale}
+            onContactClick={handleContactClick}
+          />
+        )}
       </div>
 
       {/* Chat area — hidden on mobile when no conversation */}

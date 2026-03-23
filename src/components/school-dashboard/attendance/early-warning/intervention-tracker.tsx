@@ -59,6 +59,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import {
   createIntervention,
   escalateIntervention,
@@ -72,129 +73,105 @@ import type {
   InterventionType,
 } from "@/components/school-dashboard/attendance/validation"
 
-// Intervention type configuration
-const INTERVENTION_TYPES: Record<
+// Icon and color config (labels come from dictionary)
+const INTERVENTION_TYPE_ICONS: Record<
   string,
-  {
-    label: string
-    icon: React.ReactNode
-    color: string
-  }
+  { icon: React.ReactNode; color: string }
 > = {
   PARENT_PHONE_CALL: {
-    label: "مكالمة هاتفية",
     icon: <Phone className="h-4 w-4" />,
     color: "text-blue-500",
   },
-  PARENT_EMAIL: {
-    label: "بريد إلكتروني",
-    icon: <Mail className="h-4 w-4" />,
-    color: "text-blue-500",
-  },
+  PARENT_EMAIL: { icon: <Mail className="h-4 w-4" />, color: "text-blue-500" },
   PARENT_MEETING: {
-    label: "اجتماع مع ولي الأمر",
     icon: <Users className="h-4 w-4" />,
     color: "text-green-500",
   },
-  HOME_VISIT: {
-    label: "زيارة منزلية",
-    icon: <Home className="h-4 w-4" />,
-    color: "text-purple-500",
-  },
+  HOME_VISIT: { icon: <Home className="h-4 w-4" />, color: "text-purple-500" },
   COUNSELOR_REFERRAL: {
-    label: "إحالة للمرشد",
     icon: <GraduationCap className="h-4 w-4" />,
     color: "text-yellow-500",
   },
   SOCIAL_WORKER_REFERRAL: {
-    label: "إحالة للأخصائي",
     icon: <UserCheck className="h-4 w-4" />,
     color: "text-orange-500",
   },
   ADMINISTRATOR_MEETING: {
-    label: "اجتماع إداري",
     icon: <Building className="h-4 w-4" />,
     color: "text-red-500",
   },
   ATTENDANCE_CONTRACT: {
-    label: "عقد حضور",
     icon: <FileText className="h-4 w-4" />,
     color: "text-red-500",
   },
   TRUANCY_REFERRAL: {
-    label: "إحالة تهرب",
     icon: <AlertTriangle className="h-4 w-4" />,
     color: "text-red-700",
   },
   COMMUNITY_RESOURCE: {
-    label: "موارد مجتمعية",
     icon: <Building className="h-4 w-4" />,
     color: "text-teal-500",
   },
   ACADEMIC_SUPPORT: {
-    label: "دعم أكاديمي",
     icon: <GraduationCap className="h-4 w-4" />,
     color: "text-indigo-500",
   },
   MENTORSHIP_ASSIGNMENT: {
-    label: "إرشاد",
     icon: <Award className="h-4 w-4" />,
     color: "text-pink-500",
   },
   INCENTIVE_PROGRAM: {
-    label: "حوافز",
     icon: <Award className="h-4 w-4" />,
     color: "text-green-500",
   },
-  OTHER: {
-    label: "أخرى",
-    icon: <HelpCircle className="h-4 w-4" />,
-    color: "text-gray-500",
-  },
+  OTHER: { icon: <HelpCircle className="h-4 w-4" />, color: "text-gray-500" },
 }
 
-// Status configuration
-const STATUS_CONFIG: Record<
-  string,
-  {
-    label: string
-    color: string
-    bgColor: string
-  }
-> = {
-  SCHEDULED: {
-    label: "مجدول",
-    color: "text-blue-700",
-    bgColor: "bg-blue-100",
-  },
-  IN_PROGRESS: {
-    label: "قيد التنفيذ",
-    color: "text-yellow-700",
-    bgColor: "bg-yellow-100",
-  },
-  COMPLETED: {
-    label: "مكتمل",
-    color: "text-green-700",
-    bgColor: "bg-green-100",
-  },
-  CANCELLED: {
-    label: "ملغى",
-    color: "text-gray-700",
-    bgColor: "bg-gray-100",
-  },
-  ESCALATED: {
-    label: "تم التصعيد",
-    color: "text-red-700",
-    bgColor: "bg-red-100",
-  },
+const TYPE_KEY_MAP: Record<string, string> = {
+  PARENT_PHONE_CALL: "parentPhoneCall",
+  PARENT_EMAIL: "parentEmail",
+  PARENT_MEETING: "parentMeeting",
+  HOME_VISIT: "homeVisit",
+  COUNSELOR_REFERRAL: "counselorReferral",
+  SOCIAL_WORKER_REFERRAL: "socialWorkerReferral",
+  ADMINISTRATOR_MEETING: "administratorMeeting",
+  ATTENDANCE_CONTRACT: "attendanceContract",
+  TRUANCY_REFERRAL: "truancyReferral",
+  COMMUNITY_RESOURCE: "communityResource",
+  ACADEMIC_SUPPORT: "academicSupport",
+  MENTORSHIP_ASSIGNMENT: "mentorshipAssignment",
+  INCENTIVE_PROGRAM: "incentiveProgram",
+  OTHER: "other",
 }
 
-// Priority configuration
-const PRIORITY_CONFIG: Record<number, { label: string; color: string }> = {
-  1: { label: "منخفض", color: "text-gray-500" },
-  2: { label: "متوسط", color: "text-blue-500" },
-  3: { label: "مرتفع", color: "text-orange-500" },
-  4: { label: "حرج", color: "text-red-500" },
+const STATUS_KEY_MAP: Record<string, string> = {
+  SCHEDULED: "scheduled",
+  IN_PROGRESS: "inProgress",
+  COMPLETED: "completed",
+  CANCELLED: "cancelled",
+  ESCALATED: "escalated",
+}
+
+const STATUS_COLORS: Record<string, { color: string; bgColor: string }> = {
+  SCHEDULED: { color: "text-blue-700", bgColor: "bg-blue-100" },
+  IN_PROGRESS: { color: "text-yellow-700", bgColor: "bg-yellow-100" },
+  COMPLETED: { color: "text-green-700", bgColor: "bg-green-100" },
+  CANCELLED: { color: "text-gray-700", bgColor: "bg-gray-100" },
+  ESCALATED: { color: "text-red-700", bgColor: "bg-red-100" },
+}
+
+const PRIORITY_KEY_MAP: Record<number, string> = {
+  1: "low",
+  2: "medium",
+  3: "high",
+  4: "critical",
+}
+
+const PRIORITY_COLORS: Record<number, string> = {
+  1: "text-gray-500",
+  2: "text-blue-500",
+  3: "text-orange-500",
+  4: "text-red-500",
 }
 
 interface Intervention {

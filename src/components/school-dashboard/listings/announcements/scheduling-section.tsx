@@ -14,16 +14,23 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 interface SchedulingSectionProps {
   control: Control<any>
   disabled?: boolean
+  dictionary?: Dictionary["school"]["announcements"]
 }
 
 export function SchedulingSection({
   control,
   disabled = false,
+  dictionary,
 }: SchedulingSectionProps) {
+  const s = (dictionary as any)?.scheduling as
+    | Record<string, string>
+    | undefined
+
   // Format datetime-local input value (YYYY-MM-DDTHH:mm)
   const formatDateTimeLocal = (
     date: Date | string | null | undefined
@@ -44,10 +51,10 @@ export function SchedulingSection({
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="mb-2">Scheduling Options</h3>
+        <h3 className="mb-2">{s?.title || "Scheduling Options"}</h3>
         <p className="text-muted-foreground">
-          Schedule when this announcement should be published and when it should
-          expire.
+          {s?.description ||
+            "Schedule when this announcement should be published and when it should expire."}
         </p>
       </div>
 
@@ -58,7 +65,7 @@ export function SchedulingSection({
           <FormItem>
             <FormLabel className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
-              Schedule For
+              {s?.scheduleFor || "Schedule For"}
             </FormLabel>
             <FormControl>
               <Input
@@ -73,8 +80,8 @@ export function SchedulingSection({
               />
             </FormControl>
             <FormDescription>
-              Leave empty to publish immediately, or set a future date/time for
-              scheduled publishing.
+              {s?.scheduleForDescription ||
+                "Leave empty to publish immediately, or set a future date/time for scheduled publishing."}
             </FormDescription>
             <FormMessage />
           </FormItem>
@@ -88,7 +95,7 @@ export function SchedulingSection({
           <FormItem>
             <FormLabel className="flex items-center gap-2">
               <Clock className="h-4 w-4" />
-              Expires At
+              {s?.expiresAt || "Expires At"}
             </FormLabel>
             <FormControl>
               <Input
@@ -103,8 +110,8 @@ export function SchedulingSection({
               />
             </FormControl>
             <FormDescription>
-              Optional: Set when this announcement should automatically be
-              unpublished.
+              {s?.expiresAtDescription ||
+                "Optional: Set when this announcement should automatically be unpublished."}
             </FormDescription>
             <FormMessage />
           </FormItem>

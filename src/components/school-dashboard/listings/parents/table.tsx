@@ -176,7 +176,9 @@ function ParentsTableInner({
     if (result.success && result.data) {
       router.push(`/${lang}/parents/add/${result.data.id}/information`)
     } else {
-      ErrorToast(result.error || "Failed to create")
+      ErrorToast(
+        result.error || dictionary?.failedToCreate || "Failed to create"
+      )
     }
   }, [router, lang])
 
@@ -257,7 +259,7 @@ function ParentsTableInner({
           onClick={() => setLinkChildOpen(true)}
         >
           <Link2 className="me-2 h-4 w-4" />
-          Link Child
+          {dictionary?.linkChild || "Link Child"}
         </Button>
       </div>
 

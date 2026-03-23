@@ -193,13 +193,13 @@ export function ExamCalendar({
             </div>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={handlePrevMonth}>
-                Previous
+                {t?.previous ?? "Previous"}
               </Button>
               <Button variant="outline" size="sm" onClick={handleToday}>
-                Today
+                {t?.today ?? "Today"}
               </Button>
               <Button variant="outline" size="sm" onClick={handleNextMonth}>
-                Next
+                {t?.next ?? "Next"}
               </Button>
             </div>
           </div>
@@ -214,7 +214,17 @@ export function ExamCalendar({
           {/* Calendar Grid */}
           <div className="grid grid-cols-7 gap-1">
             {/* Week day headers */}
-            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+            {(
+              (t?.weekDays as string[] | undefined) ?? [
+                "Sun",
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri",
+                "Sat",
+              ]
+            ).map((day: string) => (
               <div
                 key={day}
                 className="text-muted-foreground p-2 text-center text-sm font-medium"
@@ -270,7 +280,10 @@ export function ExamCalendar({
 
                             {dayExams.length > 2 && (
                               <div className="text-muted-foreground text-[10px]">
-                                +{dayExams.length - 2} more
+                                {(t?.more ?? "+{count} more").replace(
+                                  "{count}",
+                                  String(dayExams.length - 2)
+                                )}
                               </div>
                             )}
                           </div>
@@ -296,12 +309,13 @@ export function ExamCalendar({
                           </div>
                         ) : (
                           <div className="text-muted-foreground text-xs">
-                            No exams scheduled
+                            {t?.noExamsScheduled ?? "No exams scheduled"}
                           </div>
                         )}
                         {hasConflict && (
                           <div className="mt-1 text-xs text-red-500">
-                            ⚠️ Schedule conflict detected
+                            {t?.conflictDetected ??
+                              "Schedule conflict detected"}
                           </div>
                         )}
                       </div>
@@ -323,7 +337,10 @@ export function ExamCalendar({
               {format(selectedDate, "EEEE, MMMM d, yyyy")}
             </CardTitle>
             <CardDescription>
-              {selectedDateExams.length} exam(s) scheduled
+              {(t?.examsScheduled ?? "{count} exam(s) scheduled").replace(
+                "{count}",
+                String(selectedDateExams.length)
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -377,7 +394,7 @@ export function ExamCalendar({
                               <div className="flex items-center gap-1">
                                 <MapPin className="h-3 w-3" />
                                 {/* Room assignment would go here */}
-                                Room TBD
+                                {t?.roomTBD ?? "Room TBD"}
                               </div>
                             </div>
 
@@ -402,9 +419,9 @@ export function ExamCalendar({
             ) : (
               <div className="text-muted-foreground py-8 text-center">
                 <CalendarIcon className="mx-auto mb-4 h-12 w-12 opacity-50" />
-                <p>No exams scheduled for this date</p>
+                <p>{t?.noExamsDate ?? "No exams scheduled for this date"}</p>
                 <Button variant="outline" className="mt-4">
-                  Schedule New Exam
+                  {t?.scheduleNewExam ?? "Schedule New Exam"}
                 </Button>
               </div>
             )}

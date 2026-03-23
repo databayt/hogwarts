@@ -43,7 +43,7 @@ export async function ExamResultsList({ examId, dictionary }: Props) {
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground py-8 text-center">
-            No results available yet
+            {t?.noResults ?? "No results available yet"}
           </p>
         </CardContent>
       </Card>
@@ -55,7 +55,10 @@ export async function ExamResultsList({ examId, dictionary }: Props) {
       <CardHeader>
         <CardTitle>{t?.title ?? "Exam Results"}</CardTitle>
         <CardDescription>
-          Showing {results.length} student{results.length !== 1 ? "s" : ""}
+          {(t?.showingStudents ?? "Showing {count} student(s)").replace(
+            "{count}",
+            String(results.length)
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent>

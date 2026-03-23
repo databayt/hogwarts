@@ -11,6 +11,7 @@
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 
 import { JOURNAL_ENTRY_NUMBER_FORMAT, StandardAccountCodes } from "./config"
@@ -31,7 +32,7 @@ export async function createAccount(
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const data = {
@@ -54,7 +55,7 @@ export async function createAccount(
     })
 
     if (existing) {
-      return { success: false, error: "Account code already exists" }
+      return actionError(ACTION_ERRORS.ALREADY_EXISTS)
     }
 
     // Derive normalBalance from account type
@@ -73,11 +74,7 @@ export async function createAccount(
     return { success: true, data: account as any }
   } catch (error) {
     console.error("Error creating account:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to create account",
-    }
+    return actionError(ACTION_ERRORS.CREATE_FAILED)
   }
 }
 
@@ -92,7 +89,7 @@ export async function updateAccount(
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const data = {

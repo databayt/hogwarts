@@ -31,6 +31,7 @@ export async function CertificateContent({ lang = "ar" }: { lang?: Locale }) {
 
   const dictionary = await getDictionary(lang)
   const t = dictionary?.school?.exams?.certificates
+  const cc = dictionary?.school?.exams?.certificateContent
 
   const role = session.user.role || "USER"
   const canManage = ["DEVELOPER", "ADMIN"].includes(role)
@@ -80,11 +81,11 @@ export async function CertificateContent({ lang = "ar" }: { lang?: Locale }) {
       <div className="space-y-6">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">
-            {t?.tabs?.certificates ?? "My Certificates"}
+            {cc?.myCertificates ?? "My Certificates"}
           </h2>
           <p className="text-muted-foreground">
             {activeCerts.length > 0
-              ? `${activeCerts.length} ${t?.noCertificates ?? "certificates"}`
+              ? `${activeCerts.length} ${cc?.certificatesCount ?? "certificates"}`
               : (t?.noCertificates ?? "No certificates issued yet")}
           </p>
         </div>
@@ -94,10 +95,10 @@ export async function CertificateContent({ lang = "ar" }: { lang?: Locale }) {
             <CardContent className="flex flex-col items-center justify-center py-12">
               <Award className="text-muted-foreground mb-4 h-12 w-12" />
               <h3 className="mb-2 text-lg font-semibold">
-                {t?.noCertificates ?? "No certificates yet"}
+                {cc?.noCertificatesYet ?? "No certificates yet"}
               </h3>
               <p className="text-muted-foreground text-sm">
-                {t?.noCertificates ??
+                {cc?.certificatesWillAppear ??
                   "Certificates will appear here when they are issued to you"}
               </p>
             </CardContent>
@@ -110,7 +111,7 @@ export async function CertificateContent({ lang = "ar" }: { lang?: Locale }) {
                   <div className="flex items-start justify-between">
                     <div>
                       <CardTitle className="text-base">
-                        {cert.examTitle || "Certificate"}
+                        {cert.examTitle || (cc?.certificate ?? "Certificate")}
                       </CardTitle>
                       <p className="text-muted-foreground mt-1 text-sm">
                         {cert.recipientName}
@@ -130,15 +131,16 @@ export async function CertificateContent({ lang = "ar" }: { lang?: Locale }) {
                     {cert.rank && <Badge>#{cert.rank}</Badge>}
                   </div>
                   <p className="text-muted-foreground text-xs">
-                    #{cert.certificateNumber} &middot; Issued{" "}
-                    {formatDate(cert.issuedAt, "en")}
+                    #{cert.certificateNumber} &middot;{" "}
+                    {cc?.issuedLabel ?? "Issued"}{" "}
+                    {formatDate(cert.issuedAt, lang)}
                   </p>
                   <div className="flex gap-2">
                     {cert.pdfUrl && (
                       <Button asChild variant="outline" size="sm">
                         <a href={cert.pdfUrl} target="_blank" rel="noopener">
                           <Download className="me-1 h-3.5 w-3.5" />
-                          Download
+                          {cc?.download ?? "Download"}
                         </a>
                       </Button>
                     )}
@@ -150,7 +152,7 @@ export async function CertificateContent({ lang = "ar" }: { lang?: Locale }) {
                           rel="noopener"
                         >
                           <Share2 className="me-1 h-3.5 w-3.5" />
-                          Verify
+                          {cc?.verify ?? "Verify"}
                         </a>
                       </Button>
                     )}
@@ -170,10 +172,10 @@ export async function CertificateContent({ lang = "ar" }: { lang?: Locale }) {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">
-            {t?.tabs?.certificates ?? "Certificates"}
+            {cc?.certificates ?? "Certificates"}
           </h2>
           <p className="text-muted-foreground">
-            {t?.tabs?.templates ??
+            {cc?.manageCertificatesDescription ??
               "Manage certificate templates and issue certificates to students"}
           </p>
         </div>
@@ -181,7 +183,7 @@ export async function CertificateContent({ lang = "ar" }: { lang?: Locale }) {
           <Button asChild>
             <a href="certificates/cert-wizard">
               <Plus className="me-2 h-4 w-4" />
-              New Template
+              {cc?.newTemplate ?? "New Template"}
             </a>
           </Button>
         )}
@@ -190,29 +192,37 @@ export async function CertificateContent({ lang = "ar" }: { lang?: Locale }) {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Templates</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {cc?.templates ?? "Templates"}
+            </CardTitle>
             <Settings className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{configs.length}</div>
-            <p className="text-muted-foreground text-xs">Active templates</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Issued</CardTitle>
-            <Award className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{certificates.length}</div>
             <p className="text-muted-foreground text-xs">
-              Total certificates issued
+              {cc?.activeTemplates ?? "Active templates"}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {cc?.issued ?? "Issued"}
+            </CardTitle>
+            <Award className="text-muted-foreground h-4 w-4" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{certificates.length}</div>
+            <p className="text-muted-foreground text-xs">
+              {cc?.totalCertificatesIssued ?? "Total certificates issued"}
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {cc?.active ?? "Active"}
+            </CardTitle>
             <Award className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
@@ -220,7 +230,8 @@ export async function CertificateContent({ lang = "ar" }: { lang?: Locale }) {
               {certificates.filter((c: any) => c.status === "active").length}
             </div>
             <p className="text-muted-foreground text-xs">
-              Currently active certificates
+              {cc?.currentlyActiveCertificates ??
+                "Currently active certificates"}
             </p>
           </CardContent>
         </Card>

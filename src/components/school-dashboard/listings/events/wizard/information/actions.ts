@@ -2,6 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"

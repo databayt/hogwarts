@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface PrerequisiteSelectorProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -33,6 +34,8 @@ export function PrerequisiteSelector({
   disabled = false,
   currentClassId,
 }: PrerequisiteSelectorProps) {
+  const { dictionary } = useDictionary()
+  const d = dictionary?.school?.classes?.form
   const [availableClasses, setAvailableClasses] = useState<
     Array<{ id: string; name: string; subjectName: string }>
   >([])
@@ -72,7 +75,9 @@ export function PrerequisiteSelector({
       name="prerequisiteId"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Prerequisite Course (Optional)</FormLabel>
+          <FormLabel>
+            {d?.prerequisiteCourse || "Prerequisite Course (Optional)"}
+          </FormLabel>
           <Select
             onValueChange={(value) =>
               field.onChange(value === "none" ? null : value)
@@ -84,13 +89,17 @@ export function PrerequisiteSelector({
               <SelectTrigger>
                 <SelectValue
                   placeholder={
-                    loading ? "Loading..." : "No prerequisite required"
+                    loading
+                      ? dictionary?.school?.classes?.loading || "Loading..."
+                      : d?.noPrerequisite || "No prerequisite required"
                   }
                 />
               </SelectTrigger>
             </FormControl>
             <SelectContent>
-              <SelectItem value="none">No prerequisite required</SelectItem>
+              <SelectItem value="none">
+                {d?.noPrerequisite || "No prerequisite required"}
+              </SelectItem>
               {availableClasses
                 .filter((cls) => cls.id !== currentClassId) // Prevent self-reference
                 .map((cls) => (
@@ -106,7 +115,8 @@ export function PrerequisiteSelector({
             </SelectContent>
           </Select>
           <FormDescription>
-            Students must complete this course before enrolling
+            {d?.prerequisiteDescription ||
+              "Students must complete this course before enrolling"}
           </FormDescription>
           <FormMessage />
         </FormItem>

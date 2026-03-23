@@ -24,6 +24,8 @@ model SchoolSubjectSelection {
   @@unique([schoolId, catalogSubjectId, gradeId, streamId])
   @@index([schoolId, gradeId])
   @@index([schoolId, gradeId, streamId])
+  @@index([catalogSubjectId]) // Usage count queries across all schools
+  @@index([schoolId, isActive]) // Filtered subject list queries
   @@map("school_subject_selections")
 }
 

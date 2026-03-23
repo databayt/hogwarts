@@ -24,11 +24,35 @@ import { useDataTable } from "@/components/table/use-data-table"
 import { getSalaryStructures } from "./actions"
 import { getSalaryStructureColumns, type SalaryStructureRow } from "./columns"
 
+type SalaryColumnsDict = {
+  teacher?: string
+  employeeId?: string
+  baseSalary?: string
+  payFrequency?: string
+  allowances?: string
+  deductions?: string
+  status?: string
+  active?: string
+  inactive?: string
+  effectiveFrom?: string
+  actions?: string
+  view?: string
+  edit?: string
+  payFrequencyOptions?: Record<string, string>
+}
+
+type SalaryConfigDict = {
+  searchPlaceholder?: string
+  deleteConfirm?: string
+}
+
 interface SalaryStructuresTableProps {
   initialData: SalaryStructureRow[]
   total: number
   lang: Locale
   perPage?: number
+  columnsDict?: SalaryColumnsDict
+  configDict?: SalaryConfigDict
 }
 
 function SalaryStructuresTableInner({
@@ -36,6 +60,8 @@ function SalaryStructuresTableInner({
   total,
   lang,
   perPage = 20,
+  columnsDict,
+  configDict,
 }: SalaryStructuresTableProps) {
   const router = useRouter()
   const [searchValue, debouncedSearch, setSearchValue] = useDebouncedSearch(300)
@@ -87,13 +113,13 @@ function SalaryStructuresTableInner({
     },
   })
 
-  // Generate columns on the client side with lang
+  // Generate columns on the client side with lang and dictionary
   const columns = useMemo(
     () => [
       getSelectColumn<SalaryStructureRow>(),
-      ...getSalaryStructureColumns(lang),
+      ...getSalaryStructureColumns(lang, columnsDict),
     ],
-    [lang]
+    [lang, columnsDict]
   )
 
   // Table instance
@@ -129,7 +155,9 @@ function SalaryStructuresTableInner({
   // Bulk delete handler
   const handleBulkDelete = useCallback(
     async (rows: SalaryStructureRow[]) => {
-      const deleteMsg = `Delete ${rows.length} salary structure(s)?`
+      const deleteMsg =
+        configDict?.deleteConfirm?.replace("{count}", String(rows.length)) ||
+        `Delete ${rows.length} salary structure(s)?`
       const ok = await confirmDeleteDialog(deleteMsg)
       if (!ok) return
 
@@ -186,7 +214,9 @@ function SalaryStructuresTableInner({
         onToggleView={toggleView}
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
-        searchPlaceholder="Search salary structures..."
+        searchPlaceholder={
+          configDict?.searchPlaceholder || "Search salary structures..."
+        }
         onCreate={handleCreate}
         entityName="salary-structures"
       />

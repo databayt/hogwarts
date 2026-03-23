@@ -66,12 +66,19 @@ export const OVERTIME_MULTIPLIERS = {
   HOLIDAY: 2.5, // 250% for holiday work
 } as const
 
-// Payroll frequencies
-export const PAYROLL_FREQUENCIES = [
-  { value: "MONTHLY", label: "Monthly", daysPerPeriod: 30 },
-  { value: "BI_WEEKLY", label: "Bi-Weekly", daysPerPeriod: 14 },
-  { value: "WEEKLY", label: "Weekly", daysPerPeriod: 7 },
+// Payroll frequency values (labels come from dictionary)
+export const PAYROLL_FREQUENCY_VALUES = [
+  { value: "MONTHLY", daysPerPeriod: 30 },
+  { value: "BI_WEEKLY", daysPerPeriod: 14 },
+  { value: "WEEKLY", daysPerPeriod: 7 },
 ] as const
+
+/** Get localized payroll frequency options from dictionary */
+export const getPayrollFrequencyOptions = (d?: Record<string, string>) =>
+  PAYROLL_FREQUENCY_VALUES.map((f) => ({
+    ...f,
+    label: d?.[f.value] || f.value,
+  }))
 
 // Slip number format
 export const SLIP_NUMBER_PREFIX = "SLIP"
@@ -87,3 +94,54 @@ export const PERIOD_TYPES = {
   CUSTOM: "CUSTOM",
   YEAR_TO_DATE: "YEAR_TO_DATE",
 } as const
+
+// --- Dictionary-based factory functions ---
+
+type Dict = Record<string, any> | undefined
+
+/** Get localized payroll run status labels from dictionary */
+export const getPayrollRunStatusLabels = (d?: Dict): Record<string, string> => {
+  const s = d?.runStatus as Record<string, string> | undefined
+  return {
+    DRAFT: s?.draft || "Draft",
+    PENDING: s?.pending || "Pending",
+    PROCESSING: s?.processing || "Processing",
+    COMPLETED: s?.completed || "Completed",
+    FAILED: s?.failed || "Failed",
+    CANCELLED: s?.cancelled || "Cancelled",
+  }
+}
+
+/** Get localized salary slip status labels from dictionary */
+export const getSalarySlipStatusLabels = (d?: Dict): Record<string, string> => {
+  const s = d?.slipStatus as Record<string, string> | undefined
+  return {
+    DRAFT: s?.draft || "Draft",
+    PENDING: s?.pending || "Pending",
+    APPROVED: s?.approved || "Approved",
+    PAID: s?.paid || "Paid",
+    CANCELLED: s?.cancelled || "Cancelled",
+  }
+}
+
+/** Get localized payment method labels from dictionary */
+export const getPaymentMethodLabels = (d?: Dict): Record<string, string> => {
+  const m = d?.paymentMethod as Record<string, string> | undefined
+  return {
+    BANK_TRANSFER: m?.bankTransfer || "Bank Transfer",
+    CASH: m?.cash || "Cash",
+    CHECK: m?.check || "Check",
+    MOBILE_MONEY: m?.mobileMoney || "Mobile Money",
+  }
+}
+
+/** Get localized period type labels from dictionary */
+export const getPeriodTypeLabels = (d?: Dict): Record<string, string> => {
+  const p = d?.periodType as Record<string, string> | undefined
+  return {
+    CURRENT_MONTH: p?.currentMonth || "Current Month",
+    LAST_MONTH: p?.lastMonth || "Last Month",
+    CUSTOM: p?.custom || "Custom",
+    YEAR_TO_DATE: p?.yearToDate || "Year to Date",
+  }
+}

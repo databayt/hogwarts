@@ -154,9 +154,10 @@ export function ParentCreateForm({ onSuccess }: ParentCreateFormProps) {
     }
   }
 
+  const d = fullDict?.school?.parents as Record<string, any> | undefined
   const stepLabels: Record<number, string> = {
-    1: locale === "ar" ? "المعلومات الأساسية" : "Basic Information",
-    2: locale === "ar" ? "بيانات التواصل" : "Contact Details",
+    1: d?.basicInformation || "Basic Information",
+    2: d?.contactDetails || "Contact Details",
   }
 
   return (
@@ -164,14 +165,18 @@ export function ParentCreateForm({ onSuccess }: ParentCreateFormProps) {
       <form onSubmit={(e) => e.preventDefault()}>
         <ModalFormLayout
           title={
-            isView ? "View Parent" : currentId ? "Edit Parent" : "Create Parent"
+            isView
+              ? d?.viewParent || "View Parent"
+              : currentId
+                ? d?.editParent || "Edit Parent"
+                : d?.createParent || "Create Parent"
           }
           description={
             isView
-              ? "View parent details"
+              ? d?.viewParentDetails || "View parent details"
               : currentId
-                ? "Update parent details"
-                : "Add a new parent to your school"
+                ? d?.updateParentDetails || "Update parent details"
+                : d?.addParentDescription || "Add a new parent to your school"
           }
         >
           {renderCurrentStep()}

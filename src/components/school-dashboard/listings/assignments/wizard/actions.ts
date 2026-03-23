@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import { Decimal } from "@prisma/client/runtime/library"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -21,7 +22,7 @@ export async function getAssignmentForWizard(
 > {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const assignment = await db.assignment.findFirst({
       where: { id: assignmentId, schoolId },
@@ -41,7 +42,7 @@ export async function getAssignmentForWizard(
       },
     })
 
-    if (!assignment) return { success: false, error: "Assignment not found" }
+    if (!assignment) return actionError(ACTION_ERRORS.NOT_FOUND)
 
     return {
       success: true,
@@ -52,11 +53,10 @@ export async function getAssignmentForWizard(
       },
     }
   } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to load assignment",
-    }
+    return actionError(
+      ACTION_ERRORS.UNKNOWN,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -67,12 +67,12 @@ export async function createDraftAssignment(): Promise<
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Find the first available class for this school
@@ -82,10 +82,7 @@ export async function createDraftAssignment(): Promise<
     })
 
     if (!firstClass) {
-      return {
-        success: false,
-        error: "No classes found. Create a class first.",
-      }
+      return actionError(ACTION_ERRORS.NOT_FOUND, "no_classes")
     }
 
     // Default due date: 7 days from now
@@ -108,11 +105,10 @@ export async function createDraftAssignment(): Promise<
 
     return { success: true, data: { id: assignment.id } }
   } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to create assignment",
-    }
+    return actionError(
+      ACTION_ERRORS.UNKNOWN,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -123,12 +119,12 @@ export async function completeAssignmentWizard(
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Validate required fields are present
@@ -138,14 +134,11 @@ export async function completeAssignmentWizard(
     })
 
     if (!assignment) {
-      return { success: false, error: "Assignment not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     if (!assignment.title) {
-      return {
-        success: false,
-        error: "Title is required before completing",
-      }
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR, "title_required")
     }
 
     await db.assignment.updateMany({
@@ -156,13 +149,10 @@ export async function completeAssignmentWizard(
     revalidatePath("/assignments")
     return { success: true }
   } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to complete assignment wizard",
-    }
+    return actionError(
+      ACTION_ERRORS.UNKNOWN,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -194,12 +184,12 @@ export async function deleteDraftAssignment(
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Atomic delete — only if it's still a draft
@@ -208,17 +198,14 @@ export async function deleteDraftAssignment(
     })
 
     if (count === 0) {
-      return { success: false, error: "Draft assignment not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     return { success: true }
   } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to delete draft assignment",
-    }
+    return actionError(
+      ACTION_ERRORS.UNKNOWN,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }

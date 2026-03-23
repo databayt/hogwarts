@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import {
   getPeriodsForTerm,
   getRoomsForSelection,
@@ -30,6 +31,8 @@ import { ClassFormStepProps } from "./types"
 import { classCreateSchema } from "./validation"
 
 export function ScheduleStep({ form, isView }: ClassFormStepProps) {
+  const { dictionary } = useDictionary()
+  const d = dictionary?.school?.classes?.form
   const [terms, setTerms] = useState<Array<{ id: string; termName: string }>>(
     []
   )
@@ -114,7 +117,7 @@ export function ScheduleStep({ form, isView }: ClassFormStepProps) {
         name="termId"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Term</FormLabel>
+            <FormLabel>{d?.term || "Term"}</FormLabel>
             <Select
               onValueChange={field.onChange}
               value={field.value}
@@ -122,7 +125,7 @@ export function ScheduleStep({ form, isView }: ClassFormStepProps) {
             >
               <FormControl>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select term" />
+                  <SelectValue placeholder={d?.selectTerm || "Select term"} />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
@@ -143,7 +146,7 @@ export function ScheduleStep({ form, isView }: ClassFormStepProps) {
         name="startPeriodId"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Start Period</FormLabel>
+            <FormLabel>{d?.startPeriod || "Start Period"}</FormLabel>
             <Select
               onValueChange={field.onChange}
               value={field.value}
@@ -151,7 +154,9 @@ export function ScheduleStep({ form, isView }: ClassFormStepProps) {
             >
               <FormControl>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select start period" />
+                  <SelectValue
+                    placeholder={d?.selectStartPeriod || "Select start period"}
+                  />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
@@ -172,7 +177,7 @@ export function ScheduleStep({ form, isView }: ClassFormStepProps) {
         name="endPeriodId"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>End Period</FormLabel>
+            <FormLabel>{d?.endPeriod || "End Period"}</FormLabel>
             <Select
               onValueChange={field.onChange}
               value={field.value}
@@ -180,7 +185,9 @@ export function ScheduleStep({ form, isView }: ClassFormStepProps) {
             >
               <FormControl>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select end period" />
+                  <SelectValue
+                    placeholder={d?.selectEndPeriod || "Select end period"}
+                  />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
@@ -201,7 +208,7 @@ export function ScheduleStep({ form, isView }: ClassFormStepProps) {
         name="classroomId"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Classroom</FormLabel>
+            <FormLabel>{d?.classroom || "Classroom"}</FormLabel>
             <Select
               onValueChange={field.onChange}
               value={field.value}
@@ -209,7 +216,9 @@ export function ScheduleStep({ form, isView }: ClassFormStepProps) {
             >
               <FormControl>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select classroom" />
+                  <SelectValue
+                    placeholder={d?.selectClassroom || "Select classroom"}
+                  />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
@@ -217,7 +226,7 @@ export function ScheduleStep({ form, isView }: ClassFormStepProps) {
                   <SelectItem key={classroom.id} value={classroom.id}>
                     {classroom.roomName}
                     {classroom.capacity > 0
-                      ? ` (${classroom.capacity} seats)`
+                      ? ` (${classroom.capacity} ${d?.seats || "seats"})`
                       : ""}
                   </SelectItem>
                 ))}

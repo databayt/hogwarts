@@ -19,12 +19,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { TIME_SLOTS } from "./config"
 import { EventFormStepProps } from "./types"
 import { eventCreateSchema } from "./validation"
 
 export function ScheduleLocationStep({ form, isView }: EventFormStepProps) {
+  const { dictionary } = useDictionary()
+  const d = dictionary?.school?.events?.form as
+    | Record<string, string>
+    | undefined
   return (
     <div className="w-full space-y-6">
       {/* Event Date */}
@@ -65,7 +70,9 @@ export function ScheduleLocationStep({ form, isView }: EventFormStepProps) {
               >
                 <FormControl>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Start time" />
+                    <SelectValue
+                      placeholder={d?.startTimePlaceholder || "Start time"}
+                    />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -93,7 +100,9 @@ export function ScheduleLocationStep({ form, isView }: EventFormStepProps) {
               >
                 <FormControl>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="End time" />
+                    <SelectValue
+                      placeholder={d?.endTimePlaceholder || "End time"}
+                    />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -118,7 +127,10 @@ export function ScheduleLocationStep({ form, isView }: EventFormStepProps) {
           <FormItem>
             <FormControl>
               <Input
-                placeholder="Event location (e.g., Auditorium, Gym, Classroom 101)"
+                placeholder={
+                  d?.locationPlaceholder ||
+                  "Event location (e.g., Auditorium, Gym, Classroom 101)"
+                }
                 disabled={isView}
                 {...field}
               />

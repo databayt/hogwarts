@@ -215,10 +215,13 @@ export function EventCreateForm({
     }
   }
 
+  const d = fullDict?.school?.events
+  const steps = d?.steps as Record<string, string> | undefined
+
   const stepLabels: Record<number, string> = {
-    1: lang === "ar" ? "المعلومات الأساسية" : "Basic Information",
-    2: lang === "ar" ? "الجدول والموقع" : "Schedule & Location",
-    3: lang === "ar" ? "التفاصيل والحضور" : "Details & Attendees",
+    1: steps?.basicInformation || "Basic Information",
+    2: steps?.scheduleLocation || "Schedule & Location",
+    3: steps?.detailsAttendees || "Details & Attendees",
   }
 
   return (
@@ -226,14 +229,20 @@ export function EventCreateForm({
       <form onSubmit={(e) => e.preventDefault()}>
         <ModalFormLayout
           title={
-            isView ? "View Event" : currentId ? "Edit Event" : "Create Event"
+            isView
+              ? (d?.modal as any)?.viewEvent || "View Event"
+              : currentId
+                ? (d?.modal as any)?.editEvent || "Edit Event"
+                : (d?.modal as any)?.createEvent || "Create Event"
           }
           description={
             isView
-              ? "View event details"
+              ? (d?.modal as any)?.viewEventDescription || "View event details"
               : currentId
-                ? "Update event details"
-                : "Schedule a new school event"
+                ? (d?.modal as any)?.editEventDescription ||
+                  "Update event details"
+                : (d?.modal as any)?.createEventDescription ||
+                  "Schedule a new school event"
           }
         >
           {renderCurrentStep()}

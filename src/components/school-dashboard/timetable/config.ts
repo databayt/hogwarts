@@ -277,3 +277,138 @@ export const QUICK_ACTIONS = [
   { id: "export", label: "Export", icon: "📥", shortcut: "Ctrl+E" },
   { id: "print", label: "Print", icon: "🖨️", shortcut: "Ctrl+P" },
 ]
+
+// --- Dictionary-based factory functions ---
+
+type TtDict = Record<string, any> | undefined
+
+/** Get localized day names from dictionary */
+export function getDayOptions(d?: TtDict) {
+  const days = d?.days as Record<string, any> | undefined
+  return DAYS_OF_WEEK.map((day) => ({
+    ...day,
+    name: days?.[day.id]?.name ?? day.name,
+    short: days?.[day.id]?.short ?? day.short,
+  }))
+}
+
+/** Get localized day labels (short) for grid headers */
+export function getDayLabels(lang?: string, d?: TtDict): string[] {
+  const days = d?.days as Record<string, { short?: string }> | undefined
+  if (days) {
+    return DAYS_OF_WEEK.map((day) => days[day.id]?.short ?? day.short)
+  }
+  return lang === "ar" ? DAY_LABELS_AR : DAY_LABELS_EN
+}
+
+/** Get localized classroom type options */
+export function getClassroomTypeOptions(d?: TtDict) {
+  const ct = d?.classroomTypes as Record<string, string> | undefined
+  return CLASSROOM_TYPES.map((t) => ({
+    ...t,
+    label: ct?.[t.value] ?? t.label,
+  }))
+}
+
+/** Get localized period type options */
+export function getPeriodTypeOptions(d?: TtDict) {
+  const pt = d?.periodTypes as Record<string, string> | undefined
+  return PERIOD_TYPES.map((p) => ({
+    ...p,
+    label: pt?.[p.value] ?? p.label,
+  }))
+}
+
+/** Get localized export format options */
+export function getExportFormatOptions(d?: TtDict) {
+  const ef = d?.exportFormats as Record<string, string> | undefined
+  return EXPORT_FORMATS.map((f) => ({
+    ...f,
+    label: ef?.[f.value] ?? f.label,
+  }))
+}
+
+/** Get localized view mode options */
+export function getViewModeOptions(d?: TtDict) {
+  const vm = d?.viewModes as Record<string, string> | undefined
+  return VIEW_MODES.map((m) => ({
+    ...m,
+    label: vm?.[m.value] ?? m.label,
+  }))
+}
+
+/** Get localized drag-drop mode options */
+export function getDragDropModeOptions(d?: TtDict) {
+  const dd = d?.dragDropModes as
+    | Record<string, { label?: string; description?: string }>
+    | undefined
+  return DRAG_DROP_MODES.map((m) => ({
+    ...m,
+    label: dd?.[m.value]?.label ?? m.label,
+    description: dd?.[m.value]?.description ?? m.description,
+  }))
+}
+
+/** Get localized analytics metric labels */
+export function getAnalyticsMetricOptions(d?: TtDict) {
+  const am = d?.analyticsMetrics as Record<string, string> | undefined
+  return ANALYTICS_METRICS.map((m) => ({
+    ...m,
+    label: am?.[m.id] ?? m.label,
+  }))
+}
+
+/** Get localized quick action labels */
+export function getQuickActionOptions(d?: TtDict) {
+  const qa = d?.quickActions as Record<string, string> | undefined
+  return QUICK_ACTIONS.map((a) => ({
+    ...a,
+    label: qa?.[a.id] ?? a.label,
+  }))
+}
+
+/** Get localized notification template text */
+export function getNotificationTemplates(d?: TtDict) {
+  const nt = d?.notificationTemplates as
+    | Record<string, { title?: string; message?: string }>
+    | undefined
+  return {
+    SCHEDULE_CHANGE: {
+      title:
+        nt?.scheduleChange?.title ??
+        NOTIFICATION_TEMPLATES.SCHEDULE_CHANGE.title,
+      message:
+        nt?.scheduleChange?.message ??
+        NOTIFICATION_TEMPLATES.SCHEDULE_CHANGE.message,
+    },
+    SUBSTITUTE_TEACHER: {
+      title:
+        nt?.substituteTeacher?.title ??
+        NOTIFICATION_TEMPLATES.SUBSTITUTE_TEACHER.title,
+      message:
+        nt?.substituteTeacher?.message ??
+        NOTIFICATION_TEMPLATES.SUBSTITUTE_TEACHER.message,
+    },
+    CLASS_CANCELLED: {
+      title:
+        nt?.classCancelled?.title ??
+        NOTIFICATION_TEMPLATES.CLASS_CANCELLED.title,
+      message:
+        nt?.classCancelled?.message ??
+        NOTIFICATION_TEMPLATES.CLASS_CANCELLED.message,
+    },
+    ROOM_CHANGE: {
+      title: nt?.roomChange?.title ?? NOTIFICATION_TEMPLATES.ROOM_CHANGE.title,
+      message:
+        nt?.roomChange?.message ?? NOTIFICATION_TEMPLATES.ROOM_CHANGE.message,
+    },
+    CONFLICT_DETECTED: {
+      title:
+        nt?.conflictDetected?.title ??
+        NOTIFICATION_TEMPLATES.CONFLICT_DETECTED.title,
+      message:
+        nt?.conflictDetected?.message ??
+        NOTIFICATION_TEMPLATES.CONFLICT_DETECTED.message,
+    },
+  }
+}

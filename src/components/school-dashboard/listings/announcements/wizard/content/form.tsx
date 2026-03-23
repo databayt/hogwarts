@@ -10,21 +10,10 @@ import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { InputField, SelectField, TextareaField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { updateAnnouncementContent } from "./actions"
 import { contentSchema, type ContentFormData } from "./validation"
-
-const LANG_OPTIONS = [
-  { label: "العربية", value: "ar" },
-  { label: "English", value: "en" },
-]
-
-const PRIORITY_OPTIONS = [
-  { label: "Low", value: "low" },
-  { label: "Normal", value: "normal" },
-  { label: "High", value: "high" },
-  { label: "Urgent", value: "urgent" },
-]
 
 interface ContentFormProps {
   announcementId: string
@@ -35,6 +24,25 @@ interface ContentFormProps {
 export const ContentForm = forwardRef<WizardFormRef, ContentFormProps>(
   ({ announcementId, initialData, onValidChange }, ref) => {
     const [isPending, startTransition] = useTransition()
+    const { dictionary } = useDictionary()
+    const wc = (dictionary?.school?.announcements as any)?.wizard?.content as
+      | Record<string, string>
+      | undefined
+    const w = (dictionary?.school?.announcements as any)?.wizard as
+      | Record<string, any>
+      | undefined
+
+    const LANG_OPTIONS = [
+      { label: "\u0627\u0644\u0639\u0631\u0628\u064A\u0629", value: "ar" },
+      { label: "English", value: "en" },
+    ]
+
+    const PRIORITY_OPTIONS = [
+      { label: w?.priorityLow || "Low", value: "low" },
+      { label: w?.priorityNormal || "Normal", value: "normal" },
+      { label: w?.priorityHigh || "High", value: "high" },
+      { label: w?.priorityUrgent || "Urgent", value: "urgent" },
+    ]
 
     const form = useForm<ContentFormData>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -71,13 +79,16 @@ export const ContentForm = forwardRef<WizardFormRef, ContentFormProps>(
                 data
               )
               if (!result.success) {
-                ErrorToast(result.error || "Failed to save")
+                ErrorToast(result.error || w?.failedToSave || "Failed to save")
                 reject(new Error(result.error))
                 return
               }
               resolve()
             } catch (err) {
-              const msg = err instanceof Error ? err.message : "Failed to save"
+              const msg =
+                err instanceof Error
+                  ? err.message
+                  : w?.failedToSave || "Failed to save"
               ErrorToast(msg)
               reject(err)
             }
@@ -90,27 +101,27 @@ export const ContentForm = forwardRef<WizardFormRef, ContentFormProps>(
         <form className="space-y-6">
           <InputField
             name="title"
-            label="Title"
-            placeholder="Enter announcement title"
+            label={wc?.titleLabel || "Title"}
+            placeholder={wc?.titlePlaceholder || "Enter announcement title"}
             required
             disabled={isPending}
           />
           <TextareaField
             name="body"
-            label="Body"
-            placeholder="Enter announcement body"
+            label={wc?.bodyLabel || "Body"}
+            placeholder={wc?.bodyPlaceholder || "Enter announcement body"}
             required
             disabled={isPending}
           />
           <SelectField
             name="lang"
-            label="Language"
+            label={wc?.languageLabel || "Language"}
             options={[...LANG_OPTIONS]}
             disabled={isPending}
           />
           <SelectField
             name="priority"
-            label="Priority"
+            label={wc?.priorityLabel || "Priority"}
             options={[...PRIORITY_OPTIONS]}
             disabled={isPending}
           />

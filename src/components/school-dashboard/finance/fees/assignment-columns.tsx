@@ -36,14 +36,18 @@ export type FeeAssignmentRow = {
 }
 
 export const getFeeAssignmentColumns = (
-  lang?: string
+  lang?: string,
+  col?: Record<string, string>
 ): ColumnDef<FeeAssignmentRow>[] => {
   return [
     {
       accessorKey: "studentName",
       id: "studentName",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Student" />
+        <DataTableColumnHeader
+          column={column}
+          title={col?.student || "Student"}
+        />
       ),
       cell: ({ row }) => {
         const assignment = row.original
@@ -56,43 +60,55 @@ export const getFeeAssignmentColumns = (
           </Link>
         )
       },
-      meta: { label: "Student", variant: "text" },
+      meta: { label: col?.student || "Student", variant: "text" },
       enableColumnFilter: true,
     },
     {
       accessorKey: "feeStructureName",
       id: "feeStructureName",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Fee Structure" />
+        <DataTableColumnHeader
+          column={column}
+          title={col?.feeStructure || "Fee Structure"}
+        />
       ),
-      meta: { label: "Fee Structure", variant: "text" },
+      meta: { label: col?.feeStructure || "Fee Structure", variant: "text" },
     },
     {
       accessorKey: "academicYear",
       id: "academicYear",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Academic Year" />
+        <DataTableColumnHeader
+          column={column}
+          title={col?.academicYear || "Academic Year"}
+        />
       ),
-      meta: { label: "Academic Year", variant: "text" },
+      meta: { label: col?.academicYear || "Academic Year", variant: "text" },
     },
     {
       accessorKey: "finalAmount",
       id: "finalAmount",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Final Amount" />
+        <DataTableColumnHeader
+          column={column}
+          title={col?.finalAmount || "Final Amount"}
+        />
       ),
       cell: ({ getValue }) => (
         <span className="text-end font-medium tabular-nums">
           {formatCurrency(getValue<number>(), (lang || "en") as Locale)}
         </span>
       ),
-      meta: { label: "Final Amount", variant: "text" },
+      meta: { label: col?.finalAmount || "Final Amount", variant: "text" },
     },
     {
       accessorKey: "totalDiscount",
       id: "totalDiscount",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Discount" />
+        <DataTableColumnHeader
+          column={column}
+          title={col?.discount || "Discount"}
+        />
       ),
       cell: ({ getValue }) => {
         const val = getValue<number>()
@@ -103,26 +119,29 @@ export const getFeeAssignmentColumns = (
           </span>
         )
       },
-      meta: { label: "Discount", variant: "text" },
+      meta: { label: col?.discount || "Discount", variant: "text" },
     },
     {
       accessorKey: "paidAmount",
       id: "paidAmount",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Paid" />
+        <DataTableColumnHeader column={column} title={col?.paid || "Paid"} />
       ),
       cell: ({ getValue }) => (
         <span className="tabular-nums">
           {formatCurrency(getValue<number>(), (lang || "en") as Locale)}
         </span>
       ),
-      meta: { label: "Paid", variant: "text" },
+      meta: { label: col?.paid || "Paid", variant: "text" },
     },
     {
       accessorKey: "status",
       id: "status",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Status" />
+        <DataTableColumnHeader
+          column={column}
+          title={col?.status || "Status"}
+        />
       ),
       cell: ({ getValue }) => {
         const status = getValue<string>()
@@ -134,14 +153,14 @@ export const getFeeAssignmentColumns = (
         )
       },
       meta: {
-        label: "Status",
+        label: col?.status || "Status",
         variant: "select",
         options: [
-          { label: "Pending", value: "PENDING" },
-          { label: "Partial", value: "PARTIAL" },
-          { label: "Paid", value: "PAID" },
-          { label: "Overdue", value: "OVERDUE" },
-          { label: "Cancelled", value: "CANCELLED" },
+          { label: col?.pending || "Pending", value: "PENDING" },
+          { label: col?.partial || "Partial", value: "PARTIAL" },
+          { label: col?.paid || "Paid", value: "PAID" },
+          { label: col?.overdue || "Overdue", value: "OVERDUE" },
+          { label: col?.cancelled || "Cancelled", value: "CANCELLED" },
         ],
       },
       enableColumnFilter: true,
@@ -150,7 +169,10 @@ export const getFeeAssignmentColumns = (
       accessorKey: "createdAt",
       id: "createdAt",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Created" />
+        <DataTableColumnHeader
+          column={column}
+          title={col?.created || "Created"}
+        />
       ),
       cell: ({ getValue }) => (
         <span className="text-muted-foreground text-xs tabular-nums">
@@ -159,11 +181,13 @@ export const getFeeAssignmentColumns = (
           )}
         </span>
       ),
-      meta: { label: "Created", variant: "text" },
+      meta: { label: col?.created || "Created", variant: "text" },
     },
     {
       id: "actions",
-      header: () => <span className="sr-only">Actions</span>,
+      header: () => (
+        <span className="sr-only">{col?.actions || "Actions"}</span>
+      ),
       cell: ({ row }) => {
         const assignment = row.original
         return (
@@ -171,24 +195,24 @@ export const getFeeAssignmentColumns = (
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8 p-0">
                 <Ellipsis className="h-4 w-4" />
-                <span className="sr-only">Actions</span>
+                <span className="sr-only">{col?.actions || "Actions"}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuLabel>{col?.actions || "Actions"}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link
                   href={`/${lang}/finance/fees/assignments/${assignment.id}`}
                 >
-                  View
+                  {col?.view || "View"}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link
                   href={`/${lang}/finance/fees/assignments/${assignment.id}/payment`}
                 >
-                  Record Payment
+                  {col?.recordPayment || "Record Payment"}
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuContent>

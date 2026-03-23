@@ -8,6 +8,7 @@ import { useParams } from "next/navigation"
 import { FormHeading, FormLayout } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { useClassWizard } from "../use-class-wizard"
 import { ScheduleForm } from "./form"
@@ -18,6 +19,8 @@ export default function ScheduleContent() {
   const formRef = useRef<WizardFormRef>(null)
   const { data, isLoading } = useClassWizard()
   const [isValid, setIsValid] = useState(false)
+  const { dictionary } = useDictionary()
+  const d = dictionary?.school?.classes?.wizard?.schedule
 
   // Set initial validity from loaded data
   useEffect(() => {
@@ -41,8 +44,11 @@ export default function ScheduleContent() {
     >
       <FormLayout>
         <FormHeading
-          title="Schedule & Location"
-          description="Set the term, periods, and classroom for this class."
+          title={d?.title || "Schedule & Location"}
+          description={
+            d?.description ||
+            "Set the term, periods, and classroom for this class."
+          }
         />
         <ScheduleForm
           ref={formRef}

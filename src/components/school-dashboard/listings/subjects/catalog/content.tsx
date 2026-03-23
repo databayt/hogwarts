@@ -28,58 +28,56 @@ export async function CatalogSelectionContent({ dictionary, lang }: Props) {
     )
   }
 
-  // Fetch all published catalog subjects
-  const catalogSubjects = await db.catalogSubject.findMany({
-    where: { status: "PUBLISHED" },
-    orderBy: { sortOrder: "asc" },
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-      department: true,
-      levels: true,
-      color: true,
-      imageKey: true,
-      thumbnailKey: true,
-      curriculum: true,
-      grades: true,
-      lang: true,
-    },
-  })
-
-  // Fetch school's existing selections
-  const selections = await db.schoolSubjectSelection.findMany({
-    where: { schoolId },
-    select: {
-      id: true,
-      catalogSubjectId: true,
-      gradeId: true,
-      streamId: true,
-      isRequired: true,
-      weeklyPeriods: true,
-      customName: true,
-      isActive: true,
-    },
-  })
-
-  // Fetch school's academic grades
-  const grades = await db.academicGrade.findMany({
-    where: { schoolId },
-    orderBy: { gradeNumber: "asc" },
-    select: {
-      id: true,
-      name: true,
-      lang: true,
-      gradeNumber: true,
-      level: {
-        select: {
-          level: true,
-          name: true,
-          lang: true,
+  // Fetch all three independent queries in parallel
+  const [catalogSubjects, selections, grades] = await Promise.all([
+    db.catalogSubject.findMany({
+      where: { status: "PUBLISHED" },
+      orderBy: { sortOrder: "asc" },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        department: true,
+        levels: true,
+        color: true,
+        imageKey: true,
+        thumbnailKey: true,
+        curriculum: true,
+        grades: true,
+        lang: true,
+      },
+    }),
+    db.schoolSubjectSelection.findMany({
+      where: { schoolId },
+      select: {
+        id: true,
+        catalogSubjectId: true,
+        gradeId: true,
+        streamId: true,
+        isRequired: true,
+        weeklyPeriods: true,
+        customName: true,
+        isActive: true,
+      },
+    }),
+    db.academicGrade.findMany({
+      where: { schoolId },
+      orderBy: { gradeNumber: "asc" },
+      select: {
+        id: true,
+        name: true,
+        lang: true,
+        gradeNumber: true,
+        level: {
+          select: {
+            level: true,
+            name: true,
+            lang: true,
+          },
         },
       },
-    },
-  })
+    }),
+  ])
 
   // Build selected subject IDs set (subjects selected for any grade)
   const selectedSubjectIds = new Set(selections.map((s) => s.catalogSubjectId))

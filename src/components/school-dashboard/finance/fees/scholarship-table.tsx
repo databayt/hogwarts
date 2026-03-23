@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
 import type { Locale } from "@/components/internationalization/config"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { PlatformToolbar } from "@/components/school-dashboard/shared"
 import {
   BulkActionsToolbar,

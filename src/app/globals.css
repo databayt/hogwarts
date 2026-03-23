@@ -377,7 +377,15 @@ body {
 }
 
 @utility animate-shimmer {
-  animation: shimmer 2s ease-in-out infinite;
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  @utility animate-shimmer {
+    animation: none;
+    opacity: 0.7;
+  }
 }
 
 /* Float animation for featured book */

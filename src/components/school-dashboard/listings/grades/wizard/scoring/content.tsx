@@ -8,6 +8,7 @@ import { useParams } from "next/navigation"
 import { FormHeading, FormLayout } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { useGradeWizard } from "../use-grade-wizard"
 import { ScoringForm } from "./form"
@@ -18,6 +19,8 @@ export default function ScoringContent() {
   const formRef = useRef<WizardFormRef>(null)
   const { data, isLoading } = useGradeWizard()
   const [isValid, setIsValid] = useState(false)
+  const { dictionary: dict } = useDictionary()
+  const d = dict?.school?.grades as Record<string, any> | undefined
 
   // Set initial validity from loaded data
   useEffect(() => {
@@ -40,8 +43,11 @@ export default function ScoringContent() {
     >
       <FormLayout>
         <FormHeading
-          title="Score & Grade"
-          description="Enter the score, grade, and optional feedback."
+          title={d?.wizardScoringTitle || "Score & Grade"}
+          description={
+            d?.wizardScoringDescription ||
+            "Enter the score, grade, and optional feedback."
+          }
         />
         <ScoringForm
           ref={formRef}

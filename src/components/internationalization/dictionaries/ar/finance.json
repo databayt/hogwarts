@@ -1588,6 +1588,164 @@
     "allReports": "جميع التقارير",
     "allReportsDesc": "عرض وإدارة جميع التقارير المُنشأة",
     "viewAll": "عرض الكل",
-    "scheduleReports": "جدولة التقارير"
+    "scheduleReports": "جدولة التقارير",
+    "viewAllCount": "عرض الكل ({count})"
+  },
+
+  "salaryConfig": {
+    "allowanceTypes": {
+      "HOUSING": "بدل سكن",
+      "TRANSPORT": "بدل نقل",
+      "MEDICAL": "بدل طبي",
+      "EDUCATION": "بدل تعليم",
+      "MEAL": "بدل وجبات",
+      "MOBILE": "بدل هاتف",
+      "PERFORMANCE": "مكافأة أداء",
+      "OVERTIME": "أجر إضافي",
+      "SPECIAL": "بدل خاص",
+      "OTHER": "أخرى"
+    },
+    "deductionTypes": {
+      "TAX": "ضريبة دخل",
+      "SOCIAL_SECURITY": "تأمينات اجتماعية",
+      "PENSION": "مساهمة تقاعد",
+      "HEALTH_INSURANCE": "تأمين صحي",
+      "LIFE_INSURANCE": "تأمين على الحياة",
+      "LOAN": "سداد قرض",
+      "ADVANCE": "سلفة راتب",
+      "ABSENCE": "خصم غياب",
+      "DISCIPLINARY": "غرامة تأديبية",
+      "OTHER": "أخرى"
+    },
+    "currencyOptions": {
+      "USD": "دولار أمريكي",
+      "EUR": "يورو",
+      "GBP": "جنيه إسترليني",
+      "SDG": "جنيه سوداني"
+    },
+    "searchPlaceholder": "البحث في هياكل الرواتب...",
+    "deleteConfirm": "حذف {count} هيكل(هياكل) راتب؟",
+    "csvHeader": "المعلم,رقم الموظف,الراتب الأساسي,العملة,دورة الدفع,البدلات,الخصومات,نشط"
+  },
+
+  "salaryColumns": {
+    "teacher": "المعلم",
+    "employeeId": "رقم الموظف",
+    "baseSalary": "الراتب الأساسي",
+    "payFrequency": "دورة الدفع",
+    "allowances": "البدلات",
+    "deductions": "الخصومات",
+    "status": "الحالة",
+    "active": "نشط",
+    "inactive": "غير نشط",
+    "effectiveFrom": "تاريخ السريان",
+    "actions": "إجراءات",
+    "view": "عرض",
+    "edit": "تعديل",
+    "payFrequencyOptions": {
+      "MONTHLY": "شهري",
+      "BI_WEEKLY": "نصف شهري",
+      "WEEKLY": "أسبوعي",
+      "DAILY": "يومي"
+    }
+  },
+
+  "payrollConfig": {
+    "frequencies": {
+      "MONTHLY": "شهري",
+      "BI_WEEKLY": "نصف شهري",
+      "WEEKLY": "أسبوعي"
+    }
+  },
+
+  "timesheetConfig": {
+    "periodStatus": {
+      "OPEN": "مفتوح",
+      "CLOSED": "مغلق",
+      "LOCKED": "مقفل"
+    },
+    "entryStatus": {
+      "DRAFT": "مسودة",
+      "SUBMITTED": "مقدّم",
+      "APPROVED": "معتمد",
+      "REJECTED": "مرفوض"
+    },
+    "taskTypes": {
+      "TEACHING": "تدريس",
+      "ADMINISTRATION": "إدارة",
+      "MEETINGS": "اجتماعات",
+      "PREPARATION": "تحضير دروس",
+      "GRADING": "تصحيح وتقييم",
+      "PROFESSIONAL_DEVELOPMENT": "تطوير مهني",
+      "SUPERVISION": "إشراف على الطلاب",
+      "OTHER": "أخرى"
+    }
+  },
+
+  "walletConfig": {
+    "walletTypes": {
+      "SCHOOL": "محفظة المدرسة",
+      "PARENT": "محفظة ولي الأمر",
+      "STUDENT": "محفظة الطالب"
+    },
+    "transactionTypes": {
+      "CREDIT": "إيداع (شحن)",
+      "DEBIT": "خصم (دفع)",
+      "TRANSFER": "تحويل"
+    },
+    "paymentMethods": {
+      "CASH": "نقداً",
+      "CARD": "بطاقة ائتمان/خصم",
+      "BANK_TRANSFER": "تحويل بنكي",
+      "WALLET": "محفظة",
+      "OTHER": "أخرى"
+    }
+  },
+
+  "reportsConfig": {
+    "reportTypes": {
+      "BALANCE_SHEET": "الميزانية العمومية",
+      "INCOME_STATEMENT": "بيان الدخل (الأرباح والخسائر)",
+      "CASH_FLOW": "بيان التدفقات النقدية",
+      "TRIAL_BALANCE": "ميزان المراجعة",
+      "GENERAL_LEDGER": "دفتر الأستاذ العام",
+      "EXPENSE_ANALYSIS": "تحليل المصروفات",
+      "REVENUE_ANALYSIS": "تحليل الإيرادات",
+      "BUDGET_VARIANCE": "تقرير انحراف الميزانية"
+    },
+    "reportDescriptions": {
+      "BALANCE_SHEET": "الأصول والخصوم وحقوق الملكية في نقطة زمنية محددة",
+      "INCOME_STATEMENT": "الإيرادات والمصروفات خلال فترة زمنية",
+      "CASH_FLOW": "التدفقات النقدية الداخلة والخارجة من الأنشطة التشغيلية والاستثمارية والتمويلية",
+      "TRIAL_BALANCE": "قائمة بجميع الحسابات مع أرصدة المدين والدائن",
+      "GENERAL_LEDGER": "سجل تفصيلي للمعاملات لجميع الحسابات",
+      "EXPENSE_ANALYSIS": "تفصيل مفصل للمصروفات حسب الفئة والقسم",
+      "REVENUE_ANALYSIS": "تفصيل مفصل للإيرادات حسب المصدر",
+      "BUDGET_VARIANCE": "مقارنة الإنفاق الفعلي مع المبالغ المخصصة في الميزانية"
+    },
+    "exportFormats": {
+      "PDF": "مستند PDF",
+      "EXCEL": "جدول بيانات Excel",
+      "CSV": "ملف CSV"
+    },
+    "dateRanges": {
+      "THIS_MONTH": "هذا الشهر",
+      "LAST_MONTH": "الشهر الماضي",
+      "THIS_QUARTER": "هذا الربع",
+      "LAST_QUARTER": "الربع الماضي",
+      "THIS_YEAR": "هذه السنة",
+      "LAST_YEAR": "السنة الماضية",
+      "CUSTOM": "نطاق مخصص"
+    },
+    "availableReportsList": {
+      "balanceSheet": "الميزانية العمومية",
+      "balanceSheetDesc": "الأصول والخصوم وحقوق الملكية",
+      "incomeStatement": "بيان الدخل",
+      "incomeStatementDesc": "الإيرادات والمصروفات",
+      "cashFlow": "بيان التدفقات النقدية",
+      "cashFlowDesc": "التدفقات النقدية الداخلة والخارجة",
+      "trialBalance": "ميزان المراجعة",
+      "trialBalanceDesc": "التحقق من أرصدة الحسابات"
+    }
   }
 }

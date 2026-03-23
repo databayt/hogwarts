@@ -8,6 +8,7 @@ import { useParams } from "next/navigation"
 import { FormHeading, FormLayout } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { useEventWizard } from "../use-event-wizard"
 import { ScheduleForm } from "./form"
@@ -18,6 +19,10 @@ export default function ScheduleContent() {
   const formRef = useRef<WizardFormRef>(null)
   const { data, isLoading } = useEventWizard()
   const [isValid, setIsValid] = useState(false)
+  const { dictionary } = useDictionary()
+  const ws = dictionary?.school?.events?.wizard?.schedule as
+    | Record<string, string>
+    | undefined
 
   // Set initial validity from loaded data
   useEffect(() => {
@@ -40,8 +45,11 @@ export default function ScheduleContent() {
     >
       <FormLayout>
         <FormHeading
-          title="Event Schedule"
-          description="Set the date, time, and location for this event."
+          title={ws?.title || "Event Schedule"}
+          description={
+            ws?.description ||
+            "Set the date, time, and location for this event."
+          }
         />
         <ScheduleForm
           ref={formRef}

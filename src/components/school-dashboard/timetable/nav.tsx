@@ -29,9 +29,9 @@ export function Nav() {
     ?.timetableNav
 
   const links = [
-    { href: "/", label: tn?.overview ?? "Timetable", icon: Clock },
-    { href: "/lunch", label: tn?.substitutions ?? "Lunch", icon: Utensils },
-    { href: "/calendar", label: tn?.templates ?? "Calendar", icon: Calendar },
+    { href: "/", label: tn?.timetable ?? "Timetable", icon: Clock },
+    { href: "/lunch", label: tn?.lunch ?? "Lunch", icon: Utensils },
+    { href: "/calendar", label: tn?.calendar ?? "Calendar", icon: Calendar },
   ]
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
@@ -56,14 +56,14 @@ export function Nav() {
               >
                 <Menu className="h-6 w-6" />
                 <span className="sr-only">
-                  {tn?.overview ?? "Toggle navigation menu"}
+                  {tn?.toggleNav ?? "Toggle navigation menu"}
                 </span>
               </Button>
             </DrawerTrigger>
             <DrawerContent className="h-[50%]">
               <VisuallyHidden asChild>
                 <DrawerHeader>
-                  <DrawerTitle>{tn?.overview ?? "Menu"}</DrawerTitle>
+                  <DrawerTitle>{tn?.menu ?? "Menu"}</DrawerTitle>
                 </DrawerHeader>
               </VisuallyHidden>
               <div className="px-4 py-6">

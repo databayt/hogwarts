@@ -8,6 +8,7 @@ import { useParams } from "next/navigation"
 import { FormHeading, FormLayout } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { useAnnouncementWizard } from "../use-announcement-wizard"
 import { ContentForm } from "./form"
@@ -18,6 +19,10 @@ export default function AnnouncementContentContent() {
   const formRef = useRef<WizardFormRef>(null)
   const { data, isLoading } = useAnnouncementWizard()
   const [isValid, setIsValid] = useState(false)
+  const { dictionary } = useDictionary()
+  const wc = (dictionary?.school?.announcements as any)?.wizard?.content as
+    | Record<string, string>
+    | undefined
 
   // Set initial validity from loaded data
   useEffect(() => {
@@ -39,8 +44,10 @@ export default function AnnouncementContentContent() {
     >
       <FormLayout>
         <FormHeading
-          title="Announcement Content"
-          description="Enter the announcement title and body."
+          title={wc?.title || "Announcement Content"}
+          description={
+            wc?.description || "Enter the announcement title and body."
+          }
         />
         <ContentForm
           ref={formRef}

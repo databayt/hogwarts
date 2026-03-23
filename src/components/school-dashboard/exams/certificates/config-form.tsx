@@ -63,6 +63,7 @@ export function CertificateConfigForm({ initialData }: ConfigFormProps) {
   )
   const { dictionary } = useDictionary()
   const t = dictionary?.school?.exams?.certificates?.config
+  const cf = dictionary?.school?.exams?.configForm
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -153,7 +154,7 @@ export function CertificateConfigForm({ initialData }: ConfigFormProps) {
             name="name"
             required
             defaultValue={initialData?.name}
-            placeholder="e.g., Excellence Certificate"
+            placeholder={cf?.namePlaceholder ?? "e.g., Excellence Certificate"}
           />
         </div>
 
@@ -197,7 +198,10 @@ export function CertificateConfigForm({ initialData }: ConfigFormProps) {
           id="description"
           name="description"
           defaultValue={initialData?.description || ""}
-          placeholder="Optional description of this template"
+          placeholder={
+            t?.form?.descriptionPlaceholder ??
+            "Optional description of this template"
+          }
         />
       </div>
 
@@ -319,11 +323,15 @@ export function CertificateConfigForm({ initialData }: ConfigFormProps) {
             initialData?.bodyTemplate ||
             "This is to certify that {{studentName}} has achieved a score of {{score}}% in {{examTitle}} on {{examDate}}."
           }
-          placeholder="Use placeholders: {{studentName}}, {{score}}, {{grade}}, {{examTitle}}, {{examDate}}, {{rank}}"
+          placeholder={
+            t?.form?.bodyPlaceholder ??
+            "Use placeholders: {{studentName}}, {{score}}..."
+          }
         />
         <p className="text-muted-foreground text-xs">
-          Available placeholders: {"{{studentName}}"}, {"{{score}}"},
-          {"{{grade}}"}, {"{{examTitle}}"}, {"{{examDate}}"}, {"{{rank}}"}
+          {cf?.availablePlaceholders ?? "Available placeholders"}:{" "}
+          {"{{studentName}}"}, {"{{score}}"},{"{{grade}}"}, {"{{examTitle}}"},{" "}
+          {"{{examDate}}"}, {"{{rank}}"}
         </p>
       </div>
 
@@ -392,7 +400,7 @@ export function CertificateConfigForm({ initialData }: ConfigFormProps) {
             onClick={addSignature}
           >
             <Plus className="me-2 h-4 w-4" />
-            Add Signature
+            {cf?.addSignature ?? "Add Signature"}
           </Button>
         </div>
         <div className="space-y-4">
@@ -478,13 +486,13 @@ export function CertificateConfigForm({ initialData }: ConfigFormProps) {
       <div className="flex gap-4">
         <Button type="submit" disabled={loading}>
           {loading
-            ? "Saving..."
+            ? (cf?.saving ?? "Saving...")
             : initialData
-              ? "Update Template"
-              : "Create Template"}
+              ? (cf?.updateTemplate ?? "Update Template")
+              : (cf?.createTemplate ?? "Create Template")}
         </Button>
         <Button type="button" variant="outline" onClick={() => router.back()}>
-          Cancel
+          {cf?.cancel ?? "Cancel"}
         </Button>
       </div>
     </form>

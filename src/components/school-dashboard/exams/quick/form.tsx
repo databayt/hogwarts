@@ -105,7 +105,13 @@ export function QuickAssessmentForm({
             <FormItem>
               <FormLabel>{t?.form?.title ?? "Title"}</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., Exit Ticket - Lesson 3" {...field} />
+                <Input
+                  placeholder={
+                    t?.formPage?.titlePlaceholder ??
+                    "e.g., Exit Ticket - Lesson 3"
+                  }
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -283,10 +289,11 @@ export function QuickAssessmentForm({
               <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                 <div className="space-y-0.5">
                   <FormLabel className="text-base">
-                    Anonymous Responses
+                    {t?.formPage?.anonymousResponses ?? "Anonymous Responses"}
                   </FormLabel>
                   <FormDescription>
-                    Students can submit responses anonymously
+                    {t?.formPage?.anonymousDescription ??
+                      "Students can submit responses anonymously"}
                   </FormDescription>
                 </div>
                 <FormControl>
@@ -306,10 +313,11 @@ export function QuickAssessmentForm({
               <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                 <div className="space-y-0.5">
                   <FormLabel className="text-base">
-                    Show Results to Students
+                    {t?.formPage?.showResults ?? "Show Results to Students"}
                   </FormLabel>
                   <FormDescription>
-                    Display results to students after completion
+                    {t?.formPage?.showResultsDescription ??
+                      "Display results to students after completion"}
                   </FormDescription>
                 </div>
                 <FormControl>
@@ -330,11 +338,11 @@ export function QuickAssessmentForm({
             onClick={() => router.back()}
             disabled={isSubmitting}
           >
-            Cancel
+            {t?.formPage?.cancel ?? "Cancel"}
           </Button>
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
-            Create Assessment
+            {t?.formPage?.createAssessment ?? "Create Assessment"}
           </Button>
         </div>
       </form>

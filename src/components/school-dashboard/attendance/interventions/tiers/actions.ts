@@ -12,6 +12,7 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import type { InterventionStatus, InterventionType } from "@prisma/client"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 
 import {
@@ -62,7 +63,7 @@ export async function getStudentsByTier(): Promise<ActionResult> {
   const schoolId = session?.user?.schoolId
 
   if (!schoolId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
@@ -172,7 +173,7 @@ export async function getStudentsByTier(): Promise<ActionResult> {
     }
   } catch (error) {
     console.error("Error getting students by tier:", error)
-    return { success: false, error: "Failed to get students by tier" }
+    return actionError(ACTION_ERRORS.ATTENDANCE_NOT_FOUND)
   }
 }
 
@@ -187,7 +188,7 @@ export async function createTieredIntervention(
   const userId = session?.user?.id
 
   if (!schoolId || !userId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
@@ -243,7 +244,7 @@ export async function createTieredIntervention(
     }
   } catch (error) {
     console.error("Error creating tiered intervention:", error)
-    return { success: false, error: "Failed to create intervention" }
+    return actionError(ACTION_ERRORS.INTERVENTION_CREATE_FAILED)
   }
 }
 
@@ -258,7 +259,7 @@ export async function updateInterventionStatus(
   const userId = session?.user?.id
 
   if (!schoolId || !userId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
@@ -277,7 +278,7 @@ export async function updateInterventionStatus(
     })
 
     if (!existing) {
-      return { success: false, error: "Intervention not found" }
+      return actionError(ACTION_ERRORS.INTERVENTION_NOT_FOUND)
     }
 
     // Update intervention
@@ -317,7 +318,7 @@ export async function updateInterventionStatus(
     return { success: true, data: updated }
   } catch (error) {
     console.error("Error updating intervention status:", error)
-    return { success: false, error: "Failed to update intervention" }
+    return actionError(ACTION_ERRORS.INTERVENTION_UPDATE_FAILED)
   }
 }
 
@@ -331,7 +332,7 @@ export async function getStudentInterventionHistory(
   const schoolId = session?.user?.schoolId
 
   if (!schoolId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
@@ -365,7 +366,7 @@ export async function getStudentInterventionHistory(
     }
   } catch (error) {
     console.error("Error getting student intervention history:", error)
-    return { success: false, error: "Failed to get intervention history" }
+    return actionError(ACTION_ERRORS.INTERVENTION_NOT_FOUND)
   }
 }
 
@@ -378,7 +379,7 @@ export async function getMyPendingInterventions(): Promise<ActionResult> {
   const userId = session?.user?.id
 
   if (!schoolId || !userId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
@@ -421,7 +422,7 @@ export async function getMyPendingInterventions(): Promise<ActionResult> {
     }
   } catch (error) {
     console.error("Error getting pending interventions:", error)
-    return { success: false, error: "Failed to get pending interventions" }
+    return actionError(ACTION_ERRORS.INTERVENTION_NOT_FOUND)
   }
 }
 
@@ -433,7 +434,7 @@ export async function getMTSSStats(): Promise<ActionResult> {
   const schoolId = session?.user?.schoolId
 
   if (!schoolId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
@@ -486,6 +487,6 @@ export async function getMTSSStats(): Promise<ActionResult> {
     }
   } catch (error) {
     console.error("Error getting MTSS stats:", error)
-    return { success: false, error: "Failed to get MTSS stats" }
+    return actionError(ACTION_ERRORS.ATTENDANCE_NOT_FOUND)
   }
 }

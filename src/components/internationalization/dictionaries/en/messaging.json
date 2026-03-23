@@ -234,6 +234,27 @@
     "message_from": "Message from {sender}",
     "unread_indicator": "Unread messages below"
   },
+  "contacts": {
+    "tab_chats": "Chats",
+    "tab_contacts": "Contacts",
+    "search_placeholder": "Search contacts...",
+    "filter_all": "All",
+    "no_contacts": "No contacts available",
+    "no_results": "No contacts found",
+    "start_chat": "Start conversation",
+    "categories": {
+      "teachers": "Teachers",
+      "students": "Students",
+      "parents": "Parents",
+      "staff": "Staff",
+      "admin": "Administration",
+      "accountants": "Accountants",
+      "my_students": "My Students",
+      "my_teachers": "My Teachers",
+      "classmates": "Classmates",
+      "my_children_teachers": "My Children's Teachers"
+    }
+  },
   "search": {
     "title": "Search",
     "placeholder": "Search messages and conversations...",

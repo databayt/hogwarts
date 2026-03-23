@@ -12,6 +12,7 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import type { AttendanceStatus, Prisma, StudentStatus } from "@prisma/client"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import {
   batchPredictRisk,
   type StudentAttendanceData,
@@ -52,7 +53,7 @@ export async function runRiskPredictions(
   const schoolId = session?.user?.schoolId
 
   if (!schoolId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
   }
 
   try {

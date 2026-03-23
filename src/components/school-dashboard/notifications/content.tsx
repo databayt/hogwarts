@@ -4,7 +4,7 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
-import { ChevronLeft, ChevronRight, Settings } from "lucide-react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 
 import { getDisplayText } from "@/lib/content-display"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -88,24 +88,7 @@ export async function NotificationCenterContent({
 
   return (
     <div className="space-y-6">
-      {/* Header - Airbnb style: large title + settings gear */}
-      <div className="flex items-center justify-between">
-        <h1 className="scroll-m-20 text-3xl font-bold tracking-tight">
-          {dict.notifications.title}
-        </h1>
-
-        <Button variant="ghost" size="icon" asChild>
-          <Link href={`/${locale}/notifications/preferences`}>
-            <Settings className="h-5 w-5" />
-            <span className="sr-only">
-              {dict.notifications.preferences.title}
-            </span>
-          </Link>
-        </Button>
-      </div>
-
-      {/* Notification List - flat, no card wrapper */}
-      <div className="rounded-lg border">
+      <div>
         <NotificationCenterClient
           initialNotifications={
             (await Promise.all(
@@ -136,7 +119,7 @@ export async function NotificationCenterContent({
           }
           locale={locale}
           dictionary={dict.notifications}
-          showFilters={true}
+          showFilters={false}
         />
       </div>
 
@@ -242,26 +225,17 @@ export async function NotificationCenterContent({
 export function NotificationCenterSkeleton() {
   return (
     <div className="space-y-6">
-      {/* Header Skeleton */}
-      <div className="flex items-center justify-between">
-        <Skeleton className="h-9 w-48" />
-        <Skeleton className="h-9 w-9 rounded-md" />
-      </div>
-
-      {/* List Skeleton */}
-      <div className="rounded-lg border">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="flex gap-3 border-b px-4 py-3">
-            <Skeleton className="h-12 w-12 flex-shrink-0 rounded-full" />
-            <div className="min-w-0 flex-1 space-y-2">
-              <Skeleton className="h-4 w-4/5" />
-              <Skeleton className="h-4 w-3/5" />
-              <Skeleton className="h-3 w-24" />
-            </div>
-            <Skeleton className="h-5 w-5 flex-shrink-0" />
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="flex gap-3 border-b px-4 py-3">
+          <Skeleton className="h-12 w-12 flex-shrink-0 rounded-full" />
+          <div className="min-w-0 flex-1 space-y-2">
+            <Skeleton className="h-4 w-4/5" />
+            <Skeleton className="h-4 w-3/5" />
+            <Skeleton className="h-3 w-24" />
           </div>
-        ))}
-      </div>
+          <Skeleton className="h-5 w-5 flex-shrink-0" />
+        </div>
+      ))}
     </div>
   )
 }

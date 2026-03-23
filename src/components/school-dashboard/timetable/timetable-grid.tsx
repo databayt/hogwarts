@@ -6,11 +6,10 @@ import { memo } from "react"
 import { Clock } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { TimetableCell } from "./timetable-cell"
 import type { LegacyTimetableData } from "./types"
-
-const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
 interface TimetableGridProps {
   periods: Array<{
@@ -30,6 +29,8 @@ interface TimetableGridProps {
   availableSubjects?: string[]
 }
 
+const DAY_LABELS_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+
 function TimetableGridComponent({
   periods,
   timetableData,
@@ -39,11 +40,16 @@ function TimetableGridComponent({
   showAllSubjects = false,
   availableSubjects = [],
 }: TimetableGridProps) {
+  const { dictionary } = useDictionary()
+  const dt = dictionary?.school?.timetable as Record<string, any> | undefined
+  const g = dt?.grid
+  const dayLabels: string[] = (dt?.days as string[]) ?? DAY_LABELS_EN
+
   const days: number[] | undefined = timetableData?.days
   const labels =
     days && days.length > 0
-      ? days.map((d: number) => DAY_LABELS[d] ?? String(d))
-      : DAY_LABELS.slice(1, 6) // Default Mon-Fri
+      ? days.map((d: number) => dayLabels[d] ?? String(d))
+      : dayLabels.slice(1, 6) // Default Mon-Fri
 
   const totalCols = (labels?.length ?? 5) + 1
 
@@ -102,7 +108,7 @@ function TimetableGridComponent({
         >
           <div className="text-muted-foreground border-border flex items-center justify-center border-e px-8 py-5 print:py-3">
             <Clock className="me-2 h-4 w-4 print:h-5 print:w-5" />
-            <span className="font-medium">Period</span>
+            <span className="font-medium">{g?.period ?? "Period"}</span>
           </div>
           {labels.map((day, index) => (
             <div
@@ -125,7 +131,9 @@ function TimetableGridComponent({
               {/* Period Cell */}
               <div className="bg-muted/50 border-border flex flex-col items-center justify-center border-e px-8 py-5 print:py-4">
                 <span className="text-foreground font-medium print:text-base print:font-semibold">
-                  {period.id === "Lunch" ? "Lunch" : `Period ${period.id}`}
+                  {period.id === "Lunch"
+                    ? (g?.lunchPeriod ?? "Lunch")
+                    : `${g?.period ?? "Period"} ${period.id}`}
                 </span>
                 {period.id !== "Lunch" && (
                   <span className="text-muted-foreground mt-1 text-xs print:text-sm">
@@ -162,7 +170,7 @@ function TimetableGridComponent({
                   )}
                 >
                   <span className="text-muted-foreground font-medium print:text-base print:font-semibold">
-                    Lunch Break
+                    {g?.lunchBreak ?? "Lunch Break"}
                   </span>
                 </div>
               )}

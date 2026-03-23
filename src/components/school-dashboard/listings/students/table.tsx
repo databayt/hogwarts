@@ -243,11 +243,14 @@ function StudentsTableInner({
       } else {
         ErrorToast(
           ("error" in result ? result.error : undefined) ||
+            (dictionary as any)?.syncGradesFailed ||
             "Failed to sync grades"
         )
       }
     } catch {
-      ErrorToast("Failed to sync grades")
+      ErrorToast(
+        (dictionary as any)?.syncGradesFailed || "Failed to sync grades"
+      )
     } finally {
       setIsSyncing(false)
     }
@@ -295,7 +298,11 @@ function StudentsTableInner({
     async (filters?: Record<string, unknown>) => {
       const result = await getStudentsCSV(filters)
       if (!result.success || !result.data) {
-        throw new Error("error" in result ? result.error : "Export failed")
+        throw new Error(
+          "error" in result
+            ? result.error
+            : (dictionary as any)?.exportFailed || "Export failed"
+        )
       }
       return result.data
     },
@@ -334,8 +341,8 @@ function StudentsTableInner({
               className="h-9 w-9 rounded-full"
               onClick={handleSyncGrades}
               disabled={isSyncing}
-              aria-label="Sync Grades"
-              title="Sync Grades"
+              aria-label={(dictionary as any)?.syncGrades || "Sync Grades"}
+              title={(dictionary as any)?.syncGrades || "Sync Grades"}
             >
               <Icons.refresh
                 className={cn("h-4 w-4", isSyncing && "animate-spin")}

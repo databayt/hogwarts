@@ -10,6 +10,7 @@ import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { DateField, InputField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { updateEventSchedule } from "./actions"
 import { scheduleSchema, type ScheduleFormData } from "./validation"
@@ -23,6 +24,10 @@ interface ScheduleFormProps {
 export const ScheduleForm = forwardRef<WizardFormRef, ScheduleFormProps>(
   ({ eventId, initialData, onValidChange }, ref) => {
     const [isPending, startTransition] = useTransition()
+    const { dictionary } = useDictionary()
+    const ws = dictionary?.school?.events?.wizard?.schedule as
+      | Record<string, string>
+      | undefined
 
     const form = useForm<ScheduleFormData>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -77,28 +82,28 @@ export const ScheduleForm = forwardRef<WizardFormRef, ScheduleFormProps>(
         <form className="space-y-6">
           <DateField
             name="eventDate"
-            label="Event Date"
+            label={ws?.eventDateLabel || "Event Date"}
             required
             disabled={isPending}
           />
           <InputField
             name="startTime"
-            label="Start Time"
+            label={ws?.startTimeLabel || "Start Time"}
             type="time"
             required
             disabled={isPending}
           />
           <InputField
             name="endTime"
-            label="End Time"
+            label={ws?.endTimeLabel || "End Time"}
             type="time"
             required
             disabled={isPending}
           />
           <InputField
             name="location"
-            label="Location"
-            placeholder="Enter event location"
+            label={ws?.locationLabel || "Location"}
+            placeholder={ws?.locationPlaceholder || "Enter event location"}
             disabled={isPending}
           />
         </form>

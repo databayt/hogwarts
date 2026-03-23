@@ -71,7 +71,8 @@ export default function GuardianView({
   isLoading,
   defaultTab = "today",
 }: Props) {
-  const d = dictionary?.timetable
+  const d = dictionary?.timetable as Record<string, any> | undefined
+  const gv = (d as Record<string, any>)?.guardianView
   const isRTL = lang === "ar"
 
   const [isLoadingData, setIsLoadingData] = useState(false)
@@ -113,10 +114,16 @@ export default function GuardianView({
       if (result.children.length > 0) {
         setSelectedChild(result.children[0].id)
       } else {
-        setError("No children linked to your guardian account")
+        setError(
+          gv?.noChildren ?? "No children linked to your guardian account"
+        )
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load children")
+      setError(
+        err instanceof Error
+          ? err.message
+          : (gv?.loadChildrenFailed ?? "Failed to load children")
+      )
     } finally {
       setIsLoadingChildren(false)
     }
@@ -175,7 +182,11 @@ export default function GuardianView({
 
       setTodaySchedule(fullSchedule)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load timetable")
+      setError(
+        err instanceof Error
+          ? err.message
+          : (gv?.loadTimetableFailed ?? "Failed to load timetable")
+      )
     } finally {
       setIsLoadingData(false)
     }
@@ -259,10 +270,10 @@ export default function GuardianView({
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
-                {d?.title || "Child's Schedule"}
+                {gv?.title ?? "Child's Schedule"}
               </CardTitle>
               <CardDescription>
-                View your child's class timetable
+                {gv?.description ?? "View your child's class timetable"}
               </CardDescription>
             </div>
 
@@ -373,8 +384,14 @@ export default function GuardianView({
               <div className="flex-1">
                 <p className="text-muted-foreground text-sm">
                   {currentClassInfo.type === "current"
-                    ? `${selectedChildData?.name} is in`
-                    : `${selectedChildData?.name}'s next class`}
+                    ? (gv?.isIn?.replace(
+                        "{name}",
+                        selectedChildData?.name ?? ""
+                      ) ?? `${selectedChildData?.name} is in`)
+                    : (gv?.nextClass?.replace(
+                        "{name}",
+                        selectedChildData?.name ?? ""
+                      ) ?? `${selectedChildData?.name}'s next class`)}
                 </p>
                 <p className="text-lg font-semibold">
                   {currentClassInfo.item.subject ||
@@ -408,7 +425,7 @@ export default function GuardianView({
           <Card>
             <CardContent className="text-muted-foreground py-12 text-center">
               <Calendar className="mx-auto mb-4 h-12 w-12 opacity-50" />
-              <p>No classes scheduled for today</p>
+              <p>{gv?.noClasses ?? "No classes scheduled for today"}</p>
             </CardContent>
           </Card>
         ) : (
@@ -438,7 +455,7 @@ export default function GuardianView({
                       <p className="font-medium">
                         {item.isBreak
                           ? item.periodName
-                          : item.subject || "Free Period"}
+                          : item.subject || (gv?.freePeriod ?? "Free Period")}
                       </p>
                       {!item.isBreak && item.teacher && (
                         <p className="text-muted-foreground text-sm">
@@ -446,7 +463,9 @@ export default function GuardianView({
                         </p>
                       )}
                     </div>
-                    {item.isBreak && <Badge variant="secondary">Break</Badge>}
+                    {item.isBreak && (
+                      <Badge variant="secondary">{gv?.break ?? "Break"}</Badge>
+                    )}
                   </div>
                 </CardContent>
               </Card>

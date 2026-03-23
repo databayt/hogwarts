@@ -79,7 +79,9 @@ function ClassroomsTableInner({
         DeleteToast()
       } else {
         refresh()
-        ErrorToast(result.error || "Failed to delete classroom")
+        ErrorToast(
+          result.error || d?.failedToDelete || "Failed to delete classroom"
+        )
       }
     },
     [optimisticRemove, refresh, d]

@@ -24,6 +24,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import {
   getCurrentPeriod,
   getPeriodsForClass,
@@ -61,7 +62,10 @@ export function PeriodSelector({
   const [isLoading, setIsLoading] = useState(true)
   const [isPending, startTransition] = useTransition()
 
-  const isArabic = locale === "ar"
+  const { dictionary } = useDictionary()
+  const t = (dictionary?.school?.attendance as any)?.period as
+    | Record<string, string>
+    | undefined
 
   useEffect(() => {
     const fetchPeriods = async () => {
@@ -89,7 +93,7 @@ export function PeriodSelector({
 
   const formatTime = (isoTime: string) => {
     const date = new Date(isoTime)
-    return date.toLocaleTimeString(isArabic ? "ar-SA" : "en-US", {
+    return date.toLocaleTimeString(locale === "ar" ? "ar-SA" : "en-US", {
       hour: "2-digit",
       minute: "2-digit",
       hour12: true,
@@ -119,14 +123,10 @@ export function PeriodSelector({
         <CardContent className="text-muted-foreground py-6 text-center">
           <Clock className="mx-auto mb-2 h-8 w-8 opacity-50" />
           <p className="text-sm">
-            {isArabic
-              ? "الحضور اليومي مفعل لهذا الفصل"
-              : "Daily attendance mode enabled for this class"}
+            {t?.dailyMode || "Daily attendance mode enabled for this class"}
           </p>
           <p className="mt-1 text-xs">
-            {isArabic
-              ? "لا يوجد جدول حصص لهذا اليوم"
-              : "No timetable periods configured for this day"}
+            {t?.noTimetable || "No timetable periods configured for this day"}
           </p>
         </CardContent>
       </Card>
@@ -138,12 +138,10 @@ export function PeriodSelector({
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-sm font-medium">
           <Clock className="h-4 w-4" />
-          {isArabic ? "اختر الحصة" : "Select Period"}
+          {t?.selectPeriod || "Select Period"}
         </CardTitle>
         <CardDescription>
-          {isArabic
-            ? "اختر الحصة لتسجيل الحضور"
-            : "Choose a period to mark attendance"}
+          {t?.choosePeriod || "Choose a period to mark attendance"}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -177,7 +175,7 @@ export function PeriodSelector({
                       <span className="font-medium">{period.periodName}</span>
                       {isCurrent && (
                         <Badge variant="secondary" className="text-xs">
-                          {isArabic ? "الحالية" : "Current"}
+                          {t?.currentPeriod || "Current"}
                         </Badge>
                       )}
                       {period.hasAttendance && (
@@ -185,7 +183,7 @@ export function PeriodSelector({
                           variant="outline"
                           className="text-xs text-green-600"
                         >
-                          {isArabic ? "مكتمل" : "Done"}
+                          {t?.done || "Done"}
                         </Badge>
                       )}
                     </div>
@@ -233,7 +231,10 @@ export function CurrentPeriodIndicator({
   } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  const isArabic = locale === "ar"
+  const { dictionary } = useDictionary()
+  const t = (dictionary?.school?.attendance as any)?.period as
+    | Record<string, string>
+    | undefined
 
   useEffect(() => {
     const fetchCurrent = async () => {
@@ -254,7 +255,7 @@ export function CurrentPeriodIndicator({
 
   const formatTime = (isoTime: string) => {
     const date = new Date(isoTime)
-    return date.toLocaleTimeString(isArabic ? "ar-SA" : "en-US", {
+    return date.toLocaleTimeString(locale === "ar" ? "ar-SA" : "en-US", {
       hour: "2-digit",
       minute: "2-digit",
       hour12: true,
@@ -270,9 +271,7 @@ export function CurrentPeriodIndicator({
       <Card className="border-muted">
         <CardContent className="text-muted-foreground py-4 text-center">
           <Clock className="mx-auto mb-1 h-6 w-6 opacity-50" />
-          <p className="text-sm">
-            {isArabic ? "لا توجد حصص حالياً" : "No active periods"}
-          </p>
+          <p className="text-sm">{t?.noActivePeriods || "No active periods"}</p>
         </CardContent>
       </Card>
     )
@@ -293,7 +292,7 @@ export function CurrentPeriodIndicator({
                     {currentPeriod.periodName}
                   </span>
                   <Badge className="bg-blue-100 text-xs text-blue-700">
-                    {isArabic ? "الآن" : "Now"}
+                    {t?.now || "Now"}
                   </Badge>
                 </div>
                 <p className="text-muted-foreground text-xs">
@@ -308,7 +307,7 @@ export function CurrentPeriodIndicator({
                 size="sm"
                 onClick={() => onMarkAttendance(currentPeriod.periodId)}
               >
-                {isArabic ? "تسجيل الحضور" : "Mark Attendance"}
+                {t?.markAttendance || "Mark Attendance"}
               </Button>
             )}
           </div>
@@ -320,12 +319,12 @@ export function CurrentPeriodIndicator({
               </div>
               <div>
                 <p className="text-muted-foreground text-xs">
-                  {isArabic ? "الحصة التالية" : "Next Period"}
+                  {t?.nextPeriod || "Next Period"}
                 </p>
                 <div className="flex items-center gap-2">
                   <span className="font-medium">{nextPeriod.periodName}</span>
                   <span className="text-muted-foreground text-xs">
-                    {isArabic ? "تبدأ" : "starts at"}{" "}
+                    {t?.startsAt || "starts at"}{" "}
                     {formatTime(nextPeriod.startTime)}
                   </span>
                 </div>
@@ -353,7 +352,10 @@ export function PeriodAttendanceSummary({
   const [periods, setPeriods] = useState<Period[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
-  const isArabic = locale === "ar"
+  const { dictionary } = useDictionary()
+  const t = (dictionary?.school?.attendance as any)?.period as
+    | Record<string, string>
+    | undefined
 
   useEffect(() => {
     const fetchPeriods = async () => {
@@ -393,14 +395,14 @@ export function PeriodAttendanceSummary({
         ))}
       </div>
       <span className="text-muted-foreground">
-        {completedCount}/{totalCount} {isArabic ? "حصص" : "periods"}
+        {completedCount}/{totalCount} {t?.periods || "periods"}
       </span>
       {completedCount === totalCount && (
         <Badge
           variant="secondary"
           className="bg-green-100 text-xs text-green-700"
         >
-          {isArabic ? "مكتمل" : "Complete"}
+          {t?.complete || "Complete"}
         </Badge>
       )}
     </div>

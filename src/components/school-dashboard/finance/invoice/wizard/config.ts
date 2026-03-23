@@ -30,3 +30,51 @@ export const CURRENCY_OPTIONS = [
   { label: "SAR", value: "SAR" },
   { label: "AED", value: "AED" },
 ] as const
+
+// --- Dictionary-based factory functions ---
+
+type Dict = Record<string, any> | undefined
+
+/** Get localized invoice wizard config from dictionary */
+export const getInvoiceWizardConfig = (d?: Dict): WizardConfig => {
+  const w = d?.wizard as Record<string, any> | undefined
+  const gl = w?.groupLabels as Record<string, string> | undefined
+  return {
+    id: "invoice",
+    steps: ["details", "items"],
+    groups: {
+      1: ["details"],
+      2: ["items"],
+    },
+    groupLabels: [
+      gl?.invoiceDetails || "Invoice Details",
+      gl?.lineItems || "Line Items",
+    ],
+    requiredSteps: ["details", "items"],
+    finalLabel: w?.finalLabel || "Create Invoice",
+  }
+}
+
+/** Get localized invoice status options from dictionary */
+export const getInvoiceStatusOptions = (d?: Dict) => {
+  const s = d?.invoiceStatus as Record<string, string> | undefined
+  return [
+    { label: s?.unpaid || "Unpaid", value: "UNPAID" },
+    { label: s?.paid || "Paid", value: "PAID" },
+    { label: s?.overdue || "Overdue", value: "OVERDUE" },
+    { label: s?.cancelled || "Cancelled", value: "CANCELLED" },
+  ]
+}
+
+/** Get localized currency options from dictionary */
+export const getCurrencyOptions = (d?: Dict) => {
+  const c = d?.currency as Record<string, string> | undefined
+  return [
+    { label: c?.USD || "USD", value: "USD" },
+    { label: c?.EUR || "EUR", value: "EUR" },
+    { label: c?.GBP || "GBP", value: "GBP" },
+    { label: c?.SDG || "SDG", value: "SDG" },
+    { label: c?.SAR || "SAR", value: "SAR" },
+    { label: c?.AED || "AED", value: "AED" },
+  ]
+}

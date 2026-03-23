@@ -54,130 +54,112 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import {
   getAllInterventions,
   getInterventionStats,
 } from "@/components/school-dashboard/attendance/actions"
 
-// Intervention type configuration
-const INTERVENTION_TYPES: Record<
+// Icon and color config (labels come from dictionary)
+const INTERVENTION_TYPE_ICONS: Record<
   string,
-  {
-    label: string
-    icon: React.ReactNode
-    color: string
-  }
+  { icon: React.ReactNode; color: string }
 > = {
   PARENT_PHONE_CALL: {
-    label: "مكالمة هاتفية",
     icon: <Phone className="h-4 w-4" />,
     color: "text-blue-500",
   },
-  PARENT_EMAIL: {
-    label: "بريد إلكتروني",
-    icon: <Mail className="h-4 w-4" />,
-    color: "text-blue-500",
-  },
+  PARENT_EMAIL: { icon: <Mail className="h-4 w-4" />, color: "text-blue-500" },
   PARENT_MEETING: {
-    label: "اجتماع مع ولي الأمر",
     icon: <Users className="h-4 w-4" />,
     color: "text-green-500",
   },
-  HOME_VISIT: {
-    label: "زيارة منزلية",
-    icon: <Home className="h-4 w-4" />,
-    color: "text-purple-500",
-  },
+  HOME_VISIT: { icon: <Home className="h-4 w-4" />, color: "text-purple-500" },
   COUNSELOR_REFERRAL: {
-    label: "إحالة للمرشد",
     icon: <GraduationCap className="h-4 w-4" />,
     color: "text-yellow-500",
   },
   SOCIAL_WORKER_REFERRAL: {
-    label: "إحالة للأخصائي",
     icon: <UserCheck className="h-4 w-4" />,
     color: "text-orange-500",
   },
   ADMINISTRATOR_MEETING: {
-    label: "اجتماع إداري",
     icon: <Building className="h-4 w-4" />,
     color: "text-red-500",
   },
   ATTENDANCE_CONTRACT: {
-    label: "عقد حضور",
     icon: <FileText className="h-4 w-4" />,
     color: "text-red-500",
   },
   TRUANCY_REFERRAL: {
-    label: "إحالة تهرب",
     icon: <AlertTriangle className="h-4 w-4" />,
     color: "text-red-700",
   },
   COMMUNITY_RESOURCE: {
-    label: "موارد مجتمعية",
     icon: <Building className="h-4 w-4" />,
     color: "text-teal-500",
   },
   ACADEMIC_SUPPORT: {
-    label: "دعم أكاديمي",
     icon: <GraduationCap className="h-4 w-4" />,
     color: "text-indigo-500",
   },
   MENTORSHIP_ASSIGNMENT: {
-    label: "إرشاد",
     icon: <Award className="h-4 w-4" />,
     color: "text-pink-500",
   },
   INCENTIVE_PROGRAM: {
-    label: "حوافز",
     icon: <Award className="h-4 w-4" />,
     color: "text-green-500",
   },
-  OTHER: {
-    label: "أخرى",
-    icon: <HelpCircle className="h-4 w-4" />,
-    color: "text-gray-500",
-  },
+  OTHER: { icon: <HelpCircle className="h-4 w-4" />, color: "text-gray-500" },
 }
 
-// Status configuration
-const STATUS_CONFIG: Record<
-  string,
-  { label: string; color: string; bgColor: string }
-> = {
-  SCHEDULED: {
-    label: "مجدول",
-    color: "text-blue-700",
-    bgColor: "bg-blue-100",
-  },
-  IN_PROGRESS: {
-    label: "قيد التنفيذ",
-    color: "text-yellow-700",
-    bgColor: "bg-yellow-100",
-  },
-  COMPLETED: {
-    label: "مكتمل",
-    color: "text-green-700",
-    bgColor: "bg-green-100",
-  },
-  CANCELLED: {
-    label: "ملغى",
-    color: "text-gray-700",
-    bgColor: "bg-gray-100",
-  },
-  ESCALATED: {
-    label: "تم التصعيد",
-    color: "text-red-700",
-    bgColor: "bg-red-100",
-  },
+// Map type codes to dictionary keys
+const TYPE_KEY_MAP: Record<string, string> = {
+  PARENT_PHONE_CALL: "parentPhoneCall",
+  PARENT_EMAIL: "parentEmail",
+  PARENT_MEETING: "parentMeeting",
+  HOME_VISIT: "homeVisit",
+  COUNSELOR_REFERRAL: "counselorReferral",
+  SOCIAL_WORKER_REFERRAL: "socialWorkerReferral",
+  ADMINISTRATOR_MEETING: "administratorMeeting",
+  ATTENDANCE_CONTRACT: "attendanceContract",
+  TRUANCY_REFERRAL: "truancyReferral",
+  COMMUNITY_RESOURCE: "communityResource",
+  ACADEMIC_SUPPORT: "academicSupport",
+  MENTORSHIP_ASSIGNMENT: "mentorshipAssignment",
+  INCENTIVE_PROGRAM: "incentiveProgram",
+  OTHER: "other",
 }
 
-// Priority configuration
-const PRIORITY_CONFIG: Record<number, { label: string; color: string }> = {
-  1: { label: "منخفض", color: "text-gray-500" },
-  2: { label: "متوسط", color: "text-blue-500" },
-  3: { label: "مرتفع", color: "text-orange-500" },
-  4: { label: "حرج", color: "text-red-500" },
+const STATUS_KEY_MAP: Record<string, string> = {
+  SCHEDULED: "scheduled",
+  IN_PROGRESS: "inProgress",
+  COMPLETED: "completed",
+  CANCELLED: "cancelled",
+  ESCALATED: "escalated",
+}
+
+const STATUS_COLORS: Record<string, { color: string; bgColor: string }> = {
+  SCHEDULED: { color: "text-blue-700", bgColor: "bg-blue-100" },
+  IN_PROGRESS: { color: "text-yellow-700", bgColor: "bg-yellow-100" },
+  COMPLETED: { color: "text-green-700", bgColor: "bg-green-100" },
+  CANCELLED: { color: "text-gray-700", bgColor: "bg-gray-100" },
+  ESCALATED: { color: "text-red-700", bgColor: "bg-red-100" },
+}
+
+const PRIORITY_KEY_MAP: Record<number, string> = {
+  1: "low",
+  2: "medium",
+  3: "high",
+  4: "critical",
+}
+
+const PRIORITY_COLORS: Record<number, string> = {
+  1: "text-gray-500",
+  2: "text-blue-500",
+  3: "text-orange-500",
+  4: "text-red-500",
 }
 
 interface Intervention {
@@ -227,7 +209,13 @@ export function InterventionsContent({
   const [totalPages, setTotalPages] = useState(1)
   const [total, setTotal] = useState(0)
 
-  const isArabic = locale === "ar"
+  const { dictionary } = useDictionary()
+  const t = (dictionary?.school?.attendance as any)?.interventions as
+    | Record<string, any>
+    | undefined
+  const typeLabels = t?.interventionTypes as Record<string, string> | undefined
+  const statusLabels = t?.statusConfig as Record<string, string> | undefined
+  const priorityLabels = t?.priorityConfig as Record<string, string> | undefined
   const limit = 15
 
   const fetchData = useCallback(async () => {
@@ -308,20 +296,30 @@ export function InterventionsContent({
   }
 
   const getStatusBadge = (status: string) => {
-    const config = STATUS_CONFIG[status] || STATUS_CONFIG.SCHEDULED
+    const colors = STATUS_COLORS[status] || STATUS_COLORS.SCHEDULED
+    const label =
+      statusLabels?.[STATUS_KEY_MAP[status]] || STATUS_KEY_MAP[status] || status
     return (
-      <Badge className={cn(config.bgColor, config.color, "font-normal")}>
-        {config.label}
+      <Badge className={cn(colors.bgColor, colors.color, "font-normal")}>
+        {label}
       </Badge>
     )
   }
 
   const getTypeInfo = (type: string) => {
-    return INTERVENTION_TYPES[type] || INTERVENTION_TYPES.OTHER
+    const iconConfig =
+      INTERVENTION_TYPE_ICONS[type] || INTERVENTION_TYPE_ICONS.OTHER
+    const label = typeLabels?.[TYPE_KEY_MAP[type]] || TYPE_KEY_MAP[type] || type
+    return { ...iconConfig, label }
   }
 
   const getPriorityInfo = (priority: number) => {
-    return PRIORITY_CONFIG[priority] || PRIORITY_CONFIG[2]
+    const color = PRIORITY_COLORS[priority] || PRIORITY_COLORS[2]
+    const label =
+      priorityLabels?.[PRIORITY_KEY_MAP[priority]] ||
+      PRIORITY_KEY_MAP[priority] ||
+      String(priority)
+    return { label, color }
   }
 
   const getRiskBadge = (riskLevel: string) => {
@@ -345,21 +343,19 @@ export function InterventionsContent({
   }
 
   return (
-    <div className="space-y-6" dir={isArabic ? "rtl" : "ltr"}>
+    <div className="space-y-6">
       {/* Stats Cards */}
       {stats && (
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>
-                {isArabic ? "الإجمالي" : "Total"}
-              </CardDescription>
+              <CardDescription>{t?.total || "Total"}</CardDescription>
               <CardTitle className="text-2xl">{total}</CardTitle>
             </CardHeader>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>{isArabic ? "نشطة" : "Active"}</CardDescription>
+              <CardDescription>{t?.active || "Active"}</CardDescription>
               <CardTitle className="text-2xl text-yellow-600">
                 {stats.byStatus
                   .filter(
@@ -373,7 +369,7 @@ export function InterventionsContent({
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>
-                {isArabic ? "معدل النجاح" : "Success Rate"}
+                {t?.successRate || "Success Rate"}
               </CardDescription>
               <CardTitle className="text-2xl text-green-600">
                 {stats.successRate.toFixed(1)}%
@@ -383,7 +379,7 @@ export function InterventionsContent({
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>
-                {isArabic ? "متوسط أيام الإكمال" : "Avg. Days to Complete"}
+                {t?.avgDaysComplete || "Avg. Days to Complete"}
               </CardDescription>
               <CardTitle className="text-2xl">
                 {stats.averageDaysToComplete.toFixed(1)}
@@ -401,9 +397,7 @@ export function InterventionsContent({
               <Search className="text-muted-foreground absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2" />
               <Input
                 placeholder={
-                  isArabic
-                    ? "بحث عن طالب أو عنوان..."
-                    : "Search student or title..."
+                  t?.searchPlaceholder || "Search student or title..."
                 }
                 value={search}
                 onChange={(e) => handleSearch(e.target.value)}
@@ -412,30 +406,34 @@ export function InterventionsContent({
             </div>
             <Select value={statusFilter} onValueChange={handleStatusChange}>
               <SelectTrigger className="w-full md:w-[180px]">
-                <SelectValue placeholder={isArabic ? "الحالة" : "Status"} />
+                <SelectValue placeholder={t?.statusFilter || "Status"} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">
-                  {isArabic ? "جميع الحالات" : "All Statuses"}
+                  {t?.allStatuses || "All Statuses"}
                 </SelectItem>
-                {Object.entries(STATUS_CONFIG).map(([key, config]) => (
+                {Object.entries(STATUS_COLORS).map(([key]) => (
                   <SelectItem key={key} value={key}>
-                    {config.label}
+                    {statusLabels?.[STATUS_KEY_MAP[key]] ||
+                      STATUS_KEY_MAP[key] ||
+                      key}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <Select value={typeFilter} onValueChange={handleTypeChange}>
               <SelectTrigger className="w-full md:w-[180px]">
-                <SelectValue placeholder={isArabic ? "النوع" : "Type"} />
+                <SelectValue placeholder={t?.typeFilter || "Type"} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">
-                  {isArabic ? "جميع الأنواع" : "All Types"}
+                  {t?.allTypes || "All Types"}
                 </SelectItem>
-                {Object.entries(INTERVENTION_TYPES).map(([key, config]) => (
+                {Object.keys(INTERVENTION_TYPE_ICONS).map((key) => (
                   <SelectItem key={key} value={key}>
-                    {config.label}
+                    {typeLabels?.[TYPE_KEY_MAP[key]] ||
+                      TYPE_KEY_MAP[key] ||
+                      key}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -445,7 +443,7 @@ export function InterventionsContent({
               size="icon"
               onClick={handleRefresh}
               disabled={isPending}
-              aria-label={isArabic ? "تحديث" : "Refresh"}
+              aria-label={t?.refresh || "Refresh"}
             >
               <RefreshCw
                 className={cn("h-4 w-4", isPending && "animate-spin")}
@@ -460,12 +458,12 @@ export function InterventionsContent({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
-            {isArabic ? "جميع التدخلات" : "All Interventions"}
+            {t?.allInterventions || "All Interventions"}
           </CardTitle>
           <CardDescription>
-            {isArabic
-              ? `عرض ${interventions.length} من ${total} تدخل`
-              : `Showing ${interventions.length} of ${total} interventions`}
+            {(t?.showingOf || "Showing {shown} of {total} interventions")
+              .replace("{shown}", String(interventions.length))
+              .replace("{total}", String(total))}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -473,9 +471,8 @@ export function InterventionsContent({
             <div className="text-muted-foreground py-12 text-center">
               <FileText className="mx-auto mb-3 h-12 w-12 opacity-50" />
               <p>
-                {isArabic
-                  ? "لا توجد تدخلات تطابق البحث"
-                  : "No interventions match your search"}
+                {t?.noInterventionsMatch ||
+                  "No interventions match your search"}
               </p>
             </div>
           ) : (
@@ -484,16 +481,14 @@ export function InterventionsContent({
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>{isArabic ? "النوع" : "Type"}</TableHead>
-                      <TableHead>{isArabic ? "العنوان" : "Title"}</TableHead>
-                      <TableHead>{isArabic ? "الطالب" : "Student"}</TableHead>
-                      <TableHead>{isArabic ? "الحالة" : "Status"}</TableHead>
-                      <TableHead>
-                        {isArabic ? "الأولوية" : "Priority"}
-                      </TableHead>
-                      <TableHead>{isArabic ? "المخاطر" : "Risk"}</TableHead>
-                      <TableHead>{isArabic ? "التاريخ" : "Date"}</TableHead>
-                      <TableHead>{isArabic ? "المكلف" : "Assignee"}</TableHead>
+                      <TableHead>{t?.typeLabel || "Type"}</TableHead>
+                      <TableHead>{t?.titleLabel || "Title"}</TableHead>
+                      <TableHead>{t?.studentLabel || "Student"}</TableHead>
+                      <TableHead>{t?.statusLabel || "Status"}</TableHead>
+                      <TableHead>{t?.priorityLabel || "Priority"}</TableHead>
+                      <TableHead>{t?.riskLabel || "Risk"}</TableHead>
+                      <TableHead>{t?.dateLabel || "Date"}</TableHead>
+                      <TableHead>{t?.assigneeLabel || "Assignee"}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -581,7 +576,8 @@ export function InterventionsContent({
                           <TableCell>
                             <span className="text-sm">
                               {intervention.assigneeName ||
-                                (isArabic ? "غير مكلف" : "Unassigned")}
+                                t?.unassigned ||
+                                "Unassigned"}
                             </span>
                           </TableCell>
                         </TableRow>
@@ -595,9 +591,9 @@ export function InterventionsContent({
               {totalPages > 1 && (
                 <div className="mt-4 flex items-center justify-between border-t pt-4">
                   <p className="text-muted-foreground text-sm">
-                    {isArabic
-                      ? `صفحة ${page} من ${totalPages}`
-                      : `Page ${page} of ${totalPages}`}
+                    {(t?.pageOf || "Page {page} of {total}")
+                      .replace("{page}", String(page))
+                      .replace("{total}", String(totalPages))}
                   </p>
                   <div className="flex gap-2">
                     <Button
@@ -607,7 +603,7 @@ export function InterventionsContent({
                       disabled={page === 1}
                     >
                       <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
-                      {isArabic ? "السابق" : "Previous"}
+                      {t?.previous || "Previous"}
                     </Button>
                     <Button
                       variant="outline"
@@ -617,7 +613,7 @@ export function InterventionsContent({
                       }
                       disabled={page === totalPages}
                     >
-                      {isArabic ? "التالي" : "Next"}
+                      {t?.next || "Next"}
                       <ChevronRight className="h-4 w-4 rtl:rotate-180" />
                     </Button>
                   </div>

@@ -11,6 +11,7 @@ import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { CheckboxField, InputField, TextareaField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { completeEventWizard } from "../actions"
 import { updateEventSettings } from "./actions"
@@ -26,6 +27,10 @@ export const SettingsForm = forwardRef<WizardFormRef, SettingsFormProps>(
   ({ eventId, initialData, onValidChange }, ref) => {
     const [isPending, startTransition] = useTransition()
     const router = useRouter()
+    const { dictionary } = useDictionary()
+    const wst = dictionary?.school?.events?.wizard?.settings as
+      | Record<string, string>
+      | undefined
 
     const form = useForm<SettingsFormData>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -88,25 +93,31 @@ export const SettingsForm = forwardRef<WizardFormRef, SettingsFormProps>(
         <form className="space-y-6">
           <InputField
             name="maxAttendees"
-            label="Max Attendees"
+            label={wst?.maxAttendeesLabel || "Max Attendees"}
             type="number"
-            placeholder="Leave empty for unlimited"
+            placeholder={
+              wst?.maxAttendeesPlaceholder || "Leave empty for unlimited"
+            }
             disabled={isPending}
           />
           <CheckboxField
             name="isPublic"
-            checkboxLabel="Make this event public"
+            checkboxLabel={wst?.isPublicLabel || "Make this event public"}
             disabled={isPending}
           />
           <CheckboxField
             name="registrationRequired"
-            checkboxLabel="Require registration"
+            checkboxLabel={
+              wst?.registrationRequiredLabel || "Require registration"
+            }
             disabled={isPending}
           />
           <TextareaField
             name="notes"
-            label="Notes"
-            placeholder="Additional notes about this event"
+            label={wst?.notesLabel || "Notes"}
+            placeholder={
+              wst?.notesPlaceholder || "Additional notes about this event"
+            }
             disabled={isPending}
           />
         </form>

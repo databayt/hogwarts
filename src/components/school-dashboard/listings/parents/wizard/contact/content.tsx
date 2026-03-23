@@ -8,11 +8,14 @@ import { useParams } from "next/navigation"
 import { FormHeading, FormLayout } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { useParentWizard } from "../use-parent-wizard"
 import { ContactForm } from "./form"
 
 export default function ContactContent() {
+  const { dictionary } = useDictionary()
+  const d = dictionary?.school?.parents as Record<string, any> | undefined
   const params = useParams()
   const parentId = params.id as string
   const formRef = useRef<WizardFormRef>(null)
@@ -35,8 +38,10 @@ export default function ContactContent() {
     >
       <FormLayout>
         <FormHeading
-          title="Contact Details"
-          description="Add the parent/guardian's phone numbers."
+          title={d?.contactDetails || "Contact Details"}
+          description={
+            d?.addPhoneNumbers || "Add the parent/guardian's phone numbers."
+          }
         />
         <ContactForm
           ref={formRef}

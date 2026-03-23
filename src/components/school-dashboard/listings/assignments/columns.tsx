@@ -41,12 +41,12 @@ export const getAssignmentColumns = ({
   callbacks,
 }: GetAssignmentColumnsProps): ColumnDef<AssignmentRow>[] => {
   const t = {
-    title: dictionary?.title || "Title",
+    title: (dictionary as Record<string, any>)?.titleColumn || "Title",
     type: dictionary?.type || "Type",
     points: dictionary?.points || "Points",
     dueDate: dictionary?.dueDate || "Due Date",
     created: dictionary?.created || "Created",
-    actions: "Actions",
+    actions: (dictionary as Record<string, any>)?.actions || "Actions",
     view: common?.actions?.view || "View",
     edit: common?.actions?.edit || "Edit",
     delete: common?.actions?.delete || "Delete",

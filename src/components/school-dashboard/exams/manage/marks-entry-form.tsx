@@ -120,7 +120,12 @@ export function MarksEntryForm({ examId }: Props) {
         marks: data.marks,
       })
       if (result.success && result.data) {
-        toast.success(`Saved marks for ${result.data.count} students`)
+        toast.success(
+          (t?.savedCount ?? "Saved marks for {count} students").replace(
+            "{count}",
+            String(result.data.count)
+          )
+        )
       }
     } catch (error) {
       toast.error(t?.saveFailed ?? "Failed to save marks")
@@ -163,7 +168,9 @@ export function MarksEntryForm({ examId }: Props) {
     return (
       <Card>
         <CardContent className="py-12">
-          <p className="text-muted-foreground text-center">Exam not found</p>
+          <p className="text-muted-foreground text-center">
+            {t?.examNotFound ?? "Exam not found"}
+          </p>
         </CardContent>
       </Card>
     )
@@ -174,8 +181,16 @@ export function MarksEntryForm({ examId }: Props) {
       <CardHeader>
         <CardTitle>{exam.title}</CardTitle>
         <CardDescription>
-          {exam.className} • Total Marks: {exam.totalMarks} • Passing Marks:{" "}
-          {exam.passingMarks}
+          {exam.className} •{" "}
+          {(t?.totalMarksLabel ?? "Total Marks: {value}").replace(
+            "{value}",
+            String(exam.totalMarks)
+          )}{" "}
+          •{" "}
+          {(t?.passingMarksLabel ?? "Passing Marks: {value}").replace(
+            "{value}",
+            String(exam.passingMarks)
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -185,11 +200,11 @@ export function MarksEntryForm({ examId }: Props) {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[100px]">
-                    {dictionary?.school?.exams?.status ?? "Student ID"}
+                    {t?.studentId ?? "Student ID"}
                   </TableHead>
                   <TableHead>{t?.studentName ?? "Student Name"}</TableHead>
                   <TableHead className="w-[150px]">
-                    {dictionary?.school?.exams?.marks ?? "Marks Obtained"}
+                    {t?.marksObtained ?? "Marks Obtained"}
                   </TableHead>
                   <TableHead className="w-[100px]">
                     {dictionary?.school?.exams?.manage?.resultsList?.absent ??
@@ -207,7 +222,7 @@ export function MarksEntryForm({ examId }: Props) {
                       colSpan={5}
                       className="text-muted-foreground py-8 text-center"
                     >
-                      No students enrolled in this class
+                      {t?.noStudents ?? "No students enrolled in this class"}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -284,10 +299,10 @@ export function MarksEntryForm({ examId }: Props) {
               {saving ? (
                 <>
                   <Icons.loaderCircle className="me-2 h-4 w-4 animate-spin" />
-                  Saving...
+                  {t?.saving ?? "Saving..."}
                 </>
               ) : (
-                "Save Marks"
+                (t?.saveMarks ?? "Save Marks")
               )}
             </Button>
           </div>

@@ -45,6 +45,7 @@ export function ProgressScheduleList({
   const { dictionary } = useDictionary()
   const p = dictionary?.school?.exams?.progress
   const t = p?.schedule
+  const sl = dictionary?.school?.exams?.scheduleList
 
   const handleGenerate = async (scheduleId: string) => {
     setGeneratingId(scheduleId)
@@ -116,7 +117,7 @@ export function ProgressScheduleList({
         <CardHeader>
           <CardTitle>{t?.noSchedules ?? "No Schedules"}</CardTitle>
           <CardDescription>
-            {t?.noSchedules ??
+            {sl?.noSchedulesDescription ??
               "Create a schedule to start generating automated progress reports."}
           </CardDescription>
         </CardHeader>
@@ -129,7 +130,8 @@ export function ProgressScheduleList({
       <CardHeader>
         <CardTitle>{t?.title ?? "Report Schedules"}</CardTitle>
         <CardDescription>
-          Manage automated progress report generation
+          {sl?.manageDescription ??
+            "Manage automated progress report generation"}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -152,7 +154,9 @@ export function ProgressScheduleList({
               <TableRow key={schedule.id}>
                 <TableCell>
                   {schedule.className || (
-                    <span className="text-muted-foreground">All classes</span>
+                    <span className="text-muted-foreground">
+                      {sl?.allClasses ?? "All classes"}
+                    </span>
                   )}
                 </TableCell>
                 <TableCell>
@@ -175,7 +179,9 @@ export function ProgressScheduleList({
                       {format(new Date(schedule.lastRunAt), "MMM d, HH:mm")}
                     </time>
                   ) : (
-                    <span className="text-muted-foreground text-sm">Never</span>
+                    <span className="text-muted-foreground text-sm">
+                      {sl?.never ?? "Never"}
+                    </span>
                   )}
                 </TableCell>
                 <TableCell>

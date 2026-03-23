@@ -2,6 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -13,7 +14,7 @@ export async function getAssignmentInformation(
 ): Promise<ActionResponse<InformationFormData>> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const assignment = await db.assignment.findFirst({
       where: { id: assignmentId, schoolId },
@@ -25,7 +26,7 @@ export async function getAssignmentInformation(
       },
     })
 
-    if (!assignment) return { success: false, error: "Assignment not found" }
+    if (!assignment) return actionError(ACTION_ERRORS.NOT_FOUND)
 
     return {
       success: true,
@@ -37,10 +38,10 @@ export async function getAssignmentInformation(
       },
     }
   } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to load",
-    }
+    return actionError(
+      ACTION_ERRORS.UNKNOWN,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -50,7 +51,7 @@ export async function updateAssignmentInformation(
 ): Promise<ActionResponse> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const parsed = informationSchema.parse(input)
 
@@ -66,10 +67,10 @@ export async function updateAssignmentInformation(
 
     return { success: true }
   } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to save",
-    }
+    return actionError(
+      ACTION_ERRORS.UNKNOWN,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -79,7 +80,7 @@ export async function getClassesForAssignment(): Promise<
 > {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const classes = await db.class.findMany({
       where: { schoolId },
@@ -98,9 +99,9 @@ export async function getClassesForAssignment(): Promise<
 
     return { success: true, data: options }
   } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to load classes",
-    }
+    return actionError(
+      ACTION_ERRORS.UNKNOWN,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }

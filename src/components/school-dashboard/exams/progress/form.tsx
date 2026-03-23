@@ -64,6 +64,7 @@ export function ProgressReportForm({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { dictionary } = useDictionary()
   const t = dictionary?.school?.exams?.progress
+  const pf = dictionary?.school?.exams?.progressForm
 
   const [formData, setFormData] = useState({
     classId: schedule?.classId || "",
@@ -140,7 +141,7 @@ export function ProgressReportForm({
       <div className="space-y-4">
         <div className="space-y-2">
           <label htmlFor="class" className="text-sm font-medium">
-            Class (Optional)
+            {pf?.classOptional ?? "Class (Optional)"}
           </label>
           <Select
             value={formData.classId}
@@ -163,13 +164,13 @@ export function ProgressReportForm({
             </SelectContent>
           </Select>
           <p className="text-muted-foreground text-xs">
-            Leave empty to include all classes
+            {pf?.leaveEmptyForAll ?? "Leave empty to include all classes"}
           </p>
         </div>
 
         <div className="space-y-2">
           <label htmlFor="frequency" className="text-sm font-medium">
-            Frequency
+            {pf?.frequency ?? "Frequency"}
           </label>
           <Select
             value={formData.frequency}
@@ -197,7 +198,7 @@ export function ProgressReportForm({
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <label htmlFor="includeExamResults" className="text-sm">
-                Exam Results
+                {pf?.examResults ?? "Exam Results"}
               </label>
               <Switch
                 id="includeExamResults"
@@ -212,7 +213,7 @@ export function ProgressReportForm({
             </div>
             <div className="flex items-center justify-between">
               <label htmlFor="includeAttendance" className="text-sm">
-                Attendance
+                {pf?.attendance ?? "Attendance"}
               </label>
               <Switch
                 id="includeAttendance"
@@ -227,7 +228,7 @@ export function ProgressReportForm({
             </div>
             <div className="flex items-center justify-between">
               <label htmlFor="includeAssignments" className="text-sm">
-                Assignments
+                {pf?.assignments ?? "Assignments"}
               </label>
               <Switch
                 id="includeAssignments"
@@ -242,7 +243,7 @@ export function ProgressReportForm({
             </div>
             <div className="flex items-center justify-between">
               <label htmlFor="includeBehavior" className="text-sm">
-                Behavior
+                {pf?.behavior ?? "Behavior"}
               </label>
               <Switch
                 id="includeBehavior"
@@ -259,7 +260,9 @@ export function ProgressReportForm({
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium">Recipients</label>
+          <label className="text-sm font-medium">
+            {pf?.recipients ?? "Recipients"}
+          </label>
           <div className="space-y-2">
             {RECIPIENT_TYPES.map((type) => (
               <div
@@ -282,7 +285,9 @@ export function ProgressReportForm({
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium">Delivery Channels</label>
+          <label className="text-sm font-medium">
+            {pf?.deliveryChannels ?? "Delivery Channels"}
+          </label>
           <div className="space-y-2">
             {CHANNELS.map((channel) => (
               <div
@@ -315,7 +320,9 @@ export function ProgressReportForm({
           }
         >
           {isSubmitting && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
-          {schedule ? "Update Schedule" : "Create Schedule"}
+          {schedule
+            ? (pf?.updateSchedule ?? "Update Schedule")
+            : (pf?.createSchedule ?? "Create Schedule")}
         </Button>
         <Button
           type="button"
@@ -323,7 +330,7 @@ export function ProgressReportForm({
           onClick={() => router.back()}
           disabled={isSubmitting}
         >
-          Cancel
+          {pf?.cancel ?? "Cancel"}
         </Button>
       </div>
     </form>

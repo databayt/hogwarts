@@ -273,7 +273,7 @@ export function TimetableMobile({
                             </CardTitle>
                             {displayInfo.isSubstitute && (
                               <Badge variant="outline" className="mt-1 text-xs">
-                                Substitute
+                                {dictionary.substitute || "Substitute"}
                               </Badge>
                             )}
                           </div>

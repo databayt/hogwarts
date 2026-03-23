@@ -22,6 +22,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { useMediaQuery } from "./use-media-query"
 
@@ -38,6 +39,9 @@ export function TeacherInfoPopup({
   initialInfo = "",
   children,
 }: TeacherInfoPopupProps) {
+  const { dictionary } = useDictionary()
+  const tip = (dictionary?.school?.timetable as Record<string, any>)
+    ?.teacherInfoPopup
   const [teacherInfo, setTeacherInfo] = useState(initialInfo)
   const [isOpen, setIsOpen] = useState(false)
   const [error, setError] = useState("")
@@ -60,7 +64,7 @@ export function TeacherInfoPopup({
 
   const handleSave = () => {
     if (teacherInfo.length > 4) {
-      setError("Teacher name must be 4 characters or less")
+      setError(tip?.validation ?? "Teacher name must be 4 characters or less")
       return
     }
     onSave(teacherInfo)
@@ -78,7 +82,7 @@ export function TeacherInfoPopup({
     const value = e.target.value
     setTeacherInfo(value)
     if (value.length > 4) {
-      setError("Teacher name must be 4 characters or less")
+      setError(tip?.validation ?? "Teacher name must be 4 characters or less")
     } else {
       setError("")
     }
@@ -91,7 +95,7 @@ export function TeacherInfoPopup({
   const TeacherInfoForm = (
     <div className="grid gap-2">
       <Label htmlFor="teacher" className="dark:text-neutral-200">
-        Teacher name
+        {tip?.label ?? "Teacher name"}
       </Label>
       <Input
         ref={inputRef}
@@ -115,10 +119,11 @@ export function TeacherInfoPopup({
     <>
       <div className="space-y-2">
         <h4 className="leading-none font-medium dark:text-neutral-100">
-          Edit teacher info
+          {tip?.title ?? "Edit teacher info"}
         </h4>
         <p className="text-muted-foreground text-sm dark:text-neutral-400">
-          Enter info for {subject}. It will be stored in your browser.
+          {tip?.description?.replace("{subject}", subject) ??
+            `Enter info for ${subject}. It will be stored in your browser.`}
         </p>
       </div>
       {TeacherInfoForm}
@@ -132,10 +137,11 @@ export function TeacherInfoPopup({
         <DrawerContent className="h-[40%] dark:border-neutral-800 dark:bg-neutral-900">
           <DrawerHeader>
             <DrawerTitle className="dark:text-neutral-100">
-              Edit teacher info
+              {tip?.drawerTitle ?? "Edit teacher info"}
             </DrawerTitle>
             <DrawerDescription className="dark:text-neutral-400">
-              Enter info for {subject}. It will be stored in your browser.
+              {tip?.drawerDescription?.replace("{subject}", subject) ??
+                `Enter info for ${subject}. It will be stored in your browser.`}
             </DrawerDescription>
           </DrawerHeader>
           <div className="px-4 pb-4">
@@ -146,7 +152,7 @@ export function TeacherInfoPopup({
                 disabled={teacherInfo.length > 4}
                 className="w-full"
               >
-                Save
+                {tip?.save ?? "Save"}
               </Button>
             </div>
           </div>

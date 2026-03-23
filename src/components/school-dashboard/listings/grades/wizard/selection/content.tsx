@@ -8,6 +8,7 @@ import { useParams } from "next/navigation"
 import { FormHeading, FormLayout } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { useGradeWizard } from "../use-grade-wizard"
 import { SelectionForm } from "./form"
@@ -18,6 +19,8 @@ export default function SelectionContent() {
   const formRef = useRef<WizardFormRef>(null)
   const { data, isLoading } = useGradeWizard()
   const [isValid, setIsValid] = useState(false)
+  const { dictionary: dict } = useDictionary()
+  const d = dict?.school?.grades as Record<string, any> | undefined
 
   // Set initial validity from loaded data
   useEffect(() => {
@@ -38,8 +41,11 @@ export default function SelectionContent() {
     >
       <FormLayout>
         <FormHeading
-          title="Student & Assignment"
-          description="Select the student, class, and optionally an assignment or exam."
+          title={d?.wizardSelectionTitle || "Student & Assignment"}
+          description={
+            d?.wizardSelectionDescription ||
+            "Select the student, class, and optionally an assignment or exam."
+          }
         />
         <SelectionForm
           ref={formRef}

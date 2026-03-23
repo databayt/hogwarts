@@ -22,11 +22,16 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { AssignmentFormStepProps } from "./types"
 import { assignmentCreateSchema } from "./validation"
 
 export function InformationStep({ form, isView }: AssignmentFormStepProps) {
+  const { dictionary } = useDictionary()
+  const d = (dictionary?.school as Record<string, any>)?.assignments?.form as
+    | Record<string, any>
+    | undefined
   const [classes, setClasses] = useState<Array<{ id: string; name: string }>>(
     []
   )
@@ -55,10 +60,10 @@ export function InformationStep({ form, isView }: AssignmentFormStepProps) {
         name="title"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Assignment Title</FormLabel>
+            <FormLabel>{d?.assignmentTitle || "Assignment Title"}</FormLabel>
             <FormControl>
               <Input
-                placeholder="Enter assignment title"
+                placeholder={d?.enterTitle || "Enter assignment title"}
                 disabled={isView}
                 {...field}
               />
@@ -73,10 +78,12 @@ export function InformationStep({ form, isView }: AssignmentFormStepProps) {
         name="description"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Description</FormLabel>
+            <FormLabel>{d?.description || "Description"}</FormLabel>
             <FormControl>
               <Textarea
-                placeholder="Enter assignment description..."
+                placeholder={
+                  d?.enterDescription || "Enter assignment description..."
+                }
                 className="min-h-[100px]"
                 disabled={isView}
                 {...field}
@@ -92,7 +99,7 @@ export function InformationStep({ form, isView }: AssignmentFormStepProps) {
         name="classId"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Class</FormLabel>
+            <FormLabel>{d?.class || "Class"}</FormLabel>
             <Select
               onValueChange={field.onChange}
               value={field.value}
@@ -100,7 +107,7 @@ export function InformationStep({ form, isView }: AssignmentFormStepProps) {
             >
               <FormControl>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select class" />
+                  <SelectValue placeholder={d?.selectClass || "Select class"} />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>

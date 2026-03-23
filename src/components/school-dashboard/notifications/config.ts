@@ -13,6 +13,7 @@ import {
   Calendar,
   DollarSign,
   FileText,
+  ListChecks,
   Megaphone,
   MessageSquare,
   Shield,
@@ -120,6 +121,10 @@ export const NOTIFICATION_TYPE_CONFIG: Record<
   absence_intention_decision: {
     icon: Calendar,
     requiresAction: false,
+  },
+  setup_guide: {
+    icon: ListChecks,
+    requiresAction: true,
   },
 }
 

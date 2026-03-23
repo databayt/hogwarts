@@ -29,3 +29,30 @@ export const CURRENCY_OPTIONS = [
   { label: "CAD", value: "CAD" },
   { label: "AUD", value: "AUD" },
 ] as const
+
+// --- Dictionary-based factory functions ---
+
+type Dict = Record<string, any> | undefined
+
+/** Get localized wizard step labels from dictionary */
+export const getStepLabels = (d?: Dict) => {
+  const s = d?.steps as Record<string, string> | undefined
+  return {
+    1: s?.companyClient || "Company & Client",
+    2: s?.invoiceDetailsItems || "Invoice Details & Items",
+    3: s?.reviewSubmit || "Review & Submit",
+  } as const
+}
+
+/** Get localized currency options from dictionary */
+export const getCurrencyOptions = (d?: Dict) => {
+  const c = d?.currency as Record<string, string> | undefined
+  return [
+    { label: c?.USD || "USD", value: "USD" },
+    { label: c?.EUR || "EUR", value: "EUR" },
+    { label: c?.GBP || "GBP", value: "GBP" },
+    { label: c?.INR || "INR", value: "INR" },
+    { label: c?.CAD || "CAD", value: "CAD" },
+    { label: c?.AUD || "AUD", value: "AUD" },
+  ]
+}

@@ -98,6 +98,7 @@ export function ExamPlayer({
   const { dictionary } = useDictionary()
   const t = dictionary?.school?.exams?.take
   const exams = dictionary?.school?.exams
+  const tc = dictionary?.school?.exams?.takeContent
   const [showSubmitDialog, setShowSubmitDialog] = useState(false)
   const [showTimeWarning, setShowTimeWarning] = useState(false)
   const [showSecurityWarning, setShowSecurityWarning] = useState(false)
@@ -332,13 +333,13 @@ export function ExamPlayer({
           <div className="hover:bg-muted/50 flex cursor-pointer items-center gap-3 rounded-lg border p-4">
             <RadioGroupItem value="true" id="true" />
             <Label htmlFor="true" className="flex-1 cursor-pointer text-lg">
-              True
+              {tc?.true ?? "True"}
             </Label>
           </div>
           <div className="hover:bg-muted/50 flex cursor-pointer items-center gap-3 rounded-lg border p-4">
             <RadioGroupItem value="false" id="false" />
             <Label htmlFor="false" className="flex-1 cursor-pointer text-lg">
-              False
+              {tc?.false ?? "False"}
             </Label>
           </div>
         </div>
@@ -381,7 +382,7 @@ export function ExamPlayer({
           className="min-h-[150px] text-base"
         />
         <p className="text-muted-foreground text-sm">
-          {(answer?.answerText || "").length} characters
+          {(answer?.answerText || "").length} {tc?.characters ?? "characters"}
         </p>
       </div>
     )
@@ -407,9 +408,11 @@ export function ExamPlayer({
         <div className="text-muted-foreground flex justify-between text-sm">
           <span>
             {(answer?.answerText || "").split(/\s+/).filter(Boolean).length}{" "}
-            words
+            {tc?.words ?? "words"}
           </span>
-          <span>{(answer?.answerText || "").length} characters</span>
+          <span>
+            {(answer?.answerText || "").length} {tc?.characters ?? "characters"}
+          </span>
         </div>
       </div>
     )
@@ -447,14 +450,18 @@ export function ExamPlayer({
                     <TooltipTrigger>
                       <Badge variant="outline" className="gap-1">
                         <Shield className="h-3 w-3" />
-                        {isStrictMode ? "Proctored" : "Monitored"}
+                        {isStrictMode
+                          ? (tc?.proctored ?? "Proctored")
+                          : (tc?.monitored ?? "Monitored")}
                       </Badge>
                     </TooltipTrigger>
                     <TooltipContent>
                       <p>
                         {isStrictMode
-                          ? "Strict proctoring is active. Suspicious activity is being monitored."
-                          : "Activity is being monitored."}
+                          ? (tc?.strictProctoring ??
+                            "Strict proctoring is active. Suspicious activity is being monitored.")
+                          : (tc?.activityMonitored ??
+                            "Activity is being monitored.")}
                       </p>
                     </TooltipContent>
                   </Tooltip>
@@ -462,7 +469,8 @@ export function ExamPlayer({
               )}
             </div>
             <p className="text-muted-foreground text-sm">
-              Question {currentQuestionIndex + 1} of {totalQuestions}
+              {tc?.question ?? "Question"} {currentQuestionIndex + 1}{" "}
+              {tc?.ofLabel ?? "of"} {totalQuestions}
             </p>
           </div>
 
@@ -471,7 +479,7 @@ export function ExamPlayer({
             {isSaving && (
               <Badge variant="secondary" className="gap-1">
                 <Save className="h-3 w-3 animate-pulse" />
-                {t?.submitDialog?.submitting ?? "Saving..."}
+                {tc?.saving ?? "Saving..."}
               </Badge>
             )}
 
@@ -538,11 +546,14 @@ export function ExamPlayer({
                     <div className="space-y-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <Badge variant="outline">
-                          Question {currentQuestionIndex + 1}
+                          {tc?.question ?? "Question"}{" "}
+                          {currentQuestionIndex + 1}
                         </Badge>
                         <Badge variant="secondary">
                           {currentQuestion.points}{" "}
-                          {currentQuestion.points === 1 ? "point" : "points"}
+                          {currentQuestion.points === 1
+                            ? (tc?.point ?? "point")
+                            : (tc?.points ?? "points")}
                         </Badge>
                         <Badge>
                           {currentQuestion.question.questionType.replace(
@@ -592,7 +603,7 @@ export function ExamPlayer({
                     <div className="overflow-hidden rounded-lg border">
                       <img
                         src={currentQuestion.question.imageUrl}
-                        alt="Question image"
+                        alt={tc?.questionImage ?? "Question image"}
                         className="h-auto max-w-full"
                       />
                     </div>

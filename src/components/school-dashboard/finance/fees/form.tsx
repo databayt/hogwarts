@@ -20,6 +20,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { createFeeStructure } from "./actions"
 
@@ -31,6 +32,13 @@ interface Props {
 export default function FeeStructureForm({ lang, initialData }: Props) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+  const { dictionary } = useDictionary()
+  const ff = (dictionary as any)?.finance?.feesForm as
+    | Record<string, string>
+    | undefined
+  const fc = (dictionary as any)?.finance?.common as
+    | Record<string, string>
+    | undefined
 
   const [fees, setFees] = useState({
     tuitionFee: initialData?.tuitionFee ? Number(initialData.tuitionFee) : 0,
@@ -67,10 +75,14 @@ export default function FeeStructureForm({ lang, initialData }: Props) {
       startTransition(async () => {
         const result = await createFeeStructure(formData)
         if (result.success) {
-          SuccessToast("Fee structure created")
+          SuccessToast(ff?.feeStructureCreated || "Fee structure created")
           router.push(`/${lang}/finance/fees/structures`)
         } else {
-          ErrorToast(result.error || "Failed to create fee structure")
+          ErrorToast(
+            result.error ||
+              ff?.failedCreateFeeStructure ||
+              "Failed to create fee structure"
+          )
         }
       })
     },
@@ -86,17 +98,24 @@ export default function FeeStructureForm({ lang, initialData }: Props) {
 
   const feeFields = useMemo(
     () => [
-      { key: "tuitionFee", label: "Tuition Fee", required: true },
-      { key: "admissionFee", label: "Admission Fee" },
-      { key: "registrationFee", label: "Registration Fee" },
-      { key: "examFee", label: "Exam Fee" },
-      { key: "libraryFee", label: "Library Fee" },
-      { key: "laboratoryFee", label: "Laboratory Fee" },
-      { key: "sportsFee", label: "Sports Fee" },
-      { key: "transportFee", label: "Transport Fee" },
-      { key: "hostelFee", label: "Hostel Fee" },
+      {
+        key: "tuitionFee",
+        label: ff?.tuitionFee || "Tuition Fee",
+        required: true,
+      },
+      { key: "admissionFee", label: ff?.admissionFee || "Admission Fee" },
+      {
+        key: "registrationFee",
+        label: ff?.registrationFee || "Registration Fee",
+      },
+      { key: "examFee", label: ff?.examFee || "Exam Fee" },
+      { key: "libraryFee", label: ff?.libraryFee || "Library Fee" },
+      { key: "laboratoryFee", label: ff?.laboratoryFee || "Laboratory Fee" },
+      { key: "sportsFee", label: ff?.sportsFee || "Sports Fee" },
+      { key: "transportFee", label: ff?.transportFee || "Transport Fee" },
+      { key: "hostelFee", label: ff?.hostelFee || "Hostel Fee" },
     ],
-    []
+    [ff]
   )
 
   return (
@@ -104,21 +123,23 @@ export default function FeeStructureForm({ lang, initialData }: Props) {
       {/* Basic Info */}
       <Card>
         <CardHeader>
-          <CardTitle>Basic Information</CardTitle>
+          <CardTitle>{ff?.basicInformation || "Basic Information"}</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="name">Name *</Label>
+            <Label htmlFor="name">{ff?.nameRequired || "Name *"}</Label>
             <Input
               id="name"
               name="name"
               required
               defaultValue={initialData?.name as string | undefined}
-              placeholder="e.g. Grade 10 Annual Fees"
+              placeholder={ff?.namePlaceholder || "e.g. Grade 10 Annual Fees"}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="academicYear">Academic Year *</Label>
+            <Label htmlFor="academicYear">
+              {ff?.academicYearRequired || "Academic Year *"}
+            </Label>
             <Select
               name="academicYear"
               defaultValue={
@@ -126,7 +147,7 @@ export default function FeeStructureForm({ lang, initialData }: Props) {
               }
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select year" />
+                <SelectValue placeholder={ff?.selectYear || "Select year"} />
               </SelectTrigger>
               <SelectContent>
                 {academicYears.map((y) => (
@@ -138,7 +159,9 @@ export default function FeeStructureForm({ lang, initialData }: Props) {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="installments">Installments</Label>
+            <Label htmlFor="installments">
+              {ff?.installments || "Installments"}
+            </Label>
             <Input
               id="installments"
               name="installments"
@@ -151,12 +174,16 @@ export default function FeeStructureForm({ lang, initialData }: Props) {
             />
           </div>
           <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">
+              {ff?.description || "Description"}
+            </Label>
             <Textarea
               id="description"
               name="description"
               defaultValue={initialData?.description as string | undefined}
-              placeholder="Optional description..."
+              placeholder={
+                ff?.descriptionPlaceholder || "Optional description..."
+              }
             />
           </div>
         </CardContent>
@@ -165,7 +192,7 @@ export default function FeeStructureForm({ lang, initialData }: Props) {
       {/* Fee Components */}
       <Card>
         <CardHeader>
-          <CardTitle>Fee Components</CardTitle>
+          <CardTitle>{ff?.feeComponents || "Fee Components"}</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {feeFields.map(({ key, label, required }) => (
@@ -193,7 +220,9 @@ export default function FeeStructureForm({ lang, initialData }: Props) {
       <Card>
         <CardContent className="flex items-center justify-between pt-6">
           <div>
-            <p className="text-muted-foreground text-sm">Total Amount</p>
+            <p className="text-muted-foreground text-sm">
+              {ff?.totalAmount || "Total Amount"}
+            </p>
             <p className="text-2xl font-bold">
               {formatCurrency(totalAmount, lang)}
             </p>
@@ -204,10 +233,14 @@ export default function FeeStructureForm({ lang, initialData }: Props) {
               variant="outline"
               onClick={() => router.back()}
             >
-              Cancel
+              {fc?.cancel || "Cancel"}
             </Button>
             <Button type="submit" disabled={isPending}>
-              {isPending ? "Saving..." : initialData ? "Update" : "Create"}
+              {isPending
+                ? fc?.saving || "Saving..."
+                : initialData
+                  ? fc?.update || "Update"
+                  : fc?.create || "Create"}
             </Button>
           </div>
         </CardContent>

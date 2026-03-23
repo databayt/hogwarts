@@ -82,7 +82,9 @@ export function SubjectSelector({
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <Label>{ss?.search ?? "Select from available subjects"}</Label>
+            <Label>
+              {ss?.selectAvailable ?? "Select from available subjects"}
+            </Label>
             <Select
               value={selectedSubject}
               onValueChange={(value) => {
@@ -92,7 +94,9 @@ export function SubjectSelector({
               disabled={useCustomSubject}
             >
               <SelectTrigger>
-                <SelectValue placeholder={ss?.search ?? "Choose a subject"} />
+                <SelectValue
+                  placeholder={ss?.chooseSubject ?? "Choose a subject"}
+                />
               </SelectTrigger>
               <SelectContent>
                 {uniqueSubjects.map((subject) => (
@@ -114,13 +118,15 @@ export function SubjectSelector({
                 className="border-border bg-background text-primary focus:ring-primary h-4 w-4 rounded"
               />
               <Label htmlFor="useCustomSubject">
-                {ss?.categories?.elective ?? "Use custom subject name"}
+                {ss?.useCustom ?? "Use custom subject name"}
               </Label>
             </div>
 
             {useCustomSubject && (
               <Input
-                placeholder={ss?.search ?? "Enter custom subject name"}
+                placeholder={
+                  ss?.customPlaceholder ?? "Enter custom subject name"
+                }
                 value={customSubject}
                 onChange={(e) => setCustomSubject(e.target.value)}
                 className="mt-2"
@@ -132,26 +138,24 @@ export function SubjectSelector({
             <div className="muted dark:text-neutral-400">
               <p>
                 •{" "}
-                {ss?.categories?.core ??
+                {ss?.allSubjectsShown ??
                   "All subjects are shown in the dropdown"}
               </p>
               <p>
-                •{" "}
-                {ss?.categories?.activity ??
-                  "You can also enter a custom subject name"}
+                • {ss?.customNote ?? "You can also enter a custom subject name"}
               </p>
             </div>
           )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={handleCancel}>
-            {ss?.buttons?.cancel ?? "Cancel"}
+            {ss?.cancel ?? "Cancel"}
           </Button>
           <Button
             onClick={handleSave}
             disabled={useCustomSubject && !customSubject.trim()}
           >
-            {ss?.buttons?.confirm ?? "Save"}
+            {ss?.save ?? "Save"}
           </Button>
         </DialogFooter>
       </DialogContent>

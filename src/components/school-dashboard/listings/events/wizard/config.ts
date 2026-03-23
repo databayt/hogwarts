@@ -16,6 +16,35 @@ export const EVENT_WIZARD_CONFIG: WizardConfig = {
   finalLabel: "Complete",
 }
 
+/** Dictionary-based factory for wizard config labels */
+export const getEventWizardConfig = (d?: Record<string, any>): WizardConfig => {
+  const wc = d?.wizard?.config as Record<string, string> | undefined
+  return {
+    ...EVENT_WIZARD_CONFIG,
+    groupLabels: [
+      wc?.eventDetails || "Event Details",
+      wc?.schedule || "Schedule",
+      wc?.settings || "Settings",
+    ],
+    finalLabel: wc?.complete || "Complete",
+  }
+}
+
+/** Dictionary-based event type options */
+export const getEventTypeOptions = (d?: Record<string, any>) => {
+  const t = d?.types as Record<string, string> | undefined
+  return [
+    { label: t?.ACADEMIC || "Academic", value: "ACADEMIC" },
+    { label: t?.SPORTS || "Sports", value: "SPORTS" },
+    { label: t?.CULTURAL || "Cultural", value: "CULTURAL" },
+    { label: t?.PARENT_MEETING || "Parent Meeting", value: "PARENT_MEETING" },
+    { label: t?.CELEBRATION || "Celebration", value: "CELEBRATION" },
+    { label: t?.WORKSHOP || "Workshop", value: "WORKSHOP" },
+    { label: t?.OTHER || "Other", value: "OTHER" },
+  ]
+}
+
+/** Keep static fallback for non-dictionary contexts */
 export const EVENT_TYPE_OPTIONS = [
   { label: "Academic", value: "ACADEMIC" },
   { label: "Sports", value: "SPORTS" },

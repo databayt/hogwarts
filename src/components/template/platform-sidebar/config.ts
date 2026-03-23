@@ -129,6 +129,20 @@ export const platformNav: PlatformNavItem[] = [
   },
   { title: "Library", href: "/library", icon: "bookOpen", roles: ALL_ROLES },
   { title: "Stream", href: "/stream", icon: "video", roles: ALL_ROLES },
+  {
+    title: "Messages",
+    href: "/messages",
+    icon: "envelope",
+    roles: [
+      "DEVELOPER",
+      "ADMIN",
+      "TEACHER",
+      "STUDENT",
+      "GUARDIAN",
+      "ACCOUNTANT",
+      "STAFF",
+    ],
+  },
 
   // Profile and Settings
   { title: "Profile", href: "/profile", icon: "user", roles: ALL_ROLES },

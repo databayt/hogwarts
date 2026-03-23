@@ -16,11 +16,14 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { uploadFile } from "@/components/file"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { ParentFormStepProps } from "./types"
 import { parentCreateSchema } from "./validation"
 
 export function InformationStep({ form, isView }: ParentFormStepProps) {
+  const { dictionary } = useDictionary()
+  const d = dictionary?.school?.parents as Record<string, any> | undefined
   const [avatarUrl, setAvatarUrl] = useState(
     form.getValues("profilePhotoUrl") || ""
   )
@@ -57,7 +60,11 @@ export function InformationStep({ form, isView }: ParentFormStepProps) {
           render={({ field }) => (
             <FormItem>
               <FormControl>
-                <Input placeholder="Given name" disabled={isView} {...field} />
+                <Input
+                  placeholder={d?.givenName || "Given name"}
+                  disabled={isView}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -70,7 +77,11 @@ export function InformationStep({ form, isView }: ParentFormStepProps) {
           render={({ field }) => (
             <FormItem>
               <FormControl>
-                <Input placeholder="Surname" disabled={isView} {...field} />
+                <Input
+                  placeholder={d?.surname || "Surname"}
+                  disabled={isView}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -118,7 +129,9 @@ export function InformationStep({ form, isView }: ParentFormStepProps) {
             onChange={handleAvatarChange}
             disabled={isView}
           />
-          <p className="text-muted-foreground text-xs">Profile Photo</p>
+          <p className="text-muted-foreground text-xs">
+            {d?.profilePhoto || "Profile Photo"}
+          </p>
         </div>
       </div>
     </div>

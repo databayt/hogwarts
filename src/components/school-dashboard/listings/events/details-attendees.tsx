@@ -21,12 +21,19 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
-import { TARGET_AUDIENCES } from "./config"
 import { EventFormStepProps } from "./types"
 import { eventCreateSchema } from "./validation"
 
 export function DetailsAttendeesStep({ form, isView }: EventFormStepProps) {
+  const { dictionary } = useDictionary()
+  const d = dictionary?.school?.events?.form as
+    | Record<string, string>
+    | undefined
+  const audiences = dictionary?.school?.events?.targetAudiences as
+    | Record<string, string>
+    | undefined
   return (
     <div className="w-full space-y-6">
       {/* Organizer */}
@@ -37,7 +44,10 @@ export function DetailsAttendeesStep({ form, isView }: EventFormStepProps) {
           <FormItem>
             <FormControl>
               <Input
-                placeholder="Event organizer (e.g., Teacher Name, Department)"
+                placeholder={
+                  d?.organizerPlaceholder ||
+                  "Event organizer (e.g., Teacher Name, Department)"
+                }
                 disabled={isView}
                 {...field}
               />
@@ -60,13 +70,29 @@ export function DetailsAttendeesStep({ form, isView }: EventFormStepProps) {
             >
               <FormControl>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select target audience" />
+                  <SelectValue
+                    placeholder={
+                      d?.selectTargetAudience || "Select target audience"
+                    }
+                  />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                {TARGET_AUDIENCES.map((audience) => (
-                  <SelectItem key={audience} value={audience}>
-                    {audience}
+                {(
+                  [
+                    { key: "allStudents", value: "All Students" },
+                    { key: "primaryStudents", value: "Primary Students" },
+                    { key: "secondaryStudents", value: "Secondary Students" },
+                    { key: "teachersOnly", value: "Teachers Only" },
+                    { key: "parentsOnly", value: "Parents Only" },
+                    { key: "staffOnly", value: "Staff Only" },
+                    { key: "public", value: "Public" },
+                    { key: "specificClass", value: "Specific Class" },
+                    { key: "other", value: "Other" },
+                  ] as const
+                ).map((audience) => (
+                  <SelectItem key={audience.value} value={audience.value}>
+                    {audiences?.[audience.key] || audience.value}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -85,7 +111,10 @@ export function DetailsAttendeesStep({ form, isView }: EventFormStepProps) {
             <FormControl>
               <Input
                 type="number"
-                placeholder="Maximum number of attendees (optional)"
+                placeholder={
+                  d?.maxAttendeesPlaceholder ||
+                  "Maximum number of attendees (optional)"
+                }
                 disabled={isView}
                 {...field}
                 onChange={(e) =>
@@ -116,10 +145,11 @@ export function DetailsAttendeesStep({ form, isView }: EventFormStepProps) {
               </FormControl>
               <div className="space-y-1 leading-none">
                 <label className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Public Event
+                  {d?.publicEvent || "Public Event"}
                 </label>
                 <p className="text-muted-foreground text-sm">
-                  This event is open to the public
+                  {d?.publicEventDescription ||
+                    "This event is open to the public"}
                 </p>
               </div>
             </FormItem>
@@ -140,10 +170,11 @@ export function DetailsAttendeesStep({ form, isView }: EventFormStepProps) {
               </FormControl>
               <div className="space-y-1 leading-none">
                 <label className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Registration Required
+                  {d?.registrationRequired || "Registration Required"}
                 </label>
                 <p className="text-muted-foreground text-sm">
-                  Attendees must register to attend this event
+                  {d?.registrationRequiredDescription ||
+                    "Attendees must register to attend this event"}
                 </p>
               </div>
             </FormItem>
@@ -159,7 +190,10 @@ export function DetailsAttendeesStep({ form, isView }: EventFormStepProps) {
           <FormItem>
             <FormControl>
               <Textarea
-                placeholder="Additional notes or special instructions (optional)"
+                placeholder={
+                  d?.notesPlaceholder ||
+                  "Additional notes or special instructions (optional)"
+                }
                 disabled={isView}
                 {...field}
                 rows={4}

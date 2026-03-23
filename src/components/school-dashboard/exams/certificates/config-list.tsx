@@ -40,6 +40,7 @@ export function CertificateConfigList({
   const [loading, setLoading] = useState<string | null>(null)
   const { dictionary } = useDictionary()
   const t = dictionary?.school?.exams?.certificates?.config
+  const cfl = dictionary?.school?.exams?.configList
 
   async function handleDelete(id: string) {
     setLoading(id)
@@ -60,9 +61,12 @@ export function CertificateConfigList({
   if (configs.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
-        <h3 className="text-lg font-medium">No templates yet</h3>
+        <h3 className="text-lg font-medium">
+          {cfl?.noTemplatesYet ?? "No templates yet"}
+        </h3>
         <p className="text-muted-foreground text-sm">
-          Create a certificate template to get started.
+          {cfl?.createTemplateToStart ??
+            "Create a certificate template to get started."}
         </p>
       </div>
     )
@@ -107,7 +111,7 @@ export function CertificateConfigList({
                   <DropdownMenuItem asChild>
                     <a href={`certificates/cert-wizard/${config.id}`}>
                       <Edit className="me-2 h-4 w-4" />
-                      Edit
+                      {cfl?.edit ?? "Edit"}
                     </a>
                   </DropdownMenuItem>
                   <DropdownMenuItem
@@ -115,7 +119,7 @@ export function CertificateConfigList({
                     onClick={() => handleDelete(config.id)}
                   >
                     <Trash2 className="me-2 h-4 w-4" />
-                    Delete
+                    {cfl?.delete ?? "Delete"}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

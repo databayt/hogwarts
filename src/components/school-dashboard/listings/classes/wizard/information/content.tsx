@@ -8,6 +8,7 @@ import { useParams } from "next/navigation"
 import { FormHeading, FormLayout } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { useClassWizard } from "../use-class-wizard"
 import { InformationForm } from "./form"
@@ -18,6 +19,8 @@ export default function InformationContent() {
   const formRef = useRef<WizardFormRef>(null)
   const { data, isLoading } = useClassWizard()
   const [isValid, setIsValid] = useState(false)
+  const { dictionary } = useDictionary()
+  const d = dictionary?.school?.classes?.wizard?.information
 
   // Set initial validity from loaded data
   useEffect(() => {
@@ -41,8 +44,11 @@ export default function InformationContent() {
     >
       <FormLayout>
         <FormHeading
-          title="Class Information"
-          description="Enter the basic class details, subject, and assigned teacher."
+          title={d?.title || "Class Information"}
+          description={
+            d?.description ||
+            "Enter the basic class details, subject, and assigned teacher."
+          }
         />
         <InformationForm
           ref={formRef}

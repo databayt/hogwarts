@@ -96,7 +96,7 @@ export function NotificationBellIcon({
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0, opacity: 0 }}
                   transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                  className="absolute -top-1 ltr:-right-1 rtl:-left-1"
+                  className="absolute -top-0.5 ltr:-right-0.5 rtl:-left-0.5"
                 >
                   <Badge
                     variant="destructive"
@@ -190,7 +190,7 @@ export function NotificationBellIconCompact({
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
             transition={{ type: "spring", stiffness: 500, damping: 30 }}
-            className="absolute -top-1 ltr:-right-1 rtl:-left-1"
+            className="absolute -top-0.5 ltr:-right-0.5 rtl:-left-0.5"
           >
             <Badge
               variant="destructive"

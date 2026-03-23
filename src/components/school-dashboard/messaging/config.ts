@@ -461,3 +461,77 @@ export function formatFileSize(bytes: number): string {
   const i = Math.floor(Math.log(bytes) / Math.log(k))
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`
 }
+
+// --- Dictionary-based factory functions ---
+
+type MsgDict = Record<string, any> | undefined
+
+/** Get localized conversation type labels/descriptions from dictionary */
+export const getConversationTypeLabels = (d?: MsgDict) => {
+  const ct = d?.conversationType as Record<string, any> | undefined
+  return {
+    direct: {
+      label: ct?.direct?.label || "Direct Message",
+      description: ct?.direct?.description || "One-on-one private conversation",
+    },
+    group: {
+      label: ct?.group?.label || "Group Chat",
+      description:
+        ct?.group?.description ||
+        "Group conversation with multiple participants",
+    },
+    class: {
+      label: ct?.class?.label || "Class Channel",
+      description: ct?.class?.description || "Class-wide messaging channel",
+    },
+    department: {
+      label: ct?.department?.label || "Department Channel",
+      description:
+        ct?.department?.description || "Department-wide messaging channel",
+    },
+    announcement: {
+      label: ct?.announcement?.label || "Announcement",
+      description: ct?.announcement?.description || "One-way broadcast channel",
+    },
+  }
+}
+
+/** Get localized participant role labels from dictionary */
+export const getParticipantRoleLabels = (
+  d?: MsgDict
+): Record<string, string> => {
+  const r = d?.participantRole as Record<string, string> | undefined
+  return {
+    owner: r?.owner || "Owner",
+    admin: r?.admin || "Admin",
+    member: r?.member || "Member",
+    read_only: r?.readOnly || "Read Only",
+    guest: r?.guest || "Guest",
+  }
+}
+
+/** Get localized message status labels from dictionary */
+export const getMessageStatusLabels = (d?: MsgDict): Record<string, string> => {
+  const s = d?.messageStatus as Record<string, string> | undefined
+  return {
+    sending: s?.sending || "Sending",
+    sent: s?.sent || "Sent",
+    delivered: s?.delivered || "Delivered",
+    read: s?.read || "Read",
+    failed: s?.failed || "Failed",
+  }
+}
+
+/** Get localized content type labels from dictionary */
+export const getContentTypeLabels = (d?: MsgDict): Record<string, string> => {
+  const c = d?.contentType as Record<string, string> | undefined
+  return {
+    text: c?.text || "Text",
+    image: c?.image || "Image",
+    video: c?.video || "Video",
+    audio: c?.audio || "Audio",
+    file: c?.file || "File",
+    link: c?.link || "Link",
+    system: c?.system || "System",
+  }
+}

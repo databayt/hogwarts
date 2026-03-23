@@ -24,6 +24,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "@/components/ui/use-toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { useAttendanceContext } from "../core/attendance-context"
 import { AttendanceStats } from "../core/attendance-stats"
@@ -41,6 +42,11 @@ export default function QRCodeAttendanceContent({
   locale = "en",
   schoolId,
 }: QRCodeAttendanceContentProps) {
+  const { dictionary: dict } = useDictionary()
+  const t = (dict?.school?.attendance as any)?.qrCode as
+    | Record<string, string>
+    | undefined
+
   const [activeTab, setActiveTab] = useState<"generate" | "scan" | "manage">(
     "generate"
   )
@@ -80,17 +86,21 @@ export default function QRCodeAttendanceContent({
             <QrCode className="h-6 w-6 text-purple-600" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold">QR Code Attendance</h2>
+            <h2 className="text-2xl font-bold">
+              {t?.title || "QR Code Attendance"}
+            </h2>
             <p className="text-muted-foreground">
               {isTeacherMode
-                ? "Generate QR codes for students to scan"
-                : "Scan QR code to mark your attendance"}
+                ? t?.teacherDescription ||
+                  "Generate and display QR codes for students to scan"
+                : t?.studentDescription ||
+                  "Scan the QR code displayed by your teacher"}
             </p>
           </div>
         </div>
         <Badge variant="outline" className="text-purple-600">
           <QrCode className="me-1 h-3 w-3" />
-          QR Mode Active
+          {t?.modeActive || "QR Mode Active"}
         </Badge>
       </div>
 
@@ -108,15 +118,15 @@ export default function QRCodeAttendanceContent({
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="generate" disabled={!isTeacherMode}>
             <QrCode className="me-2 h-4 w-4" />
-            Generate QR
+            {t?.generateQr || "Generate QR"}
           </TabsTrigger>
           <TabsTrigger value="scan">
             <Scan className="me-2 h-4 w-4" />
-            Scan QR
+            {t?.scanQr || "Scan QR"}
           </TabsTrigger>
           <TabsTrigger value="manage" disabled={!isTeacherMode}>
             <Users className="me-2 h-4 w-4" />
-            Manage
+            {t?.manage || "Manage"}
           </TabsTrigger>
         </TabsList>
 
@@ -125,18 +135,17 @@ export default function QRCodeAttendanceContent({
           {!selectedClass ? (
             <Card>
               <CardHeader>
-                <CardTitle>No Class Selected</CardTitle>
+                <CardTitle>
+                  {t?.noClassSelected || "No Class Selected"}
+                </CardTitle>
                 <CardDescription>
-                  Please select a class from the dropdown above to generate QR
-                  codes
+                  {t?.selectClassMessage ||
+                    "Please select a class to generate QR codes"}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="py-4 text-center">
                   <CircleAlert className="text-muted-foreground mx-auto mb-3 h-12 w-12" />
-                  <p className="text-muted-foreground text-sm">
-                    Select a class to continue
-                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -154,8 +163,10 @@ export default function QRCodeAttendanceContent({
           <QRScanner
             onScanSuccess={(data) => {
               toast({
-                title: "QR Code Scanned",
-                description: `Attendance marked successfully`,
+                title: t?.qrCodeScanned || "QR Code Scanned",
+                description:
+                  t?.attendanceMarked ||
+                  "Attendance has been marked successfully",
               })
             }}
             dictionary={dictionary}
@@ -167,9 +178,10 @@ export default function QRCodeAttendanceContent({
         <TabsContent value="manage" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Recent QR Scans</CardTitle>
+              <CardTitle>{t?.recentScans || "Recent QR Scans"}</CardTitle>
               <CardDescription>
-                Students who have scanned the QR code today
+                {t?.scansWillAppear ||
+                  "QR code scans will appear here as students check in"}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -177,10 +189,7 @@ export default function QRCodeAttendanceContent({
                 <div className="py-8 text-center">
                   <Users className="text-muted-foreground mx-auto mb-3 h-12 w-12" />
                   <p className="text-muted-foreground">
-                    No QR scans recorded yet
-                  </p>
-                  <p className="text-muted-foreground mt-2 text-sm">
-                    Generate a QR code and share it with students
+                    {t?.noScansYet || "No QR scans recorded yet"}
                   </p>
                 </div>
               ) : (
@@ -235,46 +244,49 @@ export default function QRCodeAttendanceContent({
           {/* QR Settings */}
           <Card>
             <CardHeader>
-              <CardTitle>QR Code Settings</CardTitle>
-              <CardDescription>
-                Configure QR code generation and validation rules
-              </CardDescription>
+              <CardTitle>{t?.settings || "QR Code Settings"}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">Auto-refresh QR codes</p>
+                  <p className="font-medium">
+                    {t?.autoRefresh || "Auto-refresh QR codes"}
+                  </p>
                   <p className="text-muted-foreground text-sm">
-                    Generate new codes every 60 seconds
+                    {t?.autoRefreshDesc ||
+                      "Generate new QR codes automatically at set intervals"}
                   </p>
                 </div>
                 <Button size="sm" variant="outline">
                   <RefreshCw className="me-2 h-4 w-4" />
-                  Configure
                 </Button>
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">Require location verification</p>
+                  <p className="font-medium">
+                    {t?.requireLocation || "Require location verification"}
+                  </p>
                   <p className="text-muted-foreground text-sm">
-                    Students must be within campus to scan
+                    {t?.requireLocationDesc ||
+                      "Students must be within school bounds to scan"}
                   </p>
                 </div>
                 <Button size="sm" variant="outline">
                   <Settings className="me-2 h-4 w-4" />
-                  Setup
                 </Button>
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">Prevent screenshot sharing</p>
+                  <p className="font-medium">
+                    {t?.preventScreenshot || "Prevent screenshot sharing"}
+                  </p>
                   <p className="text-muted-foreground text-sm">
-                    Add security measures to prevent QR sharing
+                    {t?.preventScreenshotDesc ||
+                      "Add dynamic elements to prevent QR code sharing"}
                   </p>
                 </div>
                 <Button size="sm" variant="outline">
                   <CircleAlert className="me-2 h-4 w-4" />
-                  Enable
                 </Button>
               </div>
             </CardContent>

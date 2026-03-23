@@ -34,18 +34,28 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { createHallPass } from "./actions"
 import { hallPassDestinations, type HallPassDestination } from "./validation"
 
-const destinationLabels: Record<
-  HallPassDestination,
-  { en: string; ar: string }
-> = {
-  BATHROOM: { en: "Bathroom", ar: "دورة المياه" },
-  NURSE: { en: "Nurse", ar: "العيادة" },
-  OFFICE: { en: "Office", ar: "الإدارة" },
-  COUNSELOR: { en: "Counselor", ar: "المرشد" },
-  LIBRARY: { en: "Library", ar: "المكتبة" },
-  LOCKER: { en: "Locker", ar: "الخزانة" },
-  WATER_FOUNTAIN: { en: "Water Fountain", ar: "برادة الماء" },
-  OTHER: { en: "Other", ar: "أخرى" },
+// Fallback labels when dictionary is not loaded
+const destinationLabelsFallback: Record<HallPassDestination, string> = {
+  BATHROOM: "Bathroom",
+  NURSE: "Nurse",
+  OFFICE: "Office",
+  COUNSELOR: "Counselor",
+  LIBRARY: "Library",
+  LOCKER: "Locker",
+  WATER_FOUNTAIN: "Water Fountain",
+  OTHER: "Other",
+}
+
+// Map destination codes to dictionary keys
+const destinationKeyMap: Record<HallPassDestination, string> = {
+  BATHROOM: "bathroom",
+  NURSE: "nurse",
+  OFFICE: "office",
+  COUNSELOR: "counselor",
+  LIBRARY: "library",
+  LOCKER: "other",
+  WATER_FOUNTAIN: "other",
+  OTHER: "other",
 }
 
 interface Student {
@@ -71,8 +81,8 @@ export function IssuePassDialog({
   students = [],
 }: IssuePassDialogProps) {
   const { dictionary } = useDictionary()
-  const t = dictionary?.attendance?.hallPass
-  const isRTL = locale === "ar"
+  const t = (dictionary?.school?.attendance as any)?.hallPass
+  const destinations = t?.destinations as Record<string, string> | undefined
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState("")
 
@@ -173,7 +183,8 @@ export function IssuePassDialog({
               <SelectContent>
                 {hallPassDestinations.map((dest) => (
                   <SelectItem key={dest} value={dest}>
-                    {destinationLabels[dest][isRTL ? "ar" : "en"]}
+                    {destinations?.[destinationKeyMap[dest]] ||
+                      destinationLabelsFallback[dest]}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -229,7 +240,7 @@ export function IssuePassDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            {dictionary?.attendance?.form?.cancel || "Cancel"}
+            {t?.cancel || "Cancel"}
           </Button>
           <Button onClick={handleSubmit} disabled={isSubmitting}>
             {isSubmitting

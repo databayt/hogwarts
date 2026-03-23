@@ -117,7 +117,8 @@
     "exam_scheduled": "Exam scheduled",
     "exam_result": "Exam result available",
     "library_due": "Library book due",
-    "general": "General notification"
+    "general": "General notification",
+    "setup_guide": "Setup guide"
   },
   "priorities": {
     "low": "Low priority",

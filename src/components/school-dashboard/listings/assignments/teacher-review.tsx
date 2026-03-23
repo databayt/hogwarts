@@ -60,6 +60,7 @@ import {
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface Assignment {
   id: string
@@ -131,6 +132,9 @@ export function TeacherReview({
   onReturnSubmission,
   onBatchGrade,
 }: TeacherReviewProps) {
+  const { dictionary } = useDictionary()
+  const tr = (dictionary?.school as Record<string, any>)?.assignments
+    ?.teacherReview as Record<string, any> | undefined
   const [selectedTab, setSelectedTab] = useState<
     "submitted" | "graded" | "missing"
   >("submitted")
@@ -221,19 +225,21 @@ export function TeacherReview({
 
     const score = parseFloat(currentScore)
     if (isNaN(score) || score < 0 || score > assignment.totalPoints) {
-      toast.error(`Score must be between 0 and ${assignment.totalPoints}`)
+      toast.error(
+        `${tr?.scoreError || "Score must be between 0 and"} ${assignment.totalPoints}`
+      )
       return
     }
 
     try {
       await onGradeSubmission(selectedSubmission.id, score, currentFeedback)
-      toast.success("Submission graded successfully")
+      toast.success(tr?.gradedSuccess || "Submission graded successfully")
       setGradeDialogOpen(false)
       setSelectedSubmission(null)
       setCurrentScore("")
       setCurrentFeedback("")
     } catch (error) {
-      toast.error("Failed to grade submission")
+      toast.error(tr?.failedGrade || "Failed to grade submission")
     }
   }
 
@@ -244,9 +250,9 @@ export function TeacherReview({
     const score = (assignment.totalPoints * percentage) / 100
     try {
       await onGradeSubmission(submission.id, score, "")
-      toast.success(`Quick graded: ${percentage}%`)
+      toast.success(`${tr?.quickGraded || "Quick graded:"} ${percentage}%`)
     } catch (error) {
-      toast.error("Failed to apply quick grade")
+      toast.error(tr?.failedQuickGrade || "Failed to apply quick grade")
     }
   }
 
@@ -277,7 +283,7 @@ export function TeacherReview({
           </Badge>
           {isLate && (
             <Badge variant="outline" className="ms-2 text-orange-600">
-              Late
+              {tr?.late || "Late"}
             </Badge>
           )}
         </TableCell>
@@ -316,14 +322,16 @@ export function TeacherReview({
               </p>
             </div>
           ) : (
-            <span className="text-muted-foreground text-sm">Not graded</span>
+            <span className="text-muted-foreground text-sm">
+              {tr?.notGraded || "Not graded"}
+            </span>
           )}
         </TableCell>
         <TableCell>
           <div className="flex items-center gap-2">
             {submission.attachments && submission.attachments.length > 0 && (
               <Badge variant="outline" className="text-xs">
-                {submission.attachments.length} files
+                {submission.attachments.length} {tr?.files || "files"}
               </Badge>
             )}
             {submission.feedback && (
@@ -341,14 +349,14 @@ export function TeacherReview({
                   size="sm"
                   onClick={() => handleOpenGradeDialog(submission)}
                 >
-                  Grade
+                  {tr?.grade || "Grade"}
                 </Button>
                 <div className="flex gap-1">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => handleQuickGrade(submission, 100)}
-                    title="Quick grade: 100%"
+                    title={`${tr?.quickGraded || "Quick graded:"} 100%`}
                   >
                     A
                   </Button>
@@ -356,7 +364,7 @@ export function TeacherReview({
                     variant="ghost"
                     size="sm"
                     onClick={() => handleQuickGrade(submission, 85)}
-                    title="Quick grade: 85%"
+                    title={`${tr?.quickGraded || "Quick graded:"} 85%`}
                   >
                     B
                   </Button>
@@ -364,7 +372,7 @@ export function TeacherReview({
                     variant="ghost"
                     size="sm"
                     onClick={() => handleQuickGrade(submission, 70)}
-                    title="Quick grade: 70%"
+                    title={`${tr?.quickGraded || "Quick graded:"} 70%`}
                   >
                     C
                   </Button>
@@ -378,19 +386,19 @@ export function TeacherReview({
                   onClick={() => handleOpenGradeDialog(submission)}
                 >
                   <Eye className="me-1 h-4 w-4" />
-                  Review
+                  {tr?.review || "Review"}
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => onReturnSubmission(submission.id)}
                 >
-                  Return
+                  {tr?.return || "Return"}
                 </Button>
               </>
             ) : (
               <Button variant="ghost" size="sm" disabled>
-                No submission
+                {tr?.noSubmission || "No submission"}
               </Button>
             )}
           </div>
@@ -412,35 +420,47 @@ export function TeacherReview({
               </CardDescription>
             </div>
             <Badge variant="outline" className="text-lg">
-              {assignment.totalPoints} points
+              {assignment.totalPoints}{" "}
+              {(dictionary?.school as Record<string, any>)?.assignments
+                ?.studentView?.pointsLabel || "points"}
             </Badge>
           </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
             <div>
-              <p className="text-muted-foreground text-sm">Total Students</p>
+              <p className="text-muted-foreground text-sm">
+                {tr?.totalStudents || "Total Students"}
+              </p>
               <p className="text-2xl font-bold">{stats.total}</p>
             </div>
             <div>
-              <p className="text-muted-foreground text-sm">Submitted</p>
+              <p className="text-muted-foreground text-sm">
+                {tr?.submitted || "Submitted"}
+              </p>
               <p className="text-2xl font-bold text-blue-600">
                 {stats.submitted}
               </p>
               <Progress value={stats.submissionRate} className="mt-1 h-2" />
             </div>
             <div>
-              <p className="text-muted-foreground text-sm">Graded</p>
+              <p className="text-muted-foreground text-sm">
+                {tr?.graded || "Graded"}
+              </p>
               <p className="text-2xl font-bold text-green-600">
                 {stats.graded}
               </p>
             </div>
             <div>
-              <p className="text-muted-foreground text-sm">Missing</p>
+              <p className="text-muted-foreground text-sm">
+                {tr?.missing || "Missing"}
+              </p>
               <p className="text-2xl font-bold text-red-600">{stats.missing}</p>
             </div>
             <div>
-              <p className="text-muted-foreground text-sm">Average Score</p>
+              <p className="text-muted-foreground text-sm">
+                {tr?.averageScore || "Average Score"}
+              </p>
               <p className="text-2xl font-bold">{stats.averageScore}%</p>
             </div>
           </div>
@@ -450,7 +470,7 @@ export function TeacherReview({
       {/* Search and Filters */}
       <div className="flex gap-4">
         <Input
-          placeholder="Search student name or ID..."
+          placeholder={tr?.searchPlaceholder || "Search student name or ID..."}
           value={searchStudent}
           onChange={(e) => setSearchStudent(e.target.value)}
           className="max-w-sm"
@@ -461,13 +481,15 @@ export function TeacherReview({
       <Tabs value={selectedTab} onValueChange={(v) => setSelectedTab(v as any)}>
         <TabsList className="grid w-full max-w-md grid-cols-3">
           <TabsTrigger value="submitted">
-            To Grade ({categorizedSubmissions.submitted.length})
+            {tr?.toGrade || "To Grade"} (
+            {categorizedSubmissions.submitted.length})
           </TabsTrigger>
           <TabsTrigger value="graded">
-            Graded ({categorizedSubmissions.graded.length})
+            {tr?.gradedTab || "Graded"} ({categorizedSubmissions.graded.length})
           </TabsTrigger>
           <TabsTrigger value="missing">
-            Missing ({categorizedSubmissions.missing.length})
+            {tr?.missingTab || "Missing"} (
+            {categorizedSubmissions.missing.length})
           </TabsTrigger>
         </TabsList>
 
@@ -476,12 +498,12 @@ export function TeacherReview({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Student</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Submitted</TableHead>
-                  <TableHead>Score</TableHead>
-                  <TableHead>Attachments</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead>{tr?.student || "Student"}</TableHead>
+                  <TableHead>{tr?.status || "Status"}</TableHead>
+                  <TableHead>{tr?.submittedCol || "Submitted"}</TableHead>
+                  <TableHead>{tr?.score || "Score"}</TableHead>
+                  <TableHead>{tr?.attachments || "Attachments"}</TableHead>
+                  <TableHead>{tr?.actionsCol || "Actions"}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -503,12 +525,12 @@ export function TeacherReview({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Student</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Submitted</TableHead>
-                  <TableHead>Score</TableHead>
-                  <TableHead>Attachments</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead>{tr?.student || "Student"}</TableHead>
+                  <TableHead>{tr?.status || "Status"}</TableHead>
+                  <TableHead>{tr?.submittedCol || "Submitted"}</TableHead>
+                  <TableHead>{tr?.score || "Score"}</TableHead>
+                  <TableHead>{tr?.attachments || "Attachments"}</TableHead>
+                  <TableHead>{tr?.actionsCol || "Actions"}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -530,12 +552,12 @@ export function TeacherReview({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Student</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Submitted</TableHead>
-                  <TableHead>Score</TableHead>
-                  <TableHead>Attachments</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead>{tr?.student || "Student"}</TableHead>
+                  <TableHead>{tr?.status || "Status"}</TableHead>
+                  <TableHead>{tr?.submittedCol || "Submitted"}</TableHead>
+                  <TableHead>{tr?.score || "Score"}</TableHead>
+                  <TableHead>{tr?.attachments || "Attachments"}</TableHead>
+                  <TableHead>{tr?.actionsCol || "Actions"}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -557,7 +579,9 @@ export function TeacherReview({
       <Dialog open={gradeDialogOpen} onOpenChange={setGradeDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Grade Submission</DialogTitle>
+            <DialogTitle>
+              {tr?.gradeSubmission || "Grade Submission"}
+            </DialogTitle>
             <DialogDescription>
               {selectedSubmission && (
                 <span>
@@ -565,7 +589,7 @@ export function TeacherReview({
                   {selectedSubmission.student.surname}
                   {selectedSubmission.status === "LATE_SUBMITTED" && (
                     <Badge variant="outline" className="ms-2 text-orange-600">
-                      Late
+                      {tr?.late || "Late"}
                     </Badge>
                   )}
                 </span>
@@ -578,7 +602,7 @@ export function TeacherReview({
               {/* Submission Content */}
               {selectedSubmission.content && (
                 <div>
-                  <Label>Student Response</Label>
+                  <Label>{tr?.studentResponse || "Student Response"}</Label>
                   <div className="bg-muted/30 mt-2 max-h-64 overflow-y-auto rounded-lg border p-4">
                     <p className="text-sm whitespace-pre-wrap">
                       {selectedSubmission.content}
@@ -591,7 +615,7 @@ export function TeacherReview({
               {selectedSubmission.attachments &&
                 selectedSubmission.attachments.length > 0 && (
                   <div>
-                    <Label>Attachments</Label>
+                    <Label>{tr?.attachmentsLabel || "Attachments"}</Label>
                     <div className="mt-2 space-y-2">
                       {selectedSubmission.attachments.map((url, idx) => (
                         <div
@@ -601,7 +625,7 @@ export function TeacherReview({
                           <div className="flex items-center gap-2">
                             <FileText className="h-4 w-4" />
                             <span className="text-sm">
-                              Attachment {idx + 1}
+                              {tr?.attachment || "Attachment"} {idx + 1}
                             </span>
                           </div>
                           <Button variant="outline" size="sm" asChild>
@@ -611,7 +635,7 @@ export function TeacherReview({
                               rel="noopener noreferrer"
                             >
                               <Download className="me-1 h-4 w-4" />
-                              View
+                              {tr?.view || "View"}
                             </a>
                           </Button>
                         </div>
@@ -625,7 +649,7 @@ export function TeacherReview({
               {/* Grading Section */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="score">Score</Label>
+                  <Label htmlFor="score">{tr?.scoreLabel || "Score"}</Label>
                   <div className="mt-2 flex items-center gap-2">
                     <Input
                       id="score"
@@ -643,7 +667,7 @@ export function TeacherReview({
                   </div>
                 </div>
                 <div>
-                  <Label>Percentage</Label>
+                  <Label>{tr?.percentage || "Percentage"}</Label>
                   <p className="mt-2 text-2xl font-bold">
                     {currentScore && !isNaN(parseFloat(currentScore))
                       ? (
@@ -657,12 +681,15 @@ export function TeacherReview({
               </div>
 
               <div>
-                <Label htmlFor="feedback">Feedback</Label>
+                <Label htmlFor="feedback">{tr?.feedback || "Feedback"}</Label>
                 <Textarea
                   id="feedback"
                   value={currentFeedback}
                   onChange={(e) => setCurrentFeedback(e.target.value)}
-                  placeholder="Provide feedback to the student..."
+                  placeholder={
+                    tr?.feedbackPlaceholder ||
+                    "Provide feedback to the student..."
+                  }
                   className="mt-2 min-h-[100px]"
                 />
               </div>
@@ -671,9 +698,11 @@ export function TeacherReview({
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setGradeDialogOpen(false)}>
-              Cancel
+              {tr?.cancelBtn || "Cancel"}
             </Button>
-            <Button onClick={handleGradeSubmission}>Save Grade</Button>
+            <Button onClick={handleGradeSubmission}>
+              {tr?.saveGrade || "Save Grade"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -3,6 +3,10 @@
 
 /**
  * Configuration for Staff module
+ *
+ * Static options (EMPLOYMENT_STATUS_OPTIONS etc.) are kept for non-UI contexts
+ * (e.g., Zod enums, server-side logic). For UI display, use the dictionary-based
+ * factory functions that accept a staffListing dictionary section.
  */
 
 export const EMPLOYMENT_STATUS_OPTIONS = [
@@ -63,30 +67,68 @@ export function getEmploymentTypeColor(type: string): string {
   }
 }
 
-// --- Bilingual factory functions ---
+// --- Dictionary-based factory functions ---
+// These accept the staffListing dictionary section (Record<string, any>)
+// and fall back to English defaults when dictionary is not yet loaded.
 
-export const getEmploymentStatusOptions = (lang?: string) => [
-  { value: "ACTIVE", label: lang === "ar" ? "نشط" : "Active" },
-  { value: "ON_LEAVE", label: lang === "ar" ? "في إجازة" : "On Leave" },
-  { value: "TERMINATED", label: lang === "ar" ? "منتهي" : "Terminated" },
-  { value: "RETIRED", label: lang === "ar" ? "متقاعد" : "Retired" },
-]
+type StaffDict = Record<string, any> | undefined
 
-export const getEmploymentTypeOptions = (lang?: string) => [
-  { value: "FULL_TIME", label: lang === "ar" ? "دوام كامل" : "Full Time" },
-  { value: "PART_TIME", label: lang === "ar" ? "دوام جزئي" : "Part Time" },
-  { value: "CONTRACT", label: lang === "ar" ? "عقد" : "Contract" },
-  { value: "TEMPORARY", label: lang === "ar" ? "مؤقت" : "Temporary" },
-]
+export const getEmploymentStatusOptions = (d?: StaffDict) => {
+  const es = d?.employmentStatus as Record<string, string> | undefined
+  return [
+    { value: "ACTIVE", label: es?.active || "Active" },
+    { value: "ON_LEAVE", label: es?.onLeave || "On Leave" },
+    { value: "TERMINATED", label: es?.terminated || "Terminated" },
+    { value: "RETIRED", label: es?.retired || "Retired" },
+  ]
+}
 
-export const getGenderOptions = (lang?: string) => [
-  { value: "male", label: lang === "ar" ? "ذكر" : "Male" },
-  { value: "female", label: lang === "ar" ? "أنثى" : "Female" },
-]
+export const getEmploymentTypeOptions = (d?: StaffDict) => {
+  const et = d?.employmentType as Record<string, string> | undefined
+  return [
+    { value: "FULL_TIME", label: et?.fullTime || "Full Time" },
+    { value: "PART_TIME", label: et?.partTime || "Part Time" },
+    { value: "CONTRACT", label: et?.contract || "Contract" },
+    { value: "TEMPORARY", label: et?.temporary || "Temporary" },
+  ]
+}
 
-export const getStaffSortOptions = (lang?: string) => [
-  { value: "createdAt", label: lang === "ar" ? "تاريخ الإضافة" : "Date Added" },
-  { value: "givenName", label: lang === "ar" ? "الاسم الأول" : "First Name" },
-  { value: "surname", label: lang === "ar" ? "اسم العائلة" : "Last Name" },
-  { value: "position", label: lang === "ar" ? "المنصب" : "Position" },
-]
+export const getGenderOptions = (d?: StaffDict) => {
+  const g = d?.gender as Record<string, string> | undefined
+  return [
+    { value: "male", label: g?.male || "Male" },
+    { value: "female", label: g?.female || "Female" },
+  ]
+}
+
+export const getStaffSortOptions = (d?: StaffDict) => {
+  const s = d?.sortOptions as Record<string, string> | undefined
+  return [
+    { value: "createdAt", label: s?.dateAdded || "Date Added" },
+    { value: "givenName", label: s?.firstName || "First Name" },
+    { value: "surname", label: s?.lastName || "Last Name" },
+    { value: "position", label: s?.position || "Position" },
+  ]
+}
+
+/** Get status labels map for column display */
+export const getStatusLabels = (d?: StaffDict): Record<string, string> => {
+  const es = d?.employmentStatus as Record<string, string> | undefined
+  return {
+    ACTIVE: es?.active || "Active",
+    ON_LEAVE: es?.onLeave || "On Leave",
+    TERMINATED: es?.terminated || "Terminated",
+    RETIRED: es?.retired || "Retired",
+  }
+}
+
+/** Get type labels map for column display */
+export const getTypeLabels = (d?: StaffDict): Record<string, string> => {
+  const et = d?.employmentType as Record<string, string> | undefined
+  return {
+    FULL_TIME: et?.fullTime || "Full Time",
+    PART_TIME: et?.partTime || "Part Time",
+    CONTRACT: et?.contract || "Contract",
+    TEMPORARY: et?.temporary || "Temporary",
+  }
+}

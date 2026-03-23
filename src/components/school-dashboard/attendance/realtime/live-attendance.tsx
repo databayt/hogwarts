@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import type { AttendanceRecord, AttendanceStatus } from "../shared/types"
 import { formatTime, getStatusVariant } from "../shared/utils"
@@ -43,6 +44,11 @@ interface LiveAttendanceProps {
 }
 
 export function LiveAttendance({ classId, className }: LiveAttendanceProps) {
+  const { dictionary } = useDictionary()
+  const t = (dictionary?.school?.attendance as any)?.realtime as
+    | Record<string, string>
+    | undefined
+
   const { attendance, liveCount, isConnected } = useClassAttendance(classId)
   const [recentActivity, setRecentActivity] = useState<AttendanceRecord[]>([])
   const [showNotification, setShowNotification] = useState(false)
@@ -83,7 +89,7 @@ export function LiveAttendance({ classId, className }: LiveAttendanceProps) {
               <>
                 <Wifi className="h-4 w-4 text-green-600" />
                 <span className="text-sm font-medium text-green-800">
-                  Live Updates Active
+                  {t?.liveUpdatesActive || "Live Updates Active"}
                 </span>
                 <div className="h-2 w-2 animate-pulse rounded-full bg-green-500" />
               </>
@@ -91,14 +97,14 @@ export function LiveAttendance({ classId, className }: LiveAttendanceProps) {
               <>
                 <WifiOff className="h-4 w-4 text-red-600" />
                 <span className="text-sm font-medium text-red-800">
-                  Disconnected
+                  {t?.disconnected || "Disconnected"}
                 </span>
               </>
             )}
           </div>
           <Badge variant="outline" className="text-xs">
             <Zap className="me-1 h-3 w-3" />
-            Real-time
+            {t?.realtimeBadge || "Real-time"}
           </Badge>
         </div>
       </Alert>
@@ -110,11 +116,15 @@ export function LiveAttendance({ classId, className }: LiveAttendanceProps) {
             <Activity className="text-muted-foreground h-4 w-4 animate-pulse" />
           </div>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t?.total || "Total"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalStudents}</div>
-            <p className="text-muted-foreground text-xs">Students tracked</p>
+            <p className="text-muted-foreground text-xs">
+              {t?.studentsTracked || "Students tracked"}
+            </p>
           </CardContent>
         </Card>
 
@@ -124,7 +134,7 @@ export function LiveAttendance({ classId, className }: LiveAttendanceProps) {
           </div>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-green-600">
-              Present
+              {t?.present || "Present"}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -144,7 +154,7 @@ export function LiveAttendance({ classId, className }: LiveAttendanceProps) {
           </div>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-yellow-600">
-              Late
+              {t?.late || "Late"}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -164,7 +174,7 @@ export function LiveAttendance({ classId, className }: LiveAttendanceProps) {
           </div>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-red-600">
-              Absent
+              {t?.absent || "Absent"}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -184,8 +194,12 @@ export function LiveAttendance({ classId, className }: LiveAttendanceProps) {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Live Attendance Rate</CardTitle>
-              <CardDescription>Real-time tracking</CardDescription>
+              <CardTitle>
+                {t?.liveAttendanceRate || "Live Attendance Rate"}
+              </CardTitle>
+              <CardDescription>
+                {t?.realtimeTracking || "Real-time tracking"}
+              </CardDescription>
             </div>
             <div className="text-3xl font-bold">
               {attendanceRate.toFixed(1)}%
@@ -198,10 +212,10 @@ export function LiveAttendance({ classId, className }: LiveAttendanceProps) {
             <span>0%</span>
             <span>
               {attendanceRate >= 90
-                ? "🎉 Excellent!"
+                ? t?.excellent || "Excellent!"
                 : attendanceRate >= 80
-                  ? "Good"
-                  : "Needs Improvement"}
+                  ? t?.good || "Good"
+                  : t?.needsImprovement || "Needs Improvement"}
             </span>
             <span>100%</span>
           </div>
@@ -213,7 +227,7 @@ export function LiveAttendance({ classId, className }: LiveAttendanceProps) {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <CardTitle>Recent Activity</CardTitle>
+              <CardTitle>{t?.recentActivity || "Recent Activity"}</CardTitle>
               {showNotification && (
                 <motion.div
                   initial={{ scale: 0 }}
@@ -226,7 +240,7 @@ export function LiveAttendance({ classId, className }: LiveAttendanceProps) {
             </div>
             <Badge variant="secondary">
               <RefreshCw className="me-1 h-3 w-3" />
-              Live Feed
+              {t?.liveFeed || "Live Feed"}
             </Badge>
           </div>
         </CardHeader>
@@ -236,9 +250,9 @@ export function LiveAttendance({ classId, className }: LiveAttendanceProps) {
               {recentActivity.length === 0 ? (
                 <div className="text-muted-foreground py-8 text-center">
                   <Users className="mx-auto mb-3 h-12 w-12 opacity-50" />
-                  <p>Waiting for attendance updates...</p>
-                  <p className="mt-1 text-xs">
-                    Students will appear here as they check in
+                  <p>
+                    {t?.waitingForUpdates ||
+                      "Waiting for attendance updates..."}
                   </p>
                 </div>
               ) : (
@@ -298,20 +312,26 @@ export function LiveAttendance({ classId, className }: LiveAttendanceProps) {
         <Card className="border-s-4 border-s-blue-500">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm">Check-in Velocity</CardTitle>
+              <CardTitle className="text-sm">
+                {t?.checkInVelocity || "Check-in Velocity"}
+              </CardTitle>
               <TrendingUp className="h-4 w-4 text-blue-500" />
             </div>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">{recentActivity.length}</p>
-            <p className="text-muted-foreground text-xs">Last 5 minutes</p>
+            <p className="text-muted-foreground text-xs">
+              {t?.lastFiveMinutes || "Last 5 minutes"}
+            </p>
           </CardContent>
         </Card>
 
         <Card className="border-s-4 border-s-purple-500">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm">Active Methods</CardTitle>
+              <CardTitle className="text-sm">
+                {t?.activeMethods || "Active Methods"}
+              </CardTitle>
               <Activity className="h-4 w-4 text-purple-500" />
             </div>
           </CardHeader>
@@ -319,7 +339,9 @@ export function LiveAttendance({ classId, className }: LiveAttendanceProps) {
             <p className="text-2xl font-bold">
               {new Set(attendance.map((a) => a.method)).size}
             </p>
-            <p className="text-muted-foreground text-xs">Tracking methods</p>
+            <p className="text-muted-foreground text-xs">
+              {t?.trackingMethods || "Tracking methods in use"}
+            </p>
           </CardContent>
         </Card>
       </div>

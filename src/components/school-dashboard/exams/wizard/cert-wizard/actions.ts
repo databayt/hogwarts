@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import type { Prisma } from "@prisma/client"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
@@ -39,12 +40,12 @@ export async function saveCertificateComposition(
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const role = session.user.role
@@ -52,11 +53,11 @@ export async function saveCertificateComposition(
       !role ||
       ["STUDENT", "GUARDIAN", "ACCOUNTANT", "STAFF"].includes(role)
     ) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     if (!input.name) {
-      return { success: false, error: "Name is required" }
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
 
     const data = {
@@ -94,7 +95,7 @@ export async function saveCertificateComposition(
         where: { id: input.id, schoolId },
       })
       if (!existing) {
-        return { success: false, error: "Config not found" }
+        return actionError(ACTION_ERRORS.CERTIFICATE_NOT_FOUND)
       }
 
       await db.examCertificateConfig.update({
@@ -117,12 +118,6 @@ export async function saveCertificateComposition(
     revalidatePath("/exams/certificates")
     return { success: true, configId: config.id }
   } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to save certificate config",
-    }
+    return actionError(ACTION_ERRORS.CERTIFICATE_CREATE_FAILED)
   }
 }

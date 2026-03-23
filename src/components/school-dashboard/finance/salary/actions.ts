@@ -85,7 +85,10 @@ export async function getSalaryStructures(
     return { success: true, data: salaryStructures }
   } catch (error) {
     console.error("Error fetching salary structures:", error)
-    return { success: false, error: "Failed to fetch salary structures" }
+    return actionError(
+      ACTION_ERRORS.UNKNOWN,
+      "Failed to fetch salary structures"
+    )
   }
 }
 
@@ -138,13 +141,13 @@ export async function getSalaryStructure(
     })
 
     if (!salaryStructure) {
-      return { success: false, error: "Salary structure not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     return { success: true, data: salaryStructure }
   } catch (error) {
     console.error("Error fetching salary structure:", error)
-    return { success: false, error: "Failed to fetch salary structure" }
+    return actionError(ACTION_ERRORS.UNKNOWN)
   }
 }
 
@@ -198,7 +201,7 @@ export async function createSalaryStructure(
     return { success: true, data: salaryStructure.id }
   } catch (error) {
     console.error("Error creating salary structure:", error)
-    return { success: false, error: "Failed to create salary structure" }
+    return actionError(ACTION_ERRORS.UNKNOWN)
   }
 }
 
@@ -224,7 +227,7 @@ export async function updateSalaryStructure(
     })
 
     if (!salaryStructure) {
-      return { success: false, error: "Salary structure not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     await db.salaryStructure.update({
@@ -250,7 +253,7 @@ export async function updateSalaryStructure(
     return { success: true }
   } catch (error) {
     console.error("Error updating salary structure:", error)
-    return { success: false, error: "Failed to update salary structure" }
+    return actionError(ACTION_ERRORS.UNKNOWN)
   }
 }
 
@@ -280,7 +283,7 @@ export async function deactivateSalaryStructure(
     return { success: true }
   } catch (error) {
     console.error("Error deactivating salary structure:", error)
-    return { success: false, error: "Failed to deactivate salary structure" }
+    return actionError(ACTION_ERRORS.UNKNOWN)
   }
 }
 
@@ -320,7 +323,7 @@ export async function addAllowance(
     return { success: true, data: allowance.id }
   } catch (error) {
     console.error("Error adding allowance:", error)
-    return { success: false, error: "Failed to add allowance" }
+    return actionError(ACTION_ERRORS.UNKNOWN)
   }
 }
 
@@ -364,7 +367,7 @@ export async function updateAllowance(
     return { success: true }
   } catch (error) {
     console.error("Error updating allowance:", error)
-    return { success: false, error: "Failed to update allowance" }
+    return actionError(ACTION_ERRORS.UNKNOWN)
   }
 }
 
@@ -390,7 +393,7 @@ export async function deleteAllowance(
     return { success: true }
   } catch (error) {
     console.error("Error deleting allowance:", error)
-    return { success: false, error: "Failed to delete allowance" }
+    return actionError(ACTION_ERRORS.UNKNOWN)
   }
 }
 
@@ -430,7 +433,7 @@ export async function addDeduction(
     return { success: true, data: deduction.id }
   } catch (error) {
     console.error("Error adding deduction:", error)
-    return { success: false, error: "Failed to add deduction" }
+    return actionError(ACTION_ERRORS.UNKNOWN)
   }
 }
 
@@ -471,7 +474,7 @@ export async function updateDeduction(
     return { success: true }
   } catch (error) {
     console.error("Error updating deduction:", error)
-    return { success: false, error: "Failed to update deduction" }
+    return actionError(ACTION_ERRORS.UNKNOWN)
   }
 }
 
@@ -497,7 +500,7 @@ export async function deleteDeduction(
     return { success: true }
   } catch (error) {
     console.error("Error deleting deduction:", error)
-    return { success: false, error: "Failed to delete deduction" }
+    return actionError(ACTION_ERRORS.UNKNOWN)
   }
 }
 
@@ -529,7 +532,7 @@ export async function calculateSalary(
     })
 
     if (!salaryStructure) {
-      return { success: false, error: "Salary structure not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Calculate total allowances
@@ -584,7 +587,7 @@ export async function calculateSalary(
     }
   } catch (error) {
     console.error("Error calculating salary:", error)
-    return { success: false, error: "Failed to calculate salary" }
+    return actionError(ACTION_ERRORS.UNKNOWN)
   }
 }
 
@@ -614,7 +617,7 @@ export async function applySalaryIncrement(
     })
 
     if (!currentStructure) {
-      return { success: false, error: "Salary structure not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Calculate new basic salary
@@ -656,7 +659,7 @@ export async function applySalaryIncrement(
     return { success: true }
   } catch (error) {
     console.error("Error applying salary increment:", error)
-    return { success: false, error: "Failed to apply salary increment" }
+    return actionError(ACTION_ERRORS.UNKNOWN)
   }
 }
 
@@ -705,6 +708,6 @@ export async function getSalarySummary(): Promise<ActionResult<any>> {
     }
   } catch (error) {
     console.error("Error fetching salary summary:", error)
-    return { success: false, error: "Failed to fetch summary" }
+    return actionError(ACTION_ERRORS.UNKNOWN)
   }
 }

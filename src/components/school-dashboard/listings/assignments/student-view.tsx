@@ -37,6 +37,7 @@ import { Progress } from "@/components/ui/progress"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface Assignment {
   id: string
@@ -111,6 +112,9 @@ export function StudentAssignmentView({
   onSubmitClick,
   onViewClick,
 }: StudentAssignmentViewProps) {
+  const { dictionary } = useDictionary()
+  const sv = (dictionary?.school as Record<string, any>)?.assignments
+    ?.studentView as Record<string, any> | undefined
   const [selectedTab, setSelectedTab] = useState<
     "upcoming" | "overdue" | "completed"
   >("upcoming")
@@ -270,14 +274,14 @@ export function StudentAssignmentView({
             <div className="flex items-center gap-2">
               <Calendar className="text-muted-foreground h-4 w-4" />
               <span className={getDueDateColor(dueDate)}>
-                Due {format(dueDate, "MMM dd, yyyy")}
+                {sv?.dueLabel || "Due"} {format(dueDate, "MMM dd, yyyy")}
               </span>
             </div>
             <div className="flex items-center gap-2">
               <Clock className="text-muted-foreground h-4 w-4" />
               <span className={getDueDateColor(dueDate)}>
                 {isPast(dueDate)
-                  ? "Overdue"
+                  ? sv?.overdue || "Overdue"
                   : formatDistanceToNow(dueDate, { addSuffix: true })}
               </span>
             </div>
@@ -286,15 +290,17 @@ export function StudentAssignmentView({
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-4">
               <span className="font-medium">
-                {assignment.totalPoints} points
+                {assignment.totalPoints} {sv?.pointsLabel || "points"}
               </span>
               <span className="text-muted-foreground">
-                Weight: {assignment.weight}%
+                {sv?.weightLabel || "Weight:"} {assignment.weight}%
               </span>
             </div>
             {submission?.score !== undefined && (
               <div className="flex items-center gap-2">
-                <span className="font-medium">Score:</span>
+                <span className="font-medium">
+                  {sv?.scoreLabel || "Score:"}
+                </span>
                 <span
                   className={cn(
                     "font-bold",
@@ -315,7 +321,7 @@ export function StudentAssignmentView({
 
           {submission?.submittedAt && (
             <div className="text-muted-foreground text-sm">
-              Submitted on{" "}
+              {sv?.submittedOn || "Submitted on"}{" "}
               {format(
                 new Date(submission.submittedAt),
                 "MMM dd, yyyy at h:mm a"
@@ -334,8 +340,8 @@ export function StudentAssignmentView({
             >
               <Upload className="me-2 h-4 w-4" />
               {submission?.status === "DRAFT"
-                ? "Continue Submission"
-                : "Submit Assignment"}
+                ? sv?.continueSubmission || "Continue Submission"
+                : sv?.submitAssignment || "Submit Assignment"}
             </Button>
           ) : (
             <Button
@@ -344,7 +350,7 @@ export function StudentAssignmentView({
               onClick={() => onViewClick(assignment.id)}
             >
               <FileText className="me-2 h-4 w-4" />
-              View Submission
+              {sv?.viewSubmission || "View Submission"}
             </Button>
           )}
         </CardFooter>
@@ -358,7 +364,9 @@ export function StudentAssignmentView({
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Total Assignments</CardDescription>
+            <CardDescription>
+              {sv?.totalAssignments || "Total Assignments"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.total}</div>
@@ -367,7 +375,7 @@ export function StudentAssignmentView({
 
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Submitted</CardDescription>
+            <CardDescription>{sv?.submitted || "Submitted"}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="text-chart-2 text-2xl font-bold">
@@ -379,7 +387,7 @@ export function StudentAssignmentView({
 
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Pending</CardDescription>
+            <CardDescription>{sv?.pending || "Pending"}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="text-chart-4 text-2xl font-bold">
@@ -390,7 +398,9 @@ export function StudentAssignmentView({
 
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Average Score</CardDescription>
+            <CardDescription>
+              {sv?.averageScore || "Average Score"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="text-primary text-2xl font-bold">
@@ -407,7 +417,7 @@ export function StudentAssignmentView({
           size="sm"
           onClick={() => setSelectedSubject("all")}
         >
-          All Subjects
+          {sv?.allSubjects || "All Subjects"}
         </Button>
         {subjects.map((subject) => (
           <Button
@@ -425,7 +435,7 @@ export function StudentAssignmentView({
       <Tabs value={selectedTab} onValueChange={(v) => setSelectedTab(v as any)}>
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="upcoming" className="relative">
-            Upcoming
+            {sv?.upcoming || "Upcoming"}
             {categorizedAssignments.upcoming.length > 0 && (
               <span className="bg-primary/20 ms-2 rounded-full px-1.5 py-0.5 text-xs">
                 {categorizedAssignments.upcoming.length}
@@ -433,7 +443,7 @@ export function StudentAssignmentView({
             )}
           </TabsTrigger>
           <TabsTrigger value="overdue" className="relative">
-            Overdue
+            {sv?.overdue || "Overdue"}
             {categorizedAssignments.overdue.length > 0 && (
               <span className="bg-destructive/20 text-destructive ms-2 rounded-full px-1.5 py-0.5 text-xs">
                 {categorizedAssignments.overdue.length}
@@ -441,7 +451,7 @@ export function StudentAssignmentView({
             )}
           </TabsTrigger>
           <TabsTrigger value="completed">
-            Completed
+            {sv?.completed || "Completed"}
             {categorizedAssignments.completed.length > 0 && (
               <span className="bg-chart-2/20 text-chart-2 ms-2 rounded-full px-1.5 py-0.5 text-xs">
                 {categorizedAssignments.completed.length}
@@ -459,7 +469,9 @@ export function StudentAssignmentView({
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-8">
                 <Check className="text-chart-2 mb-4 h-12 w-12" />
-                <p className="text-muted-foreground">No upcoming assignments</p>
+                <p className="text-muted-foreground">
+                  {sv?.noUpcoming || "No upcoming assignments"}
+                </p>
               </CardContent>
             </Card>
           )}
@@ -474,7 +486,9 @@ export function StudentAssignmentView({
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-8">
                 <Check className="text-chart-2 mb-4 h-12 w-12" />
-                <p className="text-muted-foreground">No overdue assignments</p>
+                <p className="text-muted-foreground">
+                  {sv?.noOverdue || "No overdue assignments"}
+                </p>
               </CardContent>
             </Card>
           )}
@@ -490,7 +504,7 @@ export function StudentAssignmentView({
               <CardContent className="flex flex-col items-center justify-center py-8">
                 <FileText className="text-muted-foreground mb-4 h-12 w-12" />
                 <p className="text-muted-foreground">
-                  No completed assignments yet
+                  {sv?.noCompleted || "No completed assignments yet"}
                 </p>
               </CardContent>
             </Card>

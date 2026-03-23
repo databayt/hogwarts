@@ -3,21 +3,46 @@
 
 /**
  * Wallet Module - Configuration
+ * Labels are dictionary-backed via getter functions.
  */
 
 import { TransactionType, WalletType } from "@prisma/client"
 
-export const WalletTypeLabels: Record<WalletType, string> = {
+const DEFAULT_WALLET_TYPE_LABELS: Record<WalletType, string> = {
   SCHOOL: "School Wallet",
   PARENT: "Parent Wallet",
   STUDENT: "Student Wallet",
 }
 
-export const WalletTransactionTypeLabels: Record<TransactionType, string> = {
+/** Get localized wallet type labels from dictionary */
+export const getWalletTypeLabels = (
+  d?: Record<string, string>
+): Record<WalletType, string> => ({
+  SCHOOL: d?.SCHOOL || DEFAULT_WALLET_TYPE_LABELS.SCHOOL,
+  PARENT: d?.PARENT || DEFAULT_WALLET_TYPE_LABELS.PARENT,
+  STUDENT: d?.STUDENT || DEFAULT_WALLET_TYPE_LABELS.STUDENT,
+})
+
+/** For backward compat -- static fallback */
+export const WalletTypeLabels = DEFAULT_WALLET_TYPE_LABELS
+
+const DEFAULT_TRANSACTION_TYPE_LABELS: Record<TransactionType, string> = {
   CREDIT: "Credit (Top-up)",
   DEBIT: "Debit (Payment)",
   TRANSFER: "Transfer",
 }
+
+/** Get localized transaction type labels from dictionary */
+export const getTransactionTypeLabels = (
+  d?: Record<string, string>
+): Record<TransactionType, string> => ({
+  CREDIT: d?.CREDIT || DEFAULT_TRANSACTION_TYPE_LABELS.CREDIT,
+  DEBIT: d?.DEBIT || DEFAULT_TRANSACTION_TYPE_LABELS.DEBIT,
+  TRANSFER: d?.TRANSFER || DEFAULT_TRANSACTION_TYPE_LABELS.TRANSFER,
+})
+
+/** For backward compat -- static fallback */
+export const WalletTransactionTypeLabels = DEFAULT_TRANSACTION_TYPE_LABELS
 
 export const PaymentMethods = [
   "CASH",
@@ -29,13 +54,29 @@ export const PaymentMethods = [
 
 export type PaymentMethod = (typeof PaymentMethods)[number]
 
-export const PaymentMethodLabels: Record<PaymentMethod, string> = {
+const DEFAULT_PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   CASH: "Cash",
   CARD: "Credit/Debit Card",
   BANK_TRANSFER: "Bank Transfer",
   WALLET: "Wallet",
   OTHER: "Other",
 }
+
+/** Get localized payment method labels from dictionary */
+export const getPaymentMethodLabels = (
+  d?: Record<string, string>
+): Record<PaymentMethod, string> => {
+  const result = { ...DEFAULT_PAYMENT_METHOD_LABELS }
+  if (d) {
+    for (const key of PaymentMethods) {
+      if (d[key]) result[key] = d[key]
+    }
+  }
+  return result
+}
+
+/** For backward compat -- static fallback */
+export const PaymentMethodLabels = DEFAULT_PAYMENT_METHOD_LABELS
 
 export const WALLET_LIMITS = {
   MIN_BALANCE: 0,

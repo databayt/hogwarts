@@ -8,6 +8,7 @@ import { useParams } from "next/navigation"
 import { FormHeading, FormLayout } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { useAssignmentWizard } from "../use-assignment-wizard"
 import { InformationForm } from "./form"
@@ -19,6 +20,10 @@ export default function InformationContent() {
   const assignmentId = params.id as string
   const formRef = useRef<WizardFormRef>(null)
   const { data, isLoading } = useAssignmentWizard()
+  const { dictionary } = useDictionary()
+  const fd = (dictionary?.school as Record<string, any>)?.assignments?.form as
+    | Record<string, any>
+    | undefined
   const [isValid, setIsValid] = useState(false)
 
   // Set initial validity from loaded data
@@ -40,8 +45,10 @@ export default function InformationContent() {
     >
       <FormLayout>
         <FormHeading
-          title="Assignment Information"
-          description="Enter the assignment's basic information."
+          title={fd?.assignmentInformation || "Assignment Information"}
+          description={
+            fd?.enterBasicInfo || "Enter the assignment's basic information."
+          }
         />
         <InformationForm
           ref={formRef}

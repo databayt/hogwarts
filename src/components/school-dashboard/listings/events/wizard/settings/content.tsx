@@ -8,6 +8,7 @@ import { useParams } from "next/navigation"
 import { FormHeading, FormLayout } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { useEventWizard } from "../use-event-wizard"
 import { SettingsForm } from "./form"
@@ -18,6 +19,10 @@ export default function SettingsContent() {
   const formRef = useRef<WizardFormRef>(null)
   const { data, isLoading } = useEventWizard()
   const [isValid, setIsValid] = useState(true)
+  const { dictionary } = useDictionary()
+  const wst = dictionary?.school?.events?.wizard?.settings as
+    | Record<string, string>
+    | undefined
 
   // Settings is always valid (no required fields)
   useEffect(() => {
@@ -36,8 +41,10 @@ export default function SettingsContent() {
     >
       <FormLayout>
         <FormHeading
-          title="Event Settings"
-          description="Configure additional settings for this event."
+          title={wst?.title || "Event Settings"}
+          description={
+            wst?.description || "Configure additional settings for this event."
+          }
         />
         <SettingsForm
           ref={formRef}

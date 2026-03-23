@@ -63,6 +63,7 @@ export function CertificateList({
   const [loading, setLoading] = useState<string | null>(null)
   const { dictionary } = useDictionary()
   const t = dictionary?.school?.exams?.certificates?.list
+  const cl = dictionary?.school?.exams?.certificateList
 
   async function handleShare(id: string) {
     setLoading(id)
@@ -110,9 +111,12 @@ export function CertificateList({
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <Award className="text-muted-foreground mb-4 h-12 w-12" />
-        <h3 className="text-lg font-medium">No certificates yet</h3>
+        <h3 className="text-lg font-medium">
+          {cl?.noCertificatesYet ?? "No certificates yet"}
+        </h3>
         <p className="text-muted-foreground text-sm">
-          Certificates will appear here once generated for exam results.
+          {cl?.certificatesAppearHere ??
+            "Certificates will appear here once generated for exam results."}
         </p>
       </div>
     )
@@ -174,7 +178,7 @@ export function CertificateList({
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => handleShare(cert.id)}>
                       <Share2 className="me-2 h-4 w-4" />
-                      {t?.toast?.shared ?? "Share"}
+                      {cl?.share ?? "Share"}
                     </DropdownMenuItem>
                     {cert.isPublic && (
                       <DropdownMenuItem asChild>
@@ -184,7 +188,7 @@ export function CertificateList({
                           rel="noreferrer"
                         >
                           <ExternalLink className="me-2 h-4 w-4" />
-                          View Public
+                          {cl?.viewPublic ?? "View Public"}
                         </a>
                       </DropdownMenuItem>
                     )}
@@ -194,7 +198,7 @@ export function CertificateList({
                         onClick={() => handleRevoke(cert.id)}
                       >
                         <XCircle className="me-2 h-4 w-4" />
-                        {t?.toast?.revoked ?? "Revoke"}
+                        {cl?.revoke ?? "Revoke"}
                       </DropdownMenuItem>
                     )}
                   </DropdownMenuContent>

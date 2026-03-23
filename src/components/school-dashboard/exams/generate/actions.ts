@@ -38,6 +38,7 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import type { BloomLevel, DifficultyLevel, QuestionType } from "@prisma/client"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { getSchoolSubject } from "@/lib/school-subjects"
 
@@ -65,7 +66,7 @@ export async function createQuestion(
   try {
     const session = await auth()
     if (!session?.user?.id || !session.user.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const schoolId = session.user.schoolId
@@ -109,11 +110,7 @@ export async function createQuestion(
     return { success: true, data: { id: question.id } }
   } catch (error) {
     console.error("Create question error:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to create question",
-    }
+    return actionError(ACTION_ERRORS.QUESTION_CREATE_FAILED)
   }
 }
 

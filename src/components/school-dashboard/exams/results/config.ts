@@ -209,3 +209,130 @@ export const QUESTION_TYPE_ICONS: Record<string, string> = {
   ESSAY: "FileText",
   FILL_BLANK: "PenLine",
 }
+
+// --- Dictionary-based factory functions ---
+// These accept the exams dictionary section (Record<string, any>)
+// and fall back to English defaults when dictionary is not yet loaded.
+
+type ResultsDict = Record<string, any> | undefined
+
+export const getPdfTemplateOptions = (d?: ResultsDict) => {
+  const t = d?.resultsUi?.batchPdf?.templates as
+    | Record<string, string>
+    | undefined
+  return [
+    {
+      id: "classic",
+      name: t?.classic || "Classic",
+      description: "Traditional report card with formal layout",
+      preview: "/templates/classic-preview.png",
+    },
+    {
+      id: "modern",
+      name: t?.modern || "Modern",
+      description: "Visual design with charts and graphs",
+      preview: "/templates/modern-preview.png",
+    },
+    {
+      id: "minimal",
+      name: t?.minimal || "Minimal",
+      description: "Clean and simple text-based layout",
+      preview: "/templates/minimal-preview.png",
+    },
+  ]
+}
+
+/** Get PDF template labels map for display */
+export const getPdfTemplateLabels = (
+  d?: ResultsDict
+): Record<string, string> => {
+  const t = d?.resultsUi?.batchPdf?.templates as
+    | Record<string, string>
+    | undefined
+  return {
+    classic: t?.classic || "Classic",
+    modern: t?.modern || "Modern",
+    minimal: t?.minimal || "Minimal",
+  }
+}
+
+export const getSortOptions = (d?: ResultsDict) => {
+  const r = d?.resultsUi as Record<string, any> | undefined
+  return [
+    { value: "rank", label: r?.sortRank || "Rank" },
+    { value: "name", label: r?.sortName || "Student Name" },
+    { value: "marks", label: r?.sortMarks || "Marks Obtained" },
+  ]
+}
+
+export const getGroupByOptions = (d?: ResultsDict) => {
+  const r = d?.resultsUi as Record<string, any> | undefined
+  return [
+    { value: "none", label: r?.noGrouping || "No Grouping" },
+    { value: "grade", label: r?.groupByGrade || "Group by Grade" },
+    { value: "status", label: r?.groupByStatus || "Group by Pass/Fail" },
+  ]
+}
+
+export const getResultStatusOptions = (d?: ResultsDict) => {
+  const a = d?.manage?.analytics as Record<string, string> | undefined
+  return [
+    {
+      value: "PASS",
+      label: a?.passed || "Pass",
+      color: "green",
+      icon: "CheckCircle",
+    },
+    {
+      value: "FAIL",
+      label: a?.failed || "Fail",
+      color: "red",
+      icon: "XCircle",
+    },
+    {
+      value: "ABSENT",
+      label: a?.absent || "Absent",
+      color: "gray",
+      icon: "MinusCircle",
+    },
+  ]
+}
+
+/** Get result status labels map for display */
+export const getResultStatusLabels = (
+  d?: ResultsDict
+): Record<string, string> => {
+  const a = d?.manage?.analytics as Record<string, string> | undefined
+  return {
+    PASS: a?.passed || "Pass",
+    FAIL: a?.failed || "Fail",
+    ABSENT: a?.absent || "Absent",
+  }
+}
+
+export const getExportFormatOptions = (d?: ResultsDict) => {
+  return [
+    {
+      id: "pdf",
+      name: "PDF",
+      icon: "FileText",
+      mimeType: "application/pdf",
+      extension: ".pdf",
+    },
+    {
+      id: "excel",
+      name: "Excel",
+      icon: "FileSpreadsheet",
+      mimeType:
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      extension: ".xlsx",
+    },
+    {
+      id: "csv",
+      name: "CSV",
+      icon: "FileDown",
+      mimeType: "text/csv",
+      extension: ".csv",
+    },
+  ]
+}

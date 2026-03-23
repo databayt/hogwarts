@@ -27,12 +27,13 @@ import {
 } from "@/components/ui/select"
 import { PhoneInput } from "@/components/atom/phone-input"
 import { uploadFile } from "@/components/file"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { createStaff, updateStaff } from "./actions"
 import {
-  EMPLOYMENT_STATUS_OPTIONS,
-  EMPLOYMENT_TYPE_OPTIONS,
-  GENDER_OPTIONS,
+  getEmploymentStatusOptions,
+  getEmploymentTypeOptions,
+  getGenderOptions,
 } from "./config"
 import { staffCreateSchema, type StaffCreateInput } from "./validation"
 
@@ -56,6 +57,9 @@ export function StaffForm({
   const [isUploading, setIsUploading] = React.useState(false)
   const fileRef = React.useRef<HTMLInputElement>(null)
   const isEdit = !!initialData?.id
+  const { dictionary } = useDictionary()
+  const d = dictionary?.school?.staffListing as Record<string, any> | undefined
+  const f = d?.form as Record<string, string> | undefined
 
   async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -120,6 +124,10 @@ export function StaffForm({
     }
   }
 
+  const genderOptions = getGenderOptions(d)
+  const statusOptions = getEmploymentStatusOptions(d)
+  const typeOptions = getEmploymentTypeOptions(d)
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -134,7 +142,7 @@ export function StaffForm({
             {avatarUrl ? (
               <Image
                 src={avatarUrl}
-                alt="Photo"
+                alt={f?.photoAlt || "Photo"}
                 fill
                 className="object-cover"
               />
@@ -160,8 +168,12 @@ export function StaffForm({
             onChange={handleAvatarChange}
           />
           <div>
-            <p className="text-sm font-medium">Profile Photo</p>
-            <p className="text-muted-foreground text-xs">Click to upload</p>
+            <p className="text-sm font-medium">
+              {f?.profilePhoto || "Profile Photo"}
+            </p>
+            <p className="text-muted-foreground text-xs">
+              {f?.clickToUpload || "Click to upload"}
+            </p>
           </div>
         </div>
 
@@ -172,9 +184,12 @@ export function StaffForm({
             name="givenName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>First Name *</FormLabel>
+                <FormLabel>{f?.firstNameRequired || "First Name *"}</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter first name" {...field} />
+                  <Input
+                    placeholder={f?.firstNamePlaceholder || "Enter first name"}
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -185,9 +200,12 @@ export function StaffForm({
             name="surname"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Last Name *</FormLabel>
+                <FormLabel>{f?.lastNameRequired || "Last Name *"}</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter last name" {...field} />
+                  <Input
+                    placeholder={f?.lastNamePlaceholder || "Enter last name"}
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -201,9 +219,13 @@ export function StaffForm({
             name="emailAddress"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email *</FormLabel>
+                <FormLabel>{f?.emailRequired || "Email *"}</FormLabel>
                 <FormControl>
-                  <Input type="email" placeholder="Enter email" {...field} />
+                  <Input
+                    type="email"
+                    placeholder={f?.emailPlaceholder || "Enter email"}
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -214,18 +236,20 @@ export function StaffForm({
             name="gender"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Gender</FormLabel>
+                <FormLabel>{f?.gender || "Gender"}</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select gender" />
+                      <SelectValue
+                        placeholder={f?.selectGender || "Select gender"}
+                      />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {GENDER_OPTIONS.map((option) => (
+                    {genderOptions.map((option) => (
                       <SelectItem key={option.value} value={option.value}>
                         {option.label}
                       </SelectItem>
@@ -245,9 +269,12 @@ export function StaffForm({
             name="position"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Position</FormLabel>
+                <FormLabel>{f?.position || "Position"}</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., Accountant" {...field} />
+                  <Input
+                    placeholder={f?.positionPlaceholder || "e.g., Accountant"}
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -258,14 +285,16 @@ export function StaffForm({
             name="departmentId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Department</FormLabel>
+                <FormLabel>{f?.department || "Department"}</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select department" />
+                      <SelectValue
+                        placeholder={f?.selectDepartment || "Select department"}
+                      />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -288,18 +317,22 @@ export function StaffForm({
             name="employmentStatus"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Employment Status</FormLabel>
+                <FormLabel>
+                  {f?.employmentStatus || "Employment Status"}
+                </FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
+                      <SelectValue
+                        placeholder={f?.selectStatus || "Select status"}
+                      />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {EMPLOYMENT_STATUS_OPTIONS.map((option) => (
+                    {statusOptions.map((option) => (
                       <SelectItem key={option.value} value={option.value}>
                         {option.label}
                       </SelectItem>
@@ -315,18 +348,20 @@ export function StaffForm({
             name="employmentType"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Employment Type</FormLabel>
+                <FormLabel>{f?.employmentType || "Employment Type"}</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
+                      <SelectValue
+                        placeholder={f?.selectType || "Select type"}
+                      />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {EMPLOYMENT_TYPE_OPTIONS.map((option) => (
+                    {typeOptions.map((option) => (
                       <SelectItem key={option.value} value={option.value}>
                         {option.label}
                       </SelectItem>
@@ -346,12 +381,12 @@ export function StaffForm({
             name="phoneNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Phone Number</FormLabel>
+                <FormLabel>{f?.phoneNumber || "Phone Number"}</FormLabel>
                 <FormControl>
                   <PhoneInput
                     value={field.value}
                     onChange={(e) => field.onChange(e.target.value)}
-                    placeholder="Enter phone number"
+                    placeholder={f?.phonePlaceholder || "Enter phone number"}
                   />
                 </FormControl>
                 <FormMessage />
@@ -363,9 +398,12 @@ export function StaffForm({
             name="address"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Address</FormLabel>
+                <FormLabel>{f?.address || "Address"}</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter address" {...field} />
+                  <Input
+                    placeholder={f?.addressPlaceholder || "Enter address"}
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -380,9 +418,16 @@ export function StaffForm({
             name="emergencyContactName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Emergency Contact Name</FormLabel>
+                <FormLabel>
+                  {f?.emergencyContactName || "Emergency Contact Name"}
+                </FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter name" {...field} />
+                  <Input
+                    placeholder={
+                      f?.emergencyContactNamePlaceholder || "Enter name"
+                    }
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -393,12 +438,16 @@ export function StaffForm({
             name="emergencyContactPhone"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Emergency Contact Phone</FormLabel>
+                <FormLabel>
+                  {f?.emergencyContactPhone || "Emergency Contact Phone"}
+                </FormLabel>
                 <FormControl>
                   <PhoneInput
                     value={field.value}
                     onChange={(e) => field.onChange(e.target.value)}
-                    placeholder="Enter phone"
+                    placeholder={
+                      f?.emergencyContactPhonePlaceholder || "Enter phone"
+                    }
                   />
                 </FormControl>
                 <FormMessage />
@@ -411,11 +460,15 @@ export function StaffForm({
         <div className="flex justify-end gap-2">
           {onCancel && (
             <Button type="button" variant="outline" onClick={onCancel}>
-              Cancel
+              {f?.cancel || "Cancel"}
             </Button>
           )}
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Saving..." : isEdit ? "Update" : "Create"}
+            {isSubmitting
+              ? f?.saving || "Saving..."
+              : isEdit
+                ? f?.update || "Update"
+                : f?.create || "Create"}
           </Button>
         </div>
       </form>

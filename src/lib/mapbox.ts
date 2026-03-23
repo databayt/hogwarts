@@ -133,10 +133,18 @@ export function featureToLocationResult(
   const countryCode =
     countryContext?.short_code?.toUpperCase() || findContext("country")
 
+  // City-level results (type: "place") don't include a separate "region" context.
+  // Fall back to the feature text itself when searching for a city directly.
+  const city = findContext("place") || findContext("locality") || ""
+  const state =
+    findContext("region") ||
+    (feature.id?.startsWith("place") ? feature.text : "") ||
+    city
+
   return {
     address: feature.place_name,
-    city: findContext("place") || findContext("locality") || "",
-    state: findContext("region"),
+    city,
+    state,
     country: countryCode,
     postalCode: findContext("postcode"),
     latitude,

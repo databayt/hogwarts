@@ -10,6 +10,7 @@
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 
 import type { ExpenseActionResult } from "./types"
@@ -25,7 +26,7 @@ export async function createExpense(
   try {
     const session = await auth()
     if (!session?.user?.schoolId || !session?.user?.id) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const data = {
@@ -62,11 +63,7 @@ export async function createExpense(
     return { success: true, data: expense as any }
   } catch (error) {
     console.error("Error creating expense:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to create expense",
-    }
+    return actionError(ACTION_ERRORS.EXPENSE_CREATE_FAILED)
   }
 }
 
@@ -77,7 +74,7 @@ export async function updateExpense(
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const data = {
@@ -108,11 +105,7 @@ export async function updateExpense(
     return { success: true, data: expense as any }
   } catch (error) {
     console.error("Error updating expense:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to update expense",
-    }
+    return actionError(ACTION_ERRORS.EXPENSE_CREATE_FAILED)
   }
 }
 
@@ -120,7 +113,7 @@ export async function approveExpense(formData: FormData) {
   try {
     const session = await auth()
     if (!session?.user?.schoolId || !session?.user?.id) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const data = {
@@ -152,11 +145,7 @@ export async function approveExpense(formData: FormData) {
     return { success: true, data: expense }
   } catch (error) {
     console.error("Error approving expense:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to approve expense",
-    }
+    return actionError(ACTION_ERRORS.EXPENSE_CREATE_FAILED)
   }
 }
 
@@ -164,7 +153,7 @@ export async function createExpenseCategory(formData: FormData) {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const data = {
@@ -186,11 +175,7 @@ export async function createExpenseCategory(formData: FormData) {
     return { success: true, data: category }
   } catch (error) {
     console.error("Error creating category:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to create category",
-    }
+    return actionError(ACTION_ERRORS.EXPENSE_CREATE_FAILED)
   }
 }
 
@@ -201,7 +186,7 @@ export async function getExpenses(filters?: {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const expenses = await db.expense.findMany({
@@ -222,6 +207,6 @@ export async function getExpenses(filters?: {
     return { success: true, data: expenses }
   } catch (error) {
     console.error("Error fetching expenses:", error)
-    return { success: false, error: "Failed to fetch expenses" }
+    return actionError(ACTION_ERRORS.UNKNOWN)
   }
 }

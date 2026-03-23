@@ -5,6 +5,7 @@
  * Salary Sub-Block Configuration
  *
  * Static configuration and constants
+ * Labels are dictionary-backed via getter functions.
  */
 
 export const SALARY_STATUS = {
@@ -24,33 +25,47 @@ export const COMPONENT_STATUS = {
   INACTIVE: "INACTIVE",
 } as const
 
-// Common allowance types
-export const ALLOWANCE_TYPES = [
-  { value: "HOUSING", label: "Housing Allowance" },
-  { value: "TRANSPORT", label: "Transport Allowance" },
-  { value: "MEDICAL", label: "Medical Allowance" },
-  { value: "EDUCATION", label: "Education Allowance" },
-  { value: "MEAL", label: "Meal Allowance" },
-  { value: "MOBILE", label: "Mobile Allowance" },
-  { value: "PERFORMANCE", label: "Performance Bonus" },
-  { value: "OVERTIME", label: "Overtime Pay" },
-  { value: "SPECIAL", label: "Special Allowance" },
-  { value: "OTHER", label: "Other" },
+// Common allowance types (values only, labels come from dictionary)
+export const ALLOWANCE_TYPE_VALUES = [
+  "HOUSING",
+  "TRANSPORT",
+  "MEDICAL",
+  "EDUCATION",
+  "MEAL",
+  "MOBILE",
+  "PERFORMANCE",
+  "OVERTIME",
+  "SPECIAL",
+  "OTHER",
 ] as const
 
-// Common deduction types
-export const DEDUCTION_TYPES = [
-  { value: "TAX", label: "Income Tax" },
-  { value: "SOCIAL_SECURITY", label: "Social Security" },
-  { value: "PENSION", label: "Pension Contribution" },
-  { value: "HEALTH_INSURANCE", label: "Health Insurance" },
-  { value: "LIFE_INSURANCE", label: "Life Insurance" },
-  { value: "LOAN", label: "Loan Repayment" },
-  { value: "ADVANCE", label: "Salary Advance" },
-  { value: "ABSENCE", label: "Absence Deduction" },
-  { value: "DISCIPLINARY", label: "Disciplinary Fine" },
-  { value: "OTHER", label: "Other" },
+/** Get localized allowance type options from dictionary */
+export const getAllowanceTypeOptions = (d?: Record<string, string>) =>
+  ALLOWANCE_TYPE_VALUES.map((value) => ({
+    value,
+    label: d?.[value] || value,
+  }))
+
+// Common deduction types (values only, labels come from dictionary)
+export const DEDUCTION_TYPE_VALUES = [
+  "TAX",
+  "SOCIAL_SECURITY",
+  "PENSION",
+  "HEALTH_INSURANCE",
+  "LIFE_INSURANCE",
+  "LOAN",
+  "ADVANCE",
+  "ABSENCE",
+  "DISCIPLINARY",
+  "OTHER",
 ] as const
+
+/** Get localized deduction type options from dictionary */
+export const getDeductionTypeOptions = (d?: Record<string, string>) =>
+  DEDUCTION_TYPE_VALUES.map((value) => ({
+    value,
+    label: d?.[value] || value,
+  }))
 
 // Status badge colors
 export const STATUS_COLORS = {
@@ -63,7 +78,7 @@ export const STATUS_COLORS = {
 export const DEFAULT_TAX_RATE = 15 // 15%
 export const DEFAULT_SOCIAL_SECURITY_RATE = 5 // 5%
 
-// Salary ranges for analytics
+// Salary ranges for analytics (labels are static monetary values)
 export const SALARY_RANGES = [
   { min: 0, max: 1000, label: "$0 - $1,000" },
   { min: 1000, max: 2000, label: "$1,000 - $2,000" },
@@ -76,10 +91,18 @@ export const SALARY_RANGES = [
 // Default pagination
 export const DEFAULT_PAGE_SIZE = 20
 
-// Currency options
-export const CURRENCY_OPTIONS = [
-  { value: "USD", label: "US Dollar", symbol: "$" },
-  { value: "EUR", label: "Euro", symbol: "€" },
-  { value: "GBP", label: "British Pound", symbol: "£" },
-  { value: "SDG", label: "Sudanese Pound", symbol: "SDG" },
+// Currency options (values only, labels come from dictionary)
+export const CURRENCY_OPTION_VALUES = [
+  { value: "USD", symbol: "$" },
+  { value: "EUR", symbol: "€" },
+  { value: "GBP", symbol: "£" },
+  { value: "SDG", symbol: "SDG" },
 ] as const
+
+/** Get localized currency options from dictionary */
+export const getCurrencyOptions = (d?: Record<string, string>) =>
+  CURRENCY_OPTION_VALUES.map((c) => ({
+    value: c.value,
+    label: d?.[c.value] || c.value,
+    symbol: c.symbol,
+  }))

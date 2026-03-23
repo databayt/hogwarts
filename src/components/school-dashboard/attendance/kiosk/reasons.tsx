@@ -26,24 +26,6 @@ interface KioskReasonsProps {
   locale: string
 }
 
-const lateReasonLabels: Record<string, { en: string; ar: string }> = {
-  TRAFFIC: { en: "Traffic", ar: "ازدحام مروري" },
-  MEDICAL: { en: "Medical Appointment", ar: "موعد طبي" },
-  FAMILY: { en: "Family Emergency", ar: "طوارئ عائلية" },
-  TRANSPORTATION: { en: "Transportation Issue", ar: "مشكلة في المواصلات" },
-  WEATHER: { en: "Weather Conditions", ar: "ظروف جوية" },
-  OTHER: { en: "Other", ar: "أخرى" },
-}
-
-const earlyDepartureLabels: Record<string, { en: string; ar: string }> = {
-  MEDICAL: { en: "Medical Appointment", ar: "موعد طبي" },
-  APPOINTMENT: { en: "Scheduled Appointment", ar: "موعد محدد" },
-  FAMILY_EMERGENCY: { en: "Family Emergency", ar: "طوارئ عائلية" },
-  PARENT_PICKUP: { en: "Parent Pickup", ar: "استلام ولي الأمر" },
-  SCHOOL_ACTIVITY: { en: "School Activity", ar: "نشاط مدرسي" },
-  OTHER: { en: "Other", ar: "أخرى" },
-}
-
 export function KioskReasons({
   action,
   isLate,
@@ -54,8 +36,10 @@ export function KioskReasons({
   locale,
 }: KioskReasonsProps) {
   const { dictionary } = useDictionary()
-  const t = dictionary?.attendance?.kiosk
-  const isRTL = locale === "ar"
+  const t = (dictionary?.school?.attendance as any)?.kioskReasons as
+    | Record<string, any>
+    | undefined
+  const reasonsDict = t?.reasons as Record<string, string> | undefined
   const [selectedReason, setSelectedReason] = useState<string>("")
   const [customNote, setCustomNote] = useState("")
 
@@ -66,12 +50,29 @@ export function KioskReasons({
         ? earlyDepartureReasonCodes
         : []
 
-  const labels = action === "CHECK_IN" ? lateReasonLabels : earlyDepartureLabels
+  // Map reason codes to dictionary keys
+  const getReasonLabel = (reason: string): string => {
+    const keyMap: Record<string, string> = {
+      TRAFFIC: "traffic",
+      MEDICAL: "medical",
+      FAMILY: "family",
+      FAMILY_EMERGENCY: "family",
+      TRANSPORTATION: "transport",
+      WEATHER: "weather",
+      PARENT_PICKUP: "earlyPickup",
+      APPOINTMENT: "appointment",
+      SCHOOL_ACTIVITY: "other",
+      OTHER: "other",
+    }
+    const dictKey = keyMap[reason]
+    if (dictKey && reasonsDict?.[dictKey]) return reasonsDict[dictKey]
+    return reason.charAt(0) + reason.slice(1).toLowerCase().replace(/_/g, " ")
+  }
 
   const title =
     action === "CHECK_IN"
-      ? t?.late_arrival_reason || "Reason for Late Arrival"
-      : t?.early_departure_reason || "Reason for Early Departure"
+      ? t?.lateArrival || "Reason for Late Arrival"
+      : t?.earlyDeparture || "Reason for Early Departure"
 
   return (
     <div className="flex w-full max-w-lg flex-col items-center text-center">
@@ -89,7 +90,7 @@ export function KioskReasons({
                 : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
             )}
           >
-            {labels[reason]?.[isRTL ? "ar" : "en"] || reason}
+            {getReasonLabel(reason)}
           </button>
         ))}
       </div>
@@ -99,7 +100,10 @@ export function KioskReasons({
           <textarea
             value={customNote}
             onChange={(e) => setCustomNote(e.target.value)}
-            placeholder={t?.enter_reason || "Enter reason here..."}
+            placeholder={
+              (dictionary?.school?.attendance as any)?.kiosk?.enter_reason ||
+              "Enter reason here..."
+            }
             className="border-input bg-background w-full rounded-lg border p-3 text-lg"
             rows={3}
           />

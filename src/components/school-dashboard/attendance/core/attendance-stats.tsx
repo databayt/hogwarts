@@ -56,6 +56,7 @@ interface StatCardProps {
   color?: string
   percentage?: number
   trend?: "up" | "down" | "neutral"
+  trendLabel?: string
 }
 
 function StatCard({
@@ -66,6 +67,7 @@ function StatCard({
   color,
   percentage,
   trend,
+  trendLabel,
 }: StatCardProps) {
   return (
     <motion.div
@@ -105,7 +107,7 @@ function StatCard({
                 <Activity className="text-muted-foreground me-1 h-4 w-4" />
               )}
               <span className="text-muted-foreground text-xs">
-                vs last period
+                {trendLabel || "vs last period"}
               </span>
             </div>
           )}

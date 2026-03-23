@@ -26,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { Icons } from "@/components/saas-marketing/pricing/shared/icons"
 import { SectionColumns } from "@/components/school-dashboard/dashboard/section-columns"
 
@@ -38,6 +39,10 @@ interface UserNameFormProps {
 }
 
 export function UserRoleForm({ user }: UserNameFormProps) {
+  const { dictionary } = useDictionary()
+  const r = (dictionary?.school as any)?.settings?.userRoleForm as
+    | Record<string, string>
+    | undefined
   const { update } = useSession()
   const [updated, setUpdated] = useState(false)
   const [isPending, startTransition] = useTransition()
@@ -58,13 +63,15 @@ export function UserRoleForm({ user }: UserNameFormProps) {
       const { status } = await updateUserRoleWithId(data)
 
       if (status !== "success") {
-        toast.error("Something went wrong.", {
-          description: "Your role was not updated. Please try again.",
+        toast.error(r?.error || "Something went wrong.", {
+          description:
+            r?.updateFailedDesc ||
+            "Your role was not updated. Please try again.",
         })
       } else {
         await update()
         setUpdated(false)
-        toast.success("Your role has been updated.")
+        toast.success(r?.updated || "Your role has been updated.")
       }
     })
   }
@@ -73,8 +80,10 @@ export function UserRoleForm({ user }: UserNameFormProps) {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <SectionColumns
-          title="Your Role"
-          description="Select the role what you want for test the app."
+          title={r?.title || "Your Role"}
+          description={
+            r?.description || "Select the role what you want for test the app."
+          }
         >
           <div className="flex w-full items-center gap-2">
             <FormField
@@ -82,7 +91,9 @@ export function UserRoleForm({ user }: UserNameFormProps) {
               name="role"
               render={({ field }) => (
                 <FormItem className="w-full space-y-0">
-                  <FormLabel className="sr-only">Role</FormLabel>
+                  <FormLabel className="sr-only">
+                    {r?.roleLabel || "Role"}
+                  </FormLabel>
                   <Select
                     // TODO:(FIX) Option value not update. Use useState for the moment
                     onValueChange={(value: UserRole) => {
@@ -95,7 +106,9 @@ export function UserRoleForm({ user }: UserNameFormProps) {
                   >
                     <FormControl>
                       <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select a role" />
+                        <SelectValue
+                          placeholder={r?.selectRole || "Select a role"}
+                        />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -120,15 +133,17 @@ export function UserRoleForm({ user }: UserNameFormProps) {
                 <Icons.spinner className="size-4 animate-spin" />
               ) : (
                 <p>
-                  Save
-                  <span className="hidden sm:inline-flex">&nbsp;Changes</span>
+                  {r?.save || "Save"}
+                  <span className="hidden sm:inline-flex">
+                    &nbsp;{r?.changes || "Changes"}
+                  </span>
                 </p>
               )}
             </Button>
           </div>
           <div className="flex flex-col justify-between p-1">
             <p className="muted text-muted-foreground">
-              Remove this field on real production
+              {r?.devNote || "Remove this field on real production"}
             </p>
           </div>
         </SectionColumns>

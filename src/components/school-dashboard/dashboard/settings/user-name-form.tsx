@@ -29,6 +29,9 @@ interface UserNameFormProps {
 export function UserNameForm({ user }: UserNameFormProps) {
   const { dictionary } = useDictionary()
   const t = dictionary?.messages?.toast
+  const s = (dictionary?.school as any)?.settings?.userNameForm as
+    | Record<string, string>
+    | undefined
   const { update } = useSession()
   const [updated, setUpdated] = useState(false)
   const [isPending, startTransition] = useTransition()
@@ -53,7 +56,9 @@ export function UserNameForm({ user }: UserNameFormProps) {
 
       if (status !== "success") {
         toast.error(t?.error?.updateFailed || "Something went wrong.", {
-          description: "Your name was not updated. Please try again.",
+          description:
+            s?.updateFailedDesc ||
+            "Your name was not updated. Please try again.",
         })
       } else {
         await update()
@@ -66,12 +71,15 @@ export function UserNameForm({ user }: UserNameFormProps) {
   return (
     <form onSubmit={onSubmit} className="">
       <SectionColumns
-        title="Your Name"
-        description="Please enter a display name you are comfortable with."
+        title={s?.title || "Your Name"}
+        description={
+          s?.description ||
+          "Please enter a display name you are comfortable with."
+        }
       >
         <div className="flex w-full items-center gap-2">
           <Label className="sr-only" htmlFor="name">
-            Name
+            {s?.nameLabel || "Name"}
           </Label>
           <Input
             id="name"
@@ -90,8 +98,10 @@ export function UserNameForm({ user }: UserNameFormProps) {
               <Icons.spinner className="size-4 animate-spin" />
             ) : (
               <p>
-                Save
-                <span className="hidden sm:inline-flex">&nbsp;Changes</span>
+                {s?.save || "Save"}
+                <span className="hidden sm:inline-flex">
+                  &nbsp;{s?.changes || "Changes"}
+                </span>
               </p>
             )}
           </Button>
@@ -102,7 +112,9 @@ export function UserNameForm({ user }: UserNameFormProps) {
               {errors.name.message}
             </p>
           )}
-          <p className="text-muted-foreground text-[13px]">Max 32 characters</p>
+          <p className="text-muted-foreground text-[13px]">
+            {s?.maxChars || "Max 32 characters"}
+          </p>
         </div>
       </SectionColumns>
     </form>

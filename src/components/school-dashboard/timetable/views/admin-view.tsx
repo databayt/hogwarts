@@ -264,17 +264,15 @@ export default function AdminView({
             <Button variant="outline" className="w-[180px] justify-between">
               {selectedClassroom
                 ? rooms.find((r) => r.id === selectedClassroom)?.label
-                : (av?.labels?.lastPublished ?? "Select classroom")}
+                : (av?.selectClassroom ?? "Select classroom")}
               <ChevronsUpDown className="opacity-50" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-[180px] p-0">
             <Command>
-              <CommandInput
-                placeholder={av?.labels?.pendingChanges ?? "Search..."}
-              />
+              <CommandInput placeholder={av?.search ?? "Search..."} />
               <CommandList>
-                <CommandEmpty>{d?.noResults ?? "No results."}</CommandEmpty>
+                <CommandEmpty>{av?.noResults ?? "No results."}</CommandEmpty>
                 <CommandGroup>
                   {rooms.map((r) => (
                     <CommandItem
@@ -307,17 +305,15 @@ export default function AdminView({
             <Button variant="outline" className="w-[180px] justify-between">
               {selectedId
                 ? teachers.find((t) => t.id === selectedId)?.label
-                : (av?.title ?? d?.navigation?.byTeacher ?? "Select teacher")}
+                : (av?.selectTeacher ?? "Select teacher")}
               <ChevronsUpDown className="opacity-50" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-[180px] p-0">
             <Command>
-              <CommandInput
-                placeholder={av?.labels?.pendingChanges ?? "Search..."}
-              />
+              <CommandInput placeholder={av?.search ?? "Search..."} />
               <CommandList>
-                <CommandEmpty>{d?.noResults ?? "No results."}</CommandEmpty>
+                <CommandEmpty>{av?.noResults ?? "No results."}</CommandEmpty>
                 <CommandGroup>
                   {teachers.map((t) => (
                     <CommandItem
@@ -374,11 +370,15 @@ export default function AdminView({
               </span>
               {entityInfo.email && <span>{entityInfo.email}</span>}
               <Badge variant="secondary">
-                {slots.length} {av?.labels?.pendingChanges ?? "periods/week"}
+                {av?.periodsPerWeek?.replace("{count}", String(slots.length)) ??
+                  `${slots.length} periods/week`}
               </Badge>
               <Badge variant="outline">
-                {new Set(slots.map((s: any) => s.classId)).size}{" "}
-                {av?.labels?.lastPublished ?? "classes"}
+                {av?.classCount?.replace(
+                  "{count}",
+                  String(new Set(slots.map((s: any) => s.classId)).size)
+                ) ??
+                  `${new Set(slots.map((s: any) => s.classId)).size} classes`}
               </Badge>
             </div>
           )}

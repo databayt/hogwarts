@@ -191,7 +191,11 @@ function TeachersTableInner({
     if (result.success && result.data) {
       router.push(`/${lang}/teachers/add/${result.data.id}/information`)
     } else {
-      ErrorToast(result.error || "Failed to create")
+      ErrorToast(
+        result.error ||
+          (dictionary as any)?.failedToCreate ||
+          "Failed to create"
+      )
     }
   }, [router, lang])
 
@@ -311,7 +315,11 @@ function TeachersTableInner({
     async (filters?: Record<string, unknown>) => {
       const result = await getTeachersCSV(filters)
       if (!result.success || !result.data) {
-        throw new Error("error" in result ? result.error : "Export failed")
+        throw new Error(
+          "error" in result
+            ? result.error
+            : (dictionary as any)?.exportFailed || "Export failed"
+        )
       }
       return result.data
     },

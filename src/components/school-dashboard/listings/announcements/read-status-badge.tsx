@@ -6,6 +6,7 @@ import { Eye, EyeOff } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface ReadStatusBadgeProps {
   isRead: boolean
@@ -18,6 +19,12 @@ export function ReadStatusBadge({
   variant = "default",
   className,
 }: ReadStatusBadgeProps) {
+  const { dictionary } = useDictionary()
+  const d = dictionary?.school?.announcements as Record<string, any> | undefined
+
+  const readLabel = d?.read || "Read"
+  const unreadLabel = d?.unread || "Unread"
+
   if (variant === "minimal") {
     return (
       <div
@@ -26,7 +33,7 @@ export function ReadStatusBadge({
           isRead ? "bg-gray-300" : "bg-blue-500",
           className
         )}
-        title={isRead ? "Read" : "Unread"}
+        title={isRead ? readLabel : unreadLabel}
       />
     )
   }
@@ -41,7 +48,7 @@ export function ReadStatusBadge({
       )}
     >
       {isRead ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-      {isRead ? "Read" : "Unread"}
+      {isRead ? readLabel : unreadLabel}
     </Badge>
   )
 }

@@ -6,6 +6,7 @@ import * as React from "react"
 import { useRouter } from "next/navigation"
 
 import { useModal } from "@/components/atom/modal/context"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { DataTable } from "@/components/table/data-table"
 import { useDataTable } from "@/components/table/use-data-table"
 
@@ -23,6 +24,9 @@ interface StaffTableProps {
 export function StaffTable({ data, pageCount, locale }: StaffTableProps) {
   const router = useRouter()
   const { openModal } = useModal()
+  const { dictionary } = useDictionary()
+  const d = dictionary?.school?.staffListing as Record<string, any> | undefined
+  const tbl = d?.table as Record<string, string> | undefined
 
   const columns = React.useMemo(
     () =>
@@ -38,14 +42,18 @@ export function StaffTable({ data, pageCount, locale }: StaffTableProps) {
             openModal(staff.id)
           },
           onDelete: async (staff) => {
-            if (confirm(`Are you sure you want to delete ${staff.name}?`)) {
+            const msg = tbl?.confirmDelete
+              ? tbl.confirmDelete.replace("{name}", staff.name)
+              : `Are you sure you want to delete ${staff.name}?`
+            if (confirm(msg)) {
               await deleteStaff(staff.id)
             }
           },
         },
-        locale
+        locale,
+        d
       ),
-    [router, openModal, locale]
+    [router, openModal, locale, d, tbl]
   )
 
   const { table } = useDataTable({

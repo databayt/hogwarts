@@ -117,7 +117,8 @@
     "exam_scheduled": "تم جدولة امتحان",
     "exam_result": "نتيجة الامتحان متاحة",
     "library_due": "موعد إرجاع كتاب المكتبة",
-    "general": "إشعار عام"
+    "general": "إشعار عام",
+    "setup_guide": "دليل الإعداد"
   },
   "priorities": {
     "low": "أولوية منخفضة",

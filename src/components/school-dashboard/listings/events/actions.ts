@@ -171,7 +171,7 @@ export async function updateEvent(
     })
 
     if (!existing) {
-      return { success: false, error: "Event not found" }
+      return actionError(ACTION_ERRORS.EVENT_NOT_FOUND)
     }
 
     const data: Record<string, unknown> = {}
@@ -205,16 +205,10 @@ export async function updateEvent(
     console.error("[updateEvent] Error:", error)
 
     if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      }
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
 
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to update event",
-    }
+    return actionError(ACTION_ERRORS.EVENT_UPDATE_FAILED)
   }
 }
 
@@ -252,7 +246,7 @@ export async function deleteEvent(input: {
     })
 
     if (!existing) {
-      return { success: false, error: "Event not found" }
+      return actionError(ACTION_ERRORS.EVENT_NOT_FOUND)
     }
 
     await db.event.deleteMany({ where: { id, schoolId } })
@@ -493,7 +487,7 @@ export async function getEventsCSV(
     try {
       assertEventPermission(authContext, "export", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const sp = getEventsSchema.parse(input ?? {})
@@ -552,10 +546,7 @@ export async function getEventsCSV(
   } catch (error) {
     console.error("[getEventsCSV] Error:", error)
 
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to export events",
-    }
+    return actionError(ACTION_ERRORS.EXPORT_FAILED)
   }
 }
 
@@ -577,7 +568,7 @@ export async function bulkDeleteEvents(input: {
     try {
       assertEventPermission(authContext, "bulk_action", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized for bulk operations" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const { ids } = z
@@ -616,12 +607,12 @@ export async function registerForEvent(input: {
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const { eventId } = z.object({ eventId: z.string().min(1) }).parse(input)
@@ -639,11 +630,11 @@ export async function registerForEvent(input: {
     })
 
     if (!event) {
-      return { success: false, error: "Event not found" }
+      return actionError(ACTION_ERRORS.EVENT_NOT_FOUND)
     }
 
     if (event.status === "CANCELLED") {
-      return { success: false, error: "Event is cancelled" }
+      return actionError(ACTION_ERRORS.EVENT_NOT_FOUND)
     }
 
     // Check capacity
@@ -662,7 +653,7 @@ export async function registerForEvent(input: {
     })
 
     if (existing && existing.status === "REGISTERED") {
-      return { success: false, error: "Already registered" }
+      return actionError(ACTION_ERRORS.ALREADY_EXISTS)
     }
 
     const status = isFull ? "WAITLISTED" : "REGISTERED"

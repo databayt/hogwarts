@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface EvaluationTypeSelectorProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -31,13 +32,16 @@ export function EvaluationTypeSelector({
   form,
   disabled = false,
 }: EvaluationTypeSelectorProps) {
+  const { dictionary } = useDictionary()
+  const d = dictionary?.school?.classes?.form
+
   return (
     <FormField
       control={form.control}
       name="evaluationType"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Evaluation Type</FormLabel>
+          <FormLabel>{d?.evaluationType || "Evaluation Type"}</FormLabel>
           <Select
             onValueChange={field.onChange}
             value={field.value || "NORMAL"}
@@ -45,7 +49,11 @@ export function EvaluationTypeSelector({
           >
             <FormControl>
               <SelectTrigger>
-                <SelectValue placeholder="Select evaluation type" />
+                <SelectValue
+                  placeholder={
+                    d?.selectEvaluationType || "Select evaluation type"
+                  }
+                />
               </SelectTrigger>
             </FormControl>
             <SelectContent>
@@ -62,7 +70,8 @@ export function EvaluationTypeSelector({
             </SelectContent>
           </Select>
           <FormDescription>
-            Choose how student performance will be evaluated in this course
+            {d?.evaluationDescription ||
+              "Choose how student performance will be evaluated in this course"}
           </FormDescription>
           <FormMessage />
         </FormItem>

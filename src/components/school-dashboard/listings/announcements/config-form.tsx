@@ -40,7 +40,7 @@ import {
 interface ConfigFormProps {
   initialConfig: AnnouncementConfigData
   templates: Array<{ id: string; name: string; type: string }>
-  dictionary?: Record<string, string>
+  dictionary?: Record<string, any>
 }
 
 // Anthropic color palette
@@ -90,68 +90,67 @@ export function AnnouncementConfigForm({
     startTransition(async () => {
       const result = await updateAnnouncementConfig(data)
       if (result.success) {
-        toast.success(dictionary?.saved || "Settings saved successfully")
+        toast.success(cfg?.saved || "Settings saved successfully")
       } else {
         toast.error(
-          result.error || dictionary?.saveFailed || "Failed to save settings"
+          result.error || cfg?.saveFailed || "Failed to save settings"
         )
       }
     })
   }
 
-  // Dictionary with fallbacks
+  // Use nested config dictionary from dictionary?.config, with fallbacks
+  const cfg = dictionary?.config as Record<string, string> | undefined
+  const ann = dictionary as Record<string, any> | undefined
+
   const d = {
-    publishingDefaults: dictionary?.publishingDefaults || "Publishing Defaults",
-    notifications: dictionary?.notifications || "Notifications",
-    templates: dictionary?.templates || "Templates",
-    trackingRetention: dictionary?.trackingRetention || "Tracking & Retention",
-    defaultScope: dictionary?.defaultScope || "Default Scope",
-    defaultPriority: dictionary?.defaultPriority || "Default Priority",
-    autoPublish: dictionary?.autoPublish || "Auto-publish",
+    publishingDefaults: cfg?.publishingDefaults || "Publishing Defaults",
+    notifications: cfg?.notifications || "Notifications",
+    templates: cfg?.templates || "Templates",
+    trackingRetention: cfg?.trackingRetention || "Tracking & Retention",
+    defaultScope: cfg?.defaultScope || "Default Scope",
+    defaultPriority: cfg?.defaultPriority || "Default Priority",
+    autoPublish: cfg?.autoPublish || "Auto-publish",
     autoPublishDesc:
-      dictionary?.autoPublishDesc || "Automatically publish new announcements",
-    defaultExpiryDays: dictionary?.defaultExpiryDays || "Default Expiry (days)",
-    emailOnPublish: dictionary?.emailOnPublish || "Email on Publish",
+      cfg?.autoPublishDesc || "Automatically publish new announcements",
+    defaultExpiryDays: cfg?.defaultExpiryDays || "Default Expiry (days)",
+    emailOnPublish: cfg?.emailOnPublish || "Email on Publish",
     emailOnPublishDesc:
-      dictionary?.emailOnPublishDesc ||
-      "Send email notifications when published",
-    pushNotifications: dictionary?.pushNotifications || "Push Notifications",
+      cfg?.emailOnPublishDesc || "Send email notifications when published",
+    pushNotifications: cfg?.pushNotifications || "Push Notifications",
     pushNotificationsDesc:
-      dictionary?.pushNotificationsDesc ||
-      "Send push notifications (coming soon)",
-    quietHoursStart: dictionary?.quietHoursStart || "Quiet Hours Start",
-    quietHoursEnd: dictionary?.quietHoursEnd || "Quiet Hours End",
-    digestFrequency: dictionary?.digestFrequency || "Digest Frequency",
-    defaultTemplate: dictionary?.defaultTemplate || "Default Template",
-    allowCustomTemplates:
-      dictionary?.allowCustomTemplates || "Allow Custom Templates",
+      cfg?.pushNotificationsDesc || "Send push notifications (coming soon)",
+    quietHoursStart: cfg?.quietHoursStart || "Quiet Hours Start",
+    quietHoursEnd: cfg?.quietHoursEnd || "Quiet Hours End",
+    digestFrequency: cfg?.digestFrequency || "Digest Frequency",
+    defaultTemplate: cfg?.defaultTemplate || "Default Template",
+    allowCustomTemplates: cfg?.allowCustomTemplates || "Allow Custom Templates",
     allowCustomTemplatesDesc:
-      dictionary?.allowCustomTemplatesDesc ||
+      cfg?.allowCustomTemplatesDesc ||
       "Let users create custom announcement templates",
-    readTracking: dictionary?.readTracking || "Read Tracking",
+    readTracking: cfg?.readTracking || "Read Tracking",
     readTrackingDesc:
-      dictionary?.readTrackingDesc || "Track when users read announcements",
-    retentionDays: dictionary?.retentionDays || "Retention Period (days)",
-    autoArchive: dictionary?.autoArchive || "Auto-archive",
+      cfg?.readTrackingDesc || "Track when users read announcements",
+    retentionDays: cfg?.retentionDays || "Retention Period (days)",
+    autoArchive: cfg?.autoArchive || "Auto-archive",
     autoArchiveDesc:
-      dictionary?.autoArchiveDesc ||
-      "Automatically archive expired announcements",
-    archiveAfterDays: dictionary?.archiveAfterDays || "Archive After (days)",
-    saveChanges: dictionary?.saveChanges || "Save Changes",
-    saving: dictionary?.saving || "Saving...",
-    comingSoon: dictionary?.comingSoon || "Coming Soon",
-    school: dictionary?.school || "School",
-    class: dictionary?.class || "Class",
-    role: dictionary?.role || "Role",
-    low: dictionary?.low || "Low",
-    normal: dictionary?.normal || "Normal",
-    high: dictionary?.high || "High",
-    urgent: dictionary?.urgent || "Urgent",
-    none: dictionary?.none || "None",
-    daily: dictionary?.daily || "Daily",
-    weekly: dictionary?.weekly || "Weekly",
-    noTemplate: dictionary?.noTemplate || "No default template",
-    templatesCount: dictionary?.templatesCount || "templates available",
+      cfg?.autoArchiveDesc || "Automatically archive expired announcements",
+    archiveAfterDays: cfg?.archiveAfterDays || "Archive After (days)",
+    saveChanges: cfg?.saveChanges || "Save Changes",
+    saving: cfg?.saving || "Saving...",
+    comingSoon: cfg?.comingSoon || "Coming Soon",
+    school: ann?.school || "School",
+    class: ann?.class || "Class",
+    role: ann?.role || "Role",
+    low: ann?.low || "Low",
+    normal: ann?.normal || "Normal",
+    high: ann?.high || "High",
+    urgent: ann?.urgent || "Urgent",
+    none: cfg?.none || "None",
+    daily: cfg?.daily || "Daily",
+    weekly: cfg?.weekly || "Weekly",
+    noTemplate: cfg?.noTemplate || "No default template",
+    templatesCount: cfg?.templatesCount || "templates available",
   }
 
   return (

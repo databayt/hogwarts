@@ -22,7 +22,6 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { getPreviousEvents } from "./actions"
 import { EventAutocomplete } from "./autocomplete"
-import { EVENT_TYPES } from "./config"
 import { EventFormStepProps } from "./types"
 
 interface SuggestionItem {
@@ -38,6 +37,9 @@ export function BasicInformationStep({
 }: EventFormStepProps) {
   const { dictionary } = useDictionary()
   const d = dictionary?.school?.events?.form as
+    | Record<string, string>
+    | undefined
+  const types = dictionary?.school?.events?.types as
     | Record<string, string>
     | undefined
 
@@ -144,13 +146,25 @@ export function BasicInformationStep({
             >
               <FormControl>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select event type" />
+                  <SelectValue
+                    placeholder={d?.selectEventType || "Select event type"}
+                  />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                {EVENT_TYPES.map((type) => (
-                  <SelectItem key={type.value} value={type.value}>
-                    {type.label}
+                {(
+                  [
+                    "ACADEMIC",
+                    "SPORTS",
+                    "CULTURAL",
+                    "PARENT_MEETING",
+                    "CELEBRATION",
+                    "WORKSHOP",
+                    "OTHER",
+                  ] as const
+                ).map((value) => (
+                  <SelectItem key={value} value={value}>
+                    {types?.[value] || value}
                   </SelectItem>
                 ))}
               </SelectContent>

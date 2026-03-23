@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
 import type { Locale } from "@/components/internationalization/config"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { PlatformToolbar } from "@/components/school-dashboard/shared"
 import {
   BulkActionsToolbar,
@@ -41,6 +42,10 @@ function FeeAssignmentsTableInner({
   const [searchValue, setSearchValue] = useState("")
   const [isPending, startTransition] = useTransition()
   const { view, toggleView } = usePlatformView({ defaultView: "table" })
+  const { dictionary } = useDictionary()
+  const col = (dictionary as any)?.finance?.columns as
+    | Record<string, string>
+    | undefined
 
   const { data, isLoading, hasMore, loadMore } = usePlatformData<
     FeeAssignmentRow,
@@ -55,9 +60,9 @@ function FeeAssignmentsTableInner({
   const columns = useMemo(
     () => [
       getSelectColumn<FeeAssignmentRow>(),
-      ...getFeeAssignmentColumns(lang),
+      ...getFeeAssignmentColumns(lang, col),
     ],
-    [lang]
+    [lang, col]
   )
 
   const { table } = useDataTable<FeeAssignmentRow>({

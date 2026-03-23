@@ -14,6 +14,7 @@ export interface PageNavItem {
   hidden?: boolean
   exact?: boolean
   matchPrefix?: string
+  badge?: number
 }
 
 interface PageNavProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -111,6 +112,11 @@ function PageLink({
       )}
     >
       {page.name}
+      {page.badge != null && page.badge > 0 && (
+        <span className="bg-destructive text-destructive-foreground ms-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] leading-none font-semibold">
+          {page.badge > 99 ? "99+" : page.badge}
+        </span>
+      )}
       {isActive && (
         <span className="bg-primary absolute start-0 end-0 bottom-0 h-0.5" />
       )}

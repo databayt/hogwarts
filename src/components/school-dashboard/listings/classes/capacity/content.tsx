@@ -23,22 +23,32 @@ import { type Dictionary } from "@/components/internationalization/dictionaries"
 
 import { getAllClassesCapacity, type ClassCapacityAnalytics } from "../actions"
 
+interface StatusLabels {
+  full: string
+  nearFull: string
+  underCapacity: string
+  optimal: string
+}
+
 interface Props {
   searchParams: Promise<SearchParams>
   dictionary: Dictionary["school"]
 }
 
-function getStatusBadge(status: ClassCapacityAnalytics["status"]) {
+function getStatusBadge(
+  status: ClassCapacityAnalytics["status"],
+  labels: StatusLabels
+) {
   switch (status) {
     case "full":
-      return <Badge variant="destructive">Full</Badge>
+      return <Badge variant="destructive">{labels.full}</Badge>
     case "near-full":
       return (
         <Badge
           variant="secondary"
           className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100"
         >
-          Near Full
+          {labels.nearFull}
         </Badge>
       )
     case "under":
@@ -47,7 +57,7 @@ function getStatusBadge(status: ClassCapacityAnalytics["status"]) {
           variant="secondary"
           className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100"
         >
-          Under Capacity
+          {labels.underCapacity}
         </Badge>
       )
     case "optimal":
@@ -56,7 +66,7 @@ function getStatusBadge(status: ClassCapacityAnalytics["status"]) {
           variant="secondary"
           className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
         >
-          Optimal
+          {labels.optimal}
         </Badge>
       )
   }
@@ -71,6 +81,14 @@ function getProgressColor(percentageFull: number): string {
 
 export default async function ClassCapacityContent({ dictionary }: Props) {
   const d = dictionary?.classes
+  const cap = d?.capacity
+
+  const statusLabels: StatusLabels = {
+    full: cap?.status?.full ?? "Full",
+    nearFull: cap?.status?.nearFull ?? "Near Full",
+    underCapacity: cap?.status?.underCapacity ?? "Under Capacity",
+    optimal: cap?.status?.optimal ?? "Optimal",
+  }
 
   const result = await getAllClassesCapacity()
 
@@ -79,9 +97,7 @@ export default async function ClassCapacityContent({ dictionary }: Props) {
       <div className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>
-              {d?.capacity?.title || "Class Capacity Analysis"}
-            </CardTitle>
+            <CardTitle>{cap?.title}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-destructive">{result.error}</p>
@@ -102,14 +118,10 @@ export default async function ClassCapacityContent({ dictionary }: Props) {
       <div className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>
-              {d?.capacity?.title || "Class Capacity Analysis"}
-            </CardTitle>
+            <CardTitle>{cap?.title}</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground">
-              No classes found. Create classes to view capacity analytics.
-            </p>
+            <p className="text-muted-foreground">{cap?.noClasses}</p>
           </CardContent>
         </Card>
       </div>
@@ -122,13 +134,15 @@ export default async function ClassCapacityContent({ dictionary }: Props) {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Classes</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {cap?.totalClasses}
+            </CardTitle>
             <Users className="text-muted-foreground size-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{data.totalClasses}</div>
             <p className="text-muted-foreground text-xs">
-              {data.totalEnrolled} / {data.totalCapacity} total capacity
+              {data.totalEnrolled} / {data.totalCapacity} {cap?.totalCapacity}
             </p>
           </CardContent>
         </Card>
@@ -136,7 +150,7 @@ export default async function ClassCapacityContent({ dictionary }: Props) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Average Utilization
+              {cap?.averageUtilization}
             </CardTitle>
             <TrendingUp className="text-muted-foreground size-4" />
           </CardHeader>
@@ -148,13 +162,15 @@ export default async function ClassCapacityContent({ dictionary }: Props) {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Classes Full</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {cap?.classesFull}
+            </CardTitle>
             <AlertCircle className="text-destructive size-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{data.classesFull}</div>
             <p className="text-muted-foreground text-xs">
-              {data.classesNearFull} near full (85%+)
+              {data.classesNearFull} {cap?.nearFullPercent}
             </p>
           </CardContent>
         </Card>
@@ -162,14 +178,14 @@ export default async function ClassCapacityContent({ dictionary }: Props) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Optimal Classes
+              {cap?.optimalClasses}
             </CardTitle>
             <CheckCircle className="size-4 text-green-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{data.classesOptimal}</div>
             <p className="text-muted-foreground text-xs">
-              {data.classesUnderCapacity} under minimum
+              {data.classesUnderCapacity} {cap?.underMinimum}
             </p>
           </CardContent>
         </Card>
@@ -178,27 +194,33 @@ export default async function ClassCapacityContent({ dictionary }: Props) {
       {/* Status Distribution */}
       <Card>
         <CardHeader>
-          <CardTitle>Status Distribution</CardTitle>
-          <CardDescription>Classes by enrollment status</CardDescription>
+          <CardTitle>{cap?.statusDistribution}</CardTitle>
+          <CardDescription>{cap?.classesByStatus}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-4">
             <div className="flex items-center gap-2">
               <div className="size-3 rounded-full bg-green-500" />
-              <span className="text-sm">Optimal: {data.classesOptimal}</span>
+              <span className="text-sm">
+                {statusLabels.optimal}: {data.classesOptimal}
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <div className="size-3 rounded-full bg-amber-500" />
-              <span className="text-sm">Near Full: {data.classesNearFull}</span>
+              <span className="text-sm">
+                {statusLabels.nearFull}: {data.classesNearFull}
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <div className="bg-destructive size-3 rounded-full" />
-              <span className="text-sm">Full: {data.classesFull}</span>
+              <span className="text-sm">
+                {statusLabels.full}: {data.classesFull}
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <div className="size-3 rounded-full bg-blue-500" />
               <span className="text-sm">
-                Under Capacity: {data.classesUnderCapacity}
+                {statusLabels.underCapacity}: {data.classesUnderCapacity}
               </span>
             </div>
           </div>
@@ -208,10 +230,8 @@ export default async function ClassCapacityContent({ dictionary }: Props) {
       {/* Classes Table */}
       <Card>
         <CardHeader>
-          <CardTitle>
-            {d?.capacity?.title || "Class Capacity Details"}
-          </CardTitle>
-          <CardDescription>Enrollment status for all classes</CardDescription>
+          <CardTitle>{cap?.detailsTitle}</CardTitle>
+          <CardDescription>{cap?.enrollmentStatusAll}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -219,22 +239,22 @@ export default async function ClassCapacityContent({ dictionary }: Props) {
               <thead>
                 <tr className="border-b">
                   <th className="text-muted-foreground px-4 py-3 text-start text-sm font-medium">
-                    Class
+                    {cap?.table?.class}
                   </th>
                   <th className="text-muted-foreground px-4 py-3 text-start text-sm font-medium">
-                    Subject
+                    {cap?.table?.subject}
                   </th>
                   <th className="text-muted-foreground px-4 py-3 text-start text-sm font-medium">
-                    Teacher
+                    {cap?.table?.teacher}
                   </th>
                   <th className="text-muted-foreground px-4 py-3 text-start text-sm font-medium">
-                    Enrollment
+                    {cap?.table?.enrollment}
                   </th>
                   <th className="text-muted-foreground px-4 py-3 text-start text-sm font-medium">
-                    Capacity
+                    {cap?.table?.capacity}
                   </th>
                   <th className="text-muted-foreground px-4 py-3 text-start text-sm font-medium">
-                    Status
+                    {cap?.table?.status}
                   </th>
                 </tr>
               </thead>
@@ -270,11 +290,11 @@ export default async function ClassCapacityContent({ dictionary }: Props) {
                     </td>
                     <td className="px-4 py-3">
                       <span className="text-sm">
-                        {classItem.availableSpots} spots available
+                        {classItem.availableSpots} {cap?.spotsAvailable}
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      {getStatusBadge(classItem.status)}
+                      {getStatusBadge(classItem.status, statusLabels)}
                     </td>
                   </tr>
                 ))}
@@ -291,7 +311,7 @@ export default async function ClassCapacityContent({ dictionary }: Props) {
             <div className="flex items-center gap-2">
               <AlertTriangle className="size-5 text-amber-500" />
               <CardTitle className="text-amber-700 dark:text-amber-300">
-                Capacity Alerts
+                {cap?.capacityAlerts}
               </CardTitle>
             </div>
           </CardHeader>
@@ -308,10 +328,10 @@ export default async function ClassCapacityContent({ dictionary }: Props) {
                       <p className="font-medium">{classItem.name}</p>
                       <p className="text-muted-foreground text-sm">
                         {classItem.currentEnrollment}/{classItem.maxCapacity}{" "}
-                        students ({classItem.percentageFull}%)
+                        {cap?.students} ({classItem.percentageFull}%)
                       </p>
                     </div>
-                    {getStatusBadge(classItem.status)}
+                    {getStatusBadge(classItem.status, statusLabels)}
                   </div>
                 ))}
             </div>

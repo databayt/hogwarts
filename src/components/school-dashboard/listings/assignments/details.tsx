@@ -31,12 +31,22 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
-import { ASSIGNMENT_TYPES } from "./config"
+import { getAssignmentTypes } from "./config"
 import { AssignmentFormStepProps } from "./types"
 import { assignmentCreateSchema } from "./validation"
 
 export function DetailsStep({ form, isView }: AssignmentFormStepProps) {
+  const { dictionary } = useDictionary()
+  const d = (dictionary?.school as Record<string, any>)?.assignments?.form as
+    | Record<string, any>
+    | undefined
+  const locale = (dictionary as Record<string, any>)?.locale as
+    | string
+    | undefined
+  const typeOptions = getAssignmentTypes(locale)
+
   return (
     <div className="w-full space-y-4">
       <FormField
@@ -44,7 +54,7 @@ export function DetailsStep({ form, isView }: AssignmentFormStepProps) {
         name="type"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Assignment Type</FormLabel>
+            <FormLabel>{d?.assignmentType || "Assignment Type"}</FormLabel>
             <Select
               onValueChange={field.onChange}
               value={field.value}
@@ -52,11 +62,13 @@ export function DetailsStep({ form, isView }: AssignmentFormStepProps) {
             >
               <FormControl>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select assignment type" />
+                  <SelectValue
+                    placeholder={d?.selectType || "Select assignment type"}
+                  />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                {ASSIGNMENT_TYPES.map((type) => (
+                {typeOptions.map((type) => (
                   <SelectItem key={type.value} value={type.value}>
                     {type.label}
                   </SelectItem>
@@ -74,7 +86,7 @@ export function DetailsStep({ form, isView }: AssignmentFormStepProps) {
           name="totalPoints"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Total Points</FormLabel>
+              <FormLabel>{d?.totalPoints || "Total Points"}</FormLabel>
               <FormControl>
                 <Input
                   type="number"
@@ -98,7 +110,7 @@ export function DetailsStep({ form, isView }: AssignmentFormStepProps) {
           name="weight"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Weight (%)</FormLabel>
+              <FormLabel>{d?.weightPercent || "Weight (%)"}</FormLabel>
               <FormControl>
                 <Input
                   type="number"
@@ -124,7 +136,7 @@ export function DetailsStep({ form, isView }: AssignmentFormStepProps) {
         name="dueDate"
         render={({ field }) => (
           <FormItem className="flex flex-col">
-            <FormLabel>Due Date</FormLabel>
+            <FormLabel>{d?.dueDate || "Due Date"}</FormLabel>
             <Popover>
               <PopoverTrigger asChild>
                 <FormControl>
@@ -139,7 +151,7 @@ export function DetailsStep({ form, isView }: AssignmentFormStepProps) {
                     {field.value ? (
                       format(field.value, "PPP")
                     ) : (
-                      <span>Pick a date</span>
+                      <span>{d?.pickDate || "Pick a date"}</span>
                     )}
                     <Calendar className="ms-auto h-4 w-4 opacity-50" />
                   </Button>
@@ -165,10 +177,12 @@ export function DetailsStep({ form, isView }: AssignmentFormStepProps) {
         name="instructions"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Instructions</FormLabel>
+            <FormLabel>{d?.instructions || "Instructions"}</FormLabel>
             <FormControl>
               <Textarea
-                placeholder="Enter assignment instructions..."
+                placeholder={
+                  d?.enterInstructions || "Enter assignment instructions..."
+                }
                 className="min-h-[120px]"
                 disabled={isView}
                 {...field}

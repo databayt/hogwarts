@@ -19,16 +19,21 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import type { Locale } from "@/components/internationalization/config"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { issueFine } from "./actions"
 
-const FINE_TYPES = [
-  { value: "LATE_FEE", label: "Late Fee" },
-  { value: "LIBRARY_FINE", label: "Library Fine" },
-  { value: "DISCIPLINE_FINE", label: "Discipline Fine" },
-  { value: "DAMAGE_FINE", label: "Damage Fine" },
-  { value: "OTHER", label: "Other" },
-] as const
+const getFineTypes = (ff?: Record<string, string>) =>
+  [
+    { value: "LATE_FEE", label: ff?.lateFee || "Late Fee" },
+    { value: "LIBRARY_FINE", label: ff?.libraryFine || "Library Fine" },
+    {
+      value: "DISCIPLINE_FINE",
+      label: ff?.disciplineFine || "Discipline Fine",
+    },
+    { value: "DAMAGE_FINE", label: ff?.damageFine || "Damage Fine" },
+    { value: "OTHER", label: ff?.other || "Other" },
+  ] as const
 
 interface FineFormProps {
   students: Array<{
@@ -42,6 +47,13 @@ interface FineFormProps {
 export function FineForm({ students, lang }: FineFormProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+  const { dictionary } = useDictionary()
+  const ff = (dictionary as any)?.finance?.fineForm as
+    | Record<string, string>
+    | undefined
+  const fc = (dictionary as any)?.finance?.common as
+    | Record<string, string>
+    | undefined
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -50,10 +62,12 @@ export function FineForm({ students, lang }: FineFormProps) {
     startTransition(async () => {
       const result = await issueFine(formData)
       if (result.success) {
-        toast.success("Fine issued successfully")
+        toast.success(ff?.fineIssuedSuccessfully || "Fine issued successfully")
         router.push(`/${lang}/finance/fees/fines`)
       } else {
-        toast.error(result.error || "Failed to issue fine")
+        toast.error(
+          result.error || ff?.failedIssueFine || "Failed to issue fine"
+        )
       }
     })
   }
@@ -61,10 +75,12 @@ export function FineForm({ students, lang }: FineFormProps) {
   return (
     <form onSubmit={handleSubmit} className="max-w-lg space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="studentId">Student</Label>
+        <Label htmlFor="studentId">{ff?.studentLabel || "Student"}</Label>
         <Select name="studentId" required>
           <SelectTrigger id="studentId">
-            <SelectValue placeholder="Select a student" />
+            <SelectValue
+              placeholder={ff?.selectStudent || "Select a student"}
+            />
           </SelectTrigger>
           <SelectContent>
             {students.map((s) => (
@@ -77,13 +93,15 @@ export function FineForm({ students, lang }: FineFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="fineType">Fine Type</Label>
+        <Label htmlFor="fineType">{ff?.fineType || "Fine Type"}</Label>
         <Select name="fineType" required>
           <SelectTrigger id="fineType">
-            <SelectValue placeholder="Select fine type" />
+            <SelectValue
+              placeholder={ff?.selectFineType || "Select fine type"}
+            />
           </SelectTrigger>
           <SelectContent>
-            {FINE_TYPES.map((t) => (
+            {getFineTypes(ff).map((t) => (
               <SelectItem key={t.value} value={t.value}>
                 {t.label}
               </SelectItem>
@@ -93,7 +111,7 @@ export function FineForm({ students, lang }: FineFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="amount">Amount</Label>
+        <Label htmlFor="amount">{ff?.amount || "Amount"}</Label>
         <Input
           id="amount"
           name="amount"
@@ -106,31 +124,35 @@ export function FineForm({ students, lang }: FineFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="reason">Reason</Label>
+        <Label htmlFor="reason">{ff?.reason || "Reason"}</Label>
         <Textarea
           id="reason"
           name="reason"
           required
-          placeholder="Describe the reason for this fine"
+          placeholder={
+            ff?.reasonPlaceholder || "Describe the reason for this fine"
+          }
           rows={3}
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="dueDate">Due Date</Label>
+        <Label htmlFor="dueDate">{ff?.dueDate || "Due Date"}</Label>
         <Input id="dueDate" name="dueDate" type="date" required />
       </div>
 
       <div className="flex gap-2 pt-4">
         <Button type="submit" disabled={isPending}>
-          {isPending ? "Issuing..." : "Issue Fine"}
+          {isPending
+            ? ff?.issuing || "Issuing..."
+            : ff?.issueFine || "Issue Fine"}
         </Button>
         <Button
           type="button"
           variant="outline"
           onClick={() => router.push(`/${lang}/finance/fees/fines`)}
         >
-          Cancel
+          {fc?.cancel || "Cancel"}
         </Button>
       </div>
     </form>

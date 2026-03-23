@@ -3,22 +3,49 @@
 
 /**
  * Timesheet Module - Configuration
+ * Labels are dictionary-backed via getter functions.
  */
 
 import { EntryStatus, PeriodStatus } from "@prisma/client"
 
-export const PeriodStatusLabels: Record<PeriodStatus, string> = {
+/** Default fallback labels (used when dictionary is not available) */
+const DEFAULT_PERIOD_STATUS: Record<PeriodStatus, string> = {
   OPEN: "Open",
   CLOSED: "Closed",
   LOCKED: "Locked",
 }
 
-export const EntryStatusLabels: Record<EntryStatus, string> = {
+const DEFAULT_ENTRY_STATUS: Record<EntryStatus, string> = {
   DRAFT: "Draft",
   SUBMITTED: "Submitted",
   APPROVED: "Approved",
   REJECTED: "Rejected",
 }
+
+/** Get localized period status labels from dictionary */
+export const getPeriodStatusLabels = (
+  d?: Record<string, string>
+): Record<PeriodStatus, string> => ({
+  OPEN: d?.OPEN || DEFAULT_PERIOD_STATUS.OPEN,
+  CLOSED: d?.CLOSED || DEFAULT_PERIOD_STATUS.CLOSED,
+  LOCKED: d?.LOCKED || DEFAULT_PERIOD_STATUS.LOCKED,
+})
+
+/** For backward compat -- static fallback */
+export const PeriodStatusLabels = DEFAULT_PERIOD_STATUS
+
+/** Get localized entry status labels from dictionary */
+export const getEntryStatusLabels = (
+  d?: Record<string, string>
+): Record<EntryStatus, string> => ({
+  DRAFT: d?.DRAFT || DEFAULT_ENTRY_STATUS.DRAFT,
+  SUBMITTED: d?.SUBMITTED || DEFAULT_ENTRY_STATUS.SUBMITTED,
+  APPROVED: d?.APPROVED || DEFAULT_ENTRY_STATUS.APPROVED,
+  REJECTED: d?.REJECTED || DEFAULT_ENTRY_STATUS.REJECTED,
+})
+
+/** For backward compat -- static fallback */
+export const EntryStatusLabels = DEFAULT_ENTRY_STATUS
 
 export const TaskTypes = [
   "TEACHING",
@@ -33,7 +60,7 @@ export const TaskTypes = [
 
 export type TaskType = (typeof TaskTypes)[number]
 
-export const TaskTypeLabels: Record<TaskType, string> = {
+const DEFAULT_TASK_TYPE_LABELS: Record<TaskType, string> = {
   TEACHING: "Teaching",
   ADMINISTRATION: "Administration",
   MEETINGS: "Meetings",
@@ -43,6 +70,22 @@ export const TaskTypeLabels: Record<TaskType, string> = {
   SUPERVISION: "Student Supervision",
   OTHER: "Other",
 }
+
+/** Get localized task type labels from dictionary */
+export const getTaskTypeLabels = (
+  d?: Record<string, string>
+): Record<TaskType, string> => {
+  const result = { ...DEFAULT_TASK_TYPE_LABELS }
+  if (d) {
+    for (const key of TaskTypes) {
+      if (d[key]) result[key] = d[key]
+    }
+  }
+  return result
+}
+
+/** For backward compat -- static fallback */
+export const TaskTypeLabels = DEFAULT_TASK_TYPE_LABELS
 
 export const TIMESHEET_CONFIG = {
   PERIOD_DURATION_DAYS: 14, // Bi-weekly

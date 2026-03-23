@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { getSubjects } from "@/components/school-dashboard/listings/subjects/actions"
 import { getTeachers } from "@/components/school-dashboard/listings/teachers/actions"
 
@@ -29,6 +30,8 @@ import { ClassFormStepProps } from "./types"
 import { classCreateSchema } from "./validation"
 
 export function InformationStep({ form, isView }: ClassFormStepProps) {
+  const { dictionary } = useDictionary()
+  const d = dictionary?.school?.classes?.form
   const [subjects, setSubjects] = useState<Array<{ id: string; name: string }>>(
     []
   )
@@ -89,10 +92,10 @@ export function InformationStep({ form, isView }: ClassFormStepProps) {
         name="name"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Class Name</FormLabel>
+            <FormLabel>{d?.className || "Class Name"}</FormLabel>
             <FormControl>
               <Input
-                placeholder="Enter class name"
+                placeholder={d?.classNamePlaceholder || "Enter class name"}
                 disabled={isView}
                 {...field}
               />
@@ -107,7 +110,7 @@ export function InformationStep({ form, isView }: ClassFormStepProps) {
         name="subjectId"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Subject</FormLabel>
+            <FormLabel>{d?.subject || "Subject"}</FormLabel>
             <Select
               onValueChange={field.onChange}
               value={field.value}
@@ -115,7 +118,9 @@ export function InformationStep({ form, isView }: ClassFormStepProps) {
             >
               <FormControl>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select subject" />
+                  <SelectValue
+                    placeholder={d?.selectSubject || "Select subject"}
+                  />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
@@ -136,7 +141,7 @@ export function InformationStep({ form, isView }: ClassFormStepProps) {
         name="teacherId"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Teacher</FormLabel>
+            <FormLabel>{d?.teacher || "Teacher"}</FormLabel>
             <Select
               onValueChange={field.onChange}
               value={field.value}
@@ -144,7 +149,9 @@ export function InformationStep({ form, isView }: ClassFormStepProps) {
             >
               <FormControl>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select teacher" />
+                  <SelectValue
+                    placeholder={d?.selectTeacher || "Select teacher"}
+                  />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
@@ -166,7 +173,7 @@ export function InformationStep({ form, isView }: ClassFormStepProps) {
           name="gradeId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Grade</FormLabel>
+              <FormLabel>{d?.grade || "Grade"}</FormLabel>
               <Select
                 onValueChange={field.onChange}
                 value={field.value ?? ""}
@@ -174,7 +181,9 @@ export function InformationStep({ form, isView }: ClassFormStepProps) {
               >
                 <FormControl>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select grade (optional)" />
+                    <SelectValue
+                      placeholder={d?.selectGrade || "Select grade (optional)"}
+                    />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>

@@ -208,23 +208,31 @@ export function ExamCreateForm({ onSuccess }: ExamCreateFormProps) {
     }
   }
 
+  const steps = t?.form?.steps
   const stepLabels: Record<number, string> = {
-    1: locale === "ar" ? "المعلومات الأساسية" : "Basic Information",
-    2: locale === "ar" ? "الجدول والدرجات" : "Schedule & Marks",
-    3: locale === "ar" ? "التعليمات والتفاصيل" : "Instructions & Details",
+    1: steps?.basicInformation ?? "Basic Information",
+    2: steps?.scheduleMarks ?? "Schedule & Marks",
+    3: steps?.instructionsDetails ?? "Instructions & Details",
   }
 
   return (
     <Form {...form}>
       <form onSubmit={(e) => e.preventDefault()}>
         <ModalFormLayout
-          title={isView ? "View Exam" : currentId ? "Edit Exam" : "Create Exam"}
+          title={
+            isView
+              ? (t?.form?.viewExam ?? "View Exam")
+              : currentId
+                ? (t?.form?.editExam ?? "Edit Exam")
+                : (t?.form?.createExam ?? "Create Exam")
+          }
           description={
             isView
-              ? "View exam details"
+              ? (t?.form?.viewExamDescription ?? "View exam details")
               : currentId
-                ? "Update exam details"
-                : "Schedule a new exam for your class"
+                ? (t?.form?.editExamDescription ?? "Update exam details")
+                : (t?.form?.createExamDescription ??
+                  "Schedule a new exam for your class")
           }
         >
           {renderCurrentStep()}

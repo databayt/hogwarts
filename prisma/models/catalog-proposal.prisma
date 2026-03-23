@@ -45,5 +45,6 @@ model CatalogProposal {
 
   @@index([schoolId, status])
   @@index([status])
+  @@index([proposedBy]) // User's proposals query
   @@map("catalog_proposals")
 }

@@ -28,7 +28,7 @@ export const personalSchema = z.object({
   gender: z.enum(["MALE", "FEMALE", "OTHER"], {
     message: "Gender is required",
   }),
-  nationality: z.string().optional().or(z.literal("")),
+  nationality: z.string().min(1, "Nationality is required"),
   religion: z.string().optional().or(z.literal("")),
   category: z.string().optional().or(z.literal("")),
 })

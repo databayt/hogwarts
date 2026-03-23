@@ -8,11 +8,14 @@ import { useParams } from "next/navigation"
 import { FormHeading, FormLayout } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { useParentWizard } from "../use-parent-wizard"
 import { InformationForm } from "./form"
 
 export default function InformationContent() {
+  const { dictionary } = useDictionary()
+  const d = dictionary?.school?.parents as Record<string, any> | undefined
   const params = useParams()
   const parentId = params.id as string
   const formRef = useRef<WizardFormRef>(null)
@@ -38,8 +41,11 @@ export default function InformationContent() {
     >
       <FormLayout>
         <FormHeading
-          title="Basic Information"
-          description="Enter the parent/guardian's personal information."
+          title={d?.basicInformation || "Basic Information"}
+          description={
+            d?.enterPersonalInfo ||
+            "Enter the parent/guardian's personal information."
+          }
         />
         <InformationForm
           ref={formRef}

@@ -16,7 +16,8 @@ import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { InputField, SelectField, TextareaField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
-import { ASSESSMENT_TYPE_OPTIONS } from "@/components/school-dashboard/listings/assignments/wizard/config"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { getAssignmentTypes } from "@/components/school-dashboard/listings/assignments/config"
 
 import { getClassesForAssignment, updateAssignmentInformation } from "./actions"
 import { informationSchema, type InformationFormData } from "./validation"
@@ -30,6 +31,13 @@ interface InformationFormProps {
 export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
   ({ assignmentId, initialData, onValidChange }, ref) => {
     const [isPending, startTransition] = useTransition()
+    const { dictionary } = useDictionary()
+    const fd = (dictionary?.school as Record<string, any>)?.assignments
+      ?.form as Record<string, any> | undefined
+    const locale = (dictionary as Record<string, any>)?.locale as
+      | string
+      | undefined
+    const typeOptions = getAssignmentTypes(locale)
     const [classOptions, setClassOptions] = useState<
       { label: string; value: string }[]
     >([])
@@ -97,29 +105,29 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
         <form className="space-y-6">
           <InputField
             name="title"
-            label="Title"
-            placeholder="Enter assignment title"
+            label={fd?.assignmentTitle || "Title"}
+            placeholder={fd?.enterTitle || "Enter assignment title"}
             required
             disabled={isPending}
           />
           <SelectField
             name="classId"
-            label="Class"
+            label={fd?.class || "Class"}
             options={classOptions}
             required
             disabled={isPending}
           />
           <SelectField
             name="type"
-            label="Type"
-            options={[...ASSESSMENT_TYPE_OPTIONS]}
+            label={fd?.assignmentType || "Type"}
+            options={[...typeOptions]}
             required
             disabled={isPending}
           />
           <TextareaField
             name="description"
-            label="Description"
-            placeholder="Enter assignment description"
+            label={fd?.description || "Description"}
+            placeholder={fd?.enterDescription || "Enter assignment description"}
             disabled={isPending}
           />
         </form>
