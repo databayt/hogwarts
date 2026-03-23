@@ -378,11 +378,8 @@ body {
 
 @utility animate-shimmer {
   animation: shimmer 1.8s ease-in-out infinite;
-}
 
-/* Respect reduced motion preference */
-@media (prefers-reduced-motion: reduce) {
-  @utility animate-shimmer {
+  @media (prefers-reduced-motion: reduce) {
     animation: none;
     opacity: 0.7;
   }
