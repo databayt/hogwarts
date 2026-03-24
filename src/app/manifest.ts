@@ -3,6 +3,8 @@
 
 import type { MetadataRoute } from "next"
 
+import { asset } from "@/lib/asset-url"
+
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Hogwarts School Management",
@@ -17,7 +19,7 @@ export default function manifest(): MetadataRoute.Manifest {
     orientation: "portrait-primary",
     icons: [
       {
-        src: "/logo.png",
+        src: asset("/icons/logo.png"),
         sizes: "any",
         type: "image/png",
       },

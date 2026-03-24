@@ -93,7 +93,7 @@ export function ContactsPanel({
   )
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex min-h-0 flex-1 flex-col">
       {/* Search + filters */}
       <ContactSearch
         search={search}

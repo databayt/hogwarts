@@ -186,7 +186,7 @@ export async function seedAdmissionSettings(
         schoolId,
         allowMultipleApplications: false,
         requireDocuments: true,
-        defaultApplicationFee: 500,
+        defaultApplicationFee: 0,
         offerExpiryDays: 14,
         enablePublicPortal: true,
         enableInquiryForm: true,
@@ -274,7 +274,7 @@ export async function seedAdmissionCampaign(
           "Transfer Certificate",
           "Parent ID",
         ]),
-        applicationFee: 500,
+        applicationFee: 0,
         totalSeats: 200,
         reservedSeats: JSON.stringify({
           staff: 10,

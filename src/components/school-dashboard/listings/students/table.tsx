@@ -7,6 +7,7 @@ import { useCallback, useMemo, useState } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 
+import { asset } from "@/lib/asset-url"
 import { cn } from "@/lib/utils"
 import { useDebouncedSearch } from "@/hooks/use-debounced-search"
 import { usePlatformData } from "@/hooks/use-platform-data"
@@ -373,7 +374,7 @@ function StudentsTableInner({
               description={t.addNewStudent}
               icon={
                 <Image
-                  src="/anthropic/users.svg"
+                  src={asset("/icons/users.svg")}
                   alt=""
                   width={48}
                   height={48}

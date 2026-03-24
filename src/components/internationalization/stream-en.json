@@ -74,52 +74,13 @@
       "progress": "Progress",
       "completionRate": "completion"
     },
-    "admin": {
-      "title": "Stream Admin Dashboard",
-      "description": "Manage courses and track enrollments",
+    "settings": {
+      "title": "Stream Settings",
+      "description": "Manage enrollments, instructor preferences, and video content",
       "overview": "Overview",
-      "totalCourses": "Total Courses",
-      "totalEnrollments": "Total Enrollments",
-      "totalRevenue": "Total Revenue",
-      "recentEnrollments": "Recent Enrollments",
-      "manageCourses": "Manage Courses",
-      "createCourse": {
-        "title": "Create New Course",
-        "description": "Create a new course for your students",
-        "courseTitleLabel": "Course Title",
-        "courseTitlePlaceholder": "e.g., Introduction to Web Development",
-        "descriptionLabel": "Description",
-        "descriptionPlaceholder": "Provide a brief description of your course",
-        "categoryLabel": "Category",
-        "selectCategory": "Select a category",
-        "priceLabel": "Price (USD)",
-        "pricePlaceholder": "0.00",
-        "freeOption": "Make this course free",
-        "submit": "Create Course",
-        "creating": "Creating...",
-        "success": "Course created successfully!",
-        "error": "Failed to create course"
-      },
-      "editCourse": {
-        "title": "Edit Course",
-        "description": "Update course information",
-        "save": "Save Changes",
-        "publish": "Publish Course",
-        "unpublish": "Unpublish Course",
-        "delete": "Delete Course",
-        "addChapter": "Add Chapter",
-        "addLesson": "Add Lesson",
-        "reorderHint": "Drag to reorder",
-        "saving": "Saving..."
-      }
-    },
-    "notAdmin": {
-      "title": "Access Restricted",
-      "description": "You do not have permission to access this area",
-      "message": "Admin access required",
-      "detail": "You need administrator or teacher privileges to access this area.",
-      "goBack": "Go Back",
-      "goToDashboard": "Go to Dashboard"
+      "enrollments": "Enrollments",
+      "instructors": "Instructors",
+      "videos": "Videos"
     },
     "payment": {
       "success": {
@@ -180,37 +141,15 @@
       "courseInstructor": "Course Instructor",
       "trainingProfessionals": "Training Professionals of Tomorrow",
       "topics": "Topics",
-      "quiz": "quiz"
-    },
-    "adminCourses": {
-      "yourCourses": "Your Courses",
-      "coursesInLibrary": "courses in your library",
-      "createCourse": "Create Course",
-      "noCoursesYet": "No courses yet",
-      "createFirstCourse": "Create your first course to get started with Stream LMS",
-      "createYourFirstCourse": "Create Your First Course",
-      "uncategorized": "Uncategorized",
-      "enrolled": "enrolled",
-      "free": "Free",
-      "published": "Published",
-      "draft": "Draft",
-      "edit": "Edit",
-      "delete": "Delete"
-    },
-    "deleteDialog": {
-      "delete": "Delete",
-      "deleteCourse": "Delete Course",
-      "confirmDelete": "Are you sure you want to delete \"{title}\"? This action cannot be undone.",
-      "cancel": "Cancel",
-      "deleting": "Deleting..."
+      "quiz": "quiz",
+      "edit": "Edit"
     },
     "header": {
       "home": "Home",
       "courses": "Courses",
-      "favorite": "Favorite",
       "myLearning": "My Learning",
-      "dashboard": "Dashboard",
-      "manage": "Manage",
+      "settings": "Settings",
+      "settings": "Settings",
       "signIn": "Sign In",
       "profile": "Profile"
     },

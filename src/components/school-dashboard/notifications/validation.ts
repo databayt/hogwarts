@@ -64,6 +64,10 @@ export const notificationTypeSchema = z.enum([
   "report_ready",
   "absence_intention",
   "absence_intention_decision",
+  "setup_guide",
+  "report_ready",
+  "absence_intention",
+  "absence_intention_decision",
 ])
 
 export const notificationPrioritySchema = z.enum([

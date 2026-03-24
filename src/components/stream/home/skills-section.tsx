@@ -8,6 +8,7 @@ import Link from "next/link"
 import Autoplay from "embla-carousel-autoplay"
 import { ArrowRight, Users } from "lucide-react"
 
+import { asset } from "@/lib/asset-url"
 import { cn } from "@/lib/utils"
 import {
   Carousel,
@@ -21,19 +22,19 @@ import type { StreamContentProps } from "../types"
 const skills = [
   {
     title: "Generative AI",
-    image: "/stream/skills/generative-ai.png",
+    image: asset("/illustrations/generative-ai.png"),
     href: "/stream/courses?category=ai",
     learners: "1.7M+",
   },
   {
     title: "IT Certifications",
-    image: "/stream/skills/it-certifications.png",
+    image: asset("/illustrations/it-certifications.png"),
     href: "/stream/courses?category=it",
     learners: "14M+",
   },
   {
     title: "Data Science",
-    image: "/stream/skills/data-science.png",
+    image: asset("/illustrations/data-science.png"),
     href: "/stream/courses?category=data-science",
     learners: "8.1M+",
   },

@@ -7,6 +7,7 @@ import Image from "next/image"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useSession } from "next-auth/react"
 
+import { asset } from "@/lib/asset-url"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { type Locale } from "@/components/internationalization/config"
@@ -54,7 +55,7 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({
       number: 2,
       title: dictionary.steps.step2.title,
       description: dictionary.steps.step2.description,
-      illustration: "/illustrations/onboarding-step2.svg",
+      illustration: asset("/illustrations/onboarding-step2.svg"),
     },
     {
       number: 3,

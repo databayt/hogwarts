@@ -9,6 +9,7 @@ import { CheckCircle, Loader2 } from "lucide-react"
 import { useDropzone } from "react-dropzone"
 import { useForm, useFormContext } from "react-hook-form"
 
+import { asset } from "@/lib/asset-url"
 import { cn } from "@/lib/utils"
 import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
@@ -20,15 +21,23 @@ import { updateTeacherAttachments } from "./actions"
 import { attachmentsSchema, type AttachmentsFormData } from "./validation"
 
 const ATTACHMENT_SLOTS = [
-  { key: "degreeUrl" as const, label: "Degree", icon: "/degree.png" },
-  { key: "resumeUrl" as const, label: "Resume", icon: "/resume.png" },
-  { key: "idUrl" as const, label: "ID", icon: "/id.png" },
+  {
+    key: "degreeUrl" as const,
+    label: "Degree",
+    icon: asset("/icons/degree.png"),
+  },
+  {
+    key: "resumeUrl" as const,
+    label: "Resume",
+    icon: asset("/icons/resume.png"),
+  },
+  { key: "idUrl" as const, label: "ID", icon: asset("/icons/id.png") },
   {
     key: "certificationUrl" as const,
     label: "Certification",
-    icon: "/transcript.png",
+    icon: asset("/icons/transcript.png"),
   },
-  { key: "otherUrl" as const, label: "Other", icon: "/files.png" },
+  { key: "otherUrl" as const, label: "Other", icon: asset("/icons/files.png") },
 ]
 
 /**
@@ -170,7 +179,7 @@ export const AttachmentsForm = forwardRef<WizardFormRef, AttachmentsFormProps>(
               }}
               disabled={isPending}
               placeholder="Photo"
-              placeholderImage="/image.png"
+              placeholderImage={asset("/icons/image.png")}
             />
           </div>
 

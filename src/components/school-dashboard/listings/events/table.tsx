@@ -8,6 +8,7 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { Calendar, MapPin, Users } from "lucide-react"
 
+import { asset } from "@/lib/asset-url"
 import { formatDate } from "@/lib/i18n-format"
 import { useDebouncedSearch } from "@/hooks/use-debounced-search"
 import { usePlatformData } from "@/hooks/use-platform-data"
@@ -271,7 +272,7 @@ function EventsTableInner({
               description={t.addNewEvent}
               icon={
                 <Image
-                  src="/anthropic/category-01.svg"
+                  src={asset("/illustrations/category-01.svg")}
                   alt=""
                   width={48}
                   height={48}
@@ -283,7 +284,7 @@ function EventsTableInner({
               {data.map((event) => (
                 <GridCard
                   key={event.id}
-                  icon="/anthropic/category-01.svg"
+                  icon={asset("/illustrations/category-01.svg")}
                   title={event.title}
                   description={formatDate(event.eventDate, lang)}
                   subtitle={event.eventType?.replace("_", " ")}

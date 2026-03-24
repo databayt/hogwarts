@@ -66,52 +66,13 @@ export interface StreamDictionary {
     progress: string
     completionRate: string
   }
-  admin: {
+  settings: {
     title: string
     description: string
     overview: string
-    totalCourses: string
-    totalEnrollments: string
-    totalRevenue: string
-    recentEnrollments: string
-    manageCourses: string
-    createCourse: {
-      title: string
-      description: string
-      courseTitleLabel: string
-      courseTitlePlaceholder: string
-      descriptionLabel: string
-      descriptionPlaceholder: string
-      categoryLabel: string
-      selectCategory: string
-      priceLabel: string
-      pricePlaceholder: string
-      freeOption: string
-      submit: string
-      creating: string
-      success: string
-      error: string
-    }
-    editCourse: {
-      title: string
-      description: string
-      save: string
-      publish: string
-      unpublish: string
-      delete: string
-      addChapter: string
-      addLesson: string
-      reorderHint: string
-      saving: string
-    }
-  }
-  notAdmin: {
-    title: string
-    description: string
-    message: string
-    detail: string
-    goBack: string
-    goToDashboard: string
+    enrollments: string
+    instructors: string
+    videos: string
   }
   payment: {
     success: {
@@ -172,37 +133,11 @@ export interface StreamDictionary {
     courseInstructor: string
     trainingProfessionals: string
   }
-  adminCourses: {
-    yourCourses: string
-    coursesInLibrary: string
-    createCourse: string
-    noCoursesYet: string
-    createFirstCourse: string
-    createYourFirstCourse: string
-    uncategorized: string
-    enrolled: string
-    free: string
-    published: string
-    draft: string
-    edit: string
-    delete: string
-  }
-  deleteDialog: {
-    delete: string
-    deleteCourse: string
-    confirmDelete: string
-    cancel: string
-    deleting: string
-  }
   header: {
     home: string
     courses: string
-    /** @deprecated Use myLearning instead */
-    favorite: string
     myLearning: string
-    /** @deprecated Use manage instead */
-    dashboard: string
-    manage: string
+    settings: string
     signIn: string
     profile: string
   }
@@ -313,140 +248,33 @@ export interface StreamSearchProps {
   }
 }
 
-// Course types
-export interface StreamCourse {
+// Catalog-backed course types (CatalogSubject viewed as course)
+export interface CatalogCourseType {
   id: string
-  schoolId: string
   title: string
   slug: string
   description: string | null
   imageUrl: string | null
   price: number | null
-  isPublished: boolean
-  categoryId: string | null
-  category?: StreamCategory | null
-  userId: string
-  user?: {
+  category: { name: string } | null
+  chaptersCount: number
+  lessonsCount: number
+  enrollmentsCount: number
+}
+
+export interface CatalogIndividualCourseType extends CatalogCourseType {
+  objectives: string[]
+  prerequisites: string | null
+  targetAudience: string | null
+  chapters: Array<{
     id: string
-    email: string | null
-    username: string | null
-  }
-  chapters?: StreamChapter[]
-  enrollments?: StreamEnrollment[]
-  createdAt: Date
-  updatedAt: Date
-}
-
-export interface StreamCategory {
-  id: string
-  schoolId: string
-  name: string
-}
-
-export interface StreamChapter {
-  id: string
-  title: string
-  description: string | null
-  videoUrl: string | null
-  position: number
-  isPublished: boolean
-  isFree: boolean
-  courseId: string
-  lessons?: StreamLesson[]
-}
-
-export interface StreamLesson {
-  id: string
-  title: string
-  description: string | null
-  videoUrl: string | null
-  position: number
-  isPublished: boolean
-  isFree: boolean
-  duration: number | null
-  chapterId: string
-  progress?: StreamLessonProgress[]
-  attachments?: StreamAttachment[]
-}
-
-export interface StreamAttachment {
-  id: string
-  name: string
-  url: string
-  lessonId: string
-}
-
-export interface StreamEnrollment {
-  id: string
-  schoolId: string
-  userId: string
-  courseId: string
-  stripeCustomerId: string | null
-  stripeCheckoutSessionId: string | null
-  stripePriceId: string | null
-  isActive: boolean
-  createdAt: Date
-  updatedAt: Date
-}
-
-export interface StreamLessonProgress {
-  id: string
-  userId: string
-  lessonId: string
-  isCompleted: boolean
-  createdAt: Date
-  updatedAt: Date
-}
-
-export interface StreamCertificate {
-  id: string
-  schoolId: string
-  userId: string
-  courseId: string
-  courseTitle: string
-  certificateNumber: string
-  completedAt: Date
-  issuedAt: Date
-}
-
-// Form data types
-export interface CreateCourseData {
-  title: string
-  description?: string
-  categoryId?: string
-  price?: number
-}
-
-export interface UpdateCourseData extends Partial<CreateCourseData> {
-  imageUrl?: string
-  isPublished?: boolean
-}
-
-export interface CreateChapterData {
-  title: string
-  description?: string
-  position: number
-  isFree?: boolean
-}
-
-export interface CreateLessonData {
-  title: string
-  description?: string
-  position: number
-  duration?: number
-  isFree?: boolean
-}
-
-// Dashboard statistics
-export interface StreamStats {
-  totalCourses: number
-  totalEnrollments: number
-  totalRevenue: number
-  recentEnrollments: Array<{
-    id: string
-    courseName: string
-    studentName: string
-    enrolledAt: Date
-    amount: number
+    name: string
+    slug: string
+    lessons: Array<{
+      id: string
+      name: string
+      slug: string
+      description: string | null
+    }>
   }>
 }

@@ -1101,6 +1101,217 @@ export async function autoProvisionSections(schoolId: string) {
 }
 
 // ============================================================================
+// autoGenerateTimetableForSchool — Generate timetable slots during onboarding
+// ============================================================================
+
+/**
+ * Auto-generate timetable slots for a newly onboarded school.
+ * Creates a complete schedule with subjects distributed across periods/rooms,
+ * but with teacherId=null (teachers can be assigned later).
+ *
+ * Requires: sections, subject selections, periods, terms, classrooms.
+ * Idempotent via createMany({ skipDuplicates: true }).
+ */
+export async function autoGenerateTimetableForSchool(
+  schoolId: string
+): Promise<{ success: boolean; slotsCreated: number; warnings: string[] }> {
+  const { generateSectionTimetable } =
+    await import("@/components/school-dashboard/timetable/generate/algorithm")
+  type AlgoTypes =
+    typeof import("@/components/school-dashboard/timetable/generate/algorithm")
+  type SectionRequirement = AlgoTypes["generateSectionTimetable"] extends (
+    s: infer S,
+    ...args: unknown[]
+  ) => unknown
+    ? S extends Array<infer R>
+      ? R
+      : never
+    : never
+
+  // 1. Find active term
+  const activeTerm = await db.term.findFirst({
+    where: { schoolId, isActive: true },
+    select: { id: true, yearId: true },
+  })
+  if (!activeTerm) {
+    return { success: false, slotsCreated: 0, warnings: ["No active term"] }
+  }
+
+  // 2. Get periods (filter out breaks/lunch)
+  const periods = await db.period.findMany({
+    where: { schoolId, yearId: activeTerm.yearId },
+    orderBy: { startTime: "asc" },
+    select: { id: true, name: true },
+  })
+  const teachingPeriodIds = periods
+    .filter(
+      (p) =>
+        !p.name.toLowerCase().includes("break") &&
+        !p.name.toLowerCase().includes("lunch")
+    )
+    .map((p) => p.id)
+  if (teachingPeriodIds.length === 0) {
+    return { success: false, slotsCreated: 0, warnings: ["No periods found"] }
+  }
+
+  // 3. Get working days
+  const weekConfig = await db.schoolWeekConfig.findFirst({
+    where: { schoolId },
+    orderBy: { termId: "desc" },
+    select: { workingDays: true },
+  })
+  const workingDays: number[] =
+    Array.isArray(weekConfig?.workingDays) && weekConfig!.workingDays.length > 0
+      ? weekConfig!.workingDays
+      : [0, 1, 2, 3, 4]
+
+  // 4. Get sections
+  const sectionsData = await db.section.findMany({
+    where: { schoolId },
+    select: {
+      id: true,
+      name: true,
+      gradeId: true,
+      classroomId: true,
+    },
+  })
+  if (sectionsData.length === 0) {
+    return { success: false, slotsCreated: 0, warnings: ["No sections found"] }
+  }
+
+  // 5. Get subject selections per grade
+  const subjectSelections = await db.schoolSubjectSelection.findMany({
+    where: { schoolId, isActive: true },
+    select: {
+      catalogSubjectId: true,
+      gradeId: true,
+      weeklyPeriods: true,
+      subject: { select: { id: true, name: true } },
+    },
+  })
+  const gradeSubjectsMap = new Map<
+    string,
+    Array<{ subjectId: string; subjectName: string; hoursPerWeek: number }>
+  >()
+  for (const sel of subjectSelections) {
+    if (!sel.subject) continue
+    const list = gradeSubjectsMap.get(sel.gradeId) || []
+    list.push({
+      subjectId: sel.catalogSubjectId,
+      subjectName: sel.subject.name,
+      hoursPerWeek: sel.weeklyPeriods ?? 3,
+    })
+    gradeSubjectsMap.set(sel.gradeId, list)
+  }
+
+  // 6. Build SectionRequirement[]
+  const sectionRequirements = sectionsData.map((s) => {
+    const gradeSubjects = gradeSubjectsMap.get(s.gradeId) || []
+    return {
+      sectionId: s.id,
+      sectionName: s.name,
+      gradeId: s.gradeId,
+      classroomId: s.classroomId,
+      studentCount: 0,
+      subjects: gradeSubjects.map((gs) => ({
+        subjectId: gs.subjectId,
+        subjectName: gs.subjectName,
+        hoursPerWeek: gs.hoursPerWeek,
+        requiresLab: gs.subjectName.toLowerCase().includes("lab"),
+        preferredTeacherIds: [] as string[],
+      })),
+    }
+  })
+
+  // 7. Build RoomAvailability[] from classrooms
+  const classrooms = await db.classroom.findMany({
+    where: { schoolId },
+    select: {
+      id: true,
+      roomName: true,
+      capacity: true,
+      classroomType: { select: { name: true } },
+    },
+  })
+  const rooms = classrooms.map((r) => ({
+    roomId: r.id,
+    roomName: r.roomName,
+    capacity: r.capacity || 30,
+    roomType: r.classroomType?.name || "regular",
+    allowedSubjectTypes: [] as string[],
+    reservedBlocks: [] as Array<{ dayOfWeek: number; periodId: string }>,
+    hasAccessibility: false,
+  }))
+
+  // 8. Run the algorithm with empty teachers
+  const result = generateSectionTimetable(
+    sectionRequirements,
+    [], // No teachers yet
+    rooms,
+    {
+      schoolId,
+      termId: activeTerm.id,
+      yearId: activeTerm.yearId,
+      config: {
+        workingDays,
+        periodsPerDay: teachingPeriodIds,
+        constraints: {
+          enforceTeacherExpertise: true,
+          enforceRoomCapacity: true,
+          maxTeacherPeriodsPerDay: 6,
+          maxTeacherPeriodsPerWeek: 25,
+          maxConsecutivePeriods: 3,
+          requireLunchBreak: true,
+          preventBackToBack: false,
+        },
+        preferences: {
+          balanceSubjectDistribution: true,
+          preferMorningForCore: true,
+          avoidLastPeriodForLab: true,
+          groupSameSubjectDays: false,
+        },
+      },
+    }
+  )
+
+  if (result.slots.length === 0) {
+    return {
+      success: false,
+      slotsCreated: 0,
+      warnings: ["Algorithm produced 0 slots", ...result.warnings],
+    }
+  }
+
+  // 9. Save slots
+  const created = await db.timetable.createMany({
+    data: result.slots.map((slot) => ({
+      schoolId,
+      termId: activeTerm.id,
+      dayOfWeek: slot.dayOfWeek,
+      periodId: slot.periodId,
+      sectionId: slot.sectionId || undefined,
+      subjectId: slot.subjectId || undefined,
+      classId: slot.classId || undefined,
+      teacherId: undefined,
+      classroomId: slot.classroomId,
+      weekOffset: 0,
+      constraintViolations: slot.violations,
+    })),
+    skipDuplicates: true,
+  })
+
+  console.log(
+    `[autoGenerateTimetableForSchool] Created ${created.count} timetable slots for school ${schoolId}`
+  )
+
+  return {
+    success: true,
+    slotsCreated: created.count,
+    warnings: result.warnings,
+  }
+}
+
+// ============================================================================
 // setupLibraryForSchool — Auto-provision catalog books for a new school
 // ============================================================================
 

@@ -6,6 +6,7 @@ import { useCallback, useDeferredValue, useMemo, useState } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 
+import { asset } from "@/lib/asset-url"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
 import type { Locale } from "@/components/internationalization/config"
@@ -173,7 +174,7 @@ export function ApplicationsTable({
               }
               icon={
                 <Image
-                  src="/anthropic/document.svg"
+                  src={asset("/icons/document.svg")}
                   alt=""
                   width={48}
                   height={48}
@@ -185,7 +186,7 @@ export function ApplicationsTable({
               {data.map((application) => (
                 <GridCard
                   key={application.id}
-                  icon="/anthropic/document.svg"
+                  icon={asset("/icons/document.svg")}
                   title={application.applicantName}
                   description={application.applyingForClass}
                   subtitle={application.status}

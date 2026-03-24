@@ -193,14 +193,15 @@ export function createLocalizedResolver<T extends FieldValues>(
   validationDict: ValidationDictionary | undefined,
   zodResolverFn: typeof zodResolver
 ): ReturnType<typeof zodResolver> {
-  const baseResolver = zodResolverFn(schema)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const baseResolver = zodResolverFn(schema as any)
 
   if (!validationDict) return baseResolver
 
   return async (values, context, options) => {
     const result = (await (
       baseResolver as (
-        values: T,
+        values: FieldValues,
         context: unknown,
         options: unknown
       ) => Promise<ResolverResult<T>>

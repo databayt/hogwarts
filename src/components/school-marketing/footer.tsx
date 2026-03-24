@@ -6,6 +6,7 @@ import React from "react"
 import Image from "next/image"
 import Link from "next/link"
 
+import { asset } from "@/lib/asset-url"
 import { Button } from "@/components/ui/button"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
@@ -28,7 +29,7 @@ const Footer = () => {
         <div className="lg:min-w-0 lg:flex-[2]">
           <div className="relative mb-4 aspect-[3/2] w-[75%] overflow-hidden">
             <Image
-              src="/site/map.jpeg"
+              src={asset("/photos/map.jpeg")}
               alt="Hogwarts Castle Map"
               fill
               className="object-contain"
@@ -53,7 +54,7 @@ const Footer = () => {
           >
             <Link href="/#" className="flex items-end">
               <Image
-                src="/site/z.png"
+                src={asset("/icons/z.png")}
                 alt="Witch"
                 width={40}
                 height={40}

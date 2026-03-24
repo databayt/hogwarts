@@ -1,6 +1,8 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { asset } from "@/lib/asset-url"
+
 import type { ChatbotConfig, ChatbotDictionary, ChatbotTheme } from "./type"
 
 export const CHATBOT_POSITIONS = {
@@ -94,7 +96,7 @@ export const DEFAULT_CONFIG: Required<ChatbotConfig> = {
   locale: "en",
   dictionary: DEFAULT_DICTIONARY,
   theme: DEFAULT_THEME,
-  avatar: "/robot.png",
+  avatar: asset("/illustrations/robot.png"),
   api: {
     endpoint: "/api/chat",
     model: "llama-3.1-8b-instant",

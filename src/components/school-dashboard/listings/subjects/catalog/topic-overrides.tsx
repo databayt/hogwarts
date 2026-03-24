@@ -34,7 +34,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
-import { uploadLessonVideo } from "@/components/stream/admin/courses/edit/video-actions"
+import { uploadLessonVideo } from "@/components/stream/video/video-actions"
 
 import { toggleContentOverride } from "./actions"
 

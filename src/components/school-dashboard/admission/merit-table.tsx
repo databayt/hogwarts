@@ -13,6 +13,7 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { Award, Clock, RefreshCw, TrendingUp, Users } from "lucide-react"
 
+import { asset } from "@/lib/asset-url"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
 import { Button } from "@/components/ui/button"
@@ -257,7 +258,7 @@ export function MeritTable({
               }
               icon={
                 <Image
-                  src="/anthropic/graduation-cap.svg"
+                  src={asset("/icons/graduation-cap.svg")}
                   alt=""
                   width={48}
                   height={48}
@@ -269,7 +270,7 @@ export function MeritTable({
               {data.map((merit) => (
                 <GridCard
                   key={merit.id}
-                  icon="/anthropic/graduation-cap.svg"
+                  icon={asset("/icons/graduation-cap.svg")}
                   title={merit.applicantName}
                   description={`#${merit.meritRank}`}
                   subtitle={merit.status}

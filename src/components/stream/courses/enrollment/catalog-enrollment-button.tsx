@@ -47,8 +47,8 @@ export function CatalogEnrollmentButton({
         className="h-9 w-auto px-6 text-sm font-medium"
         onClick={() => {
           window.location.href = firstLessonId
-            ? `/${lang}/stream/dashboard/${subjectSlug}/${firstLessonId}`
-            : `/${lang}/stream/dashboard/${subjectSlug}`
+            ? `/${lang}/stream/courses/${subjectSlug}/${firstLessonId}`
+            : `/${lang}/stream/courses/${subjectSlug}`
         }}
       >
         Continue Learning

@@ -1,5 +1,11 @@
 // Stream (LMS) Module Models
 // All models include schoolId for multi-tenant support
+//
+// DEPRECATED: StreamCourse, StreamChapter, StreamLesson, StreamCategory are deprecated.
+// The catalog system (CatalogSubject → CatalogChapter → CatalogLesson) is now the
+// single source of truth. StreamEnrollment is superseded by the Enrollment model.
+// Tables are preserved for migration safety — do NOT write to these models.
+// See: /docs/catalog for the catalog-centric architecture.
 
 enum StreamCourseLevel {
   BEGINNER

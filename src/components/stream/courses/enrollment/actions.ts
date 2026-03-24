@@ -171,7 +171,7 @@ export async function enrollInCourseAction(courseId: string) {
             to: session.user.email,
             studentName: session.user.name || "Student",
             courseTitle: course.title,
-            courseUrl: `${env.NEXT_PUBLIC_APP_URL}/${locale}/stream/dashboard/${course.slug}`,
+            courseUrl: `${env.NEXT_PUBLIC_APP_URL}/${locale}/stream/courses/${course.slug}`,
             schoolName: school?.name || "School",
           }).catch((err) =>
             console.error("Failed to send enrollment email:", err)
@@ -255,7 +255,7 @@ export async function enrollInCourseAction(courseId: string) {
       checkoutUrl = result.checkoutUrl
     } else {
       // Free course - redirect to course page
-      redirect(`/${locale}/stream/dashboard/${course.slug}`)
+      redirect(`/${locale}/stream/courses/${course.slug}`)
     }
   } catch (error) {
     console.error("Enrollment error:", error)
@@ -402,7 +402,7 @@ export async function verifyPaymentAndActivateEnrollment(sessionId: string) {
         to: user.email,
         studentName: user.username || "Student",
         courseTitle: enrollment.course.title,
-        courseUrl: `${env.NEXT_PUBLIC_APP_URL}/${emailLocale}/stream/dashboard/${enrollment.course.slug}`,
+        courseUrl: `${env.NEXT_PUBLIC_APP_URL}/${emailLocale}/stream/courses/${enrollment.course.slug}`,
         schoolName: school?.name || "School",
       }).catch((err) => console.error("Failed to send enrollment email:", err))
     }

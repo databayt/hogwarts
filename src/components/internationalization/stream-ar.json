@@ -74,52 +74,13 @@
       "progress": "التقدم",
       "completionRate": "نسبة الإنجاز"
     },
-    "admin": {
-      "title": "لوحة إدارة ستريم",
-      "description": "إدارة الدورات وتتبع التسجيلات",
+    "settings": {
+      "title": "إعدادات ستريم",
+      "description": "إدارة التسجيلات وتفضيلات المدربين ومحتوى الفيديو",
       "overview": "نظرة عامة",
-      "totalCourses": "إجمالي الدورات",
-      "totalEnrollments": "إجمالي التسجيلات",
-      "totalRevenue": "إجمالي الإيرادات",
-      "recentEnrollments": "التسجيلات الأخيرة",
-      "manageCourses": "إدارة الدورات",
-      "createCourse": {
-        "title": "إنشاء دورة جديدة",
-        "description": "إنشاء دورة جديدة لطلابك",
-        "courseTitleLabel": "عنوان الدورة",
-        "courseTitlePlaceholder": "مثال: مقدمة في تطوير الويب",
-        "descriptionLabel": "الوصف",
-        "descriptionPlaceholder": "قدم وصفاً موجزاً لدورتك",
-        "categoryLabel": "الفئة",
-        "selectCategory": "اختر فئة",
-        "priceLabel": "السعر (دولار)",
-        "pricePlaceholder": "0.00",
-        "freeOption": "اجعل هذه الدورة مجانية",
-        "submit": "إنشاء الدورة",
-        "creating": "جارٍ الإنشاء...",
-        "success": "تم إنشاء الدورة بنجاح!",
-        "error": "فشل إنشاء الدورة"
-      },
-      "editCourse": {
-        "title": "تحرير الدورة",
-        "description": "تحديث معلومات الدورة",
-        "save": "حفظ التغييرات",
-        "publish": "نشر الدورة",
-        "unpublish": "إلغاء نشر الدورة",
-        "delete": "حذف الدورة",
-        "addChapter": "إضافة فصل",
-        "addLesson": "إضافة درس",
-        "reorderHint": "اسحب لإعادة الترتيب",
-        "saving": "جارٍ الحفظ..."
-      }
-    },
-    "notAdmin": {
-      "title": "الوصول مقيد",
-      "description": "ليس لديك صلاحية الوصول إلى هذه المنطقة",
-      "message": "مطلوب وصول المشرف",
-      "detail": "تحتاج إلى صلاحيات مشرف أو معلم للوصول إلى هذه المنطقة.",
-      "goBack": "العودة",
-      "goToDashboard": "الذهاب إلى لوحة التحكم"
+      "enrollments": "التسجيلات",
+      "instructors": "المدربين",
+      "videos": "الفيديوهات"
     },
     "payment": {
       "success": {
@@ -180,37 +141,15 @@
       "courseInstructor": "مدرب الدورة",
       "trainingProfessionals": "تدريب المحترفين للغد",
       "topics": "المواضيع",
-      "quiz": "اختبار"
-    },
-    "adminCourses": {
-      "yourCourses": "دوراتك",
-      "coursesInLibrary": "دورة في مكتبتك",
-      "createCourse": "إنشاء دورة",
-      "noCoursesYet": "لا توجد دورات بعد",
-      "createFirstCourse": "أنشئ أول دورة للبدء مع Stream",
-      "createYourFirstCourse": "إنشاء أول دورة",
-      "uncategorized": "بدون تصنيف",
-      "enrolled": "مسجل",
-      "free": "مجاني",
-      "published": "منشور",
-      "draft": "مسودة",
-      "edit": "تعديل",
-      "delete": "حذف"
-    },
-    "deleteDialog": {
-      "delete": "حذف",
-      "deleteCourse": "حذف الدورة",
-      "confirmDelete": "هل أنت متأكد من حذف \"{title}\"؟ لا يمكن التراجع عن هذا الإجراء.",
-      "cancel": "إلغاء",
-      "deleting": "جاري الحذف..."
+      "quiz": "اختبار",
+      "edit": "تعديل"
     },
     "header": {
       "home": "الرئيسية",
       "courses": "الدورات",
-      "favorite": "المفضلة",
       "myLearning": "تعلمي",
-      "dashboard": "لوحة التحكم",
-      "manage": "إدارة",
+      "settings": "الإعدادات",
+      "settings": "الإعدادات",
       "signIn": "تسجيل الدخول",
       "profile": "الملف الشخصي"
     },

@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { MapPin } from "lucide-react"
 
+import { asset } from "@/lib/asset-url"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -44,7 +45,7 @@ interface ProfileSidebarProps {
 }
 
 function getAchievementBadgeSrc(badgeName: string): string {
-  return `/github/${badgeName}.png`
+  return asset(`/illustrations/${badgeName}.png`)
 }
 
 function getRoleConfig(role: ProfileRole, data: Record<string, unknown>) {
@@ -61,7 +62,9 @@ function getRoleConfig(role: ProfileRole, data: Record<string, unknown>) {
           `@student_${(data.id as string)?.slice(-6)}`,
         role: "Student",
         icon: <OcticonBook className="size-4" />,
-        imageSrc: (data.profilePhotoUrl as string) || "/contributors/h.jpeg",
+        imageSrc:
+          (data.profilePhotoUrl as string) ||
+          asset("/photos/contributors-h.jpeg"),
         initials,
         stats: [
           {
@@ -159,19 +162,19 @@ function getRoleConfig(role: ProfileRole, data: Record<string, unknown>) {
           {
             id: "1",
             name: "Student Council",
-            avatarUrl: "/icons/council.png",
+            avatarUrl: asset("/icons/council.png"),
             role: "Member",
           },
           {
             id: "2",
             name: "Science Club",
-            avatarUrl: "/icons/science.png",
+            avatarUrl: asset("/icons/science.png"),
             role: "Secretary",
           },
           {
             id: "3",
             name: "Chess Club",
-            avatarUrl: "/icons/chess.png",
+            avatarUrl: asset("/icons/chess.png"),
             role: "Member",
           },
         ] as Organization[],
@@ -184,7 +187,9 @@ function getRoleConfig(role: ProfileRole, data: Record<string, unknown>) {
           `@teacher_${(data.id as string)?.slice(-6)}`,
         role: "Teacher",
         icon: <OcticonRepo className="size-4" />,
-        imageSrc: (data.profilePhotoUrl as string) || "/contributors/d.jpeg",
+        imageSrc:
+          (data.profilePhotoUrl as string) ||
+          asset("/photos/contributors-d.jpeg"),
         initials,
         stats: [
           {
@@ -272,13 +277,13 @@ function getRoleConfig(role: ProfileRole, data: Record<string, unknown>) {
           {
             id: "1",
             name: "Mathematics Dept",
-            avatarUrl: "/icons/math.png",
+            avatarUrl: asset("/icons/math.png"),
             role: "Senior Teacher",
           },
           {
             id: "2",
             name: "Curriculum Committee",
-            avatarUrl: "/icons/curriculum.png",
+            avatarUrl: asset("/icons/curriculum.png"),
             role: "Member",
           },
         ] as Organization[],
@@ -289,7 +294,9 @@ function getRoleConfig(role: ProfileRole, data: Record<string, unknown>) {
         subtitle: `@parent_${(data.id as string)?.slice(-6)}`,
         role: "Parent / Guardian",
         icon: <OcticonPeople className="size-4" />,
-        imageSrc: (data.profilePhotoUrl as string) || "/contributors/d.jpeg",
+        imageSrc:
+          (data.profilePhotoUrl as string) ||
+          asset("/photos/contributors-d.jpeg"),
         initials,
         stats: [
           {
@@ -350,7 +357,7 @@ function getRoleConfig(role: ProfileRole, data: Record<string, unknown>) {
           {
             id: "1",
             name: "Parent Association",
-            avatarUrl: "/icons/parents.png",
+            avatarUrl: asset("/icons/parents.png"),
             role: "Member",
           },
         ] as Organization[],
@@ -361,7 +368,9 @@ function getRoleConfig(role: ProfileRole, data: Record<string, unknown>) {
         subtitle: `@staff_${(data.id as string)?.slice(-6)}`,
         role: "Staff Member",
         icon: <OcticonOrganization className="size-4" />,
-        imageSrc: (data.profilePhotoUrl as string) || "/contributors/d.jpeg",
+        imageSrc:
+          (data.profilePhotoUrl as string) ||
+          asset("/photos/contributors-d.jpeg"),
         initials,
         stats: [
           {
@@ -441,7 +450,7 @@ function getRoleConfig(role: ProfileRole, data: Record<string, unknown>) {
           {
             id: "1",
             name: "Admin Team",
-            avatarUrl: "/icons/admin.png",
+            avatarUrl: asset("/icons/admin.png"),
             role: "Coordinator",
           },
         ] as Organization[],
@@ -452,7 +461,7 @@ function getRoleConfig(role: ProfileRole, data: Record<string, unknown>) {
         subtitle: "@unknown",
         role: "Unknown Role",
         icon: null,
-        imageSrc: "/contributors/d.jpeg",
+        imageSrc: asset("/photos/contributors-d.jpeg"),
         initials: "??",
         stats: [],
         info: [],
@@ -469,13 +478,13 @@ function formatDate(date: string | Date | undefined): string {
 }
 
 const achievementDetailBg: Record<string, string> = {
-  starstruck: "/github/starstruck-detail.png",
-  "galaxy-brain": "/github/galaxy-brain-detail.png",
-  "pull-shark": "/github/pull-shark-detail.png",
-  yolo: "/github/yolo-detail.png",
-  "pair-extraordinaire": "/github/pair-extraordinaire-detail.png",
-  quickdraw: "/github/quickdraw-detail.png",
-  "public-sponsor": "/github/public-sponsor-detail.png",
+  starstruck: asset("/illustrations/starstruck-detail.png"),
+  "galaxy-brain": asset("/illustrations/galaxy-brain-detail.png"),
+  "pull-shark": asset("/illustrations/pull-shark-detail.png"),
+  yolo: asset("/illustrations/yolo-detail.png"),
+  "pair-extraordinaire": asset("/illustrations/pair-extraordinaire-detail.png"),
+  quickdraw: asset("/illustrations/quickdraw-detail.png"),
+  "public-sponsor": asset("/illustrations/public-sponsor-detail.png"),
 }
 
 function AchievementPopover({

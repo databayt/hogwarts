@@ -130,7 +130,7 @@ export function ConversationList({
   ]
 
   return (
-    <div className={cn("flex h-full flex-col", className)}>
+    <div className={cn("flex min-h-0 flex-1 flex-col", className)}>
       {/* Header — WhatsApp style: 60px, title + action icons */}
       <div className="bg-msg-header-bg flex h-[60px] flex-shrink-0 items-center justify-between px-4">
         <h2 className="text-foreground text-xl font-bold">

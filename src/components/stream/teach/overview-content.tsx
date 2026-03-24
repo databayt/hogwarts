@@ -23,7 +23,7 @@ export function TeachOverviewContent({
   stats,
   subdomain,
 }: Props) {
-  const base = `/${lang}/stream/teach`
+  const base = `/${lang}/stream/settings`
 
   return (
     <div className="space-y-6">
@@ -36,7 +36,7 @@ export function TeachOverviewContent({
             Manage your content contributions and uploads
           </p>
         </div>
-        <Link href={`${base}/videos`}>
+        <Link href={`${base}?tab=videos`}>
           <Button>
             <Film className="me-2 size-4" />
             My Videos
@@ -95,7 +95,7 @@ export function TeachOverviewContent({
           <CardTitle>Quick Actions</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-3">
-          <Link href={`${base}/videos`}>
+          <Link href={`${base}?tab=videos`}>
             <Button variant="outline">
               <Film className="me-2 size-4" />
               View My Videos

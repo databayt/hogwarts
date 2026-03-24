@@ -7,8 +7,8 @@ import { usePathname } from "next/navigation"
 import {
   BookOpen,
   GraduationCap,
-  LayoutDashboard,
   LogIn,
+  Settings,
   Star,
   User,
 } from "lucide-react"
@@ -66,14 +66,14 @@ export function StreamHeader({ lang, user }: Props) {
     },
     {
       href: `/${lang}/stream/dashboard`,
-      labelKey: "favorite",
+      labelKey: "myLearning",
       icon: <Star className="size-4" />,
       requiresAuth: true,
     },
     {
-      href: `/${lang}/stream/admin`,
-      labelKey: "dashboard",
-      icon: <LayoutDashboard className="size-4" />,
+      href: `/${lang}/stream/settings`,
+      labelKey: "settings",
+      icon: <Settings className="size-4" />,
       requiresAuth: true,
       requiresAdmin: true,
     },
@@ -155,14 +155,14 @@ export function StreamHeader({ lang, user }: Props) {
                 <DropdownMenuItem asChild>
                   <Link href={`/${lang}/stream/dashboard`}>
                     <Star className="me-2 size-4" />
-                    {dictionary?.stream?.header?.favorite ?? "Favorite"}
+                    {dictionary?.stream?.header?.myLearning ?? "My Learning"}
                   </Link>
                 </DropdownMenuItem>
                 {isAdmin && (
                   <DropdownMenuItem asChild>
-                    <Link href={`/${lang}/stream/admin`}>
-                      <LayoutDashboard className="me-2 size-4" />
-                      {dictionary?.stream?.header?.dashboard ?? "Dashboard"}
+                    <Link href={`/${lang}/stream/settings`}>
+                      <Settings className="me-2 size-4" />
+                      {dictionary?.stream?.header?.settings ?? "Settings"}
                     </Link>
                   </DropdownMenuItem>
                 )}

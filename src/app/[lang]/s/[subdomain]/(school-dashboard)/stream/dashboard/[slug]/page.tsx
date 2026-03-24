@@ -20,7 +20,7 @@ export default async function StreamCourseSlugRoute({ params }: Props) {
   const firstLesson = firstChapter?.lessons[0]
 
   if (firstLesson) {
-    redirect(`/${lang}/stream/dashboard/${slug}/${firstLesson.id}`)
+    redirect(`/${lang}/stream/courses/${slug}/${firstLesson.id}`)
   }
 
   return (

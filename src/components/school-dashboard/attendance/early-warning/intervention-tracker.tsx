@@ -174,6 +174,47 @@ const PRIORITY_COLORS: Record<number, string> = {
   4: "text-red-500",
 }
 
+// Combined config objects used by UI (labels are English fallbacks)
+const STATUS_CONFIG: Record<
+  string,
+  { label: string; color: string; bgColor: string }
+> = Object.fromEntries(
+  Object.entries(STATUS_COLORS).map(([key, colors]) => [
+    key,
+    {
+      label: key.charAt(0) + key.slice(1).toLowerCase().replace(/_/g, " "),
+      ...colors,
+    },
+  ])
+)
+
+const INTERVENTION_TYPES: Record<
+  string,
+  { icon: React.ReactNode; label: string; color: string }
+> = Object.fromEntries(
+  Object.entries(INTERVENTION_TYPE_ICONS).map(([key, val]) => [
+    key,
+    {
+      ...val,
+      label: key
+        .split("_")
+        .map((w) => w.charAt(0) + w.slice(1).toLowerCase())
+        .join(" "),
+    },
+  ])
+)
+
+const PRIORITY_CONFIG: Record<number, { label: string; color: string }> =
+  Object.fromEntries(
+    Object.entries(PRIORITY_KEY_MAP).map(([key, label]) => [
+      Number(key),
+      {
+        label: label.charAt(0).toUpperCase() + label.slice(1),
+        color: PRIORITY_COLORS[Number(key)] || "text-gray-500",
+      },
+    ])
+  )
+
 interface Intervention {
   id: string
   studentId: string

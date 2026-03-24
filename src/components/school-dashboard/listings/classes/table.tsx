@@ -8,6 +8,7 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { BookOpen, Users } from "lucide-react"
 
+import { asset } from "@/lib/asset-url"
 import { useDebouncedSearch } from "@/hooks/use-debounced-search"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
@@ -257,7 +258,7 @@ function ClassesTableInner({
               description={t.addNewClass}
               icon={
                 <Image
-                  src="/anthropic/book-open.svg"
+                  src={asset("/icons/book-open.svg")}
                   alt=""
                   width={48}
                   height={48}
@@ -273,7 +274,7 @@ function ClassesTableInner({
                 return (
                   <GridCard
                     key={classItem.id}
-                    icon="/anthropic/book-open.svg"
+                    icon={asset("/icons/book-open.svg")}
                     title={displayName}
                     description={displaySubject}
                     subtitle={`${classItem.enrolledStudents} ${dictionary?.studentCount || "students"}`}

@@ -228,9 +228,9 @@ export function StreamHomeContent({
                     size: "lg",
                     variant: "ghost",
                   })}
-                  href={`/${lang}/stream/admin`}
+                  href={`/${lang}/stream/dashboard`}
                 >
-                  {dictionary?.header?.dashboard ?? "Dashboard"}
+                  {dictionary?.header?.myLearning ?? "My Learning"}
                 </Link>
               ) : isAuthenticated ? (
                 <Link
@@ -240,7 +240,7 @@ export function StreamHomeContent({
                   })}
                   href={`/${lang}/stream/dashboard`}
                 >
-                  {dictionary?.header?.favorite ?? "Favorite"}
+                  {dictionary?.header?.myLearning ?? "My Learning"}
                 </Link>
               ) : null}
             </div>

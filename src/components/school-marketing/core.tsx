@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import Image from "next/image"
 
+import { asset } from "@/lib/asset-url"
 import {
   Card,
   CardContent,
@@ -16,10 +17,13 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 import SectionHeading from "../atom/section-heading"
 
 const coreIcons = [
-  { src: "/anthropic/claude-code-best-practices.svg", alt: "Courage" },
-  { src: "/anthropic/category-06.svg", alt: "Wisdom" },
-  { src: "/anthropic/think-tool.svg", alt: "Loyalty" },
-  { src: "/anthropic/category-03.svg", alt: "Ambition" },
+  {
+    src: asset("/illustrations/claude-code-best-practices.svg"),
+    alt: "Courage",
+  },
+  { src: asset("/illustrations/category-06.svg"), alt: "Wisdom" },
+  { src: asset("/illustrations/think-tool.svg"), alt: "Loyalty" },
+  { src: asset("/illustrations/category-03.svg"), alt: "Ambition" },
 ]
 
 const bgColors = [

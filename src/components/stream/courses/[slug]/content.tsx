@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Check } from "lucide-react"
+import { Check, Pencil } from "lucide-react"
 
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { CatalogEnrollmentButton } from "@/components/stream/courses/enrollment/catalog-enrollment-button"
@@ -71,6 +71,7 @@ interface Props {
   schoolId: string | null
   course: CatalogIndividualCourseType
   isEnrolled: boolean
+  userRole?: string | null
 }
 
 export function StreamCourseDetailContent({
@@ -79,6 +80,7 @@ export function StreamCourseDetailContent({
   schoolId,
   course,
   isEnrolled,
+  userRole,
 }: Props) {
   const { dictionary: dict } = useDictionary()
 
@@ -204,6 +206,21 @@ export function StreamCourseDetailContent({
                 >
                   {dict?.stream?.courseDetail?.free ?? "FREE"}
                 </span>
+              )}
+              {(userRole === "ADMIN" ||
+                userRole === "DEVELOPER" ||
+                userRole === "TEACHER") && (
+                <Link
+                  href={`/${lang}/stream/courses/${course.slug}/edit`}
+                  className="inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors"
+                  style={{
+                    backgroundColor: colors.card,
+                    color: colors.text,
+                  }}
+                >
+                  <Pencil className="size-3.5" />
+                  {dict?.stream?.courseDetail?.edit ?? "Edit"}
+                </Link>
               )}
             </div>
 

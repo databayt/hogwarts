@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import Image from "next/image"
 
+import { asset } from "@/lib/asset-url"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import SectionHeading from "../atom/section-heading"
@@ -132,7 +133,7 @@ export default function EventCard() {
       <div className="border-border border-t pt-4 pt-12">
         <div className="mb-8 flex w-full items-start gap-4 md:w-[70%]">
           <Image
-            src="/logo.png"
+            src={asset("/icons/logo.png")}
             alt="logo"
             width={40}
             height={40}

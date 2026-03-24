@@ -3,10 +3,17 @@
 
 import Image from "next/image"
 
+import { asset } from "@/lib/asset-url"
+
 export default function Logo() {
   return (
     <div>
-      <Image src={"/logo.png"} alt="Generate Invoice" width={180} height={50} />
+      <Image
+        src={asset("/icons/logo.png")}
+        alt="Generate Invoice"
+        width={180}
+        height={50}
+      />
     </div>
   )
 }

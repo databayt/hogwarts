@@ -2,6 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { asset } from "@/lib/asset-url"
 import { useVideoScrollControl } from "@/hooks/use-video-scroll-control"
 
 export function StoryVideo() {
@@ -24,7 +25,7 @@ export function StoryVideo() {
         muted
         playsInline
       >
-        <source src="/story.mp4" type="video/mp4" />
+        <source src={asset("/media/story.mp4")} type="video/mp4" />
         Your browser does not support the video tag.
       </video>
 

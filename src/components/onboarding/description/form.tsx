@@ -9,6 +9,7 @@ import { ArrowLeft, GraduationCap, Layers, School } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 import { useForm } from "react-hook-form"
 
+import { asset } from "@/lib/asset-url"
 import { cn } from "@/lib/utils"
 import {
   Form,
@@ -94,27 +95,27 @@ export function DescriptionForm({
     {
       id: "private",
       title: dict.privateSchool || "Private",
-      image: "/onboarding/private.png",
+      image: asset("/illustrations/private.png"),
     },
     {
       id: "public",
       title: dict.publicSchool || "Public",
-      image: "/onboarding/public.png",
+      image: asset("/illustrations/onboarding-public.png"),
     },
     {
       id: "international",
       title: dict.internationalSchool || "International",
-      image: "/onboarding/international.png",
+      image: asset("/illustrations/international.png"),
     },
     {
       id: "technical",
       title: dict.technicalSchool || "Technical",
-      image: "/onboarding/techincal.png",
+      image: asset("/illustrations/techincal.png"),
     },
     {
       id: "special",
       title: dict.specialSchool || "Special",
-      image: "/onboarding/espical.png",
+      image: asset("/illustrations/espical.png"),
     },
   ]
 

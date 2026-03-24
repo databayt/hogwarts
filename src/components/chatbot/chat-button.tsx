@@ -5,6 +5,7 @@
 import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
 
+import { asset } from "@/lib/asset-url"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
@@ -99,7 +100,7 @@ export function ChatButton({
           variant="ghost"
         >
           <Image
-            src="/robot.png"
+            src={asset("/illustrations/robot.png")}
             alt="Chatbot"
             width={56}
             height={56}

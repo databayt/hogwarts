@@ -5,6 +5,7 @@
 import Image from "next/image"
 import { Crown, Star, Trophy, Users } from "lucide-react"
 
+import { asset } from "@/lib/asset-url"
 import {
   Card,
   CardContent,
@@ -17,12 +18,12 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 import SectionHeading from "../atom/section-heading"
 
 const featureIcons = [
-  { src: "/site/teleport.png", alt: "Learning" },
-  { src: "/site/tent.png", alt: "Curriculum" },
-  { src: "/site/community.png", alt: "Community" },
-  { src: "/site/champion.png", alt: "Champions" },
-  { src: "/site/world.png", alt: "World" },
-  { src: "/site/light-bulb.png", alt: "Innovation" },
+  { src: asset("/illustrations/teleport.png"), alt: "Learning" },
+  { src: asset("/illustrations/tent.png"), alt: "Curriculum" },
+  { src: asset("/illustrations/community.png"), alt: "Community" },
+  { src: asset("/illustrations/champion.png"), alt: "Champions" },
+  { src: asset("/illustrations/world.png"), alt: "World" },
+  { src: asset("/illustrations/light-bulb.png"), alt: "Innovation" },
 ]
 
 const statIcons = [

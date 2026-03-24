@@ -14,6 +14,7 @@ import {
   Users,
 } from "lucide-react"
 
+import { asset } from "@/lib/asset-url"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
@@ -151,7 +152,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
         {/* Bank Card with Image */}
         <div className="flex items-center justify-center">
           <Image
-            src="/master-card.png"
+            src={asset("/icons/master-card.png")}
             alt="Bank Card"
             width={1050}
             height={600}

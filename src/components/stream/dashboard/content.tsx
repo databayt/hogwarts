@@ -172,8 +172,8 @@ export function StreamDashboardContent({
                   <Link
                     href={
                       course.chapters[0]?.lessons[0]?.id
-                        ? `/${lang}/stream/dashboard/${course.slug}/${course.chapters[0].lessons[0].id}`
-                        : `/${lang}/stream/dashboard/${course.slug}`
+                        ? `/${lang}/stream/courses/${course.slug}/${course.chapters[0].lessons[0].id}`
+                        : `/${lang}/stream/courses/${course.slug}`
                     }
                     className={buttonVariants({ className: "w-full" })}
                   >

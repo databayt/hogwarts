@@ -22,6 +22,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
+import { asset } from "@/lib/asset-url"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -111,7 +112,7 @@ export function StreamLessonContent({
   // Resolve the current video URL — prefer selected instructor video, fallback to lesson default
   const currentVideoUrl = activeVideo?.videoUrl ?? lesson.videoUrl
 
-  const baseUrl = `/${lang}/stream/dashboard/${lesson.chapter.course.slug}`
+  const baseUrl = `/${lang}/stream/courses/${lesson.chapter.course.slug}`
 
   const handleToggleComplete = () => {
     startTransition(async () => {
@@ -244,7 +245,7 @@ export function StreamLessonContent({
               {/* Creator */}
               <div className="mt-1.5 flex items-center gap-2">
                 <Image
-                  src="/logo.png"
+                  src={asset("/icons/logo.png")}
                   alt="Hogwarts"
                   width={16}
                   height={16}

@@ -6,6 +6,7 @@ import React from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 
+import { asset } from "@/lib/asset-url"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { type Locale } from "@/components/internationalization/config"
@@ -70,7 +71,7 @@ const ApplyOverviewClient: React.FC<ApplyOverviewClientProps> = ({
       title: groupsDict.details || "Details",
       description:
         overviewDict.stage2Desc || "Provide your contact and location details",
-      illustration: "/anthropic/eng-long-running-agents.svg",
+      illustration: asset("/illustrations/eng-long-running-agents.svg"),
     },
     {
       number: 3,

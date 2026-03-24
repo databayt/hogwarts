@@ -2,25 +2,26 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { asset } from "@/lib/asset-url"
 import { cn } from "@/lib/utils"
 
 import type { StreamContentProps } from "../types"
 
 const reasons = [
   {
-    image: "/stream/teach.jpg",
+    image: asset("/illustrations/teach.jpg"),
     title: "Teach your way",
     description:
       "Publish the course you want, in the way you want, and always have control of your own content.",
   },
   {
-    image: "/stream/inspire.jpg",
+    image: asset("/illustrations/inspire.jpg"),
     title: "Inspire learners",
     description:
       "Teach what you know and help learners explore their interests, gain new skills, and advance their careers.",
   },
   {
-    image: "/stream/reward.jpg",
+    image: asset("/illustrations/reward.jpg"),
     title: "Get rewarded",
     description:
       "Expand your professional network, build your expertise, and earn money on each paid enrollment.",

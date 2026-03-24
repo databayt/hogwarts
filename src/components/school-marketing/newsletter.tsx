@@ -5,6 +5,7 @@
 import { useState } from "react"
 import Image from "next/image"
 
+import { asset } from "@/lib/asset-url"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import SectionHeading from "../atom/section-heading"
@@ -36,7 +37,7 @@ export default function Newsletter() {
       <div className="mx-auto max-w-xs py-6">
         <div className="mb-2 flex justify-start">
           <Image
-            src="/site/glass.png"
+            src={asset("/illustrations/glass.png")}
             alt="Hogwarts Glasses"
             width={48}
             height={48}

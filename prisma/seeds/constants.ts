@@ -59,7 +59,7 @@ export const DEMO_SCHOOL = {
   // Pricing
   tuitionFee: 5000,
   registrationFee: 200,
-  applicationFee: 50,
+  applicationFee: 0,
   currency: "USD",
   paymentSchedule: "annual",
 

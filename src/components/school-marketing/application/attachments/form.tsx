@@ -15,6 +15,7 @@ import { CheckCircle, Loader2 } from "lucide-react"
 import { useDropzone } from "react-dropzone"
 import { useForm, useFormContext } from "react-hook-form"
 
+import { asset } from "@/lib/asset-url"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 import { cn } from "@/lib/utils"
 import { Form } from "@/components/ui/form"
@@ -28,15 +29,23 @@ import type { AttachmentsFormProps, AttachmentsFormRef } from "./types"
 import { attachmentsSchema, type AttachmentsFormData } from "./validation"
 
 const DOCUMENT_SLOTS = [
-  { key: "degreeUrl" as const, label: "Degree", icon: "/degree.png" },
+  {
+    key: "degreeUrl" as const,
+    label: "Degree",
+    icon: asset("/icons/degree.png"),
+  },
   {
     key: "transcriptUrl" as const,
     label: "Transcript",
-    icon: "/transcript.png",
+    icon: asset("/icons/transcript.png"),
   },
-  { key: "idUrl" as const, label: "ID", icon: "/id.png" },
-  { key: "resumeUrl" as const, label: "Resume", icon: "/resume.png" },
-  { key: "otherUrl" as const, label: "Other", icon: "/files.png" },
+  { key: "idUrl" as const, label: "ID", icon: asset("/icons/id.png") },
+  {
+    key: "resumeUrl" as const,
+    label: "Resume",
+    icon: asset("/icons/resume.png"),
+  },
+  { key: "otherUrl" as const, label: "Other", icon: asset("/icons/files.png") },
 ]
 
 function DocumentCard({
@@ -252,7 +261,7 @@ export const AttachmentsForm = forwardRef<
               format: "webp",
             }}
             placeholder="Photo"
-            placeholderImage="/image.png"
+            placeholderImage={asset("/icons/image.png")}
             schoolId={schoolId}
           />
         </div>

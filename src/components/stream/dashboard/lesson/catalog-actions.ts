@@ -201,7 +201,7 @@ export async function markCatalogLessonComplete(
             to: user.email,
             studentName: user.username || "Student",
             courseTitle: subject.name,
-            certificateUrl: `${env.NEXT_PUBLIC_APP_URL}/${locale}/stream/dashboard/${subject.slug}/certificate`,
+            certificateUrl: `${env.NEXT_PUBLIC_APP_URL}/${locale}/stream/courses/${subject.slug}/certificate`,
             schoolName: school?.name || "Platform",
             completionDate: new Date().toLocaleDateString("en-US", {
               year: "numeric",
@@ -215,7 +215,7 @@ export async function markCatalogLessonComplete(
       }
     }
 
-    revalidatePath(`/[lang]/s/[subdomain]/stream/dashboard/${slug}`)
+    revalidatePath(`/[lang]/s/[subdomain]/stream/courses/${slug}`)
     return { status: "success", message: "Progress updated" }
   } catch (error) {
     console.error("Failed to mark catalog lesson complete:", error)
@@ -249,7 +249,7 @@ export async function markCatalogLessonIncomplete(
       },
     })
 
-    revalidatePath(`/[lang]/s/[subdomain]/stream/dashboard/${slug}`)
+    revalidatePath(`/[lang]/s/[subdomain]/stream/courses/${slug}`)
     return { status: "success", message: "Progress updated" }
   } catch (error) {
     console.error("Failed to mark catalog lesson incomplete:", error)

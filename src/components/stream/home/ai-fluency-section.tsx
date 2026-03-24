@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import Link from "next/link"
 
+import { asset } from "@/lib/asset-url"
 import { buttonVariants } from "@/components/ui/button"
 import type { Locale } from "@/components/internationalization/config"
 
@@ -35,7 +36,7 @@ export function AIFluencySection({ dictionary, lang }: AIFluencySectionProps) {
         borderRadius: "12px",
         overflow: "hidden",
         marginBottom: "64px",
-        backgroundImage: "url('/ai-fluency-hero.webp')",
+        backgroundImage: `url('${asset("/illustrations/ai-fluency-hero.webp")}')`,
         backgroundSize: "cover",
         backgroundPosition: "center",
       }}

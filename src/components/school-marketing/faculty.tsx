@@ -4,23 +4,24 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import Image from "next/image"
 
+import { asset } from "@/lib/asset-url"
 import { Badge } from "@/components/ui/badge"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import SectionHeading from "../atom/section-heading"
 
 const professorImages = [
-  "/site/dumbledore.jpeg",
-  "/site/snape.jpeg",
-  "/site/mcgonagall.jpeg",
-  "/site/hagrid.jpeg",
+  asset("/photos/dumbledore.jpeg"),
+  asset("/photos/snape.jpeg"),
+  asset("/photos/mcgonagall.jpeg"),
+  asset("/photos/hagrid.jpeg"),
 ]
 
 const statIcons = [
-  { src: "/anthropic/graduation-cap.svg", alt: "Experience" },
-  { src: "/anthropic/star-outline.svg", alt: "Degrees" },
-  { src: "/anthropic/book-open.svg", alt: "Research" },
-  { src: "/anthropic/user.svg", alt: "Satisfaction" },
+  { src: asset("/icons/graduation-cap.svg"), alt: "Experience" },
+  { src: asset("/icons/star-outline.svg"), alt: "Degrees" },
+  { src: asset("/icons/book-open.svg"), alt: "Research" },
+  { src: asset("/icons/anthropic-user.svg"), alt: "Satisfaction" },
 ]
 
 const statBgColors = [

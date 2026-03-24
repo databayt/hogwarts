@@ -8,6 +8,7 @@ import Link from "next/link"
 import { useParams, usePathname, useRouter } from "next/navigation"
 import { Bookmark, Check, HelpCircle, Loader2, X } from "lucide-react"
 
+import { asset } from "@/lib/asset-url"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { formatRelativeTime } from "@/components/file/formatters"
@@ -130,7 +131,7 @@ export function FormFooter({
   showClose = false,
   onClose,
   showLogo = true,
-  logoSrc = "/logo.png",
+  logoSrc = asset("/icons/logo.png"),
   showHelp = true,
   showSave = true,
   useValidation,

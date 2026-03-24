@@ -43,6 +43,7 @@ export default async function GenerateContent({
   lang,
   error,
 }: Props) {
+  const isAr = lang === "ar"
   const { schoolId } = await getTenantContext()
 
   let templates: {

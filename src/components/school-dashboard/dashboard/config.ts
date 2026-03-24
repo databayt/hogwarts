@@ -504,8 +504,9 @@ export function getLocalizedQuickActions(
   if (!qa) return actions
   return actions.map((a) => ({
     ...a,
-    label: qa[a.iconName]?.label ?? a.label,
-    description: qa[a.iconName]?.description ?? a.description,
+    label: (a.iconName ? qa[a.iconName]?.label : undefined) ?? a.label,
+    description:
+      (a.iconName ? qa[a.iconName]?.description : undefined) ?? a.description,
   }))
 }
 

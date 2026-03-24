@@ -349,7 +349,8 @@ export async function tenantSetupCatalog(input: { tenantId: string }): Promise<
         success: false,
         error: {
           message:
-            "message" in result ? result.message : "Catalog already configured",
+            ("message" in result ? result.message : undefined) ??
+            "Catalog already configured",
         },
       }
     }

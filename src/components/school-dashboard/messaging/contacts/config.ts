@@ -66,7 +66,7 @@ export const MAX_CONTACTS_PER_CATEGORY = 50
 type ContactsDict = Record<string, any> | undefined
 
 /** Get localized category labels from dictionary */
-export const getCategoryLabels = (d?: Dict): Record<string, string> => {
+export const getCategoryLabels = (d?: ContactsDict): Record<string, string> => {
   const c = d?.categories as Record<string, string> | undefined
   return {
     teachers: c?.teachers || "Teachers",
@@ -86,7 +86,7 @@ export const getCategoryLabels = (d?: Dict): Record<string, string> => {
 /** Get localized filter chips with dictionary labels */
 export const getLocalizedFilterChips = (
   role: string,
-  d?: Dict
+  d?: ContactsDict
 ): { key: ContactCategory | "all"; label: string }[] => {
   const labels = getCategoryLabels(d)
   const categories = ROLE_CATEGORIES[role] ?? []

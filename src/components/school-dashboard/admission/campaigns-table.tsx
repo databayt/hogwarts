@@ -6,6 +6,7 @@ import { useCallback, useDeferredValue, useMemo, useState } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 
+import { asset } from "@/lib/asset-url"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
 import { useModal } from "@/components/atom/modal/context"
@@ -191,7 +192,7 @@ export function CampaignsTable({
               }
               icon={
                 <Image
-                  src="/anthropic/document.svg"
+                  src={asset("/icons/document.svg")}
                   alt=""
                   width={48}
                   height={48}
@@ -203,7 +204,7 @@ export function CampaignsTable({
               {data.map((campaign) => (
                 <GridCard
                   key={campaign.id}
-                  icon="/anthropic/document.svg"
+                  icon={asset("/icons/document.svg")}
                   title={campaign.name}
                   description={campaign.academicYear}
                   subtitle={`${campaign.applicationsCount} ${t?.nav?.applications || "applications"}`}

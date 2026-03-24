@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { asset } from "@/lib/asset-url"
 import { StickyScroll } from "@/components/atom/sticky-scroll"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -27,7 +28,7 @@ export default function AboutContent({ school, dictionary, lang }: Props) {
       content: (
         <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-lg">
           <img
-            src="/site/h.jpeg"
+            src={asset("/photos/site-h.jpeg")}
             width={400}
             height={300}
             className="h-full w-full object-cover"
@@ -44,7 +45,7 @@ export default function AboutContent({ school, dictionary, lang }: Props) {
       content: (
         <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-lg">
           <img
-            src="/site/trian.jpeg"
+            src={asset("/photos/trian.jpeg")}
             width={400}
             height={300}
             className="h-full w-full object-cover"
@@ -61,7 +62,7 @@ export default function AboutContent({ school, dictionary, lang }: Props) {
       content: (
         <div className="from-destructive to-primary flex h-full w-full items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br">
           <img
-            src="/site/a.jpeg"
+            src={asset("/photos/site-a.jpeg")}
             width={400}
             height={300}
             className="h-full w-full object-cover"
@@ -78,7 +79,7 @@ export default function AboutContent({ school, dictionary, lang }: Props) {
       content: (
         <div className="from-secondary to-muted flex h-full w-full items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br">
           <img
-            src="/site/b.jpeg"
+            src={asset("/photos/site-b.jpeg")}
             width={400}
             height={300}
             className="h-full w-full object-cover"
@@ -95,7 +96,7 @@ export default function AboutContent({ school, dictionary, lang }: Props) {
       content: (
         <div className="from-primary to-accent flex h-full w-full items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br">
           <img
-            src="/contribute/h.jpeg"
+            src={asset("/photos/site-h.jpeg")}
             width={400}
             height={300}
             className="h-full w-full object-cover"
@@ -112,7 +113,7 @@ export default function AboutContent({ school, dictionary, lang }: Props) {
       content: (
         <div className="from-accent to-secondary flex h-full w-full items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br">
           <img
-            src="/ball.png"
+            src={asset("/illustrations/site-ball.png")}
             width={400}
             height={300}
             className="h-full w-full object-contain p-8"

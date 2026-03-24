@@ -3,10 +3,13 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useEffect, useState, useTransition } from "react"
+import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
-import { BookOpen } from "lucide-react"
+import { BookOpen, Plus } from "lucide-react"
 
+import { asset } from "@/lib/asset-url"
+import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { SeeMore } from "@/components/atom/see-more"
 import type { CatalogCourseType } from "@/components/stream/data/catalog/get-all-courses"
@@ -26,6 +29,8 @@ interface Props {
   page: number
   perPage: number
   activeGrade: string
+  userRole?: string | null
+  userId?: string | null
 }
 
 export function StreamCoursesContent({
@@ -37,9 +42,13 @@ export function StreamCoursesContent({
   page,
   perPage,
   activeGrade,
+  userRole,
+  userId,
 }: Props) {
   const isRTL = lang === "ar"
   const df = dictionary?.stream?.coursesFilter
+  const isAdmin =
+    userRole === "ADMIN" || userRole === "TEACHER" || userRole === "DEVELOPER"
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -88,7 +97,7 @@ export function StreamCoursesContent({
           <div className="relative flex size-28 shrink-0 items-center justify-center rounded-xl bg-[#D97757] p-4 md:size-32">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/anthropic/6903d22d0099a66d72e05699_33ddc751e21fb4b116b3f57dd553f0bc55ea09d1-1000x1000.svg"
+              src={asset("/illustrations/anthropic-abstract.svg")}
               alt="Courses"
               className="size-20 md:size-24"
             />
@@ -99,6 +108,17 @@ export function StreamCoursesContent({
               <br />
               {dictionary?.courses?.heroSubtitle || "courses"}
             </h1>
+            {isAdmin && (
+              <div className="mt-4">
+                <Link
+                  href={`/${lang}/stream/settings`}
+                  className={buttonVariants({ size: "sm" })}
+                >
+                  <Plus className="me-2 size-4" />
+                  {dictionary?.courses?.manageCourses || "Manage Courses"}
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </section>

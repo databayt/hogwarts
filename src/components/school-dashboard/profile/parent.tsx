@@ -13,6 +13,7 @@ import {
   Users,
 } from "lucide-react"
 
+import { asset } from "@/lib/asset-url"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -37,7 +38,7 @@ const CHILDREN = [
     grade: "Grade 10",
     gpa: "3.9",
     attendance: 98,
-    avatar: "/contributors/h.jpeg",
+    avatar: asset("/photos/contributors-h.jpeg"),
     status: "active",
   },
   {
@@ -45,7 +46,7 @@ const CHILDREN = [
     grade: "Grade 8",
     gpa: "3.7",
     attendance: 95,
-    avatar: "/contributors/d.jpeg",
+    avatar: asset("/photos/contributors-d.jpeg"),
     status: "active",
   },
   {
@@ -53,7 +54,7 @@ const CHILDREN = [
     grade: "Grade 6",
     gpa: "4.0",
     attendance: 100,
-    avatar: "/contributors/h.jpeg",
+    avatar: asset("/photos/contributors-h.jpeg"),
     status: "active",
   },
 ]

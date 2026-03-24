@@ -8,6 +8,7 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { CircleCheck, CircleX, Link2, Mail, Users } from "lucide-react"
 
+import { asset } from "@/lib/asset-url"
 import { useDebouncedSearch } from "@/hooks/use-debounced-search"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
@@ -279,7 +280,7 @@ function ParentsTableInner({
               description={t.addNewParent}
               icon={
                 <Image
-                  src="/anthropic/users.svg"
+                  src={asset("/icons/users.svg")}
                   alt=""
                   width={48}
                   height={48}

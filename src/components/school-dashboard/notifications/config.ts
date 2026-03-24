@@ -241,6 +241,7 @@ export const NOTIFICATION_EXPIRATION: Record<NotificationType, number | null> =
     report_ready: 30,
     absence_intention: 14,
     absence_intention_decision: 14,
+    setup_guide: 30,
   }
 
 // Pagination and limits

@@ -4,6 +4,7 @@ enum ProposalType {
   SUBJECT
   CHAPTER
   LESSON
+  VIDEO
 }
 
 enum ProposalStatus {
@@ -28,6 +29,7 @@ model CatalogProposal {
   // For chapter/lesson proposals, link to parent
   parentSubjectId String? // CatalogSubject ID (for chapter proposals)
   parentChapterId String? // CatalogChapter ID (for lesson proposals)
+  catalogLessonId String? // CatalogLesson ID (for video proposals)
 
   // Review
   reviewedBy      String?

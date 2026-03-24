@@ -4,6 +4,7 @@
 import Image from "next/image"
 import Link from "next/link"
 
+import { asset } from "@/lib/asset-url"
 import { Button } from "@/components/ui/button"
 import { AnimatedButton } from "@/components/atom/animated-button"
 import type { Locale } from "@/components/internationalization/config"
@@ -32,7 +33,7 @@ export function Hero({ lang = "en", subdomain, dictionary }: HeroProps) {
         <div
           className="absolute inset-0 overflow-hidden rounded-none lg:inset-y-8 lg:rounded-sm"
           style={{
-            backgroundImage: "url('/site/harry-potter.png')",
+            backgroundImage: `url('${asset("/photos/harry-potter.png")}')`,
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}
@@ -45,7 +46,7 @@ export function Hero({ lang = "en", subdomain, dictionary }: HeroProps) {
           <div className="max-w-xl">
             <div className="mb-6 flex items-center gap-2">
               <Image
-                src="/site/ball.png"
+                src={asset("/illustrations/site-ball.png")}
                 alt={t?.logoAlt || "Hogwarts Logo"}
                 width={100}
                 height={100}
@@ -89,7 +90,7 @@ export function Hero({ lang = "en", subdomain, dictionary }: HeroProps) {
         <div className="max-w-xl">
           <div className="flex items-center gap-2">
             <Image
-              src="/site/ball.png"
+              src={asset("/illustrations/site-ball.png")}
               alt={t?.logoAlt || "Hogwarts Logo"}
               width={100}
               height={100}

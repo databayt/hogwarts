@@ -17,6 +17,7 @@ import {
   Settings,
 } from "lucide-react"
 
+import { asset } from "@/lib/asset-url"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { LangSwitcher } from "./lang-switcher"
@@ -52,7 +53,7 @@ export function AWSHeader({
               className="flex items-center gap-2 transition-opacity hover:opacity-80"
             >
               <Image
-                src="/logo.png"
+                src={asset("/icons/logo.png")}
                 alt="Logo"
                 width={28}
                 height={28}

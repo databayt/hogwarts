@@ -5,6 +5,7 @@ const MAPBOX_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || ""
 
 export interface MapboxFeature {
   id: string
+  text?: string
   place_name: string
   center: [number, number] // [lng, lat]
   context?: Array<{

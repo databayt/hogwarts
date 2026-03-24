@@ -3,18 +3,19 @@
 
 import Image from "next/image"
 
+import { asset } from "@/lib/asset-url"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 
 const paymentMethods = [
-  { name: "Visa", icon: "/payment/visa.svg" },
-  { name: "Mastercard", icon: "/payment/mastercard.svg" },
-  { name: "Amex", icon: "/payment/amex.svg" },
-  { name: "Apple Pay", icon: "/payment/apple-pay.svg" },
-  { name: "Google Pay", icon: "/payment/google-pay.svg" },
-  { name: "PayPal", icon: "/payment/paypal.svg" },
-  { name: "Mada", icon: "/payment/mada.svg" },
-  { name: "STCPay", icon: "/payment/stcpay.svg" },
-  { name: "Fawry", icon: "/payment/fawry.svg" },
+  { name: "Visa", icon: asset("/icons/visa.svg") },
+  { name: "Mastercard", icon: asset("/icons/mastercard.svg") },
+  { name: "Amex", icon: asset("/icons/amex.svg") },
+  { name: "Apple Pay", icon: asset("/icons/apple-pay.svg") },
+  { name: "Google Pay", icon: asset("/icons/google-pay.svg") },
+  { name: "PayPal", icon: asset("/icons/paypal.svg") },
+  { name: "Mada", icon: asset("/icons/mada.svg") },
+  { name: "STCPay", icon: asset("/icons/stcpay.svg") },
+  { name: "Fawry", icon: asset("/icons/fawry.svg") },
 ]
 
 interface SecurePaymentProps {
@@ -31,7 +32,7 @@ export function SecurePayment({ dictionary }: SecurePaymentProps) {
         <div className="flex w-full justify-center md:w-[30%]">
           <div className="flex h-56 w-56 items-center justify-center rounded-3xl bg-[#6A9BCC]">
             <Image
-              src="/anthropic/category-08.svg"
+              src={asset("/illustrations/category-08.svg")}
               alt={securePayment?.title || "Secure Payment"}
               width={180}
               height={180}

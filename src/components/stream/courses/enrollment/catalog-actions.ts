@@ -124,7 +124,7 @@ export async function enrollInCatalogSubject(catalogSubjectId: string) {
             to: session.user.email,
             studentName: session.user.name || "Student",
             courseTitle: subject.name,
-            courseUrl: `${env.NEXT_PUBLIC_APP_URL}/${locale}/stream/dashboard/${subject.slug}`,
+            courseUrl: `${env.NEXT_PUBLIC_APP_URL}/${locale}/stream/courses/${subject.slug}`,
             schoolName: school?.name || "Platform",
           }).catch((err) =>
             console.error("Failed to send enrollment email:", err)
@@ -190,7 +190,7 @@ export async function enrollInCatalogSubject(catalogSubjectId: string) {
           },
         ],
         mode: "payment",
-        success_url: `${env.NEXT_PUBLIC_APP_URL}/${locale}/stream/dashboard/${subject.slug}?enrolled=true`,
+        success_url: `${env.NEXT_PUBLIC_APP_URL}/${locale}/stream/courses/${subject.slug}?enrolled=true`,
         cancel_url: `${env.NEXT_PUBLIC_APP_URL}/${locale}/stream/browse`,
         metadata: {
           userId: session.user.id,
@@ -221,8 +221,8 @@ export async function enrollInCatalogSubject(catalogSubjectId: string) {
     } else {
       // Free enrollment — redirect directly to first lesson (avoids double redirect)
       const dashboardPath = result.firstLessonId
-        ? `/${locale}/stream/dashboard/${subject.slug}/${result.firstLessonId}`
-        : `/${locale}/stream/dashboard/${subject.slug}`
+        ? `/${locale}/stream/courses/${subject.slug}/${result.firstLessonId}`
+        : `/${locale}/stream/courses/${subject.slug}`
       redirect(dashboardPath)
     }
   } catch (error) {

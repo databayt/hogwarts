@@ -157,6 +157,47 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+
+  // Stream URL restructure redirects (old → new)
+  async redirects() {
+    return [
+      {
+        source: "/:lang/stream/admin",
+        destination: "/:lang/stream/dashboard",
+        permanent: true,
+      },
+      {
+        source: "/:lang/stream/admin/courses",
+        destination: "/:lang/stream/courses",
+        permanent: true,
+      },
+      {
+        source: "/:lang/stream/admin/enrollments",
+        destination: "/:lang/stream/settings?tab=enrollments",
+        permanent: true,
+      },
+      {
+        source: "/:lang/stream/admin/instructors",
+        destination: "/:lang/stream/settings?tab=instructors",
+        permanent: true,
+      },
+      {
+        source: "/:lang/stream/teach",
+        destination: "/:lang/stream/dashboard",
+        permanent: true,
+      },
+      {
+        source: "/:lang/stream/teach/videos",
+        destination: "/:lang/stream/settings?tab=videos",
+        permanent: true,
+      },
+      {
+        source: "/:lang/stream/not-admin",
+        destination: "/:lang/stream/courses",
+        permanent: true,
+      },
+    ]
+  },
 }
 
 const withMDX = createMDX()

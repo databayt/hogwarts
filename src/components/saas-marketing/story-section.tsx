@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { Volume2, VolumeX } from "lucide-react"
 
+import { asset } from "@/lib/asset-url"
 import { useVideoScrollControl } from "@/hooks/use-video-scroll-control"
 import { Icons } from "@/components/icons"
 import type { Locale } from "@/components/internationalization/config"
@@ -62,7 +63,7 @@ export default function StorySection({ dictionary, lang }: StorySectionProps) {
             playsInline
             preload="auto"
           >
-            <source src="/story.mp4" type="video/mp4" />
+            <source src={asset("/media/story.mp4")} type="video/mp4" />
             Your browser does not support the video tag.
           </video>
 

@@ -4,6 +4,7 @@
 import Image from "next/image"
 import Link from "next/link"
 
+import { asset } from "@/lib/asset-url"
 import { buttonVariants } from "@/components/ui/button"
 
 interface CollaborateSectionProps {
@@ -24,7 +25,7 @@ export function CollaborateSection({
         {/* Image - Left side */}
         <div className="relative aspect-[4/3] lg:aspect-auto lg:w-1/2">
           <Image
-            src="/site/harry-potter.png"
+            src={asset("/photos/harry-potter.png")}
             alt={lib?.featuredBookAlt || "Featured book"}
             fill
             className="object-cover"

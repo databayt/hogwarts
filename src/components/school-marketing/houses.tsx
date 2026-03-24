@@ -5,6 +5,7 @@
 import Image from "next/image"
 import Link from "next/link"
 
+import { asset } from "@/lib/asset-url"
 import { Button } from "@/components/ui/button"
 import { EncryptedText } from "@/components/atom/encrypted-text"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
@@ -12,10 +13,10 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 import SectionHeading from "../atom/section-heading"
 
 const houseImages = [
-  "/site/gryffindor.jpeg",
-  "/site/ravenclaw.jpeg",
-  "/site/hupplepuff.jpeg",
-  "/site/slytherin.jpg",
+  asset("/photos/gryffindor.jpeg"),
+  asset("/photos/ravenclaw.jpeg"),
+  asset("/photos/hupplepuff.jpeg"),
+  asset("/photos/slytherin.jpg"),
 ]
 
 const houseColors = [
@@ -100,7 +101,7 @@ export function Houses() {
         >
           <Link href="/#" className="flex">
             <Image
-              src="/site/hat.png"
+              src={asset("/illustrations/hat.png")}
               alt="Witch"
               width={40}
               height={40}

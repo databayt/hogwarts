@@ -13,6 +13,7 @@ import Link from "next/link"
 import Lottie from "lottie-react"
 import { Check, Copy } from "lucide-react"
 
+import { asset } from "@/lib/asset-url"
 import { Modal } from "@/components/atom/modal"
 
 interface ApplicationSuccessModalProps {
@@ -40,7 +41,7 @@ export default function ApplicationSuccessModal({
   const [animationData, setAnimationData] = useState<object | null>(null)
 
   useEffect(() => {
-    fetch("/animations/confetti.json")
+    fetch(asset("/animations/confetti.json"))
       .then((res) => res.json())
       .then((data) => setAnimationData(data))
       .catch(console.error)

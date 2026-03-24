@@ -6,6 +6,7 @@
 import { useMemo, useState } from "react"
 import Image from "next/image"
 
+import { asset } from "@/lib/asset-url"
 import { cn } from "@/lib/utils"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import Card from "@/components/atom/card"
@@ -18,48 +19,48 @@ import type { FeatureCategory } from "./types"
 
 const FEATURE_IMAGES: Record<string, string> = {
   // Core
-  student: "/feature/student.png",
-  faculty: "/feature/teacher.png",
-  financial: "/feature/fees.png",
-  exam: "/feature/exam.png",
+  student: asset("/illustrations/student.png"),
+  faculty: asset("/illustrations/teacher.png"),
+  financial: asset("/illustrations/fees.png"),
+  exam: asset("/illustrations/exam.png"),
   // Essential
-  assignment: "/feature/assigment.png",
-  attendance: "/feature/attendance.png",
-  gradebook: "/feature/gradebook.png",
-  timetable: "/feature/timetable.png",
+  assignment: asset("/illustrations/assigment.png"),
+  attendance: asset("/illustrations/attendance.png"),
+  gradebook: asset("/illustrations/gradebook.png"),
+  timetable: asset("/illustrations/timetable.png"),
   // Advance
-  "digital-library": "/feature/library.png",
-  library: "/feature/library.png",
-  events: "/feature/events.png",
-  "live-classroom": "/feature/video.png",
+  "digital-library": asset("/illustrations/library.png"),
+  library: asset("/illustrations/library.png"),
+  events: asset("/illustrations/events.png"),
+  "live-classroom": asset("/illustrations/video.png"),
   // ERP
-  payroll: "/feature/payroll.png",
-  "advance-accounting": "/feature/invoicing.png",
-  expense: "/feature/wallet-3.png",
-  payment: "/feature/credit-card.png",
-  "e-commerce": "/feature/app-store.png",
-  "email-marketing": "/feature/email.png",
-  recruitment: "/feature/offer.png",
+  payroll: asset("/illustrations/payroll.png"),
+  "advance-accounting": asset("/illustrations/invoicing.png"),
+  expense: asset("/illustrations/wallet-3.png"),
+  payment: asset("/illustrations/credit-card.png"),
+  "e-commerce": asset("/illustrations/app-store.png"),
+  "email-marketing": asset("/illustrations/email.png"),
+  recruitment: asset("/illustrations/offer.png"),
   // Management
-  canteen: "/feature/canteen.png",
-  "parent-login": "/feature/parent.png",
-  transportation: "/feature/transport.png",
+  canteen: asset("/illustrations/canteen.png"),
+  "parent-login": asset("/illustrations/parent.png"),
+  transportation: asset("/illustrations/transport.png"),
   // Communication
-  helpdesk: "/feature/headphone.png",
-  "notice-board": "/feature/notifications.png",
-  "online-appointment": "/feature/calendar-2.png",
-  "secure-transcript": "/feature/id-cards.png",
-  "whatsapp-integration": "/feature/phone.png",
-  grievance: "/feature/messaging.png",
-  convocation: "/feature/graduate.png",
+  helpdesk: asset("/illustrations/headphone.png"),
+  "notice-board": asset("/illustrations/notifications.png"),
+  "online-appointment": asset("/illustrations/calendar-2.png"),
+  "secure-transcript": asset("/illustrations/id-cards.png"),
+  "whatsapp-integration": asset("/illustrations/phone.png"),
+  grievance: asset("/illustrations/messaging.png"),
+  convocation: asset("/illustrations/graduate.png"),
   // LMS
-  classroom: "/feature/blackboard.png",
+  classroom: asset("/illustrations/blackboard.png"),
   // Technical
-  "mobile-application": "/feature/app-store.png",
-  "data-import-export": "/feature/download.png",
-  secure: "/feature/role-based.png",
+  "mobile-application": asset("/illustrations/app-store.png"),
+  "data-import-export": asset("/illustrations/download.png"),
+  secure: asset("/illustrations/role-based.png"),
   // Other
-  application: "/feature/cover-letter.png",
+  application: asset("/illustrations/cover-letter.png"),
 }
 
 type TabId = "all" | FeatureCategory

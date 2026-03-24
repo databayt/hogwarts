@@ -14,6 +14,7 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { Megaphone, Pin, Star } from "lucide-react"
 
+import { asset } from "@/lib/asset-url"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
 import { Badge } from "@/components/ui/badge"
@@ -337,7 +338,7 @@ function AnnouncementsTableInner({
               description={t.createNewAnnouncement}
               icon={
                 <Image
-                  src="/anthropic/news.svg"
+                  src={asset("/icons/news.svg")}
                   alt=""
                   width={48}
                   height={48}
@@ -352,7 +353,7 @@ function AnnouncementsTableInner({
                 return (
                   <GridCard
                     key={announcement.id}
-                    icon="/anthropic/news.svg"
+                    icon={asset("/icons/news.svg")}
                     title={displayTitle}
                     description={announcement.published ? t.published : t.draft}
                     subtitle={scopeBadge.label}

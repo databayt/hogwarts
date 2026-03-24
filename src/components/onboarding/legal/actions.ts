@@ -11,6 +11,7 @@ import {
 } from "@/lib/action-response"
 import {
   applyTimetableStructureForNewSchool,
+  autoGenerateTimetableForSchool,
   autoProvisionSections,
   setupCatalogForSchool,
   setupDefaultsForSchool,
@@ -167,6 +168,14 @@ async function provisionSchoolDefaults(
   await autoProvisionSections(schoolId).catch((err) =>
     console.error(
       `[provisionSchoolDefaults] Sections failed for ${schoolId}:`,
+      err
+    )
+  )
+
+  // Step 3b: Auto-generate timetable (depends on sections, subjects, periods)
+  await autoGenerateTimetableForSchool(schoolId).catch((err) =>
+    console.error(
+      `[provisionSchoolDefaults] Timetable generation failed for ${schoolId}:`,
       err
     )
   )

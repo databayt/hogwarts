@@ -353,7 +353,7 @@ export function MessagingClient({
       {/* Sidebar — hidden on mobile when conversation active */}
       <div
         className={cn(
-          "bg-msg-sidebar-bg border-border flex flex-shrink-0 flex-col border-e",
+          "bg-msg-sidebar-bg border-border flex min-h-0 flex-shrink-0 flex-col overflow-hidden border-e",
           "w-full md:w-[420px] md:max-w-[35vw]",
           activeConversation ? "hidden md:flex" : "flex"
         )}

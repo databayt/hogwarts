@@ -138,7 +138,7 @@ export function StreamPaymentSuccessContent({
             <div className="mt-5 space-y-2">
               {verificationResult.courseSlug && (
                 <Link
-                  href={`/${lang}/stream/dashboard/${verificationResult.courseSlug}`}
+                  href={`/${lang}/stream/courses/${verificationResult.courseSlug}`}
                   className={buttonVariants({ className: "w-full" })}
                 >
                   <ArrowIcon className="size-4" />

@@ -3,6 +3,7 @@
 
 import Image from "next/image"
 
+import { asset } from "@/lib/asset-url"
 import { InfiniteSlider } from "@/components/atom/infinite-slider"
 import { ProgressiveBlur } from "@/components/atom/progressive-blur"
 import type { Locale } from "@/components/internationalization/config"
@@ -11,49 +12,49 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 const sponsors = [
   {
     name: "Faisal",
-    src: "/sponser/faisal.png",
+    src: asset("/icons/faisal.png"),
     width: 120,
     height: 60,
     className: "h-12 w-auto",
   },
   {
     name: "MTDT",
-    src: "/sponser/mtdt.png",
+    src: asset("/icons/mtdt.png"),
     width: 120,
     height: 60,
     className: "h-12 w-auto",
   },
   {
     name: "Zain",
-    src: "/sponser/zain.png",
+    src: asset("/icons/zain.png"),
     width: 100,
     height: 50,
     className: "h-10 w-auto",
   },
   {
     name: "Khartoum",
-    src: "/sponser/khartoum.png",
+    src: asset("/icons/khartoum.png"),
     width: 120,
     height: 60,
     className: "h-12 w-auto",
   },
   {
     name: "Dal",
-    src: "/sponser/dal.png",
+    src: asset("/icons/dal.png"),
     width: 120,
     height: 60,
     className: "h-12 w-auto",
   },
   {
     name: "249",
-    src: "/sponser/249.png",
+    src: asset("/icons/249.png"),
     width: 100,
     height: 50,
     className: "h-10 w-auto",
   },
   {
     name: "University of Khartoum",
-    src: "/sponser/uok.png",
+    src: asset("/icons/uok.png"),
     width: 110,
     height: 55,
     className: "h-11 w-auto",

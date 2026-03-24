@@ -13,6 +13,7 @@ import {
 } from "framer-motion"
 import { BookOpen, Building2, Cpu, DollarSign } from "lucide-react"
 
+import { asset } from "@/lib/asset-url"
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 
@@ -70,7 +71,7 @@ const tags: Tag[] = [
 
 // Per-tag images (add more as they become available)
 const tagImages: Record<string, string> = {
-  admission: "/features/admission.png",
+  admission: asset("/illustrations/admission.png"),
 }
 
 const categoryCards = [

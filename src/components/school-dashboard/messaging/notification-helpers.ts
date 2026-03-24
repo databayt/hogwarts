@@ -68,7 +68,7 @@ export async function notifyNewMessage(
     const notificationPromises = participants.map((participant) =>
       createNotification({
         userId: participant.userId,
-        type: "message" as NotificationType,
+        type: "message",
         priority: "normal",
         title: conversationTitle || senderName,
         body: truncateContent(messageContent),
@@ -131,7 +131,7 @@ export async function notifyMentions(
     const notificationPromises = validParticipants.map((participant) =>
       createNotification({
         userId: participant.userId,
-        type: "message_mention" as NotificationType,
+        type: "message_mention",
         title: mentionTitle,
         body: truncateContent(messageContent),
         priority: "high", // Mentions are higher priority
@@ -183,7 +183,7 @@ export async function notifyParticipantAdded(
 
     await createNotification({
       userId: addedUserId,
-      type: "message" as NotificationType,
+      type: "message",
       priority: "normal",
       title,
       body,
@@ -232,7 +232,7 @@ export async function notifyAnnouncement(
     const notificationPromises = participants.map((participant) =>
       createNotification({
         userId: participant.userId,
-        type: "announcement" as NotificationType,
+        type: "announcement",
         title: announcementTitle,
         body: truncateContent(announcementContent),
         priority: "high", // Announcements are high priority

@@ -10,6 +10,7 @@ import {
 } from "@/lib/action-response"
 import {
   applyTimetableStructureForNewSchool,
+  autoGenerateTimetableForSchool,
   setupCatalogForSchool,
 } from "@/lib/catalog-setup"
 import { db } from "@/lib/db"
@@ -78,6 +79,16 @@ export async function publishSchool(schoolId: string): Promise<ActionResponse> {
       console.error(
         `[publishSchool] ClassroomType creation failed for school ${schoolId}:`,
         classroomTypeError
+      )
+    }
+
+    // Auto-generate timetable slots (non-blocking)
+    try {
+      await autoGenerateTimetableForSchool(schoolId)
+    } catch (genError) {
+      console.error(
+        `[publishSchool] Timetable generation failed for school ${schoolId}:`,
+        genError
       )
     }
 

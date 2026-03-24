@@ -14,7 +14,7 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 import {
   VideoInput,
   type VideoInputMetadata,
-} from "@/components/stream/admin/courses/video-input"
+} from "@/components/stream/video/video-input"
 
 import {
   createLessonVideo,

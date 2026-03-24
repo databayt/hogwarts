@@ -13,6 +13,7 @@ import {
   UserCheck,
 } from "lucide-react"
 
+import { asset } from "@/lib/asset-url"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -258,7 +259,7 @@ export function EnrollmentTable({
               }
               icon={
                 <Image
-                  src="/anthropic/document.svg"
+                  src={asset("/icons/document.svg")}
                   alt=""
                   width={48}
                   height={48}
@@ -270,7 +271,7 @@ export function EnrollmentTable({
               {data.map((enrollment) => (
                 <GridCard
                   key={enrollment.id}
-                  icon="/anthropic/document.svg"
+                  icon={asset("/icons/document.svg")}
                   title={enrollment.applicantName}
                   description={enrollment.applyingForClass}
                   subtitle={enrollment.campaignName}

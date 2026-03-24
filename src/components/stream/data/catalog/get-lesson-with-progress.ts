@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { auth } from "@/auth"
 
+import { asset } from "@/lib/asset-url"
 import { getCatalogImageUrl } from "@/lib/catalog-image-url"
 import { getVideoUrl } from "@/lib/cloudfront"
 import { db } from "@/lib/db"
@@ -349,7 +350,10 @@ export async function getCatalogLessonWithProgress(
             v.isFeatured && !v.schoolId
               ? "Hogwarts"
               : (v.school?.name ?? v.user.username),
-          image: v.isFeatured && !v.schoolId ? "/logo.png" : v.user.image,
+          image:
+            v.isFeatured && !v.schoolId
+              ? asset("/icons/logo.png")
+              : v.user.image,
         },
         school: {
           id: v.school?.id ?? null,

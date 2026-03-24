@@ -8,6 +8,7 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { ClipboardCheck, TrendingUp } from "lucide-react"
 
+import { asset } from "@/lib/asset-url"
 import { useDebouncedSearch } from "@/hooks/use-debounced-search"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
@@ -247,7 +248,7 @@ function ResultsTableInner({
               description={t.recordNewResult}
               icon={
                 <Image
-                  src="/anthropic/graduation-cap.svg"
+                  src={asset("/icons/graduation-cap.svg")}
                   alt=""
                   width={48}
                   height={48}
@@ -259,7 +260,7 @@ function ResultsTableInner({
               {data.map((result) => (
                 <GridCard
                   key={result.id}
-                  icon="/anthropic/graduation-cap.svg"
+                  icon={asset("/icons/graduation-cap.svg")}
                   title={result.studentName}
                   description={`${result.score}/${result.maxScore} (${result.percentage.toFixed(0)}%)`}
                   subtitle={result.grade}

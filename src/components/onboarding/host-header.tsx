@@ -5,6 +5,7 @@ import React from "react"
 import Image from "next/image"
 import { Bookmark, HelpCircle } from "lucide-react"
 
+import { asset } from "@/lib/asset-url"
 import { Button } from "@/components/ui/button"
 
 interface HostHeaderProps {
@@ -20,7 +21,7 @@ const HostHeader: React.FC<HostHeaderProps> = ({ onHelp, onSave }) => {
         <div className="flex items-center">
           <div className="relative h-5 w-5">
             <Image
-              src="/site/tent.png"
+              src={asset("/illustrations/tent.png")}
               alt="Tent icon"
               fill
               sizes="20px"

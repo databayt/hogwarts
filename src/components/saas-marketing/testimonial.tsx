@@ -3,6 +3,7 @@
 
 import Image from "next/image"
 
+import { asset } from "@/lib/asset-url"
 import SectionHeading from "@/components/atom/section-heading"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -26,40 +27,40 @@ export default function Testimonial({ dictionary, lang }: TestimonialProps) {
       name: "Amira Bashir",
       role: "School Principal",
       content: "40% reduction in admin work. Teachers focus on teaching.",
-      avatar: "/contributors/1.jpg",
+      avatar: asset("/photos/contributor-1.jpg"),
     },
     {
       name: "Osman Abdout",
       role: "District Superintendent",
       content:
         "Streamlined attendance and grades. Staff communication improved.",
-      avatar: "/contributors/2.jpg",
+      avatar: asset("/photos/contributor-2.jpg"),
     },
     {
       name: "Fatima Mahdi",
       role: "Academic Director",
       content:
         "Automated enrollment and scheduling. Efficiency improved dramatically.",
-      avatar: "/contributors/3.jpg",
+      avatar: asset("/photos/contributor-3.jpg"),
     },
     {
       name: "Ahmed Hassan",
       role: "University Dean",
       content: "Revolutionized student management. Faculty focus on research.",
-      avatar: "/contributors/mazin.jpg",
+      avatar: asset("/photos/mazin.jpg"),
     },
     {
       name: "Layla Osman",
       role: "Education Coordinator",
       content: "Simplified parent-teacher communication. Highly effective.",
-      avatar: "/contributors/5.jpg",
+      avatar: asset("/photos/contributor-5.jpg"),
     },
     {
       name: "Mohamed Khalid",
       role: "School Administrator",
       content:
         "Enhanced student tracking and attendance. Essential for education.",
-      avatar: "/contributors/6.jpg",
+      avatar: asset("/photos/contributor-6.jpg"),
     },
   ]
 
@@ -69,7 +70,7 @@ export default function Testimonial({ dictionary, lang }: TestimonialProps) {
           ...item,
           avatar:
             defaultTestimonials[index]?.avatar ||
-            `/contributors/${index + 1}.jpg`,
+            asset(`/photos/contributor-${index + 1}.jpg`),
         }))
       : defaultTestimonials
 

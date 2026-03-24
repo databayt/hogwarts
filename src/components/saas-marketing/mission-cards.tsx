@@ -4,6 +4,7 @@
 import Image from "next/image"
 import Link from "next/link"
 
+import { asset } from "@/lib/asset-url"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -31,19 +32,19 @@ export default function MissionCards({ dictionary, lang }: MissionCardsProps) {
   const cards = [
     {
       title: dict.studentSuccess,
-      icon: "/icons/hands-build.svg",
+      icon: asset("/icons/hands-build.svg"),
       href: "/about",
       bgColor: "bg-[#E3DACC]", // oat - rgb(227, 218, 204)
     },
     {
       title: dict.schoolOperations,
-      icon: "/icons/hands-stack.svg",
+      icon: asset("/icons/hands-stack.svg"),
       href: "/features",
       bgColor: "bg-[#BCD1CA]", // cactus - rgb(188, 209, 202)
     },
     {
       title: dict.openAcademy,
-      icon: "/icons/objects-puzzle.svg",
+      icon: asset("/icons/objects-puzzle.svg"),
       href: "/docs",
       bgColor: "bg-[#CBCADB]", // heather - rgb(203, 202, 219)
     },

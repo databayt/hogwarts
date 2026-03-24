@@ -5,16 +5,17 @@
 import React from "react"
 import Image from "next/image"
 
+import { asset } from "@/lib/asset-url"
 import { InfiniteMovingCards } from "@/components/atom/infinite-cards"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import SectionHeading from "../atom/section-heading"
 
 const statIcons = [
-  { src: "/anthropic/star-outline.svg", alt: "Satisfaction" },
-  { src: "/anthropic/graduation-cap.svg", alt: "Acceptance" },
-  { src: "/anthropic/users.svg", alt: "Families" },
-  { src: "/anthropic/check-circle.svg", alt: "Trust" },
+  { src: asset("/icons/star-outline.svg"), alt: "Satisfaction" },
+  { src: asset("/icons/graduation-cap.svg"), alt: "Acceptance" },
+  { src: asset("/icons/users.svg"), alt: "Families" },
+  { src: asset("/icons/check-circle.svg"), alt: "Trust" },
 ]
 
 export function Testimonials() {

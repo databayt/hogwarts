@@ -202,7 +202,7 @@ export async function markLessonComplete(
             to: user.email,
             studentName: user.username || "Student",
             courseTitle: course.title,
-            certificateUrl: `${env.NEXT_PUBLIC_APP_URL}/${locale}/stream/dashboard/${course.slug}/certificate`,
+            certificateUrl: `${env.NEXT_PUBLIC_APP_URL}/${locale}/stream/courses/${course.slug}/certificate`,
             schoolName: school?.name || "School",
             completionDate: new Date().toLocaleDateString("en-US", {
               year: "numeric",
@@ -216,7 +216,7 @@ export async function markLessonComplete(
       }
     }
 
-    revalidatePath(`/[lang]/s/[subdomain]/stream/dashboard/${slug}`)
+    revalidatePath(`/[lang]/s/[subdomain]/stream/courses/${slug}`)
 
     return {
       status: "success",
@@ -300,7 +300,7 @@ export async function markLessonIncomplete(
       },
     })
 
-    revalidatePath(`/[lang]/s/[subdomain]/stream/dashboard/${slug}`)
+    revalidatePath(`/[lang]/s/[subdomain]/stream/courses/${slug}`)
 
     return {
       status: "success",
