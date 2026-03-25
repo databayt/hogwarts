@@ -16,6 +16,12 @@ export type ContactDTO = {
   category: ContactCategory
   /** Contextual info: section name, department, position */
   contextLabel?: string
+  /** Conversation enrichment (client-side merge) */
+  conversationId?: string
+  lastMessage?: string | null
+  lastMessageAt?: Date | string | null
+  unreadCount?: number
+  isPinned?: boolean
 }
 
 /** Contact categories — some are role-specific (prefixed with my_) */
@@ -30,6 +36,9 @@ export type ContactCategory =
   | "my_teachers"
   | "classmates"
   | "my_children_teachers"
+
+/** Sidebar filter type — includes all, unread, favourites + role categories */
+export type SidebarFilter = "all" | "unread" | ContactCategory | "favourites"
 
 /** Filters for the contacts panel */
 export type ContactFilters = {

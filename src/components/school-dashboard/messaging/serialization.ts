@@ -159,7 +159,9 @@ export function serializeConversation(conversation: any) {
       : null,
     lastMessage: conversation.lastMessage
       ? serializeMessage(conversation.lastMessage)
-      : null,
+      : conversation.messages?.[0]
+        ? serializeMessage(conversation.messages[0])
+        : null,
   }
 }
 

@@ -1454,7 +1454,22 @@
         "essentials": "الأساسيات",
         "contactDetails": "بيانات الاتصال",
         "healthHistory": "الصحة والسجل",
-        "complete": "إتمام"
+        "complete": "إتمام",
+        "back": "رجوع",
+        "next": "التالي",
+        "finish": "إنهاء",
+        "skipAndCreate": "تخطي وإنشاء",
+        "create": "إنشاء"
+      },
+      "attachments": {
+        "title": "المرفقات",
+        "description": "ارفع الصورة والمستندات للطالب.",
+        "degree": "الشهادة",
+        "transcript": "كشف الدرجات",
+        "id": "الهوية",
+        "resume": "السيرة الذاتية",
+        "other": "أخرى",
+        "photo": "الصورة"
       },
       "photo": {
         "title": "الصورة",

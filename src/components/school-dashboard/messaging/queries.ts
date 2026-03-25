@@ -31,6 +31,24 @@ export const conversationListSelect = {
   directParticipant1Id: true,
   directParticipant2Id: true,
   lastMessageAt: true,
+  messages: {
+    select: {
+      id: true,
+      content: true,
+      contentType: true,
+      senderId: true,
+      createdAt: true,
+      sender: {
+        select: {
+          id: true,
+          username: true,
+          email: true,
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" as const },
+    take: 1,
+  },
   isArchived: true,
   createdById: true,
   createdBy: {
@@ -160,29 +178,10 @@ export const messageListSelect = {
 
 export const conversationDetailSelect = {
   ...conversationListSelect,
-  metadata: true,
   messages: {
     take: 50,
     orderBy: { createdAt: "desc" as const },
     select: messageListSelect,
-  },
-  pinnedMessages: {
-    select: {
-      id: true,
-      conversationId: true,
-      messageId: true,
-      pinnedById: true,
-      pinnedBy: {
-        select: {
-          id: true,
-          username: true,
-        },
-      },
-      pinnedAt: true,
-      message: {
-        select: messageListSelect,
-      },
-    },
   },
 } as const
 

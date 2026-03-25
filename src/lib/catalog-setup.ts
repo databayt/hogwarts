@@ -1128,14 +1128,18 @@ export async function autoGenerateTimetableForSchool(
       : never
     : never
 
+  const tag = `[autoGenerateTimetable:${schoolId.slice(-6)}]`
+
   // 1. Find active term
   const activeTerm = await db.term.findFirst({
     where: { schoolId, isActive: true },
     select: { id: true, yearId: true },
   })
   if (!activeTerm) {
+    console.warn(`${tag} BAIL: No active term`)
     return { success: false, slotsCreated: 0, warnings: ["No active term"] }
   }
+  console.log(`${tag} Term: ${activeTerm.id}, Year: ${activeTerm.yearId}`)
 
   // 2. Get periods (filter out breaks/lunch)
   const periods = await db.period.findMany({
@@ -1150,7 +1154,11 @@ export async function autoGenerateTimetableForSchool(
         !p.name.toLowerCase().includes("lunch")
     )
     .map((p) => p.id)
+  console.log(
+    `${tag} Periods: ${periods.length} total, ${teachingPeriodIds.length} teaching`
+  )
   if (teachingPeriodIds.length === 0) {
+    console.warn(`${tag} BAIL: No teaching periods`)
     return { success: false, slotsCreated: 0, warnings: ["No periods found"] }
   }
 
@@ -1164,6 +1172,7 @@ export async function autoGenerateTimetableForSchool(
     Array.isArray(weekConfig?.workingDays) && weekConfig!.workingDays.length > 0
       ? weekConfig!.workingDays
       : [0, 1, 2, 3, 4]
+  console.log(`${tag} Working days: [${workingDays.join(",")}]`)
 
   // 4. Get sections
   const sectionsData = await db.section.findMany({
@@ -1175,7 +1184,9 @@ export async function autoGenerateTimetableForSchool(
       classroomId: true,
     },
   })
+  console.log(`${tag} Sections: ${sectionsData.length}`)
   if (sectionsData.length === 0) {
+    console.warn(`${tag} BAIL: No sections`)
     return { success: false, slotsCreated: 0, warnings: ["No sections found"] }
   }
 
@@ -1189,6 +1200,7 @@ export async function autoGenerateTimetableForSchool(
       subject: { select: { id: true, name: true } },
     },
   })
+  console.log(`${tag} Subject selections: ${subjectSelections.length}`)
   const gradeSubjectsMap = new Map<
     string,
     Array<{ subjectId: string; subjectName: string; hoursPerWeek: number }>
@@ -1223,6 +1235,21 @@ export async function autoGenerateTimetableForSchool(
     }
   })
 
+  const sectionsWithSubjects = sectionRequirements.filter(
+    (s) => s.subjects.length > 0
+  ).length
+  console.log(
+    `${tag} Sections with subjects: ${sectionsWithSubjects}/${sectionRequirements.length}`
+  )
+  if (sectionsWithSubjects === 0) {
+    console.warn(`${tag} BAIL: No sections have subjects assigned`)
+    return {
+      success: false,
+      slotsCreated: 0,
+      warnings: ["No sections have subjects assigned"],
+    }
+  }
+
   // 7. Build RoomAvailability[] from classrooms
   const classrooms = await db.classroom.findMany({
     where: { schoolId },
@@ -1243,7 +1270,12 @@ export async function autoGenerateTimetableForSchool(
     hasAccessibility: false,
   }))
 
+  console.log(`${tag} Rooms: ${rooms.length}`)
+
   // 8. Run the algorithm with empty teachers
+  console.log(
+    `${tag} Running algorithm: ${sectionRequirements.length} sections, ${rooms.length} rooms, ${workingDays.length} days, ${teachingPeriodIds.length} periods`
+  )
   const result = generateSectionTimetable(
     sectionRequirements,
     [], // No teachers yet
@@ -1273,6 +1305,16 @@ export async function autoGenerateTimetableForSchool(
       },
     }
   )
+
+  console.log(
+    `${tag} Algorithm result: ${result.slots.length} slots, ${result.warnings.length} warnings, ${result.errors.length} errors`
+  )
+  if (result.errors.length > 0) {
+    console.error(`${tag} Algorithm errors:`, result.errors)
+  }
+  if (result.warnings.length > 0) {
+    console.warn(`${tag} Algorithm warnings:`, result.warnings)
+  }
 
   if (result.slots.length === 0) {
     return {

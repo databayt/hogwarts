@@ -235,10 +235,10 @@
     "unread_indicator": "Unread messages below"
   },
   "contacts": {
-    "tab_chats": "Chats",
-    "tab_contacts": "Contacts",
     "search_placeholder": "Search contacts...",
     "filter_all": "All",
+    "unread": "Unread",
+    "favourites": "Favourites",
     "no_contacts": "No contacts available",
     "no_results": "No contacts found",
     "start_chat": "Start conversation",

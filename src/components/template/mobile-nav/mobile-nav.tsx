@@ -5,7 +5,6 @@
 import * as React from "react"
 import Link, { LinkProps } from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { Mail } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -19,6 +18,7 @@ import type { Role } from "@/components/atom/generic-command-menu/types"
 import { UserButton } from "@/components/auth/user-button"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { LanguageSwitcher } from "@/components/internationalization/language-switcher"
+import { MessageMailIcon } from "@/components/school-dashboard/messaging/mail-icon"
 import { NotificationBellIconCompact } from "@/components/school-dashboard/notifications/bell-icon"
 import type { School } from "@/components/school-marketing/types"
 import { siteConfig } from "@/components/template/marketing-header/config"
@@ -145,20 +145,10 @@ export function MobileNav({
                   />
                 )}
                 {messagesUrl && (
-                  <Button
-                    variant="link"
-                    size="icon"
-                    className="size-8 cursor-pointer transition-opacity hover:opacity-70"
-                    asChild
-                    onClick={() => setOpen(false)}
-                  >
-                    <Link href={messagesUrl}>
-                      <Mail className="h-4 w-4" />
-                      <span className="sr-only">
-                        {dictionary?.platform?.messages || "Messages"}
-                      </span>
-                    </Link>
-                  </Button>
+                  <MessageMailIcon
+                    messagesUrl={messagesUrl}
+                    label={dictionary?.platform?.messages || "Messages"}
+                  />
                 )}
               </div>
               {subdomain && (

@@ -1454,7 +1454,22 @@
         "essentials": "Essentials",
         "contactDetails": "Contact Details",
         "healthHistory": "Health & History",
-        "complete": "Complete"
+        "complete": "Complete",
+        "back": "Back",
+        "next": "Next",
+        "finish": "Finish",
+        "skipAndCreate": "Skip & Create",
+        "create": "Create"
+      },
+      "attachments": {
+        "title": "Attachments",
+        "description": "Upload photo and documents for the student.",
+        "degree": "Degree",
+        "transcript": "Transcript",
+        "id": "ID",
+        "resume": "Resume",
+        "other": "Other",
+        "photo": "Photo"
       },
       "photo": {
         "title": "Photo",

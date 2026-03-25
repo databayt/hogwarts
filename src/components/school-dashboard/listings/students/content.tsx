@@ -208,9 +208,11 @@ export default async function StudentsContent({
         uniqueClassrooms.add(s.section.classroom.roomName)
       const gl = gradeEnglishLabel(s.academicGrade)
       if (gl) uniqueGradeLabels.add(gl)
-      // Detect actual content language from text when lang field is missing/wrong
+      // Detect actual content language from text — override lang field when
+      // text clearly doesn't match (e.g. lang="ar" but name is Latin characters)
       const rawName = `${s.givenName} ${s.surname}`.trim()
-      const contentLang = s.lang || (hasLatin(rawName) ? "en" : "ar")
+      const textLang = hasLatin(rawName) ? "en" : "ar"
+      const contentLang = textLang !== s.lang ? textLang : s.lang || textLang
       if (contentLang !== lang) {
         uniqueNames.set(rawName, contentLang)
       }
@@ -269,7 +271,9 @@ export default async function StudentsContent({
 
     data = (rows as any[]).map((s) => {
       const rawName = `${s.givenName} ${s.surname}`.trim()
-      const contentLang = s.lang || (hasLatin(rawName) ? "en" : "ar")
+      const mapTextLang = hasLatin(rawName) ? "en" : "ar"
+      const contentLang =
+        mapTextLang !== s.lang ? mapTextLang : s.lang || mapTextLang
       const name =
         contentLang !== lang
           ? nameTranslations.get(rawName) || rawName

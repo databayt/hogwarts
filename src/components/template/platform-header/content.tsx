@@ -5,7 +5,6 @@
 import { useMemo } from "react"
 import Link from "next/link"
 import { useParams, usePathname } from "next/navigation"
-import { Mail } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import {
@@ -27,6 +26,7 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 import { useBreadcrumbs } from "@/components/saas-dashboard/hooks/use-breadcrumbs"
 import ImpersonationBanner from "@/components/saas-dashboard/impersonation-banner"
+import { MessageMailIcon } from "@/components/school-dashboard/messaging/mail-icon"
 import { NotificationBellIcon } from "@/components/school-dashboard/notifications/bell-icon"
 import type { School } from "@/components/school-marketing/types"
 import { ModeSwitcher } from "@/components/template/marketing-header/mode-switcher"
@@ -149,19 +149,10 @@ export default function PlatformHeader({
               dictionary={dictionary.notifications}
             />
           )}
-          <Button
-            variant="link"
-            size="icon"
-            className="size-7 cursor-pointer transition-opacity hover:opacity-70"
-            asChild
-          >
-            <Link href={messagesUrl}>
-              <Mail className="h-4 w-4" />
-              <span className="sr-only">
-                {dictionary?.platform?.messages || "Messages"}
-              </span>
-            </Link>
-          </Button>
+          <MessageMailIcon
+            messagesUrl={messagesUrl}
+            label={dictionary?.platform?.messages || "Messages"}
+          />
           <UserButton
             variant="platform"
             subdomain={params?.subdomain as string}

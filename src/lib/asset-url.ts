@@ -15,8 +15,8 @@
  *   /photos/         - Real photographs
  */
 
-const CDN = process.env.NEXT_PUBLIC_CDN_DOMAIN
-  ? `https://${process.env.NEXT_PUBLIC_CDN_DOMAIN}`
+const CDN = process.env.NEXT_PUBLIC_CDN_DOMAIN?.trim()
+  ? `https://${process.env.NEXT_PUBLIC_CDN_DOMAIN.trim()}`
   : ""
 
 /**

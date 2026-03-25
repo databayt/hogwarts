@@ -7,14 +7,15 @@ import { Search } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
-import type { ContactCategory } from "./types"
+import type { SidebarFilter } from "./types"
 
 export interface ContactSearchProps {
   search: string
   onSearchChange: (value: string) => void
-  activeFilter: ContactCategory | "all"
-  onFilterChange: (filter: ContactCategory | "all") => void
-  filterChips: { key: ContactCategory | "all"; label: string }[]
+  activeFilter: SidebarFilter
+  onFilterChange: (filter: SidebarFilter) => void
+  filterChips: { key: SidebarFilter; label: string }[]
+  unreadCount?: number
   locale?: "ar" | "en"
 }
 
@@ -24,10 +25,32 @@ export function ContactSearch({
   activeFilter,
   onFilterChange,
   filterChips,
+  unreadCount = 0,
   locale = "en",
 }: ContactSearchProps) {
   const { dictionary } = useDictionary()
   const m = dictionary?.messaging
+
+  const getLabel = (chip: { key: SidebarFilter; label: string }) => {
+    if (chip.key === "all") {
+      return m?.contacts?.filter_all ?? (locale === "ar" ? "الكل" : "All")
+    }
+    if (chip.key === "unread") {
+      const base =
+        m?.contacts?.unread ?? (locale === "ar" ? "غير مقروءة" : "Unread")
+      return unreadCount > 0 ? `${base} (${unreadCount})` : base
+    }
+    if (chip.key === "favourites") {
+      return (
+        m?.contacts?.favourites ?? (locale === "ar" ? "المفضلة" : "Favourites")
+      )
+    }
+    // Role category
+    const categories = m?.contacts?.categories as
+      | Record<string, string>
+      | undefined
+    return categories?.[chip.label] ?? chip.label
+  }
 
   return (
     <div className="space-y-2 px-3 pt-2">
@@ -50,27 +73,21 @@ export function ContactSearch({
       </div>
 
       {/* Filter chips */}
-      <div className="scrollbar-none flex gap-1.5 overflow-x-auto pb-1">
+      <div className="no-scrollbar flex gap-1.5 overflow-x-auto pb-1">
         {filterChips.map((chip) => {
           const isActive = activeFilter === chip.key
-          const label =
-            chip.key === "all"
-              ? (m?.contacts?.filter_all ?? (locale === "ar" ? "الكل" : "All"))
-              : ((
-                  m?.contacts?.categories as Record<string, string> | undefined
-                )?.[chip.label] ?? chip.label)
           return (
             <button
               key={chip.key}
               onClick={() => onFilterChange(chip.key)}
               className={cn(
-                "rounded-full px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors",
+                "flex-shrink-0 rounded-full px-3 py-1 text-sm font-medium whitespace-nowrap transition-colors",
                 isActive
-                  ? "bg-msg-filter-active text-msg-filter-active-text"
-                  : "bg-msg-filter text-msg-filter-text hover:bg-msg-filter-hover"
+                  ? "bg-msg-unread-badge text-white"
+                  : "bg-msg-hover text-foreground hover:bg-msg-hover/80"
               )}
             >
-              {label}
+              {getLabel(chip)}
             </button>
           )
         })}

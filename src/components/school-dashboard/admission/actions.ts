@@ -13,6 +13,7 @@ import { dispatchNotification } from "@/lib/dispatch-notification"
 import { enrollStudentInGradeClasses } from "@/lib/enrollment-sync"
 import { extractGradeNumber } from "@/lib/grade-utils"
 import { createInvoiceFromEnrollment } from "@/components/school-dashboard/finance/invoice/actions"
+import { detectLanguage } from "@/components/translation/util"
 
 import { assertAdmissionPermission } from "./authorization"
 import {
@@ -738,6 +739,12 @@ export async function confirmEnrollment(params: {
                   undefined,
                 emergencyContactRelation:
                   application.guardianRelation || "Parent",
+                // Detect language from the applicant's name
+                lang: detectLanguage(
+                  [application.firstName, application.lastName]
+                    .filter(Boolean)
+                    .join(" ")
+                ),
                 // Application provides all required fields — wizard is complete
                 wizardStep: null,
               },

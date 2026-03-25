@@ -8,6 +8,7 @@ import { useParams } from "next/navigation"
 import { FormHeading, FormLayout } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { useStudentWizard } from "../use-student-wizard"
 import { getStudentAttachments } from "./actions"
@@ -21,6 +22,10 @@ export default function AttachmentsContent() {
   const [isValid, setIsValid] = useState(true)
   const [initialData, setInitialData] = useState<Record<string, string>>()
   const [loaded, setLoaded] = useState(false)
+  const { dictionary } = useDictionary()
+  const t = (dictionary?.school as any)?.students?.attachments as
+    | Record<string, string>
+    | undefined
 
   // Load attachment data (documents come from StudentDocument, not the wizard provider)
   if (!loaded) {
@@ -42,14 +47,17 @@ export default function AttachmentsContent() {
     >
       <FormLayout>
         <FormHeading
-          title="Attachments"
-          description="Upload photo and documents for the student."
+          title={t?.title || "Attachments"}
+          description={
+            t?.description || "Upload photo and documents for the student."
+          }
         />
         <AttachmentsForm
           ref={formRef}
           studentId={studentId}
           initialData={initialData}
           onValidChange={setIsValid}
+          dictionary={t}
         />
       </FormLayout>
     </WizardStep>

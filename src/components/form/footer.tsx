@@ -297,7 +297,7 @@ export function FormFooter({
   return (
     <footer className="bg-background fixed start-0 end-0 bottom-0 px-4 sm:px-6 md:px-12 lg:px-20">
       {/* Progress bars */}
-      <div dir="ltr" className="mx-auto max-w-5xl">
+      <div className="mx-auto max-w-5xl">
         <div
           className="gap-1 sm:gap-2"
           style={{
@@ -316,9 +316,9 @@ export function FormFooter({
       </div>
 
       {/* Controls */}
-      <div className="mx-auto flex max-w-5xl items-center justify-between py-3 sm:py-4 rtl:flex-row-reverse">
-        {/* Left side - Logo, Help, Save */}
-        <div className="flex items-center gap-1 rtl:flex-row-reverse">
+      <div className="mx-auto flex max-w-5xl items-center justify-between py-3 sm:py-4">
+        {/* Start side - Logo, Help, Save */}
+        <div className="flex items-center gap-1">
           {showClose && onClose && (
             <button
               onClick={onClose}
@@ -371,7 +371,7 @@ export function FormFooter({
           {showSaveStatus && (
             <>
               {lastSaved && !isSaving && (
-                <div className="text-muted-foreground hidden items-center gap-1 text-xs sm:flex rtl:flex-row-reverse">
+                <div className="text-muted-foreground hidden items-center gap-1 text-xs sm:flex">
                   <Check className="h-3 w-3 text-green-500" />
                   <span>
                     {(
@@ -390,8 +390,8 @@ export function FormFooter({
           )}
         </div>
 
-        {/* Right side - Back and Next buttons */}
-        <div className="flex items-center gap-2 sm:gap-4 rtl:flex-row-reverse">
+        {/* End side - Back and Next buttons */}
+        <div className="flex items-center gap-2 sm:gap-4">
           <Button
             variant="ghost"
             onClick={handleBack}

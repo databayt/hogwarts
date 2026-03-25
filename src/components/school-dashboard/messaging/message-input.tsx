@@ -84,14 +84,15 @@ export function MessageInput({
   // Auto-reset form on successful send
   useEffect(() => {
     if (state.success && state.messageId) {
+      // Explicitly clear the textarea value before form reset
+      if (textareaRef.current) {
+        textareaRef.current.value = ""
+        textareaRef.current.style.height = "auto"
+      }
       formRef.current?.reset()
       setHasContent(false)
       onCancelReply?.()
       textareaRef.current?.focus()
-
-      if (textareaRef.current) {
-        textareaRef.current.style.height = "auto"
-      }
 
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current)

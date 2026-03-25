@@ -748,6 +748,25 @@ function applyGradeOverrides(translated: string, lang: string): string {
   return overridden.replace(/^الصف /, "")
 }
 
+// Transliterate Latin letters to Arabic in room codes (Google Translate skips these)
+const LATIN_TO_AR: Record<string, string> = {
+  A: "أ",
+  B: "ب",
+  C: "ج",
+  D: "د",
+  E: "هـ",
+  F: "و",
+  G: "ز",
+  H: "ح",
+}
+
+function transliterateRoomCode(code: string, lang: string): string {
+  if (lang !== "ar") return code
+  return code.replace(/^[A-Z]/g, (ch) => LATIN_TO_AR[ch] || ch)
+}
+
+const hasLatin = (s: string) => /[a-zA-Z]/.test(s)
+
 function formatGradeLabel(
   grade: { name?: string | null; gradeNumber?: number | null } | null
 ): string | null {
@@ -875,7 +894,7 @@ export async function getStudents(
             select: {
               name: true,
               classroom: {
-                select: { roomName: true },
+                select: { roomName: true, lang: true },
               },
             },
           },
@@ -911,6 +930,70 @@ export async function getStudents(
       )
     }
 
+    // Translate student names for current locale
+    const nameTranslations = new Map<string, string>()
+    const uniqueNames = new Map<string, string>()
+    for (const s of rows as Array<any>) {
+      const rawName = [s.givenName, s.surname].filter(Boolean).join(" ")
+      // Override lang field when text clearly doesn't match
+      // (e.g. lang="ar" default but name is Latin characters from admission)
+      const textLang = hasLatin(rawName) ? "en" : "ar"
+      const contentLang = textLang !== s.lang ? textLang : s.lang || textLang
+      if (contentLang !== displayLang) {
+        uniqueNames.set(rawName, contentLang)
+      }
+    }
+    if (uniqueNames.size > 0) {
+      await Promise.all(
+        Array.from(uniqueNames.entries()).map(async ([name, contentLang]) => {
+          const translated = await getDisplayText(
+            name,
+            contentLang as "ar" | "en",
+            displayLang as "ar" | "en",
+            schoolId
+          )
+          nameTranslations.set(name, translated)
+        })
+      )
+    }
+
+    // Translate classroom names for current locale
+    const classroomTranslations = new Map<string, string>()
+    const uniqueClassrooms = new Set<string>()
+    for (const s of rows as Array<any>) {
+      const roomName = s.section?.classroom?.roomName
+      if (roomName) {
+        const roomLang = s.section?.classroom?.lang
+        if (
+          roomLang !== displayLang ||
+          (displayLang === "ar" && hasLatin(roomName))
+        ) {
+          uniqueClassrooms.add(roomName)
+        }
+      }
+    }
+    if (uniqueClassrooms.size > 0) {
+      await Promise.all(
+        Array.from(uniqueClassrooms).map(async (name) => {
+          if (/^[A-Z]\d/.test(name)) {
+            classroomTranslations.set(
+              name,
+              transliterateRoomCode(name, displayLang)
+            )
+          } else {
+            const sourceLang = hasLatin(name) ? "en" : "ar"
+            const translated = await getDisplayText(
+              name,
+              sourceLang,
+              displayLang as "ar" | "en",
+              schoolId
+            )
+            classroomTranslations.set(name, translated)
+          }
+        })
+      )
+    }
+
     // Map results
     const mapped = (rows as Array<any>).map((s) => {
       const enGrade = formatGradeLabel(s.academicGrade)
@@ -920,12 +1003,26 @@ export async function getStudents(
           : enGrade
         : null
 
+      const rawName = [s.givenName, s.surname].filter(Boolean).join(" ")
+      const mapTextLang = hasLatin(rawName) ? "en" : "ar"
+      const contentLang =
+        mapTextLang !== s.lang ? mapTextLang : s.lang || mapTextLang
+      const name =
+        contentLang !== displayLang
+          ? nameTranslations.get(rawName) || rawName
+          : rawName
+
+      const rawClassroom = (s.section?.classroom?.roomName as string) || null
+      const classroom = rawClassroom
+        ? classroomTranslations.get(rawClassroom) || rawClassroom
+        : null
+
       return {
         id: s.id as string,
         userId: s.userId as string | null,
-        name: [s.givenName, s.surname].filter(Boolean).join(" "),
+        name,
         studentId: (s.studentId as string | null) || null,
-        classroom: (s.section?.classroom?.roomName as string) || null,
+        classroom,
         gradeName,
         status: deriveStudentDisplayStatus(s),
         createdAt: (s.createdAt as Date).toISOString(),
@@ -1012,6 +1109,10 @@ export async function getStudentsCSV(
         : {}),
     }
 
+    // Determine display language for translation
+    const cookieStore = await cookies()
+    const csvDisplayLang = cookieStore.get("NEXT_LOCALE")?.value || "ar"
+
     // Fetch ALL students matching filters (no pagination for export)
     const studentModel = getModelOrThrow("student")
     const students = await studentModel.findMany({
@@ -1032,27 +1133,102 @@ export async function getStudentsCSV(
       orderBy: [{ givenName: "asc" }, { surname: "asc" }],
     })
 
-    // Transform data for CSV export
-    const exportData = students.map((student: any) => ({
-      studentId: student.id,
-      givenName: student.givenName || "",
-      middleName: student.middleName || "",
-      surname: student.surname || "",
-      fullName: [student.givenName, student.middleName, student.surname]
+    // Translate names for current locale
+    const csvNameTranslations = new Map<string, string>()
+    const csvUniqueNames = new Map<string, string>()
+    for (const s of students as Array<any>) {
+      const rawName = [s.givenName, s.middleName, s.surname]
         .filter(Boolean)
-        .join(" "),
-      dateOfBirth: student.dateOfBirth
-        ? new Date(student.dateOfBirth).toISOString().split("T")[0]
-        : "",
-      gender: student.gender || "",
-      email: student.user?.email || "",
-      enrollmentDate: student.enrollmentDate
-        ? new Date(student.enrollmentDate).toISOString().split("T")[0]
-        : "",
-      status: student.userId ? "Active" : "Inactive",
-      sectionName: student.section?.name || student.academicGrade?.name || "",
-      createdAt: new Date(student.createdAt).toISOString().split("T")[0],
-    }))
+        .join(" ")
+      // Override lang field when text clearly doesn't match
+      const rawTextLang = hasLatin(rawName) ? "en" : "ar"
+      const contentLang =
+        rawTextLang !== s.lang ? rawTextLang : s.lang || rawTextLang
+      if (contentLang !== csvDisplayLang) {
+        csvUniqueNames.set(rawName, contentLang)
+        // Also add individual name parts for translated columns
+        if (s.givenName) {
+          const givenTextLang = hasLatin(s.givenName) ? "en" : "ar"
+          const partLang =
+            givenTextLang !== s.lang ? givenTextLang : s.lang || givenTextLang
+          if (partLang !== csvDisplayLang)
+            csvUniqueNames.set(s.givenName, partLang)
+        }
+        if (s.middleName) {
+          const midTextLang = hasLatin(s.middleName) ? "en" : "ar"
+          const partLang =
+            midTextLang !== s.lang ? midTextLang : s.lang || midTextLang
+          if (partLang !== csvDisplayLang)
+            csvUniqueNames.set(s.middleName, partLang)
+        }
+        if (s.surname) {
+          const surTextLang = hasLatin(s.surname) ? "en" : "ar"
+          const partLang =
+            surTextLang !== s.lang ? surTextLang : s.lang || surTextLang
+          if (partLang !== csvDisplayLang)
+            csvUniqueNames.set(s.surname, partLang)
+        }
+      }
+    }
+    if (csvUniqueNames.size > 0) {
+      await Promise.all(
+        Array.from(csvUniqueNames.entries()).map(
+          async ([name, contentLang]) => {
+            const translated = await getDisplayText(
+              name,
+              contentLang as "ar" | "en",
+              csvDisplayLang as "ar" | "en",
+              schoolId
+            )
+            csvNameTranslations.set(name, translated)
+          }
+        )
+      )
+    }
+
+    // Transform data for CSV export
+    const exportData = students.map((student: any) => {
+      const rawFull = [student.givenName, student.middleName, student.surname]
+        .filter(Boolean)
+        .join(" ")
+      const fullTextLang = hasLatin(rawFull) ? "en" : "ar"
+      const contentLang =
+        fullTextLang !== student.lang
+          ? fullTextLang
+          : student.lang || fullTextLang
+      const needsTranslation = contentLang !== csvDisplayLang
+
+      return {
+        studentId: student.id,
+        givenName: needsTranslation
+          ? csvNameTranslations.get(student.givenName) ||
+            student.givenName ||
+            ""
+          : student.givenName || "",
+        middleName: needsTranslation
+          ? csvNameTranslations.get(student.middleName) ||
+            student.middleName ||
+            ""
+          : student.middleName || "",
+        surname: needsTranslation
+          ? csvNameTranslations.get(student.surname) || student.surname || ""
+          : student.surname || "",
+        fullName: needsTranslation
+          ? csvNameTranslations.get(rawFull) || rawFull
+          : rawFull,
+        dateOfBirth: student.dateOfBirth
+          ? new Date(student.dateOfBirth).toISOString().split("T")[0]
+          : "",
+        gender: student.gender || "",
+        email: student.user?.email || "",
+        enrollmentDate: student.enrollmentDate
+          ? new Date(student.enrollmentDate).toISOString().split("T")[0]
+          : "",
+        status: student.userId ? "Active" : "Inactive",
+        sectionName: student.section?.name || student.academicGrade?.name || "",
+        createdAt: new Date(student.createdAt).toISOString().split("T")[0],
+      }
+    })
 
     // Define CSV columns
     const columns = [
