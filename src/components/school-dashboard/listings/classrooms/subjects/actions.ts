@@ -98,8 +98,8 @@ export async function getSubjectRoomAssignments(
           },
           teacher: {
             select: {
-              givenName: true,
-              surname: true,
+              firstName: true,
+              lastName: true,
             },
           },
         },
@@ -147,7 +147,7 @@ export async function getSubjectRoomAssignments(
             lang,
             schoolId
           ),
-          teacherName: [c.teacher.givenName, c.teacher.surname]
+          teacherName: [c.teacher.firstName, c.teacher.lastName]
             .filter(Boolean)
             .join(" "),
           currentRoomId: c.classroomId,

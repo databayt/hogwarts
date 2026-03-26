@@ -137,7 +137,9 @@
     "create_error": "حدث خطأ أثناء الإنشاء",
     "select_one_user": "الرجاء اختيار مستخدم واحد على الأقل",
     "enter_group_name": "الرجاء إدخال اسم المجموعة",
-    "react_failed": "فشل إضافة التفاعل"
+    "react_failed": "فشل إضافة التفاعل",
+    "no_school_context": "لم يتم العثور على سياق المدرسة",
+    "conversation_start_failed": "فشل بدء المحادثة"
   },
   "types": {
     "direct": "رسالة مباشرة",

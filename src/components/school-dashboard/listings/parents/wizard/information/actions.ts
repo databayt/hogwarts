@@ -14,25 +14,25 @@ export async function getParentInformation(
 ): Promise<ActionResponse<InformationFormData>> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const guardian = await db.guardian.findFirst({
       where: { id: parentId, schoolId },
       select: {
-        givenName: true,
-        surname: true,
+        firstName: true,
+        lastName: true,
         emailAddress: true,
         profilePhotoUrl: true,
       },
     })
 
-    if (!guardian) return { success: false, error: "Guardian not found" }
+    if (!guardian) return actionError(ACTION_ERRORS.PARENT_NOT_FOUND)
 
     return {
       success: true,
       data: {
-        givenName: guardian.givenName,
-        surname: guardian.surname,
+        firstName: guardian.firstName,
+        lastName: guardian.lastName,
         emailAddress: guardian.emailAddress ?? undefined,
         profilePhotoUrl: guardian.profilePhotoUrl ?? undefined,
       },
@@ -51,15 +51,15 @@ export async function updateParentInformation(
 ): Promise<ActionResponse> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const parsed = informationSchema.parse(input)
 
     await db.guardian.updateMany({
       where: { id: parentId, schoolId },
       data: {
-        givenName: parsed.givenName,
-        surname: parsed.surname,
+        firstName: parsed.firstName,
+        lastName: parsed.lastName,
         emailAddress: parsed.emailAddress || null,
         profilePhotoUrl: parsed.profilePhotoUrl ?? null,
       },

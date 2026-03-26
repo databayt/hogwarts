@@ -10,6 +10,7 @@
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 
 import type { WalletActionResult } from "./types"
@@ -25,7 +26,7 @@ export async function createWallet(
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "NOT_AUTHENTICATED" }
+      return actionError(ACTION_ERRORS.PAYMENT_FAILED)
     }
 
     const data = {
@@ -64,7 +65,7 @@ export async function topupWallet(formData: FormData) {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "NOT_AUTHENTICATED" }
+      return actionError(ACTION_ERRORS.PAYMENT_FAILED)
     }
 
     const data = {
@@ -122,7 +123,7 @@ export async function refundWallet(formData: FormData) {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "NOT_AUTHENTICATED" }
+      return actionError(ACTION_ERRORS.PAYMENT_FAILED)
     }
 
     const data = {
@@ -142,11 +143,11 @@ export async function refundWallet(formData: FormData) {
     })
 
     if (!wallet) {
-      return { success: false, error: "NOT_FOUND" }
+      return actionError(ACTION_ERRORS.PAYMENT_FAILED)
     }
 
     if (Number(wallet.balance) < validated.amount) {
-      return { success: false, error: "INSUFFICIENT_BALANCE" }
+      return actionError(ACTION_ERRORS.PAYMENT_FAILED)
     }
 
     const result = await db.$transaction(async (tx) => {
@@ -194,7 +195,7 @@ export async function getWallets(filters?: {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "NOT_AUTHENTICATED" }
+      return actionError(ACTION_ERRORS.PAYMENT_FAILED)
     }
 
     const wallets = await db.wallet.findMany({
@@ -216,6 +217,6 @@ export async function getWallets(filters?: {
     return { success: true, data: wallets }
   } catch (error) {
     console.error("Error fetching wallets:", error)
-    return { success: false, error: "UNKNOWN" }
+    return actionError(ACTION_ERRORS.PAYMENT_FAILED)
   }
 }

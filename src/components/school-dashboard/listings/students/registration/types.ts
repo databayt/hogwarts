@@ -11,9 +11,9 @@ export interface Student {
   studentId?: string
 
   // Personal Information
-  givenName: string
+  firstName: string
   middleName?: string
-  surname: string
+  lastName: string
   dateOfBirth: Date
   gender: string
   bloodGroup?: string
@@ -302,8 +302,8 @@ export interface StudentGuardian {
 export interface Guardian {
   id: string
   schoolId: string
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
   emailAddress?: string
   phoneNumbers?: GuardianPhoneNumber[]
   teacherId?: string

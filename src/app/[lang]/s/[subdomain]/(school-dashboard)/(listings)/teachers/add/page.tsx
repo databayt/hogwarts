@@ -29,8 +29,8 @@ export default async function Page({ params }: Props) {
   const teacher = await db.teacher.create({
     data: {
       schoolId,
-      givenName: "",
-      surname: "",
+      firstName: "",
+      lastName: "",
       emailAddress: draftEmail,
       wizardStep: "attachments",
     },

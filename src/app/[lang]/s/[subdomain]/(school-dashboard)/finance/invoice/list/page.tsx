@@ -4,14 +4,16 @@
 import { SearchParams } from "nuqs/server"
 
 import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { InvoiceContent } from "@/components/school-dashboard/finance/invoice/content"
 
 interface Props {
   searchParams: Promise<SearchParams>
-  params: Promise<{ lang: string; subdomain: string }>
+  params: Promise<{ lang: Locale; subdomain: string }>
 }
 
 export default async function List({ searchParams, params }: Props) {
   const { lang } = await params
+  const dictionary = await getDictionary(lang)
   return <InvoiceContent searchParams={searchParams} lang={lang as Locale} />
 }

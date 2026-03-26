@@ -56,12 +56,12 @@ export function InformationStep({ form, isView }: ParentFormStepProps) {
       <div className="space-y-4">
         <FormField
           control={form.control}
-          name="givenName"
+          name="firstName"
           render={({ field }) => (
             <FormItem>
               <FormControl>
                 <Input
-                  placeholder={d?.givenName || "Given name"}
+                  placeholder={d?.firstName || "First name"}
                   disabled={isView}
                   {...field}
                 />
@@ -73,12 +73,12 @@ export function InformationStep({ form, isView }: ParentFormStepProps) {
 
         <FormField
           control={form.control}
-          name="surname"
+          name="lastName"
           render={({ field }) => (
             <FormItem>
               <FormControl>
                 <Input
-                  placeholder={d?.surname || "Surname"}
+                  placeholder={d?.lastName || "Last name"}
                   disabled={isView}
                   {...field}
                 />

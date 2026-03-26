@@ -14,6 +14,7 @@ import { submitApplicationAction } from "../submit-action"
 import type { SubmitActionResult } from "../submit-action"
 import ApplicationSuccessModal from "../success-modal"
 import type { AcademicStepData } from "../types"
+import { getApplyErrorDict, getApplyStepDict } from "../utils"
 import { useApplyValidation } from "../validation-context"
 import { ACADEMIC_STEP_CONFIG } from "./config"
 import { AcademicForm } from "./form"
@@ -26,8 +27,7 @@ interface Props {
 export default function AcademicContent({ dictionary }: Props) {
   const params = useParams()
   const router = useRouter()
-  const { locale } = useLocale()
-  const isRTL = locale === "ar"
+  const { locale, isRTL } = useLocale()
   const subdomain = params.subdomain as string
   const id = params.id as string
 
@@ -44,6 +44,8 @@ export default function AcademicContent({ dictionary }: Props) {
   )
 
   const initialData = getStepData("academic")
+  const stepDict = getApplyStepDict(dictionary, "academic")
+  const errorDict = getApplyErrorDict(dictionary)
 
   const onNext = useCallback(async () => {
     if (!academicFormRef.current) return
@@ -68,11 +70,7 @@ export default function AcademicContent({ dictionary }: Props) {
         (!guardian?.fatherName && !guardian?.motherName) ||
         !academic?.applyingForClass
       ) {
-        throw new Error(
-          isRTL
-            ? "يرجى إكمال جميع الخطوات المطلوبة"
-            : "Please complete all required steps"
-        )
+        throw new Error(errorDict.completeAllSteps)
       }
 
       // Ensure session is saved before submitting (handles race with auto-save)
@@ -80,9 +78,7 @@ export default function AcademicContent({ dictionary }: Props) {
       if (!tokenToUse) {
         tokenToUse = await saveSession()
         if (!tokenToUse) {
-          throw new Error(
-            isRTL ? "فشل في حفظ الجلسة" : "Failed to save session"
-          )
+          throw new Error(errorDict.failedToSaveSession)
         }
       }
 
@@ -129,7 +125,7 @@ export default function AcademicContent({ dictionary }: Props) {
       )
 
       if (!result.success || !result.data) {
-        throw new Error(result.error || "Failed to submit application")
+        throw new Error(result.error || errorDict.failedToSubmit)
       }
 
       // Route based on payment requirement
@@ -143,10 +139,12 @@ export default function AcademicContent({ dictionary }: Props) {
         setIsSubmitting(false)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to submit")
+      setError(
+        err instanceof Error ? err.message : errorDict.failedToSubmit || ""
+      )
       setIsSubmitting(false)
     }
-  }, [subdomain, id, isRTL, locale, router, saveSession])
+  }, [subdomain, id, errorDict, locale, router, saveSession])
 
   useEffect(() => {
     const academicData = session.formData.academic
@@ -169,18 +167,15 @@ export default function AcademicContent({ dictionary }: Props) {
     onNext,
   ])
 
-  const dict = ((dictionary as Record<string, Record<string, string>> | null)
-    ?.apply?.academic ?? {}) as Record<string, string>
-
   const applicantEmail = session.formData.contact?.email
 
   return (
     <>
       <FormLayout>
         <FormHeading
-          title={dict.title || ACADEMIC_STEP_CONFIG.label(isRTL)}
+          title={stepDict.title || ACADEMIC_STEP_CONFIG.label(isRTL)}
           description={
-            dict.description || ACADEMIC_STEP_CONFIG.description(isRTL)
+            stepDict.description || ACADEMIC_STEP_CONFIG.description(isRTL)
           }
         />
         <div className="space-y-6">

@@ -20,8 +20,8 @@ export type PayrollRunWithRelations = PayrollRun & {
 export type SalarySlipWithRelations = SalarySlip & {
   teacher: {
     id: string
-    givenName: string
-    surname: string
+    firstName: string
+    lastName: string
     employeeId: string | null
   }
   payrollRun: PayrollRun

@@ -8,8 +8,9 @@ import { getTeacherForWizard } from "./actions"
 export interface TeacherWizardData {
   id: string
   schoolId: string
-  givenName: string
-  surname: string
+  nameFormat: string
+  firstName: string
+  lastName: string
   gender: string | null
   nationality: string | null
   emailAddress: string

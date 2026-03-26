@@ -27,19 +27,19 @@ Students enter the system through **six entry points**, each unified under a sin
 
 The primary creation path is a **7-step wizard** that creates a draft record on entry and progressively fills it in. Each step saves independently, so the student can be resumed at any point.
 
-A **"Skip & Create"** button appears as soon as the admin fills the critical fields (givenName + surname on the personal step). Clicking it saves the current step, marks the wizard complete, and redirects to the students list immediately. The student can fill in remaining details later via their profile page.
+A **"Skip & Create"** button appears as soon as the admin fills the critical fields (firstName + lastName on the personal step). Clicking it saves the current step, marks the wizard complete, and redirects to the students list immediately. The student can fill in remaining details later via their profile page.
 
 ### Steps
 
-| Step                  | Route Segment         | Fields                                                                                                                      | Required?          |
-| --------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------ |
-| 1. Photo              | `/photo`              | profilePhotoUrl                                                                                                             | None               |
-| 2. Personal           | `/personal`           | givenName, middleName, surname, dateOfBirth, gender, nationality                                                            | givenName, surname |
-| 3. Enrollment         | `/enrollment`         | enrollmentDate, admissionNumber, status, studentType, academicGradeId, sectionId                                            | None (defaults)    |
-| 4. Contact            | `/contact`            | email, mobileNumber, alternatePhone, emergencyContactName, emergencyContactPhone, emergencyContactRelation                  | None               |
-| 5. Location           | `/location`           | currentAddress, city, state, postalCode, country                                                                            | None               |
-| 6. Health             | `/health`             | medicalConditions, allergies, medicationRequired, bloodGroup, doctorName, doctorContact, insuranceProvider, insuranceNumber | None               |
-| 7. Previous Education | `/previous-education` | previousSchoolName, previousSchoolAddress, previousGrade, transferCertificateNo, transferDate, previousAcademicRecord       | None               |
+| Step                  | Route Segment         | Fields                                                                                                                      | Required?           |
+| --------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| 1. Photo              | `/photo`              | profilePhotoUrl                                                                                                             | None                |
+| 2. Personal           | `/personal`           | firstName, middleName, lastName, dateOfBirth, gender, nationality                                                           | firstName, lastName |
+| 3. Enrollment         | `/enrollment`         | enrollmentDate, admissionNumber, status, studentType, academicGradeId, sectionId                                            | None (defaults)     |
+| 4. Contact            | `/contact`            | email, mobileNumber, alternatePhone, emergencyContactName, emergencyContactPhone, emergencyContactRelation                  | None                |
+| 5. Location           | `/location`           | currentAddress, city, state, postalCode, country                                                                            | None                |
+| 6. Health             | `/health`             | medicalConditions, allergies, medicationRequired, bloodGroup, doctorName, doctorContact, insuranceProvider, insuranceNumber | None                |
+| 7. Previous Education | `/previous-education` | previousSchoolName, previousSchoolAddress, previousGrade, transferCertificateNo, transferDate, previousAcademicRecord       | None                |
 
 ### Step Groups
 
@@ -70,10 +70,10 @@ src/app/[lang]/s/[subdomain]/(school-dashboard)/(listings)/
 
 ```
 1. Admin clicks "Add Student"
-2. Draft created: { givenName: "", dateOfBirth: new Date(), wizardStep: "photo" }
+2. Draft created: { firstName: "", dateOfBirth: new Date(), wizardStep: "photo" }
 3. Each step saves fields + advances wizardStep
 4. Two completion paths:
-   a. FAST: Fill givenName + surname → click "Skip & Create" → wizardStep: null (complete)
+   a. FAST: Fill firstName + lastName → click "Skip & Create" → wizardStep: null (complete)
    b. FULL: Progress through all 7 steps → last step sets wizardStep: null (complete)
 5. Complete students appear in the main list (wizardStep: null filter)
 6. Abandoned drafts can be deleted via deleteDraftStudent()
@@ -101,7 +101,7 @@ src/components/school-dashboard/listings/students/
     ├── config.ts         # Wizard step config (order, labels, routes, groups)
     ├── use-student-wizard.ts  # Client hook for wizard state
     ├── photo/            # Step 1: form.tsx, validation.ts, actions.ts
-    ├── personal/         # Step 2: form.tsx, validation.ts, actions.ts (required: givenName, surname)
+    ├── personal/         # Step 2: form.tsx, validation.ts, actions.ts (required: firstName, lastName)
     ├── enrollment/       # Step 3: form.tsx, validation.ts, actions.ts
     ├── contact/          # Step 4: form.tsx, validation.ts, actions.ts (includes emergency tab)
     ├── location/         # Step 5: form.tsx, validation.ts, actions.ts (Mapbox or manual)
@@ -138,7 +138,7 @@ export const studentCreateSchema = personalSchema
 
 ### Skip & Create
 
-Only the **personal** step is required (`requiredSteps: ["personal"]`). Once `givenName` and `surname` are filled, a "Skip & Create" button appears. Clicking it saves the form, calls `completeStudentWizard()`, and redirects to `/students`. All other steps are optional and can be filled later.
+Only the **personal** step is required (`requiredSteps: ["personal"]`). Once `firstName` and `lastName` are filled, a "Skip & Create" button appears. Clicking it saves the form, calls `completeStudentWizard()`, and redirects to `/students`. All other steps are optional and can be filled later.
 
 ---
 
@@ -157,8 +157,8 @@ The full 7-step wizard. Creates a draft record, fills fields progressively, and 
 await tx.student.createMany({
   data: chunk.map((r) => ({
     schoolId,
-    givenName: parts[0],
-    surname: parts.slice(1).join(" "),
+    firstName: parts[0],
+    lastName: parts.slice(1).join(" "),
     email: r.validated.email,
     wizardStep: "emergency", // Marked incomplete — CSV covers personal + contact only
   })),
@@ -184,8 +184,8 @@ When an admin approves an application via `confirmEnrollment()`:
 const student = await tx.student.create({
   data: {
     schoolId,
-    givenName: application.firstName,
-    surname: application.lastName,
+    firstName: application.firstName,
+    lastName: application.lastName,
     dateOfBirth: application.dateOfBirth,
     gender: application.gender,
     email: application.email,
@@ -225,7 +225,7 @@ The student detail view has an "Edit" button that links to `/{lang}/students/add
 
 ### Skip & Create (Fast Path)
 
-When an admin only needs to register a student quickly, the **"Skip & Create"** button appears on the personal step as soon as `givenName` and `surname` are filled. Clicking it:
+When an admin only needs to register a student quickly, the **"Skip & Create"** button appears on the personal step as soon as `firstName` and `lastName` are filled. Clicking it:
 
 1. Saves the current step data
 2. Calls `completeStudentWizard()` → sets `wizardStep: null`

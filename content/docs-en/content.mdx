@@ -696,8 +696,8 @@ const where: any = {
   ...(sp.name
     ? {
         OR: [
-          { givenName: { contains: sp.name, mode: "insensitive" } },
-          { surname: { contains: sp.name, mode: "insensitive" } },
+          { firstName: { contains: sp.name, mode: "insensitive" } },
+          { lastName: { contains: sp.name, mode: "insensitive" } },
           { emailAddress: { contains: sp.name, mode: "insensitive" } },
         ],
       }

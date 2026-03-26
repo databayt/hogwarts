@@ -40,8 +40,8 @@ export function ParentCreateForm({ onSuccess }: ParentCreateFormProps) {
   const form = useForm<z.infer<typeof parentCreateSchema>>({
     resolver: zodResolver(parentCreateSchema),
     defaultValues: {
-      givenName: "",
-      surname: "",
+      firstName: "",
+      lastName: "",
       emailAddress: "",
       userId: "",
     },
@@ -61,8 +61,8 @@ export function ParentCreateForm({ onSuccess }: ParentCreateFormProps) {
       if (!res.success || !res.data) return
       const p = res.data as any
       form.reset({
-        givenName: p.givenName ?? "",
-        surname: p.surname ?? "",
+        firstName: p.firstName ?? "",
+        lastName: p.lastName ?? "",
         emailAddress: p.emailAddress ?? "",
         userId: p.userId ?? "",
       })
@@ -107,7 +107,7 @@ export function ParentCreateForm({ onSuccess }: ParentCreateFormProps) {
 
   const handleNext = async () => {
     if (currentStep === 1) {
-      const step1Fields = ["givenName", "surname"] as const
+      const step1Fields = ["firstName", "lastName"] as const
       const step1Valid = await form.trigger(step1Fields)
       if (step1Valid) {
         setCurrentStep(2)
@@ -122,7 +122,7 @@ export function ParentCreateForm({ onSuccess }: ParentCreateFormProps) {
       // For editing, save current step data
       const currentStepFields =
         currentStep === 1
-          ? (["givenName", "surname"] as const)
+          ? (["firstName", "lastName"] as const)
           : (["emailAddress", "userId"] as const)
 
       const stepValid = await form.trigger(currentStepFields)

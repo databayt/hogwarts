@@ -5,6 +5,7 @@ import { auth } from "@/auth"
 import type { Prisma } from "@prisma/client"
 import { z } from "zod"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -35,12 +36,12 @@ export async function getStudentProfile(studentId?: string) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false as const, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false as const, error: "School context not found" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Use provided ID or current user's ID
@@ -97,13 +98,13 @@ export async function getStudentProfile(studentId?: string) {
     })
 
     if (!student) {
-      return { success: false as const, error: "Student not found" }
+      return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
     }
 
     return { success: true as const, data: student }
   } catch (error) {
     console.error("Error fetching student profile:", error)
-    return { success: false as const, error: "Failed to fetch student profile" }
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }
 
@@ -111,12 +112,12 @@ export async function getTeacherProfile(teacherId?: string) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false as const, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false as const, error: "School context not found" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const targetId = teacherId || session.user.id
@@ -151,13 +152,13 @@ export async function getTeacherProfile(teacherId?: string) {
     })
 
     if (!teacher) {
-      return { success: false as const, error: "Teacher not found" }
+      return actionError(ACTION_ERRORS.TEACHER_NOT_FOUND)
     }
 
     return { success: true as const, data: teacher }
   } catch (error) {
     console.error("Error fetching teacher profile:", error)
-    return { success: false as const, error: "Failed to fetch teacher profile" }
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }
 
@@ -165,12 +166,12 @@ export async function getParentProfile(parentId?: string) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false as const, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false as const, error: "School context not found" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const targetId = parentId || session.user.id
@@ -209,13 +210,13 @@ export async function getParentProfile(parentId?: string) {
     })
 
     if (!parent) {
-      return { success: false as const, error: "Parent not found" }
+      return actionError(ACTION_ERRORS.PARENT_NOT_FOUND)
     }
 
     return { success: true as const, data: parent }
   } catch (error) {
     console.error("Error fetching parent profile:", error)
-    return { success: false as const, error: "Failed to fetch parent profile" }
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }
 
@@ -223,12 +224,12 @@ export async function getStaffProfile(staffId?: string) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false as const, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false as const, error: "School context not found" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const targetId = staffId || session.user.id
@@ -245,13 +246,13 @@ export async function getStaffProfile(staffId?: string) {
     })
 
     if (!user) {
-      return { success: false as const, error: "Staff not found" }
+      return actionError(ACTION_ERRORS.STAFF_NOT_FOUND)
     }
 
     return { success: true as const, data: user }
   } catch (error) {
     console.error("Error fetching staff profile:", error)
-    return { success: false as const, error: "Failed to fetch staff profile" }
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }
 
@@ -265,7 +266,7 @@ export async function updateProfile(
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false as const, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const parsed = updateProfileSchema.parse(input)
@@ -283,9 +284,9 @@ export async function updateProfile(
   } catch (error) {
     console.error("Error updating profile:", error)
     if (error instanceof z.ZodError) {
-      return { success: false as const, error: "Invalid input data" }
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
-    return { success: false as const, error: "Failed to update profile" }
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
   }
 }
 
@@ -293,7 +294,7 @@ export async function updateProfileBio(input: z.infer<typeof updateBioSchema>) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false as const, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const parsed = updateBioSchema.parse(input)
@@ -310,9 +311,9 @@ export async function updateProfileBio(input: z.infer<typeof updateBioSchema>) {
   } catch (error) {
     console.error("Error updating bio:", error)
     if (error instanceof z.ZodError) {
-      return { success: false as const, error: "Invalid input data" }
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
-    return { success: false as const, error: "Failed to update bio" }
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
   }
 }
 
@@ -322,7 +323,7 @@ export async function updateProfileSettings(
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false as const, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const parsed = updateSettingsSchema.parse(input)
@@ -344,9 +345,9 @@ export async function updateProfileSettings(
   } catch (error) {
     console.error("Error updating settings:", error)
     if (error instanceof z.ZodError) {
-      return { success: false as const, error: "Invalid input data" }
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
-    return { success: false as const, error: "Failed to update settings" }
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
   }
 }
 
@@ -354,7 +355,7 @@ export async function uploadProfileAvatar(formData: FormData) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false as const, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     // This is a placeholder for file upload logic
@@ -366,7 +367,7 @@ export async function uploadProfileAvatar(formData: FormData) {
 
     const file = formData.get("avatar") as File
     if (!file) {
-      return { success: false as const, error: "No file provided" }
+      return actionError(ACTION_ERRORS.UNKNOWN)
     }
 
     // Placeholder for upload logic
@@ -384,7 +385,7 @@ export async function uploadProfileAvatar(formData: FormData) {
     }
   } catch (error) {
     console.error("Error uploading avatar:", error)
-    return { success: false as const, error: "Failed to upload avatar" }
+    return actionError(ACTION_ERRORS.UPLOAD_FAILED)
   }
 }
 
@@ -396,12 +397,12 @@ export async function getProfileBasicData(userId: string, lang?: string) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false as const, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false as const, error: "School context not found" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Fetch user with role-specific relations
@@ -424,8 +425,8 @@ export async function getProfileBasicData(userId: string, lang?: string) {
         student: {
           select: {
             id: true,
-            givenName: true,
-            surname: true,
+            firstName: true,
+            lastName: true,
             profilePhotoUrl: true,
             grNumber: true,
             city: true,
@@ -448,8 +449,8 @@ export async function getProfileBasicData(userId: string, lang?: string) {
         teacher: {
           select: {
             id: true,
-            givenName: true,
-            surname: true,
+            firstName: true,
+            lastName: true,
             profilePhotoUrl: true,
             employeeId: true,
             emailAddress: true,
@@ -459,16 +460,16 @@ export async function getProfileBasicData(userId: string, lang?: string) {
         guardian: {
           select: {
             id: true,
-            givenName: true,
-            surname: true,
+            firstName: true,
+            lastName: true,
             emailAddress: true,
           },
         },
         staffMember: {
           select: {
             id: true,
-            givenName: true,
-            surname: true,
+            firstName: true,
+            lastName: true,
             profilePhotoUrl: true,
             employeeId: true,
             emailAddress: true,
@@ -485,8 +486,8 @@ export async function getProfileBasicData(userId: string, lang?: string) {
         where: { id: userId, schoolId },
         select: {
           id: true,
-          givenName: true,
-          surname: true,
+          firstName: true,
+          lastName: true,
           profilePhotoUrl: true,
           grNumber: true,
           city: true,
@@ -498,8 +499,8 @@ export async function getProfileBasicData(userId: string, lang?: string) {
       if (student) {
         const data: Record<string, unknown> = {
           id: student.id,
-          givenName: student.givenName || "",
-          surname: student.surname || "",
+          firstName: student.firstName || "",
+          lastName: student.lastName || "",
           profilePhotoUrl: student.profilePhotoUrl || null,
           emailAddress: student.email || "",
           createdAt: student.createdAt.toISOString(),
@@ -510,14 +511,14 @@ export async function getProfileBasicData(userId: string, lang?: string) {
           role: "STUDENT",
         }
 
-        if (lang && lang !== "ar" && schoolId && data.givenName) {
+        if (lang && lang !== "ar" && schoolId && data.firstName) {
           const translated = await getDisplayText(
-            data.givenName as string,
+            data.firstName as string,
             "ar",
             lang as "en",
             schoolId
           )
-          if (translated) data.givenName = translated
+          if (translated) data.firstName = translated
         }
 
         return { success: true as const, data }
@@ -528,8 +529,8 @@ export async function getProfileBasicData(userId: string, lang?: string) {
         where: { id: userId, schoolId },
         select: {
           id: true,
-          givenName: true,
-          surname: true,
+          firstName: true,
+          lastName: true,
           profilePhotoUrl: true,
           employeeId: true,
           emailAddress: true,
@@ -540,8 +541,8 @@ export async function getProfileBasicData(userId: string, lang?: string) {
       if (teacher) {
         const data: Record<string, unknown> = {
           id: teacher.id,
-          givenName: teacher.givenName || "",
-          surname: teacher.surname || "",
+          firstName: teacher.firstName || "",
+          lastName: teacher.lastName || "",
           profilePhotoUrl: teacher.profilePhotoUrl || null,
           emailAddress: teacher.emailAddress || "",
           createdAt: teacher.createdAt.toISOString(),
@@ -551,20 +552,20 @@ export async function getProfileBasicData(userId: string, lang?: string) {
           role: "TEACHER",
         }
 
-        if (lang && lang !== "ar" && schoolId && data.givenName) {
+        if (lang && lang !== "ar" && schoolId && data.firstName) {
           const translated = await getDisplayText(
-            data.givenName as string,
+            data.firstName as string,
             "ar",
             lang as "en",
             schoolId
           )
-          if (translated) data.givenName = translated
+          if (translated) data.firstName = translated
         }
 
         return { success: true as const, data }
       }
 
-      return { success: false as const, error: "User not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Build flat data object matching what sidebar's getRoleConfig expects
@@ -572,8 +573,8 @@ export async function getProfileBasicData(userId: string, lang?: string) {
       user.student || user.teacher || user.guardian || user.staffMember
     const data: Record<string, unknown> = {
       id: roleRecord?.id || user.id,
-      givenName: roleRecord?.givenName || user.username || "",
-      surname: roleRecord?.surname || "",
+      firstName: roleRecord?.firstName || user.username || "",
+      lastName: roleRecord?.lastName || "",
       profilePhotoUrl:
         (user.student?.profilePhotoUrl ??
           user.teacher?.profilePhotoUrl ??
@@ -610,9 +611,9 @@ export async function getProfileBasicData(userId: string, lang?: string) {
     const displayLang = lang || "ar"
     if (displayLang !== "ar" && schoolId) {
       const [translatedName, translatedBio] = await Promise.all([
-        data.givenName
+        data.firstName
           ? getDisplayText(
-              data.givenName as string,
+              data.firstName as string,
               "ar",
               displayLang as "en",
               schoolId
@@ -627,14 +628,14 @@ export async function getProfileBasicData(userId: string, lang?: string) {
             )
           : Promise.resolve(null),
       ])
-      if (translatedName) data.givenName = translatedName
+      if (translatedName) data.firstName = translatedName
       if (translatedBio) data.bio = translatedBio
     }
 
     return { success: true as const, data }
   } catch (error) {
     console.error("Error fetching profile basic data:", error)
-    return { success: false as const, error: "Failed to fetch profile data" }
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }
 
@@ -648,7 +649,7 @@ export async function updateGitHubProfile(
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false as const, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const parsed = updateGitHubProfileSchema.parse(input)
@@ -674,9 +675,9 @@ export async function updateGitHubProfile(
   } catch (error) {
     console.error("Error updating GitHub profile:", error)
     if (error instanceof z.ZodError) {
-      return { success: false as const, error: "Invalid input data" }
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
-    return { success: false as const, error: "Failed to update profile" }
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
   }
 }
 
@@ -688,12 +689,12 @@ export async function getPinnedItems(userId?: string) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false as const, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false as const, error: "School context not found" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const targetUserId = userId || session.user.id
@@ -711,7 +712,7 @@ export async function getPinnedItems(userId?: string) {
     return { success: true as const, data: pinnedItems }
   } catch (error) {
     console.error("Error fetching pinned items:", error)
-    return { success: false as const, error: "Failed to fetch pinned items" }
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }
 
@@ -721,12 +722,12 @@ export async function updatePinnedItems(
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false as const, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false as const, error: "School context not found" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Validate max 6 pinned items
@@ -768,9 +769,9 @@ export async function updatePinnedItems(
   } catch (error) {
     console.error("Error updating pinned items:", error)
     if (error instanceof z.ZodError) {
-      return { success: false as const, error: "Invalid input data" }
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
-    return { success: false as const, error: "Failed to update pinned items" }
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
   }
 }
 
@@ -1151,19 +1152,19 @@ export async function getContributionData(
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "School context not found" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const userId = params.userId || session.user.id
     const year = params.year || new Date().getFullYear()
 
     if (year < 2020 || year > new Date().getFullYear() + 1) {
-      return { success: false, error: "Invalid year parameter" }
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
 
     const user = await db.user.findUnique({
@@ -1172,12 +1173,12 @@ export async function getContributionData(
     })
 
     if (!user) {
-      return { success: false, error: "User not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     const role = mapUserRoleToProfileRole(user.role)
     if (!role) {
-      return { success: false, error: "Unsupported user role" }
+      return actionError(ACTION_ERRORS.UNKNOWN)
     }
 
     const data = await getCachedContributionData(userId, schoolId, year, role)
@@ -1228,12 +1229,12 @@ export async function getRecentActivity(userId?: string, limit = 20) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false as const, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false as const, error: "School context not found" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const targetUserId = userId || session.user.id
@@ -1250,7 +1251,7 @@ export async function getRecentActivity(userId?: string, limit = 20) {
     return { success: true as const, data: activities }
   } catch (error) {
     console.error("Error fetching recent activity:", error)
-    return { success: false as const, error: "Failed to fetch recent activity" }
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }
 
@@ -1283,12 +1284,12 @@ export async function logUserActivity(input: {
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false as const, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false as const, error: "School context not found" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     await db.userActivity.create({
@@ -1305,7 +1306,7 @@ export async function logUserActivity(input: {
     return { success: true as const }
   } catch (error) {
     console.error("Error logging activity:", error)
-    return { success: false as const, error: "Failed to log activity" }
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }
 
@@ -1317,12 +1318,12 @@ export async function getUserProfileWithGitHubFields(userId?: string) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false as const, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false as const, error: "School context not found" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const targetUserId = userId || session.user.id
@@ -1349,9 +1350,9 @@ export async function getUserProfileWithGitHubFields(userId?: string) {
         student: {
           select: {
             id: true,
-            givenName: true,
+            firstName: true,
             middleName: true,
-            surname: true,
+            lastName: true,
             profilePhotoUrl: true,
             grNumber: true,
             city: true,
@@ -1361,8 +1362,8 @@ export async function getUserProfileWithGitHubFields(userId?: string) {
         teacher: {
           select: {
             id: true,
-            givenName: true,
-            surname: true,
+            firstName: true,
+            lastName: true,
             profilePhotoUrl: true,
             employeeId: true,
             emailAddress: true,
@@ -1372,8 +1373,8 @@ export async function getUserProfileWithGitHubFields(userId?: string) {
         guardian: {
           select: {
             id: true,
-            givenName: true,
-            surname: true,
+            firstName: true,
+            lastName: true,
             emailAddress: true,
           },
         },
@@ -1392,7 +1393,7 @@ export async function getUserProfileWithGitHubFields(userId?: string) {
     })
 
     if (!user) {
-      return { success: false as const, error: "User not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Get name based on role
@@ -1400,15 +1401,15 @@ export async function getUserProfileWithGitHubFields(userId?: string) {
     let profilePhoto = user.image
     if (user.student) {
       displayName =
-        `${user.student.givenName || ""} ${user.student.surname || ""}`.trim()
+        `${user.student.firstName || ""} ${user.student.lastName || ""}`.trim()
       profilePhoto = user.student.profilePhotoUrl || user.image
     } else if (user.teacher) {
       displayName =
-        `${user.teacher.givenName || ""} ${user.teacher.surname || ""}`.trim()
+        `${user.teacher.firstName || ""} ${user.teacher.lastName || ""}`.trim()
       profilePhoto = user.teacher.profilePhotoUrl || user.image
     } else if (user.guardian) {
       displayName =
-        `${user.guardian.givenName || ""} ${user.guardian.surname || ""}`.trim()
+        `${user.guardian.firstName || ""} ${user.guardian.lastName || ""}`.trim()
     }
 
     return {
@@ -1422,6 +1423,6 @@ export async function getUserProfileWithGitHubFields(userId?: string) {
     }
   } catch (error) {
     console.error("Error fetching user profile:", error)
-    return { success: false as const, error: "Failed to fetch user profile" }
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }

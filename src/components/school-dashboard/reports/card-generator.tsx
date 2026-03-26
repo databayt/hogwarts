@@ -77,8 +77,8 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface Student {
   id: string
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
   studentId: string
   profileImageUrl?: string
   class: {
@@ -240,7 +240,7 @@ export function ReportCardGenerator({
       const query = searchQuery.toLowerCase()
       filtered = filtered.filter(
         (rc) =>
-          `${rc.student.givenName} ${rc.student.surname}`
+          `${rc.student.firstName} ${rc.student.lastName}`
             .toLowerCase()
             .includes(query) ||
           rc.student.studentId.toLowerCase().includes(query)
@@ -381,7 +381,7 @@ export function ReportCardGenerator({
           <div className="flex justify-between">
             <span className="font-medium">Student Name:</span>
             <span>
-              {reportCard.student.givenName} {reportCard.student.surname}
+              {reportCard.student.firstName} {reportCard.student.lastName}
             </span>
           </div>
           <div className="flex justify-between">
@@ -779,14 +779,14 @@ export function ReportCardGenerator({
                       <Avatar className="h-8 w-8">
                         <AvatarImage src={reportCard.student.profileImageUrl} />
                         <AvatarFallback>
-                          {reportCard.student.givenName[0]}
-                          {reportCard.student.surname[0]}
+                          {reportCard.student.firstName[0]}
+                          {reportCard.student.lastName[0]}
                         </AvatarFallback>
                       </Avatar>
                       <div>
                         <p className="font-medium">
-                          {reportCard.student.givenName}{" "}
-                          {reportCard.student.surname}
+                          {reportCard.student.firstName}{" "}
+                          {reportCard.student.lastName}
                         </p>
                         <p className="text-muted-foreground text-xs">
                           {reportCard.student.studentId}

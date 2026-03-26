@@ -123,8 +123,8 @@ function TeachersTableInner({
       }
       const rows = result.data.rows.map((r: any) => ({
         ...r,
-        givenName: r.givenName || r.name?.split(" ")[0] || "",
-        surname: r.surname || r.name?.split(" ").slice(1).join(" ") || "",
+        firstName: r.firstName || r.name?.split(" ")[0] || "",
+        lastName: r.lastName || r.name?.split(" ").slice(1).join(" ") || "",
         phone: r.phone || null,
         department: r.department || null,
         departmentId: r.departmentId || null,

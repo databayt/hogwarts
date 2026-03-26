@@ -466,8 +466,8 @@ export async function getActiveInterventions(input?: {
         student: {
           select: {
             id: true,
-            givenName: true,
-            surname: true,
+            firstName: true,
+            lastName: true,
             studentClasses: {
               include: {
                 class: { select: { name: true } },
@@ -521,7 +521,7 @@ export async function getActiveInterventions(input?: {
           return {
             id: intervention.id,
             studentId: intervention.studentId,
-            studentName: `${intervention.student.givenName} ${intervention.student.surname}`,
+            studentName: `${intervention.student.firstName} ${intervention.student.lastName}`,
             className:
               intervention.student.studentClasses[0]?.class.name || null,
             type: intervention.type,
@@ -641,8 +641,8 @@ export async function getAllInterventions(input?: {
           {
             student: {
               OR: [
-                { givenName: { contains: input.search, mode: "insensitive" } },
-                { surname: { contains: input.search, mode: "insensitive" } },
+                { firstName: { contains: input.search, mode: "insensitive" } },
+                { lastName: { contains: input.search, mode: "insensitive" } },
               ],
             },
           },
@@ -659,8 +659,8 @@ export async function getAllInterventions(input?: {
         student: {
           select: {
             id: true,
-            givenName: true,
-            surname: true,
+            firstName: true,
+            lastName: true,
             studentClasses: {
               include: {
                 class: { select: { name: true } },
@@ -715,7 +715,7 @@ export async function getAllInterventions(input?: {
           return {
             id: intervention.id,
             studentId: intervention.studentId,
-            studentName: `${intervention.student.givenName} ${intervention.student.surname}`,
+            studentName: `${intervention.student.firstName} ${intervention.student.lastName}`,
             className:
               intervention.student.studentClasses[0]?.class.name || null,
             type: intervention.type,

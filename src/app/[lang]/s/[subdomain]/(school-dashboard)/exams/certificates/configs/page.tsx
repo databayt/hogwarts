@@ -14,6 +14,7 @@ import { Plus } from "lucide-react"
 import { db } from "@/lib/db"
 import { Button } from "@/components/ui/button"
 import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { CertificateConfigList } from "@/components/school-dashboard/exams/certificates/config-list"
 
 interface ConfigsPageProps {
@@ -25,6 +26,7 @@ interface ConfigsPageProps {
 
 export default async function ConfigsPage({ params }: ConfigsPageProps) {
   const { lang } = await params
+  const dictionary = await getDictionary(lang)
   const session = await auth()
 
   if (["STUDENT", "GUARDIAN"].includes(session?.user?.role || "")) {

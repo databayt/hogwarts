@@ -209,13 +209,13 @@ const EMAIL_DOMAINS = ["gmail.com", "yahoo.com", "hotmail.com", "outlook.com"]
  * Generate personal email
  */
 export function generatePersonalEmail(
-  givenName: string,
-  surname: string,
+  firstName: string,
+  lastName: string,
   index: number
 ): string {
   const domain = EMAIL_DOMAINS[index % EMAIL_DOMAINS.length]
-  const cleanGivenName = givenName.toLowerCase().replace(/[^a-z]/g, "")
-  const cleanSurname = surname.toLowerCase().replace(/[^a-z]/g, "")
+  const cleanGivenName = firstName.toLowerCase().replace(/[^a-z]/g, "")
+  const cleanSurname = lastName.toLowerCase().replace(/[^a-z]/g, "")
   return `${cleanGivenName}-${cleanSurname}${index > 0 ? index : ""}@${domain}`
 }
 

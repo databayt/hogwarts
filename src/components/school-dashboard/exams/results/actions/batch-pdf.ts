@@ -276,9 +276,9 @@ async function processBatchPDFGeneration(
             select: {
               id: true,
               studentId: true,
-              givenName: true,
+              firstName: true,
               middleName: true,
-              surname: true,
+              lastName: true,
             },
           },
         },
@@ -295,9 +295,9 @@ async function processBatchPDFGeneration(
         continue
       }
 
-      const studentName = `${examResult.student.givenName} ${
+      const studentName = `${examResult.student.firstName} ${
         examResult.student.middleName || ""
-      } ${examResult.student.surname}`.trim()
+      } ${examResult.student.lastName}`.trim()
 
       // Find grade boundary for GPA
       const boundary = boundaries?.find(
@@ -518,9 +518,9 @@ export async function generateBatchReportCards(
       select: {
         id: true,
         studentId: true,
-        givenName: true,
+        firstName: true,
         middleName: true,
-        surname: true,
+        lastName: true,
       },
     })
 
@@ -644,8 +644,8 @@ async function processReportCardGeneration(
         })
       }
 
-      const studentName = `${student.givenName} ${student.middleName || ""} ${
-        student.surname
+      const studentName = `${student.firstName} ${student.middleName || ""} ${
+        student.lastName
       }`.trim()
 
       // Generate report card PDF (mock)
@@ -668,7 +668,7 @@ async function processReportCardGeneration(
     } catch (error) {
       result.files.push({
         studentId: student.id,
-        studentName: `${student.givenName} ${student.surname}`,
+        studentName: `${student.firstName} ${student.lastName}`,
         filename: "",
         error: `Failed: ${error}`,
       })

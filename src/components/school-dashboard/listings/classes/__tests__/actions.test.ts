@@ -311,7 +311,7 @@ describe("Class Actions", () => {
           id: "c1",
           name: "Math A",
           subject: { name: "Math" },
-          teacher: { givenName: "John", surname: "Smith" },
+          teacher: { firstName: "John", lastName: "Smith" },
           term: { termNumber: 1 },
           grade: { name: "Grade 1", gradeNumber: 1 },
           courseCode: "MATH101",
@@ -373,8 +373,8 @@ describe("Class Actions", () => {
       } as any)
       vi.mocked(db.student.findFirst).mockResolvedValue({
         id: "student-1",
-        givenName: "Ali",
-        surname: "Hassan",
+        firstName: "Ali",
+        lastName: "Hassan",
       } as any)
       vi.mocked(db.studentClass.findFirst).mockResolvedValue(null)
       vi.mocked(db.studentClass.create).mockResolvedValue({} as any)
@@ -401,8 +401,8 @@ describe("Class Actions", () => {
       } as any)
       vi.mocked(db.student.findFirst).mockResolvedValue({
         id: "student-1",
-        givenName: "Ali",
-        surname: "Hassan",
+        firstName: "Ali",
+        lastName: "Hassan",
       } as any)
       vi.mocked(db.studentClass.findFirst).mockResolvedValue(null)
 
@@ -428,8 +428,8 @@ describe("Class Actions", () => {
       } as any)
       vi.mocked(db.student.findFirst).mockResolvedValue({
         id: "student-1",
-        givenName: "Ali",
-        surname: "Hassan",
+        firstName: "Ali",
+        lastName: "Hassan",
       } as any)
       vi.mocked(db.studentClass.findFirst).mockResolvedValue({
         id: "existing",
@@ -462,7 +462,7 @@ describe("Class Actions", () => {
           maxCapacity: 30,
           createdAt: new Date("2026-01-01"),
           subject: { name: "Math" },
-          teacher: { givenName: "John", surname: "Smith" },
+          teacher: { firstName: "John", lastName: "Smith" },
           term: { termNumber: 1 },
           classroom: { roomName: "Room 101", capacity: 40 },
           _count: { studentClasses: 15 },

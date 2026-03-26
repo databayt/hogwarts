@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import { z } from "zod"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { logger } from "@/lib/logger"
 
@@ -25,7 +26,7 @@ export async function createDomainRequest(formData: FormData) {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     // Only PRINCIPAL or DEVELOPER can request custom domains
@@ -33,7 +34,7 @@ export async function createDomainRequest(formData: FormData) {
       session.user.role !== "PRINCIPAL" &&
       session.user.role !== "DEVELOPER"
     ) {
-      return { success: false, error: "Insufficient permissions" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const rawData = Object.fromEntries(formData)
@@ -49,7 +50,7 @@ export async function createDomainRequest(formData: FormData) {
     })
 
     if (takenRequest) {
-      return { success: false, error: "This domain is already taken" }
+      return actionError(ACTION_ERRORS.ALREADY_EXISTS)
     }
 
     // Check if there's already a pending request
@@ -95,7 +96,7 @@ export async function createDomainRequest(formData: FormData) {
         action: "domain_request_create_error",
       }
     )
-    return { success: false, error: "Failed to create domain request" }
+    return actionError(ACTION_ERRORS.CREATE_FAILED)
   }
 }
 
@@ -103,7 +104,7 @@ export async function getDomainRequests() {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const requests = await db.domainRequest.findMany({
@@ -120,7 +121,7 @@ export async function getDomainRequests() {
         action: "domain_requests_fetch_error",
       }
     )
-    return { success: false, error: "Failed to fetch domain requests" }
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }
 
@@ -128,7 +129,7 @@ export async function cancelDomainRequest(requestId: string) {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const request = await db.domainRequest.findFirst({
@@ -140,7 +141,7 @@ export async function cancelDomainRequest(requestId: string) {
     })
 
     if (!request) {
-      return { success: false, error: "Request not found or already processed" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     await db.domainRequest.delete({
@@ -164,7 +165,7 @@ export async function cancelDomainRequest(requestId: string) {
         action: "domain_request_cancel_error",
       }
     )
-    return { success: false, error: "Failed to cancel domain request" }
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }
 
@@ -173,7 +174,7 @@ export async function approveDomainRequest(requestId: string) {
   try {
     const session = await auth()
     if (!session?.user || session.user.role !== "DEVELOPER") {
-      return { success: false, error: "Insufficient permissions" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const request = await db.domainRequest.findUnique({
@@ -182,7 +183,7 @@ export async function approveDomainRequest(requestId: string) {
     })
 
     if (!request) {
-      return { success: false, error: "Request not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Only update the request status — do NOT overwrite School.domain
@@ -214,7 +215,7 @@ export async function approveDomainRequest(requestId: string) {
         action: "domain_request_approve_error",
       }
     )
-    return { success: false, error: "Failed to approve domain request" }
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }
 
@@ -222,7 +223,7 @@ export async function rejectDomainRequest(requestId: string, reason?: string) {
   try {
     const session = await auth()
     if (!session?.user || session.user.role !== "DEVELOPER") {
-      return { success: false, error: "Insufficient permissions" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     await db.domainRequest.update({
@@ -249,6 +250,6 @@ export async function rejectDomainRequest(requestId: string, reason?: string) {
         action: "domain_request_reject_error",
       }
     )
-    return { success: false, error: "Failed to reject domain request" }
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }

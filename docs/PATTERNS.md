@@ -430,8 +430,8 @@ export function createStudentSchema(dictionary: Dictionary) {
   const v = getValidationMessages(dictionary)
 
   return z.object({
-    givenName: z.string().min(1, v.required()),
-    surname: z.string().min(1, v.required()),
+    firstName: z.string().min(1, v.required()),
+    lastName: z.string().min(1, v.required()),
     email: z.string().email(v.email()),
     dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, v.date()),
     gender: z.enum(["male", "female", "other"]),
@@ -440,8 +440,8 @@ export function createStudentSchema(dictionary: Dictionary) {
 
 // Legacy schema for compatibility
 export const studentSchema = z.object({
-  givenName: z.string().min(1, "Required"),
-  surname: z.string().min(1, "Required"),
+  firstName: z.string().min(1, "Required"),
+  lastName: z.string().min(1, "Required"),
   email: z.string().email("Invalid email"),
   dateOfBirth: z.string(),
   gender: z.enum(["male", "female", "other"]),
@@ -483,8 +483,8 @@ export function StudentForm({
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
-      givenName: "",
-      surname: "",
+      firstName: "",
+      lastName: "",
       ...defaultValues,
     },
   })
@@ -494,11 +494,11 @@ export function StudentForm({
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
-          name="givenName"
+          name="firstName"
           render={({ field }) => (
             <FormItem>
               <FormLabel>
-                {dictionary?.form?.givenName || "Given Name"}
+                {dictionary?.form?.firstName || "Given Name"}
               </FormLabel>
               <FormControl>
                 <Input {...field} />
@@ -771,8 +771,8 @@ jest.mock("@/lib/tenant-context", () => ({
 describe("createStudent", () => {
   it("creates student with schoolId", async () => {
     const input = {
-      givenName: "John",
-      surname: "Doe",
+      firstName: "John",
+      lastName: "Doe",
       email: "john@example.com",
     }
 

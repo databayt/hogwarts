@@ -41,8 +41,8 @@ export default async function Page({ params }: Props) {
         where: { schoolId },
         select: {
           id: true,
-          givenName: true,
-          surname: true,
+          firstName: true,
+          lastName: true,
           emailAddress: true,
           profilePhotoUrl: true,
           employmentStatus: true,
@@ -58,7 +58,7 @@ export default async function Page({ params }: Props) {
             },
           },
         },
-        orderBy: { givenName: "asc" },
+        orderBy: { firstName: "asc" },
       })
     )) ?? []
 

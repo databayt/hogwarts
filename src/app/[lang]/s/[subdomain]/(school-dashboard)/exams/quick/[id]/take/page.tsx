@@ -7,6 +7,7 @@
  */
 
 import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { QuickAssessmentTake } from "@/components/school-dashboard/exams/quick/take"
 
 interface TakePageProps {
@@ -21,6 +22,8 @@ export default async function QuickAssessmentTakePage({
   params,
 }: TakePageProps) {
   const { id } = await params
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
 
   return <QuickAssessmentTake assessmentId={id} />
 }

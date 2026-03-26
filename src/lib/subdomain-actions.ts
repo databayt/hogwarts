@@ -252,6 +252,7 @@ const SCHOOL_SELECT = {
   website: true,
   timezone: true,
   preferredLanguage: true,
+  nameFormat: true,
   planType: true,
   maxStudents: true,
   maxTeachers: true,

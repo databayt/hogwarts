@@ -4,6 +4,8 @@
 import { Suspense } from "react"
 import type { Metadata } from "next"
 
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import {
   MessagingContent,
   MessagingContentSkeleton,
@@ -11,7 +13,7 @@ import {
 
 interface MessagesPageProps {
   params: Promise<{
-    lang: string
+    lang: Locale
     subdomain: string
   }>
   searchParams: Promise<{
@@ -23,6 +25,7 @@ export async function generateMetadata({
   params,
 }: MessagesPageProps): Promise<Metadata> {
   const { lang } = await params
+  const dictionary = await getDictionary(lang)
   return {
     title: lang === "ar" ? "الرسائل | هوغوارتس" : "Messages | Hogwarts",
     description:

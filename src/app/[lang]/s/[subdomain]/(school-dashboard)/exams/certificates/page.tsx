@@ -7,6 +7,7 @@
  */
 
 import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { CertificateContent } from "@/components/school-dashboard/exams/certificates/content"
 
 interface CertificatesPageProps {
@@ -20,6 +21,7 @@ export default async function CertificatesPage({
   params,
 }: CertificatesPageProps) {
   const { lang } = await params
+  const dictionary = await getDictionary(lang)
 
   return <CertificateContent />
 }

@@ -128,8 +128,8 @@ export async function calculateTeacherWorkload(
     where: { id: teacherId },
     select: {
       id: true,
-      givenName: true,
-      surname: true,
+      firstName: true,
+      lastName: true,
     },
   })
 
@@ -180,7 +180,7 @@ export async function calculateTeacherWorkload(
 
   return {
     teacherId: teacher.id,
-    teacherName: `${teacher.givenName} ${teacher.surname}`,
+    teacherName: `${teacher.firstName} ${teacher.lastName}`,
     totalPeriodsPerWeek,
     uniqueClassesCount: uniqueClassIds.size,
     uniqueSubjectsCount: uniqueSubjectIds.size,

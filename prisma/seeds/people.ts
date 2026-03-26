@@ -114,20 +114,20 @@ export async function seedTeachers(
 
     // McGonagall = teacher@databayt.org (detect by email, not index)
     const isHpTeacher = user.email === "teacher@databayt.org"
-    const givenName = isHpTeacher
+    const firstName = isHpTeacher
       ? HP_CHARACTERS.teacher.nameAr.split(" ")[0]
-      : teacherData.givenName
-    const surname = isHpTeacher
+      : teacherData.firstName
+    const lastName = isHpTeacher
       ? HP_CHARACTERS.teacher.nameAr.split(" ").slice(1).join(" ")
-      : teacherData.surname
+      : teacherData.lastName
     const birthDate = isHpTeacher ? HP_CHARACTERS.teacher.birthDate : undefined
 
     // Personal email (firstname-lastname@domain.com)
     const personalEmail = isHpTeacher
       ? HP_CHARACTERS.teacher.personalEmail
       : generatePersonalEmail(
-          getEnglishGivenName(teacherData.givenName, teacherData.gender),
-          getEnglishSurname(teacherData.surname),
+          getEnglishGivenName(teacherData.firstName, teacherData.gender),
+          getEnglishSurname(teacherData.lastName),
           index
         )
 
@@ -142,8 +142,8 @@ export async function seedTeachers(
         teacher = await prisma.teacher.update({
           where: { id: existing.id },
           data: {
-            givenName,
-            surname,
+            firstName,
+            lastName,
             gender: teacherData.gender,
             emailAddress: personalEmail,
             ...(birthDate ? { birthDate } : {}),
@@ -156,8 +156,8 @@ export async function seedTeachers(
             userId: user.id,
             emailAddress: personalEmail,
             employeeId: generateEmployeeId(index),
-            givenName,
-            surname,
+            firstName,
+            lastName,
             gender: teacherData.gender,
             employmentStatus: "ACTIVE",
             employmentType: "FULL_TIME",
@@ -198,8 +198,8 @@ export async function seedTeachers(
         id: teacher.id,
         userId: user.id,
         emailAddress: teacher.emailAddress,
-        givenName: teacher.givenName,
-        surname: teacher.surname,
+        firstName: teacher.firstName,
+        lastName: teacher.lastName,
       })
     } catch (error) {
       if (!isUniqueConstraintError(error)) {
@@ -214,8 +214,8 @@ export async function seedTeachers(
           id: existing.id,
           userId: user.id,
           emailAddress: existing.emailAddress,
-          givenName: existing.givenName,
-          surname: existing.surname,
+          firstName: existing.firstName,
+          lastName: existing.lastName,
         })
       }
     }
@@ -638,7 +638,7 @@ export async function seedStudents(
       const name = isHarry
         ? { ar: HP_CHARACTERS.student.nameAr.split(" ")[0], en: "Harry" }
         : getRandomName(gender as "M" | "F", globalIndex)
-      const surname = isHarry
+      const lastName = isHarry
         ? {
             ar: HP_CHARACTERS.student.nameAr.split(" ").slice(1).join(" "),
             en: "Potter",
@@ -663,21 +663,21 @@ export async function seedStudents(
             },
           },
           update: {
-            givenName: name.ar,
-            surname: surname.ar,
+            firstName: name.ar,
+            lastName: lastName.ar,
             gender,
             userId: user.id,
             bloodGroup,
             email: isHarry
               ? HP_CHARACTERS.student.personalEmail
-              : generatePersonalEmail(name.en, surname.en, globalIndex),
+              : generatePersonalEmail(name.en, lastName.en, globalIndex),
           },
           create: {
             schoolId,
             userId: user.id,
             grNumber: generateGrNumber(globalIndex),
-            givenName: name.ar,
-            surname: surname.ar,
+            firstName: name.ar,
+            lastName: lastName.ar,
             gender,
             dateOfBirth: birthDate,
             nationality: isHarry ? HP_CHARACTERS.student.nationality : "SD",
@@ -687,7 +687,7 @@ export async function seedStudents(
             mobileNumber: generatePhone(globalIndex),
             email: isHarry
               ? HP_CHARACTERS.student.personalEmail
-              : generatePersonalEmail(name.en, surname.en, globalIndex),
+              : generatePersonalEmail(name.en, lastName.en, globalIndex),
             enrollmentDate: new Date(),
             status: "ACTIVE",
             studentType: "REGULAR",
@@ -725,8 +725,8 @@ export async function seedStudents(
           id: student.id,
           userId: user.id,
           grNumber: student.grNumber || "",
-          givenName: student.givenName,
-          surname: student.surname,
+          firstName: student.firstName,
+          lastName: student.lastName,
           yearLevelId: dist.level!.id,
         })
       } catch (error) {
@@ -742,8 +742,8 @@ export async function seedStudents(
             id: existing.id,
             userId: user.id,
             grNumber: existing.grNumber || "",
-            givenName: existing.givenName,
-            surname: existing.surname,
+            firstName: existing.firstName,
+            lastName: existing.lastName,
             yearLevelId: dist.level!.id,
           })
         }
@@ -836,18 +836,18 @@ export async function seedGuardians(
       const name = hpChar
         ? { ar: hpChar.nameAr.split(" ")[0], en: hpChar.nameEn.split(" ")[0] }
         : getRandomName(pair.gender as "M" | "F", guardianIndex)
-      // Guardian shares student's surname (family name)
-      const surname = hpChar
+      // Guardian shares student's lastName (family name)
+      const lastName = hpChar
         ? {
             ar: hpChar.nameAr.split(" ").slice(1).join(" "),
             en: hpChar.nameEn.split(" ").slice(1).join(" "),
           }
-        : { ar: student.surname, en: student.surname }
+        : { ar: student.lastName, en: student.lastName }
 
       // Personal email (firstname-lastname@domain.com)
       const personalEmail = hpChar
         ? hpChar.personalEmail
-        : generatePersonalEmail(name.en, surname.en, guardianIndex)
+        : generatePersonalEmail(name.en, lastName.en, guardianIndex)
       const guardianTypeId = guardianTypeMap.get(pair.type)
 
       if (!guardianTypeId) continue
@@ -863,8 +863,8 @@ export async function seedGuardians(
           guardian = await prisma.guardian.update({
             where: { id: existing.id },
             data: {
-              givenName: name.ar,
-              surname: surname.ar,
+              firstName: name.ar,
+              lastName: lastName.ar,
               emailAddress: personalEmail,
             },
           })
@@ -874,8 +874,8 @@ export async function seedGuardians(
               schoolId,
               userId: user.id,
               emailAddress: personalEmail,
-              givenName: name.ar,
-              surname: surname.ar,
+              firstName: name.ar,
+              lastName: lastName.ar,
             },
           })
         }
@@ -925,8 +925,8 @@ export async function seedGuardians(
           // Only add to list once per pair
           guardians.push({
             id: guardian.id,
-            givenName: guardian.givenName,
-            surname: guardian.surname,
+            firstName: guardian.firstName,
+            lastName: guardian.lastName,
           })
         }
       } catch (error) {
@@ -1006,7 +1006,7 @@ export async function seedStudentDocuments(
         schoolId,
         studentId: student.id,
         documentType: docType.type,
-        documentName: `${docType.name} - ${student.givenName} ${student.surname}`,
+        documentName: `${docType.name} - ${student.firstName} ${student.lastName}`,
         fileUrl: `/uploads/documents/${student.grNumber}_${docType.type.replace(/\s+/g, "_")}.${ext}`,
         fileSize: randomNumber(50000, 2000000),
         mimeType: docType.mime,

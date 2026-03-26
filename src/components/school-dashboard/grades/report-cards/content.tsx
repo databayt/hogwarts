@@ -39,8 +39,8 @@ export async function ReportCardsContent() {
           student: {
             select: {
               id: true,
-              givenName: true,
-              surname: true,
+              firstName: true,
+              lastName: true,
               studentId: true,
             },
           },

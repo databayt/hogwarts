@@ -8,9 +8,9 @@ import type { OnboardingRole, OnboardingStep } from "./config"
 // =============================================================================
 
 export interface PersonalStepData {
-  givenName: string
+  firstName: string
   middleName?: string
-  surname: string
+  lastName: string
   dateOfBirth: string
   gender: string
   nationality?: string

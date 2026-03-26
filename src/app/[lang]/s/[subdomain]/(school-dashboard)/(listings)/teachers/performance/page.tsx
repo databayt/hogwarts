@@ -59,7 +59,7 @@ export default async function Page({ params }: Props) {
             select: { id: true, email: true, image: true },
           },
         },
-        orderBy: { surname: "asc" },
+        orderBy: { lastName: "asc" },
       })
     )) ?? []
 
@@ -149,8 +149,8 @@ export default async function Page({ params }: Props) {
 
       return {
         id: teacher.id,
-        givenName: teacher.givenName,
-        surname: teacher.surname,
+        firstName: teacher.firstName,
+        lastName: teacher.lastName,
         emailAddress: teacher.emailAddress,
         profilePhotoUrl: teacher.profilePhotoUrl,
         employmentStatus: teacher.employmentStatus,

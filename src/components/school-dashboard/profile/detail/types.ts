@@ -36,9 +36,9 @@ export type StudentProfile = {
   studentId: string | null
 
   // Name
-  givenName: string
+  firstName: string
   middleName: string | null
-  surname: string
+  lastName: string
 
   // Personal info
   dateOfBirth: Date
@@ -93,8 +93,8 @@ export type StudentProfile = {
     isPrimary: boolean
     guardian: {
       id: string
-      givenName: string
-      surname: string
+      firstName: string
+      lastName: string
       emailAddress: string | null
     }
     guardianType: {
@@ -124,8 +124,8 @@ export type TeacherProfile = {
   employeeId: string | null
 
   // Name
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
   gender: string | null
   emailAddress: string
 
@@ -180,8 +180,8 @@ export type GuardianProfile = {
   userId: string | null
 
   // Name
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
   emailAddress: string | null
 
   // Relations
@@ -197,9 +197,9 @@ export type GuardianProfile = {
     isPrimary: boolean
     student: {
       id: string
-      givenName: string
+      firstName: string
       middleName: string | null
-      surname: string
+      lastName: string
       profilePhotoUrl: string | null
       userId: string | null
     }
@@ -213,8 +213,8 @@ export type GuardianProfile = {
   teacherId: string | null
   teacher?: {
     id: string
-    givenName: string
-    surname: string
+    firstName: string
+    lastName: string
     emailAddress: string
     employeeId: string | null
   } | null

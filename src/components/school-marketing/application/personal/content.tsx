@@ -10,6 +10,7 @@ import { useLocale } from "@/components/internationalization/use-locale"
 
 import { useApplySession } from "../application-context"
 import type { PersonalStepData } from "../types"
+import { getApplyStepDict } from "../utils"
 import { useApplyValidation } from "../validation-context"
 import { PERSONAL_STEP_CONFIG } from "./config"
 import { PersonalForm } from "./form"
@@ -30,6 +31,7 @@ export default function PersonalContent({ dictionary }: Props) {
   const personalFormRef = useRef<PersonalFormRef>(null)
 
   const initialData = getStepData("personal")
+  const stepDict = getApplyStepDict(dictionary, "personal")
 
   const onNext = useCallback(async () => {
     if (personalFormRef.current) {
@@ -42,14 +44,17 @@ export default function PersonalContent({ dictionary }: Props) {
     }
   }, [locale, id, router])
 
+  const { nameFormat } = useApplySession()
+
   useEffect(() => {
     const personalData = session.formData.personal
 
-    const isValid =
-      personalData?.firstName &&
-      personalData?.lastName &&
-      personalData?.dateOfBirth &&
-      personalData?.gender
+    const hasName =
+      nameFormat === "full"
+        ? personalData?.firstName || personalData?.lastName
+        : personalData?.firstName && personalData?.lastName
+
+    const isValid = hasName && personalData?.dateOfBirth && personalData?.gender
 
     if (isValid) {
       enableNext()
@@ -60,6 +65,7 @@ export default function PersonalContent({ dictionary }: Props) {
     }
   }, [
     session.formData.personal,
+    nameFormat,
     enableNext,
     disableNext,
     setCustomNavigation,
@@ -69,8 +75,10 @@ export default function PersonalContent({ dictionary }: Props) {
   return (
     <FormLayout>
       <FormHeading
-        title={PERSONAL_STEP_CONFIG.label(isRTL)}
-        description={PERSONAL_STEP_CONFIG.description(isRTL)}
+        title={stepDict.title || PERSONAL_STEP_CONFIG.label(isRTL)}
+        description={
+          stepDict.description || PERSONAL_STEP_CONFIG.description(isRTL)
+        }
       />
       <PersonalForm
         ref={personalFormRef}

@@ -1403,9 +1403,9 @@
       "export": "تصدير",
       "reset": "إعادة تعيين",
       "information": {
-        "givenName": "الاسم الأول",
+        "firstName": "الاسم الأول",
         "middleName": "الاسم الأوسط",
-        "surname": "اسم العائلة",
+        "lastName": "اسم العائلة",
         "dateOfBirth": "تاريخ الميلاد",
         "selectGender": "اختر الجنس",
         "male": "ذكر",
@@ -1479,14 +1479,14 @@
       "personal": {
         "title": "المعلومات الشخصية",
         "description": "أدخل البيانات الشخصية للطالب.",
-        "givenName": "الاسم الأول",
-        "givenNamePlaceholder": "أدخل الاسم الأول",
-        "givenNameRequired": "الاسم الأول مطلوب",
+        "firstName": "الاسم الأول",
+        "firstNamePlaceholder": "أدخل الاسم الأول",
+        "firstNameRequired": "الاسم الأول مطلوب",
         "middleName": "الاسم الأوسط",
         "middleNamePlaceholder": "أدخل الاسم الأوسط",
-        "surname": "اسم العائلة",
-        "surnamePlaceholder": "أدخل اسم العائلة",
-        "surnameRequired": "اسم العائلة مطلوب",
+        "lastName": "اسم العائلة",
+        "lastNamePlaceholder": "أدخل اسم العائلة",
+        "lastNameRequired": "اسم العائلة مطلوب",
         "dateOfBirth": "تاريخ الميلاد",
         "dateOfBirthRequired": "تاريخ الميلاد مطلوب",
         "gender": "الجنس",
@@ -3461,8 +3461,8 @@
       "addParentDescription": "إضافة ولي أمر جديد لمدرستك",
       "basicInformation": "المعلومات الأساسية",
       "contactDetails": "بيانات التواصل",
-      "givenName": "الاسم الأول",
-      "surname": "اسم العائلة",
+      "firstName": "الاسم الأول",
+      "lastName": "اسم العائلة",
       "emailAddressOptional": "البريد الإلكتروني (اختياري)",
       "userIdOptional": "معرّف المستخدم (اختياري)",
       "profilePhoto": "الصورة الشخصية",
@@ -3496,8 +3496,8 @@
       "home": "منزل",
       "workPhone": "عمل",
       "emergencyPhone": "طوارئ",
-      "enterGivenName": "أدخل الاسم الأول",
-      "enterSurname": "أدخل اسم العائلة",
+      "enterFirstName": "أدخل الاسم الأول",
+      "enterLastName": "أدخل اسم العائلة",
       "emailAddress": "البريد الإلكتروني",
       "profilePhotoUrl": "رابط الصورة الشخصية"
     },
@@ -5300,6 +5300,7 @@
       "backup": "النسخ الاحتياطي",
       "restore": "الاستعادة",
       "systemInfo": "معلومات النظام",
+      "dataExportInitiated": "تم بدء تصدير البيانات. ستتلقى بريدًا إلكترونيًا عند الجاهزية.",
       "language": "اللغة",
       "timezone": "المنطقة الزمنية",
       "currency": "العملة",
@@ -7092,7 +7093,90 @@
           "uploaded": "تم الرفع",
           "failed": "فشل الرفع"
         },
-        "unsavedChanges": "لديك تغييرات غير محفوظة. هل أنت متأكد أنك تريد المغادرة؟"
+        "unsavedChanges": "لديك تغييرات غير محفوظة. هل أنت متأكد أنك تريد المغادرة؟",
+        "form": {
+          "personal": {
+            "firstName": "الاسم الأول",
+            "lastName": "اسم العائلة",
+            "fullName": "الاسم الكامل",
+            "firstNamePlaceholder": "أدخل الاسم الأول",
+            "lastNamePlaceholder": "أدخل اسم العائلة",
+            "fullNamePlaceholder": "أدخل الاسم الكامل",
+            "dateOfBirth": "تاريخ الميلاد",
+            "gender": "الجنس",
+            "selectGender": "اختر الجنس",
+            "nationality": "الجنسية",
+            "selectNationality": "اختر الجنسية",
+            "category": "الفئة",
+            "selectCategory": "اختر الفئة"
+          },
+          "contact": {
+            "email": "البريد الإلكتروني",
+            "emailPlaceholder": "email@example.com",
+            "phone": "الهاتف",
+            "phonePlaceholder": "+249 XXX XXX XXXX",
+            "alternatePhone": "هاتف بديل",
+            "alternatePhonePlaceholder": "+249 XXX XXX XXXX"
+          },
+          "location": {
+            "address": "العنوان الحالي",
+            "addressPlaceholder": "أدخل العنوان الحالي",
+            "city": "المدينة",
+            "cityPlaceholder": "أدخل المدينة",
+            "state": "الولاية",
+            "statePlaceholder": "أدخل الولاية",
+            "postalCode": "الرمز البريدي",
+            "postalCodePlaceholder": "أدخل الرمز البريدي",
+            "country": "الدولة",
+            "selectCountry": "اختر الدولة",
+            "searchAddress": "ابحث عن عنوان..."
+          },
+          "guardian": {
+            "fatherInfo": "معلومات الأب",
+            "motherInfo": "معلومات الأم",
+            "switchToMother": "الأم",
+            "switchToFather": "الأب",
+            "fatherName": "اسم الأب",
+            "motherName": "اسم الأم",
+            "namePlaceholder": "أدخل الاسم",
+            "occupation": "المهنة",
+            "occupationPlaceholder": "أدخل المهنة",
+            "phone": "الهاتف",
+            "email": "البريد الإلكتروني"
+          },
+          "academic": {
+            "previousSchool": "المدرسة السابقة",
+            "schoolPlaceholder": "اسم المدرسة",
+            "previousClass": "الصف السابق",
+            "classPlaceholder": "اختر الصف",
+            "performance": "الأداء",
+            "selectPerformance": "اختر الأداء",
+            "applyingForClass": "الصف المتقدم إليه",
+            "selectClass": "اختر الصف",
+            "preferredStream": "المسار المفضل",
+            "selectStream": "اختر المسار",
+            "achievements": "الإنجازات",
+            "achievementsPlaceholder": "أدخل أي إنجازات أو جوائز"
+          },
+          "attachments": {
+            "photo": "الصورة",
+            "degree": "الشهادة",
+            "transcript": "كشف الدرجات",
+            "id": "الهوية",
+            "resume": "السيرة الذاتية",
+            "other": "أخرى",
+            "uploaded": "تم الرفع"
+          }
+        },
+        "errors": {
+          "unableToLoad": "تعذر تحميل الطلب",
+          "tryAgain": "حاول مرة أخرى",
+          "backToCampaigns": "العودة للحملات",
+          "completeAllSteps": "يرجى إكمال جميع الخطوات المطلوبة",
+          "failedToSaveSession": "فشل في حفظ الجلسة",
+          "failedToSubmit": "فشل في تقديم الطلب"
+        },
+        "submit": "تقديم"
       },
       "sections": {
         "process": {
@@ -7573,8 +7657,8 @@
         "position": "المنصب"
       },
       "validation": {
-        "givenNameRequired": "الاسم الأول مطلوب",
-        "surnameRequired": "اسم العائلة مطلوب",
+        "firstNameRequired": "الاسم الأول مطلوب",
+        "lastNameRequired": "اسم العائلة مطلوب",
         "invalidEmail": "عنوان بريد إلكتروني غير صالح",
         "staffIdRequired": "معرّف الموظف مطلوب"
       },

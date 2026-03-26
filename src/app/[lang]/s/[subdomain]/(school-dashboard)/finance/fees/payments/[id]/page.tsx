@@ -17,6 +17,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 
 export const metadata = { title: "Payment Details" }
 
@@ -44,6 +45,7 @@ function statusVariant(
 
 export default async function PaymentDetailPage({ params }: Props) {
   const { lang, id } = await params
+  const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) notFound()
@@ -51,7 +53,7 @@ export default async function PaymentDetailPage({ params }: Props) {
   const payment = await db.payment.findFirst({
     where: { id, schoolId },
     include: {
-      student: { select: { givenName: true, surname: true } },
+      student: { select: { firstName: true, lastName: true } },
       feeAssignment: {
         select: {
           id: true,
@@ -66,7 +68,7 @@ export default async function PaymentDetailPage({ params }: Props) {
 
   if (!payment) notFound()
 
-  const studentName = [payment.student?.givenName, payment.student?.surname]
+  const studentName = [payment.student?.firstName, payment.student?.lastName]
     .filter(Boolean)
     .join(" ")
 

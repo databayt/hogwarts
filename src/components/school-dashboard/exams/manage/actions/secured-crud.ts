@@ -474,9 +474,9 @@ export const getExamResultsSecured = secureResultAction.read(
             select: {
               id: true,
               studentId: true,
-              givenName: true,
+              firstName: true,
               middleName: true,
-              surname: true,
+              lastName: true,
             },
           },
         },

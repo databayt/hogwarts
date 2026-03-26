@@ -6,6 +6,7 @@ import crypto from "crypto"
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -20,61 +21,73 @@ export async function getTeacherForWizard(
 > {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
-    const teacher = await db.teacher.findFirst({
-      where: { id: teacherId, schoolId },
-      include: {
-        phoneNumbers: {
-          where: { schoolId },
-          select: {
-            id: true,
-            phoneNumber: true,
-            phoneType: true,
-            isPrimary: true,
+    const [teacher, school] = await Promise.all([
+      db.teacher.findFirst({
+        where: { id: teacherId, schoolId },
+        include: {
+          phoneNumbers: {
+            where: { schoolId },
+            select: {
+              id: true,
+              phoneNumber: true,
+              phoneType: true,
+              isPrimary: true,
+            },
+          },
+          qualifications: {
+            where: { schoolId },
+            select: {
+              id: true,
+              qualificationType: true,
+              name: true,
+              institution: true,
+              major: true,
+              dateObtained: true,
+              expiryDate: true,
+              licenseNumber: true,
+              documentUrl: true,
+            },
+          },
+          experiences: {
+            where: { schoolId },
+            select: {
+              id: true,
+              institution: true,
+              position: true,
+              startDate: true,
+              endDate: true,
+              isCurrent: true,
+              description: true,
+            },
+          },
+          subjectExpertise: {
+            where: { schoolId },
+            select: {
+              id: true,
+              subjectId: true,
+              expertiseLevel: true,
+              subject: { select: { id: true, name: true } },
+            },
           },
         },
-        qualifications: {
-          where: { schoolId },
-          select: {
-            id: true,
-            qualificationType: true,
-            name: true,
-            institution: true,
-            major: true,
-            dateObtained: true,
-            expiryDate: true,
-            licenseNumber: true,
-            documentUrl: true,
-          },
-        },
-        experiences: {
-          where: { schoolId },
-          select: {
-            id: true,
-            institution: true,
-            position: true,
-            startDate: true,
-            endDate: true,
-            isCurrent: true,
-            description: true,
-          },
-        },
-        subjectExpertise: {
-          where: { schoolId },
-          select: {
-            id: true,
-            subjectId: true,
-            expertiseLevel: true,
-            subject: { select: { id: true, name: true } },
-          },
-        },
+      }),
+      db.school.findUnique({
+        where: { id: schoolId },
+        select: { nameFormat: true },
+      }),
+    ])
+
+    if (!teacher) return actionError(ACTION_ERRORS.TEACHER_NOT_FOUND)
+
+    return {
+      success: true,
+      data: {
+        ...(teacher as unknown as TeacherWizardData),
+        nameFormat: school?.nameFormat ?? "full",
       },
-    })
-
-    if (!teacher) return { success: false, error: "Teacher not found" }
-
-    return { success: true, data: teacher as TeacherWizardData }
+    }
   } catch (error) {
     return {
       success: false,
@@ -90,12 +103,12 @@ export async function createDraftTeacher(): Promise<
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const draftEmail = `draft-${crypto.randomUUID().slice(0, 8)}@draft.internal`
@@ -103,8 +116,8 @@ export async function createDraftTeacher(): Promise<
     const teacher = await db.teacher.create({
       data: {
         schoolId,
-        givenName: "",
-        surname: "",
+        firstName: "",
+        lastName: "",
         emailAddress: draftEmail,
         wizardStep: "information",
       },
@@ -127,25 +140,25 @@ export async function completeTeacherWizard(
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Validate required fields are present
     const teacher = await db.teacher.findFirst({
       where: { id: teacherId, schoolId },
-      select: { givenName: true, surname: true, emailAddress: true },
+      select: { firstName: true, lastName: true, emailAddress: true },
     })
 
     if (!teacher) {
-      return { success: false, error: "Teacher not found" }
+      return actionError(ACTION_ERRORS.TEACHER_NOT_FOUND)
     }
 
-    if (!teacher.givenName || !teacher.surname) {
+    if (!teacher.firstName || !teacher.lastName) {
       return {
         success: false,
         error: "Name is required before completing",
@@ -208,12 +221,12 @@ export async function deleteDraftTeacher(
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Atomic delete — only if it's still a draft
@@ -222,7 +235,7 @@ export async function deleteDraftTeacher(
     })
 
     if (count === 0) {
-      return { success: false, error: "Draft teacher not found" }
+      return actionError(ACTION_ERRORS.TEACHER_NOT_FOUND)
     }
 
     return { success: true }

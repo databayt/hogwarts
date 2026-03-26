@@ -9,8 +9,8 @@ import { parentCreateSchema } from "./validation"
 export type ParentDTO = {
   id: string
   schoolId: string
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
   emailAddress: string | null
   teacherId: string | null
   userId: string | null

@@ -76,7 +76,7 @@ export const NEWCOMER_STEPS: FormStep[] = [
     title: "Basic Information",
     description: "Tell us a bit about yourself",
     icon: User,
-    fields: ["givenName", "surname", "email", "phone"],
+    fields: ["firstName", "lastName", "email", "phone"],
   },
   {
     id: "verify",

@@ -394,9 +394,9 @@ import { createColumnHelpers, type ExportColumn } from "@/components/file"
 export interface StudentExportData {
   id: string
   studentId: string | null
-  givenName: string
+  firstName: string
   middleName: string | null
-  surname: string
+  lastName: string
   gender: string | null
   dateOfBirth: Date | null
   status: string
@@ -418,7 +418,7 @@ export const STUDENT_EXPORT_COLUMNS: ExportColumn<StudentExportData>[] = [
     headerAr: "الاسم الكامل",
     type: "string",
     accessor: (row) =>
-      [row.givenName, row.middleName, row.surname].filter(Boolean).join(" "),
+      [row.firstName, row.middleName, row.lastName].filter(Boolean).join(" "),
   },
   {
     key: "gender",

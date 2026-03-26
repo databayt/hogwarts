@@ -197,7 +197,7 @@ export async function runRiskPredictions(
 
       return {
         studentId: student.id,
-        studentName: `${student.givenName} ${student.surname}`,
+        studentName: `${student.firstName} ${student.lastName}`,
         grNumber: student.grNumber,
         yearLevel: student.studentYearLevels[0]?.yearLevel?.levelName || null,
         totalDays,
@@ -273,7 +273,7 @@ export async function runRiskPredictions(
     }
   } catch (error) {
     console.error("Error running predictions:", error)
-    return { success: false, error: "Failed to run predictions" }
+    return actionError(ACTION_ERRORS.ATTENDANCE_MARK_FAILED)
   }
 }
 
@@ -285,7 +285,7 @@ export async function getAtRiskStudents(): Promise<ActionResult> {
   const schoolId = session?.user?.schoolId
 
   if (!schoolId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
@@ -341,7 +341,7 @@ export async function getAtRiskStudents(): Promise<ActionResult> {
 
         return {
           id: student.id,
-          name: `${student.givenName} ${student.surname}`,
+          name: `${student.firstName} ${student.lastName}`,
           grNumber: student.grNumber,
           yearLevel: student.studentYearLevels[0]?.yearLevel?.levelName || null,
           profilePhotoUrl: student.profilePhotoUrl,
@@ -380,7 +380,7 @@ export async function getAtRiskStudents(): Promise<ActionResult> {
     }
   } catch (error) {
     console.error("Error getting at-risk students:", error)
-    return { success: false, error: "Failed to get at-risk students" }
+    return actionError(ACTION_ERRORS.ATTENDANCE_MARK_FAILED)
   }
 }
 
@@ -394,7 +394,7 @@ export async function translateMessage(
   const schoolId = session?.user?.schoolId
 
   if (!schoolId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
@@ -430,7 +430,7 @@ export async function translateMessage(
     }
   } catch (error) {
     console.error("Error translating message:", error)
-    return { success: false, error: "Failed to translate message" }
+    return actionError(ACTION_ERRORS.ATTENDANCE_MARK_FAILED)
   }
 }
 
@@ -446,7 +446,7 @@ export async function batchTranslateMessages(
   const schoolId = session?.user?.schoolId
 
   if (!schoolId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
@@ -482,7 +482,7 @@ export async function batchTranslateMessages(
     }
   } catch (error) {
     console.error("Error batch translating:", error)
-    return { success: false, error: "Failed to translate messages" }
+    return actionError(ACTION_ERRORS.ATTENDANCE_MARK_FAILED)
   }
 }
 
@@ -498,7 +498,7 @@ export async function createInterventionFromRecommendation(
   const userId = session?.user?.id
 
   if (!schoolId || !userId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
@@ -552,6 +552,6 @@ export async function createInterventionFromRecommendation(
     return { success: true, data: intervention }
   } catch (error) {
     console.error("Error creating intervention:", error)
-    return { success: false, error: "Failed to create intervention" }
+    return actionError(ACTION_ERRORS.CREATE_FAILED)
   }
 }

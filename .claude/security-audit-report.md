@@ -130,8 +130,8 @@ Validation schemas are TOO permissive:
 
 ```typescript
 export const studentBaseSchema = z.object({
-  givenName: z.string().optional(), // Should be required!
-  surname: z.string().optional(), // Should be required!
+  firstName: z.string().optional(), // Should be required!
+  lastName: z.string().optional(), // Should be required!
   gender: z.enum(["male", "female"]).optional(), // Should be required!
 })
 ```
@@ -140,8 +140,8 @@ export const studentBaseSchema = z.object({
 
 ```typescript
 export const studentBaseSchema = z.object({
-  givenName: z.string().min(1, "First name is required").max(50),
-  surname: z.string().min(1, "Last name is required").max(50),
+  firstName: z.string().min(1, "First name is required").max(50),
+  lastName: z.string().min(1, "Last name is required").max(50),
   gender: z.enum(["male", "female"], { required_error: "Gender is required" }),
   email: z.string().email().optional(),
   // Add sanitization

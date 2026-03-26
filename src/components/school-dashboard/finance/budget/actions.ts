@@ -22,7 +22,7 @@ export async function createBudget(
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const data = {
@@ -66,7 +66,7 @@ export async function updateBudget(
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const data = {
@@ -107,7 +107,7 @@ export async function createBudgetAllocation(formData: FormData) {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const data = {
@@ -150,7 +150,7 @@ export async function getBudgets(filters?: {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const budgets = await db.budget.findMany({
@@ -168,6 +168,6 @@ export async function getBudgets(filters?: {
     return { success: true, data: budgets }
   } catch (error) {
     console.error("Error fetching budgets:", error)
-    return { success: false, error: "Failed to fetch budgets" }
+    return actionError(ACTION_ERRORS.PAYMENT_FAILED)
   }
 }

@@ -7,6 +7,7 @@ import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 
 export const metadata = { title: "Wallet Transactions" }
 
@@ -16,6 +17,7 @@ interface Props {
 
 export default async function WalletTransactionsPage({ params }: Props) {
   const { lang } = await params
+  const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {

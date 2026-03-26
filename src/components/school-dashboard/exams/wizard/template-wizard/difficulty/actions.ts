@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import type { Prisma } from "@prisma/client"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -15,13 +16,13 @@ export async function updateTemplateDifficulty(
 ): Promise<ActionResponse> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const template = await db.examTemplate.findFirst({
       where: { id: templateId, schoolId },
       select: { distribution: true },
     })
-    if (!template) return { success: false, error: "Template not found" }
+    if (!template) return actionError(ACTION_ERRORS.NOT_FOUND)
 
     const distribution =
       (template.distribution as Record<string, Record<string, number>>) || {}

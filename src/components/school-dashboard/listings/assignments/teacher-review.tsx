@@ -77,8 +77,8 @@ interface Assignment {
 
 interface Student {
   id: string
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
   studentId?: string
 }
 
@@ -200,7 +200,7 @@ export function TeacherReview({
     (submissions: Submission[]) => {
       return submissions.filter((s) => {
         const studentName =
-          `${s.student.givenName} ${s.student.surname}`.toLowerCase()
+          `${s.student.firstName} ${s.student.lastName}`.toLowerCase()
         const matchesSearch =
           searchStudent === "" ||
           studentName.includes(searchStudent.toLowerCase()) ||
@@ -268,7 +268,7 @@ export function TeacherReview({
         <TableCell>
           <div>
             <p className="font-medium">
-              {submission.student.givenName} {submission.student.surname}
+              {submission.student.firstName} {submission.student.lastName}
             </p>
             {submission.student.studentId && (
               <p className="text-muted-foreground text-xs">
@@ -585,8 +585,8 @@ export function TeacherReview({
             <DialogDescription>
               {selectedSubmission && (
                 <span>
-                  {selectedSubmission.student.givenName}{" "}
-                  {selectedSubmission.student.surname}
+                  {selectedSubmission.student.firstName}{" "}
+                  {selectedSubmission.student.lastName}
                   {selectedSubmission.status === "LATE_SUBMITTED" && (
                     <Badge variant="outline" className="ms-2 text-orange-600">
                       {tr?.late || "Late"}

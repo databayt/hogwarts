@@ -20,13 +20,13 @@ export async function getGradeForWizard(
 > {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const result = await db.result.findFirst({
       where: { id: resultId, schoolId },
       include: {
         student: {
-          select: { id: true, givenName: true, surname: true },
+          select: { id: true, firstName: true, lastName: true },
         },
         class: {
           select: { id: true, name: true },
@@ -43,7 +43,7 @@ export async function getGradeForWizard(
       },
     })
 
-    if (!result) return { success: false, error: "Result not found" }
+    if (!result) return actionError(ACTION_ERRORS.NOT_FOUND)
 
     return {
       success: true,
@@ -71,7 +71,7 @@ export async function createDraftResult(): Promise<
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const session = await auth()
@@ -123,12 +123,12 @@ export async function completeGradeWizard(
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const result = await db.result.findFirst({
@@ -137,7 +137,7 @@ export async function completeGradeWizard(
     })
 
     if (!result) {
-      return { success: false, error: "Result not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     if (Number(result.score) > Number(result.maxScore)) {
@@ -200,12 +200,12 @@ export async function deleteDraftResult(
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Atomic delete — only if it's still a draft
@@ -214,7 +214,7 @@ export async function deleteDraftResult(
     })
 
     if (count === 0) {
-      return { success: false, error: "Draft result not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     return { success: true }

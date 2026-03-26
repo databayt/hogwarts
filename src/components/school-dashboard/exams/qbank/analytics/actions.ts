@@ -16,6 +16,7 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import { Prisma } from "@prisma/client"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 
 import {
@@ -35,7 +36,7 @@ export async function analyzeQuestion(questionId: string) {
   const schoolId = session?.user?.schoolId
 
   if (!schoolId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
@@ -50,7 +51,7 @@ export async function analyzeQuestion(questionId: string) {
     })
 
     if (!question) {
-      return { success: false, error: "Question not found" }
+      return actionError(ACTION_ERRORS.QUESTION_NOT_FOUND)
     }
 
     // Get all responses for this question
@@ -195,7 +196,7 @@ export async function analyzeQuestion(questionId: string) {
     }
   } catch (error) {
     console.error("Analyze question error:", error)
-    return { success: false, error: "Failed to analyze question" }
+    return actionError(ACTION_ERRORS.EXAM_UPDATE_FAILED)
   }
 }
 
@@ -207,7 +208,7 @@ export async function analyzeExamQuestions(examId: string) {
   const schoolId = session?.user?.schoolId
 
   if (!schoolId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
@@ -226,11 +227,11 @@ export async function analyzeExamQuestions(examId: string) {
     })
 
     if (!exam) {
-      return { success: false, error: "Exam not found" }
+      return actionError(ACTION_ERRORS.EXAM_NOT_FOUND)
     }
 
     if (!exam.generatedExam?.questions) {
-      return { success: false, error: "No questions found in exam" }
+      return actionError(ACTION_ERRORS.EXAM_UPDATE_FAILED)
     }
 
     // Get all student answers for this exam
@@ -242,7 +243,7 @@ export async function analyzeExamQuestions(examId: string) {
     })
 
     if (studentAnswers.length === 0) {
-      return { success: false, error: "No student responses found" }
+      return actionError(ACTION_ERRORS.EXAM_UPDATE_FAILED)
     }
 
     // Get exam results for student total scores
@@ -326,7 +327,7 @@ export async function analyzeExamQuestions(examId: string) {
     }
   } catch (error) {
     console.error("Analyze exam questions error:", error)
-    return { success: false, error: "Failed to analyze exam questions" }
+    return actionError(ACTION_ERRORS.EXAM_UPDATE_FAILED)
   }
 }
 
@@ -338,7 +339,7 @@ export async function getAnalyticsDashboard() {
   const schoolId = session?.user?.schoolId
 
   if (!schoolId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
@@ -469,7 +470,7 @@ export async function getAnalyticsDashboard() {
     }
   } catch (error) {
     console.error("Get analytics dashboard error:", error)
-    return { success: false, error: "Failed to load analytics" }
+    return actionError(ACTION_ERRORS.EXAM_UPDATE_FAILED)
   }
 }
 
@@ -481,7 +482,7 @@ export async function getQuestionAnalytics(questionId: string) {
   const schoolId = session?.user?.schoolId
 
   if (!schoolId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
@@ -523,6 +524,6 @@ export async function getQuestionAnalytics(questionId: string) {
     }
   } catch (error) {
     console.error("Get question analytics error:", error)
-    return { success: false, error: "Failed to load analytics" }
+    return actionError(ACTION_ERRORS.EXAM_UPDATE_FAILED)
   }
 }

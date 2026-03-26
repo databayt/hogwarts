@@ -625,8 +625,8 @@ export async function getAssignmentsExportData(
             },
             teacher: {
               select: {
-                givenName: true,
-                surname: true,
+                firstName: true,
+                lastName: true,
               },
             },
           },
@@ -653,7 +653,7 @@ export async function getAssignmentsExportData(
       className: (assignment.class?.name as string) || null,
       name: (assignment.class?.subject?.name as string) || null,
       teacherName: assignment.class?.teacher
-        ? `${assignment.class.teacher.givenName} ${assignment.class.teacher.surname}`.trim()
+        ? `${assignment.class.teacher.firstName} ${assignment.class.teacher.lastName}`.trim()
         : null,
       dueDate: assignment.dueDate as Date | null,
       totalPoints: assignment.totalPoints as number | null,

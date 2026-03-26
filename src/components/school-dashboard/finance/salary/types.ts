@@ -17,8 +17,8 @@ import type {
 export type SalaryStructureWithRelations = SalaryStructure & {
   teacher: {
     id: string
-    givenName: string
-    surname: string
+    firstName: string
+    lastName: string
     employeeId: string | null
   }
   allowances?: SalaryAllowance[]
@@ -33,8 +33,8 @@ export type SalaryAllowanceWithRelations = SalaryAllowance & {
   salaryStructure: SalaryStructure & {
     teacher: {
       id: string
-      givenName: string
-      surname: string
+      firstName: string
+      lastName: string
     }
   }
 }
@@ -43,8 +43,8 @@ export type SalaryDeductionWithRelations = SalaryDeduction & {
   salaryStructure: SalaryStructure & {
     teacher: {
       id: string
-      givenName: string
-      surname: string
+      firstName: string
+      lastName: string
     }
   }
 }

@@ -8,6 +8,7 @@ import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 import { CatalogChaptersContent } from "@/components/school-dashboard/listings/subjects/catalog-chapters"
 import type { SupportedLanguage } from "@/components/translation/types"
@@ -18,6 +19,7 @@ interface Props {
 
 export default async function CatalogChaptersPage({ params }: Props) {
   const { lang, slug } = await params
+  const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
   const contentLang = (l: string | null | undefined) =>
     (l || "ar") as SupportedLanguage

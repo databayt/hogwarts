@@ -42,8 +42,8 @@ export async function getDepartments(
             teacher: {
               select: {
                 id: true,
-                givenName: true,
-                surname: true,
+                firstName: true,
+                lastName: true,
                 emailAddress: true,
                 profilePhotoUrl: true,
               },
@@ -77,8 +77,8 @@ export async function getDepartments(
         subjects: [] as { id: string; name: string }[],
         teachers: dept.teacherDepartments.map((td) => ({
           id: td.teacher.id,
-          givenName: td.teacher.givenName,
-          surname: td.teacher.surname,
+          firstName: td.teacher.firstName,
+          lastName: td.teacher.lastName,
           emailAddress: td.teacher.emailAddress,
           profilePhotoUrl: td.teacher.profilePhotoUrl,
           isPrimary: td.isPrimary,

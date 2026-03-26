@@ -4,44 +4,53 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { cookies } from "next/headers"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import type { NameFormat } from "@/lib/name-utils"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import { personalSchema, type PersonalFormData } from "./validation"
 
 export async function getStudentPersonal(
   studentId: string
-): Promise<ActionResponse<PersonalFormData>> {
+): Promise<ActionResponse<PersonalFormData & { nameFormat: NameFormat }>> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
-    const student = await db.student.findFirst({
-      where: { id: studentId, schoolId },
-      select: {
-        givenName: true,
-        middleName: true,
-        surname: true,
-        dateOfBirth: true,
-        gender: true,
-        nationality: true,
-        profilePhotoUrl: true,
-      },
-    })
+    const [student, school] = await Promise.all([
+      db.student.findFirst({
+        where: { id: studentId, schoolId },
+        select: {
+          firstName: true,
+          middleName: true,
+          lastName: true,
+          dateOfBirth: true,
+          gender: true,
+          nationality: true,
+          profilePhotoUrl: true,
+        },
+      }),
+      db.school.findUnique({
+        where: { id: schoolId },
+        select: { nameFormat: true },
+      }),
+    ])
 
-    if (!student) return { success: false, error: "Student not found" }
+    if (!student) return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
 
     return {
       success: true,
       data: {
-        givenName: student.givenName,
+        firstName: student.firstName,
         middleName: student.middleName ?? undefined,
-        surname: student.surname,
+        lastName: student.lastName,
         dateOfBirth: student.dateOfBirth,
         gender: student.gender as "male" | "female",
         nationality: student.nationality ?? undefined,
         profilePhotoUrl: student.profilePhotoUrl ?? undefined,
+        nameFormat: (school?.nameFormat as NameFormat) ?? "full",
       },
     }
   } catch (error) {
@@ -58,7 +67,7 @@ export async function updateStudentPersonal(
 ): Promise<ActionResponse> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const parsed = personalSchema.parse(input)
 
@@ -69,9 +78,9 @@ export async function updateStudentPersonal(
     await db.student.updateMany({
       where: { id: studentId, schoolId },
       data: {
-        givenName: parsed.givenName,
+        firstName: parsed.firstName,
         middleName: parsed.middleName ?? null,
-        surname: parsed.surname,
+        lastName: parsed.lastName,
         dateOfBirth: parsed.dateOfBirth,
         gender: parsed.gender,
         nationality: parsed.nationality ?? null,

@@ -102,8 +102,8 @@ export async function getPayrollRun(runId: string): Promise<ActionResult<any>> {
             teacher: {
               select: {
                 id: true,
-                givenName: true,
-                surname: true,
+                firstName: true,
+                lastName: true,
                 employeeId: true,
               },
             },
@@ -595,7 +595,7 @@ export async function processPayments(
       select: {
         teacherId: true,
         netSalary: true,
-        teacher: { select: { userId: true, givenName: true, surname: true } },
+        teacher: { select: { userId: true, firstName: true, lastName: true } },
       },
     })
     for (const slip of paidSlips) {
@@ -690,8 +690,8 @@ export async function getSalarySlip(
         teacher: {
           select: {
             id: true,
-            givenName: true,
-            surname: true,
+            firstName: true,
+            lastName: true,
             employeeId: true,
             emailAddress: true,
           },

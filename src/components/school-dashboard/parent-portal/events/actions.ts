@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { auth } from "@/auth"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { logger } from "@/lib/logger"
@@ -13,7 +14,7 @@ export async function getParentEvents(displayLang?: "ar" | "en") {
     const session = await auth()
 
     if (!session?.user?.schoolId) {
-      return { success: false, error: "Not authenticated", events: [] }
+      return { ...actionError(ACTION_ERRORS.NOT_AUTHENTICATED), events: [] }
     }
 
     const schoolId = session.user.schoolId
@@ -31,9 +32,9 @@ export async function getParentEvents(displayLang?: "ar" | "en") {
             student: {
               select: {
                 id: true,
-                givenName: true,
+                firstName: true,
                 middleName: true,
-                surname: true,
+                lastName: true,
               },
             },
           },
@@ -42,7 +43,7 @@ export async function getParentEvents(displayLang?: "ar" | "en") {
     })
 
     if (!guardian) {
-      return { success: false, error: "Guardian not found", events: [] }
+      return { ...actionError(ACTION_ERRORS.PARENT_NOT_FOUND), events: [] }
     }
 
     // Fetch upcoming and recent events for the school
@@ -149,7 +150,7 @@ export async function getParentEvents(displayLang?: "ar" | "en") {
       events: mappedEvents,
       students: guardian.studentGuardians.map((sg) => ({
         id: sg.student.id,
-        name: `${sg.student.givenName}${sg.student.middleName ? ` ${sg.student.middleName}` : ""} ${sg.student.surname}`,
+        name: `${sg.student.firstName}${sg.student.middleName ? ` ${sg.student.middleName}` : ""} ${sg.student.lastName}`,
       })),
     }
   } catch (error) {

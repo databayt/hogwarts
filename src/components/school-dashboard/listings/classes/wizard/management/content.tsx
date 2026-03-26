@@ -148,7 +148,7 @@ export default function ManagementContent() {
                   label={d?.reviewTeacher || "Teacher"}
                   value={
                     data.teacher
-                      ? `${data.teacher.givenName} ${data.teacher.surname}`
+                      ? `${data.teacher.firstName} ${data.teacher.lastName}`
                       : null
                   }
                 />

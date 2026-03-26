@@ -34,8 +34,8 @@ export default async function ParentsContent({
       ...(sp.name
         ? {
             OR: [
-              { givenName: { contains: sp.name, mode: "insensitive" } },
-              { surname: { contains: sp.name, mode: "insensitive" } },
+              { firstName: { contains: sp.name, mode: "insensitive" } },
+              { lastName: { contains: sp.name, mode: "insensitive" } },
             ],
           }
         : {}),
@@ -67,12 +67,12 @@ export default async function ParentsContent({
         name:
           p.lang && p.lang !== lang
             ? await getDisplayText(
-                `${p.givenName} ${p.surname}`.trim(),
+                `${p.firstName} ${p.lastName}`.trim(),
                 p.lang || "ar",
                 lang,
                 schoolId!
               )
-            : `${p.givenName} ${p.surname}`.trim(),
+            : `${p.firstName} ${p.lastName}`.trim(),
         emailAddress: p.emailAddress || "-",
         status: p.userId ? "active" : "inactive",
         createdAt: (p.createdAt as Date).toISOString(),

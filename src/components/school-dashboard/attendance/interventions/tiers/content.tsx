@@ -31,8 +31,8 @@ import {
 
 interface Student {
   id: string
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
   grNumber: string | null
   profilePhotoUrl: string | null
   absenceRate: number
@@ -173,7 +173,7 @@ export function MTSSContent({ locale }: MTSSContentProps) {
       studentId: student.id,
       tier: student.tier,
       action,
-      title: `${actionLabels[action]?.[isRTL ? "ar" : "en"] || action} - ${student.givenName} ${student.surname}`,
+      title: `${actionLabels[action]?.[isRTL ? "ar" : "en"] || action} - ${student.firstName} ${student.lastName}`,
       priority:
         student.tier === "TIER_3" ? 4 : student.tier === "TIER_2" ? 3 : 2,
       parentNotify: student.tier !== "TIER_1",
@@ -341,21 +341,21 @@ export function MTSSContent({ locale }: MTSSContentProps) {
                           {student.profilePhotoUrl ? (
                             <Image
                               src={student.profilePhotoUrl}
-                              alt={`${student.givenName} ${student.surname}`}
+                              alt={`${student.firstName} ${student.lastName}`}
                               width={48}
                               height={48}
                               className="h-full w-full object-cover"
                             />
                           ) : (
                             <div className="flex h-full w-full items-center justify-center text-lg">
-                              {student.givenName.charAt(0)}
+                              {student.firstName.charAt(0)}
                             </div>
                           )}
                         </div>
                         {/* Info */}
                         <div>
                           <p className="font-medium">
-                            {student.givenName} {student.surname}
+                            {student.firstName} {student.lastName}
                           </p>
                           <p className="text-muted-foreground text-sm">
                             {student.grNumber} •{" "}

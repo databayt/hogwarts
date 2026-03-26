@@ -48,7 +48,7 @@ export async function getAllUsersWithPermissions(): Promise<{
   try {
     const session = await auth()
     if (!session?.user?.id || !session.user.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const schoolId = session.user.schoolId
@@ -62,7 +62,7 @@ export async function getAllUsersWithPermissions(): Promise<{
     )
 
     if (!canManage) {
-      return { success: false, error: "Insufficient permissions" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Get all users in school
@@ -127,7 +127,7 @@ export async function getAllUsersWithPermissions(): Promise<{
     return { success: true, data: summary }
   } catch (error) {
     console.error("Error getting users with permissions:", error)
-    return { success: false, error: "Failed to fetch users" }
+    return actionError(ACTION_ERRORS.PAYMENT_FAILED)
   }
 }
 
@@ -142,7 +142,7 @@ export async function getPermissionsByModule(): Promise<{
   try {
     const session = await auth()
     if (!session?.user?.id || !session.user.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const schoolId = session.user.schoolId
@@ -156,7 +156,7 @@ export async function getPermissionsByModule(): Promise<{
     )
 
     if (!canManage) {
-      return { success: false, error: "Insufficient permissions" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Get all finance permissions
@@ -211,7 +211,7 @@ export async function getPermissionsByModule(): Promise<{
     return { success: true, data: summary }
   } catch (error) {
     console.error("Error getting permissions by module:", error)
-    return { success: false, error: "Failed to fetch module permissions" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 }
 
@@ -226,7 +226,7 @@ export async function grantPermission(
   try {
     const session = await auth()
     if (!session?.user?.id || !session.user.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const schoolId = session.user.schoolId
@@ -238,7 +238,7 @@ export async function grantPermission(
     })
 
     if (!targetUser || targetUser.schoolId !== schoolId) {
-      return { success: false, error: "User not found in this school" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Grant permission
@@ -251,14 +251,14 @@ export async function grantPermission(
     )
 
     if (!success) {
-      return { success: false, error: "Failed to grant permission" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     revalidatePath("/finance/permissions")
     return { success: true }
   } catch (error) {
     console.error("Error granting permission:", error)
-    return { success: false, error: "Failed to grant permission" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 }
 
@@ -273,7 +273,7 @@ export async function revokePermission(
   try {
     const session = await auth()
     if (!session?.user?.id || !session.user.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const schoolId = session.user.schoolId
@@ -288,14 +288,14 @@ export async function revokePermission(
     )
 
     if (!success) {
-      return { success: false, error: "Failed to revoke permission" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     revalidatePath("/finance/permissions")
     return { success: true }
   } catch (error) {
     console.error("Error revoking permission:", error)
-    return { success: false, error: "Failed to revoke permission" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 }
 
@@ -314,7 +314,11 @@ export async function bulkGrantPermissions(
   try {
     const session = await auth()
     if (!session?.user?.id || !session.user.schoolId) {
-      return { success: false, granted: 0, failed: 0, error: "Unauthorized" }
+      return {
+        ...actionError(ACTION_ERRORS.UNAUTHORIZED),
+        granted: 0,
+        failed: 0,
+      }
     }
 
     const schoolId = session.user.schoolId
@@ -365,7 +369,11 @@ export async function bulkRevokePermissions(
   try {
     const session = await auth()
     if (!session?.user?.id || !session.user.schoolId) {
-      return { success: false, revoked: 0, failed: 0, error: "Unauthorized" }
+      return {
+        ...actionError(ACTION_ERRORS.UNAUTHORIZED),
+        revoked: 0,
+        failed: 0,
+      }
     }
 
     const schoolId = session.user.schoolId
@@ -411,7 +419,7 @@ export async function copyPermissions(
   try {
     const session = await auth()
     if (!session?.user?.id || !session.user.schoolId) {
-      return { success: false, copied: 0, error: "Unauthorized" }
+      return { ...actionError(ACTION_ERRORS.UNAUTHORIZED), copied: 0 }
     }
 
     const schoolId = session.user.schoolId

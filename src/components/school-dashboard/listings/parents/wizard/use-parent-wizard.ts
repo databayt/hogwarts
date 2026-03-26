@@ -8,8 +8,8 @@ import { getParentForWizard } from "./actions"
 export interface ParentWizardData {
   id: string
   schoolId: string
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
   lang: string
   emailAddress: string | null
   teacherId: string | null

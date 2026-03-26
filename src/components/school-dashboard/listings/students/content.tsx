@@ -144,8 +144,8 @@ export default async function StudentsContent({
       ...(sp.name
         ? {
             OR: [
-              { givenName: { contains: sp.name, mode: "insensitive" } },
-              { surname: { contains: sp.name, mode: "insensitive" } },
+              { firstName: { contains: sp.name, mode: "insensitive" } },
+              { lastName: { contains: sp.name, mode: "insensitive" } },
               { studentId: { contains: sp.name, mode: "insensitive" } },
             ],
           }
@@ -210,7 +210,7 @@ export default async function StudentsContent({
       if (gl) uniqueGradeLabels.add(gl)
       // Detect actual content language from text — override lang field when
       // text clearly doesn't match (e.g. lang="ar" but name is Latin characters)
-      const rawName = `${s.givenName} ${s.surname}`.trim()
+      const rawName = `${s.firstName} ${s.lastName}`.trim()
       const textLang = hasLatin(rawName) ? "en" : "ar"
       const contentLang = textLang !== s.lang ? textLang : s.lang || textLang
       if (contentLang !== lang) {
@@ -270,7 +270,7 @@ export default async function StudentsContent({
     gradeOptions = Array.from(gradeSet).map((g) => ({ label: g, value: g }))
 
     data = (rows as any[]).map((s) => {
-      const rawName = `${s.givenName} ${s.surname}`.trim()
+      const rawName = `${s.firstName} ${s.lastName}`.trim()
       const mapTextLang = hasLatin(rawName) ? "en" : "ar"
       const contentLang =
         mapTextLang !== s.lang ? mapTextLang : s.lang || mapTextLang

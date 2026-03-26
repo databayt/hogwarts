@@ -3,6 +3,7 @@
 
 import { db } from "@/lib/db"
 import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 import { ContributeAssignmentForm } from "@/components/school-dashboard/listings/subjects/catalog/contribute-assignment"
 
@@ -12,6 +13,7 @@ interface Props {
 
 export default async function ContributeAssignmentsPage({ params }: Props) {
   const { lang } = await params
+  const dictionary = await getDictionary(lang)
   const isAr = lang === "ar"
 
   const catalogSubjects = await db.catalogSubject.findMany({

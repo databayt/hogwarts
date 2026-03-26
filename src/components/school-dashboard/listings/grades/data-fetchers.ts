@@ -42,7 +42,7 @@ export async function getSchoolClasses(): Promise<
 export async function getSchoolStudents(
   classId?: string
 ): Promise<
-  ActionResponse<Array<{ id: string; givenName: string; surname: string }>>
+  ActionResponse<Array<{ id: string; firstName: string; lastName: string }>>
 > {
   try {
     const { schoolId } = await getTenantContext()
@@ -57,8 +57,8 @@ export async function getSchoolStudents(
 
     const students = await db.student.findMany({
       where,
-      select: { id: true, givenName: true, surname: true },
-      orderBy: [{ surname: "asc" }, { givenName: "asc" }],
+      select: { id: true, firstName: true, lastName: true },
+      orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
       take: 200,
     })
 

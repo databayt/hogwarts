@@ -752,7 +752,7 @@ export async function getLiveStudentLocations() {
   >`
     SELECT DISTINCT ON (lt.student_id)
       lt.student_id,
-      CONCAT(s.given_name, ' ', s.surname) as student_name,
+      CONCAT(s.given_name, ' ', s.lastName) as student_name,
       lt.lat::text,
       lt.lon::text,
       lt.accuracy,
@@ -806,8 +806,8 @@ export async function getGeofenceEvents(
     include: {
       student: {
         select: {
-          givenName: true,
-          surname: true,
+          firstName: true,
+          lastName: true,
         },
       },
       geofence: {

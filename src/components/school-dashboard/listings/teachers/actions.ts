@@ -141,8 +141,8 @@ export async function createTeacher(
       const teacher = await tx.teacher.create({
         data: {
           schoolId,
-          givenName: parsed.givenName,
-          surname: parsed.surname,
+          firstName: parsed.firstName,
+          lastName: parsed.lastName,
           gender: parsed.gender,
           emailAddress: parsed.emailAddress,
           birthDate: parsed.birthDate,
@@ -284,7 +284,7 @@ export async function updateTeacher(
     try {
       assertTeacherPermission(authContext, "update", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to update teachers" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Parse and validate input
@@ -294,8 +294,8 @@ export async function updateTeacher(
 
     // Build update data object for teacher
     const data: Record<string, unknown> = {}
-    if (typeof rest.givenName !== "undefined") data.givenName = rest.givenName
-    if (typeof rest.surname !== "undefined") data.surname = rest.surname
+    if (typeof rest.firstName !== "undefined") data.firstName = rest.firstName
+    if (typeof rest.lastName !== "undefined") data.lastName = rest.lastName
     if (typeof rest.gender !== "undefined") data.gender = rest.gender
     if (typeof rest.emailAddress !== "undefined")
       data.emailAddress = rest.emailAddress
@@ -431,7 +431,7 @@ export async function deleteTeacher(input: {
     try {
       assertTeacherPermission(authContext, "delete", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to delete teachers" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Parse and validate input
@@ -523,7 +523,7 @@ export async function getTeacher(input: {
     try {
       assertTeacherPermission(authContext, "read", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to read teachers" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Parse and validate input
@@ -671,7 +671,7 @@ export async function getTeacherWorkload(input: {
     try {
       assertTeacherPermission(authContext, "read", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to read teachers" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const { teacherId, termId } = input
@@ -776,7 +776,7 @@ export async function getTeachers(
     try {
       assertTeacherPermission(authContext, "read", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to read teachers" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const sp = getTeachersSchema.parse(input ?? {})
@@ -794,7 +794,7 @@ export async function getTeachers(
     if (sp.name) {
       const nameConditions = await buildTranslatedSearchConditions(
         sp.name,
-        ["givenName", "surname"],
+        ["firstName", "lastName"],
         schoolId,
         storageLang,
         displayLang
@@ -838,7 +838,7 @@ export async function getTeachers(
     const mapped = (rows as Array<any>).map((t) => ({
       id: t.id as string,
       userId: t.userId as string | null,
-      name: [t.givenName, t.surname].filter(Boolean).join(" "),
+      name: [t.firstName, t.lastName].filter(Boolean).join(" "),
       lang: t.lang || "ar",
       emailAddress: t.emailAddress || "-",
       status: t.employmentStatus === "ACTIVE" ? "active" : "inactive",
@@ -902,7 +902,7 @@ export async function getTeachersCSV(
     try {
       assertTeacherPermission(authContext, "export", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to export teachers" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const sp = getTeachersSchema.parse(input ?? {})
@@ -914,8 +914,8 @@ export async function getTeachersCSV(
       ...(sp.name
         ? {
             OR: [
-              { givenName: { contains: sp.name, mode: "insensitive" } },
-              { surname: { contains: sp.name, mode: "insensitive" } },
+              { firstName: { contains: sp.name, mode: "insensitive" } },
+              { lastName: { contains: sp.name, mode: "insensitive" } },
             ],
           }
         : {}),
@@ -960,16 +960,16 @@ export async function getTeachersCSV(
           take: 1,
         },
       },
-      orderBy: [{ givenName: "asc" }, { surname: "asc" }],
+      orderBy: [{ firstName: "asc" }, { lastName: "asc" }],
     })
 
     // Transform data for CSV export — use employmentStatus for consistency
     const exportData = teachers.map((teacher: any) => ({
       teacherId: teacher.id,
       employeeId: teacher.employeeId || "",
-      givenName: teacher.givenName || "",
-      surname: teacher.surname || "",
-      fullName: [teacher.givenName, teacher.surname].filter(Boolean).join(" "),
+      firstName: teacher.firstName || "",
+      lastName: teacher.lastName || "",
+      fullName: [teacher.firstName, teacher.lastName].filter(Boolean).join(" "),
       gender: teacher.gender || "",
       email: teacher.emailAddress || "",
       userEmail: teacher.user?.email || "",
@@ -989,8 +989,8 @@ export async function getTeachersCSV(
     const columns = [
       { key: "teacherId", label: "Teacher ID" },
       { key: "employeeId", label: "Employee ID" },
-      { key: "givenName", label: "First Name" },
-      { key: "surname", label: "Last Name" },
+      { key: "firstName", label: "First Name" },
+      { key: "lastName", label: "Last Name" },
       { key: "fullName", label: "Full Name" },
       { key: "gender", label: "Gender" },
       { key: "email", label: "Primary Email" },
@@ -1063,7 +1063,7 @@ export async function getSubjectsForExpertise(): Promise<
     try {
       assertTeacherPermission(authContext, "read", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to read teachers" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Fetch all subjects from catalog via school selections
@@ -1126,8 +1126,8 @@ export async function getTeachersExportData(
     Array<{
       id: string
       employeeId: string | null
-      givenName: string
-      surname: string
+      firstName: string
+      lastName: string
       fullName: string
       gender: string
       email: string | null
@@ -1156,7 +1156,7 @@ export async function getTeachersExportData(
     try {
       assertTeacherPermission(authContext, "export", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to export teachers" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const sp = getTeachersSchema.parse(input ?? {})
@@ -1168,8 +1168,8 @@ export async function getTeachersExportData(
       ...(sp.name
         ? {
             OR: [
-              { givenName: { contains: sp.name, mode: "insensitive" } },
-              { surname: { contains: sp.name, mode: "insensitive" } },
+              { firstName: { contains: sp.name, mode: "insensitive" } },
+              { lastName: { contains: sp.name, mode: "insensitive" } },
             ],
           }
         : {}),
@@ -1218,16 +1218,16 @@ export async function getTeachersExportData(
           take: 1,
         },
       },
-      orderBy: [{ givenName: "asc" }, { surname: "asc" }],
+      orderBy: [{ firstName: "asc" }, { lastName: "asc" }],
     })
 
     // Transform data for export — use employmentStatus for consistency
     const exportData = teachers.map((teacher: any) => ({
       id: teacher.id,
       employeeId: teacher.employeeId || null,
-      givenName: teacher.givenName || "",
-      surname: teacher.surname || "",
-      fullName: [teacher.givenName, teacher.surname].filter(Boolean).join(" "),
+      firstName: teacher.firstName || "",
+      lastName: teacher.lastName || "",
+      fullName: [teacher.firstName, teacher.lastName].filter(Boolean).join(" "),
       gender: teacher.gender || "",
       email: teacher.emailAddress || null,
       userEmail: teacher.user?.email || null,
@@ -1293,7 +1293,7 @@ export async function bulkDeleteTeachers(input: {
     try {
       assertTeacherPermission(authContext, "bulk_action", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized for bulk operations" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const { ids } = z

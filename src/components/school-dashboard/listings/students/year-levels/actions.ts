@@ -5,6 +5,7 @@
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
@@ -26,18 +27,18 @@ export async function getYearLevels(
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId, role } = await getTenantContext()
 
     if (!schoolId) {
-      return { success: false, error: "School not found" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Check permissions - ADMIN or DEVELOPER can access
     if (role !== "DEVELOPER" && role !== "ADMIN") {
-      return { success: false, error: "Insufficient permissions" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const yearLevels = await db.yearLevel.findMany({
@@ -91,17 +92,17 @@ export async function createYearLevel(
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId, role } = await getTenantContext()
 
     if (!schoolId) {
-      return { success: false, error: "School not found" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     if (role !== "DEVELOPER" && role !== "ADMIN") {
-      return { success: false, error: "Insufficient permissions" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const data = {
@@ -170,17 +171,17 @@ export async function updateYearLevel(
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId, role } = await getTenantContext()
 
     if (!schoolId) {
-      return { success: false, error: "School not found" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     if (role !== "DEVELOPER" && role !== "ADMIN") {
-      return { success: false, error: "Insufficient permissions" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const levelOrderValue = formData.get("levelOrder")
@@ -201,7 +202,7 @@ export async function updateYearLevel(
     })
 
     if (!existing) {
-      return { success: false, error: "Year level not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Check for duplicate name if changing name
@@ -280,17 +281,17 @@ export async function deleteYearLevel(
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId, role } = await getTenantContext()
 
     if (!schoolId) {
-      return { success: false, error: "School not found" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     if (role !== "DEVELOPER" && role !== "ADMIN") {
-      return { success: false, error: "Insufficient permissions" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const data = {
@@ -313,7 +314,7 @@ export async function deleteYearLevel(
     })
 
     if (!existing) {
-      return { success: false, error: "Year level not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Check for dependencies

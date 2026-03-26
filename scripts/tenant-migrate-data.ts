@@ -108,8 +108,8 @@ async function importStudents(schoolId: string, data: StudentRow[]) {
           // Create student with corrected field names
           await prisma.student.create({
             data: {
-              givenName: row.firstName,
-              surname: row.lastName,
+              firstName: row.firstName,
+              lastName: row.lastName,
               email: row.email,
               dateOfBirth: new Date(row.dateOfBirth),
               gender: row.gender,

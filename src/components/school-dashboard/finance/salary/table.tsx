@@ -89,7 +89,7 @@ function SalaryStructuresTableInner({
       }
       const rows: SalaryStructureRow[] = result.data.map((ss: any) => ({
         id: ss.id,
-        teacherName: [ss.teacher?.givenName, ss.teacher?.surname]
+        teacherName: [ss.teacher?.firstName, ss.teacher?.lastName]
           .filter(Boolean)
           .join(" "),
         teacherId: ss.teacherId,

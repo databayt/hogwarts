@@ -5,6 +5,7 @@
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 
 import type {
@@ -31,7 +32,7 @@ export async function createQuestion(
   try {
     const session = await auth()
     if (!session?.user?.id || !session.user.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const schoolId = session.user.schoolId
@@ -89,7 +90,7 @@ export async function updateQuestion(
   try {
     const session = await auth()
     if (!session?.user?.id || !session.user.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const schoolId = session.user.schoolId
@@ -137,7 +138,7 @@ export async function deleteQuestion(
   try {
     const session = await auth()
     if (!session?.user?.id || !session.user.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const schoolId = session.user.schoolId
@@ -274,7 +275,7 @@ export async function createTemplate(
   try {
     const session = await auth()
     if (!session?.user?.id || !session.user.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const schoolId = session.user.schoolId
@@ -363,7 +364,7 @@ export async function generateExam(
   try {
     const session = await auth()
     if (!session?.user?.id || !session.user.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const schoolId = session.user.schoolId
@@ -394,14 +395,14 @@ export async function generateExam(
       })
 
       if (!template) {
-        return { success: false, error: "Template not found" }
+        return actionError(ACTION_ERRORS.NOT_FOUND)
       }
 
       distribution = template.distribution as any
     }
 
     if (!distribution) {
-      return { success: false, error: "No distribution provided" }
+      return actionError(ACTION_ERRORS.UNKNOWN)
     }
 
     // Get available questions
@@ -410,7 +411,7 @@ export async function generateExam(
     })
 
     if (!exam) {
-      return { success: false, error: "Exam not found" }
+      return actionError(ACTION_ERRORS.EXAM_NOT_FOUND)
     }
 
     const availableQuestions = await db.questionBank.findMany({
@@ -487,7 +488,7 @@ export async function updateQuestionAnalytics(
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const schoolId = session.user.schoolId
@@ -500,7 +501,7 @@ export async function updateQuestionAnalytics(
     })
 
     if (!analytics) {
-      return { success: false, error: "Analytics not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Calculate new averages

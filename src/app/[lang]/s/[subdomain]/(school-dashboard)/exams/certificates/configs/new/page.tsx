@@ -10,6 +10,7 @@ import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 
 import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { CertificateConfigForm } from "@/components/school-dashboard/exams/certificates/config-form"
 
 interface NewConfigPageProps {
@@ -21,6 +22,7 @@ interface NewConfigPageProps {
 
 export default async function NewConfigPage({ params }: NewConfigPageProps) {
   const { lang } = await params
+  const dictionary = await getDictionary(lang)
 
   const session = await auth()
   if (["STUDENT", "GUARDIAN"].includes(session?.user?.role || "")) {

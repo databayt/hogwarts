@@ -103,13 +103,13 @@ function setTenantContext(schoolId: string) {
  * Create a student via the action and track it for cleanup.
  */
 async function createAndTrack(input: {
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
   gender?: "male" | "female"
 }) {
   const result = await createStudent({
-    givenName: input.givenName,
-    surname: input.surname,
+    firstName: input.firstName,
+    lastName: input.lastName,
     gender: input.gender ?? "male",
   })
 
@@ -171,8 +171,8 @@ describe("Multi-tenant isolation", () => {
     // Create a student in School A
     setTenantContext(schoolA.id)
     const result = await createAndTrack({
-      givenName: "Tenant",
-      surname: "Isolated",
+      firstName: "Tenant",
+      lastName: "Isolated",
       gender: "female",
     })
 
@@ -204,7 +204,7 @@ describe("Multi-tenant isolation", () => {
     it("cannot update School A student via updateStudent", async () => {
       const result = await updateStudent({
         id: studentAId,
-        givenName: "Hacked",
+        firstName: "Hacked",
       })
 
       // updateMany with schoolId scope returns success but count=0 (no rows matched)
@@ -214,7 +214,7 @@ describe("Multi-tenant isolation", () => {
       setTenantContext(schoolA.id)
       const verify = await getStudent({ id: studentAId })
       expect(verify.success).toBe(true)
-      expect((verify.data as any)?.givenName).toBe("Tenant")
+      expect((verify.data as any)?.firstName).toBe("Tenant")
     })
 
     it("cannot delete School A student via deleteStudent", async () => {
@@ -268,8 +268,8 @@ describe("CRUD operations", () => {
   describe("createStudent", () => {
     it("persists a student in the database with correct schoolId", async () => {
       const result = await createAndTrack({
-        givenName: "Create",
-        surname: "Test",
+        firstName: "Create",
+        lastName: "Test",
         gender: "male",
       })
 
@@ -280,8 +280,8 @@ describe("CRUD operations", () => {
       // Verify directly in database
       const row = await db.student.findUnique({ where: { id } })
       expect(row).not.toBeNull()
-      expect(row!.givenName).toBe("Create")
-      expect(row!.surname).toBe("Test")
+      expect(row!.firstName).toBe("Create")
+      expect(row!.lastName).toBe("Test")
       expect(row!.schoolId).toBe(schoolA.id)
     })
 
@@ -294,8 +294,8 @@ describe("CRUD operations", () => {
       })
 
       const result = await createStudent({
-        givenName: "No",
-        surname: "School",
+        firstName: "No",
+        lastName: "School",
         gender: "male",
       })
 
@@ -307,8 +307,8 @@ describe("CRUD operations", () => {
       vi.mocked(auth).mockResolvedValue(null)
 
       const result = await createStudent({
-        givenName: "No",
-        surname: "Auth",
+        firstName: "No",
+        lastName: "Auth",
         gender: "male",
       })
 
@@ -323,8 +323,8 @@ describe("CRUD operations", () => {
     beforeAll(async () => {
       setTenantContext(schoolA.id)
       const result = await createAndTrack({
-        givenName: "Update",
-        surname: "Target",
+        firstName: "Update",
+        lastName: "Target",
       })
       studentId = (result as { success: true; data: { id: string } }).data.id
     })
@@ -333,16 +333,16 @@ describe("CRUD operations", () => {
       setTenantContext(schoolA.id)
       const result = await updateStudent({
         id: studentId,
-        givenName: "Updated",
-        surname: "Changed",
+        firstName: "Updated",
+        lastName: "Changed",
       })
 
       expect(result.success).toBe(true)
 
       // Verify via direct DB read
       const row = await db.student.findUnique({ where: { id: studentId } })
-      expect(row!.givenName).toBe("Updated")
-      expect(row!.surname).toBe("Changed")
+      expect(row!.firstName).toBe("Updated")
+      expect(row!.lastName).toBe("Changed")
     })
 
     it("handles partial updates (only specified fields change)", async () => {
@@ -351,22 +351,22 @@ describe("CRUD operations", () => {
       // First set known state
       await updateStudent({
         id: studentId,
-        givenName: "Partial",
-        surname: "Before",
+        firstName: "Partial",
+        lastName: "Before",
       })
 
-      // Update only givenName
+      // Update only firstName
       const result = await updateStudent({
         id: studentId,
-        givenName: "After",
+        firstName: "After",
       })
 
       expect(result.success).toBe(true)
 
       const row = await db.student.findUnique({ where: { id: studentId } })
-      expect(row!.givenName).toBe("After")
-      // surname should remain unchanged
-      expect(row!.surname).toBe("Before")
+      expect(row!.firstName).toBe("After")
+      // lastName should remain unchanged
+      expect(row!.lastName).toBe("Before")
     })
   })
 
@@ -376,8 +376,8 @@ describe("CRUD operations", () => {
 
       // Create a student to delete
       const createResult = await createAndTrack({
-        givenName: "Delete",
-        surname: "Me",
+        firstName: "Delete",
+        lastName: "Me",
       })
       const id = (createResult as { success: true; data: { id: string } }).data
         .id
@@ -411,8 +411,8 @@ describe("CRUD operations", () => {
     beforeAll(async () => {
       setTenantContext(schoolA.id)
       const result = await createAndTrack({
-        givenName: "GetSingle",
-        surname: "Student",
+        firstName: "GetSingle",
+        lastName: "Student",
         gender: "female",
       })
       studentId = (result as { success: true; data: { id: string } }).data.id
@@ -427,8 +427,8 @@ describe("CRUD operations", () => {
 
       const student = result.data as Record<string, unknown>
       expect(student.id).toBe(studentId)
-      expect(student.givenName).toBe("GetSingle")
-      expect(student.surname).toBe("Student")
+      expect(student.firstName).toBe("GetSingle")
+      expect(student.lastName).toBe("Student")
       expect(student.schoolId).toBe(schoolA.id)
       expect(student.createdAt).toBeDefined()
     })
@@ -450,11 +450,11 @@ describe("CRUD operations", () => {
 
       // Create 5 students with distinct names for search/pagination tests
       const names = [
-        { givenName: "Alpha", surname: "First" },
-        { givenName: "Beta", surname: "Second" },
-        { givenName: "Gamma", surname: "Third" },
-        { givenName: "Delta", surname: "Fourth" },
-        { givenName: "Epsilon", surname: "Fifth" },
+        { firstName: "Alpha", lastName: "First" },
+        { firstName: "Beta", lastName: "Second" },
+        { firstName: "Gamma", lastName: "Third" },
+        { firstName: "Delta", lastName: "Fourth" },
+        { firstName: "Epsilon", lastName: "Fifth" },
       ]
 
       for (const name of names) {
@@ -485,7 +485,7 @@ describe("CRUD operations", () => {
       expect(result.data?.rows.some((r) => r.name.includes("Alpha"))).toBe(true)
     })
 
-    it("filters by name (surname search)", async () => {
+    it("filters by name (lastName search)", async () => {
       setTenantContext(schoolA.id)
 
       const result = await getStudents({ name: "Fifth" })
@@ -524,16 +524,16 @@ describe("Cross-school data integrity", () => {
     // Create a student in School A
     setTenantContext(schoolA.id)
     const resultA = await createAndTrack({
-      givenName: "CrossCheck",
-      surname: "SchoolA",
+      firstName: "CrossCheck",
+      lastName: "SchoolA",
     })
     expect(resultA.success).toBe(true)
 
     // Create a student in School B
     setTenantContext(schoolB.id)
     const resultB = await createAndTrack({
-      givenName: "CrossCheck",
-      surname: "SchoolB",
+      firstName: "CrossCheck",
+      lastName: "SchoolB",
     })
     expect(resultB.success).toBe(true)
 
@@ -582,8 +582,8 @@ describe("Authorization edge cases", () => {
     vi.mocked(auth).mockResolvedValue(null)
 
     const createResult = await createStudent({
-      givenName: "No",
-      surname: "Auth",
+      firstName: "No",
+      lastName: "Auth",
       gender: "male",
     })
     expect(createResult.success).toBe(false)
@@ -593,7 +593,7 @@ describe("Authorization edge cases", () => {
     expect(getResult.success).toBe(false)
     expect(getResult.error).toContain("authenticated")
 
-    const updateResult = await updateStudent({ id: "any-id", givenName: "X" })
+    const updateResult = await updateStudent({ id: "any-id", firstName: "X" })
     expect(updateResult.success).toBe(false)
     expect(updateResult.error).toContain("authenticated")
 
@@ -620,8 +620,8 @@ describe("Authorization edge cases", () => {
     })
 
     const result = await createStudent({
-      givenName: "No",
-      surname: "Tenant",
+      firstName: "No",
+      lastName: "Tenant",
       gender: "male",
     })
     expect(result.success).toBe(false)

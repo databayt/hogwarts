@@ -705,12 +705,12 @@ export async function cancelEventRegistration(input: {
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const { eventId } = z.object({ eventId: z.string().min(1) }).parse(input)
@@ -725,7 +725,7 @@ export async function cancelEventRegistration(input: {
     })
 
     if (!existing || existing.status === "CANCELLED") {
-      return { success: false, error: "No active registration found" }
+      return actionError(ACTION_ERRORS.UNKNOWN)
     }
 
     const wasRegistered = existing.status === "REGISTERED"
@@ -788,7 +788,7 @@ export async function getEventRegistrations(input: {
 
     // Only admin/staff can view registrations
     if (!["ADMIN", "DEVELOPER", "STAFF"].includes(authContext.role)) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const { eventId } = z.object({ eventId: z.string().min(1) }).parse(input)

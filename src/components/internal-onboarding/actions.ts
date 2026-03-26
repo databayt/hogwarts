@@ -172,7 +172,7 @@ export async function submitInternalOnboarding(
       const user = await tx.user.create({
         data: {
           email: data.contact.email,
-          username: `${data.personal.givenName} ${data.personal.surname}`,
+          username: `${data.personal.firstName} ${data.personal.lastName}`,
           role: mapRole(data.role),
           emailVerified: new Date(),
           schoolId,
@@ -186,8 +186,8 @@ export async function submitInternalOnboarding(
           const teacher = await tx.teacher.create({
             data: {
               userId: user.id,
-              givenName: data.personal.givenName,
-              surname: data.personal.surname,
+              firstName: data.personal.firstName,
+              lastName: data.personal.lastName,
               gender: data.personal.gender,
               emailAddress: data.contact.email,
               birthDate: data.personal.dateOfBirth
@@ -251,8 +251,8 @@ export async function submitInternalOnboarding(
           const staffMember = await tx.staffMember.create({
             data: {
               userId: user.id,
-              givenName: data.personal.givenName,
-              surname: data.personal.surname,
+              firstName: data.personal.firstName,
+              lastName: data.personal.lastName,
               gender: data.personal.gender,
               emailAddress: data.contact.email,
               birthDate: data.personal.dateOfBirth
@@ -320,9 +320,9 @@ export async function submitInternalOnboarding(
           await tx.student.create({
             data: {
               userId: user.id,
-              givenName: data.personal.givenName,
+              firstName: data.personal.firstName,
               middleName: data.personal.middleName || undefined,
-              surname: data.personal.surname,
+              lastName: data.personal.lastName,
               dateOfBirth: data.personal.dateOfBirth
                 ? new Date(data.personal.dateOfBirth)
                 : new Date("2010-01-01"),
@@ -405,7 +405,7 @@ export async function submitInternalOnboarding(
               type: "account_created",
               priority: "high",
               title: `New ${data.role} application`,
-              body: `${data.personal.givenName} ${data.personal.surname} has applied to join as ${data.role}. Review pending.`,
+              body: `${data.personal.firstName} ${data.personal.lastName} has applied to join as ${data.role}. Review pending.`,
             })
           )
         )

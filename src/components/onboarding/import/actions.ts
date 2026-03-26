@@ -182,7 +182,7 @@ const FIRST_NAME_ALIASES = [
 const LAST_NAME_ALIASES = [
   "last name",
   "lastname",
-  "surname",
+  "lastName",
   "family name",
   "familyname",
   "lname",

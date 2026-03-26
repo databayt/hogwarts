@@ -11,6 +11,7 @@
 
 import { auth } from "@/auth"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 
 import {
@@ -44,7 +45,7 @@ export async function initializeAccounting(schoolId: string): Promise<{
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const result = await initializeAccountingSystem(schoolId)
@@ -307,7 +308,7 @@ export async function getChartOfAccounts(schoolId: string) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const accounts = await db.chartOfAccount.findMany({
@@ -340,7 +341,7 @@ export async function getJournalEntries(
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const entries = await db.journalEntry.findMany({
@@ -381,7 +382,7 @@ export async function getAccountBalances(
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Get or create current fiscal year if not provided

@@ -57,8 +57,8 @@ export default async function ClassesContent({
           },
           teacher: {
             select: {
-              givenName: true,
-              surname: true,
+              firstName: true,
+              lastName: true,
               lang: true,
             },
           },
@@ -99,7 +99,7 @@ export default async function ClassesContent({
         ),
         teacherName: c.teacher
           ? await getDisplayText(
-              `${c.teacher.givenName} ${c.teacher.surname}`,
+              `${c.teacher.firstName} ${c.teacher.lastName}`,
               (c.teacher.lang as "ar" | "en") || "ar",
               lang,
               schoolId!

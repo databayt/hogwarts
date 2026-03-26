@@ -430,8 +430,8 @@ export async function getReportCards(input: {
     where.student = {
       ...(where.student as Record<string, unknown>),
       OR: [
-        { givenName: { contains: input.search, mode: "insensitive" } },
-        { surname: { contains: input.search, mode: "insensitive" } },
+        { firstName: { contains: input.search, mode: "insensitive" } },
+        { lastName: { contains: input.search, mode: "insensitive" } },
       ],
     }
   }
@@ -443,8 +443,8 @@ export async function getReportCards(input: {
         student: {
           select: {
             id: true,
-            givenName: true,
-            surname: true,
+            firstName: true,
+            lastName: true,
             studentId: true,
           },
         },
@@ -478,8 +478,8 @@ export async function getReportCard(reportCardId: string) {
       student: {
         select: {
           id: true,
-          givenName: true,
-          surname: true,
+          firstName: true,
+          lastName: true,
           studentId: true,
           profilePhotoUrl: true,
         },

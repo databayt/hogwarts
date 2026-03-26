@@ -5,6 +5,7 @@
 import { auth } from "@/auth"
 import { renderToStream } from "@react-pdf/renderer"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import type { Locale } from "@/components/internationalization/config"
 
@@ -42,7 +43,7 @@ export async function generateGradeCertificate(
     const schoolId = session?.user?.schoolId
 
     if (!schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // 2. Fetch grade data with all relations
@@ -54,8 +55,8 @@ export async function generateGradeCertificate(
       include: {
         student: {
           select: {
-            givenName: true,
-            surname: true,
+            firstName: true,
+            lastName: true,
             studentId: true,
             email: true,
           },
@@ -96,12 +97,12 @@ export async function generateGradeCertificate(
     })
 
     if (!grade) {
-      return { success: false, error: "Grade not found" }
+      return actionError(ACTION_ERRORS.GRADE_NOT_FOUND)
     }
 
     // 3. Build certificate data
     const studentName = grade.student
-      ? `${grade.student.givenName} ${grade.student.surname}`
+      ? `${grade.student.firstName} ${grade.student.lastName}`
       : "Unknown Student"
 
     const title =

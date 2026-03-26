@@ -2,6 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import RoomDetailContent from "@/components/school-dashboard/listings/classrooms/detail/content"
 
 export const metadata = { title: "Dashboard: Room Details" }
@@ -12,6 +13,7 @@ interface Props {
 
 export default async function Page({ params }: Props) {
   const { lang, subdomain, id } = await params
+  const dictionary = await getDictionary(lang)
 
   return <RoomDetailContent lang={lang} roomId={id} subdomain={subdomain} />
 }

@@ -47,7 +47,7 @@ export async function createSubject(
     try {
       assertSubjectPermission(authContext, "create", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to add subjects" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const parsed = subjectCreateSchema.parse(input)
@@ -130,7 +130,7 @@ export async function updateSubject(
     try {
       assertSubjectPermission(authContext, "update", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to update subjects" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const parsed = subjectUpdateSchema.parse(input)
@@ -143,7 +143,7 @@ export async function updateSubject(
     })
 
     if (!existing) {
-      return { success: false, error: "Subject selection not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     const data: Record<string, unknown> = {}
@@ -201,7 +201,7 @@ export async function deleteSubject(input: {
     try {
       assertSubjectPermission(authContext, "delete", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to remove subjects" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
@@ -213,7 +213,7 @@ export async function deleteSubject(input: {
     })
 
     if (!existing) {
-      return { success: false, error: "Subject selection not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Soft-delete by deactivating
@@ -274,7 +274,7 @@ export async function getSubject(input: {
     try {
       assertSubjectPermission(authContext, "read", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to view subjects" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
@@ -336,7 +336,7 @@ export async function getSubjects(
     try {
       assertSubjectPermission(authContext, "read", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to read subjects" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const sp = getSubjectsSchema.parse(input ?? {})
@@ -421,7 +421,7 @@ export async function bulkDeleteSubjects(input: {
     try {
       assertSubjectPermission(authContext, "bulk_action", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized for bulk operations" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const { ids } = z
@@ -507,7 +507,7 @@ export async function getSubjectsCSV(
     try {
       assertSubjectPermission(authContext, "export", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to export subjects" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     let subjects = await getSchoolSubjects(schoolId)

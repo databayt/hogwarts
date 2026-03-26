@@ -107,8 +107,8 @@ export type ActionResponse<T = void> =
 type ParentSelectResult = {
   id: string
   schoolId: string
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
   emailAddress: string | null
   teacherId: string | null
   userId: string | null
@@ -172,8 +172,8 @@ export async function createParent(
     const row = await guardianModel.create({
       data: {
         schoolId,
-        givenName: parsed.givenName,
-        surname: parsed.surname,
+        firstName: parsed.firstName,
+        lastName: parsed.lastName,
         emailAddress: parsed.emailAddress || null,
         userId: parsed.userId || null,
         profilePhotoUrl: parsed.profilePhotoUrl || null,
@@ -239,8 +239,8 @@ export async function updateParent(
 
     // Build update data object
     const data: Record<string, unknown> = {}
-    if (typeof rest.givenName !== "undefined") data.givenName = rest.givenName
-    if (typeof rest.surname !== "undefined") data.surname = rest.surname
+    if (typeof rest.firstName !== "undefined") data.firstName = rest.firstName
+    if (typeof rest.lastName !== "undefined") data.lastName = rest.lastName
     if (typeof rest.emailAddress !== "undefined")
       data.emailAddress = rest.emailAddress || null
     if (typeof rest.userId !== "undefined") data.userId = rest.userId || null
@@ -383,8 +383,8 @@ export async function getParent(input: {
       select: {
         id: true,
         schoolId: true,
-        givenName: true,
-        surname: true,
+        firstName: true,
+        lastName: true,
         emailAddress: true,
         teacherId: true,
         userId: true,
@@ -440,7 +440,7 @@ export async function getParents(
     try {
       assertParentPermission(authContext, "read", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to read parents" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Parse and validate input
@@ -453,8 +453,8 @@ export async function getParents(
       ...(sp.name
         ? {
             OR: [
-              { givenName: { contains: sp.name, mode: "insensitive" } },
-              { surname: { contains: sp.name, mode: "insensitive" } },
+              { firstName: { contains: sp.name, mode: "insensitive" } },
+              { lastName: { contains: sp.name, mode: "insensitive" } },
             ],
           }
         : {}),
@@ -490,7 +490,7 @@ export async function getParents(
     const mapped: ParentListResult[] = (rows as Array<any>).map((p) => ({
       id: p.id as string,
       userId: p.userId as string | null,
-      name: [p.givenName, p.surname].filter(Boolean).join(" "),
+      name: [p.firstName, p.lastName].filter(Boolean).join(" "),
       emailAddress: p.emailAddress || "-",
       status: p.userId ? "active" : "inactive",
       createdAt: (p.createdAt as Date).toISOString(),
@@ -543,7 +543,7 @@ export async function getParentsCSV(
     try {
       assertParentPermission(authContext, "export", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to export parents" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Parse and validate input
@@ -556,8 +556,8 @@ export async function getParentsCSV(
       ...(sp.name
         ? {
             OR: [
-              { givenName: { contains: sp.name, mode: "insensitive" } },
-              { surname: { contains: sp.name, mode: "insensitive" } },
+              { firstName: { contains: sp.name, mode: "insensitive" } },
+              { lastName: { contains: sp.name, mode: "insensitive" } },
             ],
           }
         : {}),
@@ -579,8 +579,8 @@ export async function getParentsCSV(
     // Generate CSV
     const headers = [
       "ID",
-      "Given Name",
-      "Surname",
+      "First Name",
+      "Last Name",
       "Email",
       "Status",
       "Created",
@@ -588,8 +588,8 @@ export async function getParentsCSV(
     const csvRows = (parents as Array<any>).map((p) =>
       [
         p.id,
-        `"${(p.givenName || "").replace(/"/g, '""')}"`,
-        `"${(p.surname || "").replace(/"/g, '""')}"`,
+        `"${(p.firstName || "").replace(/"/g, '""')}"`,
+        `"${(p.lastName || "").replace(/"/g, '""')}"`,
         `"${(p.emailAddress || "").replace(/"/g, '""')}"`,
         p.userId ? "Active" : "Inactive",
         new Date(p.createdAt).toISOString().split("T")[0],
@@ -664,7 +664,7 @@ export async function linkGuardian(
     try {
       assertParentPermission(authContext, "update", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to update parents" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const parsed = linkGuardianSchema.parse(input)
@@ -676,7 +676,7 @@ export async function linkGuardian(
     })
 
     if (!guardian) {
-      return { success: false, error: "Guardian not found" }
+      return actionError(ACTION_ERRORS.PARENT_NOT_FOUND)
     }
 
     // Verify student exists in this school
@@ -686,7 +686,7 @@ export async function linkGuardian(
     })
 
     if (!student) {
-      return { success: false, error: "Student not found" }
+      return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
     }
 
     // Check if relationship already exists
@@ -771,7 +771,7 @@ export async function createGuardianAndLink(
     try {
       assertParentPermission(authContext, "create", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to create parents" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const parsed = createGuardianAndLinkSchema.parse(input)
@@ -783,7 +783,7 @@ export async function createGuardianAndLink(
     })
 
     if (!student) {
-      return { success: false, error: "Student not found" }
+      return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
     }
 
     // Get or create guardian type
@@ -806,8 +806,8 @@ export async function createGuardianAndLink(
       guardian = await guardianModel.create({
         data: {
           schoolId,
-          givenName: parsed.givenName,
-          surname: parsed.surname,
+          firstName: parsed.firstName,
+          lastName: parsed.lastName,
           emailAddress: parsed.emailAddress || null,
         },
       })
@@ -916,7 +916,7 @@ export async function updateGuardianLink(
     try {
       assertParentPermission(authContext, "update", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to update parents" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const parsed = updateGuardianLinkSchema.parse(input)
@@ -928,7 +928,7 @@ export async function updateGuardianLink(
     })
 
     if (!existing) {
-      return { success: false, error: "Guardian relationship not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // If setting as primary, unset other primaries
@@ -1006,7 +1006,7 @@ export async function unlinkGuardian(
     try {
       assertParentPermission(authContext, "delete", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to delete parents" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const parsed = unlinkGuardianSchema.parse(input)
@@ -1018,7 +1018,7 @@ export async function unlinkGuardian(
     })
 
     if (!existing) {
-      return { success: false, error: "Guardian relationship not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Delete the relationship
@@ -1068,7 +1068,7 @@ export async function getGuardianTypes(): Promise<
     try {
       assertParentPermission(authContext, "read", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to read parents" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const guardianTypeModel = getModelOrThrow("guardianType")
@@ -1116,8 +1116,8 @@ export async function searchGuardians(query: string): Promise<
   ActionResponse<
     Array<{
       id: string
-      givenName: string
-      surname: string
+      firstName: string
+      lastName: string
       emailAddress: string | null
       phoneNumber: string | null
     }>
@@ -1138,7 +1138,7 @@ export async function searchGuardians(query: string): Promise<
     try {
       assertParentPermission(authContext, "read", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to read parents" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     if (!query || query.length < 2) {
@@ -1150,8 +1150,8 @@ export async function searchGuardians(query: string): Promise<
       where: {
         schoolId,
         OR: [
-          { givenName: { contains: query, mode: "insensitive" } },
-          { surname: { contains: query, mode: "insensitive" } },
+          { firstName: { contains: query, mode: "insensitive" } },
+          { lastName: { contains: query, mode: "insensitive" } },
           { emailAddress: { contains: query, mode: "insensitive" } },
         ],
       },
@@ -1166,8 +1166,8 @@ export async function searchGuardians(query: string): Promise<
 
     const mapped = guardians.map((g: any) => ({
       id: g.id,
-      givenName: g.givenName,
-      surname: g.surname,
+      firstName: g.firstName,
+      lastName: g.lastName,
       emailAddress: g.emailAddress,
       phoneNumber: g.phoneNumbers?.[0]?.phoneNumber || null,
     }))
@@ -1201,7 +1201,7 @@ export async function bulkDeleteParents(input: {
     try {
       assertParentPermission(authContext, "bulk_action", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized for bulk operations" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const { ids } = z

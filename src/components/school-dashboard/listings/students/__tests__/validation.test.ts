@@ -13,8 +13,8 @@ describe("Student Validation Schemas", () => {
   describe("studentCreateSchema", () => {
     it("validates valid student data", () => {
       const validData = {
-        givenName: "John",
-        surname: "Doe",
+        firstName: "John",
+        lastName: "Doe",
         dateOfBirth: "2010-05-15",
         gender: "male",
         enrollmentDate: "2024-09-01",
@@ -45,7 +45,7 @@ describe("Student Validation Schemas", () => {
   describe("studentUpdateSchema", () => {
     it("requires id for updates", () => {
       const withoutId = {
-        givenName: "John",
+        firstName: "John",
       }
 
       const result = studentUpdateSchema.safeParse(withoutId)
@@ -55,7 +55,7 @@ describe("Student Validation Schemas", () => {
     it("validates with id present", () => {
       const validUpdate = {
         id: "student-123",
-        givenName: "John Updated",
+        firstName: "John Updated",
       }
 
       const result = studentUpdateSchema.safeParse(validUpdate)
@@ -65,7 +65,7 @@ describe("Student Validation Schemas", () => {
     it("rejects empty id", () => {
       const emptyId = {
         id: "",
-        givenName: "John",
+        firstName: "John",
       }
 
       const result = studentUpdateSchema.safeParse(emptyId)
@@ -106,8 +106,8 @@ describe("Student Validation Schemas", () => {
     it("validates sort array structure", () => {
       const validSort = {
         sort: [
-          { id: "givenName", desc: true },
-          { id: "surname", desc: false },
+          { id: "firstName", desc: true },
+          { id: "lastName", desc: false },
         ],
       }
 

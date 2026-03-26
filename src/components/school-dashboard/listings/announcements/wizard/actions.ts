@@ -21,7 +21,7 @@ export async function getAnnouncementForWizard(
 > {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const announcement = await db.announcement.findFirst({
       where: { id: announcementId, schoolId },
@@ -45,7 +45,7 @@ export async function getAnnouncementForWizard(
     })
 
     if (!announcement) {
-      return { success: false, error: "Announcement not found" }
+      return actionError(ACTION_ERRORS.ANNOUNCEMENT_NOT_FOUND)
     }
 
     return { success: true, data: announcement as AnnouncementWizardData }
@@ -65,12 +65,12 @@ export async function createDraftAnnouncement(): Promise<
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const announcement = await db.announcement.create({
@@ -103,12 +103,12 @@ export async function completeAnnouncementWizard(
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Validate required fields are present
@@ -118,7 +118,7 @@ export async function completeAnnouncementWizard(
     })
 
     if (!announcement) {
-      return { success: false, error: "Announcement not found" }
+      return actionError(ACTION_ERRORS.ANNOUNCEMENT_NOT_FOUND)
     }
 
     if (!announcement.title || !announcement.title.trim()) {
@@ -181,12 +181,12 @@ export async function deleteDraftAnnouncement(
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Atomic delete — only if it's still a draft
@@ -195,7 +195,7 @@ export async function deleteDraftAnnouncement(
     })
 
     if (count === 0) {
-      return { success: false, error: "Draft announcement not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     return { success: true }

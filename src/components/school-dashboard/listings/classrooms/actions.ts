@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import { z } from "zod"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -27,16 +28,15 @@ export async function getClassrooms(
   input: z.infer<typeof getClassroomsSchema>
 ) {
   const { schoolId } = await getTenantContext()
-  if (!schoolId) return { success: false as const, error: "Missing school" }
+  if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
   const session = await auth()
   const authContext = getAuthContext(session)
-  if (!authContext)
-    return { success: false as const, error: "Not authenticated" }
+  if (!authContext) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
   try {
     assertClassroomPermission(authContext, "read", { schoolId })
   } catch {
-    return { success: false as const, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   const parsed = getClassroomsSchema.parse(input)
@@ -164,15 +164,15 @@ export async function createClassroom(
 ): Promise<ActionResponse<{ id: string }>> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const session = await auth()
     const authContext = getAuthContext(session)
-    if (!authContext) return { success: false, error: "Not authenticated" }
+    if (!authContext) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     try {
       assertClassroomPermission(authContext, "create", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to create classrooms" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const parsed = classroomCreateSchema.parse(input)
@@ -210,7 +210,7 @@ export async function createClassroom(
     return { success: true, data: { id: row.id } }
   } catch (error) {
     if ((error as any)?.code === "P2002") {
-      return { success: false, error: "A room with this name already exists" }
+      return actionError(ACTION_ERRORS.ALREADY_EXISTS)
     }
     return {
       success: false,
@@ -224,15 +224,15 @@ export async function updateClassroom(
 ): Promise<ActionResponse<void>> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const session = await auth()
     const authContext = getAuthContext(session)
-    if (!authContext) return { success: false, error: "Not authenticated" }
+    if (!authContext) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     try {
       assertClassroomPermission(authContext, "update", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to update classrooms" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const parsed = classroomUpdateSchema.parse(input)
@@ -241,7 +241,7 @@ export async function updateClassroom(
     const existing = await db.classroom.findFirst({
       where: { id, schoolId },
     })
-    if (!existing) return { success: false, error: "Classroom not found" }
+    if (!existing) return actionError(ACTION_ERRORS.CLASSROOM_NOT_FOUND)
 
     const data: Record<string, unknown> = {}
     if (typeof rest.roomName !== "undefined") data.roomName = rest.roomName
@@ -255,7 +255,7 @@ export async function updateClassroom(
     return { success: true, data: undefined }
   } catch (error) {
     if ((error as any)?.code === "P2002") {
-      return { success: false, error: "A room with this name already exists" }
+      return actionError(ACTION_ERRORS.ALREADY_EXISTS)
     }
     return {
       success: false,
@@ -269,15 +269,15 @@ export async function deleteClassroom(input: {
 }): Promise<ActionResponse<void>> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const session = await auth()
     const authContext = getAuthContext(session)
-    if (!authContext) return { success: false, error: "Not authenticated" }
+    if (!authContext) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     try {
       assertClassroomPermission(authContext, "delete", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to delete classrooms" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Check for references (parallel for performance)
@@ -385,8 +385,8 @@ export async function getRoomTimetable(input: {
         teacher: {
           select: {
             id: true,
-            givenName: true,
-            surname: true,
+            firstName: true,
+            lastName: true,
           },
         },
       },
@@ -412,7 +412,7 @@ export async function getRoomTimetable(input: {
       gradeName: s.class?.grade?.name ?? null,
       gradeId: s.class?.grade?.id ?? null,
       subject: s.class?.subject?.name ?? "",
-      teacher: s.teacher ? `${s.teacher.givenName} ${s.teacher.surname}` : "",
+      teacher: s.teacher ? `${s.teacher.firstName} ${s.teacher.lastName}` : "",
       teacherId: s.teacher?.id ?? "",
     })),
     workingDays: weekConfig?.workingDays ?? [0, 1, 2, 3, 4],
@@ -449,8 +449,8 @@ export async function getRoomClasses(input: { roomId: string }) {
       teacher: {
         select: {
           id: true,
-          givenName: true,
-          surname: true,
+          firstName: true,
+          lastName: true,
         },
       },
       _count: { select: { studentClasses: true } },

@@ -75,8 +75,8 @@ export default async function GuardianExamsContent({
       student: {
         select: {
           id: true,
-          givenName: true,
-          surname: true,
+          firstName: true,
+          lastName: true,
           user: { select: { username: true } },
         },
       },
@@ -137,7 +137,7 @@ export default async function GuardianExamsContent({
         studentId: { in: childIds },
       },
       include: {
-        student: { select: { givenName: true, surname: true } },
+        student: { select: { firstName: true, lastName: true } },
         exam: {
           select: {
             title: true,
@@ -256,7 +256,7 @@ export default async function GuardianExamsContent({
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium">
-                        {child.givenName} {child.surname}
+                        {child.firstName} {child.lastName}
                       </p>
                       <p className="text-muted-foreground text-sm">
                         {childResults.length}{" "}
@@ -412,7 +412,7 @@ export default async function GuardianExamsContent({
                       <div>
                         <p className="font-medium">{result.exam.title}</p>
                         <p className="text-muted-foreground text-sm">
-                          {result.student.givenName} {result.student.surname} -{" "}
+                          {result.student.firstName} {result.student.lastName} -{" "}
                           {name} - {format(result.exam.examDate, "MMM d, yyyy")}
                         </p>
                       </div>

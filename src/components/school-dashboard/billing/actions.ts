@@ -106,6 +106,7 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { stripe } from "@/components/saas-marketing/pricing/lib/stripe"
@@ -147,7 +148,7 @@ export async function getSubscriptionDetails(): Promise<
     const { schoolId } = await getTenantContext()
 
     if (!session?.user || !schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const subscription = await db.subscription.findFirst({
@@ -161,7 +162,7 @@ export async function getSubscriptionDetails(): Promise<
     return { success: true, data: subscription }
   } catch (error) {
     console.error("Error fetching subscription:", error)
-    return { success: false, error: "Failed to fetch subscription details" }
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }
 
@@ -180,7 +181,7 @@ export async function getSubscriptionTiers(): Promise<
     return { success: true, data: tiers }
   } catch (error) {
     console.error("Error fetching subscription tiers:", error)
-    return { success: false, error: "Failed to fetch subscription tiers" }
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }
 
@@ -195,7 +196,7 @@ export async function updateSubscription(
     const { schoolId } = await getTenantContext()
 
     if (!session?.user || !schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const validated = subscriptionUpdateSchema.parse(input)
@@ -207,7 +208,7 @@ export async function updateSubscription(
     })
 
     if (!currentSubscription) {
-      return { success: false, error: "No active subscription found" }
+      return actionError(ACTION_ERRORS.UNKNOWN)
     }
 
     // Get new tier
@@ -216,7 +217,7 @@ export async function updateSubscription(
     })
 
     if (!newTier) {
-      return { success: false, error: "Invalid subscription tier" }
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
 
     // Update subscription via Stripe
@@ -226,11 +227,11 @@ export async function updateSubscription(
         : newTier.yearlyPriceStripeId
 
     if (!stripePriceId) {
-      return { success: false, error: "Price not configured for this tier" }
+      return actionError(ACTION_ERRORS.UNKNOWN)
     }
 
     if (!stripe) {
-      return { success: false, error: "Stripe is not configured" }
+      return actionError(ACTION_ERRORS.UNKNOWN)
     }
 
     const updatedStripeSubscription = await stripe.subscriptions.update(
@@ -277,7 +278,7 @@ export async function updateSubscription(
     return { success: true, data: updatedSubscription }
   } catch (error) {
     console.error("Error updating subscription:", error)
-    return { success: false, error: "Failed to update subscription" }
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
   }
 }
 
@@ -292,7 +293,7 @@ export async function cancelSubscription(
     const { schoolId } = await getTenantContext()
 
     if (!session?.user || !schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const validated = cancelSubscriptionSchema.parse(input)
@@ -302,11 +303,11 @@ export async function cancelSubscription(
     })
 
     if (!subscription) {
-      return { success: false, error: "No active subscription found" }
+      return actionError(ACTION_ERRORS.UNKNOWN)
     }
 
     if (!stripe) {
-      return { success: false, error: "Stripe is not configured" }
+      return actionError(ACTION_ERRORS.UNKNOWN)
     }
 
     // Cancel in Stripe
@@ -342,7 +343,7 @@ export async function cancelSubscription(
     return { success: true, data: updatedSubscription }
   } catch (error) {
     console.error("Error cancelling subscription:", error)
-    return { success: false, error: "Failed to cancel subscription" }
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }
 
@@ -359,7 +360,7 @@ export async function getPaymentMethods(): Promise<
     const { schoolId } = await getTenantContext()
 
     if (!session?.user || !schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const paymentMethods = await db.billingPaymentMethod.findMany({
@@ -379,7 +380,7 @@ export async function getPaymentMethods(): Promise<
     return { success: true, data: paymentMethods }
   } catch (error) {
     console.error("Error fetching payment methods:", error)
-    return { success: false, error: "Failed to fetch payment methods" }
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }
 
@@ -394,7 +395,7 @@ export async function addPaymentMethod(
     const { schoolId } = await getTenantContext()
 
     if (!session?.user || !schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const validated = addPaymentMethodSchema.parse(input)
@@ -436,7 +437,7 @@ export async function addPaymentMethod(
     return { success: true, data: paymentMethod }
   } catch (error) {
     console.error("Error adding payment method:", error)
-    return { success: false, error: "Failed to add payment method" }
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }
 
@@ -451,7 +452,7 @@ export async function setDefaultPaymentMethod(
     const { schoolId } = await getTenantContext()
 
     if (!session?.user || !schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Verify ownership
@@ -460,7 +461,7 @@ export async function setDefaultPaymentMethod(
     })
 
     if (!paymentMethod) {
-      return { success: false, error: "Payment method not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Unset all defaults
@@ -479,7 +480,7 @@ export async function setDefaultPaymentMethod(
     return { success: true, data: undefined }
   } catch (error) {
     console.error("Error setting default payment method:", error)
-    return { success: false, error: "Failed to set default payment method" }
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }
 
@@ -494,7 +495,7 @@ export async function removePaymentMethod(
     const { schoolId } = await getTenantContext()
 
     if (!session?.user || !schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const paymentMethod = await db.billingPaymentMethod.findFirst({
@@ -502,7 +503,7 @@ export async function removePaymentMethod(
     })
 
     if (!paymentMethod) {
-      return { success: false, error: "Payment method not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Don't allow removing the default payment method if there are others
@@ -540,7 +541,7 @@ export async function removePaymentMethod(
     return { success: true, data: undefined }
   } catch (error) {
     console.error("Error removing payment method:", error)
-    return { success: false, error: "Failed to remove payment method" }
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }
 
@@ -559,7 +560,7 @@ export async function getInvoices(
     const { schoolId } = await getTenantContext()
 
     if (!session?.user || !schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const validated = filters
@@ -618,7 +619,7 @@ export async function getInvoices(
     return { success: true, data: { invoices, total } }
   } catch (error) {
     console.error("Error fetching invoices:", error)
-    return { success: false, error: "Failed to fetch invoices" }
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }
 
@@ -637,7 +638,7 @@ export async function getBillingHistory(
     const { schoolId } = await getTenantContext()
 
     if (!session?.user || !schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const validated = filters
@@ -684,7 +685,7 @@ export async function getBillingHistory(
     return { success: true, data: { history, total } }
   } catch (error) {
     console.error("Error fetching billing history:", error)
-    return { success: false, error: "Failed to fetch billing history" }
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }
 
@@ -741,7 +742,7 @@ export async function getBillingStats(): Promise<
     const { schoolId } = await getTenantContext()
 
     if (!session?.user || !schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Get current subscription
@@ -751,7 +752,7 @@ export async function getBillingStats(): Promise<
     })
 
     if (!subscription) {
-      return { success: false, error: "No active subscription" }
+      return actionError(ACTION_ERRORS.UNKNOWN)
     }
 
     // Get all invoices
@@ -892,7 +893,7 @@ export async function getBillingStats(): Promise<
     return { success: true, data: stats }
   } catch (error) {
     console.error("Error fetching billing stats:", error)
-    return { success: false, error: "Failed to fetch billing statistics" }
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }
 
@@ -909,7 +910,7 @@ export async function updateUsageMetrics(
     const { schoolId } = await getTenantContext()
 
     if (!session?.user || !schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const validated = updateUsageMetricsSchema.parse(input)
@@ -919,7 +920,7 @@ export async function updateUsageMetrics(
     })
 
     if (!subscription) {
-      return { success: false, error: "No active subscription" }
+      return actionError(ACTION_ERRORS.UNKNOWN)
     }
 
     const periodStart = new Date(subscription.currentPeriodEnd)
@@ -962,7 +963,7 @@ export async function updateUsageMetrics(
     return { success: true, data: usageMetrics }
   } catch (error) {
     console.error("Error updating usage metrics:", error)
-    return { success: false, error: "Failed to update usage metrics" }
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
   }
 }
 
@@ -979,7 +980,7 @@ export async function getBillingPreferences(): Promise<
     const { schoolId } = await getTenantContext()
 
     if (!session?.user || !schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     let preferences = await db.billingPreferences.findUnique({
@@ -996,7 +997,7 @@ export async function getBillingPreferences(): Promise<
     return { success: true, data: preferences }
   } catch (error) {
     console.error("Error fetching billing preferences:", error)
-    return { success: false, error: "Failed to fetch billing preferences" }
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }
 
@@ -1011,7 +1012,7 @@ export async function updateBillingPreferences(
     const { schoolId } = await getTenantContext()
 
     if (!session?.user || !schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const validated = updateBillingPreferencesSchema.parse(input)
@@ -1026,7 +1027,7 @@ export async function updateBillingPreferences(
     return { success: true, data: preferences }
   } catch (error) {
     console.error("Error updating billing preferences:", error)
-    return { success: false, error: "Failed to update billing preferences" }
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
   }
 }
 

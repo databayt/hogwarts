@@ -129,7 +129,7 @@ export function GradeDetailContent({
 
   // Format student name
   const studentName = grade.student
-    ? `${grade.student.givenName} ${grade.student.surname}`
+    ? `${grade.student.firstName} ${grade.student.lastName}`
     : t.unknown || "Unknown"
 
   // Get initials for avatar

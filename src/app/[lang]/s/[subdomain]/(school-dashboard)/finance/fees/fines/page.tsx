@@ -3,6 +3,7 @@
 
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { type FineRow } from "@/components/school-dashboard/finance/fees/fine-columns"
 import { FinesTable } from "@/components/school-dashboard/finance/fees/fine-table"
 import { getFineList } from "@/components/school-dashboard/finance/fees/queries"
@@ -15,6 +16,7 @@ interface Props {
 
 export default async function FinesPage({ params }: Props) {
   const { lang } = await params
+  const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
@@ -28,7 +30,7 @@ export default async function FinesPage({ params }: Props) {
 
   const data: FineRow[] = rows.map((f: any) => ({
     id: f.id,
-    studentName: [f.student?.givenName, f.student?.surname]
+    studentName: [f.student?.firstName, f.student?.lastName]
       .filter(Boolean)
       .join(" "),
     studentId: f.studentId,

@@ -2,6 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -15,7 +16,7 @@ export async function updatePaperConfig(
 ): Promise<ActionResponse> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const parsed = paperConfigSchema.parse(input)
 
@@ -26,7 +27,7 @@ export async function updatePaperConfig(
     })
 
     if (!genExam) {
-      return { success: false, error: "Generated exam not found" }
+      return actionError(ACTION_ERRORS.EXAM_NOT_FOUND)
     }
 
     // Upsert paper config

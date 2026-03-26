@@ -252,7 +252,10 @@ function AdvancedSettings({
     try {
       // In production, this would trigger a data export
       await new Promise((resolve) => setTimeout(resolve, 2000))
-      alert("Data export initiated. You will receive an email when ready.")
+      alert(
+        dictionary?.school?.settings?.dataExportInitiated ||
+          "Data export initiated. You will receive an email when ready."
+      )
     } finally {
       setDataExportLoading(false)
     }
@@ -328,7 +331,9 @@ function AdvancedSettings({
 
           {/* System Info */}
           <div className="bg-background rounded-xl p-4">
-            <p className="mb-2 font-medium">System Information</p>
+            <p className="mb-2 font-medium">
+              {dictionary?.school?.settings?.systemInfo || "System Information"}
+            </p>
             <div className="space-y-1 text-sm">
               <div className="flex justify-between rtl:flex-row-reverse">
                 <span className="text-muted-foreground">

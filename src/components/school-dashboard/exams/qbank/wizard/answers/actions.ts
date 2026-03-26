@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { Prisma } from "@prisma/client"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -15,7 +16,7 @@ export async function getQuestionAnswers(
 ): Promise<ActionResponse<AnswersFormData & { questionType: string }>> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const question = await db.questionBank.findFirst({
       where: { id: questionId, schoolId },
@@ -27,7 +28,7 @@ export async function getQuestionAnswers(
       },
     })
 
-    if (!question) return { success: false, error: "Question not found" }
+    if (!question) return actionError(ACTION_ERRORS.QUESTION_NOT_FOUND)
 
     // Parse options from JSON
     const optionsData = question.options as {
@@ -64,7 +65,7 @@ export async function updateQuestionAnswers(
 ): Promise<ActionResponse> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const parsed = answersSchema.parse(input)
 

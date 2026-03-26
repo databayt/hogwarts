@@ -30,8 +30,8 @@ import { selectionSchema, type SelectionFormData } from "./validation"
 
 interface StudentOption {
   id: string
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
 }
 
 interface ClassOption {
@@ -166,7 +166,7 @@ export const SelectionForm = forwardRef<WizardFormRef, SelectionFormProps>(
     }))
 
     const studentOptions = students.map((s) => ({
-      label: `${s.givenName} ${s.surname}`,
+      label: `${s.firstName} ${s.lastName}`,
       value: s.id,
     }))
 

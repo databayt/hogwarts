@@ -1,7 +1,6 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
@@ -32,47 +31,58 @@ export default async function EditorLayout({ children, params }: Props) {
     pendingDomainRequest,
   ] = await Promise.all([
     schoolId
-      ? db.school.findUnique({
-          where: { id: schoolId },
-          select: {
-            name: true,
-            preferredLanguage: true,
-            schoolType: true,
-            schoolLevel: true,
-            city: true,
-            state: true,
-            country: true,
-            domain: true,
-            logoUrl: true,
-            planType: true,
-            maxStudents: true,
-            maxTeachers: true,
-            tuitionFee: true,
-            currency: true,
-            paymentSchedule: true,
-          },
-        })
+      ? db.school
+          .findUnique({
+            where: { id: schoolId },
+            select: {
+              name: true,
+              preferredLanguage: true,
+              nameFormat: true,
+              schoolType: true,
+              schoolLevel: true,
+              city: true,
+              state: true,
+              country: true,
+              domain: true,
+              logoUrl: true,
+              planType: true,
+              maxStudents: true,
+              maxTeachers: true,
+              tuitionFee: true,
+              currency: true,
+              paymentSchedule: true,
+            },
+          })
+          .catch(() => null)
       : null,
     schoolId
-      ? db.schoolBranding.findUnique({
-          where: { schoolId },
-          select: {
-            primaryColor: true,
-            isPubliclyListed: true,
-            allowSelfEnrollment: true,
-            informationSharing: true,
-          },
-        })
+      ? db.schoolBranding
+          .findUnique({
+            where: { schoolId },
+            select: {
+              primaryColor: true,
+              isPubliclyListed: true,
+              allowSelfEnrollment: true,
+              informationSharing: true,
+            },
+          })
+          .catch(() => null)
       : null,
-    schoolId ? db.schoolYear.count({ where: { schoolId } }) : 0,
-    schoolId ? db.term.count({ where: { schoolId } }) : 0,
-    schoolId ? db.discount.count({ where: { schoolId, isActive: true } }) : 0,
+    schoolId ? db.schoolYear.count({ where: { schoolId } }).catch(() => 0) : 0,
+    schoolId ? db.term.count({ where: { schoolId } }).catch(() => 0) : 0,
     schoolId
-      ? db.domainRequest.findFirst({
-          where: { schoolId, status: { in: ["pending", "approved"] } },
-          select: { domain: true, status: true },
-          orderBy: { createdAt: "desc" },
-        })
+      ? db.discount
+          .count({ where: { schoolId, isActive: true } })
+          .catch(() => 0)
+      : 0,
+    schoolId
+      ? db.domainRequest
+          .findFirst({
+            where: { schoolId, status: { in: ["pending", "approved"] } },
+            select: { domain: true, status: true },
+            orderBy: { createdAt: "desc" },
+          })
+          .catch(() => null)
       : null,
   ])
 
@@ -83,6 +93,7 @@ export default async function EditorLayout({ children, params }: Props) {
     "capacity",
     "schedule",
     "branding",
+    "name-format",
     "join",
     "visibility",
     "price",
@@ -93,15 +104,12 @@ export default async function EditorLayout({ children, params }: Props) {
   ] as const
 
   // Build dynamic descriptions from live data
-  async function getDynamicDescription(key: string): Promise<string | null> {
+  function getDynamicDescription(key: string): string | null {
     if (!school) return null
 
     switch (key) {
-      case "title": {
-        if (!school.name || !schoolId) return null
-        const contentLang = (school.preferredLanguage || "ar") as "ar" | "en"
-        return getDisplayText(school.name, contentLang, lang, schoolId)
-      }
+      case "title":
+        return school.name || null
       case "description": {
         const parts = [school.schoolType, school.schoolLevel].filter(Boolean)
         return parts.length > 0 ? parts.join(" · ") : null
@@ -159,6 +167,10 @@ export default async function EditorLayout({ children, params }: Props) {
           : "No active discounts"
       case "legal":
         return school.planType ? `${school.planType} plan` : null
+      case "name-format":
+        return school.nameFormat === "full"
+          ? "Full Name (single field)"
+          : "Split (First + Last)"
       case "domain": {
         if (pendingDomainRequest) {
           const status =
@@ -172,20 +184,18 @@ export default async function EditorLayout({ children, params }: Props) {
     }
   }
 
-  const sectionLinks = await Promise.all(
-    SECTION_KEYS.map(async (key) => {
-      const section = d?.[key] as
-        | { title: string; description: string }
-        | undefined
-      const dynamicDesc = await getDynamicDescription(key)
+  const sectionLinks = SECTION_KEYS.map((key) => {
+    const section = d?.[key] as
+      | { title: string; description: string }
+      | undefined
+    const dynamicDesc = getDynamicDescription(key)
 
-      return {
-        key,
-        title: key,
-        description: dynamicDesc ?? section?.description ?? "",
-      }
-    })
-  )
+    return {
+      key,
+      title: key,
+      description: dynamicDesc ?? section?.description ?? "",
+    }
+  })
 
   return (
     <div className="h-[calc(100vh-15rem)] overflow-hidden">

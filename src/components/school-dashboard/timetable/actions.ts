@@ -143,7 +143,7 @@ export async function validateTeacherConstraints(input: {
   // Get teacher info
   const teacher = await db.teacher.findFirst({
     where: { id: input.teacherId, schoolId: input.schoolId },
-    select: { id: true, givenName: true, surname: true },
+    select: { id: true, firstName: true, lastName: true },
   })
 
   if (!teacher) {
@@ -161,7 +161,7 @@ export async function validateTeacherConstraints(input: {
     }
   }
 
-  const teacherName = `${teacher.givenName} ${teacher.surname}`
+  const teacherName = `${teacher.firstName} ${teacher.lastName}`
 
   // Get teacher constraint (term-specific or school-wide)
   const constraint = await db.teacherConstraint.findFirst({
@@ -652,7 +652,7 @@ export async function detectTimetableConflicts(input?: unknown) {
           classId: true,
           teacherId: true,
           class: { select: { id: true, name: true } },
-          teacher: { select: { givenName: true, surname: true } },
+          teacher: { select: { firstName: true, lastName: true } },
         },
         take: 2, // We only need 2 to show conflict
       })
@@ -665,7 +665,7 @@ export async function detectTimetableConflicts(input?: unknown) {
           classB: { id: b.class.id, name: b.class.name },
           teacher: {
             id: a.teacherId,
-            name: [a.teacher?.givenName, a.teacher?.surname]
+            name: [a.teacher?.firstName, a.teacher?.lastName]
               .filter(Boolean)
               .join(" "),
           },
@@ -727,7 +727,7 @@ export async function detectTimetableConflicts(input?: unknown) {
       classroomId: true,
       startPeriodId: true,
       endPeriodId: true,
-      teacher: { select: { id: true, givenName: true, surname: true } },
+      teacher: { select: { id: true, firstName: true, lastName: true } },
       classroom: { select: { id: true, roomName: true } },
       startPeriod: { select: { startTime: true } },
       endPeriod: { select: { endTime: true } },
@@ -757,7 +757,7 @@ export async function detectTimetableConflicts(input?: unknown) {
           classB: { id: b.id, name: b.name },
           teacher: {
             id: a.teacherId,
-            name: [a.teacher?.givenName, a.teacher?.surname]
+            name: [a.teacher?.firstName, a.teacher?.lastName]
               .filter(Boolean)
               .join(" "),
           },
@@ -850,14 +850,14 @@ export async function getTeachersForSelection(input: unknown) {
 
   const rows = await db.teacher.findMany({
     where: { schoolId },
-    orderBy: { surname: "asc" },
-    select: { id: true, givenName: true, surname: true },
+    orderBy: { lastName: "asc" },
+    select: { id: true, firstName: true, lastName: true },
   })
 
   return {
     teachers: rows.map((t) => ({
       id: t.id,
-      label: [t.givenName, t.surname].filter(Boolean).join(" "),
+      label: [t.firstName, t.lastName].filter(Boolean).join(" "),
     })),
   }
 }
@@ -896,10 +896,10 @@ export async function upsertTimetableSlot(input: unknown) {
       // Get teacher name for better error message
       const teacher = await db.teacher.findFirst({
         where: { id: validatedInput.teacherId, schoolId },
-        select: { givenName: true, surname: true },
+        select: { firstName: true, lastName: true },
       })
       const teacherName = teacher
-        ? `${teacher.givenName} ${teacher.surname}`
+        ? `${teacher.firstName} ${teacher.lastName}`
         : "Selected teacher"
       const name = classInfo.subject?.name || "this subject"
 
@@ -1028,7 +1028,7 @@ export async function moveTimetableSlot(input: {
     where: { id: input.slotId, schoolId },
     include: {
       class: { select: { id: true, name: true } },
-      teacher: { select: { id: true, givenName: true, surname: true } },
+      teacher: { select: { id: true, firstName: true, lastName: true } },
       classroom: { select: { id: true, roomName: true } },
     },
   })
@@ -1081,7 +1081,7 @@ export async function moveTimetableSlot(input: {
     },
     include: {
       class: { select: { name: true } },
-      teacher: { select: { givenName: true, surname: true } },
+      teacher: { select: { firstName: true, lastName: true } },
     },
   })
 
@@ -1461,10 +1461,10 @@ export async function getWeeklyTimetable(input: unknown): Promise<{
           id: true,
           name: true,
           subject: { select: { name: true } },
-          teacher: { select: { givenName: true, surname: true } },
+          teacher: { select: { firstName: true, lastName: true } },
         },
       },
-      teacher: { select: { givenName: true, surname: true } },
+      teacher: { select: { firstName: true, lastName: true } },
     },
   })
 
@@ -1488,10 +1488,10 @@ export async function getWeeklyTimetable(input: unknown): Promise<{
         }
       }
       const teacherName =
-        [row.teacher?.givenName, row.teacher?.surname]
+        [row.teacher?.firstName, row.teacher?.lastName]
           .filter(Boolean)
           .join(" ") ||
-        [row.class?.teacher?.givenName, row.class?.teacher?.surname]
+        [row.class?.teacher?.firstName, row.class?.teacher?.lastName]
           .filter(Boolean)
           .join(" ")
       // Prefer section-based subject name, fall back to class-based for backward compat
@@ -1579,7 +1579,7 @@ export async function getTimetableByClass(input: {
       weekOffset: input.weekOffset ?? 0,
     },
     include: {
-      teacher: { select: { id: true, givenName: true, surname: true } },
+      teacher: { select: { id: true, firstName: true, lastName: true } },
       classroom: { select: { id: true, roomName: true } },
       class: {
         select: {
@@ -1623,7 +1623,7 @@ export async function getTimetableByClass(input: {
       dayOfWeek: s.dayOfWeek,
       periodId: s.periodId,
       periodName: s.period.name,
-      teacher: s.teacher ? `${s.teacher.givenName} ${s.teacher.surname}` : "",
+      teacher: s.teacher ? `${s.teacher.firstName} ${s.teacher.lastName}` : "",
       teacherId: s.teacherId ?? undefined,
       room: s.classroom?.roomName || "",
       roomId: s.classroomId ?? undefined,
@@ -1666,7 +1666,7 @@ async function getTimetableByClassIds(input: {
       weekOffset: input.weekOffset ?? 0,
     },
     include: {
-      teacher: { select: { id: true, givenName: true, surname: true } },
+      teacher: { select: { id: true, firstName: true, lastName: true } },
       classroom: { select: { id: true, roomName: true } },
       class: {
         select: {
@@ -1694,7 +1694,7 @@ async function getTimetableByClassIds(input: {
       dayOfWeek: s.dayOfWeek,
       periodId: s.periodId,
       periodName: s.period.name,
-      teacher: s.teacher ? `${s.teacher.givenName} ${s.teacher.surname}` : "",
+      teacher: s.teacher ? `${s.teacher.firstName} ${s.teacher.lastName}` : "",
       teacherId: s.teacherId,
       room: s.classroom?.roomName || "",
       roomId: s.classroomId,
@@ -1727,8 +1727,8 @@ export async function getTimetableByStudentGrade(input: {
     where: { userId, schoolId },
     select: {
       id: true,
-      givenName: true,
-      surname: true,
+      firstName: true,
+      lastName: true,
       studentClasses: {
         where: { schoolId },
         select: {
@@ -1826,7 +1826,7 @@ export async function getTimetableByStudentGrade(input: {
       weekOffset: input.weekOffset ?? 0,
     },
     include: {
-      teacher: { select: { id: true, givenName: true, surname: true } },
+      teacher: { select: { id: true, firstName: true, lastName: true } },
       classroom: { select: { id: true, roomName: true } },
       class: {
         select: {
@@ -1844,7 +1844,7 @@ export async function getTimetableByStudentGrade(input: {
   return {
     studentInfo: {
       id: student.id,
-      name: `${student.givenName} ${student.surname}`,
+      name: `${student.firstName} ${student.lastName}`,
       gradeName,
       gradeLang,
     },
@@ -1866,7 +1866,7 @@ export async function getTimetableByStudentGrade(input: {
       dayOfWeek: s.dayOfWeek,
       periodId: s.periodId,
       periodName: s.period.name,
-      teacher: s.teacher ? `${s.teacher.givenName} ${s.teacher.surname}` : "",
+      teacher: s.teacher ? `${s.teacher.firstName} ${s.teacher.lastName}` : "",
       teacherId: s.teacherId,
       room: s.classroom?.roomName || "",
       roomId: s.classroomId,
@@ -1932,7 +1932,7 @@ export async function getTimetableByGradeLevel(input: {
       weekOffset: input.weekOffset ?? 0,
     },
     include: {
-      teacher: { select: { id: true, givenName: true, surname: true } },
+      teacher: { select: { id: true, firstName: true, lastName: true } },
       classroom: { select: { id: true, roomName: true } },
       class: {
         select: {
@@ -1979,7 +1979,7 @@ export async function getTimetableByGradeLevel(input: {
       dayOfWeek: s.dayOfWeek,
       periodId: s.periodId,
       periodName: s.period.name,
-      teacher: s.teacher ? `${s.teacher.givenName} ${s.teacher.surname}` : "",
+      teacher: s.teacher ? `${s.teacher.firstName} ${s.teacher.lastName}` : "",
       teacherId: s.teacherId,
       room: s.classroom?.roomName || "",
       roomId: s.classroomId,
@@ -2103,7 +2103,7 @@ export async function getTimetableByTeacher(input: {
 
   const teacherInfo = await db.teacher.findFirst({
     where: { id: input.teacherId, schoolId },
-    select: { id: true, givenName: true, surname: true, emailAddress: true },
+    select: { id: true, firstName: true, lastName: true, emailAddress: true },
   })
 
   // Calculate workload
@@ -2114,7 +2114,7 @@ export async function getTimetableByTeacher(input: {
     teacherInfo: teacherInfo
       ? {
           id: teacherInfo.id,
-          name: `${teacherInfo.givenName} ${teacherInfo.surname}`,
+          name: `${teacherInfo.firstName} ${teacherInfo.lastName}`,
           email: teacherInfo.emailAddress,
         }
       : null,
@@ -2190,7 +2190,7 @@ export async function getTimetableByRoom(input: {
       },
       subject: { select: { id: true, name: true } },
       section: { select: { id: true, name: true } },
-      teacher: { select: { id: true, givenName: true, surname: true } },
+      teacher: { select: { id: true, firstName: true, lastName: true } },
       period: {
         select: { id: true, name: true, startTime: true, endTime: true },
       },
@@ -2234,7 +2234,7 @@ export async function getTimetableByRoom(input: {
       className: s.class?.name || s.section?.name || "",
       classId: s.classId,
       sectionId: s.sectionId,
-      teacher: s.teacher ? `${s.teacher.givenName} ${s.teacher.surname}` : "",
+      teacher: s.teacher ? `${s.teacher.firstName} ${s.teacher.lastName}` : "",
       teacherId: s.teacherId,
       subject: s.class?.subject?.name || s.subject?.name || s.class?.name || "",
     })),
@@ -2272,7 +2272,7 @@ export async function getTimetableAnalytics(input: { termId: string }) {
   const slots = await db.timetable.findMany({
     where: { schoolId, termId: input.termId, weekOffset: 0 },
     include: {
-      teacher: { select: { id: true, givenName: true, surname: true } },
+      teacher: { select: { id: true, firstName: true, lastName: true } },
       classroom: { select: { id: true, roomName: true, capacity: true } },
       class: {
         select: {
@@ -2298,7 +2298,7 @@ export async function getTimetableAnalytics(input: { termId: string }) {
     if (slot.teacher) {
       const key = slot.teacherId ?? ""
       const existing = teacherWorkload.get(key) || {
-        name: `${slot.teacher.givenName} ${slot.teacher.surname}`,
+        name: `${slot.teacher.firstName} ${slot.teacher.lastName}`,
         periods: 0,
         classes: new Set(),
         subjects: new Set(),
@@ -2414,7 +2414,7 @@ export async function deleteTimetableSlot(input: {
       weekOffset: input.weekOffset,
     },
     include: {
-      teacher: { select: { userId: true, givenName: true, surname: true } },
+      teacher: { select: { userId: true, firstName: true, lastName: true } },
       class: { select: { name: true } },
     },
   })
@@ -2654,8 +2654,8 @@ export async function getPersonalizedTimetable(input: {
             student: {
               select: {
                 id: true,
-                givenName: true,
-                surname: true,
+                firstName: true,
+                lastName: true,
               },
             },
           },
@@ -2746,8 +2746,8 @@ export async function getGuardianChildren() {
           student: {
             select: {
               id: true,
-              givenName: true,
-              surname: true,
+              firstName: true,
+              lastName: true,
               profilePhotoUrl: true,
               studentClasses: {
                 where: { schoolId },
@@ -2794,7 +2794,7 @@ export async function getGuardianChildren() {
 
     return {
       id: sg.student.id,
-      name: `${sg.student.givenName} ${sg.student.surname}`,
+      name: `${sg.student.firstName} ${sg.student.lastName}`,
       photoUrl: sg.student.profilePhotoUrl,
       classId: enrollment?.class.id,
       className: enrollment?.class.name,
@@ -2867,7 +2867,7 @@ export async function getChildTimetable(input: {
   // Get student info
   const student = await db.student.findFirst({
     where: { id: input.childId, schoolId },
-    select: { id: true, givenName: true, surname: true },
+    select: { id: true, firstName: true, lastName: true },
   })
 
   // Get timetable slots for ALL enrolled classes
@@ -2882,7 +2882,7 @@ export async function getChildTimetable(input: {
     studentInfo: student
       ? {
           id: student.id,
-          name: `${student.givenName} ${student.surname}`,
+          name: `${student.firstName} ${student.lastName}`,
         }
       : null,
     ...timetableData,
@@ -2961,7 +2961,7 @@ export async function getTodaySchedule(input?: { date?: Date }) {
       class: {
         select: { name: true, subject: { select: { name: true } } },
       },
-      teacher: { select: { givenName: true, surname: true } },
+      teacher: { select: { firstName: true, lastName: true } },
       classroom: { select: { roomName: true } },
       period: {
         select: { id: true, name: true, startTime: true, endTime: true },
@@ -2978,7 +2978,7 @@ export async function getTodaySchedule(input?: { date?: Date }) {
     subject: slot.class?.subject?.name || slot.class?.name || "",
     className: slot.class?.name || "",
     teacher: slot.teacher
-      ? `${slot.teacher.givenName} ${slot.teacher.surname}`
+      ? `${slot.teacher.firstName} ${slot.teacher.lastName}`
       : "",
     room: slot.classroom?.roomName || "",
   }))
@@ -3036,7 +3036,7 @@ export async function getTeacherConstraints(input: {
     },
     include: {
       unavailableBlocks: true,
-      teacher: { select: { givenName: true, surname: true } },
+      teacher: { select: { firstName: true, lastName: true } },
     },
     orderBy: { termId: "desc" },
   })
@@ -3049,7 +3049,7 @@ export async function getTeacherConstraints(input: {
     constraint: {
       id: constraint.id,
       teacherId: constraint.teacherId,
-      teacherName: `${constraint.teacher.givenName} ${constraint.teacher.surname}`,
+      teacherName: `${constraint.teacher.firstName} ${constraint.teacher.lastName}`,
       termId: constraint.termId,
       maxPeriodsPerDay: constraint.maxPeriodsPerDay,
       maxPeriodsPerWeek: constraint.maxPeriodsPerWeek,
@@ -3788,8 +3788,8 @@ export async function generateTimetablePreview(input: {
     where: { schoolId, employmentStatus: "ACTIVE" },
     select: {
       id: true,
-      givenName: true,
-      surname: true,
+      firstName: true,
+      lastName: true,
       subjectExpertise: {
         where: { schoolId },
         select: { subjectId: true },
@@ -3821,7 +3821,7 @@ export async function generateTimetablePreview(input: {
 
     return {
       teacherId: t.id,
-      teacherName: `${t.givenName} ${t.surname}`,
+      teacherName: `${t.firstName} ${t.lastName}`,
       maxPeriodsPerDay: constraint?.maxPeriodsPerDay || 6,
       maxPeriodsPerWeek: constraint?.maxPeriodsPerWeek || 25,
       maxConsecutive: constraint?.maxConsecutivePeriods || 3,
@@ -5124,7 +5124,7 @@ export async function createTeacherAbsence(input: {
   // Verify teacher exists in this school
   const teacher = await db.teacher.findFirst({
     where: { id: input.teacherId, schoolId },
-    select: { id: true, givenName: true, surname: true },
+    select: { id: true, firstName: true, lastName: true },
   })
 
   if (!teacher) throw new Error("TEACHER_NOT_FOUND")
@@ -5160,7 +5160,7 @@ export async function createTeacherAbsence(input: {
       status: "PENDING",
     },
     include: {
-      teacher: { select: { givenName: true, surname: true } },
+      teacher: { select: { firstName: true, lastName: true } },
     },
   })
 
@@ -5169,7 +5169,7 @@ export async function createTeacherAbsence(input: {
     entityId: absence.id,
     metadata: {
       teacherId: input.teacherId,
-      teacherName: `${teacher.givenName} ${teacher.surname}`,
+      teacherName: `${teacher.firstName} ${teacher.lastName}`,
       absenceType: input.absenceType,
       startDate: input.startDate.toISOString(),
       endDate: input.endDate.toISOString(),
@@ -5268,11 +5268,11 @@ export async function getTeacherAbsences(input: {
       take: input.limit ?? 50,
       skip: input.offset ?? 0,
       include: {
-        teacher: { select: { id: true, givenName: true, surname: true } },
+        teacher: { select: { id: true, firstName: true, lastName: true } },
         substitutionRecords: {
           include: {
             substituteTeacher: {
-              select: { id: true, givenName: true, surname: true },
+              select: { id: true, firstName: true, lastName: true },
             },
             originalSlot: {
               include: {
@@ -5298,7 +5298,7 @@ export async function getTeacherAbsences(input: {
     absences: absences.map((a) => ({
       id: a.id,
       teacherId: a.teacherId,
-      teacherName: `${a.teacher.givenName} ${a.teacher.surname}`,
+      teacherName: `${a.teacher.firstName} ${a.teacher.lastName}`,
       startDate: a.startDate,
       endDate: a.endDate,
       absenceType: a.absenceType,
@@ -5310,7 +5310,7 @@ export async function getTeacherAbsences(input: {
         status: s.status,
         slotDate: s.slotDate,
         substituteId: s.substituteTeacherId,
-        substituteName: `${s.substituteTeacher.givenName} ${s.substituteTeacher.surname}`,
+        substituteName: `${s.substituteTeacher.firstName} ${s.substituteTeacher.lastName}`,
         periodName: s.originalSlot.period.name,
         className: s.originalSlot.class?.name,
         name: s.originalSlot.class?.subject?.name,
@@ -5410,7 +5410,7 @@ export async function findAvailableSubstitutes(input: {
 
     available.push({
       id: teacher.id,
-      name: `${teacher.givenName} ${teacher.surname}`,
+      name: `${teacher.firstName} ${teacher.lastName}`,
       hasSubjectExpertise: !!subjectExp,
       expertiseLevel: subjectExp?.expertiseLevel || null,
       currentWorkload: weekSlots,
@@ -5449,7 +5449,7 @@ export async function assignSubstitute(input: {
   // Verify absence exists
   const absence = await db.teacherAbsence.findFirst({
     where: { id: input.absenceId, schoolId },
-    include: { teacher: { select: { givenName: true, surname: true } } },
+    include: { teacher: { select: { firstName: true, lastName: true } } },
   })
 
   if (!absence) throw new Error("ABSENCE_NOT_FOUND")
@@ -5458,7 +5458,7 @@ export async function assignSubstitute(input: {
   const originalSlot = await db.timetable.findFirst({
     where: { id: input.originalSlotId, schoolId },
     include: {
-      teacher: { select: { id: true, givenName: true, surname: true } },
+      teacher: { select: { id: true, firstName: true, lastName: true } },
       class: {
         select: { name: true, subject: { select: { name: true } } },
       },
@@ -5471,7 +5471,7 @@ export async function assignSubstitute(input: {
   // Verify substitute teacher
   const substitute = await db.teacher.findFirst({
     where: { id: input.substituteTeacherId, schoolId },
-    select: { id: true, givenName: true, surname: true },
+    select: { id: true, firstName: true, lastName: true },
   })
 
   if (!substitute) throw new Error("SUBSTITUTE_TEACHER_NOT_FOUND")
@@ -5503,8 +5503,8 @@ export async function assignSubstitute(input: {
       notes: input.notes,
     },
     include: {
-      substituteTeacher: { select: { givenName: true, surname: true } },
-      originalTeacher: { select: { givenName: true, surname: true } },
+      substituteTeacher: { select: { firstName: true, lastName: true } },
+      originalTeacher: { select: { firstName: true, lastName: true } },
     },
   })
 
@@ -5513,8 +5513,8 @@ export async function assignSubstitute(input: {
     entityId: substitution.id,
     metadata: {
       type: "substitution",
-      originalTeacher: `${originalSlot.teacher?.givenName} ${originalSlot.teacher?.surname}`,
-      substituteTeacher: `${substitute.givenName} ${substitute.surname}`,
+      originalTeacher: `${originalSlot.teacher?.firstName} ${originalSlot.teacher?.lastName}`,
+      substituteTeacher: `${substitute.firstName} ${substitute.lastName}`,
       slotDate: input.slotDate.toISOString(),
       periodName: originalSlot.period?.name,
       className: originalSlot.class?.name,
@@ -5536,7 +5536,7 @@ export async function assignSubstitute(input: {
       userId: subTeacherUser.userId,
       type: "system_alert",
       title: "تعيين بديل",
-      body: `تم تعيينك كبديل لـ ${originalSlot.teacher?.givenName} ${originalSlot.teacher?.surname} في ${originalSlot.class?.name} (${originalSlot.period?.name})`,
+      body: `تم تعيينك كبديل لـ ${originalSlot.teacher?.firstName} ${originalSlot.teacher?.lastName} في ${originalSlot.class?.name} (${originalSlot.period?.name})`,
       lang: schoolPref3?.preferredLanguage ?? "ar",
       priority: "high",
       channels: ["in_app", "email"],
@@ -5679,10 +5679,10 @@ export async function getSubstitutionRecords(input: {
       skip: input.offset ?? 0,
       include: {
         originalTeacher: {
-          select: { id: true, givenName: true, surname: true },
+          select: { id: true, firstName: true, lastName: true },
         },
         substituteTeacher: {
-          select: { id: true, givenName: true, surname: true },
+          select: { id: true, firstName: true, lastName: true },
         },
         originalSlot: {
           include: {
@@ -5714,11 +5714,11 @@ export async function getSubstitutionRecords(input: {
       confirmedAt: r.confirmedAt,
       originalTeacher: {
         id: r.originalTeacher.id,
-        name: `${r.originalTeacher.givenName} ${r.originalTeacher.surname}`,
+        name: `${r.originalTeacher.firstName} ${r.originalTeacher.lastName}`,
       },
       substituteTeacher: {
         id: r.substituteTeacher.id,
-        name: `${r.substituteTeacher.givenName} ${r.substituteTeacher.surname}`,
+        name: `${r.substituteTeacher.firstName} ${r.substituteTeacher.lastName}`,
       },
       slot: {
         id: r.originalSlotId,
@@ -5840,7 +5840,7 @@ export async function getMyUpcomingSubstitutions(input: { limit?: number }) {
     orderBy: { slotDate: "asc" },
     take: input.limit ?? 10,
     include: {
-      originalTeacher: { select: { givenName: true, surname: true } },
+      originalTeacher: { select: { firstName: true, lastName: true } },
       originalSlot: {
         include: {
           period: { select: { name: true, startTime: true, endTime: true } },
@@ -5858,7 +5858,7 @@ export async function getMyUpcomingSubstitutions(input: { limit?: number }) {
       id: r.id,
       slotDate: r.slotDate,
       status: r.status,
-      originalTeacher: `${r.originalTeacher.givenName} ${r.originalTeacher.surname}`,
+      originalTeacher: `${r.originalTeacher.firstName} ${r.originalTeacher.lastName}`,
       periodName: r.originalSlot.period.name,
       periodTime: `${r.originalSlot.period.startTime} - ${r.originalSlot.period.endTime}`,
       className: r.originalSlot.class?.name,
@@ -5885,7 +5885,7 @@ export async function getSlotsNeedingSubstitutes(input: {
   const absence = await db.teacherAbsence.findFirst({
     where: { id: input.absenceId, schoolId },
     include: {
-      teacher: { select: { id: true, givenName: true, surname: true } },
+      teacher: { select: { id: true, firstName: true, lastName: true } },
       substitutionRecords: {
         select: { originalSlotId: true, slotDate: true, status: true },
       },
@@ -5980,7 +5980,7 @@ export async function getSlotsNeedingSubstitutes(input: {
   return {
     teacher: {
       id: absence.teacherId,
-      name: `${absence.teacher.givenName} ${absence.teacher.surname}`,
+      name: `${absence.teacher.firstName} ${absence.teacher.lastName}`,
     },
     absence: {
       id: absence.id,
@@ -6068,8 +6068,8 @@ export async function getTeachersForSlotEditor(input: { termId: string }) {
     where: { schoolId, employmentStatus: "ACTIVE" },
     select: {
       id: true,
-      givenName: true,
-      surname: true,
+      firstName: true,
+      lastName: true,
       user: { select: { email: true, image: true } },
       teacherDepartments: {
         where: { isPrimary: true },
@@ -6086,8 +6086,8 @@ export async function getTeachersForSlotEditor(input: { termId: string }) {
   return {
     teachers: teachers.map((t) => ({
       id: t.id,
-      firstName: t.givenName || "",
-      lastName: t.surname || "",
+      firstName: t.firstName || "",
+      lastName: t.lastName || "",
       email: t.user?.email || "",
       photoUrl: t.user?.image || undefined,
       department: t.teacherDepartments[0]?.department?.departmentName,

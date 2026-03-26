@@ -30,13 +30,13 @@ export function InfoStep() {
       <div className="space-y-4">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <TextField
-            name="givenName"
+            name="firstName"
             label="First Name"
             placeholder="Enter your first name"
             required
           />
           <TextField
-            name="surname"
+            name="lastName"
             label="Last Name"
             placeholder="Enter your last name"
             required

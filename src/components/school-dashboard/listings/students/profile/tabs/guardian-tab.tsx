@@ -76,8 +76,8 @@ export function GuardianTab({ student }: GuardianTabProps) {
 
   // Form state for adding guardian
   const [formData, setFormData] = useState({
-    givenName: "",
-    surname: "",
+    firstName: "",
+    lastName: "",
     emailAddress: "",
     phoneNumber: "",
     guardianType: "",
@@ -89,8 +89,8 @@ export function GuardianTab({ student }: GuardianTabProps) {
 
   const guardians = student.studentGuardians || []
 
-  const getInitials = (givenName: string, surname: string) => {
-    return `${givenName?.[0] || ""}${surname?.[0] || ""}`.toUpperCase()
+  const getInitials = (firstName: string, lastName: string) => {
+    return `${firstName?.[0] || ""}${lastName?.[0] || ""}`.toUpperCase()
   }
 
   const getPhoneIcon = (type: string) => {
@@ -110,8 +110,8 @@ export function GuardianTab({ student }: GuardianTabProps) {
 
   const resetForm = () => {
     setFormData({
-      givenName: "",
-      surname: "",
+      firstName: "",
+      lastName: "",
       emailAddress: "",
       phoneNumber: "",
       guardianType: "",
@@ -126,8 +126,8 @@ export function GuardianTab({ student }: GuardianTabProps) {
     startTransition(async () => {
       const result = await createGuardianAndLink({
         studentId: student.id,
-        givenName: formData.givenName,
-        surname: formData.surname,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
         emailAddress: formData.emailAddress || undefined,
         phoneNumber: formData.phoneNumber || undefined,
         guardianType: formData.guardianType,
@@ -191,8 +191,8 @@ export function GuardianTab({ student }: GuardianTabProps) {
   const openEditDialog = (guardianRel: any) => {
     setSelectedGuardian(guardianRel)
     setFormData({
-      givenName: guardianRel.guardian.givenName || "",
-      surname: guardianRel.guardian.surname || "",
+      firstName: guardianRel.guardian.firstName || "",
+      lastName: guardianRel.guardian.lastName || "",
       emailAddress: guardianRel.guardian.emailAddress || "",
       phoneNumber: guardianRel.guardian.phoneNumbers?.[0]?.phoneNumber || "",
       guardianType: guardianRel.guardianType?.name || "",
@@ -223,7 +223,7 @@ export function GuardianTab({ student }: GuardianTabProps) {
         const guardian = guardianRel.guardian
         const guardianType =
           guardianRel.guardianType?.name || guardianRel.relation
-        const fullName = `${guardian.givenName} ${guardian.surname}`
+        const fullName = `${guardian.firstName} ${guardian.lastName}`
 
         return (
           <Card
@@ -236,7 +236,7 @@ export function GuardianTab({ student }: GuardianTabProps) {
                   <Avatar className="h-16 w-16">
                     <AvatarImage src={guardian.profileUrl} alt={fullName} />
                     <AvatarFallback>
-                      {getInitials(guardian.givenName, guardian.surname)}
+                      {getInitials(guardian.firstName, guardian.lastName)}
                     </AvatarFallback>
                   </Avatar>
                   <div>
@@ -406,23 +406,23 @@ export function GuardianTab({ student }: GuardianTabProps) {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="givenName">First Name *</Label>
+                <Label htmlFor="firstName">First Name *</Label>
                 <Input
-                  id="givenName"
-                  value={formData.givenName}
+                  id="firstName"
+                  value={formData.firstName}
                   onChange={(e) =>
-                    setFormData({ ...formData, givenName: e.target.value })
+                    setFormData({ ...formData, firstName: e.target.value })
                   }
                   placeholder="Enter first name"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="surname">Last Name *</Label>
+                <Label htmlFor="lastName">Last Name *</Label>
                 <Input
-                  id="surname"
-                  value={formData.surname}
+                  id="lastName"
+                  value={formData.lastName}
                   onChange={(e) =>
-                    setFormData({ ...formData, surname: e.target.value })
+                    setFormData({ ...formData, lastName: e.target.value })
                   }
                   placeholder="Enter last name"
                 />
@@ -542,8 +542,8 @@ export function GuardianTab({ student }: GuardianTabProps) {
               onClick={handleAddGuardian}
               disabled={
                 isPending ||
-                !formData.givenName ||
-                !formData.surname ||
+                !formData.firstName ||
+                !formData.lastName ||
                 !formData.guardianType
               }
             >
@@ -567,7 +567,7 @@ export function GuardianTab({ student }: GuardianTabProps) {
           <div className="space-y-4">
             <div className="bg-muted rounded-lg p-3">
               <p className="font-medium">
-                {formData.givenName} {formData.surname}
+                {formData.firstName} {formData.lastName}
               </p>
               <p className="text-muted-foreground text-sm">
                 {formData.emailAddress || "No email"}
@@ -653,8 +653,8 @@ export function GuardianTab({ student }: GuardianTabProps) {
             <AlertDialogDescription>
               Are you sure you want to remove{" "}
               <strong>
-                {selectedGuardian?.guardian?.givenName}{" "}
-                {selectedGuardian?.guardian?.surname}
+                {selectedGuardian?.guardian?.firstName}{" "}
+                {selectedGuardian?.guardian?.lastName}
               </strong>{" "}
               as a guardian for this student? This action cannot be undone.
             </AlertDialogDescription>

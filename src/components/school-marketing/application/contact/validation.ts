@@ -3,20 +3,50 @@
 
 import { z } from "zod"
 
+import type { ValidationHelper } from "@/components/internationalization/helpers"
+
 import { FORM_LIMITS } from "../config.client"
 
+export function createContactSchema(v: ValidationHelper) {
+  return z.object({
+    email: z
+      .string()
+      .email(v.email())
+      .max(
+        FORM_LIMITS.EMAIL_MAX_LENGTH,
+        v.maxLength(FORM_LIMITS.EMAIL_MAX_LENGTH)
+      ),
+    phone: z
+      .string()
+      .min(
+        FORM_LIMITS.PHONE_MIN_LENGTH,
+        v.minLength(FORM_LIMITS.PHONE_MIN_LENGTH)
+      )
+      .max(
+        FORM_LIMITS.PHONE_MAX_LENGTH,
+        v.maxLength(FORM_LIMITS.PHONE_MAX_LENGTH)
+      ),
+    alternatePhone: z
+      .string()
+      .max(
+        FORM_LIMITS.PHONE_MAX_LENGTH,
+        v.maxLength(FORM_LIMITS.PHONE_MAX_LENGTH)
+      )
+      .optional()
+      .or(z.literal("")),
+  })
+}
+
+// Fallback schema for cases where ValidationHelper is not available
 export const contactSchema = z.object({
-  email: z
-    .string()
-    .email("Invalid email address")
-    .max(FORM_LIMITS.EMAIL_MAX_LENGTH, "Email is too long"),
+  email: z.string().email().max(FORM_LIMITS.EMAIL_MAX_LENGTH),
   phone: z
     .string()
-    .min(FORM_LIMITS.PHONE_MIN_LENGTH, "Phone number is too short")
-    .max(FORM_LIMITS.PHONE_MAX_LENGTH, "Phone number is too long"),
+    .min(FORM_LIMITS.PHONE_MIN_LENGTH)
+    .max(FORM_LIMITS.PHONE_MAX_LENGTH),
   alternatePhone: z
     .string()
-    .max(FORM_LIMITS.PHONE_MAX_LENGTH, "Phone number is too long")
+    .max(FORM_LIMITS.PHONE_MAX_LENGTH)
     .optional()
     .or(z.literal("")),
 })

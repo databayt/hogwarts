@@ -16,9 +16,9 @@ export interface StudentExportData {
   id: string
   studentId: string | null
   grNumber: string | null
-  givenName: string
+  firstName: string
   middleName: string | null
-  surname: string
+  lastName: string
   fullName: string
   dateOfBirth: Date | null
   gender: string
@@ -53,12 +53,12 @@ export const STUDENT_EXPORT_COLUMNS: ExportColumn<StudentExportData>[] = [
     "fullName",
     "Full Name",
     (row) =>
-      [row.givenName, row.middleName, row.surname].filter(Boolean).join(" "),
+      [row.firstName, row.middleName, row.lastName].filter(Boolean).join(" "),
     "الاسم الكامل"
   ),
-  text("givenName", "First Name", "الاسم الأول"),
+  text("firstName", "First Name", "الاسم الأول"),
   text("middleName", "Middle Name", "الاسم الأوسط"),
-  text("surname", "Last Name", "اسم العائلة"),
+  text("lastName", "Last Name", "اسم العائلة"),
   date("dateOfBirth", "Date of Birth", undefined, "تاريخ الميلاد"),
   {
     key: "gender",
@@ -142,7 +142,7 @@ export const STUDENT_EXPORT_COLUMNS_COMPACT: ExportColumn<StudentExportData>[] =
       "fullName",
       "Full Name",
       (row) =>
-        [row.givenName, row.middleName, row.surname].filter(Boolean).join(" "),
+        [row.firstName, row.middleName, row.lastName].filter(Boolean).join(" "),
       "الاسم الكامل"
     ),
     text("email", "Email", "البريد الإلكتروني"),

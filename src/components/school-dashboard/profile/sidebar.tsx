@@ -49,9 +49,9 @@ function getAchievementBadgeSrc(badgeName: string): string {
 }
 
 function getRoleConfig(role: ProfileRole, data: Record<string, unknown>) {
-  const fullName = `${data.givenName || ""} ${data.surname || ""}`.trim()
+  const fullName = `${data.firstName || ""} ${data.lastName || ""}`.trim()
   const initials =
-    `${(data.givenName as string)?.[0] || ""}${(data.surname as string)?.[0] || ""}`.toUpperCase()
+    `${(data.firstName as string)?.[0] || ""}${(data.lastName as string)?.[0] || ""}`.toUpperCase()
 
   switch (role) {
     case "student":

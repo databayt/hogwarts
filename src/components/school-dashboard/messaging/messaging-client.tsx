@@ -195,13 +195,18 @@ export function MessagingClient({
       } else {
         toast({
           title: m?.notifications?.error || "Error",
-          description: result.error || "Failed to start conversation",
+          description:
+            ("error" in result && result.error) ||
+            m?.errors?.conversation_start_failed ||
+            "Failed to start conversation",
         })
       }
     } catch {
       toast({
         title: m?.notifications?.error || "Error",
-        description: "Failed to start conversation",
+        description:
+          m?.errors?.conversation_start_failed ||
+          "Failed to start conversation",
       })
     }
   }

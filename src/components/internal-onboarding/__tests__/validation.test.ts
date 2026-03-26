@@ -32,8 +32,8 @@ import {
 
 describe("personalSchema", () => {
   const validPersonal = {
-    givenName: "Ahmed",
-    surname: "Hassan",
+    firstName: "Ahmed",
+    lastName: "Hassan",
     dateOfBirth: "2000-01-15",
     gender: "male",
   }
@@ -53,27 +53,27 @@ describe("personalSchema", () => {
     expect(result.success).toBe(true)
   })
 
-  describe("givenName", () => {
-    it("should accept givenName with exactly 2 characters", () => {
+  describe("firstName", () => {
+    it("should accept firstName with exactly 2 characters", () => {
       const result = personalSchema.safeParse({
         ...validPersonal,
-        givenName: "Al",
+        firstName: "Al",
       })
       expect(result.success).toBe(true)
     })
 
-    it("should accept givenName with 50 characters", () => {
+    it("should accept firstName with 50 characters", () => {
       const result = personalSchema.safeParse({
         ...validPersonal,
-        givenName: "A".repeat(50),
+        firstName: "A".repeat(50),
       })
       expect(result.success).toBe(true)
     })
 
-    it("should reject givenName with less than 2 characters", () => {
+    it("should reject firstName with less than 2 characters", () => {
       const result = personalSchema.safeParse({
         ...validPersonal,
-        givenName: "A",
+        firstName: "A",
       })
       expect(result.success).toBe(false)
       if (!result.success) {
@@ -81,24 +81,24 @@ describe("personalSchema", () => {
       }
     })
 
-    it("should reject givenName with more than 50 characters", () => {
+    it("should reject firstName with more than 50 characters", () => {
       const result = personalSchema.safeParse({
         ...validPersonal,
-        givenName: "A".repeat(51),
+        firstName: "A".repeat(51),
       })
       expect(result.success).toBe(false)
     })
 
-    it("should reject empty givenName", () => {
+    it("should reject empty firstName", () => {
       const result = personalSchema.safeParse({
         ...validPersonal,
-        givenName: "",
+        firstName: "",
       })
       expect(result.success).toBe(false)
     })
 
-    it("should reject missing givenName", () => {
-      const { givenName, ...rest } = validPersonal
+    it("should reject missing firstName", () => {
+      const { firstName, ...rest } = validPersonal
       const result = personalSchema.safeParse(rest)
       expect(result.success).toBe(false)
     })
@@ -135,27 +135,27 @@ describe("personalSchema", () => {
     })
   })
 
-  describe("surname", () => {
-    it("should accept surname with exactly 2 characters", () => {
+  describe("lastName", () => {
+    it("should accept lastName with exactly 2 characters", () => {
       const result = personalSchema.safeParse({
         ...validPersonal,
-        surname: "Li",
+        lastName: "Li",
       })
       expect(result.success).toBe(true)
     })
 
-    it("should accept surname with 50 characters", () => {
+    it("should accept lastName with 50 characters", () => {
       const result = personalSchema.safeParse({
         ...validPersonal,
-        surname: "A".repeat(50),
+        lastName: "A".repeat(50),
       })
       expect(result.success).toBe(true)
     })
 
-    it("should reject surname with less than 2 characters", () => {
+    it("should reject lastName with less than 2 characters", () => {
       const result = personalSchema.safeParse({
         ...validPersonal,
-        surname: "H",
+        lastName: "H",
       })
       expect(result.success).toBe(false)
       if (!result.success) {
@@ -163,16 +163,19 @@ describe("personalSchema", () => {
       }
     })
 
-    it("should reject surname with more than 50 characters", () => {
+    it("should reject lastName with more than 50 characters", () => {
       const result = personalSchema.safeParse({
         ...validPersonal,
-        surname: "A".repeat(51),
+        lastName: "A".repeat(51),
       })
       expect(result.success).toBe(false)
     })
 
-    it("should reject empty surname", () => {
-      const result = personalSchema.safeParse({ ...validPersonal, surname: "" })
+    it("should reject empty lastName", () => {
+      const result = personalSchema.safeParse({
+        ...validPersonal,
+        lastName: "",
+      })
       expect(result.success).toBe(false)
     })
   })
@@ -1091,8 +1094,8 @@ describe("Edge Cases", () => {
   describe("unicode and special characters", () => {
     it("should accept Arabic names in personalSchema", () => {
       const result = personalSchema.safeParse({
-        givenName: "محمد",
-        surname: "الحسن",
+        firstName: "محمد",
+        lastName: "الحسن",
         dateOfBirth: "2000-01-01",
         gender: "male",
       })
@@ -1101,8 +1104,8 @@ describe("Edge Cases", () => {
 
     it("should accept names with accents", () => {
       const result = personalSchema.safeParse({
-        givenName: "Jose",
-        surname: "Gonzalez",
+        firstName: "Jose",
+        lastName: "Gonzalez",
         dateOfBirth: "1995-03-20",
         gender: "male",
       })

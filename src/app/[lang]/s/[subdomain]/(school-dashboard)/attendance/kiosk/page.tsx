@@ -6,6 +6,7 @@ import { auth } from "@/auth"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { KioskContent } from "@/components/school-dashboard/attendance/kiosk/content"
 
 export const metadata = { title: "Dashboard: Attendance Kiosk" }
@@ -20,6 +21,7 @@ export default async function Page({ params }: Props) {
     auth(),
     getTenantContext(),
   ])
+  const dictionary = await getDictionary(lang)
 
   // Admin/Developer only for kiosk setup
   if (!["ADMIN", "DEVELOPER"].includes(session?.user?.role ?? "")) {

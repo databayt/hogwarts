@@ -70,8 +70,8 @@ export async function GET(request: Request) {
           teacher: {
             select: {
               id: true,
-              givenName: true,
-              surname: true,
+              firstName: true,
+              lastName: true,
               userId: true,
             },
           },
@@ -122,7 +122,7 @@ export async function GET(request: Request) {
 
           stats.remindersCreated++
           console.log(
-            `[Cron] Created reminder for teacher ${entry.teacher?.givenName} ${entry.teacher?.surname} - ${entry.class?.name ?? "Unknown Class"}`
+            `[Cron] Created reminder for teacher ${entry.teacher?.firstName} ${entry.teacher?.lastName} - ${entry.class?.name ?? "Unknown Class"}`
           )
         }
       }

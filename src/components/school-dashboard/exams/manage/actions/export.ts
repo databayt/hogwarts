@@ -155,9 +155,9 @@ export async function getExamResultsCSV(input: {
         student: {
           select: {
             studentId: true,
-            givenName: true,
+            firstName: true,
             middleName: true,
-            surname: true,
+            lastName: true,
           },
         },
       },
@@ -168,9 +168,9 @@ export async function getExamResultsCSV(input: {
     const resultsWithRank = results.map((result, index) => ({
       rank: result.isAbsent ? "Absent" : String(index + 1),
       studentId: result.student.studentId,
-      studentName: `${result.student.givenName} ${
+      studentName: `${result.student.firstName} ${
         result.student.middleName || ""
-      } ${result.student.surname}`.trim(),
+      } ${result.student.lastName}`.trim(),
       marksObtained: result.marksObtained,
       totalMarks: result.totalMarks,
       percentage: result.percentage.toFixed(2),

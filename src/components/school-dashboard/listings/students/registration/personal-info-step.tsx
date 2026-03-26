@@ -44,7 +44,7 @@ export function PersonalInfoStep({ form, dictionary }: PersonalInfoStepProps) {
       <div className="grid gap-4 md:grid-cols-3">
         <FormField
           control={form.control}
-          name="givenName"
+          name="firstName"
           render={({ field }) => (
             <FormItem>
               <FormLabel>First Name *</FormLabel>
@@ -72,7 +72,7 @@ export function PersonalInfoStep({ form, dictionary }: PersonalInfoStepProps) {
 
         <FormField
           control={form.control}
-          name="surname"
+          name="lastName"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Last Name *</FormLabel>

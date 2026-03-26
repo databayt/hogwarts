@@ -78,7 +78,7 @@ export const ContactCard = memo(function ContactCard({
   className,
 }: ContactCardProps) {
   const initials =
-    `${contact.givenName?.[0] ?? ""}${contact.surname?.[0] ?? ""}`.toUpperCase() ||
+    `${contact.firstName?.[0] ?? ""}${contact.lastName?.[0] ?? ""}`.toUpperCase() ||
     "?"
   const hasConversation = !!contact.conversationId
   const hasUnread = (contact.unreadCount ?? 0) > 0

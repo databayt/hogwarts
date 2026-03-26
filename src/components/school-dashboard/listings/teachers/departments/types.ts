@@ -10,8 +10,8 @@
 
 export interface DepartmentTeacher {
   id: string
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
   emailAddress: string
   profilePhotoUrl?: string | null
   isPrimary: boolean

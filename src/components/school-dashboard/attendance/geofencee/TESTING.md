@@ -411,8 +411,8 @@ describe("Server Actions Integration", () => {
       data: {
         id: "test-student-123",
         schoolId: testSchoolId,
-        givenName: "Test",
-        surname: "Student",
+        firstName: "Test",
+        lastName: "Student",
       },
     })
     testStudentId = student.id
@@ -934,16 +934,16 @@ async function seedGeoTestData() {
     db.student.create({
       data: {
         schoolId: school.id,
-        givenName: "Ahmad",
-        surname: "Al-Rashid",
+        firstName: "Ahmad",
+        lastName: "Al-Rashid",
         email: "ahmad@test.com",
       },
     }),
     db.student.create({
       data: {
         schoolId: school.id,
-        givenName: "Fatima",
-        surname: "Al-Zahrani",
+        firstName: "Fatima",
+        lastName: "Al-Zahrani",
         email: "fatima@test.com",
       },
     }),

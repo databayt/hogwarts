@@ -4,6 +4,7 @@
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import PaymentForm from "@/components/school-dashboard/finance/fees/payment-form"
 
 export const metadata = { title: "Record Payment" }
@@ -14,6 +15,7 @@ interface Props {
 
 export default async function RecordPaymentPage({ params }: Props) {
   const { lang } = await params
+  const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
@@ -23,7 +25,7 @@ export default async function RecordPaymentPage({ params }: Props) {
   const assignments = await db.feeAssignment.findMany({
     where: { schoolId, status: { in: ["PENDING", "PARTIAL"] } },
     include: {
-      student: { select: { givenName: true, surname: true } },
+      student: { select: { firstName: true, lastName: true } },
       feeStructure: { select: { name: true } },
       payments: { where: { status: "SUCCESS" }, select: { amount: true } },
     },
@@ -38,7 +40,7 @@ export default async function RecordPaymentPage({ params }: Props) {
     const finalAmount = Number(a.finalAmount)
     return {
       id: a.id,
-      studentName: [a.student?.givenName, a.student?.surname]
+      studentName: [a.student?.firstName, a.student?.lastName]
         .filter(Boolean)
         .join(" "),
       feeStructureName: a.feeStructure?.name ?? "Unnamed",

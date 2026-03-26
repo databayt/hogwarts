@@ -19,8 +19,8 @@ describe("Parent Validation Schemas", () => {
   ])
 
   const parentBaseSchema = z.object({
-    givenName: z.string().min(1, "Given name is required"),
-    surname: z.string().min(1, "Surname is required"),
+    firstName: z.string().min(1, "First name is required"),
+    lastName: z.string().min(1, "Last name is required"),
     email: z.string().email("Invalid email").optional(),
     phone: z.string().min(1, "Phone number is required"),
     occupation: z.string().optional(),
@@ -46,8 +46,8 @@ describe("Parent Validation Schemas", () => {
   describe("parentCreateSchema", () => {
     it("validates complete parent data", () => {
       const validData = {
-        givenName: "John",
-        surname: "Doe",
+        firstName: "John",
+        lastName: "Doe",
         email: "john.doe@email.com",
         phone: "+1234567890",
         occupation: "Engineer",
@@ -61,13 +61,13 @@ describe("Parent Validation Schemas", () => {
 
     it("requires mandatory fields", () => {
       const missingName = {
-        surname: "Doe",
+        lastName: "Doe",
         phone: "+1234567890",
       }
 
       const missingPhone = {
-        givenName: "John",
-        surname: "Doe",
+        firstName: "John",
+        lastName: "Doe",
       }
 
       expect(parentCreateSchema.safeParse(missingName).success).toBe(false)
@@ -76,15 +76,15 @@ describe("Parent Validation Schemas", () => {
 
     it("validates email format when provided", () => {
       const invalidEmail = {
-        givenName: "John",
-        surname: "Doe",
+        firstName: "John",
+        lastName: "Doe",
         phone: "+1234567890",
         email: "not-an-email",
       }
 
       const validEmail = {
-        givenName: "John",
-        surname: "Doe",
+        firstName: "John",
+        lastName: "Doe",
         phone: "+1234567890",
         email: "valid@email.com",
       }
@@ -108,8 +108,8 @@ describe("Parent Validation Schemas", () => {
 
       validRelationships.forEach((rel) => {
         const data = {
-          givenName: "Test",
-          surname: "User",
+          firstName: "Test",
+          lastName: "User",
           phone: "+123",
           relationship: rel,
         }
@@ -117,8 +117,8 @@ describe("Parent Validation Schemas", () => {
       })
 
       const invalidRelationship = {
-        givenName: "Test",
-        surname: "User",
+        firstName: "Test",
+        lastName: "User",
         phone: "+123",
         relationship: "INVALID",
       }
@@ -131,7 +131,7 @@ describe("Parent Validation Schemas", () => {
   describe("parentUpdateSchema", () => {
     it("requires id for updates", () => {
       const withoutId = {
-        givenName: "Updated Name",
+        firstName: "Updated Name",
       }
 
       const result = parentUpdateSchema.safeParse(withoutId)

@@ -654,8 +654,8 @@ export async function getStudentsAtRisk(input?: {
     where: studentWhere,
     select: {
       id: true,
-      givenName: true,
-      surname: true,
+      firstName: true,
+      lastName: true,
       attendances: {
         where,
         select: { status: true },
@@ -673,7 +673,7 @@ export async function getStudentsAtRisk(input?: {
 
       return {
         studentId: student.id,
-        name: `${student.givenName} ${student.surname}`,
+        name: `${student.firstName} ${student.lastName}`,
         totalDays: total,
         presentDays: present,
         absentDays: total - present,
@@ -713,7 +713,7 @@ export async function getRecentAttendance(input?: {
     take: limit,
     include: {
       student: {
-        select: { givenName: true, surname: true },
+        select: { firstName: true, lastName: true },
       },
       class: {
         select: { name: true },
@@ -725,7 +725,7 @@ export async function getRecentAttendance(input?: {
     records: records.map((r) => ({
       id: r.id,
       studentId: r.studentId,
-      studentName: `${r.student.givenName} ${r.student.surname}`,
+      studentName: `${r.student.firstName} ${r.student.lastName}`,
       classId: r.classId,
       className: r.class?.name ?? "",
       date: r.date.toISOString(),

@@ -31,20 +31,21 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       resolver: zodResolver(informationSchema) as any,
       defaultValues: {
-        givenName: initialData?.givenName || "",
-        surname: initialData?.surname || "",
+        firstName: initialData?.firstName || "",
+        lastName: initialData?.lastName || "",
         emailAddress: initialData?.emailAddress || "",
         profilePhotoUrl: initialData?.profilePhotoUrl || "",
       },
     })
 
     // Notify parent of validity changes
-    const givenName = form.watch("givenName")
-    const surname = form.watch("surname")
+    const firstName = form.watch("firstName")
+    const lastName = form.watch("lastName")
     React.useEffect(() => {
-      const isValid = givenName.trim().length >= 1 && surname.trim().length >= 1
+      const isValid =
+        firstName.trim().length >= 1 && lastName.trim().length >= 1
       onValidChange?.(isValid)
-    }, [givenName, surname, onValidChange])
+    }, [firstName, lastName, onValidChange])
 
     useImperativeHandle(ref, () => ({
       saveAndNext: () =>
@@ -77,16 +78,16 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
       <Form {...form}>
         <form className="space-y-6">
           <InputField
-            name="givenName"
-            label={d?.givenName || "Given Name"}
-            placeholder={d?.enterGivenName || "Enter given name"}
+            name="firstName"
+            label={d?.firstName || "First Name"}
+            placeholder={d?.enterFirstName || "Enter first name"}
             required
             disabled={isPending}
           />
           <InputField
-            name="surname"
-            label={d?.surname || "Surname"}
-            placeholder={d?.enterSurname || "Enter surname"}
+            name="lastName"
+            label={d?.lastName || "Last Name"}
+            placeholder={d?.enterLastName || "Enter last name"}
             required
             disabled={isPending}
           />

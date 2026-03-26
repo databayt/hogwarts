@@ -6,18 +6,22 @@
  * Public-facing page to verify certificate authenticity
  */
 
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { verifyCertificate } from "@/components/school-dashboard/exams/certificates/actions"
 
 interface VerifyPageProps {
   params: Promise<{
     code: string
+    lang: Locale
   }>
 }
 
 export default async function CertificateVerifyPage({
   params,
 }: VerifyPageProps) {
-  const { code } = await params
+  const { code, lang } = await params
+  const dictionary = await getDictionary(lang)
   const result = await verifyCertificate({ code })
 
   if (!result.success) {

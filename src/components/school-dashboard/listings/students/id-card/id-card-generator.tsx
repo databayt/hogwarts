@@ -87,8 +87,8 @@ export function IDCardGenerator({
   // ListFilter students based on search and filters
   const filteredStudents = students.filter((student) => {
     const matchesSearch =
-      student.givenName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      student.surname?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      student.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      student.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       student.grNumber?.toLowerCase().includes(searchQuery.toLowerCase())
 
     const matchesClass = filterClass === "all" || true // Replace with actual class check
@@ -132,7 +132,7 @@ export function IDCardGenerator({
     return {
       studentId: student.id,
       grNumber: student.grNumber || "N/A",
-      studentName: [student.givenName, student.middleName, student.surname]
+      studentName: [student.firstName, student.middleName, student.lastName]
         .filter(Boolean)
         .join(" "),
       profilePhotoUrl: student.profilePhotoUrl,
@@ -174,7 +174,7 @@ export function IDCardGenerator({
         const cardData: IDCardData = {
           studentId: student.id,
           grNumber: student.grNumber || "N/A",
-          studentName: [student.givenName, student.middleName, student.surname]
+          studentName: [student.firstName, student.middleName, student.lastName]
             .filter(Boolean)
             .join(" "),
           profilePhotoUrl: student.profilePhotoUrl,
@@ -406,9 +406,9 @@ export function IDCardGenerator({
                   {filteredStudents.map((student) => {
                     const isSelected = selectedStudents.has(student.id)
                     const fullName = [
-                      student.givenName,
+                      student.firstName,
                       student.middleName,
-                      student.surname,
+                      student.lastName,
                     ]
                       .filter(Boolean)
                       .join(" ")
@@ -433,8 +433,8 @@ export function IDCardGenerator({
                             alt={fullName}
                           />
                           <AvatarFallback>
-                            {student.givenName?.[0]}
-                            {student.surname?.[0]}
+                            {student.firstName?.[0]}
+                            {student.lastName?.[0]}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1">

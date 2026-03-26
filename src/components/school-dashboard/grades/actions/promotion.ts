@@ -648,8 +648,8 @@ export async function getPromotionCandidates(batchId: string) {
       student: {
         select: {
           id: true,
-          givenName: true,
-          surname: true,
+          firstName: true,
+          lastName: true,
           studentId: true,
         },
       },

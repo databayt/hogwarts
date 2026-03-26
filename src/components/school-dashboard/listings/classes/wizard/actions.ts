@@ -21,13 +21,13 @@ export async function getClassForWizard(
 > {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const cls = await db.class.findFirst({
       where: { id: classId, schoolId },
       include: {
         subject: { select: { id: true, name: true } },
-        teacher: { select: { id: true, givenName: true, surname: true } },
+        teacher: { select: { id: true, firstName: true, lastName: true } },
         term: {
           select: {
             id: true,
@@ -44,7 +44,7 @@ export async function getClassForWizard(
       },
     })
 
-    if (!cls) return { success: false, error: "Class not found" }
+    if (!cls) return actionError(ACTION_ERRORS.CLASS_NOT_FOUND)
 
     return {
       success: true,
@@ -92,12 +92,12 @@ export async function createDraftClass(): Promise<
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Get first available subject, teacher, term, period, and classroom as placeholders
@@ -167,12 +167,12 @@ export async function completeClassWizard(
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const cls = await db.class.findFirst({
@@ -181,7 +181,7 @@ export async function completeClassWizard(
     })
 
     if (!cls) {
-      return { success: false, error: "Class not found" }
+      return actionError(ACTION_ERRORS.CLASS_NOT_FOUND)
     }
 
     if (cls.name.startsWith("Draft-")) {
@@ -237,12 +237,12 @@ export async function deleteDraftClass(
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Atomic delete — only if it's still a draft
@@ -251,7 +251,7 @@ export async function deleteDraftClass(
     })
 
     if (count === 0) {
-      return { success: false, error: "Draft class not found" }
+      return actionError(ACTION_ERRORS.CLASS_NOT_FOUND)
     }
 
     return { success: true }
@@ -270,7 +270,7 @@ export async function getSubjectsForClass(): Promise<
 > {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const { getSchoolSubjectOptions } = await import("@/lib/school-subjects")
     const subjects = await getSchoolSubjectOptions(schoolId)
@@ -293,18 +293,18 @@ export async function getTeachersForClass(): Promise<
 > {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const teachers = await db.teacher.findMany({
       where: { schoolId },
-      select: { id: true, givenName: true, surname: true },
-      orderBy: { givenName: "asc" },
+      select: { id: true, firstName: true, lastName: true },
+      orderBy: { firstName: "asc" },
     })
 
     return {
       success: true,
       data: teachers.map((t) => ({
-        label: `${t.givenName} ${t.surname}`,
+        label: `${t.firstName} ${t.lastName}`,
         value: t.id,
       })),
     }
@@ -322,7 +322,7 @@ export async function getGradesForClass(): Promise<
 > {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const grades = await db.academicGrade.findMany({
       where: { schoolId },
@@ -348,7 +348,7 @@ export async function getTermsForClass(): Promise<
 > {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const terms = await db.term.findMany({
       where: { schoolId },
@@ -374,7 +374,7 @@ export async function getPeriodsForClass(): Promise<
 > {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const periods = await db.period.findMany({
       where: { schoolId },
@@ -400,7 +400,7 @@ export async function getClassroomsForClass(): Promise<
 > {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const classrooms = await db.classroom.findMany({
       where: { schoolId },
@@ -427,7 +427,7 @@ export async function getClassesForPrerequisite(
 ): Promise<ActionResponse<{ label: string; value: string }[]>> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const classes = await db.class.findMany({
       where: {

@@ -6,6 +6,7 @@ import { notFound } from "next/navigation"
 import { getCatalogImageUrl } from "@/lib/catalog-image-url"
 import { db } from "@/lib/db"
 import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 import { CatalogMaterialsContent } from "@/components/school-dashboard/listings/subjects/catalog-materials"
 
@@ -15,6 +16,7 @@ interface Props {
 
 export default async function CatalogMaterialsPage({ params }: Props) {
   const { lang, subdomain, slug } = await params
+  const dictionary = await getDictionary(lang)
 
   const subject = await db.catalogSubject.findUnique({
     where: { slug },

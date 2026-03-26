@@ -84,8 +84,8 @@ export function StaffForm({
   const form = useForm<StaffCreateInput>({
     resolver: zodResolver(staffCreateSchema) as any,
     defaultValues: {
-      givenName: initialData?.givenName || "",
-      surname: initialData?.surname || "",
+      firstName: initialData?.firstName || "",
+      lastName: initialData?.lastName || "",
       emailAddress: initialData?.emailAddress || "",
       gender: initialData?.gender || undefined,
       position: initialData?.position || "",
@@ -181,7 +181,7 @@ export function StaffForm({
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
-            name="givenName"
+            name="firstName"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>{f?.firstNameRequired || "First Name *"}</FormLabel>
@@ -197,7 +197,7 @@ export function StaffForm({
           />
           <FormField
             control={form.control}
-            name="surname"
+            name="lastName"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>{f?.lastNameRequired || "Last Name *"}</FormLabel>

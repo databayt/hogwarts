@@ -393,8 +393,8 @@ export async function verifyCertificateCode(
     include: {
       student: {
         select: {
-          givenName: true,
-          surname: true,
+          firstName: true,
+          lastName: true,
           studentId: true,
         },
       },
@@ -434,7 +434,7 @@ export async function verifyCertificateCode(
   return {
     valid: true,
     certificate: {
-      studentName: `${certificate.student.givenName} ${certificate.student.surname}`,
+      studentName: `${certificate.student.firstName} ${certificate.student.lastName}`,
       studentId: certificate.student.studentId,
       examTitle: certificate.examResult.exam.title,
       examDate: certificate.examResult.exam.examDate,

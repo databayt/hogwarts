@@ -82,6 +82,9 @@ export { TextareaField } from "./atoms/textarea"
 export { CheckboxField } from "./atoms/checkbox"
 export { DateField } from "./atoms/date"
 
+// Composite fields
+export { NameFields } from "./atoms/name-fields"
+
 // Extended fields
 export { SwitchField } from "./atoms/switch"
 export { RadioGroupField } from "./atoms/radio-group"

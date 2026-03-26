@@ -50,8 +50,8 @@ export type StaffQueryParams = StaffListFilters &
 export const staffListSelect = {
   id: true,
   employeeId: true,
-  givenName: true,
-  surname: true,
+  firstName: true,
+  lastName: true,
   lang: true,
   emailAddress: true,
   gender: true,
@@ -74,8 +74,8 @@ export const staffDetailSelect = {
   id: true,
   schoolId: true,
   employeeId: true,
-  givenName: true,
-  surname: true,
+  firstName: true,
+  lastName: true,
   gender: true,
   emailAddress: true,
   birthDate: true,
@@ -154,13 +154,13 @@ export function buildStaffWhere(
   if (filters.search) {
     where.OR = [
       {
-        givenName: {
+        firstName: {
           contains: filters.search,
           mode: Prisma.QueryMode.insensitive,
         },
       },
       {
-        surname: {
+        lastName: {
           contains: filters.search,
           mode: Prisma.QueryMode.insensitive,
         },
@@ -280,7 +280,7 @@ export async function getDepartmentStaff(
       schoolId,
       departmentId,
     },
-    orderBy: [{ surname: "asc" }, { givenName: "asc" }],
+    orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
     select: staffListSelect,
   })
 }
@@ -294,7 +294,7 @@ export async function getActiveStaff(schoolId: string) {
       schoolId,
       employmentStatus: "ACTIVE",
     },
-    orderBy: [{ surname: "asc" }, { givenName: "asc" }],
+    orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
     select: staffListSelect,
   })
 }
@@ -373,18 +373,18 @@ export async function getStaffStats(schoolId: string) {
  * Format staff full name
  */
 export function formatStaffName(staff: {
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
 }): string {
-  return `${staff.givenName} ${staff.surname}`
+  return `${staff.firstName} ${staff.lastName}`
 }
 
 /**
  * Get staff initials for avatar
  */
 export function getStaffInitials(staff: {
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
 }): string {
-  return `${staff.givenName.charAt(0)}${staff.surname.charAt(0)}`.toUpperCase()
+  return `${staff.firstName.charAt(0)}${staff.lastName.charAt(0)}`.toUpperCase()
 }

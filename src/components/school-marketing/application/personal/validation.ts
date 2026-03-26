@@ -5,32 +5,92 @@
 
 import { z } from "zod"
 
+import type { NameFormat } from "@/lib/name-utils"
+import type { ValidationHelper } from "@/components/internationalization/helpers"
+
 import { FORM_LIMITS } from "../config.client"
 
-export const personalSchema = z.object({
-  firstName: z
-    .string()
-    .min(FORM_LIMITS.NAME_MIN_LENGTH, "First name is too short")
-    .max(FORM_LIMITS.NAME_MAX_LENGTH, "First name is too long")
-    .trim(),
-  middleName: z
-    .string()
-    .max(FORM_LIMITS.NAME_MAX_LENGTH, "Middle name is too long")
-    .trim()
-    .optional()
-    .or(z.literal("")),
-  lastName: z
-    .string()
-    .min(FORM_LIMITS.NAME_MIN_LENGTH, "Last name is too short")
-    .max(FORM_LIMITS.NAME_MAX_LENGTH, "Last name is too long")
-    .trim(),
-  dateOfBirth: z.string().min(1, "Date of birth is required"),
-  gender: z.enum(["MALE", "FEMALE", "OTHER"], {
-    message: "Gender is required",
-  }),
-  nationality: z.string().min(1, "Nationality is required"),
-  religion: z.string().optional().or(z.literal("")),
-  category: z.string().optional().or(z.literal("")),
-})
+function getNonNameFields(v: ValidationHelper) {
+  return {
+    dateOfBirth: z.string().min(1, v.required()),
+    gender: z.enum(["MALE", "FEMALE", "OTHER"], {
+      message: v.required(),
+    }),
+    nationality: z.string().min(1, v.required()),
+    religion: z.string().optional().or(z.literal("")),
+    category: z.string().optional().or(z.literal("")),
+  }
+}
 
-export type PersonalSchemaType = z.infer<typeof personalSchema>
+export function createPersonalSchema(v: ValidationHelper) {
+  return z.object({
+    firstName: z
+      .string()
+      .min(
+        FORM_LIMITS.NAME_MIN_LENGTH,
+        v.minLength(FORM_LIMITS.NAME_MIN_LENGTH)
+      )
+      .max(
+        FORM_LIMITS.NAME_MAX_LENGTH,
+        v.maxLength(FORM_LIMITS.NAME_MAX_LENGTH)
+      )
+      .trim(),
+    middleName: z
+      .string()
+      .max(
+        FORM_LIMITS.NAME_MAX_LENGTH,
+        v.maxLength(FORM_LIMITS.NAME_MAX_LENGTH)
+      )
+      .trim()
+      .optional()
+      .or(z.literal("")),
+    lastName: z
+      .string()
+      .min(
+        FORM_LIMITS.NAME_MIN_LENGTH,
+        v.minLength(FORM_LIMITS.NAME_MIN_LENGTH)
+      )
+      .max(
+        FORM_LIMITS.NAME_MAX_LENGTH,
+        v.maxLength(FORM_LIMITS.NAME_MAX_LENGTH)
+      )
+      .trim(),
+    ...getNonNameFields(v),
+  })
+}
+
+export function getPersonalSchema(
+  nameFormat: NameFormat = "full",
+  v?: ValidationHelper
+) {
+  // Fallback for cases where ValidationHelper is not available
+  const fallbackV = {
+    required: () => "Required",
+    minLength: (min: number) => `Min ${min} characters`,
+    maxLength: (max: number) => `Max ${max} characters`,
+  } as ValidationHelper
+
+  const val = v || fallbackV
+
+  if (nameFormat === "full") {
+    return z.object({
+      _fullName: z
+        .string()
+        .min(
+          FORM_LIMITS.NAME_MIN_LENGTH,
+          val.minLength(FORM_LIMITS.NAME_MIN_LENGTH)
+        )
+        .max(200, val.maxLength(200))
+        .trim(),
+      firstName: z.string().default("").or(z.literal("")),
+      middleName: z.string().optional().or(z.literal("")),
+      lastName: z.string().default("").or(z.literal("")),
+      ...getNonNameFields(val),
+    })
+  }
+  return createPersonalSchema(val)
+}
+
+export type PersonalSchemaType = z.infer<
+  ReturnType<typeof createPersonalSchema>
+>

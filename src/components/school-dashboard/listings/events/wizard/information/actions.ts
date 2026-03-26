@@ -14,7 +14,7 @@ export async function getEventInformation(
 ): Promise<ActionResponse<InformationFormData>> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const event = await db.event.findFirst({
       where: { id: eventId, schoolId },
@@ -27,7 +27,7 @@ export async function getEventInformation(
       },
     })
 
-    if (!event) return { success: false, error: "Event not found" }
+    if (!event) return actionError(ACTION_ERRORS.EVENT_NOT_FOUND)
 
     return {
       success: true,
@@ -53,7 +53,7 @@ export async function updateEventInformation(
 ): Promise<ActionResponse> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const parsed = informationSchema.parse(input)
 

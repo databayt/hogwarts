@@ -66,8 +66,8 @@ export function NewcomersModal({
     mode: "onChange",
     defaultValues: {
       role: undefined,
-      givenName: "",
-      surname: "",
+      firstName: "",
+      lastName: "",
       email: "",
       phone: "",
       verificationCode: "",

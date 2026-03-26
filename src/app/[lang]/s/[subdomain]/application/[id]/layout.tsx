@@ -2,9 +2,11 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React, { useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 
+import type { NameFormat } from "@/lib/name-utils"
+import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ADMISSION_CONFIG, FormFooter } from "@/components/form/footer"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
@@ -14,6 +16,10 @@ import {
   useApplySession,
 } from "@/components/school-marketing/application/application-context"
 import ErrorBoundary from "@/components/school-marketing/application/error-boundary"
+import {
+  getApplyErrorDict,
+  getApplyRootDict,
+} from "@/components/school-marketing/application/utils"
 import {
   ApplyValidationProvider,
   useApplyValidation,
@@ -33,10 +39,9 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
   const subdomain = params.subdomain as string
   const isRTL = locale === "ar"
 
-  const dict =
-    ((dictionary as Record<string, unknown> | null)?.apply as
-      | Record<string, string>
-      | undefined) ?? {}
+  const applyRoot = getApplyRootDict(dictionary)
+  const errorDict = getApplyErrorDict(dictionary)
+  const dict = (applyRoot?.footer as Record<string, string> | undefined) ?? {}
 
   useEffect(() => {
     if (id && subdomain && !session.sessionToken) {
@@ -92,8 +97,7 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
           <div className="max-w-md text-center">
             <div className="mb-4 text-6xl">⚠️</div>
             <h2 className="mb-2 text-2xl font-bold">
-              {dict.unableToLoad ||
-                (isRTL ? "تعذر تحميل الطلب" : "Unable to Load Application")}
+              {errorDict.unableToLoad}
             </h2>
             <p className="text-muted-foreground mb-4">{error}</p>
             <div className="flex flex-col gap-3">
@@ -101,7 +105,7 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
                 onClick={() => id && subdomain && initSession(id, subdomain)}
                 className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 py-2 transition-colors"
               >
-                {dict.tryAgain || (isRTL ? "حاول مرة أخرى" : "Try Again")}
+                {errorDict.tryAgain}
               </button>
               <button
                 onClick={() =>
@@ -109,8 +113,7 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
                 }
                 className="bg-secondary text-secondary-foreground hover:bg-secondary/90 rounded-md px-4 py-2 transition-colors"
               >
-                {dict.backToCampaigns ||
-                  (isRTL ? "العودة للحملات" : "Back to Campaigns")}
+                {errorDict.backToCampaigns}
               </button>
             </div>
           </div>
@@ -139,16 +142,30 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
         showSaveStatus={false}
         showSave={false}
         onSave={saveSession}
-        finalLabel={isRTL ? "تقديم" : "Submit"}
+        finalLabel={(applyRoot?.submit as string) || dict.submit}
       />
     </div>
   )
 }
 
 export default function ApplyLayout({ children }: ApplyLayoutProps) {
+  const params = useParams()
+  const subdomain = params.subdomain as string
+  const [nameFormat, setNameFormat] = useState<NameFormat>("full")
+
+  useEffect(() => {
+    if (subdomain) {
+      getSchoolBySubdomain(subdomain).then((result) => {
+        if (result.success && result.data?.nameFormat) {
+          setNameFormat(result.data.nameFormat as NameFormat)
+        }
+      })
+    }
+  }, [subdomain])
+
   return (
     <ErrorBoundary>
-      <ApplySessionProvider>
+      <ApplySessionProvider nameFormat={nameFormat}>
         <ApplyValidationProvider>
           <ApplyLayoutContent>{children}</ApplyLayoutContent>
         </ApplyValidationProvider>

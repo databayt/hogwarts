@@ -43,7 +43,7 @@ export function getColumns(
       cell: ({ row }) => {
         const student = row.original.student
         const fullName =
-          `${student.givenName} ${student.middleName || ""} ${student.surname}`
+          `${student.firstName} ${student.middleName || ""} ${student.lastName}`
             .trim()
             .replace(/\s+/g, " ")
         return <div className="font-medium">{fullName}</div>

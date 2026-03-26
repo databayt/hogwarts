@@ -45,8 +45,18 @@ export async function updateSchoolTitle(
 
     const validated = titleSchema.parse(data)
 
+    // Check if subdomain is actually changing
+    const currentSchool = await db.school.findUnique({
+      where: { id: schoolId },
+      select: { domain: true },
+    })
+    const isSubdomainChanging =
+      validated.subdomain &&
+      currentSchool?.domain &&
+      validated.subdomain !== currentSchool.domain
+
     // Check subdomain availability before saving
-    if (validated.subdomain) {
+    if (isSubdomainChanging) {
       const existing = await db.school.findFirst({
         where: {
           domain: validated.subdomain,
@@ -61,11 +71,15 @@ export async function updateSchoolTitle(
       }
     }
 
+    // Only update domain when: school has no domain yet (onboarding) OR subdomain explicitly changed
+    const shouldUpdateDomain =
+      (!currentSchool?.domain && validated.subdomain) || isSubdomainChanging
+
     await db.school.update({
       where: { id: schoolId },
       data: {
         name: validated.title,
-        ...(validated.subdomain ? { domain: validated.subdomain } : {}),
+        ...(shouldUpdateDomain ? { domain: validated.subdomain } : {}),
       },
     })
 

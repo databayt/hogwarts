@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { Suspense, useRef, useState } from "react"
+import React, { Suspense, useCallback, useRef, useState } from "react"
 import {
   AlertCircle,
   BookOpen,
@@ -10,23 +10,22 @@ import {
   Building,
   Calendar,
   CheckCircle2,
-  ChevronDown,
-  ChevronUp,
   ClipboardList,
   Clock,
   Download,
   FileText,
   GraduationCap,
+  Info,
   Layers,
   Loader2,
   Shield,
   Target,
+  Upload,
   UserCheck,
   Users,
 } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ModalProvider } from "@/components/atom/modal/context"
 import type { Locale } from "@/components/internationalization/config"
@@ -37,12 +36,7 @@ import { YearLevelTable } from "../academic/level/table"
 import { PeriodTable } from "../academic/period/table"
 import { TermTable } from "../academic/term/table"
 import { SchoolYearTable } from "../academic/year/table"
-import {
-  bulkImportGuardians,
-  bulkImportStaff,
-  bulkImportStudents,
-  bulkImportTeachers,
-} from "./actions"
+import { bulkParseAndValidate, bulkSmartImport } from "./actions"
 
 interface Props {
   dictionary: Dictionary
@@ -130,30 +124,40 @@ function ScrollRow({
   )
 }
 
+// ---------- People Import (Onboarding-style DropZone) ----------
+
+type ImportType = "students" | "teachers" | "staff" | "guardians"
+
 interface ImportResult {
   imported: number
   failed: number
+  skipped: number
   errors: Array<{ row: number; error: string; details?: string }>
-  warnings?: Array<{ row: number; warning: string }>
 }
 
-interface PeopleCardConfig {
-  id: string
-  icon: React.ComponentType<{ className?: string }>
-  title: string
-  description: string
-  templateContent: string
-  templateFilename: string
-  importAction: (
-    formData: FormData
-  ) => Promise<{ success: boolean; data?: ImportResult; error?: string }>
-}
-
-interface CardImportState {
+interface SectionState {
   uploading: boolean
+  importing: boolean
   result: ImportResult | null
   error: string | null
-  showErrors: boolean
+}
+
+const initialSectionState: SectionState = {
+  uploading: false,
+  importing: false,
+  result: null,
+  error: null,
+}
+
+const ACCEPTED_FORMATS = ".csv,.xlsx,.xls,.json,.docx"
+
+interface DropZoneConfig {
+  type: ImportType
+  icon: React.ComponentType<{ className?: string }>
+  label: string
+  labelAr: string
+  templateContent: string
+  templateFilename: string
 }
 
 const STUDENT_TEMPLATE =
@@ -163,10 +167,10 @@ const TEACHER_TEMPLATE =
   'name,email,employeeId,department,phoneNumber,subjects,qualification\nDr. Alice Johnson,alice@school.edu,TCH001,Mathematics,+1234567890,"Algebra,Calculus",PhD in Mathematics\nMr. Bob Wilson,bob@school.edu,TCH002,Science,+0987654321,Physics,MSc in Physics'
 
 const STAFF_TEMPLATE =
-  "givenName,surname,emailAddress,employeeId,position,department,phoneNumber,gender,employmentType\nAhmed,Hassan,ahmed@school.edu,STF001,Accountant,Finance,+1234567890,male,FULL_TIME\nFatima,Ali,fatima@school.edu,STF002,Librarian,Library,+0987654321,female,PART_TIME"
+  "firstName,lastName,emailAddress,employeeId,position,department,phoneNumber,gender,employmentType\nAhmed,Hassan,ahmed@school.edu,STF001,Accountant,Finance,+1234567890,male,FULL_TIME\nFatima,Ali,fatima@school.edu,STF002,Librarian,Library,+0987654321,female,PART_TIME"
 
 const GUARDIAN_TEMPLATE =
-  "givenName,surname,emailAddress,phoneNumber,guardianType,studentId\nMohammed,Ahmed,mohammed@example.com,+1234567890,father,STD001\nSara,Hassan,sara@example.com,+0987654321,mother,STD002"
+  "firstName,lastName,emailAddress,phoneNumber,guardianType,studentId\nMohammed,Ahmed,mohammed@example.com,+1234567890,father,STD001\nSara,Hassan,sara@example.com,+0987654321,mother,STD002"
 
 function downloadTemplate(content: string, filename: string) {
   const blob = new Blob([content], { type: "text/csv" })
@@ -180,261 +184,304 @@ function downloadTemplate(content: string, filename: string) {
   URL.revokeObjectURL(url)
 }
 
-function ImportResultDisplay({
-  cardId,
+function DropZone({
+  config,
   state,
+  inputRef,
   isArabic,
-  onToggleErrors,
-  onReset,
+  onUpload,
+  onBrowse,
 }: {
-  cardId: string
-  state: CardImportState
+  config: DropZoneConfig
+  state: SectionState
+  inputRef: (el: HTMLInputElement | null) => void
   isArabic: boolean
-  onToggleErrors: (id: string) => void
-  onReset: (id: string) => void
+  onUpload: (file: File) => void
+  onBrowse: () => void
 }) {
-  if (state.uploading) {
-    return (
-      <div className="flex items-center gap-2 rounded-md border p-3">
-        <Loader2 className="h-4 w-4 animate-spin" />
-        <p className="text-sm">
-          {isArabic ? "جاري الاستيراد..." : "Importing..."}
-        </p>
-      </div>
-    )
-  }
+  const hasResult = state.result || state.error
+  const label = isArabic ? config.labelAr : config.label
+  const Icon = config.icon
 
-  if (state.error) {
-    return (
-      <div className="space-y-2">
-        <div className="flex items-center gap-2 rounded-md border border-red-200 bg-red-50 p-3 dark:border-red-900 dark:bg-red-950">
-          <AlertCircle className="h-4 w-4 shrink-0 text-red-600" />
-          <p className="text-sm text-red-600">{state.error}</p>
-        </div>
-        <Button variant="outline" size="sm" onClick={() => onReset(cardId)}>
-          {isArabic ? "حاول مرة أخرى" : "Try Again"}
-        </Button>
-      </div>
-    )
-  }
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault()
+      const file = e.dataTransfer.files?.[0]
+      if (file) onUpload(file)
+    },
+    [onUpload]
+  )
 
-  if (!state.result) return null
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+  }, [])
 
-  const { result } = state
   return (
-    <div className="space-y-3">
+    <div className="relative">
       <div
-        className={`flex items-center gap-2 rounded-md p-3 ${
-          result.imported > 0
-            ? "border border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950"
-            : "border border-yellow-200 bg-yellow-50 dark:border-yellow-900 dark:bg-yellow-950"
+        className={`min-h-[140px] rounded-lg border-2 border-dashed transition-colors ${
+          state.error
+            ? "border-red-300"
+            : state.result
+              ? state.importing
+                ? "border-orange-300"
+                : "border-muted-foreground/30"
+              : "border-muted-foreground/30 hover:border-muted-foreground/50"
         }`}
       >
-        <CheckCircle2
-          className={`h-4 w-4 shrink-0 ${
-            result.imported > 0 ? "text-green-600" : "text-yellow-600"
-          }`}
-        />
-        <p className="text-sm">
-          {isArabic
-            ? `تم استيراد ${result.imported} بنجاح، فشل ${result.failed}`
-            : `${result.imported} imported successfully, ${result.failed} failed`}
-        </p>
+        {state.uploading ? (
+          <div className="flex h-[140px] items-center justify-center">
+            <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
+          </div>
+        ) : hasResult ? (
+          <div className="flex min-h-[140px] flex-col items-center justify-center space-y-2 p-4">
+            {state.result && (
+              <div className="space-y-2 text-sm">
+                {state.result.imported > 0 && (
+                  <div
+                    className={`flex items-center justify-center gap-2 ${state.importing ? "text-orange-600" : "text-green-700 dark:text-green-400"}`}
+                  >
+                    {state.importing ? (
+                      <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+                    ) : (
+                      <CheckCircle2 className="h-4 w-4 shrink-0" />
+                    )}
+                    {state.result.imported}{" "}
+                    {state.importing
+                      ? isArabic
+                        ? "جاري الاستيراد..."
+                        : "importing..."
+                      : isArabic
+                        ? "تم الاستيراد بنجاح"
+                        : "imported successfully"}
+                  </div>
+                )}
+                {state.result.skipped > 0 && (
+                  <div className="text-muted-foreground flex items-center gap-2">
+                    <Info className="h-4 w-4 shrink-0" />
+                    {state.result.skipped}{" "}
+                    {isArabic
+                      ? "تم تخطيها (موجودة)"
+                      : "skipped (already exist)"}
+                  </div>
+                )}
+                {state.result.failed > 0 && (
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-red-600">
+                      <AlertCircle className="h-4 w-4 shrink-0" />
+                      {state.result.failed} {isArabic ? "فشل" : "failed"}
+                    </div>
+                    <div className="max-h-[80px] overflow-y-auto rounded border p-2 text-xs">
+                      {state.result.errors.map((err, i) => (
+                        <div key={i} className="text-muted-foreground py-0.5">
+                          {isArabic ? `صف ${err.row}` : `Row ${err.row}`}:{" "}
+                          {err.error}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {state.error && (
+              <div className="flex items-center gap-2 text-sm text-red-600">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                {state.error}
+              </div>
+            )}
+
+            {!state.importing && (
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={onBrowse}
+                  className="text-muted-foreground hover:text-foreground mt-1 text-xs underline underline-offset-2"
+                >
+                  {isArabic ? "رفع ملف آخر" : "Upload another file"}
+                </button>
+              </div>
+            )}
+            <input
+              ref={inputRef}
+              type="file"
+              accept={ACCEPTED_FORMATS}
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) onUpload(file)
+                e.target.value = ""
+              }}
+              className="sr-only"
+            />
+          </div>
+        ) : (
+          <div
+            className="flex h-[140px] cursor-pointer flex-col items-center justify-center gap-2"
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onClick={onBrowse}
+          >
+            <div className="flex items-center gap-2">
+              <Icon className="text-muted-foreground h-5 w-5" />
+              <Upload className="text-muted-foreground h-4 w-4" />
+            </div>
+            <p className="text-sm">
+              {isArabic ? "اسحب ملف " : "Drop "}
+              <span className="font-semibold">{label}</span>
+              {isArabic ? " أو تصفح" : " file or browse"}
+            </p>
+            <p className="text-muted-foreground/60 text-xs">CSV, Excel, JSON</p>
+            <input
+              ref={inputRef}
+              type="file"
+              accept={ACCEPTED_FORMATS}
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) onUpload(file)
+                e.target.value = ""
+              }}
+              className="sr-only"
+            />
+          </div>
+        )}
       </div>
 
-      {result.warnings && result.warnings.length > 0 && (
-        <div className="rounded-md border border-yellow-200 bg-yellow-50 p-3 dark:border-yellow-900 dark:bg-yellow-950">
-          <p className="mb-1 text-sm font-medium text-yellow-800 dark:text-yellow-200">
-            {isArabic ? "تحذيرات" : "Warnings"}
-          </p>
-          {result.warnings.map((w, idx) => (
-            <p
-              key={idx}
-              className="text-xs text-yellow-700 dark:text-yellow-300"
-            >
-              {isArabic ? `صف ${w.row}` : `Row ${w.row}`}: {w.warning}
-            </p>
-          ))}
-        </div>
+      {/* Download template button */}
+      {!hasResult && !state.uploading && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            downloadTemplate(config.templateContent, config.templateFilename)
+          }}
+          className="text-muted-foreground hover:text-foreground absolute end-2 top-2 rounded p-1 transition-colors"
+          title={isArabic ? "تحميل القالب" : "Download Template"}
+        >
+          <Download className="h-4 w-4" />
+        </button>
       )}
-
-      {result.errors.length > 0 && (
-        <div className="rounded-md border p-3">
-          <button
-            type="button"
-            onClick={() => onToggleErrors(cardId)}
-            className="flex w-full items-center justify-between text-sm font-medium"
-          >
-            <span>
-              {isArabic
-                ? `${result.errors.length} أخطاء`
-                : `${result.errors.length} error${result.errors.length > 1 ? "s" : ""}`}
-            </span>
-            {state.showErrors ? (
-              <ChevronUp className="h-4 w-4" />
-            ) : (
-              <ChevronDown className="h-4 w-4" />
-            )}
-          </button>
-          {state.showErrors && (
-            <div className="mt-2 max-h-48 space-y-1 overflow-y-auto">
-              {result.errors.map((err, idx) => (
-                <div
-                  key={idx}
-                  className="rounded bg-red-50 p-2 text-xs dark:bg-red-950"
-                >
-                  <span className="font-medium">
-                    {isArabic ? `صف ${err.row}` : `Row ${err.row}`}:
-                  </span>{" "}
-                  {err.error}
-                  {err.details && (
-                    <p className="text-muted-foreground mt-1 whitespace-pre-wrap">
-                      {err.details}
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      <Button variant="outline" size="sm" onClick={() => onReset(cardId)}>
-        {isArabic ? "استيراد ملف آخر" : "Import Another File"}
-      </Button>
     </div>
   )
 }
+
+// ---------- Main Component ----------
 
 export default function BulkContent({ dictionary, lang }: Props) {
   const isArabic = lang === "ar"
   const [activeAcademic, setActiveAcademic] = useState("years")
 
-  // People import state
-  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
-  const [importStates, setImportStates] = useState<
-    Record<string, CardImportState>
-  >({})
-  const [activeImportCard, setActiveImportCard] = useState<string | null>(null)
+  // People import state (onboarding two-phase pattern)
+  const [sectionStates, setSectionStates] = useState<
+    Record<ImportType, SectionState>
+  >({
+    students: initialSectionState,
+    teachers: initialSectionState,
+    staff: initialSectionState,
+    guardians: initialSectionState,
+  })
+  const inputRefs = useRef<Record<ImportType, HTMLInputElement | null>>({
+    students: null,
+    teachers: null,
+    staff: null,
+    guardians: null,
+  })
 
-  const peopleCardConfigs: PeopleCardConfig[] = [
+  const dropZoneConfigs: DropZoneConfig[] = [
     {
-      id: "students",
+      type: "students",
       icon: GraduationCap,
-      title: isArabic ? "الطلاب" : "Students",
-      description: isArabic
-        ? "استيراد بيانات الطلاب"
-        : "Import student records",
+      label: "Students",
+      labelAr: "الطلاب",
       templateContent: STUDENT_TEMPLATE,
       templateFilename: "students-template.csv",
-      importAction: bulkImportStudents,
     },
     {
-      id: "teachers",
+      type: "teachers",
       icon: UserCheck,
-      title: isArabic ? "المعلمين" : "Teachers",
-      description: isArabic
-        ? "استيراد بيانات المعلمين"
-        : "Import teacher records",
+      label: "Teachers",
+      labelAr: "المعلمين",
       templateContent: TEACHER_TEMPLATE,
       templateFilename: "teachers-template.csv",
-      importAction: bulkImportTeachers,
     },
     {
-      id: "staff",
+      type: "staff",
       icon: Users,
-      title: isArabic ? "الموظفين" : "Staff",
-      description: isArabic
-        ? "استيراد بيانات الموظفين"
-        : "Import staff records",
+      label: "Staff",
+      labelAr: "الموظفين",
       templateContent: STAFF_TEMPLATE,
       templateFilename: "staff-template.csv",
-      importAction: bulkImportStaff,
     },
     {
-      id: "guardians",
+      type: "guardians",
       icon: Shield,
-      title: isArabic ? "أولياء الأمور" : "Guardians",
-      description: isArabic
-        ? "استيراد بيانات أولياء الأمور"
-        : "Import guardian records",
+      label: "Guardians",
+      labelAr: "أولياء الأمور",
       templateContent: GUARDIAN_TEMPLATE,
       templateFilename: "guardians-template.csv",
-      importAction: bulkImportGuardians,
     },
   ]
 
-  async function handleFileSelect(card: PeopleCardConfig, file: File) {
-    setActiveImportCard(card.id)
-    setImportStates((prev) => ({
-      ...prev,
-      [card.id]: {
-        uploading: true,
-        result: null,
-        error: null,
-        showErrors: false,
-      },
+  const handleUpload = useCallback(async (file: File, type: ImportType) => {
+    const setState = (updater: (prev: SectionState) => SectionState) => {
+      setSectionStates((prev) => ({
+        ...prev,
+        [type]: updater(prev[type]),
+      }))
+    }
+
+    setState(() => ({
+      uploading: true,
+      importing: false,
+      result: null,
+      error: null,
     }))
 
     try {
+      // Phase 1: Fast parse + validate
       const formData = new FormData()
       formData.append("file", file)
-      const response = await card.importAction(formData)
+      formData.append("type", type)
 
-      if (response.success && response.data) {
-        setImportStates((prev) => ({
-          ...prev,
-          [card.id]: {
-            uploading: false,
-            result: response.data!,
-            error: null,
-            showErrors: false,
-          },
-        }))
-      } else {
-        setImportStates((prev) => ({
-          ...prev,
-          [card.id]: {
-            uploading: false,
-            result: null,
-            error: response.error || "Import failed",
-            showErrors: false,
-          },
-        }))
-      }
-    } catch (err) {
-      setImportStates((prev) => ({
-        ...prev,
-        [card.id]: {
-          uploading: false,
-          result: null,
-          error: err instanceof Error ? err.message : "Import failed",
-          showErrors: false,
+      const preview = await bulkParseAndValidate(formData)
+
+      // Show optimistic result immediately
+      setState(() => ({
+        uploading: false,
+        importing: true,
+        result: {
+          imported: preview.validRows,
+          failed: preview.invalidRows.length,
+          skipped: 0,
+          errors: preview.invalidRows,
         },
+        error: null,
+      }))
+
+      // Phase 2: Background DB import
+      const importData = new FormData()
+      importData.append("csvContent", preview.csvContent)
+      importData.append("type", type)
+
+      bulkSmartImport(importData)
+        .then((result) => {
+          setState((prev) => ({ ...prev, result, importing: false }))
+        })
+        .catch((err) => {
+          setState((prev) => ({
+            ...prev,
+            error: err instanceof Error ? err.message : "Import failed",
+            importing: false,
+          }))
+        })
+    } catch (err) {
+      setState(() => ({
+        uploading: false,
+        importing: false,
+        result: null,
+        error: err instanceof Error ? err.message : "Import failed",
       }))
     }
-  }
-
-  function handleReset(cardId: string) {
-    setImportStates((prev) => {
-      const next = { ...prev }
-      delete next[cardId]
-      return next
-    })
-    setActiveImportCard(null)
-    const input = fileInputRefs.current[cardId]
-    if (input) input.value = ""
-  }
-
-  function handleToggleErrors(cardId: string) {
-    setImportStates((prev) => ({
-      ...prev,
-      [cardId]: {
-        ...prev[cardId],
-        showErrors: !prev[cardId]?.showErrors,
-      },
-    }))
-  }
+  }, [])
 
   const academicCards: BulkCardItem[] = [
     {
@@ -561,6 +608,28 @@ export default function BulkContent({ dictionary, lang }: Props) {
 
   return (
     <div className="space-y-10">
+      {/* People (DropZone-based import) */}
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold">
+          {isArabic ? "الأشخاص" : "People"}
+        </h2>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {dropZoneConfigs.map((config) => (
+            <DropZone
+              key={config.type}
+              config={config}
+              state={sectionStates[config.type]}
+              inputRef={(el) => {
+                inputRefs.current[config.type] = el
+              }}
+              isArabic={isArabic}
+              onUpload={(file) => handleUpload(file, config.type)}
+              onBrowse={() => inputRefs.current[config.type]?.click()}
+            />
+          ))}
+        </div>
+      </section>
+
       {/* Academic */}
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">
@@ -600,88 +669,6 @@ export default function BulkContent({ dictionary, lang }: Props) {
           {isArabic ? "الهيكل" : "Structure"}
         </h2>
         <ScrollRow items={structureCards} activeId={null} onSelect={() => {}} />
-      </section>
-
-      {/* People */}
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold">
-          {isArabic ? "الأشخاص" : "People"}
-        </h2>
-        <div className="no-scrollbar -mx-1 flex gap-3 overflow-x-auto px-1">
-          {peopleCardConfigs.map((card) => {
-            const Icon = card.icon
-            const state = importStates[card.id]
-            const isActive = activeImportCard === card.id
-            const isUploading = state?.uploading
-            return (
-              <div key={card.id} className="relative w-60 shrink-0">
-                <input
-                  type="file"
-                  accept=".csv,.xlsx,.xls,.json,.docx"
-                  className="hidden"
-                  ref={(el) => {
-                    fileInputRefs.current[card.id] = el
-                  }}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0]
-                    if (file) handleFileSelect(card, file)
-                  }}
-                />
-                <div
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => {
-                    if (!isUploading) fileInputRefs.current[card.id]?.click()
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !isUploading)
-                      fileInputRefs.current[card.id]?.click()
-                  }}
-                  className={`hover:bg-muted/50 w-full cursor-pointer space-y-2 rounded-lg border p-4 transition-colors ${
-                    isActive ? "border-primary bg-muted/30" : ""
-                  } ${isUploading ? "pointer-events-none opacity-60" : ""}`}
-                >
-                  <div className="flex items-center gap-2">
-                    {isUploading ? (
-                      <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
-                    ) : (
-                      <Icon className="text-muted-foreground h-5 w-5" />
-                    )}
-                  </div>
-                  <p className="text-sm font-medium">{card.title}</p>
-                  <p className="text-muted-foreground text-xs">
-                    {card.description}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    downloadTemplate(
-                      card.templateContent,
-                      card.templateFilename
-                    )
-                  }}
-                  className="text-muted-foreground hover:text-foreground absolute end-2 top-2 rounded p-1 transition-colors"
-                  title={isArabic ? "تحميل القالب" : "Download Template"}
-                >
-                  <Download className="h-4 w-4" />
-                </button>
-              </div>
-            )
-          })}
-        </div>
-        {activeImportCard && importStates[activeImportCard] && (
-          <div className="pt-2">
-            <ImportResultDisplay
-              cardId={activeImportCard}
-              state={importStates[activeImportCard]}
-              isArabic={isArabic}
-              onToggleErrors={handleToggleErrors}
-              onReset={handleReset}
-            />
-          </div>
-        )}
       </section>
 
       {/* Placeholder sections */}

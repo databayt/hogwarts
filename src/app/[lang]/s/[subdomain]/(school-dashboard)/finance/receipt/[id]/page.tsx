@@ -8,6 +8,8 @@
 
 import { notFound } from "next/navigation"
 
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { getReceiptById } from "@/components/school-dashboard/finance/receipt/actions"
 import { ReceiptDetail } from "@/components/school-dashboard/finance/receipt/receipt-detail"
 
@@ -16,11 +18,12 @@ export const metadata = {
 }
 
 interface Props {
-  params: Promise<{ id: string }>
+  params: Promise<{ id: string; lang: Locale }>
 }
 
 export default async function ReceiptDetailPage({ params }: Props) {
-  const { id } = await params
+  const { id, lang } = await params
+  const dictionary = await getDictionary(lang)
 
   // Fetch receipt on the server
   const result = await getReceiptById(id)

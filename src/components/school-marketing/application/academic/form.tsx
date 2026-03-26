@@ -2,7 +2,12 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React, { forwardRef, useEffect, useImperativeHandle } from "react"
+import React, {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+} from "react"
 import { useParams } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -24,13 +29,19 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { createI18nHelpers } from "@/components/internationalization/helpers"
 import { useLocale } from "@/components/internationalization/use-locale"
 
 import { useApplySession } from "../application-context"
+import { getApplyDict } from "../utils"
 import { saveAcademicStep } from "./actions"
 import { GRADE_OPTIONS, PERFORMANCE_OPTIONS, STREAM_OPTIONS } from "./config"
 import type { AcademicFormProps, AcademicFormRef } from "./types"
-import { academicSchema, type AcademicSchemaType } from "./validation"
+import {
+  academicSchema,
+  createAcademicSchema,
+  type AcademicSchemaType,
+} from "./validation"
 
 export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
   ({ initialData, onSuccess, dictionary }, ref) => {
@@ -40,8 +51,17 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
     const isRTL = lang === "ar"
     const { session, updateStepData } = useApplySession()
 
+    const schema = useMemo(() => {
+      const messages = (dictionary as Record<string, unknown>)?.messages as
+        | Record<string, unknown>
+        | undefined
+      if (!messages) return academicSchema
+      const { validation } = createI18nHelpers(messages as never)
+      return createAcademicSchema(validation)
+    }, [dictionary])
+
     const form = useForm<AcademicSchemaType>({
-      resolver: zodResolver(academicSchema),
+      resolver: zodResolver(schema),
       defaultValues: {
         previousSchool: initialData?.previousSchool || "",
         previousClass: initialData?.previousClass || "",
@@ -55,8 +75,7 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
       },
     })
 
-    const dict = ((dictionary as Record<string, Record<string, string>> | null)
-      ?.apply?.academic ?? {}) as Record<string, string>
+    const dict = getApplyDict(dictionary, "academic")
 
     const prevDataRef = React.useRef<string>("")
     useEffect(() => {
@@ -100,14 +119,9 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
                 name="previousSchool"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      {dict.previousSchool || "Previous School"}
-                    </FormLabel>
+                    <FormLabel>{dict.previousSchool}</FormLabel>
                     <FormControl>
-                      <Input
-                        {...field}
-                        placeholder={dict.schoolPlaceholder || "School name"}
-                      />
+                      <Input {...field} placeholder={dict.schoolPlaceholder} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -118,17 +132,11 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
                 name="previousClass"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      {dict.previousClass || "Previous Grade"}
-                    </FormLabel>
+                    <FormLabel>{dict.previousClass}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue
-                            placeholder={
-                              dict.classPlaceholder || "Select grade"
-                            }
-                          />
+                          <SelectValue placeholder={dict.classPlaceholder} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -148,15 +156,11 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
                 name="previousPercentage"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{dict.performance || "Performance"}</FormLabel>
+                    <FormLabel>{dict.performance}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue
-                            placeholder={
-                              dict.selectPerformance || "Select performance"
-                            }
-                          />
+                          <SelectValue placeholder={dict.selectPerformance} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -182,15 +186,11 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
                 name="applyingForClass"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      {dict.applyingForClass || "Applying for Class"} *
-                    </FormLabel>
+                    <FormLabel>{dict.applyingForClass} *</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue
-                            placeholder={dict.selectClass || "Select class"}
-                          />
+                          <SelectValue placeholder={dict.selectClass} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -210,15 +210,11 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
                 name="preferredStream"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      {dict.preferredStream || "Preferred Stream"}
-                    </FormLabel>
+                    <FormLabel>{dict.preferredStream}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue
-                            placeholder={dict.selectStream || "Select stream"}
-                          />
+                          <SelectValue placeholder={dict.selectStream} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -242,15 +238,12 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
             name="achievements"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{dict.achievements || "Achievements"}</FormLabel>
+                <FormLabel>{dict.achievements}</FormLabel>
                 <FormControl>
                   <Textarea
                     {...field}
                     rows={4}
-                    placeholder={
-                      dict.achievementsPlaceholder ||
-                      "Enter any achievements or awards"
-                    }
+                    placeholder={dict.achievementsPlaceholder}
                   />
                 </FormControl>
                 <FormMessage />

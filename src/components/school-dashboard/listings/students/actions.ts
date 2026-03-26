@@ -350,9 +350,9 @@ export async function createStudent(
     const row = await studentModel.create({
       data: {
         schoolId,
-        givenName: parsed.givenName,
+        firstName: parsed.firstName,
         middleName: parsed.middleName ?? null,
-        surname: parsed.surname,
+        lastName: parsed.lastName,
         ...(parsed.dateOfBirth
           ? { dateOfBirth: new Date(parsed.dateOfBirth) }
           : {}),
@@ -436,10 +436,10 @@ export async function updateStudent(
 
     // Build update data object
     const data: Record<string, unknown> = {}
-    if (typeof rest.givenName !== "undefined") data.givenName = rest.givenName
+    if (typeof rest.firstName !== "undefined") data.firstName = rest.firstName
     if (typeof rest.middleName !== "undefined")
       data.middleName = rest.middleName ?? null
-    if (typeof rest.surname !== "undefined") data.surname = rest.surname
+    if (typeof rest.lastName !== "undefined") data.lastName = rest.lastName
     if (typeof rest.gender !== "undefined") data.gender = rest.gender
     if (typeof rest.userId !== "undefined") {
       const trimmed = rest.userId?.trim()
@@ -691,9 +691,9 @@ export async function getStudent(input: {
       select: {
         id: true,
         schoolId: true,
-        givenName: true,
+        firstName: true,
         middleName: true,
-        surname: true,
+        lastName: true,
         dateOfBirth: true,
         gender: true,
         enrollmentDate: true,
@@ -844,7 +844,7 @@ export async function getStudents(
     if (sp.name) {
       const nameConditions = await buildTranslatedSearchConditions(
         sp.name,
-        ["givenName", "surname"],
+        ["firstName", "lastName"],
         schoolId,
         storageLang,
         displayLang
@@ -934,7 +934,7 @@ export async function getStudents(
     const nameTranslations = new Map<string, string>()
     const uniqueNames = new Map<string, string>()
     for (const s of rows as Array<any>) {
-      const rawName = [s.givenName, s.surname].filter(Boolean).join(" ")
+      const rawName = [s.firstName, s.lastName].filter(Boolean).join(" ")
       // Override lang field when text clearly doesn't match
       // (e.g. lang="ar" default but name is Latin characters from admission)
       const textLang = hasLatin(rawName) ? "en" : "ar"
@@ -1003,7 +1003,7 @@ export async function getStudents(
           : enGrade
         : null
 
-      const rawName = [s.givenName, s.surname].filter(Boolean).join(" ")
+      const rawName = [s.firstName, s.lastName].filter(Boolean).join(" ")
       const mapTextLang = hasLatin(rawName) ? "en" : "ar"
       const contentLang =
         mapTextLang !== s.lang ? mapTextLang : s.lang || mapTextLang
@@ -1083,7 +1083,7 @@ export async function getStudentsCSV(
     try {
       assertStudentPermission(authContext, "export", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Parse and validate input
@@ -1095,8 +1095,8 @@ export async function getStudentsCSV(
       ...(sp.name
         ? {
             OR: [
-              { givenName: { contains: sp.name, mode: "insensitive" } },
-              { surname: { contains: sp.name, mode: "insensitive" } },
+              { firstName: { contains: sp.name, mode: "insensitive" } },
+              { lastName: { contains: sp.name, mode: "insensitive" } },
             ],
           }
         : {}),
@@ -1130,14 +1130,14 @@ export async function getStudentsCSV(
           select: { name: true },
         },
       },
-      orderBy: [{ givenName: "asc" }, { surname: "asc" }],
+      orderBy: [{ firstName: "asc" }, { lastName: "asc" }],
     })
 
     // Translate names for current locale
     const csvNameTranslations = new Map<string, string>()
     const csvUniqueNames = new Map<string, string>()
     for (const s of students as Array<any>) {
-      const rawName = [s.givenName, s.middleName, s.surname]
+      const rawName = [s.firstName, s.middleName, s.lastName]
         .filter(Boolean)
         .join(" ")
       // Override lang field when text clearly doesn't match
@@ -1147,12 +1147,12 @@ export async function getStudentsCSV(
       if (contentLang !== csvDisplayLang) {
         csvUniqueNames.set(rawName, contentLang)
         // Also add individual name parts for translated columns
-        if (s.givenName) {
-          const givenTextLang = hasLatin(s.givenName) ? "en" : "ar"
+        if (s.firstName) {
+          const givenTextLang = hasLatin(s.firstName) ? "en" : "ar"
           const partLang =
             givenTextLang !== s.lang ? givenTextLang : s.lang || givenTextLang
           if (partLang !== csvDisplayLang)
-            csvUniqueNames.set(s.givenName, partLang)
+            csvUniqueNames.set(s.firstName, partLang)
         }
         if (s.middleName) {
           const midTextLang = hasLatin(s.middleName) ? "en" : "ar"
@@ -1161,12 +1161,12 @@ export async function getStudentsCSV(
           if (partLang !== csvDisplayLang)
             csvUniqueNames.set(s.middleName, partLang)
         }
-        if (s.surname) {
-          const surTextLang = hasLatin(s.surname) ? "en" : "ar"
+        if (s.lastName) {
+          const surTextLang = hasLatin(s.lastName) ? "en" : "ar"
           const partLang =
             surTextLang !== s.lang ? surTextLang : s.lang || surTextLang
           if (partLang !== csvDisplayLang)
-            csvUniqueNames.set(s.surname, partLang)
+            csvUniqueNames.set(s.lastName, partLang)
         }
       }
     }
@@ -1188,7 +1188,7 @@ export async function getStudentsCSV(
 
     // Transform data for CSV export
     const exportData = students.map((student: any) => {
-      const rawFull = [student.givenName, student.middleName, student.surname]
+      const rawFull = [student.firstName, student.middleName, student.lastName]
         .filter(Boolean)
         .join(" ")
       const fullTextLang = hasLatin(rawFull) ? "en" : "ar"
@@ -1200,19 +1200,19 @@ export async function getStudentsCSV(
 
       return {
         studentId: student.id,
-        givenName: needsTranslation
-          ? csvNameTranslations.get(student.givenName) ||
-            student.givenName ||
+        firstName: needsTranslation
+          ? csvNameTranslations.get(student.firstName) ||
+            student.firstName ||
             ""
-          : student.givenName || "",
+          : student.firstName || "",
         middleName: needsTranslation
           ? csvNameTranslations.get(student.middleName) ||
             student.middleName ||
             ""
           : student.middleName || "",
-        surname: needsTranslation
-          ? csvNameTranslations.get(student.surname) || student.surname || ""
-          : student.surname || "",
+        lastName: needsTranslation
+          ? csvNameTranslations.get(student.lastName) || student.lastName || ""
+          : student.lastName || "",
         fullName: needsTranslation
           ? csvNameTranslations.get(rawFull) || rawFull
           : rawFull,
@@ -1233,9 +1233,9 @@ export async function getStudentsCSV(
     // Define CSV columns
     const columns = [
       { key: "studentId", label: "Student ID" },
-      { key: "givenName", label: "First Name" },
+      { key: "firstName", label: "First Name" },
       { key: "middleName", label: "Middle Name" },
-      { key: "surname", label: "Last Name" },
+      { key: "lastName", label: "Last Name" },
       { key: "fullName", label: "Full Name" },
       { key: "dateOfBirth", label: "Date of Birth" },
       { key: "gender", label: "Gender" },
@@ -1284,9 +1284,9 @@ export async function getStudentsExportData(
       id: string
       studentId: string | null
       grNumber: string | null
-      givenName: string
+      firstName: string
       middleName: string | null
-      surname: string
+      lastName: string
       fullName: string
       dateOfBirth: Date | null
       gender: string
@@ -1320,7 +1320,7 @@ export async function getStudentsExportData(
     try {
       assertStudentPermission(authContext, "export", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Parse and validate input
@@ -1332,8 +1332,8 @@ export async function getStudentsExportData(
       ...(sp.name
         ? {
             OR: [
-              { givenName: { contains: sp.name, mode: "insensitive" } },
-              { surname: { contains: sp.name, mode: "insensitive" } },
+              { firstName: { contains: sp.name, mode: "insensitive" } },
+              { lastName: { contains: sp.name, mode: "insensitive" } },
             ],
           }
         : {}),
@@ -1387,7 +1387,7 @@ export async function getStudentsExportData(
           take: 1,
         },
       },
-      orderBy: [{ givenName: "asc" }, { surname: "asc" }],
+      orderBy: [{ firstName: "asc" }, { lastName: "asc" }],
     })
 
     // Transform data for export
@@ -1395,10 +1395,10 @@ export async function getStudentsExportData(
       id: student.id,
       studentId: student.studentId || null,
       grNumber: student.grNumber || null,
-      givenName: student.givenName || "",
+      firstName: student.firstName || "",
       middleName: student.middleName || null,
-      surname: student.surname || "",
-      fullName: [student.givenName, student.middleName, student.surname]
+      lastName: student.lastName || "",
+      fullName: [student.firstName, student.middleName, student.lastName]
         .filter(Boolean)
         .join(" "),
       dateOfBirth: student.dateOfBirth ? new Date(student.dateOfBirth) : null,
@@ -1414,8 +1414,8 @@ export async function getStudentsExportData(
       yearLevel: student.studentYearLevels?.[0]?.yearLevel?.name || null,
       guardianName: student.studentGuardians?.[0]?.guardian
         ? [
-            student.studentGuardians[0].guardian.givenName,
-            student.studentGuardians[0].guardian.surname,
+            student.studentGuardians[0].guardian.firstName,
+            student.studentGuardians[0].guardian.lastName,
           ]
             .filter(Boolean)
             .join(" ")
@@ -1471,14 +1471,14 @@ export async function registerStudent(
     try {
       assertStudentPermission(authContext, "create", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Validate required fields
     const registrationSchema = z
       .object({
-        givenName: z.string().min(1),
-        surname: z.string().min(1),
+        firstName: z.string().min(1),
+        lastName: z.string().min(1),
         dateOfBirth: z.string().min(1),
         gender: z.string().min(1),
         middleName: z.string().optional().nullable(),
@@ -1490,8 +1490,8 @@ export async function registerStudent(
         guardians: z
           .array(
             z.object({
-              givenName: z.string().min(1),
-              surname: z.string().min(1),
+              firstName: z.string().min(1),
+              lastName: z.string().min(1),
               email: z.string().optional().nullable(),
               mobileNumber: z.string().optional().nullable(),
               relation: z.string().optional().nullable(),
@@ -1526,8 +1526,8 @@ export async function registerStudent(
           guardianRecord = await guardianModel.create({
             data: {
               schoolId,
-              givenName: guardian.givenName,
-              surname: guardian.surname,
+              firstName: guardian.firstName,
+              lastName: guardian.lastName,
               emailAddress: guardian.email,
             },
           })
@@ -1557,9 +1557,9 @@ export async function registerStudent(
     // Prepare student data
     const studentData: any = {
       schoolId,
-      givenName: validatedInput.givenName,
+      firstName: validatedInput.firstName,
       middleName: validatedInput.middleName || null,
-      surname: validatedInput.surname,
+      lastName: validatedInput.lastName,
       dateOfBirth: new Date(validatedInput.dateOfBirth),
       gender: validatedInput.gender,
       bloodGroup: validatedInput.bloodGroup || null,
@@ -1846,7 +1846,7 @@ export async function bulkDeleteStudents(input: {
     try {
       assertStudentPermission(authContext, "bulk_action", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized for bulk operations" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const { ids } = z
@@ -1863,7 +1863,7 @@ export async function bulkDeleteStudents(input: {
 
     const validIds = existing.map((s: any) => s.id as string)
     if (validIds.length === 0) {
-      return { success: false, error: "No valid students found" }
+      return actionError(ACTION_ERRORS.UNKNOWN)
     }
 
     // Cascade validation: check for dependencies before bulk deletion

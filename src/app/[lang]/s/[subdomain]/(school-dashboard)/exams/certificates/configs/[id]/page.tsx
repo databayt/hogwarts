@@ -11,6 +11,7 @@ import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
 import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { CertificateConfigForm } from "@/components/school-dashboard/exams/certificates/config-form"
 
 interface EditConfigPageProps {
@@ -23,6 +24,7 @@ interface EditConfigPageProps {
 
 export default async function EditConfigPage({ params }: EditConfigPageProps) {
   const { lang, id } = await params
+  const dictionary = await getDictionary(lang)
   const session = await auth()
 
   if (["STUDENT", "GUARDIAN"].includes(session?.user?.role || "")) {

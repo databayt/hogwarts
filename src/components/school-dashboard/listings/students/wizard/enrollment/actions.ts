@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { cookies } from "next/headers"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
@@ -35,7 +36,7 @@ export async function getGradeOptions(
 ): Promise<ActionResponse<{ value: string; label: string }[]>> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const grades = await db.academicGrade.findMany({
       where: { schoolId },
@@ -70,7 +71,7 @@ export async function getSectionOptions(
 ): Promise<ActionResponse<{ value: string; label: string }[]>> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const sections = await db.section.findMany({
       where: { schoolId, gradeId },
@@ -104,7 +105,7 @@ export async function getStudentEnrollment(
 ): Promise<ActionResponse<EnrollmentFormData>> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const student = await db.student.findFirst({
       where: { id: studentId, schoolId },
@@ -119,7 +120,7 @@ export async function getStudentEnrollment(
       },
     })
 
-    if (!student) return { success: false, error: "Student not found" }
+    if (!student) return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
 
     return {
       success: true,
@@ -147,7 +148,7 @@ export async function updateStudentEnrollment(
 ): Promise<ActionResponse> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const parsed = enrollmentSchema.parse(input)
 

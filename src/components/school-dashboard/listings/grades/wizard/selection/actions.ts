@@ -14,7 +14,7 @@ export async function getGradeSelection(
 ): Promise<ActionResponse<SelectionFormData>> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const result = await db.result.findFirst({
       where: { id: resultId, schoolId },
@@ -27,7 +27,7 @@ export async function getGradeSelection(
       },
     })
 
-    if (!result) return { success: false, error: "Result not found" }
+    if (!result) return actionError(ACTION_ERRORS.NOT_FOUND)
 
     return {
       success: true,
@@ -53,7 +53,7 @@ export async function updateGradeSelection(
 ): Promise<ActionResponse> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const parsed = selectionSchema.parse(input)
 
@@ -79,16 +79,16 @@ export async function updateGradeSelection(
 
 /** Get students for the grade selection dropdown */
 export async function getStudentsForGrade(): Promise<
-  ActionResponse<{ id: string; givenName: string; surname: string }[]>
+  ActionResponse<{ id: string; firstName: string; lastName: string }[]>
 > {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const students = await db.student.findMany({
       where: { schoolId },
-      select: { id: true, givenName: true, surname: true },
-      orderBy: { givenName: "asc" },
+      select: { id: true, firstName: true, lastName: true },
+      orderBy: { firstName: "asc" },
     })
 
     return { success: true, data: students }
@@ -106,7 +106,7 @@ export async function getClassesForGrade(): Promise<
 > {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const classes = await db.class.findMany({
       where: { schoolId },
@@ -129,7 +129,7 @@ export async function getAssignmentsForGrade(
 ): Promise<ActionResponse<{ id: string; title: string }[]>> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const assignments = await db.assignment.findMany({
       where: { schoolId, classId },
@@ -153,7 +153,7 @@ export async function getExamsForGrade(
 ): Promise<ActionResponse<{ id: string; title: string }[]>> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const exams = await db.exam.findMany({
       where: { schoolId, classId },
@@ -176,7 +176,7 @@ export async function getSubjectsForGrade(): Promise<
 > {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const { getSchoolSubjectOptions } = await import("@/lib/school-subjects")
     const subjects = await getSchoolSubjectOptions(schoolId)

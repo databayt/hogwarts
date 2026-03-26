@@ -281,8 +281,8 @@ export async function getPayments(studentId?: string) {
       student: {
         select: {
           studentId: true,
-          givenName: true,
-          surname: true,
+          firstName: true,
+          lastName: true,
         },
       },
       feeAssignment: {

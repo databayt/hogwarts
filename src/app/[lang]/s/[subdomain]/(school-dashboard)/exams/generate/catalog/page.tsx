@@ -2,6 +2,7 @@ import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 
 import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { CatalogExamBrowseTab } from "@/components/school-dashboard/exams/generate/catalog-tab"
 
 interface PageProps {
@@ -13,6 +14,7 @@ interface PageProps {
 
 export default async function CatalogExamBrowsePage({ params }: PageProps) {
   const { lang } = await params
+  const dictionary = await getDictionary(lang)
 
   const session = await auth()
   if (["STUDENT", "GUARDIAN"].includes(session?.user?.role || "")) {

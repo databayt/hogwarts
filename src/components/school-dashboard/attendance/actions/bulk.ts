@@ -277,7 +277,7 @@ export async function getAttendanceReport(
     db.attendance.findMany({
       where,
       include: {
-        student: { select: { givenName: true, surname: true } },
+        student: { select: { firstName: true, lastName: true } },
         class: { select: { name: true } },
       },
       orderBy: { date: "desc" },
@@ -297,7 +297,7 @@ export async function getAttendanceReport(
       id: r.id,
       date: r.date.toISOString().split("T")[0],
       studentId: r.studentId,
-      studentName: `${r.student.givenName} ${r.student.surname}`,
+      studentName: `${r.student.firstName} ${r.student.lastName}`,
       classId: r.classId,
       className: r.class?.name ?? "",
       status: r.status,
@@ -388,7 +388,7 @@ export async function getAttendanceReportCsv(input: {
     orderBy: { date: "desc" },
     take: sp.limit ?? 1000,
     include: {
-      student: { select: { givenName: true, surname: true } },
+      student: { select: { firstName: true, lastName: true } },
       class: { select: { name: true } },
     },
   })
@@ -403,7 +403,7 @@ export async function getAttendanceReportCsv(input: {
       [
         r.date.toISOString().split("T")[0],
         r.studentId,
-        `"${r.student.givenName} ${r.student.surname}"`,
+        `"${r.student.firstName} ${r.student.lastName}"`,
         r.classId,
         `"${r.class?.name ?? ""}"`,
         String(r.status),

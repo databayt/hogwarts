@@ -241,9 +241,9 @@ describe("Timetable Actions", () => {
             id: CCLASS1,
             name: "Math 10",
             subject: { name: "Math" },
-            teacher: { givenName: "Alan", surname: "Turing" },
+            teacher: { firstName: "Alan", lastName: "Turing" },
           },
-          teacher: { givenName: "Alan", surname: "Turing" },
+          teacher: { firstName: "Alan", lastName: "Turing" },
         },
       ] as any)
 
@@ -382,7 +382,7 @@ describe("Timetable Actions", () => {
           periodId: CPERIOD1,
           class: { id: CCLASS1, name: "Class 1" },
           teacherId: CTEACHER1,
-          teacher: { givenName: "A", surname: "B" },
+          teacher: { firstName: "A", lastName: "B" },
           classroomId: CROOM1,
           classroom: { roomName: "R1" },
         },
@@ -391,7 +391,7 @@ describe("Timetable Actions", () => {
           periodId: CPERIOD1,
           class: { id: CCLASS2, name: "Class 2" },
           teacherId: CTEACHER1,
-          teacher: { givenName: "A", surname: "B" },
+          teacher: { firstName: "A", lastName: "B" },
           classroomId: CROOM2,
           classroom: { roomName: "R2" },
         },
@@ -417,8 +417,8 @@ describe("Timetable Actions", () => {
       // Teacher check
       vi.mocked(db.teacher.findFirst).mockResolvedValue({
         id: CTEACHER1,
-        givenName: "A",
-        surname: "B",
+        firstName: "A",
+        lastName: "B",
       } as any)
       vi.mocked(db.teacherConstraint.findFirst).mockResolvedValue(null)
       // Room check — classroom must exist
@@ -469,7 +469,7 @@ describe("Timetable Actions", () => {
           classId: CCLASS1,
           weekOffset: 0,
           class: { id: CCLASS1, name: "Math" },
-          teacher: { id: CTEACHER1, givenName: "A", surname: "B" },
+          teacher: { id: CTEACHER1, firstName: "A", lastName: "B" },
           classroom: { id: CROOM1, roomName: "Room 1" },
         } as any)
         // Second findFirst: conflict check at target position → no conflict
@@ -480,8 +480,8 @@ describe("Timetable Actions", () => {
       // Teacher constraint check
       vi.mocked(db.teacher.findFirst).mockResolvedValue({
         id: CTEACHER1,
-        givenName: "A",
-        surname: "B",
+        firstName: "A",
+        lastName: "B",
       } as any)
       vi.mocked(db.teacherConstraint.findFirst).mockResolvedValue(null)
       // Room constraint check — class info for student count

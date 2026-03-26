@@ -43,8 +43,8 @@ interface Props {
   }>
   students?: Array<{
     id: string
-    givenName: string
-    surname: string
+    firstName: string
+    lastName: string
     academicGradeId: string | null
   }>
 }
@@ -113,7 +113,7 @@ export default function EnrollStudentContent({
               <SelectContent>
                 {students.map((s) => (
                   <SelectItem key={s.id} value={s.id}>
-                    {s.givenName} {s.surname}
+                    {s.firstName} {s.lastName}
                   </SelectItem>
                 ))}
               </SelectContent>

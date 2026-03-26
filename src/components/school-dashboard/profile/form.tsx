@@ -64,7 +64,7 @@ export default function EditProfileForm({
   onCancel,
 }: EditProfileFormProps) {
   const fullName =
-    `${(data.givenName as string) || ""} ${(data.surname as string) || ""}`.trim()
+    `${(data.firstName as string) || ""} ${(data.lastName as string) || ""}`.trim()
   const existingSocial = (data.socialLinks as SocialLinks) || {}
 
   const [name, setName] = useState(fullName || (data.username as string) || "")

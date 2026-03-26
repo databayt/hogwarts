@@ -138,8 +138,8 @@ test.describe("Internal Onboarding: /join Flow", () => {
     await page.waitForTimeout(2000)
 
     // We should now be on the personal step (/join/personal)
-    const givenName = page.locator('input[name="givenName"]').first()
-    const hasGivenName = await givenName
+    const firstName = page.locator('input[name="firstName"]').first()
+    const hasGivenName = await firstName
       .isVisible({ timeout: TIMEOUTS.medium })
       .catch(() => false)
 
@@ -155,11 +155,11 @@ test.describe("Internal Onboarding: /join Flow", () => {
     const uniqueEmail = `test-${Date.now()}@e2e-join.test`
 
     // Fill personal step
-    await givenName.fill("E2E")
+    await firstName.fill("E2E")
 
-    const surname = page.locator('input[name="surname"]').first()
-    if (await surname.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await surname.fill("TestUser")
+    const lastName = page.locator('input[name="lastName"]').first()
+    if (await lastName.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await lastName.fill("TestUser")
     }
 
     const dateOfBirth = page.locator('input[name="dateOfBirth"]').first()

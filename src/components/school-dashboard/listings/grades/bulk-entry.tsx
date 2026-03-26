@@ -40,8 +40,8 @@ import { type Dictionary } from "@/components/internationalization/dictionaries"
 
 interface Student {
   id: string
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
   studentId?: string
 }
 
@@ -219,7 +219,7 @@ export function BulkGradeEntry({
           : ""
       return [
         student.studentId || student.id,
-        `${student.givenName} ${student.surname}`,
+        `${student.firstName} ${student.lastName}`,
         typeof score === "number" ? formatNumber(score, locale) : "",
         entry?.grade || "",
         percentage,
@@ -373,7 +373,7 @@ export function BulkGradeEntry({
                       <TableCell>
                         <div>
                           <div className="font-medium">
-                            {student.givenName} {student.surname}
+                            {student.firstName} {student.lastName}
                           </div>
                           {student.studentId && (
                             <div className="text-muted-foreground text-xs">

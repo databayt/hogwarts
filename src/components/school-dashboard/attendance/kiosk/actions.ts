@@ -10,6 +10,7 @@
 
 import { revalidatePath } from "next/cache"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
@@ -45,7 +46,7 @@ export async function lookupStudent(
     const { identifierValue, method } = input
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     let student = null
@@ -97,7 +98,7 @@ export async function lookupStudent(
     }
 
     if (!student) {
-      return { success: false, error: "Student not found" }
+      return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
     }
 
     // Get today's date range
@@ -138,7 +139,7 @@ export async function lookupStudent(
       success: true,
       student: {
         id: student.id,
-        name: `${student.givenName} ${student.surname}`,
+        name: `${student.firstName} ${student.lastName}`,
         photoUrl: student.profilePhotoUrl,
         grNumber: student.grNumber,
         yearLevel: student.studentYearLevels[0]?.yearLevel?.levelName,
@@ -149,7 +150,7 @@ export async function lookupStudent(
     }
   } catch (error) {
     console.error("Error looking up student:", error)
-    return { success: false, error: "Failed to look up student" }
+    return actionError(ACTION_ERRORS.ATTENDANCE_MARK_FAILED)
   }
 }
 
@@ -187,7 +188,7 @@ export async function processKioskCheck(
     } = input
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const now = new Date()
@@ -211,13 +212,13 @@ export async function processKioskCheck(
     })
 
     if (!student) {
-      return { success: false, error: "Student not found" }
+      return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
     }
 
     const classId = student.studentClasses[0]?.classId
 
     if (!classId) {
-      return { success: false, error: "Student not enrolled in any class" }
+      return actionError(ACTION_ERRORS.ATTENDANCE_MARK_FAILED)
     }
 
     // Determine attendance status
@@ -321,7 +322,7 @@ export async function processKioskCheck(
     return { success: true, attendanceId: attendance?.id }
   } catch (error) {
     console.error("Error processing kiosk check:", error)
-    return { success: false, error: "Failed to process check-in/out" }
+    return actionError(ACTION_ERRORS.ATTENDANCE_MARK_FAILED)
   }
 }
 
@@ -347,7 +348,7 @@ export async function registerKiosk(
     const { kioskId, kioskName, location } = input
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Check if kiosk already registered (use unique constraint)
@@ -395,6 +396,6 @@ export async function registerKiosk(
     return { success: true, sessionId: session.id }
   } catch (error) {
     console.error("Error registering kiosk:", error)
-    return { success: false, error: "Failed to register kiosk" }
+    return actionError(ACTION_ERRORS.ATTENDANCE_MARK_FAILED)
   }
 }

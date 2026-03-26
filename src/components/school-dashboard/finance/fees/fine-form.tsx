@@ -38,8 +38,8 @@ const getFineTypes = (ff?: Record<string, string>) =>
 interface FineFormProps {
   students: Array<{
     id: string
-    givenName: string | null
-    surname: string | null
+    firstName: string | null
+    lastName: string | null
   }>
   lang: Locale
 }
@@ -85,7 +85,7 @@ export function FineForm({ students, lang }: FineFormProps) {
           <SelectContent>
             {students.map((s) => (
               <SelectItem key={s.id} value={s.id}>
-                {[s.givenName, s.surname].filter(Boolean).join(" ")}
+                {[s.firstName, s.lastName].filter(Boolean).join(" ")}
               </SelectItem>
             ))}
           </SelectContent>

@@ -96,8 +96,8 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface Student {
   id: string
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
   studentId: string
   profileImageUrl?: string
   class: string
@@ -273,7 +273,7 @@ export function FeeManagement({
       const query = searchQuery.toLowerCase()
       filtered = filtered.filter(
         (fp) =>
-          `${fp.student?.givenName} ${fp.student?.surname}`
+          `${fp.student?.firstName} ${fp.student?.lastName}`
             .toLowerCase()
             .includes(query) ||
           fp.student?.studentId.toLowerCase().includes(query)
@@ -726,14 +726,14 @@ export function FeeManagement({
                                 src={payment.student?.profileImageUrl}
                               />
                               <AvatarFallback>
-                                {payment.student?.givenName[0]}
-                                {payment.student?.surname[0]}
+                                {payment.student?.firstName[0]}
+                                {payment.student?.lastName[0]}
                               </AvatarFallback>
                             </Avatar>
                             <div>
                               <p className="font-medium">
-                                {payment.student?.givenName}{" "}
-                                {payment.student?.surname}
+                                {payment.student?.firstName}{" "}
+                                {payment.student?.lastName}
                               </p>
                               <p className="text-muted-foreground text-xs">
                                 {payment.student?.studentId}
@@ -851,8 +851,8 @@ export function FeeManagement({
                           <CircleAlert className="h-8 w-8 text-red-600" />
                           <div>
                             <p className="font-medium">
-                              {payment.student?.givenName}{" "}
-                              {payment.student?.surname}
+                              {payment.student?.firstName}{" "}
+                              {payment.student?.lastName}
                             </p>
                             <p className="text-muted-foreground text-sm">
                               {payment.feeStructure?.name} - $
@@ -946,8 +946,8 @@ export function FeeManagement({
             <DialogDescription>
               {selectedPayment && (
                 <>
-                  {selectedPayment.student?.givenName}{" "}
-                  {selectedPayment.student?.surname} -{" "}
+                  {selectedPayment.student?.firstName}{" "}
+                  {selectedPayment.student?.lastName} -{" "}
                   {selectedPayment.feeStructure?.name}
                 </>
               )}

@@ -59,8 +59,8 @@ export const salaryStructureListSelect = {
   teacher: {
     select: {
       id: true,
-      givenName: true,
-      surname: true,
+      firstName: true,
+      lastName: true,
       employeeId: true,
     },
   },
@@ -94,7 +94,7 @@ export function buildSalaryStructureWhere(
     where.OR = [
       {
         teacher: {
-          givenName: {
+          firstName: {
             contains: filters.search,
             mode: Prisma.QueryMode.insensitive,
           },
@@ -102,7 +102,7 @@ export function buildSalaryStructureWhere(
       },
       {
         teacher: {
-          surname: {
+          lastName: {
             contains: filters.search,
             mode: Prisma.QueryMode.insensitive,
           },

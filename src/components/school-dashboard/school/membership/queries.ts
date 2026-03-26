@@ -15,8 +15,8 @@ export async function getUnifiedMembers(
       student: {
         select: {
           id: true,
-          givenName: true,
-          surname: true,
+          firstName: true,
+          lastName: true,
           email: true,
           status: true,
           academicGradeId: true,
@@ -28,8 +28,8 @@ export async function getUnifiedMembers(
       teacher: {
         select: {
           id: true,
-          givenName: true,
-          surname: true,
+          firstName: true,
+          lastName: true,
           emailAddress: true,
           employmentStatus: true,
           teacherDepartments: {
@@ -43,8 +43,8 @@ export async function getUnifiedMembers(
       staffMember: {
         select: {
           id: true,
-          givenName: true,
-          surname: true,
+          firstName: true,
+          lastName: true,
           emailAddress: true,
           employmentStatus: true,
           position: true,
@@ -53,8 +53,8 @@ export async function getUnifiedMembers(
       guardian: {
         select: {
           id: true,
-          givenName: true,
-          surname: true,
+          firstName: true,
+          lastName: true,
           emailAddress: true,
           _count: { select: { studentGuardians: true } },
         },
@@ -68,22 +68,22 @@ export async function getUnifiedMembers(
     let name = user.username || user.email || "Unknown"
     if (user.student) {
       name =
-        [user.student.givenName, user.student.surname]
+        [user.student.firstName, user.student.lastName]
           .filter(Boolean)
           .join(" ") || name
     } else if (user.teacher) {
       name =
-        [user.teacher.givenName, user.teacher.surname]
+        [user.teacher.firstName, user.teacher.lastName]
           .filter(Boolean)
           .join(" ") || name
     } else if (user.staffMember) {
       name =
-        [user.staffMember.givenName, user.staffMember.surname]
+        [user.staffMember.firstName, user.staffMember.lastName]
           .filter(Boolean)
           .join(" ") || name
     } else if (user.guardian) {
       name =
-        [user.guardian.givenName, user.guardian.surname]
+        [user.guardian.firstName, user.guardian.lastName]
           .filter(Boolean)
           .join(" ") || name
     }

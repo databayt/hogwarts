@@ -165,9 +165,9 @@ export async function getGuardianChildrenAttendance(): Promise<
             student: {
               select: {
                 id: true,
-                givenName: true,
+                firstName: true,
                 middleName: true,
-                surname: true,
+                lastName: true,
                 studentClasses: {
                   include: {
                     class: {
@@ -176,8 +176,8 @@ export async function getGuardianChildrenAttendance(): Promise<
                         teacher: {
                           select: {
                             id: true,
-                            givenName: true,
-                            surname: true,
+                            firstName: true,
+                            lastName: true,
                           },
                         },
                       },
@@ -218,13 +218,13 @@ export async function getGuardianChildrenAttendance(): Promise<
 
     const students = guardian.studentGuardians.map((sg) => ({
       id: sg.student.id,
-      name: `${sg.student.givenName}${sg.student.middleName ? ` ${sg.student.middleName}` : ""} ${sg.student.surname}`,
+      name: `${sg.student.firstName}${sg.student.middleName ? ` ${sg.student.middleName}` : ""} ${sg.student.lastName}`,
       email: null as string | null,
       classes: sg.student.studentClasses.map((sc) => ({
         id: sc.class.id,
         name: `${sc.class.subject.name} - ${sc.class.name}`,
         teacher: sc.class.teacher
-          ? `${sc.class.teacher.givenName} ${sc.class.teacher.surname}`
+          ? `${sc.class.teacher.firstName} ${sc.class.teacher.lastName}`
           : "N/A",
       })),
       attendances: sg.student.attendances.map((a) => ({

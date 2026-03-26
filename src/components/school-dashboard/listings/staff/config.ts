@@ -32,8 +32,8 @@ export const STAFF_PAGE_SIZE = 20
 
 export const STAFF_SORT_OPTIONS = [
   { value: "createdAt", label: "Date Added" },
-  { value: "givenName", label: "First Name" },
-  { value: "surname", label: "Last Name" },
+  { value: "firstName", label: "First Name" },
+  { value: "lastName", label: "Last Name" },
   { value: "position", label: "Position" },
 ] as const
 
@@ -105,8 +105,8 @@ export const getStaffSortOptions = (d?: StaffDict) => {
   const s = d?.sortOptions as Record<string, string> | undefined
   return [
     { value: "createdAt", label: s?.dateAdded || "Date Added" },
-    { value: "givenName", label: s?.firstName || "First Name" },
-    { value: "surname", label: s?.lastName || "Last Name" },
+    { value: "firstName", label: s?.firstName || "First Name" },
+    { value: "lastName", label: s?.lastName || "Last Name" },
     { value: "position", label: s?.position || "Position" },
   ]
 }

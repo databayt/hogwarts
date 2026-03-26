@@ -72,8 +72,8 @@ export async function ReportCardsContent({
     include: {
       student: {
         select: {
-          givenName: true,
-          surname: true,
+          firstName: true,
+          lastName: true,
           studentId: true,
         },
       },
@@ -81,7 +81,7 @@ export async function ReportCardsContent({
         include: { subject: { select: { name: true } } },
       },
     },
-    orderBy: { student: { givenName: "asc" } },
+    orderBy: { student: { firstName: "asc" } },
   })
 
   // Stats
@@ -201,7 +201,7 @@ export async function ReportCardsContent({
                 {reportCards.map((rc) => (
                   <TableRow key={rc.id}>
                     <TableCell className="font-medium">
-                      {rc.student.givenName} {rc.student.surname}
+                      {rc.student.firstName} {rc.student.lastName}
                     </TableCell>
                     <TableCell>{rc.student.studentId ?? "—"}</TableCell>
                     <TableCell>{rc.grades.length}</TableCell>

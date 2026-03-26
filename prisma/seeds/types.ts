@@ -29,23 +29,23 @@ export interface TeacherRef {
   id: string
   userId: string
   emailAddress: string
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
 }
 
 export interface StudentRef {
   id: string
   userId: string
   grNumber: string
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
   yearLevelId?: string
 }
 
 export interface GuardianRef {
   id: string
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
 }
 
 // ============================================================================
@@ -186,8 +186,8 @@ export interface TopicData {
 }
 
 export interface TeacherData {
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
   gender: "M" | "F"
   department: string // Arabic department name (e.g. "اللغات")
   specialty?: string

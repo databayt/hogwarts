@@ -87,8 +87,8 @@ describe("Student Actions", () => {
     it("creates student with schoolId for multi-tenant isolation", async () => {
       const mockStudent = {
         id: "student-1",
-        givenName: "John",
-        surname: "Doe",
+        firstName: "John",
+        lastName: "Doe",
         schoolId: mockSchoolId,
       }
 
@@ -96,8 +96,8 @@ describe("Student Actions", () => {
       vi.mocked(db.student.create).mockResolvedValue(mockStudent as any)
 
       const result = await createStudent({
-        givenName: "John",
-        surname: "Doe",
+        firstName: "John",
+        lastName: "Doe",
         gender: "male",
         dateOfBirth: "2010-05-15",
       })
@@ -114,8 +114,8 @@ describe("Student Actions", () => {
       })
 
       const result = await createStudent({
-        givenName: "John",
-        surname: "Doe",
+        firstName: "John",
+        lastName: "Doe",
         gender: "male",
       })
 
@@ -131,7 +131,7 @@ describe("Student Actions", () => {
 
       const result = await updateStudent({
         id: "student-1",
-        givenName: "Jane",
+        firstName: "Jane",
       })
 
       expect(result.success).toBe(true)
@@ -144,7 +144,7 @@ describe("Student Actions", () => {
 
       const result = await updateStudent({
         id: "student-from-other-school",
-        givenName: "Jane",
+        firstName: "Jane",
       })
 
       // updateMany doesn't throw when nothing matches - it just returns count: 0
@@ -180,8 +180,8 @@ describe("Student Actions", () => {
       const mockStudents = [
         {
           id: "1",
-          givenName: "John",
-          surname: "Doe",
+          firstName: "John",
+          lastName: "Doe",
           schoolId: mockSchoolId,
           userId: null,
           createdAt: now,
@@ -189,8 +189,8 @@ describe("Student Actions", () => {
         },
         {
           id: "2",
-          givenName: "Jane",
-          surname: "Smith",
+          firstName: "Jane",
+          lastName: "Smith",
           schoolId: mockSchoolId,
           userId: "user-1",
           createdAt: now,

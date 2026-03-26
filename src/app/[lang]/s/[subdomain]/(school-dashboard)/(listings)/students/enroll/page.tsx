@@ -65,11 +65,11 @@ export default async function Page({ params }: Props) {
       where: { schoolId, academicGradeId: null },
       select: {
         id: true,
-        givenName: true,
-        surname: true,
+        firstName: true,
+        lastName: true,
         academicGradeId: true,
       },
-      orderBy: [{ surname: "asc" }, { givenName: "asc" }],
+      orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
       take: 200,
     }),
   ])

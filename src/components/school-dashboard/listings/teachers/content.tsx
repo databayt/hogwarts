@@ -37,8 +37,8 @@ export default async function TeachersContent({
       ...(sp.name
         ? {
             OR: [
-              { givenName: { contains: sp.name, mode: "insensitive" } },
-              { surname: { contains: sp.name, mode: "insensitive" } },
+              { firstName: { contains: sp.name, mode: "insensitive" } },
+              { lastName: { contains: sp.name, mode: "insensitive" } },
               { emailAddress: { contains: sp.name, mode: "insensitive" } },
             ],
           }
@@ -126,14 +126,14 @@ export default async function TeachersContent({
           name:
             t.lang && t.lang !== lang
               ? await getDisplayText(
-                  `${t.givenName} ${t.surname}`.trim(),
+                  `${t.firstName} ${t.lastName}`.trim(),
                   t.lang || "ar",
                   lang,
                   schoolId!
                 )
-              : `${t.givenName} ${t.surname}`.trim(),
-          givenName: t.givenName || "",
-          surname: t.surname || "",
+              : `${t.firstName} ${t.lastName}`.trim(),
+          firstName: t.firstName || "",
+          lastName: t.lastName || "",
           emailAddress: t.emailAddress || "-",
           phone: t.phoneNumbers?.[0]?.phoneNumber || null,
           department: departmentName,

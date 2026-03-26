@@ -2,24 +2,44 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React, { forwardRef, useEffect, useImperativeHandle } from "react"
+import React, {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+} from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
 import { Form } from "@/components/ui/form"
 import { InputField, PhoneField } from "@/components/form"
+import { createI18nHelpers } from "@/components/internationalization/helpers"
 
 import { useApplySession } from "../application-context"
+import { getApplyDict } from "../utils"
 import { saveContactStep } from "./actions"
 import type { ContactFormProps, ContactFormRef } from "./types"
-import { contactSchema, type ContactSchemaType } from "./validation"
+import {
+  contactSchema,
+  createContactSchema,
+  type ContactSchemaType,
+} from "./validation"
 
 export const ContactForm = forwardRef<ContactFormRef, ContactFormProps>(
   ({ initialData, onSuccess, dictionary }, ref) => {
     const { updateStepData } = useApplySession()
 
+    const schema = useMemo(() => {
+      const messages = (dictionary as Record<string, unknown>)?.messages as
+        | Record<string, unknown>
+        | undefined
+      if (!messages) return contactSchema
+      const { validation } = createI18nHelpers(messages as never)
+      return createContactSchema(validation)
+    }, [dictionary])
+
     const form = useForm<ContactSchemaType>({
-      resolver: zodResolver(contactSchema),
+      resolver: zodResolver(schema),
       defaultValues: {
         email: initialData?.email || "",
         phone: initialData?.phone || "",
@@ -27,8 +47,7 @@ export const ContactForm = forwardRef<ContactFormRef, ContactFormProps>(
       },
     })
 
-    const dict = ((dictionary as Record<string, Record<string, string>> | null)
-      ?.apply?.contact ?? {}) as Record<string, string>
+    const dict = getApplyDict(dictionary, "contact")
 
     const prevDataRef = React.useRef<string>("")
     useEffect(() => {
@@ -65,19 +84,19 @@ export const ContactForm = forwardRef<ContactFormRef, ContactFormProps>(
         <form className="space-y-6">
           <InputField
             name="email"
-            label={`${dict.email || "Email"} *`}
-            placeholder={dict.emailPlaceholder || "email@example.com"}
+            label={`${dict.email} *`}
+            placeholder={dict.emailPlaceholder}
             type="email"
           />
           <PhoneField
             name="phone"
-            label={`${dict.phone || "Phone"} *`}
-            placeholder={dict.phonePlaceholder || "+249 XXX XXX XXXX"}
+            label={`${dict.phone} *`}
+            placeholder={dict.phonePlaceholder}
           />
           <PhoneField
             name="alternatePhone"
-            label={dict.alternatePhone || "Alternate Phone"}
-            placeholder={dict.alternatePhonePlaceholder || "+249 XXX XXX XXXX"}
+            label={dict.alternatePhone}
+            placeholder={dict.alternatePhonePlaceholder}
           />
         </form>
       </Form>

@@ -4,14 +4,17 @@
 import { redirect } from "next/navigation"
 
 import { getTenantContext } from "@/lib/tenant-context"
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { getCatalogCourseSidebarData } from "@/components/stream/data/catalog/get-course-sidebar-data"
 
 interface Props {
-  params: Promise<{ lang: string; subdomain: string; slug: string }>
+  params: Promise<{ lang: Locale; subdomain: string; slug: string }>
 }
 
 export default async function StreamCourseSlugRoute({ params }: Props) {
   const { lang, subdomain, slug } = await params
+  const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
 
   const course = await getCatalogCourseSidebarData(slug, schoolId)

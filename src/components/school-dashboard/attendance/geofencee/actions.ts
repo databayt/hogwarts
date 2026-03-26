@@ -11,6 +11,7 @@
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 
 import {
@@ -61,7 +62,7 @@ export async function submitLocation(
     // 1. Authenticate and get session
     const session = await auth()
     if (!session?.user?.schoolId || !session.user.id) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const schoolId = session.user.schoolId
@@ -79,7 +80,7 @@ export async function submitLocation(
     })
 
     if (!student) {
-      return { success: false, error: "User is not a student" }
+      return actionError(ACTION_ERRORS.ATTENDANCE_MARK_FAILED)
     }
 
     // 3. Validate location data
@@ -156,7 +157,7 @@ export async function createCircularGeofence(
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const schoolId = session.user.schoolId
@@ -164,7 +165,7 @@ export async function createCircularGeofence(
 
     // Check permissions
     if (role !== "ADMIN" && role !== "TEACHER") {
-      return { success: false, error: "Insufficient permissions" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Validate data
@@ -179,7 +180,7 @@ export async function createCircularGeofence(
     })
 
     if (existing) {
-      return { success: false, error: "Geofence with this name already exists" }
+      return actionError(ACTION_ERRORS.ATTENDANCE_MARK_FAILED)
     }
 
     // Create geofence
@@ -229,7 +230,7 @@ export async function createPolygonGeofence(
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const schoolId = session.user.schoolId
@@ -237,7 +238,7 @@ export async function createPolygonGeofence(
 
     // Check permissions
     if (role !== "ADMIN" && role !== "TEACHER") {
-      return { success: false, error: "Insufficient permissions" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Validate data
@@ -252,7 +253,7 @@ export async function createPolygonGeofence(
     })
 
     if (existing) {
-      return { success: false, error: "Geofence with this name already exists" }
+      return actionError(ACTION_ERRORS.ATTENDANCE_MARK_FAILED)
     }
 
     // Create geofence
@@ -298,7 +299,7 @@ export async function updateGeofenceStatus(
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const schoolId = session.user.schoolId
@@ -306,7 +307,7 @@ export async function updateGeofenceStatus(
 
     // Check permissions
     if (role !== "ADMIN" && role !== "TEACHER") {
-      return { success: false, error: "Insufficient permissions" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Validate input
@@ -321,7 +322,7 @@ export async function updateGeofenceStatus(
     })
 
     if (!geofence) {
-      return { success: false, error: "Geofence not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Update status
@@ -354,7 +355,7 @@ export async function deleteGeofence(id: string): Promise<ActionResult> {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const schoolId = session.user.schoolId
@@ -380,7 +381,7 @@ export async function deleteGeofence(id: string): Promise<ActionResult> {
     })
 
     if (!geofence) {
-      return { success: false, error: "Geofence not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Delete geofence (cascade will delete events)
@@ -425,7 +426,7 @@ export async function getGeofences(): Promise<
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const schoolId = session.user.schoolId
@@ -433,7 +434,7 @@ export async function getGeofences(): Promise<
 
     // Check permissions
     if (role !== "ADMIN" && role !== "TEACHER") {
-      return { success: false, error: "Insufficient permissions" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const geofences = await db.geoFence.findMany({
@@ -498,7 +499,7 @@ export async function getLiveStudentLocations(
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const schoolId = session.user.schoolId
@@ -506,7 +507,7 @@ export async function getLiveStudentLocations(
 
     // Check permissions
     if (role !== "ADMIN" && role !== "TEACHER") {
-      return { success: false, error: "Insufficient permissions" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Validate query
@@ -533,7 +534,7 @@ export async function getLiveStudentLocations(
     >`
       SELECT DISTINCT ON (l."studentId")
         l."studentId" as student_id,
-        CONCAT(s."givenName", ' ', s."surname") as student_name,
+        CONCAT(s."firstName", ' ', s."lastName") as student_name,
         CAST(l.lat AS DOUBLE PRECISION) as lat,
         CAST(l.lon AS DOUBLE PRECISION) as lon,
         l.accuracy,
@@ -606,7 +607,7 @@ export async function getGeofenceEvents(
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const schoolId = session.user.schoolId
@@ -614,7 +615,7 @@ export async function getGeofenceEvents(
 
     // Check permissions
     if (role !== "ADMIN" && role !== "TEACHER") {
-      return { success: false, error: "Insufficient permissions" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Validate query
@@ -634,8 +635,8 @@ export async function getGeofenceEvents(
       include: {
         student: {
           select: {
-            givenName: true,
-            surname: true,
+            firstName: true,
+            lastName: true,
           },
         },
         geofence: {
@@ -651,7 +652,7 @@ export async function getGeofenceEvents(
     const serialized = events.map((e) => ({
       id: e.id,
       studentId: e.studentId,
-      studentName: `${e.student.givenName} ${e.student.surname}`,
+      studentName: `${e.student.firstName} ${e.student.lastName}`,
       geofenceId: e.geofenceId,
       geofenceName: e.geofence.name,
       eventType: e.eventType,

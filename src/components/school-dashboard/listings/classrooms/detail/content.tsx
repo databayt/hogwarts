@@ -107,7 +107,9 @@ export default async function RoomDetailContent({
         name: c.name,
         gradeName: c.grade?.name ?? null,
         subject: c.subject?.name ?? "",
-        teacher: c.teacher ? `${c.teacher.givenName} ${c.teacher.surname}` : "",
+        teacher: c.teacher
+          ? `${c.teacher.firstName} ${c.teacher.lastName}`
+          : "",
         enrollment: c._count.studentClasses,
         maxCapacity: c.maxCapacity ?? 0,
       }))}

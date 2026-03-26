@@ -87,8 +87,8 @@ export async function getPeriodsForClass(input: {
         },
         teacher: {
           select: {
-            givenName: true,
-            surname: true,
+            firstName: true,
+            lastName: true,
           },
         },
       },
@@ -129,7 +129,7 @@ export async function getPeriodsForClass(input: {
           timetableId: entry.id,
           name: entry.class?.subject?.name || null,
           teacherName: entry.teacher
-            ? `${entry.teacher.givenName} ${entry.teacher.surname}`
+            ? `${entry.teacher.firstName} ${entry.teacher.lastName}`
             : null,
           hasAttendance: attendedPeriods.has(entry.periodId),
         })),
@@ -699,7 +699,7 @@ export async function getStudentDayAttendance(input: {
     // Get student
     const student = await db.student.findFirst({
       where: { id: input.studentId, schoolId },
-      select: { id: true, givenName: true, surname: true },
+      select: { id: true, firstName: true, lastName: true },
     })
 
     if (!student) {
@@ -753,7 +753,7 @@ export async function getStudentDayAttendance(input: {
       data: {
         student: {
           id: student.id,
-          name: `${student.givenName} ${student.surname}`,
+          name: `${student.firstName} ${student.lastName}`,
         },
         periods: attendances.map((a) => ({
           periodId: a.periodId,

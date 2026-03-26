@@ -101,9 +101,17 @@ export const TitleForm = forwardRef<TitleFormRef, TitleFormProps>(
     const titleValue = form.watch("title")
     const subdomainValue = form.watch("subdomain")
     const maxLength = FORM_LIMITS.TITLE_MAX_LENGTH
+    const initialTitleRef = React.useRef(initialData?.title || "")
+    const hasExistingSubdomain = React.useRef(!!initialData?.subdomain)
 
     // Auto-generate subdomain from title in real-time
+    // Skip when editing an existing school with a pre-set subdomain
     React.useEffect(() => {
+      if (
+        hasExistingSubdomain.current &&
+        titleValue === initialTitleRef.current
+      )
+        return
       if (
         titleValue &&
         titleValue.trim().length >= FORM_LIMITS.TITLE_MIN_LENGTH
@@ -113,8 +121,13 @@ export const TitleForm = forwardRef<TitleFormRef, TitleFormProps>(
       }
     }, [titleValue, form])
 
-    // Notify parent of title changes
+    // Notify parent of title changes (skip initial mount value)
+    const isFirstRender = React.useRef(true)
     React.useEffect(() => {
+      if (isFirstRender.current) {
+        isFirstRender.current = false
+        return
+      }
       onTitleChange?.(titleValue)
     }, [titleValue, onTitleChange])
 

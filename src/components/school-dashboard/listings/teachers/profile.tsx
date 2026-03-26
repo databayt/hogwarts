@@ -55,7 +55,7 @@ export function TeacherProfile({ teacher, onEdit }: TeacherProfileProps) {
   // Calculate profile completion
   const calculateProfileCompletion = () => {
     const sections = {
-      basic: !!(teacher.givenName && teacher.surname && teacher.emailAddress),
+      basic: !!(teacher.firstName && teacher.lastName && teacher.emailAddress),
       contact: !!(teacher.phoneNumbers && teacher.phoneNumbers.length > 0),
       employment: !!(teacher.employmentStatus && teacher.employmentType),
       qualifications: !!(
@@ -144,13 +144,13 @@ export function TeacherProfile({ teacher, onEdit }: TeacherProfileProps) {
               <Avatar className="h-20 w-20">
                 <AvatarImage src={teacher.avatarUrl} />
                 <AvatarFallback className="text-2xl">
-                  {teacher.givenName?.[0]}
-                  {teacher.surname?.[0]}
+                  {teacher.firstName?.[0]}
+                  {teacher.lastName?.[0]}
                 </AvatarFallback>
               </Avatar>
               <div className="space-y-1">
                 <h2 className="text-2xl font-bold">
-                  {teacher.givenName} {teacher.surname}
+                  {teacher.firstName} {teacher.lastName}
                 </h2>
                 <p className="text-muted-foreground">
                   {teacher.employeeId
@@ -287,7 +287,7 @@ export function TeacherProfile({ teacher, onEdit }: TeacherProfileProps) {
                     {t?.fullName || "Full Name"}
                   </p>
                   <p className="font-medium">
-                    {teacher.givenName} {teacher.surname}
+                    {teacher.firstName} {teacher.lastName}
                   </p>
                 </div>
                 <div>

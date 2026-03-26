@@ -188,7 +188,7 @@ export async function markNotificationAsRead(
     })
 
     if (!existing) {
-      return { success: false, error: "Notification not found" }
+      return actionError(ACTION_ERRORS.NOTIFICATION_SEND_FAILED)
     }
 
     // Check permission
@@ -346,7 +346,7 @@ export async function deleteNotification(
     })
 
     if (!existing) {
-      return { success: false, error: "Notification not found" }
+      return actionError(ACTION_ERRORS.NOTIFICATION_SEND_FAILED)
     }
 
     // Check permission

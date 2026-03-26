@@ -50,8 +50,8 @@ export async function GET(
         schoolId,
       },
       select: {
-        givenName: true,
-        surname: true,
+        firstName: true,
+        lastName: true,
       },
     })
 
@@ -59,7 +59,7 @@ export async function GET(
       return NextResponse.json({ error: "Teacher not found" }, { status: 404 })
     }
 
-    const name = [teacher.givenName, teacher.surname].filter(Boolean).join(" ")
+    const name = [teacher.firstName, teacher.lastName].filter(Boolean).join(" ")
 
     return NextResponse.json({ name })
   } catch (error) {

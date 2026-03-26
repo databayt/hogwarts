@@ -8,6 +8,7 @@ import { InvoiceStatus } from "@prisma/client"
 import { format } from "date-fns"
 import { z } from "zod"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -85,11 +86,11 @@ async function requireAuthAndTenant(): Promise<
 > {
   const session = await auth()
   if (!session?.user?.id) {
-    return { success: false, error: "Not authenticated" }
+    return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
   }
   const { schoolId } = await getTenantContext()
   if (!schoolId) {
-    return { success: false, error: "Missing school context" }
+    return actionError(ACTION_ERRORS.MISSING_SCHOOL)
   }
   return { userId: session.user.id, schoolId }
 }
@@ -219,7 +220,7 @@ export async function createInvoice(
       "invoice",
       "create"
     )
-    if (!canCreate) return { success: false, error: "Unauthorized" }
+    if (!canCreate) return actionError(ACTION_ERRORS.UNAUTHORIZED)
 
     const result = await createInvoiceCore(
       ctx.userId,
@@ -269,7 +270,7 @@ export async function createInvoiceWithAutoNumber(
       "invoice",
       "create"
     )
-    if (!canCreate) return { success: false, error: "Unauthorized" }
+    if (!canCreate) return actionError(ACTION_ERRORS.UNAUTHORIZED)
 
     const autoInvoiceNo = await generateUniqueInvoiceNumber(ctx.schoolId)
     const result = await createInvoiceCore(
@@ -303,13 +304,13 @@ export async function updateInvoice(
       "invoice",
       "edit"
     )
-    if (!canEdit) return { success: false, error: "Unauthorized" }
+    if (!canEdit) return actionError(ACTION_ERRORS.UNAUTHORIZED)
 
     const invoice = await db.userInvoice.findFirst({
       where: { id, userId: ctx.userId, schoolId: ctx.schoolId },
       include: { items: true },
     })
-    if (!invoice) return { success: false, error: "Invoice not found" }
+    if (!invoice) return actionError(ACTION_ERRORS.INVOICE_NOT_FOUND)
 
     await Promise.all([
       db.userInvoiceAddress.update({
@@ -349,7 +350,7 @@ export async function updateInvoice(
     revalidatePath("/finance/invoice")
     return { success: true, data: updatedInvoice }
   } catch (error) {
-    return { success: false, error: "Failed to update invoice" }
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
   }
 }
 
@@ -391,7 +392,7 @@ export async function getInvoices(
       pagination: { total: number; pages: number; page: number; limit: number }
     }
   } catch (error) {
-    return { success: false, error: "Failed to fetch invoices" }
+    return actionError(ACTION_ERRORS.INVOICE_CREATE_FAILED)
   }
 }
 
@@ -484,7 +485,7 @@ export async function getInvoiceById(id: string): Promise<ActionResponse> {
       where: { id, userId: ctx.userId, schoolId: ctx.schoolId },
       include: { items: true, from: true, to: true },
     })
-    if (!invoice) return { success: false, error: "Invoice not found" }
+    if (!invoice) return actionError(ACTION_ERRORS.INVOICE_NOT_FOUND)
 
     return {
       success: true,
@@ -505,7 +506,7 @@ export async function getInvoiceById(id: string): Promise<ActionResponse> {
       },
     }
   } catch (error) {
-    return { success: false, error: "Failed to fetch invoice" }
+    return actionError(ACTION_ERRORS.INVOICE_CREATE_FAILED)
   }
 }
 
@@ -523,12 +524,12 @@ export async function deleteInvoice({
       "invoice",
       "delete"
     )
-    if (!canDelete) return { success: false, error: "Unauthorized" }
+    if (!canDelete) return actionError(ACTION_ERRORS.UNAUTHORIZED)
 
     const invoice = await db.userInvoice.findFirst({
       where: { id, userId: ctx.userId, schoolId: ctx.schoolId },
     })
-    if (!invoice) return { success: false, error: "Invoice not found" }
+    if (!invoice) return actionError(ACTION_ERRORS.INVOICE_NOT_FOUND)
 
     await db.userInvoice.delete({ where: { id } })
 
@@ -560,15 +561,14 @@ export async function sendInvoiceEmail(
       "invoice",
       "export"
     )
-    if (!canExport) return { success: false, error: "Unauthorized" }
+    if (!canExport) return actionError(ACTION_ERRORS.UNAUTHORIZED)
 
     const invoice = await db.userInvoice.findFirst({
       where: { id: invoiceId, userId: ctx.userId, schoolId: ctx.schoolId },
       include: { items: true, from: true, to: true },
     })
-    if (!invoice) return { success: false, error: "Invoice not found" }
-    if (!invoice.to.email)
-      return { success: false, error: "Client email not found" }
+    if (!invoice) return actionError(ACTION_ERRORS.INVOICE_NOT_FOUND)
+    if (!invoice.to.email) return actionError(ACTION_ERRORS.NOT_FOUND)
 
     const totalFormatted = new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -594,7 +594,7 @@ export async function sendInvoiceEmail(
 
     return { success: true }
   } catch (error) {
-    return { success: false, error: "Failed to send email" }
+    return actionError(ACTION_ERRORS.PAYMENT_FAILED)
   }
 }
 
@@ -613,8 +613,7 @@ export async function updateUser(
 ): Promise<ActionResponse> {
   try {
     const session = await auth()
-    if (!session?.user?.id)
-      return { success: false, error: "Not authenticated" }
+    if (!session?.user?.id) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
 
     const userData: Record<string, string> = {}
     if (data.firstName !== undefined) userData.firstName = data.firstName
@@ -627,7 +626,7 @@ export async function updateUser(
     })
     return { success: true, data: updatedUser }
   } catch (error) {
-    return { success: false, error: "Failed to update user" }
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
   }
 }
 
@@ -693,7 +692,7 @@ export async function updateSettings(
 
     return { success: true, data: newSettings }
   } catch (error) {
-    return { success: false, error: "Failed to update settings" }
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
   }
 }
 
@@ -708,7 +707,7 @@ export async function getSettings(): Promise<ActionResponse> {
     })
     return { success: true, data: settings }
   } catch (error) {
-    return { success: false, error: "Failed to fetch settings" }
+    return actionError(ACTION_ERRORS.PAYMENT_FAILED)
   }
 }
 
@@ -779,7 +778,7 @@ export async function getDashboardStats(): Promise<ActionResponse> {
       },
     }
   } catch (error) {
-    return { success: false, error: "Failed to fetch dashboard stats" }
+    return actionError(ACTION_ERRORS.PAYMENT_FAILED)
   }
 }
 

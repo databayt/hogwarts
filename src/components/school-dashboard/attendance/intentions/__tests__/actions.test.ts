@@ -66,8 +66,8 @@ describe("Intentions Actions - schoolId scoping", () => {
       const mockIntentionId = "intention-001"
       vi.mocked(db.student.findFirst).mockResolvedValue({
         id: mockStudentId,
-        givenName: "Test",
-        surname: "Student",
+        firstName: "Test",
+        lastName: "Student",
       } as any)
       vi.mocked(db.absenceIntention.findFirst).mockResolvedValue(null) // No overlapping
       vi.mocked(db.absenceIntention.create).mockResolvedValue({
@@ -104,7 +104,7 @@ describe("Intentions Actions - schoolId scoping", () => {
         id: mockIntentionId,
         schoolId: mockSchoolId,
         status: "PENDING",
-        student: { givenName: "Test", surname: "Student" },
+        student: { firstName: "Test", lastName: "Student" },
       } as any)
       vi.mocked(db.absenceIntention.update).mockResolvedValue({
         id: mockIntentionId,

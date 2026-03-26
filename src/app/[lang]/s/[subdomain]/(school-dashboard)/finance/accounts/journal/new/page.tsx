@@ -6,6 +6,7 @@ import Link from "next/link"
 import { getTenantContext } from "@/lib/tenant-context"
 import { buttonVariants } from "@/components/ui/button"
 import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 
 export const metadata = { title: "New Journal Entry" }
 
@@ -15,6 +16,7 @@ interface Props {
 
 export default async function NewJournalEntryPage({ params }: Props) {
   const { lang } = await params
+  const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {

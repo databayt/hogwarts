@@ -5,6 +5,7 @@
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -19,27 +20,39 @@ export async function getStudentForWizard(
 > {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
-    const student = await db.student.findFirst({
-      where: { id: studentId, schoolId },
-      include: {
-        application: {
-          select: {
-            applicationNumber: true,
-            campaignId: true,
-            status: true,
-            submittedAt: true,
-            confirmationDate: true,
-            campaign: { select: { name: true, academicYear: true } },
+    const [student, school] = await Promise.all([
+      db.student.findFirst({
+        where: { id: studentId, schoolId },
+        include: {
+          application: {
+            select: {
+              applicationNumber: true,
+              campaignId: true,
+              status: true,
+              submittedAt: true,
+              confirmationDate: true,
+              campaign: { select: { name: true, academicYear: true } },
+            },
           },
         },
+      }),
+      db.school.findUnique({
+        where: { id: schoolId },
+        select: { nameFormat: true },
+      }),
+    ])
+
+    if (!student) return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
+
+    return {
+      success: true,
+      data: {
+        ...(student as unknown as StudentWizardData),
+        nameFormat: school?.nameFormat ?? "full",
       },
-    })
-
-    if (!student) return { success: false, error: "Student not found" }
-
-    return { success: true, data: student as unknown as StudentWizardData }
+    }
   } catch (error) {
     return {
       success: false,
@@ -55,19 +68,19 @@ export async function createDraftStudent(): Promise<
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const student = await db.student.create({
       data: {
         schoolId,
-        givenName: "",
-        surname: "",
+        firstName: "",
+        lastName: "",
         dateOfBirth: new Date(),
         gender: "male",
         wizardStep: "attachments",
@@ -91,25 +104,25 @@ export async function completeStudentWizard(
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Validate required fields are present
     const student = await db.student.findFirst({
       where: { id: studentId, schoolId },
-      select: { givenName: true, surname: true },
+      select: { firstName: true, lastName: true },
     })
 
     if (!student) {
-      return { success: false, error: "Student not found" }
+      return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
     }
 
-    if (!student.givenName || !student.surname) {
+    if (!student.firstName || !student.lastName) {
       return {
         success: false,
         error: "Name is required before completing",
@@ -164,12 +177,12 @@ export async function deleteDraftStudent(
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Atomic delete — only if it's still a draft
@@ -178,7 +191,7 @@ export async function deleteDraftStudent(
     })
 
     if (count === 0) {
-      return { success: false, error: "Draft student not found" }
+      return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
     }
 
     return { success: true }

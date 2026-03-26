@@ -487,8 +487,8 @@ export async function getRecentActivities(): Promise<ActivityItem[]> {
         take: 5,
         select: {
           id: true,
-          givenName: true,
-          surname: true,
+          firstName: true,
+          lastName: true,
           createdAt: true,
         },
       }),
@@ -529,7 +529,7 @@ export async function getRecentActivities(): Promise<ActivityItem[]> {
   const activities: ActivityItem[] = [
     ...recentStudents.map((s) => ({
       type: "enrollment" as const,
-      action: `New student enrolled: ${s.givenName} ${s.surname}`,
+      action: `New student enrolled: ${s.firstName} ${s.lastName}`,
       timestamp: s.createdAt,
       user: "Admin",
     })),
@@ -799,7 +799,7 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
         select: {
           name: true,
           subject: { select: { name: true } },
-          teacher: { select: { givenName: true, surname: true } },
+          teacher: { select: { firstName: true, lastName: true } },
         },
       },
       classroom: { select: { roomName: true } },
@@ -871,7 +871,7 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
       subject: entry.class?.subject?.name || "Unknown Subject",
       className: entry.class?.name || "Unknown Class",
       teacher: entry.class?.teacher
-        ? `${entry.class.teacher.givenName || ""} ${entry.class.teacher.surname || ""}`.trim() ||
+        ? `${entry.class.teacher.firstName || ""} ${entry.class.teacher.lastName || ""}`.trim() ||
           "Unknown Teacher"
         : "Unknown Teacher",
       room: entry.classroom?.roomName || "TBA",
@@ -941,9 +941,9 @@ export async function getParentDashboardData(): Promise<ParentDashboardData> {
         select: {
           id: true,
           studentId: true,
-          givenName: true,
+          firstName: true,
           middleName: true,
-          surname: true,
+          lastName: true,
         },
       },
     },
@@ -952,7 +952,7 @@ export async function getParentDashboardData(): Promise<ParentDashboardData> {
   const children = studentGuardians.map((sg) => ({
     id: sg.student.id,
     studentId: sg.student.studentId,
-    name: `${sg.student.givenName} ${sg.student.middleName || ""} ${sg.student.surname}`.trim(),
+    name: `${sg.student.firstName} ${sg.student.middleName || ""} ${sg.student.lastName}`.trim(),
   }))
 
   const firstChild = children[0]
@@ -1463,8 +1463,8 @@ export async function getStaffEvaluationsDue() {
     take: 5,
     select: {
       id: true,
-      givenName: true,
-      surname: true,
+      firstName: true,
+      lastName: true,
       teacherDepartments: {
         where: { isPrimary: true },
         select: { department: { select: { departmentName: true } } },
@@ -1474,7 +1474,7 @@ export async function getStaffEvaluationsDue() {
   })
 
   return teachers.map((teacher, index) => ({
-    teacher: `${teacher.givenName} ${teacher.surname}`,
+    teacher: `${teacher.firstName} ${teacher.lastName}`,
     department:
       teacher.teacherDepartments[0]?.department?.departmentName || "General",
     dueDate: new Date(
@@ -1929,7 +1929,7 @@ export async function getRecentTransactions(limit: number = 10) {
         take: limit,
         include: {
           student: {
-            select: { givenName: true, surname: true },
+            select: { firstName: true, lastName: true },
           },
         },
       }),
@@ -1949,7 +1949,7 @@ export async function getRecentTransactions(limit: number = 10) {
     const paymentTransactions = payments.map((payment) => ({
       id: payment.id,
       type: "fee_payment" as const,
-      studentName: `${payment.student.givenName} ${payment.student.surname}`,
+      studentName: `${payment.student.firstName} ${payment.student.lastName}`,
       amount: Number(payment.amount),
       status:
         payment.status === "SUCCESS"
@@ -2052,8 +2052,8 @@ export async function getFeeDefaulters(limit: number = 10) {
           select: {
             id: true,
             studentId: true,
-            givenName: true,
-            surname: true,
+            firstName: true,
+            lastName: true,
             studentYearLevels: {
               select: { yearLevel: { select: { levelName: true } } },
               take: 1,
@@ -2092,7 +2092,7 @@ export async function getFeeDefaulters(limit: number = 10) {
         return {
           id: assignment.student.id,
           studentId: assignment.student.studentId,
-          name: `${assignment.student.givenName} ${assignment.student.surname}`,
+          name: `${assignment.student.firstName} ${assignment.student.lastName}`,
           class:
             assignment.student.studentYearLevels?.[0]?.yearLevel?.levelName ||
             "N/A",
@@ -2120,8 +2120,8 @@ async function getMockDefaulters(schoolId: string, limit: number) {
     select: {
       id: true,
       studentId: true,
-      givenName: true,
-      surname: true,
+      firstName: true,
+      lastName: true,
       studentYearLevels: {
         select: { yearLevel: { select: { levelName: true } } },
         take: 1,
@@ -2133,7 +2133,7 @@ async function getMockDefaulters(schoolId: string, limit: number) {
   return students.slice(0, 5).map((student) => ({
     id: student.id,
     studentId: student.studentId,
-    name: `${student.givenName} ${student.surname}`,
+    name: `${student.firstName} ${student.lastName}`,
     class: student.studentYearLevels?.[0]?.yearLevel?.levelName || "N/A",
     outstandingAmount: Math.floor(Math.random() * 10000) + 5000,
     monthsOverdue: Math.floor(Math.random() * 3) + 1,
@@ -2268,7 +2268,7 @@ export async function recordPayment(data: {
     success: true,
     transactionId: `TXN-${Date.now()}`,
     amount: data.amount,
-    studentName: `${student.givenName} ${student.surname}`,
+    studentName: `${student.firstName} ${student.lastName}`,
     timestamp: new Date(),
     reference: data.reference || `PAY-${Date.now()}`,
   }
@@ -3064,8 +3064,8 @@ async function getParentUpcomingData(userId: string, schoolId: string) {
       student: {
         select: {
           id: true,
-          givenName: true,
-          surname: true,
+          firstName: true,
+          lastName: true,
         },
       },
     },
@@ -3117,7 +3117,7 @@ async function getParentUpcomingData(userId: string, schoolId: string) {
 
       return {
         id: sg.student.id,
-        name: `${sg.student.givenName} ${sg.student.surname}`.trim(),
+        name: `${sg.student.firstName} ${sg.student.lastName}`.trim(),
         pendingAssignments,
         overdueAssignments,
       }
@@ -4008,8 +4008,8 @@ async function getParentFinancialOverview(
     include: {
       student: {
         select: {
-          givenName: true,
-          surname: true,
+          firstName: true,
+          lastName: true,
           userId: true,
         },
       },
@@ -4020,7 +4020,7 @@ async function getParentFinancialOverview(
     children.map(async (c) => {
       if (!c.student.userId) {
         return {
-          childName: `${c.student.givenName} ${c.student.surname}`,
+          childName: `${c.student.firstName} ${c.student.lastName}`,
           total: 0,
           paid: 0,
           pending: 0,
@@ -4038,7 +4038,7 @@ async function getParentFinancialOverview(
         .reduce((sum, inv) => sum + Number(inv.total), 0)
 
       return {
-        childName: `${c.student.givenName} ${c.student.surname}`,
+        childName: `${c.student.firstName} ${c.student.lastName}`,
         total,
         paid,
         pending: total - paid,
@@ -5652,7 +5652,7 @@ export async function getUpcomingClass(): Promise<{
           select: {
             name: true,
             subject: { select: { name: true } },
-            teacher: { select: { givenName: true, surname: true } },
+            teacher: { select: { firstName: true, lastName: true } },
             _count: { select: { studentClasses: true } },
           },
         },
@@ -5694,7 +5694,7 @@ export async function getUpcomingClass(): Promise<{
       title: slot.class.subject?.name || slot.class.name,
       subtitle: slot.class.name,
       description: slot.class.teacher
-        ? `${slot.class.teacher.givenName} ${slot.class.teacher.surname}`
+        ? `${slot.class.teacher.firstName} ${slot.class.teacher.lastName}`
         : "No teacher assigned",
       details: [
         { label: "Time", value: `${startTime} - ${endTime}` },

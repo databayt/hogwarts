@@ -7,6 +7,7 @@
  */
 
 import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { ProgressReportContent } from "@/components/school-dashboard/exams/progress/content"
 
 interface ProgressReportsPageProps {
@@ -19,7 +20,8 @@ interface ProgressReportsPageProps {
 export default async function ProgressReportsPage({
   params,
 }: ProgressReportsPageProps) {
-  await params
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
 
   return <ProgressReportContent />
 }

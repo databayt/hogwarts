@@ -16,7 +16,7 @@ export async function getAnnouncementTargeting(
 ): Promise<ActionResponse<TargetingFormData>> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const announcement = await db.announcement.findFirst({
       where: { id: announcementId, schoolId },
@@ -33,7 +33,7 @@ export async function getAnnouncementTargeting(
     })
 
     if (!announcement) {
-      return { success: false, error: "Announcement not found" }
+      return actionError(ACTION_ERRORS.ANNOUNCEMENT_NOT_FOUND)
     }
 
     return {
@@ -63,7 +63,7 @@ export async function updateAnnouncementTargeting(
 ): Promise<ActionResponse> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const parsed = targetingSchema.parse(input)
 

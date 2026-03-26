@@ -70,8 +70,8 @@ describe("Barcode Server Actions", () => {
         usageCount: 0,
         student: {
           id: mockStudentId,
-          givenName: "Ahmed",
-          surname: "Al-Rashid",
+          firstName: "Ahmed",
+          lastName: "Al-Rashid",
         },
       }
 

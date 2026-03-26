@@ -60,7 +60,7 @@ export default async function ResultsAnalyticsContent({
           marksObtained: true,
           grade: true,
           student: {
-            select: { givenName: true, surname: true },
+            select: { firstName: true, lastName: true },
           },
           exam: {
             select: { passingMarks: true },
@@ -128,7 +128,7 @@ export default async function ResultsAnalyticsContent({
     )
     const toPerformer = (r: (typeof sorted)[0]) => ({
       studentName:
-        `${r.student.givenName || ""} ${r.student.surname || ""}`.trim() ||
+        `${r.student.firstName || ""} ${r.student.lastName || ""}`.trim() ||
         "Unknown",
       percentage: r.percentage,
       grade: r.grade,

@@ -69,8 +69,8 @@ export function StaffTable({ data, pageCount, locale }: StaffTableProps) {
 // Transform database row to table row
 export function transformStaffToRow(staff: {
   id: string
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
   emailAddress: string
   position: string | null
   employmentStatus: string

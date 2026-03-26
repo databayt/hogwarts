@@ -74,8 +74,8 @@ export function StudentRegistrationForm({
   const form = useForm<StudentRegistration>({
     resolver: zodResolver(studentRegistrationSchema) as any,
     defaultValues: (student as any) || {
-      givenName: "",
-      surname: "",
+      firstName: "",
+      lastName: "",
       gender: "Male",
       nationality: "Saudi Arabia",
       country: "Saudi Arabia",
@@ -141,7 +141,7 @@ export function StudentRegistrationForm({
       if (result.success) {
         toast({
           title: isEdit ? "Student Updated" : "Student Registered",
-          description: `${data.givenName} ${data.surname} has been successfully ${isEdit ? "updated" : "registered"}.`,
+          description: `${data.firstName} ${data.lastName} has been successfully ${isEdit ? "updated" : "registered"}.`,
         })
 
         if (onSuccess && result.data) {

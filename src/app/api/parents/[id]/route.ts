@@ -50,8 +50,8 @@ export async function GET(
         schoolId,
       },
       select: {
-        givenName: true,
-        surname: true,
+        firstName: true,
+        lastName: true,
       },
     })
 
@@ -59,7 +59,7 @@ export async function GET(
       return NextResponse.json({ error: "Parent not found" }, { status: 404 })
     }
 
-    const name = [guardian.givenName, guardian.surname]
+    const name = [guardian.firstName, guardian.lastName]
       .filter(Boolean)
       .join(" ")
 

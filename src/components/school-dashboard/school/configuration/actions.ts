@@ -73,7 +73,7 @@ export async function updateSchoolIdentity(
     })
 
     if (existingSchool) {
-      return { success: false, error: "This subdomain is already taken" }
+      return actionError(ACTION_ERRORS.ALREADY_EXISTS)
     }
 
     // Update school
@@ -107,7 +107,7 @@ export async function updateSchoolIdentity(
         error: error.issues.map((e) => e.message).join(", "),
       }
     }
-    return { success: false, error: "Failed to update school information" }
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
   }
 }
 
@@ -166,7 +166,7 @@ export async function updateSchoolBranding(
         error: error.issues.map((e) => e.message).join(", "),
       }
     }
-    return { success: false, error: "Failed to update branding" }
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
   }
 }
 
@@ -217,7 +217,7 @@ export async function updateSchoolLocation(
         error: error.issues.map((e) => e.message).join(", "),
       }
     }
-    return { success: false, error: "Failed to update school location" }
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
   }
 }
 
@@ -266,7 +266,7 @@ export async function updateSchoolPricing(
         error: error.issues.map((e) => e.message).join(", "),
       }
     }
-    return { success: false, error: "Failed to update school pricing" }
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
   }
 }
 
@@ -323,7 +323,7 @@ export async function updatePlanLimits(
         error: error.issues.map((e) => e.message).join(", "),
       }
     }
-    return { success: false, error: "Failed to update plan limits" }
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
   }
 }
 
@@ -369,6 +369,46 @@ export async function updateSchoolCapacity(
         error: error.issues.map((e) => e.message).join(", "),
       }
     }
-    return { success: false, error: "Failed to update capacity" }
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
+  }
+}
+
+// Schema for name format update
+const nameFormatSchema = z.object({
+  nameFormat: z.enum(["split", "full"]),
+})
+
+export async function updateSchoolNameFormat(
+  schoolId: string,
+  data: z.infer<typeof nameFormatSchema>
+): Promise<ActionResult> {
+  try {
+    const session = await auth()
+    const userSchoolId = session?.user?.schoolId
+
+    if (!userSchoolId || userSchoolId !== schoolId) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
+    const validatedData = nameFormatSchema.parse(data)
+
+    await db.school.update({
+      where: { id: schoolId },
+      data: { nameFormat: validatedData.nameFormat },
+    })
+
+    revalidatePath("/school/configuration")
+    revalidatePath("/school/configuration/name-format")
+
+    return { success: true }
+  } catch (error) {
+    console.error("Error updating name format:", error)
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: error.issues.map((e) => e.message).join(", "),
+      }
+    }
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
   }
 }

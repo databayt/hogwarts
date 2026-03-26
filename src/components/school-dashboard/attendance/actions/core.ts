@@ -87,7 +87,7 @@ async function triggerAbsenceNotification(
       }),
     ])
 
-    const studentName = `${student.givenName} ${student.surname}`
+    const studentName = `${student.firstName} ${student.lastName}`
     const className = classInfo?.name || "Unknown class"
     const schoolName = schoolInfo?.name || "School"
     const dateStrAr = date.toLocaleDateString("ar-SA", {
@@ -475,8 +475,8 @@ export async function getAttendanceList(input: {
     // Dual path: section-based (preferred) or legacy class-based
     let students: Array<{
       id: string
-      givenName: string
-      surname: string
+      firstName: string
+      lastName: string
       userId: string | null
     }>
 
@@ -484,8 +484,8 @@ export async function getAttendanceList(input: {
       // Section-based: query students directly from section
       students = await db.student.findMany({
         where: { schoolId, sectionId: parsed.sectionId },
-        select: { id: true, givenName: true, surname: true, userId: true },
-        orderBy: { givenName: "asc" },
+        select: { id: true, firstName: true, lastName: true, userId: true },
+        orderBy: { firstName: "asc" },
       })
     } else if (parsed.classId) {
       // Legacy: query through StudentClass join table
@@ -495,8 +495,8 @@ export async function getAttendanceList(input: {
           student: {
             select: {
               id: true,
-              givenName: true,
-              surname: true,
+              firstName: true,
+              lastName: true,
               userId: true,
             },
           },
@@ -545,7 +545,7 @@ export async function getAttendanceList(input: {
 
     const rows = await Promise.all(
       students.map(async (s) => {
-        const rawName = [s.givenName, s.surname].filter(Boolean).join(" ")
+        const rawName = [s.firstName, s.lastName].filter(Boolean).join(" ")
 
         const name = needsTranslation
           ? await getDisplayText(rawName, contentLang, displayLang, schoolId)
@@ -643,7 +643,7 @@ export async function getSectionsForSelection(gradeId?: string): Promise<
         letter: true,
         gradeId: true,
         grade: { select: { name: true } },
-        homeroomTeacher: { select: { givenName: true, surname: true } },
+        homeroomTeacher: { select: { firstName: true, lastName: true } },
         _count: { select: { students: true } },
       },
       orderBy: { name: "asc" },
@@ -658,7 +658,7 @@ export async function getSectionsForSelection(gradeId?: string): Promise<
           gradeName: s.grade.name,
           gradeId: s.gradeId,
           teacher: s.homeroomTeacher
-            ? `${s.homeroomTeacher.givenName} ${s.homeroomTeacher.surname}`
+            ? `${s.homeroomTeacher.firstName} ${s.homeroomTeacher.lastName}`
             : null,
           studentCount: s._count.students,
         })),
@@ -749,7 +749,7 @@ export async function getClassesForSelection(input?: {
         gradeId: true,
         grade: { select: { name: true } },
         teacher: {
-          select: { givenName: true, surname: true },
+          select: { firstName: true, lastName: true },
         },
       },
     })
@@ -761,7 +761,7 @@ export async function getClassesForSelection(input?: {
           id: c.id,
           name: c.name,
           teacher: c.teacher
-            ? `${c.teacher.givenName} ${c.teacher.surname}`
+            ? `${c.teacher.firstName} ${c.teacher.lastName}`
             : null,
           gradeId: c.gradeId,
           gradeName: c.grade?.name ?? null,
@@ -821,8 +821,8 @@ export async function quickMarkAllPresent(input: {
             student: {
               select: {
                 id: true,
-                givenName: true,
-                surname: true,
+                firstName: true,
+                lastName: true,
               },
             },
           },
@@ -888,7 +888,7 @@ export async function quickMarkAllPresent(input: {
 
     const results = students.map((student) => ({
       id: student.id,
-      name: `${student.givenName} ${student.surname}`,
+      name: `${student.firstName} ${student.lastName}`,
       status: "PRESENT" as const,
     }))
 

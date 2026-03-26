@@ -46,9 +46,9 @@ interface Certificate {
   viewCount: number
   config: { name: string; type: string }
   student: {
-    givenName: string
+    firstName: string
     middleName: string | null
-    surname: string
+    lastName: string
   }
 }
 

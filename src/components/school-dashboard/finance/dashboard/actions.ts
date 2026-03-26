@@ -408,7 +408,7 @@ export async function getRecentTransactions(
     recentTransactions.push({
       id: pay.id,
       type: "income",
-      description: `Fee payment from ${pay.student.givenName} ${pay.student.surname}`,
+      description: `Fee payment from ${pay.student.firstName} ${pay.student.lastName}`,
       amount: decimalToNumber(pay.amount),
       date: pay.paymentDate,
       status:

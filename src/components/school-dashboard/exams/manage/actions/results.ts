@@ -35,9 +35,9 @@ export async function getExamResults(input: {
           select: {
             id: true,
             studentId: true,
-            givenName: true,
+            firstName: true,
             middleName: true,
-            surname: true,
+            lastName: true,
           },
         },
       },
@@ -47,9 +47,9 @@ export async function getExamResults(input: {
     const mapped: ExamResultRow[] = results.map((result) => ({
       id: result.id,
       studentId: result.student.studentId,
-      studentName: `${result.student.givenName} ${
+      studentName: `${result.student.firstName} ${
         result.student.middleName || ""
-      } ${result.student.surname}`.trim(),
+      } ${result.student.lastName}`.trim(),
       marksObtained: result.marksObtained,
       totalMarks: result.totalMarks,
       percentage: result.percentage,
@@ -219,9 +219,9 @@ export async function getTopPerformers(input: {
           select: {
             id: true,
             studentId: true,
-            givenName: true,
+            firstName: true,
             middleName: true,
-            surname: true,
+            lastName: true,
           },
         },
       },
@@ -234,9 +234,9 @@ export async function getTopPerformers(input: {
     const mapped: ExamResultRow[] = topResults.map((result, index) => ({
       id: result.id,
       studentId: result.student.studentId,
-      studentName: `${result.student.givenName} ${
+      studentName: `${result.student.firstName} ${
         result.student.middleName || ""
-      } ${result.student.surname}`.trim(),
+      } ${result.student.lastName}`.trim(),
       marksObtained: result.marksObtained,
       totalMarks: result.totalMarks,
       percentage: result.percentage,

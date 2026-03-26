@@ -49,9 +49,9 @@ export type StudentQueryParams = StudentListFilters &
 /** Minimal fields for list display */
 export const studentListSelect = {
   id: true,
-  givenName: true,
+  firstName: true,
   middleName: true,
-  surname: true,
+  lastName: true,
   gender: true,
   userId: true,
   wizardStep: true,
@@ -88,9 +88,9 @@ export const studentListSelect = {
 export const studentDetailSelect = {
   id: true,
   schoolId: true,
-  givenName: true,
+  firstName: true,
   middleName: true,
-  surname: true,
+  lastName: true,
   dateOfBirth: true,
   gender: true,
   enrollmentDate: true,
@@ -149,8 +149,8 @@ export const studentDetailSelect = {
       guardian: {
         select: {
           id: true,
-          givenName: true,
-          surname: true,
+          firstName: true,
+          lastName: true,
           emailAddress: true,
         },
       },
@@ -180,13 +180,13 @@ export function buildStudentWhere(
   if (filters.search) {
     where.OR = [
       {
-        givenName: {
+        firstName: {
           contains: filters.search,
           mode: Prisma.QueryMode.insensitive,
         },
       },
       {
-        surname: {
+        lastName: {
           contains: filters.search,
           mode: Prisma.QueryMode.insensitive,
         },
@@ -317,7 +317,7 @@ export async function getClassStudents(schoolId: string, classId: string) {
         },
       },
     },
-    orderBy: [{ surname: "asc" }, { givenName: "asc" }],
+    orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
     select: studentListSelect,
   })
 }
@@ -423,11 +423,11 @@ export async function getSchoolAcademicGrades(schoolId: string) {
  * Format student full name
  */
 export function formatStudentName(student: {
-  givenName: string
+  firstName: string
   middleName?: string | null
-  surname: string
+  lastName: string
 }): string {
-  return [student.givenName, student.middleName, student.surname]
+  return [student.firstName, student.middleName, student.lastName]
     .filter(Boolean)
     .join(" ")
 }
@@ -436,8 +436,8 @@ export function formatStudentName(student: {
  * Get student initials for avatar
  */
 export function getStudentInitials(student: {
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
 }): string {
-  return `${student.givenName.charAt(0)}${student.surname.charAt(0)}`.toUpperCase()
+  return `${student.firstName.charAt(0)}${student.lastName.charAt(0)}`.toUpperCase()
 }

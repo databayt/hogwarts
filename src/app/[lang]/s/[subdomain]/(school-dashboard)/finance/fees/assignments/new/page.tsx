@@ -4,6 +4,7 @@
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { FeeAssignmentForm } from "@/components/school-dashboard/finance/fees/assignment-form"
 
 export const metadata = {
@@ -16,6 +17,7 @@ export default async function AssignFeePage({
   params: Promise<{ lang: Locale; subdomain: string }>
 }) {
   const { lang } = await params
+  const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
@@ -25,8 +27,8 @@ export default async function AssignFeePage({
   const [students, feeStructures] = await Promise.all([
     db.student.findMany({
       where: { schoolId },
-      select: { id: true, givenName: true, surname: true },
-      orderBy: { givenName: "asc" },
+      select: { id: true, firstName: true, lastName: true },
+      orderBy: { firstName: "asc" },
       take: 500,
     }),
     db.feeStructure.findMany({

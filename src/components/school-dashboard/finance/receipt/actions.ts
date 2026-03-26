@@ -11,6 +11,7 @@
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { logger } from "@/lib/logger"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -51,10 +52,7 @@ export async function uploadReceipt(
     // 2. Get tenant context (CRITICAL for multi-tenant safety)
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return {
-        success: false,
-        error: "Missing school context",
-      }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // 3. Extract and validate file
@@ -158,19 +156,13 @@ export async function getReceipts(input?: {
     // 1. Authenticate
     const session = await auth()
     if (!session?.user) {
-      return {
-        success: false,
-        error: "Unauthorized",
-      }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // 2. Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return {
-        success: false,
-        error: "Missing school context",
-      }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // 3. Validate input
@@ -248,19 +240,13 @@ export async function getReceiptById(
     // 1. Authenticate
     const session = await auth()
     if (!session?.user) {
-      return {
-        success: false,
-        error: "Unauthorized",
-      }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // 2. Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return {
-        success: false,
-        error: "Missing school context",
-      }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // 3. Validate input
@@ -275,10 +261,7 @@ export async function getReceiptById(
     })
 
     if (!receipt) {
-      return {
-        success: false,
-        error: "Receipt not found",
-      }
+      return actionError(ACTION_ERRORS.RECEIPT_NOT_FOUND)
     }
 
     return {
@@ -311,19 +294,13 @@ export async function deleteReceipt(id: string): Promise<ServerActionResponse> {
     // 1. Authenticate
     const session = await auth()
     if (!session?.user) {
-      return {
-        success: false,
-        error: "Unauthorized",
-      }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // 2. Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return {
-        success: false,
-        error: "Missing school context",
-      }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // 3. Validate input
@@ -338,10 +315,7 @@ export async function deleteReceipt(id: string): Promise<ServerActionResponse> {
     })
 
     if (!receipt) {
-      return {
-        success: false,
-        error: "Receipt not found",
-      }
+      return actionError(ACTION_ERRORS.RECEIPT_NOT_FOUND)
     }
 
     // 5. Delete file from storage using centralized provider
@@ -398,19 +372,13 @@ export async function retryReceiptExtraction(
     // 1. Authenticate
     const session = await auth()
     if (!session?.user) {
-      return {
-        success: false,
-        error: "Unauthorized",
-      }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // 2. Get tenant context
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return {
-        success: false,
-        error: "Missing school context",
-      }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // 3. Verify receipt ownership
@@ -422,10 +390,7 @@ export async function retryReceiptExtraction(
     })
 
     if (!receipt) {
-      return {
-        success: false,
-        error: "Receipt not found",
-      }
+      return actionError(ACTION_ERRORS.RECEIPT_NOT_FOUND)
     }
 
     // 4. Trigger extraction retry

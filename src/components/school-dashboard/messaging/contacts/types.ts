@@ -7,8 +7,8 @@ import type { UserRole } from "@prisma/client"
 export type ContactDTO = {
   /** User.id — used for creating direct conversations */
   id: string
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
   displayName: string
   email: string | null
   image: string | null

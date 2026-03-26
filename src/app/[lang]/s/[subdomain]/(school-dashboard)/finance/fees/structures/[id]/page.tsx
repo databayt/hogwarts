@@ -6,6 +6,7 @@ import { notFound } from "next/navigation"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import FeeStructureForm from "@/components/school-dashboard/finance/fees/form"
 
 export const metadata = { title: "Fee Structure Details" }
@@ -16,6 +17,7 @@ interface Props {
 
 export default async function FeeStructureDetailPage({ params }: Props) {
   const { lang, id } = await params
+  const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {

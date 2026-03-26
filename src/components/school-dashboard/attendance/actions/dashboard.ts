@@ -117,8 +117,8 @@ export async function getStudentsByRiskLevel(input?: {
       where,
       select: {
         id: true,
-        givenName: true,
-        surname: true,
+        firstName: true,
+        lastName: true,
         studentClasses: {
           take: 1,
           include: { class: { select: { id: true, name: true } } },
@@ -187,7 +187,7 @@ export async function getStudentsByRiskLevel(input?: {
 
       return {
         studentId: student.id,
-        studentName: `${student.givenName} ${student.surname}`,
+        studentName: `${student.firstName} ${student.lastName}`,
         classId: primaryClass?.id || null,
         className: primaryClass?.name || null,
         totalDays,
@@ -279,8 +279,8 @@ export async function getStudentEarlyWarningDetails(studentId: string): Promise<
       where: { id: studentId, schoolId },
       select: {
         id: true,
-        givenName: true,
-        surname: true,
+        firstName: true,
+        lastName: true,
         studentClasses: {
           take: 1,
           include: { class: { select: { id: true, name: true } } },
@@ -439,7 +439,7 @@ export async function getStudentEarlyWarningDetails(studentId: string): Promise<
       data: {
         student: {
           studentId: student.id,
-          studentName: `${student.givenName} ${student.surname}`,
+          studentName: `${student.firstName} ${student.lastName}`,
           classId: primaryClass?.id || null,
           className: primaryClass?.name || null,
           totalDays,
@@ -572,7 +572,7 @@ export async function getTodaysDashboard(): Promise<
         studentId: true,
         status: true,
         markedAt: true,
-        student: { select: { givenName: true, surname: true } },
+        student: { select: { firstName: true, lastName: true } },
         class: { select: { name: true } },
       },
       orderBy: { markedAt: "desc" },
@@ -612,7 +612,7 @@ export async function getTodaysDashboard(): Promise<
       select: {
         studentId: true,
         date: true,
-        student: { select: { givenName: true, surname: true } },
+        student: { select: { firstName: true, lastName: true } },
         class: { select: { name: true } },
       },
       orderBy: { date: "desc" },
@@ -627,7 +627,7 @@ export async function getTodaysDashboard(): Promise<
       const key = absence.studentId
       if (!studentAbsences.has(key)) {
         studentAbsences.set(key, {
-          name: `${absence.student.givenName} ${absence.student.surname}`,
+          name: `${absence.student.firstName} ${absence.student.lastName}`,
           className: absence.class?.name ?? "",
           dates: [],
         })
@@ -675,7 +675,7 @@ export async function getTodaysDashboard(): Promise<
     // Get recent activity (last 10)
     const recentActivity = todayAttendance.slice(0, 10).map((a) => ({
       id: a.id,
-      studentName: `${a.student.givenName} ${a.student.surname}`,
+      studentName: `${a.student.firstName} ${a.student.lastName}`,
       className: a.class?.name ?? "",
       status: a.status,
       time: a.markedAt.toLocaleTimeString("en-US", {
@@ -914,7 +914,7 @@ export async function getFollowUpStudents(input?: { limit?: number }): Promise<
       select: {
         studentId: true,
         date: true,
-        student: { select: { givenName: true, surname: true } },
+        student: { select: { firstName: true, lastName: true } },
         class: { select: { name: true } },
       },
       orderBy: { date: "desc" },
@@ -928,7 +928,7 @@ export async function getFollowUpStudents(input?: { limit?: number }): Promise<
     for (const absence of recentAbsences) {
       if (!studentAbsenceMap.has(absence.studentId)) {
         studentAbsenceMap.set(absence.studentId, {
-          name: `${absence.student.givenName} ${absence.student.surname}`,
+          name: `${absence.student.firstName} ${absence.student.lastName}`,
           className: absence.class?.name ?? "",
           dates: [],
         })
@@ -977,7 +977,7 @@ export async function getFollowUpStudents(input?: { limit?: number }): Promise<
           select: {
             studentId: true,
             date: true,
-            student: { select: { givenName: true, surname: true } },
+            student: { select: { firstName: true, lastName: true } },
             class: { select: { name: true } },
           },
         },
@@ -988,7 +988,7 @@ export async function getFollowUpStudents(input?: { limit?: number }): Promise<
     for (const excuse of pendingExcuses) {
       results.push({
         studentId: excuse.attendance.studentId,
-        studentName: `${excuse.attendance.student.givenName} ${excuse.attendance.student.surname}`,
+        studentName: `${excuse.attendance.student.firstName} ${excuse.attendance.student.lastName}`,
         className: excuse.attendance.class?.name ?? "",
         issue: "unexcused_pending",
         severity: "info",
@@ -1119,8 +1119,8 @@ export async function getUnmarkedClasses(): Promise<
         teacher: {
           select: {
             id: true,
-            givenName: true,
-            surname: true,
+            firstName: true,
+            lastName: true,
           },
         },
       },
@@ -1156,7 +1156,7 @@ export async function getUnmarkedClasses(): Promise<
         periodName: entry.period.name,
         teacherId: entry.teacher?.id ?? "",
         teacherName: entry.teacher
-          ? `${entry.teacher.givenName} ${entry.teacher.surname}`
+          ? `${entry.teacher.firstName} ${entry.teacher.lastName}`
           : "",
         scheduledTime: `${entry.period.startTime} - ${entry.period.endTime}`,
       }))
@@ -1234,8 +1234,8 @@ export async function getParentAttendanceSummary(): Promise<
         student: {
           select: {
             id: true,
-            givenName: true,
-            surname: true,
+            firstName: true,
+            lastName: true,
             studentClasses: {
               include: {
                 class: { select: { name: true } },
@@ -1325,7 +1325,7 @@ export async function getParentAttendanceSummary(): Promise<
 
         return {
           studentId: student.id,
-          studentName: `${student.givenName} ${student.surname}`,
+          studentName: `${student.firstName} ${student.lastName}`,
           className,
           stats,
           recentAbsences: recentAbsences.map((a) => ({

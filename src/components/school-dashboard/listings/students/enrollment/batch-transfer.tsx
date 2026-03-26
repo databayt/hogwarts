@@ -156,7 +156,7 @@ export function BatchTransfer({
 
   const getStudentName = (studentId: string) => {
     const student = students.find((s) => s.id === studentId)
-    return student ? `${student.givenName} ${student.surname}` : "Unknown"
+    return student ? `${student.firstName} ${student.lastName}` : "Unknown"
   }
 
   const getBatchName = (batchId: string) => {
@@ -453,7 +453,7 @@ export function BatchTransfer({
                       <SelectContent>
                         {students.map((student) => (
                           <SelectItem key={student.id} value={student.id}>
-                            {student.givenName} {student.surname}
+                            {student.firstName} {student.lastName}
                             {student.grNumber && ` (${student.grNumber})`}
                           </SelectItem>
                         ))}

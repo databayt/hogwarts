@@ -5,6 +5,7 @@
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -18,8 +19,6 @@ import {
   type SchoolYearUpdateInput,
 } from "./validation"
 
-export type { ActionResponse }
-
 const ACADEMIC_PATH = "/school/academic"
 
 // ============================================================================
@@ -32,10 +31,10 @@ export async function createSchoolYear(
   try {
     const { schoolId, role } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
     if (role !== "ADMIN" && role !== "DEVELOPER") {
-      return { success: false, error: "Insufficient permissions" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const parsed = schoolYearCreateSchema.parse(input)
@@ -88,10 +87,10 @@ export async function updateSchoolYear(
   try {
     const { schoolId, role } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
     if (role !== "ADMIN" && role !== "DEVELOPER") {
-      return { success: false, error: "Insufficient permissions" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const parsed = schoolYearUpdateSchema.parse(input)
@@ -104,7 +103,7 @@ export async function updateSchoolYear(
     })
 
     if (!existing) {
-      return { success: false, error: "School year not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Check for duplicate year name (exclude current)
@@ -155,10 +154,10 @@ export async function deleteSchoolYear(input: {
   try {
     const { schoolId, role } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
     if (role !== "ADMIN" && role !== "DEVELOPER") {
-      return { success: false, error: "Insufficient permissions" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
@@ -175,7 +174,7 @@ export async function deleteSchoolYear(input: {
     })
 
     if (!existing) {
-      return { success: false, error: "School year not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Check for dependencies
@@ -219,7 +218,7 @@ export async function getSchoolYear(input: {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
@@ -274,7 +273,7 @@ export async function getSchoolYears(
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const sp = getSchoolYearsSchema.parse(input ?? {})
@@ -346,7 +345,7 @@ export async function getSchoolYearOptions(): Promise<
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const years = await db.schoolYear.findMany({

@@ -64,8 +64,8 @@ export const classListSelect = {
   teacher: {
     select: {
       id: true,
-      givenName: true,
-      surname: true,
+      firstName: true,
+      lastName: true,
     },
   },
   term: {
@@ -104,8 +104,8 @@ export const classDetailSelect = {
   teacher: {
     select: {
       id: true,
-      givenName: true,
-      surname: true,
+      firstName: true,
+      lastName: true,
       emailAddress: true,
     },
   },
@@ -145,8 +145,8 @@ export const classDetailSelect = {
       student: {
         select: {
           id: true,
-          givenName: true,
-          surname: true,
+          firstName: true,
+          lastName: true,
         },
       },
     },
@@ -157,8 +157,8 @@ export const classDetailSelect = {
       teacher: {
         select: {
           id: true,
-          givenName: true,
-          surname: true,
+          firstName: true,
+          lastName: true,
         },
       },
       subject: {

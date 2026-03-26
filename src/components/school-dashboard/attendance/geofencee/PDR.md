@@ -486,7 +486,7 @@ export async function getLiveStudentLocations() {
   const locations = await db.$queryRaw`
     SELECT DISTINCT ON (lt.student_id)
       lt.student_id,
-      CONCAT(s.given_name, ' ', s.surname) as student_name,
+      CONCAT(s.given_name, ' ', s.lastName) as student_name,
       lt.lat::text,
       lt.lon::text,
       lt.accuracy,
@@ -1063,12 +1063,12 @@ const studentCache = new Map<string, { name: string; photo?: string }>()
 export async function warmStudentCache(schoolId: string) {
   const students = await db.student.findMany({
     where: { schoolId },
-    select: { id: true, givenName: true, surname: true, photoUrl: true },
+    select: { id: true, firstName: true, lastName: true, photoUrl: true },
   })
 
   students.forEach((s) => {
     studentCache.set(s.id, {
-      name: `${s.givenName} ${s.surname}`,
+      name: `${s.firstName} ${s.lastName}`,
       photo: s.photoUrl || undefined,
     })
   })

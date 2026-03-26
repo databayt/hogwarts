@@ -36,7 +36,7 @@ export function InformationStep({ form, isView }: ClassFormStepProps) {
     []
   )
   const [teachers, setTeachers] = useState<
-    Array<{ id: string; givenName: string; surname: string }>
+    Array<{ id: string; firstName: string; lastName: string }>
   >([])
   const [grades, setGrades] = useState<
     Array<{ id: string; name: string; gradeNumber: number }>
@@ -67,8 +67,8 @@ export function InformationStep({ form, isView }: ClassFormStepProps) {
           setTeachers(
             teachersRes.data.rows.map((t: any) => ({
               id: t.id,
-              givenName: t.givenName || "",
-              surname: t.surname || "",
+              firstName: t.firstName || "",
+              lastName: t.lastName || "",
             }))
           )
         }
@@ -157,7 +157,7 @@ export function InformationStep({ form, isView }: ClassFormStepProps) {
               <SelectContent>
                 {teachers.map((teacher) => (
                   <SelectItem key={teacher.id} value={teacher.id}>
-                    {teacher.givenName} {teacher.surname}
+                    {teacher.firstName} {teacher.lastName}
                   </SelectItem>
                 ))}
               </SelectContent>

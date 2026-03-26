@@ -259,7 +259,7 @@ export async function updateClass(
     })
 
     if (!existing) {
-      return { success: false, error: "Class not found" }
+      return actionError(ACTION_ERRORS.CLASS_NOT_FOUND)
     }
 
     // Capacity cross-validation for updates: hard error
@@ -357,7 +357,7 @@ export async function deleteClass(input: {
     })
 
     if (!existing) {
-      return { success: false, error: "Class not found" }
+      return actionError(ACTION_ERRORS.CLASS_NOT_FOUND)
     }
 
     await db.class.deleteMany({ where: { id, schoolId } })
@@ -415,7 +415,7 @@ export async function enrollStudentInClass(input: {
     try {
       assertClassPermission(authContext, "update", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to update classes" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const { classId, studentId } = z
@@ -439,18 +439,18 @@ export async function enrollStudentInClass(input: {
     })
 
     if (!classData) {
-      return { success: false, error: "Class not found" }
+      return actionError(ACTION_ERRORS.CLASS_NOT_FOUND)
     }
 
     // Verify student exists in school
     const studentModel = getModelOrThrow("student")
     const student = await studentModel.findFirst({
       where: { id: studentId, schoolId },
-      select: { id: true, givenName: true, surname: true },
+      select: { id: true, firstName: true, lastName: true },
     })
 
     if (!student) {
-      return { success: false, error: "Student not found" }
+      return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
     }
 
     // Check if student is already enrolled
@@ -462,7 +462,7 @@ export async function enrollStudentInClass(input: {
     if (existingEnrollment) {
       return {
         success: false,
-        error: `${student.givenName} ${student.surname} is already enrolled in "${classData.name}"`,
+        error: `${student.firstName} ${student.lastName} is already enrolled in "${classData.name}"`,
       }
     }
 
@@ -542,7 +542,7 @@ export async function unenrollStudentFromClass(input: {
     try {
       assertClassPermission(authContext, "update", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to update classes" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const { classId, studentId } = z
@@ -559,7 +559,7 @@ export async function unenrollStudentFromClass(input: {
     })
 
     if (!enrollment) {
-      return { success: false, error: "Student is not enrolled in this class" }
+      return actionError(ACTION_ERRORS.UNKNOWN)
     }
 
     // Delete enrollment
@@ -623,7 +623,7 @@ export async function getClassCapacityStatus(input: {
     try {
       assertClassPermission(authContext, "read", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to read classes" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const { classId } = z
@@ -646,7 +646,7 @@ export async function getClassCapacityStatus(input: {
     })
 
     if (!classData) {
-      return { success: false, error: "Class not found" }
+      return actionError(ACTION_ERRORS.CLASS_NOT_FOUND)
     }
 
     const minCapacity = classData.minCapacity || 10
@@ -712,7 +712,7 @@ export async function getClass(input: {
     try {
       assertClassPermission(authContext, "read", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to read classes" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
@@ -778,8 +778,8 @@ export type ClassDetailResult = {
   } | null
   teacher: {
     id: string
-    givenName: string
-    surname: string
+    firstName: string
+    lastName: string
     userId: string | null
   } | null
   term: {
@@ -796,8 +796,8 @@ export type ClassDetailResult = {
     id: string
     student: {
       id: string
-      givenName: string
-      surname: string
+      firstName: string
+      lastName: string
       userId: string | null
     }
     enrolledAt: Date
@@ -825,7 +825,7 @@ export async function getClassById(input: {
     try {
       assertClassPermission(authContext, "read", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to read classes" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
@@ -844,8 +844,8 @@ export async function getClassById(input: {
         teacher: {
           select: {
             id: true,
-            givenName: true,
-            surname: true,
+            firstName: true,
+            lastName: true,
             userId: true,
           },
         },
@@ -868,8 +868,8 @@ export async function getClassById(input: {
             student: {
               select: {
                 id: true,
-                givenName: true,
-                surname: true,
+                firstName: true,
+                lastName: true,
                 userId: true,
               },
             },
@@ -950,7 +950,7 @@ export async function getClasses(
     try {
       assertClassPermission(authContext, "read", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to read classes" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const sp = getClassesSchema.parse(input ?? {})
@@ -984,8 +984,8 @@ export async function getClasses(
           },
           teacher: {
             select: {
-              givenName: true,
-              surname: true,
+              firstName: true,
+              lastName: true,
             },
           },
           term: {
@@ -1014,7 +1014,7 @@ export async function getClasses(
       name: c.name as string,
       subjectName: c.subject?.name || "Unknown",
       teacherName: c.teacher
-        ? `${c.teacher.givenName} ${c.teacher.surname}`
+        ? `${c.teacher.firstName} ${c.teacher.lastName}`
         : "Unknown",
       termName: c.term?.termNumber ? `Term ${c.term.termNumber}` : "Unknown",
       gradeName: c.grade?.name || "",
@@ -1065,7 +1065,7 @@ export async function getClassesCSV(
     try {
       assertClassPermission(authContext, "export", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to export classes" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const sp = getClassesSchema.parse(input ?? {})
@@ -1088,8 +1088,8 @@ export async function getClassesCSV(
         },
         teacher: {
           select: {
-            givenName: true,
-            surname: true,
+            firstName: true,
+            lastName: true,
           },
         },
         term: {
@@ -1125,7 +1125,7 @@ export async function getClassesCSV(
       grade: classItem.grade?.name || "",
       subject: classItem.subject?.name || "",
       teacher: classItem.teacher
-        ? `${classItem.teacher.givenName} ${classItem.teacher.surname}`
+        ? `${classItem.teacher.firstName} ${classItem.teacher.lastName}`
         : "",
       term: classItem.term?.termNumber
         ? `Term ${classItem.term.termNumber}`
@@ -1224,7 +1224,7 @@ export async function getAllClassesCapacity(): Promise<
     try {
       assertClassPermission(authContext, "read", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to read classes" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const classes = await db.class.findMany({
@@ -1234,7 +1234,7 @@ export async function getAllClassesCapacity(): Promise<
           select: { name: true },
         },
         teacher: {
-          select: { givenName: true, surname: true },
+          select: { firstName: true, lastName: true },
         },
         _count: {
           select: { studentClasses: true },
@@ -1269,7 +1269,7 @@ export async function getAllClassesCapacity(): Promise<
         name: c.name,
         subjectName: c.subject?.name || "Unknown",
         teacherName: c.teacher
-          ? `${c.teacher.givenName} ${c.teacher.surname}`
+          ? `${c.teacher.firstName} ${c.teacher.lastName}`
           : "Unassigned",
         currentEnrollment,
         minCapacity,
@@ -1370,7 +1370,7 @@ export async function getClassesExportData(
     try {
       assertClassPermission(authContext, "export", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to export classes" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const sp = getClassesSchema.parse(input ?? {})
@@ -1393,8 +1393,8 @@ export async function getClassesExportData(
         },
         teacher: {
           select: {
-            givenName: true,
-            surname: true,
+            firstName: true,
+            lastName: true,
           },
         },
         term: {
@@ -1423,7 +1423,7 @@ export async function getClassesExportData(
       code: classItem.courseCode || null,
       subjectName: classItem.subject?.name || null,
       teacherName: classItem.teacher
-        ? `${classItem.teacher.givenName} ${classItem.teacher.surname}`
+        ? `${classItem.teacher.firstName} ${classItem.teacher.lastName}`
         : null,
       termName: classItem.term?.termNumber
         ? `Term ${classItem.term.termNumber}`
@@ -1481,7 +1481,7 @@ export async function assignSubjectTeacher(
     try {
       assertClassPermission(authContext, "update", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to update classes" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const parsed = classTeacherCreateSchema.parse(input)
@@ -1493,18 +1493,18 @@ export async function assignSubjectTeacher(
     })
 
     if (!existingClass) {
-      return { success: false, error: "Class not found" }
+      return actionError(ACTION_ERRORS.CLASS_NOT_FOUND)
     }
 
     // Verify teacher exists and belongs to school
     const teacherModel = getModelOrThrow("teacher")
     const teacher = await teacherModel.findFirst({
       where: { id: parsed.teacherId, schoolId },
-      select: { id: true, givenName: true, surname: true },
+      select: { id: true, firstName: true, lastName: true },
     })
 
     if (!teacher) {
-      return { success: false, error: "Teacher not found" }
+      return actionError(ACTION_ERRORS.TEACHER_NOT_FOUND)
     }
 
     // Check for duplicate assignment
@@ -1520,7 +1520,7 @@ export async function assignSubjectTeacher(
     if (existing) {
       return {
         success: false,
-        error: `${teacher.givenName} ${teacher.surname} is already assigned to this class`,
+        error: `${teacher.firstName} ${teacher.lastName} is already assigned to this class`,
       }
     }
 
@@ -1578,7 +1578,7 @@ export async function updateSubjectTeacher(input: {
     try {
       assertClassPermission(authContext, "update", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to update classes" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const parsed = classTeacherUpdateSchema.parse(input)
@@ -1591,7 +1591,7 @@ export async function updateSubjectTeacher(input: {
     })
 
     if (!existing) {
-      return { success: false, error: "Assignment not found" }
+      return actionError(ACTION_ERRORS.ASSIGNMENT_NOT_FOUND)
     }
 
     await classTeacherModel.updateMany({
@@ -1642,7 +1642,7 @@ export async function removeSubjectTeacher(input: {
     try {
       assertClassPermission(authContext, "update", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to update classes" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
@@ -1655,7 +1655,7 @@ export async function removeSubjectTeacher(input: {
     })
 
     if (!existing) {
-      return { success: false, error: "Assignment not found" }
+      return actionError(ACTION_ERRORS.ASSIGNMENT_NOT_FOUND)
     }
 
     await classTeacherModel.deleteMany({
@@ -1705,7 +1705,7 @@ export async function getClassSubjectTeachers(input: {
     try {
       assertClassPermission(authContext, "read", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to read classes" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const { classId } = z.object({ classId: z.string().min(1) }).parse(input)
@@ -1717,7 +1717,7 @@ export async function getClassSubjectTeachers(input: {
     })
 
     if (!existingClass) {
-      return { success: false, error: "Class not found" }
+      return actionError(ACTION_ERRORS.CLASS_NOT_FOUND)
     }
 
     const classTeacherModel = getModelOrThrow("classTeacher")
@@ -1727,8 +1727,8 @@ export async function getClassSubjectTeachers(input: {
         teacher: {
           select: {
             id: true,
-            givenName: true,
-            surname: true,
+            firstName: true,
+            lastName: true,
             emailAddress: true,
           },
         },
@@ -1741,7 +1741,7 @@ export async function getClassSubjectTeachers(input: {
       classId: a.classId,
       teacherId: a.teacherId,
       role: a.role,
-      teacherName: `${a.teacher.givenName} ${a.teacher.surname}`,
+      teacherName: `${a.teacher.firstName} ${a.teacher.lastName}`,
       teacherEmail: a.teacher.emailAddress || null,
       createdAt: a.createdAt.toISOString(),
     }))
@@ -1790,7 +1790,7 @@ export async function getAvailableTeachersForClass(input: {
     try {
       assertClassPermission(authContext, "read", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to read classes" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const { classId } = z.object({ classId: z.string().min(1) }).parse(input)
@@ -1813,16 +1813,16 @@ export async function getAvailableTeachersForClass(input: {
       },
       select: {
         id: true,
-        givenName: true,
-        surname: true,
+        firstName: true,
+        lastName: true,
         emailAddress: true,
       },
-      orderBy: [{ surname: "asc" }, { givenName: "asc" }],
+      orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
     })
 
     const result = teachers.map((t: any) => ({
       id: t.id,
-      name: `${t.givenName} ${t.surname}`,
+      name: `${t.firstName} ${t.lastName}`,
       email: t.emailAddress || null,
     }))
 
@@ -1858,7 +1858,7 @@ export async function bulkDeleteClasses(input: {
     try {
       assertClassPermission(authContext, "bulk_action", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized for bulk operations" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const { ids } = z

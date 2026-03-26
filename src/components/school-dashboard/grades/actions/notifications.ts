@@ -59,7 +59,7 @@ export async function sendGradeNotification(input: {
       where: { id: input.resultId, schoolId },
       include: {
         student: {
-          select: { id: true, userId: true, givenName: true, surname: true },
+          select: { id: true, userId: true, firstName: true, lastName: true },
         },
         class: { include: { subject: { select: { name: true } } } },
       },
@@ -67,7 +67,7 @@ export async function sendGradeNotification(input: {
 
     if (!result) return { success: false, error: "Result not found" }
 
-    const studentName = `${result.student.givenName} ${result.student.surname}`
+    const studentName = `${result.student.firstName} ${result.student.lastName}`
     const name = result.class?.subject?.name || "a subject"
 
     const recipients: string[] = []
@@ -144,8 +144,8 @@ export async function sendBatchGradeNotifications(input: {
           select: {
             id: true,
             userId: true,
-            givenName: true,
-            surname: true,
+            firstName: true,
+            lastName: true,
           },
         },
       },
@@ -178,7 +178,7 @@ export async function sendBatchGradeNotifications(input: {
     let count = 0
 
     for (const rc of reportCards) {
-      const studentName = `${rc.student.givenName} ${rc.student.surname}`
+      const studentName = `${rc.student.firstName} ${rc.student.lastName}`
       const recipients: string[] = []
 
       if (rc.student.userId) recipients.push(rc.student.userId)

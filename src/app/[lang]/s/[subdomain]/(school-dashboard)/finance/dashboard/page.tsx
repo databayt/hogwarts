@@ -3,6 +3,8 @@
 
 import { Metadata } from "next"
 
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { FinanceDashboardContent } from "@/components/school-dashboard/finance/dashboard/content"
 
 export const metadata: Metadata = {
@@ -14,8 +16,9 @@ export const metadata: Metadata = {
 export default async function FinanceDashboardPage({
   params,
 }: {
-  params: Promise<{ lang: string }>
+  params: Promise<{ lang: Locale }>
 }) {
   const { lang } = await params
+  const dictionary = await getDictionary(lang)
   return <FinanceDashboardContent lang={lang} />
 }

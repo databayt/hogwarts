@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { generateIncomeStatement } from "@/components/school-dashboard/finance/reports/actions"
 import type { IncomeStatementData } from "@/components/school-dashboard/finance/reports/types"
 
@@ -21,6 +22,7 @@ interface Props {
 
 export default async function ProfitLossPage({ params }: Props) {
   const { lang } = await params
+  const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {

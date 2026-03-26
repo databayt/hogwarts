@@ -35,8 +35,8 @@ interface Payment {
   status: string
   student?: {
     studentId: string | null
-    givenName: string
-    surname: string
+    firstName: string
+    lastName: string
   }
   feeAssignment?: {
     feeStructure?: {
@@ -121,7 +121,7 @@ export function PaymentsList({ payments, dictionary }: Props) {
                   </TableCell>
                   <TableCell>
                     {payment.student
-                      ? `${payment.student.givenName} ${payment.student.surname}`
+                      ? `${payment.student.firstName} ${payment.student.lastName}`
                       : "N/A"}
                   </TableCell>
                   <TableCell>

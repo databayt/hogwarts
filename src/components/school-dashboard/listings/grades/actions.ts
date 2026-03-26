@@ -201,7 +201,7 @@ export async function updateResult(
     })
 
     if (!existing) {
-      return { success: false, error: "Result not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Check update permission
@@ -321,7 +321,7 @@ export async function deleteResult(input: {
     })
 
     if (!existing) {
-      return { success: false, error: "Result not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Check delete permission
@@ -429,7 +429,7 @@ export async function getResult(input: {
         result.studentId
       )
       if (!isOwner) {
-        return { success: false, error: "You can only view your own results" }
+        return actionError(ACTION_ERRORS.UNKNOWN)
       }
     }
     if (authContext.role === "GUARDIAN" && authContext.schoolId) {
@@ -607,7 +607,7 @@ export async function getResultsCSV(
     const csvRows = rows.map((r) =>
       [
         r.id,
-        `"${r.student ? `${r.student.givenName} ${r.student.surname}` : "Unknown"}"`,
+        `"${r.student ? `${r.student.firstName} ${r.student.lastName}` : "Unknown"}"`,
         `"${(r.assignment?.title || r.exam?.title || "").replace(/"/g, '""')}"`,
         `"${(r.class?.name || "").replace(/"/g, '""')}"`,
         Number(r.score),

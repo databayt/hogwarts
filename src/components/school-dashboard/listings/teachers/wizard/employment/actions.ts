@@ -2,6 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -13,7 +14,7 @@ export async function getTeacherEmployment(
 ): Promise<ActionResponse<EmploymentFormData>> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const teacher = await db.teacher.findFirst({
       where: { id: teacherId, schoolId },
@@ -27,7 +28,7 @@ export async function getTeacherEmployment(
       },
     })
 
-    if (!teacher) return { success: false, error: "Teacher not found" }
+    if (!teacher) return actionError(ACTION_ERRORS.TEACHER_NOT_FOUND)
 
     return {
       success: true,
@@ -56,7 +57,7 @@ export async function updateTeacherEmployment(
 ): Promise<ActionResponse> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const parsed = employmentSchema.parse(input)
 

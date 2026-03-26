@@ -15,6 +15,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -74,6 +75,7 @@ const methods = [
 
 export default async function Page({ params }: Props) {
   const [{ lang, subdomain }, session] = await Promise.all([params, auth()])
+  const dictionary = await getDictionary(lang)
 
   // Staff only
   const staffRoles = ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"]

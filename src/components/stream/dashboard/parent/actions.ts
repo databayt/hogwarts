@@ -10,8 +10,8 @@ import { getTenantContext } from "@/lib/tenant-context"
 export interface ChildProgress {
   student: {
     id: string
-    givenName: string
-    surname: string
+    firstName: string
+    lastName: string
   }
   enrollments: Array<{
     id: string
@@ -44,8 +44,8 @@ export async function getChildrenProgress(): Promise<ChildProgress[]> {
           student: {
             select: {
               id: true,
-              givenName: true,
-              surname: true,
+              firstName: true,
+              lastName: true,
               userId: true,
             },
           },
@@ -115,8 +115,8 @@ export async function getChildrenProgress(): Promise<ChildProgress[]> {
     results.push({
       student: {
         id: student.id,
-        givenName: student.givenName,
-        surname: student.surname,
+        firstName: student.firstName,
+        lastName: student.lastName,
       },
       enrollments: enriched,
     })

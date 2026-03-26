@@ -92,8 +92,8 @@ export const feeAssignmentListSelect = {
   student: {
     select: {
       id: true,
-      givenName: true,
-      surname: true,
+      firstName: true,
+      lastName: true,
     },
   },
   feeStructure: {
@@ -141,8 +141,8 @@ export const paymentListSelect = {
   student: {
     select: {
       id: true,
-      givenName: true,
-      surname: true,
+      firstName: true,
+      lastName: true,
     },
   },
   feeAssignment: {
@@ -197,8 +197,8 @@ export const fineListSelect = {
   student: {
     select: {
       id: true,
-      givenName: true,
-      surname: true,
+      firstName: true,
+      lastName: true,
     },
   },
 } as const
@@ -269,7 +269,7 @@ export function buildFeeAssignmentWhere(
     where.OR = [
       {
         student: {
-          givenName: {
+          firstName: {
             contains: filters.search,
             mode: Prisma.QueryMode.insensitive,
           },
@@ -277,7 +277,7 @@ export function buildFeeAssignmentWhere(
       },
       {
         student: {
-          surname: {
+          lastName: {
             contains: filters.search,
             mode: Prisma.QueryMode.insensitive,
           },
@@ -322,7 +322,7 @@ export function buildPaymentWhere(
     where.OR = [
       {
         student: {
-          givenName: {
+          firstName: {
             contains: filters.search,
             mode: Prisma.QueryMode.insensitive,
           },
@@ -330,7 +330,7 @@ export function buildPaymentWhere(
       },
       {
         student: {
-          surname: {
+          lastName: {
             contains: filters.search,
             mode: Prisma.QueryMode.insensitive,
           },
@@ -416,7 +416,7 @@ export function buildFineWhere(
     where.OR = [
       {
         student: {
-          givenName: {
+          firstName: {
             contains: filters.search,
             mode: Prisma.QueryMode.insensitive,
           },
@@ -424,7 +424,7 @@ export function buildFineWhere(
       },
       {
         student: {
-          surname: {
+          lastName: {
             contains: filters.search,
             mode: Prisma.QueryMode.insensitive,
           },

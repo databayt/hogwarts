@@ -84,9 +84,9 @@ export const Gender = {
 // Personal Information Schema
 export const personalInfoSchema = z.object({
   // Basic Info
-  givenName: z.string().min(2, "First name must be at least 2 characters"),
+  firstName: z.string().min(2, "First name must be at least 2 characters"),
   middleName: z.string().optional(),
-  surname: z.string().min(2, "Last name must be at least 2 characters"),
+  lastName: z.string().min(2, "Last name must be at least 2 characters"),
 
   // Date and Gender
   dateOfBirth: z.date().refine((date) => {
@@ -161,8 +161,8 @@ export const guardianInfoSchema = z.object({
   guardians: z
     .array(
       z.object({
-        givenName: z.string().min(2, "Guardian first name is required"),
-        surname: z.string().min(2, "Guardian last name is required"),
+        firstName: z.string().min(2, "Guardian first name is required"),
+        lastName: z.string().min(2, "Guardian last name is required"),
         relation: z.string().min(2, "Relationship is required"), // Father, Mother, Guardian, etc.
         email: z.string().email("Invalid email address").optional(),
         mobileNumber: z

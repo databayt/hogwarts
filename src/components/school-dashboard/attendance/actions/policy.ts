@@ -156,11 +156,11 @@ export async function evaluatePolicies(schoolId: string): Promise<
               if (policy.alertRecipients.length > 0) {
                 const student = await db.student.findFirst({
                   where: { id: studentId, schoolId },
-                  select: { givenName: true, surname: true },
+                  select: { firstName: true, lastName: true },
                 })
 
                 const studentName = student
-                  ? `${student.givenName} ${student.surname}`
+                  ? `${student.firstName} ${student.lastName}`
                   : "طالب"
 
                 await Promise.all(
@@ -231,8 +231,8 @@ export async function getPolicyTriggers(input?: {
       notes: string | null
       createdAt: Date
       student: {
-        givenName: string
-        surname: string
+        firstName: string
+        lastName: string
       }
     }>
   }>
@@ -253,8 +253,8 @@ export async function getPolicyTriggers(input?: {
       include: {
         student: {
           select: {
-            givenName: true,
-            surname: true,
+            firstName: true,
+            lastName: true,
           },
         },
       },

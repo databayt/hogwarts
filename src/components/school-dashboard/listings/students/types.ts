@@ -9,9 +9,9 @@ import { studentCreateSchema } from "./validation"
 export type StudentDTO = {
   id: string
   schoolId: string
-  givenName: string
+  firstName: string
   middleName: string | null
-  surname: string
+  lastName: string
   dateOfBirth: Date
   gender: string
   enrollmentDate: Date

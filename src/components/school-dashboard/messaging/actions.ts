@@ -283,7 +283,7 @@ export async function updateConversation(
       parsed.conversationId
     )
     if (!conversation) {
-      return { success: false, error: "Conversation not found" }
+      return actionError(ACTION_ERRORS.MESSAGE_SEND_FAILED)
     }
 
     // Get user's participant role
@@ -374,7 +374,7 @@ export async function archiveConversation(
       authContext.userId
     )
     if (!isParticipant) {
-      return { success: false, error: "Not a participant in this conversation" }
+      return actionError(ACTION_ERRORS.MESSAGE_SEND_FAILED)
     }
 
     // Get conversation title for audit
@@ -461,7 +461,7 @@ export async function sendMessage(
       parsed.conversationId
     )
     if (!conversation) {
-      return { success: false, error: "Conversation not found" }
+      return actionError(ACTION_ERRORS.MESSAGE_SEND_FAILED)
     }
 
     // Get user's participant role
@@ -618,11 +618,11 @@ export async function sendMessageFromForm(
 
     // Validate required fields
     if (!conversationId) {
-      return { success: false, error: "Conversation ID is required" }
+      return actionError(ACTION_ERRORS.MESSAGE_SEND_FAILED)
     }
 
     if (!content || !content.trim()) {
-      return { success: false, error: "Message content is required" }
+      return actionError(ACTION_ERRORS.MESSAGE_SEND_FAILED)
     }
 
     // Call the existing sendMessage action
@@ -673,19 +673,19 @@ export async function editMessage(
     // Get message
     const message = await getMessage(schoolId, parsed.messageId)
     if (!message) {
-      return { success: false, error: "Message not found" }
+      return actionError(ACTION_ERRORS.MESSAGE_SEND_FAILED)
     }
 
     // Check permission (can only edit own messages)
     if (message.senderId !== authContext.userId) {
-      return { success: false, error: "Can only edit your own messages" }
+      return actionError(ACTION_ERRORS.MESSAGE_SEND_FAILED)
     }
 
     // Check edit window
     const now = new Date()
     const messageAge = now.getTime() - new Date(message.createdAt).getTime()
     if (messageAge > DEFAULT_SETTINGS.messageEditWindow) {
-      return { success: false, error: "Message edit window has expired" }
+      return actionError(ACTION_ERRORS.MESSAGE_SEND_FAILED)
     }
 
     // Update message
@@ -750,7 +750,7 @@ export async function deleteMessage(
     // Get message
     const message = await getMessage(schoolId, parsed.messageId)
     if (!message) {
-      return { success: false, error: "Message not found" }
+      return actionError(ACTION_ERRORS.MESSAGE_SEND_FAILED)
     }
 
     // Get user's participant role
@@ -767,7 +767,7 @@ export async function deleteMessage(
       participant?.role === "admin"
 
     if (!canDelete) {
-      return { success: false, error: "Permission denied" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Soft delete message
@@ -827,7 +827,7 @@ export async function markMessageAsRead(
     // Get message
     const message = await getMessage(schoolId, parsed.messageId)
     if (!message) {
-      return { success: false, error: "Message not found" }
+      return actionError(ACTION_ERRORS.MESSAGE_SEND_FAILED)
     }
 
     // Create or update read receipt
@@ -931,7 +931,7 @@ export async function addParticipant(
       parsed.conversationId
     )
     if (!conversation) {
-      return { success: false, error: "Conversation not found" }
+      return actionError(ACTION_ERRORS.MESSAGE_SEND_FAILED)
     }
 
     // Get user's participant role
@@ -943,7 +943,7 @@ export async function addParticipant(
 
     // Check permission
     if (!canManageParticipants(participant?.role)) {
-      return { success: false, error: "Permission denied" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Add participant
@@ -1029,7 +1029,7 @@ export async function removeParticipant(
       parsed.userId === authContext.userId
 
     if (!canRemove) {
-      return { success: false, error: "Permission denied" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Remove participant
@@ -1090,7 +1090,7 @@ export async function addReaction(
     // Get message
     const message = await getMessage(schoolId, parsed.messageId)
     if (!message) {
-      return { success: false, error: "Message not found" }
+      return actionError(ACTION_ERRORS.MESSAGE_SEND_FAILED)
     }
 
     // Verify user is participant
@@ -1100,7 +1100,7 @@ export async function addReaction(
       authContext.userId
     )
     if (!isParticipant) {
-      return { success: false, error: "Not a participant in this conversation" }
+      return actionError(ACTION_ERRORS.MESSAGE_SEND_FAILED)
     }
 
     // Create or update reaction
@@ -1212,7 +1212,7 @@ export async function loadMoreMessages(input: {
     )
 
     if (!isParticipant) {
-      return { success: false, error: "Not a participant in this conversation" }
+      return actionError(ACTION_ERRORS.MESSAGE_SEND_FAILED)
     }
 
     // Import the cursor-based query and serialization utility
@@ -1384,7 +1384,7 @@ export async function leaveConversation(input: {
     )
 
     if (!conversation) {
-      return { success: false, error: "Conversation not found" }
+      return actionError(ACTION_ERRORS.MESSAGE_SEND_FAILED)
     }
 
     if (conversation.type === "direct") {
@@ -1564,7 +1564,7 @@ export async function searchConversationMessages(input: {
       authContext.userId
     )
     if (!isParticipant) {
-      return { success: false, error: "Not a participant in this conversation" }
+      return actionError(ACTION_ERRORS.MESSAGE_SEND_FAILED)
     }
 
     // Import search function

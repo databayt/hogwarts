@@ -5,6 +5,7 @@
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -19,7 +20,7 @@ export async function getInvoiceForWizard(
 > {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const invoice = await db.userInvoice.findFirst({
       where: { id: invoiceId, schoolId },
@@ -39,7 +40,7 @@ export async function getInvoiceForWizard(
       },
     })
 
-    if (!invoice) return { success: false, error: "Invoice not found" }
+    if (!invoice) return actionError(ACTION_ERRORS.INVOICE_NOT_FOUND)
 
     return { success: true, data: invoice as unknown as InvoiceWizardData }
   } catch (error) {
@@ -57,12 +58,12 @@ export async function createDraftInvoice(): Promise<
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const invoice = await db.$transaction(async (tx) => {
@@ -122,12 +123,12 @@ export async function completeInvoiceWizard(
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Validate invoice has items
@@ -137,7 +138,7 @@ export async function completeInvoiceWizard(
     })
 
     if (!invoice) {
-      return { success: false, error: "Invoice not found" }
+      return actionError(ACTION_ERRORS.INVOICE_NOT_FOUND)
     }
 
     if (invoice.items.length === 0) {
@@ -200,12 +201,12 @@ export async function deleteDraftInvoice(
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Only delete if it's still a draft
@@ -215,7 +216,7 @@ export async function deleteDraftInvoice(
     })
 
     if (!invoice) {
-      return { success: false, error: "Draft invoice not found" }
+      return actionError(ACTION_ERRORS.INVOICE_NOT_FOUND)
     }
 
     await db.$transaction(async (tx) => {

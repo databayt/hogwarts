@@ -51,8 +51,8 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 interface TeacherScheduleData {
   id: string
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
   emailAddress: string
   profilePhotoUrl?: string | null
   employmentStatus: string
@@ -89,8 +89,8 @@ interface Props {
 // Helper Functions
 // ============================================================================
 
-function getInitials(givenName: string, surname: string): string {
-  return `${givenName.charAt(0)}${surname.charAt(0)}`.toUpperCase()
+function getInitials(firstName: string, lastName: string): string {
+  return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
 }
 
 function getWorkloadColor(status: string): string {
@@ -165,7 +165,7 @@ export function TeacherScheduleContent({
   // Filter teachers
   const filteredTeachers = useMemo(() => {
     return teachers.filter((teacher) => {
-      const fullName = `${teacher.givenName} ${teacher.surname}`.toLowerCase()
+      const fullName = `${teacher.firstName} ${teacher.lastName}`.toLowerCase()
       const matchesSearch =
         fullName.includes(searchTerm.toLowerCase()) ||
         teacher.emailAddress.toLowerCase().includes(searchTerm.toLowerCase())
@@ -362,12 +362,12 @@ export function TeacherScheduleContent({
                             src={teacher.profilePhotoUrl || undefined}
                           />
                           <AvatarFallback className="text-xs">
-                            {getInitials(teacher.givenName, teacher.surname)}
+                            {getInitials(teacher.firstName, teacher.lastName)}
                           </AvatarFallback>
                         </Avatar>
                         <div>
                           <p className="font-medium">
-                            {teacher.givenName} {teacher.surname}
+                            {teacher.firstName} {teacher.lastName}
                           </p>
                           <p className="text-muted-foreground text-xs">
                             {teacher.emailAddress}

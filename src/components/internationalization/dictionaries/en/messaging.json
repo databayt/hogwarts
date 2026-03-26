@@ -137,7 +137,9 @@
     "create_error": "An error occurred",
     "select_one_user": "Please select at least one user",
     "enter_group_name": "Please enter a group name",
-    "react_failed": "Failed to add reaction"
+    "react_failed": "Failed to add reaction",
+    "no_school_context": "No school context found",
+    "conversation_start_failed": "Failed to start conversation"
   },
   "types": {
     "direct": "Direct Message",

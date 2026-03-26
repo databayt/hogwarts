@@ -10,6 +10,7 @@ import { useLocale } from "@/components/internationalization/use-locale"
 
 import { useApplySession } from "../application-context"
 import type { ContactStepData } from "../types"
+import { getApplyStepDict } from "../utils"
 import { useApplyValidation } from "../validation-context"
 import { CONTACT_STEP_CONFIG } from "./config"
 import { ContactForm } from "./form"
@@ -22,8 +23,7 @@ interface Props {
 export default function ContactContent({ dictionary }: Props) {
   const params = useParams()
   const router = useRouter()
-  const { locale } = useLocale()
-  const isRTL = locale === "ar"
+  const { locale, isRTL } = useLocale()
   const id = params.id as string
 
   const { enableNext, disableNext, setCustomNavigation } = useApplyValidation()
@@ -31,6 +31,7 @@ export default function ContactContent({ dictionary }: Props) {
   const contactFormRef = useRef<ContactFormRef>(null)
 
   const initialData = getStepData("contact")
+  const stepDict = getApplyStepDict(dictionary, "contact")
 
   const onNext = useCallback(async () => {
     if (contactFormRef.current) {
@@ -66,8 +67,10 @@ export default function ContactContent({ dictionary }: Props) {
   return (
     <FormLayout>
       <FormHeading
-        title={CONTACT_STEP_CONFIG.label(isRTL)}
-        description={CONTACT_STEP_CONFIG.description(isRTL)}
+        title={stepDict.title || CONTACT_STEP_CONFIG.label(isRTL)}
+        description={
+          stepDict.description || CONTACT_STEP_CONFIG.description(isRTL)
+        }
       />
       <ContactForm
         ref={contactFormRef}

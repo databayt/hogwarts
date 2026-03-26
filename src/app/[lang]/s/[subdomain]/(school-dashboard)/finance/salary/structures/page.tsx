@@ -5,6 +5,7 @@ import { getDisplayText } from "@/lib/content-display"
 import { detectLanguage } from "@/lib/i18n-content"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { type SalaryStructureRow } from "@/components/school-dashboard/finance/salary/columns"
 import { getSalaryStructureList } from "@/components/school-dashboard/finance/salary/queries"
 import { SalaryStructuresTable } from "@/components/school-dashboard/finance/salary/table"
@@ -17,6 +18,7 @@ interface Props {
 
 export default async function SalaryStructuresPage({ params }: Props) {
   const { lang } = await params
+  const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
@@ -32,9 +34,9 @@ export default async function SalaryStructuresPage({ params }: Props) {
     rows.map(async (s: any) => ({
       id: s.id,
       teacherName: await getDisplayText(
-        [s.teacher?.givenName, s.teacher?.surname].filter(Boolean).join(" "),
+        [s.teacher?.firstName, s.teacher?.lastName].filter(Boolean).join(" "),
         detectLanguage(
-          [s.teacher?.givenName, s.teacher?.surname].filter(Boolean).join(" ")
+          [s.teacher?.firstName, s.teacher?.lastName].filter(Boolean).join(" ")
         ),
         lang,
         schoolId

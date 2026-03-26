@@ -136,7 +136,7 @@ export async function submitNewcomerApplication(
       const user = await tx.user.create({
         data: {
           email: data.email,
-          username: `${data.givenName} ${data.surname}`,
+          username: `${data.firstName} ${data.lastName}`,
           role: mapRoleToUserRole(data.role),
           emailVerified: new Date(), // Email was verified
           schoolId,
@@ -149,8 +149,8 @@ export async function submitNewcomerApplication(
           await tx.teacher.create({
             data: {
               userId: user.id,
-              givenName: data.givenName,
-              surname: data.surname,
+              firstName: data.firstName,
+              lastName: data.lastName,
               emailAddress: data.email,
               schoolId,
             },
@@ -161,8 +161,8 @@ export async function submitNewcomerApplication(
           await tx.student.create({
             data: {
               userId: user.id,
-              givenName: data.givenName,
-              surname: data.surname,
+              firstName: data.firstName,
+              lastName: data.lastName,
               dateOfBirth: data.dateOfBirth
                 ? new Date(data.dateOfBirth)
                 : new Date("2010-01-01"), // Default placeholder, to be updated
@@ -176,8 +176,8 @@ export async function submitNewcomerApplication(
           await tx.guardian.create({
             data: {
               userId: user.id,
-              givenName: data.givenName,
-              surname: data.surname,
+              firstName: data.firstName,
+              lastName: data.lastName,
               emailAddress: data.email,
               schoolId,
             },

@@ -14,7 +14,7 @@ export async function getParentContact(
 ): Promise<ActionResponse<ContactFormData>> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const guardian = await db.guardian.findFirst({
       where: { id: parentId, schoolId },
@@ -26,7 +26,7 @@ export async function getParentContact(
       },
     })
 
-    if (!guardian) return { success: false, error: "Guardian not found" }
+    if (!guardian) return actionError(ACTION_ERRORS.PARENT_NOT_FOUND)
 
     return {
       success: true,
@@ -52,7 +52,7 @@ export async function updateParentContact(
 ): Promise<ActionResponse> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const parsed = contactSchema.parse(input)
 

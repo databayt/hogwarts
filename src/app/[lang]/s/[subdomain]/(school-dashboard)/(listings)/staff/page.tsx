@@ -2,6 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { StaffContent } from "@/components/school-dashboard/listings/staff/content"
 
 interface Props {
@@ -20,6 +21,7 @@ interface Props {
 
 export default async function StaffPage({ params, searchParams }: Props) {
   const { lang } = await params
+  const dictionary = await getDictionary(lang)
   const search = await searchParams
 
   return <StaffContent locale={lang} searchParams={search} />

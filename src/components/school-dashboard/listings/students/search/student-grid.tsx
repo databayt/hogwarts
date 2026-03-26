@@ -43,11 +43,11 @@ const statusColors = {
 
 export function StudentGrid({ students, onStudentSelect }: StudentGridProps) {
   const getInitials = (student: Student) => {
-    return `${student.givenName?.[0] || ""}${student.surname?.[0] || ""}`.toUpperCase()
+    return `${student.firstName?.[0] || ""}${student.lastName?.[0] || ""}`.toUpperCase()
   }
 
   const getFullName = (student: Student) => {
-    return [student.givenName, student.middleName, student.surname]
+    return [student.firstName, student.middleName, student.lastName]
       .filter(Boolean)
       .join(" ")
   }

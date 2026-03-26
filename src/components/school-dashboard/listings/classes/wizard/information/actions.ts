@@ -14,7 +14,7 @@ export async function getClassInformation(
 ): Promise<ActionResponse<InformationFormData>> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const cls = await db.class.findFirst({
       where: { id: classId, schoolId },
@@ -28,7 +28,7 @@ export async function getClassInformation(
       },
     })
 
-    if (!cls) return { success: false, error: "Class not found" }
+    if (!cls) return actionError(ACTION_ERRORS.CLASS_NOT_FOUND)
 
     return {
       success: true,
@@ -56,7 +56,7 @@ export async function updateClassInformation(
 ): Promise<ActionResponse> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const parsed = informationSchema.parse(input)
 
@@ -71,7 +71,7 @@ export async function updateClassInformation(
     })
 
     if (existing) {
-      return { success: false, error: "A class with this name already exists" }
+      return actionError(ACTION_ERRORS.ALREADY_EXISTS)
     }
 
     await db.class.updateMany({

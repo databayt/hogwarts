@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import type { Prisma } from "@prisma/client"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
@@ -28,12 +29,12 @@ export async function saveTemplate(
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const role = session.user.role
@@ -41,11 +42,11 @@ export async function saveTemplate(
       !role ||
       ["STUDENT", "GUARDIAN", "ACCOUNTANT", "STAFF"].includes(role)
     ) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     if (!input.name || !input.subjectId) {
-      return { success: false, error: "Name and subject are required" }
+      return actionError(ACTION_ERRORS.EXAM_UPDATE_FAILED)
     }
 
     // Calculate total marks from distribution if not provided
@@ -61,7 +62,7 @@ export async function saveTemplate(
         where: { id: input.id, schoolId },
       })
       if (!existing) {
-        return { success: false, error: "Template not found" }
+        return actionError(ACTION_ERRORS.NOT_FOUND)
       }
 
       await db.examTemplate.update({

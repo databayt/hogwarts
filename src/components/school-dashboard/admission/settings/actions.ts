@@ -5,6 +5,7 @@
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 
@@ -21,7 +22,7 @@ export async function getAdmissionSettings(): Promise<
     const schoolId = session?.user?.schoolId
 
     if (!schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Get or create settings for this school
@@ -55,7 +56,7 @@ export async function getAdmissionSettings(): Promise<
     }
   } catch (error) {
     console.error("[getAdmissionSettings]", error)
-    return { success: false, error: "Failed to fetch settings" }
+    return actionError(ACTION_ERRORS.ADMISSION_UPDATE_FAILED)
   }
 }
 
@@ -67,13 +68,13 @@ export async function saveAdmissionSettings(
     const schoolId = session?.user?.schoolId
 
     if (!schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // RBAC: Only ADMIN and DEVELOPER can modify admission settings
     const role = session.user.role
     if (role !== "DEVELOPER" && role !== "ADMIN") {
-      return { success: false, error: "Insufficient permissions" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Validate input
@@ -117,6 +118,6 @@ export async function saveAdmissionSettings(
     return { success: true, data: null }
   } catch (error) {
     console.error("[saveAdmissionSettings]", error)
-    return { success: false, error: "Failed to save settings" }
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }

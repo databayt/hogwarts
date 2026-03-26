@@ -47,8 +47,8 @@ export type TeacherQueryParams = TeacherListFilters &
 /** Minimal fields for list display */
 export const teacherListSelect = {
   id: true,
-  givenName: true,
-  surname: true,
+  firstName: true,
+  lastName: true,
   emailAddress: true,
   gender: true,
   userId: true,
@@ -60,9 +60,9 @@ export const teacherListSelect = {
 export const teacherDetailSelect = {
   id: true,
   schoolId: true,
-  givenName: true,
+  firstName: true,
   middleName: true,
-  surname: true,
+  lastName: true,
   gender: true,
   dateOfBirth: true,
   emailAddress: true,
@@ -129,13 +129,13 @@ export function buildTeacherWhere(
   if (filters.search) {
     where.OR = [
       {
-        givenName: {
+        firstName: {
           contains: filters.search,
           mode: Prisma.QueryMode.insensitive,
         },
       },
       {
-        surname: {
+        lastName: {
           contains: filters.search,
           mode: Prisma.QueryMode.insensitive,
         },
@@ -235,7 +235,7 @@ export async function getClassTeachers(schoolId: string, classId: string) {
         },
       },
     },
-    orderBy: [{ surname: "asc" }, { givenName: "asc" }],
+    orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
     select: teacherListSelect,
   })
 }
@@ -314,11 +314,11 @@ export async function getTeacherStats(schoolId: string) {
  * Format teacher full name
  */
 export function formatTeacherName(teacher: {
-  givenName: string
+  firstName: string
   middleName?: string | null
-  surname: string
+  lastName: string
 }): string {
-  return [teacher.givenName, teacher.middleName, teacher.surname]
+  return [teacher.firstName, teacher.middleName, teacher.lastName]
     .filter(Boolean)
     .join(" ")
 }
@@ -327,8 +327,8 @@ export function formatTeacherName(teacher: {
  * Get teacher initials for avatar
  */
 export function getTeacherInitials(teacher: {
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
 }): string {
-  return `${teacher.givenName.charAt(0)}${teacher.surname.charAt(0)}`.toUpperCase()
+  return `${teacher.firstName.charAt(0)}${teacher.lastName.charAt(0)}`.toUpperCase()
 }

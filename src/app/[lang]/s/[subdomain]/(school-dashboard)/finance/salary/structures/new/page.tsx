@@ -3,6 +3,7 @@
 
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 
 export const metadata = { title: "Create Salary Structure" }
 
@@ -12,6 +13,7 @@ interface Props {
 
 export default async function NewSalaryStructurePage({ params }: Props) {
   const { lang } = await params
+  const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {

@@ -4,6 +4,7 @@
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { PlanLimitsSection } from "@/components/school-dashboard/school/configuration/plan-limits-section"
 
 export const metadata = { title: "Configuration: Plan & Limits" }
@@ -14,6 +15,7 @@ interface Props {
 
 export default async function PlanPage({ params }: Props) {
   const { lang } = await params
+  const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
 
   const [school, studentCount, teacherCount] = await Promise.all([

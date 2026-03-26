@@ -16,9 +16,9 @@ async function getGuardianChildren(guardianId: string, schoolId: string) {
         select: {
           id: true,
           studentId: true,
-          givenName: true,
+          firstName: true,
           middleName: true,
-          surname: true,
+          lastName: true,
         },
       },
     },
@@ -27,7 +27,7 @@ async function getGuardianChildren(guardianId: string, schoolId: string) {
   return studentGuardians.map((sg) => ({
     id: sg.student.id,
     studentId: sg.student.studentId,
-    name: `${sg.student.givenName} ${sg.student.middleName || ""} ${sg.student.surname}`.trim(),
+    name: `${sg.student.firstName} ${sg.student.middleName || ""} ${sg.student.lastName}`.trim(),
   }))
 }
 
@@ -244,8 +244,8 @@ export async function getChildTimetable(input: { studentId: string }) {
           },
           teacher: {
             select: {
-              givenName: true,
-              surname: true,
+              firstName: true,
+              lastName: true,
             },
           },
           classroom: {
@@ -276,7 +276,7 @@ export async function getChildTimetable(input: { studentId: string }) {
       className: entry.class?.name ?? "",
       name: entry.class?.subject?.name ?? "",
       teacherName: entry.class?.teacher
-        ? `${entry.class.teacher.givenName} ${entry.class.teacher.surname}`
+        ? `${entry.class.teacher.firstName} ${entry.class.teacher.lastName}`
         : "",
       roomName: entry.class?.classroom?.roomName || "TBA",
     })),
@@ -325,9 +325,9 @@ export async function getChildOverview(input: { studentId: string }) {
     select: {
       id: true,
       studentId: true,
-      givenName: true,
+      firstName: true,
       middleName: true,
-      surname: true,
+      lastName: true,
       gender: true,
       dateOfBirth: true,
     },
@@ -381,7 +381,7 @@ export async function getChildOverview(input: { studentId: string }) {
       ? {
           id: student.id,
           studentId: student.studentId,
-          name: `${student.givenName} ${student.middleName || ""} ${student.surname}`.trim(),
+          name: `${student.firstName} ${student.middleName || ""} ${student.lastName}`.trim(),
           gender: student.gender,
           dateOfBirth: student.dateOfBirth.toISOString(),
         }

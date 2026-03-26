@@ -10,7 +10,9 @@ import { useLocale } from "@/components/internationalization/use-locale"
 
 import { useApplySession } from "../application-context"
 import type { GuardianStepData } from "../types"
+import { getApplyStepDict } from "../utils"
 import { useApplyValidation } from "../validation-context"
+import { GUARDIAN_STEP_CONFIG } from "./config"
 import { GuardianForm } from "./form"
 import type { GuardianFormRef } from "./types"
 
@@ -21,8 +23,7 @@ interface Props {
 export default function GuardianContent({ dictionary }: Props) {
   const params = useParams()
   const router = useRouter()
-  const { locale } = useLocale()
-  const isRTL = locale === "ar"
+  const { locale, isRTL } = useLocale()
   const id = params.id as string
 
   const { enableNext, disableNext, setCustomNavigation } = useApplyValidation()
@@ -30,6 +31,7 @@ export default function GuardianContent({ dictionary }: Props) {
   const guardianFormRef = useRef<GuardianFormRef>(null)
 
   const initialData = getStepData("guardian")
+  const stepDict = getApplyStepDict(dictionary, "guardian")
 
   const onNext = useCallback(async () => {
     if (guardianFormRef.current) {
@@ -62,20 +64,12 @@ export default function GuardianContent({ dictionary }: Props) {
     onNext,
   ])
 
-  const dict = ((dictionary as Record<string, Record<string, string>> | null)
-    ?.apply?.guardian ?? {}) as Record<string, string>
-
   return (
     <FormLayout>
       <FormHeading
-        title={
-          dict.title || (isRTL ? "معلومات ولي الأمر" : "Guardian Information")
-        }
+        title={stepDict.title || GUARDIAN_STEP_CONFIG.label(isRTL)}
         description={
-          dict.description ||
-          (isRTL
-            ? "أدخل معلومات ولي أمر الطالب"
-            : "Enter the student's guardian details.")
+          stepDict.description || GUARDIAN_STEP_CONFIG.description(isRTL)
         }
       />
       <GuardianForm

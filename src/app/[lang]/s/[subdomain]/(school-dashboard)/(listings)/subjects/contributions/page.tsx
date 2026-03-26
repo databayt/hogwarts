@@ -2,6 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 import { getMyContributions } from "@/components/school-dashboard/listings/subjects/catalog/contribution-actions"
 import { MyContributions } from "@/components/school-dashboard/listings/subjects/catalog/my-contributions"
@@ -12,6 +13,7 @@ interface Props {
 
 export default async function MyContributionsPage({ params }: Props) {
   const { lang } = await params
+  const dictionary = await getDictionary(lang)
   const isAr = lang === "ar"
 
   let contributions = {

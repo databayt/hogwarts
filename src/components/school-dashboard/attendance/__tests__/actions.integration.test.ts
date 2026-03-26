@@ -104,8 +104,8 @@ async function createFullClassChain(schoolId: string, suffix: string) {
   const teacher = await db.teacher.create({
     data: {
       schoolId,
-      givenName: `Teacher`,
-      surname: suffix,
+      firstName: `Teacher`,
+      lastName: suffix,
       emailAddress: `teacher-${suffix}@test-integration.com`,
     },
   })
@@ -186,8 +186,8 @@ async function createStudentWithEnrollment(
   const student = await db.student.create({
     data: {
       schoolId,
-      givenName: `Student`,
-      surname: suffix,
+      firstName: `Student`,
+      lastName: suffix,
       dateOfBirth: new Date("2010-01-01"),
       gender: "M",
     },

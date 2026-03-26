@@ -75,8 +75,8 @@ import { type Dictionary } from "@/components/internationalization/dictionaries"
 
 interface TeacherPerformance {
   id: string
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
   emailAddress?: string
   profilePhotoUrl?: string
   employmentStatus?: string
@@ -167,7 +167,7 @@ export default function TeacherPerformanceContent({
   const filteredTeachers = useMemo(() => {
     return teachers.filter((teacher) => {
       // Search filter
-      const fullName = `${teacher.givenName} ${teacher.surname}`.toLowerCase()
+      const fullName = `${teacher.firstName} ${teacher.lastName}`.toLowerCase()
       const matchesSearch =
         searchQuery === "" || fullName.includes(searchQuery.toLowerCase())
 
@@ -309,8 +309,8 @@ export default function TeacherPerformanceContent({
     }
   }
 
-  const getInitials = (givenName: string, surname: string) => {
-    return `${givenName?.charAt(0) || ""}${surname?.charAt(0) || ""}`.toUpperCase()
+  const getInitials = (firstName: string, lastName: string) => {
+    return `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase()
   }
 
   return (
@@ -429,12 +429,12 @@ export default function TeacherPerformanceContent({
                         <Avatar className="h-10 w-10">
                           <AvatarImage src={teacher.profilePhotoUrl || ""} />
                           <AvatarFallback>
-                            {getInitials(teacher.givenName, teacher.surname)}
+                            {getInitials(teacher.firstName, teacher.lastName)}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1">
                           <p className="font-medium">
-                            {teacher.givenName} {teacher.surname}
+                            {teacher.firstName} {teacher.lastName}
                           </p>
                           <p className="text-muted-foreground text-sm">
                             {teacher.departments[0]?.name || "-"}
@@ -671,14 +671,14 @@ export default function TeacherPerformanceContent({
                                 />
                                 <AvatarFallback className="text-xs">
                                   {getInitials(
-                                    teacher.givenName,
-                                    teacher.surname
+                                    teacher.firstName,
+                                    teacher.lastName
                                   )}
                                 </AvatarFallback>
                               </Avatar>
                               <div>
                                 <p className="font-medium">
-                                  {teacher.givenName} {teacher.surname}
+                                  {teacher.firstName} {teacher.lastName}
                                 </p>
                                 <p className="text-muted-foreground text-xs">
                                   {teacher.emailAddress}
@@ -755,12 +755,12 @@ export default function TeacherPerformanceContent({
                         <Avatar className="h-10 w-10">
                           <AvatarImage src={teacher.profilePhotoUrl || ""} />
                           <AvatarFallback>
-                            {getInitials(teacher.givenName, teacher.surname)}
+                            {getInitials(teacher.firstName, teacher.lastName)}
                           </AvatarFallback>
                         </Avatar>
                         <div>
                           <CardTitle className="text-base">
-                            {teacher.givenName} {teacher.surname}
+                            {teacher.firstName} {teacher.lastName}
                           </CardTitle>
                           <CardDescription>
                             {teacher.departments[0]?.name || "-"}

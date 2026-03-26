@@ -8,6 +8,7 @@ import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 
 export const metadata = { title: "Salary Structure Details" }
 
@@ -17,6 +18,7 @@ interface Props {
 
 export default async function SalaryStructureDetailPage({ params }: Props) {
   const { lang, id } = await params
+  const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
@@ -27,7 +29,7 @@ export default async function SalaryStructureDetailPage({ params }: Props) {
     where: { id, schoolId },
     include: {
       teacher: {
-        select: { id: true, givenName: true, surname: true, employeeId: true },
+        select: { id: true, firstName: true, lastName: true, employeeId: true },
       },
       allowances: { orderBy: { createdAt: "desc" } },
       deductions: { orderBy: { createdAt: "desc" } },
@@ -37,7 +39,10 @@ export default async function SalaryStructureDetailPage({ params }: Props) {
 
   if (!structure) notFound()
 
-  const teacherName = [structure.teacher?.givenName, structure.teacher?.surname]
+  const teacherName = [
+    structure.teacher?.firstName,
+    structure.teacher?.lastName,
+  ]
     .filter(Boolean)
     .join(" ")
 

@@ -6,20 +6,13 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import * as XLSX from "xlsx"
 
-import type { ActionResponse } from "@/lib/action-response"
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import {
   importGuardians,
   importStaff,
   importStudents,
   importTeachers,
 } from "@/components/file/import/csv-import"
-
-interface BulkImportResult {
-  imported: number
-  failed: number
-  errors: Array<{ row: number; error: string; details?: string }>
-  warnings?: Array<{ row: number; warning: string }>
-}
 
 // ---------- Smart Header Maps ----------
 
@@ -173,8 +166,8 @@ const TEACHER_HEADER_MAP: Record<string, string[]> = {
 }
 
 const STAFF_HEADER_MAP: Record<string, string[]> = {
-  givenName: ["first name", "firstname", "given name", "الاسم الأول"],
-  surname: ["last name", "lastname", "family name", "اسم العائلة"],
+  firstName: ["first name", "firstname", "given name", "الاسم الأول"],
+  lastName: ["last name", "lastname", "family name", "اسم العائلة"],
   emailAddress: [
     "email",
     "email address",
@@ -205,8 +198,8 @@ const STAFF_HEADER_MAP: Record<string, string[]> = {
 }
 
 const GUARDIAN_HEADER_MAP: Record<string, string[]> = {
-  givenName: ["first name", "firstname", "given name", "الاسم الأول"],
-  surname: ["last name", "lastname", "family name", "اسم العائلة"],
+  firstName: ["first name", "firstname", "given name", "الاسم الأول"],
+  lastName: ["last name", "lastname", "family name", "اسم العائلة"],
   emailAddress: [
     "email",
     "email address",
@@ -251,7 +244,7 @@ const FIRST_NAME_ALIASES = [
 const LAST_NAME_ALIASES = [
   "last name",
   "lastname",
-  "surname",
+  "lastName",
   "family name",
   "familyname",
   "lname",
@@ -563,121 +556,141 @@ function htmlTableToCSV(html: string): string {
     .join("\n")
 }
 
-// ---------- Smart Import Pipeline ----------
+// ---------- Two-Phase Import (Onboarding Pattern) ----------
+
+type ImportType = "students" | "teachers" | "staff" | "guardians"
+
+const VALID_TYPES: ImportType[] = ["students", "teachers", "staff", "guardians"]
+
+interface ParseResult {
+  totalRows: number
+  validRows: number
+  invalidRows: Array<{ row: number; error: string }>
+  csvContent: string
+}
+
+interface SmartImportResult {
+  imported: number
+  failed: number
+  skipped: number
+  errors: Array<{ row: number; error: string; details?: string }>
+}
+
+function getHeaderMap(type: ImportType): Record<string, string[]> {
+  switch (type) {
+    case "students":
+      return STUDENT_HEADER_MAP
+    case "teachers":
+      return TEACHER_HEADER_MAP
+    case "staff":
+      return STAFF_HEADER_MAP
+    case "guardians":
+      return GUARDIAN_HEADER_MAP
+  }
+}
 
 /**
- * Process file through the smart import pipeline:
- * 1. Convert any format to CSV
- * 2. Smart remap headers (EN/AR aliases)
- * 3. Normalize gender values
- * 4. Import with auto-generated IDs for missing fields
+ * Phase 1: Fast parse + validate (no DB writes).
+ * Returns row counts and pre-processed CSV for Phase 2.
  */
-async function smartFileToCSV(
-  file: File,
-  headerMap: Record<string, string[]>
-): Promise<string> {
-  let csv = await fileToCSV(file)
-  csv = csv.replace(/^\ufeff/, "") // Remove BOM
-  csv = remapCSVHeaders(csv, headerMap)
-  csv = normalizeGenderValues(csv)
-  return csv
-}
-
-// ---------- Export Actions ----------
-
-export async function bulkImportStudents(
+export async function bulkParseAndValidate(
   formData: FormData
-): Promise<ActionResponse<BulkImportResult>> {
-  try {
-    const session = await auth()
-    const schoolId = session?.user?.schoolId
-    if (!schoolId) return { success: false, error: "Missing school context" }
+): Promise<ParseResult> {
+  const session = await auth()
+  if (!session?.user?.schoolId) {
+    throw new Error("Not authenticated or missing school context")
+  }
 
-    const file = formData.get("file") as File | null
-    if (!file) return { success: false, error: "No file provided" }
+  const file = formData.get("file") as File | null
+  const type = formData.get("type") as string
 
-    const csvContent = await smartFileToCSV(file, STUDENT_HEADER_MAP)
-    const result = await importStudents(csvContent, schoolId)
+  if (!file) throw new Error("No file provided")
+  if (!type || !VALID_TYPES.includes(type as ImportType)) {
+    throw new Error("Invalid import type")
+  }
 
-    revalidatePath("/students")
-    return { success: result.success, data: result }
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Import failed",
+  let csvContent = await fileToCSV(file)
+  csvContent = csvContent.replace(/^\ufeff/, "")
+  csvContent = remapCSVHeaders(csvContent, getHeaderMap(type as ImportType))
+  csvContent = normalizeGenderValues(csvContent)
+
+  const lines = csvContent.split(/\r?\n/).filter((l) => l.trim())
+  const totalRows = Math.max(0, lines.length - 1)
+  const invalidRows: Array<{ row: number; error: string }> = []
+
+  if (totalRows > 0) {
+    const headers = parseCSVLine(lines[0])
+    const nameIdx = headers.indexOf("name")
+    const firstNameIdx = headers.indexOf("firstName")
+
+    for (let i = 1; i < lines.length; i++) {
+      if (!lines[i].trim()) continue
+      const values = parseCSVLine(lines[i])
+      const name = values[nameIdx]?.trim()
+      const firstName = values[firstNameIdx]?.trim()
+
+      if (!name && !firstName) {
+        invalidRows.push({ row: i + 1, error: "Missing name" })
+      }
     }
+  }
+
+  return {
+    totalRows,
+    validRows: totalRows - invalidRows.length,
+    invalidRows,
+    csvContent,
   }
 }
 
-export async function bulkImportTeachers(
+/**
+ * Phase 2: Actual DB import.
+ * Accepts pre-processed csvContent from bulkParseAndValidate.
+ */
+export async function bulkSmartImport(
   formData: FormData
-): Promise<ActionResponse<BulkImportResult>> {
-  try {
-    const session = await auth()
-    const schoolId = session?.user?.schoolId
-    if (!schoolId) return { success: false, error: "Missing school context" }
+): Promise<SmartImportResult> {
+  const session = await auth()
+  const schoolId = session?.user?.schoolId
+  if (!schoolId) throw new Error("Not authenticated or missing school context")
 
-    const file = formData.get("file") as File | null
-    if (!file) return { success: false, error: "No file provided" }
-
-    const csvContent = await smartFileToCSV(file, TEACHER_HEADER_MAP)
-    const result = await importTeachers(csvContent, schoolId)
-
-    revalidatePath("/teachers")
-    return { success: result.success, data: result }
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Import failed",
-    }
+  const type = formData.get("type") as string
+  if (!type || !VALID_TYPES.includes(type as ImportType)) {
+    throw new Error("Invalid import type")
   }
-}
 
-export async function bulkImportStaff(
-  formData: FormData
-): Promise<ActionResponse<BulkImportResult>> {
-  try {
-    const session = await auth()
-    const schoolId = session?.user?.schoolId
-    if (!schoolId) return { success: false, error: "Missing school context" }
-
+  let csvContent = formData.get("csvContent") as string | null
+  if (!csvContent) {
     const file = formData.get("file") as File | null
-    if (!file) return { success: false, error: "No file provided" }
-
-    const csvContent = await smartFileToCSV(file, STAFF_HEADER_MAP)
-    const result = await importStaff(csvContent, schoolId)
-
-    revalidatePath("/staff")
-    return { success: result.success, data: result }
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Import failed",
-    }
+    if (!file) throw new Error("No file or csvContent provided")
+    csvContent = await fileToCSV(file)
+    csvContent = csvContent.replace(/^\ufeff/, "")
+    csvContent = remapCSVHeaders(csvContent, getHeaderMap(type as ImportType))
+    csvContent = normalizeGenderValues(csvContent)
   }
-}
 
-export async function bulkImportGuardians(
-  formData: FormData
-): Promise<ActionResponse<BulkImportResult>> {
-  try {
-    const session = await auth()
-    const schoolId = session?.user?.schoolId
-    if (!schoolId) return { success: false, error: "Missing school context" }
+  const result =
+    type === "students"
+      ? await importStudents(csvContent, schoolId)
+      : type === "teachers"
+        ? await importTeachers(csvContent, schoolId)
+        : type === "staff"
+          ? await importStaff(csvContent, schoolId)
+          : await importGuardians(csvContent, schoolId)
 
-    const file = formData.get("file") as File | null
-    if (!file) return { success: false, error: "No file provided" }
+  const pathMap: Record<string, string> = {
+    students: "/students",
+    teachers: "/teachers",
+    staff: "/staff",
+    guardians: "/parents",
+  }
+  revalidatePath(pathMap[type] || "/school/bulk")
 
-    const csvContent = await smartFileToCSV(file, GUARDIAN_HEADER_MAP)
-    const result = await importGuardians(csvContent, schoolId)
-
-    revalidatePath("/parents")
-    return { success: result.success, data: result }
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Import failed",
-    }
+  return {
+    imported: result.imported,
+    failed: result.failed,
+    skipped: result.skipped,
+    errors: result.errors,
   }
 }
 

@@ -12,6 +12,7 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import { renderToBuffer } from "@react-pdf/renderer"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { ReportCardTemplate } from "@/components/file/generate/report-card"
 import type {
@@ -56,7 +57,7 @@ export async function generateReportCards(input: {
     const session = await auth()
     const schoolId = session?.user?.schoolId
     if (!schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Fetch term info
@@ -65,7 +66,7 @@ export async function generateReportCards(input: {
       include: { schoolYear: true },
     })
     if (!term) {
-      return { success: false, error: "Term not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Get exams for this term (Exam has no termId — filter through Class.termId)
@@ -81,7 +82,7 @@ export async function generateReportCards(input: {
     })
 
     if (exams.length === 0) {
-      return { success: false, error: "No exams found for this term" }
+      return actionError(ACTION_ERRORS.UNKNOWN)
     }
 
     const examIds = exams.map((e) => e.id)
@@ -115,8 +116,8 @@ export async function generateReportCards(input: {
         student: {
           select: {
             id: true,
-            givenName: true,
-            surname: true,
+            firstName: true,
+            lastName: true,
             studentId: true,
           },
         },
@@ -124,7 +125,7 @@ export async function generateReportCards(input: {
     })
 
     if (results.length === 0) {
-      return { success: false, error: "No exam results found for this term" }
+      return actionError(ACTION_ERRORS.UNKNOWN)
     }
 
     // Group results by student
@@ -284,7 +285,7 @@ export async function generateReportCards(input: {
         schoolEmail: school?.email ?? undefined,
         issueDate: new Date(),
         locale,
-        studentName: `${student.givenName} ${student.surname}`,
+        studentName: `${student.firstName} ${student.lastName}`,
         studentId: student.studentId ?? student.id,
         studentPhoto: undefined,
         className,
@@ -307,7 +308,7 @@ export async function generateReportCards(input: {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const buffer = await renderToBuffer(doc as any)
 
-        const studentName = `${student.givenName}-${student.surname}`.replace(
+        const studentName = `${student.firstName}-${student.lastName}`.replace(
           /[^a-zA-Z0-9-_]/g,
           "-"
         )
@@ -361,7 +362,7 @@ export async function publishReportCards(input: {
   try {
     const session = await auth()
     const schoolId = session?.user?.schoolId
-    if (!schoolId) return { success: false, error: "Unauthorized" }
+    if (!schoolId) return actionError(ACTION_ERRORS.UNAUTHORIZED)
 
     await db.reportCard.updateMany({
       where: {
@@ -378,7 +379,7 @@ export async function publishReportCards(input: {
     return { success: true }
   } catch (error) {
     console.error("Publish error:", error)
-    return { success: false, error: "Failed to publish report cards" }
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }
 
@@ -393,7 +394,7 @@ export async function updateReportCardComments(input: {
   try {
     const session = await auth()
     const schoolId = session?.user?.schoolId
-    if (!schoolId) return { success: false, error: "Unauthorized" }
+    if (!schoolId) return actionError(ACTION_ERRORS.UNAUTHORIZED)
 
     await db.reportCard.update({
       where: { id: input.reportCardId, schoolId },
@@ -411,7 +412,7 @@ export async function updateReportCardComments(input: {
     return { success: true }
   } catch (error) {
     console.error("Update comments error:", error)
-    return { success: false, error: "Failed to update comments" }
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
   }
 }
 
@@ -438,7 +439,7 @@ export async function getReportCards(input: {
   try {
     const session = await auth()
     const schoolId = session?.user?.schoolId
-    if (!schoolId) return { success: false, error: "Unauthorized" }
+    if (!schoolId) return actionError(ACTION_ERRORS.UNAUTHORIZED)
 
     const reportCards = await db.reportCard.findMany({
       where: {
@@ -448,19 +449,19 @@ export async function getReportCards(input: {
       include: {
         student: {
           select: {
-            givenName: true,
-            surname: true,
+            firstName: true,
+            lastName: true,
             studentId: true,
           },
         },
         grades: { select: { id: true } },
       },
-      orderBy: { student: { givenName: "asc" } },
+      orderBy: { student: { firstName: "asc" } },
     })
 
     const data = reportCards.map((rc) => ({
       id: rc.id,
-      studentName: `${rc.student.givenName} ${rc.student.surname}`,
+      studentName: `${rc.student.firstName} ${rc.student.lastName}`,
       studentId: rc.student.studentId ?? "",
       overallGrade: rc.overallGrade,
       overallGPA: rc.overallGPA ? Number(rc.overallGPA) : null,
@@ -472,6 +473,6 @@ export async function getReportCards(input: {
     return { success: true, data }
   } catch (error) {
     console.error("Get report cards error:", error)
-    return { success: false, error: "Failed to fetch report cards" }
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }

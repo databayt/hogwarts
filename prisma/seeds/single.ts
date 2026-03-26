@@ -133,16 +133,16 @@ async function resolveTeachers(
       id: true,
       userId: true,
       emailAddress: true,
-      givenName: true,
-      surname: true,
+      firstName: true,
+      lastName: true,
     },
   })
   return teachers.map((t) => ({
     id: t.id,
     userId: t.userId ?? "",
     emailAddress: t.emailAddress ?? "",
-    givenName: t.givenName,
-    surname: t.surname,
+    firstName: t.firstName,
+    lastName: t.lastName,
   }))
 }
 
@@ -156,8 +156,8 @@ async function resolveStudents(
       id: true,
       userId: true,
       grNumber: true,
-      givenName: true,
-      surname: true,
+      firstName: true,
+      lastName: true,
       studentYearLevels: {
         select: { levelId: true },
         take: 1,
@@ -169,8 +169,8 @@ async function resolveStudents(
     id: s.id,
     userId: s.userId ?? "",
     grNumber: s.grNumber ?? "",
-    givenName: s.givenName,
-    surname: s.surname,
+    firstName: s.firstName,
+    lastName: s.lastName,
     yearLevelId: s.studentYearLevels[0]?.levelId ?? undefined,
   }))
 }

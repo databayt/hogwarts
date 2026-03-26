@@ -256,8 +256,8 @@ export async function createStudent(
   const row = await db.student.create({
     data: {
       schoolId,
-      givenName: parsed.givenName,
-      surname: parsed.surname,
+      firstName: parsed.firstName,
+      lastName: parsed.lastName,
       gender: parsed.gender,
     },
   })

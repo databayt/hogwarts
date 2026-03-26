@@ -182,8 +182,8 @@ export async function validateAccessCode(
       student: {
         select: {
           id: true,
-          givenName: true,
-          surname: true,
+          firstName: true,
+          lastName: true,
         },
       },
     },
@@ -205,7 +205,7 @@ export async function validateAccessCode(
     valid: true,
     studentId: accessCode.studentId,
     studentName:
-      `${accessCode.student.givenName} ${accessCode.student.surname}`.trim(),
+      `${accessCode.student.firstName} ${accessCode.student.lastName}`.trim(),
     codeId: accessCode.id,
   }
 }

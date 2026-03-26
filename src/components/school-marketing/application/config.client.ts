@@ -49,37 +49,48 @@ export const STEP_GROUP_LABELS = {
   3: { en: "Family & Education", ar: "العائلة والتعليم" },
 }
 
-// Step metadata
+// Step metadata (bilingual)
 export const STEP_METADATA: Record<
   ApplyStep,
   {
-    label: string
-    description: string
+    label: (isRTL: boolean) => string
+    description: (isRTL: boolean) => string
   }
 > = {
   attachments: {
-    label: "المرفقات",
-    description: "الصورة الشخصية والمستندات",
+    label: (isRTL) => (isRTL ? "المرفقات" : "Attachments"),
+    description: (isRTL) =>
+      isRTL ? "الصورة الشخصية والمستندات" : "Upload photo and documents",
   },
   personal: {
-    label: "المعلومات الشخصية",
-    description: "المعلومات الشخصية للطالب",
+    label: (isRTL) => (isRTL ? "المعلومات الشخصية" : "Personal Information"),
+    description: (isRTL) =>
+      isRTL ? "المعلومات الشخصية للطالب" : "Student's personal details",
   },
   contact: {
-    label: "معلومات الاتصال",
-    description: "البريد الإلكتروني ورقم الهاتف",
+    label: (isRTL) => (isRTL ? "معلومات الاتصال" : "Contact Information"),
+    description: (isRTL) =>
+      isRTL ? "البريد الإلكتروني ورقم الهاتف" : "Email and phone number",
   },
   location: {
-    label: "العنوان",
-    description: "عنوان الإقامة",
+    label: (isRTL) => (isRTL ? "العنوان" : "Address"),
+    description: (isRTL) =>
+      isRTL ? "عنوان الإقامة" : "Residential address",
   },
   guardian: {
-    label: "معلومات ولي الأمر",
-    description: "معلومات الوالدين أو ولي الأمر",
+    label: (isRTL) => (isRTL ? "معلومات ولي الأمر" : "Guardian Information"),
+    description: (isRTL) =>
+      isRTL
+        ? "معلومات الوالدين أو ولي الأمر"
+        : "Parent or guardian details",
   },
   academic: {
-    label: "المعلومات الأكاديمية",
-    description: "التعليم السابق والصف المتقدم إليه",
+    label: (isRTL) =>
+      isRTL ? "المعلومات الأكاديمية" : "Academic Information",
+    description: (isRTL) =>
+      isRTL
+        ? "التعليم السابق والصف المتقدم إليه"
+        : "Previous education and applying class",
   },
 }
 

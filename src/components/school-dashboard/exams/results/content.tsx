@@ -92,11 +92,11 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
     if (role === "GUARDIAN" && scope.studentIds.length > 1) {
       const students = await db.student.findMany({
         where: { id: { in: scope.studentIds }, schoolId },
-        select: { id: true, givenName: true, surname: true },
+        select: { id: true, firstName: true, lastName: true },
       })
       children = students.map((s) => ({
         id: s.id,
-        name: `${s.givenName || ""} ${s.surname || ""}`.trim(),
+        name: `${s.firstName || ""} ${s.lastName || ""}`.trim(),
       }))
     }
 
@@ -106,7 +106,7 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
         studentId: { in: scope.studentIds },
       },
       include: {
-        student: { select: { id: true, givenName: true, surname: true } },
+        student: { select: { id: true, firstName: true, lastName: true } },
         exam: {
           select: {
             title: true,
@@ -145,7 +145,7 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
                 <p className="font-medium">{result.exam.title}</p>
                 <p className="text-muted-foreground text-sm">
                   {role === "GUARDIAN" &&
-                    `${result.student.givenName} ${result.student.surname} - `}
+                    `${result.student.firstName} ${result.student.lastName} - `}
                   {name} - {format(result.exam.examDate, "MMM d, yyyy")}
                 </p>
               </div>

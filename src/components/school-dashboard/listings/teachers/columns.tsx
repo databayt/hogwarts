@@ -22,8 +22,8 @@ import { DataTableColumnHeader } from "@/components/table/data-table-column-head
 export type TeacherRow = {
   id: string
   name: string
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
   emailAddress: string
   phone: string | null
   department: string | null

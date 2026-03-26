@@ -10,8 +10,8 @@ import { z } from "zod"
 describe("Teacher Validation Schemas", () => {
   // Define test schemas based on common teacher validation patterns
   const teacherBaseSchema = z.object({
-    givenName: z.string().min(1, "Given name is required"),
-    surname: z.string().min(1, "Surname is required"),
+    firstName: z.string().min(1, "First name is required"),
+    lastName: z.string().min(1, "Last name is required"),
     email: z.string().email("Invalid email format"),
     phone: z.string().optional(),
     qualification: z.string().optional(),
@@ -28,8 +28,8 @@ describe("Teacher Validation Schemas", () => {
   describe("teacherCreateSchema", () => {
     it("validates complete teacher data", () => {
       const validData = {
-        givenName: "Jane",
-        surname: "Smith",
+        firstName: "Jane",
+        lastName: "Smith",
         email: "jane.smith@school.edu",
         phone: "+1234567890",
         qualification: "PhD in Mathematics",
@@ -52,14 +52,14 @@ describe("Teacher Validation Schemas", () => {
 
     it("validates email format", () => {
       const invalidEmail = {
-        givenName: "Jane",
-        surname: "Smith",
+        firstName: "Jane",
+        lastName: "Smith",
         email: "not-an-email",
       }
 
       const validEmail = {
-        givenName: "Jane",
-        surname: "Smith",
+        firstName: "Jane",
+        lastName: "Smith",
         email: "valid@email.com",
       }
 
@@ -69,15 +69,15 @@ describe("Teacher Validation Schemas", () => {
 
     it("validates experience is non-negative", () => {
       const negativeExp = {
-        givenName: "Jane",
-        surname: "Smith",
+        firstName: "Jane",
+        lastName: "Smith",
         email: "jane@school.edu",
         experience: -5,
       }
 
       const validExp = {
-        givenName: "Jane",
-        surname: "Smith",
+        firstName: "Jane",
+        lastName: "Smith",
         email: "jane@school.edu",
         experience: 0,
       }
@@ -90,7 +90,7 @@ describe("Teacher Validation Schemas", () => {
   describe("teacherUpdateSchema", () => {
     it("requires id for updates", () => {
       const withoutId = {
-        givenName: "Updated Name",
+        firstName: "Updated Name",
       }
 
       const result = teacherUpdateSchema.safeParse(withoutId)
@@ -110,7 +110,7 @@ describe("Teacher Validation Schemas", () => {
     it("rejects empty id", () => {
       const emptyId = {
         id: "",
-        givenName: "Updated",
+        firstName: "Updated",
       }
 
       const result = teacherUpdateSchema.safeParse(emptyId)

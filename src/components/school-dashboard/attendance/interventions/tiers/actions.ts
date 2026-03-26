@@ -87,8 +87,8 @@ export async function getStudentsByTier(): Promise<ActionResult> {
       },
       select: {
         id: true,
-        givenName: true,
-        surname: true,
+        firstName: true,
+        lastName: true,
         grNumber: true,
         profilePhotoUrl: true,
         studentYearLevels: {
@@ -226,7 +226,7 @@ export async function createTieredIntervention(
       },
       include: {
         student: {
-          select: { givenName: true, surname: true },
+          select: { firstName: true, lastName: true },
         },
       },
     })
@@ -237,7 +237,7 @@ export async function createTieredIntervention(
       success: true,
       data: {
         id: intervention.id,
-        studentName: `${intervention.student.givenName} ${intervention.student.surname}`,
+        studentName: `${intervention.student.firstName} ${intervention.student.lastName}`,
         tier,
         action,
       },
@@ -341,7 +341,7 @@ export async function getStudentInterventionHistory(
       orderBy: { createdAt: "desc" },
       include: {
         student: {
-          select: { givenName: true, surname: true },
+          select: { firstName: true, lastName: true },
         },
       },
     })
@@ -394,8 +394,8 @@ export async function getMyPendingInterventions(): Promise<ActionResult> {
         student: {
           select: {
             id: true,
-            givenName: true,
-            surname: true,
+            firstName: true,
+            lastName: true,
             profilePhotoUrl: true,
           },
         },
@@ -408,7 +408,7 @@ export async function getMyPendingInterventions(): Promise<ActionResult> {
         id: i.id,
         student: {
           id: i.student.id,
-          name: `${i.student.givenName} ${i.student.surname}`,
+          name: `${i.student.firstName} ${i.student.lastName}`,
           photoUrl: i.student.profilePhotoUrl,
         },
         type: i.type,

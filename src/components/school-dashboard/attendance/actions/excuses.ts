@@ -115,13 +115,13 @@ export async function submitExcuse(input: {
           },
           include: {
             teacher: {
-              select: { userId: true, givenName: true, surname: true },
+              select: { userId: true, firstName: true, lastName: true },
             },
           },
         })
       : []
 
-    const studentName = `${attendance.student.givenName} ${attendance.student.surname}`
+    const studentName = `${attendance.student.firstName} ${attendance.student.lastName}`
     const dateStr = attendance.date.toLocaleDateString("en-US", {
       weekday: "long",
       year: "numeric",
@@ -212,7 +212,7 @@ export async function reviewExcuse(input: {
                     guardian: {
                       select: {
                         userId: true,
-                        givenName: true,
+                        firstName: true,
                         emailAddress: true,
                       },
                     },
@@ -256,7 +256,7 @@ export async function reviewExcuse(input: {
     }
 
     // Notify the guardian who submitted the excuse
-    const studentName = `${excuse.attendance.student.givenName} ${excuse.attendance.student.surname}`
+    const studentName = `${excuse.attendance.student.firstName} ${excuse.attendance.student.lastName}`
     const className = excuse.attendance.class?.name ?? ""
     const statusTextAr =
       parsed.status === "APPROVED" ? "تمت الموافقة على" : "تم رفض"
@@ -494,7 +494,7 @@ export async function getPendingExcuses(input?: {
         attendance: {
           include: {
             student: {
-              select: { id: true, givenName: true, surname: true },
+              select: { id: true, firstName: true, lastName: true },
             },
             class: {
               select: { name: true },
@@ -523,7 +523,7 @@ export async function getPendingExcuses(input?: {
           id: e.id,
           attendanceId: e.attendanceId,
           studentId: e.attendance.studentId,
-          studentName: `${e.attendance.student.givenName} ${e.attendance.student.surname}`,
+          studentName: `${e.attendance.student.firstName} ${e.attendance.student.lastName}`,
           className: e.attendance.class?.name ?? "",
           date: e.attendance.date.toISOString(),
           reason: e.reason,
@@ -594,7 +594,7 @@ export async function getExcuseById(excuseId: string): Promise<
         attendance: {
           include: {
             student: {
-              select: { id: true, givenName: true, surname: true },
+              select: { id: true, firstName: true, lastName: true },
             },
             class: {
               select: { name: true },
@@ -627,7 +627,7 @@ export async function getExcuseById(excuseId: string): Promise<
           id: excuse.id,
           attendanceId: excuse.attendanceId,
           studentId: excuse.attendance.studentId,
-          studentName: `${excuse.attendance.student.givenName} ${excuse.attendance.student.surname}`,
+          studentName: `${excuse.attendance.student.firstName} ${excuse.attendance.student.lastName}`,
           className: excuse.attendance.class?.name ?? "",
           date: excuse.attendance.date.toISOString(),
           attendanceStatus: excuse.attendance.status,
@@ -742,7 +742,7 @@ export async function getUnexcusedAbsences(studentId?: string): Promise<
       },
       include: {
         student: {
-          select: { id: true, givenName: true, surname: true },
+          select: { id: true, firstName: true, lastName: true },
         },
         class: {
           select: { id: true, name: true },
@@ -758,7 +758,7 @@ export async function getUnexcusedAbsences(studentId?: string): Promise<
         absences: absences.map((a) => ({
           id: a.id,
           studentId: a.studentId,
-          studentName: `${a.student.givenName} ${a.student.surname}`,
+          studentName: `${a.student.firstName} ${a.student.lastName}`,
           classId: a.classId ?? "",
           className: a.class?.name ?? "",
           date: a.date.toISOString(),

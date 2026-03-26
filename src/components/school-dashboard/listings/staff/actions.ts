@@ -274,8 +274,8 @@ export async function getStaffForExport(): Promise<ActionResponse<any[]>> {
       select: {
         id: true,
         employeeId: true,
-        givenName: true,
-        surname: true,
+        firstName: true,
+        lastName: true,
         emailAddress: true,
         position: true,
         employmentStatus: true,
@@ -288,13 +288,13 @@ export async function getStaffForExport(): Promise<ActionResponse<any[]>> {
           },
         },
       },
-      orderBy: [{ surname: "asc" }, { givenName: "asc" }],
+      orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
     })
 
     const exportData = staff.map((s) => ({
       "Employee ID": s.employeeId || "",
-      "First Name": s.givenName,
-      "Last Name": s.surname,
+      "First Name": s.firstName,
+      "Last Name": s.lastName,
       Email: s.emailAddress,
       Position: s.position || "",
       Department: s.department?.departmentName || "",

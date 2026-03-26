@@ -28,9 +28,9 @@ export function PersonalTab({ student }: PersonalTabProps) {
           <CardTitle className="text-lg">Personal Information</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-3">
-          <InfoRow label="First Name" value={student.givenName} />
+          <InfoRow label="First Name" value={student.firstName} />
           <InfoRow label="Middle Name" value={student.middleName} />
-          <InfoRow label="Last Name" value={student.surname} />
+          <InfoRow label="Last Name" value={student.lastName} />
           <InfoRow
             label="Date of Birth"
             value={

@@ -5,6 +5,7 @@
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -32,7 +33,7 @@ async function requireSchoolAdmin(): Promise<
   }
   const { schoolId } = await getTenantContext()
   if (!schoolId) {
-    return { ok: false, error: "Missing school context" }
+    return { ok: false, ...actionError(ACTION_ERRORS.MISSING_SCHOOL) }
   }
   return { ok: true, session, schoolId }
 }
@@ -203,7 +204,7 @@ export async function updateSubjectSelection(
     })
 
     if (!selection) {
-      return { success: false, error: "Selection not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     await db.schoolSubjectSelection.update({
@@ -243,7 +244,7 @@ export async function toggleContentOverride(input: {
     const userId = session?.user?.id
 
     if (!userId) {
-      return { success: false, error: "Missing user identity" }
+      return actionError(ACTION_ERRORS.UNKNOWN)
     }
 
     const validated = contentOverrideSchema.parse(input)

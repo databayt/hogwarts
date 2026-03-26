@@ -20,7 +20,7 @@ import type { NewcomerFormData } from "../validation"
 export function WelcomeStep({ onComplete }: { onComplete?: () => void }) {
   const form = useFormContext<NewcomerFormData>()
   const role = form.watch("role")
-  const givenName = form.watch("givenName")
+  const firstName = form.watch("firstName")
 
   const roleLabel =
     NEWCOMER_ROLES.find((r) => r.value === role)?.label || "Member"
@@ -28,7 +28,7 @@ export function WelcomeStep({ onComplete }: { onComplete?: () => void }) {
   return (
     <FormStepContainer maxWidth="md">
       <FormSuccess
-        title={`Welcome, ${givenName}!`}
+        title={`Welcome, ${firstName}!`}
         description={`Your ${roleLabel.toLowerCase()} application has been submitted successfully. A school administrator will review your application shortly.`}
         showConfetti
         confettiColors={["#22c55e", "#3b82f6", "#8b5cf6"]}

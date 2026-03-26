@@ -75,8 +75,8 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface Student {
   id: string
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
   studentId: string
   profileImageUrl?: string
   class: string
@@ -211,7 +211,7 @@ export function AttendanceTracking({
 
     const query = searchQuery.toLowerCase()
     return students.filter((student) => {
-      const fullName = `${student.givenName} ${student.surname}`.toLowerCase()
+      const fullName = `${student.firstName} ${student.lastName}`.toLowerCase()
       return (
         fullName.includes(query) ||
         student.studentId.toLowerCase().includes(query) ||
@@ -385,7 +385,7 @@ export function AttendanceTracking({
       const record = attendanceData.get(student.id)
       return [
         student.studentId,
-        `${student.givenName} ${student.surname}`,
+        `${student.firstName} ${student.lastName}`,
         record?.status || "ABSENT",
         record?.checkInTime || "",
         record?.note || "",
@@ -608,13 +608,13 @@ export function AttendanceTracking({
                             <Avatar className="h-8 w-8">
                               <AvatarImage src={student.profileImageUrl} />
                               <AvatarFallback>
-                                {student.givenName[0]}
-                                {student.surname[0]}
+                                {student.firstName[0]}
+                                {student.lastName[0]}
                               </AvatarFallback>
                             </Avatar>
                             <div>
                               <p className="font-medium">
-                                {student.givenName} {student.surname}
+                                {student.firstName} {student.lastName}
                               </p>
                               <p className="text-muted-foreground text-xs">
                                 {student.class}

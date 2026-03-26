@@ -548,7 +548,7 @@ function getMappingConfig(dataType: string): MappingConfig[] {
         },
         {
           sourceColumn: "Last Name",
-          alternateNames: ["lastname", "lname", "surname", "family name"],
+          alternateNames: ["lastname", "lname", "lastName", "family name"],
           targetField: "lastName",
           required: true,
           type: "string",
@@ -618,7 +618,7 @@ function getMappingConfig(dataType: string): MappingConfig[] {
         },
         {
           sourceColumn: "Last Name",
-          alternateNames: ["lastname", "lname", "surname"],
+          alternateNames: ["lastname", "lname", "lastName"],
           targetField: "lastName",
           required: true,
           type: "string",

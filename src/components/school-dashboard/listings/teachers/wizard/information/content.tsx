@@ -5,6 +5,8 @@
 import React, { useEffect, useRef, useState } from "react"
 import { useParams } from "next/navigation"
 
+import type { NameFormat } from "@/lib/name-utils"
+import { composeFullName } from "@/lib/name-utils"
 import { FormHeading, FormLayout } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
@@ -19,14 +21,21 @@ export default function InformationContent() {
   const { data, isLoading } = useTeacherWizard()
   const [isValid, setIsValid] = useState(false)
 
+  const nameFormat = (data?.nameFormat as NameFormat) ?? "full"
+
   // Set initial validity from loaded data
   useEffect(() => {
     if (data) {
-      setIsValid(
-        data.givenName.trim().length >= 1 && data.surname.trim().length >= 1
-      )
+      if (nameFormat === "full") {
+        const full = composeFullName(data.firstName, null, data.lastName)
+        setIsValid(full.trim().length >= 1)
+      } else {
+        setIsValid(
+          data.firstName.trim().length >= 1 && data.lastName.trim().length >= 1
+        )
+      }
     }
-  }, [data])
+  }, [data, nameFormat])
 
   return (
     <WizardStep
@@ -44,11 +53,12 @@ export default function InformationContent() {
         <InformationForm
           ref={formRef}
           teacherId={teacherId}
+          nameFormat={nameFormat}
           initialData={
             data
               ? {
-                  givenName: data.givenName,
-                  surname: data.surname,
+                  firstName: data.firstName,
+                  lastName: data.lastName,
                   gender: data.gender as "male" | "female" | undefined,
                   birthDate: data.birthDate ?? undefined,
                   nationality: data.nationality ?? undefined,

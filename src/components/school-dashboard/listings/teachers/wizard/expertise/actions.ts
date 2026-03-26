@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { cookies } from "next/headers"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
@@ -29,7 +30,7 @@ export async function getTeacherExpertise(
 ): Promise<ActionResponse<ExpertiseFormData>> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const expertise = await db.teacherSubjectExpertise.findMany({
       where: { teacherId, schoolId },
@@ -63,7 +64,7 @@ export async function updateTeacherExpertise(
 ): Promise<ActionResponse> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const parsed = expertiseSchema.parse(input)
 
@@ -114,7 +115,7 @@ export async function getGradesAndSubjects(): Promise<
 > {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const grades = await db.academicGrade.findMany({
       where: { schoolId },

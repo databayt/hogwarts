@@ -13,6 +13,7 @@ model School {
   website     String?
   timezone    String   @default("Africa/Khartoum")
   preferredLanguage String @default("ar") // Admin's chosen content language ("ar" or "en")
+  nameFormat        String @default("full") // "full" (single full name field) | "split" (first+last fields)
 
   // School classification
   schoolType  String? // private, public, international, technical, special

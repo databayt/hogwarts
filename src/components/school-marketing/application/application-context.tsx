@@ -13,6 +13,7 @@ import React, {
   useState,
 } from "react"
 
+import type { NameFormat } from "@/lib/name-utils"
 import {
   resumeApplicationSession,
   saveApplicationSession,
@@ -41,6 +42,7 @@ interface ApplySessionContextType {
   subdomain: string | null
   campaign: PublicCampaign | null
   setCampaign: (campaign: PublicCampaign | null) => void
+  nameFormat: NameFormat
 
   // Session state
   session: ApplySessionState
@@ -91,6 +93,7 @@ interface ApplySessionProviderProps {
   initialSubdomain?: string
   initialCampaignId?: string
   initialSessionToken?: string
+  nameFormat?: NameFormat
 }
 
 const STORAGE_KEY = "hogwarts_apply_session"
@@ -100,6 +103,7 @@ export const ApplySessionProvider: React.FC<ApplySessionProviderProps> = ({
   initialSubdomain,
   initialCampaignId,
   initialSessionToken,
+  nameFormat: initialNameFormat = "full",
 }) => {
   const [subdomain, setSubdomain] = useState<string | null>(
     initialSubdomain || null
@@ -397,6 +401,7 @@ export const ApplySessionProvider: React.FC<ApplySessionProviderProps> = ({
       subdomain,
       campaign,
       setCampaign,
+      nameFormat: initialNameFormat,
       session,
       initSession,
       loadSession,
@@ -410,6 +415,7 @@ export const ApplySessionProvider: React.FC<ApplySessionProviderProps> = ({
     [
       subdomain,
       campaign,
+      initialNameFormat,
       session,
       initSession,
       loadSession,

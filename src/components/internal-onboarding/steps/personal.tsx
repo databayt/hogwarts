@@ -47,9 +47,9 @@ export function PersonalStep() {
   const form = useForm<PersonalSchemaType>({
     resolver: zodResolver(personalSchema),
     defaultValues: {
-      givenName: initialData?.givenName || autoFill?.firstName || "",
+      firstName: initialData?.firstName || autoFill?.firstName || "",
       middleName: initialData?.middleName || autoFill?.middleName || "",
-      surname: initialData?.surname || autoFill?.lastName || "",
+      lastName: initialData?.lastName || autoFill?.lastName || "",
       dateOfBirth: initialData?.dateOfBirth || autoFill?.dateOfBirth || "",
       gender: initialData?.gender || autoFill?.gender || "",
       nationality: initialData?.nationality || autoFill?.nationality || "",
@@ -63,7 +63,7 @@ export function PersonalStep() {
       updateStepData("personal", value as PersonalSchemaType)
 
       const isValid =
-        value.givenName && value.surname && value.dateOfBirth && value.gender
+        value.firstName && value.lastName && value.dateOfBirth && value.gender
       if (isValid) {
         enableNext()
         setCustomNavigation({
@@ -111,7 +111,7 @@ export function PersonalStep() {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <FormField
               control={form.control}
-              name="givenName"
+              name="firstName"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>First Name *</FormLabel>
@@ -137,7 +137,7 @@ export function PersonalStep() {
             />
             <FormField
               control={form.control}
-              name="surname"
+              name="lastName"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Last Name *</FormLabel>

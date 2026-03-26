@@ -4,6 +4,7 @@
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { ConfigBrandingForm } from "@/components/school-dashboard/school/configuration/config-branding-form"
 
 export const metadata = { title: "Configuration: Branding" }
@@ -14,6 +15,7 @@ interface Props {
 
 export default async function BrandingPage({ params }: Props) {
   const { lang } = await params
+  const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
 
   const [school, branding] = await Promise.all([

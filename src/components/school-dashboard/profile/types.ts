@@ -427,8 +427,8 @@ export interface ParentProfile extends BaseProfile {
       achievements?: Achievement[]
     }
     // Flattened student properties for direct access (temporary for mock data compatibility)
-    givenName?: string
-    surname?: string
+    firstName?: string
+    lastName?: string
     profilePhotoUrl?: string | null
     grade?: string
     section?: string

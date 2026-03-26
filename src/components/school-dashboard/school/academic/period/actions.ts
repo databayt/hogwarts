@@ -5,6 +5,7 @@
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -17,8 +18,6 @@ import {
   type PeriodCreateInput,
   type PeriodUpdateInput,
 } from "./validation"
-
-export type { ActionResponse }
 
 const ACADEMIC_PATH = "/school/academic"
 
@@ -45,10 +44,10 @@ export async function createPeriod(
   try {
     const { schoolId, role } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
     if (role !== "ADMIN" && role !== "DEVELOPER") {
-      return { success: false, error: "Insufficient permissions" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const parsed = periodCreateSchema.parse(input)
@@ -60,7 +59,7 @@ export async function createPeriod(
     })
 
     if (!year) {
-      return { success: false, error: "Academic year not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Check for duplicate period name in same year
@@ -111,10 +110,10 @@ export async function updatePeriod(
   try {
     const { schoolId, role } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
     if (role !== "ADMIN" && role !== "DEVELOPER") {
-      return { success: false, error: "Insufficient permissions" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const parsed = periodUpdateSchema.parse(input)
@@ -127,7 +126,7 @@ export async function updatePeriod(
     })
 
     if (!existing) {
-      return { success: false, error: "Period not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Check for duplicate name (exclude current)
@@ -181,10 +180,10 @@ export async function deletePeriod(input: {
   try {
     const { schoolId, role } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
     if (role !== "ADMIN" && role !== "DEVELOPER") {
-      return { success: false, error: "Insufficient permissions" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
@@ -196,7 +195,7 @@ export async function deletePeriod(input: {
     })
 
     if (!existing) {
-      return { success: false, error: "Period not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Check for dependent timetable entries
@@ -241,7 +240,7 @@ export async function getPeriod(input: {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
@@ -282,7 +281,7 @@ export async function getPeriods(
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const sp = getPeriodsSchema.parse(input ?? {})
@@ -353,7 +352,7 @@ export async function getPeriodOptions(): Promise<
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const periods = await db.period.findMany({

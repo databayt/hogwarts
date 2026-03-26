@@ -5,6 +5,7 @@
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getSchoolSubjectOptions } from "@/lib/school-subjects"
@@ -20,7 +21,7 @@ export async function getExamForWizard(
 > {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const exam = await db.exam.findFirst({
       where: { id: examId, schoolId },
@@ -30,7 +31,7 @@ export async function getExamForWizard(
       },
     })
 
-    if (!exam) return { success: false, error: "Exam not found" }
+    if (!exam) return actionError(ACTION_ERRORS.EXAM_NOT_FOUND)
 
     return {
       success: true,
@@ -60,12 +61,12 @@ export async function createDraftExam(): Promise<
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Find the first available class (which has a subjectId)
@@ -114,12 +115,12 @@ export async function completeExamWizard(
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const exam = await db.exam.findFirst({
@@ -128,7 +129,7 @@ export async function completeExamWizard(
     })
 
     if (!exam) {
-      return { success: false, error: "Exam not found" }
+      return actionError(ACTION_ERRORS.EXAM_NOT_FOUND)
     }
 
     if (!exam.title?.trim()) {
@@ -182,12 +183,12 @@ export async function deleteDraftExam(examId: string): Promise<ActionResponse> {
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Atomic delete — only if it's still a draft
@@ -196,7 +197,7 @@ export async function deleteDraftExam(examId: string): Promise<ActionResponse> {
     })
 
     if (count === 0) {
-      return { success: false, error: "Draft exam not found" }
+      return actionError(ACTION_ERRORS.EXAM_NOT_FOUND)
     }
 
     return { success: true }
@@ -215,7 +216,7 @@ export async function getClassOptions(): Promise<
 > {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const classes = await db.class.findMany({
       where: { schoolId },
@@ -238,7 +239,7 @@ export async function getSubjectOptions(): Promise<
 > {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const subjects = await getSchoolSubjectOptions(schoolId)
 

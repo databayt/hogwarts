@@ -212,7 +212,7 @@ export async function checkExamConflicts(
             type: "teacher",
             entityId: entry.teacherId ?? "",
             entityName: entry.teacher
-              ? `${entry.teacher.givenName} ${entry.teacher.surname}`
+              ? `${entry.teacher.firstName} ${entry.teacher.lastName}`
               : "",
             conflictingEvent: `Teaching ${entry.class?.name ?? "Unknown"} - ${entry.period.name}`,
             conflictTime: `${periodStart} - ${periodEnd}`,

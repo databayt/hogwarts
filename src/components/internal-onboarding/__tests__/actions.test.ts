@@ -61,9 +61,9 @@ vi.mock("next/cache", () => ({
 // =============================================================================
 
 const createPersonalData = (overrides = {}) => ({
-  givenName: "Ahmed",
+  firstName: "Ahmed",
   middleName: "Mohamed",
-  surname: "Hassan",
+  lastName: "Hassan",
   dateOfBirth: "2000-01-15",
   gender: "male",
   nationality: "Egyptian",
@@ -466,8 +466,8 @@ describe("submitInternalOnboarding", () => {
       expect(txMock.teacher.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           userId: "user-1",
-          givenName: "Ahmed",
-          surname: "Hassan",
+          firstName: "Ahmed",
+          lastName: "Hassan",
           gender: "male",
           emailAddress: "ahmed@example.com",
           employmentType: "FULL_TIME",
@@ -622,8 +622,8 @@ describe("submitInternalOnboarding", () => {
       expect(txMock.staffMember.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           userId: "user-1",
-          givenName: "Ahmed",
-          surname: "Hassan",
+          firstName: "Ahmed",
+          lastName: "Hassan",
           gender: "male",
           emailAddress: "ahmed@example.com",
           position: "Receptionist",
@@ -758,8 +758,8 @@ describe("submitInternalOnboarding", () => {
       expect(txMock.staffMember.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           userId: "user-1",
-          givenName: "Ahmed",
-          surname: "Hassan",
+          firstName: "Ahmed",
+          lastName: "Hassan",
           position: "Vice Principal",
           schoolId: "school-1",
         }),
@@ -832,9 +832,9 @@ describe("submitInternalOnboarding", () => {
       expect(txMock.student.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           userId: "user-1",
-          givenName: "Ahmed",
+          firstName: "Ahmed",
           middleName: "Mohamed",
-          surname: "Hassan",
+          lastName: "Hassan",
           gender: "male",
           nationality: "Egyptian",
           email: "ahmed@example.com",
@@ -882,8 +882,8 @@ describe("submitInternalOnboarding", () => {
       expect(txMock.student.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           userId: "user-1",
-          givenName: "Ahmed",
-          surname: "Hassan",
+          firstName: "Ahmed",
+          lastName: "Hassan",
           schoolId: "school-1",
         }),
       })
@@ -895,7 +895,7 @@ describe("submitInternalOnboarding", () => {
   // ---------------------------------------------------------------------------
 
   describe("user creation", () => {
-    it("should set username as 'givenName surname'", async () => {
+    it("should set username as 'firstName lastName'", async () => {
       const txMock = createTxMock()
       txMock.user.create.mockResolvedValue({ id: "user-1" })
       txMock.teacher.create.mockResolvedValue({ id: "teacher-1" })
@@ -903,7 +903,7 @@ describe("submitInternalOnboarding", () => {
 
       await submitInternalOnboarding("school-1", {
         role: "teacher",
-        personal: createPersonalData({ givenName: "Khalid", surname: "Ali" }),
+        personal: createPersonalData({ firstName: "Khalid", lastName: "Ali" }),
         contact: createContactData(),
         roleDetails: createTeacherDetails(),
       })

@@ -2,6 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -21,7 +22,7 @@ export async function getStudentAttachments(
 ): Promise<ActionResponse<AttachmentsFormData>> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const student = await db.student.findFirst({
       where: { id: studentId, schoolId },
@@ -34,7 +35,7 @@ export async function getStudentAttachments(
       },
     })
 
-    if (!student) return { success: false, error: "Student not found" }
+    if (!student) return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
 
     const docMap = new Map(
       student.documents.map((d) => [d.documentType, d.fileUrl])
@@ -65,7 +66,7 @@ export async function updateStudentAttachments(
 ): Promise<ActionResponse> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const parsed = attachmentsSchema.parse(input)
 

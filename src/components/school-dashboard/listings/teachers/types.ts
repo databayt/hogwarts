@@ -9,8 +9,8 @@ import { teacherCreateSchema } from "./validation"
 export type TeacherDTO = {
   id: string
   schoolId: string
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
   gender: string | null
   emailAddress: string
   userId: string | null

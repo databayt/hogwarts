@@ -24,9 +24,9 @@ model Student {
   studentId String? // External student identifier
 
   // Name fields
-  givenName  String
+  firstName  String  @map("givenName")
   middleName String?
-  surname    String
+  lastName   String  @map("surname")
   lang       String  @default("ar") // Language of stored name data
 
   // Extended personal details
@@ -195,8 +195,8 @@ model Student {
 model Guardian {
   id              String  @id @default(cuid())
   schoolId        String
-  givenName       String
-  surname         String
+  firstName       String  @map("givenName")
+  lastName        String  @map("surname")
   lang            String  @default("ar") // Language of stored name data
   emailAddress    String?
   teacherId       String? @unique // Link to teacher if guardian is also a teacher

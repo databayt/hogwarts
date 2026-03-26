@@ -25,7 +25,7 @@ export interface ClassWizardData {
   prerequisiteId: string | null
   wizardStep: string | null
   subject: { id: string; name: string }
-  teacher: { id: string; givenName: string; surname: string }
+  teacher: { id: string; firstName: string; lastName: string }
   term: { id: string; name: string }
   startPeriod: { id: string; name: string }
   endPeriod: { id: string; name: string }

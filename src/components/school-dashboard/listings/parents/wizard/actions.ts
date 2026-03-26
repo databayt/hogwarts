@@ -20,7 +20,7 @@ export async function getParentForWizard(
 > {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const guardian = await db.guardian.findFirst({
       where: { id: parentId, schoolId },
@@ -37,7 +37,7 @@ export async function getParentForWizard(
       },
     })
 
-    if (!guardian) return { success: false, error: "Guardian not found" }
+    if (!guardian) return actionError(ACTION_ERRORS.PARENT_NOT_FOUND)
 
     return { success: true, data: guardian as ParentWizardData }
   } catch (error) {
@@ -55,19 +55,19 @@ export async function createDraftParent(): Promise<
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const guardian = await db.guardian.create({
       data: {
         schoolId,
-        givenName: "",
-        surname: "",
+        firstName: "",
+        lastName: "",
         wizardStep: "information",
       },
     })
@@ -89,25 +89,25 @@ export async function completeParentWizard(
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Validate required fields are present
     const guardian = await db.guardian.findFirst({
       where: { id: parentId, schoolId },
-      select: { givenName: true, surname: true },
+      select: { firstName: true, lastName: true },
     })
 
     if (!guardian) {
-      return { success: false, error: "Guardian not found" }
+      return actionError(ACTION_ERRORS.PARENT_NOT_FOUND)
     }
 
-    if (!guardian.givenName || !guardian.surname) {
+    if (!guardian.firstName || !guardian.lastName) {
       return {
         success: false,
         error: "Name is required before completing",
@@ -160,12 +160,12 @@ export async function deleteDraftParent(
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Atomic delete — only if it's still a draft
@@ -174,7 +174,7 @@ export async function deleteDraftParent(
     })
 
     if (count === 0) {
-      return { success: false, error: "Draft guardian not found" }
+      return actionError(ACTION_ERRORS.PARENT_NOT_FOUND)
     }
 
     return { success: true }

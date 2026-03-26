@@ -169,7 +169,7 @@ export async function getComplianceDashboard(): Promise<
       where: { schoolId },
       include: {
         student: {
-          select: { givenName: true, surname: true },
+          select: { firstName: true, lastName: true },
         },
       },
       orderBy: { createdAt: "desc" },
@@ -178,7 +178,7 @@ export async function getComplianceDashboard(): Promise<
 
     const recentPolicyTriggers = recentTriggers.map((trigger) => ({
       id: trigger.id,
-      studentName: `${trigger.student.givenName} ${trigger.student.surname}`,
+      studentName: `${trigger.student.firstName} ${trigger.student.lastName}`,
       tier: trigger.tier,
       absenceCount: trigger.absenceCount,
       action: trigger.action,
@@ -360,11 +360,11 @@ export async function getComplianceReport(input?: {
     const atRiskStudentIds = absencesByStudent.map((a) => a.studentId)
     const students = await db.student.findMany({
       where: { id: { in: atRiskStudentIds }, schoolId },
-      select: { id: true, givenName: true, surname: true },
+      select: { id: true, firstName: true, lastName: true },
     })
 
     const studentMap = new Map(
-      students.map((s) => [s.id, `${s.givenName} ${s.surname}`])
+      students.map((s) => [s.id, `${s.firstName} ${s.lastName}`])
     )
 
     // Get total attendance per at-risk student

@@ -10,8 +10,8 @@ export type StaffDTO = {
   id: string
   schoolId: string
   employeeId: string | null
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
   gender: string | null
   emailAddress: string
   position: string | null

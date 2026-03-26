@@ -624,36 +624,36 @@ export const SURNAMES_EN = [
 export const TEACHER_DATA: TeacherData[] = [
   // Languages Department (20 teachers)
   {
-    givenName: "فاطمة",
-    surname: "حسن",
+    firstName: "فاطمة",
+    lastName: "حسن",
     gender: "F",
     department: "اللغات",
     specialty: "Arabic",
   },
   {
-    givenName: "محمد",
-    surname: "علي",
+    firstName: "محمد",
+    lastName: "علي",
     gender: "M",
     department: "اللغات",
     specialty: "Arabic",
   },
   {
-    givenName: "عائشة",
-    surname: "أحمد",
+    firstName: "عائشة",
+    lastName: "أحمد",
     gender: "F",
     department: "اللغات",
     specialty: "English",
   },
   {
-    givenName: "أحمد",
-    surname: "محمد",
+    firstName: "أحمد",
+    lastName: "محمد",
     gender: "M",
     department: "اللغات",
     specialty: "English",
   },
   {
-    givenName: "مريم",
-    surname: "إبراهيم",
+    firstName: "مريم",
+    lastName: "إبراهيم",
     gender: "F",
     department: "اللغات",
     specialty: "French",
@@ -661,71 +661,71 @@ export const TEACHER_DATA: TeacherData[] = [
 
   // Sciences Department (25 teachers)
   {
-    givenName: "إبراهيم",
-    surname: "عثمان",
+    firstName: "إبراهيم",
+    lastName: "عثمان",
     gender: "M",
     department: "العلوم",
     specialty: "Mathematics",
   },
   {
-    givenName: "خالد",
-    surname: "عبدالرحمن",
+    firstName: "خالد",
+    lastName: "عبدالرحمن",
     gender: "M",
     department: "العلوم",
     specialty: "Mathematics",
   },
   {
-    givenName: "أمينة",
-    surname: "يوسف",
+    firstName: "أمينة",
+    lastName: "يوسف",
     gender: "F",
     department: "العلوم",
     specialty: "Physics",
   },
   {
-    givenName: "عمر",
-    surname: "الحسن",
+    firstName: "عمر",
+    lastName: "الحسن",
     gender: "M",
     department: "العلوم",
     specialty: "Physics",
   },
   {
-    givenName: "خديجة",
-    surname: "النور",
+    firstName: "خديجة",
+    lastName: "النور",
     gender: "F",
     department: "العلوم",
     specialty: "Chemistry",
   },
   {
-    givenName: "حسن",
-    surname: "عبدالله",
+    firstName: "حسن",
+    lastName: "عبدالله",
     gender: "M",
     department: "العلوم",
     specialty: "Chemistry",
   },
   {
-    givenName: "زينب",
-    surname: "آدم",
+    firstName: "زينب",
+    lastName: "آدم",
     gender: "F",
     department: "العلوم",
     specialty: "Biology",
   },
   {
-    givenName: "يوسف",
-    surname: "موسى",
+    firstName: "يوسف",
+    lastName: "موسى",
     gender: "M",
     department: "العلوم",
     specialty: "Biology",
   },
   {
-    givenName: "علي",
-    surname: "عيسى",
+    firstName: "علي",
+    lastName: "عيسى",
     gender: "M",
     department: "العلوم",
     specialty: "Computer Science",
   },
   {
-    givenName: "هدى",
-    surname: "خليل",
+    firstName: "هدى",
+    lastName: "خليل",
     gender: "F",
     department: "العلوم",
     specialty: "Science",
@@ -733,36 +733,36 @@ export const TEACHER_DATA: TeacherData[] = [
 
   // Humanities Department (15 teachers)
   {
-    givenName: "سارة",
-    surname: "صالح",
+    firstName: "سارة",
+    lastName: "صالح",
     gender: "F",
     department: "العلوم الإنسانية",
     specialty: "History",
   },
   {
-    givenName: "عبدالله",
-    surname: "عبدالقادر",
+    firstName: "عبدالله",
+    lastName: "عبدالقادر",
     gender: "M",
     department: "العلوم الإنسانية",
     specialty: "History",
   },
   {
-    givenName: "نور",
-    surname: "الطيب",
+    firstName: "نور",
+    lastName: "الطيب",
     gender: "F",
     department: "العلوم الإنسانية",
     specialty: "Geography",
   },
   {
-    givenName: "طارق",
-    surname: "بشير",
+    firstName: "طارق",
+    lastName: "بشير",
     gender: "M",
     department: "العلوم الإنسانية",
     specialty: "Geography",
   },
   {
-    givenName: "ليلى",
-    surname: "جعفر",
+    firstName: "ليلى",
+    lastName: "جعفر",
     gender: "F",
     department: "العلوم الإنسانية",
     specialty: "Social Studies",
@@ -770,29 +770,29 @@ export const TEACHER_DATA: TeacherData[] = [
 
   // Religion Department (15 teachers)
   {
-    givenName: "مصطفى",
-    surname: "المهدي",
+    firstName: "مصطفى",
+    lastName: "المهدي",
     gender: "M",
     department: "الدين",
     specialty: "Islamic Studies",
   },
   {
-    givenName: "رقية",
-    surname: "الزين",
+    firstName: "رقية",
+    lastName: "الزين",
     gender: "F",
     department: "الدين",
     specialty: "Islamic Studies",
   },
   {
-    givenName: "ياسر",
-    surname: "عمر",
+    firstName: "ياسر",
+    lastName: "عمر",
     gender: "M",
     department: "الدين",
     specialty: "Quran",
   },
   {
-    givenName: "حليمة",
-    surname: "سليمان",
+    firstName: "حليمة",
+    lastName: "سليمان",
     gender: "F",
     department: "الدين",
     specialty: "Quran",
@@ -800,15 +800,15 @@ export const TEACHER_DATA: TeacherData[] = [
 
   // ICT Department (10 teachers)
   {
-    givenName: "عبدالرحمن",
-    surname: "البشير",
+    firstName: "عبدالرحمن",
+    lastName: "البشير",
     gender: "M",
     department: "تقنية المعلومات",
     specialty: "ICT",
   },
   {
-    givenName: "سمية",
-    surname: "الأمين",
+    firstName: "سمية",
+    lastName: "الأمين",
     gender: "F",
     department: "تقنية المعلومات",
     specialty: "ICT",
@@ -816,29 +816,29 @@ export const TEACHER_DATA: TeacherData[] = [
 
   // Arts & PE Department (15 teachers)
   {
-    givenName: "صلاح",
-    surname: "حامد",
+    firstName: "صلاح",
+    lastName: "حامد",
     gender: "M",
     department: "الفنون والرياضة",
     specialty: "Physical Education",
   },
   {
-    givenName: "ريم",
-    surname: "كمال",
+    firstName: "ريم",
+    lastName: "كمال",
     gender: "F",
     department: "الفنون والرياضة",
     specialty: "Physical Education",
   },
   {
-    givenName: "دعاء",
-    surname: "جلال",
+    firstName: "دعاء",
+    lastName: "جلال",
     gender: "F",
     department: "الفنون والرياضة",
     specialty: "Art",
   },
   {
-    givenName: "بكري",
-    surname: "نصر",
+    firstName: "بكري",
+    lastName: "نصر",
     gender: "M",
     department: "الفنون والرياضة",
     specialty: "Music",
@@ -1204,13 +1204,13 @@ export function getRandomName(
 }
 
 /**
- * Get random surname
+ * Get random lastName
  */
 export function getRandomSurname(index: number): { ar: string; en: string } {
-  const surnameIndex = index % SURNAMES_AR.length
+  const lastNameIndex = index % SURNAMES_AR.length
   return {
-    ar: SURNAMES_AR[surnameIndex],
-    en: SURNAMES_EN[surnameIndex],
+    ar: SURNAMES_AR[lastNameIndex],
+    en: SURNAMES_EN[lastNameIndex],
   }
 }
 
@@ -1248,7 +1248,7 @@ export function getEnglishGivenName(
 }
 
 /**
- * Get English surname from Arabic surname
+ * Get English lastName from Arabic lastName
  */
 export function getEnglishSurname(arabicSurname: string): string {
   const idx = SURNAMES_AR.indexOf(arabicSurname)

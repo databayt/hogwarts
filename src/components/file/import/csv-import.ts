@@ -63,8 +63,8 @@ const teacherCsvSchema = z.object({
 })
 
 const staffCsvSchema = z.object({
-  givenName: z.string().min(1, "Given name is required"),
-  surname: z.string().min(1, "Surname is required"),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
   emailAddress: z.string().email("Invalid email"),
   employeeId: z.string().optional(),
   position: z.string().optional(),
@@ -77,8 +77,8 @@ const staffCsvSchema = z.object({
 })
 
 const guardianCsvSchema = z.object({
-  givenName: z.string().min(1, "Given name is required"),
-  surname: z.string().min(1, "Surname is required"),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
   emailAddress: z.string().email().optional(),
   phoneNumber: z.string().optional(),
   guardianType: z.string().optional(),
@@ -446,9 +446,9 @@ class CsvImportService {
                   userId: userIds[idx],
                   schoolId,
                   studentId: r.validated.studentId!,
-                  givenName: nameParts[0] || "Unknown",
+                  firstName: nameParts[0] || "Unknown",
                   middleName: r.validated.middleName || undefined,
-                  surname: nameParts.slice(1).join(" ") || "Unknown",
+                  lastName: nameParts.slice(1).join(" ") || "Unknown",
                   dateOfBirth: r.validated.dateOfBirth
                     ? new Date(r.validated.dateOfBirth)
                     : new Date("2010-01-01"),
@@ -605,8 +605,8 @@ class CsvImportService {
         data: {
           userId: guardianUser.id,
           schoolId,
-          givenName: parts[0] || "Unknown",
-          surname: parts.slice(1).join(" ") || "Unknown",
+          firstName: parts[0] || "Unknown",
+          lastName: parts.slice(1).join(" ") || "Unknown",
           emailAddress: guardianEmail,
           lang,
         },
@@ -837,8 +837,8 @@ class CsvImportService {
                   userId: userIds[idx],
                   schoolId,
                   employeeId: r.validated.employeeId!,
-                  givenName: parts[0] || "Unknown",
-                  surname: parts.slice(1).join(" ") || "Unknown",
+                  firstName: parts[0] || "Unknown",
+                  lastName: parts.slice(1).join(" ") || "Unknown",
                   emailAddress: r.validated.email!,
                   lang: detectedLang,
                   wizardStep,
@@ -1054,7 +1054,7 @@ class CsvImportService {
           )
           const user = await db.user.create({
             data: {
-              username: `${validated.givenName} ${validated.surname}`,
+              username: `${validated.firstName} ${validated.lastName}`,
               email: validated.emailAddress,
               password: defaultPassword,
               role: "STAFF",
@@ -1080,8 +1080,8 @@ class CsvImportService {
               userId: user.id,
               schoolId,
               employeeId: validated.employeeId || undefined,
-              givenName: validated.givenName,
-              surname: validated.surname,
+              firstName: validated.firstName,
+              lastName: validated.lastName,
               emailAddress: validated.emailAddress,
               gender: validated.gender || undefined,
               position: validated.position || undefined,
@@ -1166,7 +1166,7 @@ class CsvImportService {
       // Detect CSV language from a sample of names
       const sampleNames = rows
         .slice(0, 5)
-        .map((r: any) => `${r.givenName || ""} ${r.surname || ""}`.trim())
+        .map((r: any) => `${r.firstName || ""} ${r.lastName || ""}`.trim())
         .filter(Boolean)
       const detectedLang = sampleNames.length
         ? detectLanguage(sampleNames.join(" "))
@@ -1221,7 +1221,7 @@ class CsvImportService {
             validated.emailAddress || `guardian-${Date.now()}-${i}@school.local`
           const user = await db.user.create({
             data: {
-              username: `${validated.givenName} ${validated.surname}`,
+              username: `${validated.firstName} ${validated.lastName}`,
               email,
               password: defaultPassword,
               role: "GUARDIAN",
@@ -1235,8 +1235,8 @@ class CsvImportService {
             data: {
               userId: user.id,
               schoolId,
-              givenName: validated.givenName,
-              surname: validated.surname,
+              firstName: validated.firstName,
+              lastName: validated.lastName,
               emailAddress: validated.emailAddress || undefined,
               lang: detectedLang,
             },
@@ -1333,8 +1333,8 @@ class CsvImportService {
 
   generateStaffTemplate(): string {
     const headers = [
-      "givenName",
-      "surname",
+      "firstName",
+      "lastName",
       "emailAddress",
       "employeeId",
       "position",
@@ -1353,8 +1353,8 @@ class CsvImportService {
 
   generateGuardianTemplate(): string {
     const headers = [
-      "givenName",
-      "surname",
+      "firstName",
+      "lastName",
       "emailAddress",
       "phoneNumber",
       "guardianType",

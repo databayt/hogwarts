@@ -26,7 +26,7 @@ export default function InformationContent() {
   useEffect(() => {
     if (data) {
       setIsValid(
-        data.givenName.trim().length >= 1 && data.surname.trim().length >= 1
+        data.firstName.trim().length >= 1 && data.lastName.trim().length >= 1
       )
     }
   }, [data])
@@ -53,8 +53,8 @@ export default function InformationContent() {
           initialData={
             data
               ? {
-                  givenName: data.givenName,
-                  surname: data.surname,
+                  firstName: data.firstName,
+                  lastName: data.lastName,
                   emailAddress: data.emailAddress ?? undefined,
                   profilePhotoUrl: data.profilePhotoUrl ?? undefined,
                 }

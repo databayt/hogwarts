@@ -47,8 +47,8 @@ export type ParentQueryParams = ParentListFilters &
 /** Minimal fields for list display */
 export const parentListSelect = {
   id: true,
-  givenName: true,
-  surname: true,
+  firstName: true,
+  lastName: true,
   emailAddress: true,
   phoneNumber: true,
   userId: true,
@@ -58,8 +58,8 @@ export const parentListSelect = {
       student: {
         select: {
           id: true,
-          givenName: true,
-          surname: true,
+          firstName: true,
+          lastName: true,
         },
       },
       relationshipType: true,
@@ -72,9 +72,9 @@ export const parentListSelect = {
 export const parentDetailSelect = {
   id: true,
   schoolId: true,
-  givenName: true,
+  firstName: true,
   middleName: true,
-  surname: true,
+  lastName: true,
   emailAddress: true,
   phoneNumber: true,
   alternativePhone: true,
@@ -101,8 +101,8 @@ export const parentDetailSelect = {
       student: {
         select: {
           id: true,
-          givenName: true,
-          surname: true,
+          firstName: true,
+          lastName: true,
         },
       },
     },
@@ -128,13 +128,13 @@ export function buildParentWhere(
   if (filters.search) {
     where.OR = [
       {
-        givenName: {
+        firstName: {
           contains: filters.search,
           mode: Prisma.QueryMode.insensitive,
         },
       },
       {
-        surname: {
+        lastName: {
           contains: filters.search,
           mode: Prisma.QueryMode.insensitive,
         },
@@ -243,7 +243,7 @@ export async function getStudentParents(schoolId: string, studentId: string) {
         },
       },
     },
-    orderBy: [{ surname: "asc" }, { givenName: "asc" }],
+    orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
     select: parentListSelect,
   })
 }
@@ -274,11 +274,11 @@ export async function verifyParentOwnership(
  * Format parent full name
  */
 export function formatParentName(parent: {
-  givenName: string
+  firstName: string
   middleName?: string | null
-  surname: string
+  lastName: string
 }): string {
-  return [parent.givenName, parent.middleName, parent.surname]
+  return [parent.firstName, parent.middleName, parent.lastName]
     .filter(Boolean)
     .join(" ")
 }
@@ -287,10 +287,10 @@ export function formatParentName(parent: {
  * Get parent initials for avatar
  */
 export function getParentInitials(parent: {
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
 }): string {
-  return `${parent.givenName.charAt(0)}${parent.surname.charAt(0)}`.toUpperCase()
+  return `${parent.firstName.charAt(0)}${parent.lastName.charAt(0)}`.toUpperCase()
 }
 
 /**

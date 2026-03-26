@@ -91,8 +91,8 @@ export async function seedComboniTeachers() {
     const teacher = await prisma.teacher.create({
       data: {
         schoolId: school.id,
-        givenName: data.givenName,
-        surname: data.surname,
+        firstName: data.firstName,
+        lastName: data.lastName,
         gender: data.gender,
         emailAddress: email,
         employeeId: `CMB-T${String(i + 1).padStart(3, "0")}`,

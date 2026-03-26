@@ -4,6 +4,7 @@
 import { auth } from "@/auth"
 
 import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { EarlyWarningContent } from "@/components/school-dashboard/attendance/early-warning/content"
 
 export const metadata = { title: "Dashboard: Early Warning" }
@@ -16,6 +17,7 @@ const STAFF_ROLES = ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"]
 
 export default async function Page({ params }: Props) {
   const [{ lang }, session] = await Promise.all([params, auth()])
+  const dictionary = await getDictionary(lang)
 
   if (!STAFF_ROLES.includes(session?.user?.role ?? "")) {
     return (

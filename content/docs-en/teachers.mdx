@@ -33,7 +33,7 @@ A **Skip & Create** fast path lets admins complete the wizard early — once the
 | Step              | Route Segment     | Fields                                                                                        | Required?               |
 | ----------------- | ----------------- | --------------------------------------------------------------------------------------------- | ----------------------- |
 | 1. Photo          | `/photo`          | profilePhotoUrl                                                                               | None                    |
-| 2. Information    | `/information`    | givenName, surname, gender, birthDate                                                         | givenName, surname      |
+| 2. Information    | `/information`    | firstName, lastName, gender, birthDate                                                        | firstName, lastName     |
 | 3. Contact        | `/contact`        | emailAddress, phoneNumbers[]                                                                  | emailAddress            |
 | 4. Employment     | `/employment`     | employeeId, joiningDate, employmentStatus, employmentType, contractStartDate, contractEndDate | None (defaults applied) |
 | 5. Qualifications | `/qualifications` | qualifications[] (type, name, institution, major, dates, license)                             | None                    |
@@ -61,7 +61,7 @@ src/app/[lang]/s/[subdomain]/(school-dashboard)/(listings)/
 
 ```
 1. Admin clicks "Add Teacher"
-2. page.tsx creates draft: { givenName: "", emailAddress: "draft-xxx@draft.internal", wizardStep: "photo" }
+2. page.tsx creates draft: { firstName: "", emailAddress: "draft-xxx@draft.internal", wizardStep: "photo" }
 3. Each step saves fields + advances wizardStep
 4. Two completion paths:
    a. FAST: "Skip & Create" on contact step (or later) → saves + completes + redirects
@@ -157,7 +157,7 @@ The full 7-step wizard. Creates a draft record, fills fields progressively, and 
 
 **wizardStep lifecycle**: `"photo"` -> `"information"` -> `"contact"` -> ... -> `null` (complete)
 
-**Skip & Create**: Once givenName + surname (information) and emailAddress (contact) are filled, the "Skip & Create" button appears on the contact step and all subsequent steps. Clicking it saves the current step, calls `completeTeacherWizard()`, and redirects to `/teachers`.
+**Skip & Create**: Once firstName + lastName (information) and emailAddress (contact) are filled, the "Skip & Create" button appears on the contact step and all subsequent steps. Clicking it saves the current step, calls `completeTeacherWizard()`, and redirects to `/teachers`.
 
 ### 2. CSV Bulk Import
 
@@ -166,8 +166,8 @@ The full 7-step wizard. Creates a draft record, fills fields progressively, and 
 await tx.teacher.createMany({
   data: chunk.map((r) => ({
     schoolId,
-    givenName: parts[0],
-    surname: parts.slice(1).join(" "),
+    firstName: parts[0],
+    lastName: parts.slice(1).join(" "),
     emailAddress: r.validated.email,
     wizardStep: "employment", // Marked incomplete — CSV covers name + contact only
   })),

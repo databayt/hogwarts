@@ -5,6 +5,7 @@
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 
 import type {
@@ -65,7 +66,7 @@ export async function createProgressSchedule(
     const userId = await getUserId()
 
     if (!schoolId || !userId) {
-      return { success: false, error: "Unauthorized", code: "NO_SCHOOL" }
+      return { ...actionError(ACTION_ERRORS.UNAUTHORIZED), code: "NO_SCHOOL" }
     }
 
     const parsed = progressScheduleCreateSchema.parse(input)
@@ -76,11 +77,7 @@ export async function createProgressSchedule(
         where: { id: parsed.classId, schoolId },
       })
       if (!classExists) {
-        return {
-          success: false,
-          error: "Class not found",
-          code: "CLASS_NOT_FOUND",
-        }
+        return { ...actionError(ACTION_ERRORS.CLASS_NOT_FOUND) }
       }
     }
 
@@ -106,11 +103,7 @@ export async function createProgressSchedule(
     return { success: true, data: { id: schedule.id } }
   } catch (error) {
     console.error("Error creating progress schedule:", error)
-    return {
-      success: false,
-      error: "Failed to create schedule",
-      code: "CREATE_FAILED",
-    }
+    return { ...actionError(ACTION_ERRORS.CREATE_FAILED) }
   }
 }
 
@@ -185,7 +178,7 @@ export async function updateProgressSchedule(
   try {
     const schoolId = await getSchoolId()
     if (!schoolId) {
-      return { success: false, error: "Unauthorized", code: "NO_SCHOOL" }
+      return { ...actionError(ACTION_ERRORS.UNAUTHORIZED), code: "NO_SCHOOL" }
     }
 
     const parsed = progressScheduleUpdateSchema.parse(input)
@@ -205,11 +198,7 @@ export async function updateProgressSchedule(
         where: { id: data.classId, schoolId },
       })
       if (!classExists) {
-        return {
-          success: false,
-          error: "Class not found",
-          code: "CLASS_NOT_FOUND",
-        }
+        return { ...actionError(ACTION_ERRORS.CLASS_NOT_FOUND) }
       }
     }
 
@@ -237,11 +226,7 @@ export async function updateProgressSchedule(
     return { success: true }
   } catch (error) {
     console.error("Error updating progress schedule:", error)
-    return {
-      success: false,
-      error: "Failed to update schedule",
-      code: "UPDATE_FAILED",
-    }
+    return { ...actionError(ACTION_ERRORS.UPDATE_FAILED) }
   }
 }
 
@@ -251,7 +236,7 @@ export async function deleteProgressSchedule(
   try {
     const schoolId = await getSchoolId()
     if (!schoolId) {
-      return { success: false, error: "Unauthorized", code: "NO_SCHOOL" }
+      return { ...actionError(ACTION_ERRORS.UNAUTHORIZED), code: "NO_SCHOOL" }
     }
 
     const existing = await db.progressReportSchedule.findFirst({
@@ -268,11 +253,7 @@ export async function deleteProgressSchedule(
     return { success: true }
   } catch (error) {
     console.error("Error deleting progress schedule:", error)
-    return {
-      success: false,
-      error: "Failed to delete schedule",
-      code: "DELETE_FAILED",
-    }
+    return { ...actionError(ACTION_ERRORS.DELETE_FAILED) }
   }
 }
 
@@ -286,7 +267,7 @@ export async function generateProgressReports(
   try {
     const schoolId = await getSchoolId()
     if (!schoolId) {
-      return { success: false, error: "Unauthorized", code: "NO_SCHOOL" }
+      return { ...actionError(ACTION_ERRORS.UNAUTHORIZED), code: "NO_SCHOOL" }
     }
 
     const schedule = await db.progressReportSchedule.findFirst({
@@ -315,9 +296,9 @@ export async function generateProgressReports(
       },
       select: {
         id: true,
-        givenName: true,
+        firstName: true,
         middleName: true,
-        surname: true,
+        lastName: true,
       },
     })
 
@@ -327,7 +308,7 @@ export async function generateProgressReports(
     for (const student of students) {
       try {
         const studentName =
-          `${student.givenName} ${student.middleName || ""} ${student.surname}`.trim()
+          `${student.firstName} ${student.middleName || ""} ${student.lastName}`.trim()
 
         // Collect report data based on toggles
         const reportData: Record<string, unknown> = {
@@ -459,9 +440,9 @@ export async function getGeneratedReports(
       include: {
         student: {
           select: {
-            givenName: true,
+            firstName: true,
             middleName: true,
-            surname: true,
+            lastName: true,
           },
         },
       },
@@ -472,7 +453,7 @@ export async function getGeneratedReports(
       id: r.id,
       studentId: r.studentId,
       studentName:
-        `${r.student.givenName} ${r.student.middleName || ""} ${r.student.surname}`.trim(),
+        `${r.student.firstName} ${r.student.middleName || ""} ${r.student.lastName}`.trim(),
       reportData: r.reportData,
       sentAt: r.sentAt,
       createdAt: r.createdAt,

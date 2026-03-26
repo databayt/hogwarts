@@ -2,13 +2,16 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 
 interface Props {
-  params: Promise<{ subdomain: string }>
+  params: Promise<{ subdomain: string; lang: Locale }>
 }
 
 export default async function Test({ params }: Props) {
-  const { subdomain } = await params
+  const { subdomain, lang } = await params
+  const dictionary = await getDictionary(lang)
 
   try {
     const result = await getSchoolBySubdomain(subdomain)

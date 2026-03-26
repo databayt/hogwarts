@@ -5,6 +5,7 @@ import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 
 import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import MyContributionsContent from "@/components/library/contribute/my-contributions"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 
@@ -21,6 +22,7 @@ const ALLOWED_ROLES = ["ADMIN", "TEACHER", "DEVELOPER"]
 
 export default async function MyContributionsPage({ params }: Props) {
   const [{ lang }, session] = await Promise.all([params, auth()])
+  const dictionary = await getDictionary(lang)
 
   if (!session?.user?.id) {
     redirect("/library")

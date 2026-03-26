@@ -102,11 +102,11 @@ export function StudentProfile({
   const [activeTab, setActiveTab] = useState("personal")
 
   const getInitials = () => {
-    return `${student.givenName?.[0] || ""}${student.surname?.[0] || ""}`.toUpperCase()
+    return `${student.firstName?.[0] || ""}${student.lastName?.[0] || ""}`.toUpperCase()
   }
 
   const getFullName = () => {
-    return [student.givenName, student.middleName, student.surname]
+    return [student.firstName, student.middleName, student.lastName]
       .filter(Boolean)
       .join(" ")
   }

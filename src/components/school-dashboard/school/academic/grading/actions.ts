@@ -20,8 +20,6 @@ import {
   type ScoreRangeUpdateInput,
 } from "./validation"
 
-export type { ActionResponse }
-
 const ACADEMIC_PATH = "/school/academic"
 
 // ============================================================================
@@ -106,10 +104,10 @@ export async function updateScoreRange(
   try {
     const { schoolId, role } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
     if (role !== "ADMIN" && role !== "DEVELOPER") {
-      return { success: false, error: "Insufficient permissions" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const parsed = scoreRangeUpdateSchema.parse(input)
@@ -122,7 +120,7 @@ export async function updateScoreRange(
     })
 
     if (!existing) {
-      return { success: false, error: "Score range not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Check for duplicate grade (exclude current)
@@ -199,10 +197,10 @@ export async function deleteScoreRange(input: {
   try {
     const { schoolId, role } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
     if (role !== "ADMIN" && role !== "DEVELOPER") {
-      return { success: false, error: "Insufficient permissions" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
@@ -214,7 +212,7 @@ export async function deleteScoreRange(input: {
     })
 
     if (!existing) {
-      return { success: false, error: "Score range not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     await db.scoreRange.deleteMany({ where: { id, schoolId } })
@@ -249,7 +247,7 @@ export async function getScoreRange(input: {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
@@ -298,7 +296,7 @@ export async function getScoreRanges(
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const sp = getScoreRangesSchema.parse(input ?? {})
@@ -363,7 +361,7 @@ export async function getScoreRangeOptions(): Promise<
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const ranges = await db.scoreRange.findMany({

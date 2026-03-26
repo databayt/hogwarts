@@ -27,8 +27,8 @@ describe("Timetable Production Readiness - Logic Verification", () => {
       // This tests that the implementation logic exists
       const studentWithClasses = {
         id: "student-1",
-        givenName: "Harry",
-        surname: "Potter",
+        firstName: "Harry",
+        lastName: "Potter",
         studentClasses: [
           {
             classId: "class-math",
@@ -75,8 +75,8 @@ describe("Timetable Production Readiness - Logic Verification", () => {
             isPrimary: true,
             student: {
               id: "student-1",
-              givenName: "Harry",
-              surname: "Potter",
+              firstName: "Harry",
+              lastName: "Potter",
               profilePhotoUrl: "http://example.com/harry.jpg",
               studentClasses: [
                 {
@@ -106,7 +106,7 @@ describe("Timetable Production Readiness - Logic Verification", () => {
 
         return {
           id: sg.student.id,
-          name: `${sg.student.givenName} ${sg.student.surname}`,
+          name: `${sg.student.firstName} ${sg.student.lastName}`,
           photoUrl: sg.student.profilePhotoUrl,
           classId: enrollment?.class.id,
           className: enrollment?.class.name,
@@ -172,8 +172,8 @@ describe("Timetable Production Readiness - Logic Verification", () => {
       expect(hasExpertise).toBe(false)
 
       // Error message format documented
-      const teacher = { givenName: "Severus", surname: "Snape" }
-      const errorMessage = `${teacher.givenName} ${teacher.surname} is not qualified to teach ${classInfo.subject.name}`
+      const teacher = { firstName: "Severus", lastName: "Snape" }
+      const errorMessage = `${teacher.firstName} ${teacher.lastName} is not qualified to teach ${classInfo.subject.name}`
       expect(errorMessage).toContain("is not qualified to teach")
     })
   })

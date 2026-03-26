@@ -29,8 +29,8 @@ import {
 // ============================================================================
 
 interface StaffData {
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
   gender: "M" | "F"
   position: string
   category: string
@@ -40,64 +40,64 @@ interface StaffData {
 const STAFF_DATA: StaffData[] = [
   // Admin (8)
   {
-    givenName: "عبدالله",
-    surname: "حسن",
+    firstName: "عبدالله",
+    lastName: "حسن",
     gender: "M",
     position: "نائب المدير",
     category: "admin",
     emailPrefix: "vp",
   },
   {
-    givenName: "سارة",
-    surname: "أحمد",
+    firstName: "سارة",
+    lastName: "أحمد",
     gender: "F",
     position: "سكرتير المدرسة",
     category: "admin",
     emailPrefix: "secretary",
   },
   {
-    givenName: "محمد",
-    surname: "عثمان",
+    firstName: "محمد",
+    lastName: "عثمان",
     gender: "M",
     position: "مسؤول شؤون الطلاب",
     category: "admin",
     emailPrefix: "student.affairs",
   },
   {
-    givenName: "فاطمة",
-    surname: "إبراهيم",
+    firstName: "فاطمة",
+    lastName: "إبراهيم",
     gender: "F",
     position: "مسؤولة القبول والتسجيل",
     category: "admin",
     emailPrefix: "admissions",
   },
   {
-    givenName: "أحمد",
-    surname: "عبدالرحمن",
+    firstName: "أحمد",
+    lastName: "عبدالرحمن",
     gender: "M",
     position: "مسؤول الأنشطة",
     category: "admin",
     emailPrefix: "activities",
   },
   {
-    givenName: "هدى",
-    surname: "يوسف",
+    firstName: "هدى",
+    lastName: "يوسف",
     gender: "F",
     position: "مسؤولة العلاقات العامة",
     category: "admin",
     emailPrefix: "pr",
   },
   {
-    givenName: "خالد",
-    surname: "الحسن",
+    firstName: "خالد",
+    lastName: "الحسن",
     gender: "M",
     position: "مسؤول الموارد البشرية",
     category: "admin",
     emailPrefix: "hr",
   },
   {
-    givenName: "مريم",
-    surname: "النور",
+    firstName: "مريم",
+    lastName: "النور",
     gender: "F",
     position: "مسؤولة الجودة",
     category: "admin",
@@ -106,32 +106,32 @@ const STAFF_DATA: StaffData[] = [
 
   // Finance (4)
   {
-    givenName: "إبراهيم",
-    surname: "عبدالله",
+    firstName: "إبراهيم",
+    lastName: "عبدالله",
     gender: "M",
     position: "محاسب أول",
     category: "finance",
     emailPrefix: "accountant1",
   },
   {
-    givenName: "أمينة",
-    surname: "آدم",
+    firstName: "أمينة",
+    lastName: "آدم",
     gender: "F",
     position: "محاسبة",
     category: "finance",
     emailPrefix: "accountant2",
   },
   {
-    givenName: "عثمان",
-    surname: "موسى",
+    firstName: "عثمان",
+    lastName: "موسى",
     gender: "M",
     position: "أمين الصندوق",
     category: "finance",
     emailPrefix: "cashier",
   },
   {
-    givenName: "زينب",
-    surname: "عيسى",
+    firstName: "زينب",
+    lastName: "عيسى",
     gender: "F",
     position: "مسؤولة الرواتب",
     category: "finance",
@@ -140,24 +140,24 @@ const STAFF_DATA: StaffData[] = [
 
   // IT (3)
   {
-    givenName: "علي",
-    surname: "خليل",
+    firstName: "علي",
+    lastName: "خليل",
     gender: "M",
     position: "مدير تقنية المعلومات",
     category: "it",
     emailPrefix: "it.manager",
   },
   {
-    givenName: "حسن",
-    surname: "صالح",
+    firstName: "حسن",
+    lastName: "صالح",
     gender: "M",
     position: "فني حاسوب",
     category: "it",
     emailPrefix: "it.tech",
   },
   {
-    givenName: "نور",
-    surname: "عبدالقادر",
+    firstName: "نور",
+    lastName: "عبدالقادر",
     gender: "F",
     position: "مسؤولة الشبكات",
     category: "it",
@@ -166,48 +166,48 @@ const STAFF_DATA: StaffData[] = [
 
   // Facilities (6)
   {
-    givenName: "عمر",
-    surname: "الطيب",
+    firstName: "عمر",
+    lastName: "الطيب",
     gender: "M",
     position: "مدير المباني والصيانة",
     category: "facilities",
     emailPrefix: "facilities",
   },
   {
-    givenName: "يوسف",
-    surname: "بشير",
+    firstName: "يوسف",
+    lastName: "بشير",
     gender: "M",
     position: "فني صيانة",
     category: "facilities",
     emailPrefix: "maintenance1",
   },
   {
-    givenName: "بكري",
-    surname: "جعفر",
+    firstName: "بكري",
+    lastName: "جعفر",
     gender: "M",
     position: "فني صيانة",
     category: "facilities",
     emailPrefix: "maintenance2",
   },
   {
-    givenName: "طارق",
-    surname: "المهدي",
+    firstName: "طارق",
+    lastName: "المهدي",
     gender: "M",
     position: "حارس أمن",
     category: "facilities",
     emailPrefix: "security1",
   },
   {
-    givenName: "مصطفى",
-    surname: "الزين",
+    firstName: "مصطفى",
+    lastName: "الزين",
     gender: "M",
     position: "حارس أمن",
     category: "facilities",
     emailPrefix: "security2",
   },
   {
-    givenName: "ياسر",
-    surname: "عمر",
+    firstName: "ياسر",
+    lastName: "عمر",
     gender: "M",
     position: "سائق الحافلة المدرسية",
     category: "facilities",
@@ -216,40 +216,40 @@ const STAFF_DATA: StaffData[] = [
 
   // Support (5)
   {
-    givenName: "رقية",
-    surname: "سليمان",
+    firstName: "رقية",
+    lastName: "سليمان",
     gender: "F",
     position: "أمينة المكتبة",
     category: "support",
     emailPrefix: "librarian",
   },
   {
-    givenName: "سمية",
-    surname: "البشير",
+    firstName: "سمية",
+    lastName: "البشير",
     gender: "F",
     position: "ممرضة المدرسة",
     category: "support",
     emailPrefix: "nurse",
   },
   {
-    givenName: "حليمة",
-    surname: "الأمين",
+    firstName: "حليمة",
+    lastName: "الأمين",
     gender: "F",
     position: "المرشدة الاجتماعية",
     category: "support",
     emailPrefix: "counselor",
   },
   {
-    givenName: "عبدالرحمن",
-    surname: "حامد",
+    firstName: "عبدالرحمن",
+    lastName: "حامد",
     gender: "M",
     position: "مسؤول المقصف",
     category: "support",
     emailPrefix: "cafeteria",
   },
   {
-    givenName: "صلاح",
-    surname: "كمال",
+    firstName: "صلاح",
+    lastName: "كمال",
     gender: "M",
     position: "مسؤول النقل المدرسي",
     category: "support",
@@ -281,20 +281,20 @@ export async function seedStaffMembers(
 
     // Index 0 = Hagrid
     const isHagrid = i === 0
-    const givenName = isHagrid
+    const firstName = isHagrid
       ? HP_CHARACTERS.staff.nameAr.split(" ")[0]
-      : staff.givenName
-    const surname = isHagrid
+      : staff.firstName
+    const lastName = isHagrid
       ? HP_CHARACTERS.staff.nameAr.split(" ").slice(1).join(" ")
-      : staff.surname
+      : staff.lastName
     const position = isHagrid ? HP_CHARACTERS.staff.position : staff.position
 
     // Personal email (firstname-lastname@domain.com)
     const personalEmail = isHagrid
       ? HP_CHARACTERS.staff.personalEmail
       : generatePersonalEmail(
-          getEnglishGivenName(staff.givenName, staff.gender),
-          getEnglishSurname(staff.surname),
+          getEnglishGivenName(staff.firstName, staff.gender),
+          getEnglishSurname(staff.lastName),
           i
         )
 
@@ -309,8 +309,8 @@ export async function seedStaffMembers(
           data: {
             schoolId,
             employeeId,
-            givenName,
-            surname,
+            firstName,
+            lastName,
             gender: staff.gender === "M" ? "Male" : "Female",
             emailAddress: personalEmail,
             position,
@@ -330,8 +330,8 @@ export async function seedStaffMembers(
         await prisma.staffMember.update({
           where: { id: existing.id },
           data: {
-            givenName,
-            surname,
+            firstName,
+            lastName,
             position,
             emailAddress: personalEmail,
             userId,

@@ -115,7 +115,7 @@ export function ClassDetailContent({
   }
 
   const teacherName = classData.teacher
-    ? `${classData.teacher.givenName} ${classData.teacher.surname}`
+    ? `${classData.teacher.firstName} ${classData.teacher.lastName}`
     : t.unknown
 
   const name = classData.subject?.name || t.unknown
@@ -350,14 +350,14 @@ export function ClassDetailContent({
                       <div className="flex items-center gap-3">
                         <Avatar>
                           <AvatarFallback>
-                            {enrollment.student.givenName[0]}
-                            {enrollment.student.surname[0]}
+                            {enrollment.student.firstName[0]}
+                            {enrollment.student.lastName[0]}
                           </AvatarFallback>
                         </Avatar>
                         <div>
                           <p className="font-medium">
-                            {enrollment.student.givenName}{" "}
-                            {enrollment.student.surname}
+                            {enrollment.student.firstName}{" "}
+                            {enrollment.student.lastName}
                           </p>
                           <p className="text-muted-foreground text-xs">
                             {t.enrolledAt}:{" "}

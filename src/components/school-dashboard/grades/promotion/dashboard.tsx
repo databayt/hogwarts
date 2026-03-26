@@ -294,7 +294,7 @@ export function PromotionDashboard({
                   <TableRow key={c.id}>
                     <TableCell>
                       <div className="font-medium">
-                        {c.student.givenName} {c.student.surname}
+                        {c.student.firstName} {c.student.lastName}
                       </div>
                       {c.student.studentId && (
                         <div className="text-muted-foreground text-xs">

@@ -40,7 +40,7 @@ export async function enrollStudent(input: {
     try {
       assertStudentPermission(authContext, "update", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const { studentId, academicGradeId, classId, batchId } = input
@@ -51,7 +51,7 @@ export async function enrollStudent(input: {
       select: { id: true },
     })
     if (!student) {
-      return { success: false, error: "Student not found" }
+      return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
     }
 
     // Set academic grade on student (scoped by schoolId for defense-in-depth)
@@ -111,12 +111,12 @@ export async function enrollStudent(input: {
       })
 
       if (!classData) {
-        return { success: false, error: "Class not found" }
+        return actionError(ACTION_ERRORS.CLASS_NOT_FOUND)
       }
 
       const maxCapacity = classData.maxCapacity || 50
       if (classData._count.studentClasses >= maxCapacity) {
-        return { success: false, error: "Class is at full capacity" }
+        return actionError(ACTION_ERRORS.UNKNOWN)
       }
 
       // Check if already enrolled

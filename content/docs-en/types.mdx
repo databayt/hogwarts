@@ -76,8 +76,8 @@ export type TeacherRow = {
 export type TeacherRow = {
   id: string
   name: string
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
   emailAddress: string
   phone: string | null
   department: string | null
@@ -103,8 +103,8 @@ import type { TeacherRow } from "./types"
 export type TeacherRow = {
   id: string
   name: string
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
   emailAddress: string
   phone: string | null
   department: string | null
@@ -167,9 +167,9 @@ export interface Student {
   schoolId: string
   grNumber?: string
   studentId?: string
-  givenName: string
+  firstName: string
   middleName?: string
-  surname: string
+  lastName: string
   dateOfBirth: Date
   gender: string
   bloodGroup?: string
@@ -180,8 +180,8 @@ export interface Student {
 export type StudentWithRelations = Student & {
   guardian?: {
     id: string
-    givenName: string
-    surname: string
+    firstName: string
+    lastName: string
     phone: string | null
   }
   class?: {
@@ -203,8 +203,8 @@ import { teacherCreateSchema } from "./validation"
 
 // BAD: Manually matching validation schema fields
 export type TeacherFormData = {
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
   emailAddress: string
   gender: string
   // ... duplicates validation.ts fields
@@ -289,8 +289,8 @@ import { teacherCreateSchema } from "./validation"
 export type TeacherDTO = {
   id: string
   schoolId: string
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
   gender: string | null
   emailAddress: string
   userId: string | null
@@ -302,8 +302,8 @@ export type TeacherDTO = {
 export type TeacherRow = {
   id: string
   name: string
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
   emailAddress: string
   phone: string | null
   department: string | null
@@ -353,8 +353,8 @@ export type PayrollRunWithRelations = PayrollRun & {
 export type SalarySlipWithRelations = SalarySlip & {
   teacher: {
     id: string
-    givenName: string
-    surname: string
+    firstName: string
+    lastName: string
     employeeId: string | null
   }
   payrollRun: PayrollRun
@@ -550,8 +550,8 @@ export type TeacherRow = {
 export type TeacherRow = {
   id: string
   name: string
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
   emailAddress: string
   phone: string | null
   department: string | null
@@ -578,7 +578,7 @@ export interface Student {
 }
 
 export type StudentWithRelations = Student & {
-  guardian?: Pick<Guardian, "id" | "givenName" | "surname" | "phone">
+  guardian?: Pick<Guardian, "id" | "firstName" | "lastName" | "phone">
   class?: Pick<Class, "id" | "name">
 }
 ```

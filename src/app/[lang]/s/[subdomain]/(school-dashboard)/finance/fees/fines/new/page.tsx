@@ -8,6 +8,7 @@ import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Button } from "@/components/ui/button"
 import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { FineForm } from "@/components/school-dashboard/finance/fees/fine-form"
 
 export const metadata = { title: "Issue Fine" }
@@ -18,14 +19,15 @@ interface Props {
 
 export default async function NewFinePage({ params }: Props) {
   const { lang } = await params
+  const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) notFound()
 
   const students = await db.student.findMany({
     where: { schoolId },
-    select: { id: true, givenName: true, surname: true },
-    orderBy: { givenName: "asc" },
+    select: { id: true, firstName: true, lastName: true },
+    orderBy: { firstName: "asc" },
   })
 
   return (

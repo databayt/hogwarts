@@ -147,7 +147,9 @@ export function useExamSession({
       if (result.success) {
         onSubmit?.()
       } else {
-        onError?.(result.error || "Failed to submit exam")
+        onError?.(
+          ("error" in result && result.error) || "Failed to submit exam"
+        )
       }
 
       return result

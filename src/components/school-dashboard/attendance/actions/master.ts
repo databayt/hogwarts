@@ -152,7 +152,7 @@ export async function getMasterAttendanceForDay(input: {
       },
       include: {
         student: {
-          select: { givenName: true, surname: true },
+          select: { firstName: true, lastName: true },
         },
       },
       orderBy: { checkInTime: "asc" },
@@ -171,7 +171,7 @@ export async function getMasterAttendanceForDay(input: {
       data: {
         records: records.map((r) => ({
           studentId: r.studentId,
-          studentName: `${r.student.givenName} ${r.student.surname}`,
+          studentName: `${r.student.firstName} ${r.student.lastName}`,
           status: r.status,
           checkInTime: r.checkInTime?.toISOString() || null,
           checkOutTime: r.checkOutTime?.toISOString() || null,
@@ -239,7 +239,7 @@ export async function getPrefillFromMaster(input: {
       },
       include: {
         student: {
-          select: { id: true, givenName: true, surname: true },
+          select: { id: true, firstName: true, lastName: true },
         },
       },
     })
@@ -275,12 +275,12 @@ export async function getPrefillFromMaster(input: {
       if (!master || master.status === "ABSENT") {
         absentStudents.push({
           studentId: student.id,
-          studentName: `${student.givenName} ${student.surname}`,
+          studentName: `${student.firstName} ${student.lastName}`,
         })
       } else {
         presentStudents.push({
           studentId: student.id,
-          studentName: `${student.givenName} ${student.surname}`,
+          studentName: `${student.firstName} ${student.lastName}`,
           masterStatus: master.status,
           checkInTime: master.checkInTime?.toISOString() || null,
         })

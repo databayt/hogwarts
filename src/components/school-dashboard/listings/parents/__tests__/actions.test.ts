@@ -84,8 +84,8 @@ describe("Parent/Guardian Actions", () => {
     it("creates guardian with schoolId for multi-tenant isolation", async () => {
       const mockGuardian = {
         id: "guardian-1",
-        givenName: "Robert",
-        surname: "Smith",
+        firstName: "Robert",
+        lastName: "Smith",
         schoolId: mockSchoolId,
       }
 
@@ -93,8 +93,8 @@ describe("Parent/Guardian Actions", () => {
       vi.mocked(db.guardian.create).mockResolvedValue(mockGuardian as any)
 
       const result = await createParent({
-        givenName: "Robert",
-        surname: "Smith",
+        firstName: "Robert",
+        lastName: "Smith",
       })
 
       expect(result.success).toBe(true)
@@ -109,8 +109,8 @@ describe("Parent/Guardian Actions", () => {
       })
 
       const result = await createParent({
-        givenName: "Robert",
-        surname: "Smith",
+        firstName: "Robert",
+        lastName: "Smith",
       })
 
       expect(result.success).toBe(false)
@@ -189,8 +189,8 @@ describe("Parent/Guardian Actions", () => {
       const mockGuardians = [
         {
           id: "1",
-          givenName: "Robert",
-          surname: "Smith",
+          firstName: "Robert",
+          lastName: "Smith",
           schoolId: mockSchoolId,
           emailAddress: "robert@example.com",
           userId: null,
@@ -200,8 +200,8 @@ describe("Parent/Guardian Actions", () => {
         },
         {
           id: "2",
-          givenName: "Mary",
-          surname: "Johnson",
+          firstName: "Mary",
+          lastName: "Johnson",
           schoolId: mockSchoolId,
           emailAddress: "mary@example.com",
           userId: "u-1",

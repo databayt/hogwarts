@@ -69,7 +69,7 @@ export async function getCampaigns(params: {
     }
   } catch (error) {
     console.error("[getCampaigns]", error)
-    return { success: false, error: "Failed to fetch campaigns" }
+    return actionError(ACTION_ERRORS.ADMISSION_UPDATE_FAILED)
   }
 }
 
@@ -99,7 +99,7 @@ export async function getCampaign(params: { id: string }): Promise<
     })
 
     if (!campaign) {
-      return { success: false, error: "Campaign not found" }
+      return actionError(ACTION_ERRORS.ADMISSION_NOT_FOUND)
     }
 
     return {
@@ -118,7 +118,7 @@ export async function getCampaign(params: { id: string }): Promise<
     }
   } catch (error) {
     console.error("[getCampaign]", error)
-    return { success: false, error: "Failed to fetch campaign" }
+    return actionError(ACTION_ERRORS.ADMISSION_UPDATE_FAILED)
   }
 }
 
@@ -169,7 +169,7 @@ export async function createCampaign(
         error: "A campaign with this name already exists",
       }
     }
-    return { success: false, error: "Failed to create campaign" }
+    return actionError(ACTION_ERRORS.CREATE_FAILED)
   }
 }
 
@@ -220,7 +220,7 @@ export async function updateCampaign(
         error: "A campaign with this name already exists",
       }
     }
-    return { success: false, error: "Failed to update campaign" }
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
   }
 }
 
@@ -244,7 +244,7 @@ export async function deleteCampaign(params: {
     })
 
     if (!campaign) {
-      return { success: false, error: "Campaign not found" }
+      return actionError(ACTION_ERRORS.ADMISSION_NOT_FOUND)
     }
 
     if (campaign._count.applications > 0) {
@@ -262,7 +262,7 @@ export async function deleteCampaign(params: {
     return { success: true, data: null }
   } catch (error) {
     console.error("[deleteCampaign]", error)
-    return { success: false, error: "Failed to delete campaign" }
+    return actionError(ACTION_ERRORS.DELETE_FAILED)
   }
 }
 
@@ -313,7 +313,7 @@ export async function getApplications(params: {
     }
   } catch (error) {
     console.error("[getApplications]", error)
-    return { success: false, error: "Failed to fetch applications" }
+    return actionError(ACTION_ERRORS.ADMISSION_UPDATE_FAILED)
   }
 }
 
@@ -349,7 +349,7 @@ export async function updateApplicationStatus(params: {
       select: { status: true },
     })
     if (!current) {
-      return { success: false, error: "Application not found" }
+      return actionError(ACTION_ERRORS.ADMISSION_NOT_FOUND)
     }
     const allowed = VALID_TRANSITIONS[current.status]
     if (!allowed || !allowed.includes(params.status)) {
@@ -434,7 +434,7 @@ export async function updateApplicationStatus(params: {
     return { success: true, data: null }
   } catch (error) {
     console.error("[updateApplicationStatus]", error)
-    return { success: false, error: "Failed to update status" }
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
   }
 }
 
@@ -483,7 +483,7 @@ export async function getMeritListData(params: {
     }
   } catch (error) {
     console.error("[getMeritListData]", error)
-    return { success: false, error: "Failed to fetch merit list" }
+    return actionError(ACTION_ERRORS.ADMISSION_UPDATE_FAILED)
   }
 }
 
@@ -528,7 +528,7 @@ export async function generateMeritList(params: {
     return { success: true, data: null }
   } catch (error) {
     console.error("[generateMeritList]", error)
-    return { success: false, error: "Failed to generate merit list" }
+    return actionError(ACTION_ERRORS.ADMISSION_UPDATE_FAILED)
   }
 }
 
@@ -584,7 +584,7 @@ export async function getEnrollmentData(params: {
     }
   } catch (error) {
     console.error("[getEnrollmentData]", error)
-    return { success: false, error: "Failed to fetch enrollment data" }
+    return actionError(ACTION_ERRORS.ADMISSION_UPDATE_FAILED)
   }
 }
 
@@ -608,11 +608,11 @@ export async function confirmEnrollment(params: {
     })
 
     if (!application) {
-      return { success: false, error: "Application not found" }
+      return actionError(ACTION_ERRORS.ADMISSION_NOT_FOUND)
     }
 
     if (application.status === "ADMITTED") {
-      return { success: false, error: "Application is already enrolled" }
+      return actionError(ACTION_ERRORS.ADMISSION_UPDATE_FAILED)
     }
 
     if (
@@ -701,9 +701,9 @@ export async function confirmEnrollment(params: {
               data: {
                 schoolId,
                 userId,
-                givenName: application.firstName,
+                firstName: application.firstName,
                 middleName: application.middleName,
-                surname: application.lastName,
+                lastName: application.lastName,
                 dateOfBirth: application.dateOfBirth,
                 gender: application.gender,
                 nationality: application.nationality ?? undefined,
@@ -965,10 +965,10 @@ export async function confirmEnrollment(params: {
           }
 
           for (const entry of guardianEntries) {
-            // Split name into givenName + surname
+            // Split name into firstName + lastName
             const nameParts = entry.fullName.trim().split(/\s+/)
-            const surname = nameParts.length > 1 ? nameParts.pop()! : ""
-            const givenName = nameParts.join(" ") || entry.fullName
+            const lastName = nameParts.length > 1 ? nameParts.pop()! : ""
+            const firstName = nameParts.join(" ") || entry.fullName
 
             // Ensure GuardianType exists
             const guardianType = await tx.guardianType.upsert({
@@ -991,15 +991,15 @@ export async function confirmEnrollment(params: {
                 },
                 create: {
                   schoolId,
-                  givenName,
-                  surname,
+                  firstName,
+                  lastName,
                   emailAddress: entry.email,
                 },
                 update: {},
               })
             } else {
               guardian = await tx.guardian.create({
-                data: { schoolId, givenName, surname },
+                data: { schoolId, firstName, lastName },
               })
             }
 
@@ -1301,7 +1301,7 @@ export async function confirmEnrollment(params: {
     }
   } catch (error) {
     console.error("[confirmEnrollment]", error)
-    return { success: false, error: "Failed to confirm enrollment" }
+    return actionError(ACTION_ERRORS.ADMISSION_UPDATE_FAILED)
   }
 }
 
@@ -1332,7 +1332,7 @@ export async function recordPayment(params: {
     return { success: true, data: null }
   } catch (error) {
     console.error("[recordPayment]", error)
-    return { success: false, error: "Failed to record payment" }
+    return actionError(ACTION_ERRORS.ADMISSION_UPDATE_FAILED)
   }
 }
 
@@ -1407,7 +1407,7 @@ export async function getAvailableSectionsForPlacement(params: {
     }
   } catch (error) {
     console.error("[getAvailableSectionsForPlacement]", error)
-    return { success: false, error: "Failed to fetch sections" }
+    return actionError(ACTION_ERRORS.ADMISSION_UPDATE_FAILED)
   }
 }
 
@@ -1429,7 +1429,7 @@ export async function placeStudentInSection(params: {
       select: { status: true, userId: true, firstName: true, lastName: true },
     })
 
-    if (!application) return { success: false, error: "Application not found" }
+    if (!application) return actionError(ACTION_ERRORS.ADMISSION_NOT_FOUND)
     if (application.status !== "ADMITTED") {
       return {
         success: false,
@@ -1491,7 +1491,7 @@ export async function placeStudentInSection(params: {
       return { ...section, full: false as const, alreadyPlaced: false as const }
     })
 
-    if (!sectionData) return { success: false, error: "Section not found" }
+    if (!sectionData) return actionError(ACTION_ERRORS.NOT_FOUND)
 
     if ("full" in sectionData && sectionData.full) {
       return {
@@ -1561,7 +1561,7 @@ export async function placeStudentInSection(params: {
     return { success: true, data: null }
   } catch (error) {
     console.error("[placeStudentInSection]", error)
-    return { success: false, error: "Failed to place student" }
+    return actionError(ACTION_ERRORS.ADMISSION_UPDATE_FAILED)
   }
 }
 
@@ -1591,6 +1591,6 @@ export async function fetchCampaignOptions(): Promise<
     return { success: true, data: options }
   } catch (error) {
     console.error("[fetchCampaignOptions]", error)
-    return { success: false, error: "Failed to fetch campaign options" }
+    return actionError(ACTION_ERRORS.ADMISSION_UPDATE_FAILED)
   }
 }

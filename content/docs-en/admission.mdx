@@ -147,9 +147,9 @@ This is **non-fatal** — enrollment succeeds even if invoice generation fails. 
 
 | Application Field         | Student Field            | Notes                                   |
 | ------------------------- | ------------------------ | --------------------------------------- |
-| firstName                 | givenName                | Direct copy                             |
+| firstName                 | firstName                | Direct copy                             |
 | middleName                | middleName               | Direct copy                             |
-| lastName                  | surname                  | Direct copy                             |
+| lastName                  | lastName                 | Direct copy                             |
 | dateOfBirth               | dateOfBirth              | Direct copy                             |
 | gender                    | gender                   | Direct copy                             |
 | nationality               | nationality              | Direct copy                             |
@@ -183,7 +183,7 @@ This is **non-fatal** — enrollment succeeds even if invoice generation fails. 
 
 For each parent/guardian in the application (father, mother, optional guardian):
 
-1. Name is split into `givenName` + `surname` (split on last space)
+1. Name is split into `firstName` + `lastName` (split on last space)
 2. `GuardianType` is upserted (e.g., "father", "mother")
 3. `Guardian` is created (or found by email if provided)
 4. `StudentGuardian` join record links student to guardian with occupation, isPrimary

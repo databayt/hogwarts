@@ -2,6 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import RoomCapacityContent from "@/components/school-dashboard/listings/classrooms/room-capacity-content"
 
 export const metadata = { title: "Dashboard: Room Capacity" }
@@ -12,6 +13,7 @@ interface Props {
 
 export default async function Page({ params }: Props) {
   const { lang } = await params
+  const dictionary = await getDictionary(lang)
 
   return <RoomCapacityContent lang={lang} />
 }

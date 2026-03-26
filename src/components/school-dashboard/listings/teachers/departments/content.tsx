@@ -87,8 +87,8 @@ import {
 
 interface Teacher {
   id: string
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
   emailAddress: string
   profilePhotoUrl?: string | null
   isPrimary: boolean
@@ -118,8 +118,8 @@ interface Props {
 // Helper Functions
 // ============================================================================
 
-function getInitials(givenName: string, surname: string): string {
-  return `${givenName.charAt(0)}${surname.charAt(0)}`.toUpperCase()
+function getInitials(firstName: string, lastName: string): string {
+  return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
 }
 
 // ============================================================================
@@ -572,7 +572,7 @@ export function DepartmentsContent({ dictionary, lang }: Props) {
                             src={teacher.profilePhotoUrl || undefined}
                           />
                           <AvatarFallback className="text-xs">
-                            {getInitials(teacher.givenName, teacher.surname)}
+                            {getInitials(teacher.firstName, teacher.lastName)}
                           </AvatarFallback>
                         </Avatar>
                       ))}
@@ -643,14 +643,14 @@ export function DepartmentsContent({ dictionary, lang }: Props) {
                                 />
                                 <AvatarFallback className="text-xs">
                                   {getInitials(
-                                    teacher.givenName,
-                                    teacher.surname
+                                    teacher.firstName,
+                                    teacher.lastName
                                   )}
                                 </AvatarFallback>
                               </Avatar>
                               <div className="flex-1">
                                 <p className="text-sm font-medium">
-                                  {teacher.givenName} {teacher.surname}
+                                  {teacher.firstName} {teacher.lastName}
                                 </p>
                                 <p className="text-muted-foreground text-xs">
                                   {teacher.emailAddress}

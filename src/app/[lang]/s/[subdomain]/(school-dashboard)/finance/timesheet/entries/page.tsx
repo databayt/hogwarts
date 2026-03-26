@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 
 export const metadata = { title: "Timesheet Entries" }
 
@@ -19,6 +20,7 @@ interface Props {
 
 export default async function TimesheetEntriesPage({ params }: Props) {
   const { lang } = await params
+  const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
@@ -30,7 +32,7 @@ export default async function TimesheetEntriesPage({ params }: Props) {
     orderBy: { entryDate: "desc" },
     take: 100,
     include: {
-      teacher: { select: { givenName: true, surname: true } },
+      teacher: { select: { firstName: true, lastName: true } },
       period: { select: { name: true } },
     },
   })
@@ -60,7 +62,7 @@ export default async function TimesheetEntriesPage({ params }: Props) {
               <CardContent className="flex items-center justify-between py-4">
                 <div>
                   <p className="font-medium">
-                    {entry.teacher.givenName} {entry.teacher.surname}
+                    {entry.teacher.firstName} {entry.teacher.lastName}
                   </p>
                   <p className="text-muted-foreground text-sm">
                     {entry.period.name} &mdash;{" "}

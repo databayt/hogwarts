@@ -147,7 +147,7 @@ describe("Attendance Actions", () => {
           checkInTime: null,
           checkOutTime: null,
           notes: null,
-          student: { givenName: "Test", surname: "Student" },
+          student: { firstName: "Test", lastName: "Student" },
           class: { name: "Math 101" },
         },
       ] as any)

@@ -3,6 +3,7 @@
 
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { type FeeAssignmentRow } from "@/components/school-dashboard/finance/fees/assignment-columns"
 import { FeeAssignmentsTable } from "@/components/school-dashboard/finance/fees/assignment-table"
 import { getFeeAssignmentList } from "@/components/school-dashboard/finance/fees/queries"
@@ -15,6 +16,7 @@ interface Props {
 
 export default async function FeeAssignmentsPage({ params }: Props) {
   const { lang } = await params
+  const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
@@ -28,7 +30,7 @@ export default async function FeeAssignmentsPage({ params }: Props) {
 
   const data: FeeAssignmentRow[] = rows.map((fa: any) => ({
     id: fa.id,
-    studentName: [fa.student?.givenName, fa.student?.surname]
+    studentName: [fa.student?.firstName, fa.student?.lastName]
       .filter(Boolean)
       .join(" "),
     studentId: fa.studentId,

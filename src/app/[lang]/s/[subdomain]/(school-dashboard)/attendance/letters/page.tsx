@@ -4,6 +4,7 @@
 import { auth } from "@/auth"
 
 import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { LettersContent } from "@/components/school-dashboard/attendance/letters/content"
 
 export const metadata = { title: "Dashboard: Compliance Letters" }
@@ -14,6 +15,7 @@ interface Props {
 
 export default async function Page({ params }: Props) {
   const [{ lang }, session] = await Promise.all([params, auth()])
+  const dictionary = await getDictionary(lang)
 
   if (!["ADMIN", "DEVELOPER"].includes(session?.user?.role ?? "")) {
     return (

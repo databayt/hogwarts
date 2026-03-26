@@ -2,6 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -13,7 +14,7 @@ export async function getInvoiceDetails(
 ): Promise<ActionResponse<DetailsFormData>> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const invoice = await db.userInvoice.findFirst({
       where: { id: invoiceId, schoolId },
@@ -23,7 +24,7 @@ export async function getInvoiceDetails(
       },
     })
 
-    if (!invoice) return { success: false, error: "Invoice not found" }
+    if (!invoice) return actionError(ACTION_ERRORS.INVOICE_NOT_FOUND)
 
     return {
       success: true,
@@ -64,7 +65,7 @@ export async function updateInvoiceDetails(
 ): Promise<ActionResponse> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const parsed = detailsSchema.parse(input)
 
@@ -74,7 +75,7 @@ export async function updateInvoiceDetails(
       select: { fromAddressId: true, toAddressId: true },
     })
 
-    if (!invoice) return { success: false, error: "Invoice not found" }
+    if (!invoice) return actionError(ACTION_ERRORS.INVOICE_NOT_FOUND)
 
     await db.$transaction(async (tx) => {
       // Update from address

@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import { z } from "zod"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
@@ -203,9 +204,9 @@ export async function processBarcodeScan(
       attendanceId: attendance.id,
       studentId: studentIdentifier.studentId,
       studentName:
-        studentIdentifier.student.givenName +
+        studentIdentifier.student.firstName +
         " " +
-        studentIdentifier.student.surname,
+        studentIdentifier.student.lastName,
       status: attendance.status,
     }
   } catch (error) {
@@ -293,7 +294,7 @@ export async function assignBarcodeToStudent(
       newValue: {
         studentId: data.studentId,
         studentName:
-          identifier.student.givenName + " " + identifier.student.surname,
+          identifier.student.firstName + " " + identifier.student.lastName,
         isActive: data.isActive ?? true,
         expiresAt: data.expiresAt,
       },
@@ -340,8 +341,8 @@ export async function getStudentBarcodes(studentId?: string) {
         student: {
           select: {
             id: true,
-            givenName: true,
-            surname: true,
+            firstName: true,
+            lastName: true,
             email: true,
           },
         },

@@ -416,8 +416,8 @@ export function createSampleTeachers(schoolId: string, count: number = 10) {
     teachers.push({
       id: `teacher_${i + 1}`,
       schoolId,
-      givenName: `Teacher`,
-      surname: `${i + 1}`,
+      firstName: `Teacher`,
+      lastName: `${i + 1}`,
       email: `teacher${i + 1}@school.edu`,
       specialization,
     })

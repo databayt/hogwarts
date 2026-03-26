@@ -1,0 +1,4 @@
+name,email,student id,grade,parent name,parent email,parent phone
+John Smith,john.smith@test.com,STU001,Grade 1,Jane Smith,jane.smith@test.com,+1234567890
+Alice Johnson,alice.j@test.com,STU002,Grade 2,Bob Johnson,bob.j@test.com,+1234567891
+Mohammed Ali,m.ali@test.com,STU003,Grade 1,Fatima Ali,f.ali@test.com,+1234567892

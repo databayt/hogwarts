@@ -5,6 +5,7 @@
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -18,8 +19,6 @@ import {
   type TermUpdateInput,
 } from "./validation"
 
-export type { ActionResponse }
-
 const ACADEMIC_PATH = "/school/academic"
 
 // ============================================================================
@@ -32,10 +31,10 @@ export async function createTerm(
   try {
     const { schoolId, role } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
     if (role !== "ADMIN" && role !== "DEVELOPER") {
-      return { success: false, error: "Insufficient permissions" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const parsed = termCreateSchema.parse(input)
@@ -47,7 +46,7 @@ export async function createTerm(
     })
 
     if (!year) {
-      return { success: false, error: "Academic year not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Check for duplicate term number in same year
@@ -99,10 +98,10 @@ export async function updateTerm(
   try {
     const { schoolId, role } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
     if (role !== "ADMIN" && role !== "DEVELOPER") {
-      return { success: false, error: "Insufficient permissions" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const parsed = termUpdateSchema.parse(input)
@@ -115,7 +114,7 @@ export async function updateTerm(
     })
 
     if (!existing) {
-      return { success: false, error: "Term not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Check for duplicate term number (exclude current)
@@ -169,10 +168,10 @@ export async function deleteTerm(input: {
   try {
     const { schoolId, role } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
     if (role !== "ADMIN" && role !== "DEVELOPER") {
-      return { success: false, error: "Insufficient permissions" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
@@ -184,7 +183,7 @@ export async function deleteTerm(input: {
     })
 
     if (!existing) {
-      return { success: false, error: "Term not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Check for dependent classes
@@ -226,10 +225,10 @@ export async function setActiveTerm(input: {
   try {
     const { schoolId, role } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
     if (role !== "ADMIN" && role !== "DEVELOPER") {
-      return { success: false, error: "Insufficient permissions" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
@@ -241,7 +240,7 @@ export async function setActiveTerm(input: {
     })
 
     if (!existing) {
-      return { success: false, error: "Term not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Deactivate all other terms in the SAME YEAR only (not across all years)
@@ -279,7 +278,7 @@ export async function getTerm(input: {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
@@ -320,7 +319,7 @@ export async function getTerms(
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const sp = getTermsSchema.parse(input ?? {})
@@ -397,7 +396,7 @@ export async function getTermOptions(): Promise<
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const terms = await db.term.findMany({

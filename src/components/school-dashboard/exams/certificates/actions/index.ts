@@ -258,7 +258,7 @@ export async function generateCertificate(
       },
       include: {
         student: {
-          select: { givenName: true, middleName: true, surname: true },
+          select: { firstName: true, middleName: true, lastName: true },
         },
         exam: { select: { title: true, examDate: true } },
         certificate: true,
@@ -334,7 +334,7 @@ export async function generateCertificate(
     }
 
     const studentName =
-      `${examResult.student.givenName} ${examResult.student.middleName || ""} ${examResult.student.surname}`.trim() ||
+      `${examResult.student.firstName} ${examResult.student.middleName || ""} ${examResult.student.lastName}`.trim() ||
       "Unknown Student"
 
     const certificate = await db.examCertificate.create({
@@ -465,7 +465,7 @@ export async function batchGenerateCertificates(
       },
       include: {
         student: {
-          select: { givenName: true, middleName: true, surname: true },
+          select: { firstName: true, middleName: true, lastName: true },
         },
         exam: { select: { title: true, examDate: true } },
       },
@@ -535,7 +535,7 @@ export async function batchGenerateCertificates(
         )
         const verificationCode = generateVerificationCode()
         const studentName =
-          `${result.student.givenName} ${result.student.middleName || ""} ${result.student.surname}`.trim() ||
+          `${result.student.firstName} ${result.student.middleName || ""} ${result.student.lastName}`.trim() ||
           "Unknown Student"
 
         let expiresAt: Date | undefined
@@ -773,7 +773,7 @@ export async function getCertificates(filters?: {
       include: {
         config: { select: { name: true, type: true } },
         student: {
-          select: { givenName: true, middleName: true, surname: true },
+          select: { firstName: true, middleName: true, lastName: true },
         },
       },
       orderBy: { issuedAt: "desc" },

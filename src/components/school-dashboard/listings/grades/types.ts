@@ -21,7 +21,7 @@ export type ResultDTO = {
   feedback: string | null
   submittedAt: Date | null
   gradedAt: Date | null
-  student?: { id: string; givenName: string; surname: string } | null
+  student?: { id: string; firstName: string; lastName: string } | null
   assignment?: { id: string; title: string; totalPoints: number } | null
   class?: { id: string; name: string } | null
   createdAt: Date

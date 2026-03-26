@@ -40,9 +40,9 @@ export async function getExamWithStudents(input: { examId: string }): Promise<{
                 student: {
                   select: {
                     id: true,
-                    givenName: true,
+                    firstName: true,
                     middleName: true,
-                    surname: true,
+                    lastName: true,
                     studentId: true,
                   },
                 },
@@ -64,8 +64,8 @@ export async function getExamWithStudents(input: { examId: string }): Promise<{
       return {
         id: sc.student.id,
         studentId: sc.student.studentId,
-        name: `${sc.student.givenName} ${sc.student.middleName || ""} ${
-          sc.student.surname
+        name: `${sc.student.firstName} ${sc.student.middleName || ""} ${
+          sc.student.lastName
         }`.trim(),
         marksObtained: result?.marksObtained ?? null,
         isAbsent: result?.isAbsent ?? false,

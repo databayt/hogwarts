@@ -491,8 +491,8 @@ const { events } = await getGeofenceEvents({
     timestamp: Date
     processedAt: Date | null
     student: {
-      givenName: string
-      surname: string
+      firstName: string
+      lastName: string
     }
     geofence: {
       name: string
@@ -517,7 +517,7 @@ const { events } = await getGeofenceEvents({
 })
 
 events.forEach((event) => {
-  const student = `${event.student.givenName} ${event.student.surname}`
+  const student = `${event.student.firstName} ${event.student.lastName}`
   console.log(
     `${event.timestamp.toLocaleTimeString()}: ${student} ${event.eventType} ${event.geofence.name}`
   )
@@ -996,8 +996,8 @@ export interface GeofenceEvent {
   timestamp: Date
   processedAt: Date | null
   student: {
-    givenName: string
-    surname: string
+    firstName: string
+    lastName: string
   }
   geofence: {
     name: string

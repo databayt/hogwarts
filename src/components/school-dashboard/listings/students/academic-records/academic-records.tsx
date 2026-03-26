@@ -645,7 +645,7 @@ export function AcademicRecords({
                 <div className="border-b pb-4 text-center">
                   <h3 className="text-xl font-bold">Academic Transcript</h3>
                   <p className="text-muted-foreground mt-1 text-sm">
-                    {student.givenName} {student.middleName} {student.surname}
+                    {student.firstName} {student.middleName} {student.lastName}
                   </p>
                   <p className="text-muted-foreground text-xs">
                     {student.grNumber} | {student.email}

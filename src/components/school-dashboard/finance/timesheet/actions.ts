@@ -10,6 +10,7 @@
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 
 import type { TimesheetActionResult } from "./types"
@@ -25,7 +26,7 @@ export async function createTimesheet(
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "NOT_AUTHENTICATED" }
+      return actionError(ACTION_ERRORS.PAYMENT_FAILED)
     }
 
     const data = {
@@ -62,7 +63,7 @@ export async function addTimesheetEntry(formData: FormData) {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "NOT_AUTHENTICATED" }
+      return actionError(ACTION_ERRORS.PAYMENT_FAILED)
     }
 
     const data = {
@@ -120,7 +121,7 @@ export async function submitTimesheet(timesheetId: string) {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "NOT_AUTHENTICATED" }
+      return actionError(ACTION_ERRORS.PAYMENT_FAILED)
     }
 
     const timesheet = await db.timesheetPeriod.update({
@@ -153,7 +154,7 @@ export async function approveTimesheet(formData: FormData) {
   try {
     const session = await auth()
     if (!session?.user?.schoolId || !session?.user?.id) {
-      return { success: false, error: "NOT_AUTHENTICATED" }
+      return actionError(ACTION_ERRORS.PAYMENT_FAILED)
     }
 
     const data = {
@@ -197,7 +198,7 @@ export async function getTimesheets(filters?: {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "NOT_AUTHENTICATED" }
+      return actionError(ACTION_ERRORS.PAYMENT_FAILED)
     }
 
     const timesheets = await db.timesheetPeriod.findMany({
@@ -217,6 +218,6 @@ export async function getTimesheets(filters?: {
     return { success: true, data: timesheets }
   } catch (error) {
     console.error("Error fetching timesheets:", error)
-    return { success: false, error: "UNKNOWN" }
+    return actionError(ACTION_ERRORS.PAYMENT_FAILED)
   }
 }

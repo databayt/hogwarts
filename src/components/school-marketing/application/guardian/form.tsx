@@ -6,6 +6,7 @@ import React, {
   forwardRef,
   useEffect,
   useImperativeHandle,
+  useMemo,
   useState,
 } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -15,18 +16,31 @@ import { useForm } from "react-hook-form"
 import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
 import { InputField, PhoneField } from "@/components/form"
+import { createI18nHelpers } from "@/components/internationalization/helpers"
 
 import { useApplySession } from "../application-context"
 import type { GuardianStepData } from "../types"
+import { getApplyDict } from "../utils"
 import { saveGuardianStep } from "./actions"
 import type { GuardianFormProps, GuardianFormRef } from "./types"
-import { guardianSchema, type GuardianSchemaType } from "./validation"
+import {
+  createGuardianSchema,
+  guardianSchema,
+  type GuardianSchemaType,
+} from "./validation"
 
 export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
   ({ initialData, onSuccess, dictionary }, ref) => {
     const { updateStepData } = useApplySession()
-    const isRTL =
-      (dictionary as Record<string, string> | null)?.locale === "ar" || false
+
+    const schema = useMemo(() => {
+      const messages = (dictionary as Record<string, unknown>)?.messages as
+        | Record<string, unknown>
+        | undefined
+      if (!messages) return guardianSchema
+      const { validation } = createI18nHelpers(messages as never)
+      return createGuardianSchema(validation)
+    }, [dictionary])
 
     // Determine initial view: show mother if mother has data but father doesn't
     const initialView =
@@ -36,7 +50,7 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
     )
 
     const form = useForm<GuardianSchemaType>({
-      resolver: zodResolver(guardianSchema),
+      resolver: zodResolver(schema),
       defaultValues: {
         fatherName: initialData?.fatherName || "",
         fatherOccupation: initialData?.fatherOccupation || "",
@@ -53,8 +67,7 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
       },
     })
 
-    const dict = ((dictionary as Record<string, Record<string, string>> | null)
-      ?.apply?.guardian ?? {}) as Record<string, string>
+    const dict = getApplyDict(dictionary, "guardian")
 
     const prevDataRef = React.useRef<string>("")
     useEffect(() => {
@@ -94,11 +107,7 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
         <form className="space-y-6">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">
-              {isFather
-                ? dict.fatherInfo ||
-                  (isRTL ? "معلومات الأب" : "Father's Information")
-                : dict.motherInfo ||
-                  (isRTL ? "معلومات الأم" : "Mother's Information")}
+              {isFather ? dict.fatherInfo : dict.motherInfo}
             </h3>
             <Button
               type="button"
@@ -109,40 +118,29 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
               }
               className="text-muted-foreground gap-2"
             >
-              {isFather
-                ? dict.switchToMother || (isRTL ? "الأم" : "Mother")
-                : dict.switchToFather || (isRTL ? "الأب" : "Father")}
+              {isFather ? dict.switchToMother : dict.switchToFather}
               <ArrowRight className="size-4 rtl:rotate-180" />
             </Button>
           </div>
 
           <InputField
             name={`${namePrefix}Name`}
-            label={
-              isFather
-                ? dict.fatherName || (isRTL ? "اسم الأب" : "Father's Name")
-                : dict.motherName || (isRTL ? "اسم الأم" : "Mother's Name")
-            }
-            placeholder={
-              dict.namePlaceholder || (isRTL ? "أدخل الاسم" : "Enter name")
-            }
+            label={isFather ? dict.fatherName : dict.motherName}
+            placeholder={dict.namePlaceholder}
           />
           <InputField
             name={`${namePrefix}Occupation`}
-            label={dict.occupation || (isRTL ? "المهنة" : "Occupation")}
-            placeholder={
-              dict.occupationPlaceholder ||
-              (isRTL ? "أدخل المهنة" : "Enter occupation")
-            }
+            label={dict.occupation}
+            placeholder={dict.occupationPlaceholder}
           />
           <PhoneField
             name={`${namePrefix}Phone`}
-            label={dict.phone || (isRTL ? "الهاتف" : "Phone")}
+            label={dict.phone}
             placeholder="+249 XXX XXX XXXX"
           />
           <InputField
             name={`${namePrefix}Email`}
-            label={dict.email || (isRTL ? "البريد الإلكتروني" : "Email")}
+            label={dict.email}
             placeholder="email@example.com"
             type="email"
           />

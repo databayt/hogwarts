@@ -6,52 +6,68 @@ import React, { forwardRef, useImperativeHandle, useTransition } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
+import type { NameFormat } from "@/lib/name-utils"
+import { composeFullName } from "@/lib/name-utils"
+import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
-import { CountryField, DateField, SelectField } from "@/components/form"
+import {
+  CountryField,
+  DateField,
+  NameFields,
+  SelectField,
+} from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { GENDER_OPTIONS } from "@/components/school-dashboard/listings/teachers/config"
 
 import { updateTeacherInformation } from "./actions"
-import { informationSchema, type InformationFormData } from "./validation"
+import { getInformationSchema, type InformationFormData } from "./validation"
 
 interface InformationFormProps {
   teacherId: string
   initialData?: Partial<InformationFormData>
+  nameFormat?: NameFormat
   onValidChange?: (isValid: boolean) => void
 }
 
 export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
-  ({ teacherId, initialData, onValidChange }, ref) => {
+  ({ teacherId, initialData, nameFormat = "full", onValidChange }, ref) => {
     const [isPending, startTransition] = useTransition()
 
-    const form = useForm<InformationFormData>({
+    const schema = getInformationSchema(nameFormat)
+
+    const form = useForm({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      resolver: zodResolver(informationSchema) as any,
+      resolver: zodResolver(schema) as any,
       defaultValues: {
-        givenName: initialData?.givenName || "",
-        surname: initialData?.surname || "",
+        firstName: initialData?.firstName || "",
+        lastName: initialData?.lastName || "",
         gender: initialData?.gender || "male",
         birthDate: initialData?.birthDate,
         nationality: initialData?.nationality || "",
+        ...(nameFormat === "full"
+          ? {
+              _fullName: composeFullName(
+                initialData?.firstName,
+                null,
+                initialData?.lastName
+              ),
+            }
+          : {}),
       },
     })
 
     // Notify parent of validity changes
-    const givenName = form.watch("givenName")
-    const surname = form.watch("surname")
+    const firstName = form.watch("firstName")
+    const lastName = form.watch("lastName")
+    const fullName = nameFormat === "full" ? form.watch("_fullName") : null
     React.useEffect(() => {
-      const isValid = givenName.trim().length >= 1 && surname.trim().length >= 1
+      const isValid =
+        nameFormat === "full"
+          ? (fullName as string)?.trim().length >= 1
+          : (firstName as string)?.trim().length >= 1 &&
+            (lastName as string)?.trim().length >= 1
       onValidChange?.(isValid)
-    }, [givenName, surname, onValidChange])
+    }, [firstName, lastName, fullName, nameFormat, onValidChange])
 
     useImperativeHandle(ref, () => ({
       saveAndNext: () =>
@@ -64,7 +80,13 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
                 return
               }
               const data = form.getValues()
-              const result = await updateTeacherInformation(teacherId, data)
+              const { _fullName, ...saveData } = data as InformationFormData & {
+                _fullName?: string
+              }
+              const result = await updateTeacherInformation(
+                teacherId,
+                saveData as InformationFormData
+              )
               if (!result.success) {
                 ErrorToast(result.error || "Failed to save")
                 reject(new Error(result.error))
@@ -83,54 +105,26 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
     return (
       <Form {...form}>
         <form className="space-y-6">
-          <FieldGroup className="grid grid-cols-2">
-            <FormField
-              control={form.control}
-              name="givenName"
-              render={({ field }) => (
-                <Field>
-                  <FieldLabel htmlFor="givenName">
-                    Given Name
-                    <span className="text-destructive ms-1">*</span>
-                  </FieldLabel>
-                  <FormItem>
-                    <FormControl>
-                      <Input
-                        id="givenName"
-                        placeholder="Enter given name"
-                        disabled={isPending}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                </Field>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="surname"
-              render={({ field }) => (
-                <Field>
-                  <FieldLabel htmlFor="surname">
-                    Surname
-                    <span className="text-destructive ms-1">*</span>
-                  </FieldLabel>
-                  <FormItem>
-                    <FormControl>
-                      <Input
-                        id="surname"
-                        placeholder="Enter surname"
-                        disabled={isPending}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                </Field>
-              )}
-            />
-          </FieldGroup>
+          <NameFields
+            nameFormat={nameFormat}
+            fields={{
+              firstName: "firstName",
+              middleName: "_unused_middleName",
+              lastName: "lastName",
+            }}
+            labels={{
+              firstName: "First Name",
+              lastName: "Last Name",
+              fullName: "Full Name",
+            }}
+            placeholders={{
+              firstName: "Enter first name",
+              lastName: "Enter last name",
+              fullName: "Enter full name",
+            }}
+            required
+            disabled={isPending}
+          />
           <div className="grid grid-cols-2 gap-7">
             <DateField
               name="birthDate"

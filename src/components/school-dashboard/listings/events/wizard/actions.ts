@@ -20,7 +20,7 @@ export async function getEventForWizard(
 > {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const event = await db.event.findFirst({
       where: { id: eventId, schoolId },
@@ -45,7 +45,7 @@ export async function getEventForWizard(
       },
     })
 
-    if (!event) return { success: false, error: "Event not found" }
+    if (!event) return actionError(ACTION_ERRORS.EVENT_NOT_FOUND)
 
     return { success: true, data: event as EventWizardData }
   } catch (error) {
@@ -63,12 +63,12 @@ export async function createDraftEvent(): Promise<
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const event = await db.event.create({
@@ -98,12 +98,12 @@ export async function completeEventWizard(
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Validate required fields are present
@@ -113,7 +113,7 @@ export async function completeEventWizard(
     })
 
     if (!event) {
-      return { success: false, error: "Event not found" }
+      return actionError(ACTION_ERRORS.EVENT_NOT_FOUND)
     }
 
     if (!event.title || event.title.trim().length === 0) {
@@ -169,12 +169,12 @@ export async function deleteDraftEvent(
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Atomic delete — only if it's still a draft
@@ -183,7 +183,7 @@ export async function deleteDraftEvent(
     })
 
     if (count === 0) {
-      return { success: false, error: "Draft event not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     return { success: true }

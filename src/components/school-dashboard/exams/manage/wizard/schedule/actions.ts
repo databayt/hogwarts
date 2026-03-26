@@ -2,6 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -13,7 +14,7 @@ export async function getExamSchedule(
 ): Promise<ActionResponse<ScheduleFormData>> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const exam = await db.exam.findFirst({
       where: { id: examId, schoolId },
@@ -28,7 +29,7 @@ export async function getExamSchedule(
       },
     })
 
-    if (!exam) return { success: false, error: "Exam not found" }
+    if (!exam) return actionError(ACTION_ERRORS.EXAM_NOT_FOUND)
 
     return {
       success: true,
@@ -56,7 +57,7 @@ export async function updateExamSchedule(
 ): Promise<ActionResponse> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const parsed = scheduleSchema.parse(input)
 

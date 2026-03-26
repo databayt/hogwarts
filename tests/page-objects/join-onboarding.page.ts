@@ -74,9 +74,9 @@ export class JoinOnboardingPage {
   // LOCATORS - Personal Step
   // =========================================================================
 
-  readonly givenNameInput: Locator
+  readonly firstNameInput: Locator
   readonly middleNameInput: Locator
-  readonly surnameInput: Locator
+  readonly lastNameInput: Locator
   readonly dateOfBirthInput: Locator
   readonly genderSelect: Locator
   readonly nationalityInput: Locator
@@ -135,9 +135,9 @@ export class JoinOnboardingPage {
     )
 
     // Personal step fields
-    this.givenNameInput = page.locator('input[name="givenName"]')
+    this.firstNameInput = page.locator('input[name="firstName"]')
     this.middleNameInput = page.locator('input[name="middleName"]')
-    this.surnameInput = page.locator('input[name="surname"]')
+    this.lastNameInput = page.locator('input[name="lastName"]')
     this.dateOfBirthInput = page.locator('input[name="dateOfBirth"]')
     this.genderSelect = page.locator('[name="gender"]')
     this.nationalityInput = page.locator('input[name="nationality"]')
@@ -260,8 +260,8 @@ export class JoinOnboardingPage {
    * Fill in the personal step form fields.
    */
   async completePersonalStep(data: {
-    givenName: string
-    surname: string
+    firstName: string
+    lastName: string
     dateOfBirth?: string
     gender?: string
     nationality?: string
@@ -270,22 +270,22 @@ export class JoinOnboardingPage {
 
     // Given name
     if (
-      await this.givenNameInput
+      await this.firstNameInput
         .first()
         .isVisible({ timeout: TIMEOUTS.medium })
         .catch(() => false)
     ) {
-      await this.givenNameInput.first().fill(data.givenName)
+      await this.firstNameInput.first().fill(data.firstName)
     }
 
     // Surname
     if (
-      await this.surnameInput
+      await this.lastNameInput
         .first()
         .isVisible({ timeout: 3000 })
         .catch(() => false)
     ) {
-      await this.surnameInput.first().fill(data.surname)
+      await this.lastNameInput.first().fill(data.lastName)
     }
 
     // Date of birth

@@ -83,7 +83,7 @@ export async function seedInvoices(
       const toAddress = await prisma.userInvoiceAddress.create({
         data: {
           schoolId,
-          name: `${student.givenName} ${student.surname}`,
+          name: `${student.firstName} ${student.lastName}`,
           email: `student${i + 1}@databayt.org`,
           address1: `${randomNumber(1, 100)} Student Lane`,
           address2: "Khartoum, Sudan",

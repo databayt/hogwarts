@@ -145,9 +145,9 @@ function filterStudentData(
 ): Partial<NonNullable<ProfileData["student"]>> {
   const baseData = {
     id: student.id,
-    givenName: student.givenName,
+    firstName: student.firstName,
     middleName: student.middleName,
-    surname: student.surname,
+    lastName: student.lastName,
     profilePhotoUrl: student.profilePhotoUrl,
   }
 
@@ -197,8 +197,8 @@ function filterTeacherData(
 ): Partial<NonNullable<ProfileData["teacher"]>> {
   const baseData = {
     id: teacher.id,
-    givenName: teacher.givenName,
-    surname: teacher.surname,
+    firstName: teacher.firstName,
+    lastName: teacher.lastName,
     profilePhotoUrl: teacher.profilePhotoUrl,
   }
 
@@ -248,8 +248,8 @@ function filterGuardianData(
 ): Partial<NonNullable<ProfileData["guardian"]>> {
   const baseData = {
     id: guardian.id,
-    givenName: guardian.givenName,
-    surname: guardian.surname,
+    firstName: guardian.firstName,
+    lastName: guardian.lastName,
   }
 
   if (permissionLevel === "ADMIN" || permissionLevel === "OWNER") {
@@ -285,7 +285,7 @@ export function canViewField(
   fieldName: string,
   permissionLevel: PermissionLevel
 ): boolean {
-  const publicFields = ["id", "username", "image", "givenName", "surname"]
+  const publicFields = ["id", "username", "image", "firstName", "lastName"]
   const relatedFields = [
     ...publicFields,
     "email",

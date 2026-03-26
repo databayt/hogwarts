@@ -16,7 +16,7 @@ export async function getGradeScoring(
 ): Promise<ActionResponse<ScoringFormData>> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const result = await db.result.findFirst({
       where: { id: resultId, schoolId },
@@ -28,7 +28,7 @@ export async function getGradeScoring(
       },
     })
 
-    if (!result) return { success: false, error: "Result not found" }
+    if (!result) return actionError(ACTION_ERRORS.NOT_FOUND)
 
     return {
       success: true,
@@ -53,7 +53,7 @@ export async function updateGradeScoring(
 ): Promise<ActionResponse> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const parsed = scoringSchema.parse(input)
     const percentage = (parsed.score / parsed.maxScore) * 100

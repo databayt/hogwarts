@@ -49,7 +49,7 @@ export function ParentProgressContent({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <GraduationCap className="size-5" />
-              {child.student.givenName} {child.student.surname}
+              {child.student.firstName} {child.student.lastName}
             </CardTitle>
           </CardHeader>
           <CardContent>

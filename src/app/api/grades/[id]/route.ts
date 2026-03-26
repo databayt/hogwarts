@@ -80,8 +80,8 @@ export async function GET(
       select: {
         student: {
           select: {
-            givenName: true,
-            surname: true,
+            firstName: true,
+            lastName: true,
           },
         },
         assignment: {
@@ -104,7 +104,7 @@ export async function GET(
 
     // Build name: "Student Name - Assignment/Exam Title"
     const studentName = result.student
-      ? `${result.student.givenName} ${result.student.surname}`
+      ? `${result.student.firstName} ${result.student.lastName}`
       : "Unknown Student"
 
     const itemTitle =

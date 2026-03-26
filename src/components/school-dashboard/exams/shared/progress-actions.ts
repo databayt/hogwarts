@@ -279,13 +279,13 @@ export async function getGuardianChildren(): Promise<
     where: { guardianId: guardian.id, schoolId },
     select: {
       student: {
-        select: { id: true, givenName: true, surname: true },
+        select: { id: true, firstName: true, lastName: true },
       },
     },
   })
 
   return sgs.map((sg) => ({
     id: sg.student.id,
-    name: `${sg.student.givenName || ""} ${sg.student.surname || ""}`.trim(),
+    name: `${sg.student.firstName || ""} ${sg.student.lastName || ""}`.trim(),
   }))
 }

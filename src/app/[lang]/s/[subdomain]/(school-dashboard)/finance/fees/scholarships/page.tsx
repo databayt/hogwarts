@@ -3,6 +3,7 @@
 
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { getScholarshipList } from "@/components/school-dashboard/finance/fees/queries"
 import { type ScholarshipRow } from "@/components/school-dashboard/finance/fees/scholarship-columns"
 import { ScholarshipsTable } from "@/components/school-dashboard/finance/fees/scholarship-table"
@@ -15,6 +16,7 @@ interface Props {
 
 export default async function ScholarshipsPage({ params }: Props) {
   const { lang } = await params
+  const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {

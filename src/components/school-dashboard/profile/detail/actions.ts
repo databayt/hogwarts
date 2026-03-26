@@ -1,5 +1,6 @@
 "use server"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { currentUser } from "@/components/auth/auth"
 
@@ -67,8 +68,8 @@ export async function getProfileById(userId: string) {
                 guardian: {
                   select: {
                     id: true,
-                    givenName: true,
-                    surname: true,
+                    firstName: true,
+                    lastName: true,
                     emailAddress: true,
                   },
                 },
@@ -140,9 +141,9 @@ export async function getProfileById(userId: string) {
                 student: {
                   select: {
                     id: true,
-                    givenName: true,
+                    firstName: true,
                     middleName: true,
-                    surname: true,
+                    lastName: true,
                     profilePhotoUrl: true,
                     userId: true,
                   },
@@ -158,8 +159,8 @@ export async function getProfileById(userId: string) {
             teacher: {
               select: {
                 id: true,
-                givenName: true,
-                surname: true,
+                firstName: true,
+                lastName: true,
                 emailAddress: true,
                 employeeId: true,
               },
@@ -170,10 +171,7 @@ export async function getProfileById(userId: string) {
     })
 
     if (!user) {
-      return {
-        success: false,
-        error: "User not found",
-      }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Multi-tenant check - ensure user belongs to viewer's school (unless viewer is DEVELOPER)

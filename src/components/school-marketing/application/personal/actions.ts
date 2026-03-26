@@ -4,13 +4,13 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import type { ActionResponse } from "@/lib/action-response"
 
-import { personalSchema, type PersonalSchemaType } from "./validation"
+import { getPersonalSchema, type PersonalSchemaType } from "./validation"
 
 export async function savePersonalStep(
   data: PersonalSchemaType
 ): Promise<ActionResponse<PersonalSchemaType>> {
   try {
-    const validatedData = personalSchema.parse(data)
+    const validatedData = getPersonalSchema("split").parse(data)
     return { success: true, data: validatedData }
   } catch (error) {
     return {

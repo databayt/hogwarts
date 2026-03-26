@@ -11,6 +11,7 @@
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { formatDate } from "@/lib/i18n-format"
 
@@ -38,7 +39,7 @@ export async function generateLetter(
   const userId = session?.user?.id
 
   if (!schoolId || !userId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
@@ -76,7 +77,7 @@ export async function generateLetter(
     })
 
     if (!student) {
-      return { success: false, error: "Student not found" }
+      return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
     }
 
     // Get school info
@@ -91,7 +92,7 @@ export async function generateLetter(
     })
 
     if (!school) {
-      return { success: false, error: "School not found" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Calculate attendance stats
@@ -104,7 +105,7 @@ export async function generateLetter(
     // Get template
     const template = letterTemplates[letterType]
     if (!template) {
-      return { success: false, error: "Invalid letter type" }
+      return actionError(ACTION_ERRORS.ATTENDANCE_MARK_FAILED)
     }
 
     // Build data for template
@@ -112,10 +113,10 @@ export async function generateLetter(
     const className = student.studentClasses[0]?.class?.name || "N/A"
 
     const templateData: Record<string, string> = {
-      studentName: `${student.givenName} ${student.surname}`,
+      studentName: `${student.firstName} ${student.lastName}`,
       studentId: student.grNumber || student.id,
       guardianName: guardian
-        ? `${guardian.givenName} ${guardian.surname}`
+        ? `${guardian.firstName} ${guardian.lastName}`
         : "Parent/Guardian",
       className,
       absenceRate: absenceRate.toFixed(1),
@@ -214,7 +215,7 @@ export async function generateLetter(
     }
   } catch (error) {
     console.error("Error generating letter:", error)
-    return { success: false, error: "Failed to generate letter" }
+    return actionError(ACTION_ERRORS.ATTENDANCE_MARK_FAILED)
   }
 }
 
@@ -228,7 +229,7 @@ export async function getStudentLetterHistory(
   const schoolId = session?.user?.schoolId
 
   if (!schoolId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
@@ -266,7 +267,7 @@ export async function getStudentLetterHistory(
     }
   } catch (error) {
     console.error("Error getting letter history:", error)
-    return { success: false, error: "Failed to get letter history" }
+    return actionError(ACTION_ERRORS.ATTENDANCE_MARK_FAILED)
   }
 }
 
@@ -280,13 +281,13 @@ export async function getStudentsNeedingLetters(
   const schoolId = session?.user?.schoolId
 
   if (!schoolId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
     const template = letterTemplates[letterType]
     if (!template) {
-      return { success: false, error: "Invalid letter type" }
+      return actionError(ACTION_ERRORS.ATTENDANCE_MARK_FAILED)
     }
 
     // Get date range for current month
@@ -363,7 +364,7 @@ export async function getStudentsNeedingLetters(
       success: true,
       data: eligibleStudents.map((s) => ({
         id: s.id,
-        name: `${s.givenName} ${s.surname}`,
+        name: `${s.firstName} ${s.lastName}`,
         grNumber: s.grNumber,
         yearLevel: s.studentYearLevels[0]?.yearLevel?.levelName,
         absenceRate: Math.round(s.absenceRate * 10) / 10,
@@ -375,7 +376,7 @@ export async function getStudentsNeedingLetters(
     }
   } catch (error) {
     console.error("Error getting students needing letters:", error)
-    return { success: false, error: "Failed to get eligible students" }
+    return actionError(ACTION_ERRORS.ATTENDANCE_MARK_FAILED)
   }
 }
 
@@ -391,7 +392,7 @@ export async function bulkGenerateLetters(
   const schoolId = session?.user?.schoolId
 
   if (!schoolId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   const results: { studentId: string; success: boolean; error?: string }[] = []
@@ -438,7 +439,7 @@ export async function previewLetter(
   const schoolId = session?.user?.schoolId
 
   if (!schoolId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
@@ -466,7 +467,7 @@ export async function previewLetter(
     })
 
     if (!student) {
-      return { success: false, error: "Student not found" }
+      return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
     }
 
     // Get school
@@ -475,12 +476,12 @@ export async function previewLetter(
     })
 
     if (!school) {
-      return { success: false, error: "School not found" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const template = letterTemplates[letterType]
     if (!template) {
-      return { success: false, error: "Invalid letter type" }
+      return actionError(ACTION_ERRORS.ATTENDANCE_MARK_FAILED)
     }
 
     // Calculate stats
@@ -494,10 +495,10 @@ export async function previewLetter(
 
     // Build template data
     const templateData: Record<string, string> = {
-      studentName: `${student.givenName} ${student.surname}`,
+      studentName: `${student.firstName} ${student.lastName}`,
       studentId: student.grNumber || student.id,
       guardianName: guardian
-        ? `${guardian.givenName} ${guardian.surname}`
+        ? `${guardian.firstName} ${guardian.lastName}`
         : "Parent/Guardian",
       className: student.studentClasses[0]?.class?.name || "N/A",
       absenceRate: absenceRate.toFixed(1),
@@ -546,6 +547,6 @@ export async function previewLetter(
     }
   } catch (error) {
     console.error("Error previewing letter:", error)
-    return { success: false, error: "Failed to preview letter" }
+    return actionError(ACTION_ERRORS.ATTENDANCE_MARK_FAILED)
   }
 }

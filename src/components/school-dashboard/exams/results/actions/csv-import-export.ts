@@ -125,9 +125,9 @@ export async function exportExamResultsToCSV(
             student: {
               select: {
                 studentId: true,
-                givenName: true,
+                firstName: true,
                 middleName: true,
-                surname: true,
+                lastName: true,
               },
             },
           },
@@ -178,9 +178,9 @@ export async function exportExamResultsToCSV(
     const rows = [RESULT_CSV_HEADERS.join(",")]
 
     for (const result of resultsWithRank) {
-      const studentName = `${result.student.givenName} ${
+      const studentName = `${result.student.firstName} ${
         result.student.middleName || ""
-      } ${result.student.surname}`.trim()
+      } ${result.student.lastName}`.trim()
 
       const row = [
         result.student.studentId || "",
@@ -549,8 +549,8 @@ export async function generateResultImportTemplate(examId: string): Promise<{
     // Add student rows
     for (const sc of exam.class.studentClasses) {
       const studentName =
-        `${sc.student.givenName} ${sc.student.middleName || ""} ${
-          sc.student.surname
+        `${sc.student.firstName} ${sc.student.middleName || ""} ${
+          sc.student.lastName
         }`.trim()
 
       rows.push(`${sc.student.studentId || ""},"${studentName}",0,No,`)

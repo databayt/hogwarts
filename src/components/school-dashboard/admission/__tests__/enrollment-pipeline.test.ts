@@ -253,8 +253,8 @@ describe("confirmEnrollment - full pipeline", () => {
     expect(db.student.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         schoolId: SCHOOL_ID,
-        givenName: "Ahmed",
-        surname: "Hassan",
+        firstName: "Ahmed",
+        lastName: "Hassan",
         dateOfBirth: mockApplication.dateOfBirth,
         gender: "MALE",
         nationality: "Sudan",
@@ -482,8 +482,8 @@ describe("confirmEnrollment - full pipeline", () => {
         },
         create: expect.objectContaining({
           schoolId: SCHOOL_ID,
-          givenName: "Hassan",
-          surname: "Ahmed",
+          firstName: "Hassan",
+          lastName: "Ahmed",
           emailAddress: "hassan@test.com",
         }),
       })

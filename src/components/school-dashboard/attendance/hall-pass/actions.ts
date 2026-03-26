@@ -12,6 +12,7 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import type { HallPassDestination } from "@prisma/client"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
@@ -34,7 +35,7 @@ export async function createHallPass(
   const userId = session?.user?.id
 
   if (!schoolId || !userId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
@@ -96,7 +97,7 @@ export async function createHallPass(
       },
       include: {
         student: {
-          select: { givenName: true, surname: true },
+          select: { firstName: true, lastName: true },
         },
         class: {
           select: { name: true },
@@ -110,7 +111,7 @@ export async function createHallPass(
       success: true,
       data: {
         id: hallPass.id,
-        studentName: `${hallPass.student.givenName} ${hallPass.student.surname}`,
+        studentName: `${hallPass.student.firstName} ${hallPass.student.lastName}`,
         className: hallPass.class.name,
         destination: hallPass.destination,
         expectedReturn: hallPass.expectedReturn,
@@ -119,7 +120,7 @@ export async function createHallPass(
     }
   } catch (error) {
     console.error("Error creating hall pass:", error)
-    return { success: false, error: "Failed to create hall pass" }
+    return actionError(ACTION_ERRORS.CREATE_FAILED)
   }
 }
 
@@ -132,7 +133,7 @@ export async function returnHallPass(
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
@@ -147,7 +148,7 @@ export async function returnHallPass(
     })
 
     if (!hallPass) {
-      return { success: false, error: "Hall pass not found or not active" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     const now = new Date()
@@ -178,7 +179,7 @@ export async function returnHallPass(
     }
   } catch (error) {
     console.error("Error returning hall pass:", error)
-    return { success: false, error: "Failed to return hall pass" }
+    return actionError(ACTION_ERRORS.ATTENDANCE_MARK_FAILED)
   }
 }
 
@@ -189,7 +190,7 @@ export async function cancelHallPass(passId: string): Promise<ActionResult> {
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
@@ -202,7 +203,7 @@ export async function cancelHallPass(passId: string): Promise<ActionResult> {
     })
 
     if (!hallPass) {
-      return { success: false, error: "Hall pass not found or not active" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     await db.hallPass.update({
@@ -215,7 +216,7 @@ export async function cancelHallPass(passId: string): Promise<ActionResult> {
     return { success: true }
   } catch (error) {
     console.error("Error cancelling hall pass:", error)
-    return { success: false, error: "Failed to cancel hall pass" }
+    return actionError(ACTION_ERRORS.ATTENDANCE_MARK_FAILED)
   }
 }
 
@@ -226,7 +227,7 @@ export async function getActiveHallPasses(): Promise<ActionResult> {
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
@@ -251,8 +252,8 @@ export async function getActiveHallPasses(): Promise<ActionResult> {
         student: {
           select: {
             id: true,
-            givenName: true,
-            surname: true,
+            firstName: true,
+            lastName: true,
             profilePhotoUrl: true,
           },
         },
@@ -269,7 +270,7 @@ export async function getActiveHallPasses(): Promise<ActionResult> {
         id: pass.id,
         student: {
           id: pass.student.id,
-          name: `${pass.student.givenName} ${pass.student.surname}`,
+          name: `${pass.student.firstName} ${pass.student.lastName}`,
           photoUrl: pass.student.profilePhotoUrl,
         },
         class: pass.class,
@@ -287,7 +288,7 @@ export async function getActiveHallPasses(): Promise<ActionResult> {
     }
   } catch (error) {
     console.error("Error getting active hall passes:", error)
-    return { success: false, error: "Failed to get hall passes" }
+    return actionError(ACTION_ERRORS.ATTENDANCE_MARK_FAILED)
   }
 }
 
@@ -301,7 +302,7 @@ export async function getStudentHallPassHistory(
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
@@ -336,7 +337,7 @@ export async function getStudentHallPassHistory(
     }
   } catch (error) {
     console.error("Error getting student hall pass history:", error)
-    return { success: false, error: "Failed to get hall pass history" }
+    return actionError(ACTION_ERRORS.ATTENDANCE_MARK_FAILED)
   }
 }
 
@@ -349,7 +350,7 @@ export async function getHallPassStats(
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
@@ -396,6 +397,6 @@ export async function getHallPassStats(
     }
   } catch (error) {
     console.error("Error getting hall pass stats:", error)
-    return { success: false, error: "Failed to get hall pass stats" }
+    return actionError(ACTION_ERRORS.ATTENDANCE_MARK_FAILED)
   }
 }

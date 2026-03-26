@@ -57,11 +57,11 @@ export async function generateTranscript(input: {
     // Fetch student
     const student = await db.student.findFirst({
       where: { id: input.studentId, schoolId },
-      select: { id: true, givenName: true, surname: true },
+      select: { id: true, firstName: true, lastName: true },
     })
     if (!student) return { success: false, error: "Student not found" }
 
-    const studentName = `${student.givenName} ${student.surname}`
+    const studentName = `${student.firstName} ${student.lastName}`
 
     // Fetch all report cards for this student, grouped by year
     const reportCards = await db.reportCard.findMany({

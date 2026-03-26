@@ -185,15 +185,15 @@ export async function getBulkAttendanceStats(input: {
     },
     select: {
       id: true,
-      givenName: true,
-      surname: true,
+      firstName: true,
+      lastName: true,
     },
   })
 
   const studentMap = new Map(
     students.map((s) => [
       s.id,
-      `${s.givenName || ""} ${s.surname || ""}`.trim(),
+      `${s.firstName || ""} ${s.lastName || ""}`.trim(),
     ])
   )
 

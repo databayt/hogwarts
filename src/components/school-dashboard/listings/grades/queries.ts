@@ -68,8 +68,8 @@ export const resultListSelect = {
   student: {
     select: {
       id: true,
-      givenName: true,
-      surname: true,
+      firstName: true,
+      lastName: true,
       lang: true,
     },
   },
@@ -126,8 +126,8 @@ export const resultDetailSelect = {
   student: {
     select: {
       id: true,
-      givenName: true,
-      surname: true,
+      firstName: true,
+      lastName: true,
       email: true,
       studentId: true,
     },
@@ -218,7 +218,7 @@ export function buildResultWhere(
     where.OR = [
       {
         student: {
-          givenName: {
+          firstName: {
             contains: filters.search,
             mode: Prisma.QueryMode.insensitive,
           },
@@ -226,7 +226,7 @@ export function buildResultWhere(
       },
       {
         student: {
-          surname: {
+          lastName: {
             contains: filters.search,
             mode: Prisma.QueryMode.insensitive,
           },
@@ -745,10 +745,10 @@ export function getStudentRank(
  * @returns Formatted student name
  */
 export function formatStudentName(result: {
-  student: { givenName: string; surname: string } | null
+  student: { firstName: string; lastName: string } | null
 }): string {
   if (!result.student) return "Unknown"
-  return `${result.student.givenName} ${result.student.surname}`
+  return `${result.student.firstName} ${result.student.lastName}`
 }
 
 /**

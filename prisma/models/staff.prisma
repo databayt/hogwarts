@@ -4,8 +4,8 @@ model Teacher {
   id           String  @id @default(cuid())
   schoolId     String
   employeeId   String? // External employee identifier
-  givenName    String
-  surname      String
+  firstName    String  @map("givenName")
+  lastName     String  @map("surname")
   lang         String  @default("ar")
   gender       String?
   nationality  String?

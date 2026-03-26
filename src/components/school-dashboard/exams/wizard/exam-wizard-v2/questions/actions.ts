@@ -2,6 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -20,7 +21,7 @@ export async function getAvailableQuestions(
 ): Promise<ActionResponse<QuestionOption[]>> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const where: Record<string, unknown> = {
       schoolId,
@@ -68,7 +69,7 @@ export async function updateSelectedQuestions(
 ): Promise<ActionResponse> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     // Verify generated exam belongs to school
     const genExam = await db.generatedExam.findFirst({
@@ -77,7 +78,7 @@ export async function updateSelectedQuestions(
     })
 
     if (!genExam) {
-      return { success: false, error: "Generated exam not found" }
+      return actionError(ACTION_ERRORS.EXAM_NOT_FOUND)
     }
 
     // Delete existing questions and re-create

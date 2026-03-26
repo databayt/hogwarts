@@ -2,6 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -16,7 +17,7 @@ export async function getQuestionDetails(
 ): Promise<ActionResponse<QuestionDetailsFormData>> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const question = await db.questionBank.findFirst({
       where: { id: questionId, schoolId },
@@ -34,7 +35,7 @@ export async function getQuestionDetails(
       },
     })
 
-    if (!question) return { success: false, error: "Question not found" }
+    if (!question) return actionError(ACTION_ERRORS.QUESTION_NOT_FOUND)
 
     return {
       success: true,
@@ -65,7 +66,7 @@ export async function updateQuestionDetails(
 ): Promise<ActionResponse> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const parsed = questionDetailsSchema.parse(input)
 
@@ -111,7 +112,7 @@ export async function getSubjectsForQuestion(): Promise<
 > {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const { getSchoolSubjectOptions } = await import("@/lib/school-subjects")
     const subjects = (await getSchoolSubjectOptions(schoolId)).map((s) => ({

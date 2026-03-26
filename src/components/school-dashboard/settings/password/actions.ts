@@ -3,6 +3,7 @@
 import { auth } from "@/auth"
 import { compare, hash } from "bcryptjs"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 
@@ -16,7 +17,7 @@ export async function changePassword(input: {
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const parsed = changePasswordSchema.parse(input)
@@ -27,18 +28,18 @@ export async function changePassword(input: {
     })
 
     if (!user) {
-      return { success: false, error: "User not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // If user has an existing password, require current password
     if (user.password) {
       if (!parsed.currentPassword) {
-        return { success: false, error: "Current password is required" }
+        return actionError(ACTION_ERRORS.UNKNOWN)
       }
 
       const isValid = await compare(parsed.currentPassword, user.password)
       if (!isValid) {
-        return { success: false, error: "Current password is incorrect" }
+        return actionError(ACTION_ERRORS.UNKNOWN)
       }
     }
     // OAuth users without a password can set one without providing current password

@@ -140,7 +140,7 @@ export async function deleteAccount(
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Check if account has been used in any ledger entries
@@ -186,7 +186,7 @@ export async function createJournalEntry(
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const entriesData = JSON.parse(formData.get("entries") as string)
@@ -283,7 +283,7 @@ export async function postJournalEntry(
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const journalEntry = await db.journalEntry.findUnique({
@@ -297,11 +297,11 @@ export async function postJournalEntry(
     })
 
     if (!journalEntry) {
-      return { success: false, error: "Journal entry not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     if (journalEntry.isPosted) {
-      return { success: false, error: "Journal entry is already posted" }
+      return actionError(ACTION_ERRORS.PAYMENT_FAILED)
     }
 
     // Post the entry
@@ -354,7 +354,7 @@ export async function getChartOfAccounts(filters?: {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const accounts = await db.chartOfAccount.findMany({
@@ -369,7 +369,7 @@ export async function getChartOfAccounts(filters?: {
     return { success: true, data: accounts }
   } catch (error) {
     console.error("Error fetching chart of accounts:", error)
-    return { success: false, error: "Failed to fetch chart of accounts" }
+    return actionError(ACTION_ERRORS.PAYMENT_FAILED)
   }
 }
 
@@ -384,7 +384,7 @@ export async function getJournalEntries(filters?: {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const entries = await db.journalEntry.findMany({
@@ -413,6 +413,6 @@ export async function getJournalEntries(filters?: {
     return { success: true, data: entries }
   } catch (error) {
     console.error("Error fetching journal entries:", error)
-    return { success: false, error: "Failed to fetch journal entries" }
+    return actionError(ACTION_ERRORS.PAYMENT_FAILED)
   }
 }

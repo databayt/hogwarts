@@ -15,8 +15,8 @@ import { createColumnHelpers, type ExportColumn } from "@/components/file"
 export interface TeacherExportData {
   id: string
   employeeId: string | null
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
   fullName: string
   gender: string
   email: string | null
@@ -44,11 +44,11 @@ export const TEACHER_EXPORT_COLUMNS: ExportColumn<TeacherExportData>[] = [
   custom(
     "fullName",
     "Full Name",
-    (row) => [row.givenName, row.surname].filter(Boolean).join(" "),
+    (row) => [row.firstName, row.lastName].filter(Boolean).join(" "),
     "الاسم الكامل"
   ),
-  text("givenName", "First Name", "الاسم الأول"),
-  text("surname", "Last Name", "اسم العائلة"),
+  text("firstName", "First Name", "الاسم الأول"),
+  text("lastName", "Last Name", "اسم العائلة"),
   {
     key: "gender",
     header: "Gender",
@@ -105,7 +105,7 @@ export const TEACHER_EXPORT_COLUMNS_COMPACT: ExportColumn<TeacherExportData>[] =
     custom(
       "fullName",
       "Full Name",
-      (row) => [row.givenName, row.surname].filter(Boolean).join(" "),
+      (row) => [row.firstName, row.lastName].filter(Boolean).join(" "),
       "الاسم الكامل"
     ),
     text("email", "Email", "البريد الإلكتروني"),

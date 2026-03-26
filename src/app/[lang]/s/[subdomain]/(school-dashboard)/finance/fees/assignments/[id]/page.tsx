@@ -25,6 +25,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 
 export const metadata = { title: "Assignment Details" }
 
@@ -65,6 +66,7 @@ function paymentStatusVariant(
 
 export default async function AssignmentDetailPage({ params }: Props) {
   const { lang, id } = await params
+  const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) notFound()
@@ -72,7 +74,7 @@ export default async function AssignmentDetailPage({ params }: Props) {
   const assignment = await db.feeAssignment.findFirst({
     where: { id, schoolId },
     include: {
-      student: { select: { givenName: true, surname: true } },
+      student: { select: { firstName: true, lastName: true } },
       feeStructure: { select: { name: true, totalAmount: true } },
       payments: {
         orderBy: { paymentDate: "desc" },
@@ -93,8 +95,8 @@ export default async function AssignmentDetailPage({ params }: Props) {
   if (!assignment) notFound()
 
   const studentName = [
-    assignment.student?.givenName,
-    assignment.student?.surname,
+    assignment.student?.firstName,
+    assignment.student?.lastName,
   ]
     .filter(Boolean)
     .join(" ")

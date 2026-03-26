@@ -2,6 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { MockContent } from "@/components/school-dashboard/exams/mock/content"
 
 interface MockPageProps {
@@ -12,7 +13,8 @@ interface MockPageProps {
 }
 
 export default async function MockPage({ params }: MockPageProps) {
-  await params
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
 
   return <MockContent />
 }

@@ -58,8 +58,8 @@ describe("getChildrenProgress", () => {
         {
           student: {
             id: "student-1",
-            givenName: "Harry",
-            surname: "Potter",
+            firstName: "Harry",
+            lastName: "Potter",
             userId: "student-user-1",
           },
         },
@@ -96,8 +96,8 @@ describe("getChildrenProgress", () => {
         {
           student: {
             id: "student-1",
-            givenName: "Harry",
-            surname: "Potter",
+            firstName: "Harry",
+            lastName: "Potter",
             userId: "student-user-1",
           },
         },
@@ -116,7 +116,7 @@ describe("getChildrenProgress", () => {
     const result = await getChildrenProgress()
 
     expect(result).toHaveLength(1)
-    expect(result[0].student.givenName).toBe("Harry")
+    expect(result[0].student.firstName).toBe("Harry")
     expect(result[0].enrollments).toHaveLength(1)
     expect(result[0].enrollments[0].completedLessons).toBe(1)
     expect(result[0].enrollments[0].totalLessons).toBe(5)

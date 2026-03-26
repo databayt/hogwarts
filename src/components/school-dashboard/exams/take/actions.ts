@@ -18,6 +18,7 @@ import { auth } from "@/auth"
 import { Prisma } from "@prisma/client"
 import type { ProctorMode, SecurityFlag } from "@prisma/client"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 
 import {
@@ -73,12 +74,12 @@ export async function startExamSession(input: StartExamSessionInput) {
   const userId = session?.user?.id
 
   if (!schoolId || !userId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   const validated = startExamSessionSchema.safeParse(input)
   if (!validated.success) {
-    return { success: false, error: "Invalid input" }
+    return actionError(ACTION_ERRORS.VALIDATION_ERROR)
   }
 
   const { examId, ipAddress, userAgent, deviceFingerprint } = validated.data
@@ -100,11 +101,11 @@ export async function startExamSession(input: StartExamSessionInput) {
     })
 
     if (!exam) {
-      return { success: false, error: "Exam not found" }
+      return actionError(ACTION_ERRORS.EXAM_NOT_FOUND)
     }
 
     if (exam.status !== "IN_PROGRESS") {
-      return { success: false, error: "Exam is not currently active" }
+      return actionError(ACTION_ERRORS.EXAM_UPDATE_FAILED)
     }
 
     // Get student ID from user
@@ -114,7 +115,7 @@ export async function startExamSession(input: StartExamSessionInput) {
     })
 
     if (!student) {
-      return { success: false, error: "Student record not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Check existing attempts
@@ -228,7 +229,7 @@ export async function startExamSession(input: StartExamSessionInput) {
     }
   } catch (error) {
     console.error("Start exam session error:", error)
-    return { success: false, error: "Failed to start exam session" }
+    return actionError(ACTION_ERRORS.EXAM_UPDATE_FAILED)
   }
 }
 
@@ -241,12 +242,12 @@ export async function autoSaveAnswers(input: AutoSaveAnswersInput) {
   const schoolId = session?.user?.schoolId
 
   if (!schoolId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   const validated = autoSaveAnswersSchema.safeParse(input)
   if (!validated.success) {
-    return { success: false, error: "Invalid input" }
+    return actionError(ACTION_ERRORS.VALIDATION_ERROR)
   }
 
   const { sessionId, answers, currentQuestionIndex } = validated.data
@@ -262,7 +263,7 @@ export async function autoSaveAnswers(input: AutoSaveAnswersInput) {
     })
 
     if (!examSession) {
-      return { success: false, error: "Session not found or expired" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Update session with answer snapshot
@@ -282,7 +283,7 @@ export async function autoSaveAnswers(input: AutoSaveAnswersInput) {
     return { success: true }
   } catch (error) {
     console.error("Auto-save error:", error)
-    return { success: false, error: "Failed to save answers" }
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }
 
@@ -295,12 +296,12 @@ export async function reportSecurityFlag(input: ReportSecurityFlagInput) {
   const schoolId = session?.user?.schoolId
 
   if (!schoolId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   const validated = reportSecurityFlagSchema.safeParse(input)
   if (!validated.success) {
-    return { success: false, error: "Invalid input" }
+    return actionError(ACTION_ERRORS.VALIDATION_ERROR)
   }
 
   const { sessionId, flag, details } = validated.data
@@ -316,7 +317,7 @@ export async function reportSecurityFlag(input: ReportSecurityFlagInput) {
     })
 
     if (!examSession) {
-      return { success: false, error: "Session not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Add flag to array
@@ -357,7 +358,7 @@ export async function reportSecurityFlag(input: ReportSecurityFlagInput) {
     return { success: true }
   } catch (error) {
     console.error("Report security flag error:", error)
-    return { success: false, error: "Failed to report flag" }
+    return actionError(ACTION_ERRORS.EXAM_UPDATE_FAILED)
   }
 }
 
@@ -370,12 +371,12 @@ export async function submitExamSession(input: SubmitExamAnswersInput) {
   const schoolId = session?.user?.schoolId
 
   if (!schoolId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   const validated = submitExamAnswersSchema.safeParse(input)
   if (!validated.success) {
-    return { success: false, error: "Invalid input" }
+    return actionError(ACTION_ERRORS.VALIDATION_ERROR)
   }
 
   const { examId, sessionId, answers } = validated.data
@@ -396,7 +397,7 @@ export async function submitExamSession(input: SubmitExamAnswersInput) {
     })
 
     if (!examSession) {
-      return { success: false, error: "Session not found or already submitted" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Check if within time limit (with late submission grace period if enabled)
@@ -416,7 +417,7 @@ export async function submitExamSession(input: SubmitExamAnswersInput) {
           where: { id: sessionId },
           data: { status: "EXPIRED" },
         })
-        return { success: false, error: "Time limit exceeded" }
+        return actionError(ACTION_ERRORS.EXAM_UPDATE_FAILED)
       }
     }
 
@@ -468,7 +469,7 @@ export async function submitExamSession(input: SubmitExamAnswersInput) {
     }
   } catch (error) {
     console.error("Submit exam error:", error)
-    return { success: false, error: "Failed to submit exam" }
+    return actionError(ACTION_ERRORS.EXAM_UPDATE_FAILED)
   }
 }
 
@@ -482,7 +483,7 @@ export async function getExamSession(examId: string) {
   const userId = session?.user?.id
 
   if (!schoolId || !userId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
@@ -492,7 +493,7 @@ export async function getExamSession(examId: string) {
     })
 
     if (!student) {
-      return { success: false, error: "Student not found" }
+      return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
     }
 
     const examSession = await db.examSession.findFirst({
@@ -507,6 +508,6 @@ export async function getExamSession(examId: string) {
     return { success: true, session: examSession }
   } catch (error) {
     console.error("Get exam session error:", error)
-    return { success: false, error: "Failed to get session" }
+    return actionError(ACTION_ERRORS.EXAM_UPDATE_FAILED)
   }
 }

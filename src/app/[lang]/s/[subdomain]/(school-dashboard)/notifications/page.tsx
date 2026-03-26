@@ -4,7 +4,10 @@
 import { Suspense } from "react"
 
 import type { Locale } from "@/components/internationalization/config"
-import { getNotificationDictionary } from "@/components/internationalization/dictionaries"
+import {
+  getDictionary,
+  getNotificationDictionary,
+} from "@/components/internationalization/dictionaries"
 import {
   NotificationCenterContent,
   NotificationCenterSkeleton,
@@ -28,6 +31,7 @@ interface NotificationsPageProps {
 
 export async function generateMetadata({ params }: NotificationsPageProps) {
   const { lang } = await params
+  const dictionary = await getDictionary(lang)
   const dict = await getNotificationDictionary(lang)
 
   return {

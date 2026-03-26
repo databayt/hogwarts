@@ -166,7 +166,7 @@ export function EnrollmentForm({
                     <AlertDescription>
                       Enrolling:{" "}
                       <strong>
-                        {student.givenName} {student.surname}
+                        {student.firstName} {student.lastName}
                       </strong>
                       {student.grNumber && ` (${student.grNumber})`}
                     </AlertDescription>

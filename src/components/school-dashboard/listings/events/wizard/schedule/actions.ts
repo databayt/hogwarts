@@ -14,7 +14,7 @@ export async function getEventSchedule(
 ): Promise<ActionResponse<ScheduleFormData>> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const event = await db.event.findFirst({
       where: { id: eventId, schoolId },
@@ -26,7 +26,7 @@ export async function getEventSchedule(
       },
     })
 
-    if (!event) return { success: false, error: "Event not found" }
+    if (!event) return actionError(ACTION_ERRORS.EVENT_NOT_FOUND)
 
     return {
       success: true,
@@ -51,7 +51,7 @@ export async function updateEventSchedule(
 ): Promise<ActionResponse> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const parsed = scheduleSchema.parse(input)
 

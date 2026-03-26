@@ -5,6 +5,8 @@
 import React, { useEffect, useRef, useState } from "react"
 import { useParams } from "next/navigation"
 
+import type { NameFormat } from "@/lib/name-utils"
+import { composeFullName } from "@/lib/name-utils"
 import { FormHeading, FormLayout } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
@@ -19,19 +21,31 @@ export default function PersonalContent() {
   const formRef = useRef<WizardFormRef>(null)
   const { data, isLoading } = useStudentWizard()
   const { dictionary } = useDictionary()
-  const t = (dictionary?.school as any)?.students?.personal as
-    | Record<string, string>
+  const students = (dictionary?.school as Record<string, unknown>)?.students as
+    | Record<string, unknown>
     | undefined
+  const t = students?.personal as Record<string, string> | undefined
   const [isValid, setIsValid] = useState(false)
+
+  const nameFormat = (data?.nameFormat as NameFormat) ?? "full"
 
   // Set initial validity from loaded data
   useEffect(() => {
     if (data) {
-      setIsValid(
-        data.givenName.trim().length >= 1 && data.surname.trim().length >= 1
-      )
+      if (nameFormat === "full") {
+        const full = composeFullName(
+          data.firstName,
+          data.middleName,
+          data.lastName
+        )
+        setIsValid(full.trim().length >= 1)
+      } else {
+        setIsValid(
+          data.firstName.trim().length >= 1 && data.lastName.trim().length >= 1
+        )
+      }
     }
-  }, [data])
+  }, [data, nameFormat])
 
   return (
     <WizardStep
@@ -51,12 +65,13 @@ export default function PersonalContent() {
         <PersonalForm
           ref={formRef}
           studentId={studentId}
+          nameFormat={nameFormat}
           initialData={
             data
               ? {
-                  givenName: data.givenName,
+                  firstName: data.firstName,
                   middleName: data.middleName ?? undefined,
-                  surname: data.surname,
+                  lastName: data.lastName,
                   dateOfBirth: data.dateOfBirth,
                   gender: data.gender as "male" | "female",
                   nationality: data.nationality ?? undefined,

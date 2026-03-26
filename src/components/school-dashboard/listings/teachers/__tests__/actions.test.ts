@@ -58,8 +58,8 @@ describe("Teacher Actions", () => {
     it("creates teacher with schoolId for multi-tenant isolation", async () => {
       const mockTeacher = {
         id: "teacher-1",
-        givenName: "Sarah",
-        surname: "Johnson",
+        firstName: "Sarah",
+        lastName: "Johnson",
         schoolId: mockSchoolId,
       }
 
@@ -86,8 +86,8 @@ describe("Teacher Actions", () => {
       })
 
       const result = await createTeacher({
-        givenName: "Sarah",
-        surname: "Johnson",
+        firstName: "Sarah",
+        lastName: "Johnson",
         gender: "female",
         emailAddress: "sarah.johnson@school.edu",
       })
@@ -104,8 +104,8 @@ describe("Teacher Actions", () => {
       })
 
       const result = await createTeacher({
-        givenName: "Sarah",
-        surname: "Johnson",
+        firstName: "Sarah",
+        lastName: "Johnson",
         gender: "female",
         emailAddress: "sarah.johnson@school.edu",
       })
@@ -118,8 +118,8 @@ describe("Teacher Actions", () => {
     it("updates teacher with schoolId scope", async () => {
       const mockTeacher = {
         id: "teacher-1",
-        givenName: "Sarah",
-        surname: "Williams",
+        firstName: "Sarah",
+        lastName: "Williams",
         schoolId: mockSchoolId,
       }
 
@@ -152,7 +152,7 @@ describe("Teacher Actions", () => {
 
       const result = await updateTeacher({
         id: "teacher-1",
-        surname: "Williams",
+        lastName: "Williams",
       })
 
       expect(result.success).toBe(true)
@@ -188,7 +188,7 @@ describe("Teacher Actions", () => {
 
       const result = await updateTeacher({
         id: "teacher-from-other-school",
-        surname: "Hacker",
+        lastName: "Hacker",
       })
 
       // updateMany doesn't throw when nothing matches
@@ -223,16 +223,16 @@ describe("Teacher Actions", () => {
       const mockTeachers = [
         {
           id: "1",
-          givenName: "Sarah",
-          surname: "Johnson",
+          firstName: "Sarah",
+          lastName: "Johnson",
           schoolId: mockSchoolId,
           userId: null,
           createdAt: now,
         },
         {
           id: "2",
-          givenName: "Mike",
-          surname: "Brown",
+          firstName: "Mike",
+          lastName: "Brown",
           schoolId: mockSchoolId,
           userId: "user-1",
           createdAt: now,

@@ -2,6 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -13,7 +14,7 @@ export async function getStudentHealth(
 ): Promise<ActionResponse<HealthFormData>> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const student = await db.student.findFirst({
       where: { id: studentId, schoolId },
@@ -29,7 +30,7 @@ export async function getStudentHealth(
       },
     })
 
-    if (!student) return { success: false, error: "Student not found" }
+    if (!student) return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
 
     return {
       success: true,
@@ -58,7 +59,7 @@ export async function updateStudentHealth(
 ): Promise<ActionResponse> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const parsed = healthSchema.parse(input)
 

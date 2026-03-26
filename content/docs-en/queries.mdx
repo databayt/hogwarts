@@ -64,8 +64,8 @@ Define `<entity>ListSelect` (minimal fields for tables) and `<entity>DetailSelec
 /** Minimal fields for list display */
 export const teacherListSelect = {
   id: true,
-  givenName: true,
-  surname: true,
+  firstName: true,
+  lastName: true,
   emailAddress: true,
   gender: true,
   userId: true,
@@ -76,9 +76,9 @@ export const teacherListSelect = {
 export const teacherDetailSelect = {
   id: true,
   schoolId: true,
-  givenName: true,
+  firstName: true,
   middleName: true,
-  surname: true,
+  lastName: true,
   // ... all fields
   user: {
     select: {
@@ -107,8 +107,8 @@ export function buildTeacherWhere(
 
   if (filters.search) {
     where.OR = [
-      { givenName: { contains: filters.search, mode: "insensitive" } },
-      { surname: { contains: filters.search, mode: "insensitive" } },
+      { firstName: { contains: filters.search, mode: "insensitive" } },
+      { lastName: { contains: filters.search, mode: "insensitive" } },
       { emailAddress: { contains: filters.search, mode: "insensitive" } },
     ]
   }
@@ -262,8 +262,8 @@ export type TeacherQueryParams = TeacherListFilters &
 /** Minimal fields for list display */
 export const teacherListSelect = {
   id: true,
-  givenName: true,
-  surname: true,
+  firstName: true,
+  lastName: true,
   emailAddress: true,
   gender: true,
   userId: true,
@@ -274,9 +274,9 @@ export const teacherListSelect = {
 export const teacherDetailSelect = {
   id: true,
   schoolId: true,
-  givenName: true,
+  firstName: true,
   middleName: true,
-  surname: true,
+  lastName: true,
   // ... all fields
   user: {
     select: { id: true, email: true, image: true },
@@ -295,8 +295,8 @@ export function buildTeacherWhere(
 
   if (filters.search) {
     where.OR = [
-      { givenName: { contains: filters.search, mode: "insensitive" } },
-      { surname: { contains: filters.search, mode: "insensitive" } },
+      { firstName: { contains: filters.search, mode: "insensitive" } },
+      { lastName: { contains: filters.search, mode: "insensitive" } },
     ]
   }
 
@@ -506,19 +506,19 @@ Formatting functions like `formatTeacherName` and `getTeacherInitials` are pure 
 ```typescript
 // BAD: In queries.ts
 export function formatTeacherName(teacher: {
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
 }) {
-  return `${teacher.givenName} ${teacher.surname}`
+  return `${teacher.firstName} ${teacher.lastName}`
 }
 
 // GOOD: Move to util.ts
 // util.ts
 export function formatTeacherName(teacher: {
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
 }) {
-  return `${teacher.givenName} ${teacher.surname}`
+  return `${teacher.firstName} ${teacher.lastName}`
 }
 ```
 

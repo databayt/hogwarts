@@ -21,7 +21,7 @@
  * - Cannot look up students from other schools
  *
  * NAME FORMAT:
- * - Concatenates: givenName + middleName + surname
+ * - Concatenates: firstName + middleName + lastName
  * - Filters out null/empty parts
  * - Arabic names may have 3-4 parts
  *
@@ -72,9 +72,9 @@ export async function GET(
         schoolId,
       },
       select: {
-        givenName: true,
+        firstName: true,
         middleName: true,
-        surname: true,
+        lastName: true,
       },
     })
 
@@ -82,7 +82,7 @@ export async function GET(
       return NextResponse.json({ error: "Student not found" }, { status: 404 })
     }
 
-    const name = [student.givenName, student.middleName, student.surname]
+    const name = [student.firstName, student.middleName, student.lastName]
       .filter(Boolean)
       .join(" ")
 

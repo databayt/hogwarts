@@ -64,7 +64,7 @@ export async function getStudentIdentifiers(studentId?: string) {
       where,
       include: {
         student: {
-          select: { givenName: true, surname: true },
+          select: { firstName: true, lastName: true },
         },
       },
       orderBy: { issuedAt: "desc" },
@@ -74,7 +74,7 @@ export async function getStudentIdentifiers(studentId?: string) {
       identifiers: identifiers.map((i) => ({
         id: i.id,
         studentId: i.studentId,
-        studentName: `${i.student.givenName} ${i.student.surname}`,
+        studentName: `${i.student.firstName} ${i.student.lastName}`,
         type: i.type,
         value: i.value,
         isActive: i.isActive,
@@ -130,8 +130,8 @@ export async function findStudentByIdentifier(input: {
         student: {
           select: {
             id: true,
-            givenName: true,
-            surname: true,
+            firstName: true,
+            lastName: true,
           },
         },
       },
@@ -154,7 +154,7 @@ export async function findStudentByIdentifier(input: {
       found: true,
       student: {
         id: identifier.student.id,
-        name: `${identifier.student.givenName} ${identifier.student.surname}`,
+        name: `${identifier.student.firstName} ${identifier.student.lastName}`,
       },
     }
   } catch (error) {

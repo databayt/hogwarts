@@ -154,7 +154,7 @@ export async function generateSections(
     try {
       assertClassroomPermission(authContext, "create", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to generate sections" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const parsed = generateSectionsSchema.parse(input)
@@ -323,7 +323,7 @@ export async function generateClassesForGrade(
     try {
       assertClassroomPermission(authContext, "create", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to generate classes" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const parsed = generateClassesSchema.parse(input)
@@ -334,7 +334,7 @@ export async function generateClassesForGrade(
       select: { id: true },
     })
     if (!term) {
-      return { success: false, error: "Term not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Find required defaults: all teachers, expertise map, and period range
@@ -575,7 +575,7 @@ export async function bulkEnrollStudentsInClasses(input: {
     try {
       assertClassroomPermission(authContext, "create", { schoolId })
     } catch {
-      return { success: false, error: "Unauthorized to enroll students" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     let totalEnrolled = 0

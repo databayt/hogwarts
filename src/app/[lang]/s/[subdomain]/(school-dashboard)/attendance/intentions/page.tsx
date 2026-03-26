@@ -5,6 +5,7 @@ import { auth } from "@/auth"
 
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import IntentionsContent from "@/components/school-dashboard/attendance/intentions/content"
 
 export const metadata = { title: "Dashboard: Absence Intentions" }
@@ -21,6 +22,7 @@ export default async function Page({ params }: Props) {
     auth(),
     getTenantContext(),
   ])
+  const dictionary = await getDictionary(lang)
 
   if (!STAFF_ROLES.includes(session?.user?.role ?? "")) {
     return (

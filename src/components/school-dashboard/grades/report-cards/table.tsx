@@ -197,7 +197,7 @@ export function ReportCardsTable({
                   </TableCell>
                   <TableCell>
                     <div className="font-medium">
-                      {rc.student.givenName} {rc.student.surname}
+                      {rc.student.firstName} {rc.student.lastName}
                     </div>
                     {rc.student.studentId && (
                       <div className="text-muted-foreground text-xs">

@@ -64,8 +64,8 @@ export async function getSalaryStructures(
         teacher: {
           select: {
             id: true,
-            givenName: true,
-            surname: true,
+            firstName: true,
+            lastName: true,
             employeeId: true,
           },
         },
@@ -112,8 +112,8 @@ export async function getSalaryStructure(
         teacher: {
           select: {
             id: true,
-            givenName: true,
-            surname: true,
+            firstName: true,
+            lastName: true,
             employeeId: true,
             emailAddress: true,
           },

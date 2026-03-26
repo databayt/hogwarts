@@ -67,7 +67,7 @@ export function ReviewStep() {
       }
       const ref = result.data?.userId?.slice(-8).toUpperCase() || ""
       const name = encodeURIComponent(
-        `${personal.givenName} ${personal.surname}`
+        `${personal.firstName} ${personal.lastName}`
       )
       const role = encodeURIComponent(state.role)
       const phone = contact.phone ? encodeURIComponent(contact.phone) : ""
@@ -150,9 +150,9 @@ export function ReviewStep() {
             <CardTitle className="text-lg">Personal Information</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-4">
-            <ReviewField label="First Name" value={personal.givenName} />
+            <ReviewField label="First Name" value={personal.firstName} />
             <ReviewField label="Middle Name" value={personal.middleName} />
-            <ReviewField label="Last Name" value={personal.surname} />
+            <ReviewField label="Last Name" value={personal.lastName} />
             <ReviewField label="Date of Birth" value={personal.dateOfBirth} />
             <ReviewField label="Gender" value={personal.gender} />
             <ReviewField label="Nationality" value={personal.nationality} />

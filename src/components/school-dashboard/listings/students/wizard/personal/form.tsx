@@ -6,20 +6,14 @@ import React, { forwardRef, useImperativeHandle, useTransition } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
+import type { NameFormat } from "@/lib/name-utils"
+import { composeFullName } from "@/lib/name-utils"
+import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import {
   CountryField,
   DateField,
-  InputField,
+  NameFields,
   SelectField,
 } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
@@ -27,43 +21,61 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { getGenderOptions } from "@/components/school-dashboard/listings/students/config"
 
 import { updateStudentPersonal } from "./actions"
-import { personalSchema, type PersonalFormData } from "./validation"
+import { getPersonalSchema, type PersonalFormData } from "./validation"
 
 interface PersonalFormProps {
   studentId: string
   initialData?: Partial<PersonalFormData>
+  nameFormat?: NameFormat
   onValidChange?: (isValid: boolean) => void
 }
 
 export const PersonalForm = forwardRef<WizardFormRef, PersonalFormProps>(
-  ({ studentId, initialData, onValidChange }, ref) => {
+  ({ studentId, initialData, nameFormat = "full", onValidChange }, ref) => {
     const [isPending, startTransition] = useTransition()
     const { dictionary } = useDictionary()
-    const students = (dictionary?.school as any)?.students
+    const students = (dictionary?.school as Record<string, unknown>)
+      ?.students as Record<string, unknown> | undefined
     const t = students?.personal as Record<string, string> | undefined
     const tRoot = students as Record<string, string> | undefined
 
-    const form = useForm<PersonalFormData>({
+    const schema = getPersonalSchema(nameFormat)
+
+    const form = useForm({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      resolver: zodResolver(personalSchema) as any,
+      resolver: zodResolver(schema) as any,
       defaultValues: {
-        givenName: initialData?.givenName || "",
+        firstName: initialData?.firstName || "",
         middleName: initialData?.middleName || "",
-        surname: initialData?.surname || "",
+        lastName: initialData?.lastName || "",
         dateOfBirth: initialData?.dateOfBirth,
         gender: initialData?.gender,
         nationality: initialData?.nationality || "",
         profilePhotoUrl: initialData?.profilePhotoUrl,
+        ...(nameFormat === "full"
+          ? {
+              _fullName: composeFullName(
+                initialData?.firstName,
+                initialData?.middleName,
+                initialData?.lastName
+              ),
+            }
+          : {}),
       },
     })
 
     // Notify parent of validity changes
-    const givenName = form.watch("givenName")
-    const surname = form.watch("surname")
+    const firstName = form.watch("firstName")
+    const lastName = form.watch("lastName")
+    const fullName = nameFormat === "full" ? form.watch("_fullName") : null
     React.useEffect(() => {
-      const isValid = givenName.trim().length >= 1 && surname.trim().length >= 1
+      const isValid =
+        nameFormat === "full"
+          ? (fullName as string)?.trim().length >= 1
+          : (firstName as string)?.trim().length >= 1 &&
+            (lastName as string)?.trim().length >= 1
       onValidChange?.(isValid)
-    }, [givenName, surname, onValidChange])
+    }, [firstName, lastName, fullName, nameFormat, onValidChange])
 
     useImperativeHandle(ref, () => ({
       saveAndNext: () =>
@@ -78,7 +90,14 @@ export const PersonalForm = forwardRef<WizardFormRef, PersonalFormProps>(
                 return
               }
               const data = form.getValues()
-              const result = await updateStudentPersonal(studentId, data)
+              // Strip the virtual _fullName field before saving
+              const { _fullName, ...saveData } = data as PersonalFormData & {
+                _fullName?: string
+              }
+              const result = await updateStudentPersonal(
+                studentId,
+                saveData as PersonalFormData
+              )
               if (!result.success) {
                 ErrorToast(
                   result.error || tRoot?.failedToSave || "Failed to save"
@@ -102,62 +121,25 @@ export const PersonalForm = forwardRef<WizardFormRef, PersonalFormProps>(
     return (
       <Form {...form}>
         <form className="space-y-6">
-          <FieldGroup className="grid grid-cols-2">
-            <FormField
-              control={form.control}
-              name="givenName"
-              render={({ field }) => (
-                <Field>
-                  <FieldLabel htmlFor="givenName">
-                    {t?.givenName || "Given Name"}
-                    <span className="text-destructive ms-1">*</span>
-                  </FieldLabel>
-                  <FormItem>
-                    <FormControl>
-                      <Input
-                        id="givenName"
-                        placeholder={
-                          t?.givenNamePlaceholder || "Enter given name"
-                        }
-                        disabled={isPending}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                </Field>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="surname"
-              render={({ field }) => (
-                <Field>
-                  <FieldLabel htmlFor="surname">
-                    {t?.surname || "Surname"}
-                    <span className="text-destructive ms-1">*</span>
-                  </FieldLabel>
-                  <FormItem>
-                    <FormControl>
-                      <Input
-                        id="surname"
-                        placeholder={t?.surnamePlaceholder || "Enter surname"}
-                        disabled={isPending}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                </Field>
-              )}
-            />
-          </FieldGroup>
-          <InputField
-            name="middleName"
-            label={t?.middleName || "Middle Name"}
-            placeholder={t?.middleNamePlaceholder || "Enter middle name"}
+          <NameFields
+            nameFormat={nameFormat}
+            fields={{
+              firstName: "firstName",
+              middleName: "middleName",
+              lastName: "lastName",
+            }}
+            labels={{
+              firstName: t?.firstName || "First Name",
+              lastName: t?.lastName || "Last Name",
+              fullName: t?.fullName || "Full Name",
+            }}
+            placeholders={{
+              firstName: t?.firstNamePlaceholder || "Enter first name",
+              lastName: t?.lastNamePlaceholder || "Enter last name",
+              fullName: t?.fullNamePlaceholder || "Enter full name",
+            }}
+            required
             disabled={isPending}
-            className="hidden"
           />
           <div className="grid grid-cols-2 gap-7">
             <DateField
@@ -168,7 +150,9 @@ export const PersonalForm = forwardRef<WizardFormRef, PersonalFormProps>(
             <SelectField
               name="gender"
               label={t?.gender || "Gender"}
-              options={getGenderOptions(students)}
+              options={getGenderOptions(
+                students as Parameters<typeof getGenderOptions>[0]
+              )}
               disabled={isPending}
             />
           </div>

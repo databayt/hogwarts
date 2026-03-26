@@ -2,35 +2,53 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React, { forwardRef, useEffect, useImperativeHandle } from "react"
+import React, {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+} from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
-import { FieldGroup } from "@/components/ui/field"
+import { composeFullName } from "@/lib/name-utils"
 import { Form } from "@/components/ui/form"
 import {
   CountryField,
   DateField,
-  InputField,
+  NameFields,
   SelectField,
 } from "@/components/form"
+import { createI18nHelpers } from "@/components/internationalization/helpers"
 import { useLocale } from "@/components/internationalization/use-locale"
 
 import { useApplySession } from "../application-context"
 import type { PersonalStepData } from "../types"
+import { getApplyDict } from "../utils"
 import { savePersonalStep } from "./actions"
 import { CATEGORY_OPTIONS, GENDER_OPTIONS } from "./config"
 import type { PersonalFormProps, PersonalFormRef } from "./types"
-import { personalSchema, type PersonalSchemaType } from "./validation"
+import { getPersonalSchema, type PersonalSchemaType } from "./validation"
 
 export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
   ({ initialData, onSuccess, dictionary }, ref) => {
     const { locale } = useLocale()
     const isRTL = locale === "ar"
-    const { updateStepData } = useApplySession()
+    const { updateStepData, nameFormat } = useApplySession()
 
-    const form = useForm<PersonalSchemaType>({
-      resolver: zodResolver(personalSchema),
+    const { v } = useMemo(() => {
+      const messages = (dictionary as Record<string, unknown>)?.messages as
+        | Record<string, unknown>
+        | undefined
+      if (!messages) return { v: undefined }
+      const { validation } = createI18nHelpers(messages as never)
+      return { v: validation }
+    }, [dictionary])
+
+    const schema = getPersonalSchema(nameFormat, v)
+
+    const form = useForm({
+      resolver: zodResolver(schema),
       defaultValues: {
         firstName: initialData?.firstName || "",
         middleName: initialData?.middleName || "",
@@ -40,11 +58,19 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
         nationality: initialData?.nationality || "",
         religion: initialData?.religion || "",
         category: initialData?.category || "",
+        ...(nameFormat === "full"
+          ? {
+              _fullName: composeFullName(
+                initialData?.firstName,
+                initialData?.middleName,
+                initialData?.lastName
+              ),
+            }
+          : {}),
       },
     })
 
-    const dict = ((dictionary as Record<string, Record<string, string>> | null)
-      ?.apply?.personal ?? {}) as Record<string, string>
+    const dict = getApplyDict(dictionary, "personal")
 
     const prevDataRef = React.useRef<string>("")
     useEffect(() => {
@@ -52,7 +78,11 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
         const json = JSON.stringify(value)
         if (json !== prevDataRef.current) {
           prevDataRef.current = json
-          updateStepData("personal", value as unknown as PersonalStepData)
+          // Strip _fullName before updating step data
+          const { _fullName, ...stepData } = value as PersonalStepData & {
+            _fullName?: string
+          }
+          updateStepData("personal", stepData as unknown as PersonalStepData)
         }
       })
       return () => subscription.unsubscribe()
@@ -63,7 +93,11 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
       if (!isValid) throw new Error("Form validation failed")
 
       const data = form.getValues()
-      const result = await savePersonalStep(data)
+      // Strip _fullName before saving
+      const { _fullName, ...saveData } = data as PersonalSchemaType & {
+        _fullName?: string
+      }
+      const result = await savePersonalStep(saveData as PersonalSchemaType)
 
       if (!result.success) throw new Error(result.error || "Failed to save")
 
@@ -79,36 +113,37 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
     return (
       <Form {...form}>
         <form className="space-y-6">
-          <FieldGroup className="grid grid-cols-2">
-            <InputField
-              name="firstName"
-              label={`${dict.firstName || "First Name"} *`}
-              placeholder={dict.firstNamePlaceholder || "Enter first name"}
-            />
-            <InputField
-              name="lastName"
-              label={`${dict.lastName || "Last Name"} *`}
-              placeholder={dict.lastNamePlaceholder || "Enter last name"}
-            />
-          </FieldGroup>
-          <InputField
-            name="middleName"
-            label={dict.middleName || "Middle Name"}
-            placeholder={dict.middleNamePlaceholder || "Enter middle name"}
-            className="hidden"
+          <NameFields
+            nameFormat={nameFormat}
+            fields={{
+              firstName: "firstName",
+              middleName: "middleName",
+              lastName: "lastName",
+            }}
+            labels={{
+              firstName: dict.firstName,
+              lastName: dict.lastName,
+              fullName: dict.fullName,
+            }}
+            placeholders={{
+              firstName: dict.firstNamePlaceholder,
+              lastName: dict.lastNamePlaceholder,
+              fullName: dict.fullNamePlaceholder,
+            }}
+            required
           />
           <div className="grid grid-cols-2 gap-7">
             <DateField
               name="dateOfBirth"
-              label={`${dict.dateOfBirth || "Date of Birth"} *`}
+              label={`${dict.dateOfBirth} *`}
               captionLayout="dropdown"
               startMonth={new Date(1990, 0)}
               endMonth={new Date()}
             />
             <SelectField
               name="gender"
-              label={`${dict.gender || "Gender"} *`}
-              placeholder={dict.selectGender || "Select gender"}
+              label={`${dict.gender} *`}
+              placeholder={dict.selectGender}
               options={GENDER_OPTIONS(isRTL).map((o) => ({
                 value: o.value,
                 label: o.label,
@@ -118,13 +153,13 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
           <div className="grid grid-cols-2 gap-7">
             <CountryField
               name="nationality"
-              label={dict.nationality || "Nationality"}
-              placeholder={dict.selectNationality || "Select nationality"}
+              label={dict.nationality}
+              placeholder={dict.selectNationality}
             />
             <SelectField
               name="category"
-              label={dict.category || "Category"}
-              placeholder={dict.selectCategory || "Select category"}
+              label={dict.category}
+              placeholder={dict.selectCategory}
               options={CATEGORY_OPTIONS(isRTL).map((o) => ({
                 value: o.value,
                 label: o.label,

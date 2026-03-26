@@ -19,8 +19,8 @@ export const linkGuardianSchema = z.object({
 
 export const createGuardianAndLinkSchema = z.object({
   studentId: z.string().min(1, "Student ID is required"),
-  givenName: z.string().min(1, "First name is required"),
-  surname: z.string().min(1, "Last name is required"),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
   emailAddress: z.string().email().optional().or(z.literal("")),
   phoneNumber: z.string().optional(),
   guardianType: z.string().min(1, "Guardian type is required"),
@@ -48,8 +48,8 @@ export const unlinkGuardianSchema = z.object({
 // ============================================================================
 
 export const parentBaseSchema = z.object({
-  givenName: z.string().min(1, "Given name is required"),
-  surname: z.string().min(1, "Surname is required"),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
   emailAddress: z
     .string()
     .email("Valid email is required")

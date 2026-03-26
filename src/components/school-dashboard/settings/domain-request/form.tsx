@@ -86,7 +86,9 @@ export function DomainRequestForm({
       if (result.success) {
         setSuccess("Domain request cancelled successfully.")
       } else {
-        setError(result.error || "Failed to cancel request")
+        setError(
+          ("error" in result && result.error) || "Failed to cancel request"
+        )
       }
     })
   }

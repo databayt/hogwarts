@@ -67,7 +67,7 @@ export async function getFeeStructures(): Promise<ActionResult<any[]>> {
     return { success: true, data: feeStructures }
   } catch (error) {
     console.error("Error fetching fee structures:", error)
-    return { success: false, error: "Failed to fetch fee structures" }
+    return actionError(ACTION_ERRORS.PAYMENT_FAILED)
   }
 }
 
@@ -132,7 +132,7 @@ export async function createFeeStructure(
     return { success: true, data: feeStructure.id }
   } catch (error) {
     console.error("Error creating fee structure:", error)
-    return { success: false, error: "Failed to create fee structure" }
+    return actionError(ACTION_ERRORS.CREATE_FAILED)
   }
 }
 
@@ -165,7 +165,7 @@ export async function assignFee(data: FormData): Promise<ActionResult<string>> {
     })
 
     if (existing) {
-      return { success: false, error: "Fee already assigned to this student" }
+      return actionError(ACTION_ERRORS.PAYMENT_FAILED)
     }
 
     const feeAssignment = await db.feeAssignment.create({
@@ -196,7 +196,7 @@ export async function assignFee(data: FormData): Promise<ActionResult<string>> {
     // Notify student about new fee due (non-blocking)
     const student = await db.student.findFirst({
       where: { id: formData.studentId as string, schoolId },
-      select: { userId: true, givenName: true, surname: true },
+      select: { userId: true, firstName: true, lastName: true },
     })
     if (student?.userId) {
       dispatchNotification({
@@ -230,14 +230,14 @@ export async function assignFee(data: FormData): Promise<ActionResult<string>> {
             userId: link.guardian.userId,
             type: "fee_due",
             title: "رسوم دراسية جديدة",
-            body: `تم تعيين رسوم بقيمة ${parseFloat(formData.finalAmount as string).toLocaleString()} لحساب ${student.givenName} ${student.surname}`,
+            body: `تم تعيين رسوم بقيمة ${parseFloat(formData.finalAmount as string).toLocaleString()} لحساب ${student.firstName} ${student.lastName}`,
             lang: schoolLang,
             priority: "high",
             channels: ["in_app", "email"],
             metadata: {
               feeAssignmentId: feeAssignment.id,
               amount: parseFloat(formData.finalAmount as string),
-              studentName: `${student.givenName} ${student.surname}`,
+              studentName: `${student.firstName} ${student.lastName}`,
               url: "/finance/fees",
             },
             actorId: session.user.id,
@@ -252,7 +252,7 @@ export async function assignFee(data: FormData): Promise<ActionResult<string>> {
     return { success: true, data: feeAssignment.id }
   } catch (error) {
     console.error("Error assigning fee:", error)
-    return { success: false, error: "Failed to assign fee" }
+    return actionError(ACTION_ERRORS.PAYMENT_FAILED)
   }
 }
 
@@ -282,7 +282,7 @@ export async function bulkAssignFees(
     })
 
     if (!feeStructure) {
-      return { success: false, error: "Fee structure not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Create assignments for all students
@@ -303,7 +303,7 @@ export async function bulkAssignFees(
     return { success: true, data: assignments.count }
   } catch (error) {
     console.error("Error bulk assigning fees:", error)
-    return { success: false, error: "Failed to assign fees" }
+    return actionError(ACTION_ERRORS.PAYMENT_FAILED)
   }
 }
 
@@ -333,7 +333,7 @@ export async function getStudentFees(
     return { success: true, data: feeAssignments }
   } catch (error) {
     console.error("Error fetching student fees:", error)
-    return { success: false, error: "Failed to fetch student fees" }
+    return actionError(ACTION_ERRORS.PAYMENT_FAILED)
   }
 }
 
@@ -366,7 +366,7 @@ export async function recordPayment(
     })
 
     if (!feeAssignment) {
-      return { success: false, error: "Fee assignment not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Calculate total paid
@@ -481,7 +481,7 @@ export async function recordPayment(
     return { success: true, data: payment.id }
   } catch (error) {
     console.error("Error recording payment:", error)
-    return { success: false, error: "Failed to record payment" }
+    return actionError(ACTION_ERRORS.PAYMENT_FAILED)
   }
 }
 
@@ -511,7 +511,7 @@ export async function applyScholarship(
     })
 
     if (!scholarship) {
-      return { success: false, error: "Scholarship not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Update fee assignment
@@ -530,7 +530,7 @@ export async function applyScholarship(
     return { success: true }
   } catch (error) {
     console.error("Error applying scholarship:", error)
-    return { success: false, error: "Failed to apply scholarship" }
+    return actionError(ACTION_ERRORS.PAYMENT_FAILED)
   }
 }
 
@@ -568,7 +568,7 @@ export async function issueFine(data: FormData): Promise<ActionResult<string>> {
     return { success: true, data: fine.id }
   } catch (error) {
     console.error("Error issuing fine:", error)
-    return { success: false, error: "Failed to issue fine" }
+    return actionError(ACTION_ERRORS.PAYMENT_FAILED)
   }
 }
 
@@ -601,7 +601,7 @@ export async function waiveFine(
     return { success: true }
   } catch (error) {
     console.error("Error waiving fine:", error)
-    return { success: false, error: "Failed to waive fine" }
+    return actionError(ACTION_ERRORS.PAYMENT_FAILED)
   }
 }
 
@@ -625,7 +625,7 @@ export async function fetchAssignmentRows(
     const result = await getFeeAssignmentList(schoolId, { page, perPage })
     const rows = result.rows.map((fa: any) => ({
       id: fa.id,
-      studentName: [fa.student?.givenName, fa.student?.surname]
+      studentName: [fa.student?.firstName, fa.student?.lastName]
         .filter(Boolean)
         .join(" "),
       studentId: fa.student?.id,
@@ -661,7 +661,7 @@ export async function fetchPaymentRows(
     const rows = result.rows.map((p: any) => ({
       id: p.id,
       paymentNumber: p.paymentNumber,
-      studentName: [p.student?.givenName, p.student?.surname]
+      studentName: [p.student?.firstName, p.student?.lastName]
         .filter(Boolean)
         .join(" "),
       studentId: p.student?.id,
@@ -697,7 +697,7 @@ export async function fetchFineRows(
     const result = await getFineList(schoolId, { page, perPage })
     const rows = result.rows.map((f: any) => ({
       id: f.id,
-      studentName: [f.student?.givenName, f.student?.surname]
+      studentName: [f.student?.firstName, f.student?.lastName]
         .filter(Boolean)
         .join(" "),
       studentId: f.student?.id,
@@ -768,6 +768,6 @@ export async function getFeeCollectionSummary(): Promise<ActionResult<any>> {
     }
   } catch (error) {
     console.error("Error fetching fee collection summary:", error)
-    return { success: false, error: "Failed to fetch summary" }
+    return actionError(ACTION_ERRORS.PAYMENT_FAILED)
   }
 }

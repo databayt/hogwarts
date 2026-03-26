@@ -8,10 +8,12 @@ import { getStudentForWizard } from "./actions"
 export interface StudentWizardData {
   id: string
   schoolId: string
+  // School config
+  nameFormat: string
   // Personal
-  givenName: string
+  firstName: string
   middleName: string | null
-  surname: string
+  lastName: string
   dateOfBirth: Date
   gender: string
   nationality: string | null

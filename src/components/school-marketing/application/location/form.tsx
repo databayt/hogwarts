@@ -2,7 +2,12 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React, { forwardRef, useEffect, useImperativeHandle } from "react"
+import React, {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+} from "react"
 import dynamic from "next/dynamic"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -11,11 +16,17 @@ import { type LocationResult } from "@/lib/mapbox"
 import { Form } from "@/components/ui/form"
 import { Skeleton } from "@/components/ui/skeleton"
 import { CountryField, InputField, TextareaField } from "@/components/form"
+import { createI18nHelpers } from "@/components/internationalization/helpers"
 
 import { useApplySession } from "../application-context"
+import { getApplyDict } from "../utils"
 import { saveLocationStep } from "./actions"
 import type { LocationFormProps, LocationFormRef } from "./types"
-import { locationSchema, type LocationSchemaType } from "./validation"
+import {
+  createLocationSchema,
+  locationSchema,
+  type LocationSchemaType,
+} from "./validation"
 
 const MapboxLocationPicker = dynamic(
   () =>
@@ -42,9 +53,18 @@ export const LocationForm = forwardRef<LocationFormRef, LocationFormProps>(
       longitude: number
     }>({ latitude: 0, longitude: 0 })
 
+    const schema = useMemo(() => {
+      const messages = (dictionary as Record<string, unknown>)?.messages as
+        | Record<string, unknown>
+        | undefined
+      if (!messages) return locationSchema
+      const { validation } = createI18nHelpers(messages as never)
+      return createLocationSchema(validation)
+    }, [dictionary])
+
     const form = useForm<LocationSchemaType>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      resolver: zodResolver(locationSchema) as any,
+      resolver: zodResolver(schema) as any,
       defaultValues: {
         address: initialData?.address || "",
         city: initialData?.city || "",
@@ -54,8 +74,7 @@ export const LocationForm = forwardRef<LocationFormRef, LocationFormProps>(
       },
     })
 
-    const dict = ((dictionary as Record<string, Record<string, string>> | null)
-      ?.apply?.location ?? {}) as Record<string, string>
+    const dict = getApplyDict(dictionary, "location")
 
     const prevDataRef = React.useRef<string>("")
     useEffect(() => {
@@ -115,7 +134,7 @@ export const LocationForm = forwardRef<LocationFormRef, LocationFormProps>(
             <MapboxLocationPicker
               value={pickerValue}
               onChange={handleLocationChange}
-              placeholder={dict.searchAddress || "Search for an address..."}
+              placeholder={dict.searchAddress}
             />
           </form>
         </Form>
@@ -128,28 +147,28 @@ export const LocationForm = forwardRef<LocationFormRef, LocationFormProps>(
         <form className="space-y-6">
           <TextareaField
             name="address"
-            label={`${dict.address || "Current Address"} *`}
-            placeholder={dict.addressPlaceholder || "Enter current address"}
+            label={`${dict.address} *`}
+            placeholder={dict.addressPlaceholder}
           />
           <InputField
             name="city"
-            label={`${dict.city || "City"} *`}
-            placeholder={dict.cityPlaceholder || "Enter city"}
+            label={`${dict.city} *`}
+            placeholder={dict.cityPlaceholder}
           />
           <InputField
             name="state"
-            label={`${dict.state || "State"} *`}
-            placeholder={dict.statePlaceholder || "Enter state"}
+            label={`${dict.state} *`}
+            placeholder={dict.statePlaceholder}
           />
           <InputField
             name="postalCode"
-            label={dict.postalCode || "Postal Code"}
-            placeholder={dict.postalCodePlaceholder || "Enter postal code"}
+            label={dict.postalCode}
+            placeholder={dict.postalCodePlaceholder}
           />
           <CountryField
             name="country"
-            label={`${dict.country || "Country"} *`}
-            placeholder={dict.selectCountry || "Select country"}
+            label={`${dict.country} *`}
+            placeholder={dict.selectCountry}
           />
         </form>
       </Form>

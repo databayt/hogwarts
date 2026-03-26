@@ -11,6 +11,7 @@
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 
@@ -46,7 +47,7 @@ export async function awardPoints(
   const userId = session?.user?.id
 
   if (!schoolId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
@@ -70,7 +71,7 @@ export async function awardPoints(
     return { success: true, data: reward }
   } catch (error) {
     console.error("Error awarding points:", error)
-    return { success: false, error: "Failed to award points" }
+    return actionError(ACTION_ERRORS.ATTENDANCE_MARK_FAILED)
   }
 }
 
@@ -86,7 +87,7 @@ export async function processAttendancePoints(
   const schoolId = session?.user?.schoolId
 
   if (!schoolId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
@@ -248,7 +249,7 @@ export async function processAttendancePoints(
     }
   } catch (error) {
     console.error("Error processing attendance points:", error)
-    return { success: false, error: "Failed to process attendance points" }
+    return actionError(ACTION_ERRORS.ATTENDANCE_MARK_FAILED)
   }
 }
 
@@ -263,7 +264,7 @@ export async function awardBadge(
   const userId = session?.user?.id
 
   if (!schoolId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
@@ -277,7 +278,7 @@ export async function awardBadge(
     if (!badge) {
       const definition = BADGE_DEFINITIONS[validated.badgeCode as BadgeCode]
       if (!definition) {
-        return { success: false, error: "Invalid badge code" }
+        return actionError(ACTION_ERRORS.ATTENDANCE_MARK_FAILED)
       }
 
       badge = await db.attendanceBadge.create({
@@ -329,7 +330,7 @@ export async function awardBadge(
     return { success: true, data: studentBadge }
   } catch (error) {
     console.error("Error awarding badge:", error)
-    return { success: false, error: "Failed to award badge" }
+    return actionError(ACTION_ERRORS.ATTENDANCE_MARK_FAILED)
   }
 }
 
@@ -344,7 +345,7 @@ export async function getLeaderboard(
   const schoolId = session?.user?.schoolId
 
   if (!schoolId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
@@ -353,8 +354,8 @@ export async function getLeaderboard(
       where: { schoolId, status: "ACTIVE" },
       select: {
         id: true,
-        givenName: true,
-        surname: true,
+        firstName: true,
+        lastName: true,
         profilePhotoUrl: true,
         attendanceRewards: {
           select: { points: true },
@@ -385,7 +386,7 @@ export async function getLeaderboard(
     const leaderboardRaw = students
       .map((student) => ({
         studentId: student.id,
-        studentName: `${student.givenName} ${student.surname}`,
+        studentName: `${student.firstName} ${student.lastName}`,
         profilePhotoUrl: student.profilePhotoUrl,
         points: student.attendanceRewards.reduce((sum, r) => sum + r.points, 0),
         currentStreak: student.attendanceStreak?.currentStreak || 0,
@@ -426,7 +427,7 @@ export async function getLeaderboard(
     return { success: true, data: leaderboard }
   } catch (error) {
     console.error("Error getting leaderboard:", error)
-    return { success: false, error: "Failed to get leaderboard" }
+    return actionError(ACTION_ERRORS.ATTENDANCE_MARK_FAILED)
   }
 }
 
@@ -440,7 +441,7 @@ export async function getStudentGamificationStats(
   const schoolId = session?.user?.schoolId
 
   if (!schoolId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
@@ -506,7 +507,7 @@ export async function getStudentGamificationStats(
     }
   } catch (error) {
     console.error("Error getting student stats:", error)
-    return { success: false, error: "Failed to get student stats" }
+    return actionError(ACTION_ERRORS.ATTENDANCE_MARK_FAILED)
   }
 }
 
@@ -520,7 +521,7 @@ export async function createCompetition(
   const schoolId = session?.user?.schoolId
 
   if (!schoolId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
@@ -563,7 +564,7 @@ export async function createCompetition(
     return { success: true, data: competition }
   } catch (error) {
     console.error("Error creating competition:", error)
-    return { success: false, error: "Failed to create competition" }
+    return actionError(ACTION_ERRORS.CREATE_FAILED)
   }
 }
 
@@ -577,7 +578,7 @@ export async function getActiveCompetitions(
   const schoolId = session?.user?.schoolId
 
   if (!schoolId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
@@ -651,7 +652,7 @@ export async function getActiveCompetitions(
     }
   } catch (error) {
     console.error("Error getting competitions:", error)
-    return { success: false, error: "Failed to get competitions" }
+    return actionError(ACTION_ERRORS.ATTENDANCE_MARK_FAILED)
   }
 }
 
@@ -665,7 +666,7 @@ export async function updateCompetitionStandings(
   const schoolId = session?.user?.schoolId
 
   if (!schoolId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
@@ -675,7 +676,7 @@ export async function updateCompetitionStandings(
     })
 
     if (!competition) {
-      return { success: false, error: "Competition not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Update each class's stats
@@ -729,7 +730,7 @@ export async function updateCompetitionStandings(
     return { success: true }
   } catch (error) {
     console.error("Error updating competition standings:", error)
-    return { success: false, error: "Failed to update standings" }
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
   }
 }
 
@@ -741,7 +742,7 @@ export async function initializeDefaultBadges(): Promise<ActionResult> {
   const schoolId = session?.user?.schoolId
 
   if (!schoolId) {
-    return { success: false, error: "Unauthorized" }
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
@@ -766,6 +767,6 @@ export async function initializeDefaultBadges(): Promise<ActionResult> {
     return { success: true }
   } catch (error) {
     console.error("Error initializing badges:", error)
-    return { success: false, error: "Failed to initialize badges" }
+    return actionError(ACTION_ERRORS.ATTENDANCE_MARK_FAILED)
   }
 }

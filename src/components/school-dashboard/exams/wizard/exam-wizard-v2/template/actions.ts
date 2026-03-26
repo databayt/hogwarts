@@ -2,6 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -21,7 +22,7 @@ export async function getAvailableTemplates(): Promise<
 > {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const templates = await db.examTemplate.findMany({
       where: { schoolId, isActive: true, wizardStep: null },
@@ -83,7 +84,7 @@ export async function selectTemplate(
 ): Promise<ActionResponse> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     // Verify template belongs to school
     const template = await db.examTemplate.findFirst({
@@ -92,7 +93,7 @@ export async function selectTemplate(
     })
 
     if (!template) {
-      return { success: false, error: "Template not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     await db.generatedExam.updateMany({

@@ -13,6 +13,7 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import type { Prisma } from "@prisma/client"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -61,12 +62,12 @@ export async function submitAbsenceIntention(
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Validate input
@@ -75,11 +76,11 @@ export async function submitAbsenceIntention(
     // Verify student belongs to school
     const student = await db.student.findFirst({
       where: { id: validated.studentId, schoolId },
-      select: { id: true, givenName: true, surname: true },
+      select: { id: true, firstName: true, lastName: true },
     })
 
     if (!student) {
-      return { success: false, error: "Student not found" }
+      return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
     }
 
     // Check for overlapping intentions
@@ -153,18 +154,18 @@ export async function reviewAbsenceIntention(
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Check user has review permissions (teacher, admin, developer)
     const allowedRoles = ["TEACHER", "ADMIN", "DEVELOPER"]
     if (!session.user.role || !allowedRoles.includes(session.user.role)) {
-      return { success: false, error: "Insufficient permissions" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Validate input
@@ -175,17 +176,17 @@ export async function reviewAbsenceIntention(
       where: { id: validated.intentionId, schoolId },
       include: {
         student: {
-          select: { givenName: true, surname: true },
+          select: { firstName: true, lastName: true },
         },
       },
     })
 
     if (!intention) {
-      return { success: false, error: "Intention not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     if (intention.status !== "PENDING") {
-      return { success: false, error: "Intention has already been reviewed" }
+      return actionError(ACTION_ERRORS.ATTENDANCE_MARK_FAILED)
     }
 
     // Update the intention
@@ -244,7 +245,7 @@ export async function getAbsenceIntentions(
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Build where clause
@@ -275,7 +276,7 @@ export async function getAbsenceIntentions(
         where,
         include: {
           student: {
-            select: { givenName: true, surname: true },
+            select: { firstName: true, lastName: true },
           },
         },
         orderBy: { createdAt: "desc" },
@@ -290,7 +291,7 @@ export async function getAbsenceIntentions(
         intentions: intentions.map((i) => ({
           id: i.id,
           studentId: i.studentId,
-          studentName: `${i.student.givenName} ${i.student.surname}`,
+          studentName: `${i.student.firstName} ${i.student.lastName}`,
           dateFrom: i.dateFrom,
           dateTo: i.dateTo,
           daysCount: i.daysCount,
@@ -323,7 +324,7 @@ export async function getPendingIntentionsCount(): Promise<
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const count = await db.absenceIntention.count({
@@ -362,7 +363,7 @@ export async function getStudentIntentions(studentId: string): Promise<
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const intentions = await db.absenceIntention.findMany({
@@ -407,12 +408,12 @@ export async function cancelAbsenceIntention(
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Find the intention
@@ -421,7 +422,7 @@ export async function cancelAbsenceIntention(
     })
 
     if (!intention) {
-      return { success: false, error: "Intention not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Only the submitter can cancel, and only if still pending
@@ -474,8 +475,8 @@ async function notifyIntentionSubmission(
       include: {
         student: {
           select: {
-            givenName: true,
-            surname: true,
+            firstName: true,
+            lastName: true,
             studentClasses: {
               include: {
                 class: {
@@ -492,7 +493,7 @@ async function notifyIntentionSubmission(
 
     if (!intention) return
 
-    const studentName = `${intention.student.givenName} ${intention.student.surname}`
+    const studentName = `${intention.student.firstName} ${intention.student.lastName}`
     const dateFrom = intention.dateFrom.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
@@ -545,13 +546,13 @@ async function notifyIntentionDecision(
     const intention = await db.absenceIntention.findFirst({
       where: { id: intentionId, schoolId },
       include: {
-        student: { select: { givenName: true, surname: true } },
+        student: { select: { firstName: true, lastName: true } },
       },
     })
 
     if (!intention) return
 
-    const studentName = `${intention.student.givenName} ${intention.student.surname}`
+    const studentName = `${intention.student.firstName} ${intention.student.lastName}`
     const dateFrom = intention.dateFrom.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",

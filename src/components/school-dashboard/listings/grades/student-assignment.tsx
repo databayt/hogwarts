@@ -33,7 +33,7 @@ export function StudentAssignmentStep({
   dictionary,
 }: ResultFormStepProps) {
   const [students, setStudents] = useState<
-    Array<{ id: string; givenName: string; surname: string }>
+    Array<{ id: string; firstName: string; lastName: string }>
   >([])
   const [assignments, setAssignments] = useState<
     Array<{ id: string; title: string; totalPoints: number }>
@@ -137,7 +137,7 @@ export function StudentAssignmentStep({
               <SelectContent>
                 {students.map((student) => (
                   <SelectItem key={student.id} value={student.id}>
-                    {student.givenName} {student.surname}
+                    {student.firstName} {student.lastName}
                   </SelectItem>
                 ))}
               </SelectContent>

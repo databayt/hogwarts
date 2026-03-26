@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { auth } from "@/auth"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { logger } from "@/lib/logger"
@@ -13,7 +14,10 @@ export async function getParentAnnouncements(displayLang?: "ar" | "en") {
     const session = await auth()
 
     if (!session?.user?.schoolId) {
-      return { success: false, error: "Not authenticated", announcements: [] }
+      return {
+        ...actionError(ACTION_ERRORS.NOT_AUTHENTICATED),
+        announcements: [],
+      }
     }
 
     // Get guardian and their students' classes
@@ -40,7 +44,10 @@ export async function getParentAnnouncements(displayLang?: "ar" | "en") {
     })
 
     if (!guardian) {
-      return { success: false, error: "Guardian not found", announcements: [] }
+      return {
+        ...actionError(ACTION_ERRORS.PARENT_NOT_FOUND),
+        announcements: [],
+      }
     }
 
     // Get all class IDs for the guardian's students
@@ -82,8 +89,8 @@ export async function getParentAnnouncements(displayLang?: "ar" | "en") {
             teacher: {
               select: {
                 id: true,
-                givenName: true,
-                surname: true,
+                firstName: true,
+                lastName: true,
               },
             },
           },
@@ -121,7 +128,7 @@ export async function getParentAnnouncements(displayLang?: "ar" | "en") {
               name: announcement.class.name,
               subject: announcement.class.subject.name,
               teacher: announcement.class.teacher
-                ? `${announcement.class.teacher.givenName} ${announcement.class.teacher.surname}`
+                ? `${announcement.class.teacher.firstName} ${announcement.class.teacher.lastName}`
                 : "N/A",
             }
           : null,
@@ -150,7 +157,7 @@ export async function getParentAnnouncements(displayLang?: "ar" | "en") {
       announcements: mappedAnnouncements,
       students: guardian.studentGuardians.map((sg) => ({
         id: sg.student.id,
-        name: `${sg.student.givenName}${sg.student.middleName ? ` ${sg.student.middleName}` : ""} ${sg.student.surname}`,
+        name: `${sg.student.firstName}${sg.student.middleName ? ` ${sg.student.middleName}` : ""} ${sg.student.lastName}`,
       })),
     }
   } catch (error) {

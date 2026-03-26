@@ -190,8 +190,8 @@ function transliterateSingle(arabicName: string): string {
 /**
  * Get display name based on locale
  *
- * @param givenName - Arabic given name
- * @param surname - Arabic surname
+ * @param firstName - Arabic given name
+ * @param lastName - Arabic lastName
  * @param lang - Current locale
  * @returns Formatted full name in appropriate script
  *
@@ -200,11 +200,12 @@ function transliterateSingle(arabicName: string): string {
  * getDisplayName("محمد", "علي", "ar") // "محمد علي"
  */
 export function getDisplayName(
-  givenName: string | null | undefined,
-  surname: string | null | undefined,
-  lang: Locale
+  firstName: string | null | undefined,
+  lastName: string | null | undefined,
+  lang: Locale,
+  middleName?: string | null
 ): string {
-  const parts = [givenName, surname].filter(Boolean) as string[]
+  const parts = [firstName, middleName, lastName].filter(Boolean) as string[]
 
   if (parts.length === 0) return ""
 

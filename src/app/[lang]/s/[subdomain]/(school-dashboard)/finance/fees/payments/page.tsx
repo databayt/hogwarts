@@ -3,6 +3,7 @@
 
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { type PaymentRow } from "@/components/school-dashboard/finance/fees/payment-columns"
 import { PaymentsTable } from "@/components/school-dashboard/finance/fees/payment-table"
 import { getPaymentList } from "@/components/school-dashboard/finance/fees/queries"
@@ -15,6 +16,7 @@ interface Props {
 
 export default async function PaymentsPage({ params }: Props) {
   const { lang } = await params
+  const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
@@ -29,7 +31,7 @@ export default async function PaymentsPage({ params }: Props) {
   const data: PaymentRow[] = rows.map((p: any) => ({
     id: p.id,
     paymentNumber: p.paymentNumber,
-    studentName: [p.student?.givenName, p.student?.surname]
+    studentName: [p.student?.firstName, p.student?.lastName]
       .filter(Boolean)
       .join(" "),
     feeStructureName: p.feeAssignment?.feeStructure?.name || "-",

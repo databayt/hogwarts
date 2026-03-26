@@ -6,7 +6,7 @@
  *
  * Broad categories (teachers, students, parents, staff, admin, accountants)
  * use User.schoolId as the canonical membership source, then enrich with
- * domain model data (givenName, surname, contextLabel) when available.
+ * domain model data (firstName, lastName, contextLabel) when available.
  *
  * Relationship categories (my_teachers, my_students, classmates,
  * my_children_teachers) use domain model traversal.
@@ -142,8 +142,8 @@ async function getContactsForCategory(
 // ============================================================================
 
 type ProfileData = {
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
   email: string | null
   image: string | null
   contextLabel?: string
@@ -194,13 +194,13 @@ async function getMembersByRole(
   // 3. Merge: domain data preferred, User fallback
   return users.map((u) => {
     const profile = profiles.get(u.id)
-    const displayName = profile?.givenName
-      ? `${profile.givenName} ${profile.surname}`
+    const displayName = profile?.firstName
+      ? `${profile.firstName} ${profile.lastName}`
       : (u.username ?? u.email ?? "User")
     return {
       id: u.id,
-      givenName: profile?.givenName ?? u.username ?? "",
-      surname: profile?.surname ?? "",
+      firstName: profile?.firstName ?? u.username ?? "",
+      lastName: profile?.lastName ?? "",
       displayName,
       email: profile?.email ?? u.email ?? null,
       image: u.image ?? profile?.image ?? null,
@@ -221,23 +221,23 @@ function getDomainSearchFilters(
   switch (userRole) {
     case "TEACHER":
       return [
-        { teacher: { givenName: nameFilter } },
-        { teacher: { surname: nameFilter } },
+        { teacher: { firstName: nameFilter } },
+        { teacher: { lastName: nameFilter } },
       ]
     case "STUDENT":
       return [
-        { student: { givenName: nameFilter } },
-        { student: { surname: nameFilter } },
+        { student: { firstName: nameFilter } },
+        { student: { lastName: nameFilter } },
       ]
     case "GUARDIAN":
       return [
-        { guardian: { givenName: nameFilter } },
-        { guardian: { surname: nameFilter } },
+        { guardian: { firstName: nameFilter } },
+        { guardian: { lastName: nameFilter } },
       ]
     case "STAFF":
       return [
-        { staffMember: { givenName: nameFilter } },
-        { staffMember: { surname: nameFilter } },
+        { staffMember: { firstName: nameFilter } },
+        { staffMember: { lastName: nameFilter } },
       ]
     default:
       return []
@@ -259,8 +259,8 @@ async function enrichProfiles(
         where: { schoolId, userId: { in: userIds } },
         select: {
           userId: true,
-          givenName: true,
-          surname: true,
+          firstName: true,
+          lastName: true,
           emailAddress: true,
           profilePhotoUrl: true,
           homeroomSections: { select: { name: true }, take: 1 },
@@ -273,8 +273,8 @@ async function enrichProfiles(
       for (const t of teachers) {
         if (t.userId) {
           map.set(t.userId, {
-            givenName: t.givenName,
-            surname: t.surname,
+            firstName: t.firstName,
+            lastName: t.lastName,
             email: t.emailAddress,
             image: t.profilePhotoUrl ?? null,
             contextLabel:
@@ -290,8 +290,8 @@ async function enrichProfiles(
         where: { schoolId, userId: { in: userIds } },
         select: {
           userId: true,
-          givenName: true,
-          surname: true,
+          firstName: true,
+          lastName: true,
           email: true,
           profilePhotoUrl: true,
           section: { select: { name: true } },
@@ -300,8 +300,8 @@ async function enrichProfiles(
       for (const s of students) {
         if (s.userId) {
           map.set(s.userId, {
-            givenName: s.givenName,
-            surname: s.surname,
+            firstName: s.firstName,
+            lastName: s.lastName,
             email: s.email ?? null,
             image: s.profilePhotoUrl ?? null,
             contextLabel: s.section?.name,
@@ -315,13 +315,13 @@ async function enrichProfiles(
         where: { schoolId, userId: { in: userIds } },
         select: {
           userId: true,
-          givenName: true,
-          surname: true,
+          firstName: true,
+          lastName: true,
           emailAddress: true,
           profilePhotoUrl: true,
           studentGuardians: {
             select: {
-              student: { select: { givenName: true, surname: true } },
+              student: { select: { firstName: true, lastName: true } },
             },
             take: 2,
           },
@@ -330,11 +330,11 @@ async function enrichProfiles(
       for (const g of guardians) {
         if (g.userId) {
           const childNames = g.studentGuardians
-            .map((sg) => sg.student.givenName)
+            .map((sg) => sg.student.firstName)
             .join(", ")
           map.set(g.userId, {
-            givenName: g.givenName,
-            surname: g.surname,
+            firstName: g.firstName,
+            lastName: g.lastName,
             email: g.emailAddress ?? null,
             image: g.profilePhotoUrl ?? null,
             contextLabel: childNames || undefined,
@@ -348,8 +348,8 @@ async function enrichProfiles(
         where: { schoolId, userId: { in: userIds } },
         select: {
           userId: true,
-          givenName: true,
-          surname: true,
+          firstName: true,
+          lastName: true,
           emailAddress: true,
           profilePhotoUrl: true,
           position: true,
@@ -359,8 +359,8 @@ async function enrichProfiles(
       for (const s of staff) {
         if (s.userId) {
           map.set(s.userId, {
-            givenName: s.givenName,
-            surname: s.surname,
+            firstName: s.firstName,
+            lastName: s.lastName,
             email: s.emailAddress,
             image: s.profilePhotoUrl ?? null,
             contextLabel: s.position ?? s.department?.departmentName,
@@ -437,16 +437,16 @@ function guardianWhere(
 function nameSearch(search?: string) {
   if (!search || search.length < 2) return undefined
   return [
-    { givenName: { contains: search, mode: "insensitive" as const } },
-    { surname: { contains: search, mode: "insensitive" as const } },
+    { firstName: { contains: search, mode: "insensitive" as const } },
+    { lastName: { contains: search, mode: "insensitive" as const } },
   ]
 }
 
 // -- Shared selects --
 
 const teacherSelect = {
-  givenName: true,
-  surname: true,
+  firstName: true,
+  lastName: true,
   emailAddress: true,
   profilePhotoUrl: true,
   user: { select: { id: true, image: true, role: true } },
@@ -458,8 +458,8 @@ const teacherSelect = {
 } as const
 
 const studentSelect = {
-  givenName: true,
-  surname: true,
+  firstName: true,
+  lastName: true,
   email: true,
   profilePhotoUrl: true,
   user: { select: { id: true, image: true, role: true } },
@@ -467,13 +467,13 @@ const studentSelect = {
 } as const
 
 const guardianSelect = {
-  givenName: true,
-  surname: true,
+  firstName: true,
+  lastName: true,
   emailAddress: true,
   profilePhotoUrl: true,
   user: { select: { id: true, image: true, role: true } },
   studentGuardians: {
-    select: { student: { select: { givenName: true, surname: true } } },
+    select: { student: { select: { firstName: true, lastName: true } } },
     take: 2,
   },
 } as const
@@ -487,9 +487,9 @@ type TeacherRow = Awaited<
 function mapTeacher(t: TeacherRow, category: ContactCategory): ContactDTO {
   return {
     id: t.user!.id,
-    givenName: t.givenName,
-    surname: t.surname,
-    displayName: `${t.givenName} ${t.surname}`,
+    firstName: t.firstName,
+    lastName: t.lastName,
+    displayName: `${t.firstName} ${t.lastName}`,
     email: t.emailAddress,
     image: t.user!.image ?? t.profilePhotoUrl ?? null,
     role: t.user!.role,
@@ -507,9 +507,9 @@ type StudentRow = Awaited<
 function mapStudent(s: StudentRow, category: ContactCategory): ContactDTO {
   return {
     id: s.user!.id,
-    givenName: s.givenName,
-    surname: s.surname,
-    displayName: `${s.givenName} ${s.surname}`,
+    firstName: s.firstName,
+    lastName: s.lastName,
+    displayName: `${s.firstName} ${s.lastName}`,
     email: s.email ?? null,
     image: s.user!.image ?? s.profilePhotoUrl ?? null,
     role: s.user!.role,
@@ -524,13 +524,13 @@ type GuardianRow = Awaited<
 
 function mapGuardian(g: GuardianRow, category: ContactCategory): ContactDTO {
   const childNames = g.studentGuardians
-    .map((sg) => sg.student.givenName)
+    .map((sg) => sg.student.firstName)
     .join(", ")
   return {
     id: g.user!.id,
-    givenName: g.givenName,
-    surname: g.surname,
-    displayName: `${g.givenName} ${g.surname}`,
+    firstName: g.firstName,
+    lastName: g.lastName,
+    displayName: `${g.firstName} ${g.lastName}`,
     email: g.emailAddress ?? null,
     image: g.user!.image ?? g.profilePhotoUrl ?? null,
     role: g.user!.role,
@@ -596,7 +596,7 @@ async function getTeachersForStudent(
       id: { in: [...teacherIds] },
     }),
     select: teacherSelect,
-    orderBy: [{ givenName: "asc" }, { surname: "asc" }],
+    orderBy: [{ firstName: "asc" }, { lastName: "asc" }],
     take: MAX_CONTACTS_PER_CATEGORY,
   })
 
@@ -671,7 +671,7 @@ async function getTeachersForGuardian(
       id: { in: [...teacherIds] },
     }),
     select: teacherSelect,
-    orderBy: [{ givenName: "asc" }, { surname: "asc" }],
+    orderBy: [{ firstName: "asc" }, { lastName: "asc" }],
     take: MAX_CONTACTS_PER_CATEGORY,
   })
 
@@ -718,7 +718,7 @@ async function getStudentsForTeacher(
       sectionId: { in: sectionIds },
     }),
     select: studentSelect,
-    orderBy: [{ givenName: "asc" }, { surname: "asc" }],
+    orderBy: [{ firstName: "asc" }, { lastName: "asc" }],
     take: MAX_CONTACTS_PER_CATEGORY,
   })
 
@@ -741,7 +741,7 @@ async function getClassmatesForStudent(
       sectionId: student.sectionId,
     }),
     select: studentSelect,
-    orderBy: [{ givenName: "asc" }, { surname: "asc" }],
+    orderBy: [{ firstName: "asc" }, { lastName: "asc" }],
     take: MAX_CONTACTS_PER_CATEGORY,
   })
 
@@ -776,7 +776,7 @@ async function getGuardiansForTeacher(
       studentGuardians: { some: { studentId: { in: studentIds } } },
     }),
     select: guardianSelect,
-    orderBy: [{ givenName: "asc" }, { surname: "asc" }],
+    orderBy: [{ firstName: "asc" }, { lastName: "asc" }],
     take: MAX_CONTACTS_PER_CATEGORY,
   })
 

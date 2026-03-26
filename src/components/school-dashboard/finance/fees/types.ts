@@ -32,8 +32,8 @@ export type FeeStructureWithRelations = FeeStructure & {
 export type FeeAssignmentWithRelations = FeeAssignment & {
   student: {
     id: string
-    givenName: string
-    surname: string
+    firstName: string
+    lastName: string
   }
   feeStructure: FeeStructure
   payments?: Payment[]
@@ -45,8 +45,8 @@ export type FeeAssignmentWithRelations = FeeAssignment & {
 export type PaymentWithRelations = Payment & {
   student: {
     id: string
-    givenName: string
-    surname: string
+    firstName: string
+    lastName: string
   }
   feeAssignment?: FeeAssignment
 }
@@ -61,8 +61,8 @@ export type ScholarshipWithRelations = Scholarship & {
 export type ScholarshipApplicationWithRelations = ScholarshipApplication & {
   student: {
     id: string
-    givenName: string
-    surname: string
+    firstName: string
+    lastName: string
   }
   scholarship: Scholarship
 }
@@ -70,8 +70,8 @@ export type ScholarshipApplicationWithRelations = ScholarshipApplication & {
 export type FineWithRelations = Fine & {
   student: {
     id: string
-    givenName: string
-    surname: string
+    firstName: string
+    lastName: string
   }
 }
 

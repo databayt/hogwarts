@@ -140,8 +140,8 @@ export function StudentSearch({
       id: "1",
       schoolId: "school1",
       grNumber: "GR20240001",
-      givenName: "John",
-      surname: "Doe",
+      firstName: "John",
+      lastName: "Doe",
       dateOfBirth: new Date("2008-05-15"),
       gender: "Male",
       status: "ACTIVE",
@@ -157,8 +157,8 @@ export function StudentSearch({
       id: "2",
       schoolId: "school1",
       grNumber: "GR20240002",
-      givenName: "Jane",
-      surname: "Smith",
+      firstName: "Jane",
+      lastName: "Smith",
       dateOfBirth: new Date("2008-08-20"),
       gender: "Female",
       status: "ACTIVE",
@@ -215,8 +215,8 @@ export function StudentSearch({
       result = result.filter((student) => {
         const searchString = debouncedQuery.toLowerCase()
         return (
-          student.givenName?.toLowerCase().includes(searchString) ||
-          student.surname?.toLowerCase().includes(searchString) ||
+          student.firstName?.toLowerCase().includes(searchString) ||
+          student.lastName?.toLowerCase().includes(searchString) ||
           student.grNumber?.toLowerCase().includes(searchString) ||
           student.email?.toLowerCase().includes(searchString) ||
           student.mobileNumber?.includes(searchString)

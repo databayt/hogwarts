@@ -7,6 +7,7 @@
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import {
   cacheKeys,
   gradeBoundaryCache,
@@ -77,9 +78,9 @@ export async function getExamResults(input: z.infer<typeof getResultsSchema>) {
               select: {
                 id: true,
                 studentId: true,
-                givenName: true,
+                firstName: true,
                 middleName: true,
-                surname: true,
+                lastName: true,
               },
             },
           },
@@ -111,7 +112,7 @@ export async function getExamResults(input: z.infer<typeof getResultsSchema>) {
     })
 
     if (!exam) {
-      return { success: false, error: "Exam not found" }
+      return actionError(ACTION_ERRORS.EXAM_NOT_FOUND)
     }
 
     // Get grade boundaries from cache or database
@@ -153,7 +154,7 @@ export async function getExamResults(input: z.infer<typeof getResultsSchema>) {
           id: result.id,
           studentId: result.student.studentId || "",
           studentName:
-            `${result.student.givenName} ${result.student.middleName || ""} ${result.student.surname}`.trim(),
+            `${result.student.firstName} ${result.student.middleName || ""} ${result.student.lastName}`.trim(),
           marksObtained: result.marksObtained,
           totalMarks: result.totalMarks,
           percentage: result.percentage,
@@ -244,9 +245,9 @@ export async function getExamAnalytics(
               select: {
                 id: true,
                 studentId: true,
-                givenName: true,
+                firstName: true,
                 middleName: true,
-                surname: true,
+                lastName: true,
               },
             },
           },
@@ -275,7 +276,7 @@ export async function getExamAnalytics(
     })
 
     if (!exam) {
-      return { success: false, error: "Exam not found" }
+      return actionError(ACTION_ERRORS.EXAM_NOT_FOUND)
     }
 
     // Get grade boundaries from cache or database
@@ -307,7 +308,7 @@ export async function getExamAnalytics(
         id: result.id,
         studentId: result.student.studentId || "",
         studentName:
-          `${result.student.givenName} ${result.student.middleName || ""} ${result.student.surname}`.trim(),
+          `${result.student.firstName} ${result.student.middleName || ""} ${result.student.lastName}`.trim(),
         marksObtained: result.marksObtained,
         totalMarks: result.totalMarks,
         percentage: result.percentage,
@@ -478,9 +479,9 @@ export async function generateStudentPDF(
                 select: {
                   id: true,
                   studentId: true,
-                  givenName: true,
+                  firstName: true,
                   middleName: true,
-                  surname: true,
+                  lastName: true,
                 },
               },
             },
@@ -548,7 +549,7 @@ export async function generateStudentPDF(
     ])
 
     if (!examData || !school || examData.examResults.length === 0) {
-      return { success: false, error: "Data not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     const studentExamResult = examData.examResults[0]
@@ -565,7 +566,7 @@ export async function generateStudentPDF(
       id: studentExamResult.id,
       studentId: studentExamResult.student.studentId || "",
       studentName:
-        `${studentExamResult.student.givenName} ${studentExamResult.student.middleName || ""} ${studentExamResult.student.surname}`.trim(),
+        `${studentExamResult.student.firstName} ${studentExamResult.student.middleName || ""} ${studentExamResult.student.lastName}`.trim(),
       marksObtained: studentExamResult.marksObtained,
       totalMarks: studentExamResult.totalMarks,
       percentage: studentExamResult.percentage,

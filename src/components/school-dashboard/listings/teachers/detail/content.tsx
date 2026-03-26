@@ -68,8 +68,8 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 interface TeacherDetailData {
   id: string
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
   gender?: string
   emailAddress: string
   birthDate?: Date | string | null
@@ -167,8 +167,8 @@ function formatDate(
   })
 }
 
-function getInitials(givenName: string, surname: string): string {
-  return `${givenName.charAt(0)}${surname.charAt(0)}`.toUpperCase()
+function getInitials(firstName: string, lastName: string): string {
+  return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
 }
 
 function getStatusColor(status?: string): string {
@@ -264,7 +264,7 @@ export function TeacherDetailContent({
     departments: d?.departments || "Departments",
   }
 
-  const fullName = `${teacher.givenName} ${teacher.surname}`
+  const fullName = `${teacher.firstName} ${teacher.lastName}`
 
   return (
     <>
@@ -282,7 +282,7 @@ export function TeacherDetailContent({
                   alt={fullName}
                 />
                 <AvatarFallback className="bg-primary/10 text-2xl md:text-3xl">
-                  {getInitials(teacher.givenName, teacher.surname)}
+                  {getInitials(teacher.firstName, teacher.lastName)}
                 </AvatarFallback>
               </Avatar>
 

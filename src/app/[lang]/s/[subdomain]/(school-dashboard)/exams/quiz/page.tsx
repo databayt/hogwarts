@@ -2,6 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { QuizContent } from "@/components/school-dashboard/exams/quiz/content"
 
 interface QuizPageProps {
@@ -12,7 +13,8 @@ interface QuizPageProps {
 }
 
 export default async function QuizPage({ params }: QuizPageProps) {
-  await params
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
 
   return <QuizContent />
 }

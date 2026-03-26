@@ -7,7 +7,7 @@ export const STEPS = {
 } as const
 
 export const STEP_FIELDS = {
-  1: ["givenName", "surname"] as const,
+  1: ["firstName", "lastName"] as const,
   2: ["emailAddress", "userId"] as const,
 } as const
 

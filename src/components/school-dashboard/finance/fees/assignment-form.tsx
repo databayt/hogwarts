@@ -26,7 +26,7 @@ import { assignFee, bulkAssignFees } from "./actions"
 interface FeeAssignmentFormProps {
   lang: string
   feeStructures: { id: string; name: string; totalAmount: number }[]
-  students: { id: string; givenName: string; surname: string }[]
+  students: { id: string; firstName: string; lastName: string }[]
 }
 
 export function FeeAssignmentForm({
@@ -277,7 +277,7 @@ export function FeeAssignmentForm({
                   htmlFor={`student-${student.id}`}
                   className="font-normal"
                 >
-                  {student.givenName} {student.surname}
+                  {student.firstName} {student.lastName}
                 </Label>
               </div>
             ))}

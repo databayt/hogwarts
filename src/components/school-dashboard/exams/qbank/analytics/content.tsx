@@ -134,7 +134,10 @@ export function AnalyticsDashboard() {
     if (result.success && result.data) {
       setData(result.data as DashboardData)
     } else {
-      setError(result.error || (t?.loadFailed ?? "Failed to load analytics"))
+      setError(
+        ("error" in result && result.error) ||
+          (t?.loadFailed ?? "Failed to load analytics")
+      )
     }
     setIsLoading(false)
   }

@@ -1403,9 +1403,9 @@
       "export": "Export",
       "reset": "Reset",
       "information": {
-        "givenName": "Given name",
+        "firstName": "First name",
         "middleName": "Middle name",
-        "surname": "Surname",
+        "lastName": "Last name",
         "dateOfBirth": "Date of birth",
         "selectGender": "Select gender",
         "male": "Male",
@@ -1479,14 +1479,14 @@
       "personal": {
         "title": "Personal Information",
         "description": "Enter the student's personal details.",
-        "givenName": "Given Name",
-        "givenNamePlaceholder": "Enter given name",
-        "givenNameRequired": "Given name is required",
+        "firstName": "First Name",
+        "firstNamePlaceholder": "Enter first name",
+        "firstNameRequired": "First name is required",
         "middleName": "Middle Name",
         "middleNamePlaceholder": "Enter middle name",
-        "surname": "Surname",
-        "surnamePlaceholder": "Enter surname",
-        "surnameRequired": "Surname is required",
+        "lastName": "Last Name",
+        "lastNamePlaceholder": "Enter last name",
+        "lastNameRequired": "Last name is required",
         "dateOfBirth": "Date of Birth",
         "dateOfBirthRequired": "Date of birth is required",
         "gender": "Gender",
@@ -3453,8 +3453,8 @@
       "addParentDescription": "Add a new parent to your school",
       "basicInformation": "Basic Information",
       "contactDetails": "Contact Details",
-      "givenName": "Given Name",
-      "surname": "Surname",
+      "firstName": "First Name",
+      "lastName": "Last Name",
       "emailAddressOptional": "Email address (optional)",
       "userIdOptional": "User ID (optional)",
       "profilePhoto": "Profile Photo",
@@ -3488,8 +3488,8 @@
       "home": "Home",
       "workPhone": "Work",
       "emergencyPhone": "Emergency",
-      "enterGivenName": "Enter given name",
-      "enterSurname": "Enter surname",
+      "enterFirstName": "Enter first name",
+      "enterLastName": "Enter last name",
       "emailAddress": "Email Address",
       "profilePhotoUrl": "Profile Photo URL"
     },
@@ -5292,6 +5292,7 @@
       "backup": "Backup",
       "restore": "Restore",
       "systemInfo": "System Information",
+      "dataExportInitiated": "Data export initiated. You will receive an email when ready.",
       "language": "Language",
       "timezone": "Timezone",
       "currency": "Currency",
@@ -7084,7 +7085,90 @@
           "uploaded": "Uploaded",
           "failed": "Upload failed"
         },
-        "unsavedChanges": "You have unsaved changes. Are you sure you want to leave?"
+        "unsavedChanges": "You have unsaved changes. Are you sure you want to leave?",
+        "form": {
+          "personal": {
+            "firstName": "First Name",
+            "lastName": "Last Name",
+            "fullName": "Full Name",
+            "firstNamePlaceholder": "Enter first name",
+            "lastNamePlaceholder": "Enter last name",
+            "fullNamePlaceholder": "Enter full name",
+            "dateOfBirth": "Date of Birth",
+            "gender": "Gender",
+            "selectGender": "Select gender",
+            "nationality": "Nationality",
+            "selectNationality": "Select nationality",
+            "category": "Category",
+            "selectCategory": "Select category"
+          },
+          "contact": {
+            "email": "Email",
+            "emailPlaceholder": "email@example.com",
+            "phone": "Phone",
+            "phonePlaceholder": "+249 XXX XXX XXXX",
+            "alternatePhone": "Alternate Phone",
+            "alternatePhonePlaceholder": "+249 XXX XXX XXXX"
+          },
+          "location": {
+            "address": "Current Address",
+            "addressPlaceholder": "Enter current address",
+            "city": "City",
+            "cityPlaceholder": "Enter city",
+            "state": "State",
+            "statePlaceholder": "Enter state",
+            "postalCode": "Postal Code",
+            "postalCodePlaceholder": "Enter postal code",
+            "country": "Country",
+            "selectCountry": "Select country",
+            "searchAddress": "Search for an address..."
+          },
+          "guardian": {
+            "fatherInfo": "Father's Information",
+            "motherInfo": "Mother's Information",
+            "switchToMother": "Mother",
+            "switchToFather": "Father",
+            "fatherName": "Father's Name",
+            "motherName": "Mother's Name",
+            "namePlaceholder": "Enter name",
+            "occupation": "Occupation",
+            "occupationPlaceholder": "Enter occupation",
+            "phone": "Phone",
+            "email": "Email"
+          },
+          "academic": {
+            "previousSchool": "Previous School",
+            "schoolPlaceholder": "School name",
+            "previousClass": "Previous Grade",
+            "classPlaceholder": "Select grade",
+            "performance": "Performance",
+            "selectPerformance": "Select performance",
+            "applyingForClass": "Applying for Class",
+            "selectClass": "Select class",
+            "preferredStream": "Preferred Stream",
+            "selectStream": "Select stream",
+            "achievements": "Achievements",
+            "achievementsPlaceholder": "Enter any achievements or awards"
+          },
+          "attachments": {
+            "photo": "Photo",
+            "degree": "Degree",
+            "transcript": "Transcript",
+            "id": "ID",
+            "resume": "Resume",
+            "other": "Other",
+            "uploaded": "Uploaded"
+          }
+        },
+        "errors": {
+          "unableToLoad": "Unable to Load Application",
+          "tryAgain": "Try Again",
+          "backToCampaigns": "Back to Campaigns",
+          "completeAllSteps": "Please complete all required steps",
+          "failedToSaveSession": "Failed to save session",
+          "failedToSubmit": "Failed to submit"
+        },
+        "submit": "Submit"
       },
       "sections": {
         "process": {
@@ -7565,8 +7649,8 @@
         "position": "Position"
       },
       "validation": {
-        "givenNameRequired": "Given name is required",
-        "surnameRequired": "Surname is required",
+        "firstNameRequired": "First name is required",
+        "lastNameRequired": "Last name is required",
         "invalidEmail": "Invalid email address",
         "staffIdRequired": "Staff member ID is required"
       },

@@ -48,8 +48,8 @@ export function GuardianInfoStep({ form, dictionary }: GuardianInfoStepProps) {
 
   const addGuardian = () => {
     append({
-      givenName: "",
-      surname: "",
+      firstName: "",
+      lastName: "",
       relation: "",
       email: "",
       mobileNumber: "",
@@ -89,7 +89,7 @@ export function GuardianInfoStep({ form, dictionary }: GuardianInfoStepProps) {
             <div className="grid gap-4 md:grid-cols-3">
               <FormField
                 control={form.control}
-                name={`guardians.${index}.givenName`}
+                name={`guardians.${index}.firstName`}
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>First Name *</FormLabel>
@@ -103,7 +103,7 @@ export function GuardianInfoStep({ form, dictionary }: GuardianInfoStepProps) {
 
               <FormField
                 control={form.control}
-                name={`guardians.${index}.surname`}
+                name={`guardians.${index}.lastName`}
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Last Name *</FormLabel>

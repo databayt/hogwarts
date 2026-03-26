@@ -115,12 +115,12 @@ export function AcademicTab({ student, gradeBoundaries }: AcademicTabProps) {
       ? {
           name: studentClasses[0]?.class?.name || "Not Assigned",
           teacher: studentClasses[0]?.class?.teacher
-            ? `${studentClasses[0].class.teacher.givenName} ${studentClasses[0].class.teacher.surname}`
+            ? `${studentClasses[0].class.teacher.firstName} ${studentClasses[0].class.teacher.lastName}`
             : "Not Assigned",
           subjects: studentClasses.map((sc: any) => ({
             name: sc.class?.subject?.name || sc.class?.name || "Unknown",
             teacher: sc.class?.teacher
-              ? `${sc.class.teacher.givenName} ${sc.class.teacher.surname}`
+              ? `${sc.class.teacher.firstName} ${sc.class.teacher.lastName}`
               : "Not Assigned",
             grade: examResults.find(
               (er: any) => er.subjectId === sc.class?.subject?.id

@@ -2,6 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getSchoolSubjectOptions } from "@/lib/school-subjects"
@@ -16,7 +17,7 @@ export async function updateExamDetails(
 ): Promise<ActionResponse> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const parsed = examDetailsSchema.parse(input)
 
@@ -27,7 +28,7 @@ export async function updateExamDetails(
     })
 
     if (!genExam) {
-      return { success: false, error: "Generated exam not found" }
+      return actionError(ACTION_ERRORS.EXAM_NOT_FOUND)
     }
 
     // Calculate endTime from startTime + duration
@@ -68,7 +69,7 @@ export async function getClassOptions(): Promise<
 > {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const classes = await db.class.findMany({
       where: { schoolId },
@@ -91,7 +92,7 @@ export async function getSubjectOptions(): Promise<
 > {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const subjects = await getSchoolSubjectOptions(schoolId)
 

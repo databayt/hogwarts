@@ -74,8 +74,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface Child {
   id: string
-  givenName: string
-  surname: string
+  firstName: string
+  lastName: string
   yearLevel: string
   class: string
   profileImageUrl?: string
@@ -269,12 +269,12 @@ export function ParentDashboard({
                     <Avatar className="h-16 w-16">
                       <AvatarImage src={child.profileImageUrl} />
                       <AvatarFallback>
-                        {child.givenName[0]}
-                        {child.surname[0]}
+                        {child.firstName[0]}
+                        {child.lastName[0]}
                       </AvatarFallback>
                     </Avatar>
                     <div className="text-center">
-                      <p className="font-medium">{child.givenName}</p>
+                      <p className="font-medium">{child.firstName}</p>
                       <p className="text-muted-foreground text-sm">
                         {child.yearLevel}
                       </p>

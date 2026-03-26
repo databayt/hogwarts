@@ -425,7 +425,7 @@ export async function updateAnnouncement(
     })
 
     if (!existing) {
-      return { success: false, error: "Announcement not found" }
+      return actionError(ACTION_ERRORS.ANNOUNCEMENT_NOT_FOUND)
     }
 
     // Check update permission
@@ -548,7 +548,7 @@ export async function deleteAnnouncement(input: {
     })
 
     if (!existing) {
-      return { success: false, error: "Announcement not found" }
+      return actionError(ACTION_ERRORS.ANNOUNCEMENT_NOT_FOUND)
     }
 
     // Check delete permission
@@ -641,7 +641,7 @@ export async function toggleAnnouncementPublish(input: {
     })
 
     if (!existing) {
-      return { success: false, error: "Announcement not found" }
+      return actionError(ACTION_ERRORS.ANNOUNCEMENT_NOT_FOUND)
     }
 
     // Check publish permission

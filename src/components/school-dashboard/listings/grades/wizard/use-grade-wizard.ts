@@ -25,7 +25,7 @@ export interface GradeWizardData {
   gradedBy: string | null
   yearLevelId: string | null
   wizardStep: string | null
-  student: { id: string; givenName: string; surname: string } | null
+  student: { id: string; firstName: string; lastName: string } | null
   class: { id: string; name: string } | null
   assignment: { id: string; title: string } | null
   exam: { id: string; title: string } | null

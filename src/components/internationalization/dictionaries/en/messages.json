@@ -46,7 +46,7 @@
     "currentPasswordRequired": "Current password is required",
     "firstNameRequired": "First name is required",
     "lastNameRequired": "Last name is required",
-    "givenNameRequired": "Given name is required",
+    "firstNameRequired": "First name is required",
     "fatherNameRequired": "Father name is required",
     "grandFatherNameRequired": "Grandfather name is required",
     "familyNameRequired": "Family name is required",

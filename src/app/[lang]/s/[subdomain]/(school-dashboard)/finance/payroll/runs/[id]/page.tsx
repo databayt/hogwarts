@@ -10,6 +10,7 @@ import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 
 export const metadata = { title: "Payroll Run Details" }
 
@@ -19,6 +20,7 @@ interface Props {
 
 export default async function PayrollRunDetailPage({ params }: Props) {
   const { lang, id } = await params
+  const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
@@ -31,10 +33,10 @@ export default async function PayrollRunDetailPage({ params }: Props) {
       salarySlips: {
         include: {
           teacher: {
-            select: { givenName: true, surname: true, employeeId: true },
+            select: { firstName: true, lastName: true, employeeId: true },
           },
         },
-        orderBy: { teacher: { surname: "asc" } },
+        orderBy: { teacher: { lastName: "asc" } },
       },
     },
   })
@@ -101,7 +103,7 @@ export default async function PayrollRunDetailPage({ params }: Props) {
                 <CardContent className="flex items-center justify-between py-3">
                   <div>
                     <p className="font-medium">
-                      {[slip.teacher?.givenName, slip.teacher?.surname]
+                      {[slip.teacher?.firstName, slip.teacher?.lastName]
                         .filter(Boolean)
                         .join(" ")}
                     </p>

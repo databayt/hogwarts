@@ -11,6 +11,7 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import { AccountType } from "@prisma/client"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 
 import type {
@@ -29,7 +30,7 @@ export async function generateBalanceSheet(
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "NOT_AUTHENTICATED" }
+      return actionError(ACTION_ERRORS.PAYMENT_FAILED)
     }
 
     // Get account balances
@@ -106,7 +107,7 @@ export async function generateIncomeStatement(
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "NOT_AUTHENTICATED" }
+      return actionError(ACTION_ERRORS.PAYMENT_FAILED)
     }
 
     const balances = await db.accountBalance.findMany({
@@ -170,7 +171,7 @@ export async function generateTrialBalance(
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "NOT_AUTHENTICATED" }
+      return actionError(ACTION_ERRORS.PAYMENT_FAILED)
     }
 
     const balances = await db.accountBalance.findMany({
@@ -230,7 +231,7 @@ export async function getAvailableReports() {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: "NOT_AUTHENTICATED" }
+      return actionError(ACTION_ERRORS.PAYMENT_FAILED)
     }
 
     // Return list of available reports (labels resolved via dictionary on client)
@@ -264,6 +265,6 @@ export async function getAvailableReports() {
     return { success: true, data: reports }
   } catch (error) {
     console.error("Error fetching available reports:", error)
-    return { success: false, error: "UNKNOWN" }
+    return actionError(ACTION_ERRORS.PAYMENT_FAILED)
   }
 }

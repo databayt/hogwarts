@@ -70,7 +70,7 @@ export async function changeRole(
       targetUser.id === authContext.userId &&
       authContext.role !== "DEVELOPER"
     ) {
-      return { success: false, error: "Cannot change your own role" }
+      return actionError(ACTION_ERRORS.UNKNOWN)
     }
 
     await db.$transaction(async (tx) => {
@@ -91,11 +91,11 @@ export async function changeRole(
           data: {
             schoolId,
             userId: parsed.userId,
-            givenName:
+            firstName:
               targetUser.username ||
               targetUser.email?.split("@")[0] ||
               "Member",
-            surname: "",
+            lastName: "",
             dateOfBirth: new Date(parsed.dateOfBirth),
             gender: parsed.gender,
             status: "ACTIVE",
@@ -108,11 +108,11 @@ export async function changeRole(
           data: {
             schoolId,
             userId: parsed.userId,
-            givenName:
+            firstName:
               targetUser.username ||
               targetUser.email?.split("@")[0] ||
               "Member",
-            surname: "",
+            lastName: "",
             emailAddress: targetUser.email || "",
           },
         })
@@ -123,11 +123,11 @@ export async function changeRole(
           data: {
             schoolId,
             userId: parsed.userId,
-            givenName:
+            firstName:
               targetUser.username ||
               targetUser.email?.split("@")[0] ||
               "Member",
-            surname: "",
+            lastName: "",
             emailAddress: targetUser.email || "",
           },
         })
@@ -138,11 +138,11 @@ export async function changeRole(
           data: {
             schoolId,
             userId: parsed.userId,
-            givenName:
+            firstName:
               targetUser.username ||
               targetUser.email?.split("@")[0] ||
               "Member",
-            surname: "",
+            lastName: "",
           },
         })
       }
@@ -162,7 +162,7 @@ export async function changeRole(
     return { success: true, data: { id: parsed.userId } }
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { success: false, error: "Validation failed" }
+      return actionError(ACTION_ERRORS.SAVE_FAILED)
     }
     return {
       success: false,
@@ -197,7 +197,7 @@ export async function assignGrade(
       include: { student: true },
     })
     if (!user?.student) {
-      return { success: false, error: "User is not a student" }
+      return actionError(ACTION_ERRORS.UNKNOWN)
     }
 
     // Verify grade belongs to this school
@@ -243,7 +243,7 @@ export async function suspendMember(
 
     // Cannot suspend yourself
     if (parsed.userId === authContext.userId) {
-      return { success: false, error: "Cannot suspend yourself" }
+      return actionError(ACTION_ERRORS.UNKNOWN)
     }
 
     const targetUser = await db.user.findFirst({
@@ -397,7 +397,7 @@ export async function removeMember(
 
     // Cannot remove yourself
     if (parsed.userId === authContext.userId) {
-      return { success: false, error: "Cannot remove yourself" }
+      return actionError(ACTION_ERRORS.UNKNOWN)
     }
 
     const targetUser = await db.user.findFirst({
@@ -736,7 +736,7 @@ export async function inviteMember(
     return { success: true, data: { id: request.id } }
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { success: false, error: "Invalid email or role" }
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
     return {
       success: false,
@@ -830,7 +830,7 @@ export async function resendInvitation(
     return { success: true }
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { success: false, error: "Validation failed" }
+      return actionError(ACTION_ERRORS.SAVE_FAILED)
     }
     return {
       success: false,
@@ -860,7 +860,7 @@ export async function acceptInvitation(
     }
 
     if (isInvitationExpired(request.expiresAt)) {
-      return { success: false, error: "This invitation has expired" }
+      return actionError(ACTION_ERRORS.UNKNOWN)
     }
 
     const schoolId = request.schoolId
@@ -1124,10 +1124,10 @@ export async function exportMembersCSV(): Promise<ActionResponse<string>> {
         role: true,
         isSuspended: true,
         createdAt: true,
-        student: { select: { givenName: true, surname: true } },
-        teacher: { select: { givenName: true, surname: true } },
-        staffMember: { select: { givenName: true, surname: true } },
-        guardian: { select: { givenName: true, surname: true } },
+        student: { select: { firstName: true, lastName: true } },
+        teacher: { select: { firstName: true, lastName: true } },
+        staffMember: { select: { firstName: true, lastName: true } },
+        guardian: { select: { firstName: true, lastName: true } },
       },
       orderBy: { createdAt: "desc" },
     })
@@ -1136,7 +1136,7 @@ export async function exportMembersCSV(): Promise<ActionResponse<string>> {
     const rows = users.map((u) => {
       const profile = u.student || u.teacher || u.staffMember || u.guardian
       const name = profile
-        ? [profile.givenName, profile.surname].filter(Boolean).join(" ") ||
+        ? [profile.firstName, profile.lastName].filter(Boolean).join(" ") ||
           u.username ||
           ""
         : u.username || ""
@@ -1175,7 +1175,7 @@ export async function forcePasswordReset(
 
     // Cannot force-reset own password via admin action
     if (parsed.userId === authContext.userId) {
-      return { success: false, error: "Cannot force-reset your own password" }
+      return actionError(ACTION_ERRORS.UNKNOWN)
     }
 
     const targetUser = await db.user.findFirst({

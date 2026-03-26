@@ -821,8 +821,8 @@ describe("Admission Actions", () => {
         data: expect.objectContaining({
           schoolId: SCHOOL_ID,
           userId: "user-applicant",
-          givenName: "John",
-          surname: "Doe",
+          firstName: "John",
+          lastName: "Doe",
           email: "john@example.com",
           status: "ACTIVE",
         }),

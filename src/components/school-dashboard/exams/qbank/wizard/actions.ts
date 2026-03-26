@@ -5,6 +5,7 @@
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -20,7 +21,7 @@ export async function getQuestionForWizard(
 > {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const question = await db.questionBank.findFirst({
       where: { id: questionId, schoolId },
@@ -29,7 +30,7 @@ export async function getQuestionForWizard(
       },
     })
 
-    if (!question) return { success: false, error: "Question not found" }
+    if (!question) return actionError(ACTION_ERRORS.QUESTION_NOT_FOUND)
 
     return {
       success: true,
@@ -53,12 +54,12 @@ export async function createDraftQuestion(): Promise<
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { getSchoolSubjects } = await import("@/lib/school-subjects")
@@ -105,12 +106,12 @@ export async function completeQuestionWizard(
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const question = await db.questionBank.findFirst({
@@ -119,7 +120,7 @@ export async function completeQuestionWizard(
     })
 
     if (!question) {
-      return { success: false, error: "Question not found" }
+      return actionError(ACTION_ERRORS.QUESTION_NOT_FOUND)
     }
 
     if (!question.questionText || question.questionText.trim().length < 10) {
@@ -175,12 +176,12 @@ export async function deleteDraftQuestion(
   try {
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Atomic delete — only if it's still a draft
@@ -189,7 +190,7 @@ export async function deleteDraftQuestion(
     })
 
     if (count === 0) {
-      return { success: false, error: "Draft question not found" }
+      return actionError(ACTION_ERRORS.QUESTION_NOT_FOUND)
     }
 
     return { success: true }

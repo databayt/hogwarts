@@ -8,12 +8,15 @@ import { z } from "zod"
 // =============================================================================
 
 export const personalSchema = z.object({
-  givenName: z
+  firstName: z
     .string()
     .min(2, "First name must be at least 2 characters")
     .max(50),
   middleName: z.string().max(50).optional().or(z.literal("")),
-  surname: z.string().min(2, "Last name must be at least 2 characters").max(50),
+  lastName: z
+    .string()
+    .min(2, "Last name must be at least 2 characters")
+    .max(50),
   dateOfBirth: z.string().min(1, "Date of birth is required"),
   gender: z.string().min(1, "Gender is required"),
   nationality: z.string().optional().or(z.literal("")),

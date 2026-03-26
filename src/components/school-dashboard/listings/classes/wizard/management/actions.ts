@@ -14,7 +14,7 @@ export async function getClassManagement(
 ): Promise<ActionResponse<ManagementFormData>> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const cls = await db.class.findFirst({
       where: { id: classId, schoolId },
@@ -26,7 +26,7 @@ export async function getClassManagement(
       },
     })
 
-    if (!cls) return { success: false, error: "Class not found" }
+    if (!cls) return actionError(ACTION_ERRORS.CLASS_NOT_FOUND)
 
     return {
       success: true,
@@ -51,7 +51,7 @@ export async function updateClassManagement(
 ): Promise<ActionResponse> {
   try {
     const { schoolId } = await getTenantContext()
-    if (!schoolId) return { success: false, error: "Missing school context" }
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const parsed = managementSchema.parse(input)
 

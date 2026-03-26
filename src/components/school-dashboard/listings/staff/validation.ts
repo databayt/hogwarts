@@ -5,8 +5,8 @@ import { z } from "zod"
 
 export const staffCreateSchema = z.object({
   // Basic Information
-  givenName: z.string().min(1, "Given name is required"),
-  surname: z.string().min(1, "Surname is required"),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
   gender: z.string().optional(),
   emailAddress: z.string().email("Invalid email address"),
   birthDate: z.coerce.date().optional(),
