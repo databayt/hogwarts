@@ -33,6 +33,7 @@ import { backfillClassGrades } from "./backfill-class-grades"
 import { backfillExamCatalogBridges } from "./backfill-exam-catalog-bridges"
 import { backfillStudentSections } from "./backfill-student-sections"
 import { seedBanking } from "./banking"
+import { seedBannerCopy } from "./banner-copy"
 import { seedCatalog } from "./catalog"
 import { seedBooks } from "./catalog-books"
 import { seedCatalogContent } from "./catalog-content"
@@ -400,6 +401,14 @@ const SEEDS: Record<string, SeedEntry> = {
     global: true,
     run: async (prisma) => {
       await seedWorldCurricula(prisma)
+    },
+  },
+  "banner-copy": {
+    description:
+      "Copy old curated wide banners to new concept S3 paths (all grades)",
+    global: true,
+    run: async () => {
+      await seedBannerCopy()
     },
   },
   "concept-images": {
