@@ -86,7 +86,7 @@ export async function getChildrenProgress(): Promise<ChildProgress[]> {
     // For each enrollment, count total lessons in the subject
     const enriched = await Promise.all(
       enrollments.map(async (enrollment) => {
-        const totalLessons = await db.catalogLesson.count({
+        const totalLessons = await db.lesson.count({
           where: {
             chapter: { subjectId: enrollment.subject.id },
             status: "PUBLISHED",

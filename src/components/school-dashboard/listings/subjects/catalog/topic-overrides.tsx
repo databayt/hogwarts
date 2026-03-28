@@ -34,11 +34,11 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
-import { uploadLessonVideo } from "@/components/stream/video/video-actions"
+import { uploadVideo } from "@/components/stream/video/video-actions"
 
 import { toggleContentOverride } from "./actions"
 
-interface LessonVideo {
+interface Video {
   id: string
   title: string
   instructorName: string
@@ -51,7 +51,7 @@ interface Lesson {
   name: string
   isHidden: boolean
   videoCount?: number
-  videos?: LessonVideo[]
+  videos?: Video[]
 }
 
 interface Chapter {
@@ -138,7 +138,7 @@ export function TopicOverrides({ chapters, lang }: Props) {
 
     startTransition(async () => {
       try {
-        const result = await uploadLessonVideo({
+        const result = await uploadVideo({
           catalogLessonId: videoLessonId,
           title: videoTitle.trim() || videoLessonName,
           videoUrl: videoUrl.trim(),

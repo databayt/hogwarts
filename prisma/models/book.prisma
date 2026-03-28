@@ -1,0 +1,70 @@
+// Book — library catalog entries (NO schoolId)
+// Schools adopt books via BookSelection bridge
+
+model Book {
+  id               String  @id @default(cuid())
+  title            String
+  slug             String  @unique
+  lang             String  @default("ar")
+  author           String
+  isbn             String? @unique
+  genre            String
+  description      String? @db.Text
+  summary          String? @db.Text
+  catalogSubjectId String?
+
+  catalogSubject Subject? @relation(fields: [catalogSubjectId], references: [id])
+
+  coverUrl    String?
+  coverKey    String?
+  coverColor  String  @default("#000000")
+
+  publisher       String?
+  publicationYear Int?
+  language        String   @default("ar")
+  pageCount       Int?
+  tags            String[] @default([])
+
+  digitalFileUrl  String?
+  digitalFileKey  String?
+  digitalFileSize Int?
+  digitalMimeType String?
+
+  videoUrl   String?
+  gradeLevel String  @default("GENERAL")
+
+  rating      Float @default(0)
+  ratingCount Int   @default(0)
+
+  // Contribution pattern
+  contributedBy       String?
+  contributedSchoolId String?
+  approvalStatus      ApprovalStatus    @default(PENDING)
+  approvedBy          String?
+  approvedAt          DateTime?
+  rejectionReason     String?
+  visibility          ContentVisibility @default(PUBLIC)
+
+  status ContentStatus @default(DRAFT)
+
+  usageCount    Int @default(0)
+  downloadCount Int @default(0)
+
+  // Bridges
+  bookSelections BookSelection[]
+
+  // School mirrors (adopted into school libraries)
+  schoolBooks SchoolBook[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([genre])
+  @@index([gradeLevel])
+  @@index([approvalStatus, visibility])
+  @@index([author])
+  @@index([contributedBy])
+  @@index([status])
+  @@index([catalogSubjectId])
+  @@map("catalog_books")
+}

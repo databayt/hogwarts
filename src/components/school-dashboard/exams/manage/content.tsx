@@ -33,7 +33,7 @@ export default async function ExamsContent({
   let total = 0
 
   if (schoolId) {
-    const where: Prisma.ExamWhereInput = {
+    const where: Prisma.SchoolExamWhereInput = {
       schoolId,
       ...(sp.title
         ? { title: { contains: sp.title, mode: "insensitive" } }
@@ -53,7 +53,7 @@ export default async function ExamsContent({
         : [{ examDate: "desc" }, { startTime: "asc" }]
 
     const [rows, count] = await Promise.all([
-      db.exam.findMany({
+      db.schoolExam.findMany({
         where,
         orderBy,
         skip,
@@ -67,7 +67,7 @@ export default async function ExamsContent({
           },
         },
       }),
-      db.exam.count({ where }),
+      db.schoolExam.count({ where }),
     ])
 
     data = await Promise.all(

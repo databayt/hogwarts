@@ -117,7 +117,7 @@ export default async function GuardianExamsContent({
 
   // Fetch upcoming exams + recent results for all children in parallel
   const [upcomingExams, recentResults] = await Promise.all([
-    db.exam.findMany({
+    db.schoolExam.findMany({
       where: {
         schoolId,
         classId: { in: classIds },

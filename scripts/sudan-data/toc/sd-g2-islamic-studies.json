@@ -1,0 +1,206 @@
+{
+  "subject": "islamic-studies",
+  "subjectNameAr": "التربية الإسلامية",
+  "grade": 2,
+  "level": "elementary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "الطبعة الأولى 2021م",
+  "chapters": [
+    {
+      "nameAr": "من القرآن الكريم",
+      "name": "From the Holy Quran",
+      "slug": "quran",
+      "sequenceOrder": 1,
+      "lessons": [
+        {
+          "nameAr": "سورة قريش",
+          "name": "Surah Quraish",
+          "slug": "surah-quraish",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "سورة القدر",
+          "name": "Surah Al-Qadr",
+          "slug": "surah-al-qadr",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "سورة التين",
+          "name": "Surah At-Tin",
+          "slug": "surah-at-tin",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "سورة الشرح",
+          "name": "Surah Ash-Sharh",
+          "slug": "surah-ash-sharh",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "سورة الكافرون",
+          "name": "Surah Al-Kafirun",
+          "slug": "surah-al-kafirun",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "سورة الماعون",
+          "name": "Surah Al-Maun",
+          "slug": "surah-al-maun",
+          "sequenceOrder": 6
+        },
+        {
+          "nameAr": "سورة الفيل",
+          "name": "Surah Al-Fil",
+          "slug": "surah-al-fil",
+          "sequenceOrder": 7
+        },
+        {
+          "nameAr": "سورة الهمزة",
+          "name": "Surah Al-Humazah",
+          "slug": "surah-al-humazah",
+          "sequenceOrder": 8
+        },
+        {
+          "nameAr": "سورة العلق",
+          "name": "Surah Al-Alaq",
+          "slug": "surah-al-alaq",
+          "sequenceOrder": 9
+        },
+        {
+          "nameAr": "سورة الفجر (تلاوة)",
+          "name": "Surah Al-Fajr (Recitation)",
+          "slug": "surah-al-fajr",
+          "sequenceOrder": 10
+        },
+        {
+          "nameAr": "سورة الغاشية (تلاوة)",
+          "name": "Surah Al-Ghashiyah (Recitation)",
+          "slug": "surah-al-ghashiyah",
+          "sequenceOrder": 11
+        },
+        {
+          "nameAr": "سورة البروج (تلاوة)",
+          "name": "Surah Al-Buruj (Recitation)",
+          "slug": "surah-al-buruj",
+          "sequenceOrder": 12
+        },
+        {
+          "nameAr": "سورة الانشقاق (تلاوة)",
+          "name": "Surah Al-Inshiqaq (Recitation)",
+          "slug": "surah-al-inshiqaq",
+          "sequenceOrder": 13
+        },
+        {
+          "nameAr": "سورة المطففين (تلاوة)",
+          "name": "Surah Al-Mutaffifin (Recitation)",
+          "slug": "surah-al-mutaffifin",
+          "sequenceOrder": 14
+        }
+      ]
+    },
+    {
+      "nameAr": "الحديث النبوي ومكارم الأخلاق",
+      "name": "Prophetic Hadith and Noble Morals",
+      "slug": "hadith-and-morals",
+      "sequenceOrder": 2,
+      "lessons": [
+        {
+          "nameAr": "الدرس الأول",
+          "name": "Lesson 1",
+          "slug": "lesson-1",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الدرس الثاني",
+          "name": "Lesson 2",
+          "slug": "lesson-2",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الدرس الثالث",
+          "name": "Lesson 3",
+          "slug": "lesson-3",
+          "sequenceOrder": 3
+        }
+      ]
+    },
+    {
+      "nameAr": "الصلاة",
+      "name": "Prayer",
+      "slug": "prayer",
+      "sequenceOrder": 3,
+      "lessons": [
+        {
+          "nameAr": "الدرس الأول",
+          "name": "Lesson 1",
+          "slug": "lesson-1",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الدرس الثاني",
+          "name": "Lesson 2",
+          "slug": "lesson-2",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الدرس الثالث",
+          "name": "Lesson 3",
+          "slug": "lesson-3",
+          "sequenceOrder": 3
+        }
+      ]
+    },
+    {
+      "nameAr": "من أركان الإيمان",
+      "name": "Pillars of Faith",
+      "slug": "pillars-of-faith",
+      "sequenceOrder": 4,
+      "lessons": [
+        {
+          "nameAr": "الدرس الأول",
+          "name": "Lesson 1",
+          "slug": "lesson-1",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الدرس الثاني",
+          "name": "Lesson 2",
+          "slug": "lesson-2",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الدرس الثالث",
+          "name": "Lesson 3",
+          "slug": "lesson-3",
+          "sequenceOrder": 3
+        }
+      ]
+    },
+    {
+      "nameAr": "من السيرة النبوية الشريفة",
+      "name": "From the Prophet's Biography",
+      "slug": "prophets-biography",
+      "sequenceOrder": 5,
+      "lessons": [
+        {
+          "nameAr": "الدرس الأول",
+          "name": "Lesson 1",
+          "slug": "lesson-1",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الدرس الثاني",
+          "name": "Lesson 2",
+          "slug": "lesson-2",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الدرس الثالث",
+          "name": "Lesson 3",
+          "slug": "lesson-3",
+          "sequenceOrder": 3
+        }
+      ]
+    }
+  ]
+}

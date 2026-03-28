@@ -20,12 +20,12 @@ import type {
   AdmissionApplicationStatus,
   Announcement,
   Attendance,
-  CatalogSubject,
   Class,
   Exam,
   Gender,
   School,
   Student,
+  Subject,
   Teacher,
   Timetable,
   User,
@@ -225,11 +225,9 @@ export function createMockClass(overrides?: Partial<Class>): Class {
 }
 
 /**
- * Mock CatalogSubject Factory (replaces old Subject factory)
+ * Mock Subject Factory (replaces old Subject factory)
  */
-export function createMockSubject(
-  overrides?: Partial<CatalogSubject>
-): CatalogSubject {
+export function createMockSubject(overrides?: Partial<Subject>): Subject {
   const id = overrides?.id ?? generateId("sub")
 
   return {
@@ -247,11 +245,9 @@ export function createMockSubject(
     curriculum: overrides?.curriculum ?? "national",
     schoolTypes: overrides?.schoolTypes ?? [],
     concept: overrides?.concept ?? null,
-    imageKey: overrides?.imageKey ?? null,
-    thumbnailKey: overrides?.thumbnailKey ?? null,
+    thumbnail: overrides?.thumbnail ?? null,
     color: overrides?.color ?? null,
-    iconUrl: overrides?.iconUrl ?? null,
-    bannerUrl: overrides?.bannerUrl ?? null,
+    banner: overrides?.banner ?? null,
     tags: overrides?.tags ?? [],
     status: overrides?.status ?? "PUBLISHED",
     gradeRange: overrides?.gradeRange ?? null,

@@ -90,7 +90,7 @@ export default async function StudentExamsContent({ dictionary, lang }: Props) {
 
   // Fetch upcoming exams + recent results in parallel
   const [upcomingExams, recentResults] = await Promise.all([
-    db.exam.findMany({
+    db.schoolExam.findMany({
       where: {
         schoolId,
         classId: { in: classIds },

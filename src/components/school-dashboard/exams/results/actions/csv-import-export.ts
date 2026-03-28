@@ -103,7 +103,7 @@ export async function exportExamResultsToCSV(
     const parsed = exportResultsSchema.parse(input)
 
     // Fetch exam with results
-    const exam = await db.exam.findFirst({
+    const exam = await db.schoolExam.findFirst({
       where: {
         id: parsed.examId,
         schoolId,
@@ -307,7 +307,7 @@ export async function importExamResultsFromCSV(
     const parsed = importResultsSchema.parse(input)
 
     // Verify exam exists and belongs to school
-    const exam = await db.exam.findFirst({
+    const exam = await db.schoolExam.findFirst({
       where: {
         id: parsed.examId,
         schoolId,
@@ -512,7 +512,7 @@ export async function generateResultImportTemplate(examId: string): Promise<{
     }
 
     // Get exam details
-    const exam = await db.exam.findFirst({
+    const exam = await db.schoolExam.findFirst({
       where: {
         id: examId,
         schoolId,

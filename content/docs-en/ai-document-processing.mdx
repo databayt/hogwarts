@@ -1,0 +1,348 @@
+---
+title: "AI Document Processing"
+description: "Infrastructure for AI-powered document extraction, classification, and processing across all school domains"
+---
+
+## Overview
+
+The AI Document Processing system provides a domain-agnostic document processing pipeline that any feature in Hogwarts can plug into. Rather than building separate AI integrations for each module, every domain shares a single extraction service, processing queue, and budget enforcement layer.
+
+Currently active for two domains:
+
+- **Admission documents** -- classification, extraction, completeness checking, and merit scoring
+- **Bank receipts** -- amount/date/reference extraction with auto-matching to pending payments
+
+The foundation supports 8 future domains: exams, textbooks, library, attendance, onboarding, invoices, and vendor documents. Each domain registers a handler with its own Zod schemas and prompts, while the shared infrastructure handles queuing, retries, cost tracking, and status display.
+
+For the full epic/story breakdown covering all planned domains, see [Document Intelligence](/docs/document-intelligence).
+
+---
+
+## Architecture
+
+The system uses a layered architecture where each layer has a single responsibility. Domain features interact only with the top-level API, while the infrastructure handles orchestration, retry logic, and cost enforcement underneath.
+
+### Layer Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                        Domain Features                              │
+│  (Admission AI, Bank Receipts, future: Exams, Textbooks, etc.)     │
+└──────────────────────────────┬──────────────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                  Generic Extraction Service                         │
+│  extractWithSchema<T>(schema, prompt, fileUrl)                     │
+│  Handles: PDF, Word, Excel, CSV, Image                             │
+└──────────────────────────────┬──────────────────────────────────────┘
+                               │
+                ┌──────────────┼──────────────┐
+                ▼              ▼              ▼
+┌──────────────────┐ ┌──────────────┐ ┌──────────────────┐
+│  Handler Registry │ │ Queue Runner │ │ Budget Enforcer  │
+│  Strategy pattern │ │ Async jobs   │ │ Per-school caps  │
+│  Per-domain logic │ │ Retry + back │ │ Domain toggles   │
+└──────────────────┘ └──────────────┘ └──────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                     Processing API                                  │
+│  /api/document-processing/run (cron trigger, DEVELOPER/ADMIN)      │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Core Layers
+
+| Layer                      | Location                                      | Responsibility                                                                                                            |
+| -------------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Generic Extraction Service | `src/lib/document-extraction/`                | Accepts any Zod schema + prompt, handles all file types (PDF, Word, Excel, CSV, Image), returns validated structured data |
+| Handler Registry           | `src/lib/document-extraction/handlers/`       | Strategy pattern -- each domain registers a handler that maps job types to extraction schemas and prompts                 |
+| Queue Runner               | `src/lib/document-extraction/queue-runner.ts` | Async job processing with retry logic using exponential backoff (30s, 60s, 120s)                                          |
+| AI Budget Enforcement      | `src/lib/ai/budget.ts`                        | Per-school monthly spend caps, per-domain toggles, usage tracking                                                         |
+| Processing API             | `/api/document-processing/run`                | Cron trigger endpoint, restricted to DEVELOPER and ADMIN roles                                                            |
+
+### Processing Flow
+
+```
+Upload → Classify → Queue Job → Handler → Extract with Schema → Store Result → Track Cost
+```
+
+1. A file is uploaded via the existing S3/CloudFront pipeline
+2. The domain feature classifies the document type (or accepts a user-provided type)
+3. A `DocumentProcessingJob` record is created with status PENDING
+4. The queue runner picks up the job, sets it to PROCESSING, and delegates to the registered handler
+5. The handler calls `extractWithSchema()` with the appropriate Zod schema and prompt
+6. Results are stored in the job record as JSON, status set to COMPLETED
+7. Cost is tracked in `AIUsageLog` and checked against the school's budget
+
+---
+
+## Database Models
+
+### DocumentProcessingJob
+
+Tracks every AI processing request across all domains with full lifecycle management.
+
+| Field              | Type              | Purpose                                                        |
+| ------------------ | ----------------- | -------------------------------------------------------------- |
+| `id`               | `String @id`      | Primary key                                                    |
+| `schoolId`         | `String`          | Multi-tenant isolation                                         |
+| `userId`           | `String`          | Who initiated the job                                          |
+| `jobType`          | `String`          | Domain identifier (e.g., `ADMISSION_DOCUMENT`, `BANK_RECEIPT`) |
+| `status`           | `Enum`            | `PENDING`, `PROCESSING`, `COMPLETED`, `FAILED`                 |
+| `inputFileUrl`     | `String`          | Source file URL                                                |
+| `inputData`        | `Json?`           | Additional context for processing                              |
+| `resultData`       | `Json?`           | Extracted structured data                                      |
+| `errorMessage`     | `String?`         | Error details on failure                                       |
+| `retryCount`       | `Int @default(0)` | Number of retry attempts                                       |
+| `maxRetries`       | `Int @default(3)` | Maximum allowed retries                                        |
+| `processingTimeMs` | `Int?`            | Duration of processing                                         |
+| `costUsd`          | `Decimal?`        | Cost attributed to this job                                    |
+
+### AIUsageLog
+
+Per-school monthly cost tracking with granular attribution.
+
+| Field          | Type         | Purpose                                          |
+| -------------- | ------------ | ------------------------------------------------ |
+| `id`           | `String @id` | Primary key                                      |
+| `schoolId`     | `String`     | Multi-tenant isolation                           |
+| `jobType`      | `String`     | Which domain incurred the cost                   |
+| `model`        | `String`     | AI model used (e.g., `claude-sonnet-4-20250514`) |
+| `provider`     | `String`     | Provider name (e.g., `anthropic`)                |
+| `inputTokens`  | `Int`        | Tokens sent                                      |
+| `outputTokens` | `Int`        | Tokens received                                  |
+| `costUsd`      | `Decimal`    | Cost in USD                                      |
+| `createdAt`    | `DateTime`   | Timestamp for monthly aggregation                |
+
+### School Model Extensions
+
+| Field              | Type       | Purpose                                                                 |
+| ------------------ | ---------- | ----------------------------------------------------------------------- |
+| `aiMonthlyBudget`  | `Decimal?` | Monthly AI spend cap -- `null` means unlimited                          |
+| `aiEnabledDomains` | `Json`     | Array of enabled domain strings (e.g., `["admission", "bank_receipt"]`) |
+
+---
+
+## Admission Documents (EPIC-1)
+
+The first domain implementation covers the full admission document lifecycle: classification, extraction, completeness checking, and merit scoring.
+
+### Classification
+
+Auto-detects document type from uploaded files. Supported types:
+
+- `degree` -- academic degree certificates
+- `transcript` -- academic transcripts with GPA
+- `national_id` -- national ID cards
+- `resume` -- CVs and resumes
+- `other` -- unrecognized documents
+
+### Extraction Schemas
+
+Each document type has a dedicated Zod schema with `.describe()` annotations that guide the AI model. Schemas define the exact fields to extract, their types, and validation rules.
+
+### Arabic-Aware Prompts
+
+Extraction prompts are designed for Arabic-dominant documents:
+
+- **Transliteration** -- Arabic names are transliterated to Latin script alongside the original
+- **Hijri-to-Gregorian conversion** -- Dates in Hijri calendar are converted to Gregorian
+- **Bilingual field handling** -- Documents with mixed Arabic/English content are processed correctly
+
+### Server Actions
+
+| Action                        | Purpose                                  |
+| ----------------------------- | ---------------------------------------- |
+| `processApplicationDocument`  | Queue a document for AI extraction       |
+| `getDocumentProcessingStatus` | Poll job status for real-time UI updates |
+| `classifyDocument`            | Classify document type before extraction |
+
+### Completeness Check
+
+Cross-references uploaded documents against the campaign's `requiredDocuments` list. Returns a per-document status showing which required documents have been uploaded, which have been processed, and which are missing.
+
+### Merit Engine
+
+Auto-computes weighted merit scores from extracted data:
+
+- GPA extracted from transcripts
+- Entrance exam scores
+- Interview scores
+- Configurable weights per campaign
+
+### Bank Receipt Processing
+
+| Capability | Detail                                                 |
+| ---------- | ------------------------------------------------------ |
+| Extraction | Amount, date, reference number, bank name              |
+| Matching   | Auto-match extracted data to pending `Payment` records |
+| Validation | Cross-check amount against expected fee                |
+
+---
+
+## UI Components
+
+### Shared Status Components
+
+| Component                | File                                  | Behavior                                                                         |
+| ------------------------ | ------------------------------------- | -------------------------------------------------------------------------------- |
+| `ProcessingStatusBadge`  | `shared/processing-status-badge.tsx`  | PENDING (amber), PROCESSING (blue with spinner), COMPLETED (green), FAILED (red) |
+| `ConfidenceScoreDisplay` | `shared/confidence-score-display.tsx` | Color-coded dot: HIGH (green, ≥0.8), MEDIUM (amber, ≥0.5), LOW (red, &lt;0.5)    |
+| `ProcessingProgressCard` | `shared/processing-progress-card.tsx` | Composites badge + confidence + error message + retry button                     |
+| `AIBudgetIndicator`      | `shared/ai-budget-indicator.tsx`      | Progress bar showing spend vs limit with percentage                              |
+
+### Admission AI Components
+
+| Component             | File                                     | Purpose                                                            |
+| --------------------- | ---------------------------------------- | ------------------------------------------------------------------ |
+| `DocumentCard`        | `admission/ai/document-card.tsx`         | Thumbnail + status badge + confidence + document type + actions    |
+| `DocumentReviewPanel` | `admission/ai/document-review-panel.tsx` | Slide-over panel showing all extracted fields with edit capability |
+| `DocumentsSection`    | `admission/ai/documents-section.tsx`     | Interactive grid replacing the static document display             |
+
+### Settings Components
+
+| Component        | File                            | Purpose                                                            |
+| ---------------- | ------------------------------- | ------------------------------------------------------------------ |
+| `AISettingsForm` | `settings/ai-settings-form.tsx` | Admin config for monthly budget, domain toggles, and usage display |
+
+All components are under `src/components/school-dashboard/`.
+
+---
+
+## File Reference
+
+### Foundation
+
+| File                                                   | Purpose                                                     |
+| ------------------------------------------------------ | ----------------------------------------------------------- |
+| `src/lib/document-extraction/types.ts`                 | Generic extraction types, `ProcessingJobType` enum          |
+| `src/lib/document-extraction/claude-extractor.ts`      | `extractWithClaudeGeneric()` -- core AI extraction function |
+| `src/lib/document-extraction/index.ts`                 | `extractWithSchema<T>()` public API                         |
+| `src/lib/document-extraction/queue-runner.ts`          | Async job runner with exponential backoff retry             |
+| `src/lib/document-extraction/handlers/index.ts`        | Handler registry (strategy pattern)                         |
+| `src/lib/document-extraction/handlers/admission.ts`    | Admission document handler                                  |
+| `src/lib/document-extraction/handlers/bank-receipt.ts` | Bank receipt handler                                        |
+| `prisma/models/document-processing.prisma`             | `DocumentProcessingJob` + `AIUsageLog` Prisma models        |
+| `src/lib/ai/budget.ts`                                 | `canUseAI()`, `trackAIUsage()`, `getAIUsageSummary()`       |
+| `src/app/api/document-processing/run/route.ts`         | Cron trigger endpoint for queue processing                  |
+
+### Admission AI
+
+| File                                                                     | Purpose                                                   |
+| ------------------------------------------------------------------------ | --------------------------------------------------------- |
+| `src/components/school-dashboard/admission/ai/types.ts`                  | Document type definitions and interfaces                  |
+| `src/components/school-dashboard/admission/ai/schemas.ts`                | Zod extraction schemas per document type                  |
+| `src/components/school-dashboard/admission/ai/prompts.ts`                | Arabic-aware extraction prompts                           |
+| `src/components/school-dashboard/admission/ai/classify.ts`               | Document type classifier                                  |
+| `src/components/school-dashboard/admission/ai/actions.ts`                | Server actions for document processing                    |
+| `src/components/school-dashboard/admission/ai/completeness.ts`           | Document completeness check against campaign requirements |
+| `src/components/school-dashboard/admission/ai/merit-engine.ts`           | Weighted merit scoring from extracted data                |
+| `src/components/school-dashboard/admission/ai/bank-receipt-schema.ts`    | Bank receipt Zod schema                                   |
+| `src/components/school-dashboard/admission/ai/bank-receipt-actions.ts`   | Bank receipt server actions                               |
+| `src/components/school-dashboard/admission/ai/document-card.tsx`         | Document card component with AI status overlay            |
+| `src/components/school-dashboard/admission/ai/document-review-panel.tsx` | Extracted data review slide-over                          |
+| `src/components/school-dashboard/admission/ai/documents-section.tsx`     | Interactive document grid                                 |
+
+### Shared UI
+
+| File                                                                  | Purpose                                     |
+| --------------------------------------------------------------------- | ------------------------------------------- |
+| `src/components/school-dashboard/shared/processing-status-badge.tsx`  | Status badge with color-coded states        |
+| `src/components/school-dashboard/shared/confidence-score-display.tsx` | Confidence score with color-coded indicator |
+| `src/components/school-dashboard/shared/processing-progress-card.tsx` | Composite progress card                     |
+| `src/components/school-dashboard/shared/ai-budget-indicator.tsx`      | Budget usage progress bar                   |
+
+### Settings
+
+| File                                                              | Purpose                                           |
+| ----------------------------------------------------------------- | ------------------------------------------------- |
+| `src/components/school-dashboard/settings/ai-settings-form.tsx`   | Admin form for AI budget and domain configuration |
+| `src/components/school-dashboard/settings/ai-settings-actions.ts` | Server actions for AI settings CRUD               |
+
+---
+
+## Configuration
+
+### Setup
+
+1. Add the Anthropic API key to `.env`:
+
+```
+ANTHROPIC_API_KEY=sk-ant-...
+```
+
+2. Optionally set the school's `aiMonthlyBudget` in the AI Settings page (null = unlimited)
+
+3. Toggle which domains are enabled for AI processing in AI Settings
+
+### Cost Estimates
+
+| Operation                     | Estimated Cost  |
+| ----------------------------- | --------------- |
+| Document classification       | ~$0.01/doc      |
+| Document extraction           | ~$0.02-0.05/doc |
+| Bank receipt extraction       | ~$0.02-0.03/doc |
+| Full application (5 docs)     | ~$0.15          |
+| 200 applications per campaign | ~$30            |
+
+Costs are tracked per-school in `AIUsageLog` and enforced against `aiMonthlyBudget`. When the budget is exhausted, AI operations return `AI_BUDGET_EXCEEDED` and the UI prompts manual processing instead.
+
+---
+
+## Adding a New Domain
+
+To add AI processing for a new domain (e.g., textbooks), follow these five steps:
+
+### Step 1: Create Schemas and Prompts
+
+Create a Zod schema with `.describe()` annotations and an extraction prompt in the domain's `ai/` directory. The schema defines the exact fields the AI should extract, and the prompt provides context for the model.
+
+```typescript
+// src/components/school-dashboard/textbooks/ai/schemas.ts
+import { z } from "zod"
+
+export const textbookMetadataSchema = z.object({
+  title: z.string().describe("Book title"),
+  author: z.string().describe("Author name"),
+  isbn: z.string().optional().describe("ISBN number"),
+  edition: z.string().optional().describe("Edition number"),
+  publisher: z.string().optional().describe("Publisher name"),
+})
+```
+
+### Step 2: Create a Handler
+
+Register a handler in `src/lib/document-extraction/handlers/` that maps the job type to its schema and prompt.
+
+### Step 3: Register in Queue Runner
+
+Import the handler in `queue-runner.ts` so it auto-registers when the module loads.
+
+### Step 4: Add Server Actions
+
+Create server actions in the domain's `ai/actions.ts` that call `createProcessingJob()` with the appropriate job type.
+
+### Step 5: Enable the Domain
+
+Add the domain string to the school's `aiEnabledDomains` array via the AI Settings form or directly in the database.
+
+---
+
+## Future Epics (Roadmap)
+
+The Document Intelligence Initiative encompasses 8 epics totaling 233 story points. EPIC-0 (Foundation) and EPIC-1 (Admission Documents) are complete. The remaining epics are planned:
+
+| Epic   | Name                             | Story Points | Description                                          |
+| ------ | -------------------------------- | ------------ | ---------------------------------------------------- |
+| EPIC-0 | Foundation                       | 34           | Shared infrastructure (complete)                     |
+| EPIC-1 | Admission Documents              | 49           | Classification, extraction, merit scoring (complete) |
+| EPIC-2 | Exam Paper Intelligence          | 36           | Scan grading, answer key extraction, analytics       |
+| EPIC-3 | Textbook & Curriculum Processing | 28           | Metadata extraction, chapter indexing, search        |
+| EPIC-4 | Library & Book Management        | 24           | Catalog enrichment, barcode processing               |
+| EPIC-5 | Attendance Intelligence          | 20           | ID card scanning, face recognition prep              |
+| EPIC-6 | School Onboarding Intelligence   | 20           | Document verification during school setup            |
+| EPIC-7 | Invoice & Expense Processing     | 22           | Invoice OCR, expense categorization, vendor matching |
+
+For the full story-level breakdown with acceptance criteria, see [Document Intelligence](/docs/document-intelligence).

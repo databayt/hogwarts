@@ -1,0 +1,78 @@
+{
+  "subject": "islamic-studies",
+  "subjectNameAr": "التربية الإسلامية",
+  "grade": 12,
+  "level": "secondary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "",
+  "chapters": [
+    {
+      "nameAr": "الوحدة الأولى: القرآن الكريم",
+      "name": "Unit 1: The Holy Quran",
+      "slug": "holy-quran",
+      "sequenceOrder": 1,
+      "lessons": [
+        {
+          "nameAr": "سورة الحجرات",
+          "name": "Surah Al-Hujurat",
+          "slug": "surah-al-hujurat",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "تفسير سورة الحجرات",
+          "name": "Interpretation of Surah Al-Hujurat",
+          "slug": "tafsir-al-hujurat",
+          "sequenceOrder": 2
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة الثانية: الحديث الشريف",
+      "name": "Unit 2: Hadith",
+      "slug": "hadith",
+      "sequenceOrder": 2,
+      "lessons": [
+        {
+          "nameAr": "الحديث الأول",
+          "name": "Hadith 1",
+          "slug": "hadith-1",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الحديث الثاني",
+          "name": "Hadith 2",
+          "slug": "hadith-2",
+          "sequenceOrder": 2
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة الثالثة: العقيدة",
+      "name": "Unit 3: Creed",
+      "slug": "creed",
+      "sequenceOrder": 3,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الرابعة: الفقه",
+      "name": "Unit 4: Jurisprudence",
+      "slug": "jurisprudence",
+      "sequenceOrder": 4,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الخامسة: السيرة النبوية",
+      "name": "Unit 5: Prophetic Biography",
+      "slug": "prophetic-biography",
+      "sequenceOrder": 5,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة السادسة: الثقافة الإسلامية",
+      "name": "Unit 6: Islamic Culture",
+      "slug": "islamic-culture",
+      "sequenceOrder": 6,
+      "lessons": []
+    }
+  ]
+}

@@ -75,9 +75,9 @@ describe("Contribute Actions", () => {
   })
 
   describe("contributeBook", () => {
-    it("creates CatalogBook with PENDING status", async () => {
+    it("creates Book with PENDING status", async () => {
       mockTeacherSession()
-      vi.mocked(db.catalogBook.create).mockResolvedValue({
+      vi.mocked(db.schoolBook.create).mockResolvedValue({
         id: "book-1",
       } as any)
 
@@ -87,7 +87,7 @@ describe("Contribute Actions", () => {
         success: true,
         data: { bookId: "book-1" },
       })
-      expect(db.catalogBook.create).toHaveBeenCalledWith({
+      expect(db.schoolBook.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           title: "My Book",
           author: "Author Name",
@@ -103,13 +103,13 @@ describe("Contribute Actions", () => {
 
     it("generates slug from title", async () => {
       mockTeacherSession()
-      vi.mocked(db.catalogBook.create).mockResolvedValue({
+      vi.mocked(db.schoolBook.create).mockResolvedValue({
         id: "book-2",
       } as any)
 
       await contributeBook(validInput)
 
-      const createCall = vi.mocked(db.catalogBook.create).mock.calls[0][0]
+      const createCall = vi.mocked(db.schoolBook.create).mock.calls[0][0]
       expect(createCall.data.slug).toMatch(/^my-book-[a-z0-9]+$/)
     })
 
@@ -125,7 +125,7 @@ describe("Contribute Actions", () => {
       const result = await contributeBook(validInput)
 
       expect(result).toEqual({ success: false, error: "Unauthorized" })
-      expect(db.catalogBook.create).not.toHaveBeenCalled()
+      expect(db.schoolBook.create).not.toHaveBeenCalled()
     })
 
     it("requires school context", async () => {
@@ -143,7 +143,7 @@ describe("Contribute Actions", () => {
         success: false,
         error: "Missing school context",
       })
-      expect(db.catalogBook.create).not.toHaveBeenCalled()
+      expect(db.schoolBook.create).not.toHaveBeenCalled()
     })
 
     it("returns error for missing title", async () => {
@@ -158,7 +158,7 @@ describe("Contribute Actions", () => {
         success: false,
         error: "Title is required",
       })
-      expect(db.catalogBook.create).not.toHaveBeenCalled()
+      expect(db.schoolBook.create).not.toHaveBeenCalled()
     })
 
     it("returns error for unauthenticated user", async () => {
@@ -170,12 +170,12 @@ describe("Contribute Actions", () => {
         success: false,
         error: "Not authenticated",
       })
-      expect(db.catalogBook.create).not.toHaveBeenCalled()
+      expect(db.schoolBook.create).not.toHaveBeenCalled()
     })
 
     it("returns error on database failure", async () => {
       mockAdminSession()
-      vi.mocked(db.catalogBook.create).mockRejectedValue(
+      vi.mocked(db.schoolBook.create).mockRejectedValue(
         new Error("Unique constraint violation on isbn")
       )
 

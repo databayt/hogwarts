@@ -22,7 +22,7 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { toggleSubjectSelection } from "./actions"
 
-interface CatalogSubject {
+interface Subject {
   id: string
   name: string
   slug: string
@@ -55,7 +55,7 @@ interface Selection {
 }
 
 interface Props {
-  subjects: CatalogSubject[]
+  subjects: Subject[]
   grades: Grade[]
   selections: Selection[]
   schoolLevels: string[]
@@ -196,7 +196,7 @@ export function SubjectPicker({
 
   // Group subjects by department
   const groupedSubjects = useMemo(() => {
-    const groups: Record<string, CatalogSubject[]> = {}
+    const groups: Record<string, Subject[]> = {}
     for (const s of filteredSubjects) {
       const dept = s.department
       if (!groups[dept]) groups[dept] = []

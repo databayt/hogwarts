@@ -78,7 +78,7 @@ export default function CampaignSelectorContent({
             completeYourApplication:
               dict.completeYourApplication || "Complete your application",
             draft: dict.draft || "Draft",
-            step: dict.stepLabel || "Step",
+            stepLabel: dict.stepLabel || "Step",
           }}
         />
       )}

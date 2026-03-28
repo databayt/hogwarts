@@ -125,7 +125,7 @@ export async function updateTemplateTargeting(
       return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
-    const existing = await db.examTemplate.findFirst({
+    const existing = await db.schoolExamTemplate.findFirst({
       where: { id: templateId, schoolId },
       select: { id: true },
     })
@@ -134,7 +134,7 @@ export async function updateTemplateTargeting(
       return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
-    await db.examTemplate.updateMany({
+    await db.schoolExamTemplate.updateMany({
       where: { id: templateId, schoolId },
       data: {
         gradeIds: data.gradeIds,

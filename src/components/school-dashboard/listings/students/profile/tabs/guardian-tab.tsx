@@ -58,21 +58,23 @@ import type { Student } from "../../registration/types"
 
 interface GuardianTabProps {
   student: Student
+  dictionary?: any
 }
 
-const GUARDIAN_TYPES = [
-  { value: "father", label: "الأب" },
-  { value: "mother", label: "الأم" },
-  { value: "guardian", label: "ولي الأمر" },
-  { value: "other", label: "آخر" },
-]
-
-export function GuardianTab({ student }: GuardianTabProps) {
+export function GuardianTab({ student, dictionary }: GuardianTabProps) {
+  const d = dictionary
   const [isPending, startTransition] = useTransition()
   const [isAddOpen, setIsAddOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [selectedGuardian, setSelectedGuardian] = useState<any>(null)
+
+  const GUARDIAN_TYPES = [
+    { value: "father", label: d?.father || "Father" },
+    { value: "mother", label: d?.mother || "Mother" },
+    { value: "guardian", label: d?.guardian || "Guardian" },
+    { value: "other", label: d?.other || "Other" },
+  ]
 
   // Form state for adding guardian
   const [formData, setFormData] = useState({
@@ -138,7 +140,7 @@ export function GuardianTab({ student }: GuardianTabProps) {
       })
 
       if (result.success) {
-        toast.success("Guardian added successfully")
+        toast.success(d?.guardianAdded || "Guardian added successfully")
         setIsAddOpen(false)
         resetForm()
       } else {
@@ -160,7 +162,7 @@ export function GuardianTab({ student }: GuardianTabProps) {
       })
 
       if (result.success) {
-        toast.success("Guardian updated successfully")
+        toast.success(d?.guardianUpdated || "Guardian updated successfully")
         setIsEditOpen(false)
         setSelectedGuardian(null)
         resetForm()
@@ -179,7 +181,7 @@ export function GuardianTab({ student }: GuardianTabProps) {
       })
 
       if (result.success) {
-        toast.success("Guardian removed successfully")
+        toast.success(d?.guardianRemoved || "Guardian removed successfully")
         setIsDeleteOpen(false)
         setSelectedGuardian(null)
       } else {
@@ -215,7 +217,7 @@ export function GuardianTab({ student }: GuardianTabProps) {
       <div className="flex justify-end">
         <Button variant="outline" size="sm" onClick={() => setIsAddOpen(true)}>
           <Plus className="me-2 h-4 w-4" />
-          Add Guardian
+          {d?.addGuardian || "Add Guardian"}
         </Button>
       </div>
 
@@ -244,7 +246,7 @@ export function GuardianTab({ student }: GuardianTabProps) {
                       {fullName}
                       {guardianRel.isPrimary && (
                         <Badge variant="default" className="text-xs">
-                          Primary
+                          {d?.primary || "Primary"}
                         </Badge>
                       )}
                     </CardTitle>
@@ -285,7 +287,9 @@ export function GuardianTab({ student }: GuardianTabProps) {
             <CardContent className="space-y-4">
               {/* Contact Information */}
               <div className="space-y-2">
-                <h4 className="font-medium">Contact Information</h4>
+                <h4 className="font-medium">
+                  {d?.contactInformation || "Contact Information"}
+                </h4>
                 <div className="grid gap-2">
                   {guardian.emailAddress && (
                     <a
@@ -314,7 +318,7 @@ export function GuardianTab({ student }: GuardianTabProps) {
                         </span>
                         {phone.isPrimary && (
                           <Badge variant="secondary" className="text-xs">
-                            Primary
+                            {d?.primary || "Primary"}
                           </Badge>
                         )}
                       </div>
@@ -326,9 +330,12 @@ export function GuardianTab({ student }: GuardianTabProps) {
               {/* Work Information */}
               {guardianRel.workplace && (
                 <div className="space-y-2">
-                  <h4 className="font-medium">Work Information</h4>
+                  <h4 className="font-medium">
+                    {d?.workInformation || "Work Information"}
+                  </h4>
                   <p className="text-muted-foreground text-sm">
-                    {guardianRel.occupation} at {guardianRel.workplace}
+                    {guardianRel.occupation} {d?.at || "at"}{" "}
+                    {guardianRel.workplace}
                   </p>
                 </div>
               )}
@@ -336,7 +343,7 @@ export function GuardianTab({ student }: GuardianTabProps) {
               {/* Address if different from student */}
               {guardian.address && (
                 <div className="space-y-2">
-                  <h4 className="font-medium">Address</h4>
+                  <h4 className="font-medium">{d?.address || "Address"}</h4>
                   <p className="text-muted-foreground text-sm">
                     {guardian.address}
                   </p>
@@ -345,19 +352,21 @@ export function GuardianTab({ student }: GuardianTabProps) {
 
               {/* Permissions & Access */}
               <div className="space-y-2">
-                <h4 className="font-medium">Permissions</h4>
+                <h4 className="font-medium">
+                  {d?.permissions || "Permissions"}
+                </h4>
                 <div className="flex flex-wrap gap-2">
                   <Badge variant="outline" className="text-xs">
-                    Can Pick Up
+                    {d?.canPickUp || "Can Pick Up"}
                   </Badge>
                   <Badge variant="outline" className="text-xs">
-                    Receives Reports
+                    {d?.receivesReports || "Receives Reports"}
                   </Badge>
                   <Badge variant="outline" className="text-xs">
-                    Emergency Contact
+                    {d?.emergencyContact || "Emergency Contact"}
                   </Badge>
                   <Badge variant="outline" className="text-xs">
-                    Fee Payment
+                    {d?.feePayment || "Fee Payment"}
                   </Badge>
                 </div>
               </div>
@@ -365,7 +374,7 @@ export function GuardianTab({ student }: GuardianTabProps) {
               {/* Notes */}
               {guardianRel.notes && (
                 <div className="space-y-2">
-                  <h4 className="font-medium">Notes</h4>
+                  <h4 className="font-medium">{d?.notes || "Notes"}</h4>
                   <p className="text-muted-foreground text-sm">
                     {guardianRel.notes}
                   </p>
@@ -380,14 +389,16 @@ export function GuardianTab({ student }: GuardianTabProps) {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-8">
             <User className="text-muted-foreground mb-4 h-12 w-12" />
-            <p className="text-muted-foreground">No guardians registered</p>
+            <p className="text-muted-foreground">
+              {d?.noGuardiansRegistered || "No guardians registered"}
+            </p>
             <Button
               variant="outline"
               className="mt-4"
               onClick={() => setIsAddOpen(true)}
             >
               <Plus className="me-2 h-4 w-4" />
-              Add Guardian
+              {d?.addGuardian || "Add Guardian"}
             </Button>
           </CardContent>
         </Card>
@@ -397,40 +408,45 @@ export function GuardianTab({ student }: GuardianTabProps) {
       <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Add Guardian</DialogTitle>
+            <DialogTitle>{d?.addGuardian || "Add Guardian"}</DialogTitle>
             <DialogDescription>
-              Add a parent or guardian for this student.
+              {d?.addGuardianDescription ||
+                "Add a parent or guardian for this student."}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="firstName">First Name *</Label>
+                <Label htmlFor="firstName">
+                  {d?.firstName || "First Name"} *
+                </Label>
                 <Input
                   id="firstName"
                   value={formData.firstName}
                   onChange={(e) =>
                     setFormData({ ...formData, firstName: e.target.value })
                   }
-                  placeholder="Enter first name"
+                  placeholder={d?.enterFirstName || "Enter first name"}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name *</Label>
+                <Label htmlFor="lastName">{d?.lastName || "Last Name"} *</Label>
                 <Input
                   id="lastName"
                   value={formData.lastName}
                   onChange={(e) =>
                     setFormData({ ...formData, lastName: e.target.value })
                   }
-                  placeholder="Enter last name"
+                  placeholder={d?.enterLastName || "Enter last name"}
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="guardianType">Relationship *</Label>
+              <Label htmlFor="guardianType">
+                {d?.relationship || "Relationship"} *
+              </Label>
               <Select
                 value={formData.guardianType}
                 onValueChange={(value) =>
@@ -438,7 +454,9 @@ export function GuardianTab({ student }: GuardianTabProps) {
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select relationship" />
+                  <SelectValue
+                    placeholder={d?.selectRelationship || "Select relationship"}
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {GUARDIAN_TYPES.map((type) => (
@@ -451,7 +469,7 @@ export function GuardianTab({ student }: GuardianTabProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="emailAddress">Email</Label>
+              <Label htmlFor="emailAddress">{d?.email || "Email"}</Label>
               <Input
                 id="emailAddress"
                 type="email"
@@ -459,12 +477,14 @@ export function GuardianTab({ student }: GuardianTabProps) {
                 onChange={(e) =>
                   setFormData({ ...formData, emailAddress: e.target.value })
                 }
-                placeholder="guardian@email.com"
+                placeholder={d?.emailPlaceholder || "guardian@email.com"}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="phoneNumber">Phone Number</Label>
+              <Label htmlFor="phoneNumber">
+                {d?.phoneNumber || "Phone Number"}
+              </Label>
               <Input
                 id="phoneNumber"
                 type="tel"
@@ -472,31 +492,33 @@ export function GuardianTab({ student }: GuardianTabProps) {
                 onChange={(e) =>
                   setFormData({ ...formData, phoneNumber: e.target.value })
                 }
-                placeholder="+1 234 567 8900"
+                placeholder={d?.phonePlaceholder || "+1 234 567 8900"}
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="occupation">Occupation</Label>
+                <Label htmlFor="occupation">
+                  {d?.occupation || "Occupation"}
+                </Label>
                 <Input
                   id="occupation"
                   value={formData.occupation}
                   onChange={(e) =>
                     setFormData({ ...formData, occupation: e.target.value })
                   }
-                  placeholder="e.g., Engineer"
+                  placeholder={d?.occupationPlaceholder || "e.g., Engineer"}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="workplace">Workplace</Label>
+                <Label htmlFor="workplace">{d?.workplace || "Workplace"}</Label>
                 <Input
                   id="workplace"
                   value={formData.workplace}
                   onChange={(e) =>
                     setFormData({ ...formData, workplace: e.target.value })
                   }
-                  placeholder="e.g., Tech Corp"
+                  placeholder={d?.workplacePlaceholder || "e.g., Tech Corp"}
                 />
               </div>
             </div>
@@ -510,19 +532,19 @@ export function GuardianTab({ student }: GuardianTabProps) {
                 }
               />
               <Label htmlFor="isPrimary" className="text-sm font-normal">
-                Set as primary guardian
+                {d?.setAsPrimaryGuardian || "Set as primary guardian"}
               </Label>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="notes">Notes</Label>
+              <Label htmlFor="notes">{d?.notes || "Notes"}</Label>
               <Textarea
                 id="notes"
                 value={formData.notes}
                 onChange={(e) =>
                   setFormData({ ...formData, notes: e.target.value })
                 }
-                placeholder="Additional notes..."
+                placeholder={d?.additionalNotes || "Additional notes..."}
                 rows={2}
               />
             </div>
@@ -536,7 +558,7 @@ export function GuardianTab({ student }: GuardianTabProps) {
                 resetForm()
               }}
             >
-              Cancel
+              {d?.cancel || "Cancel"}
             </Button>
             <Button
               onClick={handleAddGuardian}
@@ -548,7 +570,7 @@ export function GuardianTab({ student }: GuardianTabProps) {
               }
             >
               {isPending && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
-              Add Guardian
+              {d?.addGuardian || "Add Guardian"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -558,9 +580,10 @@ export function GuardianTab({ student }: GuardianTabProps) {
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Edit Guardian</DialogTitle>
+            <DialogTitle>{d?.editGuardian || "Edit Guardian"}</DialogTitle>
             <DialogDescription>
-              Update guardian relationship details.
+              {d?.editGuardianDescription ||
+                "Update guardian relationship details."}
             </DialogDescription>
           </DialogHeader>
 
@@ -570,31 +593,35 @@ export function GuardianTab({ student }: GuardianTabProps) {
                 {formData.firstName} {formData.lastName}
               </p>
               <p className="text-muted-foreground text-sm">
-                {formData.emailAddress || "No email"}
+                {formData.emailAddress || d?.noEmail || "No email"}
               </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="editOccupation">Occupation</Label>
+                <Label htmlFor="editOccupation">
+                  {d?.occupation || "Occupation"}
+                </Label>
                 <Input
                   id="editOccupation"
                   value={formData.occupation}
                   onChange={(e) =>
                     setFormData({ ...formData, occupation: e.target.value })
                   }
-                  placeholder="e.g., Engineer"
+                  placeholder={d?.occupationPlaceholder || "e.g., Engineer"}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="editWorkplace">Workplace</Label>
+                <Label htmlFor="editWorkplace">
+                  {d?.workplace || "Workplace"}
+                </Label>
                 <Input
                   id="editWorkplace"
                   value={formData.workplace}
                   onChange={(e) =>
                     setFormData({ ...formData, workplace: e.target.value })
                   }
-                  placeholder="e.g., Tech Corp"
+                  placeholder={d?.workplacePlaceholder || "e.g., Tech Corp"}
                 />
               </div>
             </div>
@@ -608,19 +635,19 @@ export function GuardianTab({ student }: GuardianTabProps) {
                 }
               />
               <Label htmlFor="editIsPrimary" className="text-sm font-normal">
-                Set as primary guardian
+                {d?.setAsPrimaryGuardian || "Set as primary guardian"}
               </Label>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="editNotes">Notes</Label>
+              <Label htmlFor="editNotes">{d?.notes || "Notes"}</Label>
               <Textarea
                 id="editNotes"
                 value={formData.notes}
                 onChange={(e) =>
                   setFormData({ ...formData, notes: e.target.value })
                 }
-                placeholder="Additional notes..."
+                placeholder={d?.additionalNotes || "Additional notes..."}
                 rows={2}
               />
             </div>
@@ -635,11 +662,11 @@ export function GuardianTab({ student }: GuardianTabProps) {
                 resetForm()
               }}
             >
-              Cancel
+              {d?.cancel || "Cancel"}
             </Button>
             <Button onClick={handleEditGuardian} disabled={isPending}>
               {isPending && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
-              Save Changes
+              {d?.saveChanges || "Save Changes"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -649,19 +676,23 @@ export function GuardianTab({ student }: GuardianTabProps) {
       <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove Guardian</AlertDialogTitle>
+            <AlertDialogTitle>
+              {d?.removeGuardian || "Remove Guardian"}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to remove{" "}
+              {d?.removeGuardianConfirmation ||
+                "Are you sure you want to remove"}{" "}
               <strong>
                 {selectedGuardian?.guardian?.firstName}{" "}
                 {selectedGuardian?.guardian?.lastName}
               </strong>{" "}
-              as a guardian for this student? This action cannot be undone.
+              {d?.asGuardianForStudent ||
+                "as a guardian for this student? This action cannot be undone."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setSelectedGuardian(null)}>
-              Cancel
+              {d?.cancel || "Cancel"}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteGuardian}
@@ -669,7 +700,7 @@ export function GuardianTab({ student }: GuardianTabProps) {
               disabled={isPending}
             >
               {isPending && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
-              Remove
+              {d?.remove || "Remove"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

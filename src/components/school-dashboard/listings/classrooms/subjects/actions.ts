@@ -106,8 +106,8 @@ export async function getSubjectRoomAssignments(
         orderBy: { subject: { name: "asc" } },
       })
 
-      // Get weeklyPeriods from SchoolSubjectSelection for this grade
-      const selections = await db.schoolSubjectSelection.findMany({
+      // Get weeklyPeriods from SubjectSelection for this grade
+      const selections = await db.subjectSelection.findMany({
         where: { schoolId, gradeId: grade.id, isActive: true },
         select: {
           catalogSubjectId: true,

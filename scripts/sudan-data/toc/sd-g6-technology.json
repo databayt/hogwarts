@@ -1,0 +1,17 @@
+{
+  "subject": "technology",
+  "subjectNameAr": "التقانة",
+  "grade": 6,
+  "level": "elementary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "",
+  "chapters": [
+    {
+      "nameAr": "التقانة",
+      "name": "Technology",
+      "slug": "technology",
+      "sequenceOrder": 1,
+      "lessons": []
+    }
+  ]
+}

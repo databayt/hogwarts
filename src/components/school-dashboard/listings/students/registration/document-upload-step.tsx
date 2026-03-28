@@ -52,39 +52,61 @@ interface DocumentUploadStepProps {
   dictionary?: any
 }
 
-const documentTypes = [
-  { value: "BIRTH_CERTIFICATE", label: "Birth Certificate", required: true },
-  {
-    value: "TRANSFER_CERTIFICATE",
-    label: "Transfer Certificate",
-    required: false,
-  },
-  { value: "MEDICAL_REPORT", label: "Medical Report", required: false },
-  { value: "PASSPORT_COPY", label: "Passport Copy", required: false },
-  { value: "VISA_COPY", label: "Visa Copy", required: false },
-  { value: "ID_CARD", label: "ID Card Copy", required: false },
-  {
-    value: "ACADEMIC_TRANSCRIPT",
-    label: "Academic Transcript",
-    required: false,
-  },
-  {
-    value: "CHARACTER_CERTIFICATE",
-    label: "Character Certificate",
-    required: false,
-  },
-  {
-    value: "LEAVING_CERTIFICATE",
-    label: "Leaving Certificate",
-    required: false,
-  },
-  { value: "OTHER", label: "Other", required: false },
-]
-
 export function DocumentUploadStep({
   form,
   dictionary,
 }: DocumentUploadStepProps) {
+  const reg = dictionary?.school?.students?.registration?.documents
+  const types = reg?.types
+
+  const documentTypes = [
+    {
+      value: "BIRTH_CERTIFICATE",
+      label: types?.birthCertificate || "Birth Certificate",
+      required: true,
+    },
+    {
+      value: "TRANSFER_CERTIFICATE",
+      label: types?.transferCertificate || "Transfer Certificate",
+      required: false,
+    },
+    {
+      value: "MEDICAL_REPORT",
+      label: types?.medicalReport || "Medical Report",
+      required: false,
+    },
+    {
+      value: "PASSPORT_COPY",
+      label: types?.passportCopy || "Passport Copy",
+      required: false,
+    },
+    {
+      value: "VISA_COPY",
+      label: types?.visaCopy || "Visa Copy",
+      required: false,
+    },
+    {
+      value: "ID_CARD",
+      label: types?.idCard || "ID Card Copy",
+      required: false,
+    },
+    {
+      value: "ACADEMIC_TRANSCRIPT",
+      label: types?.academicTranscript || "Academic Transcript",
+      required: false,
+    },
+    {
+      value: "CHARACTER_CERTIFICATE",
+      label: types?.characterCertificate || "Character Certificate",
+      required: false,
+    },
+    {
+      value: "LEAVING_CERTIFICATE",
+      label: types?.leavingCertificate || "Leaving Certificate",
+      required: false,
+    },
+    { value: "OTHER", label: types?.other || "Other", required: false },
+  ]
   const [showProfileUploader, setShowProfileUploader] = useState(false)
   const [showDocumentUploader, setShowDocumentUploader] = useState<
     number | null
@@ -111,7 +133,10 @@ export function DocumentUploadStep({
       setProfilePhotoUrl(url)
       form.setValue("profilePhotoUrl", url)
       setShowProfileUploader(false)
-      toast.success("Profile photo uploaded successfully")
+      toast.success(
+        reg?.profilePhotoUploadedSuccess ||
+          "Profile photo uploaded successfully"
+      )
     }
   }
 
@@ -132,7 +157,9 @@ export function DocumentUploadStep({
       form.setValue(`documents.${index}.mimeType`, "") // MimeType not available
       form.setValue(`documents.${index}.documentName`, file.fileId)
       setShowDocumentUploader(null)
-      toast.success("Document uploaded successfully")
+      toast.success(
+        reg?.documentUploadedSuccess || "Document uploaded successfully"
+      )
     }
   }
 
@@ -153,8 +180,8 @@ export function DocumentUploadStep({
       <Alert>
         <CircleAlert className="h-4 w-4" />
         <AlertDescription>
-          Please upload clear, readable copies of documents. Accepted formats:
-          PDF, JPG, PNG. Max file size: 10MB per document.
+          {reg?.uploadAlert ||
+            "Please upload clear, readable copies of documents. Accepted formats: PDF, JPG, PNG. Max file size: 10MB per document."}
         </AlertDescription>
       </Alert>
 
@@ -163,7 +190,7 @@ export function DocumentUploadStep({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Image className="h-4 w-4" />
-            Profile Photo
+            {reg?.profilePhoto || "Profile Photo"}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -172,7 +199,7 @@ export function DocumentUploadStep({
               <div className="relative">
                 <img
                   src={profilePhotoUrl || form.watch("profilePhotoUrl")}
-                  alt="Profile"
+                  alt={reg?.profileAlt || "Profile"}
                   className="h-32 w-32 rounded-lg border object-cover"
                 />
                 <Button
@@ -190,7 +217,8 @@ export function DocumentUploadStep({
               </div>
               <div className="flex-1">
                 <p className="text-muted-foreground text-sm">
-                  Profile photo uploaded successfully
+                  {reg?.profileUploadedSuccess ||
+                    "Profile photo uploaded successfully"}
                 </p>
                 <Button
                   type="button"
@@ -199,7 +227,7 @@ export function DocumentUploadStep({
                   className="mt-2"
                   onClick={() => setShowProfileUploader(true)}
                 >
-                  Change Photo
+                  {reg?.changePhoto || "Change Photo"}
                 </Button>
               </div>
             </div>
@@ -211,7 +239,8 @@ export function DocumentUploadStep({
                 </div>
                 <div className="flex-1">
                   <p className="text-muted-foreground mb-2 text-sm">
-                    Passport size photo, Max 5MB (JPG, PNG)
+                    {reg?.photoSizeHint ||
+                      "Passport size photo, Max 5MB (JPG, PNG)"}
                   </p>
                   <Button
                     type="button"
@@ -219,7 +248,7 @@ export function DocumentUploadStep({
                     onClick={() => setShowProfileUploader(true)}
                   >
                     <Upload className="me-2 h-4 w-4" />
-                    Upload Photo
+                    {reg?.uploadPhoto || "Upload Photo"}
                   </Button>
                 </div>
               </div>
@@ -232,7 +261,9 @@ export function DocumentUploadStep({
       <Dialog open={showProfileUploader} onOpenChange={setShowProfileUploader}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Upload Profile Photo</DialogTitle>
+            <DialogTitle>
+              {reg?.uploadProfilePhoto || "Upload Profile Photo"}
+            </DialogTitle>
           </DialogHeader>
           <FileUploader
             category="IMAGE"
@@ -253,8 +284,8 @@ export function DocumentUploadStep({
         <Alert>
           <FileText className="h-4 w-4" />
           <AlertDescription>
-            As a transfer student, please provide Transfer Certificate and
-            previous academic records.
+            {reg?.transferDocumentsAlert ||
+              "As a transfer student, please provide Transfer Certificate and previous academic records."}
           </AlertDescription>
         </Alert>
       )}
@@ -262,7 +293,7 @@ export function DocumentUploadStep({
       {/* Document Upload */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h4>Documents</h4>
+          <h4>{reg?.documents || "Documents"}</h4>
           <Button
             type="button"
             variant="outline"
@@ -277,7 +308,7 @@ export function DocumentUploadStep({
             }
           >
             <Upload className="me-2 h-4 w-4" />
-            Add Document
+            {reg?.addDocument || "Add Document"}
           </Button>
         </div>
 
@@ -285,7 +316,7 @@ export function DocumentUploadStep({
           <Card key={field.id}>
             <CardHeader className="py-3">
               <CardTitle className="flex items-center justify-between text-sm">
-                Document {index + 1}
+                {reg?.document || "Document"} {index + 1}
                 <Button
                   type="button"
                   variant="ghost"
@@ -303,14 +334,21 @@ export function DocumentUploadStep({
                   name={`documents.${index}.documentType`}
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Document Type</FormLabel>
+                      <FormLabel>
+                        {reg?.documentType || "Document Type"}
+                      </FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select document type" />
+                            <SelectValue
+                              placeholder={
+                                reg?.selectDocumentType ||
+                                "Select document type"
+                              }
+                            />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -323,7 +361,7 @@ export function DocumentUploadStep({
                                     variant="secondary"
                                     className="text-xs"
                                   >
-                                    Required
+                                    {reg?.required || "Required"}
                                   </Badge>
                                 )}
                               </div>
@@ -341,7 +379,7 @@ export function DocumentUploadStep({
                   name={`documents.${index}.fileUrl`}
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Upload File</FormLabel>
+                      <FormLabel>{reg?.uploadFile || "Upload File"}</FormLabel>
                       <FormControl>
                         <div className="flex items-center gap-2">
                           {field.value ? (
@@ -356,7 +394,7 @@ export function DocumentUploadStep({
                                 className="flex-1"
                               >
                                 <Eye className="me-2 h-4 w-4" />
-                                View File
+                                {reg?.viewFile || "View File"}
                               </Button>
                               <Button
                                 type="button"
@@ -365,7 +403,7 @@ export function DocumentUploadStep({
                                 onClick={() => setShowDocumentUploader(index)}
                               >
                                 <Upload className="me-2 h-4 w-4" />
-                                Change
+                                {reg?.change || "Change"}
                               </Button>
                             </>
                           ) : (
@@ -376,7 +414,7 @@ export function DocumentUploadStep({
                               className="w-full"
                             >
                               <Upload className="me-2 h-4 w-4" />
-                              Upload File
+                              {reg?.uploadFile || "Upload File"}
                             </Button>
                           )}
                         </div>
@@ -392,10 +430,15 @@ export function DocumentUploadStep({
                 name={`documents.${index}.description`}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description (Optional)</FormLabel>
+                    <FormLabel>
+                      {reg?.descriptionOptional || "Description (Optional)"}
+                    </FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Add any notes about this document"
+                        placeholder={
+                          reg?.descriptionPlaceholder ||
+                          "Add any notes about this document"
+                        }
                         {...field}
                       />
                     </FormControl>
@@ -422,7 +465,9 @@ export function DocumentUploadStep({
       {/* Checklist */}
       <Card className="bg-muted/50">
         <CardHeader>
-          <CardTitle className="text-sm">Document Checklist</CardTitle>
+          <CardTitle className="text-sm">
+            {reg?.documentChecklist || "Document Checklist"}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2 text-sm">
@@ -434,7 +479,7 @@ export function DocumentUploadStep({
               )
               .map((type) => {
                 const hasDocument = documents.some(
-                  (d: any) => d.documentType === type.value && d.fileUrl
+                  (doc: any) => doc.documentType === type.value && doc.fileUrl
                 )
                 return (
                   <div key={type.value} className="flex items-center gap-2">
@@ -464,7 +509,9 @@ export function DocumentUploadStep({
       >
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Upload Document</DialogTitle>
+            <DialogTitle>
+              {reg?.uploadDocument || "Upload Document"}
+            </DialogTitle>
           </DialogHeader>
           {showDocumentUploader !== null && (
             <FileUploader

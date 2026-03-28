@@ -215,7 +215,7 @@ export const ApplySessionProvider: React.FC<ApplySessionProviderProps> = ({
         setSession((prev) => ({
           ...prev,
           isLoading: false,
-          error: result.error || "Failed to load session",
+          error: result.error || "FAILED_TO_LOAD_SESSION",
         }))
         return false
       }
@@ -223,7 +223,7 @@ export const ApplySessionProvider: React.FC<ApplySessionProviderProps> = ({
       setSession((prev) => ({
         ...prev,
         isLoading: false,
-        error: "Failed to load session",
+        error: "FAILED_TO_LOAD_SESSION",
       }))
       return false
     }
@@ -317,7 +317,7 @@ export const ApplySessionProvider: React.FC<ApplySessionProviderProps> = ({
         setSession((prev) => ({
           ...prev,
           isSaving: false,
-          error: result.error || "Failed to save",
+          error: result.error || "FAILED_TO_SAVE",
         }))
         return null
       }
@@ -325,7 +325,7 @@ export const ApplySessionProvider: React.FC<ApplySessionProviderProps> = ({
       setSession((prev) => ({
         ...prev,
         isSaving: false,
-        error: "Failed to save session",
+        error: "FAILED_TO_SAVE_SESSION",
       }))
       return null
     }

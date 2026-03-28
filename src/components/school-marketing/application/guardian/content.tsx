@@ -12,7 +12,6 @@ import { useApplySession } from "../application-context"
 import type { GuardianStepData } from "../types"
 import { getApplyStepDict } from "../utils"
 import { useApplyValidation } from "../validation-context"
-import { GUARDIAN_STEP_CONFIG } from "./config"
 import { GuardianForm } from "./form"
 import type { GuardianFormRef } from "./types"
 
@@ -23,7 +22,7 @@ interface Props {
 export default function GuardianContent({ dictionary }: Props) {
   const params = useParams()
   const router = useRouter()
-  const { locale, isRTL } = useLocale()
+  const { locale } = useLocale()
   const id = params.id as string
 
   const { enableNext, disableNext, setCustomNavigation } = useApplyValidation()
@@ -67,10 +66,8 @@ export default function GuardianContent({ dictionary }: Props) {
   return (
     <FormLayout>
       <FormHeading
-        title={stepDict.title || GUARDIAN_STEP_CONFIG.label(isRTL)}
-        description={
-          stepDict.description || GUARDIAN_STEP_CONFIG.description(isRTL)
-        }
+        title={stepDict.title || "Guardian Information"}
+        description={stepDict.description || "Enter parent or guardian details"}
       />
       <GuardianForm
         ref={guardianFormRef}

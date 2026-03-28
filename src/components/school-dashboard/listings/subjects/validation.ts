@@ -17,7 +17,7 @@ export const subjectSelectSchema = z.object({
 })
 
 /**
- * Schema for updating a SchoolSubjectSelection record.
+ * Schema for updating a SubjectSelection record.
  */
 export const subjectUpdateSchema = z.object({
   id: z.string().min(1, "Required"),

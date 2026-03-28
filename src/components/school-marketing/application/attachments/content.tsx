@@ -9,6 +9,7 @@ import { FormHeading, FormLayout } from "@/components/form"
 import { useLocale } from "@/components/internationalization/use-locale"
 
 import { useApplySession } from "../application-context"
+import { getApplyStepDict } from "../utils"
 import { useApplyValidation } from "../validation-context"
 import { ATTACHMENTS_STEP_CONFIG } from "./config"
 import { AttachmentsForm } from "./form"
@@ -21,8 +22,7 @@ interface Props {
 export default function AttachmentsContent({ dictionary }: Props) {
   const params = useParams()
   const router = useRouter()
-  const { locale } = useLocale()
-  const isRTL = locale === "ar"
+  const { locale, isRTL } = useLocale()
   const id = params.id as string
 
   const { enableNext, setCustomNavigation } = useApplyValidation()
@@ -30,6 +30,7 @@ export default function AttachmentsContent({ dictionary }: Props) {
   const attachmentsFormRef = useRef<AttachmentsFormRef>(null)
 
   const initialData = getStepData("attachments")
+  const stepDict = getApplyStepDict(dictionary, "documents")
 
   const onNext = useCallback(async () => {
     if (attachmentsFormRef.current) {
@@ -51,8 +52,10 @@ export default function AttachmentsContent({ dictionary }: Props) {
   return (
     <FormLayout>
       <FormHeading
-        title={ATTACHMENTS_STEP_CONFIG.label(isRTL)}
-        description={ATTACHMENTS_STEP_CONFIG.description(isRTL)}
+        title={stepDict.title || ATTACHMENTS_STEP_CONFIG.label(isRTL)}
+        description={
+          stepDict.description || ATTACHMENTS_STEP_CONFIG.description(isRTL)
+        }
       />
       <AttachmentsForm
         ref={attachmentsFormRef}

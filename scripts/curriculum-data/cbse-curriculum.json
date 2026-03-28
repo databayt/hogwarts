@@ -1,0 +1,1060 @@
+{
+  "version": "1.0",
+  "country": "IN",
+  "curriculum": "cbse",
+  "lang": "en",
+  "officialName": "Central Board of Secondary Education",
+  "organization": "CBSE under Ministry of Education, Government of India",
+  "website": "https://cbse.gov.in",
+  "academicWebsite": "https://cbseacademic.nic.in",
+  "description": "India's largest national education board, affiliated with NCERT curriculum. Follows the National Education Policy (NEP) 2020 framework. Over 28,000 schools affiliated in India and 240+ schools in 25+ countries.",
+  "gradeRange": "1-12",
+  "structureCode": "5+3+2+2",
+  "structure": {
+    "foundational": {
+      "name": "Foundational Stage",
+      "nameAr": "المرحلة التأسيسية",
+      "grades": [-2, -1, 0, 1, 2],
+      "gradeNames": {
+        "-2": "Nursery",
+        "-1": "LKG (Lower Kindergarten)",
+        "0": "UKG (Upper Kindergarten)",
+        "1": "Class I",
+        "2": "Class II"
+      },
+      "ageRange": [3, 8],
+      "level": "PRESCHOOL",
+      "note": "NEP 2020 stage. Pre-primary + Classes 1-2. Play-based and activity-based learning."
+    },
+    "preparatory": {
+      "name": "Preparatory Stage",
+      "nameAr": "المرحلة التحضيرية",
+      "grades": [3, 4, 5],
+      "gradeNames": {
+        "3": "Class III",
+        "4": "Class IV",
+        "5": "Class V"
+      },
+      "ageRange": [8, 11],
+      "level": "ELEMENTARY",
+      "note": "NEP 2020 stage. Classes 3-5. Introduction of subject-based teaching."
+    },
+    "middle": {
+      "name": "Middle Stage",
+      "nameAr": "المرحلة المتوسطة",
+      "grades": [6, 7, 8],
+      "gradeNames": {
+        "6": "Class VI",
+        "7": "Class VII",
+        "8": "Class VIII"
+      },
+      "ageRange": [11, 14],
+      "level": "MIDDLE",
+      "note": "NEP 2020 stage. Classes 6-8. Subject specialization begins. Vocational exposure introduced."
+    },
+    "secondary": {
+      "name": "Secondary Stage",
+      "nameAr": "المرحلة الثانوية",
+      "grades": [9, 10],
+      "gradeNames": {
+        "9": "Class IX",
+        "10": "Class X"
+      },
+      "ageRange": [14, 16],
+      "level": "HIGH",
+      "note": "Board exam at Class 10. Multidisciplinary study with depth.",
+      "exam": "CBSE Class X Board Examination"
+    },
+    "seniorSecondary": {
+      "name": "Senior Secondary Stage",
+      "nameAr": "المرحلة الثانوية العليا",
+      "grades": [11, 12],
+      "gradeNames": {
+        "11": "Class XI",
+        "12": "Class XII"
+      },
+      "ageRange": [16, 18],
+      "level": "HIGH",
+      "note": "Stream-based: Science, Commerce, Humanities. Board exam at Class 12.",
+      "exam": "CBSE Class XII Board Examination (AISSCE)"
+    }
+  },
+  "subjects": {
+    "primary": {
+      "name": "Primary (Classes 1-5)",
+      "grades": [1, 2, 3, 4, 5],
+      "mandatory": [
+        {
+          "name": "English",
+          "slug": "in-english",
+          "department": "Languages",
+          "concept": "language-arts",
+          "color": "#2563eb",
+          "grades": [1, 2, 3, 4, 5],
+          "note": "Reading, writing, grammar, comprehension, creative writing"
+        },
+        {
+          "name": "Hindi",
+          "slug": "in-hindi",
+          "department": "Languages",
+          "concept": "language-arts",
+          "color": "#dc2626",
+          "grades": [1, 2, 3, 4, 5],
+          "note": "National language. Reading, writing, grammar, literature."
+        },
+        {
+          "name": "Mathematics",
+          "slug": "in-mathematics-primary",
+          "department": "Sciences",
+          "concept": "math",
+          "color": "#7c3aed",
+          "grades": [1, 2, 3, 4, 5],
+          "note": "Numbers, operations, geometry, measurement, data handling, patterns"
+        },
+        {
+          "name": "Environmental Studies (EVS)",
+          "slug": "in-evs",
+          "department": "Sciences",
+          "concept": "science",
+          "color": "#16a34a",
+          "grades": [3, 4, 5],
+          "note": "Integrated science and social studies for Classes 3-5. Not taught in Classes 1-2 as separate subject."
+        },
+        {
+          "name": "General Knowledge (GK)",
+          "slug": "in-gk",
+          "department": "General",
+          "concept": "general-knowledge",
+          "color": "#0891b2",
+          "grades": [1, 2, 3, 4, 5],
+          "note": "Current affairs, general awareness, reasoning"
+        },
+        {
+          "name": "Art and Craft",
+          "slug": "in-art-craft-primary",
+          "department": "Arts",
+          "concept": "art",
+          "color": "#c026d3",
+          "grades": [1, 2, 3, 4, 5],
+          "note": "Drawing, painting, clay modeling, paper craft"
+        },
+        {
+          "name": "Health and Physical Education",
+          "slug": "in-hpe-primary",
+          "department": "Physical Education",
+          "concept": "physical-education",
+          "color": "#ea580c",
+          "grades": [1, 2, 3, 4, 5],
+          "note": "Physical fitness, hygiene, nutrition, sports"
+        },
+        {
+          "name": "Computer Science",
+          "slug": "in-cs-primary",
+          "department": "Technology",
+          "concept": "computer-science",
+          "color": "#6366f1",
+          "grades": [3, 4, 5],
+          "note": "Basic computer literacy. Many schools introduce from Class 3."
+        }
+      ],
+      "optional": [
+        {
+          "name": "Third Language",
+          "slug": "in-third-lang-primary",
+          "department": "Languages",
+          "concept": "languages",
+          "color": "#be185d",
+          "grades": [5],
+          "note": "Some schools introduce a third language (Sanskrit, French, German, etc.) from Class 5"
+        }
+      ]
+    },
+    "upperPrimary": {
+      "name": "Upper Primary / Middle (Classes 6-8)",
+      "grades": [6, 7, 8],
+      "mandatory": [
+        {
+          "name": "English",
+          "slug": "in-english-middle",
+          "department": "Languages",
+          "concept": "language-arts",
+          "color": "#2563eb",
+          "grades": [6, 7, 8],
+          "note": "Grammar, literature, writing, comprehension. Prose and poetry from NCERT textbooks."
+        },
+        {
+          "name": "Hindi",
+          "slug": "in-hindi-middle",
+          "department": "Languages",
+          "concept": "language-arts",
+          "color": "#dc2626",
+          "grades": [6, 7, 8],
+          "note": "Hindi literature (Vasant, Durva), grammar (Vyakaran), poetry"
+        },
+        {
+          "name": "Mathematics",
+          "slug": "in-mathematics-middle",
+          "department": "Sciences",
+          "concept": "math",
+          "color": "#7c3aed",
+          "grades": [6, 7, 8],
+          "note": "Algebra, geometry, ratio & proportion, data handling, mensuration, integers"
+        },
+        {
+          "name": "Science",
+          "slug": "in-science-middle",
+          "department": "Sciences",
+          "concept": "science",
+          "color": "#16a34a",
+          "grades": [6, 7, 8],
+          "note": "Combined Physics, Chemistry, Biology. Replaces EVS from Class 6."
+        },
+        {
+          "name": "Social Science",
+          "slug": "in-social-science-middle",
+          "department": "Social Sciences",
+          "concept": "history",
+          "color": "#d97706",
+          "grades": [6, 7, 8],
+          "note": "History, Geography, Civics (Social and Political Life). Three separate NCERT textbooks."
+        },
+        {
+          "name": "Sanskrit",
+          "slug": "in-sanskrit",
+          "department": "Languages",
+          "concept": "languages",
+          "color": "#92400e",
+          "grades": [6, 7, 8],
+          "note": "Classical language. Mandatory in many CBSE schools as third language."
+        },
+        {
+          "name": "Art Education",
+          "slug": "in-art-middle",
+          "department": "Arts",
+          "concept": "art",
+          "color": "#c026d3",
+          "grades": [6, 7, 8],
+          "note": "Visual arts, music, dance, theatre integrated"
+        },
+        {
+          "name": "Health and Physical Education",
+          "slug": "in-hpe-middle",
+          "department": "Physical Education",
+          "concept": "physical-education",
+          "color": "#ea580c",
+          "grades": [6, 7, 8],
+          "note": "Sports, fitness, health education, yoga"
+        },
+        {
+          "name": "Computer Science",
+          "slug": "in-cs-middle",
+          "department": "Technology",
+          "concept": "computer-science",
+          "color": "#6366f1",
+          "grades": [6, 7, 8],
+          "note": "Programming basics, internet safety, digital literacy, Scratch/Python introduction"
+        }
+      ],
+      "optional": [
+        {
+          "name": "Third Language (other options)",
+          "slug": "in-third-lang-middle",
+          "department": "Languages",
+          "concept": "languages",
+          "color": "#be185d",
+          "grades": [6, 7, 8],
+          "note": "French, German, Spanish, Japanese, Urdu, Tamil, Telugu, Bengali, Marathi, Gujarati, Kannada, Malayalam, Punjabi, Assamese, Odia, etc."
+        }
+      ]
+    },
+    "secondary": {
+      "name": "Secondary (Classes 9-10)",
+      "grades": [9, 10],
+      "note": "Board Exam at Class 10. Students must take minimum 5 subjects: 2 Languages + 3 core subjects. Can add 1 elective + 1 skill subject.",
+      "mandatory": [
+        {
+          "name": "Language 1 (English Core)",
+          "slug": "in-english-core-sec",
+          "code": "184",
+          "department": "Languages",
+          "concept": "language-arts",
+          "color": "#2563eb",
+          "grades": [9, 10],
+          "note": "Mandatory first language. Literature: Beehive, Moments (Class 9), First Flight, Footprints (Class 10)."
+        },
+        {
+          "name": "Language 2 (Hindi Course A or B)",
+          "slug": "in-hindi-sec",
+          "code": "002/085",
+          "department": "Languages",
+          "concept": "language-arts",
+          "color": "#dc2626",
+          "grades": [9, 10],
+          "note": "Hindi A (literary) or Hindi B (functional). Or another language from CBSE's list of 38+ languages."
+        },
+        {
+          "name": "Mathematics",
+          "slug": "in-mathematics-sec",
+          "code": "041",
+          "department": "Sciences",
+          "concept": "math",
+          "color": "#7c3aed",
+          "grades": [9, 10],
+          "note": "Standard or Basic level. Algebra, geometry, trigonometry, statistics, probability, coordinate geometry."
+        },
+        {
+          "name": "Science",
+          "slug": "in-science-sec",
+          "code": "086",
+          "department": "Sciences",
+          "concept": "science",
+          "color": "#16a34a",
+          "grades": [9, 10],
+          "note": "Combined Physics, Chemistry, Biology. NCERT textbooks. Theory 80 marks + Practical 20 marks."
+        },
+        {
+          "name": "Social Science",
+          "slug": "in-social-science-sec",
+          "code": "087",
+          "department": "Social Sciences",
+          "concept": "history",
+          "color": "#d97706",
+          "grades": [9, 10],
+          "note": "History (India and the Contemporary World), Geography (Contemporary India), Political Science (Democratic Politics), Economics (Understanding Economic Development)."
+        }
+      ],
+      "languageOptions": [
+        { "name": "Hindi Course A", "code": "002" },
+        { "name": "Hindi Course B", "code": "085" },
+        { "name": "English Language and Literature", "code": "184" },
+        { "name": "English Communicative", "code": "101" },
+        { "name": "Sanskrit", "code": "122" },
+        { "name": "French", "code": "018" },
+        { "name": "German", "code": "020" },
+        { "name": "Spanish", "code": "025" },
+        { "name": "Japanese", "code": "089" },
+        { "name": "Urdu Course A", "code": "003" },
+        { "name": "Urdu Course B", "code": "303" },
+        { "name": "Tamil", "code": "033" },
+        { "name": "Telugu", "code": "034" },
+        { "name": "Bengali", "code": "004" },
+        { "name": "Marathi", "code": "009" },
+        { "name": "Gujarati", "code": "010" },
+        { "name": "Kannada", "code": "015" },
+        { "name": "Malayalam", "code": "016" },
+        { "name": "Punjabi", "code": "011" },
+        { "name": "Assamese", "code": "006" },
+        { "name": "Odia", "code": "013" },
+        { "name": "Manipuri", "code": "007" },
+        { "name": "Kashmiri", "code": "005" },
+        { "name": "Sindhi", "code": "012" },
+        { "name": "Nepali", "code": "021" },
+        { "name": "Limboo", "code": "038" },
+        { "name": "Lepcha", "code": "039" },
+        { "name": "Bhutia", "code": "040" },
+        { "name": "Mizo", "code": "075" },
+        { "name": "Tibetan", "code": "076" },
+        { "name": "Persian", "code": "019" },
+        { "name": "Arabic", "code": "017" },
+        { "name": "Portuguese", "code": "024" },
+        { "name": "Bodo", "code": "092" },
+        { "name": "Tangkhul", "code": "093" },
+        { "name": "Dogri", "code": "094" },
+        { "name": "Maithili", "code": "095" },
+        { "name": "Santhali", "code": "096" },
+        { "name": "Konkani", "code": "097" }
+      ],
+      "electives": [
+        {
+          "name": "Information Technology",
+          "slug": "in-it-sec",
+          "code": "402",
+          "department": "Technology",
+          "concept": "computer-science",
+          "color": "#6366f1",
+          "grades": [9, 10],
+          "note": "Skill-based subject. Digital documentation, spreadsheets, databases, web applications."
+        },
+        {
+          "name": "Artificial Intelligence",
+          "slug": "in-ai-sec",
+          "code": "417",
+          "department": "Technology",
+          "concept": "computer-science",
+          "color": "#8b5cf6",
+          "grades": [9, 10],
+          "note": "Skill-based subject. AI fundamentals, natural language processing, data science basics."
+        },
+        {
+          "name": "Computer Applications",
+          "slug": "in-ca-sec",
+          "code": "165",
+          "department": "Technology",
+          "concept": "computer-science",
+          "color": "#4f46e5",
+          "grades": [9, 10],
+          "note": "Academic elective. HTML, CSS, networking, cyber safety."
+        },
+        {
+          "name": "Home Science",
+          "slug": "in-home-science-sec",
+          "code": "064",
+          "department": "Life Skills",
+          "concept": "life-skills",
+          "color": "#059669",
+          "grades": [9, 10],
+          "note": "Nutrition, textiles, family studies, resource management"
+        },
+        {
+          "name": "Painting",
+          "slug": "in-painting-sec",
+          "code": "049",
+          "department": "Arts",
+          "concept": "art",
+          "color": "#c026d3",
+          "grades": [9, 10],
+          "note": "Still life, nature, composition, history of Indian art"
+        },
+        {
+          "name": "Music (Hindustani Vocal)",
+          "slug": "in-music-hindustani-sec",
+          "code": "031",
+          "department": "Arts",
+          "concept": "music",
+          "color": "#a21caf",
+          "grades": [9, 10],
+          "note": "Ragas, talas, music history, practical performance"
+        },
+        {
+          "name": "Music (Carnatic Vocal)",
+          "slug": "in-music-carnatic-sec",
+          "code": "032",
+          "department": "Arts",
+          "concept": "music",
+          "color": "#9333ea",
+          "grades": [9, 10],
+          "note": "South Indian classical music tradition"
+        }
+      ],
+      "skillSubjects": [
+        { "name": "Retail", "code": "401" },
+        { "name": "Information Technology", "code": "402" },
+        { "name": "Security", "code": "403" },
+        { "name": "Automotive", "code": "404" },
+        { "name": "Introduction to Financial Markets", "code": "405" },
+        { "name": "Introduction to Tourism", "code": "406" },
+        { "name": "Beauty and Wellness", "code": "407" },
+        { "name": "Agriculture", "code": "408" },
+        { "name": "Food Production", "code": "409" },
+        { "name": "Front Office Operations", "code": "410" },
+        { "name": "Banking and Insurance", "code": "411" },
+        { "name": "Marketing and Sales", "code": "412" },
+        { "name": "Healthcare", "code": "413" },
+        { "name": "Apparel", "code": "414" },
+        { "name": "Multimedia", "code": "415" },
+        { "name": "Multi Skill Foundation Course", "code": "416" },
+        { "name": "Artificial Intelligence", "code": "417" },
+        { "name": "Physical Activity Trainer", "code": "418" },
+        { "name": "Data Science", "code": "419" },
+        { "name": "Electronics and Hardware", "code": "420" },
+        { "name": "Pharmaceutical and Biotechnology", "code": "421" },
+        { "name": "Design Thinking and Innovation", "code": "422" }
+      ]
+    },
+    "seniorSecondary": {
+      "name": "Senior Secondary (Classes 11-12)",
+      "grades": [11, 12],
+      "note": "Board Exam at Class 12 (AISSCE). Students choose a stream: Science, Commerce, or Humanities. Must take minimum 5 subjects: 1 Language + 4 electives from chosen stream. Can add 6th subject as additional.",
+      "commonMandatory": [
+        {
+          "name": "English Core",
+          "slug": "in-english-core-sr",
+          "code": "301",
+          "department": "Languages",
+          "concept": "language-arts",
+          "color": "#2563eb",
+          "grades": [11, 12],
+          "note": "Mandatory language. Literature: Hornbill, Snapshots (Class 11), Flamingo, Vistas (Class 12). Theory 80 + Project 20."
+        }
+      ],
+      "languageSubjects": [
+        { "name": "English Elective", "code": "001" },
+        { "name": "English Core", "code": "301" },
+        { "name": "Hindi Elective", "code": "002" },
+        { "name": "Hindi Core", "code": "302" },
+        { "name": "Sanskrit Elective", "code": "022" },
+        { "name": "Sanskrit Core", "code": "322" },
+        { "name": "Urdu Elective", "code": "003" },
+        { "name": "Urdu Core", "code": "303" },
+        { "name": "French", "code": "018" },
+        { "name": "German", "code": "020" },
+        { "name": "Spanish", "code": "025" },
+        { "name": "Japanese", "code": "089" },
+        { "name": "Tamil", "code": "033" },
+        { "name": "Telugu", "code": "034" },
+        { "name": "Bengali", "code": "004" },
+        { "name": "Marathi", "code": "009" },
+        { "name": "Gujarati", "code": "010" },
+        { "name": "Kannada", "code": "015" },
+        { "name": "Malayalam", "code": "016" },
+        { "name": "Punjabi", "code": "011" },
+        { "name": "Assamese", "code": "006" },
+        { "name": "Odia", "code": "013" },
+        { "name": "Arabic", "code": "017" },
+        { "name": "Persian", "code": "019" },
+        { "name": "Nepali", "code": "021" },
+        { "name": "Manipuri", "code": "007" },
+        { "name": "Kashmiri", "code": "005" },
+        { "name": "Bodo", "code": "092" },
+        { "name": "Mizo", "code": "075" },
+        { "name": "Tibetan", "code": "076" }
+      ],
+      "streams": {
+        "science": {
+          "name": "Science Stream",
+          "nameAr": "التيار العلمي",
+          "subStreams": {
+            "medical": {
+              "name": "Science (Medical/PCB)",
+              "typical": ["Physics", "Chemistry", "Biology", "English Core"],
+              "optional": [
+                "Mathematics",
+                "Physical Education",
+                "Computer Science",
+                "Biotechnology",
+                "Psychology"
+              ]
+            },
+            "nonMedical": {
+              "name": "Science (Non-Medical/PCM)",
+              "typical": [
+                "Physics",
+                "Chemistry",
+                "Mathematics",
+                "English Core"
+              ],
+              "optional": [
+                "Computer Science",
+                "Informatics Practices",
+                "Physical Education",
+                "Engineering Graphics"
+              ]
+            }
+          },
+          "subjects": [
+            {
+              "name": "Physics",
+              "slug": "in-physics",
+              "code": "042",
+              "department": "Sciences",
+              "concept": "physics",
+              "color": "#4f46e5",
+              "grades": [11, 12],
+              "note": "Mechanics, thermodynamics, optics, electromagnetism, modern physics. Theory 70 + Practical 30."
+            },
+            {
+              "name": "Chemistry",
+              "slug": "in-chemistry",
+              "code": "043",
+              "department": "Sciences",
+              "concept": "chemistry",
+              "color": "#0891b2",
+              "grades": [11, 12],
+              "note": "Physical, organic, inorganic chemistry. Theory 70 + Practical 30."
+            },
+            {
+              "name": "Mathematics",
+              "slug": "in-mathematics-sr",
+              "code": "041",
+              "department": "Sciences",
+              "concept": "math",
+              "color": "#7c3aed",
+              "grades": [11, 12],
+              "note": "Calculus, algebra, vectors, probability, linear programming, 3D geometry. Theory 80 + Internal 20."
+            },
+            {
+              "name": "Biology",
+              "slug": "in-biology",
+              "code": "044",
+              "department": "Sciences",
+              "concept": "biology",
+              "color": "#16a34a",
+              "grades": [11, 12],
+              "note": "Diversity of life, structural organization, cell biology, genetics, ecology, biotechnology. Theory 70 + Practical 30."
+            },
+            {
+              "name": "Computer Science (Python)",
+              "slug": "in-cs-sr",
+              "code": "083",
+              "department": "Technology",
+              "concept": "computer-science",
+              "color": "#6366f1",
+              "grades": [11, 12],
+              "note": "Python programming, data structures, SQL, networking, computational thinking. Theory 70 + Practical 30."
+            },
+            {
+              "name": "Informatics Practices",
+              "slug": "in-ip",
+              "code": "065",
+              "department": "Technology",
+              "concept": "computer-science",
+              "color": "#8b5cf6",
+              "grades": [11, 12],
+              "note": "Python (Pandas, Matplotlib), SQL, data management, networking. Theory 70 + Practical 30."
+            },
+            {
+              "name": "Biotechnology",
+              "slug": "in-biotech",
+              "code": "045",
+              "department": "Sciences",
+              "concept": "biology",
+              "color": "#059669",
+              "grades": [11, 12],
+              "note": "Biomolecules, cell biology, genetics, genomics, recombinant DNA technology. Theory 70 + Practical 30."
+            },
+            {
+              "name": "Engineering Graphics",
+              "slug": "in-eng-graphics",
+              "code": "046",
+              "department": "Technology",
+              "concept": "technology",
+              "color": "#475569",
+              "grades": [11, 12],
+              "note": "Technical drawing, projections, sections, development. Theory 30 + Practical 70."
+            }
+          ]
+        },
+        "commerce": {
+          "name": "Commerce Stream",
+          "nameAr": "التيار التجاري",
+          "typical": [
+            "Accountancy",
+            "Business Studies",
+            "Economics",
+            "English Core"
+          ],
+          "optional": [
+            "Mathematics",
+            "Informatics Practices",
+            "Entrepreneurship",
+            "Physical Education"
+          ],
+          "subjects": [
+            {
+              "name": "Accountancy",
+              "slug": "in-accountancy",
+              "code": "055",
+              "department": "Commerce",
+              "concept": "economics",
+              "color": "#b45309",
+              "grades": [11, 12],
+              "note": "Financial statements, partnerships, company accounts, analysis of financial statements, cash flow. Theory 80 + Project 20."
+            },
+            {
+              "name": "Business Studies",
+              "slug": "in-business-studies",
+              "code": "054",
+              "department": "Commerce",
+              "concept": "economics",
+              "color": "#d97706",
+              "grades": [11, 12],
+              "note": "Business environment, forms of business, management, marketing, consumer protection. Theory 80 + Project 20."
+            },
+            {
+              "name": "Economics",
+              "slug": "in-economics",
+              "code": "030",
+              "department": "Commerce",
+              "concept": "economics",
+              "color": "#ca8a04",
+              "grades": [11, 12],
+              "note": "Micro and macro economics, Indian economic development, statistics. Theory 80 + Project 20."
+            },
+            {
+              "name": "Entrepreneurship",
+              "slug": "in-entrepreneurship",
+              "code": "066",
+              "department": "Commerce",
+              "concept": "economics",
+              "color": "#a16207",
+              "grades": [11, 12],
+              "note": "Business planning, resource mobilization, enterprise marketing, legal requirements. Theory 70 + Project 30."
+            },
+            {
+              "name": "Applied Mathematics",
+              "slug": "in-applied-math",
+              "code": "241",
+              "department": "Sciences",
+              "concept": "math",
+              "color": "#9333ea",
+              "grades": [11, 12],
+              "note": "Alternate to pure Mathematics. Focuses on real-world applications: probability, inferential statistics, index numbers, financial mathematics."
+            }
+          ]
+        },
+        "humanities": {
+          "name": "Arts / Humanities Stream",
+          "nameAr": "تيار الآداب والعلوم الإنسانية",
+          "typical": [
+            "History",
+            "Political Science",
+            "Geography or Sociology or Psychology",
+            "English Core"
+          ],
+          "optional": [
+            "Economics",
+            "Mathematics",
+            "Physical Education",
+            "Fine Arts",
+            "Music",
+            "Legal Studies",
+            "Philosophy",
+            "Home Science"
+          ],
+          "subjects": [
+            {
+              "name": "History",
+              "slug": "in-history",
+              "code": "027",
+              "department": "Humanities",
+              "concept": "history",
+              "color": "#92400e",
+              "grades": [11, 12],
+              "note": "Themes in World History (Class 11), Themes in Indian History (Class 12). Theory 80 + Project 20."
+            },
+            {
+              "name": "Political Science",
+              "slug": "in-political-science",
+              "code": "028",
+              "department": "Humanities",
+              "concept": "civics",
+              "color": "#0369a1",
+              "grades": [11, 12],
+              "note": "Indian Constitution, political theory, politics in India since independence, contemporary world politics. Theory 80 + Project 20."
+            },
+            {
+              "name": "Geography",
+              "slug": "in-geography",
+              "code": "029",
+              "department": "Humanities",
+              "concept": "geography",
+              "color": "#15803d",
+              "grades": [11, 12],
+              "note": "Physical geography, human geography, India: physical environment, practical geography. Theory 70 + Practical 30."
+            },
+            {
+              "name": "Sociology",
+              "slug": "in-sociology",
+              "code": "039",
+              "department": "Humanities",
+              "concept": "sociology",
+              "color": "#7c3aed",
+              "grades": [11, 12],
+              "note": "Society in India, social change, social structure, Indian society. Theory 80 + Project 20."
+            },
+            {
+              "name": "Psychology",
+              "slug": "in-psychology",
+              "code": "037",
+              "department": "Humanities",
+              "concept": "psychology",
+              "color": "#be185d",
+              "grades": [11, 12],
+              "note": "Perception, learning, memory, intelligence, personality, psychological disorders, therapeutic approaches. Theory 70 + Practical 30."
+            },
+            {
+              "name": "Philosophy",
+              "slug": "in-philosophy",
+              "code": "040",
+              "department": "Humanities",
+              "concept": "philosophy",
+              "color": "#6d28d9",
+              "grades": [11, 12],
+              "note": "Indian and Western philosophy, ethics, logic. Theory 100."
+            },
+            {
+              "name": "Legal Studies",
+              "slug": "in-legal-studies",
+              "code": "074",
+              "department": "Humanities",
+              "concept": "law",
+              "color": "#1e3a5f",
+              "grades": [11, 12],
+              "note": "Indian legal system, constitution, family law, human rights, legal profession. Theory 80 + Project 20."
+            },
+            {
+              "name": "Home Science",
+              "slug": "in-home-science-sr",
+              "code": "064",
+              "department": "Life Skills",
+              "concept": "life-skills",
+              "color": "#059669",
+              "grades": [11, 12],
+              "note": "Human development, nutrition, textiles, family resource management, community development. Theory 70 + Practical 30."
+            }
+          ]
+        }
+      },
+      "crossStreamElectives": [
+        {
+          "name": "Physical Education",
+          "slug": "in-physical-education-sr",
+          "code": "048",
+          "department": "Physical Education",
+          "concept": "physical-education",
+          "color": "#ea580c",
+          "grades": [11, 12],
+          "note": "Available across all streams. Sports science, kinesiology, yoga, first aid. Theory 70 + Practical 30."
+        },
+        {
+          "name": "Fine Arts (Painting)",
+          "slug": "in-painting-sr",
+          "code": "049",
+          "department": "Arts",
+          "concept": "art",
+          "color": "#c026d3",
+          "grades": [11, 12],
+          "note": "Indian art history, drawing, composition, design. Theory 30 + Practical 70."
+        },
+        {
+          "name": "Fine Arts (Sculpture)",
+          "slug": "in-sculpture-sr",
+          "code": "050",
+          "department": "Arts",
+          "concept": "art",
+          "color": "#a21caf",
+          "grades": [11, 12],
+          "note": "Sculpture techniques, Indian sculptural traditions"
+        },
+        {
+          "name": "Fine Arts (Commercial Art)",
+          "slug": "in-commercial-art-sr",
+          "code": "051",
+          "department": "Arts",
+          "concept": "art",
+          "color": "#86198f",
+          "grades": [11, 12],
+          "note": "Graphic design, advertising art, typography"
+        },
+        {
+          "name": "Graphics Design",
+          "slug": "in-graphics-design",
+          "code": "052",
+          "department": "Arts",
+          "concept": "art",
+          "color": "#701a75",
+          "grades": [11, 12],
+          "note": "Digital graphics and visual communication"
+        },
+        {
+          "name": "Hindustani Music (Vocal)",
+          "slug": "in-music-hindustani-vocal-sr",
+          "code": "031",
+          "department": "Arts",
+          "concept": "music",
+          "color": "#be123c",
+          "grades": [11, 12],
+          "note": "North Indian classical music vocal tradition. Theory 30 + Practical 70."
+        },
+        {
+          "name": "Hindustani Music (Melodic Instruments)",
+          "slug": "in-music-hindustani-melodic-sr",
+          "code": "032",
+          "department": "Arts",
+          "concept": "music",
+          "color": "#9f1239",
+          "grades": [11, 12],
+          "note": "Sitar, sarod, flute, santoor, violin, etc."
+        },
+        {
+          "name": "Hindustani Music (Percussion Instruments)",
+          "slug": "in-music-hindustani-percussion-sr",
+          "code": "033",
+          "department": "Arts",
+          "concept": "music",
+          "color": "#881337",
+          "grades": [11, 12],
+          "note": "Tabla, pakhawaj"
+        },
+        {
+          "name": "Carnatic Music (Vocal)",
+          "slug": "in-music-carnatic-vocal-sr",
+          "code": "034",
+          "department": "Arts",
+          "concept": "music",
+          "color": "#e11d48",
+          "grades": [11, 12],
+          "note": "South Indian classical music vocal tradition"
+        },
+        {
+          "name": "Carnatic Music (Melodic Instruments)",
+          "slug": "in-music-carnatic-melodic-sr",
+          "code": "035",
+          "department": "Arts",
+          "concept": "music",
+          "color": "#f43f5e",
+          "grades": [11, 12],
+          "note": "Veena, violin, flute, etc."
+        },
+        {
+          "name": "Carnatic Music (Percussion Instruments)",
+          "slug": "in-music-carnatic-percussion-sr",
+          "code": "036",
+          "department": "Arts",
+          "concept": "music",
+          "color": "#fb7185",
+          "grades": [11, 12],
+          "note": "Mridangam, ghatam"
+        },
+        {
+          "name": "Dance (Kathak)",
+          "slug": "in-dance-kathak",
+          "code": "057",
+          "department": "Arts",
+          "concept": "dance",
+          "color": "#f59e0b",
+          "grades": [11, 12],
+          "note": "Classical Kathak dance form"
+        },
+        {
+          "name": "Dance (Bharatanatyam)",
+          "slug": "in-dance-bharatanatyam",
+          "code": "058",
+          "department": "Arts",
+          "concept": "dance",
+          "color": "#eab308",
+          "grades": [11, 12],
+          "note": "Classical Bharatanatyam dance form"
+        },
+        {
+          "name": "Dance (Odissi)",
+          "slug": "in-dance-odissi",
+          "code": "059",
+          "department": "Arts",
+          "concept": "dance",
+          "color": "#facc15",
+          "grades": [11, 12],
+          "note": "Classical Odissi dance form"
+        },
+        {
+          "name": "Dance (Manipuri)",
+          "slug": "in-dance-manipuri",
+          "code": "060",
+          "department": "Arts",
+          "concept": "dance",
+          "color": "#fde047",
+          "grades": [11, 12],
+          "note": "Classical Manipuri dance form"
+        },
+        {
+          "name": "Dance (Kuchipudi)",
+          "slug": "in-dance-kuchipudi",
+          "code": "061",
+          "department": "Arts",
+          "concept": "dance",
+          "color": "#fef08a",
+          "grades": [11, 12],
+          "note": "Classical Kuchipudi dance form"
+        },
+        {
+          "name": "Dance (Mohiniyattam)",
+          "slug": "in-dance-mohiniyattam",
+          "code": "062",
+          "department": "Arts",
+          "concept": "dance",
+          "color": "#fcd34d",
+          "grades": [11, 12],
+          "note": "Classical Mohiniyattam dance form"
+        },
+        {
+          "name": "Knowledge Traditions and Practices of India",
+          "slug": "in-ktpi",
+          "code": "073",
+          "department": "Humanities",
+          "concept": "general-knowledge",
+          "color": "#78350f",
+          "grades": [11, 12],
+          "note": "Traditional Indian knowledge systems: Ayurveda, yoga, Indian mathematics, astronomy, metallurgy."
+        },
+        {
+          "name": "NCC (National Cadet Corps)",
+          "slug": "in-ncc",
+          "code": "076",
+          "department": "General",
+          "concept": "leadership",
+          "color": "#064e3b",
+          "grades": [11, 12],
+          "note": "Military training, discipline, leadership. Practical-heavy."
+        }
+      ],
+      "skillSubjects": [
+        { "name": "Retail", "code": "801" },
+        { "name": "Information Technology", "code": "802" },
+        { "name": "Web Applications", "code": "803" },
+        { "name": "Automotive", "code": "804" },
+        { "name": "Financial Markets Management", "code": "805" },
+        { "name": "Tourism", "code": "806" },
+        { "name": "Beauty and Wellness", "code": "807" },
+        { "name": "Agriculture", "code": "808" },
+        { "name": "Food Production", "code": "809" },
+        { "name": "Front Office Operations", "code": "810" },
+        { "name": "Banking", "code": "811" },
+        { "name": "Marketing", "code": "812" },
+        { "name": "Health Care", "code": "813" },
+        { "name": "Insurance", "code": "814" },
+        { "name": "Horticulture", "code": "816" },
+        { "name": "Typography and Computer Applications", "code": "817" },
+        { "name": "Geospatial Technology", "code": "818" },
+        { "name": "Electrical Technology", "code": "819" },
+        { "name": "Electronics Technology", "code": "820" },
+        { "name": "Multimedia", "code": "821" },
+        { "name": "Taxation", "code": "822" },
+        { "name": "Cost Accounting", "code": "823" },
+        { "name": "Office Procedures and Practices", "code": "824" },
+        { "name": "Shorthand (English)", "code": "825" },
+        { "name": "Shorthand (Hindi)", "code": "826" },
+        { "name": "Air Conditioning and Refrigeration", "code": "827" },
+        { "name": "Medical Diagnostics", "code": "828" },
+        { "name": "Textile Design", "code": "829" },
+        { "name": "Design", "code": "830" },
+        { "name": "Salesmanship", "code": "831" },
+        { "name": "Business Administration", "code": "833" },
+        { "name": "Food Nutrition and Dietetics", "code": "834" },
+        { "name": "Mass Media Studies", "code": "835" },
+        { "name": "Library and Information Science", "code": "836" },
+        { "name": "Fashion Studies", "code": "837" },
+        { "name": "Yoga", "code": "841" },
+        { "name": "Early Childhood Care and Education", "code": "842" },
+        { "name": "Artificial Intelligence", "code": "843" },
+        { "name": "Data Science", "code": "844" }
+      ]
+    }
+  },
+  "examStructure": {
+    "class10": {
+      "name": "CBSE Class X Board Examination",
+      "type": "Secondary School Examination (SSE)",
+      "mandatory": [
+        "Language 1",
+        "Language 2",
+        "Mathematics",
+        "Science",
+        "Social Science"
+      ],
+      "optional": ["6th Subject (any elective or skill)"],
+      "marking": "Theory + Internal Assessment. Best of 5 subjects counted.",
+      "gradingSystem": "CGPA (Cumulative Grade Point Average) on 10-point scale"
+    },
+    "class12": {
+      "name": "CBSE Class XII Board Examination (AISSCE)",
+      "fullName": "All India Senior School Certificate Examination",
+      "mandatory": [
+        "Language (at least 1)",
+        "4 Elective Subjects from chosen stream"
+      ],
+      "optional": ["6th Subject as additional"],
+      "marking": "Theory (70-80%) + Practical/Project (20-30%) depending on subject",
+      "gradingSystem": "Marks-based percentage system"
+    }
+  }
+}

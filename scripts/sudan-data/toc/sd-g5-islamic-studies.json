@@ -1,0 +1,65 @@
+{
+  "subject": "islamic-studies",
+  "subjectNameAr": "التربية الإسلامية",
+  "grade": 5,
+  "level": "elementary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "الطبعة الأولى 2021م",
+  "chapters": [
+    {
+      "nameAr": "الوحدة الأولى: سور من القرآن الكريم",
+      "name": "Unit 1: Surahs from the Holy Quran",
+      "slug": "surahs-from-quran",
+      "sequenceOrder": 1,
+      "lessons": [
+        {
+          "nameAr": "سور الحفظ: سورة الانفطار، سورة الإنسان، سورة القيامة، سورة المدثر، سورة المزمل",
+          "name": "Memorization Surahs: Al-Infitar, Al-Insan, Al-Qiyamah, Al-Muddaththir, Al-Muzzammil",
+          "slug": "memorization-surahs",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "سور التلاوة: سورة الملك، سورة القلم",
+          "name": "Recitation Surahs: Al-Mulk, Al-Qalam",
+          "slug": "recitation-surahs",
+          "sequenceOrder": 2
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة الثانية: أحاديث من الحديث النبوي الشريف",
+      "name": "Unit 2: Hadiths from the Prophet's Traditions",
+      "slug": "prophetic-hadiths",
+      "sequenceOrder": 2,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الثالثة: من أركان الإيمان",
+      "name": "Unit 3: Pillars of Faith",
+      "slug": "pillars-of-faith",
+      "sequenceOrder": 3,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الرابعة: الفقه",
+      "name": "Unit 4: Islamic Jurisprudence",
+      "slug": "islamic-jurisprudence",
+      "sequenceOrder": 4,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الخامسة: من مكارم الأخلاق",
+      "name": "Unit 5: Noble Morals",
+      "slug": "noble-morals",
+      "sequenceOrder": 5,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة السادسة: من السيرة النبوية الشريفة",
+      "name": "Unit 6: From the Prophet's Biography",
+      "slug": "prophets-biography",
+      "sequenceOrder": 6,
+      "lessons": []
+    }
+  ]
+}

@@ -9,27 +9,27 @@ import { db } from "@/lib/db"
 import { requireDeveloper } from "@/components/saas-dashboard/lib/operator-auth"
 
 import type {
-  PendingCatalogExamItem,
-  PendingCatalogExamTemplateItem,
+  PendingExamItem,
   PendingExamListResult,
+  PendingExamTemplateItem,
   PendingTemplateListResult,
 } from "./exam-approval-types"
 
 // Re-export types for consumers
 export type {
-  PendingCatalogExamItem,
-  PendingCatalogExamTemplateItem,
+  PendingExamItem,
+  PendingExamTemplateItem,
   PendingExamListResult,
   PendingTemplateListResult,
 }
 
 // ============================================================================
-// Pending CatalogExam list with pagination
+// Pending Exam list with pagination
 // ============================================================================
 
 const PAGE_SIZE = 20
 
-export async function getPendingCatalogExams(
+export async function getPendingExams(
   page: number = 1
 ): Promise<PendingExamListResult> {
   try {
@@ -38,7 +38,7 @@ export async function getPendingCatalogExams(
     const skip = (page - 1) * PAGE_SIZE
 
     const [items, total] = await Promise.all([
-      db.catalogExam.findMany({
+      db.exam.findMany({
         where: { approvalStatus: "PENDING" },
         select: {
           id: true,
@@ -59,7 +59,7 @@ export async function getPendingCatalogExams(
         skip,
         take: PAGE_SIZE,
       }),
-      db.catalogExam.count({ where: { approvalStatus: "PENDING" } }),
+      db.exam.count({ where: { approvalStatus: "PENDING" } }),
     ])
 
     // Batch-fetch contributed school names
@@ -77,7 +77,7 @@ export async function getPendingCatalogExams(
         : []
     const schoolMap = new Map(schools.map((s) => [s.id, s.name]))
 
-    const mapped: PendingCatalogExamItem[] = items.map((item) => ({
+    const mapped: PendingExamItem[] = items.map((item) => ({
       id: item.id,
       title: item.title,
       examType: item.examType,
@@ -104,24 +104,24 @@ export async function getPendingCatalogExams(
 }
 
 // ============================================================================
-// Approve a CatalogExam
+// Approve a Exam
 // ============================================================================
 
-export async function approveCatalogExam(
+export async function approveExam(
   catalogExamId: string
 ): Promise<ActionResponse> {
   try {
     const session = await requireDeveloper()
     const userId = session.user?.id
 
-    const existing = await db.catalogExam.findUnique({
+    const existing = await db.exam.findUnique({
       where: { id: catalogExamId },
     })
     if (!existing) {
       return { success: false, error: "Exam not found" }
     }
 
-    await db.catalogExam.update({
+    await db.exam.update({
       where: { id: catalogExamId },
       data: {
         approvalStatus: "APPROVED",
@@ -143,10 +143,10 @@ export async function approveCatalogExam(
 }
 
 // ============================================================================
-// Reject a CatalogExam
+// Reject a Exam
 // ============================================================================
 
-export async function rejectCatalogExam(
+export async function rejectExam(
   catalogExamId: string,
   reason: string
 ): Promise<ActionResponse> {
@@ -158,14 +158,14 @@ export async function rejectCatalogExam(
       return { success: false, error: "Rejection reason is required" }
     }
 
-    const existing = await db.catalogExam.findUnique({
+    const existing = await db.exam.findUnique({
       where: { id: catalogExamId },
     })
     if (!existing) {
       return { success: false, error: "Exam not found" }
     }
 
-    await db.catalogExam.update({
+    await db.exam.update({
       where: { id: catalogExamId },
       data: {
         approvalStatus: "REJECTED",
@@ -186,10 +186,10 @@ export async function rejectCatalogExam(
 }
 
 // ============================================================================
-// Pending CatalogExamTemplate list with pagination
+// Pending ExamTemplate list with pagination
 // ============================================================================
 
-export async function getPendingCatalogExamTemplates(
+export async function getPendingExamTemplates(
   page: number = 1
 ): Promise<PendingTemplateListResult> {
   try {
@@ -198,7 +198,7 @@ export async function getPendingCatalogExamTemplates(
     const skip = (page - 1) * PAGE_SIZE
 
     const [items, total] = await Promise.all([
-      db.catalogExamTemplate.findMany({
+      db.examTemplate.findMany({
         where: { approvalStatus: "PENDING" },
         select: {
           id: true,
@@ -217,7 +217,7 @@ export async function getPendingCatalogExamTemplates(
         skip,
         take: PAGE_SIZE,
       }),
-      db.catalogExamTemplate.count({
+      db.examTemplate.count({
         where: { approvalStatus: "PENDING" },
       }),
     ])
@@ -237,7 +237,7 @@ export async function getPendingCatalogExamTemplates(
         : []
     const schoolMap = new Map(schools.map((s) => [s.id, s.name]))
 
-    const mapped: PendingCatalogExamTemplateItem[] = items.map((item) => ({
+    const mapped: PendingExamTemplateItem[] = items.map((item) => ({
       id: item.id,
       name: item.name,
       examType: item.examType,
@@ -264,24 +264,22 @@ export async function getPendingCatalogExamTemplates(
 }
 
 // ============================================================================
-// Approve a CatalogExamTemplate
+// Approve a ExamTemplate
 // ============================================================================
 
-export async function approveCatalogExamTemplate(
-  id: string
-): Promise<ActionResponse> {
+export async function approveExamTemplate(id: string): Promise<ActionResponse> {
   try {
     const session = await requireDeveloper()
     const userId = session.user?.id
 
-    const existing = await db.catalogExamTemplate.findUnique({
+    const existing = await db.examTemplate.findUnique({
       where: { id },
     })
     if (!existing) {
       return { success: false, error: "Template not found" }
     }
 
-    await db.catalogExamTemplate.update({
+    await db.examTemplate.update({
       where: { id },
       data: {
         approvalStatus: "APPROVED",
@@ -306,10 +304,10 @@ export async function approveCatalogExamTemplate(
 }
 
 // ============================================================================
-// Reject a CatalogExamTemplate
+// Reject a ExamTemplate
 // ============================================================================
 
-export async function rejectCatalogExamTemplate(
+export async function rejectExamTemplate(
   id: string,
   reason: string
 ): Promise<ActionResponse> {
@@ -321,14 +319,14 @@ export async function rejectCatalogExamTemplate(
       return { success: false, error: "Rejection reason is required" }
     }
 
-    const existing = await db.catalogExamTemplate.findUnique({
+    const existing = await db.examTemplate.findUnique({
       where: { id },
     })
     if (!existing) {
       return { success: false, error: "Template not found" }
     }
 
-    await db.catalogExamTemplate.update({
+    await db.examTemplate.update({
       where: { id },
       data: {
         approvalStatus: "REJECTED",

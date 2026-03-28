@@ -1,0 +1,38 @@
+{
+  "subject": "quran-studies",
+  "subjectNameAr": "القرآن الكريم وعلومه",
+  "grade": 11,
+  "level": "secondary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "",
+  "chapters": [
+    {
+      "nameAr": "الوحدة الأولى: التلاوة والحفظ",
+      "name": "Unit 1: Recitation and Memorization",
+      "slug": "recitation-memorization",
+      "sequenceOrder": 1,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الثانية: التفسير",
+      "name": "Unit 2: Tafsir (Interpretation)",
+      "slug": "tafsir",
+      "sequenceOrder": 2,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الثالثة: علوم القرآن",
+      "name": "Unit 3: Quran Sciences",
+      "slug": "quran-sciences",
+      "sequenceOrder": 3,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الرابعة: أحكام التجويد",
+      "name": "Unit 4: Tajweed Rules",
+      "slug": "tajweed-rules",
+      "sequenceOrder": 4,
+      "lessons": []
+    }
+  ]
+}

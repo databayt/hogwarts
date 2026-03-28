@@ -8,9 +8,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { db } from "@/lib/db"
 
 import {
-  createCatalogQuestion,
-  deleteCatalogQuestion,
-  updateCatalogQuestion,
+  createQuestion,
+  deleteQuestion,
+  updateQuestion,
 } from "../question-actions"
 
 // ---------------------------------------------------------------------------
@@ -78,7 +78,7 @@ function buildQuestionFormData(
 // Tests
 // ---------------------------------------------------------------------------
 
-describe("CatalogQuestion CRUD Actions", () => {
+describe("Question CRUD Actions", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     // Default: authenticated DEVELOPER
@@ -88,22 +88,20 @@ describe("CatalogQuestion CRUD Actions", () => {
   })
 
   // ========================================================================
-  // createCatalogQuestion
+  // createQuestion
   // ========================================================================
 
-  describe("createCatalogQuestion", () => {
+  describe("createQuestion", () => {
     it("creates a question with valid FormData and returns success", async () => {
       const mockQuestion = { id: "q-1" }
-      vi.mocked(db.catalogQuestion.create).mockResolvedValue(
-        mockQuestion as any
-      )
+      vi.mocked(db.question.create).mockResolvedValue(mockQuestion as any)
 
       const fd = buildQuestionFormData({ tags: ["math", "addition"] })
-      const result = await createCatalogQuestion(fd)
+      const result = await createQuestion(fd)
 
       expect(result).toEqual({ success: true, data: { id: "q-1" } })
-      expect(db.catalogQuestion.create).toHaveBeenCalledTimes(1)
-      expect(db.catalogQuestion.create).toHaveBeenCalledWith({
+      expect(db.question.create).toHaveBeenCalledTimes(1)
+      expect(db.question.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           questionText: "What is 2 + 2?",
           questionType: "MULTIPLE_CHOICE",
@@ -120,16 +118,16 @@ describe("CatalogQuestion CRUD Actions", () => {
     })
 
     it("strips client approvalStatus and always sets APPROVED", async () => {
-      vi.mocked(db.catalogQuestion.create).mockResolvedValue({
+      vi.mocked(db.question.create).mockResolvedValue({
         id: "q-2",
       } as any)
 
       // Client tries to sneak in PENDING approvalStatus
       const fd = buildQuestionFormData({ approvalStatus: "PENDING" })
-      const result = await createCatalogQuestion(fd)
+      const result = await createQuestion(fd)
 
       expect(result.success).toBe(true)
-      expect(db.catalogQuestion.create).toHaveBeenCalledWith({
+      expect(db.question.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           approvalStatus: "APPROVED",
           visibility: "PUBLIC",
@@ -140,13 +138,13 @@ describe("CatalogQuestion CRUD Actions", () => {
 
     it("returns error for malformed options JSON", async () => {
       const fd = buildQuestionFormData({ options: "{invalid json" })
-      const result = await createCatalogQuestion(fd)
+      const result = await createQuestion(fd)
 
       expect(result).toEqual({
         success: false,
         error: "Invalid options JSON",
       })
-      expect(db.catalogQuestion.create).not.toHaveBeenCalled()
+      expect(db.question.create).not.toHaveBeenCalled()
     })
 
     it("requires DEVELOPER role (returns error for non-developer)", async () => {
@@ -155,46 +153,46 @@ describe("CatalogQuestion CRUD Actions", () => {
       } as any)
 
       const fd = buildQuestionFormData()
-      const result = await createCatalogQuestion(fd)
+      const result = await createQuestion(fd)
 
       expect(result).toEqual({
         success: false,
         error: "Unauthorized: DEVELOPER role required",
       })
-      expect(db.catalogQuestion.create).not.toHaveBeenCalled()
+      expect(db.question.create).not.toHaveBeenCalled()
     })
 
     it("returns error for invalid questionType (Zod validation)", async () => {
       const fd = buildQuestionFormData({ questionType: "INVALID_TYPE" })
-      const result = await createCatalogQuestion(fd)
+      const result = await createQuestion(fd)
 
       expect(result.success).toBe(false)
       expect(result.error).toBeDefined()
-      expect(db.catalogQuestion.create).not.toHaveBeenCalled()
+      expect(db.question.create).not.toHaveBeenCalled()
     })
 
     it("returns error when auth session is null", async () => {
       vi.mocked(auth).mockResolvedValue(null as any)
 
       const fd = buildQuestionFormData()
-      const result = await createCatalogQuestion(fd)
+      const result = await createQuestion(fd)
 
       expect(result.success).toBe(false)
       expect(result.error).toBe("Unauthorized: DEVELOPER role required")
     })
 
     it("defaults points to 1 when not provided", async () => {
-      vi.mocked(db.catalogQuestion.create).mockResolvedValue({
+      vi.mocked(db.question.create).mockResolvedValue({
         id: "q-3",
       } as any)
 
       const fd = buildQuestionFormData()
       fd.delete("points")
 
-      const result = await createCatalogQuestion(fd)
+      const result = await createQuestion(fd)
 
       expect(result.success).toBe(true)
-      expect(db.catalogQuestion.create).toHaveBeenCalledWith({
+      expect(db.question.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           points: 1,
         }),
@@ -202,43 +200,43 @@ describe("CatalogQuestion CRUD Actions", () => {
     })
 
     it("handles missing options field gracefully", async () => {
-      vi.mocked(db.catalogQuestion.create).mockResolvedValue({
+      vi.mocked(db.question.create).mockResolvedValue({
         id: "q-4",
       } as any)
 
       const fd = buildQuestionFormData()
       fd.delete("options")
 
-      const result = await createCatalogQuestion(fd)
+      const result = await createQuestion(fd)
 
       expect(result.success).toBe(true)
     })
   })
 
   // ========================================================================
-  // updateCatalogQuestion
+  // updateQuestion
   // ========================================================================
 
-  describe("updateCatalogQuestion", () => {
+  describe("updateQuestion", () => {
     it("updates a question by id", async () => {
-      vi.mocked(db.catalogQuestion.findUnique).mockResolvedValue({
+      vi.mocked(db.question.findUnique).mockResolvedValue({
         id: "q-1",
         questionText: "Old text",
       } as any)
-      vi.mocked(db.catalogQuestion.update).mockResolvedValue({
+      vi.mocked(db.question.update).mockResolvedValue({
         id: "q-1",
       } as any)
 
       const fd = buildQuestionFormData({
         questionText: "Updated question text",
       })
-      const result = await updateCatalogQuestion("q-1", fd)
+      const result = await updateQuestion("q-1", fd)
 
       expect(result).toEqual({ success: true, data: { id: "q-1" } })
-      expect(db.catalogQuestion.findUnique).toHaveBeenCalledWith({
+      expect(db.question.findUnique).toHaveBeenCalledWith({
         where: { id: "q-1" },
       })
-      expect(db.catalogQuestion.update).toHaveBeenCalledWith({
+      expect(db.question.update).toHaveBeenCalledWith({
         where: { id: "q-1" },
         data: expect.objectContaining({
           questionText: "Updated question text",
@@ -250,16 +248,16 @@ describe("CatalogQuestion CRUD Actions", () => {
     })
 
     it("returns error for non-existent id", async () => {
-      vi.mocked(db.catalogQuestion.findUnique).mockResolvedValue(null)
+      vi.mocked(db.question.findUnique).mockResolvedValue(null)
 
       const fd = buildQuestionFormData()
-      const result = await updateCatalogQuestion("non-existent-id", fd)
+      const result = await updateQuestion("non-existent-id", fd)
 
       expect(result).toEqual({
         success: false,
         error: "Question not found",
       })
-      expect(db.catalogQuestion.update).not.toHaveBeenCalled()
+      expect(db.question.update).not.toHaveBeenCalled()
     })
 
     it("requires DEVELOPER role", async () => {
@@ -268,64 +266,64 @@ describe("CatalogQuestion CRUD Actions", () => {
       } as any)
 
       const fd = buildQuestionFormData()
-      const result = await updateCatalogQuestion("q-1", fd)
+      const result = await updateQuestion("q-1", fd)
 
       expect(result.success).toBe(false)
       expect(result.error).toBe("Unauthorized: DEVELOPER role required")
-      expect(db.catalogQuestion.findUnique).not.toHaveBeenCalled()
+      expect(db.question.findUnique).not.toHaveBeenCalled()
     })
 
     it("returns error for malformed options JSON", async () => {
-      vi.mocked(db.catalogQuestion.findUnique).mockResolvedValue({
+      vi.mocked(db.question.findUnique).mockResolvedValue({
         id: "q-1",
       } as any)
 
       const fd = buildQuestionFormData({ options: "not-json{" })
-      const result = await updateCatalogQuestion("q-1", fd)
+      const result = await updateQuestion("q-1", fd)
 
       expect(result).toEqual({
         success: false,
         error: "Invalid options JSON",
       })
-      expect(db.catalogQuestion.update).not.toHaveBeenCalled()
+      expect(db.question.update).not.toHaveBeenCalled()
     })
   })
 
   // ========================================================================
-  // deleteCatalogQuestion
+  // deleteQuestion
   // ========================================================================
 
-  describe("deleteCatalogQuestion", () => {
+  describe("deleteQuestion", () => {
     it("deletes a question by id", async () => {
-      vi.mocked(db.catalogQuestion.findUnique).mockResolvedValue({
+      vi.mocked(db.question.findUnique).mockResolvedValue({
         id: "q-1",
       } as any)
-      vi.mocked(db.catalogQuestion.delete).mockResolvedValue({
+      vi.mocked(db.question.delete).mockResolvedValue({
         id: "q-1",
       } as any)
 
-      const result = await deleteCatalogQuestion("q-1")
+      const result = await deleteQuestion("q-1")
 
       expect(result).toEqual({ success: true })
-      expect(db.catalogQuestion.findUnique).toHaveBeenCalledWith({
+      expect(db.question.findUnique).toHaveBeenCalledWith({
         where: { id: "q-1" },
       })
-      expect(db.catalogQuestion.delete).toHaveBeenCalledWith({
+      expect(db.question.delete).toHaveBeenCalledWith({
         where: { id: "q-1" },
       })
       expect(revalidatePath).toHaveBeenCalledWith("/catalog/questions")
     })
 
     it("returns error for non-existent id", async () => {
-      vi.mocked(db.catalogQuestion.findUnique).mockResolvedValue(null)
+      vi.mocked(db.question.findUnique).mockResolvedValue(null)
 
-      const result = await deleteCatalogQuestion("non-existent-id")
+      const result = await deleteQuestion("non-existent-id")
 
       expect(result).toEqual({
         success: false,
         error: "Question not found",
       })
-      expect(db.catalogQuestion.delete).not.toHaveBeenCalled()
+      expect(db.question.delete).not.toHaveBeenCalled()
     })
 
     it("requires DEVELOPER role", async () => {
@@ -333,22 +331,22 @@ describe("CatalogQuestion CRUD Actions", () => {
         user: { id: "student-1", role: "STUDENT" },
       } as any)
 
-      const result = await deleteCatalogQuestion("q-1")
+      const result = await deleteQuestion("q-1")
 
       expect(result.success).toBe(false)
       expect(result.error).toBe("Unauthorized: DEVELOPER role required")
-      expect(db.catalogQuestion.findUnique).not.toHaveBeenCalled()
+      expect(db.question.findUnique).not.toHaveBeenCalled()
     })
 
     it("returns error message when db.delete throws", async () => {
-      vi.mocked(db.catalogQuestion.findUnique).mockResolvedValue({
+      vi.mocked(db.question.findUnique).mockResolvedValue({
         id: "q-1",
       } as any)
-      vi.mocked(db.catalogQuestion.delete).mockRejectedValue(
+      vi.mocked(db.question.delete).mockRejectedValue(
         new Error("Foreign key constraint")
       )
 
-      const result = await deleteCatalogQuestion("q-1")
+      const result = await deleteQuestion("q-1")
 
       expect(result).toEqual({
         success: false,

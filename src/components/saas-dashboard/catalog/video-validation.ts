@@ -14,4 +14,4 @@ export const lessonVideoSchema = z.object({
   storageKey: z.string().optional().nullable(),
 })
 
-export type LessonVideoInput = z.infer<typeof lessonVideoSchema>
+export type VideoInput = z.infer<typeof lessonVideoSchema>

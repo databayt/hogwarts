@@ -109,7 +109,7 @@ export interface GeneratedSlot {
   dayOfWeek: number
   periodId: string
   sectionId: string // Section being scheduled
-  subjectId: string // CatalogSubject taught
+  subjectId: string // Subject taught
   classId: string // Legacy compat — empty for section-based
   teacherId: string | null // null = unassigned
   classroomId: string

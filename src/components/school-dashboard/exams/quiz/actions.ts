@@ -11,7 +11,7 @@ const QUIZ_EXAM_TYPES = ["quiz", "diagnostic"]
 export async function getQuizzes(filters?: {
   catalogSubjectId?: string
   examType?: string
-  enrolledCatalogSubjectIds?: string[]
+  enrolledSubjectIds?: string[]
 }): Promise<QuizItem[]> {
   const where: Record<string, unknown> = {
     status: "PUBLISHED",
@@ -20,15 +20,15 @@ export async function getQuizzes(filters?: {
 
   if (filters?.catalogSubjectId) {
     where.subjectId = filters.catalogSubjectId
-  } else if (filters?.enrolledCatalogSubjectIds) {
-    where.subjectId = { in: filters.enrolledCatalogSubjectIds }
+  } else if (filters?.enrolledSubjectIds) {
+    where.subjectId = { in: filters.enrolledSubjectIds }
   }
 
   if (filters?.examType && QUIZ_EXAM_TYPES.includes(filters.examType)) {
     where.examType = filters.examType
   }
 
-  const exams = await db.catalogExam.findMany({
+  const exams = await db.exam.findMany({
     where,
     include: {
       subject: { select: { name: true, slug: true, color: true } },
@@ -56,7 +56,7 @@ export async function getQuizzes(filters?: {
 
 export async function getQuizQuestionStats(
   catalogSubjectId?: string,
-  enrolledCatalogSubjectIds?: string[]
+  enrolledSubjectIds?: string[]
 ): Promise<QuizQuestionStats[]> {
   const where: Record<string, unknown> = {
     status: "PUBLISHED" as const,
@@ -65,11 +65,11 @@ export async function getQuizQuestionStats(
 
   if (catalogSubjectId) {
     where.catalogSubjectId = catalogSubjectId
-  } else if (enrolledCatalogSubjectIds) {
-    where.catalogSubjectId = { in: enrolledCatalogSubjectIds }
+  } else if (enrolledSubjectIds) {
+    where.catalogSubjectId = { in: enrolledSubjectIds }
   }
 
-  const questions = await db.catalogQuestion.findMany({
+  const questions = await db.question.findMany({
     where,
     select: {
       catalogSubjectId: true,
@@ -107,14 +107,12 @@ export async function getQuizQuestionStats(
   )
 }
 
-export async function getCatalogSubjectsForQuizFilter(
-  enrolledCatalogSubjectIds?: string[]
+export async function getSubjectsForQuizFilter(
+  enrolledSubjectIds?: string[]
 ): Promise<QuizSubjectFilter[]> {
-  const subjects = await db.catalogSubject.findMany({
+  const subjects = await db.subject.findMany({
     where: {
-      ...(enrolledCatalogSubjectIds
-        ? { id: { in: enrolledCatalogSubjectIds } }
-        : {}),
+      ...(enrolledSubjectIds ? { id: { in: enrolledSubjectIds } } : {}),
       exams: {
         some: {
           status: "PUBLISHED",

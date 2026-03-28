@@ -21,7 +21,7 @@ import type { getDictionary } from "@/components/internationalization/dictionari
 import { Shell as PageContainer } from "@/components/table/shell"
 
 import { CreateQuestionDialog } from "./create-question-dialog"
-import type { CatalogQuestionRow } from "./question-columns"
+import type { QuestionRow } from "./question-columns"
 import { QuestionTable } from "./question-table"
 
 interface Props {
@@ -30,7 +30,7 @@ interface Props {
 }
 
 export async function QuestionContent({ lang }: Props) {
-  const questions = await db.catalogQuestion.findMany({
+  const questions = await db.question.findMany({
     orderBy: { createdAt: "desc" },
     select: {
       id: true,
@@ -63,7 +63,7 @@ export async function QuestionContent({ lang }: Props) {
         ).toFixed(1)
       : "0"
 
-  const rows: CatalogQuestionRow[] = questions.map((q) => ({
+  const rows: QuestionRow[] = questions.map((q) => ({
     ...q,
     questionType: q.questionType as string,
     difficulty: q.difficulty as string,

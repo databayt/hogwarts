@@ -344,8 +344,8 @@ async function getAcademicPerformanceMetricsInternal(
 ): Promise<AcademicPerformanceMetrics> {
   // Parallelize the two count queries
   const [totalExams, totalAssignments] = await Promise.all([
-    db.exam.count({ where: { schoolId } }),
-    db.assignment.count({ where: { schoolId } }),
+    db.schoolExam.count({ where: { schoolId } }),
+    db.schoolAssignment.count({ where: { schoolId } }),
   ])
 
   // TODO: Implement real GPA calculation, pass rate, and improvement metrics.
@@ -502,7 +502,7 @@ export async function getRecentActivities(): Promise<ActivityItem[]> {
           createdAt: true,
         },
       }),
-      db.exam.findMany({
+      db.schoolExam.findMany({
         where: { schoolId },
         orderBy: { createdAt: "desc" },
         take: 5,
@@ -513,7 +513,7 @@ export async function getRecentActivities(): Promise<ActivityItem[]> {
           createdAt: true,
         },
       }),
-      db.assignment.findMany({
+      db.schoolAssignment.findMany({
         where: { schoolId },
         orderBy: { createdAt: "desc" },
         take: 5,
@@ -662,7 +662,7 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
     },
   })
 
-  const pendingAssignments = await db.assignment.findMany({
+  const pendingAssignments = await db.schoolAssignment.findMany({
     where: {
       schoolId,
       status: "PUBLISHED",
@@ -679,18 +679,22 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
   const classes = await db.class.findMany({
     where: { teacherId: teacher.id, schoolId },
     include: {
-      exams: {
+      schoolExams: {
         include: { results: { select: { percentage: true } } },
       },
     },
   })
 
   const classPerformance = classes.map((cls) => {
-    const allResults = cls.exams.flatMap((exam) => exam.results)
+    const allResults = cls.schoolExams.flatMap(
+      (exam: { results: { percentage: number }[] }) => exam.results
+    )
     const average =
       allResults.length > 0
-        ? allResults.reduce((sum, r) => sum + r.percentage, 0) /
-          allResults.length
+        ? allResults.reduce(
+            (sum: number, r: { percentage: number }) => sum + r.percentage,
+            0
+          ) / allResults.length
         : 0
     return {
       className: cls.name,
@@ -698,7 +702,7 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
     }
   })
 
-  const upcomingExams = await db.exam.findMany({
+  const upcomingExams = await db.schoolExam.findMany({
     where: {
       schoolId,
       class: { teacherId: teacher.id },
@@ -808,7 +812,7 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
     orderBy: { period: { startTime: "asc" } },
   })
 
-  const upcomingAssignments = await db.assignment.findMany({
+  const upcomingAssignments = await db.schoolAssignment.findMany({
     where: {
       schoolId,
       classId: { in: classIds },
@@ -992,7 +996,7 @@ export async function getParentDashboardData(): Promise<ParentDashboardData> {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
-  const upcomingAssignments = await db.assignment.findMany({
+  const upcomingAssignments = await db.schoolAssignment.findMany({
     where: {
       schoolId,
       classId: { in: classIds },
@@ -1384,7 +1388,7 @@ export async function getAcademicPerformanceTrends() {
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("Missing school context")
 
-  const exams = await db.exam.findMany({
+  const exams = await db.schoolExam.findMany({
     where: {
       schoolId,
       examDate: { gte: subMonths(new Date(), 3) },
@@ -2915,7 +2919,7 @@ async function getStudentUpcomingData(userId: string, schoolId: string) {
   const classIds = studentClasses.map((sc) => sc.classId)
 
   // Get assignments with status
-  const assignments = await db.assignment.findMany({
+  const assignments = await db.schoolAssignment.findMany({
     where: {
       schoolId,
       classId: { in: classIds },
@@ -3085,7 +3089,7 @@ async function getParentUpcomingData(userId: string, schoolId: string) {
       const classIds = studentClasses.map((sc) => sc.classId)
 
       const [pendingAssignments, overdueAssignments] = await Promise.all([
-        db.assignment.count({
+        db.schoolAssignment.count({
           where: {
             schoolId,
             classId: { in: classIds },
@@ -3099,7 +3103,7 @@ async function getParentUpcomingData(userId: string, schoolId: string) {
             },
           },
         }),
-        db.assignment.count({
+        db.schoolAssignment.count({
           where: {
             schoolId,
             classId: { in: classIds },
@@ -3328,7 +3332,7 @@ async function getStudentResourceUsage(
         status: { in: ["SUBMITTED", "GRADED"] },
       },
     }),
-    db.assignment.count({
+    db.schoolAssignment.count({
       where: { schoolId, status: { in: ["PUBLISHED", "IN_PROGRESS"] } },
     }),
     // Use ExamResult for grades instead of non-existent grade model
@@ -3336,7 +3340,7 @@ async function getStudentResourceUsage(
       where: { studentId: student.id, schoolId },
       select: { percentage: true },
     }),
-    db.exam.findFirst({
+    db.schoolExam.findFirst({
       where: { schoolId, examDate: { gte: new Date() } },
       orderBy: { examDate: "asc" },
       select: { examDate: true },
@@ -3514,7 +3518,7 @@ async function getParentResourceUsage(
         where: { studentId: { in: childIds }, schoolId, status: "PRESENT" },
       }),
       // Pending assignments for all children (not yet submitted)
-      db.assignment.count({
+      db.schoolAssignment.count({
         where: {
           schoolId,
           status: { in: ["PUBLISHED", "IN_PROGRESS"] },
@@ -4492,7 +4496,7 @@ export async function getDashboardAnalytics(): Promise<DashboardAnalytics> {
         status: "PLANNED",
       },
     }),
-    db.assignment.count({
+    db.schoolAssignment.count({
       where: {
         schoolId,
         dueDate: { gte: now },
@@ -4792,7 +4796,7 @@ async function getTeacherChartData(
   const weeklyLessons: number[] = [0, 0, 0, 0]
 
   // Get grading progress (assignments by teacher)
-  const assignments = await db.assignment.findMany({
+  const assignments = await db.schoolAssignment.findMany({
     where: { classId: { in: classIds }, schoolId },
     select: { id: true },
   })

@@ -114,7 +114,7 @@ export default async function UpcomingExamsContent({
     const today = new Date()
     today.setHours(0, 0, 0, 0)
 
-    const exams = await db.exam.findMany({
+    const exams = await db.schoolExam.findMany({
       where: {
         schoolId,
         status: { in: ["PLANNED", "IN_PROGRESS"] },

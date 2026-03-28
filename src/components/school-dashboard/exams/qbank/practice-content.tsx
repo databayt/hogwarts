@@ -64,7 +64,7 @@ export default async function PracticeContent({ lang }: Props) {
         subjectId: true,
       },
     }),
-    db.catalogSubject.findMany({
+    db.subject.findMany({
       where: { id: { in: subjectIds } },
       select: { id: true, name: true },
     }),

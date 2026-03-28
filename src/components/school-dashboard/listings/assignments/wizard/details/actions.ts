@@ -18,7 +18,7 @@ export async function getAssignmentDetails(
     const { schoolId } = await getTenantContext()
     if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
-    const assignment = await db.assignment.findFirst({
+    const assignment = await db.schoolAssignment.findFirst({
       where: { id: assignmentId, schoolId },
       select: {
         totalPoints: true,
@@ -57,7 +57,7 @@ export async function updateAssignmentDetails(
 
     const parsed = detailsSchema.parse(input)
 
-    await db.assignment.updateMany({
+    await db.schoolAssignment.updateMany({
       where: { id: assignmentId, schoolId },
       data: {
         totalPoints: new Decimal(parsed.totalPoints),

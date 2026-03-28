@@ -28,7 +28,7 @@ export const studentCreateSchema = photoSchema
   })
 
 export const studentUpdateSchema = studentCreateSchema.partial().extend({
-  id: z.string().min(1, "Required"),
+  id: z.string().min(1),
 })
 
 export const sortItemSchema = z.object({

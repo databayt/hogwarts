@@ -19,7 +19,7 @@ interface ContributeExamResult {
 
 /**
  * Contribute a completed generated exam to the catalog.
- * Extracts questions/distribution and creates CatalogExam + CatalogExamQuestion junction.
+ * Extracts questions/distribution and creates Exam + ExamQuestion junction.
  */
 export async function contributeExamToCatalog(
   generatedExamId: string,
@@ -93,7 +93,7 @@ export async function contributeExamToCatalog(
     }
 
     // Check not already contributed
-    const existing = await db.exam.findFirst({
+    const existing = await db.schoolExam.findFirst({
       where: { id: exam.id, catalogExamId: { not: null } },
       select: { catalogExamId: true },
     })
@@ -113,10 +113,10 @@ export async function contributeExamToCatalog(
       ? (generatedExam.template.bloomDistribution as Record<string, unknown>)
       : null
 
-    // Create CatalogExam + junction in transaction
+    // Create Exam + junction in transaction
     const catalogExam = await db.$transaction(async (tx) => {
       // 1. Create catalog exam
-      const newCatalogExam = await tx.catalogExam.create({
+      const newExam = await tx.exam.create({
         data: {
           subjectId: catalogSubjectId,
           chapterId: exam.catalogChapterId || undefined,
@@ -138,7 +138,7 @@ export async function contributeExamToCatalog(
         },
       })
 
-      // 2. Create CatalogExamQuestion junction records
+      // 2. Create ExamQuestion junction records
       for (const geq of generatedExam.questions) {
         const { question } = geq
 
@@ -147,7 +147,7 @@ export async function contributeExamToCatalog(
 
         // If no catalog mirror exists, create one
         if (!catalogQuestionId) {
-          const catalogQ = await tx.catalogQuestion.create({
+          const catalogQ = await tx.question.create({
             data: {
               catalogSubjectId,
               questionText: question.questionText,
@@ -175,9 +175,9 @@ export async function contributeExamToCatalog(
           })
         }
 
-        await tx.catalogExamQuestion.create({
+        await tx.examQuestion.create({
           data: {
-            catalogExamId: newCatalogExam.id,
+            catalogExamId: newExam.id,
             catalogQuestionId,
             order: geq.order,
             points: geq.points,
@@ -186,12 +186,12 @@ export async function contributeExamToCatalog(
       }
 
       // 3. Update school exam with catalog bridge FK
-      await tx.exam.update({
+      await tx.schoolExam.update({
         where: { id: exam.id },
-        data: { catalogExamId: newCatalogExam.id },
+        data: { catalogExamId: newExam.id },
       })
 
-      return newCatalogExam
+      return newExam
     })
 
     revalidatePath("/exams/generate")
@@ -239,7 +239,7 @@ export async function contributeExamTemplateToCatalog(
     const userId = session.user.id
     const visibility = options?.visibility || "PUBLIC"
 
-    const template = await db.examTemplate.findFirst({
+    const template = await db.schoolExamTemplate.findFirst({
       where: { id: templateId, schoolId },
     })
 
@@ -280,7 +280,7 @@ export async function contributeExamTemplateToCatalog(
                 ? "diagnostic"
                 : "midterm"
 
-      const newCatalogTemplate = await tx.catalogExamTemplate.create({
+      const newCatalogTemplate = await tx.examTemplate.create({
         data: {
           catalogSubjectId,
           name: template.name,
@@ -299,7 +299,7 @@ export async function contributeExamTemplateToCatalog(
       })
 
       // Link school template to catalog
-      await tx.examTemplate.update({
+      await tx.schoolExamTemplate.update({
         where: { id: templateId },
         data: { catalogExamTemplateId: newCatalogTemplate.id },
       })

@@ -30,7 +30,7 @@ export async function CatalogSelectionContent({ dictionary, lang }: Props) {
 
   // Fetch all three independent queries in parallel
   const [catalogSubjects, selections, grades] = await Promise.all([
-    db.catalogSubject.findMany({
+    db.subject.findMany({
       where: { status: "PUBLISHED" },
       orderBy: { sortOrder: "asc" },
       select: {
@@ -40,14 +40,13 @@ export async function CatalogSelectionContent({ dictionary, lang }: Props) {
         department: true,
         levels: true,
         color: true,
-        imageKey: true,
-        thumbnailKey: true,
+        thumbnail: true,
         curriculum: true,
         grades: true,
         lang: true,
       },
     }),
-    db.schoolSubjectSelection.findMany({
+    db.subjectSelection.findMany({
       where: { schoolId },
       select: {
         id: true,
@@ -108,7 +107,7 @@ export async function CatalogSelectionContent({ dictionary, lang }: Props) {
       color: s.color,
       curriculum: s.curriculum,
       grades: s.grades as number[],
-      imageUrl: getCatalogImageUrl(s.thumbnailKey, s.imageKey, "sm"),
+      imageUrl: getCatalogImageUrl(s.thumbnail, "sm"),
       isSelected: selectedSubjectIds.has(s.id),
     }))
   )

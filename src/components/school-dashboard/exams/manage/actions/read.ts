@@ -24,7 +24,7 @@ export async function getExam(input: { id: string }): Promise<{
 
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
-    const exam = await db.exam.findFirst({
+    const exam = await db.schoolExam.findFirst({
       where: { id, schoolId },
       select: {
         id: true,
@@ -101,7 +101,7 @@ export async function getExams(
 
     // Fetch data and count in parallel
     const [rows, count] = await Promise.all([
-      db.exam.findMany({
+      db.schoolExam.findMany({
         where,
         orderBy,
         skip,
@@ -119,7 +119,7 @@ export async function getExams(
           },
         },
       }),
-      db.exam.count({ where }),
+      db.schoolExam.count({ where }),
     ])
 
     // Map to response format
@@ -204,7 +204,7 @@ export async function getUpcomingExams(input?: {
       }
     }
 
-    const exams = await db.exam.findMany({
+    const exams = await db.schoolExam.findMany({
       where,
       orderBy: [{ examDate: "asc" }, { startTime: "asc" }],
       take: input?.limit || 10,

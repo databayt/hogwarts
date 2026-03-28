@@ -29,7 +29,7 @@ async function resolveLocale(): Promise<Locale> {
 }
 
 /**
- * @deprecated Use catalog-actions.ts enrollInCatalogSubject() instead.
+ * @deprecated Use catalog-actions.ts enrollInSubject() instead.
  * Legacy action targeting StreamEnrollment model. Kept only because
  * verifyPaymentAndActivateEnrollment() below is still used by the
  * payment success page for legacy Stripe checkout sessions.

@@ -25,7 +25,7 @@ export async function getSchoolScheduleData(
         country: true,
         schoolType: true,
         schoolLevel: true,
-        curriculum: true,
+        timetableStructure: true,
       },
     })
 
@@ -35,7 +35,7 @@ export async function getSchoolScheduleData(
       country: school.country || null,
       schoolType: school.schoolType || undefined,
       schoolLevel: school.schoolLevel || undefined,
-      selectedStructure: school.curriculum || undefined,
+      selectedStructure: school.timetableStructure || undefined,
     })
   } catch (error) {
     return createActionResponse(undefined, error)
@@ -49,10 +49,9 @@ export async function saveScheduleChoice(
   try {
     await requireSchoolOwnership(schoolId)
 
-    // Store the chosen structure slug in the school's curriculum field
     await db.school.update({
       where: { id: schoolId },
-      data: { curriculum: structureSlug },
+      data: { timetableStructure: structureSlug },
     })
 
     revalidatePath(`/onboarding/${schoolId}/schedule`)

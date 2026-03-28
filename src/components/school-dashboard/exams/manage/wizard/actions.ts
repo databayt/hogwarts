@@ -23,7 +23,7 @@ export async function getExamForWizard(
     const { schoolId } = await getTenantContext()
     if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
-    const exam = await db.exam.findFirst({
+    const exam = await db.schoolExam.findFirst({
       where: { id: examId, schoolId },
       include: {
         class: { select: { id: true, name: true } },
@@ -82,7 +82,7 @@ export async function createDraftExam(): Promise<
       }
     }
 
-    const exam = await db.exam.create({
+    const exam = await db.schoolExam.create({
       data: {
         schoolId,
         title: "",
@@ -123,7 +123,7 @@ export async function completeExamWizard(
       return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
-    const exam = await db.exam.findFirst({
+    const exam = await db.schoolExam.findFirst({
       where: { id: examId, schoolId },
       select: { title: true, classId: true, subjectId: true },
     })
@@ -139,7 +139,7 @@ export async function completeExamWizard(
       }
     }
 
-    await db.exam.updateMany({
+    await db.schoolExam.updateMany({
       where: { id: examId, schoolId },
       data: { wizardStep: null },
     })
@@ -169,7 +169,7 @@ export async function updateExamWizardStep(
     const { schoolId } = await getTenantContext()
     if (!schoolId) return
 
-    await db.exam.updateMany({
+    await db.schoolExam.updateMany({
       where: { id: examId, schoolId },
       data: { wizardStep: step },
     })
@@ -192,7 +192,7 @@ export async function deleteDraftExam(examId: string): Promise<ActionResponse> {
     }
 
     // Atomic delete — only if it's still a draft
-    const { count } = await db.exam.deleteMany({
+    const { count } = await db.schoolExam.deleteMany({
       where: { id: examId, schoolId, wizardStep: { not: null } },
     })
 

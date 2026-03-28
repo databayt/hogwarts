@@ -21,7 +21,7 @@ import type {
   StudentDocument,
   StudentGuardian,
   StudentYearLevel,
-  CatalogSubject as Subject,
+  Subject,
   Teacher,
   TeacherExperience,
   TeacherQualification,

@@ -83,10 +83,10 @@ describe("Exam Actions", () => {
         id: "class-1",
         schoolId: mockSchoolId,
       } as any)
-      vi.mocked(db.catalogSubject.findFirst).mockResolvedValue({
+      vi.mocked(db.subject.findFirst).mockResolvedValue({
         id: "subject-1",
       } as any)
-      vi.mocked(db.exam.create).mockResolvedValue(mockExam as any)
+      vi.mocked(db.schoolExam.create).mockResolvedValue(mockExam as any)
 
       const result = await createExam({
         title: "Midterm Exam",
@@ -153,7 +153,7 @@ describe("Exam Actions", () => {
 
   describe("updateExam", () => {
     it("updates exam with schoolId scope", async () => {
-      vi.mocked(db.exam.findFirst).mockResolvedValue({
+      vi.mocked(db.schoolExam.findFirst).mockResolvedValue({
         id: "exam-1",
         schoolId: mockSchoolId,
         status: "PLANNED",
@@ -162,7 +162,7 @@ describe("Exam Actions", () => {
         endTime: "11:00",
         classId: "class-1",
       } as any)
-      vi.mocked(db.exam.updateMany).mockResolvedValue({ count: 1 } as any)
+      vi.mocked(db.schoolExam.updateMany).mockResolvedValue({ count: 1 } as any)
 
       const result = await updateExam({
         id: "exam-1",
@@ -173,7 +173,7 @@ describe("Exam Actions", () => {
     })
 
     it("returns error for completed exams", async () => {
-      vi.mocked(db.exam.findFirst).mockResolvedValue({
+      vi.mocked(db.schoolExam.findFirst).mockResolvedValue({
         id: "exam-1",
         schoolId: mockSchoolId,
         status: "COMPLETED",
@@ -193,12 +193,12 @@ describe("Exam Actions", () => {
 
   describe("deleteExam", () => {
     it("deletes exam with schoolId scope", async () => {
-      vi.mocked(db.exam.findFirst).mockResolvedValue({
+      vi.mocked(db.schoolExam.findFirst).mockResolvedValue({
         id: "exam-1",
         schoolId: mockSchoolId,
         _count: { results: 0 },
       } as any)
-      vi.mocked(db.exam.deleteMany).mockResolvedValue({ count: 1 } as any)
+      vi.mocked(db.schoolExam.deleteMany).mockResolvedValue({ count: 1 } as any)
 
       const result = await deleteExam({ id: "exam-1" })
 
@@ -206,7 +206,7 @@ describe("Exam Actions", () => {
     })
 
     it("prevents deletion of exams with results", async () => {
-      vi.mocked(db.exam.findFirst).mockResolvedValue({
+      vi.mocked(db.schoolExam.findFirst).mockResolvedValue({
         id: "exam-1",
         schoolId: mockSchoolId,
         _count: { results: 5 },
@@ -244,8 +244,8 @@ describe("Exam Actions", () => {
         },
       ]
 
-      vi.mocked(db.exam.findMany).mockResolvedValue(mockExams as any)
-      vi.mocked(db.exam.count).mockResolvedValue(2)
+      vi.mocked(db.schoolExam.findMany).mockResolvedValue(mockExams as any)
+      vi.mocked(db.schoolExam.count).mockResolvedValue(2)
 
       const result = await getExams({})
 

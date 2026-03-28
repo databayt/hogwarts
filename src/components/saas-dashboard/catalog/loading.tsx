@@ -196,7 +196,7 @@ export function CatalogAnalyticsSkeleton() {
 // CATALOG BOOK DETAIL — breadcrumb + hero + 3 stats + details card
 // =============================================================================
 
-export function CatalogBookDetailSkeleton() {
+export function BookDetailSkeleton() {
   return (
     <div>
       {/* Breadcrumb */}

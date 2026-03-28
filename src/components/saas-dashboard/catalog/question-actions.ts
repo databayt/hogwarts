@@ -11,12 +11,10 @@ import { requireDeveloper } from "@/components/saas-dashboard/lib/operator-auth"
 import { catalogQuestionSchema } from "./question-validation"
 
 // ============================================================================
-// CatalogQuestion CRUD
+// Question CRUD
 // ============================================================================
 
-export async function createCatalogQuestion(
-  data: FormData
-): Promise<ActionResponse> {
+export async function createQuestion(data: FormData): Promise<ActionResponse> {
   try {
     await requireDeveloper()
 
@@ -39,7 +37,7 @@ export async function createCatalogQuestion(
       options: parsedOptions,
     })
 
-    const question = await db.catalogQuestion.create({
+    const question = await db.question.create({
       data: {
         ...validated,
         // Server-controlled: SaaS admin = auto-approved
@@ -60,14 +58,14 @@ export async function createCatalogQuestion(
   }
 }
 
-export async function updateCatalogQuestion(
+export async function updateQuestion(
   id: string,
   data: FormData
 ): Promise<ActionResponse> {
   try {
     await requireDeveloper()
 
-    const existing = await db.catalogQuestion.findUnique({ where: { id } })
+    const existing = await db.question.findUnique({ where: { id } })
     if (!existing) {
       return { success: false, error: "Question not found" }
     }
@@ -91,7 +89,7 @@ export async function updateCatalogQuestion(
       options: parsedOptions,
     })
 
-    const question = await db.catalogQuestion.update({
+    const question = await db.question.update({
       where: { id },
       data: {
         ...validated,
@@ -111,18 +109,16 @@ export async function updateCatalogQuestion(
   }
 }
 
-export async function deleteCatalogQuestion(
-  id: string
-): Promise<ActionResponse> {
+export async function deleteQuestion(id: string): Promise<ActionResponse> {
   try {
     await requireDeveloper()
 
-    const existing = await db.catalogQuestion.findUnique({ where: { id } })
+    const existing = await db.question.findUnique({ where: { id } })
     if (!existing) {
       return { success: false, error: "Question not found" }
     }
 
-    await db.catalogQuestion.delete({ where: { id } })
+    await db.question.delete({ where: { id } })
 
     revalidatePath("/catalog/questions")
     return { success: true }

@@ -1,0 +1,17 @@
+{
+  "subject": "english",
+  "subjectNameAr": "اللغة الإنجليزية",
+  "grade": 11,
+  "level": "secondary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "",
+  "chapters": [
+    {
+      "nameAr": "اللغة الإنجليزية - Spine 5",
+      "name": "English - Spine 5",
+      "slug": "spine-5",
+      "sequenceOrder": 1,
+      "lessons": []
+    }
+  ]
+}

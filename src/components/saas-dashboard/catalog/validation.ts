@@ -15,7 +15,7 @@ export const catalogSubjectSchema = z.object({
   curriculum: z.string().default("national"),
   schoolTypes: z.array(z.string()).default([]),
   concept: z.string().optional(),
-  imageKey: z.string().optional(),
+  thumbnail: z.string().optional(),
   color: z.string().optional(),
   status: z
     .enum(["DRAFT", "REVIEW", "PUBLISHED", "ARCHIVED", "DEPRECATED"])
@@ -31,7 +31,7 @@ export const catalogChapterSchema = z.object({
   lang: z.string().default("ar"),
   description: z.string().optional(),
   sequenceOrder: z.number().int().min(0),
-  imageKey: z.string().optional(),
+  thumbnail: z.string().optional(),
   color: z.string().optional(),
   status: z
     .enum(["DRAFT", "REVIEW", "PUBLISHED", "ARCHIVED", "DEPRECATED"])
@@ -52,6 +52,6 @@ export const catalogLessonSchema = z.object({
     .default("DRAFT"),
 })
 
-export type CatalogSubjectInput = z.infer<typeof catalogSubjectSchema>
-export type CatalogChapterInput = z.infer<typeof catalogChapterSchema>
-export type CatalogLessonInput = z.infer<typeof catalogLessonSchema>
+export type SubjectInput = z.infer<typeof catalogSubjectSchema>
+export type ChapterInput = z.infer<typeof catalogChapterSchema>
+export type LessonInput = z.infer<typeof catalogLessonSchema>

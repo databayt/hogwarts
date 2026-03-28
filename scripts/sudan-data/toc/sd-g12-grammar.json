@@ -1,0 +1,38 @@
+{
+  "subject": "grammar",
+  "subjectNameAr": "قواعد النحو",
+  "grade": 12,
+  "level": "secondary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "",
+  "chapters": [
+    {
+      "nameAr": "الوحدة الأولى",
+      "name": "Unit 1",
+      "slug": "unit-1",
+      "sequenceOrder": 1,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الثانية",
+      "name": "Unit 2",
+      "slug": "unit-2",
+      "sequenceOrder": 2,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الثالثة",
+      "name": "Unit 3",
+      "slug": "unit-3",
+      "sequenceOrder": 3,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الرابعة",
+      "name": "Unit 4",
+      "slug": "unit-4",
+      "sequenceOrder": 4,
+      "lessons": []
+    }
+  ]
+}

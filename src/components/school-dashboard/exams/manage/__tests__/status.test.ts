@@ -58,18 +58,18 @@ describe("Exam Status Actions — defense-in-depth", () => {
 
   describe("startExam", () => {
     it("uses updateMany with schoolId", async () => {
-      vi.mocked(db.exam.findFirst).mockResolvedValue({
+      vi.mocked(db.schoolExam.findFirst).mockResolvedValue({
         id: "exam-1",
         schoolId: SCHOOL_ID,
         status: "PLANNED",
         generatedExam: { _count: { questions: 10 } },
       } as any)
-      vi.mocked(db.exam.updateMany).mockResolvedValue({ count: 1 })
+      vi.mocked(db.schoolExam.updateMany).mockResolvedValue({ count: 1 })
 
       const result = await startExam("exam-1")
 
       expect(result.success).toBe(true)
-      expect(db.exam.updateMany).toHaveBeenCalledWith({
+      expect(db.schoolExam.updateMany).toHaveBeenCalledWith({
         where: { id: "exam-1", schoolId: SCHOOL_ID },
         data: { status: "IN_PROGRESS" },
       })
@@ -90,7 +90,7 @@ describe("Exam Status Actions — defense-in-depth", () => {
     })
 
     it("returns error for exam not found", async () => {
-      vi.mocked(db.exam.findFirst).mockResolvedValue(null)
+      vi.mocked(db.schoolExam.findFirst).mockResolvedValue(null)
 
       const result = await startExam("exam-missing")
 
@@ -99,7 +99,7 @@ describe("Exam Status Actions — defense-in-depth", () => {
     })
 
     it("returns error for invalid status transition", async () => {
-      vi.mocked(db.exam.findFirst).mockResolvedValue({
+      vi.mocked(db.schoolExam.findFirst).mockResolvedValue({
         id: "exam-1",
         status: "COMPLETED",
       } as any)
@@ -113,17 +113,17 @@ describe("Exam Status Actions — defense-in-depth", () => {
 
   describe("completeExam", () => {
     it("uses updateMany with schoolId", async () => {
-      vi.mocked(db.exam.findFirst).mockResolvedValue({
+      vi.mocked(db.schoolExam.findFirst).mockResolvedValue({
         id: "exam-1",
         schoolId: SCHOOL_ID,
         status: "IN_PROGRESS",
       } as any)
-      vi.mocked(db.exam.updateMany).mockResolvedValue({ count: 1 })
+      vi.mocked(db.schoolExam.updateMany).mockResolvedValue({ count: 1 })
 
       const result = await completeExam("exam-1", { autoGrade: false })
 
       expect(result.success).toBe(true)
-      expect(db.exam.updateMany).toHaveBeenCalledWith({
+      expect(db.schoolExam.updateMany).toHaveBeenCalledWith({
         where: { id: "exam-1", schoolId: SCHOOL_ID },
         data: { status: "COMPLETED" },
       })
@@ -132,18 +132,18 @@ describe("Exam Status Actions — defense-in-depth", () => {
 
   describe("cancelExam", () => {
     it("uses updateMany with schoolId", async () => {
-      vi.mocked(db.exam.findFirst).mockResolvedValue({
+      vi.mocked(db.schoolExam.findFirst).mockResolvedValue({
         id: "exam-1",
         schoolId: SCHOOL_ID,
         status: "PLANNED",
         description: "Original description",
       } as any)
-      vi.mocked(db.exam.updateMany).mockResolvedValue({ count: 1 })
+      vi.mocked(db.schoolExam.updateMany).mockResolvedValue({ count: 1 })
 
       const result = await cancelExam("exam-1", "Scheduling conflict")
 
       expect(result.success).toBe(true)
-      expect(db.exam.updateMany).toHaveBeenCalledWith({
+      expect(db.schoolExam.updateMany).toHaveBeenCalledWith({
         where: { id: "exam-1", schoolId: SCHOOL_ID },
         data: expect.objectContaining({ status: "CANCELLED" }),
       })
@@ -152,13 +152,13 @@ describe("Exam Status Actions — defense-in-depth", () => {
 
   describe("publishResults", () => {
     it("uses updateMany with schoolId", async () => {
-      vi.mocked(db.exam.findFirst).mockResolvedValue({
+      vi.mocked(db.schoolExam.findFirst).mockResolvedValue({
         id: "exam-1",
         schoolId: SCHOOL_ID,
         _count: { results: 25 },
         class: { _count: { studentClasses: 25 } },
       } as any)
-      vi.mocked(db.exam.updateMany).mockResolvedValue({ count: 1 })
+      vi.mocked(db.schoolExam.updateMany).mockResolvedValue({ count: 1 })
 
       const result = await publishResults({
         examId: "exam-1",
@@ -166,7 +166,7 @@ describe("Exam Status Actions — defense-in-depth", () => {
       })
 
       expect(result.success).toBe(true)
-      expect(db.exam.updateMany).toHaveBeenCalledWith({
+      expect(db.schoolExam.updateMany).toHaveBeenCalledWith({
         where: { id: "exam-1", schoolId: SCHOOL_ID },
         data: { status: "COMPLETED" },
       })

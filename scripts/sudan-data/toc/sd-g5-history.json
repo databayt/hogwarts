@@ -1,0 +1,224 @@
+{
+  "subject": "history",
+  "subjectNameAr": "التاريخ",
+  "grade": 5,
+  "level": "elementary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "الطبعة الأولى 2021م",
+  "chapters": [
+    {
+      "nameAr": "الوحدة الأولى: من تاريخ السودان",
+      "name": "Unit 1: From Sudan's History",
+      "slug": "from-sudans-history",
+      "sequenceOrder": 1,
+      "lessons": [
+        {
+          "nameAr": "الدرس الأول: وطننا السودان",
+          "name": "Lesson 1: Our Homeland Sudan",
+          "slug": "our-homeland-sudan",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الدرس الثاني: التقويم",
+          "name": "Lesson 2: The Calendar",
+          "slug": "the-calendar",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الدرس الثالث: حضارات السودان القديمة",
+          "name": "Lesson 3: Ancient Sudanese Civilizations",
+          "slug": "ancient-sudanese-civilizations",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "الدرس الرابع: حضارة كرمة",
+          "name": "Lesson 4: Kerma Civilization",
+          "slug": "kerma-civilization",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "الدرس الخامس: حضارة كوش",
+          "name": "Lesson 5: Kush Civilization",
+          "slug": "kush-civilization",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "الدرس السادس: ممالك النوبة المسيحية",
+          "name": "Lesson 6: Christian Nubian Kingdoms",
+          "slug": "christian-nubian-kingdoms",
+          "sequenceOrder": 6
+        },
+        {
+          "nameAr": "الدرس السابع: الفتح الإسلامي لأرض السودان",
+          "name": "Lesson 7: Islamic Conquest of Sudan",
+          "slug": "islamic-conquest-of-sudan",
+          "sequenceOrder": 7
+        },
+        {
+          "nameAr": "الدرس الثامن: دخول العرب إلى السودان",
+          "name": "Lesson 8: Arabs Entering Sudan",
+          "slug": "arabs-entering-sudan",
+          "sequenceOrder": 8
+        },
+        {
+          "nameAr": "الدرس التاسع: السلطنات الإسلامية في السودان (1)",
+          "name": "Lesson 9: Islamic Sultanates in Sudan (1)",
+          "slug": "islamic-sultanates-in-sudan-1",
+          "sequenceOrder": 9
+        },
+        {
+          "nameAr": "الدرس العاشر: السلطنات الإسلامية في السودان (2)",
+          "name": "Lesson 10: Islamic Sultanates in Sudan (2)",
+          "slug": "islamic-sultanates-in-sudan-2",
+          "sequenceOrder": 10
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة الثانية: تطور الدولة الإسلامية حتى العصر الأموي",
+      "name": "Unit 2: Evolution of the Islamic State to the Umayyad Era",
+      "slug": "islamic-state-to-umayyad-era",
+      "sequenceOrder": 2,
+      "lessons": [
+        {
+          "nameAr": "الدرس الأول: الدعوة والدولة الإسلامية في عهد النبي صلى الله عليه وسلم",
+          "name": "Lesson 1: Islamic Call and State in the Prophet's Era",
+          "slug": "islamic-call-in-prophets-era",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الدرس الثاني: الدولة الإسلامية في عهد الخلفاء الراشدين",
+          "name": "Lesson 2: Islamic State in the Rightly Guided Caliphs Era",
+          "slug": "rightly-guided-caliphs-era",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الدرس الثالث: الدولة الأموية",
+          "name": "Lesson 3: The Umayyad State",
+          "slug": "the-umayyad-state",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "الدرس الرابع: الفتوحات في عهد الدولة الأموية",
+          "name": "Lesson 4: Conquests in the Umayyad Era",
+          "slug": "conquests-in-umayyad-era",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "الدرس الخامس: سقوط الدولة الأموية",
+          "name": "Lesson 5: Fall of the Umayyad State",
+          "slug": "fall-of-umayyad-state",
+          "sequenceOrder": 5
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة الثالثة: من تاريخ إفريقيا",
+      "name": "Unit 3: From Africa's History",
+      "slug": "from-africas-history",
+      "sequenceOrder": 3,
+      "lessons": [
+        {
+          "nameAr": "الدرس الأول: إفريقيا والإفريقيون",
+          "name": "Lesson 1: Africa and Africans",
+          "slug": "africa-and-africans",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الدرس الثاني: موقع إفريقيا وسكانها",
+          "name": "Lesson 2: Location and People of Africa",
+          "slug": "location-and-people-of-africa",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الدرس الثالث: نماذج من حضارات إفريقيا القديمة",
+          "name": "Lesson 3: Examples of Ancient African Civilizations",
+          "slug": "ancient-african-civilizations",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "الدرس الرابع: دخول المسيحية في إفريقيا",
+          "name": "Lesson 4: Christianity Entering Africa",
+          "slug": "christianity-entering-africa",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "الدرس الخامس: طرق انتشار الإسلام في إفريقيا",
+          "name": "Lesson 5: Ways Islam Spread in Africa",
+          "slug": "ways-islam-spread-in-africa",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "الدرس السادس: عوامل ووسائل انتشار الإسلام في إفريقيا",
+          "name": "Lesson 6: Factors and Means of Islam's Spread in Africa",
+          "slug": "factors-of-islams-spread-in-africa",
+          "sequenceOrder": 6
+        },
+        {
+          "nameAr": "الدرس السابع: انتشار الإسلام في شمال إفريقيا",
+          "name": "Lesson 7: Spread of Islam in North Africa",
+          "slug": "islam-in-north-africa",
+          "sequenceOrder": 7
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة الرابعة: من تاريخ أوربا",
+      "name": "Unit 4: From Europe's History",
+      "slug": "from-europes-history",
+      "sequenceOrder": 4,
+      "lessons": [
+        {
+          "nameAr": "الدرس الأول: أوربا في عصور الظلام",
+          "name": "Lesson 1: Europe in the Dark Ages",
+          "slug": "europe-in-dark-ages",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الدرس الثاني: أثر الحضارة الإسلامية على أوربا",
+          "name": "Lesson 2: Impact of Islamic Civilization on Europe",
+          "slug": "islamic-civilization-impact-on-europe",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الدرس الثالث: النهضة الأوربية",
+          "name": "Lesson 3: The European Renaissance",
+          "slug": "the-european-renaissance",
+          "sequenceOrder": 3
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة الخامسة: فن التربية الوطنية",
+      "name": "Unit 5: Civic Education",
+      "slug": "civic-education",
+      "sequenceOrder": 5,
+      "lessons": [
+        {
+          "nameAr": "الدرس الأول: خصائص الإنسان السوداني",
+          "name": "Lesson 1: Characteristics of the Sudanese Person",
+          "slug": "characteristics-of-sudanese-person",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الدرس الثاني: خصائص المجتمع السوداني",
+          "name": "Lesson 2: Characteristics of Sudanese Society",
+          "slug": "characteristics-of-sudanese-society",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الدرس الثالث: مميزات الأرض السودانية",
+          "name": "Lesson 3: Advantages of Sudanese Land",
+          "slug": "advantages-of-sudanese-land",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "الدرس الرابع: إسهام السودان في الحضارة الإنسانية",
+          "name": "Lesson 4: Sudan's Contribution to Human Civilization",
+          "slug": "sudans-contribution-to-human-civilization",
+          "sequenceOrder": 4
+        }
+      ]
+    }
+  ]
+}

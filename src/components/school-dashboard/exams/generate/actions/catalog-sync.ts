@@ -9,7 +9,7 @@ import { db } from "@/lib/db"
 // ============================================================================
 
 /**
- * Sync school ExamTemplate changes back to its CatalogExamTemplate.
+ * Sync school ExamTemplate changes back to its ExamTemplate.
  * Only syncs if the school is the original contributor.
  */
 export async function syncTemplateBackToCatalog(
@@ -23,7 +23,7 @@ export async function syncTemplateBackToCatalog(
 
     const schoolId = session.user.schoolId
 
-    const template = await db.examTemplate.findFirst({
+    const template = await db.schoolExamTemplate.findFirst({
       where: { id: templateId, schoolId },
     })
 
@@ -32,7 +32,7 @@ export async function syncTemplateBackToCatalog(
     }
 
     // Only sync if we're the contributor
-    const catalogTemplate = await db.catalogExamTemplate.findFirst({
+    const catalogTemplate = await db.examTemplate.findFirst({
       where: {
         id: template.catalogExamTemplateId,
         contributedSchoolId: schoolId,
@@ -43,7 +43,7 @@ export async function syncTemplateBackToCatalog(
       return { success: false, error: "Not the original contributor" }
     }
 
-    await db.catalogExamTemplate.update({
+    await db.examTemplate.update({
       where: { id: catalogTemplate.id },
       data: {
         name: template.name,
@@ -76,7 +76,7 @@ export async function handleTemplateDeletion(
 
     const schoolId = session.user.schoolId
 
-    const template = await db.examTemplate.findFirst({
+    const template = await db.schoolExamTemplate.findFirst({
       where: { id: templateId, schoolId },
     })
 
@@ -85,7 +85,7 @@ export async function handleTemplateDeletion(
     }
 
     // Check if other schools have adopted this catalog template
-    const otherAdopters = await db.examTemplate.count({
+    const otherAdopters = await db.schoolExamTemplate.count({
       where: {
         catalogExamTemplateId: template.catalogExamTemplateId,
         id: { not: templateId },
@@ -94,7 +94,7 @@ export async function handleTemplateDeletion(
 
     if (otherAdopters === 0) {
       // No other adopters and we're the contributor - can delete catalog too
-      const catalogTemplate = await db.catalogExamTemplate.findFirst({
+      const catalogTemplate = await db.examTemplate.findFirst({
         where: {
           id: template.catalogExamTemplateId,
           contributedSchoolId: schoolId,
@@ -102,7 +102,7 @@ export async function handleTemplateDeletion(
       })
 
       if (catalogTemplate) {
-        await db.catalogExamTemplate.delete({
+        await db.examTemplate.delete({
           where: { id: catalogTemplate.id },
         })
         return { success: true, catalogPreserved: false }

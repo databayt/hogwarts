@@ -93,6 +93,7 @@ export function BatchTransfer({
 }: BatchTransferProps) {
   const { dictionary } = useDictionary()
   const t = dictionary?.messages?.toast
+  const bt = dictionary?.school?.students?.enrollmentForm?.batchTransfer
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showTransferDialog, setShowTransferDialog] = useState(false)
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
@@ -156,12 +157,14 @@ export function BatchTransfer({
 
   const getStudentName = (studentId: string) => {
     const student = students.find((s) => s.id === studentId)
-    return student ? `${student.firstName} ${student.lastName}` : "Unknown"
+    return student
+      ? `${student.firstName} ${student.lastName}`
+      : bt?.unknown || "Unknown"
   }
 
   const getBatchName = (batchId: string) => {
     const batch = batches.find((b) => b.id === batchId)
-    return batch?.name || "Unknown"
+    return batch?.name || bt?.unknown || "Unknown"
   }
 
   const getStatusIcon = (status: string) => {
@@ -200,7 +203,9 @@ export function BatchTransfer({
               <Users className="h-8 w-8 text-blue-500" />
               <div>
                 <p className="text-2xl font-bold">{transfers.length}</p>
-                <p className="text-muted-foreground text-sm">Total Transfers</p>
+                <p className="text-muted-foreground text-sm">
+                  {bt?.totalTransfers || "Total Transfers"}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -212,7 +217,9 @@ export function BatchTransfer({
               <Clock className="h-8 w-8 text-yellow-500" />
               <div>
                 <p className="text-2xl font-bold">{pendingTransfers.length}</p>
-                <p className="text-muted-foreground text-sm">Pending</p>
+                <p className="text-muted-foreground text-sm">
+                  {bt?.pending || "Pending"}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -224,7 +231,9 @@ export function BatchTransfer({
               <CircleCheck className="h-8 w-8 text-green-500" />
               <div>
                 <p className="text-2xl font-bold">{approvedTransfers.length}</p>
-                <p className="text-muted-foreground text-sm">Approved</p>
+                <p className="text-muted-foreground text-sm">
+                  {bt?.approved || "Approved"}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -236,7 +245,9 @@ export function BatchTransfer({
               <CircleX className="h-8 w-8 text-red-500" />
               <div>
                 <p className="text-2xl font-bold">{rejectedTransfers.length}</p>
-                <p className="text-muted-foreground text-sm">Rejected</p>
+                <p className="text-muted-foreground text-sm">
+                  {bt?.rejected || "Rejected"}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -249,16 +260,19 @@ export function BatchTransfer({
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Pending Transfer Requests</CardTitle>
+                <CardTitle>
+                  {bt?.pendingRequests || "Pending Transfer Requests"}
+                </CardTitle>
                 <CardDescription>
-                  Review and approve or reject batch transfer requests
+                  {bt?.pendingDescription ||
+                    "Review and approve or reject batch transfer requests"}
                 </CardDescription>
               </div>
               <Badge
                 variant="secondary"
                 className="bg-yellow-100 text-yellow-800"
               >
-                {pendingTransfers.length} Pending
+                {pendingTransfers.length} {bt?.pending || "Pending"}
               </Badge>
             </div>
           </CardHeader>
@@ -266,13 +280,13 @@ export function BatchTransfer({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Student</TableHead>
-                  <TableHead>From Batch</TableHead>
-                  <TableHead>To Batch</TableHead>
-                  <TableHead>Reason</TableHead>
-                  <TableHead>Requested On</TableHead>
-                  <TableHead>Effective Date</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead>{bt?.student || "Student"}</TableHead>
+                  <TableHead>{bt?.fromBatch || "From Batch"}</TableHead>
+                  <TableHead>{bt?.toBatch || "To Batch"}</TableHead>
+                  <TableHead>{bt?.reason || "Reason"}</TableHead>
+                  <TableHead>{bt?.requestedOn || "Requested On"}</TableHead>
+                  <TableHead>{bt?.effectiveDate || "Effective Date"}</TableHead>
+                  <TableHead>{bt?.actions || "Actions"}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -308,7 +322,7 @@ export function BatchTransfer({
                           size="sm"
                           onClick={() => handleApprove(transfer.id)}
                         >
-                          Approve
+                          {bt?.approve || "Approve"}
                         </Button>
                         <Button
                           variant="outline"
@@ -318,7 +332,7 @@ export function BatchTransfer({
                             setShowRejectDialog(true)
                           }}
                         >
-                          Reject
+                          {bt?.reject || "Reject"}
                         </Button>
                       </div>
                     </TableCell>
@@ -333,15 +347,16 @@ export function BatchTransfer({
       {/* New Transfer Request */}
       <Card>
         <CardHeader>
-          <CardTitle>New Transfer Request</CardTitle>
+          <CardTitle>{bt?.newTransfer || "New Transfer Request"}</CardTitle>
           <CardDescription>
-            Initiate a batch transfer for a student
+            {bt?.newTransferDescription ||
+              "Initiate a batch transfer for a student"}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Button onClick={() => setShowTransferDialog(true)}>
             <TrendingUp className="me-2 h-4 w-4" />
-            Request Transfer
+            {bt?.requestTransfer || "Request Transfer"}
           </Button>
         </CardContent>
       </Card>
@@ -349,20 +364,22 @@ export function BatchTransfer({
       {/* Transfer History */}
       <Card>
         <CardHeader>
-          <CardTitle>Transfer History</CardTitle>
-          <CardDescription>All batch transfer records</CardDescription>
+          <CardTitle>{bt?.transferHistory || "Transfer History"}</CardTitle>
+          <CardDescription>
+            {bt?.transferHistoryDescription || "All batch transfer records"}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Student</TableHead>
-                <TableHead>Transfer</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Request Date</TableHead>
-                <TableHead>Approved By</TableHead>
-                <TableHead>Effective Date</TableHead>
-                <TableHead>Reason</TableHead>
+                <TableHead>{bt?.student || "Student"}</TableHead>
+                <TableHead>{bt?.transfer || "Transfer"}</TableHead>
+                <TableHead>{bt?.status || "Status"}</TableHead>
+                <TableHead>{bt?.requestDate || "Request Date"}</TableHead>
+                <TableHead>{bt?.approvedBy || "Approved By"}</TableHead>
+                <TableHead>{bt?.effectiveDate || "Effective Date"}</TableHead>
+                <TableHead>{bt?.reason || "Reason"}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -409,7 +426,8 @@ export function BatchTransfer({
                     </span>
                     {transfer.rejectionReason && (
                       <p className="mt-1 text-xs text-red-600">
-                        Rejected: {transfer.rejectionReason}
+                        {bt?.rejectedPrefix || "Rejected:"}{" "}
+                        {transfer.rejectionReason}
                       </p>
                     )}
                   </TableCell>
@@ -424,9 +442,12 @@ export function BatchTransfer({
       <Dialog open={showTransferDialog} onOpenChange={setShowTransferDialog}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Request Batch Transfer</DialogTitle>
+            <DialogTitle>
+              {bt?.requestDialog || "Request Batch Transfer"}
+            </DialogTitle>
             <DialogDescription>
-              Submit a request to transfer a student to a different batch
+              {bt?.requestDialogDescription ||
+                "Submit a request to transfer a student to a different batch"}
             </DialogDescription>
           </DialogHeader>
 
@@ -440,14 +461,16 @@ export function BatchTransfer({
                 name="studentId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Student</FormLabel>
+                    <FormLabel>{bt?.student || "Student"}</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select student" />
+                          <SelectValue
+                            placeholder={bt?.selectStudent || "Select student"}
+                          />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -470,14 +493,20 @@ export function BatchTransfer({
                   name="fromBatchId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Current Batch</FormLabel>
+                      <FormLabel>
+                        {bt?.currentBatch || "Current Batch"}
+                      </FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select current batch" />
+                            <SelectValue
+                              placeholder={
+                                bt?.selectCurrentBatch || "Select current batch"
+                              }
+                            />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -498,14 +527,18 @@ export function BatchTransfer({
                   name="toBatchId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>New Batch</FormLabel>
+                      <FormLabel>{bt?.newBatch || "New Batch"}</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select new batch" />
+                            <SelectValue
+                              placeholder={
+                                bt?.selectNewBatch || "Select new batch"
+                              }
+                            />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -518,7 +551,8 @@ export function BatchTransfer({
                         </SelectContent>
                       </Select>
                       <FormDescription>
-                        Select the batch to transfer the student to
+                        {bt?.selectBatchDescription ||
+                          "Select the batch to transfer the student to"}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -531,16 +565,21 @@ export function BatchTransfer({
                 name="reason"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Reason for Transfer</FormLabel>
+                    <FormLabel>
+                      {bt?.reasonForTransfer || "Reason for Transfer"}
+                    </FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Provide a detailed reason for the transfer request..."
+                        placeholder={
+                          bt?.reasonPlaceholder ||
+                          "Provide a detailed reason for the transfer request..."
+                        }
                         className="min-h-[100px]"
                         {...field}
                       />
                     </FormControl>
                     <FormDescription>
-                      Minimum 10 characters required
+                      {bt?.minCharacters || "Minimum 10 characters required"}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -552,7 +591,9 @@ export function BatchTransfer({
                 name="effectiveDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Effective Date</FormLabel>
+                    <FormLabel>
+                      {bt?.effectiveDateLabel || "Effective Date"}
+                    </FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
@@ -566,7 +607,7 @@ export function BatchTransfer({
                             <CalendarIcon className="me-2 h-4 w-4" />
                             {field.value
                               ? format(field.value, "PPP")
-                              : "Pick a date"}
+                              : bt?.pickDate || "Pick a date"}
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
@@ -581,7 +622,8 @@ export function BatchTransfer({
                       </PopoverContent>
                     </Popover>
                     <FormDescription>
-                      When the transfer should take effect
+                      {bt?.effectiveDateDescription ||
+                        "When the transfer should take effect"}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -594,13 +636,13 @@ export function BatchTransfer({
                   variant="outline"
                   onClick={() => setShowTransferDialog(false)}
                 >
-                  Cancel
+                  {bt?.cancel || "Cancel"}
                 </Button>
                 <Button type="submit" disabled={isSubmitting}>
                   {isSubmitting && (
                     <CircleCheck className="me-2 h-4 w-4 animate-spin" />
                   )}
-                  Submit Transfer Request
+                  {bt?.submitRequest || "Submit Transfer Request"}
                 </Button>
               </DialogFooter>
             </form>
@@ -612,9 +654,12 @@ export function BatchTransfer({
       <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Reject Transfer Request</DialogTitle>
+            <DialogTitle>
+              {bt?.rejectDialog || "Reject Transfer Request"}
+            </DialogTitle>
             <DialogDescription>
-              Provide a reason for rejecting this transfer request
+              {bt?.rejectDialogDescription ||
+                "Provide a reason for rejecting this transfer request"}
             </DialogDescription>
           </DialogHeader>
 
@@ -622,21 +667,30 @@ export function BatchTransfer({
             {selectedTransfer && (
               <Alert>
                 <TriangleAlert className="h-4 w-4" />
-                <AlertTitle>Transfer Details</AlertTitle>
+                <AlertTitle>
+                  {bt?.transferDetails || "Transfer Details"}
+                </AlertTitle>
                 <AlertDescription>
-                  Student: {getStudentName(selectedTransfer.studentId)}
+                  {bt?.studentLabel || "Student:"}{" "}
+                  {getStudentName(selectedTransfer.studentId)}
                   <br />
-                  From: {getBatchName(selectedTransfer.fromBatchId)}
+                  {bt?.fromLabel || "From:"}{" "}
+                  {getBatchName(selectedTransfer.fromBatchId)}
                   <br />
-                  To: {getBatchName(selectedTransfer.toBatchId)}
+                  {bt?.toLabel || "To:"}{" "}
+                  {getBatchName(selectedTransfer.toBatchId)}
                 </AlertDescription>
               </Alert>
             )}
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Rejection Reason</label>
+              <label className="text-sm font-medium">
+                {bt?.rejectionReason || "Rejection Reason"}
+              </label>
               <Textarea
-                placeholder="Enter reason for rejection..."
+                placeholder={
+                  bt?.rejectionPlaceholder || "Enter reason for rejection..."
+                }
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
                 className="min-h-[100px]"
@@ -649,14 +703,14 @@ export function BatchTransfer({
               variant="outline"
               onClick={() => setShowRejectDialog(false)}
             >
-              Cancel
+              {bt?.cancel || "Cancel"}
             </Button>
             <Button
               variant="destructive"
               onClick={handleReject}
               disabled={!rejectionReason}
             >
-              Reject Transfer
+              {bt?.rejectTransfer || "Reject Transfer"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -10,10 +10,10 @@
  * Sources: public/clickview/by-url/{subject-slug}/ directories
  * Filename pattern: {topic-slug}-{coverId}.jpg
  *
- * Deduplication: Tracks coverId → thumbnailKey. When multiple records share
+ * Deduplication: Tracks coverId → thumbnail. When multiple records share
  * the same coverId, uploads once and reuses the S3 key.
  *
- * Idempotency: Filters WHERE thumbnailKey IS NULL. Safe to interrupt and resume.
+ * Idempotency: Filters WHERE thumbnail IS NULL. Safe to interrupt and resume.
  *
  * Usage: pnpm db:seed:single clickview-lesson-images
  */
@@ -102,7 +102,7 @@ export async function seedClickViewLessonImages(
   const coverIdMap = buildCoverIdMap()
   console.log(`  Found ${coverIdMap.size} local cover images`)
 
-  // Deduplication: coverId → S3 thumbnailKey (uploaded once, reused)
+  // Deduplication: coverId → S3 thumbnail (uploaded once, reused)
   const uploaded = new Map<string, string>()
 
   await processLessons(prisma, coverIdMap, uploaded)
@@ -118,10 +118,10 @@ async function processLessons(
   coverIdMap: Map<string, string>,
   uploaded: Map<string, string>
 ): Promise<void> {
-  // Fetch lessons without thumbnailKey, joined with chapter+subject for slug paths
-  const lessons = await prisma.catalogLesson.findMany({
+  // Fetch lessons without thumbnail, joined with chapter+subject for slug paths
+  const lessons = await prisma.lesson.findMany({
     where: {
-      thumbnailKey: null,
+      thumbnail: null,
       chapter: {
         subject: { curriculum: "us-k12" },
       },
@@ -129,7 +129,6 @@ async function processLessons(
     select: {
       id: true,
       slug: true,
-      imageKey: true,
       clickviewCoverId: true,
       chapter: {
         select: {
@@ -156,8 +155,7 @@ async function processLessons(
 
   for (const lesson of lessons) {
     // Extract coverId from imageKey URL or clickviewCoverId field
-    const coverId =
-      lesson.clickviewCoverId ?? extractCoverIdFromUrl(lesson.imageKey)
+    const coverId = lesson.clickviewCoverId ?? null
 
     if (!coverId) {
       skipCount++
@@ -170,9 +168,9 @@ async function processLessons(
     // Check if already uploaded (dedup)
     if (uploaded.has(coverId)) {
       const existingKey = uploaded.get(coverId)!
-      await prisma.catalogLesson.update({
+      await prisma.lesson.update({
         where: { id: lesson.id },
-        data: { thumbnailKey: existingKey },
+        data: { thumbnail: existingKey },
       })
       reuseCount++
       continue
@@ -200,9 +198,9 @@ async function processLessons(
 
     try {
       await processAndUploadCatalogImage(fileBuffer, s3Key)
-      await prisma.catalogLesson.update({
+      await prisma.lesson.update({
         where: { id: lesson.id },
-        data: { thumbnailKey: s3Key },
+        data: { thumbnail: s3Key },
       })
       uploaded.set(coverId, s3Key)
 
@@ -233,21 +231,20 @@ async function processChapters(
   coverIdMap: Map<string, string>,
   uploaded: Map<string, string>
 ): Promise<void> {
-  // Fetch chapters without thumbnailKey, with their first lesson's coverId
-  const chapters = await prisma.catalogChapter.findMany({
+  // Fetch chapters without thumbnail, with their first lesson's coverId
+  const chapters = await prisma.chapter.findMany({
     where: {
-      thumbnailKey: null,
+      thumbnail: null,
       subject: { curriculum: "us-k12" },
     },
     select: {
       id: true,
       slug: true,
-      imageKey: true,
       subject: {
         select: { slug: true },
       },
       lessons: {
-        select: { clickviewCoverId: true, imageKey: true },
+        select: { clickviewCoverId: true },
         orderBy: { sequenceOrder: "asc" },
         take: 1,
       },
@@ -269,10 +266,7 @@ async function processChapters(
   for (const chapter of chapters) {
     // Use first child lesson's coverId (matches ClickView behavior)
     const firstLesson = chapter.lessons[0]
-    const coverId = firstLesson
-      ? (firstLesson.clickviewCoverId ??
-        extractCoverIdFromUrl(firstLesson.imageKey))
-      : extractCoverIdFromUrl(chapter.imageKey)
+    const coverId = firstLesson?.clickviewCoverId ?? null
 
     if (!coverId) {
       skipCount++
@@ -285,9 +279,9 @@ async function processChapters(
     // Check if already uploaded (dedup from lesson phase)
     if (uploaded.has(coverId)) {
       const existingKey = uploaded.get(coverId)!
-      await prisma.catalogChapter.update({
+      await prisma.chapter.update({
         where: { id: chapter.id },
-        data: { thumbnailKey: existingKey },
+        data: { thumbnail: existingKey },
       })
       reuseCount++
       continue
@@ -315,9 +309,9 @@ async function processChapters(
 
     try {
       await processAndUploadCatalogImage(fileBuffer, s3Key)
-      await prisma.catalogChapter.update({
+      await prisma.chapter.update({
         where: { id: chapter.id },
-        data: { thumbnailKey: s3Key },
+        data: { thumbnail: s3Key },
       })
       uploaded.set(coverId, s3Key)
     } catch (err) {

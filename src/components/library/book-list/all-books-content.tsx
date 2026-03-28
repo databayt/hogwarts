@@ -58,13 +58,13 @@ export default async function AllBooksContent({
   const perPage = LIBRARY_CONFIG.BOOKS_PER_PAGE
 
   // Get hidden book IDs for this school
-  const hiddenSelections = await db.schoolBookSelection.findMany({
+  const hiddenSelections = await db.bookSelection.findMany({
     where: { schoolId, isActive: false },
     select: { catalogBookId: true },
   })
   const hiddenBookIds = new Set(hiddenSelections.map((s) => s.catalogBookId))
 
-  // Build where clause — query global CatalogBook, exclude hidden
+  // Build where clause — query global Book, exclude hidden
   const where: Record<string, unknown> = {
     status: "PUBLISHED",
     approvalStatus: "APPROVED",
@@ -106,15 +106,15 @@ export default async function AllBooksContent({
   }
 
   const [catalogBooks, totalCount, distinctGenres] = await Promise.all([
-    db.catalogBook.findMany({
+    db.book.findMany({
       where,
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * perPage,
       take: perPage,
       select: catalogSelect,
     }),
-    db.catalogBook.count({ where }),
-    db.catalogBook.findMany({
+    db.book.count({ where }),
+    db.book.findMany({
       where: {
         status: "PUBLISHED",
         approvalStatus: "APPROVED",

@@ -66,7 +66,7 @@ export async function getExamResults(input: z.infer<typeof getResultsSchema>) {
       getResultsSchema.parse(input)
 
     // Fetch exam with all necessary relations in a single query
-    const exam = await db.exam.findFirst({
+    const exam = await db.schoolExam.findFirst({
       where: { id: examId, schoolId },
       include: {
         class: { select: { name: true } },
@@ -233,7 +233,7 @@ export async function getExamAnalytics(
     const { examId } = getAnalyticsSchema.parse(input)
 
     // Fetch all data in a single optimized query
-    const exam = await db.exam.findFirst({
+    const exam = await db.schoolExam.findFirst({
       where: { id: examId, schoolId },
       include: {
         class: { select: { name: true } },
@@ -464,7 +464,7 @@ export async function generateStudentPDF(
     // Fetch all necessary data, using cache where available
     const [examData, school, boundaries] = await Promise.all([
       // Get exam with student result in single query (always fresh)
-      db.exam.findFirst({
+      db.schoolExam.findFirst({
         where: { id: parsed.examId, schoolId },
         include: {
           class: { select: { name: true } },

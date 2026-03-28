@@ -108,7 +108,7 @@ export default function StatusTrackerContent({
   const fetchStatus = async (token: string) => {
     setIsLoading(true)
     try {
-      const result = await getApplicationStatus(token)
+      const result = await getApplicationStatus(subdomain, token)
       if (result.success && result.data) {
         setStatus(result.data)
         setStep("display")

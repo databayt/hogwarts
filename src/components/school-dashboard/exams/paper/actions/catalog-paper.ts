@@ -10,7 +10,7 @@ import { getTenantContext } from "@/lib/tenant-context"
 // Browse catalog paper templates
 // ============================================================================
 
-export interface CatalogPaperTemplateRow {
+export interface PaperTemplateRow {
   id: string
   name: string
   template: string
@@ -21,11 +21,11 @@ export interface CatalogPaperTemplateRow {
   isAdopted: boolean
 }
 
-export async function browseCatalogPaperTemplates(filters?: {
+export async function browsePaperTemplates(filters?: {
   template?: string
   search?: string
   page?: number
-}): Promise<{ templates: CatalogPaperTemplateRow[]; total: number }> {
+}): Promise<{ templates: PaperTemplateRow[]; total: number }> {
   const { schoolId } = await getTenantContext()
   if (!schoolId) return { templates: [], total: 0 }
 
@@ -53,13 +53,13 @@ export async function browseCatalogPaperTemplates(filters?: {
   )
 
   const [templates, total] = await Promise.all([
-    db.catalogPaperTemplate.findMany({
+    db.paperTemplate.findMany({
       where: where as any,
       take,
       skip: page * take,
       orderBy: [{ usageCount: "desc" }, { createdAt: "desc" }],
     }),
-    db.catalogPaperTemplate.count({ where: where as any }),
+    db.paperTemplate.count({ where: where as any }),
   ])
 
   return {
@@ -87,7 +87,7 @@ interface AdoptPaperResult {
   data?: { configId: string }
 }
 
-export async function adoptCatalogPaperTemplate(
+export async function adoptPaperTemplate(
   catalogPaperTemplateId: string,
   generatedExamId: string
 ): Promise<AdoptPaperResult> {
@@ -99,7 +99,7 @@ export async function adoptCatalogPaperTemplate(
 
     const schoolId = session.user.schoolId
 
-    const catalogTemplate = await db.catalogPaperTemplate.findFirst({
+    const catalogTemplate = await db.paperTemplate.findFirst({
       where: {
         id: catalogPaperTemplateId,
         status: "PUBLISHED",
@@ -154,7 +154,7 @@ export async function adoptCatalogPaperTemplate(
         },
       })
 
-      await db.catalogPaperTemplate.update({
+      await db.paperTemplate.update({
         where: { id: catalogPaperTemplateId },
         data: { usageCount: { increment: 1 } },
       })
@@ -194,7 +194,7 @@ export async function adoptCatalogPaperTemplate(
         },
       })
 
-      await tx.catalogPaperTemplate.update({
+      await tx.paperTemplate.update({
         where: { id: catalogPaperTemplateId },
         data: { usageCount: { increment: 1 } },
       })

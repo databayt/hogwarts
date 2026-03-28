@@ -40,7 +40,7 @@ export async function getProposalsForReview(
       where.status = statusFilter
     }
 
-    const proposals = await db.catalogProposal.findMany({
+    const proposals = await db.proposal.findMany({
       where,
       orderBy: { createdAt: "desc" },
       include: {
@@ -108,7 +108,7 @@ export async function approveProposal(
     const catalogEntityId = await db.$transaction(
       async (tx) => {
         // Optimistic locking: fetch + check status inside transaction
-        const proposal = await tx.catalogProposal.findUnique({
+        const proposal = await tx.proposal.findUnique({
           where: { id },
         })
 
@@ -133,12 +133,12 @@ export async function approveProposal(
             const baseSlug = generateSlug(data.name || "untitled")
             let slug = baseSlug
             let attempt = 0
-            while (await tx.catalogSubject.findUnique({ where: { slug } })) {
+            while (await tx.subject.findUnique({ where: { slug } })) {
               attempt++
               slug = `${baseSlug}-${attempt}`
             }
 
-            const subject = await tx.catalogSubject.create({
+            const subject = await tx.subject.create({
               data: {
                 name: data.name,
                 slug,
@@ -151,7 +151,7 @@ export async function approveProposal(
               },
             })
 
-            // Auto-bridge: create SchoolSubjectSelection for ALL applicable grades
+            // Auto-bridge: create SubjectSelection for ALL applicable grades
             const proposalGrades: number[] = data.grades || []
             let schoolGrades: Array<{ id: string; gradeNumber: number }>
 
@@ -172,7 +172,7 @@ export async function approveProposal(
             }
 
             if (schoolGrades.length > 0) {
-              await tx.schoolSubjectSelection.createMany({
+              await tx.subjectSelection.createMany({
                 data: schoolGrades.map((g) => ({
                   schoolId: proposal.schoolId,
                   catalogSubjectId: subject.id,
@@ -196,7 +196,7 @@ export async function approveProposal(
             let slug = baseSlug
             let attempt = 0
             while (
-              await tx.catalogChapter.findFirst({
+              await tx.chapter.findFirst({
                 where: {
                   subjectId: proposal.parentSubjectId,
                   slug,
@@ -207,7 +207,7 @@ export async function approveProposal(
               slug = `${baseSlug}-${attempt}`
             }
 
-            const chapter = await tx.catalogChapter.create({
+            const chapter = await tx.chapter.create({
               data: {
                 subjectId: proposal.parentSubjectId,
                 name: data.name,
@@ -229,7 +229,7 @@ export async function approveProposal(
             let slug = baseSlug
             let attempt = 0
             while (
-              await tx.catalogLesson.findFirst({
+              await tx.lesson.findFirst({
                 where: {
                   chapterId: proposal.parentChapterId,
                   slug,
@@ -240,7 +240,7 @@ export async function approveProposal(
               slug = `${baseSlug}-${attempt}`
             }
 
-            const lesson = await tx.catalogLesson.create({
+            const lesson = await tx.lesson.create({
               data: {
                 chapterId: proposal.parentChapterId,
                 name: data.name,
@@ -259,7 +259,7 @@ export async function approveProposal(
         }
 
         // Update proposal status INSIDE the same transaction
-        await tx.catalogProposal.update({
+        await tx.proposal.update({
           where: { id },
           data: {
             status: "PUBLISHED",
@@ -303,7 +303,7 @@ export async function rejectProposal(
       return { success: false, error: "Rejection reason is required" }
     }
 
-    const proposal = await db.catalogProposal.findUnique({
+    const proposal = await db.proposal.findUnique({
       where: { id },
       select: { status: true },
     })
@@ -319,7 +319,7 @@ export async function rejectProposal(
       }
     }
 
-    await db.catalogProposal.update({
+    await db.proposal.update({
       where: { id },
       data: {
         status: "REJECTED",

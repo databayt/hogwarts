@@ -10,7 +10,6 @@ import type {
   AnswerSheetType,
   BloomLevel,
   DifficultyLevel,
-  Exam,
   ExamPaperConfig,
   ExamPaperTemplate,
   GeneratedExam,
@@ -21,6 +20,7 @@ import type {
   QuestionType,
   School,
   SchoolBranding,
+  SchoolExam,
 } from "@prisma/client"
 
 // ============================================================================
@@ -81,7 +81,7 @@ export interface GeneratedExamWithDetails extends GeneratedExam {
 }
 
 /** Exam with class and subject */
-export interface ExamWithDetails extends Exam {
+export interface ExamWithDetails extends SchoolExam {
   class: { name: string; id: string }
   subject: { name: string; id: string }
 }

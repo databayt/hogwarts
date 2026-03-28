@@ -22,9 +22,11 @@ import type { Student, StudentDocument } from "../../registration/types"
 
 interface DocumentsTabProps {
   student: Student
+  dictionary?: any
 }
 
-export function DocumentsTab({ student }: DocumentsTabProps) {
+export function DocumentsTab({ student, dictionary }: DocumentsTabProps) {
+  const d = dictionary
   // Use real documents from database
   const documents = student.documents || []
 
@@ -65,7 +67,7 @@ export function DocumentsTab({ student }: DocumentsTabProps) {
       <div className="flex justify-end">
         <Button variant="outline" size="sm">
           <Upload className="me-2 h-4 w-4" />
-          Upload Document
+          {d?.uploadDocument || "Upload Document"}
         </Button>
       </div>
 
@@ -75,7 +77,9 @@ export function DocumentsTab({ student }: DocumentsTabProps) {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-sm">Total Documents</p>
+                <p className="text-muted-foreground text-sm">
+                  {d?.totalDocuments || "Total Documents"}
+                </p>
                 <p className="text-2xl font-bold">{documents.length}</p>
               </div>
               <FileText className="text-muted-foreground h-8 w-8" />
@@ -87,9 +91,11 @@ export function DocumentsTab({ student }: DocumentsTabProps) {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-sm">Verified</p>
+                <p className="text-muted-foreground text-sm">
+                  {d?.verified || "Verified"}
+                </p>
                 <p className="text-2xl font-bold text-green-600">
-                  {documents.filter((d) => d.isVerified).length}
+                  {documents.filter((doc) => doc.isVerified).length}
                 </p>
               </div>
               <CircleCheck className="h-8 w-8 text-green-600" />
@@ -101,9 +107,11 @@ export function DocumentsTab({ student }: DocumentsTabProps) {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-sm">Pending</p>
+                <p className="text-muted-foreground text-sm">
+                  {d?.pending || "Pending"}
+                </p>
                 <p className="text-2xl font-bold text-yellow-600">
-                  {documents.filter((d) => !d.isVerified).length}
+                  {documents.filter((doc) => !doc.isVerified).length}
                 </p>
               </div>
               <Clock className="h-8 w-8 text-yellow-600" />
@@ -115,9 +123,14 @@ export function DocumentsTab({ student }: DocumentsTabProps) {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-sm">Expiring Soon</p>
+                <p className="text-muted-foreground text-sm">
+                  {d?.expiringSoon || "Expiring Soon"}
+                </p>
                 <p className="text-2xl font-bold text-orange-600">
-                  {documents.filter((d) => isExpiringSoon(d.expiryDate)).length}
+                  {
+                    documents.filter((doc) => isExpiringSoon(doc.expiryDate))
+                      .length
+                  }
                 </p>
               </div>
               <TriangleAlert className="h-8 w-8 text-orange-600" />
@@ -152,7 +165,7 @@ export function DocumentsTab({ student }: DocumentsTabProps) {
                             className="border-green-600 text-green-600"
                           >
                             <CircleCheck className="me-1 h-3 w-3" />
-                            Verified
+                            {d?.verified || "Verified"}
                           </Badge>
                         ) : (
                           <Badge
@@ -160,11 +173,13 @@ export function DocumentsTab({ student }: DocumentsTabProps) {
                             className="border-yellow-600 text-yellow-600"
                           >
                             <Clock className="me-1 h-3 w-3" />
-                            Pending Verification
+                            {d?.pendingVerification || "Pending Verification"}
                           </Badge>
                         )}
                         {isExpired(doc.expiryDate) && (
-                          <Badge variant="destructive">Expired</Badge>
+                          <Badge variant="destructive">
+                            {d?.expired || "Expired"}
+                          </Badge>
                         )}
                         {!isExpired(doc.expiryDate) &&
                           isExpiringSoon(doc.expiryDate) && (
@@ -172,7 +187,7 @@ export function DocumentsTab({ student }: DocumentsTabProps) {
                               variant="outline"
                               className="border-orange-600 text-orange-600"
                             >
-                              Expiring Soon
+                              {d?.expiringSoon || "Expiring Soon"}
                             </Badge>
                           )}
                       </h4>
@@ -182,9 +197,11 @@ export function DocumentsTab({ student }: DocumentsTabProps) {
                     </div>
 
                     <div className="text-muted-foreground flex gap-4 text-sm">
-                      <span>Size: {formatFileSize(doc.fileSize || 0)}</span>
                       <span>
-                        Uploaded:{" "}
+                        {d?.size || "Size:"} {formatFileSize(doc.fileSize || 0)}
+                      </span>
+                      <span>
+                        {d?.uploaded || "Uploaded:"}{" "}
                         {format(new Date(doc.uploadedAt), "dd MMM yyyy")}
                       </span>
                       {doc.expiryDate && (
@@ -195,7 +212,7 @@ export function DocumentsTab({ student }: DocumentsTabProps) {
                               : ""
                           }
                         >
-                          Expires:{" "}
+                          {d?.expires || "Expires:"}{" "}
                           {format(new Date(doc.expiryDate), "dd MMM yyyy")}
                         </span>
                       )}
@@ -203,7 +220,8 @@ export function DocumentsTab({ student }: DocumentsTabProps) {
 
                     {doc.isVerified && doc.verifiedBy && (
                       <div className="text-muted-foreground text-sm">
-                        Verified by {doc.verifiedBy} on{" "}
+                        {d?.verifiedBy || "Verified by"} {doc.verifiedBy}{" "}
+                        {d?.on || "on"}{" "}
                         {doc.verifiedAt &&
                           format(new Date(doc.verifiedAt), "dd MMM yyyy")}
                       </div>
@@ -250,10 +268,12 @@ export function DocumentsTab({ student }: DocumentsTabProps) {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-8">
             <FileText className="text-muted-foreground mb-4 h-12 w-12" />
-            <p className="text-muted-foreground">No documents uploaded</p>
+            <p className="text-muted-foreground">
+              {d?.noDocuments || "No documents uploaded"}
+            </p>
             <Button variant="outline" className="mt-4">
               <Upload className="me-2 h-4 w-4" />
-              Upload First Document
+              {d?.uploadFirstDocument || "Upload First Document"}
             </Button>
           </CardContent>
         </Card>
@@ -263,47 +283,49 @@ export function DocumentsTab({ student }: DocumentsTabProps) {
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">
-            Required Documents Checklist
+            {d?.requiredDocumentsChecklist || "Required Documents Checklist"}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
             {[
               {
-                name: "Birth Certificate",
+                name: d?.birthCertificate || "Birth Certificate",
                 type: "BIRTH_CERTIFICATE",
                 required: true,
               },
               {
-                name: "Transfer Certificate",
+                name: d?.transferCertificate || "Transfer Certificate",
                 type: "TRANSFER_CERTIFICATE",
                 required: student.studentType === "TRANSFER",
               },
               {
-                name: "Medical Report",
+                name: d?.medicalReport || "Medical Report",
                 type: "MEDICAL_REPORT",
                 required: true,
               },
               {
-                name: "Passport Copy",
+                name: d?.passportCopy || "Passport Copy",
                 type: "PASSPORT_COPY",
                 required: student.studentType === "INTERNATIONAL",
               },
               {
-                name: "Visa Copy",
+                name: d?.visaCopy || "Visa Copy",
                 type: "VISA_COPY",
                 required: student.studentType === "INTERNATIONAL",
               },
               {
-                name: "Previous Academic Records",
+                name: d?.previousAcademicRecords || "Previous Academic Records",
                 type: "ACADEMIC_RECORDS",
                 required: student.studentType === "TRANSFER",
               },
             ].map((doc, index) => {
               const uploaded = documents.some(
-                (d: any) =>
-                  d.documentType?.toUpperCase() === doc.type ||
-                  d.documentType?.toUpperCase().includes(doc.type.split("_")[0])
+                (item: any) =>
+                  item.documentType?.toUpperCase() === doc.type ||
+                  item.documentType
+                    ?.toUpperCase()
+                    .includes(doc.type.split("_")[0])
               )
               return (
                 <div
@@ -328,7 +350,7 @@ export function DocumentsTab({ student }: DocumentsTabProps) {
                   </div>
                   {doc.required && (
                     <Badge variant="secondary" className="text-xs">
-                      Required
+                      {d?.required || "Required"}
                     </Badge>
                   )}
                 </div>

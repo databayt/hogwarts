@@ -43,6 +43,44 @@ export interface ExtractionOptions {
   allowedTypes?: string[]
 }
 
+// Generic extraction options for domain-agnostic extraction
+export interface GenericExtractionOptions extends ExtractionOptions {
+  schema: import("zod").ZodType
+  prompt: string
+  systemPrompt?: string
+  preferVision?: boolean // Use image input even for text-extractable docs (default: false for text docs)
+}
+
+// Processing job types for the document processing queue
+export type ProcessingJobType =
+  | "admission_document"
+  | "admission_classify"
+  | "bank_receipt"
+  | "textbook_metadata"
+  | "textbook_chapters"
+  | "textbook_embedding"
+  | "book_metadata"
+  | "vendor_invoice"
+  | "expense_receipt"
+  | "answer_sheet_ocr"
+  | "onboarding"
+  | "generic"
+
+// Generic extraction result with typed data
+export interface GenericExtractionResult<T = unknown> {
+  success: boolean
+  data?: {
+    fields: ExtractedField[]
+    rawText?: string
+    documentType?: string
+    confidence: number
+    extractedObject: T
+  }
+  error?: string
+  errorCode?: string
+  processingTime: number
+}
+
 // Step-specific extracted data types
 export interface TitleData {
   schoolName?: string

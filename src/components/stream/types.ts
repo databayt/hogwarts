@@ -248,7 +248,7 @@ export interface StreamSearchProps {
   }
 }
 
-// Catalog-backed course types (CatalogSubject viewed as course)
+// Catalog-backed course types (Subject viewed as course)
 export interface CatalogCourseType {
   id: string
   title: string

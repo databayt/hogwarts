@@ -115,7 +115,7 @@ export async function getTemplateForWizard(
     const { schoolId } = await getTenantContext()
     if (!schoolId) return { success: false, error: "Missing school context" }
 
-    const template = await db.examTemplate.findFirst({
+    const template = await db.schoolExamTemplate.findFirst({
       where: { id: templateId, schoolId },
     })
 
@@ -160,7 +160,7 @@ export async function createDraftTemplate(): Promise<
 
     const firstSubject = schoolSubjects[0]
 
-    const template = await db.examTemplate.create({
+    const template = await db.schoolExamTemplate.create({
       data: {
         schoolId,
         name: "",
@@ -198,7 +198,7 @@ export async function completeTemplateWizard(
       return { success: false, error: "Missing school context" }
     }
 
-    const template = await db.examTemplate.findFirst({
+    const template = await db.schoolExamTemplate.findFirst({
       where: { id: templateId, schoolId },
       select: { name: true },
     })
@@ -214,7 +214,7 @@ export async function completeTemplateWizard(
       }
     }
 
-    await db.examTemplate.updateMany({
+    await db.schoolExamTemplate.updateMany({
       where: { id: templateId, schoolId },
       data: { wizardStep: null },
     })
@@ -244,7 +244,7 @@ export async function updateTemplateWizardStep(
     const { schoolId } = await getTenantContext()
     if (!schoolId) return
 
-    await db.examTemplate.updateMany({
+    await db.schoolExamTemplate.updateMany({
       where: { id: templateId, schoolId },
       data: { wizardStep: step },
     })
@@ -268,7 +268,7 @@ export async function deleteDraftTemplate(
       return { success: false, error: "Missing school context" }
     }
 
-    const { count } = await db.examTemplate.deleteMany({
+    const { count } = await db.schoolExamTemplate.deleteMany({
       where: { id: templateId, schoolId, wizardStep: { not: null } },
     })
 

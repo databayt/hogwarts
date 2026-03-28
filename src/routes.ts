@@ -283,10 +283,24 @@ export const roleRoutes: Record<string, Role[]> = {
   "/assignments/*": ["ADMIN", "TEACHER", "DEVELOPER"],
 
   // ============================================================================
-  // Student management (admin, teachers, staff)
+  // Student management (admin, teachers, staff + students/guardians for self-view)
   // ============================================================================
-  "/students": ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"],
-  "/students/*": ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"],
+  "/students": [
+    "ADMIN",
+    "TEACHER",
+    "STAFF",
+    "STUDENT",
+    "GUARDIAN",
+    "DEVELOPER",
+  ],
+  "/students/*": [
+    "ADMIN",
+    "TEACHER",
+    "STAFF",
+    "STUDENT",
+    "GUARDIAN",
+    "DEVELOPER",
+  ],
   "/parents": ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"],
   "/parents/*": ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"],
 

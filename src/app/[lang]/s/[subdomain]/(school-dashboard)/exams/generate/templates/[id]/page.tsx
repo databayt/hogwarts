@@ -36,7 +36,7 @@ export default async function TemplateDetailPage({ params }: Props) {
     return notFound()
   }
 
-  const template = await db.examTemplate.findUnique({
+  const template = await db.schoolExamTemplate.findUnique({
     where: { id, schoolId },
     include: {
       subject: { select: { name: true } },

@@ -1,0 +1,79 @@
+// School Book — school-scoped library books (has schoolId)
+// Renamed from Book to avoid conflict with catalog Book
+
+enum BorrowStatus {
+  BORROWED
+  RETURNED
+  OVERDUE
+}
+
+enum LibraryUserStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model SchoolBook {
+  id              String  @id @default(cuid())
+  title           String
+  author          String
+  genre           String
+  rating          Int     @default(0)
+  coverUrl        String
+  coverColor      String  @default("#000000")
+  description     String  @db.Text
+  totalCopies     Int     @default(1)
+  availableCopies Int     @default(1)
+  videoUrl        String?
+  summary         String  @db.Text
+  gradeLevel      String  @default("GENERAL")
+  isbn            String?
+  publisher       String?
+  publicationYear Int?
+  language        String?
+  pageCount       Int?
+
+  schoolId String
+  school   School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  // Optional link to global catalog
+  catalogBookId String?
+  catalogBook   Book? @relation(fields: [catalogBookId], references: [id], onDelete: SetNull)
+
+  borrowRecords BorrowRecord[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId])
+  @@index([schoolId, title])
+  @@index([schoolId, catalogBookId])
+  @@index([schoolId, gradeLevel])
+  @@map("books")
+}
+
+model BorrowRecord {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  bookId String
+  book   SchoolBook @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  schoolId String
+  school   School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  borrowDate DateTime     @default(now())
+  dueDate    DateTime
+  returnDate DateTime?
+  status     BorrowStatus @default(BORROWED)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, schoolId])
+  @@index([bookId, schoolId])
+  @@index([schoolId, status])
+  @@map("borrow_records")
+}

@@ -39,7 +39,7 @@ export async function getRankedSubjects(options?: {
   if (country) where.country = country
   if (curriculum) where.curriculum = curriculum
 
-  const subjects = await db.catalogSubject.findMany({
+  const subjects = await db.subject.findMany({
     where,
     orderBy: [
       { usageCount: "desc" },
@@ -55,7 +55,7 @@ export async function getRankedSubjects(options?: {
       levels: true,
       country: true,
       curriculum: true,
-      thumbnailKey: true,
+      thumbnail: true,
       color: true,
       usageCount: true,
       averageRating: true,
@@ -82,7 +82,7 @@ export async function getRankedContent(
       return getRankedSubjects({ limit })
 
     case "chapters":
-      return db.catalogChapter.findMany({
+      return db.chapter.findMany({
         where: {
           status: "PUBLISHED",
           ...(subjectId ? { subjectId } : {}),
@@ -102,7 +102,7 @@ export async function getRankedContent(
       })
 
     case "lessons":
-      return db.catalogLesson.findMany({
+      return db.lesson.findMany({
         where: {
           status: "PUBLISHED",
           ...(subjectId ? { chapter: { subjectId } } : {}),
@@ -150,30 +150,30 @@ export async function rateContent(
 
   switch (type) {
     case "subject": {
-      const item = await db.catalogSubject.findUniqueOrThrow({
+      const item = await db.subject.findUniqueOrThrow({
         where: { id },
         select: { averageRating: true, ratingCount: true },
       })
       const data = updateRating(item.averageRating, item.ratingCount, rating)
-      await db.catalogSubject.update({ where: { id }, data })
+      await db.subject.update({ where: { id }, data })
       return data
     }
     case "chapter": {
-      const item = await db.catalogChapter.findUniqueOrThrow({
+      const item = await db.chapter.findUniqueOrThrow({
         where: { id },
         select: { averageRating: true, ratingCount: true },
       })
       const data = updateRating(item.averageRating, item.ratingCount, rating)
-      await db.catalogChapter.update({ where: { id }, data })
+      await db.chapter.update({ where: { id }, data })
       return data
     }
     case "lesson": {
-      const item = await db.catalogLesson.findUniqueOrThrow({
+      const item = await db.lesson.findUniqueOrThrow({
         where: { id },
         select: { averageRating: true, ratingCount: true },
       })
       const data = updateRating(item.averageRating, item.ratingCount, rating)
-      await db.catalogLesson.update({ where: { id }, data })
+      await db.lesson.update({ where: { id }, data })
       return data
     }
   }
@@ -188,19 +188,19 @@ export async function recordContentUsage(
 ) {
   switch (type) {
     case "subject":
-      await db.catalogSubject.update({
+      await db.subject.update({
         where: { id },
         data: { usageCount: { increment: 1 } },
       })
       break
     case "chapter":
-      await db.catalogChapter.update({
+      await db.chapter.update({
         where: { id },
         data: { usageCount: { increment: 1 } },
       })
       break
     case "lesson":
-      await db.catalogLesson.update({
+      await db.lesson.update({
         where: { id },
         data: { usageCount: { increment: 1 } },
       })
@@ -220,10 +220,10 @@ export async function getEngagementSummary() {
     topLessons,
     lowestRated,
   ] = await Promise.all([
-    db.catalogSubject.count({ where: { status: "PUBLISHED" } }),
-    db.catalogChapter.count({ where: { status: "PUBLISHED" } }),
-    db.catalogLesson.count({ where: { status: "PUBLISHED" } }),
-    db.catalogSubject.findMany({
+    db.subject.count({ where: { status: "PUBLISHED" } }),
+    db.chapter.count({ where: { status: "PUBLISHED" } }),
+    db.lesson.count({ where: { status: "PUBLISHED" } }),
+    db.subject.findMany({
       where: { status: "PUBLISHED" },
       orderBy: { usageCount: "desc" },
       take: 10,
@@ -238,7 +238,7 @@ export async function getEngagementSummary() {
         curriculum: true,
       },
     }),
-    db.catalogLesson.findMany({
+    db.lesson.findMany({
       where: { status: "PUBLISHED" },
       orderBy: { usageCount: "desc" },
       take: 10,
@@ -257,7 +257,7 @@ export async function getEngagementSummary() {
         },
       },
     }),
-    db.catalogSubject.findMany({
+    db.subject.findMany({
       where: {
         status: "PUBLISHED",
         ratingCount: { gt: 0 },

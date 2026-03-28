@@ -75,15 +75,15 @@ async function buildSubjectTeacherMap(
   })
   const deptNameById = new Map(departments.map((d) => [d.id, d.departmentName]))
 
-  // Get CatalogSubject department strings for subject→department matching
-  // Class.subjectId now points to CatalogSubject
+  // Get Subject department strings for subject→department matching
+  // Class.subjectId now points to Subject
   const classes = await prisma.class.findMany({
     where: { schoolId },
     select: { subjectId: true },
   })
   const subjectIds = [...new Set(classes.map((c) => c.subjectId))]
 
-  const catalogSubjects = await prisma.catalogSubject.findMany({
+  const catalogSubjects = await prisma.subject.findMany({
     where: { id: { in: subjectIds } },
     select: { id: true, department: true },
   })
@@ -166,9 +166,9 @@ export async function seedTimetable(
     teachers
   )
 
-  // Get subject names for lab detection (from CatalogSubject)
+  // Get subject names for lab detection (from Subject)
   const classSubjectIds = [...new Set(classes.map((c) => c.subjectId))]
-  const nameRecords = await prisma.catalogSubject.findMany({
+  const nameRecords = await prisma.subject.findMany({
     where: { id: { in: classSubjectIds } },
     select: { id: true, name: true },
   })

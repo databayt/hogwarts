@@ -17,13 +17,13 @@ import {
 } from "@/components/stream/video/video-input"
 
 import {
-  createLessonVideo,
-  deleteLessonVideo,
-  getLessonVideos,
-  toggleLessonVideoFeatured,
+  createVideo,
+  deleteVideo,
+  getVideos,
+  toggleVideoFeatured,
 } from "./video-actions"
 
-interface LessonVideoItem {
+interface VideoItem {
   id: string
   title: string
   videoUrl: string
@@ -36,18 +36,15 @@ interface LessonVideoItem {
   createdAt: Date
 }
 
-interface LessonVideoManagerProps {
+interface VideoManagerProps {
   lessonId: string
   lessonName: string
 }
 
-export function LessonVideoManager({
-  lessonId,
-  lessonName,
-}: LessonVideoManagerProps) {
+export function VideoManager({ lessonId, lessonName }: VideoManagerProps) {
   const { dictionary } = useDictionary()
   const t = dictionary?.messages?.toast
-  const [videos, setVideos] = useState<LessonVideoItem[]>([])
+  const [videos, setVideos] = useState<VideoItem[]>([])
   const [loading, setLoading] = useState(true)
   const [isPending, startTransition] = useTransition()
 
@@ -61,7 +58,7 @@ export function LessonVideoManager({
     let cancelled = false
     async function load() {
       try {
-        const result = await getLessonVideos(lessonId)
+        const result = await getVideos(lessonId)
         if (!cancelled) setVideos(result)
       } catch {
         if (!cancelled)
@@ -94,7 +91,7 @@ export function LessonVideoManager({
 
     startTransition(async () => {
       try {
-        const result = await createLessonVideo({
+        const result = await createVideo({
           catalogLessonId: lessonId,
           title: videoTitle.trim(),
           videoUrl,
@@ -107,7 +104,7 @@ export function LessonVideoManager({
 
         if (result.success) {
           // Refresh list
-          const updated = await getLessonVideos(lessonId)
+          const updated = await getVideos(lessonId)
           setVideos(updated)
           // Reset form
           setVideoUrl(null)
@@ -124,7 +121,7 @@ export function LessonVideoManager({
   const handleDelete = (videoId: string) => {
     startTransition(async () => {
       try {
-        await deleteLessonVideo(videoId)
+        await deleteVideo(videoId)
         setVideos((prev) => prev.filter((v) => v.id !== videoId))
         toast.success(t?.success?.deleted || "Video deleted")
       } catch {
@@ -136,7 +133,7 @@ export function LessonVideoManager({
   const handleToggleFeatured = (videoId: string) => {
     startTransition(async () => {
       try {
-        const result = await toggleLessonVideoFeatured(videoId)
+        const result = await toggleVideoFeatured(videoId)
         if (result.success) {
           setVideos((prev) =>
             prev.map((v) =>

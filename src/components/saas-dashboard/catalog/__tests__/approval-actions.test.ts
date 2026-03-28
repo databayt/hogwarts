@@ -85,14 +85,14 @@ describe("Approval Actions", () => {
   // ==========================================================================
 
   describe("approveContent", () => {
-    it("approves a CatalogQuestion", async () => {
+    it("approves a Question", async () => {
       mockDeveloperSession()
-      vi.mocked(db.catalogQuestion.update).mockResolvedValue({} as any)
+      vi.mocked(db.question.update).mockResolvedValue({} as any)
 
-      const result = await approveContent("CatalogQuestion", "q-1")
+      const result = await approveContent("Question", "q-1")
 
       expect(result).toEqual({ success: true })
-      expect(db.catalogQuestion.update).toHaveBeenCalledWith({
+      expect(db.question.update).toHaveBeenCalledWith({
         where: { id: "q-1" },
         data: expect.objectContaining({
           approvalStatus: "APPROVED",
@@ -103,14 +103,14 @@ describe("Approval Actions", () => {
       expect(revalidatePath).toHaveBeenCalledWith("/catalog/approvals")
     })
 
-    it("approves a CatalogMaterial", async () => {
+    it("approves a Material", async () => {
       mockDeveloperSession()
-      vi.mocked(db.catalogMaterial.update).mockResolvedValue({} as any)
+      vi.mocked(db.material.update).mockResolvedValue({} as any)
 
-      const result = await approveContent("CatalogMaterial", "m-1")
+      const result = await approveContent("Material", "m-1")
 
       expect(result).toEqual({ success: true })
-      expect(db.catalogMaterial.update).toHaveBeenCalledWith({
+      expect(db.material.update).toHaveBeenCalledWith({
         where: { id: "m-1" },
         data: expect.objectContaining({
           approvalStatus: "APPROVED",
@@ -120,14 +120,14 @@ describe("Approval Actions", () => {
       })
     })
 
-    it("approves a CatalogAssignment", async () => {
+    it("approves a Assignment", async () => {
       mockDeveloperSession()
-      vi.mocked(db.catalogAssignment.update).mockResolvedValue({} as any)
+      vi.mocked(db.assignment.update).mockResolvedValue({} as any)
 
-      const result = await approveContent("CatalogAssignment", "a-1")
+      const result = await approveContent("Assignment", "a-1")
 
       expect(result).toEqual({ success: true })
-      expect(db.catalogAssignment.update).toHaveBeenCalledWith({
+      expect(db.assignment.update).toHaveBeenCalledWith({
         where: { id: "a-1" },
         data: expect.objectContaining({
           approvalStatus: "APPROVED",
@@ -137,10 +137,10 @@ describe("Approval Actions", () => {
       })
     })
 
-    it("approves a CatalogBook with transaction (auto-select into library)", async () => {
+    it("approves a Book with transaction (auto-select into library)", async () => {
       mockDeveloperSession()
 
-      const mockCatalogBook = {
+      const mockBook = {
         id: "b-1",
         title: "Test Book",
         author: "Author",
@@ -165,7 +165,7 @@ describe("Approval Actions", () => {
           catalogBook: {
             update: vi
               .fn()
-              .mockResolvedValueOnce(mockCatalogBook) // first update (approve)
+              .mockResolvedValueOnce(mockBook) // first update (approve)
               .mockResolvedValueOnce({} as any), // second update (usageCount)
           },
           schoolBookSelection: {
@@ -180,17 +180,17 @@ describe("Approval Actions", () => {
         return callback(tx)
       })
 
-      const result = await approveContent("CatalogBook", "b-1")
+      const result = await approveContent("Book", "b-1")
 
       expect(result).toEqual({ success: true })
       expect(db.$transaction).toHaveBeenCalledTimes(1)
       expect(revalidatePath).toHaveBeenCalledWith("/catalog/approvals")
     })
 
-    it("approves a CatalogBook without auto-select when no contributedSchoolId", async () => {
+    it("approves a Book without auto-select when no contributedSchoolId", async () => {
       mockDeveloperSession()
 
-      const mockCatalogBook = {
+      const mockBook = {
         id: "b-2",
         title: "Orphan Book",
         author: "Author",
@@ -214,7 +214,7 @@ describe("Approval Actions", () => {
       vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
         const tx = {
           catalogBook: {
-            update: vi.fn().mockResolvedValue(mockCatalogBook),
+            update: vi.fn().mockResolvedValue(mockBook),
           },
           schoolBookSelection: {
             findFirst: vi.fn(),
@@ -230,16 +230,16 @@ describe("Approval Actions", () => {
         return callback(tx)
       })
 
-      const result = await approveContent("CatalogBook", "b-2")
+      const result = await approveContent("Book", "b-2")
 
       expect(result).toEqual({ success: true })
       expect(selectionCreateCalled).toBe(false)
     })
 
-    it("approves a CatalogBook without creating duplicate selection", async () => {
+    it("approves a Book without creating duplicate selection", async () => {
       mockDeveloperSession()
 
-      const mockCatalogBook = {
+      const mockBook = {
         id: "b-3",
         title: "Already Selected Book",
         author: "Author",
@@ -264,7 +264,7 @@ describe("Approval Actions", () => {
       vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
         const tx = {
           catalogBook: {
-            update: vi.fn().mockResolvedValue(mockCatalogBook),
+            update: vi.fn().mockResolvedValue(mockBook),
           },
           schoolBookSelection: {
             findFirst: vi.fn().mockResolvedValue({ id: "existing-sel" }), // already exists
@@ -282,7 +282,7 @@ describe("Approval Actions", () => {
         return callback(tx)
       })
 
-      const result = await approveContent("CatalogBook", "b-3")
+      const result = await approveContent("Book", "b-3")
 
       expect(result).toEqual({ success: true })
       expect(selectionCreateCalled).toBe(false)
@@ -292,19 +292,19 @@ describe("Approval Actions", () => {
     it("requires DEVELOPER role", async () => {
       mockNonDeveloperSession("ADMIN")
 
-      const result = await approveContent("CatalogQuestion", "q-1")
+      const result = await approveContent("Question", "q-1")
 
       expect(result).toEqual({
         success: false,
         error: "Unauthorized: DEVELOPER role required",
       })
-      expect(db.catalogQuestion.update).not.toHaveBeenCalled()
+      expect(db.question.update).not.toHaveBeenCalled()
     })
 
     it("returns error when unauthenticated", async () => {
       mockUnauthenticated()
 
-      const result = await approveContent("CatalogQuestion", "q-1")
+      const result = await approveContent("Question", "q-1")
 
       expect(result).toEqual({
         success: false,
@@ -325,11 +325,11 @@ describe("Approval Actions", () => {
 
     it("returns error when database update fails", async () => {
       mockDeveloperSession()
-      vi.mocked(db.catalogQuestion.update).mockRejectedValue(
+      vi.mocked(db.question.update).mockRejectedValue(
         new Error("Record not found")
       )
 
-      const result = await approveContent("CatalogQuestion", "nonexistent")
+      const result = await approveContent("Question", "nonexistent")
 
       expect(result).toEqual({
         success: false,
@@ -343,18 +343,18 @@ describe("Approval Actions", () => {
   // ==========================================================================
 
   describe("rejectContent", () => {
-    it("rejects a CatalogQuestion with reason", async () => {
+    it("rejects a Question with reason", async () => {
       mockDeveloperSession()
-      vi.mocked(db.catalogQuestion.update).mockResolvedValue({} as any)
+      vi.mocked(db.question.update).mockResolvedValue({} as any)
 
       const result = await rejectContent(
-        "CatalogQuestion",
+        "Question",
         "q-1",
         "Low quality content"
       )
 
       expect(result).toEqual({ success: true })
-      expect(db.catalogQuestion.update).toHaveBeenCalledWith({
+      expect(db.question.update).toHaveBeenCalledWith({
         where: { id: "q-1" },
         data: expect.objectContaining({
           approvalStatus: "REJECTED",
@@ -365,18 +365,18 @@ describe("Approval Actions", () => {
       expect(revalidatePath).toHaveBeenCalledWith("/catalog/approvals")
     })
 
-    it("rejects a CatalogMaterial with reason", async () => {
+    it("rejects a Material with reason", async () => {
       mockDeveloperSession()
-      vi.mocked(db.catalogMaterial.update).mockResolvedValue({} as any)
+      vi.mocked(db.material.update).mockResolvedValue({} as any)
 
       const result = await rejectContent(
-        "CatalogMaterial",
+        "Material",
         "m-1",
         "Incorrect information"
       )
 
       expect(result).toEqual({ success: true })
-      expect(db.catalogMaterial.update).toHaveBeenCalledWith({
+      expect(db.material.update).toHaveBeenCalledWith({
         where: { id: "m-1" },
         data: expect.objectContaining({
           approvalStatus: "REJECTED",
@@ -385,18 +385,18 @@ describe("Approval Actions", () => {
       })
     })
 
-    it("rejects a CatalogAssignment with reason", async () => {
+    it("rejects a Assignment with reason", async () => {
       mockDeveloperSession()
-      vi.mocked(db.catalogAssignment.update).mockResolvedValue({} as any)
+      vi.mocked(db.assignment.update).mockResolvedValue({} as any)
 
       const result = await rejectContent(
-        "CatalogAssignment",
+        "Assignment",
         "a-1",
         "Does not meet standards"
       )
 
       expect(result).toEqual({ success: true })
-      expect(db.catalogAssignment.update).toHaveBeenCalledWith({
+      expect(db.assignment.update).toHaveBeenCalledWith({
         where: { id: "a-1" },
         data: expect.objectContaining({
           approvalStatus: "REJECTED",
@@ -405,18 +405,14 @@ describe("Approval Actions", () => {
       })
     })
 
-    it("rejects a CatalogBook with reason", async () => {
+    it("rejects a Book with reason", async () => {
       mockDeveloperSession()
-      vi.mocked(db.catalogBook.update).mockResolvedValue({} as any)
+      vi.mocked(db.book.update).mockResolvedValue({} as any)
 
-      const result = await rejectContent(
-        "CatalogBook",
-        "b-1",
-        "Copyright issues"
-      )
+      const result = await rejectContent("Book", "b-1", "Copyright issues")
 
       expect(result).toEqual({ success: true })
-      expect(db.catalogBook.update).toHaveBeenCalledWith({
+      expect(db.book.update).toHaveBeenCalledWith({
         where: { id: "b-1" },
         data: expect.objectContaining({
           approvalStatus: "REJECTED",
@@ -428,51 +424,43 @@ describe("Approval Actions", () => {
     it("returns error for empty rejection reason", async () => {
       mockDeveloperSession()
 
-      const result = await rejectContent("CatalogQuestion", "q-1", "")
+      const result = await rejectContent("Question", "q-1", "")
 
       expect(result).toEqual({
         success: false,
         error: "Rejection reason is required",
       })
-      expect(db.catalogQuestion.update).not.toHaveBeenCalled()
+      expect(db.question.update).not.toHaveBeenCalled()
     })
 
     it("returns error for whitespace-only rejection reason", async () => {
       mockDeveloperSession()
 
-      const result = await rejectContent("CatalogQuestion", "q-1", "   ")
+      const result = await rejectContent("Question", "q-1", "   ")
 
       expect(result).toEqual({
         success: false,
         error: "Rejection reason is required",
       })
-      expect(db.catalogQuestion.update).not.toHaveBeenCalled()
+      expect(db.question.update).not.toHaveBeenCalled()
     })
 
     it("requires DEVELOPER role", async () => {
       mockNonDeveloperSession("TEACHER")
 
-      const result = await rejectContent(
-        "CatalogQuestion",
-        "q-1",
-        "Some reason"
-      )
+      const result = await rejectContent("Question", "q-1", "Some reason")
 
       expect(result).toEqual({
         success: false,
         error: "Unauthorized: DEVELOPER role required",
       })
-      expect(db.catalogQuestion.update).not.toHaveBeenCalled()
+      expect(db.question.update).not.toHaveBeenCalled()
     })
 
     it("returns error when unauthenticated", async () => {
       mockUnauthenticated()
 
-      const result = await rejectContent(
-        "CatalogMaterial",
-        "m-1",
-        "Bad content"
-      )
+      const result = await rejectContent("Material", "m-1", "Bad content")
 
       expect(result).toEqual({
         success: false,
@@ -497,15 +485,11 @@ describe("Approval Actions", () => {
 
     it("returns error when database update fails", async () => {
       mockDeveloperSession()
-      vi.mocked(db.catalogMaterial.update).mockRejectedValue(
+      vi.mocked(db.material.update).mockRejectedValue(
         new Error("Database connection lost")
       )
 
-      const result = await rejectContent(
-        "CatalogMaterial",
-        "m-1",
-        "Bad content"
-      )
+      const result = await rejectContent("Material", "m-1", "Bad content")
 
       expect(result).toEqual({
         success: false,

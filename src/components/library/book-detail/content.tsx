@@ -45,8 +45,8 @@ export default async function LibraryBookDetailContent({
     notFound()
   }
 
-  // Load from global CatalogBook (works for all schools out of the box)
-  const catalogBook = await db.catalogBook.findFirst({
+  // Load from global Book (works for all schools out of the box)
+  const catalogBook = await db.book.findFirst({
     where: {
       id: bookId,
       status: "PUBLISHED",
@@ -59,7 +59,7 @@ export default async function LibraryBookDetailContent({
   }
 
   // Check if school has hidden this book
-  const hiddenSelection = await db.schoolBookSelection.findUnique({
+  const hiddenSelection = await db.bookSelection.findUnique({
     where: { schoolId_catalogBookId: { schoolId, catalogBookId: bookId } },
     select: { isActive: true },
   })
@@ -68,12 +68,12 @@ export default async function LibraryBookDetailContent({
   }
 
   // Find or lazily create school-scoped Book for borrowing
-  let schoolBook = await db.book.findFirst({
+  let schoolBook = await db.schoolBook.findFirst({
     where: { schoolId, catalogBookId: bookId },
   })
 
   if (!schoolBook) {
-    schoolBook = await db.book.create({
+    schoolBook = await db.schoolBook.create({
       data: {
         schoolId,
         catalogBookId: catalogBook.id,
@@ -120,7 +120,7 @@ export default async function LibraryBookDetailContent({
     db.borrowRecord.count({
       where: { bookId: schoolBook.id, schoolId, status: "BORROWED" },
     }),
-    db.catalogBook.findMany({
+    db.book.findMany({
       where: {
         author: catalogBook.author,
         id: { not: bookId },
@@ -138,7 +138,7 @@ export default async function LibraryBookDetailContent({
         rating: true,
       },
     }),
-    db.catalogBook.findMany({
+    db.book.findMany({
       where: {
         genre: catalogBook.genre,
         id: { not: bookId },

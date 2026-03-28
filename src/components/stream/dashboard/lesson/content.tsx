@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/dialog"
 import type {
   AvailableVideo,
-  CatalogLessonWithProgress,
+  LessonWithProgress,
 } from "@/components/stream/data/catalog/get-lesson-with-progress"
 import {
   VideoPlayer,
@@ -45,9 +45,9 @@ import {
 } from "@/components/stream/shared/video-player"
 
 import {
-  markCatalogLessonComplete as markLessonComplete,
-  markCatalogLessonIncomplete as markLessonIncomplete,
-  updateCatalogLessonProgress as updateLessonProgress,
+  markLessonComplete,
+  markLessonIncomplete,
+  updateLessonProgress,
 } from "./catalog-actions"
 
 interface StreamLessonContentProps {
@@ -55,7 +55,7 @@ interface StreamLessonContentProps {
   lang: string
   schoolId: string | null
   subdomain: string
-  lesson: CatalogLessonWithProgress
+  lesson: LessonWithProgress
   quizQuestions?: Array<{
     id: string
     questionText: string
@@ -740,7 +740,7 @@ export function StreamLessonContent({
         </div>
       )}
 
-      {/* Quiz — practice questions from CatalogQuestion */}
+      {/* Quiz — practice questions from Question */}
       {quizQuestions && quizQuestions.length > 0 && (
         <Card>
           <CardHeader>

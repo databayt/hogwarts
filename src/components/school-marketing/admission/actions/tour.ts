@@ -340,11 +340,18 @@ export async function createTourBooking(
  * Get booking details by booking number
  */
 export async function getBookingDetails(
+  subdomain: string,
   bookingNumber: string
 ): Promise<ActionResult<TourBookingConfirmation>> {
   try {
-    const booking = await db.tourBooking.findUnique({
-      where: { bookingNumber },
+    // Resolve schoolId for tenant isolation
+    const schoolResult = await getSchoolBySubdomain(subdomain)
+    if (!schoolResult.success || !schoolResult.data) {
+      return { success: false, error: "School not found" }
+    }
+
+    const booking = await db.tourBooking.findFirst({
+      where: { bookingNumber, schoolId: schoolResult.data.id },
       include: {
         slot: true,
         school: {
@@ -393,12 +400,19 @@ export async function getBookingDetails(
  * Cancel a booking
  */
 export async function cancelTourBooking(
+  subdomain: string,
   bookingNumber: string,
   reason?: string
 ): Promise<ActionResult<{ message: string }>> {
   try {
-    const booking = await db.tourBooking.findUnique({
-      where: { bookingNumber },
+    // Resolve schoolId for tenant isolation
+    const schoolResult = await getSchoolBySubdomain(subdomain)
+    if (!schoolResult.success || !schoolResult.data) {
+      return { success: false, error: "School not found" }
+    }
+
+    const booking = await db.tourBooking.findFirst({
+      where: { bookingNumber, schoolId: schoolResult.data.id },
       include: {
         slot: true,
         school: {
@@ -422,7 +436,7 @@ export async function cancelTourBooking(
     // Cancel booking and decrement slot count
     await db.$transaction([
       db.tourBooking.update({
-        where: { bookingNumber },
+        where: { id: booking.id },
         data: {
           status: "CANCELLED",
           cancelledAt: new Date(),
@@ -473,12 +487,19 @@ export async function cancelTourBooking(
  * Reschedule a booking
  */
 export async function rescheduleTourBooking(
+  subdomain: string,
   bookingNumber: string,
   newSlotId: string
 ): Promise<ActionResult<TourBookingConfirmation>> {
   try {
-    const booking = await db.tourBooking.findUnique({
-      where: { bookingNumber },
+    // Resolve schoolId for tenant isolation
+    const schoolResult = await getSchoolBySubdomain(subdomain)
+    if (!schoolResult.success || !schoolResult.data) {
+      return { success: false, error: "School not found" }
+    }
+
+    const booking = await db.tourBooking.findFirst({
+      where: { bookingNumber, schoolId: schoolResult.data.id },
       include: {
         slot: true,
         school: {

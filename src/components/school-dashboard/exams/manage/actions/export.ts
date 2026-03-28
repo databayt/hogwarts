@@ -41,7 +41,7 @@ export async function getExamsCSV(
     }
 
     // Fetch ALL exams matching filters (no pagination for export)
-    const exams = await db.exam.findMany({
+    const exams = await db.schoolExam.findMany({
       where,
       include: {
         class: {
@@ -131,7 +131,7 @@ export async function getExamResultsCSV(input: {
     const { examId } = z.object({ examId: z.string().min(1) }).parse(input)
 
     // Get exam details
-    const exam = await db.exam.findFirst({
+    const exam = await db.schoolExam.findFirst({
       where: { id: examId, schoolId },
       select: {
         title: true,
@@ -253,7 +253,7 @@ export async function getAnalyticsCSV(input: {
     }
 
     // Get exams with results
-    const exams = await db.exam.findMany({
+    const exams = await db.schoolExam.findMany({
       where,
       include: {
         class: { select: { name: true } },
@@ -388,7 +388,7 @@ export async function getExamsExportData(
     }
 
     // Fetch ALL exams matching filters (no pagination for export)
-    const exams = await db.exam.findMany({
+    const exams = await db.schoolExam.findMany({
       where,
       include: {
         class: {

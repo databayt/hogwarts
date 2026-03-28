@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 async function getCatalogAdminStats(schoolId: string) {
   const [totalSubjects, totalEnrollments, totalVideos, recentEnrollments] =
     await Promise.all([
-      db.schoolSubjectSelection.count({
+      db.subjectSelection.count({
         where: { schoolId, isActive: true },
       }),
       db.enrollment.count({
@@ -45,7 +45,7 @@ async function getCatalogAdminStats(schoolId: string) {
           OR: [{ schoolId }, { schoolId: null }],
         },
       }),
-      db.lessonVideo.count({
+      db.video.count({
         where: { schoolId },
       }),
       (async () => {
@@ -87,7 +87,7 @@ async function getCatalogAdminStats(schoolId: string) {
       })(),
     ])
 
-  const recentSubjectSelections = await db.schoolSubjectSelection.findMany({
+  const recentSubjectSelections = await db.subjectSelection.findMany({
     where: { schoolId, isActive: true },
     orderBy: { createdAt: "desc" },
     take: 5,

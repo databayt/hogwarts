@@ -1,0 +1,138 @@
+{
+  "subject": "computer",
+  "subjectNameAr": "تكنولوجيا المعلومات والاتصالات",
+  "grade": 5,
+  "level": "elementary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "الطبعة الأولى 2021م",
+  "chapters": [
+    {
+      "nameAr": "الوحدة الأولى: معالجة وتخزين البيانات في الحاسوب",
+      "name": "Unit 1: Data Processing and Storage in Computers",
+      "slug": "data-processing-and-storage",
+      "sequenceOrder": 1,
+      "lessons": [
+        {
+          "nameAr": "الدرس الأول: العمليات الأساسية للحاسوب",
+          "name": "Lesson 1: Basic Computer Operations",
+          "slug": "basic-computer-operations",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الدرس الثاني: وحدة المعالجة المركزية",
+          "name": "Lesson 2: Central Processing Unit",
+          "slug": "central-processing-unit",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الدرس الثالث: وحدات التخزين في الحاسوب",
+          "name": "Lesson 3: Computer Storage Units",
+          "slug": "computer-storage-units",
+          "sequenceOrder": 3
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة الثانية: نظام الويندوز لتشغيل الحاسوب",
+      "name": "Unit 2: Windows Operating System",
+      "slug": "windows-operating-system",
+      "sequenceOrder": 2,
+      "lessons": [
+        {
+          "nameAr": "الدرس الأول: سطح المكتب",
+          "name": "Lesson 1: The Desktop",
+          "slug": "the-desktop",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الدرس الثاني: المظهر العام لويندوز",
+          "name": "Lesson 2: Windows General Appearance",
+          "slug": "windows-general-appearance",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الدرس الثالث: إدارة الملفات",
+          "name": "Lesson 3: File Management",
+          "slug": "file-management",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "الدرس الرابع: التاريخ والوقت",
+          "name": "Lesson 4: Date and Time",
+          "slug": "date-and-time",
+          "sequenceOrder": 4
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة الثالثة: البرامج المساعدة",
+      "name": "Unit 3: Utility Programs",
+      "slug": "utility-programs",
+      "sequenceOrder": 3,
+      "lessons": [
+        {
+          "nameAr": "الدرس الأول: الآلة الحاسبة",
+          "name": "Lesson 1: Calculator",
+          "slug": "calculator",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الدرس الثاني: الرسام",
+          "name": "Lesson 2: Paint",
+          "slug": "paint",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الدرس الثالث: الأشكال الأساسية",
+          "name": "Lesson 3: Basic Shapes",
+          "slug": "basic-shapes",
+          "sequenceOrder": 3
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة الرابعة: البرامج التطبيقية (MS Word)",
+      "name": "Unit 4: Application Programs (MS Word)",
+      "slug": "ms-word",
+      "sequenceOrder": 4,
+      "lessons": [
+        {
+          "nameAr": "الدرس الأول: الواجهة الرئيسة للبرنامج",
+          "name": "Lesson 1: Program Main Interface",
+          "slug": "program-main-interface",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الدرس الثاني: العمليات الأساسية",
+          "name": "Lesson 2: Basic Operations",
+          "slug": "basic-operations",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الدرس الثالث: الجداول",
+          "name": "Lesson 3: Tables",
+          "slug": "tables",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "الدرس الرابع: الأشكال والصور",
+          "name": "Lesson 4: Shapes and Images",
+          "slug": "shapes-and-images",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "الدرس الخامس: رأس وتذييل الصفحة",
+          "name": "Lesson 5: Header and Footer",
+          "slug": "header-and-footer",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "الدرس السادس: طباعة المستند",
+          "name": "Lesson 6: Printing Documents",
+          "slug": "printing-documents",
+          "sequenceOrder": 6
+        }
+      ]
+    }
+  ]
+}

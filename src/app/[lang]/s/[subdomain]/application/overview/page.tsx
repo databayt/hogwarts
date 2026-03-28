@@ -19,7 +19,7 @@ const ApplyOverviewPage = async ({ params, searchParams }: Props) => {
 
   return (
     <ApplyOverviewClient
-      dictionary={dictionary.school.admission.form}
+      dictionary={dictionary.school.admission}
       lang={lang}
       subdomain={subdomain}
       id={id}

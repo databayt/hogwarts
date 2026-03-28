@@ -15,9 +15,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-import { deleteCatalogMaterial } from "./material-actions"
+import { deleteMaterial } from "./material-actions"
 
-export interface CatalogMaterialRow {
+export interface MaterialRow {
   id: string
   title: string
   description: string | null
@@ -58,7 +58,7 @@ function formatFileSize(bytes: number | null): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-export const materialColumns: ColumnDef<CatalogMaterialRow>[] = [
+export const materialColumns: ColumnDef<MaterialRow>[] = [
   {
     accessorKey: "title",
     header: "Title",
@@ -129,7 +129,7 @@ export const materialColumns: ColumnDef<CatalogMaterialRow>[] = [
 
       async function handleDelete() {
         if (!confirm("Are you sure you want to delete this material?")) return
-        await deleteCatalogMaterial(id)
+        await deleteMaterial(id)
       }
 
       return (

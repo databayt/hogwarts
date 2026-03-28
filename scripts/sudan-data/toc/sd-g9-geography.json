@@ -1,0 +1,31 @@
+{
+  "subject": "geography",
+  "subjectNameAr": "الجغرافيا",
+  "grade": 9,
+  "level": "middle",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "",
+  "chapters": [
+    {
+      "nameAr": "جغرافية السودان الطبيعية",
+      "name": "Physical Geography of Sudan",
+      "slug": "physical-geography-sudan",
+      "sequenceOrder": 1,
+      "lessons": []
+    },
+    {
+      "nameAr": "جغرافية السودان البشرية",
+      "name": "Human Geography of Sudan",
+      "slug": "human-geography-sudan",
+      "sequenceOrder": 2,
+      "lessons": []
+    },
+    {
+      "nameAr": "المشكلات البيئية في السودان",
+      "name": "Environmental Problems in Sudan",
+      "slug": "environmental-problems-sudan",
+      "sequenceOrder": 3,
+      "lessons": []
+    }
+  ]
+}

@@ -30,8 +30,8 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { createCampaign, getCampaign, updateCampaign } from "./actions"
 import {
+  CAMPAIGN_STATUS_VALUES,
   campaignSchemaWithValidation,
-  campaignStatusOptions,
   type CampaignFormData,
 } from "./validation"
 
@@ -73,41 +73,29 @@ export function CampaignForm({
   const itemId = modal.id
   const isEdit = !!itemId
 
-  const t = dictionary?.campaigns ?? {}
-  const isRTL = lang === "ar"
+  const t = dictionary?.campaigns
+  const col = dictionary?.columns
 
   const labels = {
     title: isEdit
-      ? isRTL
-        ? "تعديل الحملة"
-        : "Edit Campaign"
-      : isRTL
-        ? "إنشاء حملة"
-        : "Create Campaign",
-    subtitle: isRTL
-      ? "أدخل تفاصيل حملة القبول"
-      : "Enter the details for the admission campaign",
-    name: isRTL ? "اسم الحملة" : "Campaign Name",
-    namePlaceholder: isRTL
-      ? "مثال: قبول 2024-2025"
-      : "e.g., Admissions 2024-2025",
-    academicYear: isRTL ? "العام الدراسي" : "Academic Year",
-    dateRange: isRTL ? "فترة الحملة" : "Campaign Period",
-    status: isRTL ? "الحالة" : "Status",
-    description: isRTL ? "الوصف" : "Description",
-    descriptionPlaceholder: isRTL
-      ? "وصف اختياري للحملة..."
-      : "Optional campaign description...",
-    totalSeats: isRTL ? "المقاعد المتاحة" : "Total Seats",
-    cancel: isRTL ? "إلغاء" : "Cancel",
-    create: isRTL ? "إنشاء" : "Create",
-    update: isRTL ? "تحديث" : "Update",
-    createSuccess: isRTL
-      ? "تم إنشاء الحملة بنجاح"
-      : "Campaign created successfully",
-    updateSuccess: isRTL
-      ? "تم تحديث الحملة بنجاح"
-      : "Campaign updated successfully",
+      ? t?.editCampaign || "Edit Campaign"
+      : t?.createCampaign || "Create Campaign",
+    subtitle: t?.enterDetails || "Enter the details for the admission campaign",
+    name: t?.campaignName || "Campaign Name",
+    namePlaceholder: t?.namePlaceholder || "e.g., Admissions 2024-2025",
+    academicYear: t?.academicYear || "Academic Year",
+    dateRange: t?.campaignPeriod || "Campaign Period",
+    status: col?.status || "Status",
+    description: t?.description || "Description",
+    descriptionPlaceholder:
+      t?.descriptionPlaceholder || "Optional campaign description...",
+    totalSeats: t?.totalSeats || "Total Seats",
+    cancel: "Cancel",
+    create: "Create",
+    update: "Update",
+    pickDateRange: t?.pickDateRange || "Pick a date range",
+    createSuccess: t?.campaignCreated || "Campaign created successfully",
+    updateSuccess: t?.campaignUpdated || "Campaign updated successfully",
   }
 
   const form = useForm<CampaignFormData>({
@@ -192,7 +180,10 @@ export function CampaignForm({
               <SelectField
                 name="status"
                 label={labels.status}
-                options={[...campaignStatusOptions]}
+                options={CAMPAIGN_STATUS_VALUES.map((v) => ({
+                  value: v,
+                  label: dictionary?.status?.[v] || v,
+                }))}
                 disabled={isPending}
               />
               <div className="space-y-2">
@@ -232,7 +223,7 @@ export function CampaignForm({
                         format(watched.startDate, "LLL dd, y")
                       )
                     ) : (
-                      <span>{isRTL ? "اختر الفترة" : "Pick a date range"}</span>
+                      <span>{labels.pickDateRange}</span>
                     )}
                   </Button>
                 </PopoverTrigger>

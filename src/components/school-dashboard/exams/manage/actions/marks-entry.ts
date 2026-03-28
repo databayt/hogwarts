@@ -30,7 +30,7 @@ export async function getExamWithStudents(input: { examId: string }): Promise<{
 
     const { examId } = z.object({ examId: z.string().min(1) }).parse(input)
 
-    const exam = await db.exam.findFirst({
+    const exam = await db.schoolExam.findFirst({
       where: { id: examId, schoolId },
       include: {
         class: {
@@ -150,7 +150,7 @@ export async function enterMarks(input: {
     const parsed = schema.parse(input)
 
     // Get exam details for validation
-    const exam = await db.exam.findFirst({
+    const exam = await db.schoolExam.findFirst({
       where: { id: parsed.examId, schoolId },
       select: { totalMarks: true, passingMarks: true },
     })
@@ -262,7 +262,7 @@ export async function bulkImportMarks(input: {
     }
 
     // Validate exam exists
-    const exam = await db.exam.findFirst({
+    const exam = await db.schoolExam.findFirst({
       where: { id: input.examId, schoolId },
       select: { totalMarks: true },
     })

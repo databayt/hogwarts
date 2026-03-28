@@ -18,11 +18,11 @@ interface Props {
   params: Promise<{ lang: Locale; subjectId: string }>
 }
 
-export default async function CatalogSubjectPage({ params }: Props) {
+export default async function SubjectPage({ params }: Props) {
   const { lang, subjectId } = await params
   const dictionary = await getDictionary(lang)
 
-  const subject = await db.catalogSubject.findUnique({
+  const subject = await db.subject.findUnique({
     where: { id: subjectId },
     include: {
       chapters: {

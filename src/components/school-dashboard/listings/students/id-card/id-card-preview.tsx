@@ -22,6 +22,7 @@ interface IDCardPreviewProps {
   template: IDCardTemplate
   onPrint?: () => void
   onDownload?: (format: "pdf" | "image") => void
+  dictionary?: any
 }
 
 export function IDCardPreview({
@@ -29,7 +30,9 @@ export function IDCardPreview({
   template,
   onPrint,
   onDownload,
+  dictionary,
 }: IDCardPreviewProps) {
+  const d = dictionary?.school?.students?.idCard
   const [showBack, setShowBack] = useState(false)
   const [showFullscreen, setShowFullscreen] = useState(false)
 
@@ -38,7 +41,7 @@ export function IDCardPreview({
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>ID Card Preview</CardTitle>
+            <CardTitle>{d?.preview?.title || "ID Card Preview"}</CardTitle>
             <div className="flex gap-2">
               <Button
                 variant="outline"
@@ -46,7 +49,9 @@ export function IDCardPreview({
                 onClick={() => setShowBack(!showBack)}
               >
                 <RotateCw className="me-2 h-4 w-4" />
-                {showBack ? "Show Front" : "Show Back"}
+                {showBack
+                  ? d?.preview?.showFront || "Show Front"
+                  : d?.preview?.showBack || "Show Back"}
               </Button>
               <Button
                 variant="outline"
@@ -54,7 +59,7 @@ export function IDCardPreview({
                 onClick={() => setShowFullscreen(true)}
               >
                 <Maximize2 className="me-2 h-4 w-4" />
-                Fullscreen
+                {d?.preview?.fullscreen || "Fullscreen"}
               </Button>
             </div>
           </div>
@@ -75,6 +80,7 @@ export function IDCardPreview({
                 data={data}
                 template={template}
                 side={showBack ? "back" : "front"}
+                dictionary={dictionary}
               />
             </div>
 
@@ -86,7 +92,7 @@ export function IDCardPreview({
                 onClick={() => onDownload?.("pdf")}
               >
                 <Download className="me-2 h-4 w-4" />
-                Download PDF
+                {d?.preview?.downloadPdf || "Download PDF"}
               </Button>
               <Button
                 variant="outline"
@@ -94,31 +100,35 @@ export function IDCardPreview({
                 onClick={() => onDownload?.("image")}
               >
                 <Download className="me-2 h-4 w-4" />
-                Download Image
+                {d?.preview?.downloadImage || "Download Image"}
               </Button>
               <Button variant="default" className="flex-1" onClick={onPrint}>
                 <Printer className="me-2 h-4 w-4" />
-                Print Card
+                {d?.preview?.printCard || "Print Card"}
               </Button>
             </div>
 
             {/* Template Info */}
             <div className="text-muted-foreground space-y-1 text-center text-sm">
               <p>
-                Template: {template.name} ({template.orientation})
+                {d?.preview?.templateLabel || "Template"}: {template.name} (
+                {template.orientation})
               </p>
               <p>
-                Size: {template.size.width}x{template.size.height}
+                {d?.preview?.sizeLabel || "Size"}: {template.size.width}x
+                {template.size.height}
                 {template.size.unit}
               </p>
               <p>
-                Features:{" "}
+                {d?.preview?.featuresLabel || "Features"}:{" "}
                 {[
-                  template.includeBarcode && "Barcode",
-                  template.includeQRCode && "QR Code",
+                  template.includeBarcode && (d?.preview?.barcode || "Barcode"),
+                  template.includeQRCode && (d?.preview?.qrCode || "QR Code"),
                 ]
                   .filter(Boolean)
-                  .join(", ") || "None"}
+                  .join(", ") ||
+                  d?.preview?.none ||
+                  "None"}
               </p>
             </div>
           </div>
@@ -129,12 +139,17 @@ export function IDCardPreview({
       <Dialog open={showFullscreen} onOpenChange={setShowFullscreen}>
         <DialogContent className="max-w-4xl">
           <DialogHeader>
-            <DialogTitle>ID Card Preview - {data.studentName}</DialogTitle>
+            <DialogTitle>
+              {d?.preview?.previewTitle || "ID Card Preview"} -{" "}
+              {data.studentName}
+            </DialogTitle>
           </DialogHeader>
           <div className="flex items-center justify-center gap-8 py-8">
             {/* Front Side */}
             <div className="text-center">
-              <h4 className="mb-4 text-sm font-medium">Front</h4>
+              <h4 className="mb-4 text-sm font-medium">
+                {d?.preview?.front || "Front"}
+              </h4>
               <div
                 className="rounded-lg border-2 border-gray-300 bg-white p-4 shadow-lg"
                 style={{
@@ -147,13 +162,16 @@ export function IDCardPreview({
                   data={data}
                   template={template}
                   side="front"
+                  dictionary={dictionary}
                 />
               </div>
             </div>
 
             {/* Back Side */}
             <div className="text-center">
-              <h4 className="mb-4 text-sm font-medium">Back</h4>
+              <h4 className="mb-4 text-sm font-medium">
+                {d?.preview?.back || "Back"}
+              </h4>
               <div
                 className="rounded-lg border-2 border-gray-300 bg-white p-4 shadow-lg"
                 style={{
@@ -166,6 +184,7 @@ export function IDCardPreview({
                   data={data}
                   template={template}
                   side="back"
+                  dictionary={dictionary}
                 />
               </div>
             </div>

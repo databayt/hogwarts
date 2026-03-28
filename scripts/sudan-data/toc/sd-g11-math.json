@@ -1,0 +1,45 @@
+{
+  "subject": "math",
+  "subjectNameAr": "الرياضيات",
+  "grade": 11,
+  "level": "secondary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "",
+  "chapters": [
+    {
+      "nameAr": "الوحدة الأولى: التفاضل",
+      "name": "Unit 1: Differentiation",
+      "slug": "differentiation",
+      "sequenceOrder": 1,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الثانية: التكامل",
+      "name": "Unit 2: Integration",
+      "slug": "integration",
+      "sequenceOrder": 2,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الثالثة: المتجهات",
+      "name": "Unit 3: Vectors",
+      "slug": "vectors",
+      "sequenceOrder": 3,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الرابعة: الإحصاء والاحتمالات",
+      "name": "Unit 4: Statistics and Probability",
+      "slug": "statistics-probability",
+      "sequenceOrder": 4,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الخامسة: المصفوفات",
+      "name": "Unit 5: Matrices",
+      "slug": "matrices",
+      "sequenceOrder": 5,
+      "lessons": []
+    }
+  ]
+}

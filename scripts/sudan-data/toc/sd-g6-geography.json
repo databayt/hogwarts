@@ -1,0 +1,17 @@
+{
+  "subject": "geography",
+  "subjectNameAr": "الجغرافيا",
+  "grade": 6,
+  "level": "elementary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "",
+  "chapters": [
+    {
+      "nameAr": "الجغرافيا",
+      "name": "Geography",
+      "slug": "geography",
+      "sequenceOrder": 1,
+      "lessons": []
+    }
+  ]
+}

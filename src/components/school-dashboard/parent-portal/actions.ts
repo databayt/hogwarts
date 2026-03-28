@@ -144,7 +144,7 @@ export async function getChildAssignments(input: { studentId: string }) {
   const classIds = studentClasses.map((sc) => sc.classId)
 
   // Get assignments for student's classes
-  const assignments = await db.assignment.findMany({
+  const assignments = await db.schoolAssignment.findMany({
     where: {
       classId: { in: classIds },
       schoolId,

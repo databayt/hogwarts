@@ -107,9 +107,7 @@ describe("Proposal Actions (SaaS)", () => {
           parentChapterId: null,
         },
       ]
-      vi.mocked(db.catalogProposal.findMany).mockResolvedValue(
-        mockProposals as any
-      )
+      vi.mocked(db.proposal.findMany).mockResolvedValue(mockProposals as any)
 
       const result = await getProposalsForReview()
 
@@ -121,11 +119,11 @@ describe("Proposal Actions (SaaS)", () => {
 
     it("filters by status when provided", async () => {
       mockDeveloperSession()
-      vi.mocked(db.catalogProposal.findMany).mockResolvedValue([])
+      vi.mocked(db.proposal.findMany).mockResolvedValue([])
 
       await getProposalsForReview("SUBMITTED")
 
-      expect(db.catalogProposal.findMany).toHaveBeenCalledWith(
+      expect(db.proposal.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { status: "SUBMITTED" },
         })
@@ -147,10 +145,10 @@ describe("Proposal Actions (SaaS)", () => {
   // ==========================================================================
 
   describe("approveProposal", () => {
-    it("approves SUBJECT proposal (creates CatalogSubject + auto-bridges)", async () => {
+    it("approves SUBJECT proposal (creates Subject + auto-bridges)", async () => {
       mockDeveloperSession()
 
-      vi.mocked(db.catalogProposal.findUnique).mockResolvedValue({
+      vi.mocked(db.proposal.findUnique).mockResolvedValue({
         id: "p-1",
         type: "SUBJECT",
         status: "SUBMITTED",
@@ -180,14 +178,14 @@ describe("Proposal Actions (SaaS)", () => {
         return callback(tx)
       })
 
-      vi.mocked(db.catalogProposal.update).mockResolvedValue({} as any)
+      vi.mocked(db.proposal.update).mockResolvedValue({} as any)
 
       const result = await approveProposal("p-1", "Looks good")
 
       expect(result.success).toBe(true)
       expect(result.data).toEqual({ catalogEntityId: "cs-1" })
       expect(db.$transaction).toHaveBeenCalledTimes(1)
-      expect(db.catalogProposal.update).toHaveBeenCalledWith({
+      expect(db.proposal.update).toHaveBeenCalledWith({
         where: { id: "p-1" },
         data: expect.objectContaining({
           status: "PUBLISHED",
@@ -201,7 +199,7 @@ describe("Proposal Actions (SaaS)", () => {
     it("approves CHAPTER proposal", async () => {
       mockDeveloperSession()
 
-      vi.mocked(db.catalogProposal.findUnique).mockResolvedValue({
+      vi.mocked(db.proposal.findUnique).mockResolvedValue({
         id: "p-2",
         type: "CHAPTER",
         status: "IN_REVIEW",
@@ -210,17 +208,17 @@ describe("Proposal Actions (SaaS)", () => {
         data: { name: "Mechanics", sequenceOrder: 1 },
       } as any)
 
-      vi.mocked(db.catalogChapter.findFirst).mockResolvedValue(null)
-      vi.mocked(db.catalogChapter.create).mockResolvedValue({
+      vi.mocked(db.chapter.findFirst).mockResolvedValue(null)
+      vi.mocked(db.chapter.create).mockResolvedValue({
         id: "ch-1",
       } as any)
-      vi.mocked(db.catalogProposal.update).mockResolvedValue({} as any)
+      vi.mocked(db.proposal.update).mockResolvedValue({} as any)
 
       const result = await approveProposal("p-2")
 
       expect(result.success).toBe(true)
       expect(result.data).toEqual({ catalogEntityId: "ch-1" })
-      expect(db.catalogChapter.create).toHaveBeenCalledWith({
+      expect(db.chapter.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           subjectId: "cs-1",
           name: "Mechanics",
@@ -232,7 +230,7 @@ describe("Proposal Actions (SaaS)", () => {
     it("approves LESSON proposal", async () => {
       mockDeveloperSession()
 
-      vi.mocked(db.catalogProposal.findUnique).mockResolvedValue({
+      vi.mocked(db.proposal.findUnique).mockResolvedValue({
         id: "p-3",
         type: "LESSON",
         status: "SUBMITTED",
@@ -241,17 +239,17 @@ describe("Proposal Actions (SaaS)", () => {
         data: { name: "Newton's Laws", durationMinutes: 45 },
       } as any)
 
-      vi.mocked(db.catalogLesson.findFirst).mockResolvedValue(null)
-      vi.mocked(db.catalogLesson.create).mockResolvedValue({
+      vi.mocked(db.lesson.findFirst).mockResolvedValue(null)
+      vi.mocked(db.lesson.create).mockResolvedValue({
         id: "les-1",
       } as any)
-      vi.mocked(db.catalogProposal.update).mockResolvedValue({} as any)
+      vi.mocked(db.proposal.update).mockResolvedValue({} as any)
 
       const result = await approveProposal("p-3")
 
       expect(result.success).toBe(true)
       expect(result.data).toEqual({ catalogEntityId: "les-1" })
-      expect(db.catalogLesson.create).toHaveBeenCalledWith({
+      expect(db.lesson.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           chapterId: "ch-1",
           name: "Newton's Laws",
@@ -263,7 +261,7 @@ describe("Proposal Actions (SaaS)", () => {
 
     it("returns error for non-existent proposal", async () => {
       mockDeveloperSession()
-      vi.mocked(db.catalogProposal.findUnique).mockResolvedValue(null)
+      vi.mocked(db.proposal.findUnique).mockResolvedValue(null)
 
       const result = await approveProposal("nonexistent")
 
@@ -272,7 +270,7 @@ describe("Proposal Actions (SaaS)", () => {
 
     it("returns error for already-approved proposal", async () => {
       mockDeveloperSession()
-      vi.mocked(db.catalogProposal.findUnique).mockResolvedValue({
+      vi.mocked(db.proposal.findUnique).mockResolvedValue({
         id: "p-1",
         type: "SUBJECT",
         status: "PUBLISHED",
@@ -287,7 +285,7 @@ describe("Proposal Actions (SaaS)", () => {
 
     it("returns error for unknown proposal type", async () => {
       mockDeveloperSession()
-      vi.mocked(db.catalogProposal.findUnique).mockResolvedValue({
+      vi.mocked(db.proposal.findUnique).mockResolvedValue({
         id: "p-1",
         type: "UNKNOWN",
         status: "SUBMITTED",
@@ -311,7 +309,7 @@ describe("Proposal Actions (SaaS)", () => {
         success: false,
         error: "Unauthorized: DEVELOPER role required",
       })
-      expect(db.catalogProposal.findUnique).not.toHaveBeenCalled()
+      expect(db.proposal.findUnique).not.toHaveBeenCalled()
     })
   })
 
@@ -322,15 +320,15 @@ describe("Proposal Actions (SaaS)", () => {
   describe("rejectProposal", () => {
     it("rejects proposal with reason", async () => {
       mockDeveloperSession()
-      vi.mocked(db.catalogProposal.findUnique).mockResolvedValue({
+      vi.mocked(db.proposal.findUnique).mockResolvedValue({
         status: "SUBMITTED",
       } as any)
-      vi.mocked(db.catalogProposal.update).mockResolvedValue({} as any)
+      vi.mocked(db.proposal.update).mockResolvedValue({} as any)
 
       const result = await rejectProposal("p-1", "Duplicate subject")
 
       expect(result).toEqual({ success: true })
-      expect(db.catalogProposal.update).toHaveBeenCalledWith({
+      expect(db.proposal.update).toHaveBeenCalledWith({
         where: { id: "p-1" },
         data: expect.objectContaining({
           status: "REJECTED",
@@ -350,7 +348,7 @@ describe("Proposal Actions (SaaS)", () => {
         success: false,
         error: "Rejection reason is required",
       })
-      expect(db.catalogProposal.findUnique).not.toHaveBeenCalled()
+      expect(db.proposal.findUnique).not.toHaveBeenCalled()
     })
 
     it("returns error for whitespace-only rejection reason", async () => {
@@ -366,7 +364,7 @@ describe("Proposal Actions (SaaS)", () => {
 
     it("returns error for non-existent proposal", async () => {
       mockDeveloperSession()
-      vi.mocked(db.catalogProposal.findUnique).mockResolvedValue(null)
+      vi.mocked(db.proposal.findUnique).mockResolvedValue(null)
 
       const result = await rejectProposal("nonexistent", "Bad content")
 

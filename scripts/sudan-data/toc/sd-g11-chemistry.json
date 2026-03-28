@@ -1,0 +1,52 @@
+{
+  "subject": "chemistry",
+  "subjectNameAr": "الكيمياء",
+  "grade": 11,
+  "level": "secondary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "",
+  "chapters": [
+    {
+      "nameAr": "الوحدة الأولى: الترتيب الدوري للعناصر",
+      "name": "Unit 1: Periodic Arrangement of Elements",
+      "slug": "periodic-arrangement-elements",
+      "sequenceOrder": 1,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الثانية: فلزات المجموعة الأولى",
+      "name": "Unit 2: Group 1 Metals",
+      "slug": "group-1-metals",
+      "sequenceOrder": 2,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الثالثة: الكيمياء العضوية",
+      "name": "Unit 3: Organic Chemistry",
+      "slug": "organic-chemistry",
+      "sequenceOrder": 3,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الرابعة: النيتروجين",
+      "name": "Unit 4: Nitrogen",
+      "slug": "nitrogen",
+      "sequenceOrder": 4,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الخامسة: الهالوجينات",
+      "name": "Unit 5: Halogens",
+      "slug": "halogens",
+      "sequenceOrder": 5,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة السادسة: العناصر الانتقالية",
+      "name": "Unit 6: Transition Elements",
+      "slug": "transition-elements",
+      "sequenceOrder": 6,
+      "lessons": []
+    }
+  ]
+}

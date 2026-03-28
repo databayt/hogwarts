@@ -139,11 +139,11 @@ async function cloneSchool() {
 
       // 5. Clone subject selections (SchoolSubjectSelection bridge to CatalogSubject)
       spinner.text = "Cloning subject selections..."
-      const sourceSelections = await tx.schoolSubjectSelection.findMany({
+      const sourceSelections = await tx.subjectSelection.findMany({
         where: { schoolId: sourceSchool.id },
       })
       for (const sel of sourceSelections) {
-        await tx.schoolSubjectSelection.create({
+        await tx.subjectSelection.create({
           data: {
             schoolId: targetSchool.id,
             catalogSubjectId: sel.catalogSubjectId,

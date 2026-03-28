@@ -39,7 +39,7 @@ vi.mock("@/lib/db", () => ({
 const mockGetTenant = getTenantContext as ReturnType<typeof vi.fn>
 const mockFindGuardian = db.guardian.findUnique as ReturnType<typeof vi.fn>
 const mockFindEnrollments = db.enrollment.findMany as ReturnType<typeof vi.fn>
-const mockLessonCount = db.catalogLesson.count as ReturnType<typeof vi.fn>
+const mockLessonCount = db.lesson.count as ReturnType<typeof vi.fn>
 
 beforeEach(() => {
   vi.clearAllMocks()

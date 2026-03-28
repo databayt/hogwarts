@@ -37,6 +37,7 @@ interface SuccessContentProps {
   paymentReference?: string | null
   applicationFeePaid?: boolean
   requiresPayment?: boolean
+  accessToken?: string | null
 }
 
 export default function SuccessContent({
@@ -47,6 +48,7 @@ export default function SuccessContent({
   paymentReference,
   applicationFeePaid,
   requiresPayment,
+  accessToken,
 }: SuccessContentProps) {
   const params = useParams()
   const { locale } = useLocale()
@@ -84,7 +86,7 @@ export default function SuccessContent({
   ).replace("{schoolName}", schoolName)
 
   return (
-    <div className="min-h-screen py-12">
+    <div className="min-h-screen py-6 sm:py-12">
       <ApplicationSuccessModal
         applicationNumber={applicationNumber || ""}
         schoolUrl={`${subdomain}.databayt.org`}
@@ -92,13 +94,14 @@ export default function SuccessContent({
         setShowModal={setShowConfetti}
         isRTL={isRTL}
         locale={locale}
+        dictionary={dictionary.school as unknown as Record<string, unknown>}
       />
       <div className="container mx-auto max-w-2xl px-4">
         <div className="mb-8 text-center">
           <div className="mb-4 inline-flex h-20 w-20 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
             <CheckCircle2 className="h-10 w-10 text-green-600" />
           </div>
-          <h1 className="text-3xl font-bold">
+          <h1 className="text-2xl font-bold sm:text-3xl">
             {successDict.title || "Application Submitted!"}
           </h1>
           <p className="text-muted-foreground mt-2">{thankYouText}</p>
@@ -107,7 +110,7 @@ export default function SuccessContent({
         {/* Payment CTA when payment is pending */}
         {paymentPending && (
           <Card className="border-primary/50 bg-primary/5 mb-6">
-            <CardContent className="flex items-center gap-4 pt-6">
+            <CardContent className="flex flex-col items-start gap-4 pt-6 sm:flex-row sm:items-center">
               <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
                 <CreditCard className="h-6 w-6 text-amber-600" />
               </div>
@@ -121,7 +124,7 @@ export default function SuccessContent({
                 </p>
               </div>
               <Link
-                href={`/${locale}/application/${id}/payment?number=${applicationNumber}`}
+                href={`/${locale}/application/${id}/payment?number=${applicationNumber}${accessToken ? `&token=${encodeURIComponent(accessToken)}` : ""}`}
               >
                 <Button>
                   {successDict.completePayment || "Complete Payment"}

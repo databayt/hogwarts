@@ -5,16 +5,16 @@
  * Catalog Content Seed (Optimized for ClickView K-12 62 Subjects)
  *
  * Seeds 4 content types with subject-aware exam blueprints:
- * - CatalogMaterial (subject + chapter level)
- * - CatalogExam (subject + chapter + lesson level) with proper distribution JSON
- * - CatalogQuestion (subject + chapter + ALL lessons) with category-specific text
- * - CatalogAssignment (lesson-level)
+ * - Material (subject + chapter level)
+ * - Exam (subject + chapter + lesson level) with proper distribution JSON
+ * - Question (subject + chapter + ALL lessons) with category-specific text
+ * - Assignment (lesson-level)
  *
  * Key optimizations over previous version:
  * 1. Subject-aware question distributions (STEM vs Humanities vs Languages)
  * 2. Bloom's taxonomy alignment per subject category
  * 3. Difficulty curves by school level (Elementary=easy-heavy, High=balanced)
- * 4. Rich distribution JSON on every CatalogExam (not null)
+ * 4. Rich distribution JSON on every Exam (not null)
  * 5. Full lesson coverage (ALL lessons, not just first 3 per chapter)
  * 6. More exam types: midterm, practice, diagnostic (not just final/test/quiz)
  * 7. Category-specific MCQ options (not generic "Wrong answer A/B/C")
@@ -216,7 +216,7 @@ function buildExam(
 
 export async function seedCatalogContent(prisma: PrismaClient): Promise<void> {
   // 1. Fetch all published catalog subjects with chapters + lessons
-  const subjects: SubjectWithContent[] = await prisma.catalogSubject.findMany({
+  const subjects: SubjectWithContent[] = await prisma.subject.findMany({
     where: { status: "PUBLISHED" },
     orderBy: { sortOrder: "asc" },
     select: {
@@ -245,9 +245,7 @@ export async function seedCatalogContent(prisma: PrismaClient): Promise<void> {
   })
 
   if (subjects.length === 0) {
-    console.log(
-      "   No catalog subjects found. Run clickview-catalog seed first."
-    )
+    console.log("   No catalog subjects found. Run us-catalog seed first.")
     return
   }
 
@@ -556,7 +554,7 @@ export async function seedCatalogContent(prisma: PrismaClient): Promise<void> {
 
   // 3. Batch insert
   console.log(`   Inserting ${materials.length} materials...`)
-  const materialResult = await prisma.catalogMaterial.createMany({
+  const materialResult = await prisma.material.createMany({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data: materials as any,
     skipDuplicates: true,
@@ -564,7 +562,7 @@ export async function seedCatalogContent(prisma: PrismaClient): Promise<void> {
   logSuccess("Materials", materialResult.count)
 
   console.log(`   Inserting ${exams.length} exams...`)
-  const examResult = await prisma.catalogExam.createMany({
+  const examResult = await prisma.exam.createMany({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data: exams as any,
     skipDuplicates: true,
@@ -572,7 +570,7 @@ export async function seedCatalogContent(prisma: PrismaClient): Promise<void> {
   logSuccess("Exams", examResult.count)
 
   console.log(`   Inserting ${questions.length} questions...`)
-  const questionResult = await prisma.catalogQuestion.createMany({
+  const questionResult = await prisma.question.createMany({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data: questions as any,
     skipDuplicates: true,
@@ -580,17 +578,17 @@ export async function seedCatalogContent(prisma: PrismaClient): Promise<void> {
   logSuccess("Questions", questionResult.count)
 
   console.log(`   Inserting ${assignments.length} assignments...`)
-  const assignmentResult = await prisma.catalogAssignment.createMany({
+  const assignmentResult = await prisma.assignment.createMany({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data: assignments as any,
     skipDuplicates: true,
   })
   logSuccess("Assignments", assignmentResult.count)
 
-  // 3b. Create CatalogExamQuestion junction records
+  // 3b. Create ExamQuestion junction records
   // Link each exam to questions in its scope (subject/chapter/lesson)
-  console.log(`   Creating CatalogExamQuestion junction records...`)
-  const createdExams = await prisma.catalogExam.findMany({
+  console.log(`   Creating ExamQuestion junction records...`)
+  const createdExams = await prisma.exam.findMany({
     select: {
       id: true,
       subjectId: true,
@@ -624,7 +622,7 @@ export async function seedCatalogContent(prisma: PrismaClient): Promise<void> {
       continue
     }
 
-    const scopeQuestions = await prisma.catalogQuestion.findMany({
+    const scopeQuestions = await prisma.question.findMany({
       where: scopeWhere,
       select: { id: true, points: true },
       take: exam.totalQuestions || 10,
@@ -641,7 +639,7 @@ export async function seedCatalogContent(prisma: PrismaClient): Promise<void> {
 
     // Flush batch periodically
     if (junctionBatch.length >= JUNCTION_BATCH_SIZE) {
-      const result = await prisma.catalogExamQuestion.createMany({
+      const result = await prisma.examQuestion.createMany({
         data: junctionBatch,
         skipDuplicates: true,
       })
@@ -652,7 +650,7 @@ export async function seedCatalogContent(prisma: PrismaClient): Promise<void> {
 
   // Flush remaining
   if (junctionBatch.length > 0) {
-    const result = await prisma.catalogExamQuestion.createMany({
+    const result = await prisma.examQuestion.createMany({
       data: junctionBatch,
       skipDuplicates: true,
     })

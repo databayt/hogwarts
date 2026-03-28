@@ -11,7 +11,7 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 import { BreadcrumbTitle } from "@/components/saas-dashboard/breadcrumb-title"
 import { StreamLessonContent } from "@/components/stream/dashboard/lesson/content"
 import { getLessonContent } from "@/components/stream/data/catalog/get-lesson-content"
-import { getCatalogLessonWithProgress } from "@/components/stream/data/catalog/get-lesson-with-progress"
+import { getLessonWithProgress } from "@/components/stream/data/catalog/get-lesson-with-progress"
 
 interface Props {
   params: Promise<{
@@ -25,7 +25,7 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lessonId } = await params
   try {
-    const lesson = await getCatalogLessonWithProgress(lessonId)
+    const lesson = await getLessonWithProgress(lessonId)
     return {
       title: lesson?.title || "Lesson",
       description: lesson?.description || "Course lesson content",
@@ -46,7 +46,7 @@ export default async function StreamLessonPage({ params }: Props) {
   }
 
   const [lesson, lessonContent] = await Promise.all([
-    getCatalogLessonWithProgress(lessonId),
+    getLessonWithProgress(lessonId),
     getLessonContent(lessonId),
   ])
 

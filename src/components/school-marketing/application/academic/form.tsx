@@ -30,12 +30,16 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { createI18nHelpers } from "@/components/internationalization/helpers"
-import { useLocale } from "@/components/internationalization/use-locale"
 
 import { useApplySession } from "../application-context"
-import { getApplyDict } from "../utils"
+import { useAutoFillMerge } from "../use-auto-fill-merge"
+import { getApplyDict, getApplyOptionsDict } from "../utils"
 import { saveAcademicStep } from "./actions"
-import { GRADE_OPTIONS, PERFORMANCE_OPTIONS, STREAM_OPTIONS } from "./config"
+import {
+  getGradeOptions,
+  getPerformanceOptions,
+  getStreamOptions,
+} from "./config"
 import type { AcademicFormProps, AcademicFormRef } from "./types"
 import {
   academicSchema,
@@ -47,8 +51,6 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
   ({ initialData, onSuccess, dictionary }, ref) => {
     const params = useParams()
     const subdomain = params.subdomain as string
-    const { locale: lang } = useLocale()
-    const isRTL = lang === "ar"
     const { session, updateStepData } = useApplySession()
 
     const schema = useMemo(() => {
@@ -75,7 +77,11 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
       },
     })
 
+    // Merge AI-extracted data into empty fields (late-arrival insurance)
+    useAutoFillMerge(form, initialData)
+
     const dict = getApplyDict(dictionary, "academic")
+    const optionsDict = getApplyOptionsDict(dictionary)
 
     const prevDataRef = React.useRef<string>("")
     useEffect(() => {
@@ -140,11 +146,13 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {GRADE_OPTIONS(isRTL).map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
+                        {getGradeOptions(optionsDict.grade || {}).map(
+                          (option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          )
+                        )}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -164,7 +172,9 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {PERFORMANCE_OPTIONS(isRTL).map((option) => (
+                        {getPerformanceOptions(
+                          optionsDict.performance || {}
+                        ).map((option) => (
                           <SelectItem key={option.value} value={option.value}>
                             {option.label}
                           </SelectItem>
@@ -194,11 +204,13 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {GRADE_OPTIONS(isRTL).map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
+                        {getGradeOptions(optionsDict.grade || {}).map(
+                          (option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          )
+                        )}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -218,11 +230,13 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {STREAM_OPTIONS(isRTL).map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
+                        {getStreamOptions(optionsDict.stream || {}).map(
+                          (option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          )
+                        )}
                       </SelectContent>
                     </Select>
                     <FormMessage />

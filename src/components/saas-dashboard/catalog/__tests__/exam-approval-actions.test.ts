@@ -8,12 +8,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { db } from "@/lib/db"
 
 import {
-  approveCatalogExam,
-  approveCatalogExamTemplate,
-  getPendingCatalogExams,
-  getPendingCatalogExamTemplates,
-  rejectCatalogExam,
-  rejectCatalogExamTemplate,
+  approveExam,
+  approveExamTemplate,
+  getPendingExams,
+  getPendingExamTemplates,
+  rejectExam,
+  rejectExamTemplate,
 } from "../exam-approval-actions"
 
 // ============================================================================
@@ -74,10 +74,10 @@ describe("Exam Approval Actions", () => {
   })
 
   // ==========================================================================
-  // getPendingCatalogExams
+  // getPendingExams
   // ==========================================================================
 
-  describe("getPendingCatalogExams", () => {
+  describe("getPendingExams", () => {
     it("returns paginated pending exams", async () => {
       mockDeveloperSession()
 
@@ -95,13 +95,13 @@ describe("Exam Approval Actions", () => {
         },
       ]
 
-      vi.mocked(db.catalogExam.findMany).mockResolvedValue(mockExams as any)
-      vi.mocked(db.catalogExam.count).mockResolvedValue(1)
+      vi.mocked(db.exam.findMany).mockResolvedValue(mockExams as any)
+      vi.mocked(db.exam.count).mockResolvedValue(1)
       vi.mocked(db.school.findMany).mockResolvedValue([
         { id: "school-1", name: "Demo School" },
       ] as any)
 
-      const result = await getPendingCatalogExams(1)
+      const result = await getPendingExams(1)
 
       expect(result.items).toHaveLength(1)
       expect(result.items[0].title).toBe("Math Final")
@@ -114,30 +114,30 @@ describe("Exam Approval Actions", () => {
     it("requires DEVELOPER role (returns empty on auth failure)", async () => {
       mockNonDeveloperSession("ADMIN")
 
-      const result = await getPendingCatalogExams()
+      const result = await getPendingExams()
 
       expect(result.items).toEqual([])
       expect(result.total).toBe(0)
-      expect(db.catalogExam.findMany).not.toHaveBeenCalled()
+      expect(db.exam.findMany).not.toHaveBeenCalled()
     })
   })
 
   // ==========================================================================
-  // approveCatalogExam
+  // approveExam
   // ==========================================================================
 
-  describe("approveCatalogExam", () => {
+  describe("approveExam", () => {
     it("approves exam with PUBLISHED status", async () => {
       mockDeveloperSession()
-      vi.mocked(db.catalogExam.findUnique).mockResolvedValue({
+      vi.mocked(db.exam.findUnique).mockResolvedValue({
         id: "exam-1",
       } as any)
-      vi.mocked(db.catalogExam.update).mockResolvedValue({} as any)
+      vi.mocked(db.exam.update).mockResolvedValue({} as any)
 
-      const result = await approveCatalogExam("exam-1")
+      const result = await approveExam("exam-1")
 
       expect(result).toEqual({ success: true })
-      expect(db.catalogExam.update).toHaveBeenCalledWith({
+      expect(db.exam.update).toHaveBeenCalledWith({
         where: { id: "exam-1" },
         data: expect.objectContaining({
           approvalStatus: "APPROVED",
@@ -151,18 +151,18 @@ describe("Exam Approval Actions", () => {
 
     it("returns error for non-existent exam", async () => {
       mockDeveloperSession()
-      vi.mocked(db.catalogExam.findUnique).mockResolvedValue(null)
+      vi.mocked(db.exam.findUnique).mockResolvedValue(null)
 
-      const result = await approveCatalogExam("nonexistent")
+      const result = await approveExam("nonexistent")
 
       expect(result).toEqual({ success: false, error: "Exam not found" })
-      expect(db.catalogExam.update).not.toHaveBeenCalled()
+      expect(db.exam.update).not.toHaveBeenCalled()
     })
 
     it("requires DEVELOPER role", async () => {
       mockNonDeveloperSession("ADMIN")
 
-      const result = await approveCatalogExam("exam-1")
+      const result = await approveExam("exam-1")
 
       expect(result).toEqual({
         success: false,
@@ -172,21 +172,21 @@ describe("Exam Approval Actions", () => {
   })
 
   // ==========================================================================
-  // rejectCatalogExam
+  // rejectExam
   // ==========================================================================
 
-  describe("rejectCatalogExam", () => {
+  describe("rejectExam", () => {
     it("rejects exam with reason", async () => {
       mockDeveloperSession()
-      vi.mocked(db.catalogExam.findUnique).mockResolvedValue({
+      vi.mocked(db.exam.findUnique).mockResolvedValue({
         id: "exam-1",
       } as any)
-      vi.mocked(db.catalogExam.update).mockResolvedValue({} as any)
+      vi.mocked(db.exam.update).mockResolvedValue({} as any)
 
-      const result = await rejectCatalogExam("exam-1", "Low quality")
+      const result = await rejectExam("exam-1", "Low quality")
 
       expect(result).toEqual({ success: true })
-      expect(db.catalogExam.update).toHaveBeenCalledWith({
+      expect(db.exam.update).toHaveBeenCalledWith({
         where: { id: "exam-1" },
         data: expect.objectContaining({
           approvalStatus: "REJECTED",
@@ -198,20 +198,20 @@ describe("Exam Approval Actions", () => {
     it("returns error for empty reason", async () => {
       mockDeveloperSession()
 
-      const result = await rejectCatalogExam("exam-1", "")
+      const result = await rejectExam("exam-1", "")
 
       expect(result).toEqual({
         success: false,
         error: "Rejection reason is required",
       })
-      expect(db.catalogExam.findUnique).not.toHaveBeenCalled()
+      expect(db.exam.findUnique).not.toHaveBeenCalled()
     })
 
     it("returns error for non-existent exam", async () => {
       mockDeveloperSession()
-      vi.mocked(db.catalogExam.findUnique).mockResolvedValue(null)
+      vi.mocked(db.exam.findUnique).mockResolvedValue(null)
 
-      const result = await rejectCatalogExam("nonexistent", "Bad content")
+      const result = await rejectExam("nonexistent", "Bad content")
 
       expect(result).toEqual({ success: false, error: "Exam not found" })
     })
@@ -219,7 +219,7 @@ describe("Exam Approval Actions", () => {
     it("requires DEVELOPER role", async () => {
       mockNonDeveloperSession("TEACHER")
 
-      const result = await rejectCatalogExam("exam-1", "Reason")
+      const result = await rejectExam("exam-1", "Reason")
 
       expect(result).toEqual({
         success: false,
@@ -229,10 +229,10 @@ describe("Exam Approval Actions", () => {
   })
 
   // ==========================================================================
-  // getPendingCatalogExamTemplates
+  // getPendingExamTemplates
   // ==========================================================================
 
-  describe("getPendingCatalogExamTemplates", () => {
+  describe("getPendingExamTemplates", () => {
     it("returns paginated pending templates", async () => {
       mockDeveloperSession()
 
@@ -250,15 +250,15 @@ describe("Exam Approval Actions", () => {
         },
       ]
 
-      vi.mocked(db.catalogExamTemplate.findMany).mockResolvedValue(
+      vi.mocked(db.examTemplate.findMany).mockResolvedValue(
         mockTemplates as any
       )
-      vi.mocked(db.catalogExamTemplate.count).mockResolvedValue(1)
+      vi.mocked(db.examTemplate.count).mockResolvedValue(1)
       vi.mocked(db.school.findMany).mockResolvedValue([
         { id: "school-1", name: "Demo School" },
       ] as any)
 
-      const result = await getPendingCatalogExamTemplates(1)
+      const result = await getPendingExamTemplates(1)
 
       expect(result.items).toHaveLength(1)
       expect(result.items[0].name).toBe("Midterm Template")
@@ -269,7 +269,7 @@ describe("Exam Approval Actions", () => {
     it("requires DEVELOPER role (returns empty on auth failure)", async () => {
       mockNonDeveloperSession("ADMIN")
 
-      const result = await getPendingCatalogExamTemplates()
+      const result = await getPendingExamTemplates()
 
       expect(result.items).toEqual([])
       expect(result.total).toBe(0)
@@ -277,21 +277,21 @@ describe("Exam Approval Actions", () => {
   })
 
   // ==========================================================================
-  // approveCatalogExamTemplate
+  // approveExamTemplate
   // ==========================================================================
 
-  describe("approveCatalogExamTemplate", () => {
+  describe("approveExamTemplate", () => {
     it("approves template", async () => {
       mockDeveloperSession()
-      vi.mocked(db.catalogExamTemplate.findUnique).mockResolvedValue({
+      vi.mocked(db.examTemplate.findUnique).mockResolvedValue({
         id: "tpl-1",
       } as any)
-      vi.mocked(db.catalogExamTemplate.update).mockResolvedValue({} as any)
+      vi.mocked(db.examTemplate.update).mockResolvedValue({} as any)
 
-      const result = await approveCatalogExamTemplate("tpl-1")
+      const result = await approveExamTemplate("tpl-1")
 
       expect(result).toEqual({ success: true })
-      expect(db.catalogExamTemplate.update).toHaveBeenCalledWith({
+      expect(db.examTemplate.update).toHaveBeenCalledWith({
         where: { id: "tpl-1" },
         data: expect.objectContaining({
           approvalStatus: "APPROVED",
@@ -302,9 +302,9 @@ describe("Exam Approval Actions", () => {
 
     it("returns error for non-existent template", async () => {
       mockDeveloperSession()
-      vi.mocked(db.catalogExamTemplate.findUnique).mockResolvedValue(null)
+      vi.mocked(db.examTemplate.findUnique).mockResolvedValue(null)
 
-      const result = await approveCatalogExamTemplate("nonexistent")
+      const result = await approveExamTemplate("nonexistent")
 
       expect(result).toEqual({
         success: false,
@@ -315,7 +315,7 @@ describe("Exam Approval Actions", () => {
     it("requires DEVELOPER role", async () => {
       mockNonDeveloperSession("ADMIN")
 
-      const result = await approveCatalogExamTemplate("tpl-1")
+      const result = await approveExamTemplate("tpl-1")
 
       expect(result).toEqual({
         success: false,
@@ -325,21 +325,21 @@ describe("Exam Approval Actions", () => {
   })
 
   // ==========================================================================
-  // rejectCatalogExamTemplate
+  // rejectExamTemplate
   // ==========================================================================
 
-  describe("rejectCatalogExamTemplate", () => {
+  describe("rejectExamTemplate", () => {
     it("rejects template with reason", async () => {
       mockDeveloperSession()
-      vi.mocked(db.catalogExamTemplate.findUnique).mockResolvedValue({
+      vi.mocked(db.examTemplate.findUnique).mockResolvedValue({
         id: "tpl-1",
       } as any)
-      vi.mocked(db.catalogExamTemplate.update).mockResolvedValue({} as any)
+      vi.mocked(db.examTemplate.update).mockResolvedValue({} as any)
 
-      const result = await rejectCatalogExamTemplate("tpl-1", "Incomplete")
+      const result = await rejectExamTemplate("tpl-1", "Incomplete")
 
       expect(result).toEqual({ success: true })
-      expect(db.catalogExamTemplate.update).toHaveBeenCalledWith({
+      expect(db.examTemplate.update).toHaveBeenCalledWith({
         where: { id: "tpl-1" },
         data: expect.objectContaining({
           approvalStatus: "REJECTED",
@@ -351,7 +351,7 @@ describe("Exam Approval Actions", () => {
     it("returns error for empty reason", async () => {
       mockDeveloperSession()
 
-      const result = await rejectCatalogExamTemplate("tpl-1", "")
+      const result = await rejectExamTemplate("tpl-1", "")
 
       expect(result).toEqual({
         success: false,
@@ -361,12 +361,9 @@ describe("Exam Approval Actions", () => {
 
     it("returns error for non-existent template", async () => {
       mockDeveloperSession()
-      vi.mocked(db.catalogExamTemplate.findUnique).mockResolvedValue(null)
+      vi.mocked(db.examTemplate.findUnique).mockResolvedValue(null)
 
-      const result = await rejectCatalogExamTemplate(
-        "nonexistent",
-        "Bad content"
-      )
+      const result = await rejectExamTemplate("nonexistent", "Bad content")
 
       expect(result).toEqual({
         success: false,
@@ -377,7 +374,7 @@ describe("Exam Approval Actions", () => {
     it("requires DEVELOPER role", async () => {
       mockNonDeveloperSession("TEACHER")
 
-      const result = await rejectCatalogExamTemplate("tpl-1", "Reason")
+      const result = await rejectExamTemplate("tpl-1", "Reason")
 
       expect(result).toEqual({
         success: false,

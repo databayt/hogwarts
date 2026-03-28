@@ -83,7 +83,7 @@ describe("Proposal Actions (School)", () => {
   describe("submitSubjectProposal", () => {
     it("creates proposal with SUBMITTED status", async () => {
       mockAdminSession()
-      vi.mocked(db.catalogProposal.create).mockResolvedValue({
+      vi.mocked(db.proposal.create).mockResolvedValue({
         id: "p-1",
       } as any)
 
@@ -95,7 +95,7 @@ describe("Proposal Actions (School)", () => {
 
       expect(result.success).toBe(true)
       expect(result.data).toEqual({ id: "p-1" })
-      expect(db.catalogProposal.create).toHaveBeenCalledWith({
+      expect(db.proposal.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           schoolId: "school-1",
           proposedBy: "admin-1",
@@ -116,7 +116,7 @@ describe("Proposal Actions (School)", () => {
 
       expect(result.success).toBe(false)
       expect(result.error).toBeDefined()
-      expect(db.catalogProposal.create).not.toHaveBeenCalled()
+      expect(db.proposal.create).not.toHaveBeenCalled()
     })
 
     it("requires ADMIN/DEVELOPER role", async () => {
@@ -139,7 +139,7 @@ describe("Proposal Actions (School)", () => {
   describe("submitChapterProposal", () => {
     it("creates chapter proposal with parentSubjectId", async () => {
       mockAdminSession()
-      vi.mocked(db.catalogProposal.create).mockResolvedValue({
+      vi.mocked(db.proposal.create).mockResolvedValue({
         id: "p-2",
       } as any)
 
@@ -150,7 +150,7 @@ describe("Proposal Actions (School)", () => {
 
       expect(result.success).toBe(true)
       expect(result.data).toEqual({ id: "p-2" })
-      expect(db.catalogProposal.create).toHaveBeenCalledWith({
+      expect(db.proposal.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           type: "CHAPTER",
           parentSubjectId: "subject-1",
@@ -178,7 +178,7 @@ describe("Proposal Actions (School)", () => {
   describe("submitLessonProposal", () => {
     it("creates lesson proposal with parentChapterId", async () => {
       mockAdminSession()
-      vi.mocked(db.catalogProposal.create).mockResolvedValue({
+      vi.mocked(db.proposal.create).mockResolvedValue({
         id: "p-3",
       } as any)
 
@@ -189,7 +189,7 @@ describe("Proposal Actions (School)", () => {
 
       expect(result.success).toBe(true)
       expect(result.data).toEqual({ id: "p-3" })
-      expect(db.catalogProposal.create).toHaveBeenCalledWith({
+      expect(db.proposal.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           type: "LESSON",
           parentChapterId: "chapter-1",
@@ -229,16 +229,14 @@ describe("Proposal Actions (School)", () => {
           rejectionReason: null,
         },
       ]
-      vi.mocked(db.catalogProposal.findMany).mockResolvedValue(
-        mockProposals as any
-      )
+      vi.mocked(db.proposal.findMany).mockResolvedValue(mockProposals as any)
 
       const result = await getMyProposals()
 
       expect(result.success).toBe(true)
       expect(result.data).toHaveLength(1)
       expect(result.data![0].createdAt).toBe("2026-01-01T00:00:00.000Z")
-      expect(db.catalogProposal.findMany).toHaveBeenCalledWith(
+      expect(db.proposal.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { schoolId: "school-1" },
         })
@@ -262,11 +260,11 @@ describe("Proposal Actions (School)", () => {
   describe("updateProposal", () => {
     it("updates DRAFT proposal and re-submits", async () => {
       mockAdminSession()
-      vi.mocked(db.catalogProposal.findFirst).mockResolvedValue({
+      vi.mocked(db.proposal.findFirst).mockResolvedValue({
         status: "DRAFT",
         type: "SUBJECT",
       } as any)
-      vi.mocked(db.catalogProposal.update).mockResolvedValue({} as any)
+      vi.mocked(db.proposal.update).mockResolvedValue({} as any)
 
       const result = await updateProposal("p-1", {
         name: "Updated Physics",
@@ -274,7 +272,7 @@ describe("Proposal Actions (School)", () => {
       })
 
       expect(result).toEqual({ success: true })
-      expect(db.catalogProposal.update).toHaveBeenCalledWith({
+      expect(db.proposal.update).toHaveBeenCalledWith({
         where: { id: "p-1" },
         data: expect.objectContaining({
           status: "SUBMITTED",
@@ -287,11 +285,11 @@ describe("Proposal Actions (School)", () => {
 
     it("updates REJECTED proposal and re-submits", async () => {
       mockAdminSession()
-      vi.mocked(db.catalogProposal.findFirst).mockResolvedValue({
+      vi.mocked(db.proposal.findFirst).mockResolvedValue({
         status: "REJECTED",
         type: "CHAPTER",
       } as any)
-      vi.mocked(db.catalogProposal.update).mockResolvedValue({} as any)
+      vi.mocked(db.proposal.update).mockResolvedValue({} as any)
 
       const result = await updateProposal("p-2", {
         name: "Updated Chapter",
@@ -302,7 +300,7 @@ describe("Proposal Actions (School)", () => {
 
     it("validates data against proposal type schema (rejects invalid)", async () => {
       mockAdminSession()
-      vi.mocked(db.catalogProposal.findFirst).mockResolvedValue({
+      vi.mocked(db.proposal.findFirst).mockResolvedValue({
         status: "DRAFT",
         type: "SUBJECT",
       } as any)
@@ -314,12 +312,12 @@ describe("Proposal Actions (School)", () => {
 
       expect(result.success).toBe(false)
       expect(result.error).toBeDefined()
-      expect(db.catalogProposal.update).not.toHaveBeenCalled()
+      expect(db.proposal.update).not.toHaveBeenCalled()
     })
 
     it("returns error for non-existent proposal", async () => {
       mockAdminSession()
-      vi.mocked(db.catalogProposal.findFirst).mockResolvedValue(null)
+      vi.mocked(db.proposal.findFirst).mockResolvedValue(null)
 
       const result = await updateProposal("nonexistent", { name: "X" })
 
@@ -328,7 +326,7 @@ describe("Proposal Actions (School)", () => {
 
     it("returns error for SUBMITTED proposal (only DRAFT/REJECTED editable)", async () => {
       mockAdminSession()
-      vi.mocked(db.catalogProposal.findFirst).mockResolvedValue({
+      vi.mocked(db.proposal.findFirst).mockResolvedValue({
         status: "SUBMITTED",
         type: "SUBJECT",
       } as any)
@@ -339,7 +337,7 @@ describe("Proposal Actions (School)", () => {
         success: false,
         error: "Only DRAFT or REJECTED proposals can be edited",
       })
-      expect(db.catalogProposal.update).not.toHaveBeenCalled()
+      expect(db.proposal.update).not.toHaveBeenCalled()
     })
 
     it("requires ADMIN/DEVELOPER role", async () => {

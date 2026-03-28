@@ -1,0 +1,72 @@
+{
+  "subject": "military-sciences",
+  "subjectNameAr": "العلوم العسكرية",
+  "grade": 11,
+  "level": "secondary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "2008م",
+  "chapters": [
+    {
+      "nameAr": "الباب الأول: التربية العسكرية",
+      "name": "Chapter 1: Military Education",
+      "slug": "military-education",
+      "sequenceOrder": 1,
+      "lessons": [
+        {
+          "nameAr": "النظام والانضباط",
+          "name": "Discipline and Order",
+          "slug": "discipline-order",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "التدريبات العسكرية",
+          "name": "Military Drills",
+          "slug": "military-drills",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الأسلحة الخفيفة",
+          "name": "Light Weapons",
+          "slug": "light-weapons",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "الإسعافات الأولية",
+          "name": "First Aid",
+          "slug": "first-aid",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "قراءة الخرائط",
+          "name": "Map Reading",
+          "slug": "map-reading",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "الدفاع المدني",
+          "name": "Civil Defense",
+          "slug": "civil-defense",
+          "sequenceOrder": 6
+        },
+        {
+          "nameAr": "الأمن الوطني",
+          "name": "National Security",
+          "slug": "national-security",
+          "sequenceOrder": 7
+        },
+        {
+          "nameAr": "الخدمة الوطنية",
+          "name": "National Service",
+          "slug": "national-service",
+          "sequenceOrder": 8
+        },
+        {
+          "nameAr": "التاريخ العسكري",
+          "name": "Military History",
+          "slug": "military-history",
+          "sequenceOrder": 9
+        }
+      ]
+    }
+  ]
+}

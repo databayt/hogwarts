@@ -43,7 +43,7 @@ export async function bulkGradeExam(
     const validated = bulkGradeSchema.parse(Object.fromEntries(data))
 
     // Verify exam exists and belongs to school
-    const exam = await db.exam.findFirst({
+    const exam = await db.schoolExam.findFirst({
       where: { id: validated.examId, schoolId },
     })
 

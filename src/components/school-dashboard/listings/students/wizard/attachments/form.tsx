@@ -21,6 +21,7 @@ import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { useUpload } from "@/components/file/upload/use-upload"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { updateStudentAttachments } from "./actions"
 import { attachmentsSchema, type AttachmentsFormData } from "./validation"
@@ -64,11 +65,13 @@ function DocumentCard({
   label,
   icon,
   disabled,
+  onUploaded,
 }: {
   name: string
   label: string
   icon: string
   disabled?: boolean
+  onUploaded?: (slotKey: string, fileUrl: string) => void
 }) {
   const form = useFormContext()
   const currentValue = form.watch(name)
@@ -87,6 +90,7 @@ function DocumentCard({
       maxFiles: 1,
       onSuccess: (result) => {
         form.setValue(name, result)
+        if (result?.url) onUploaded?.(name, result.url)
       },
     })
 
@@ -296,12 +300,26 @@ interface AttachmentsFormProps {
   studentId: string
   initialData?: Partial<AttachmentsFormData>
   onValidChange?: (isValid: boolean) => void
+  onDocumentUploaded?: (slotKey: string, fileUrl: string) => void
   dictionary?: AttachmentDict
 }
 
 export const AttachmentsForm = forwardRef<WizardFormRef, AttachmentsFormProps>(
-  ({ studentId, initialData, onValidChange, dictionary: t }, ref) => {
+  (
+    {
+      studentId,
+      initialData,
+      onValidChange,
+      onDocumentUploaded,
+      dictionary: t,
+    },
+    ref
+  ) => {
     const [isPending, startTransition] = useTransition()
+    const { dictionary } = useDictionary()
+    const tRoot = (dictionary?.school as any)?.students as
+      | Record<string, string>
+      | undefined
 
     const form = useForm<AttachmentsFormData>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -329,13 +347,18 @@ export const AttachmentsForm = forwardRef<WizardFormRef, AttachmentsFormProps>(
               const data = form.getValues()
               const result = await updateStudentAttachments(studentId, data)
               if (!result.success) {
-                ErrorToast(result.error || "Failed to save")
+                ErrorToast(
+                  result.error || tRoot?.failedToSave || "Failed to save"
+                )
                 reject(new Error(result.error))
                 return
               }
               resolve()
             } catch (err) {
-              const msg = err instanceof Error ? err.message : "Failed to save"
+              const msg =
+                err instanceof Error
+                  ? err.message
+                  : tRoot?.failedToSave || "Failed to save"
               ErrorToast(msg)
               reject(err)
             }
@@ -363,6 +386,7 @@ export const AttachmentsForm = forwardRef<WizardFormRef, AttachmentsFormProps>(
               label={label}
               icon={icon}
               disabled={isPending}
+              onUploaded={onDocumentUploaded}
             />
           ))}
         </form>

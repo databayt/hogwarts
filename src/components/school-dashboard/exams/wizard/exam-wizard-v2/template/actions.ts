@@ -24,7 +24,7 @@ export async function getAvailableTemplates(): Promise<
     const { schoolId } = await getTenantContext()
     if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
-    const templates = await db.examTemplate.findMany({
+    const templates = await db.schoolExamTemplate.findMany({
       where: { schoolId, isActive: true, wizardStep: null },
       orderBy: { updatedAt: "desc" },
       select: {
@@ -87,7 +87,7 @@ export async function selectTemplate(
     if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     // Verify template belongs to school
-    const template = await db.examTemplate.findFirst({
+    const template = await db.schoolExamTemplate.findFirst({
       where: { id: templateId, schoolId, isActive: true },
       select: { id: true, subjectId: true },
     })

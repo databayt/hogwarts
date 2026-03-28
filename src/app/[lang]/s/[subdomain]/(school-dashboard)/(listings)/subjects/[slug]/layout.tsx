@@ -13,13 +13,10 @@ interface Props {
   children: React.ReactNode
 }
 
-export default async function CatalogSubjectLayout({
-  params,
-  children,
-}: Props) {
+export default async function SubjectLayout({ params, children }: Props) {
   const { lang, slug } = await params
 
-  const subject = await db.catalogSubject.findUnique({
+  const subject = await db.subject.findUnique({
     where: { slug },
     select: {
       name: true,
@@ -28,9 +25,8 @@ export default async function CatalogSubjectLayout({
       description: true,
       department: true,
       color: true,
-      imageKey: true,
-      thumbnailKey: true,
-      bannerUrl: true,
+      thumbnail: true,
+      banner: true,
       levels: true,
       grades: true,
       totalChapters: true,
@@ -48,7 +44,7 @@ export default async function CatalogSubjectLayout({
   // Fetch grade siblings for toggle (same clickviewId, different grades)
   let gradeSiblings: { grade: number; slug: string }[] = []
   if (subject.clickviewId) {
-    const siblings = await db.catalogSubject.findMany({
+    const siblings = await db.subject.findMany({
       where: { clickviewId: subject.clickviewId, status: "PUBLISHED" },
       select: { grades: true, slug: true },
       orderBy: { sortOrder: "asc" },
@@ -59,12 +55,8 @@ export default async function CatalogSubjectLayout({
       .sort((a, b) => a.grade - b.grade)
   }
 
-  const heroImageUrl = getCatalogImageUrl(subject.bannerUrl, null, "original")
-  const imageUrl = getCatalogImageUrl(
-    subject.thumbnailKey,
-    subject.imageKey,
-    "sm"
-  )
+  const heroImageUrl = getCatalogImageUrl(subject.banner, "original")
+  const imageUrl = getCatalogImageUrl(subject.thumbnail, "sm")
 
   return (
     <div className="mt-3 space-y-5">

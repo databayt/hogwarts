@@ -1,0 +1,17 @@
+{
+  "subject": "earth-environment",
+  "subjectNameAr": "الأرض بيئة الحياة",
+  "grade": 5,
+  "level": "elementary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "الطبعة الأولى 2021م",
+  "chapters": [
+    {
+      "nameAr": "الأرض بيئة الحياة",
+      "name": "Earth: The Environment of Life",
+      "slug": "earth-environment-of-life",
+      "sequenceOrder": 1,
+      "lessons": []
+    }
+  ]
+}

@@ -26,7 +26,7 @@ const ApplicationDashboard: React.FC<ApplicationDashboardProps> = ({
   dictionary,
   locale,
 }) => {
-  const dict = dictionary?.apply || {}
+  const dict = dictionary?.school?.admission?.portal || {}
   const hasDrafts = draftApplications.length > 0
 
   return (
@@ -34,7 +34,7 @@ const ApplicationDashboard: React.FC<ApplicationDashboardProps> = ({
       {/* Welcome Header */}
       <div>
         <h3 className="mb-3 text-lg sm:mb-4 sm:text-xl lg:text-2xl">
-          {dict.welcomeStatic || "Welcome"}
+          {dict.welcome || "Welcome"}
         </h3>
       </div>
 
@@ -50,7 +50,7 @@ const ApplicationDashboard: React.FC<ApplicationDashboardProps> = ({
                 application={application}
                 onClick={onResumeDraft}
                 isRTL={locale === "ar"}
-                dictionary={dictionary}
+                dictionary={dict}
               />
             ))}
           </div>

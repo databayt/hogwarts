@@ -29,4 +29,4 @@ export const catalogAssignmentSchema = z.object({
   visibility: z.enum(["PRIVATE", "SCHOOL", "PUBLIC", "PAID"]).default("PUBLIC"),
 })
 
-export type CatalogAssignmentInput = z.infer<typeof catalogAssignmentSchema>
+export type AssignmentInput = z.infer<typeof catalogAssignmentSchema>

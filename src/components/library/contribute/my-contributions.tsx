@@ -37,7 +37,7 @@ export default async function MyContributionsContent({ lang }: Props) {
     )
   }
 
-  const contributions = await db.catalogBook.findMany({
+  const contributions = await db.book.findMany({
     where: { contributedBy: session.user.id },
     orderBy: { createdAt: "desc" },
     select: {

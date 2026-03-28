@@ -49,8 +49,8 @@ export default defineConfig({
   /* Retry on CI only, more retries for production (network flakiness) */
   retries: process.env.CI ? 2 : isProduction ? 1 : 0,
 
-  /* Workers: Use all available cores locally, single worker on CI */
-  workers: process.env.CI ? 1 : undefined,
+  /* Workers: limited locally (Turbopack dev server can't handle many concurrent requests) */
+  workers: process.env.CI ? 1 : 2,
 
   /* Reporter configuration */
   reporter: [
@@ -117,6 +117,10 @@ export default defineConfig({
       name: "setup",
       testMatch: /.*\.setup\.ts/,
       testDir: "./tests",
+      fullyParallel: false,
+      use: {
+        navigationTimeout: 30_000,
+      },
     },
 
     // ============================================

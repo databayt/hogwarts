@@ -178,7 +178,7 @@ export async function seedAssignments(
 
       try {
         // Check if assignment already exists
-        const existing = await prisma.assignment.findFirst({
+        const existing = await prisma.schoolAssignment.findFirst({
           where: {
             schoolId,
             classId: classInfo.id,
@@ -187,7 +187,7 @@ export async function seedAssignments(
         })
 
         if (!existing) {
-          const assignment = await prisma.assignment.create({
+          const assignment = await prisma.schoolAssignment.create({
             data: {
               schoolId,
               classId: classInfo.id,
@@ -229,7 +229,7 @@ export async function seedAssignmentSubmissions(
   let submissionCount = 0
 
   // Get all published assignments
-  const assignments = await prisma.assignment.findMany({
+  const assignments = await prisma.schoolAssignment.findMany({
     where: {
       schoolId,
       status: { in: ["PUBLISHED", "COMPLETED", "GRADED"] },

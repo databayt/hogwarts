@@ -21,7 +21,7 @@ interface Stage {
 }
 
 interface ApplyOverviewClientProps {
-  dictionary: Dictionary["school"]["admission"]["form"]
+  dictionary: Dictionary["school"]["admission"]
   lang: Locale
   subdomain: string
   id?: string
@@ -37,24 +37,8 @@ const ApplyOverviewClient: React.FC<ApplyOverviewClientProps> = ({
   const [isStarting, setIsStarting] = React.useState(false)
   const { isRTL } = useLocale()
 
-  const applyDict = (
-    dictionary as unknown as {
-      apply?: {
-        overview?: Record<string, string>
-      }
-    }
-  )?.apply
-  const overviewDict = applyDict?.overview ?? {}
-
-  // 3 stages matching ADMISSION_CONFIG.groupLabels
-  const groupsDict =
-    (
-      dictionary as unknown as {
-        apply?: {
-          groups?: Record<string, string>
-        }
-      }
-    )?.apply?.groups ?? {}
+  const overviewDict = dictionary?.apply?.overview ?? {}
+  const groupsDict = dictionary?.apply?.groups ?? {}
 
   const stages: Stage[] = [
     {
@@ -107,7 +91,7 @@ const ApplyOverviewClient: React.FC<ApplyOverviewClientProps> = ({
           <div className="grid grid-cols-1 items-start gap-12 md:grid-cols-2">
             {/* Left Side - Title */}
             <div>
-              <h2 className="text-start text-4xl font-bold tracking-tight">
+              <h2 className="text-start text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl">
                 {overviewDict.title || "Application Steps"}
               </h2>
               <p className="text-muted-foreground mt-4 text-start">

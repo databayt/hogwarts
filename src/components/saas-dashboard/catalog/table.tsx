@@ -20,11 +20,11 @@ import { PlatformToolbar } from "@/components/school-dashboard/shared/platform-t
 import { DataTable } from "@/components/table/data-table"
 import { useDataTable } from "@/components/table/use-data-table"
 
-import { catalogColumns, type CatalogSubjectRow } from "./columns"
+import { catalogColumns, type SubjectRow } from "./columns"
 import { CreateSubjectForm } from "./create-subject-dialog"
 
 interface Props {
-  data: CatalogSubjectRow[]
+  data: SubjectRow[]
   stats?: {
     subjects: number
     chapters: number
@@ -60,7 +60,7 @@ export function CatalogTable({ data, stats }: Props) {
     [filtered, visibleCount]
   )
 
-  const { table } = useDataTable<CatalogSubjectRow>({
+  const { table } = useDataTable<SubjectRow>({
     data: visible,
     columns,
     pageCount: 1,

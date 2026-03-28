@@ -1,0 +1,108 @@
+{
+  "subject": "arts",
+  "subjectNameAr": "أساسيات التربية التقنية",
+  "grade": 2,
+  "level": "elementary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "الطبعة الأولى 2022م",
+  "chapters": [
+    {
+      "nameAr": "المجال الهندسي",
+      "name": "Engineering Field",
+      "slug": "engineering-field",
+      "sequenceOrder": 1,
+      "lessons": [
+        {
+          "nameAr": "الإنسان والمعادن",
+          "name": "Humans and Metals",
+          "slug": "humans-and-metals",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الإنسان والأخشاب",
+          "name": "Humans and Wood",
+          "slug": "humans-and-wood",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الأجهزة الصحية",
+          "name": "Sanitary Equipment",
+          "slug": "sanitary-equipment",
+          "sequenceOrder": 3
+        }
+      ]
+    },
+    {
+      "nameAr": "المجال الزراعي",
+      "name": "Agricultural Field",
+      "slug": "agricultural-field",
+      "sequenceOrder": 2,
+      "lessons": [
+        {
+          "nameAr": "نباتات الزينة",
+          "name": "Ornamental Plants",
+          "slug": "ornamental-plants",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "تكاثر نباتات الزينة",
+          "name": "Propagation of Ornamental Plants",
+          "slug": "ornamental-plant-propagation",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "تربية الأسماك",
+          "name": "Fish Farming",
+          "slug": "fish-farming",
+          "sequenceOrder": 3
+        }
+      ]
+    },
+    {
+      "nameAr": "الفندقة والديكور",
+      "name": "Hospitality and Decor",
+      "slug": "hospitality-and-decor",
+      "sequenceOrder": 3,
+      "lessons": [
+        {
+          "nameAr": "تزيين المنازل من الداخل",
+          "name": "Interior Home Decoration",
+          "slug": "interior-decoration",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الخدمات الفندقية",
+          "name": "Hotel Services",
+          "slug": "hotel-services",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "صناعة الفنادق والسياحة",
+          "name": "Hotel Industry and Tourism",
+          "slug": "hotel-industry-tourism",
+          "sequenceOrder": 3
+        }
+      ]
+    },
+    {
+      "nameAr": "تقنيات التجارة",
+      "name": "Commercial Technologies",
+      "slug": "commercial-technologies",
+      "sequenceOrder": 4,
+      "lessons": [
+        {
+          "nameAr": "المفاهيم الأساسية لريادة الأعمال التجارية",
+          "name": "Basic Concepts of Business Entrepreneurship",
+          "slug": "business-entrepreneurship",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "التقنيات المصرفية",
+          "name": "Banking Technologies",
+          "slug": "banking-technologies",
+          "sequenceOrder": 2
+        }
+      ]
+    }
+  ]
+}

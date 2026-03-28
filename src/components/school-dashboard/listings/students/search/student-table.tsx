@@ -43,6 +43,7 @@ interface StudentTableProps {
   onEdit?: (student: Student) => void
   onDelete?: (student: Student) => void
   enableSelection?: boolean
+  dictionary?: any
 }
 
 const statusColors = {
@@ -60,7 +61,9 @@ export function StudentTable({
   onEdit,
   onDelete,
   enableSelection = false,
+  dictionary,
 }: StudentTableProps) {
+  const d = dictionary?.school?.students?.search
   const [selectedStudents, setSelectedStudents] = useState<Set<string>>(
     new Set()
   )
@@ -124,14 +127,16 @@ export function StudentTable({
                 />
               </TableHead>
             )}
-            <TableHead>Student</TableHead>
-            <TableHead>GR Number</TableHead>
-            <TableHead>Age/Gender</TableHead>
-            <TableHead>Contact</TableHead>
-            <TableHead>Class</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Enrollment</TableHead>
-            <TableHead className="text-end">Actions</TableHead>
+            <TableHead>{d?.tableHeaders?.student || "Student"}</TableHead>
+            <TableHead>{d?.tableHeaders?.grNumber || "GR Number"}</TableHead>
+            <TableHead>{d?.tableHeaders?.ageGender || "Age/Gender"}</TableHead>
+            <TableHead>{d?.tableHeaders?.contact || "Contact"}</TableHead>
+            <TableHead>{d?.tableHeaders?.class || "Class"}</TableHead>
+            <TableHead>{d?.tableHeaders?.status || "Status"}</TableHead>
+            <TableHead>{d?.tableHeaders?.enrollment || "Enrollment"}</TableHead>
+            <TableHead className="text-end">
+              {d?.tableHeaders?.actions || "Actions"}
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -177,14 +182,16 @@ export function StudentTable({
                 </div>
                 {student.admissionNumber && (
                   <div className="text-muted-foreground text-xs">
-                    Adm: {student.admissionNumber}
+                    {d?.admissionPrefix || "Adm:"} {student.admissionNumber}
                   </div>
                 )}
               </TableCell>
               <TableCell>
                 <div className="text-sm">
                   {student.dateOfBirth && (
-                    <span>{getAge(student.dateOfBirth)} years</span>
+                    <span>
+                      {getAge(student.dateOfBirth)} {d?.years || "years"}
+                    </span>
                   )}
                 </div>
                 <div className="text-muted-foreground text-xs">
@@ -223,7 +230,7 @@ export function StudentTable({
                     format(new Date(student.enrollmentDate), "MMM dd, yyyy")}
                 </div>
                 <div className="text-muted-foreground text-xs">
-                  {student.category || "General"}
+                  {student.category || d?.general || "General"}
                 </div>
               </TableCell>
               <TableCell
@@ -233,34 +240,38 @@ export function StudentTable({
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="h-8 w-8 p-0">
-                      <span className="sr-only">Open menu</span>
+                      <span className="sr-only">
+                        {d?.tableActions?.openMenu || "Open menu"}
+                      </span>
                       <Ellipsis className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                    <DropdownMenuLabel>
+                      {d?.tableActions?.actions || "Actions"}
+                    </DropdownMenuLabel>
                     <DropdownMenuItem
                       onClick={() => onStudentSelect?.(student)}
                     >
                       <Eye className="me-2 h-4 w-4" />
-                      View Profile
+                      {d?.tableActions?.viewProfile || "View Profile"}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => onEdit?.(student)}>
                       <Pencil className="me-2 h-4 w-4" />
-                      Edit Student
+                      {d?.tableActions?.editStudent || "Edit Student"}
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem>
                       <FileText className="me-2 h-4 w-4" />
-                      Generate Report
+                      {d?.tableActions?.generateReport || "Generate Report"}
                     </DropdownMenuItem>
                     <DropdownMenuItem>
                       <CreditCard className="me-2 h-4 w-4" />
-                      View Fees
+                      {d?.tableActions?.viewFees || "View Fees"}
                     </DropdownMenuItem>
                     <DropdownMenuItem>
                       <Calendar className="me-2 h-4 w-4" />
-                      View Attendance
+                      {d?.tableActions?.viewAttendance || "View Attendance"}
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
@@ -268,7 +279,7 @@ export function StudentTable({
                       onClick={() => onDelete?.(student)}
                     >
                       <Trash2 className="me-2 h-4 w-4" />
-                      Delete Student
+                      {d?.tableActions?.deleteStudent || "Delete Student"}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

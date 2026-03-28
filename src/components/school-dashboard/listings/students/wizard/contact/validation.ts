@@ -3,15 +3,25 @@
 
 import { z } from "zod"
 
-export const contactSchema = z.object({
-  // Contact tab
-  email: z.string().email("Invalid email").optional().or(z.literal("")),
-  mobileNumber: z.string().optional(),
-  alternatePhone: z.string().optional(),
-  // Emergency tab
-  emergencyContactName: z.string().optional(),
-  emergencyContactPhone: z.string().optional(),
-  emergencyContactRelation: z.string().optional(),
-})
+import type { ValidationHelper } from "@/components/internationalization/helpers"
+
+export function createContactSchema(v?: ValidationHelper) {
+  return z.object({
+    // Contact tab
+    email: z
+      .string()
+      .email(v?.email() || "Invalid email")
+      .optional()
+      .or(z.literal("")),
+    mobileNumber: z.string().optional(),
+    alternatePhone: z.string().optional(),
+    // Emergency tab
+    emergencyContactName: z.string().optional(),
+    emergencyContactPhone: z.string().optional(),
+    emergencyContactRelation: z.string().optional(),
+  })
+}
+
+export const contactSchema = createContactSchema()
 
 export type ContactFormData = z.infer<typeof contactSchema>

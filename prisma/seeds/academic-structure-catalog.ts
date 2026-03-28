@@ -8,13 +8,13 @@
  *   - 3 AcademicLevels (Elementary, Middle, High)
  *   - 14 AcademicGrades (KG1-KG2, Grade 1-12)
  *   - 2 AcademicStreams (Science, Arts for grades 10-12)
- *   - SchoolSubjectSelections (bridge: demo school → catalog subjects)
+ *   - SubjectSelections (bridge: demo school → catalog subjects)
  */
 
 import type { PrismaClient } from "@prisma/client"
 
 import { YEAR_LEVELS } from "./constants"
-import type { CatalogSubjectRef, YearLevelRef } from "./types"
+import type { SubjectRef, YearLevelRef } from "./types"
 import { logSuccess } from "./utils"
 
 // ============================================================================
@@ -150,7 +150,7 @@ export async function seedAcademicStructureCatalog(
   prisma: PrismaClient,
   schoolId: string,
   yearLevels: YearLevelRef[],
-  catalogSubjects?: CatalogSubjectRef[],
+  catalogSubjects?: SubjectRef[],
   schoolLevel?: string | null
 ): Promise<void> {
   // Filter levels/grades/streams based on schoolLevel
@@ -297,12 +297,12 @@ export async function seedAcademicStructureCatalog(
   logSuccess("AcademicStreams", streamCount, "Science + Arts")
 
   // ======================================================================
-  // Step 4: Create SchoolSubjectSelections (bridge records)
+  // Step 4: Create SubjectSelections (bridge records)
   // ======================================================================
 
   if (!catalogSubjects) {
     // Load from DB if not passed
-    const subjects = await prisma.catalogSubject.findMany({
+    const subjects = await prisma.subject.findMany({
       where: { status: "PUBLISHED", country: "US" },
       select: { id: true, name: true, slug: true, levels: true },
     })
@@ -314,7 +314,7 @@ export async function seedAcademicStructureCatalog(
   }
 
   // Load full catalog subjects with levels for matching
-  const fullSubjects = await prisma.catalogSubject.findMany({
+  const fullSubjects = await prisma.subject.findMany({
     where: { status: "PUBLISHED", country: "US" },
     select: { id: true, name: true, levels: true },
   })
@@ -336,7 +336,7 @@ export async function seedAcademicStructureCatalog(
       if (!gradeId) continue
 
       // Use findFirst + create instead of upsert for nullable streamId
-      const existing = await prisma.schoolSubjectSelection.findFirst({
+      const existing = await prisma.subjectSelection.findFirst({
         where: {
           schoolId,
           catalogSubjectId: cs.id,
@@ -346,7 +346,7 @@ export async function seedAcademicStructureCatalog(
       })
 
       if (!existing) {
-        await prisma.schoolSubjectSelection.create({
+        await prisma.subjectSelection.create({
           data: {
             schoolId,
             catalogSubjectId: cs.id,
@@ -361,9 +361,5 @@ export async function seedAcademicStructureCatalog(
     }
   }
 
-  logSuccess(
-    "SchoolSubjectSelections",
-    selectionCount,
-    "demo school bridge records"
-  )
+  logSuccess("SubjectSelections", selectionCount, "demo school bridge records")
 }

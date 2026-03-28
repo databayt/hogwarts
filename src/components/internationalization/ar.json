@@ -125,6 +125,8 @@
       "UPDATE_FAILED": "فشل في التحديث",
       "DELETE_FAILED": "فشل في الحذف",
       "SAVE_FAILED": "فشل في الحفظ",
+      "LOAD_FAILED": "فشل في تحميل البيانات",
+      "HAS_DEPENDENCIES": "لا يمكن حذف العنصر لوجود عناصر مرتبطة به",
       "STUDENT_NOT_FOUND": "الطالب غير موجود",
       "STUDENT_CREATE_FAILED": "فشل في إنشاء الطالب",
       "STUDENT_UPDATE_FAILED": "فشل في تحديث الطالب",

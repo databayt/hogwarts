@@ -29,6 +29,7 @@ import type { GradeBoundaryData } from "../student-profile"
 interface AcademicTabProps {
   student: Student
   gradeBoundaries?: GradeBoundaryData[]
+  dictionary?: any
 }
 
 /**
@@ -102,7 +103,12 @@ const calculateGPA = (
   return count > 0 ? totalPoints / count : 0
 }
 
-export function AcademicTab({ student, gradeBoundaries }: AcademicTabProps) {
+export function AcademicTab({
+  student,
+  gradeBoundaries,
+  dictionary,
+}: AcademicTabProps) {
+  const d = dictionary
   const studentClasses = student.studentClasses || []
   const examResults = student.examResults || []
   const submissions = student.submissions || []
@@ -113,15 +119,20 @@ export function AcademicTab({ student, gradeBoundaries }: AcademicTabProps) {
   const currentClass =
     studentClasses.length > 0
       ? {
-          name: studentClasses[0]?.class?.name || "Not Assigned",
+          name:
+            studentClasses[0]?.class?.name || d?.notAssigned || "Not Assigned",
           teacher: studentClasses[0]?.class?.teacher
             ? `${studentClasses[0].class.teacher.firstName} ${studentClasses[0].class.teacher.lastName}`
-            : "Not Assigned",
+            : d?.notAssigned || "Not Assigned",
           subjects: studentClasses.map((sc: any) => ({
-            name: sc.class?.subject?.name || sc.class?.name || "Unknown",
+            name:
+              sc.class?.subject?.name ||
+              sc.class?.name ||
+              d?.unknown ||
+              "Unknown",
             teacher: sc.class?.teacher
               ? `${sc.class.teacher.firstName} ${sc.class.teacher.lastName}`
-              : "Not Assigned",
+              : d?.notAssigned || "Not Assigned",
             grade: examResults.find(
               (er: any) => er.subjectId === sc.class?.subject?.id
             )
@@ -191,24 +202,28 @@ export function AcademicTab({ student, gradeBoundaries }: AcademicTabProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Layers className="h-5 w-5" />
-              Current Grade
+              {d?.currentGrade || "Current Grade"}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <div>
-                <p className="text-muted-foreground text-sm">Grade</p>
+                <p className="text-muted-foreground text-sm">
+                  {d?.grade || "Grade"}
+                </p>
                 <p className="text-xl font-semibold">{academicGrade.name}</p>
               </div>
               <div>
-                <p className="text-muted-foreground text-sm">Level</p>
+                <p className="text-muted-foreground text-sm">
+                  {d?.level || "Level"}
+                </p>
                 <p className="font-medium">
                   {academicGrade.level?.name || "-"}
                 </p>
               </div>
               <div>
                 <p className="text-muted-foreground text-sm">
-                  Catalog Subjects
+                  {d?.catalogSubjects || "Catalog Subjects"}
                 </p>
                 <p className="font-medium">{catalogSubjects.length}</p>
               </div>
@@ -223,25 +238,27 @@ export function AcademicTab({ student, gradeBoundaries }: AcademicTabProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BookOpen className="h-5 w-5" />
-              Catalog Subjects
+              {d?.catalogSubjects || "Catalog Subjects"}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Subject</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>{d?.subject || "Subject"}</TableHead>
+                  <TableHead>{d?.status || "Status"}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {catalogSubjects.map((selection: any) => (
                   <TableRow key={selection.id}>
                     <TableCell className="font-medium">
-                      {selection.subject?.name || "Unknown"}
+                      {selection.subject?.name || d?.unknown || "Unknown"}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">Available</Badge>
+                      <Badge variant="outline">
+                        {d?.available || "Available"}
+                      </Badge>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -256,7 +273,7 @@ export function AcademicTab({ student, gradeBoundaries }: AcademicTabProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <GraduationCap className="h-5 w-5" />
-            Current Academic Information
+            {d?.currentAcademicInformation || "Current Academic Information"}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -264,11 +281,15 @@ export function AcademicTab({ student, gradeBoundaries }: AcademicTabProps) {
             <>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
-                  <p className="text-muted-foreground text-sm">Current Class</p>
+                  <p className="text-muted-foreground text-sm">
+                    {d?.currentClass || "Current Class"}
+                  </p>
                   <p className="font-medium">{currentClass.name}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-sm">Class Teacher</p>
+                  <p className="text-muted-foreground text-sm">
+                    {d?.classTeacher || "Class Teacher"}
+                  </p>
                   <p className="font-medium">{currentClass.teacher}</p>
                 </div>
               </div>
@@ -276,7 +297,9 @@ export function AcademicTab({ student, gradeBoundaries }: AcademicTabProps) {
               {/* GPA Overview */}
               <div className="bg-muted rounded-lg p-4">
                 <div className="mb-2 flex items-center justify-between">
-                  <span className="text-sm font-medium">Current GPA</span>
+                  <span className="text-sm font-medium">
+                    {d?.currentGPA || "Current GPA"}
+                  </span>
                   <span
                     className={`text-2xl font-bold ${gpa >= 3.0 ? "text-green-600" : gpa >= 2.0 ? "text-yellow-600" : "text-red-600"}`}
                   >
@@ -285,7 +308,7 @@ export function AcademicTab({ student, gradeBoundaries }: AcademicTabProps) {
                 </div>
                 <Progress value={(gpa / 4) * 100} className="h-2" />
                 <p className="text-muted-foreground mt-1 text-xs">
-                  Based on {examResults.length} exam
+                  {examResults.length} {d?.exam || "exam"}
                   {examResults.length !== 1 ? "s" : ""}
                 </p>
               </div>
@@ -293,7 +316,7 @@ export function AcademicTab({ student, gradeBoundaries }: AcademicTabProps) {
           ) : (
             <div className="text-muted-foreground flex flex-col items-center justify-center py-8">
               <GraduationCap className="mb-4 h-12 w-12" />
-              <p>No class enrollment yet</p>
+              <p>{d?.noClassEnrollment || "No class enrollment yet"}</p>
             </div>
           )}
         </CardContent>
@@ -304,7 +327,7 @@ export function AcademicTab({ student, gradeBoundaries }: AcademicTabProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5" />
-            Subject Performance
+            {d?.subjectPerformance || "Subject Performance"}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -312,11 +335,13 @@ export function AcademicTab({ student, gradeBoundaries }: AcademicTabProps) {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Subject</TableHead>
-                  <TableHead>Teacher</TableHead>
-                  <TableHead>Current Grade</TableHead>
-                  <TableHead className="text-end">Score</TableHead>
-                  <TableHead>Progress</TableHead>
+                  <TableHead>{d?.subject || "Subject"}</TableHead>
+                  <TableHead>{d?.teacher || "Teacher"}</TableHead>
+                  <TableHead>{d?.currentGrade || "Current Grade"}</TableHead>
+                  <TableHead className="text-end">
+                    {d?.score || "Score"}
+                  </TableHead>
+                  <TableHead>{d?.progress || "Progress"}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -346,7 +371,7 @@ export function AcademicTab({ student, gradeBoundaries }: AcademicTabProps) {
           ) : (
             <div className="text-muted-foreground flex flex-col items-center justify-center py-8">
               <BookOpen className="mb-4 h-12 w-12" />
-              <p>No subjects enrolled yet</p>
+              <p>{d?.noSubjectsEnrolled || "No subjects enrolled yet"}</p>
             </div>
           )}
         </CardContent>
@@ -357,7 +382,7 @@ export function AcademicTab({ student, gradeBoundaries }: AcademicTabProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Trophy className="h-5 w-5" />
-            Recent Exam Results
+            {d?.recentExamResults || "Recent Exam Results"}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -365,11 +390,11 @@ export function AcademicTab({ student, gradeBoundaries }: AcademicTabProps) {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Exam</TableHead>
-                  <TableHead>Subject</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Marks</TableHead>
-                  <TableHead>Grade</TableHead>
+                  <TableHead>{d?.exam || "Exam"}</TableHead>
+                  <TableHead>{d?.subject || "Subject"}</TableHead>
+                  <TableHead>{d?.date || "Date"}</TableHead>
+                  <TableHead>{d?.marks || "Marks"}</TableHead>
+                  <TableHead>{d?.grade || "Grade"}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -385,7 +410,7 @@ export function AcademicTab({ student, gradeBoundaries }: AcademicTabProps) {
                   return (
                     <TableRow key={result.id || index}>
                       <TableCell className="font-medium">
-                        {result.exam?.name || "Exam"}
+                        {result.exam?.name || d?.exam || "Exam"}
                       </TableCell>
                       <TableCell>{result.subject?.name || "-"}</TableCell>
                       <TableCell>
@@ -412,7 +437,7 @@ export function AcademicTab({ student, gradeBoundaries }: AcademicTabProps) {
           ) : (
             <div className="text-muted-foreground flex flex-col items-center justify-center py-8">
               <Trophy className="mb-4 h-12 w-12" />
-              <p>No exam results yet</p>
+              <p>{d?.noExamResults || "No exam results yet"}</p>
             </div>
           )}
         </CardContent>
@@ -423,7 +448,7 @@ export function AcademicTab({ student, gradeBoundaries }: AcademicTabProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            Recent Assignments
+            {d?.recentAssignments || "Recent Assignments"}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -431,18 +456,20 @@ export function AcademicTab({ student, gradeBoundaries }: AcademicTabProps) {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Assignment</TableHead>
-                  <TableHead>Due Date</TableHead>
-                  <TableHead>Submitted</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Score</TableHead>
+                  <TableHead>{d?.assignment || "Assignment"}</TableHead>
+                  <TableHead>{d?.dueDate || "Due Date"}</TableHead>
+                  <TableHead>{d?.submitted || "Submitted"}</TableHead>
+                  <TableHead>{d?.status || "Status"}</TableHead>
+                  <TableHead>{d?.score || "Score"}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {submissions.map((submission: any, index: number) => (
                   <TableRow key={submission.id || index}>
                     <TableCell className="font-medium">
-                      {submission.assignment?.title || "Assignment"}
+                      {submission.assignment?.title ||
+                        d?.assignment ||
+                        "Assignment"}
                     </TableCell>
                     <TableCell>
                       {submission.assignment?.dueDate
@@ -465,7 +492,7 @@ export function AcademicTab({ student, gradeBoundaries }: AcademicTabProps) {
                         variant="secondary"
                         className={getStatusColor(submission.status)}
                       >
-                        {submission.status || "Pending"}
+                        {submission.status || d?.pending || "Pending"}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -481,7 +508,7 @@ export function AcademicTab({ student, gradeBoundaries }: AcademicTabProps) {
           ) : (
             <div className="text-muted-foreground flex flex-col items-center justify-center py-8">
               <Calendar className="mb-4 h-12 w-12" />
-              <p>No assignments yet</p>
+              <p>{d?.noAssignments || "No assignments yet"}</p>
             </div>
           )}
         </CardContent>
@@ -490,7 +517,7 @@ export function AcademicTab({ student, gradeBoundaries }: AcademicTabProps) {
       {/* Academic History */}
       <Card>
         <CardHeader>
-          <CardTitle>Academic History</CardTitle>
+          <CardTitle>{d?.academicHistory || "Academic History"}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
@@ -502,10 +529,12 @@ export function AcademicTab({ student, gradeBoundaries }: AcademicTabProps) {
                 >
                   <div>
                     <p className="font-medium">
-                      {yearLevel.schoolYear?.name || "Academic Year"}
+                      {yearLevel.schoolYear?.name ||
+                        d?.academicYear ||
+                        "Academic Year"}
                     </p>
                     <p className="text-muted-foreground text-sm">
-                      {yearLevel.yearLevel?.name || "Grade"}
+                      {yearLevel.yearLevel?.name || d?.grade || "Grade"}
                     </p>
                   </div>
                   <div className="text-end">
@@ -513,11 +542,12 @@ export function AcademicTab({ student, gradeBoundaries }: AcademicTabProps) {
                       className={`font-bold ${yearLevel.score && Number(yearLevel.score) >= 50 ? "text-green-600" : "text-muted-foreground"}`}
                     >
                       {yearLevel.score && Number(yearLevel.score) >= 50
-                        ? "Passed"
-                        : "In Progress"}
+                        ? d?.passed || "Passed"
+                        : d?.inProgress || "In Progress"}
                     </p>
                     <p className="text-muted-foreground text-sm">
-                      Score: {yearLevel.score?.toString() || "N/A"}
+                      {d?.score ? `${d.score}:` : "Score:"}{" "}
+                      {yearLevel.score?.toString() || "N/A"}
                     </p>
                   </div>
                 </div>
@@ -525,7 +555,7 @@ export function AcademicTab({ student, gradeBoundaries }: AcademicTabProps) {
             ) : (
               <div className="text-muted-foreground flex flex-col items-center justify-center py-8">
                 <GraduationCap className="mb-4 h-12 w-12" />
-                <p>No academic history available</p>
+                <p>{d?.noAcademicHistory || "No academic history available"}</p>
               </div>
             )}
           </div>

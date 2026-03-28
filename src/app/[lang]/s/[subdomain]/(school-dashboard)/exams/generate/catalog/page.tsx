@@ -3,7 +3,7 @@ import { auth } from "@/auth"
 
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import { CatalogExamBrowseTab } from "@/components/school-dashboard/exams/generate/catalog-tab"
+import { ExamBrowseTab } from "@/components/school-dashboard/exams/generate/catalog-tab"
 
 interface PageProps {
   params: Promise<{
@@ -12,7 +12,7 @@ interface PageProps {
   }>
 }
 
-export default async function CatalogExamBrowsePage({ params }: PageProps) {
+export default async function ExamBrowsePage({ params }: PageProps) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
 
@@ -29,7 +29,7 @@ export default async function CatalogExamBrowsePage({ params }: PageProps) {
           Browse and adopt exams from the global catalog
         </p>
       </div>
-      <CatalogExamBrowseTab />
+      <ExamBrowseTab />
     </div>
   )
 }

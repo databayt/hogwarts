@@ -102,7 +102,7 @@ export async function createDraftClass(): Promise<
 
     // Get first available subject, teacher, term, period, and classroom as placeholders
     const [subject, teacher, term, period, classroom] = await Promise.all([
-      db.catalogSubject.findFirst({ select: { id: true } }),
+      db.subject.findFirst({ select: { id: true } }),
       db.teacher.findFirst({ where: { schoolId }, select: { id: true } }),
       db.term.findFirst({ where: { schoolId }, select: { id: true } }),
       db.period.findFirst({ where: { schoolId }, select: { id: true } }),

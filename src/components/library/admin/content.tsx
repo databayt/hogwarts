@@ -32,7 +32,7 @@ export default async function LibraryAdminContent({
   // Fetch statistics
   const [totalBooks, totalBorrows, activeBorrows, overdueBooks] =
     await Promise.all([
-      db.book.count({ where: { schoolId } }),
+      db.schoolBook.count({ where: { schoolId } }),
       db.borrowRecord.count({ where: { schoolId } }),
       db.borrowRecord.count({
         where: { schoolId, status: "BORROWED" },

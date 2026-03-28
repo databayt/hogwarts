@@ -68,7 +68,16 @@ const SCIENCE_ONLY_PATTERNS = [
   "كيمياء",
   "أحياء",
 ]
-const ARTS_ONLY_PATTERNS = ["philosophy", "فلسفة"]
+const ARTS_ONLY_PATTERNS = [
+  "philosophy",
+  "فلسفة",
+  "أدب",
+  "بلاغة",
+  "مطالعة",
+  "نحو",
+  "عربية خاصة",
+  "رياضيات أساسية",
+]
 
 function getSubjectStreamType(name: string): "SCIENCE" | "ARTS" | null {
   const lower = name.toLowerCase()
@@ -91,6 +100,12 @@ function getDefaultWeeklyPeriods(name: string, gradeNumber: number): number {
   if (lowerName.includes("arabic") || lowerName.includes("عربي")) return 5
   if (lowerName.includes("english") || lowerName.includes("إنجليزي"))
     return gradeNumber <= 6 ? 4 : 5
+  if (
+    lowerName.includes("إسلامية") ||
+    lowerName.includes("islamic") ||
+    lowerName.includes("religion")
+  )
+    return gradeNumber <= 6 ? 3 : 2
   if (lowerName.includes("science") || lowerName.includes("علوم"))
     return gradeNumber <= 6 ? 3 : 4
   if (
@@ -253,6 +268,7 @@ function inferCurriculum(country: string, schoolType?: string | null): string {
     EG: "national",
     AE: "national",
     QA: "national",
+    KW: "national",
     JO: "national",
   }
   return map[country] || "us-k12"
@@ -341,7 +357,7 @@ export async function setupDefaultsForSchool(
 /**
  * Auto-setup catalog for a new school.
  * Creates AcademicLevels, AcademicGrades, AcademicStreams, and
- * SchoolSubjectSelection records linking all applicable catalog subjects.
+ * SubjectSelection records linking all applicable catalog subjects.
  *
  * Uses progressive fallback for catalog matching:
  * 1. country + curriculum + schoolType filter → exact match
@@ -370,16 +386,13 @@ export async function setupCatalogForSchool(
       schoolLevel: true,
       country: true,
       schoolType: true,
-      curriculum: true,
+      timetableStructure: true,
     },
   })
 
   // Use school's country (ISO code), then options override, then fallback
   const country = school?.country || options?.country || "US"
   const schoolType = school?.schoolType || options?.schoolType || undefined
-  // Infer curriculum from country+schoolType for catalog lookup
-  // NOTE: school.curriculum stores the timetable structure slug (e.g. "us-standard"),
-  // NOT the catalog curriculum. Only options override or inferCurriculum() are valid here.
   const curriculum = options?.curriculum || inferCurriculum(country, schoolType)
   const allowedLevels =
     SCHOOL_LEVEL_TO_CATALOG[school?.schoolLevel ?? "both"] ??
@@ -389,11 +402,7 @@ export async function setupCatalogForSchool(
   )
 
   // Progressive fallback for catalog subjects
-  const catalogSubjects = await findCatalogSubjects(
-    country,
-    curriculum,
-    schoolType
-  )
+  const catalogSubjects = await findSubjects(country, curriculum, schoolType)
 
   if (catalogSubjects.length === 0) {
     console.warn(
@@ -597,7 +606,7 @@ export async function setupCatalogForSchool(
 
       // Bulk insert all selections at once
       if (selectionData.length > 0) {
-        await tx.schoolSubjectSelection.createMany({ data: selectionData })
+        await tx.subjectSelection.createMany({ data: selectionData })
       }
       const selectionCount = selectionData.length
 
@@ -623,7 +632,7 @@ export async function setupCatalogForSchool(
       .catalogSubjectIds
     if (subjectIds?.length > 0) {
       try {
-        await db.schoolInstructorPreference.createMany({
+        await db.instructorPreference.createMany({
           data: subjectIds.map((catalogSubjectId) => ({
             schoolId,
             catalogSubjectId,
@@ -660,7 +669,7 @@ export async function setupCatalogForSchool(
  * Progressive fallback catalog subject finder.
  * Tries increasingly broad queries until subjects are found.
  */
-async function findCatalogSubjects(
+async function findSubjects(
   country: string,
   curriculum: string,
   schoolType?: string
@@ -674,7 +683,7 @@ async function findCatalogSubjects(
 
   // Step 1: Exact match (country + curriculum + schoolType filter)
   if (schoolType) {
-    const exact = await db.catalogSubject.findMany({
+    const exact = await db.subject.findMany({
       where: {
         status: "PUBLISHED",
         country,
@@ -692,7 +701,7 @@ async function findCatalogSubjects(
   }
 
   // Step 2: Broad match (country + curriculum, ignore schoolType)
-  const broad = await db.catalogSubject.findMany({
+  const broad = await db.subject.findMany({
     where: {
       status: "PUBLISHED",
       country,
@@ -708,7 +717,7 @@ async function findCatalogSubjects(
   }
 
   // Step 3: Universal match (country="*" + curriculum, e.g. IB worldwide)
-  const universal = await db.catalogSubject.findMany({
+  const universal = await db.subject.findMany({
     where: {
       status: "PUBLISHED",
       country: "*",
@@ -725,7 +734,7 @@ async function findCatalogSubjects(
 
   // Step 4: Baseline fallback (US + us-k12)
   if (country !== "US" || curriculum !== "us-k12") {
-    const fallback = await db.catalogSubject.findMany({
+    const fallback = await db.subject.findMany({
       where: {
         status: "PUBLISHED",
         country: "US",
@@ -750,7 +759,7 @@ async function findCatalogSubjects(
  */
 export async function teardownCatalogForSchool(schoolId: string) {
   // Collect affected subject IDs before deletion for usage count decrement
-  const selections = await db.schoolSubjectSelection.findMany({
+  const selections = await db.subjectSelection.findMany({
     where: { schoolId },
     select: { catalogSubjectId: true },
     distinct: ["catalogSubjectId"],
@@ -759,7 +768,7 @@ export async function teardownCatalogForSchool(schoolId: string) {
 
   // Delete instructor preferences first (non-critical, outside transaction)
   try {
-    await db.schoolInstructorPreference.deleteMany({ where: { schoolId } })
+    await db.instructorPreference.deleteMany({ where: { schoolId } })
   } catch (err) {
     console.error(
       `[teardownCatalog] Instructor preferences cleanup failed (non-critical):`,
@@ -770,8 +779,8 @@ export async function teardownCatalogForSchool(schoolId: string) {
   await db.$transaction(
     async (tx) => {
       // Delete bridge tables first
-      await tx.schoolSubjectSelection.deleteMany({ where: { schoolId } })
-      await tx.schoolContentOverride.deleteMany({ where: { schoolId } })
+      await tx.subjectSelection.deleteMany({ where: { schoolId } })
+      await tx.contentOverride.deleteMany({ where: { schoolId } })
 
       // Delete academic structure
       await tx.academicStream.deleteMany({ where: { schoolId } })
@@ -938,7 +947,7 @@ export async function applyTimetableStructureForNewSchool(
  * Get ranked videos for a catalog lesson.
  * Ranking: featured first, then by engagement (views + rating).
  */
-export async function getRankedLessonVideos(
+export async function getRankedVideos(
   lessonId: string,
   schoolId: string | null,
   options?: { limit?: number; includeSchoolOnly?: boolean }
@@ -958,7 +967,7 @@ export async function getRankedLessonVideos(
     whereClause.visibility = "PUBLIC"
   }
 
-  const videos = await db.lessonVideo.findMany({
+  const videos = await db.video.findMany({
     where: whereClause,
     orderBy: [
       { isFeatured: "desc" },
@@ -1008,7 +1017,7 @@ export async function getRankedLessonVideos(
  * Record a video view for engagement tracking.
  */
 export async function recordVideoView(videoId: string) {
-  await db.lessonVideo.update({
+  await db.video.update({
     where: { id: videoId },
     data: { viewCount: { increment: 1 } },
   })
@@ -1191,7 +1200,7 @@ export async function autoGenerateTimetableForSchool(
   }
 
   // 5. Get subject selections per grade
-  const subjectSelections = await db.schoolSubjectSelection.findMany({
+  const subjectSelections = await db.subjectSelection.findMany({
     where: { schoolId, isActive: true },
     select: {
       catalogSubjectId: true,
@@ -1361,14 +1370,14 @@ const DEFAULT_COPIES_PER_BOOK = 3
 
 /**
  * Auto-provision library books from the global catalog for a new school.
- * Creates SchoolBookSelection + Book records for all public, approved catalog books.
+ * Creates BookSelection + Book records for all public, approved catalog books.
  * Idempotent — skips if school already has books.
  *
  * Called during school onboarding or manually from SaaS dashboard.
  */
 export async function setupLibraryForSchool(schoolId: string) {
   // Idempotent: skip if school already has books
-  const existingBooks = await db.book.count({ where: { schoolId } })
+  const existingBooks = await db.schoolBook.count({ where: { schoolId } })
   if (existingBooks > 0) {
     return {
       skipped: true,
@@ -1378,7 +1387,7 @@ export async function setupLibraryForSchool(schoolId: string) {
   }
 
   // Get all public, approved, published catalog books
-  const catalogBooks = await db.catalogBook.findMany({
+  const catalogBooks = await db.book.findMany({
     where: {
       status: "PUBLISHED",
       approvalStatus: "APPROVED",
@@ -1414,12 +1423,12 @@ export async function setupLibraryForSchool(schoolId: string) {
 
       for (const cb of catalogBooks) {
         // Check for existing selection to prevent unique constraint violation
-        const existingSelection = await tx.schoolBookSelection.findFirst({
+        const existingSelection = await tx.bookSelection.findFirst({
           where: { schoolId, catalogBookId: cb.id },
         })
         if (existingSelection) continue
 
-        await tx.schoolBookSelection.create({
+        await tx.bookSelection.create({
           data: {
             schoolId,
             catalogBookId: cb.id,
@@ -1429,7 +1438,7 @@ export async function setupLibraryForSchool(schoolId: string) {
           },
         })
 
-        await tx.book.create({
+        await tx.schoolBook.create({
           data: {
             schoolId,
             catalogBookId: cb.id,
@@ -1465,10 +1474,10 @@ export async function setupLibraryForSchool(schoolId: string) {
   try {
     const catalogBookIds = catalogBooks.map((cb) => cb.id)
     for (const catalogBookId of catalogBookIds) {
-      const usageCount = await db.schoolBookSelection.count({
+      const usageCount = await db.bookSelection.count({
         where: { catalogBookId },
       })
-      await db.catalogBook.update({
+      await db.book.update({
         where: { id: catalogBookId },
         data: { usageCount },
       })
@@ -1485,7 +1494,7 @@ export const _testing = {
   inferCurriculum,
   getSubjectStreamType,
   getDefaultWeeklyPeriods,
-  findCatalogSubjects,
+  findSubjects,
   YEAR_LEVEL_DEFAULTS,
   DEPARTMENT_DEFAULTS,
   SCORE_RANGE_DEFAULTS,

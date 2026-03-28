@@ -18,7 +18,7 @@ export async function updateTemplatePreset(
     const { schoolId } = await getTenantContext()
     if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
-    await db.examTemplate.updateMany({
+    await db.schoolExamTemplate.updateMany({
       where: { id: templateId, schoolId },
       data: {
         blockConfig: blockConfig as unknown as Prisma.InputJsonValue,
@@ -41,7 +41,7 @@ export async function getSchoolTemplates(): Promise<
     const { schoolId } = await getTenantContext()
     if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
-    const templates = await db.examTemplate.findMany({
+    const templates = await db.schoolExamTemplate.findMany({
       where: { schoolId, isActive: true, wizardStep: null },
       select: { id: true, name: true, blockConfig: true },
       orderBy: { name: "asc" },

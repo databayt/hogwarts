@@ -30,15 +30,15 @@ The catalog uses **grade-specific subjects** rather than level-based subjects. E
 ```
 Level-based (old):  "Elementary Math"  levels: [ELEMENTARY]  grades: [1,2,3,4,5,6]
                                         |
-Grade-specific:     "Math Grade 1"     grades: [1]   slug: us-math-grade-1
-                    "Math Grade 2"     grades: [2]   slug: us-math-grade-2
-                    "Math Grade 3"     grades: [3]   slug: us-math-grade-3
+Grade-specific:     "Math Grade 1"     grades: [1]   slug: us-g1-math
+                    "Math Grade 2"     grades: [2]   slug: us-g2-math
+                    "Math Grade 3"     grades: [3]   slug: us-g3-math
                     ...
 ```
 
 Key points:
 
-- **Slug convention**: `us-{subject}-grade-{N}` (e.g., `us-math-grade-3`)
+- **Slug convention**: `us-g{N}-{subject}` (e.g., `us-g3-math`)
 - **Single grade per subject**: Each grade-specific subject has `grades: [3]` (single grade) instead of `grades: [1,2,3,4,5,6]`
 - **Chapters and lessons duplicated**: Each grade-specific subject has its own set of chapters and lessons
 - **Descriptions**: All subjects, chapters, and lessons include descriptions
@@ -924,7 +924,7 @@ Known integration issues between layers:
 | ~~No Term records auto-created~~                 | 2 --> 7   | Fixed   | `applyTimetableStructureForNewSchool()` now creates 2 default Terms (Term 1: Sep-Jan, Term 2: Feb-Jun) linked to the school year.                                                                                                               |
 | ~~SchoolWeekConfig not created~~                 | 2 --> 7   | Fixed   | `applyTimetableStructureForNewSchool()` now creates a `SchoolWeekConfig` record with working days and lunch config from the selected structure.                                                                                                 |
 | ~~Only Sudan timetable structures~~              | 2         | Fixed   | Now 10 structures: 5 SD, 2 GULF, 1 MENA, 1 US, 1 wildcard. `getRecommendedStructures()` uses scoring system with country/region/wildcard/schoolType/schoolLevel signals.                                                                        |
-| ~~Subjects are level-based, not grade-specific~~ | 1         | Fixed   | 62 level-based subjects replaced by ~220 grade-specific subjects. Each has `grades: [N]` and slug `us-{subject}-grade-{N}`. Chapters/lessons duplicated per grade.                                                                              |
+| ~~Subjects are level-based, not grade-specific~~ | 1         | Fixed   | 62 level-based subjects replaced by ~220 grade-specific subjects. Each has `grades: [N]` and slug `us-g{N}-{subject}`. Chapters/lessons duplicated per grade.                                                                                   |
 | ~~`Subject` model removed~~                      | 4         | Fixed   | School-scoped `Subject` model removed entirely. `Class.subjectId` now points directly to `CatalogSubject.id`. Schools bridge to catalog via `SchoolSubjectSelection`.                                                                           |
 | ~~CatalogBook disconnected from subjects~~       | 1         | Fixed   | `CatalogBook.catalogSubjectId` now links books to grade-specific `CatalogSubject`. `SchoolBookSelection.gradeId` enables grade-scoped book assignments.                                                                                         |
 | ~~`getUpcomingClass()` missing termId~~          | 7         | Fixed   | `getUpcomingClass()` now looks up the active `Term` and filters timetable entries by `termId`.                                                                                                                                                  |

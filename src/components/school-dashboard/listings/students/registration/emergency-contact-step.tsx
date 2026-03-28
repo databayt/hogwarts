@@ -27,32 +27,33 @@ interface EmergencyContactStepProps {
   dictionary?: any
 }
 
-const relationshipOptions = [
-  "Father",
-  "Mother",
-  "Guardian",
-  "Uncle",
-  "Aunt",
-  "Grandfather",
-  "Grandmother",
-  "Brother",
-  "Sister",
-  "Other",
-]
-
 export function EmergencyContactStep({
   form,
   dictionary,
 }: EmergencyContactStepProps) {
+  const reg = dictionary?.school?.students?.registration?.emergency
+
+  const relationshipOptions = [
+    { value: "Father", label: reg?.father || "Father" },
+    { value: "Mother", label: reg?.mother || "Mother" },
+    { value: "Guardian", label: reg?.guardian || "Guardian" },
+    { value: "Uncle", label: reg?.uncle || "Uncle" },
+    { value: "Aunt", label: reg?.aunt || "Aunt" },
+    { value: "Grandfather", label: reg?.grandfather || "Grandfather" },
+    { value: "Grandmother", label: reg?.grandmother || "Grandmother" },
+    { value: "Brother", label: reg?.brother || "Brother" },
+    { value: "Sister", label: reg?.sister || "Sister" },
+    { value: "Other", label: reg?.other || "Other" },
+  ]
+
   return (
     <div className="grid gap-6">
       <Alert>
         <CircleAlert className="h-4 w-4" />
-        <AlertTitle>Important</AlertTitle>
+        <AlertTitle>{reg?.important || "Important"}</AlertTitle>
         <AlertDescription>
-          Emergency contact information will be used only in case of
-          emergencies. Please ensure the contact person is available and
-          reachable.
+          {reg?.importantDescription ||
+            "Emergency contact information will be used only in case of emergencies. Please provide accurate and up-to-date contact details."}
         </AlertDescription>
       </Alert>
 
@@ -62,9 +63,14 @@ export function EmergencyContactStep({
           name="emergencyContactName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Emergency Contact Name *</FormLabel>
+              <FormLabel>
+                {reg?.contactName || "Emergency Contact Name *"}
+              </FormLabel>
               <FormControl>
-                <Input placeholder="Enter full name" {...field} />
+                <Input
+                  placeholder={reg?.enterFullName || "Enter full name"}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -77,7 +83,9 @@ export function EmergencyContactStep({
             name="emergencyContactPhone"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Emergency Contact Phone *</FormLabel>
+                <FormLabel>
+                  {reg?.contactPhone || "Emergency Contact Phone *"}
+                </FormLabel>
                 <FormControl>
                   <Input type="tel" placeholder="+966 XX XXX XXXX" {...field} />
                 </FormControl>
@@ -91,20 +99,24 @@ export function EmergencyContactStep({
             name="emergencyContactRelation"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Relationship *</FormLabel>
+                <FormLabel>{reg?.relationship || "Relationship *"}</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select relationship" />
+                      <SelectValue
+                        placeholder={
+                          reg?.selectRelationship || "Select relationship"
+                        }
+                      />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {relationshipOptions.map((relation) => (
-                      <SelectItem key={relation} value={relation}>
-                        {relation}
+                    {relationshipOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -117,16 +129,23 @@ export function EmergencyContactStep({
       </div>
 
       <div className="bg-muted rounded-lg p-4">
-        <h5 className="mb-2">Tips for Emergency Contacts</h5>
+        <h5 className="mb-2">{reg?.tips || "Tips for Emergency Contacts"}</h5>
         <ul className="text-muted-foreground space-y-1 text-sm">
-          <li>• Choose someone who is usually available during school hours</li>
           <li>
-            • Ensure they are authorized to make medical decisions if needed
+            {reg?.tip1 ||
+              "Provide at least one local contact who can be reached quickly"}
           </li>
-          <li>• Verify the phone number is correct and active</li>
           <li>
-            • Consider adding an alternate emergency contact in guardian
-            information
+            {reg?.tip2 ||
+              "Include both mobile and landline numbers if available"}
+          </li>
+          <li>
+            {reg?.tip3 ||
+              "Update emergency contacts whenever there are changes"}
+          </li>
+          <li>
+            {reg?.tip4 ||
+              "Ensure the emergency contact is aware they are listed"}
           </li>
         </ul>
       </div>

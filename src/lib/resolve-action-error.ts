@@ -39,6 +39,7 @@ export function resolveActionError(
     "Failed to update": ACTION_ERRORS.UPDATE_FAILED,
     "Failed to delete": ACTION_ERRORS.DELETE_FAILED,
     "Failed to save": ACTION_ERRORS.SAVE_FAILED,
+    "Failed to load": ACTION_ERRORS.LOAD_FAILED,
     "Payment failed": ACTION_ERRORS.PAYMENT_FAILED,
     "Upload failed": ACTION_ERRORS.UPLOAD_FAILED,
     "Export failed": ACTION_ERRORS.EXPORT_FAILED,

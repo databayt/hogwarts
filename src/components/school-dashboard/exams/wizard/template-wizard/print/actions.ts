@@ -19,7 +19,7 @@ export async function updateTemplatePrint(
     const { schoolId } = await getTenantContext()
     if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
-    const template = await db.examTemplate.findFirst({
+    const template = await db.schoolExamTemplate.findFirst({
       where: { id: templateId, schoolId },
       select: { printConfig: true, blockConfig: true },
     })
@@ -28,7 +28,7 @@ export async function updateTemplatePrint(
     const existingBlockConfig =
       (template.blockConfig as Record<string, unknown>) || {}
 
-    await db.examTemplate.updateMany({
+    await db.schoolExamTemplate.updateMany({
       where: { id: templateId, schoolId },
       data: {
         printConfig: {

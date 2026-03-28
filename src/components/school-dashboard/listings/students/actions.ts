@@ -222,13 +222,10 @@ export async function getGradesAndSections(): Promise<
     }
   } catch (error) {
     console.error("[getGradesAndSections] Error:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to load grades and sections",
-    }
+    return actionError(
+      ACTION_ERRORS.LOAD_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -383,17 +380,16 @@ export async function createStudent(
     })
 
     if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      }
+      return actionError(
+        ACTION_ERRORS.VALIDATION_ERROR,
+        error.issues.map((e) => e.message).join(", ")
+      )
     }
 
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to create student",
-    }
+    return actionError(
+      ACTION_ERRORS.STUDENT_CREATE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -503,17 +499,16 @@ export async function updateStudent(
     })
 
     if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      }
+      return actionError(
+        ACTION_ERRORS.VALIDATION_ERROR,
+        error.issues.map((e) => e.message).join(", ")
+      )
     }
 
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to update student",
-    }
+    return actionError(
+      ACTION_ERRORS.STUDENT_UPDATE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -630,17 +625,16 @@ export async function deleteStudent(input: {
     })
 
     if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      }
+      return actionError(
+        ACTION_ERRORS.VALIDATION_ERROR,
+        error.issues.map((e) => e.message).join(", ")
+      )
     }
 
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to delete student",
-    }
+    return actionError(
+      ACTION_ERRORS.STUDENT_DELETE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -713,16 +707,16 @@ export async function getStudent(input: {
     })
 
     if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      }
+      return actionError(
+        ACTION_ERRORS.VALIDATION_ERROR,
+        error.issues.map((e) => e.message).join(", ")
+      )
     }
 
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch student",
-    }
+    return actionError(
+      ACTION_ERRORS.LOAD_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -1046,17 +1040,16 @@ export async function getStudents(
     })
 
     if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      }
+      return actionError(
+        ACTION_ERRORS.VALIDATION_ERROR,
+        error.issues.map((e) => e.message).join(", ")
+      )
     }
 
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to fetch students",
-    }
+    return actionError(
+      ACTION_ERRORS.LOAD_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -1256,17 +1249,16 @@ export async function getStudentsCSV(
     })
 
     if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      }
+      return actionError(
+        ACTION_ERRORS.VALIDATION_ERROR,
+        error.issues.map((e) => e.message).join(", ")
+      )
     }
 
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to export students",
-    }
+    return actionError(
+      ACTION_ERRORS.EXPORT_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -1434,17 +1426,16 @@ export async function getStudentsExportData(
     })
 
     if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      }
+      return actionError(
+        ACTION_ERRORS.VALIDATION_ERROR,
+        error.issues.map((e) => e.message).join(", ")
+      )
     }
 
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to fetch export data",
-    }
+    return actionError(
+      ACTION_ERRORS.EXPORT_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -1809,17 +1800,16 @@ export async function registerStudent(
     })
 
     if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      }
+      return actionError(
+        ACTION_ERRORS.VALIDATION_ERROR,
+        error.issues.map((e) => e.message).join(", ")
+      )
     }
 
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to register student",
-    }
+    return actionError(
+      ACTION_ERRORS.STUDENT_CREATE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -1947,18 +1937,15 @@ export async function bulkDeleteStudents(input: {
   } catch (error) {
     console.error("[bulkDeleteStudents] Error:", error)
     if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      }
+      return actionError(
+        ACTION_ERRORS.VALIDATION_ERROR,
+        error.issues.map((e) => e.message).join(", ")
+      )
     }
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to bulk delete students",
-    }
+    return actionError(
+      ACTION_ERRORS.STUDENT_DELETE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -2023,13 +2010,10 @@ export async function generateStudentAccessCodes(input: {
     }
   } catch (error) {
     console.error("[generateStudentAccessCodes] Error:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to generate access codes",
-    }
+    return actionError(
+      ACTION_ERRORS.CREATE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -2098,11 +2082,10 @@ export async function getStudentAccessCodes(input: {
     }
   } catch (error) {
     console.error("[getStudentAccessCodes] Error:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to fetch access codes",
-    }
+    return actionError(
+      ACTION_ERRORS.LOAD_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -2130,9 +2113,9 @@ export async function bulkSyncStudentGrades(): Promise<
     return { success: true, data: result }
   } catch (error) {
     console.error("[bulkSyncStudentGrades] Error:", error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to sync grades",
-    }
+    return actionError(
+      ACTION_ERRORS.UPDATE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }

@@ -103,7 +103,9 @@ function EnrollmentActionsCell({
       if (result.success) {
         SuccessToast(t?.enrollment?.paymentRecorded || "Payment recorded")
       } else {
-        ErrorToast(result.error || "Failed to record payment")
+        ErrorToast(
+          result.error || t?.applicationDetail?.statusUpdateFailed || "Failed"
+        )
       }
     })
   }
@@ -116,7 +118,9 @@ function EnrollmentActionsCell({
           t?.enrollment?.enrollmentConfirmed || "Enrollment confirmed"
         )
       } else {
-        ErrorToast(result.error || "Failed to confirm enrollment")
+        ErrorToast(
+          result.error || t?.applicationDetail?.statusUpdateFailed || "Failed"
+        )
       }
     })
   }
@@ -127,13 +131,11 @@ function EnrollmentActionsCell({
 
   const onSendReminder = () => {
     const name = enrollment.applicantName || enrollment.firstName
+    const appNum = enrollment.applicationNumber
     const subject = encodeURIComponent(
-      `Enrollment Reminder - ${enrollment.applicationNumber}`
+      `${t?.enrollment?.sendReminder || "Enrollment Reminder"} - ${appNum}`
     )
-    const body = encodeURIComponent(
-      `Dear ${name},\n\nThis is a reminder regarding your enrollment application (${enrollment.applicationNumber}).\n\nPlease complete any outstanding steps at your earliest convenience.\n\nThank you.`
-    )
-    window.open(`mailto:?subject=${subject}&body=${body}`, "_blank")
+    window.open(`mailto:?subject=${subject}`, "_blank")
   }
 
   return (
@@ -141,7 +143,7 @@ function EnrollmentActionsCell({
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="h-8 w-8 p-0" disabled={isPending}>
           <Ellipsis className="h-4 w-4" />
-          <span className="sr-only">Open menu</span>
+          <span className="sr-only">{t?.toolbar?.openMenu || "Open menu"}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

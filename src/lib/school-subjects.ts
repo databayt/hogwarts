@@ -2,7 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { cache } from "react"
-import type { CatalogSubject } from "@prisma/client"
+import type { Subject } from "@prisma/client"
 
 import { db } from "@/lib/db"
 
@@ -18,8 +18,7 @@ const SUBJECT_CORE_SELECT = {
   country: true,
   curriculum: true,
   color: true,
-  imageKey: true,
-  thumbnailKey: true,
+  thumbnail: true,
   status: true,
   totalChapters: true,
   totalLessons: true,
@@ -41,8 +40,7 @@ export type SubjectCore = {
   country: string
   curriculum: string
   color: string | null
-  imageKey: string | null
-  thumbnailKey: string | null
+  thumbnail: string | null
   status: string
   totalChapters: number
   totalLessons: number
@@ -54,13 +52,13 @@ export type SubjectCore = {
 }
 
 /**
- * Get all active subjects for a school via SchoolSubjectSelection bridge.
- * Returns core CatalogSubject fields (deduplicated by catalogSubjectId).
+ * Get all active subjects for a school via SubjectSelection bridge.
+ * Returns core Subject fields (deduplicated by catalogSubjectId).
  * Wrapped with React.cache() for request-level deduplication.
  */
 export const getSchoolSubjects = cache(
   async (schoolId: string): Promise<SubjectCore[]> => {
-    const selections = await db.schoolSubjectSelection.findMany({
+    const selections = await db.subjectSelection.findMany({
       where: { schoolId, isActive: true },
       select: { subject: { select: SUBJECT_CORE_SELECT } },
       distinct: ["catalogSubjectId"],
@@ -74,8 +72,8 @@ export const getSchoolSubjects = cache(
  */
 export async function getSchoolSubjectsFull(
   schoolId: string
-): Promise<CatalogSubject[]> {
-  const selections = await db.schoolSubjectSelection.findMany({
+): Promise<Subject[]> {
+  const selections = await db.subjectSelection.findMany({
     where: { schoolId, isActive: true },
     include: { subject: true },
     distinct: ["catalogSubjectId"],
@@ -88,7 +86,7 @@ export async function getSchoolSubjectsFull(
  * Returns { id, name, department } for each subject.
  */
 export const getSchoolSubjectOptions = cache(async (schoolId: string) => {
-  const selections = await db.schoolSubjectSelection.findMany({
+  const selections = await db.subjectSelection.findMany({
     where: { schoolId, isActive: true },
     select: {
       subject: {
@@ -105,14 +103,14 @@ export const getSchoolSubjectOptions = cache(async (schoolId: string) => {
 })
 
 /**
- * Find a single school subject by CatalogSubject ID.
+ * Find a single school subject by Subject ID.
  * Verifies the school has selected this subject.
  */
 export async function getSchoolSubject(
   schoolId: string,
   subjectId: string
 ): Promise<SubjectCore | null> {
-  const selection = await db.schoolSubjectSelection.findFirst({
+  const selection = await db.subjectSelection.findFirst({
     where: { schoolId, catalogSubjectId: subjectId, isActive: true },
     select: { subject: { select: SUBJECT_CORE_SELECT } },
   })

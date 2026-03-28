@@ -1,0 +1,17 @@
+{
+  "subject": "science",
+  "subjectNameAr": "العلوم",
+  "grade": 9,
+  "level": "middle",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "",
+  "chapters": [
+    {
+      "nameAr": "العلوم",
+      "name": "Science",
+      "slug": "science",
+      "sequenceOrder": 1,
+      "lessons": []
+    }
+  ]
+}

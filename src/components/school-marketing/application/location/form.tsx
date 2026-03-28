@@ -19,6 +19,7 @@ import { CountryField, InputField, TextareaField } from "@/components/form"
 import { createI18nHelpers } from "@/components/internationalization/helpers"
 
 import { useApplySession } from "../application-context"
+import { useAutoFillMerge } from "../use-auto-fill-merge"
 import { getApplyDict } from "../utils"
 import { saveLocationStep } from "./actions"
 import type { LocationFormProps, LocationFormRef } from "./types"
@@ -73,6 +74,9 @@ export const LocationForm = forwardRef<LocationFormRef, LocationFormProps>(
         country: initialData?.country || "",
       },
     })
+
+    // Merge AI-extracted data into empty fields (late-arrival insurance)
+    useAutoFillMerge(form, initialData)
 
     const dict = getApplyDict(dictionary, "location")
 

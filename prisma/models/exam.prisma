@@ -1,853 +1,206 @@
-// ============================================================================
-// EXAM MANAGEMENT SYSTEM
-// ============================================================================
-// This file contains models for the exam management system:
-// 1. Manage - Schedule and organize exams
-// 2. Auto-Mark - Automated grading system
-// 3. Results - Analytics and PDF reports
-//
-// NOTE: Question Bank models have been moved to prisma/models/qbank.prisma
-// ============================================================================
+// Exam — formal assessment templates (NO schoolId)
+// ExamTemplate — reusable exam blueprints with distribution rules
+// ExamBlueprint — subject-category defaults (STEM_MATH, etc.)
+// PaperTemplate — print layout configuration
 
-// ========== ENUMS ==========
-
-// Basic Exam Enums
-enum ExamType {
-  MIDTERM
-  FINAL
-  QUIZ
-  TEST
-  PRACTICAL
-}
-
-enum ExamStatus {
-  PLANNED
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
-}
-
-// Proctoring Mode for exam security
-enum ProctorMode {
-  NONE      // No restrictions
-  BASIC     // Question randomization, timing
-  STANDARD  // + Browser focus detection
-  STRICT    // + Browser lockdown, session tracking
-}
-
-// Security flags for exam monitoring
-enum SecurityFlag {
-  FOCUS_LOST     // Tab/window lost focus
-  TAB_SWITCH     // Switched browser tabs
-  COPY_ATTEMPT   // Attempted to copy content
-  TIME_ANOMALY   // Suspicious timing pattern
-  IP_CHANGE      // IP address changed mid-exam
-  MULTIPLE_DEVICE // Detected access from multiple devices
-}
-
-// Exam session status
-enum SessionStatus {
-  NOT_STARTED
-  IN_PROGRESS
-  PAUSED
-  SUBMITTED
-  EXPIRED
-  FLAGGED
-}
-
-// Grading system types for multi-format support
-enum GradingSystem {
-  PERCENTAGE  // 0-100%
-  GPA_4       // 0.0-4.0
-  GPA_5       // 0.0-5.0
-  LETTER      // A+, A, B+, B, C+, C, D, F
-  CGPA        // Cumulative GPA
-  CCE         // Continuous and Comprehensive Evaluation
-  CBSE        // Central Board pattern
-  ICSE        // Indian Certificate pattern
-}
-
-// Auto-Marking Enums
-enum GradingMethod {
-  AUTO // Fully automated (MCQ, T/F, Fill Blank)
-  AI_ASSISTED // AI grading with teacher review (Short Answer, Essay)
-  MANUAL // Teacher grades manually
-}
-
-enum SubmissionType {
-  DIGITAL // Answered directly in school-dashboard
-  UPLOAD // Uploaded file (PDF/image)
-  OCR // Scanned and processed via OCR
-}
-
-enum MarkingStatus {
-  NOT_STARTED // No grading yet
-  IN_PROGRESS // Partially graded
-  AUTO_GRADED // Auto-graded, pending review
-  AI_GRADED // AI-graded, pending review
-  REVIEWED // Teacher reviewed
-  COMPLETED // Finalized
-}
-
-// ========== BASIC EXAM MANAGEMENT (MANAGE BLOCK) ==========
-
-// Main Exam model
 model Exam {
-  id           String     @id @default(cuid())
-  schoolId     String
-  title        String
-  description  String?    @db.Text
-  classId      String
-  subjectId    String
-  examDate     DateTime
-  startTime    String // Format: "HH:MM" (e.g., "09:00")
-  endTime      String // Format: "HH:MM" (e.g., "11:00")
-  duration     Int // Duration in minutes
-  totalMarks   Int
-  passingMarks Int
-  examType     ExamType
-  instructions String?    @db.Text
-  status       ExamStatus @default(PLANNED)
-
-  // Optional catalog FK bridges
-  catalogChapterId String?
-  catalogLessonId  String?
-  catalogExamId    String? // Bridge to CatalogExam (adopted exam)
-
-  // Proctoring & Security settings
-  proctorMode       ProctorMode @default(BASIC)
-  shuffleQuestions  Boolean     @default(true)
-  shuffleOptions    Boolean     @default(true)
-  maxAttempts       Int         @default(1)
-  retakePenalty     Decimal?    @db.Decimal(5, 2) // % deduction per retake
-  allowLateSubmit   Boolean     @default(false)
-  lateSubmitMinutes Int         @default(0) // Extra minutes allowed after deadline
-
-  // Wizard support
-  wizardStep String? // null = complete, non-null = current wizard step slug
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  school         School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  class          Class           @relation(fields: [classId], references: [id], onDelete: Cascade)
-  subject        CatalogSubject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  examResults    ExamResult[]
-  results        Result[]
-  generatedExam  GeneratedExam? // Auto-generated exam (one-to-one)
-  studentAnswers StudentAnswer[] // Auto-marking system
-  markingResults MarkingResult[] // Auto-marking system
-  examSessions   ExamSession[]   // Proctoring sessions
-
-  // Catalog bridge relations
-  catalogChapter CatalogChapter? @relation(fields: [catalogChapterId], references: [id], onDelete: SetNull)
-  catalogLesson  CatalogLesson?  @relation(fields: [catalogLessonId], references: [id], onDelete: SetNull)
-  catalogExam    CatalogExam?    @relation("CatalogExamMirror", fields: [catalogExamId], references: [id], onDelete: SetNull)
-
-  // Performance indexes
-  @@index([schoolId, examDate])
-  @@index([schoolId, classId])
-  @@index([schoolId, subjectId])
-  @@index([schoolId, status])
-  @@index([schoolId, examType])
-  @@index([schoolId, examDate, status]) // Composite for upcoming exams
-  @@index([schoolId, classId, examDate]) // Composite for class schedule
-  @@index([schoolId, subjectId, examType]) // Composite for subject exams
-  @@index([catalogExamId])
-  @@index([createdAt]) // For sorting
-  @@map("exams")
-}
-
-// Exam Session - Tracks individual student exam attempts with proctoring
-model ExamSession {
-  id              String        @id @default(cuid())
-  schoolId        String
-  examId          String
-  studentId       String
-  attemptNumber   Int           @default(1)
-  status          SessionStatus @default(NOT_STARTED)
-
-  // Timing
-  startedAt       DateTime?
-  submittedAt     DateTime?
-  lastActivityAt  DateTime?
-
-  // Proctoring
-  proctorMode     ProctorMode   @default(BASIC)
-  ipAddress       String?
-  userAgent       String?
-  deviceFingerprint String?     // Browser fingerprint for device tracking
-
-  // Security tracking
-  securityFlags   Json          @default("[]") // [{flag, timestamp, details}]
-  flagCount       Int           @default(0)
-  focusLostCount  Int           @default(0)
-  tabSwitchCount  Int           @default(0)
-  copyAttempts    Int           @default(0)
-
-  // Answer backup (auto-save)
-  answerSnapshot  Json?         // Backup of answers in case of connection loss
-  lastSavedAt     DateTime?
-
-  // Question order (for shuffled exams)
-  questionOrder   Json?         // Array of question IDs in display order
-  optionOrders    Json?         // Map of questionId -> shuffled option indices
-
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-
-  school          School        @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  exam            Exam          @relation(fields: [examId], references: [id], onDelete: Cascade)
-  student         Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
-
-  @@unique([examId, studentId, attemptNumber])
-  @@index([schoolId])
-  @@index([schoolId, examId])
-  @@index([schoolId, studentId])
-  @@index([schoolId, status])
-  @@index([schoolId, examId, status])
-  @@index([flagCount]) // For identifying flagged sessions
-  @@map("exam_sessions")
-}
-
-// Exam results for students
-model ExamResult {
-  id            String   @id @default(cuid())
-  schoolId      String
-  examId        String
-  studentId     String
-  marksObtained Int
-  totalMarks    Int
-  percentage    Float
-  grade         String?
-  remarks       String?  @db.Text
-  isAbsent      Boolean  @default(false)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  school      School           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  exam        Exam             @relation(fields: [examId], references: [id], onDelete: Cascade)
-  student     Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  certificate ExamCertificate? // One-to-one relation for exam certificate
-
-  @@unique([examId, studentId])
-  // Performance indexes
-  @@index([schoolId, examId])
-  @@index([schoolId, studentId])
-  @@index([schoolId, examId, marksObtained]) // For ranking queries
-  @@index([schoolId, examId, percentage]) // For performance analysis
-  @@index([schoolId, studentId, createdAt]) // For student history
-  @@index([isAbsent]) // For filtering absent students
-  @@map("exam_results")
-}
-
-// Grade boundaries for letter grades
-model GradeBoundary {
-  id        String   @id @default(cuid())
-  schoolId  String
-  grade     String // A+, A, B+, B, C+, C, D, F
-  minScore  Decimal  @db.Decimal(5, 2)
-  maxScore  Decimal  @db.Decimal(5, 2)
-  gpaValue  Decimal  @db.Decimal(3, 2) // GPA equivalent (e.g., 4.0, 3.7)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-
-  @@unique([schoolId, grade])
-  @@index([schoolId, minScore, maxScore])
-  @@map("grade_boundaries")
-}
-
-// School-wide grading configuration
-model SchoolGradingConfig {
-  id              String        @id @default(cuid())
-  schoolId        String        @unique
-
-  // Primary grading system
-  primarySystem   GradingSystem @default(GPA_4)
-  gpaScale        Decimal       @default(4.0) @db.Decimal(3, 1) // 4.0 or 5.0
-
-  // Display preferences
-  showPercentage  Boolean       @default(true)
-  showGPA         Boolean       @default(true)
-  showLetter      Boolean       @default(true)
-
-  // Pass/fail threshold
-  passingThreshold Int          @default(60) // Percentage required to pass
-
-  // CGPA weighting configuration
-  // Format: {"midterm": 0.3, "final": 0.5, "quiz": 0.1, "assignment": 0.1}
-  cgpaWeighting   Json?
-
-  // Custom grade boundaries (overrides defaults)
-  // Format: [{"grade": "A+", "minScore": 97, "maxScore": 100, "gpa4": 4.0, "gpa5": 5.0}, ...]
-  customBoundaries Json?
-
-  // Retake policy: "best" | "latest" | "average"
-  retakePolicy    String        @default("best")
-  maxRetakes      Int           @default(2)
-  retakePenaltyPercent Int      @default(0) // % deduction per retake
-
-  // Rounding
-  roundingMethod  String        @default("round") // round, floor, ceil
-  decimalPlaces   Int           @default(2)
-
-  school          School        @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-
-  @@map("school_grading_configs")
-}
-
-// ========== QUESTION BANK & GENERATION ==========
-// NOTE: All QBank models have been moved to prisma/models/qbank.prisma
-// This includes: QuestionBank, QuestionAnalytics, ExamTemplate,
-// GeneratedExam, GeneratedExamQuestion, and related AI automation models
-
-// ========== AUTO-MARKING SYSTEM (MARK BLOCK) ==========
-
-// Grading Rubric for subjective questions
-model Rubric {
   id          String  @id @default(cuid())
-  schoolId    String
-  questionId  String  @unique // Links to QuestionBank
+  subjectId   String
+  chapterId   String?
+  lessonId    String?
   title       String
   description String? @db.Text
-  totalPoints Decimal @db.Decimal(5, 2)
+  lang        String  @default("ar")
+
+  examType        String // midterm, final, chapter_test, practice
+  durationMinutes Int?
+  totalMarks      Int?
+  passingMarks    Int?
+  questions       Json? // Legacy: use ExamQuestion junction instead
+  totalQuestions  Int?
+  distribution    Json? // e.g. {"MULTIPLE_CHOICE": {"EASY": 5}}
+  bloomDistribution Json? // e.g. {"REMEMBER": 4, "UNDERSTAND": 3}
+
+  gradeRange String?
+  levels     SchoolLevel[]
+  status     ContentStatus @default(DRAFT)
+  tags       String[]      @default([])
+
+  // Contribution pattern
+  contributedBy       String?
+  contributedSchoolId String?
+  approvalStatus      ApprovalStatus    @default(PENDING)
+  approvedBy          String?
+  approvedAt          DateTime?
+  rejectionReason     String?
+  visibility          ContentVisibility @default(PUBLIC)
+
+  // Engagement metrics
+  usageCount   Int   @default(0)
+  averageScore Float @default(0)
+  qualityScore Float @default(0)
+  ratingCount  Int   @default(0)
+
+  // Pricing for PAID visibility
+  price    Decimal? @db.Decimal(8, 2)
+  currency String?  @default("USD")
+
+  // Variant support (self-referencing)
+  variantOf    String?
+  variantLabel String?
+
+  // Relations
+  subject Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  chapter Chapter? @relation(fields: [chapterId], references: [id], onDelete: SetNull)
+  lesson  Lesson?  @relation("LessonExams", fields: [lessonId], references: [id], onDelete: SetNull)
+
+  // Variant relations
+  parentExam Exam?  @relation("ExamVariants", fields: [variantOf], references: [id], onDelete: SetNull)
+  variants   Exam[] @relation("ExamVariants")
+
+  // Junction table for questions
+  examQuestions ExamQuestion[]
+
+  // School mirrors (adopted by schools)
+  schoolExams SchoolExam[] @relation("CatalogExamMirror")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  school   School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  question QuestionBank      @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  criteria RubricCriterion[]
-
-  @@index([schoolId, questionId])
-  @@map("rubrics")
+  @@index([subjectId])
+  @@index([chapterId])
+  @@index([lessonId])
+  @@index([status])
+  @@index([approvalStatus, visibility])
+  @@index([contributedBy])
+  @@index([contributedSchoolId])
+  @@index([variantOf])
+  @@map("catalog_exams")
 }
 
-// Individual rubric criteria
-model RubricCriterion {
-  id          String  @id @default(cuid())
-  schoolId    String
-  rubricId    String
-  criterion   String  @db.Text // What to evaluate
-  description String? @db.Text // Detailed description
-  maxPoints   Decimal @db.Decimal(5, 2)
-  order       Int     @default(0)
+// Reusable exam blueprints with distribution/Bloom rules
+model ExamTemplate {
+  id               String  @id @default(cuid())
+  catalogSubjectId String
+  name             String
+  description      String? @db.Text
+  lang             String  @default("ar")
 
-  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  rubric Rubric @relation(fields: [rubricId], references: [id], onDelete: Cascade)
+  examType    String // midterm, final, chapter_test, quiz, practice, diagnostic
+  duration    Int // Minutes
+  totalMarks  Decimal @db.Decimal(6, 2)
 
-  @@index([schoolId, rubricId])
-  @@map("rubric_criteria")
-}
+  distribution      Json // {"MULTIPLE_CHOICE": {"EASY": 5, "MEDIUM": 3}}
+  bloomDistribution Json?
 
-// Student answers/responses for exam questions
-model StudentAnswer {
-  id             String         @id @default(cuid())
-  schoolId       String
-  examId         String // Links to Exam
-  questionId     String // Links to QuestionBank
-  studentId      String
-  submissionType SubmissionType
+  gradeRange String?
+  levels     SchoolLevel[]
 
-  // Answer content
-  answerText        String?  @db.Text // Digital answer
-  selectedOptionIds String[] // For MCQ (array of indices)
-  uploadUrl         String? // Uploaded file URL
-  ocrText           String?  @db.Text // Extracted text from OCR
-  ocrConfidence     Float? // OCR accuracy confidence (0-1)
+  // Contribution pattern
+  contributedBy       String?
+  contributedSchoolId String?
+  approvalStatus      ApprovalStatus    @default(PENDING)
+  approvedBy          String?
+  approvedAt          DateTime?
+  rejectionReason     String?
+  visibility          ContentVisibility @default(PUBLIC)
 
-  // Timestamps
-  submittedAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  usageCount Int @default(0)
+  status ContentStatus @default(PUBLISHED)
+  tags   String[]      @default([])
 
-  school        School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  exam          Exam           @relation(fields: [examId], references: [id], onDelete: Cascade)
-  question      QuestionBank   @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  student       Student        @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  markingResult MarkingResult?
+  // Relations
+  catalogSubject Subject @relation(fields: [catalogSubjectId], references: [id], onDelete: Cascade)
 
-  @@unique([examId, questionId, studentId])
-  // Performance indexes
-  @@index([schoolId, examId])
-  @@index([schoolId, studentId])
-  @@index([schoolId, questionId])
-  @@index([schoolId, examId, submittedAt])
-  @@index([schoolId, submissionType])
-  @@index([schoolId, examId, studentId]) // Composite for student exam answers
-  @@index([schoolId, examId, questionId]) // Composite for exam question answers
-  @@index([uploadUrl]) // For OCR processing queries
-  @@index([ocrText]) // For OCR status queries
-  @@map("student_answers")
-}
-
-// Marking/Grading results
-model MarkingResult {
-  id              String @id @default(cuid())
-  schoolId        String
-  studentAnswerId String @unique
-  examId          String
-  questionId      String // Links to QuestionBank
-  studentId       String
-
-  // Grading details
-  gradingMethod GradingMethod
-  status        MarkingStatus @default(NOT_STARTED)
-  pointsAwarded Decimal       @db.Decimal(5, 2)
-  maxPoints     Decimal       @db.Decimal(5, 2)
-
-  // AI grading
-  aiScore      Decimal? @db.Decimal(5, 2)
-  aiConfidence Float? // AI confidence score (0-1)
-  aiReasoning  String?  @db.Text // AI explanation
-
-  // Teacher feedback
-  feedback String?   @db.Text
-  gradedBy String? // Teacher ID
-  gradedAt DateTime?
-
-  // Flags
-  needsReview   Boolean @default(false)
-  wasOverridden Boolean @default(false)
+  // School mirrors (adopted templates)
+  schoolMirrors SchoolExamTemplate[] @relation("CatalogExamTemplateMirror")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  school        School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  studentAnswer StudentAnswer   @relation(fields: [studentAnswerId], references: [id], onDelete: Cascade)
-  exam          Exam            @relation(fields: [examId], references: [id], onDelete: Cascade)
-  question      QuestionBank    @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  student       Student         @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  overrides     GradeOverride[]
-
-  // Performance indexes
-  @@index([schoolId, examId])
-  @@index([schoolId, studentId])
-  @@index([schoolId, status])
-  @@index([schoolId, gradingMethod])
-  @@index([schoolId, needsReview])
-  @@index([schoolId, gradedBy])
-  @@index([schoolId, examId, status])
-  @@index([schoolId, status, needsReview])
-  @@index([schoolId, examId, studentId]) // Composite for student exam marks
-  @@index([schoolId, questionId, studentId]) // Composite for question performance
-  @@index([gradedAt]) // For recent grading queries
-  @@index([aiConfidence]) // For AI grading confidence analysis
-  @@map("marking_results")
+  @@index([catalogSubjectId])
+  @@index([examType])
+  @@index([status])
+  @@index([approvalStatus, visibility])
+  @@index([contributedBy])
+  @@index([contributedSchoolId])
+  @@map("catalog_exam_templates")
 }
 
-// Manual grade overrides/adjustments
-model GradeOverride {
-  id              String @id @default(cuid())
-  schoolId        String
-  markingResultId String
+// Subject-category blueprints (STEM_MATH, LANGUAGE_ARTS, etc.)
+model ExamBlueprint {
+  id       String @id @default(cuid())
+  category String @unique
+  name     String
+  description String? @db.Text
 
-  previousScore Decimal  @db.Decimal(5, 2)
-  newScore      Decimal  @db.Decimal(5, 2)
-  reason        String   @db.Text
-  overriddenBy  String // Teacher ID
-  overriddenAt  DateTime @default(now())
+  questionTypeWeights Json
+  bloomWeights        Json
+  difficultyCurves    Json
+  examTypeConfigs     Json
+  questionTemplates   Json?
+  mcqOptionGenerators Json?
+  classificationRules Json?
 
-  school        School        @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  markingResult MarkingResult @relation(fields: [markingResultId], references: [id], onDelete: Cascade)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@index([schoolId, markingResultId])
-  @@index([schoolId, overriddenBy])
-  @@map("grade_overrides")
+  @@index([isActive])
+  @@map("catalog_exam_blueprints")
 }
 
-// ========== EXAM PAPER SYSTEM ==========
+// Exam paper layout configuration (NO schoolId)
+model PaperTemplate {
+  id   String @id @default(cuid())
+  name String
+  lang String @default("ar")
 
-enum ExamPaperTemplate {
-  CLASSIC // Traditional academic style
-  MODERN // Clean, minimalist
-  FORMAL // Government/official exam style
-  CUSTOM // School-branded template
-}
+  template        String @default("CLASSIC")
+  layout          String @default("SINGLE_COLUMN")
+  answerSheetType String @default("SEPARATE")
 
-enum PaperLayout {
-  SINGLE_COLUMN // Questions stacked vertically
-  TWO_COLUMN // Questions in two columns
-  BOOKLET // Multi-page with answer sheet
-}
-
-enum AnswerSheetType {
-  NONE // Answers inline with questions
-  SEPARATE // Answer sheet as separate page
-  BUBBLE // OMR-style bubble sheet
-}
-
-// Paper configuration for generated exams
-model ExamPaperConfig {
-  id              String @id @default(cuid())
-  schoolId        String
-  generatedExamId String @unique
-
-  // Template & Layout
-  template        ExamPaperTemplate @default(CLASSIC)
-  layout          PaperLayout       @default(SINGLE_COLUMN)
-  answerSheetType AnswerSheetType   @default(SEPARATE)
-
-  // Header Configuration
   showSchoolLogo     Boolean @default(true)
   showExamTitle      Boolean @default(true)
   showInstructions   Boolean @default(true)
   customInstructions String? @db.Text
-  showStudentInfo    Boolean @default(true) // Name, ID fields
+  showStudentInfo    Boolean @default(true)
 
-  // Question Configuration
   showQuestionNumbers   Boolean @default(true)
   showPointsPerQuestion Boolean @default(true)
   showQuestionType      Boolean @default(false)
   shuffleQuestions      Boolean @default(false)
   shuffleOptions        Boolean @default(false)
 
-  // Answer Space
-  answerLinesShort Int @default(3) // Lines for short answer
-  answerLinesEssay Int @default(12) // Lines for essay
+  answerLinesShort Int @default(3)
+  answerLinesEssay Int @default(12)
 
-  // Footer & Print Settings
   showPageNumbers Boolean @default(true)
   showTotalPages  Boolean @default(true)
   customFooter    String?
-  pageSize        String  @default("A4") // A4, Letter
+  pageSize        String  @default("A4")
   orientation     String  @default("portrait")
 
-  // Building blocks config (JSON array of block configs)
-  blockConfig Json? // [{type: "header", enabled: true, props: {...}}, ...]
+  blockConfig Json?
 
-  // Versioning (for multiple exam versions A/B/C)
-  versionCount Int @default(1)
+  // Contribution pattern
+  contributedBy       String?
+  contributedSchoolId String?
+  approvalStatus      ApprovalStatus    @default(PENDING)
+  approvedBy          String?
+  approvedAt          DateTime?
+  rejectionReason     String?
+  visibility          ContentVisibility @default(PUBLIC)
 
-  // Regional preset & copy count
-  regionPreset      String? // "sd-national", "sa-national", etc.
-  recommendedCopies Int?    // Auto-calculated: enrolled + spare
-  customCopies      Int?    // Teacher override
-  spareCopies       Int     @default(2)
-
-  // Catalog bridge FK (adopted from catalog paper template)
-  catalogPaperTemplateId String?
-
-  school        School           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  generatedExam GeneratedExam    @relation(fields: [generatedExamId], references: [id], onDelete: Cascade)
-  papers        GeneratedPaper[]
+  usageCount Int @default(0)
+  status ContentStatus @default(PUBLISHED)
+  tags   String[]      @default([])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([schoolId])
-  @@index([schoolId, generatedExamId])
-  @@index([catalogPaperTemplateId])
-  @@map("exam_paper_configs")
-}
-
-// Generated paper PDF instances
-model GeneratedPaper {
-  id       String @id @default(cuid())
-  schoolId String
-  configId String
-
-  versionCode   String? // A, B, C for different versions
-  pdfUrl        String? // Stored PDF URL
-  answerKeyUrl  String? // Answer key PDF URL
-  questionOrder Json // Array of question IDs in paper order
-  optionOrder   Json? // Map of question ID to shuffled option indices
-
-  generatedBy String
-  generatedAt DateTime @default(now())
-
-  school School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  config ExamPaperConfig @relation(fields: [configId], references: [id], onDelete: Cascade)
-
-  @@index([schoolId, configId])
-  @@index([generatedAt])
-  @@map("generated_papers")
-}
-
-// Answer key for generated exams
-model ExamAnswerKey {
-  id              String @id @default(cuid())
-  schoolId        String
-  generatedExamId String @unique
-
-  // Answer key data (JSON)
-  // [{questionId, order, questionType, correctAnswer, points, explanation}]
-  answers Json
-  pdfUrl  String? // Answer key PDF URL
-
-  generatedBy String
-  generatedAt DateTime @default(now())
-
-  school        School        @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  generatedExam GeneratedExam @relation(fields: [generatedExamId], references: [id], onDelete: Cascade)
-
-  @@index([schoolId])
-  @@index([schoolId, generatedExamId])
-  @@map("exam_answer_keys")
-}
-
-// ========== EXAM CERTIFICATE SYSTEM ==========
-
-enum CertificateType {
-  ACHIEVEMENT // For high scores
-  COMPLETION // For completing exam
-  PARTICIPATION // For participating
-  MERIT // For merit (top 10%)
-  EXCELLENCE // For excellence (top 3%)
-  CUSTOM // Custom certificate
-}
-
-// Certificate template configuration
-model ExamCertificateConfig {
-  id          String          @id @default(cuid())
-  schoolId    String
-  name        String
-  type        CertificateType
-  description String?         @db.Text
-
-  // Template Configuration
-  templateStyle String @default("elegant") // elegant, modern, classic, minimal
-  orientation   String @default("landscape")
-
-  // Content Configuration (supports placeholders)
-  titleText      String  @default("Certificate of Achievement")
-  titleTextAr    String?
-  bodyTemplate   String  @db.Text // Template with placeholders like {{studentName}}
-  bodyTemplateAr String? @db.Text
-
-  // Criteria for eligibility
-  minPercentage Float? // Minimum percentage to qualify
-  minGrade      String? // Minimum grade to qualify (e.g., "B")
-  topPercentile Float? // Top X% of class
-
-  // Signatures (JSON array)
-  // [{name: string, title: string, signatureUrl?: string}]
-  signatures Json
-
-  // Composition (composable template system)
-  compositionConfig Json?   // CertificateCompositionConfig
-  regionPreset      String? // "sd-national", "sa-national", etc.
-  pageSize          String  @default("A4")
-
-  // Branding
-  useSchoolLogo Boolean @default(true)
-  customLogo    String?
-  borderStyle   String  @default("gold") // gold, silver, blue, custom
-
-  // Validity
-  expiryMonths Int? // Certificate expiry in months (null = permanent)
-
-  // Verification
-  enableVerification Boolean @default(true)
-  verificationPrefix String? // e.g., "CERT-" for CERT-ABC123
-
-  school       School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  certificates ExamCertificate[]
-
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([schoolId, type])
-  @@index([schoolId, isActive])
-  @@map("exam_certificate_configs")
-}
-
-// Issued exam certificates
-model ExamCertificate {
-  id           String @id @default(cuid())
-  schoolId     String
-  configId     String
-  examResultId String @unique
-  studentId    String
-
-  // Certificate Details
-  certificateNumber String    @unique
-  issuedAt          DateTime  @default(now())
-  expiresAt         DateTime?
-
-  // Frozen Content (snapshot at time of generation)
-  recipientName   String
-  recipientNameAr String?
-  examTitle       String
-  examDate        DateTime
-  score           Float
-  grade           String?
-  rank            Int?
-
-  // PDF Storage
-  pdfUrl       String?
-  thumbnailUrl String?
-
-  // Verification
-  verificationCode String  @unique
-  verificationUrl  String?
-
-  // Sharing
-  shareToken  String?   @unique // For public sharing
-  shareExpiry DateTime?
-  isPublic    Boolean   @default(false)
-  viewCount   Int       @default(0)
-
-  // Status
-  status        String    @default("active") // active, revoked, expired
-  revokedAt     DateTime?
-  revokedReason String?
-
-  school     School                @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  config     ExamCertificateConfig @relation(fields: [configId], references: [id], onDelete: Cascade)
-  examResult ExamResult            @relation(fields: [examResultId], references: [id], onDelete: Cascade)
-  student    Student               @relation(fields: [studentId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([schoolId, studentId])
-  @@index([schoolId, configId])
-  @@index([verificationCode])
-  @@index([shareToken])
   @@index([status])
-  @@index([issuedAt])
-  @@map("exam_certificates")
-}
-
-// ========== RESULTS & GRADING (RESULTS BLOCK) ==========
-
-// Individual grade/result entry (can be for assignments, exams, or standalone grades)
-model Result {
-  id           String  @id @default(cuid())
-  schoolId     String
-  studentId    String
-  classId      String
-  assignmentId String? // Optional: link to assignment if grading assignment
-  examId       String? // Optional: link to exam if grading exam
-  subjectId    String? // Optional: for subject-specific grades
-
-  // Scoring
-  score      Decimal @db.Decimal(6, 2)
-  maxScore   Decimal @db.Decimal(6, 2)
-  percentage Float // Auto-calculated
-  grade      String // Letter grade (A+, A, B+, etc.)
-
-  // Metadata
-  title       String? // Title if standalone grade entry
-  description String?   @db.Text
-  feedback    String?   @db.Text
-  submittedAt DateTime?
-  gradedAt    DateTime
-  gradedBy    String? // Teacher ID who entered the grade
-
-  // Year level for analytics grouping
-  yearLevelId String?
-  yearLevel   YearLevel? @relation(fields: [yearLevelId], references: [id], onDelete: SetNull)
-
-  // Relations
-  school     School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  student    Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  class      Class       @relation(fields: [classId], references: [id], onDelete: Cascade)
-  assignment Assignment? @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
-  exam       Exam?       @relation(fields: [examId], references: [id], onDelete: Cascade)
-  subject    CatalogSubject? @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-
-  // Wizard support
-  wizardStep String? // null = complete, non-null = current wizard step slug
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Performance indexes
-  @@index([schoolId, studentId])
-  @@index([schoolId, classId])
-  @@index([schoolId, assignmentId])
-  @@index([schoolId, examId])
-  @@index([schoolId, subjectId])
-  @@index([schoolId, gradedAt])
-  @@index([schoolId, yearLevelId]) // For year-level analytics
-  @@index([schoolId, studentId, subjectId]) // Composite for student subject results
-  @@index([schoolId, classId, subjectId]) // Composite for class subject results
-  @@index([percentage]) // For performance analysis
-  @@index([grade]) // For grade distribution queries
-  @@map("results")
-}
-
-// Report card for a specific term/period
-model ReportCard {
-  id          String  @id @default(cuid())
-  schoolId    String
-  studentId   String
-  termId      String
-  yearLevelId String?
-
-  // Overall performance
-  overallGrade  String?
-  overallGPA    Decimal? @db.Decimal(3, 2)
-  rank          Int? // Student rank in class
-  totalStudents Int? // Total students in class for rank context
-
-  // Attendance summary
-  daysPresent Int?
-  daysAbsent  Int?
-  daysLate    Int?
-
-  // Comments
-  teacherComments   String? @db.Text
-  principalComments String? @db.Text
-
-  // PDF Storage
-  pdfUrl       String?
-  thumbnailUrl String?
-
-  // Status
-  isPublished Boolean   @default(false)
-  publishedAt DateTime?
-
-  // Relations
-  school    School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  student   Student           @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  term      Term              @relation(fields: [termId], references: [id], onDelete: Cascade)
-  yearLevel YearLevel?        @relation(fields: [yearLevelId], references: [id], onDelete: SetNull)
-  grades    ReportCardGrade[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([schoolId, studentId, termId])
-  @@index([schoolId, termId])
-  @@index([schoolId, studentId])
-  @@index([schoolId, isPublished])
-  @@map("report_cards")
-}
-
-// Individual subject grade in a report card
-model ReportCardGrade {
-  id           String @id @default(cuid())
-  schoolId     String
-  reportCardId String
-  subjectId    String
-
-  grade      String
-  score      Decimal? @db.Decimal(6, 2)
-  maxScore   Decimal? @db.Decimal(6, 2)
-  percentage Float?
-  credits    Decimal? @db.Decimal(3, 1)
-
-  comments String? @db.Text
-
-  // Relations
-  school     School     @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  reportCard ReportCard @relation(fields: [reportCardId], references: [id], onDelete: Cascade)
-  subject    CatalogSubject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([reportCardId, subjectId])
-  @@index([schoolId, reportCardId])
-  @@index([schoolId, subjectId])
-  @@map("report_card_grades")
+  @@index([approvalStatus, visibility])
+  @@index([template])
+  @@map("catalog_paper_templates")
 }

@@ -4,7 +4,6 @@
 // Results Block Types
 
 import type {
-  CatalogSubject,
   Class,
   Exam,
   ExamResult,
@@ -12,6 +11,7 @@ import type {
   MarkingResult,
   SchoolBranding,
   Student,
+  Subject,
 } from "@prisma/client"
 
 // ========== Result Data Types ==========
@@ -181,7 +181,7 @@ export interface ResultExportOptions {
 
 export interface ExamWithResults extends Exam {
   class: Class
-  subject: CatalogSubject
+  subject: Subject
   examResults: (ExamResult & {
     student: Student
   })[]

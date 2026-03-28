@@ -30,6 +30,7 @@ import type { Student } from "../registration/types"
 interface StudentGridProps {
   students: Student[]
   onStudentSelect?: (student: Student) => void
+  dictionary?: any
 }
 
 const statusColors = {
@@ -41,7 +42,12 @@ const statusColors = {
   DROPPED_OUT: "bg-red-700 text-white",
 }
 
-export function StudentGrid({ students, onStudentSelect }: StudentGridProps) {
+export function StudentGrid({
+  students,
+  onStudentSelect,
+  dictionary,
+}: StudentGridProps) {
+  const d = dictionary?.school?.students?.search
   const getInitials = (student: Student) => {
     return `${student.firstName?.[0] || ""}${student.lastName?.[0] || ""}`.toUpperCase()
   }
@@ -88,7 +94,10 @@ export function StudentGrid({ students, onStudentSelect }: StudentGridProps) {
                 <div>
                   <h4 className="font-medium">{getFullName(student)}</h4>
                   <p className="text-muted-foreground text-xs">
-                    {student.grNumber || student.studentId || "No ID"}
+                    {student.grNumber ||
+                      student.studentId ||
+                      d?.noId ||
+                      "No ID"}
                   </p>
                 </div>
               </div>
@@ -102,16 +111,22 @@ export function StudentGrid({ students, onStudentSelect }: StudentGridProps) {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                  <DropdownMenuLabel>
+                    {d?.gridActions?.actions || "Actions"}
+                  </DropdownMenuLabel>
                   <DropdownMenuItem onClick={() => onStudentSelect?.(student)}>
                     <Eye className="me-2 h-4 w-4" />
-                    View Profile
+                    {d?.gridActions?.viewProfile || "View Profile"}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>Pencil</DropdownMenuItem>
-                  <DropdownMenuItem>Generate Report</DropdownMenuItem>
+                  <DropdownMenuItem>
+                    {d?.gridActions?.edit || "Edit"}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    {d?.gridActions?.generateReport || "Generate Report"}
+                  </DropdownMenuItem>
                   <DropdownMenuItem className="text-red-600">
-                    Delete
+                    {d?.gridActions?.delete || "Delete"}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -148,7 +163,8 @@ export function StudentGrid({ students, onStudentSelect }: StudentGridProps) {
                 <div className="text-muted-foreground flex items-center gap-2">
                   <Calendar className="h-3 w-3" />
                   <span>
-                    {getAge(student.dateOfBirth)} years • {student.gender}
+                    {getAge(student.dateOfBirth)} {d?.years || "years"} •{" "}
+                    {student.gender}
                   </span>
                 </div>
               )}
@@ -164,11 +180,15 @@ export function StudentGrid({ students, onStudentSelect }: StudentGridProps) {
 
             <div className="border-t pt-2">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Class</span>
+                <span className="text-muted-foreground">
+                  {d?.gridLabels?.class || "Class"}
+                </span>
                 <span className="font-medium">Grade 10-A</span>
               </div>
               <div className="mt-1 flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Enrolled</span>
+                <span className="text-muted-foreground">
+                  {d?.gridLabels?.enrolled || "Enrolled"}
+                </span>
                 <span className="font-medium">
                   {student.enrollmentDate &&
                     format(new Date(student.enrollmentDate), "MMM yyyy")}
@@ -187,7 +207,7 @@ export function StudentGrid({ students, onStudentSelect }: StudentGridProps) {
               }}
             >
               <Eye className="me-2 h-4 w-4" />
-              View Details
+              {d?.gridLabels?.viewDetails || "View Details"}
             </Button>
           </CardFooter>
         </Card>

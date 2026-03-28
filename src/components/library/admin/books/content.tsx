@@ -32,7 +32,7 @@ export default async function LibraryAdminBooksContent({
     )
   }
 
-  const books = await db.book.findMany({
+  const books = await db.schoolBook.findMany({
     where: { schoolId },
     orderBy: { createdAt: "desc" },
     select: {

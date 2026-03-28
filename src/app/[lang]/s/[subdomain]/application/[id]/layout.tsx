@@ -55,8 +55,8 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
       <div className="flex items-start gap-4">
         <Skeleton className="h-12 w-12 rounded-full" />
         <div className="flex-1 space-y-2">
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="h-4 w-96" />
+          <Skeleton className="h-8 w-64 max-w-full" />
+          <Skeleton className="h-4 w-96 max-w-full" />
         </div>
       </div>
       <div className="space-y-4">

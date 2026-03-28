@@ -27,7 +27,7 @@ export default async function ExamAnalyticsPage({ params }: Props) {
     return notFound()
   }
 
-  const exam = await db.exam.findUnique({
+  const exam = await db.schoolExam.findUnique({
     where: { id: examId, schoolId },
     include: {
       class: { select: { name: true } },

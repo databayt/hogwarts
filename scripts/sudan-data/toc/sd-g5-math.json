@@ -1,0 +1,52 @@
+{
+  "subject": "math",
+  "subjectNameAr": "الرياضيات",
+  "grade": 5,
+  "level": "elementary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "الطبعة الثانية 2021م",
+  "chapters": [
+    {
+      "nameAr": "الوحدة الأولى: مجموعة الأعداد الطبيعية والعمليات عليها",
+      "name": "Unit 1: Natural Numbers and Operations",
+      "slug": "natural-numbers-and-operations",
+      "sequenceOrder": 1,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الثانية: الكسور والعمليات عليها",
+      "name": "Unit 2: Fractions and Operations",
+      "slug": "fractions-and-operations",
+      "sequenceOrder": 2,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الثالثة: الكسور العشرية والعمليات عليها",
+      "name": "Unit 3: Decimal Fractions and Operations",
+      "slug": "decimal-fractions-and-operations",
+      "sequenceOrder": 3,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الرابعة: النسبة والتناسب",
+      "name": "Unit 4: Ratio and Proportion",
+      "slug": "ratio-and-proportion",
+      "sequenceOrder": 4,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الخامسة: حساب محيط الأشكال الهندسية المستوية",
+      "name": "Unit 5: Perimeter of Plane Geometric Shapes",
+      "slug": "perimeter-of-plane-geometric-shapes",
+      "sequenceOrder": 5,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة السادسة: الزوايا والمثلثات",
+      "name": "Unit 6: Angles and Triangles",
+      "slug": "angles-and-triangles",
+      "sequenceOrder": 6,
+      "lessons": []
+    }
+  ]
+}

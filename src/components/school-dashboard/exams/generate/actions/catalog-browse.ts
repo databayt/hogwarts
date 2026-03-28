@@ -7,7 +7,7 @@ import { getTenantContext } from "@/lib/tenant-context"
 // Browse catalog exams available for adoption
 // ============================================================================
 
-export interface CatalogExamBrowseFilters {
+export interface ExamBrowseFilters {
   catalogSubjectId?: string
   examType?: string
   gradeRange?: string
@@ -15,7 +15,7 @@ export interface CatalogExamBrowseFilters {
   page?: number
 }
 
-export interface CatalogExamRow {
+export interface ExamRow {
   id: string
   title: string
   description: string | null
@@ -35,16 +35,16 @@ export interface CatalogExamRow {
   variantLabel: string | null
 }
 
-export async function browseCatalogExams(
-  filters: CatalogExamBrowseFilters
-): Promise<{ exams: CatalogExamRow[]; total: number }> {
+export async function browseExams(
+  filters: ExamBrowseFilters
+): Promise<{ exams: ExamRow[]; total: number }> {
   const { schoolId } = await getTenantContext()
   if (!schoolId) {
     return { exams: [], total: 0 }
   }
 
   // Find already-adopted catalog exam IDs for this school
-  const adopted = await db.exam.findMany({
+  const adopted = await db.schoolExam.findMany({
     where: { schoolId, catalogExamId: { not: null } },
     select: { catalogExamId: true },
   })
@@ -72,7 +72,7 @@ export async function browseCatalogExams(
   const take = 20
 
   const [exams, total] = await Promise.all([
-    db.catalogExam.findMany({
+    db.exam.findMany({
       where: where as any,
       include: {
         subject: { select: { name: true } },
@@ -83,7 +83,7 @@ export async function browseCatalogExams(
       skip: page * take,
       orderBy: [{ usageCount: "desc" }, { createdAt: "desc" }],
     }),
-    db.catalogExam.count({ where: where as any }),
+    db.exam.count({ where: where as any }),
   ])
 
   return {
@@ -114,14 +114,14 @@ export async function browseCatalogExams(
 // Browse catalog exam templates
 // ============================================================================
 
-export interface CatalogExamTemplateBrowseFilters {
+export interface ExamTemplateBrowseFilters {
   catalogSubjectId?: string
   examType?: string
   search?: string
   page?: number
 }
 
-export interface CatalogExamTemplateRow {
+export interface ExamTemplateRow {
   id: string
   name: string
   description: string | null
@@ -136,21 +136,21 @@ export interface CatalogExamTemplateRow {
   isAdopted: boolean
 }
 
-export async function browseCatalogExamTemplates(
-  filters: CatalogExamTemplateBrowseFilters
-): Promise<{ templates: CatalogExamTemplateRow[]; total: number }> {
+export async function browseExamTemplates(
+  filters: ExamTemplateBrowseFilters
+): Promise<{ templates: ExamTemplateRow[]; total: number }> {
   const { schoolId } = await getTenantContext()
   if (!schoolId) {
     return { templates: [], total: 0 }
   }
 
   // Find already-adopted template IDs
-  const adopted = await db.examTemplate.findMany({
+  const adoptedTemplates = await db.schoolExamTemplate.findMany({
     where: { schoolId, catalogExamTemplateId: { not: null } },
     select: { catalogExamTemplateId: true },
   })
   const adoptedIds = new Set(
-    adopted.map((t) => t.catalogExamTemplateId).filter(Boolean)
+    adoptedTemplates.map((t) => t.catalogExamTemplateId).filter(Boolean)
   )
 
   const where: Record<string, unknown> = {
@@ -173,7 +173,7 @@ export async function browseCatalogExamTemplates(
   const take = 20
 
   const [templates, total] = await Promise.all([
-    db.catalogExamTemplate.findMany({
+    db.examTemplate.findMany({
       where: where as any,
       include: {
         catalogSubject: { select: { name: true } },
@@ -182,7 +182,7 @@ export async function browseCatalogExamTemplates(
       skip: page * take,
       orderBy: [{ usageCount: "desc" }, { createdAt: "desc" }],
     }),
-    db.catalogExamTemplate.count({ where: where as any }),
+    db.examTemplate.count({ where: where as any }),
   ])
 
   return {
@@ -208,7 +208,7 @@ export async function browseCatalogExamTemplates(
 // Get catalog exam detail (for preview modal)
 // ============================================================================
 
-export interface CatalogExamDetail {
+export interface ExamDetail {
   id: string
   title: string
   description: string | null
@@ -239,13 +239,13 @@ export interface CatalogExamDetail {
   isAdopted: boolean
 }
 
-export async function getCatalogExamDetail(
+export async function getExamDetail(
   catalogExamId: string
-): Promise<CatalogExamDetail | null> {
+): Promise<ExamDetail | null> {
   const { schoolId } = await getTenantContext()
   if (!schoolId) return null
 
-  const exam = await db.catalogExam.findFirst({
+  const exam = await db.exam.findFirst({
     where: {
       id: catalogExamId,
       status: "PUBLISHED",
@@ -257,7 +257,7 @@ export async function getCatalogExamDetail(
       chapter: { select: { name: true } },
       examQuestions: {
         include: {
-          catalogQuestion: {
+          question: {
             select: {
               questionText: true,
               questionType: true,
@@ -277,7 +277,7 @@ export async function getCatalogExamDetail(
   if (!exam) return null
 
   // Check if adopted
-  const adopted = await db.exam.findFirst({
+  const adopted = await db.schoolExam.findFirst({
     where: { schoolId, catalogExamId },
     select: { id: true },
   })
@@ -303,11 +303,11 @@ export async function getCatalogExamDetail(
     variantLabel: exam.variantLabel,
     variantCount: exam._count.variants,
     sampleQuestions: exam.examQuestions.map((eq) => ({
-      questionText: eq.catalogQuestion.questionText,
-      questionType: eq.catalogQuestion.questionType,
-      difficulty: eq.catalogQuestion.difficulty,
-      bloomLevel: eq.catalogQuestion.bloomLevel,
-      points: Number(eq.catalogQuestion.points),
+      questionText: eq.question.questionText,
+      questionType: eq.question.questionType,
+      difficulty: eq.question.difficulty,
+      bloomLevel: eq.question.bloomLevel,
+      points: Number(eq.question.points),
       order: eq.order,
     })),
     isAdopted: !!adopted,

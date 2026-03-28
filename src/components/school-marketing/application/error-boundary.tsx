@@ -39,7 +39,11 @@ class ApplyErrorBoundary extends Component<Props, State> {
 
   render() {
     // Get translations with fallbacks
-    const t = this.props.dictionary?.marketing?.site?.apply?.error
+    const d = this.props.dictionary as Record<string, unknown> | undefined
+    const school = d?.school as Record<string, unknown> | undefined
+    const admission = school?.admission as Record<string, unknown> | undefined
+    const apply = admission?.apply as Record<string, unknown> | undefined
+    const t = apply?.errorBoundary as Record<string, string> | undefined
 
     if (this.state.hasError) {
       if (this.props.fallback) {

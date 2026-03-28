@@ -49,6 +49,64 @@ export const STEP_GROUP_LABELS = {
   3: { en: "Family & Education", ar: "العائلة والتعليم" },
 }
 
+// ---------------------------------------------------------------------------
+// Dictionary-first accessors
+// These provide i18n-correct labels when dictionary is available,
+// falling back to the hardcoded STEP_METADATA / STEP_GROUP_LABELS below.
+// ---------------------------------------------------------------------------
+
+/** Minimal shape expected from dictionary.school.admission.apply.steps */
+type StepDict = Record<string, Record<string, string>>
+
+/** Minimal shape expected from dictionary.school.admission.apply.groups */
+type GroupsDict = Record<string, string>
+
+/**
+ * Get step label + description from dictionary, falling back to STEP_METADATA.
+ *
+ * Usage:
+ *   const meta = getStepMeta(dictionary.school.admission.apply.steps, "personal")
+ */
+export function getStepMeta(stepsDict: StepDict | undefined, step: ApplyStep) {
+  const s = stepsDict?.[step]
+  return {
+    label: s?.label || STEP_METADATA[step].label(false),
+    description: s?.description || STEP_METADATA[step].description(false),
+  }
+}
+
+/**
+ * Group label mapping: group number → dictionary key
+ */
+const GROUP_KEY_MAP: Record<number, string> = {
+  1: "basicInfo",
+  2: "details",
+  3: "familyEducation",
+}
+
+/**
+ * Get group label from dictionary, falling back to STEP_GROUP_LABELS.
+ *
+ * Usage:
+ *   const label = getGroupLabel(dictionary.school.admission.apply.groups, 1, isRTL)
+ */
+export function getGroupLabel(
+  groupsDict: GroupsDict | undefined,
+  group: number,
+  isRTL: boolean
+) {
+  const key = GROUP_KEY_MAP[group]
+  if (key && groupsDict?.[key]) {
+    return groupsDict[key]
+  }
+  const fallback = STEP_GROUP_LABELS[group as keyof typeof STEP_GROUP_LABELS]
+  return fallback ? (isRTL ? fallback.ar : fallback.en) : ""
+}
+
+// ---------------------------------------------------------------------------
+// Fallback metadata (used when dictionary is not available)
+// ---------------------------------------------------------------------------
+
 // Step metadata (bilingual)
 export const STEP_METADATA: Record<
   ApplyStep,
@@ -74,19 +132,15 @@ export const STEP_METADATA: Record<
   },
   location: {
     label: (isRTL) => (isRTL ? "العنوان" : "Address"),
-    description: (isRTL) =>
-      isRTL ? "عنوان الإقامة" : "Residential address",
+    description: (isRTL) => (isRTL ? "عنوان الإقامة" : "Residential address"),
   },
   guardian: {
     label: (isRTL) => (isRTL ? "معلومات ولي الأمر" : "Guardian Information"),
     description: (isRTL) =>
-      isRTL
-        ? "معلومات الوالدين أو ولي الأمر"
-        : "Parent or guardian details",
+      isRTL ? "معلومات الوالدين أو ولي الأمر" : "Parent or guardian details",
   },
   academic: {
-    label: (isRTL) =>
-      isRTL ? "المعلومات الأكاديمية" : "Academic Information",
+    label: (isRTL) => (isRTL ? "المعلومات الأكاديمية" : "Academic Information"),
     description: (isRTL) =>
       isRTL
         ? "التعليم السابق والصف المتقدم إليه"

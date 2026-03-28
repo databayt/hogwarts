@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 
-import { createCatalogAssignment } from "./assignment-actions"
+import { createAssignment } from "./assignment-actions"
 
 const ASSIGNMENT_TYPES = [
   { value: "homework", label: "Homework" },
@@ -103,7 +103,7 @@ export function CreateAssignmentDialog() {
           formData.append("tags", tag)
         }
 
-        const result = await createCatalogAssignment(formData)
+        const result = await createAssignment(formData)
         if (result.success) {
           toast.success("Assignment created")
           setOpen(false)

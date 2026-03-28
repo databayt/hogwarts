@@ -161,7 +161,7 @@ async function main() {
       const coverUrl = await uploadToS3(filePath, book.localFile)
 
       // Check if book already exists
-      const existingBook = await prisma.book.findFirst({
+      const existingBook = await prisma.schoolBook.findFirst({
         where: {
           title: book.title,
           schoolId: school.id,
@@ -170,7 +170,7 @@ async function main() {
 
       if (existingBook) {
         // Update existing book
-        await prisma.book.update({
+        await prisma.schoolBook.update({
           where: { id: existingBook.id },
           data: {
             coverUrl,
@@ -182,7 +182,7 @@ async function main() {
         console.log(`Updated: ${book.title}\n`)
       } else {
         // Create new book
-        await prisma.book.create({
+        await prisma.schoolBook.create({
           data: {
             title: book.title,
             author: book.author,

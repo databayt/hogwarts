@@ -38,6 +38,8 @@ interface PersonalInfoStepProps {
 }
 
 export function PersonalInfoStep({ form, dictionary }: PersonalInfoStepProps) {
+  const reg = dictionary?.school?.students?.registration?.personal
+
   return (
     <div className="grid gap-6">
       {/* Name Section */}
@@ -47,9 +49,12 @@ export function PersonalInfoStep({ form, dictionary }: PersonalInfoStepProps) {
           name="firstName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>First Name *</FormLabel>
+              <FormLabel>{reg?.firstName || "First Name *"}</FormLabel>
               <FormControl>
-                <Input placeholder="Enter first name" {...field} />
+                <Input
+                  placeholder={reg?.enterFirstName || "Enter first name"}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -61,9 +66,12 @@ export function PersonalInfoStep({ form, dictionary }: PersonalInfoStepProps) {
           name="middleName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Middle Name</FormLabel>
+              <FormLabel>{reg?.middleName || "Middle Name"}</FormLabel>
               <FormControl>
-                <Input placeholder="Enter middle name" {...field} />
+                <Input
+                  placeholder={reg?.enterMiddleName || "Enter middle name"}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -75,9 +83,12 @@ export function PersonalInfoStep({ form, dictionary }: PersonalInfoStepProps) {
           name="lastName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Last Name *</FormLabel>
+              <FormLabel>{reg?.lastName || "Last Name *"}</FormLabel>
               <FormControl>
-                <Input placeholder="Enter last name" {...field} />
+                <Input
+                  placeholder={reg?.enterLastName || "Enter last name"}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -92,7 +103,7 @@ export function PersonalInfoStep({ form, dictionary }: PersonalInfoStepProps) {
           name="dateOfBirth"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Date of Birth *</FormLabel>
+              <FormLabel>{reg?.dateOfBirth || "Date of Birth *"}</FormLabel>
               <Popover>
                 <PopoverTrigger asChild>
                   <FormControl>
@@ -106,7 +117,7 @@ export function PersonalInfoStep({ form, dictionary }: PersonalInfoStepProps) {
                       {field.value ? (
                         format(field.value, "PPP")
                       ) : (
-                        <span>Pick a date</span>
+                        <span>{reg?.pickDate || "Pick a date"}</span>
                       )}
                       <CalendarIcon className="ms-auto h-4 w-4 opacity-50" />
                     </Button>
@@ -134,11 +145,13 @@ export function PersonalInfoStep({ form, dictionary }: PersonalInfoStepProps) {
           name="gender"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Gender *</FormLabel>
+              <FormLabel>{reg?.gender || "Gender *"}</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select gender" />
+                    <SelectValue
+                      placeholder={reg?.selectGender || "Select gender"}
+                    />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -159,11 +172,15 @@ export function PersonalInfoStep({ form, dictionary }: PersonalInfoStepProps) {
           name="bloodGroup"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Blood Group</FormLabel>
+              <FormLabel>{reg?.bloodGroup || "Blood Group"}</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select blood group" />
+                    <SelectValue
+                      placeholder={
+                        reg?.selectBloodGroup || "Select blood group"
+                      }
+                    />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -187,9 +204,12 @@ export function PersonalInfoStep({ form, dictionary }: PersonalInfoStepProps) {
           name="nationality"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Nationality</FormLabel>
+              <FormLabel>{reg?.nationality || "Nationality"}</FormLabel>
               <FormControl>
-                <Input placeholder="Enter nationality" {...field} />
+                <Input
+                  placeholder={reg?.enterNationality || "Enter nationality"}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -201,9 +221,14 @@ export function PersonalInfoStep({ form, dictionary }: PersonalInfoStepProps) {
           name="passportNumber"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Passport Number</FormLabel>
+              <FormLabel>{reg?.passportNumber || "Passport Number"}</FormLabel>
               <FormControl>
-                <Input placeholder="Enter passport number" {...field} />
+                <Input
+                  placeholder={
+                    reg?.enterPassportNumber || "Enter passport number"
+                  }
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -215,9 +240,12 @@ export function PersonalInfoStep({ form, dictionary }: PersonalInfoStepProps) {
           name="visaStatus"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Visa Status</FormLabel>
+              <FormLabel>{reg?.visaStatus || "Visa Status"}</FormLabel>
               <FormControl>
-                <Input placeholder="Enter visa status" {...field} />
+                <Input
+                  placeholder={reg?.enterVisaStatus || "Enter visa status"}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -233,7 +261,9 @@ export function PersonalInfoStep({ form, dictionary }: PersonalInfoStepProps) {
             name="visaExpiryDate"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Visa Expiry Date</FormLabel>
+                <FormLabel>
+                  {reg?.visaExpiryDate || "Visa Expiry Date"}
+                </FormLabel>
                 <Popover>
                   <PopoverTrigger asChild>
                     <FormControl>
@@ -247,7 +277,7 @@ export function PersonalInfoStep({ form, dictionary }: PersonalInfoStepProps) {
                         {field.value ? (
                           format(field.value, "PPP")
                         ) : (
-                          <span>Pick a date</span>
+                          <span>{reg?.pickDate || "Pick a date"}</span>
                         )}
                         <CalendarIcon className="ms-auto h-4 w-4 opacity-50" />
                       </Button>
@@ -277,9 +307,12 @@ export function PersonalInfoStep({ form, dictionary }: PersonalInfoStepProps) {
           name="grNumber"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>GR Number</FormLabel>
+              <FormLabel>{reg?.grNumber || "GR Number"}</FormLabel>
               <FormControl>
-                <Input placeholder="Enter GR number" {...field} />
+                <Input
+                  placeholder={reg?.enterGrNumber || "Enter GR number"}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -291,9 +324,16 @@ export function PersonalInfoStep({ form, dictionary }: PersonalInfoStepProps) {
           name="admissionNumber"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Admission Number</FormLabel>
+              <FormLabel>
+                {reg?.admissionNumber || "Admission Number"}
+              </FormLabel>
               <FormControl>
-                <Input placeholder="Enter admission number" {...field} />
+                <Input
+                  placeholder={
+                    reg?.enterAdmissionNumber || "Enter admission number"
+                  }
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -305,11 +345,15 @@ export function PersonalInfoStep({ form, dictionary }: PersonalInfoStepProps) {
           name="studentType"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Student Type *</FormLabel>
+              <FormLabel>{reg?.studentType || "Student Type *"}</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select student type" />
+                    <SelectValue
+                      placeholder={
+                        reg?.selectStudentType || "Select student type"
+                      }
+                    />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -333,20 +377,24 @@ export function PersonalInfoStep({ form, dictionary }: PersonalInfoStepProps) {
           name="category"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Category</FormLabel>
+              <FormLabel>{reg?.category || "Category"}</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
+                    <SelectValue
+                      placeholder={reg?.selectCategory || "Select category"}
+                    />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="General">General</SelectItem>
-                  <SelectItem value="SC">SC</SelectItem>
-                  <SelectItem value="ST">ST</SelectItem>
-                  <SelectItem value="OBC">OBC</SelectItem>
-                  <SelectItem value="EWS">EWS</SelectItem>
-                  <SelectItem value="Other">Other</SelectItem>
+                  <SelectItem value="General">
+                    {reg?.general || "General"}
+                  </SelectItem>
+                  <SelectItem value="SC">{reg?.sc || "SC"}</SelectItem>
+                  <SelectItem value="ST">{reg?.st || "ST"}</SelectItem>
+                  <SelectItem value="OBC">{reg?.obc || "OBC"}</SelectItem>
+                  <SelectItem value="EWS">{reg?.ews || "EWS"}</SelectItem>
+                  <SelectItem value="Other">{reg?.other || "Other"}</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -359,7 +407,7 @@ export function PersonalInfoStep({ form, dictionary }: PersonalInfoStepProps) {
           name="admissionDate"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Admission Date *</FormLabel>
+              <FormLabel>{reg?.admissionDate || "Admission Date *"}</FormLabel>
               <Popover>
                 <PopoverTrigger asChild>
                   <FormControl>
@@ -373,7 +421,7 @@ export function PersonalInfoStep({ form, dictionary }: PersonalInfoStepProps) {
                       {field.value ? (
                         format(field.value, "PPP")
                       ) : (
-                        <span>Pick a date</span>
+                        <span>{reg?.pickDate || "Pick a date"}</span>
                       )}
                       <CalendarIcon className="ms-auto h-4 w-4 opacity-50" />
                     </Button>

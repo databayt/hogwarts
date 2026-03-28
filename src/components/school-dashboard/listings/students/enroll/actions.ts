@@ -164,10 +164,9 @@ export async function enrollStudent(input: {
     return { success: true, data: { studentId } }
   } catch (error) {
     console.error("[enrollStudent] Error:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to enroll student",
-    }
+    return actionError(
+      ACTION_ERRORS.ENROLLMENT_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }

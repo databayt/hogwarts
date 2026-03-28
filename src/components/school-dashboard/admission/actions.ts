@@ -138,9 +138,18 @@ export async function createCampaign(
     // Validate input
     const validated = campaignSchemaWithValidation.safeParse(data)
     if (!validated.success) {
-      return {
-        success: false,
-        error: validated.error.issues[0]?.message ?? "Invalid data",
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+    }
+
+    // Fall back to school's default application fee if none specified
+    let applicationFee = validated.data.applicationFee ?? null
+    if (applicationFee === null || applicationFee === 0) {
+      const settings = await db.admissionSettings.findUnique({
+        where: { schoolId },
+        select: { defaultApplicationFee: true },
+      })
+      if (settings?.defaultApplicationFee) {
+        applicationFee = Number(settings.defaultApplicationFee)
       }
     }
 
@@ -154,7 +163,7 @@ export async function createCampaign(
         status: validated.data.status,
         description: validated.data.description ?? null,
         totalSeats: validated.data.totalSeats,
-        applicationFee: validated.data.applicationFee ?? null,
+        applicationFee,
       },
     })
 
@@ -163,11 +172,8 @@ export async function createCampaign(
   } catch (error) {
     console.error("[createCampaign]", error)
     // Check for unique constraint violation
-    if ((error as any)?.code === "P2002") {
-      return {
-        success: false,
-        error: "A campaign with this name already exists",
-      }
+    if ((error as { code?: string })?.code === "P2002") {
+      return actionError(ACTION_ERRORS.ALREADY_EXISTS)
     }
     return actionError(ACTION_ERRORS.CREATE_FAILED)
   }
@@ -189,10 +195,7 @@ export async function updateCampaign(
     // Validate input
     const validated = campaignSchemaWithValidation.safeParse(data)
     if (!validated.success) {
-      return {
-        success: false,
-        error: validated.error.issues[0]?.message ?? "Invalid data",
-      }
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
 
     await db.admissionCampaign.update({
@@ -214,11 +217,8 @@ export async function updateCampaign(
   } catch (error) {
     console.error("[updateCampaign]", error)
     // Check for unique constraint violation
-    if ((error as any)?.code === "P2002") {
-      return {
-        success: false,
-        error: "A campaign with this name already exists",
-      }
+    if ((error as { code?: string })?.code === "P2002") {
+      return actionError(ACTION_ERRORS.ALREADY_EXISTS)
     }
     return actionError(ACTION_ERRORS.UPDATE_FAILED)
   }
@@ -248,10 +248,7 @@ export async function deleteCampaign(params: {
     }
 
     if (campaign._count.applications > 0) {
-      return {
-        success: false,
-        error: "Cannot delete campaign with existing applications",
-      }
+      return actionError(ACTION_ERRORS.CAMPAIGN_HAS_APPLICATIONS)
     }
 
     await db.admissionCampaign.delete({
@@ -353,10 +350,7 @@ export async function updateApplicationStatus(params: {
     }
     const allowed = VALID_TRANSITIONS[current.status]
     if (!allowed || !allowed.includes(params.status)) {
-      return {
-        success: false,
-        error: `Cannot transition from ${current.status} to ${params.status}`,
-      }
+      return actionError(ACTION_ERRORS.APPLICATION_STATUS_INVALID)
     }
 
     const data: Record<string, unknown> = {
@@ -619,10 +613,7 @@ export async function confirmEnrollment(params: {
       application.offerExpiryDate &&
       new Date(application.offerExpiryDate) < new Date()
     ) {
-      return {
-        success: false,
-        error: "Admission offer has expired. Please extend the offer first.",
-      }
+      return actionError(ACTION_ERRORS.OFFER_EXPIRED)
     }
 
     const enrollmentNumber = `ENR-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
@@ -879,12 +870,33 @@ export async function confirmEnrollment(params: {
         }
 
         // 6. Auto-assign fees if matching FeeStructure exists
+        // Only assign school-wide (classId=null) or grade-matching fee structures
         try {
+          const studentGrade = await tx.student.findUnique({
+            where: { id: student.id },
+            select: { academicGradeId: true },
+          })
+
+          const gradeClassIds: string[] = []
+          if (studentGrade?.academicGradeId) {
+            const matchingClasses = await tx.class.findMany({
+              where: { schoolId, gradeId: studentGrade.academicGradeId },
+              select: { id: true },
+            })
+            gradeClassIds.push(...matchingClasses.map((c) => c.id))
+          }
+
           const feeStructures = await tx.feeStructure.findMany({
             where: {
               schoolId,
               academicYear: application.campaign.academicYear,
               isActive: true,
+              OR: [
+                { classId: null }, // School-wide fee structures
+                ...(gradeClassIds.length > 0
+                  ? [{ classId: { in: gradeClassIds } }]
+                  : []),
+              ],
             },
           })
 
@@ -919,6 +931,9 @@ export async function confirmEnrollment(params: {
 
         // 7. Create Guardian records from application parent/guardian data
         try {
+          const { createOrLinkGuardian, fromFullName } =
+            await import("@/lib/guardian-utils")
+
           const guardianEntries: Array<{
             typeName: string
             fullName: string
@@ -965,83 +980,11 @@ export async function confirmEnrollment(params: {
           }
 
           for (const entry of guardianEntries) {
-            // Split name into firstName + lastName
-            const nameParts = entry.fullName.trim().split(/\s+/)
-            const lastName = nameParts.length > 1 ? nameParts.pop()! : ""
-            const firstName = nameParts.join(" ") || entry.fullName
-
-            // Ensure GuardianType exists
-            const guardianType = await tx.guardianType.upsert({
-              where: {
-                schoolId_name: { schoolId, name: entry.typeName },
-              },
-              create: { schoolId, name: entry.typeName },
-              update: {},
+            await createOrLinkGuardian(tx, {
+              schoolId,
+              studentId: student.id,
+              ...fromFullName(entry),
             })
-
-            // Create or find Guardian (unique by schoolId + email)
-            let guardian
-            if (entry.email) {
-              guardian = await tx.guardian.upsert({
-                where: {
-                  schoolId_emailAddress: {
-                    schoolId,
-                    emailAddress: entry.email,
-                  },
-                },
-                create: {
-                  schoolId,
-                  firstName,
-                  lastName,
-                  emailAddress: entry.email,
-                },
-                update: {},
-              })
-            } else {
-              guardian = await tx.guardian.create({
-                data: { schoolId, firstName, lastName },
-              })
-            }
-
-            // Link student to guardian
-            await tx.studentGuardian.upsert({
-              where: {
-                schoolId_studentId_guardianId: {
-                  schoolId,
-                  studentId: student.id,
-                  guardianId: guardian.id,
-                },
-              },
-              create: {
-                schoolId,
-                studentId: student.id,
-                guardianId: guardian.id,
-                guardianTypeId: guardianType.id,
-                isPrimary: entry.isPrimary,
-                occupation: entry.occupation,
-              },
-              update: {},
-            })
-
-            // Add phone number if provided
-            if (entry.phone) {
-              await tx.guardianPhoneNumber.upsert({
-                where: {
-                  schoolId_guardianId_phoneNumber: {
-                    schoolId,
-                    guardianId: guardian.id,
-                    phoneNumber: entry.phone,
-                  },
-                },
-                create: {
-                  schoolId,
-                  guardianId: guardian.id,
-                  phoneNumber: entry.phone,
-                  isPrimary: true,
-                },
-                update: {},
-              })
-            }
           }
         } catch (guardianError) {
           console.warn(
@@ -1080,54 +1023,53 @@ export async function confirmEnrollment(params: {
           console.warn("[confirmEnrollment] Document copy failed:", docError)
         }
 
+        // 6b. Auto-generate invoice from fee assignments (inside transaction for atomicity)
+        try {
+          const feeAssignments = await tx.feeAssignment.findMany({
+            where: {
+              schoolId,
+              studentId: student.id,
+              academicYear: application.campaign.academicYear,
+              status: "PENDING",
+            },
+            include: {
+              feeStructure: { select: { name: true } },
+            },
+          })
+
+          if (feeAssignments.length > 0) {
+            const school = await tx.school.findUnique({
+              where: { id: schoolId },
+              select: { name: true, address: true, currency: true },
+            })
+
+            await createInvoiceFromEnrollment({
+              schoolId,
+              userId,
+              studentName: `${application.firstName} ${application.lastName}`,
+              studentEmail: application.email,
+              schoolName: school?.name ?? "School",
+              schoolAddress: school?.address ?? "",
+              currency: school?.currency ?? "USD",
+              items: feeAssignments.map((fa) => ({
+                name: fa.feeStructure.name,
+                amount: Number(fa.finalAmount),
+              })),
+              tx,
+            })
+          }
+        } catch (invoiceError) {
+          console.warn(
+            "[confirmEnrollment] Invoice auto-generation failed:",
+            invoiceError
+          )
+        }
+
         enrolledStudentId = student.id
       }
 
       return userId
     })
-
-    // 6b. Auto-generate invoice from fee assignments (non-fatal, outside transaction)
-    try {
-      if (enrolledStudentId && (txUserId || application.userId)) {
-        const feeAssignments = await db.feeAssignment.findMany({
-          where: {
-            schoolId,
-            studentId: enrolledStudentId,
-            academicYear: application.campaign.academicYear,
-            status: "PENDING",
-          },
-          include: {
-            feeStructure: { select: { name: true } },
-          },
-        })
-
-        if (feeAssignments.length > 0) {
-          const school = await db.school.findUnique({
-            where: { id: schoolId },
-            select: { name: true, address: true, currency: true },
-          })
-
-          await createInvoiceFromEnrollment({
-            schoolId,
-            userId: txUserId || application.userId!,
-            studentName: `${application.firstName} ${application.lastName}`,
-            studentEmail: application.email,
-            schoolName: school?.name ?? "School",
-            schoolAddress: school?.address ?? "",
-            currency: school?.currency ?? "USD",
-            items: feeAssignments.map((fa) => ({
-              name: fa.feeStructure.name,
-              amount: Number(fa.finalAmount),
-            })),
-          })
-        }
-      }
-    } catch (invoiceError) {
-      console.warn(
-        "[confirmEnrollment] Invoice auto-generation failed:",
-        invoiceError
-      )
-    }
 
     // Check for suggested section placement (auto-suggest when a matching section has capacity)
     let suggestedSectionId: string | null = null
@@ -1431,18 +1373,12 @@ export async function placeStudentInSection(params: {
 
     if (!application) return actionError(ACTION_ERRORS.ADMISSION_NOT_FOUND)
     if (application.status !== "ADMITTED") {
-      return {
-        success: false,
-        error: "Only admitted students can be placed in sections",
-      }
+      return actionError(ACTION_ERRORS.PLACEMENT_INVALID_STATUS)
     }
 
     // Find the student record via userId
     if (!application.userId) {
-      return {
-        success: false,
-        error: "No user account linked to this application",
-      }
+      return actionError(ACTION_ERRORS.PLACEMENT_NO_USER)
     }
 
     const student = await db.student.findFirst({
@@ -1451,11 +1387,7 @@ export async function placeStudentInSection(params: {
     })
 
     if (!student) {
-      return {
-        success: false,
-        error:
-          "Student record not found. Ensure enrollment is confirmed first.",
-      }
+      return actionError(ACTION_ERRORS.ENROLLMENT_FAILED)
     }
 
     // Check section capacity and assign atomically

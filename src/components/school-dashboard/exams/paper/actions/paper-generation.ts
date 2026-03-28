@@ -21,6 +21,7 @@ import { getTemplate } from "../templates"
 import type {
   AnswerKeyEntry,
   ExamPaperData,
+  ExamWithDetails,
   QuestionForPaper,
   QuestionOption,
   SchoolForPaper,
@@ -259,7 +260,7 @@ export async function generateExamPaper(
         ...generatedExam.exam,
         class: generatedExam.exam.class,
         subject: generatedExam.exam.subject,
-      },
+      } as ExamWithDetails,
       school: {
         id: school.id,
         name: school.name,
@@ -750,7 +751,7 @@ export async function getPaperData(
         ...generatedExam.exam,
         class: generatedExam.exam.class,
         subject: generatedExam.exam.subject,
-      },
+      } as ExamWithDetails,
       school: {
         id: school.id,
         name: school.name,

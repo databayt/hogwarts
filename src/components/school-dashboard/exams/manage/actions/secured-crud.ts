@@ -83,7 +83,7 @@ export const createExamSecured = secureExamAction.create(
       }
 
       // Check if subject exists and belongs to school
-      const subjectExists = await db.schoolSubjectSelection.findFirst({
+      const subjectExists = await db.subjectSelection.findFirst({
         where: {
           catalogSubjectId: parsed.subjectId,
           schoolId,
@@ -135,7 +135,7 @@ export const createExamSecured = secureExamAction.create(
         }
       }
 
-      const exam = await db.exam.create({
+      const exam = await db.schoolExam.create({
         data: {
           schoolId,
           title: parsed.title,
@@ -211,7 +211,7 @@ export const updateExamSecured = secureExamAction.update(
       }
 
       // Check if exam exists and belongs to school
-      const examExists = await db.exam.findFirst({
+      const examExists = await db.schoolExam.findFirst({
         where: {
           id,
           schoolId,
@@ -255,7 +255,7 @@ export const updateExamSecured = secureExamAction.update(
       if (typeof rest.instructions !== "undefined")
         data.instructions = rest.instructions || null
 
-      await db.exam.updateMany({
+      await db.schoolExam.updateMany({
         where: { id, schoolId },
         data,
       })
@@ -312,7 +312,7 @@ export const deleteExamSecured = secureExamAction.delete(
       }
 
       // Check if exam exists
-      const exam = await db.exam.findFirst({
+      const exam = await db.schoolExam.findFirst({
         where: {
           id: examId,
           schoolId,
@@ -343,7 +343,7 @@ export const deleteExamSecured = secureExamAction.delete(
         }
       }
 
-      await db.exam.deleteMany({
+      await db.schoolExam.deleteMany({
         where: { id: examId, schoolId },
       })
 
@@ -379,7 +379,7 @@ export const getExamsSecured = secureExamAction.read(async function getExams(
     // Apply permission filters
     const filters = await applyPermissionFilters(context, "exam")
 
-    const exams = await db.exam.findMany({
+    const exams = await db.schoolExam.findMany({
       where: {
         ...filters,
         ...(params.where || {}),

@@ -7,16 +7,16 @@ import { useMemo } from "react"
 import { DataTable } from "@/components/table/data-table"
 import { useDataTable } from "@/components/table/use-data-table"
 
-import { catalogBookColumns, type CatalogBookRow } from "./book-columns"
+import { catalogBookColumns, type BookRow } from "./book-columns"
 
 interface Props {
-  data: CatalogBookRow[]
+  data: BookRow[]
 }
 
-export function CatalogBookTable({ data }: Props) {
+export function BookTable({ data }: Props) {
   const columns = useMemo(() => catalogBookColumns, [])
 
-  const { table } = useDataTable<CatalogBookRow>({
+  const { table } = useDataTable<BookRow>({
     data,
     columns,
     pageCount: 1,

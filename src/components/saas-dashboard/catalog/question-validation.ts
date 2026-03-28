@@ -41,4 +41,4 @@ export const catalogQuestionSchema = z.object({
     .default("DRAFT"),
 })
 
-export type CatalogQuestionInput = z.infer<typeof catalogQuestionSchema>
+export type QuestionInput = z.infer<typeof catalogQuestionSchema>

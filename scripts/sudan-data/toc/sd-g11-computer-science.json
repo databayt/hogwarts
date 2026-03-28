@@ -1,0 +1,38 @@
+{
+  "subject": "computer-science",
+  "subjectNameAr": "علوم الحاسوب",
+  "grade": 11,
+  "level": "secondary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "",
+  "chapters": [
+    {
+      "nameAr": "الوحدة الأولى: مقدمة في الحاسوب",
+      "name": "Unit 1: Introduction to Computers",
+      "slug": "introduction-computers",
+      "sequenceOrder": 1,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الثانية: أنظمة العد والتحويل",
+      "name": "Unit 2: Number Systems and Conversion",
+      "slug": "number-systems-conversion",
+      "sequenceOrder": 2,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الثالثة: البرمجة",
+      "name": "Unit 3: Programming",
+      "slug": "programming",
+      "sequenceOrder": 3,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الرابعة: قواعد البيانات",
+      "name": "Unit 4: Databases",
+      "slug": "databases",
+      "sequenceOrder": 4,
+      "lessons": []
+    }
+  ]
+}

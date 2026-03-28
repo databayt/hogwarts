@@ -13,7 +13,7 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { SubjectHero, SubjectHeroSkeleton } from "./hero"
 import { YearSection, YearSectionSkeleton } from "./year-section"
 
-// Type for subject detail - matches CatalogSubject shape
+// Type for subject detail - matches Subject shape
 interface SubjectDetailResult {
   id: string
   name: string

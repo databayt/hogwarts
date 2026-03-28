@@ -182,7 +182,7 @@ export async function autoGradeExam(
     }
 
     // Verify exam exists and belongs to school
-    const exam = await db.exam.findFirst({
+    const exam = await db.schoolExam.findFirst({
       where: { id: examId, schoolId },
     })
 

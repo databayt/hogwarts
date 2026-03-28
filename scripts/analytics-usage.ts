@@ -74,7 +74,7 @@ async function generateUsageReport() {
           date: { gte: since },
         },
       }),
-      prisma.exam.count({
+      prisma.schoolExam.count({
         where: {
           ...whereClause,
           createdAt: { gte: since },

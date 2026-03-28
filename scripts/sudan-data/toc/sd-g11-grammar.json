@@ -1,0 +1,38 @@
+{
+  "subject": "grammar",
+  "subjectNameAr": "قواعد النحو",
+  "grade": 11,
+  "level": "secondary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "",
+  "chapters": [
+    {
+      "nameAr": "المنصوبات",
+      "name": "Accusative Case Topics",
+      "slug": "accusative-case",
+      "sequenceOrder": 1,
+      "lessons": []
+    },
+    {
+      "nameAr": "المجرورات",
+      "name": "Genitive Case Topics",
+      "slug": "genitive-case",
+      "sequenceOrder": 2,
+      "lessons": []
+    },
+    {
+      "nameAr": "التوابع",
+      "name": "Grammatical Followers",
+      "slug": "grammatical-followers",
+      "sequenceOrder": 3,
+      "lessons": []
+    },
+    {
+      "nameAr": "الأساليب النحوية",
+      "name": "Grammatical Styles",
+      "slug": "grammatical-styles",
+      "sequenceOrder": 4,
+      "lessons": []
+    }
+  ]
+}

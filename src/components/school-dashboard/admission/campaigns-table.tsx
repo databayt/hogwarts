@@ -95,13 +95,13 @@ export function CampaignsTable({
     async (id: string) => {
       const result = await deleteCampaign({ id })
       if (result.success) {
-        DeleteToast(lang === "ar" ? "تم حذف الحملة" : "Campaign deleted")
+        DeleteToast(t?.campaigns?.campaignDeleted || "Campaign deleted")
         refresh()
       } else {
         ErrorToast(result.error ?? "Error")
       }
     },
-    [lang, refresh]
+    [t, refresh]
   )
 
   const columns = useMemo(
@@ -148,15 +148,16 @@ export function CampaignsTable({
     return { label, variant: variant as "default" | "outline" | "secondary" }
   }
 
+  const tb = t?.toolbar
   const toolbarTranslations = {
     search: t?.campaigns?.campaignName || "Campaign name",
     create: t?.campaigns?.createCampaign || "Create Campaign",
-    reset: "Reset",
-    tableView: "Table",
-    gridView: "Grid",
-    export: "Export",
-    exportCSV: "Export CSV",
-    exporting: "Exporting...",
+    reset: tb?.reset || "Reset",
+    tableView: tb?.tableView || "Table",
+    gridView: tb?.gridView || "Grid",
+    export: tb?.export || "Export",
+    exportCSV: tb?.exportCSV || "Export CSV",
+    exporting: tb?.exporting || "Exporting...",
   }
 
   return (
@@ -221,7 +222,9 @@ export function CampaignsTable({
                 disabled={isLoading}
                 className="hover:bg-accent rounded-md border px-4 py-2 text-sm disabled:opacity-50"
               >
-                {isLoading ? "Loading..." : "Load More"}
+                {isLoading
+                  ? tb?.loading || "Loading..."
+                  : tb?.loadMore || "Load More"}
               </button>
             </div>
           )}

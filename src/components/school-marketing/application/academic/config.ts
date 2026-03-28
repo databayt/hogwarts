@@ -13,51 +13,46 @@ export const ACADEMIC_STEP_CONFIG = {
       : "Enter previous education and applying class information",
 }
 
-export const GRADE_OPTIONS = (isRTL: boolean) =>
-  [
-    { value: "روضة 1", label: isRTL ? "روضة 1" : "KG 1" },
-    { value: "روضة 2", label: isRTL ? "روضة 2" : "KG 2" },
-    { value: "الصف الأول", label: isRTL ? "الصف الأول" : "Grade 1" },
-    { value: "الصف الثاني", label: isRTL ? "الصف الثاني" : "Grade 2" },
-    { value: "الصف الثالث", label: isRTL ? "الصف الثالث" : "Grade 3" },
-    { value: "الصف الرابع", label: isRTL ? "الصف الرابع" : "Grade 4" },
-    { value: "الصف الخامس", label: isRTL ? "الصف الخامس" : "Grade 5" },
-    { value: "الصف السادس", label: isRTL ? "الصف السادس" : "Grade 6" },
-    { value: "الصف السابع", label: isRTL ? "الصف السابع" : "Grade 7" },
-    { value: "الصف الثامن", label: isRTL ? "الصف الثامن" : "Grade 8" },
-    { value: "الصف التاسع", label: isRTL ? "الصف التاسع" : "Grade 9" },
-    { value: "الصف العاشر", label: isRTL ? "الصف العاشر" : "Grade 10" },
-    { value: "الصف الحادي عشر", label: isRTL ? "الصف الحادي عشر" : "Grade 11" },
-    { value: "الصف الثاني عشر", label: isRTL ? "الصف الثاني عشر" : "Grade 12" },
-  ] as const
+type OptionDict = Record<string, string>
 
-export const STREAM_OPTIONS = (isRTL: boolean) =>
-  [
-    { value: "science", label: isRTL ? "علمي" : "Science" },
-    { value: "arts", label: isRTL ? "أدبي" : "Arts" },
-    { value: "commerce", label: isRTL ? "تجاري" : "Commerce" },
-    { value: "general", label: isRTL ? "عام" : "General" },
-  ] as const
+export const getGradeOptions = (d: OptionDict) => [
+  { value: "روضة 1", label: d.kg1 || "KG 1" },
+  { value: "روضة 2", label: d.kg2 || "KG 2" },
+  { value: "الصف الأول", label: d.grade1 || "Grade 1" },
+  { value: "الصف الثاني", label: d.grade2 || "Grade 2" },
+  { value: "الصف الثالث", label: d.grade3 || "Grade 3" },
+  { value: "الصف الرابع", label: d.grade4 || "Grade 4" },
+  { value: "الصف الخامس", label: d.grade5 || "Grade 5" },
+  { value: "الصف السادس", label: d.grade6 || "Grade 6" },
+  { value: "الصف السابع", label: d.grade7 || "Grade 7" },
+  { value: "الصف الثامن", label: d.grade8 || "Grade 8" },
+  { value: "الصف التاسع", label: d.grade9 || "Grade 9" },
+  { value: "الصف العاشر", label: d.grade10 || "Grade 10" },
+  { value: "الصف الحادي عشر", label: d.grade11 || "Grade 11" },
+  { value: "الصف الثاني عشر", label: d.grade12 || "Grade 12" },
+]
 
-export const PERFORMANCE_OPTIONS = (isRTL: boolean) =>
-  [
-    { value: "excellent", label: isRTL ? "ممتاز (90%+)" : "Excellent (90%+)" },
-    {
-      value: "very-good",
-      label: isRTL ? "جيد جداً (80-89%)" : "Very Good (80-89%)",
-    },
-    { value: "good", label: isRTL ? "جيد (70-79%)" : "Good (70-79%)" },
-    { value: "average", label: isRTL ? "مقبول (60-69%)" : "Average (60-69%)" },
-    {
-      value: "below-average",
-      label: isRTL ? "ضعيف (أقل من 60%)" : "Below Average (<60%)",
-    },
-  ] as const
+export const getStreamOptions = (d: OptionDict) => [
+  { value: "science", label: d.science || "Science" },
+  { value: "arts", label: d.arts || "Arts" },
+  { value: "commerce", label: d.commerce || "Commerce" },
+  { value: "general", label: d.general || "General" },
+]
 
-export const LANGUAGE_OPTIONS = (isRTL: boolean) =>
-  [
-    { value: "arabic", label: isRTL ? "العربية" : "Arabic" },
-    { value: "english", label: isRTL ? "الإنجليزية" : "English" },
-    { value: "french", label: isRTL ? "الفرنسية" : "French" },
-    { value: "quran", label: isRTL ? "القرآن الكريم" : "Quran" },
-  ] as const
+export const getPerformanceOptions = (d: OptionDict) => [
+  { value: "excellent", label: d.excellent || "Excellent (90%+)" },
+  { value: "very-good", label: d["very-good"] || "Very Good (80-89%)" },
+  { value: "good", label: d.good || "Good (70-79%)" },
+  { value: "average", label: d.average || "Average (60-69%)" },
+  {
+    value: "below-average",
+    label: d["below-average"] || "Below Average (<60%)",
+  },
+]
+
+export const getLanguageOptions = (d: OptionDict) => [
+  { value: "arabic", label: d.arabic || "Arabic" },
+  { value: "english", label: d.english || "English" },
+  { value: "french", label: d.french || "French" },
+  { value: "quran", label: d.quran || "Quran" },
+]

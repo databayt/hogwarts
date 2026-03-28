@@ -36,7 +36,7 @@ interface ApplicationCardProps {
   locale?: string
   dictionary?: {
     draft?: string
-    step?: string
+    stepLabel?: string
     lastUpdated?: string
     expiresIn?: string
     applicationFallback?: string
@@ -145,7 +145,7 @@ export function ApplicationCard({
                   </>
                 )}
                 <span>
-                  {dict.step || "Step"} {application.currentStep}/
+                  {dict.stepLabel || "Step"} {application.currentStep}/
                   {application.totalSteps}
                 </span>
               </p>

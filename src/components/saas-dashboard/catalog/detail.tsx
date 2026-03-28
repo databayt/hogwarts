@@ -84,20 +84,20 @@ import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { CatalogImageUpload } from "@/components/saas-dashboard/catalog/image-upload"
-import { createLessonVideo } from "@/components/saas-dashboard/catalog/video-actions"
-import { LessonVideoManager } from "@/components/saas-dashboard/catalog/video-manager"
+import { createVideo } from "@/components/saas-dashboard/catalog/video-actions"
+import { VideoManager } from "@/components/saas-dashboard/catalog/video-manager"
 import { Shell as PageContainer } from "@/components/table/shell"
 
 import {
-  createCatalogChapter,
-  createCatalogLesson,
-  deleteCatalogChapter,
-  deleteCatalogLesson,
-  reorderCatalogChapters,
-  reorderCatalogLessons,
-  updateCatalogChapter,
-  updateCatalogLesson,
-  updateCatalogSubject,
+  createChapter,
+  createLesson,
+  deleteChapter,
+  deleteLesson,
+  reorderChapters,
+  reorderLessons,
+  updateChapter,
+  updateLesson,
+  updateSubject,
 } from "./actions"
 
 // ---------------------------------------------------------------------------
@@ -113,8 +113,7 @@ interface Lesson {
   durationMinutes: number | null
   description: string | null
   objectives: string | null
-  thumbnailKey: string | null
-  imageKey: string | null
+  thumbnail: string | null
   color: string | null
   concept: string | null
   _count?: { videos: number }
@@ -128,8 +127,7 @@ interface Chapter {
   status: string
   totalLessons: number
   description: string | null
-  thumbnailKey: string | null
-  imageKey: string | null
+  thumbnail: string | null
   color: string | null
   concept: string | null
   lessons: Lesson[]
@@ -146,8 +144,7 @@ interface Subject {
   curriculum: string
   description: string | null
   color: string | null
-  imageKey: string | null
-  thumbnailKey: string | null
+  thumbnail: string | null
   concept: string | null
   totalChapters: number
   totalLessons: number
@@ -225,8 +222,8 @@ export function CatalogDetail({ subject, lang }: Props) {
   const [lessonDuration, setLessonDuration] = useState("")
   const [lessonObjectives, setLessonObjectives] = useState("")
   const [lessonStatus, setLessonStatus] = useState<string>("DRAFT")
-  const [lessonVideoUrl, setLessonVideoUrl] = useState("")
-  const [lessonVideoTitle, setLessonVideoTitle] = useState("")
+  const [lessonVideoUrl, setVideoUrl] = useState("")
+  const [lessonVideoTitle, setVideoTitle] = useState("")
 
   // Video dialog state
   const [isVideoDialogOpen, setIsVideoDialogOpen] = useState(false)
@@ -293,7 +290,7 @@ export function CatalogDetail({ subject, lang }: Props) {
           formData.append("levels", level)
         }
 
-        const result = await updateCatalogSubject(subject.id, formData)
+        const result = await updateSubject(subject.id, formData)
         if (!result.success) {
           toast.error("Failed to update subject")
           return
@@ -341,7 +338,7 @@ export function CatalogDetail({ subject, lang }: Props) {
         // Persist to server
         startTransition(async () => {
           try {
-            await reorderCatalogChapters(
+            await reorderChapters(
               subject.id,
               withPositions.map((c) => ({
                 id: c.id,
@@ -378,7 +375,7 @@ export function CatalogDetail({ subject, lang }: Props) {
           // Persist to server
           startTransition(async () => {
             try {
-              await reorderCatalogLessons(
+              await reorderLessons(
                 chapterId,
                 withPositions.map((l) => ({
                   id: l.id,
@@ -443,7 +440,7 @@ export function CatalogDetail({ subject, lang }: Props) {
         formData.set("status", chapterStatus)
 
         if (editingChapter) {
-          const result = await updateCatalogChapter(editingChapter.id, formData)
+          const result = await updateChapter(editingChapter.id, formData)
           if (!result.success) {
             toast.error(t?.error?.updateFailed || "Failed to update chapter")
             return
@@ -465,7 +462,7 @@ export function CatalogDetail({ subject, lang }: Props) {
           toast.success(t?.success?.updated || "Chapter updated")
         } else {
           formData.set("subjectId", subject.id)
-          const result = await createCatalogChapter(formData)
+          const result = await createChapter(formData)
           if (!result.success) {
             toast.error(t?.error?.createFailed || "Failed to create chapter")
             return
@@ -480,8 +477,7 @@ export function CatalogDetail({ subject, lang }: Props) {
               sequenceOrder: Number(chapterSequence) || 0,
               status: chapterStatus,
               totalLessons: 0,
-              thumbnailKey: null,
-              imageKey: null,
+              thumbnail: null,
               color: null,
               concept: null,
               lessons: [],
@@ -500,7 +496,7 @@ export function CatalogDetail({ subject, lang }: Props) {
   const handleDeleteChapter = (chapterId: string) => {
     startTransition(async () => {
       try {
-        await deleteCatalogChapter(chapterId)
+        await deleteChapter(chapterId)
         setChapters((prev) => prev.filter((c) => c.id !== chapterId))
         toast.success(t?.success?.deleted || "Chapter deleted")
       } catch {
@@ -525,8 +521,8 @@ export function CatalogDetail({ subject, lang }: Props) {
     setLessonDuration("")
     setLessonObjectives("")
     setLessonStatus("DRAFT")
-    setLessonVideoUrl("")
-    setLessonVideoTitle("")
+    setVideoUrl("")
+    setVideoTitle("")
     setIsLessonDialogOpen(true)
   }
 
@@ -543,8 +539,8 @@ export function CatalogDetail({ subject, lang }: Props) {
     )
     setLessonObjectives(lesson.objectives ?? "")
     setLessonStatus(lesson.status)
-    setLessonVideoUrl("")
-    setLessonVideoTitle("")
+    setVideoUrl("")
+    setVideoTitle("")
     setIsLessonDialogOpen(true)
   }
 
@@ -572,7 +568,7 @@ export function CatalogDetail({ subject, lang }: Props) {
         formData.set("status", lessonStatus)
 
         if (editingLesson) {
-          const result = await updateCatalogLesson(editingLesson.id, formData)
+          const result = await updateLesson(editingLesson.id, formData)
           if (!result.success) {
             toast.error(t?.error?.updateFailed || "Failed to update lesson")
             return
@@ -605,7 +601,7 @@ export function CatalogDetail({ subject, lang }: Props) {
           toast.success(t?.success?.updated || "Lesson updated")
         } else {
           formData.set("chapterId", selectedChapterId)
-          const result = await createCatalogLesson(formData)
+          const result = await createLesson(formData)
           if (!result.success) {
             toast.error(t?.error?.createFailed || "Failed to create lesson")
             return
@@ -629,8 +625,7 @@ export function CatalogDetail({ subject, lang }: Props) {
                           : null,
                         objectives: lessonObjectives || null,
                         status: lessonStatus,
-                        thumbnailKey: null,
-                        imageKey: null,
+                        thumbnail: null,
                         color: null,
                         concept: null,
                       },
@@ -642,7 +637,7 @@ export function CatalogDetail({ subject, lang }: Props) {
           // Create inline video if URL provided
           if (lessonVideoUrl.trim()) {
             try {
-              await createLessonVideo({
+              await createVideo({
                 catalogLessonId: result.lesson.id,
                 title: lessonVideoTitle.trim() || lessonName.trim(),
                 videoUrl: lessonVideoUrl.trim(),
@@ -658,7 +653,7 @@ export function CatalogDetail({ subject, lang }: Props) {
         // For edited lessons, also create video if URL provided
         if (editingLesson && lessonVideoUrl.trim()) {
           try {
-            await createLessonVideo({
+            await createVideo({
               catalogLessonId: editingLesson.id,
               title: lessonVideoTitle.trim() || lessonName.trim(),
               videoUrl: lessonVideoUrl.trim(),
@@ -679,7 +674,7 @@ export function CatalogDetail({ subject, lang }: Props) {
   const handleDeleteLesson = (lessonId: string, chapterId: string) => {
     startTransition(async () => {
       try {
-        await deleteCatalogLesson(lessonId)
+        await deleteLesson(lessonId)
         setChapters((prev) =>
           prev.map((c) =>
             c.id === chapterId
@@ -715,7 +710,7 @@ export function CatalogDetail({ subject, lang }: Props) {
   const totalLessons = chapters.reduce((s, ch) => s + ch.lessons.length, 0)
 
   // Resolve banner image: CDN thumbnail or color fallback
-  const cdnBannerUrl = getCatalogImageUrl(subject.thumbnailKey, null, "lg")
+  const cdnBannerUrl = getCatalogImageUrl(subject.thumbnail, "lg")
 
   return (
     <PageContainer>
@@ -777,8 +772,7 @@ export function CatalogDetail({ subject, lang }: Props) {
         <CatalogImageUpload
           entityType="subject"
           entityId={subject.id}
-          currentThumbnailKey={subject.thumbnailKey}
-          currentImageKey={null}
+          currentThumbnailKey={subject.thumbnail}
         />
       </div>
 
@@ -826,8 +820,7 @@ export function CatalogDetail({ subject, lang }: Props) {
           <CatalogImageUpload
             entityType="subject"
             entityId={subject.id}
-            currentThumbnailKey={subject.thumbnailKey}
-            currentImageKey={null}
+            currentThumbnailKey={subject.thumbnail}
           />
         </CardContent>
       </Card>
@@ -975,8 +968,7 @@ export function CatalogDetail({ subject, lang }: Props) {
                 <CatalogImageUpload
                   entityType="chapter"
                   entityId={editingChapter.id}
-                  currentThumbnailKey={editingChapter.thumbnailKey}
-                  currentImageKey={null}
+                  currentThumbnailKey={editingChapter.thumbnail}
                 />
               </div>
             )}
@@ -1108,7 +1100,7 @@ export function CatalogDetail({ subject, lang }: Props) {
                   <Input
                     id="lesson-video-title"
                     value={lessonVideoTitle}
-                    onChange={(e) => setLessonVideoTitle(e.target.value)}
+                    onChange={(e) => setVideoTitle(e.target.value)}
                     placeholder="Video title (or uses lesson name)"
                     className="h-8 text-sm"
                   />
@@ -1120,7 +1112,7 @@ export function CatalogDetail({ subject, lang }: Props) {
                   <Input
                     id="lesson-video-url"
                     value={lessonVideoUrl}
-                    onChange={(e) => setLessonVideoUrl(e.target.value)}
+                    onChange={(e) => setVideoUrl(e.target.value)}
                     placeholder="https://youtube.com/watch?v=..."
                     className="h-8 text-sm"
                   />
@@ -1133,8 +1125,7 @@ export function CatalogDetail({ subject, lang }: Props) {
                 <CatalogImageUpload
                   entityType="lesson"
                   entityId={editingLesson.id}
-                  currentThumbnailKey={editingLesson.thumbnailKey}
-                  currentImageKey={null}
+                  currentThumbnailKey={editingLesson.thumbnail}
                 />
               </div>
             )}
@@ -1165,7 +1156,7 @@ export function CatalogDetail({ subject, lang }: Props) {
             </DialogDescription>
           </DialogHeader>
           {videoLessonId && (
-            <LessonVideoManager
+            <VideoManager
               lessonId={videoLessonId}
               lessonName={videoLessonName}
             />
@@ -1362,15 +1353,9 @@ function SortableChapterItem({
           >
             <GripVertical className="text-muted-foreground h-4 w-4" />
           </button>
-          {chapter.thumbnailKey && (
+          {chapter.thumbnail && (
             <img
-              src={
-                getCatalogImageUrl(
-                  chapter.thumbnailKey,
-                  chapter.imageKey,
-                  "sm"
-                ) ?? ""
-              }
+              src={getCatalogImageUrl(chapter.thumbnail, "sm") ?? ""}
               alt=""
               className="h-6 w-6 shrink-0 rounded object-cover"
             />
@@ -1536,11 +1521,9 @@ function SortableLessonItem({
       >
         <GripVertical className="h-3 w-3" />
       </button>
-      {lesson.thumbnailKey ? (
+      {lesson.thumbnail ? (
         <img
-          src={
-            getCatalogImageUrl(lesson.thumbnailKey, lesson.imageKey, "sm") ?? ""
-          }
+          src={getCatalogImageUrl(lesson.thumbnail, "sm") ?? ""}
           alt=""
           className="h-5 w-5 shrink-0 rounded object-cover"
         />

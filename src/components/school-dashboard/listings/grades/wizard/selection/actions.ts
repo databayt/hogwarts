@@ -131,7 +131,7 @@ export async function getAssignmentsForGrade(
     const { schoolId } = await getTenantContext()
     if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
-    const assignments = await db.assignment.findMany({
+    const assignments = await db.schoolAssignment.findMany({
       where: { schoolId, classId },
       select: { id: true, title: true },
       orderBy: { title: "asc" },
@@ -155,7 +155,7 @@ export async function getExamsForGrade(
     const { schoolId } = await getTenantContext()
     if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
-    const exams = await db.exam.findMany({
+    const exams = await db.schoolExam.findMany({
       where: { schoolId, classId },
       select: { id: true, title: true },
       orderBy: { title: "asc" },

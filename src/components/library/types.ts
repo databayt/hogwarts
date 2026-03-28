@@ -58,7 +58,7 @@ export enum LibraryUserStatus {
   REJECTED = "REJECTED",
 }
 
-// Lightweight type for list/card display (works with both CatalogBook and Book)
+// Lightweight type for list/card display (works with both Book and Book)
 export interface BookListItem {
   id: string
   title: string

@@ -8,10 +8,7 @@ import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import type { SupportedLanguage } from "@/components/translation/types"
 
-import {
-  CatalogSubjectsGrid,
-  type CatalogSubjectItem,
-} from "./catalog-subjects-grid"
+import { SubjectsGrid, type SubjectItem } from "./catalog-subjects-grid"
 
 interface Props {
   lang: Locale
@@ -20,12 +17,12 @@ interface Props {
 
 export default async function SubjectsContent({ lang, level }: Props) {
   const { schoolId } = await getTenantContext()
-  let subjects: CatalogSubjectItem[] = []
+  let subjects: SubjectItem[] = []
 
   if (schoolId) {
     try {
       // Get school's active catalog selections with their catalog subjects
-      const selections = await db.schoolSubjectSelection.findMany({
+      const selections = await db.subjectSelection.findMany({
         where: { schoolId, isActive: true },
         select: {
           catalogSubjectId: true,
@@ -40,8 +37,7 @@ export default async function SubjectsContent({ lang, level }: Props) {
               levels: true,
               grades: true,
               color: true,
-              imageKey: true,
-              thumbnailKey: true,
+              thumbnail: true,
               lang: true,
               totalChapters: true,
               totalLessons: true,
@@ -106,7 +102,7 @@ export default async function SubjectsContent({ lang, level }: Props) {
             levels: rep.levels,
             grades: sorted.flatMap((s) => s.grades).sort((a, b) => a - b),
             color: rep.color,
-            imageUrl: getCatalogImageUrl(rep.thumbnailKey, rep.imageKey, "sm"),
+            imageUrl: getCatalogImageUrl(rep.thumbnail, "sm"),
             totalChapters: rep.totalChapters,
             totalLessons: rep.totalLessons,
             averageRating: rep.averageRating,
@@ -127,14 +123,14 @@ export default async function SubjectsContent({ lang, level }: Props) {
         !message.includes("does not exist") &&
         !message.includes("relation")
       ) {
-        console.error("[CatalogSubjects] Unexpected error:", message)
+        console.error("[Subjects] Unexpected error:", message)
       }
     }
   }
 
   return (
     <div className="space-y-6">
-      <CatalogSubjectsGrid subjects={subjects} lang={lang} />
+      <SubjectsGrid subjects={subjects} lang={lang} />
     </div>
   )
 }

@@ -65,7 +65,7 @@ export async function contributeBook(input: {
 
     const slug = slugify(input.title) + "-" + Date.now().toString(36)
 
-    const book = await db.catalogBook.create({
+    const book = await db.book.create({
       data: {
         title: input.title,
         slug,

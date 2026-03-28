@@ -74,11 +74,10 @@ export async function getYearLevels(
     }
   } catch (error) {
     console.error("Failed to fetch year levels:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to fetch year levels",
-    }
+    return actionError(
+      ACTION_ERRORS.LOAD_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -119,10 +118,7 @@ export async function createYearLevel(
     })
 
     if (existingName) {
-      return {
-        success: false,
-        error: "A year level with this name already exists",
-      }
+      return actionError(ACTION_ERRORS.ALREADY_EXISTS)
     }
 
     // Check for duplicate level order
@@ -131,10 +127,7 @@ export async function createYearLevel(
     })
 
     if (existingOrder) {
-      return {
-        success: false,
-        error: `Level order ${validated.levelOrder} is already in use`,
-      }
+      return actionError(ACTION_ERRORS.ALREADY_EXISTS)
     }
 
     const yearLevel = await db.yearLevel.create({
@@ -153,11 +146,10 @@ export async function createYearLevel(
     }
   } catch (error) {
     console.error("Failed to create year level:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to create year level",
-    }
+    return actionError(
+      ACTION_ERRORS.YEAR_LEVEL_CREATE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -215,10 +207,7 @@ export async function updateYearLevel(
         },
       })
       if (duplicate) {
-        return {
-          success: false,
-          error: "A year level with this name already exists",
-        }
+        return actionError(ACTION_ERRORS.ALREADY_EXISTS)
       }
     }
 
@@ -235,10 +224,7 @@ export async function updateYearLevel(
         },
       })
       if (duplicateOrder) {
-        return {
-          success: false,
-          error: `Level order ${validated.levelOrder} is already in use`,
-        }
+        return actionError(ACTION_ERRORS.ALREADY_EXISTS)
       }
     }
 
@@ -263,11 +249,10 @@ export async function updateYearLevel(
     }
   } catch (error) {
     console.error("Failed to update year level:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to update year level",
-    }
+    return actionError(
+      ACTION_ERRORS.YEAR_LEVEL_UPDATE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -319,17 +304,11 @@ export async function deleteYearLevel(
 
     // Check for dependencies
     if (existing._count.studentYearLevels > 0) {
-      return {
-        success: false,
-        error: `Cannot delete year level with ${existing._count.studentYearLevels} enrolled student(s). Please reassign students first.`,
-      }
+      return actionError(ACTION_ERRORS.HAS_DEPENDENCIES)
     }
 
     if (existing._count.batches > 0) {
-      return {
-        success: false,
-        error: `Cannot delete year level with ${existing._count.batches} batch(es). Please reassign batches first.`,
-      }
+      return actionError(ACTION_ERRORS.HAS_DEPENDENCIES)
     }
 
     // Use deleteMany with schoolId for defense-in-depth
@@ -341,10 +320,9 @@ export async function deleteYearLevel(
     return { success: true }
   } catch (error) {
     console.error("Failed to delete year level:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to delete year level",
-    }
+    return actionError(
+      ACTION_ERRORS.YEAR_LEVEL_DELETE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }

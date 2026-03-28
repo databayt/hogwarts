@@ -1,0 +1,208 @@
+{
+  "subject": "islamic-studies",
+  "subjectNameAr": "التربية الإسلامية",
+  "grade": 3,
+  "level": "elementary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "الطبعة الأولى 2021م",
+  "chapters": [
+    {
+      "nameAr": "من القرآن الكريم",
+      "name": "From the Holy Quran",
+      "slug": "quran",
+      "sequenceOrder": 1,
+      "lessons": [
+        {
+          "nameAr": "سورة التكاثر (حفظ)",
+          "name": "Surah At-Takathur (Memorization)",
+          "slug": "surah-at-takathur",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "سورة القارعة (حفظ)",
+          "name": "Surah Al-Qariah (Memorization)",
+          "slug": "surah-al-qariah",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "سورة الضحى (حفظ)",
+          "name": "Surah Ad-Duha (Memorization)",
+          "slug": "surah-ad-duha",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "سورة الزلزلة (حفظ)",
+          "name": "Surah Az-Zalzalah (Memorization)",
+          "slug": "surah-az-zalzalah",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "سورة الليل (حفظ)",
+          "name": "Surah Al-Lail (Memorization)",
+          "slug": "surah-al-lail",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "سورة البلد (تلاوة)",
+          "name": "Surah Al-Balad (Recitation)",
+          "slug": "surah-al-balad",
+          "sequenceOrder": 6
+        },
+        {
+          "nameAr": "سورة المطففين (تلاوة)",
+          "name": "Surah Al-Mutaffifin (Recitation)",
+          "slug": "surah-al-mutaffifin",
+          "sequenceOrder": 7
+        },
+        {
+          "nameAr": "سورة التكوير (تلاوة)",
+          "name": "Surah At-Takwir (Recitation)",
+          "slug": "surah-at-takwir",
+          "sequenceOrder": 8
+        },
+        {
+          "nameAr": "سورة الانفطار (تلاوة)",
+          "name": "Surah Al-Infitar (Recitation)",
+          "slug": "surah-al-infitar",
+          "sequenceOrder": 9
+        },
+        {
+          "nameAr": "سورة الأعلى (تلاوة)",
+          "name": "Surah Al-Ala (Recitation)",
+          "slug": "surah-al-ala",
+          "sequenceOrder": 10
+        }
+      ]
+    },
+    {
+      "nameAr": "من الحديث النبوي الشريف",
+      "name": "From the Noble Prophetic Hadith",
+      "slug": "prophetic-hadith",
+      "sequenceOrder": 2,
+      "lessons": [
+        {
+          "nameAr": "الدرس الأول",
+          "name": "Lesson 1",
+          "slug": "lesson-1",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الدرس الثاني",
+          "name": "Lesson 2",
+          "slug": "lesson-2",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الدرس الثالث",
+          "name": "Lesson 3",
+          "slug": "lesson-3",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "الدرس الرابع",
+          "name": "Lesson 4",
+          "slug": "lesson-4",
+          "sequenceOrder": 4
+        }
+      ]
+    },
+    {
+      "nameAr": "الفقه",
+      "name": "Islamic Jurisprudence",
+      "slug": "fiqh",
+      "sequenceOrder": 3,
+      "lessons": [
+        {
+          "nameAr": "الدرس الأول",
+          "name": "Lesson 1",
+          "slug": "lesson-1",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الدرس الثاني",
+          "name": "Lesson 2",
+          "slug": "lesson-2",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الدرس الثالث",
+          "name": "Lesson 3",
+          "slug": "lesson-3",
+          "sequenceOrder": 3
+        }
+      ]
+    },
+    {
+      "nameAr": "أركان الإيمان",
+      "name": "Pillars of Faith",
+      "slug": "pillars-of-faith",
+      "sequenceOrder": 4,
+      "lessons": [
+        {
+          "nameAr": "الدرس الأول",
+          "name": "Lesson 1",
+          "slug": "lesson-1",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الدرس الثاني",
+          "name": "Lesson 2",
+          "slug": "lesson-2",
+          "sequenceOrder": 2
+        }
+      ]
+    },
+    {
+      "nameAr": "من مكارم الأخلاق",
+      "name": "Noble Morals",
+      "slug": "noble-morals",
+      "sequenceOrder": 5,
+      "lessons": [
+        {
+          "nameAr": "الدرس الأول",
+          "name": "Lesson 1",
+          "slug": "lesson-1",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الدرس الثاني",
+          "name": "Lesson 2",
+          "slug": "lesson-2",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الدرس الثالث",
+          "name": "Lesson 3",
+          "slug": "lesson-3",
+          "sequenceOrder": 3
+        }
+      ]
+    },
+    {
+      "nameAr": "من السيرة النبوية الشريفة",
+      "name": "From the Prophet's Biography",
+      "slug": "prophets-biography",
+      "sequenceOrder": 6,
+      "lessons": [
+        {
+          "nameAr": "الدرس الأول",
+          "name": "Lesson 1",
+          "slug": "lesson-1",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الدرس الثاني",
+          "name": "Lesson 2",
+          "slug": "lesson-2",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الدرس الثالث",
+          "name": "Lesson 3",
+          "slug": "lesson-3",
+          "sequenceOrder": 3
+        }
+      ]
+    }
+  ]
+}

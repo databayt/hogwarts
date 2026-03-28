@@ -108,7 +108,7 @@ export async function generateBatchExamPDFs(
     const parsed = batchPDFSchema.parse(input)
 
     // Verify exam exists
-    const exam = await db.exam.findFirst({
+    const exam = await db.schoolExam.findFirst({
       where: {
         id: parsed.examId,
         schoolId,

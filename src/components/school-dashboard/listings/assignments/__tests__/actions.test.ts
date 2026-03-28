@@ -145,10 +145,10 @@ describe("Assignment Actions", () => {
         { id: "2", title: "Assignment 2", schoolId: mockSchoolId },
       ]
 
-      vi.mocked(db.assignment.findMany).mockResolvedValue(
+      vi.mocked(db.schoolAssignment.findMany).mockResolvedValue(
         mockAssignments as any
       )
-      vi.mocked(db.assignment.count).mockResolvedValue(2)
+      vi.mocked(db.schoolAssignment.count).mockResolvedValue(2)
 
       const result = await getAssignments({})
 

@@ -35,7 +35,7 @@ export default async function GenerateContent({ dictionary, lang }: Props) {
   if (schoolId) {
     ;[questionCount, templateCount, generatedExamCount] = await Promise.all([
       db.questionBank.count({ where: { schoolId } }),
-      db.examTemplate.count({ where: { schoolId } }),
+      db.schoolExamTemplate.count({ where: { schoolId } }),
       db.generatedExam.count({ where: { schoolId } }),
     ])
   }

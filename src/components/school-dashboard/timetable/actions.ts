@@ -3713,8 +3713,8 @@ export async function generateTimetablePreview(input: {
     },
   })
 
-  // Get subject selections for each grade (links CatalogSubjects to grades with weeklyPeriods)
-  const subjectSelections = await db.schoolSubjectSelection.findMany({
+  // Get subject selections for each grade (links Subjects to grades with weeklyPeriods)
+  const subjectSelections = await db.subjectSelection.findMany({
     where: { schoolId, isActive: true },
     select: {
       catalogSubjectId: true,

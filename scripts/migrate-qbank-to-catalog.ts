@@ -49,7 +49,7 @@ async function main() {
           try {
             // Create CatalogQuestion
             // QuestionBank.subjectId now points directly to CatalogSubject
-            const catalogQuestion = await tx.catalogQuestion.create({
+            const catalogQuestion = await tx.question.create({
               data: {
                 catalogSubjectId: q.subjectId ?? null,
                 catalogChapterId: q.catalogChapterId ?? null,

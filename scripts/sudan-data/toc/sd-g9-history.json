@@ -1,0 +1,105 @@
+{
+  "subject": "history",
+  "subjectNameAr": "التاريخ",
+  "grade": 9,
+  "level": "middle",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "",
+  "chapters": [
+    {
+      "nameAr": "الثورة والدولة المهدية",
+      "name": "The Mahdist Revolution and State",
+      "slug": "mahdist-revolution-and-state",
+      "sequenceOrder": 1,
+      "lessons": [
+        {
+          "nameAr": "تمهيد ودوافع الثورة المهدية",
+          "name": "Introduction and Motives of the Mahdist Revolution",
+          "slug": "introduction-mahdist-revolution",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "أسباب قيام الثورة المهدية",
+          "name": "Causes of the Mahdist Revolution",
+          "slug": "causes-mahdist-revolution",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "مراحل الثورة المهدية",
+          "name": "Stages of the Mahdist Revolution",
+          "slug": "stages-mahdist-revolution",
+          "sequenceOrder": 3
+        }
+      ]
+    },
+    {
+      "nameAr": "المواجهات العسكرية بين الثوار والاستعمار التركي المصري",
+      "name": "Military Confrontations Between Revolutionaries and Turkish-Egyptian Colonialism",
+      "slug": "military-confrontations",
+      "sequenceOrder": 2,
+      "lessons": [
+        {
+          "nameAr": "نظم الحكم والإدارة في الدولة المهدية",
+          "name": "Governance and Administration Systems in the Mahdist State",
+          "slug": "governance-mahdist-state",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "سقوط الدولة المهدية وأسبابها",
+          "name": "Fall of the Mahdist State and Its Causes",
+          "slug": "fall-mahdist-state",
+          "sequenceOrder": 2
+        }
+      ]
+    },
+    {
+      "nameAr": "نظم الحكم والإدارة في فترة الحكم الثنائي",
+      "name": "Governance Systems During the Condominium Period",
+      "slug": "condominium-governance",
+      "sequenceOrder": 3,
+      "lessons": [
+        {
+          "nameAr": "مقاومة السودانيين للحكم الثنائي: حركات المقاومة الدينية والقبلية",
+          "name": "Sudanese Resistance to Condominium Rule: Religious and Tribal Resistance Movements",
+          "slug": "sudanese-resistance-movements",
+          "sequenceOrder": 1
+        }
+      ]
+    },
+    {
+      "nameAr": "التطورات السياسية والاجتماعية في السودان ١٩٥٤-١٩٨٥م",
+      "name": "Political and Social Developments in Sudan 1954-1985",
+      "slug": "political-social-developments-sudan",
+      "sequenceOrder": 4,
+      "lessons": []
+    },
+    {
+      "nameAr": "نظم الحكم العثماني للولايات العربية ونتائجها",
+      "name": "Ottoman Rule of Arab Territories and Its Results",
+      "slug": "ottoman-rule-arab-territories",
+      "sequenceOrder": 5,
+      "lessons": []
+    },
+    {
+      "nameAr": "تقسيم القارة الأفريقية بين الدول الأوروبية",
+      "name": "Division of Africa Among European Powers",
+      "slug": "division-of-africa",
+      "sequenceOrder": 6,
+      "lessons": [
+        {
+          "nameAr": "حركات التحرر الوطني في أفريقيا",
+          "name": "National Liberation Movements in Africa",
+          "slug": "african-liberation-movements",
+          "sequenceOrder": 1
+        }
+      ]
+    },
+    {
+      "nameAr": "التطورات العالمية بعد الحرب العالمية الثانية",
+      "name": "Global Developments After World War II",
+      "slug": "post-wwii-developments",
+      "sequenceOrder": 7,
+      "lessons": []
+    }
+  ]
+}

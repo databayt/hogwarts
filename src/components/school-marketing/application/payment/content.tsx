@@ -33,6 +33,7 @@ import {
 interface PaymentContentProps {
   applicationNumber: string
   applicationId: string
+  accessToken: string
   fee: number
   currency: string
   methods: string[]
@@ -49,6 +50,7 @@ const GATEWAY_ICONS: Record<string, React.ElementType> = {
 export default function PaymentContent({
   applicationNumber,
   applicationId,
+  accessToken,
   fee,
   currency,
   methods,
@@ -86,6 +88,26 @@ export default function PaymentContent({
       },
     }
 
+  // Error code to user-facing message mapping
+  const ERROR_MAP: Record<string, string> = {
+    STRIPE_NOT_CONFIGURED:
+      paymentDict.errorProcessing || "Error processing payment",
+    SCHOOL_NOT_FOUND: paymentDict.errorProcessing || "Error processing payment",
+    APPLICATION_NOT_FOUND:
+      paymentDict.errorProcessing || "Error processing payment",
+    NO_FEE_CONFIGURED:
+      paymentDict.errorProcessing || "Error processing payment",
+    CHECKOUT_FAILED: paymentDict.errorProcessing || "Error processing payment",
+    PAYMENT_RECORD_FAILED:
+      paymentDict.errorProcessing || "Error processing payment",
+    PAYMENT_ALREADY_RECORDED:
+      paymentDict.paymentAlreadyRecorded ||
+      "Payment has already been recorded for this application",
+  }
+
+  const translateError = (code: string) =>
+    ERROR_MAP[code] || paymentDict.errorProcessing || code
+
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [completedMethod, setCompletedMethod] = useState<string | null>(null)
@@ -104,10 +126,11 @@ export default function PaymentContent({
         const result = await createStripeCheckout(
           subdomain,
           applicationId,
-          locale
+          locale,
+          accessToken
         )
         if (!result.success) {
-          setError(result.error ?? "Payment failed")
+          setError(translateError(result.error ?? "CHECKOUT_FAILED"))
           setLoading(null)
           return
         }
@@ -116,9 +139,13 @@ export default function PaymentContent({
           return
         }
       } else if (method === "cash") {
-        const result = await recordCashPaymentIntent(subdomain, applicationId)
+        const result = await recordCashPaymentIntent(
+          subdomain,
+          applicationId,
+          accessToken
+        )
         if (!result.success) {
-          setError(result.error ?? "Failed to record payment")
+          setError(translateError(result.error ?? "PAYMENT_RECORD_FAILED"))
           setLoading(null)
           return
         }
@@ -128,9 +155,13 @@ export default function PaymentContent({
           cashInstructions: result.data?.cashInstructions,
         })
       } else if (method === "bank_transfer") {
-        const result = await recordBankTransferIntent(subdomain, applicationId)
+        const result = await recordBankTransferIntent(
+          subdomain,
+          applicationId,
+          accessToken
+        )
         if (!result.success) {
-          setError(result.error ?? "Failed to record payment")
+          setError(translateError(result.error ?? "PAYMENT_RECORD_FAILED"))
           setLoading(null)
           return
         }
@@ -150,7 +181,7 @@ export default function PaymentContent({
   // Show confirmation after cash or bank transfer selection
   if (completedMethod && resultData) {
     return (
-      <div className="min-h-screen py-12">
+      <div className="min-h-screen py-6 sm:py-12">
         <div className="container mx-auto max-w-2xl px-4">
           <div className="mb-8 text-center">
             <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
@@ -221,38 +252,46 @@ export default function PaymentContent({
                           "Bank Account Details"}
                       </p>
                       <div className="bg-muted space-y-2 rounded-lg p-4 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">
+                        <div className="flex justify-between gap-2">
+                          <span className="text-muted-foreground flex-shrink-0">
                             {paymentDict.bank || "Bank"}
                           </span>
-                          <span>{resultData.bankDetails.bankName}</span>
+                          <span className="truncate text-end">
+                            {resultData.bankDetails.bankName}
+                          </span>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">
+                        <div className="flex justify-between gap-2">
+                          <span className="text-muted-foreground flex-shrink-0">
                             {paymentDict.accountName || "Account Name"}
                           </span>
-                          <span>{resultData.bankDetails.accountName}</span>
+                          <span className="truncate text-end">
+                            {resultData.bankDetails.accountName}
+                          </span>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">
+                        <div className="flex justify-between gap-2">
+                          <span className="text-muted-foreground flex-shrink-0">
                             {paymentDict.accountNumber || "Account Number"}
                           </span>
-                          <span className="font-mono">
+                          <span className="truncate text-end font-mono">
                             {resultData.bankDetails.accountNumber}
                           </span>
                         </div>
                         {resultData.bankDetails.iban && (
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">IBAN</span>
-                            <span className="font-mono">
+                          <div className="flex justify-between gap-2">
+                            <span className="text-muted-foreground flex-shrink-0">
+                              IBAN
+                            </span>
+                            <span className="truncate text-end font-mono">
                               {resultData.bankDetails.iban}
                             </span>
                           </div>
                         )}
                         {resultData.bankDetails.swiftCode && (
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">SWIFT</span>
-                            <span className="font-mono">
+                          <div className="flex justify-between gap-2">
+                            <span className="text-muted-foreground flex-shrink-0">
+                              SWIFT
+                            </span>
+                            <span className="truncate text-end font-mono">
                               {resultData.bankDetails.swiftCode}
                             </span>
                           </div>
@@ -287,7 +326,7 @@ export default function PaymentContent({
   }
 
   return (
-    <div className="min-h-screen py-12">
+    <div className="min-h-screen py-6 sm:py-12">
       <div className="container mx-auto max-w-2xl px-4">
         <div className="mb-8 text-center">
           <h1 className="text-2xl font-bold">
@@ -304,7 +343,7 @@ export default function PaymentContent({
             <CardDescription>
               {paymentDict.amountDue || "Amount Due"}
             </CardDescription>
-            <CardTitle className="text-3xl">
+            <CardTitle className="text-2xl sm:text-3xl">
               {fee} {currency}
             </CardTitle>
           </CardHeader>

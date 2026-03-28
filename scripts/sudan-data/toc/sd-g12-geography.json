@@ -1,0 +1,122 @@
+{
+  "subject": "geography",
+  "subjectNameAr": "الجغرافيا والدراسات البيئية",
+  "grade": 12,
+  "level": "secondary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "الطبعة المنقحة 2009",
+  "chapters": [
+    {
+      "nameAr": "الباب الأول: مقدمة في قراءة وتفسير الصور الجوية والفضائية",
+      "name": "Chapter 1: Introduction to Reading and Interpreting Aerial and Satellite Images",
+      "slug": "aerial-satellite-images",
+      "sequenceOrder": 1,
+      "lessons": [
+        {
+          "nameAr": "الاستشعار عن بعد",
+          "name": "Remote Sensing",
+          "slug": "remote-sensing",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الصور الجوية",
+          "name": "Aerial Photos",
+          "slug": "aerial-photos",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الصور الفضائية",
+          "name": "Satellite Images",
+          "slug": "satellite-images",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "تمرين مراجعة",
+          "name": "Review Exercise",
+          "slug": "review-exercise",
+          "sequenceOrder": 4
+        }
+      ]
+    },
+    {
+      "nameAr": "الباب الثاني: الجغرافيا الاقتصادية",
+      "name": "Chapter 2: Economic Geography",
+      "slug": "economic-geography",
+      "sequenceOrder": 2,
+      "lessons": [
+        {
+          "nameAr": "الجغرافيا الاقتصادية",
+          "name": "Economic Geography",
+          "slug": "economic-geography-intro",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "أنواع النشاط الاقتصادي",
+          "name": "Types of Economic Activity",
+          "slug": "types-economic-activity",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الإنتاج الزراعي",
+          "name": "Agricultural Production",
+          "slug": "agricultural-production",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "الأنماط الزراعية",
+          "name": "Agricultural Patterns",
+          "slug": "agricultural-patterns",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "تصنيف المحاصيل في العالم",
+          "name": "World Crop Classification",
+          "slug": "world-crop-classification",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "محاصيل الحبوب الغذائية",
+          "name": "Food Grain Crops",
+          "slug": "food-grain-crops",
+          "sequenceOrder": 6
+        },
+        {
+          "nameAr": "محاصيل المواد الخام",
+          "name": "Raw Material Crops",
+          "slug": "raw-material-crops",
+          "sequenceOrder": 7
+        },
+        {
+          "nameAr": "إنتاج الغابات",
+          "name": "Forest Production",
+          "slug": "forest-production",
+          "sequenceOrder": 8
+        },
+        {
+          "nameAr": "الإنتاج الحيواني",
+          "name": "Animal Production",
+          "slug": "animal-production",
+          "sequenceOrder": 9
+        },
+        {
+          "nameAr": "الإنتاج المعدني",
+          "name": "Mineral Production",
+          "slug": "mineral-production",
+          "sequenceOrder": 10
+        },
+        {
+          "nameAr": "مصادر الطاقة",
+          "name": "Energy Sources",
+          "slug": "energy-sources",
+          "sequenceOrder": 11
+        },
+        {
+          "nameAr": "البترول",
+          "name": "Petroleum",
+          "slug": "petroleum",
+          "sequenceOrder": 12
+        }
+      ]
+    }
+  ]
+}

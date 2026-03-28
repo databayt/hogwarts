@@ -142,7 +142,7 @@ export async function createDraftGeneratedExam(): Promise<
     }
 
     // Create a placeholder Exam record with wizardStep
-    const exam = await db.exam.create({
+    const exam = await db.schoolExam.create({
       data: {
         schoolId,
         title: "",
@@ -211,7 +211,7 @@ export async function completeExamGenerateWizard(
         where: { id: generatedExamId, schoolId },
         data: { wizardStep: null },
       }),
-      db.exam.updateMany({
+      db.schoolExam.updateMany({
         where: { id: genExam.examId, schoolId },
         data: { wizardStep: null },
       }),
@@ -285,7 +285,7 @@ export async function deleteDraftGeneratedExam(
       db.generatedExam.deleteMany({
         where: { id: generatedExamId, schoolId, wizardStep: { not: null } },
       }),
-      db.exam.deleteMany({
+      db.schoolExam.deleteMany({
         where: { id: genExam.examId, schoolId },
       }),
     ])

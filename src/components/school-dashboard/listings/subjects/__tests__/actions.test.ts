@@ -74,7 +74,7 @@ describe("Subject Actions", () => {
   })
 
   describe("getSubjects", () => {
-    it("fetches subjects from CatalogSubject via school-subjects lib", async () => {
+    it("fetches subjects from Subject via school-subjects lib", async () => {
       const mockSubjects = [
         {
           id: "1",

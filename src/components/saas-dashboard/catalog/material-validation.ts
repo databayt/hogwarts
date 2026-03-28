@@ -45,4 +45,4 @@ export const catalogMaterialSchema = z.object({
   visibility: z.enum(["PRIVATE", "SCHOOL", "PUBLIC", "PAID"]).default("PUBLIC"),
 })
 
-export type CatalogMaterialInput = z.infer<typeof catalogMaterialSchema>
+export type MaterialInput = z.infer<typeof catalogMaterialSchema>

@@ -1,0 +1,88 @@
+{
+  "subject": "engineering",
+  "subjectNameAr": "العلوم الهندسية",
+  "grade": 11,
+  "level": "secondary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "",
+  "chapters": [
+    {
+      "nameAr": "الباب الأول: أساسيات الرسم الهندسي",
+      "name": "Chapter 1: Fundamentals of Engineering Drawing",
+      "slug": "fundamentals-engineering-drawing",
+      "sequenceOrder": 1,
+      "lessons": [
+        {
+          "nameAr": "أدوات الرسم الهندسي",
+          "name": "Engineering Drawing Tools",
+          "slug": "engineering-drawing-tools",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الخطوط الهندسية",
+          "name": "Engineering Lines",
+          "slug": "engineering-lines",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الأشكال الهندسية الأساسية",
+          "name": "Basic Geometric Shapes",
+          "slug": "basic-geometric-shapes",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "الإسقاط العمودي",
+          "name": "Orthogonal Projection",
+          "slug": "orthogonal-projection",
+          "sequenceOrder": 4
+        }
+      ]
+    },
+    {
+      "nameAr": "الباب الثاني: أساسيات الهندسة الميكانيكية",
+      "name": "Chapter 2: Fundamentals of Mechanical Engineering",
+      "slug": "fundamentals-mechanical-engineering",
+      "sequenceOrder": 2,
+      "lessons": [
+        {
+          "nameAr": "القوى والعزوم",
+          "name": "Forces and Moments",
+          "slug": "forces-moments",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الاتزان",
+          "name": "Equilibrium",
+          "slug": "equilibrium",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الآلات البسيطة",
+          "name": "Simple Machines",
+          "slug": "simple-machines",
+          "sequenceOrder": 3
+        }
+      ]
+    },
+    {
+      "nameAr": "الباب الثالث: أساسيات الهندسة الكهربائية",
+      "name": "Chapter 3: Fundamentals of Electrical Engineering",
+      "slug": "fundamentals-electrical-engineering",
+      "sequenceOrder": 3,
+      "lessons": [
+        {
+          "nameAr": "الدوائر الكهربائية",
+          "name": "Electrical Circuits",
+          "slug": "electrical-circuits",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "المقاومة والتوصيل",
+          "name": "Resistance and Conductivity",
+          "slug": "resistance-conductivity",
+          "sequenceOrder": 2
+        }
+      ]
+    }
+  ]
+}

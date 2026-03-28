@@ -105,8 +105,8 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
     return (
       <Form {...form}>
         <form className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 className="min-w-0 text-lg font-semibold">
               {isFather ? dict.fatherInfo : dict.motherInfo}
             </h3>
             <Button
@@ -136,12 +136,12 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
           <PhoneField
             name={`${namePrefix}Phone`}
             label={dict.phone}
-            placeholder="+249 XXX XXX XXXX"
+            placeholder={dict.phonePlaceholder}
           />
           <InputField
             name={`${namePrefix}Email`}
             label={dict.email}
-            placeholder="email@example.com"
+            placeholder={dict.emailPlaceholder}
             type="email"
           />
         </form>

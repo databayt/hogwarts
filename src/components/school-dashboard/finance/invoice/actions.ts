@@ -800,6 +800,7 @@ export async function createInvoiceFromEnrollment(params: {
   currency: string
   items: EnrollmentFeeItem[]
   dueDate?: Date
+  tx?: Parameters<Parameters<typeof db.$transaction>[0]>[0]
 }): Promise<{ success: boolean; invoiceId?: string; error?: string }> {
   try {
     const {
@@ -811,6 +812,7 @@ export async function createInvoiceFromEnrollment(params: {
       schoolAddress,
       currency,
       items,
+      tx,
     } = params
 
     if (items.length === 0) {
@@ -822,8 +824,12 @@ export async function createInvoiceFromEnrollment(params: {
     const dueDate =
       params.dueDate ?? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
 
-    const invoice = await db.$transaction(async (tx) => {
-      const fromAddress = await tx.userInvoiceAddress.create({
+    // If a transaction client is provided, use it directly (caller manages atomicity).
+    // Otherwise, create our own transaction.
+    const createInvoice = async (
+      client: Pick<typeof db, "userInvoiceAddress" | "userInvoice">
+    ) => {
+      const fromAddress = await client.userInvoiceAddress.create({
         data: {
           name: schoolName,
           address1: schoolAddress || "School Address",
@@ -831,7 +837,7 @@ export async function createInvoiceFromEnrollment(params: {
         },
       })
 
-      const toAddress = await tx.userInvoiceAddress.create({
+      const toAddress = await client.userInvoiceAddress.create({
         data: {
           name: studentName,
           email: studentEmail,
@@ -840,7 +846,7 @@ export async function createInvoiceFromEnrollment(params: {
         },
       })
 
-      return tx.userInvoice.create({
+      return client.userInvoice.create({
         data: {
           invoice_no: invoiceNumber,
           invoice_date: new Date(),
@@ -865,7 +871,11 @@ export async function createInvoiceFromEnrollment(params: {
           },
         },
       })
-    })
+    }
+
+    const invoice = tx
+      ? await createInvoice(tx)
+      : await db.$transaction((txClient) => createInvoice(txClient))
 
     return { success: true, invoiceId: invoice.id }
   } catch (error) {

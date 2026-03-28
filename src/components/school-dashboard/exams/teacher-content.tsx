@@ -90,16 +90,16 @@ export default async function TeacherExamsContent({ dictionary, lang }: Props) {
     myStudentsCount,
     resultsCount,
   ] = await Promise.all([
-    db.exam.count({
+    db.schoolExam.count({
       where: { schoolId, classId: { in: classIds } },
     }),
     db.questionBank.count({
       where: { schoolId, createdBy: userId },
     }),
-    db.examTemplate.count({
+    db.schoolExamTemplate.count({
       where: { schoolId, createdBy: userId },
     }),
-    db.exam.count({
+    db.schoolExam.count({
       where: {
         schoolId,
         classId: { in: classIds },
@@ -107,7 +107,7 @@ export default async function TeacherExamsContent({ dictionary, lang }: Props) {
         examDate: { lt: today },
       },
     }),
-    db.exam.count({
+    db.schoolExam.count({
       where: {
         schoolId,
         classId: { in: classIds },
@@ -115,7 +115,7 @@ export default async function TeacherExamsContent({ dictionary, lang }: Props) {
         examDate: { gte: today },
       },
     }),
-    db.exam.count({
+    db.schoolExam.count({
       where: {
         schoolId,
         classId: { in: classIds },

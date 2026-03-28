@@ -51,7 +51,7 @@ export default async function ResultsAnalyticsContent({
 
   if (schoolId) {
     const [examsCount, results] = await Promise.all([
-      db.exam.count({ where: { schoolId, status: "COMPLETED" } }),
+      db.schoolExam.count({ where: { schoolId, status: "COMPLETED" } }),
       db.examResult.findMany({
         where: { schoolId },
         select: {

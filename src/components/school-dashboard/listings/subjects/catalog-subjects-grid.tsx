@@ -11,7 +11,7 @@ import { StarRating } from "@/components/ui/star-rating"
 import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
-export interface CatalogSubjectItem {
+export interface SubjectItem {
   id: string
   slug: string
   name: string
@@ -38,12 +38,12 @@ function levelLabel(level: string, lang: Locale): string {
 }
 
 interface Props {
-  subjects: CatalogSubjectItem[]
+  subjects: SubjectItem[]
   lang: Locale
   subdomain?: string
 }
 
-export function CatalogSubjectsGrid({ subjects, lang, subdomain }: Props) {
+export function SubjectsGrid({ subjects, lang, subdomain }: Props) {
   const { dictionary } = useDictionary()
   const cat = dictionary?.school?.subjects?.catalog as
     | Record<string, string>

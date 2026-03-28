@@ -16,7 +16,7 @@ export async function getExamSettings(
     const { schoolId } = await getTenantContext()
     if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
-    const exam = await db.exam.findFirst({
+    const exam = await db.schoolExam.findFirst({
       where: { id: examId, schoolId },
       select: {
         proctorMode: true,
@@ -63,7 +63,7 @@ export async function updateExamSettings(
 
     const parsed = settingsSchema.parse(input)
 
-    await db.exam.updateMany({
+    await db.schoolExam.updateMany({
       where: { id: examId, schoolId },
       data: {
         proctorMode: parsed.proctorMode,

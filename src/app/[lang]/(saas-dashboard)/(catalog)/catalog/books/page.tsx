@@ -3,7 +3,7 @@
 
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import { CatalogBookContent } from "@/components/saas-dashboard/catalog/book-content"
+import { BookContent } from "@/components/saas-dashboard/catalog/book-content"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 
 export const metadata = {
@@ -15,7 +15,7 @@ interface Props {
   params: Promise<{ lang: Locale }>
 }
 
-export default async function CatalogBooksPage({ params }: Props) {
+export default async function BooksPage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
 
@@ -24,7 +24,7 @@ export default async function CatalogBooksPage({ params }: Props) {
       <PageHeadingSetter
         title={dictionary?.saas?.catalog?.navigation?.books || "Catalog Books"}
       />
-      <CatalogBookContent dictionary={dictionary} lang={lang} />
+      <BookContent dictionary={dictionary} lang={lang} />
     </>
   )
 }

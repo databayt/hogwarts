@@ -1,0 +1,196 @@
+{
+  "subject": "agriculture",
+  "subjectNameAr": "مبادئ الإنتاج الزراعي والحيواني",
+  "grade": 12,
+  "level": "secondary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "الطبعة الثانية المنقحة 2009",
+  "chapters": [
+    {
+      "nameAr": "الباب الأول: الإنتاج الزراعي",
+      "name": "Chapter 1: Agricultural Production",
+      "slug": "agricultural-production",
+      "sequenceOrder": 1,
+      "lessons": [
+        {
+          "nameAr": "العوامل التي تتحكم في نمو النبات",
+          "name": "Factors Controlling Plant Growth",
+          "slug": "factors-controlling-plant-growth",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "أثر التوسع الزراعي والرعوي الجائر في الموارد الطبيعية",
+          "name": "Impact of Excessive Agricultural and Pastoral Expansion on Natural Resources",
+          "slug": "impact-excessive-expansion-natural-resources",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "نباتات الزينة",
+          "name": "Ornamental Plants",
+          "slug": "ornamental-plants",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "النباتات العطرية",
+          "name": "Aromatic Plants",
+          "slug": "aromatic-plants",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "تسويق الخضر والفاكهة",
+          "name": "Marketing of Vegetables and Fruits",
+          "slug": "marketing-vegetables-fruits",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "المحاصيل البستانية",
+          "name": "Horticultural Crops",
+          "slug": "horticultural-crops",
+          "sequenceOrder": 6
+        },
+        {
+          "nameAr": "طرق حفظ الأغذية",
+          "name": "Food Preservation Methods",
+          "slug": "food-preservation-methods",
+          "sequenceOrder": 7
+        },
+        {
+          "nameAr": "التصنيع الغذائي",
+          "name": "Food Processing",
+          "slug": "food-processing",
+          "sequenceOrder": 8
+        }
+      ]
+    },
+    {
+      "nameAr": "الباب الثاني: الإنتاج الحيواني",
+      "name": "Chapter 2: Animal Production",
+      "slug": "animal-production",
+      "sequenceOrder": 2,
+      "lessons": [
+        {
+          "nameAr": "إنتاج الألبان",
+          "name": "Dairy Production",
+          "slug": "dairy-production",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "طرق الحلب",
+          "name": "Milking Methods",
+          "slug": "milking-methods",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "نظم إنتاج الألبان في السودان",
+          "name": "Dairy Production Systems in Sudan",
+          "slug": "dairy-production-systems-sudan",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "ضبط جودة الألبان",
+          "name": "Dairy Quality Control",
+          "slug": "dairy-quality-control",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "طرق حفظ اللبن",
+          "name": "Milk Preservation Methods",
+          "slug": "milk-preservation-methods",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "سلامة (صحة) الألبان ومنتجاتها",
+          "name": "Dairy Safety and Products",
+          "slug": "dairy-safety-products",
+          "sequenceOrder": 6
+        },
+        {
+          "nameAr": "إنتاج اللحوم",
+          "name": "Meat Production",
+          "slug": "meat-production",
+          "sequenceOrder": 7
+        },
+        {
+          "nameAr": "جودة اللحم",
+          "name": "Meat Quality",
+          "slug": "meat-quality",
+          "sequenceOrder": 8
+        },
+        {
+          "nameAr": "طرق إنتاج اللحوم",
+          "name": "Meat Production Methods",
+          "slug": "meat-production-methods",
+          "sequenceOrder": 9
+        },
+        {
+          "nameAr": "حفظ اللحوم",
+          "name": "Meat Preservation",
+          "slug": "meat-preservation",
+          "sequenceOrder": 10
+        },
+        {
+          "nameAr": "تصنيع اللحوم",
+          "name": "Meat Processing",
+          "slug": "meat-processing",
+          "sequenceOrder": 11
+        },
+        {
+          "nameAr": "مخلفات الذبيح",
+          "name": "Slaughter By-products",
+          "slug": "slaughter-by-products",
+          "sequenceOrder": 12
+        },
+        {
+          "nameAr": "صحة وسلامة اللحوم",
+          "name": "Meat Health and Safety",
+          "slug": "meat-health-safety",
+          "sequenceOrder": 13
+        }
+      ]
+    },
+    {
+      "nameAr": "القطاع الزراعي والحيواني وآفاق المستقبل",
+      "name": "Agricultural and Animal Sector and Future Prospects",
+      "slug": "agricultural-animal-sector-future",
+      "sequenceOrder": 3,
+      "lessons": [
+        {
+          "nameAr": "دور القطاعين في الناتج القومي",
+          "name": "Role of Both Sectors in National Product",
+          "slug": "role-sectors-national-product",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "إسهام القطاع في الأمن الغذائي",
+          "name": "Sector Contribution to Food Security",
+          "slug": "sector-contribution-food-security",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "إسهام القطاع في الصناعات التحويلية",
+          "name": "Sector Contribution to Manufacturing Industries",
+          "slug": "sector-contribution-manufacturing",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "إسهام القطاع في حصيلة الصادر",
+          "name": "Sector Contribution to Export Revenue",
+          "slug": "sector-contribution-export-revenue",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "الإسهام في توفير فرص العمل",
+          "name": "Contribution to Job Creation",
+          "slug": "contribution-job-creation",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "الإسهام في الوحدة الوطنية والأمن القومي",
+          "name": "Contribution to National Unity and Security",
+          "slug": "contribution-national-unity-security",
+          "sequenceOrder": 6
+        }
+      ]
+    }
+  ]
+}

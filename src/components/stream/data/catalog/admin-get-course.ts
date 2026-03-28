@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { notFound } from "next/navigation"
 
+import { getCatalogImageUrl } from "@/lib/catalog-image-url"
 import { db } from "@/lib/db"
 
 /**
@@ -15,7 +16,7 @@ export async function adminGetCatalogCourse(
   subjectId: string,
   schoolId: string | null
 ) {
-  const subject = await db.catalogSubject.findFirst({
+  const subject = await db.subject.findFirst({
     where: {
       id: subjectId,
       status: { not: "ARCHIVED" },
@@ -47,7 +48,7 @@ export async function adminGetCatalogCourse(
 
   // Get school-specific overrides if schoolId provided
   const overrides = schoolId
-    ? await db.schoolContentOverride.findMany({
+    ? await db.contentOverride.findMany({
         where: { schoolId, isHidden: true },
         select: {
           catalogChapterId: true,
@@ -69,11 +70,7 @@ export async function adminGetCatalogCourse(
     title: subject.name,
     slug: subject.slug,
     description: subject.description,
-    imageUrl: subject.imageKey
-      ? subject.imageKey.startsWith("/")
-        ? subject.imageKey
-        : `/subjects/${subject.imageKey}.png`
-      : null,
+    imageUrl: getCatalogImageUrl(subject.thumbnail) ?? null,
     isPublished: subject.status === "PUBLISHED",
     schoolId: null as string | null,
     category: { name: subject.department },
@@ -100,7 +97,7 @@ export async function adminGetCatalogCourse(
       department: subject.department,
       levels: subject.levels,
       color: subject.color,
-      imageKey: subject.imageKey,
+      thumbnail: subject.thumbnail,
       totalChapters: subject.totalChapters,
       totalLessons: subject.totalLessons,
     },

@@ -1,0 +1,52 @@
+{
+  "subject": "islamic-studies",
+  "subjectNameAr": "التربية الإسلامية",
+  "grade": 6,
+  "level": "elementary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "",
+  "chapters": [
+    {
+      "nameAr": "سور من القرآن الكريم",
+      "name": "Surahs from the Holy Quran",
+      "slug": "surahs-from-quran",
+      "sequenceOrder": 1,
+      "lessons": []
+    },
+    {
+      "nameAr": "من علوم القرآن الكريم",
+      "name": "Quranic Sciences",
+      "slug": "quranic-sciences",
+      "sequenceOrder": 2,
+      "lessons": []
+    },
+    {
+      "nameAr": "من الحديث النبوي الشريف",
+      "name": "Prophetic Hadith",
+      "slug": "prophetic-hadith",
+      "sequenceOrder": 3,
+      "lessons": []
+    },
+    {
+      "nameAr": "العقيدة",
+      "name": "Creed",
+      "slug": "creed",
+      "sequenceOrder": 4,
+      "lessons": []
+    },
+    {
+      "nameAr": "الفقه",
+      "name": "Jurisprudence",
+      "slug": "jurisprudence",
+      "sequenceOrder": 5,
+      "lessons": []
+    },
+    {
+      "nameAr": "من سيرة النبي والصحابة",
+      "name": "Biography of the Prophet and Companions",
+      "slug": "prophet-companions-biography",
+      "sequenceOrder": 6,
+      "lessons": []
+    }
+  ]
+}

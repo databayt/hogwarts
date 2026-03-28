@@ -1,0 +1,38 @@
+{
+  "subject": "history",
+  "subjectNameAr": "التاريخ",
+  "grade": 12,
+  "level": "secondary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "الطبعة المنقحة 2009",
+  "chapters": [
+    {
+      "nameAr": "الوحدة الأولى: الثورة والدولة المهدية",
+      "name": "Unit 1: The Mahdist Revolution and State",
+      "slug": "mahdist-revolution-state",
+      "sequenceOrder": 1,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الثانية: الحكم الثنائي والحركة الوطنية",
+      "name": "Unit 2: Condominium Rule and the National Movement",
+      "slug": "condominium-rule-national-movement",
+      "sequenceOrder": 2,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الثالثة: دولة الخلافة العثمانية والأطماع الاستعمارية",
+      "name": "Unit 3: The Ottoman Caliphate and Colonial Ambitions",
+      "slug": "ottoman-caliphate-colonial-ambitions",
+      "sequenceOrder": 3,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الرابعة: حركات التحرر العربية",
+      "name": "Unit 4: Arab Liberation Movements",
+      "slug": "arab-liberation-movements",
+      "sequenceOrder": 4,
+      "lessons": []
+    }
+  ]
+}

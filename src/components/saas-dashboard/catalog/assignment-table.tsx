@@ -7,19 +7,16 @@ import { useMemo } from "react"
 import { DataTable } from "@/components/table/data-table"
 import { useDataTable } from "@/components/table/use-data-table"
 
-import {
-  assignmentColumns,
-  type CatalogAssignmentRow,
-} from "./assignment-columns"
+import { assignmentColumns, type AssignmentRow } from "./assignment-columns"
 
 interface Props {
-  data: CatalogAssignmentRow[]
+  data: AssignmentRow[]
 }
 
 export function AssignmentTable({ data }: Props) {
   const columns = useMemo(() => assignmentColumns, [])
 
-  const { table } = useDataTable<CatalogAssignmentRow>({
+  const { table } = useDataTable<AssignmentRow>({
     data,
     columns,
     pageCount: 1,

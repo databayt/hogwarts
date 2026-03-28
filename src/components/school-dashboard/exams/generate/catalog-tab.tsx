@@ -38,13 +38,13 @@ import {
 } from "@/components/ui/select"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
-import { getCatalogSubjectsForBrowse } from "../qbank/actions/catalog-browse"
+import { getSubjectsForBrowse } from "../qbank/actions/catalog-browse"
 import {
-  browseCatalogExams,
-  getCatalogExamDetail,
-  type CatalogExamBrowseFilters,
-  type CatalogExamDetail,
-  type CatalogExamRow,
+  browseExams,
+  getExamDetail,
+  type ExamBrowseFilters,
+  type ExamDetail,
+  type ExamRow,
 } from "./actions/catalog-browse"
 
 const EXAM_TYPE_LABELS: Record<string, string> = {
@@ -65,24 +65,24 @@ const EXAM_TYPE_COLORS: Record<string, string> = {
   diagnostic: "bg-cyan-100 text-cyan-800",
 }
 
-export function CatalogExamBrowseTab() {
+export function ExamBrowseTab() {
   const { dictionary } = useDictionary()
   const t = dictionary?.school?.exams?.generateUi?.catalog as
     | Record<string, any>
     | undefined
-  const [exams, setExams] = useState<CatalogExamRow[]>([])
+  const [exams, setExams] = useState<ExamRow[]>([])
   const [total, setTotal] = useState(0)
   const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([])
-  const [filters, setFilters] = useState<CatalogExamBrowseFilters>({})
+  const [filters, setFilters] = useState<ExamBrowseFilters>({})
   const [page, setPage] = useState(0)
   const [isPending, startTransition] = useTransition()
-  const [previewExam, setPreviewExam] = useState<CatalogExamDetail | null>(null)
+  const [previewExam, setPreviewExam] = useState<ExamDetail | null>(null)
   const [previewOpen, setPreviewOpen] = useState(false)
   const [loadingPreview, setLoadingPreview] = useState(false)
 
   const fetchExams = useCallback(() => {
     startTransition(async () => {
-      const result = await browseCatalogExams({ ...filters, page })
+      const result = await browseExams({ ...filters, page })
       setExams(result.exams)
       setTotal(result.total)
     })
@@ -93,14 +93,14 @@ export function CatalogExamBrowseTab() {
   }, [fetchExams])
 
   useEffect(() => {
-    getCatalogSubjectsForBrowse().then(setSubjects)
+    getSubjectsForBrowse().then(setSubjects)
   }, [])
 
   const handlePreview = async (examId: string) => {
     setLoadingPreview(true)
     setPreviewOpen(true)
     try {
-      const detail = await getCatalogExamDetail(examId)
+      const detail = await getExamDetail(examId)
       setPreviewExam(detail)
     } finally {
       setLoadingPreview(false)

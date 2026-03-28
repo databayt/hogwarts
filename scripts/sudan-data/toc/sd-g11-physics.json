@@ -1,0 +1,45 @@
+{
+  "subject": "physics",
+  "subjectNameAr": "الفيزياء",
+  "grade": 11,
+  "level": "secondary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "",
+  "chapters": [
+    {
+      "nameAr": "الوحدة الأولى: المتجهات",
+      "name": "Unit 1: Vectors",
+      "slug": "vectors",
+      "sequenceOrder": 1,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الثانية: المقذوفات",
+      "name": "Unit 2: Projectiles",
+      "slug": "projectiles",
+      "sequenceOrder": 2,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الثالثة: العزم والإتزان",
+      "name": "Unit 3: Torque and Equilibrium",
+      "slug": "torque-equilibrium",
+      "sequenceOrder": 3,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الرابعة: الشغل والطاقة والقدرة",
+      "name": "Unit 4: Work, Energy, and Power",
+      "slug": "work-energy-power",
+      "sequenceOrder": 4,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الخامسة: الحرارة وقانونا الديناميكا الحرارية",
+      "name": "Unit 5: Heat and Laws of Thermodynamics",
+      "slug": "heat-thermodynamics",
+      "sequenceOrder": 5,
+      "lessons": []
+    }
+  ]
+}

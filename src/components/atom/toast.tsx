@@ -33,33 +33,14 @@ const CONFIG = {
 // ============================================
 export const SuccessToast = (message: string) => {
   toast(message, {
-    icon: (
-      <div className="bg-chart-2 flex h-8 w-8 items-center justify-center rounded-full">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-5 w-5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="white"
-          strokeWidth={3}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M5 13l4 4L19 7"
-          />
-        </svg>
-      </div>
-    ),
     duration: CONFIG.duration.success,
     position: CONFIG.position,
     style: {
+      background: "var(--chart-2)",
+      color: "white",
       border: "none",
-      padding: "0px",
-      background: "transparent",
-      boxShadow: "none",
-      minWidth: "auto",
-      minHeight: "auto",
+      width: "220px",
+      maxWidth: "220px",
     },
   })
 }

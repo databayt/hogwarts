@@ -47,6 +47,8 @@
 
 import { z } from "zod"
 
+import type { ValidationHelper } from "@/components/internationalization/helpers"
+
 // Enums matching Prisma model
 export const StudentStatus = {
   ACTIVE: "ACTIVE",
@@ -82,99 +84,153 @@ export const Gender = {
 } as const
 
 // Personal Information Schema
-export const personalInfoSchema = z.object({
-  // Basic Info
-  firstName: z.string().min(2, "First name must be at least 2 characters"),
-  middleName: z.string().optional(),
-  lastName: z.string().min(2, "Last name must be at least 2 characters"),
+export function createPersonalInfoSchema(v?: ValidationHelper) {
+  return z.object({
+    // Basic Info
+    firstName: z
+      .string()
+      .min(2, v?.minLength(2) || "First name must be at least 2 characters"),
+    middleName: z.string().optional(),
+    lastName: z
+      .string()
+      .min(2, v?.minLength(2) || "Last name must be at least 2 characters"),
 
-  // Date and Gender
-  dateOfBirth: z.date().refine((date) => {
-    const age = new Date().getFullYear() - date.getFullYear()
-    return age >= 3 && age <= 25
-  }, "Student must be between 3 and 25 years old"),
+    // Date and Gender
+    dateOfBirth: z.date().refine(
+      (date) => {
+        const age = new Date().getFullYear() - date.getFullYear()
+        return age >= 3 && age <= 25
+      },
+      v?.get("invalidAge") || "Student must be between 3 and 25 years old"
+    ),
 
-  gender: z.enum(["Male", "Female", "Other"]),
+    gender: z.enum(["Male", "Female", "Other"]),
 
-  // Health Info
-  bloodGroup: z
-    .enum(["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"])
-    .optional(),
+    // Health Info
+    bloodGroup: z
+      .enum(["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"])
+      .optional(),
 
-  // Nationality and Documents
-  nationality: z.string().default("Saudi Arabia"),
-  passportNumber: z.string().optional(),
-  visaStatus: z.string().optional(),
-  visaExpiryDate: z.date().optional(),
+    // Nationality and Documents
+    nationality: z.string().default("Saudi Arabia"),
+    passportNumber: z.string().optional(),
+    visaStatus: z.string().optional(),
+    visaExpiryDate: z.date().optional(),
 
-  // Student IDs
-  grNumber: z.string().optional(),
-  admissionNumber: z.string().optional(),
-  studentType: z
-    .enum(["REGULAR", "TRANSFER", "INTERNATIONAL", "EXCHANGE"])
-    .default("REGULAR"),
-  category: z.string().optional(),
-})
+    // Student IDs
+    grNumber: z.string().optional(),
+    admissionNumber: z.string().optional(),
+    studentType: z
+      .enum(["REGULAR", "TRANSFER", "INTERNATIONAL", "EXCHANGE"])
+      .default("REGULAR"),
+    category: z.string().optional(),
+  })
+}
+export const personalInfoSchema = createPersonalInfoSchema()
 
 // Contact Information Schema
-export const contactInfoSchema = z.object({
-  // Contact Details
-  email: z.string().email("Invalid email address").optional(),
-  mobileNumber: z
-    .string()
-    .regex(/^\+?[\d\s-()]+$/, "Invalid phone number format")
-    .min(10, "Phone number must be at least 10 digits")
-    .optional(),
-  alternatePhone: z
-    .string()
-    .regex(/^\+?[\d\s-()]+$/, "Invalid phone number format")
-    .optional(),
+export function createContactInfoSchema(v?: ValidationHelper) {
+  const phoneMsg = v?.get("phone") || "Invalid phone number format"
+  return z.object({
+    // Contact Details
+    email: z
+      .string()
+      .email(v?.email() || "Invalid email address")
+      .optional(),
+    mobileNumber: z
+      .string()
+      .regex(/^\+?[\d\s-()]+$/, phoneMsg)
+      .min(10, v?.minLength(10) || "Phone number must be at least 10 digits")
+      .optional(),
+    alternatePhone: z
+      .string()
+      .regex(/^\+?[\d\s-()]+$/, phoneMsg)
+      .optional(),
 
-  // Current Address
-  currentAddress: z.string().min(10, "Address must be at least 10 characters"),
-  city: z.string().min(2, "City is required"),
-  state: z.string().min(2, "State/Province is required"),
-  postalCode: z.string().optional(),
-  country: z.string().default("Saudi Arabia"),
+    // Current Address
+    currentAddress: z
+      .string()
+      .min(10, v?.minLength(10) || "Address must be at least 10 characters"),
+    city: z.string().min(2, v?.get("cityRequired") || "City is required"),
+    state: z
+      .string()
+      .min(2, v?.get("stateRequired") || "State/Province is required"),
+    postalCode: z.string().optional(),
+    country: z.string().default("Saudi Arabia"),
 
-  // Permanent Address (optional, can be same as current)
-  sameAsPermanent: z.boolean().default(false),
-  permanentAddress: z.string().optional(),
-  permanentCity: z.string().optional(),
-  permanentState: z.string().optional(),
-  permanentPostalCode: z.string().optional(),
-  permanentCountry: z.string().optional(),
-})
+    // Permanent Address (optional, can be same as current)
+    sameAsPermanent: z.boolean().default(false),
+    permanentAddress: z.string().optional(),
+    permanentCity: z.string().optional(),
+    permanentState: z.string().optional(),
+    permanentPostalCode: z.string().optional(),
+    permanentCountry: z.string().optional(),
+  })
+}
+export const contactInfoSchema = createContactInfoSchema()
 
 // Emergency Contact Schema
-export const emergencyContactSchema = z.object({
-  emergencyContactName: z.string().min(2, "Emergency contact name is required"),
-  emergencyContactPhone: z
-    .string()
-    .regex(/^\+?[\d\s-()]+$/, "Invalid phone number format")
-    .min(10, "Phone number must be at least 10 digits"),
-  emergencyContactRelation: z.string().min(2, "Relationship is required"),
-})
+export function createEmergencyContactSchema(v?: ValidationHelper) {
+  const phoneMsg = v?.get("phone") || "Invalid phone number format"
+  return z.object({
+    emergencyContactName: z
+      .string()
+      .min(2, v?.required() || "Emergency contact name is required"),
+    emergencyContactPhone: z
+      .string()
+      .regex(/^\+?[\d\s-()]+$/, phoneMsg)
+      .min(10, v?.minLength(10) || "Phone number must be at least 10 digits"),
+    emergencyContactRelation: z
+      .string()
+      .min(2, v?.get("relationshipRequired") || "Relationship is required"),
+  })
+}
+export const emergencyContactSchema = createEmergencyContactSchema()
 
 // Guardian Information Schema
-export const guardianInfoSchema = z.object({
-  guardians: z
-    .array(
-      z.object({
-        firstName: z.string().min(2, "Guardian first name is required"),
-        lastName: z.string().min(2, "Guardian last name is required"),
-        relation: z.string().min(2, "Relationship is required"), // Father, Mother, Guardian, etc.
-        email: z.string().email("Invalid email address").optional(),
-        mobileNumber: z
-          .string()
-          .regex(/^\+?[\d\s-()]+$/, "Invalid phone number format")
-          .min(10, "Phone number must be at least 10 digits"),
-        occupation: z.string().optional(),
-        isPrimary: z.boolean().default(false),
-      })
-    )
-    .min(1, "At least one guardian is required"),
-})
+export function createGuardianInfoSchema(v?: ValidationHelper) {
+  const phoneMsg = v?.get("phone") || "Invalid phone number format"
+  return z.object({
+    guardians: z
+      .array(
+        z.object({
+          firstName: z
+            .string()
+            .min(
+              2,
+              v?.get("firstNameRequired") || "Guardian first name is required"
+            ),
+          lastName: z
+            .string()
+            .min(
+              2,
+              v?.get("lastNameRequired") || "Guardian last name is required"
+            ),
+          relation: z
+            .string()
+            .min(
+              2,
+              v?.get("relationshipRequired") || "Relationship is required"
+            ),
+          email: z
+            .string()
+            .email(v?.email() || "Invalid email address")
+            .optional(),
+          mobileNumber: z
+            .string()
+            .regex(/^\+?[\d\s-()]+$/, phoneMsg)
+            .min(
+              10,
+              v?.minLength(10) || "Phone number must be at least 10 digits"
+            ),
+          occupation: z.string().optional(),
+          isPrimary: z.boolean().default(false),
+        })
+      )
+      .min(1, v?.get("atLeastOne") || "At least one guardian is required"),
+  })
+}
+export const guardianInfoSchema = createGuardianInfoSchema()
 
 // Previous Education Schema
 export const previousEducationSchema = z.object({
@@ -188,40 +244,46 @@ export const previousEducationSchema = z.object({
 })
 
 // Health Information Schema
-export const healthInfoSchema = z.object({
-  // Medical Conditions
-  medicalConditions: z.string().optional(),
-  allergies: z.string().optional(),
-  medicationRequired: z.string().optional(),
+export function createHealthInfoSchema(v?: ValidationHelper) {
+  return z.object({
+    // Medical Conditions
+    medicalConditions: z.string().optional(),
+    allergies: z.string().optional(),
+    medicationRequired: z.string().optional(),
 
-  // Doctor Information
-  doctorName: z.string().optional(),
-  doctorContact: z
-    .string()
-    .regex(/^\+?[\d\s-()]+$/, "Invalid phone number format")
-    .optional(),
-  hospitalPreference: z.string().optional(),
+    // Doctor Information
+    doctorName: z.string().optional(),
+    doctorContact: z
+      .string()
+      .regex(
+        /^\+?[\d\s-()]+$/,
+        v?.get("phone") || "Invalid phone number format"
+      )
+      .optional(),
+    hospitalPreference: z.string().optional(),
 
-  // Insurance
-  insuranceProvider: z.string().optional(),
-  insuranceNumber: z.string().optional(),
-  insuranceValidTill: z.date().optional(),
+    // Insurance
+    insuranceProvider: z.string().optional(),
+    insuranceNumber: z.string().optional(),
+    insuranceValidTill: z.date().optional(),
 
-  // Vaccination Records
-  vaccinations: z
-    .array(
-      z.object({
-        name: z.string(),
-        date: z.date(),
-        nextDueDate: z.date().optional(),
-      })
-    )
-    .optional(),
+    // Vaccination Records
+    vaccinations: z
+      .array(
+        z.object({
+          name: z.string(),
+          date: z.date(),
+          nextDueDate: z.date().optional(),
+        })
+      )
+      .optional(),
 
-  // Special Needs
-  hasSpecialNeeds: z.boolean().default(false),
-  specialNeedsDetails: z.string().optional(),
-})
+    // Special Needs
+    hasSpecialNeeds: z.boolean().default(false),
+    specialNeedsDetails: z.string().optional(),
+  })
+}
+export const healthInfoSchema = createHealthInfoSchema()
 
 // Document Upload Schema
 export const documentSchema = z.object({

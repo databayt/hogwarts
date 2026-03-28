@@ -47,8 +47,8 @@ export async function seedComboniTeachers() {
     throw new Error("No departments found. Run onboarding first.")
   }
 
-  // 3. Get school subjects for expertise linking (via CatalogSubject)
-  const selections = await prisma.schoolSubjectSelection.findMany({
+  // 3. Get school subjects for expertise linking (via Subject)
+  const selections = await prisma.subjectSelection.findMany({
     where: { schoolId: school.id, isActive: true },
     include: {
       subject: {

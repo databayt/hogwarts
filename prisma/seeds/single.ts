@@ -34,16 +34,17 @@ import { backfillExamCatalogBridges } from "./backfill-exam-catalog-bridges"
 import { backfillStudentSections } from "./backfill-student-sections"
 import { seedBanking } from "./banking"
 import { seedCatalog } from "./catalog"
-import { seedCatalogBooks } from "./catalog-books"
+import { seedBooks } from "./catalog-books"
 import { seedCatalogContent } from "./catalog-content"
-import { seedCatalogExamTemplates } from "./catalog-exam-templates"
+import { seedExamTemplates } from "./catalog-exam-templates"
 import { seedCatalogImages } from "./catalog-images"
 import { seedCatalogVideos } from "./catalog-videos"
 import { seedAllClasses } from "./classes"
 import { seedClassrooms } from "./classrooms"
-import { seedClickViewCatalog } from "./clickview-catalog"
 import { seedClickViewImages } from "./clickview-images"
 import { seedClickViewLessonImages } from "./clickview-lesson-images"
+import { seedConceptImages } from "./concept-images"
+import { seedCurriculum } from "./curriculum"
 import { seedEvents } from "./events"
 import { seedExamResults, seedExams, seedGradingConfig } from "./exams"
 import { seedFees } from "./fees"
@@ -60,6 +61,7 @@ import { seedAllPeople, seedStudentDocuments } from "./people"
 import { seedProfileImages } from "./profile-images"
 import { seedQBank } from "./qbank"
 import { seedSchoolWithBranding } from "./school"
+import { seedSudanCatalog } from "./sd-catalog"
 import { seedComboniTeachers } from "./seed-comboni-teachers"
 import { seedStaffMembers } from "./staff-members"
 import { seedStreamCourses, seedStreamEnrollments } from "./stream"
@@ -78,7 +80,9 @@ import type {
   UserRef,
   YearLevelRef,
 } from "./types"
+import { seedUsCatalog } from "./us-catalog"
 import { measureDuration } from "./utils"
+import { seedWorldCurricula } from "./world-curricula"
 
 // ============================================================================
 // DB RESOLVERS - Fetch existing data instead of re-seeding
@@ -194,8 +198,8 @@ async function resolveSubjects(
   prisma: PrismaClient,
   schoolId: string
 ): Promise<SubjectRef[]> {
-  // Resolve from SchoolSubjectSelection -> CatalogSubject
-  const selections = await prisma.schoolSubjectSelection.findMany({
+  // Resolve from SubjectSelection -> Subject
+  const selections = await prisma.subjectSelection.findMany({
     where: { schoolId, isActive: true },
     include: {
       subject: {
@@ -213,8 +217,8 @@ async function resolveSubjects(
     }))
   }
 
-  // Fallback: query CatalogSubject directly
-  const catalogSubjects = await prisma.catalogSubject.findMany({
+  // Fallback: query Subject directly
+  const catalogSubjects = await prisma.subject.findMany({
     where: { status: "PUBLISHED" },
     select: { id: true, name: true, department: true },
     orderBy: { sortOrder: "asc" },
@@ -351,12 +355,12 @@ const SEEDS: Record<string, SeedEntry> = {
       await seedCatalogImages(prisma)
     },
   },
-  "clickview-catalog": {
+  "us-catalog": {
     description:
-      "ClickView US K-12 catalog (~220 grade-specific subjects, ~800 chapters, ~4000 lessons)",
+      "US K-12 catalog (~220 grade-specific subjects, ~800 chapters, ~4000 lessons)",
     global: true,
     run: async (prisma) => {
-      await seedClickViewCatalog(prisma)
+      await seedUsCatalog(prisma)
     },
   },
   "clickview-images": {
@@ -372,6 +376,38 @@ const SEEDS: Record<string, SeedEntry> = {
     global: true,
     run: async (prisma) => {
       await seedClickViewLessonImages(prisma)
+    },
+  },
+  "sd-catalog": {
+    description:
+      "Sudan national curriculum (Grade 1 pilot: 4 subjects, ~17 chapters, ~120 lessons)",
+    global: true,
+    run: async (prisma) => {
+      await seedSudanCatalog(prisma)
+    },
+  },
+  curriculum: {
+    description:
+      "Curriculum records (SD-national, US-k12) + backfill Subject.curriculumId",
+    global: true,
+    run: async (prisma) => {
+      await seedCurriculum(prisma)
+    },
+  },
+  "world-curricula": {
+    description:
+      "8 world curricula (GB, IB, SA, EG, AE, QA, KW, JO) with grade-specific subjects",
+    global: true,
+    run: async (prisma) => {
+      await seedWorldCurricula(prisma)
+    },
+  },
+  "concept-images": {
+    description:
+      "Universal concept images → Sharp/WebP → S3/CloudFront (shared across all curricula)",
+    global: true,
+    run: async (prisma) => {
+      await seedConceptImages(prisma)
     },
   },
   "catalog-content": {
@@ -397,7 +433,7 @@ const SEEDS: Record<string, SeedEntry> = {
         where: { domain: "demo" },
         select: { id: true },
       })
-      await seedCatalogBooks(prisma, school?.id)
+      await seedBooks(prisma, school?.id)
     },
   },
   school: {
@@ -423,7 +459,7 @@ const SEEDS: Record<string, SeedEntry> = {
     description: "Academic structure + catalog bridge",
     run: async (prisma, schoolId) => {
       const yearLevels = await resolveYearLevels(prisma, schoolId)
-      const catalogSubjects = await prisma.catalogSubject.findMany({
+      const catalogSubjects = await prisma.subject.findMany({
         select: { id: true, name: true, slug: true },
       })
       const school = await prisma.school.findUnique({
@@ -801,7 +837,7 @@ const SEEDS: Record<string, SeedEntry> = {
       "Catalog exam blueprints, exam templates (2 per subject), paper templates",
     global: true,
     run: async (prisma) => {
-      await seedCatalogExamTemplates(prisma)
+      await seedExamTemplates(prisma)
     },
   },
   "profile-images": {

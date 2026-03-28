@@ -34,6 +34,7 @@ export function PreviousEducationStep({
   form,
   dictionary,
 }: PreviousEducationStepProps) {
+  const reg = dictionary?.school?.students?.registration?.previousEducation
   const studentType = form.watch("studentType")
   const isTransferStudent =
     studentType === "TRANSFER" || studentType === "INTERNATIONAL"
@@ -44,8 +45,8 @@ export function PreviousEducationStep({
         <Alert>
           <School className="h-4 w-4" />
           <AlertDescription>
-            As a transfer student, please provide details about your previous
-            education to help us place you in the appropriate grade level.
+            {reg?.transferAlert ||
+              "As a transfer student, please provide details about your previous education to help us place you in the appropriate grade level."}
           </AlertDescription>
         </Alert>
       )}
@@ -56,9 +57,17 @@ export function PreviousEducationStep({
           name="previousSchoolName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Previous School Name</FormLabel>
+              <FormLabel>
+                {reg?.previousSchoolName || "Previous School Name"}
+              </FormLabel>
               <FormControl>
-                <Input placeholder="Enter previous school name" {...field} />
+                <Input
+                  placeholder={
+                    reg?.previousSchoolNamePlaceholder ||
+                    "Enter previous school name"
+                  }
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -70,10 +79,15 @@ export function PreviousEducationStep({
           name="previousSchoolAddress"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Previous School Address</FormLabel>
+              <FormLabel>
+                {reg?.previousSchoolAddress || "Previous School Address"}
+              </FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Enter complete address of previous school"
+                  placeholder={
+                    reg?.previousSchoolAddressPlaceholder ||
+                    "Enter complete address of previous school"
+                  }
                   {...field}
                 />
               </FormControl>
@@ -88,9 +102,17 @@ export function PreviousEducationStep({
             name="previousGrade"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Last Grade/Class Completed</FormLabel>
+                <FormLabel>
+                  {reg?.lastGradeCompleted || "Last Grade/Class Completed"}
+                </FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., Grade 5, Class X" {...field} />
+                  <Input
+                    placeholder={
+                      reg?.lastGradeCompletedPlaceholder ||
+                      "e.g., Grade 5, Class X"
+                    }
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -102,9 +124,18 @@ export function PreviousEducationStep({
             name="transferCertificateNo"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Transfer Certificate Number</FormLabel>
+                <FormLabel>
+                  {reg?.transferCertificateNumber ||
+                    "Transfer Certificate Number"}
+                </FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter TC number" {...field} />
+                  <Input
+                    placeholder={
+                      reg?.transferCertificateNumberPlaceholder ||
+                      "Enter TC number"
+                    }
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -118,7 +149,7 @@ export function PreviousEducationStep({
             name="transferDate"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Transfer Date</FormLabel>
+                <FormLabel>{reg?.transferDate || "Transfer Date"}</FormLabel>
                 <Popover>
                   <PopoverTrigger asChild>
                     <FormControl>
@@ -132,7 +163,7 @@ export function PreviousEducationStep({
                         {field.value ? (
                           format(field.value, "PPP")
                         ) : (
-                          <span>Pick a date</span>
+                          <span>{reg?.pickADate || "Pick a date"}</span>
                         )}
                         <CalendarIcon className="ms-auto h-4 w-4 opacity-50" />
                       </Button>
@@ -158,10 +189,15 @@ export function PreviousEducationStep({
             name="reasonForTransfer"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Reason for Transfer</FormLabel>
+                <FormLabel>
+                  {reg?.reasonForTransfer || "Reason for Transfer"}
+                </FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="e.g., Family relocation, Better academics"
+                    placeholder={
+                      reg?.reasonForTransferPlaceholder ||
+                      "e.g., Family relocation, Better academics"
+                    }
                     {...field}
                   />
                 </FormControl>
@@ -176,10 +212,15 @@ export function PreviousEducationStep({
           name="previousAcademicRecord"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Academic Record/Achievements</FormLabel>
+              <FormLabel>
+                {reg?.academicRecord || "Academic Record/Achievements"}
+              </FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Mention any academic achievements, awards, or notable performance in previous school"
+                  placeholder={
+                    reg?.academicRecordPlaceholder ||
+                    "Mention any academic achievements, awards, or notable performance in previous school"
+                  }
                   {...field}
                 />
               </FormControl>
@@ -192,8 +233,8 @@ export function PreviousEducationStep({
       {!isTransferStudent && (
         <div className="bg-muted rounded-lg p-4">
           <p className="text-muted-foreground text-sm">
-            Previous education information is optional for regular students but
-            helps us understand the student's academic background better.
+            {reg?.optionalNotice ||
+              "Previous education information is optional for regular students but helps us understand the student's academic background better."}
           </p>
         </div>
       )}

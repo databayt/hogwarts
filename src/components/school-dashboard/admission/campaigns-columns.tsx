@@ -66,10 +66,10 @@ export const getCampaignColumns = (
       header: ({ column }) => (
         <DataTableColumnHeader
           column={column}
-          title={locale === "ar" ? "الاسم" : "Name"}
+          title={t?.columns?.name || "Name"}
         />
       ),
-      meta: { label: locale === "ar" ? "الاسم" : "Name", variant: "text" },
+      meta: { label: t?.columns?.name || "Name", variant: "text" },
       enableColumnFilter: true,
     },
     {
@@ -77,17 +77,17 @@ export const getCampaignColumns = (
       header: ({ column }) => (
         <DataTableColumnHeader
           column={column}
-          title={locale === "ar" ? "السنة" : "Year"}
+          title={t?.columns?.year || "Year"}
         />
       ),
-      meta: { label: locale === "ar" ? "السنة" : "Year", variant: "text" },
+      meta: { label: t?.columns?.year || "Year", variant: "text" },
     },
     {
       accessorKey: "status",
       header: ({ column }) => (
         <DataTableColumnHeader
           column={column}
-          title={locale === "ar" ? "الحالة" : "Status"}
+          title={t?.columns?.status || "Status"}
         />
       ),
       cell: ({ getValue }) => {
@@ -96,7 +96,7 @@ export const getCampaignColumns = (
         return <Badge variant={getStatusVariant(status)}>{label}</Badge>
       },
       meta: {
-        label: locale === "ar" ? "الحالة" : "Status",
+        label: t?.columns?.status || "Status",
         variant: "select",
         options: [
           { label: t?.status?.DRAFT || "Draft", value: "DRAFT" },
@@ -114,7 +114,7 @@ export const getCampaignColumns = (
       header: ({ column }) => (
         <DataTableColumnHeader
           column={column}
-          title={locale === "ar" ? "الطلبات" : "Applications"}
+          title={t?.columns?.applications || "Applications"}
         />
       ),
       cell: ({ getValue }) => (
@@ -126,7 +126,7 @@ export const getCampaignColumns = (
       header: ({ column }) => (
         <DataTableColumnHeader
           column={column}
-          title={locale === "ar" ? "المقاعد" : "Seats"}
+          title={t?.columns?.seats || "Seats"}
         />
       ),
       cell: ({ getValue }) => (
@@ -138,12 +138,12 @@ export const getCampaignColumns = (
       header: ({ column }) => (
         <DataTableColumnHeader
           column={column}
-          title={locale === "ar" ? "البداية" : "Start"}
+          title={t?.columns?.start || "Start"}
         />
       ),
       cell: ({ getValue }) => (
         <span className="text-muted-foreground text-xs tabular-nums">
-          {new Date(getValue<string>()).toLocaleDateString()}
+          {new Date(getValue<string>()).toLocaleDateString(locale)}
         </span>
       ),
     },
@@ -152,12 +152,12 @@ export const getCampaignColumns = (
       header: ({ column }) => (
         <DataTableColumnHeader
           column={column}
-          title={locale === "ar" ? "النهاية" : "End"}
+          title={t?.columns?.end || "End"}
         />
       ),
       cell: ({ getValue }) => (
         <span className="text-muted-foreground text-xs tabular-nums">
-          {new Date(getValue<string>()).toLocaleDateString()}
+          {new Date(getValue<string>()).toLocaleDateString(locale)}
         </span>
       ),
     },
@@ -176,12 +176,12 @@ export const getCampaignColumns = (
 
         const handleDelete = async () => {
           const confirmed = await confirmDeleteDialog(undefined, {
-            title: isRTL ? "حذف الحملة" : "Delete Campaign",
-            description: isRTL
-              ? "هل أنت متأكد؟ لا يمكن التراجع عن هذا الإجراء."
-              : "Are you sure? This action cannot be undone.",
-            confirmText: isRTL ? "حذف" : "Delete",
-            cancelText: isRTL ? "إلغاء" : "Cancel",
+            title: t?.campaigns?.deleteCampaign || "Delete Campaign",
+            description:
+              t?.campaigns?.deleteConfirm ||
+              "Are you sure? This action cannot be undone.",
+            confirmText: undefined,
+            cancelText: undefined,
           })
           if (confirmed) onDelete?.(campaign.id)
         }
@@ -191,7 +191,9 @@ export const getCampaignColumns = (
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8 p-0">
                 <Ellipsis className="h-4 w-4" />
-                <span className="sr-only">Open menu</span>
+                <span className="sr-only">
+                  {t?.toolbar?.openMenu || "Open menu"}
+                </span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -204,7 +206,7 @@ export const getCampaignColumns = (
                 className="text-destructive focus:text-destructive"
                 disabled={campaign.applicationsCount > 0}
               >
-                {isRTL ? "حذف" : "Delete"}
+                {t?.campaigns?.deleteCampaign || "Delete"}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

@@ -57,7 +57,7 @@ export async function createBook(
     const schoolId = contextSchoolId
     const validatedData = bookSchema.parse(data)
 
-    const book = await db.book.create({
+    const book = await db.schoolBook.create({
       data: {
         ...validatedData,
         schoolId,
@@ -106,7 +106,7 @@ export async function updateBook(
     const { id, schoolId: _clientSchoolId, ...updateFields } = validatedData
 
     // Verify book belongs to this school
-    const existingBook = await db.book.findFirst({
+    const existingBook = await db.schoolBook.findFirst({
       where: { id, schoolId },
     })
 
@@ -116,7 +116,7 @@ export async function updateBook(
 
     assertLibraryPermission(authCtx, "update", { id, schoolId })
 
-    const book = await db.book.update({
+    const book = await db.schoolBook.update({
       where: { id },
       data: updateFields,
     })
@@ -192,7 +192,7 @@ export async function borrowBook(
     }
 
     // Check if book exists and is available
-    const book = await db.book.findFirst({
+    const book = await db.schoolBook.findFirst({
       where: {
         id: bookId,
         schoolId,
@@ -239,7 +239,7 @@ export async function borrowBook(
           status: "BORROWED",
         },
       }),
-      db.book.update({
+      db.schoolBook.update({
         where: { id: bookId },
         data: {
           availableCopies: {
@@ -315,7 +315,7 @@ export async function returnBook(
           returnDate: new Date(),
         },
       }),
-      db.book.update({
+      db.schoolBook.update({
         where: { id: borrowRecord.bookId },
         data: {
           availableCopies: {
@@ -366,7 +366,7 @@ export async function deleteBook(
     const { id } = data
 
     // Verify book belongs to this school
-    const book = await db.book.findFirst({
+    const book = await db.schoolBook.findFirst({
       where: { id, schoolId },
     })
 
@@ -390,7 +390,7 @@ export async function deleteBook(
       }
     }
 
-    await db.book.delete({
+    await db.schoolBook.delete({
       where: { id },
     })
 

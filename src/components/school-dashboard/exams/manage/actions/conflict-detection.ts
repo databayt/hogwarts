@@ -161,7 +161,7 @@ export async function checkExamConflicts(
     }
 
     // 2. Check for overlapping exams for the same class
-    const classExams = await db.exam.findMany({
+    const classExams = await db.schoolExam.findMany({
       where: {
         schoolId,
         classId,
@@ -222,7 +222,7 @@ export async function checkExamConflicts(
       }
 
       // Check teacher's other exams on same date
-      const teacherExams = await db.exam.findMany({
+      const teacherExams = await db.schoolExam.findMany({
         where: {
           schoolId,
           examDate,
@@ -296,7 +296,7 @@ export async function checkExamConflicts(
       }
 
       // Check classroom's other exams on same date
-      const classroomExams = await db.exam.findMany({
+      const classroomExams = await db.schoolExam.findMany({
         where: {
           schoolId,
           examDate,
@@ -356,7 +356,7 @@ export async function checkExamConflicts(
         ]
 
         // Check for exams in those other classes on the same date
-        const otherExams = await db.exam.findMany({
+        const otherExams = await db.schoolExam.findMany({
           where: {
             schoolId,
             classId: { in: otherClassIds },
@@ -444,7 +444,7 @@ export async function findAvailableExamSlots(
     })
 
     // Get existing exams for the class on this date
-    const existingExams = await db.exam.findMany({
+    const existingExams = await db.schoolExam.findMany({
       where: {
         schoolId,
         classId,

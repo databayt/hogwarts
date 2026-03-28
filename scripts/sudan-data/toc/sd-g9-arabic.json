@@ -1,0 +1,17 @@
+{
+  "subject": "arabic",
+  "subjectNameAr": "اللغة العربية",
+  "grade": 9,
+  "level": "middle",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "",
+  "chapters": [
+    {
+      "nameAr": "اللغة العربية",
+      "name": "Arabic Language",
+      "slug": "arabic-language",
+      "sequenceOrder": 1,
+      "lessons": []
+    }
+  ]
+}

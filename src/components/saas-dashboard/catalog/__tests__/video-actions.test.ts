@@ -8,10 +8,10 @@ import { db } from "@/lib/db"
 import { requireDeveloper } from "@/components/saas-dashboard/lib/operator-auth"
 
 import {
-  createLessonVideo,
-  deleteLessonVideo,
-  getLessonVideos,
-  toggleLessonVideoFeatured,
+  createVideo,
+  deleteVideo,
+  getVideos,
+  toggleVideoFeatured,
 } from "../video-actions"
 
 // ============================================================================
@@ -85,26 +85,26 @@ describe("Video Actions", () => {
   })
 
   // ==========================================================================
-  // createLessonVideo
+  // createVideo
   // ==========================================================================
 
-  describe("createLessonVideo", () => {
+  describe("createVideo", () => {
     it("creates video with YouTube URL — detects provider and extracts ID", async () => {
       mockDeveloperSession()
-      vi.mocked(db.lessonVideo.create).mockResolvedValue({
+      vi.mocked(db.video.create).mockResolvedValue({
         id: "vid-1",
         provider: "youtube",
         externalId: "dQw4w9WgXcQ",
       } as any)
 
-      const result = await createLessonVideo(
+      const result = await createVideo(
         makeVideoInput({
           videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
         })
       )
 
       expect(result.success).toBe(true)
-      expect(db.lessonVideo.create).toHaveBeenCalledWith({
+      expect(db.video.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           provider: "youtube",
           externalId: "dQw4w9WgXcQ",
@@ -116,20 +116,20 @@ describe("Video Actions", () => {
 
     it("creates video with Vimeo URL — detects provider and extracts ID", async () => {
       mockDeveloperSession()
-      vi.mocked(db.lessonVideo.create).mockResolvedValue({
+      vi.mocked(db.video.create).mockResolvedValue({
         id: "vid-2",
         provider: "vimeo",
         externalId: "123456789",
       } as any)
 
-      const result = await createLessonVideo(
+      const result = await createVideo(
         makeVideoInput({
           videoUrl: "https://vimeo.com/123456789",
         })
       )
 
       expect(result.success).toBe(true)
-      expect(db.lessonVideo.create).toHaveBeenCalledWith({
+      expect(db.video.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           provider: "vimeo",
           externalId: "123456789",
@@ -139,20 +139,20 @@ describe("Video Actions", () => {
 
     it("creates video with self-hosted URL — provider self-hosted, externalId null", async () => {
       mockDeveloperSession()
-      vi.mocked(db.lessonVideo.create).mockResolvedValue({
+      vi.mocked(db.video.create).mockResolvedValue({
         id: "vid-3",
         provider: "self-hosted",
         externalId: null,
       } as any)
 
-      const result = await createLessonVideo(
+      const result = await createVideo(
         makeVideoInput({
           videoUrl: "https://cdn.databayt.org/videos/intro.mp4",
         })
       )
 
       expect(result.success).toBe(true)
-      expect(db.lessonVideo.create).toHaveBeenCalledWith({
+      expect(db.video.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           provider: "self-hosted",
           externalId: null,
@@ -162,13 +162,13 @@ describe("Video Actions", () => {
 
     it("sets isFeatured true and approvalStatus APPROVED", async () => {
       mockDeveloperSession()
-      vi.mocked(db.lessonVideo.create).mockResolvedValue({
+      vi.mocked(db.video.create).mockResolvedValue({
         id: "vid-4",
       } as any)
 
-      await createLessonVideo(makeVideoInput())
+      await createVideo(makeVideoInput())
 
-      expect(db.lessonVideo.create).toHaveBeenCalledWith({
+      expect(db.video.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           isFeatured: true,
           approvalStatus: "APPROVED",
@@ -180,21 +180,21 @@ describe("Video Actions", () => {
     it("requires DEVELOPER role", async () => {
       mockAuthFailure()
 
-      await expect(createLessonVideo(makeVideoInput())).rejects.toThrow(
+      await expect(createVideo(makeVideoInput())).rejects.toThrow(
         "Unauthorized: DEVELOPER role required"
       )
-      expect(db.lessonVideo.create).not.toHaveBeenCalled()
+      expect(db.video.create).not.toHaveBeenCalled()
     })
 
     it("uses session.user.id for userId field", async () => {
       mockDeveloperSession()
-      vi.mocked(db.lessonVideo.create).mockResolvedValue({
+      vi.mocked(db.video.create).mockResolvedValue({
         id: "vid-5",
       } as any)
 
-      await createLessonVideo(makeVideoInput())
+      await createVideo(makeVideoInput())
 
-      expect(db.lessonVideo.create).toHaveBeenCalledWith({
+      expect(db.video.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           userId: "dev-1",
           schoolId: null,
@@ -204,22 +204,22 @@ describe("Video Actions", () => {
   })
 
   // ==========================================================================
-  // getLessonVideos
+  // getVideos
   // ==========================================================================
 
-  describe("getLessonVideos", () => {
+  describe("getVideos", () => {
     it("returns videos for a lesson", async () => {
       mockDeveloperSession()
       const mockVideos = [
         { id: "vid-1", title: "Intro", isFeatured: true },
         { id: "vid-2", title: "Part 2", isFeatured: false },
       ]
-      vi.mocked(db.lessonVideo.findMany).mockResolvedValue(mockVideos as any)
+      vi.mocked(db.video.findMany).mockResolvedValue(mockVideos as any)
 
-      const result = await getLessonVideos("lesson-1")
+      const result = await getVideos("lesson-1")
 
       expect(result).toEqual(mockVideos)
-      expect(db.lessonVideo.findMany).toHaveBeenCalledWith({
+      expect(db.video.findMany).toHaveBeenCalledWith({
         where: { catalogLessonId: "lesson-1" },
         orderBy: [{ isFeatured: "desc" }, { createdAt: "desc" }],
         select: {
@@ -239,11 +239,11 @@ describe("Video Actions", () => {
 
     it("orders by isFeatured desc then createdAt desc", async () => {
       mockDeveloperSession()
-      vi.mocked(db.lessonVideo.findMany).mockResolvedValue([] as any)
+      vi.mocked(db.video.findMany).mockResolvedValue([] as any)
 
-      await getLessonVideos("lesson-1")
+      await getVideos("lesson-1")
 
-      expect(db.lessonVideo.findMany).toHaveBeenCalledWith(
+      expect(db.video.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           orderBy: [{ isFeatured: "desc" }, { createdAt: "desc" }],
         })
@@ -253,30 +253,30 @@ describe("Video Actions", () => {
     it("requires DEVELOPER role", async () => {
       mockAuthFailure()
 
-      await expect(getLessonVideos("lesson-1")).rejects.toThrow(
+      await expect(getVideos("lesson-1")).rejects.toThrow(
         "Unauthorized: DEVELOPER role required"
       )
-      expect(db.lessonVideo.findMany).not.toHaveBeenCalled()
+      expect(db.video.findMany).not.toHaveBeenCalled()
     })
   })
 
   // ==========================================================================
-  // deleteLessonVideo
+  // deleteVideo
   // ==========================================================================
 
-  describe("deleteLessonVideo", () => {
+  describe("deleteVideo", () => {
     it("deletes video from DB", async () => {
       mockDeveloperSession()
-      vi.mocked(db.lessonVideo.findUniqueOrThrow).mockResolvedValue({
+      vi.mocked(db.video.findUniqueOrThrow).mockResolvedValue({
         storageKey: null,
         catalogLessonId: "lesson-1",
       } as any)
-      vi.mocked(db.lessonVideo.delete).mockResolvedValue({} as any)
+      vi.mocked(db.video.delete).mockResolvedValue({} as any)
 
-      const result = await deleteLessonVideo("vid-1")
+      const result = await deleteVideo("vid-1")
 
       expect(result).toEqual({ success: true })
-      expect(db.lessonVideo.delete).toHaveBeenCalledWith({
+      expect(db.video.delete).toHaveBeenCalledWith({
         where: { id: "vid-1" },
       })
       expect(revalidatePath).toHaveBeenCalledWith("/catalog")
@@ -284,48 +284,48 @@ describe("Video Actions", () => {
 
     it("attempts S3 cleanup when storageKey exists", async () => {
       mockDeveloperSession()
-      vi.mocked(db.lessonVideo.findUniqueOrThrow).mockResolvedValue({
+      vi.mocked(db.video.findUniqueOrThrow).mockResolvedValue({
         storageKey: "videos/lesson-1/intro.mp4",
         catalogLessonId: "lesson-1",
       } as any)
-      vi.mocked(db.lessonVideo.delete).mockResolvedValue({} as any)
+      vi.mocked(db.video.delete).mockResolvedValue({} as any)
       mockSend.mockResolvedValue({})
 
-      const result = await deleteLessonVideo("vid-1")
+      const result = await deleteVideo("vid-1")
 
       expect(result).toEqual({ success: true })
-      expect(db.lessonVideo.delete).toHaveBeenCalledWith({
+      expect(db.video.delete).toHaveBeenCalledWith({
         where: { id: "vid-1" },
       })
     })
 
     it("skips S3 cleanup when no storageKey", async () => {
       mockDeveloperSession()
-      vi.mocked(db.lessonVideo.findUniqueOrThrow).mockResolvedValue({
+      vi.mocked(db.video.findUniqueOrThrow).mockResolvedValue({
         storageKey: null,
         catalogLessonId: "lesson-1",
       } as any)
-      vi.mocked(db.lessonVideo.delete).mockResolvedValue({} as any)
+      vi.mocked(db.video.delete).mockResolvedValue({} as any)
 
-      await deleteLessonVideo("vid-1")
+      await deleteVideo("vid-1")
 
       expect(mockSend).not.toHaveBeenCalled()
     })
 
     it("handles S3 failure gracefully — still deletes DB record", async () => {
       mockDeveloperSession()
-      vi.mocked(db.lessonVideo.findUniqueOrThrow).mockResolvedValue({
+      vi.mocked(db.video.findUniqueOrThrow).mockResolvedValue({
         storageKey: "videos/lesson-1/intro.mp4",
         catalogLessonId: "lesson-1",
       } as any)
-      vi.mocked(db.lessonVideo.delete).mockResolvedValue({} as any)
+      vi.mocked(db.video.delete).mockResolvedValue({} as any)
       mockSend.mockRejectedValue(new Error("S3 network error"))
 
-      const result = await deleteLessonVideo("vid-1")
+      const result = await deleteVideo("vid-1")
 
       // Non-critical: DB deletion still happens
       expect(result).toEqual({ success: true })
-      expect(db.lessonVideo.delete).toHaveBeenCalledWith({
+      expect(db.video.delete).toHaveBeenCalledWith({
         where: { id: "vid-1" },
       })
     })
@@ -333,31 +333,31 @@ describe("Video Actions", () => {
     it("requires DEVELOPER role", async () => {
       mockAuthFailure()
 
-      await expect(deleteLessonVideo("vid-1")).rejects.toThrow(
+      await expect(deleteVideo("vid-1")).rejects.toThrow(
         "Unauthorized: DEVELOPER role required"
       )
-      expect(db.lessonVideo.findUniqueOrThrow).not.toHaveBeenCalled()
+      expect(db.video.findUniqueOrThrow).not.toHaveBeenCalled()
     })
   })
 
   // ==========================================================================
-  // toggleLessonVideoFeatured
+  // toggleVideoFeatured
   // ==========================================================================
 
-  describe("toggleLessonVideoFeatured", () => {
+  describe("toggleVideoFeatured", () => {
     it("toggles true to false", async () => {
       mockDeveloperSession()
-      vi.mocked(db.lessonVideo.findUniqueOrThrow).mockResolvedValue({
+      vi.mocked(db.video.findUniqueOrThrow).mockResolvedValue({
         isFeatured: true,
       } as any)
-      vi.mocked(db.lessonVideo.update).mockResolvedValue({
+      vi.mocked(db.video.update).mockResolvedValue({
         isFeatured: false,
       } as any)
 
-      const result = await toggleLessonVideoFeatured("vid-1")
+      const result = await toggleVideoFeatured("vid-1")
 
       expect(result).toEqual({ success: true, isFeatured: false })
-      expect(db.lessonVideo.update).toHaveBeenCalledWith({
+      expect(db.video.update).toHaveBeenCalledWith({
         where: { id: "vid-1" },
         data: { isFeatured: false },
       })
@@ -366,17 +366,17 @@ describe("Video Actions", () => {
 
     it("toggles false to true", async () => {
       mockDeveloperSession()
-      vi.mocked(db.lessonVideo.findUniqueOrThrow).mockResolvedValue({
+      vi.mocked(db.video.findUniqueOrThrow).mockResolvedValue({
         isFeatured: false,
       } as any)
-      vi.mocked(db.lessonVideo.update).mockResolvedValue({
+      vi.mocked(db.video.update).mockResolvedValue({
         isFeatured: true,
       } as any)
 
-      const result = await toggleLessonVideoFeatured("vid-2")
+      const result = await toggleVideoFeatured("vid-2")
 
       expect(result).toEqual({ success: true, isFeatured: true })
-      expect(db.lessonVideo.update).toHaveBeenCalledWith({
+      expect(db.video.update).toHaveBeenCalledWith({
         where: { id: "vid-2" },
         data: { isFeatured: true },
       })
@@ -385,10 +385,10 @@ describe("Video Actions", () => {
     it("requires DEVELOPER role", async () => {
       mockAuthFailure()
 
-      await expect(toggleLessonVideoFeatured("vid-1")).rejects.toThrow(
+      await expect(toggleVideoFeatured("vid-1")).rejects.toThrow(
         "Unauthorized: DEVELOPER role required"
       )
-      expect(db.lessonVideo.findUniqueOrThrow).not.toHaveBeenCalled()
+      expect(db.video.findUniqueOrThrow).not.toHaveBeenCalled()
     })
   })
 })

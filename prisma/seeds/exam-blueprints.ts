@@ -1079,8 +1079,8 @@ export function extractSchoolLevel(slug: string): SchoolLevel {
   if (slug.startsWith("middle-")) return "middle"
   if (slug.startsWith("high-")) return "high"
 
-  // New grade-based slugs: us-math-grade-3
-  const gradeMatch = slug.match(/-grade-(\d+)$/)
+  // Grade-based slugs: us-g3-math, sd-g1-math, gb-g7-math
+  const gradeMatch = slug.match(/-g(\d+)-/)
   if (gradeMatch) {
     const grade = parseInt(gradeMatch[1], 10)
     if (grade <= 6) return "elementary"
@@ -1100,7 +1100,7 @@ export const LESSON_LEVEL_EXAM_TYPES: ExamType[] = ["quiz", "diagnostic"]
 
 /**
  * Questions per level per difficulty.
- * Used when seeding CatalogQuestions.
+ * Used when seeding Questions.
  */
 export const QUESTIONS_PER_SUBJECT = 10 // per subject (spread across difficulties)
 export const QUESTIONS_PER_CHAPTER = 6 // per chapter

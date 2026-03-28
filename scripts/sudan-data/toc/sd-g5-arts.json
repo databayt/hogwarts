@@ -1,0 +1,160 @@
+{
+  "subject": "arts",
+  "subjectNameAr": "التربية الفنية",
+  "grade": 5,
+  "level": "elementary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "الطبعة الأولى 2021م",
+  "chapters": [
+    {
+      "nameAr": "المجال الأول: الرسم",
+      "name": "Domain 1: Drawing",
+      "slug": "drawing",
+      "sequenceOrder": 1,
+      "lessons": [
+        {
+          "nameAr": "الدرس الأول: رسم الأواني المنزلية",
+          "name": "Lesson 1: Drawing Household Utensils",
+          "slug": "drawing-household-utensils",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الدرس الثاني: التدرج اللوني",
+          "name": "Lesson 2: Color Gradation",
+          "slug": "color-gradation",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الدرس الثالث: فرحة العيد",
+          "name": "Lesson 3: Eid Joy",
+          "slug": "eid-joy",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "الدرس الرابع: التراث الشعبي",
+          "name": "Lesson 4: Folk Heritage",
+          "slug": "folk-heritage",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "الدرس الخامس: رسم لمنظر طبيعي",
+          "name": "Lesson 5: Drawing a Landscape",
+          "slug": "drawing-a-landscape",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "الدرس السادس: الطواف حول الكعبة الشريفة",
+          "name": "Lesson 6: Tawaf Around the Kaaba",
+          "slug": "tawaf-around-kaaba",
+          "sequenceOrder": 6
+        },
+        {
+          "nameAr": "الدرس السابع: السوق",
+          "name": "Lesson 7: The Market",
+          "slug": "the-market",
+          "sequenceOrder": 7
+        }
+      ]
+    },
+    {
+      "nameAr": "المجال الثاني: التصميم والزخرفة",
+      "name": "Domain 2: Design and Decoration",
+      "slug": "design-and-decoration",
+      "sequenceOrder": 2,
+      "lessons": [
+        {
+          "nameAr": "الدرس الأول: التصميم الفني",
+          "name": "Lesson 1: Artistic Design",
+          "slug": "artistic-design",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الدرس الثاني: تصميم زخرفي",
+          "name": "Lesson 2: Decorative Design",
+          "slug": "decorative-design",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الدرس الثالث: التداخل بين الأشكال",
+          "name": "Lesson 3: Overlapping Shapes",
+          "slug": "overlapping-shapes",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "الدرس الرابع: تصميم مصلاية أو سجادة الصلاة",
+          "name": "Lesson 4: Designing a Prayer Mat",
+          "slug": "designing-prayer-mat",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "الدرس الخامس: الخطوط العربية",
+          "name": "Lesson 5: Arabic Calligraphy",
+          "slug": "arabic-calligraphy",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "الدرس السادس: الزخرفة النباتية",
+          "name": "Lesson 6: Plant Ornamentation",
+          "slug": "plant-ornamentation",
+          "sequenceOrder": 6
+        },
+        {
+          "nameAr": "الدرس السابع: الزخرفة الهندسية",
+          "name": "Lesson 7: Geometric Ornamentation",
+          "slug": "geometric-ornamentation",
+          "sequenceOrder": 7
+        }
+      ]
+    },
+    {
+      "nameAr": "المجال الثالث: التشكيل والتركيب",
+      "name": "Domain 3: Sculpting and Assembly",
+      "slug": "sculpting-and-assembly",
+      "sequenceOrder": 3,
+      "lessons": [
+        {
+          "nameAr": "الدرس الأول: التشكيل بخامات متنوعة",
+          "name": "Lesson 1: Sculpting with Various Materials",
+          "slug": "sculpting-with-various-materials",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الدرس الثاني: الأصباغ",
+          "name": "Lesson 2: Dyes",
+          "slug": "dyes",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الدرس الثالث: أعمال النسيج الورقي",
+          "name": "Lesson 3: Paper Weaving",
+          "slug": "paper-weaving",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "الدرس الرابع: الطباعة بالبخ (الرش)",
+          "name": "Lesson 4: Spray Printing",
+          "slug": "spray-printing",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "الدرس الخامس: أعمال الطين",
+          "name": "Lesson 5: Clay Work",
+          "slug": "clay-work",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "الدرس السادس: التشكيل بالحبوب",
+          "name": "Lesson 6: Sculpting with Grains",
+          "slug": "sculpting-with-grains",
+          "sequenceOrder": 6
+        },
+        {
+          "nameAr": "الدرس السابع: التشكيل ثلاثي الأبعاد",
+          "name": "Lesson 7: 3D Sculpting",
+          "slug": "3d-sculpting",
+          "sequenceOrder": 7
+        }
+      ]
+    }
+  ]
+}

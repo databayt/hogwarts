@@ -143,6 +143,10 @@ export class LoginPage extends BasePage {
    * Login with credentials
    */
   async login(email: string, password: string): Promise<string> {
+    // Wait for React hydration before interacting with form
+    await this.page.waitForLoadState("load")
+    await this.page.waitForTimeout(500)
+
     await this.fillEmail(email)
     await this.fillPassword(password)
     await this.submit()
@@ -319,6 +323,10 @@ export class SchoolLoginPage extends SchoolBasePage {
    * Login with credentials
    */
   async login(email: string, password: string): Promise<string> {
+    // Wait for React hydration before interacting with form
+    await this.page.waitForLoadState("load")
+    await this.page.waitForTimeout(500)
+
     await this.fillEmail(email)
     await this.fillPassword(password)
     await this.submit()

@@ -59,7 +59,7 @@ export default async function Page({ params }: Props) {
   const isGuardian = role === "GUARDIAN"
   const canEdit = role === "ADMIN" || role === "TEACHER" || role === "DEVELOPER"
 
-  const exam = await db.exam.findUnique({
+  const exam = await db.schoolExam.findUnique({
     where: { id, schoolId },
     include: {
       class: { select: { name: true } },

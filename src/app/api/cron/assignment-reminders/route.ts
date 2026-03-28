@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
     const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000)
 
     // Find assignments due in the next 24 hours (exclude drafts)
-    const upcomingAssignments = await db.assignment.findMany({
+    const upcomingAssignments = await db.schoolAssignment.findMany({
       where: {
         status: { not: "DRAFT" },
         dueDate: {

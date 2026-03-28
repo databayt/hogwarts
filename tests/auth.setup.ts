@@ -33,16 +33,29 @@ const TEST_USERS = {
 
 for (const [role, credentials] of Object.entries(TEST_USERS)) {
   setup(`authenticate as ${role}`, async ({ page }) => {
-    await page.goto("/en/login")
+    await page.goto("/en/login", { timeout: 30_000 })
 
-    // Fill in credentials (inputs use placeholder, not label)
-    await page.getByRole("textbox", { name: /email/i }).fill(credentials.email)
-    await page
-      .getByRole("textbox", { name: /password/i })
-      .fill(credentials.password)
+    // Wait for React to fully hydrate — the login button must be interactive
+    await page.waitForLoadState("load")
+    const loginButton = page.getByRole("button", {
+      name: /sign in|login|log in/i,
+    })
+    await loginButton.waitFor({ state: "visible", timeout: 15_000 })
+
+    // Ensure React hydration is complete by waiting for the button to respond
+    // to focus events (a proxy for event handlers being attached)
+    await page.waitForTimeout(1_000)
+
+    // Fill credentials using fill() — works with React controlled inputs
+    // after hydration is complete
+    const emailInput = page.locator('input[name="email"]')
+    await emailInput.fill(credentials.email)
+    await expect(emailInput).toHaveValue(credentials.email, { timeout: 5_000 })
+
+    await page.locator('input[name="password"]').fill(credentials.password)
 
     // Submit
-    await page.getByRole("button", { name: /sign in|login|log in/i }).click()
+    await loginButton.click()
 
     // Wait for navigation away from login page
     await expect(page).not.toHaveURL(/\/login/, { timeout: 30_000 })

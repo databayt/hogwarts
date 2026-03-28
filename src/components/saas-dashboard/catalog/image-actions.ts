@@ -31,7 +31,7 @@ export async function uploadCatalogThumbnail(
   entityId: string
 ): Promise<{
   status: "success" | "error"
-  thumbnailKey?: string
+  thumbnail?: string
   error?: string
 }> {
   try {
@@ -60,27 +60,27 @@ export async function uploadCatalogThumbnail(
     const key = buildKey(entityType, entityId)
 
     // Process and upload to S3
-    const thumbnailKey = await processAndUploadCatalogImage(buffer, key)
+    const thumbnail = await processAndUploadCatalogImage(buffer, key)
 
     // Store key in database
     if (entityType === "subject") {
-      await db.catalogSubject.update({
+      await db.subject.update({
         where: { id: entityId },
-        data: { thumbnailKey },
+        data: { thumbnail },
       })
     } else if (entityType === "chapter") {
-      await db.catalogChapter.update({
+      await db.chapter.update({
         where: { id: entityId },
-        data: { thumbnailKey },
+        data: { thumbnail },
       })
     } else {
-      await db.catalogLesson.update({
+      await db.lesson.update({
         where: { id: entityId },
-        data: { thumbnailKey },
+        data: { thumbnail },
       })
     }
 
-    return { status: "success", thumbnailKey }
+    return { status: "success", thumbnail }
   } catch (error) {
     console.error("[catalog-image] Upload failed:", error)
     return {
@@ -105,48 +105,48 @@ export async function deleteCatalogThumbnail(
   }
 
   try {
-    // Get current thumbnailKey
-    let thumbnailKey: string | null = null
+    // Get current thumbnail
+    let thumbnail: string | null = null
 
     if (entityType === "subject") {
-      const entity = await db.catalogSubject.findUnique({
+      const entity = await db.subject.findUnique({
         where: { id: entityId },
-        select: { thumbnailKey: true },
+        select: { thumbnail: true },
       })
-      thumbnailKey = entity?.thumbnailKey ?? null
+      thumbnail = entity?.thumbnail ?? null
     } else if (entityType === "chapter") {
-      const entity = await db.catalogChapter.findUnique({
+      const entity = await db.chapter.findUnique({
         where: { id: entityId },
-        select: { thumbnailKey: true },
+        select: { thumbnail: true },
       })
-      thumbnailKey = entity?.thumbnailKey ?? null
+      thumbnail = entity?.thumbnail ?? null
     } else {
-      const entity = await db.catalogLesson.findUnique({
+      const entity = await db.lesson.findUnique({
         where: { id: entityId },
-        select: { thumbnailKey: true },
+        select: { thumbnail: true },
       })
-      thumbnailKey = entity?.thumbnailKey ?? null
+      thumbnail = entity?.thumbnail ?? null
     }
 
-    if (thumbnailKey) {
-      await deleteCatalogImage(thumbnailKey)
+    if (thumbnail) {
+      await deleteCatalogImage(thumbnail)
     }
 
     // Clear from database
     if (entityType === "subject") {
-      await db.catalogSubject.update({
+      await db.subject.update({
         where: { id: entityId },
-        data: { thumbnailKey: null },
+        data: { thumbnail: null },
       })
     } else if (entityType === "chapter") {
-      await db.catalogChapter.update({
+      await db.chapter.update({
         where: { id: entityId },
-        data: { thumbnailKey: null },
+        data: { thumbnail: null },
       })
     } else {
-      await db.catalogLesson.update({
+      await db.lesson.update({
         where: { id: entityId },
-        data: { thumbnailKey: null },
+        data: { thumbnail: null },
       })
     }
 

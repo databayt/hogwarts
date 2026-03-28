@@ -13,7 +13,7 @@ interface DraftApplicationsProps {
   dictionary?: {
     completeYourApplication?: string
     draft?: string
-    step?: string
+    stepLabel?: string
     lastUpdated?: string
     noDrafts?: string
   }
@@ -43,7 +43,7 @@ export function DraftApplications({
             isRTL={isRTL}
             dictionary={{
               draft: dict.draft,
-              step: dict.step,
+              stepLabel: dict.stepLabel,
               lastUpdated: dict.lastUpdated,
             }}
           />

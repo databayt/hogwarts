@@ -19,7 +19,7 @@ export const getCatalogCourse = cache(async function getCatalogCourse(
   schoolId: string | null,
   lang: string = "en"
 ) {
-  const subject = await db.catalogSubject.findFirst({
+  const subject = await db.subject.findFirst({
     where: {
       slug,
       status: "PUBLISHED",
@@ -38,8 +38,7 @@ export const getCatalogCourse = cache(async function getCatalogCourse(
               sequenceOrder: true,
               durationMinutes: true,
               status: true,
-              imageKey: true,
-              thumbnailKey: true,
+              thumbnail: true,
             },
           },
         },
@@ -58,7 +57,7 @@ export const getCatalogCourse = cache(async function getCatalogCourse(
 
   if (schoolId) {
     try {
-      const overrides = await db.schoolContentOverride.findMany({
+      const overrides = await db.contentOverride.findMany({
         where: {
           schoolId,
           isHidden: true,
@@ -98,14 +97,14 @@ export const getCatalogCourse = cache(async function getCatalogCourse(
         where: { catalogSubjectId: subject.id, isActive: true },
       })
       .catch(() => 0),
-    db.catalogExam
+    db.exam
       .count({
         where: { subjectId: subject.id, status: "PUBLISHED" },
       })
       .catch(() => 0),
     // Dynamic creator attribution — find who contributed the most videos
     (allLessonIds.length > 0
-      ? db.lessonVideo
+      ? db.video
           .groupBy({
             by: ["schoolId"],
             where: {
@@ -168,11 +167,7 @@ export const getCatalogCourse = cache(async function getCatalogCourse(
                 position: lesson.sequenceOrder,
                 duration: lesson.durationMinutes,
                 isFree: true,
-                imageUrl: getCatalogImageUrl(
-                  lesson.thumbnailKey,
-                  lesson.imageKey,
-                  "md"
-                ),
+                imageUrl: getCatalogImageUrl(lesson.thumbnail, "md"),
               }))
           ),
         ])
@@ -183,11 +178,7 @@ export const getCatalogCourse = cache(async function getCatalogCourse(
           position: chapter.sequenceOrder,
           isPublished: true,
           isFree: true,
-          imageUrl: getCatalogImageUrl(
-            chapter.thumbnailKey,
-            chapter.imageKey,
-            "sm"
-          ),
+          imageUrl: getCatalogImageUrl(chapter.thumbnail, "sm"),
           color: chapter.color,
           lessons: translatedLessons,
         }
@@ -204,8 +195,7 @@ export const getCatalogCourse = cache(async function getCatalogCourse(
     prerequisites: subject.prerequisites,
     targetAudience: subject.targetAudience,
     imageUrl: getCatalogImageUrl(
-      subject.bannerUrl ?? subject.thumbnailKey,
-      subject.imageKey,
+      subject.banner ?? subject.thumbnail,
       "original"
     ),
     price: subject.price ? Number(subject.price) : null,
@@ -225,9 +215,8 @@ export const getCatalogCourse = cache(async function getCatalogCourse(
     },
     _catalog: {
       color: subject.color,
-      bannerUrl: subject.bannerUrl,
-      imageKey: subject.imageKey,
-      thumbnailKey: subject.thumbnailKey,
+      banner: subject.banner,
+      thumbnail: subject.thumbnail,
       totalChapters: subject.totalChapters,
       totalLessons: subject.totalLessons,
       averageRating: subject.averageRating,

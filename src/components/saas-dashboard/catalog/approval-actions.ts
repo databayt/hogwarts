@@ -12,12 +12,7 @@ import { requireDeveloper } from "@/components/saas-dashboard/lib/operator-auth"
 // Content type mapping
 // ============================================================================
 
-type ContentType =
-  | "CatalogQuestion"
-  | "CatalogMaterial"
-  | "CatalogAssignment"
-  | "CatalogBook"
-  | "LessonVideo"
+type ContentType = "Question" | "Material" | "Assignment" | "Book" | "Video"
 
 // ============================================================================
 // Approve content across all 5 content types
@@ -43,28 +38,28 @@ export async function approveContent(
     }
 
     switch (contentType) {
-      case "CatalogQuestion":
-        await db.catalogQuestion.update({
+      case "Question":
+        await db.question.update({
           where: { id },
           data: approvalData,
         })
         break
-      case "CatalogMaterial":
-        await db.catalogMaterial.update({
+      case "Material":
+        await db.material.update({
           where: { id },
           data: approvalData,
         })
         break
-      case "CatalogAssignment":
-        await db.catalogAssignment.update({
+      case "Assignment":
+        await db.assignment.update({
           where: { id },
           data: approvalData,
         })
         break
-      case "CatalogBook": {
+      case "Book": {
         // Transaction: approve + auto-select into contributor's library + update usage count
         await db.$transaction(async (tx) => {
-          const catalogBook = await tx.catalogBook.update({
+          const catalogBook = await tx.book.update({
             where: { id },
             data: { ...approvalData, status: "PUBLISHED" },
             select: {
@@ -89,7 +84,7 @@ export async function approveContent(
           })
 
           if (catalogBook.contributedSchoolId) {
-            const existingSelection = await tx.schoolBookSelection.findFirst({
+            const existingSelection = await tx.bookSelection.findFirst({
               where: {
                 schoolId: catalogBook.contributedSchoolId,
                 catalogBookId: id,
@@ -97,7 +92,7 @@ export async function approveContent(
             })
 
             if (!existingSelection) {
-              await tx.schoolBookSelection.create({
+              await tx.bookSelection.create({
                 data: {
                   schoolId: catalogBook.contributedSchoolId,
                   catalogBookId: id,
@@ -107,7 +102,7 @@ export async function approveContent(
                 },
               })
 
-              await tx.book.create({
+              await tx.schoolBook.create({
                 data: {
                   schoolId: catalogBook.contributedSchoolId,
                   catalogBookId: id,
@@ -132,10 +127,10 @@ export async function approveContent(
               })
 
               // Usage count inside transaction to prevent race condition
-              const usageCount = await tx.schoolBookSelection.count({
+              const usageCount = await tx.bookSelection.count({
                 where: { catalogBookId: id },
               })
-              await tx.catalogBook.update({
+              await tx.book.update({
                 where: { id },
                 data: { usageCount },
               })
@@ -144,8 +139,8 @@ export async function approveContent(
         })
         break
       }
-      case "LessonVideo":
-        await db.lessonVideo.update({
+      case "Video":
+        await db.video.update({
           where: { id },
           data: {
             approvalStatus: "APPROVED",
@@ -202,32 +197,32 @@ export async function rejectContent(
     }
 
     switch (contentType) {
-      case "CatalogQuestion":
-        await db.catalogQuestion.update({
+      case "Question":
+        await db.question.update({
           where: { id },
           data: rejectionData,
         })
         break
-      case "CatalogMaterial":
-        await db.catalogMaterial.update({
+      case "Material":
+        await db.material.update({
           where: { id },
           data: rejectionData,
         })
         break
-      case "CatalogAssignment":
-        await db.catalogAssignment.update({
+      case "Assignment":
+        await db.assignment.update({
           where: { id },
           data: rejectionData,
         })
         break
-      case "CatalogBook":
-        await db.catalogBook.update({
+      case "Book":
+        await db.book.update({
           where: { id },
           data: rejectionData,
         })
         break
-      case "LessonVideo":
-        await db.lessonVideo.update({
+      case "Video":
+        await db.video.update({
           where: { id },
           data: {
             approvalStatus: "REJECTED",

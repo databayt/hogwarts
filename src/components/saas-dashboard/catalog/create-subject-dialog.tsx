@@ -21,11 +21,7 @@ import { useModal } from "@/components/atom/modal/context"
 import { ModalFooter } from "@/components/atom/modal/modal-footer"
 import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout"
 
-import {
-  createCatalogChapter,
-  createCatalogLesson,
-  createCatalogSubject,
-} from "./actions"
+import { createChapter, createLesson, createSubject } from "./actions"
 
 const STATUS_OPTIONS = [
   "DRAFT",
@@ -177,7 +173,7 @@ export function CreateSubjectForm() {
           formData.append("grades", String(g))
         }
 
-        const result = await createCatalogSubject(formData)
+        const result = await createSubject(formData)
         if (!result.success) {
           toast.error("Failed to create subject")
           return
@@ -196,7 +192,7 @@ export function CreateSubjectForm() {
           chFormData.set("sequenceOrder", String(ci))
           chFormData.set("status", "DRAFT")
 
-          const chResult = await createCatalogChapter(chFormData)
+          const chResult = await createChapter(chFormData)
           if (!chResult.success) continue
 
           // Create lessons for this chapter
@@ -209,7 +205,7 @@ export function CreateSubjectForm() {
             lFormData.set("slug", slugify(lName))
             lFormData.set("sequenceOrder", String(li))
             lFormData.set("status", "DRAFT")
-            await createCatalogLesson(lFormData)
+            await createLesson(lFormData)
           }
         }
 

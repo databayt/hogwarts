@@ -60,7 +60,7 @@ export async function completeOnboarding(
         name: true,
         domain: true,
         country: true,
-        curriculum: true,
+        timetableStructure: true,
         schoolLevel: true,
         schoolType: true,
         preferredLanguage: true,
@@ -102,7 +102,7 @@ async function provisionSchoolDefaults(
   schoolId: string,
   school: {
     country: string | null
-    curriculum: string | null
+    timetableStructure: string | null
     schoolLevel: string | null
     schoolType: string | null
     preferredLanguage: string | null
@@ -139,10 +139,10 @@ async function provisionSchoolDefaults(
   )
 
   // Step 2: Timetable depends on catalog (grades must exist)
-  if (school.curriculum) {
+  if (school.timetableStructure) {
     await applyTimetableStructureForNewSchool(
       schoolId,
-      school.curriculum
+      school.timetableStructure
     ).catch((err) =>
       console.error(
         `[provisionSchoolDefaults] Timetable failed for ${schoolId}:`,

@@ -99,10 +99,9 @@ async function backupSchool(schoolId: string, schoolDomain: string) {
 
     // Backup subject selections
     spinner.text = "Backing up subject selections..."
-    backup.data.subjectSelections =
-      await prisma.schoolSubjectSelection.findMany({
-        where: { schoolId },
-      })
+    backup.data.subjectSelections = await prisma.subjectSelection.findMany({
+      where: { schoolId },
+    })
 
     // Backup attendance (last 90 days)
     spinner.text = "Backing up attendance..."

@@ -49,6 +49,27 @@ export async function getAdmissionSettings(): Promise<
         offerExpiryDays: settings.offerExpiryDays,
         autoEmailNotifications: settings.autoEmailNotifications,
         enableOnlinePayment: settings.enableOnlinePayment,
+        paymentMethods: ((settings.paymentMethods as string[]) ?? [
+          "stripe",
+          "cash",
+        ]) as ("stripe" | "cash" | "bank_transfer")[],
+        bankDetails: settings.bankDetails
+          ? {
+              bankName:
+                (settings.bankDetails as Record<string, string>).bankName ?? "",
+              accountName:
+                (settings.bankDetails as Record<string, string>).accountName ??
+                "",
+              accountNumber:
+                (settings.bankDetails as Record<string, string>)
+                  .accountNumber ?? "",
+              iban: (settings.bankDetails as Record<string, string>).iban ?? "",
+              swiftCode:
+                (settings.bankDetails as Record<string, string>).swiftCode ??
+                "",
+            }
+          : null,
+        cashPaymentInstructions: settings.cashPaymentInstructions ?? null,
         academicWeight: settings.academicWeight,
         entranceWeight: settings.entranceWeight,
         interviewWeight: settings.interviewWeight,
@@ -80,38 +101,29 @@ export async function saveAdmissionSettings(
     // Validate input
     const validated = admissionSettingsSchema.safeParse(data)
     if (!validated.success) {
-      return {
-        success: false,
-        error: validated.error.issues[0]?.message ?? "Invalid data",
-      }
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
 
     // Upsert settings
+    const settingsData = {
+      allowMultipleApplications: validated.data.allowMultipleApplications,
+      requireDocuments: validated.data.requireDocuments,
+      defaultApplicationFee: validated.data.applicationFee || null,
+      offerExpiryDays: validated.data.offerExpiryDays,
+      autoEmailNotifications: validated.data.autoEmailNotifications,
+      enableOnlinePayment: validated.data.enableOnlinePayment,
+      paymentMethods: validated.data.paymentMethods ?? ["stripe", "cash"],
+      bankDetails: validated.data.bankDetails ?? undefined,
+      cashPaymentInstructions: validated.data.cashPaymentInstructions ?? null,
+      academicWeight: validated.data.academicWeight,
+      entranceWeight: validated.data.entranceWeight,
+      interviewWeight: validated.data.interviewWeight,
+    }
+
     await db.admissionSettings.upsert({
       where: { schoolId },
-      create: {
-        schoolId,
-        allowMultipleApplications: validated.data.allowMultipleApplications,
-        requireDocuments: validated.data.requireDocuments,
-        defaultApplicationFee: validated.data.applicationFee || null,
-        offerExpiryDays: validated.data.offerExpiryDays,
-        autoEmailNotifications: validated.data.autoEmailNotifications,
-        enableOnlinePayment: validated.data.enableOnlinePayment,
-        academicWeight: validated.data.academicWeight,
-        entranceWeight: validated.data.entranceWeight,
-        interviewWeight: validated.data.interviewWeight,
-      },
-      update: {
-        allowMultipleApplications: validated.data.allowMultipleApplications,
-        requireDocuments: validated.data.requireDocuments,
-        defaultApplicationFee: validated.data.applicationFee || null,
-        offerExpiryDays: validated.data.offerExpiryDays,
-        autoEmailNotifications: validated.data.autoEmailNotifications,
-        enableOnlinePayment: validated.data.enableOnlinePayment,
-        academicWeight: validated.data.academicWeight,
-        entranceWeight: validated.data.entranceWeight,
-        interviewWeight: validated.data.interviewWeight,
-      },
+      create: { schoolId, ...settingsData },
+      update: settingsData,
     })
 
     revalidatePath("/admission/settings")

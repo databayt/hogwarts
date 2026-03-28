@@ -24,6 +24,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { ErrorToast, SuccessToast } from "@/components/atom/toast"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import {
   getAvailableSectionsForPlacement,
@@ -39,10 +40,17 @@ interface AdmittedStudent {
 
 interface BulkPlacementProps {
   students: AdmittedStudent[]
+  dictionary: Dictionary["school"]["admission"]
   onComplete?: () => void
 }
 
-export function BulkPlacement({ students, onComplete }: BulkPlacementProps) {
+export function BulkPlacement({
+  students,
+  dictionary,
+  onComplete,
+}: BulkPlacementProps) {
+  const t = dictionary?.bulkPlacement
+  const st = dictionary?.status
   const [sections, setSections] = useState<
     Array<{
       id: string
@@ -128,10 +136,19 @@ export function BulkPlacement({ students, onComplete }: BulkPlacementProps) {
       setPlacedCount((prev) => prev + successCount)
 
       if (successCount > 0) {
-        SuccessToast(`${successCount} student(s) placed successfully`)
+        SuccessToast(
+          (
+            t?.placedSuccess || "{count} student(s) placed successfully"
+          ).replace("{count}", String(successCount))
+        )
       }
       if (errorCount > 0) {
-        ErrorToast(`${errorCount} student(s) failed to place`)
+        ErrorToast(
+          (t?.placedFailed || "{count} student(s) failed to place").replace(
+            "{count}",
+            String(errorCount)
+          )
+        )
       }
 
       setSelectedStudents(new Set())
@@ -144,7 +161,8 @@ export function BulkPlacement({ students, onComplete }: BulkPlacementProps) {
       <div className="flex items-center gap-2 rounded-lg border p-4">
         <Check className="text-green-600" />
         <p className="text-sm">
-          All admitted students have been placed in sections.
+          {t?.allPlaced ||
+            "All admitted students have been placed in sections."}
         </p>
       </div>
     )
@@ -154,17 +172,21 @@ export function BulkPlacement({ students, onComplete }: BulkPlacementProps) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="font-medium">Bulk Section Placement</h3>
+          <h3 className="font-medium">
+            {t?.title || "Bulk Section Placement"}
+          </h3>
           <p className="text-muted-foreground text-sm">
-            {unplacedStudents.length} admitted student(s) without section
-            placement
+            {(
+              t?.description ||
+              "{count} admitted student(s) without section placement"
+            ).replace("{count}", String(unplacedStudents.length))}
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <Select value={targetSectionId} onValueChange={setTargetSectionId}>
             <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Target section" />
+              <SelectValue placeholder={t?.targetSection || "Target section"} />
             </SelectTrigger>
             <SelectContent>
               {sections.map((sec) => {
@@ -185,8 +207,11 @@ export function BulkPlacement({ students, onComplete }: BulkPlacementProps) {
             }
           >
             {isPending
-              ? "Placing..."
-              : `Place ${selectedStudents.size} Student(s)`}
+              ? t?.placing || "Placing..."
+              : (t?.placeStudents || "Place {count} Student(s)").replace(
+                  "{count}",
+                  String(selectedStudents.size)
+                )}
           </Button>
         </div>
       </div>
@@ -204,9 +229,9 @@ export function BulkPlacement({ students, onComplete }: BulkPlacementProps) {
                   onCheckedChange={toggleAll}
                 />
               </TableHead>
-              <TableHead>Student</TableHead>
-              <TableHead>Applying For</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>{t?.student || "Student"}</TableHead>
+              <TableHead>{t?.applyingFor || "Applying For"}</TableHead>
+              <TableHead>{dictionary?.columns?.status || "Status"}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -221,7 +246,9 @@ export function BulkPlacement({ students, onComplete }: BulkPlacementProps) {
                 <TableCell>{student.studentName}</TableCell>
                 <TableCell>{student.applyingForClass}</TableCell>
                 <TableCell>
-                  <Badge variant="secondary">Admitted</Badge>
+                  <Badge variant="secondary">
+                    {st?.ADMITTED || "Admitted"}
+                  </Badge>
                 </TableCell>
               </TableRow>
             ))}
@@ -231,7 +258,9 @@ export function BulkPlacement({ students, onComplete }: BulkPlacementProps) {
 
       {placedCount > 0 && (
         <p className="text-muted-foreground text-sm">
-          {placedCount} student(s) placed this session.
+          {(
+            t?.placedThisSession || "{count} student(s) placed this session."
+          ).replace("{count}", String(placedCount))}
         </p>
       )}
     </div>

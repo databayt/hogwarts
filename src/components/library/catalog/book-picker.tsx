@@ -29,9 +29,9 @@ import {
 } from "@/components/ui/select"
 import type { Locale } from "@/components/internationalization/config"
 
-import { deselectCatalogBook, selectCatalogBook } from "./actions"
+import { deselectBook, selectBook } from "./actions"
 
-interface CatalogBook {
+interface Book {
   id: string
   title: string
   slug: string
@@ -58,7 +58,7 @@ interface Selection {
 }
 
 interface Props {
-  books: CatalogBook[]
+  books: Book[]
   selections: Selection[]
   lang: Locale
   canManage?: boolean
@@ -118,7 +118,7 @@ export function BookPicker({
 
   // Group by genre
   const groupedBooks = useMemo(() => {
-    const groups: Record<string, CatalogBook[]> = {}
+    const groups: Record<string, Book[]> = {}
     for (const b of filteredBooks) {
       if (!groups[b.genre]) groups[b.genre] = []
       groups[b.genre].push(b)
@@ -134,7 +134,7 @@ export function BookPicker({
       setOptimisticSelected(newSet)
 
       startTransition(async () => {
-        const result = await deselectCatalogBook(bookId)
+        const result = await deselectBook(bookId)
         if (!result.success) {
           // Revert
           setOptimisticSelected((prev) => new Set([...prev, bookId]))
@@ -165,7 +165,7 @@ export function BookPicker({
     const shelfLocation = shelf.trim() || undefined
 
     startTransition(async () => {
-      const result = await selectCatalogBook(bookId, totalCopies, shelfLocation)
+      const result = await selectBook(bookId, totalCopies, shelfLocation)
       if (!result.success) {
         setOptimisticSelected((prev) => {
           const s = new Set(prev)

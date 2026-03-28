@@ -24,7 +24,7 @@ const NewApplicationOptions: React.FC<NewApplicationOptionsProps> = ({
   dictionary,
   locale,
 }) => {
-  const dict = dictionary?.apply || {}
+  const dict = dictionary?.school?.admission?.portal || {}
   const isRTL = locale === "ar"
   const ChevronIcon = isRTL ? ChevronLeft : ChevronRight
 
@@ -56,7 +56,7 @@ const NewApplicationOptions: React.FC<NewApplicationOptionsProps> = ({
             <div className="min-w-0 flex-1 text-start">
               <h5>{dict.startFromScratch || "Start from scratch"}</h5>
               <p className="muted mt-0.5">
-                {dict.startFromScratchDescription ||
+                {dict.startFromScratchDesc ||
                   "Begin a new application with basic setup"}
               </p>
             </div>
@@ -77,7 +77,7 @@ const NewApplicationOptions: React.FC<NewApplicationOptionsProps> = ({
             <div className="min-w-0 flex-1 text-start">
               <h5>{dict.importFromProfile || "Import from profile"}</h5>
               <p className="muted mt-0.5">
-                {dict.importFromProfileDescription ||
+                {dict.importFromProfileDesc ||
                   "Auto-fill from documents or LinkedIn"}
               </p>
             </div>

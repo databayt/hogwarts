@@ -4,12 +4,15 @@
 /**
  * Catalog Images Seed
  *
- * Uploads ClickView images to S3/CloudFront for each CatalogSubject.
- * Uses the existing processAndUploadCatalogImage pipeline (Sharp → WebP → S3).
+ * @deprecated Superseded by the concept-based image system.
+ * All curricula now share images via concept-images.ts, and each seed
+ * (us-catalog, sd-catalog, world-curricula) sets thumbnail/banner
+ * directly at creation using grade-based concept paths:
+ *   catalog/concepts/g{grade}-{concept}/thumbnail
+ *   catalog/concepts/g{grade}-{concept}/banner
  *
- * Two-phase upload:
- *   1. Curated banners from public/clickview/banners/ (high-quality, hand-picked)
- *   2. Fallback topic images from public/clickview/by-url/ (auto-scraped)
+ * The source directories (public/clickview/banners/, public/clickview/by-url/)
+ * no longer exist on disk. Kept for reference only.
  *
  * Usage: pnpm db:seed:single catalog-images
  */
@@ -123,16 +126,16 @@ export async function seedCatalogImages(prisma: PrismaClient): Promise<void> {
       continue
     }
 
-    const subject = await prisma.catalogSubject.findUnique({
+    const subject = await prisma.subject.findUnique({
       where: { slug },
-      select: { id: true, thumbnailKey: true },
+      select: { id: true, thumbnail: true },
     })
     if (!subject) {
       console.log(`  Skipping ${slug}: not found in database`)
       continue
     }
-    if (subject.thumbnailKey) {
-      console.log(`  Skipping ${slug}: already has thumbnailKey`)
+    if (subject.thumbnail) {
+      console.log(`  Skipping ${slug}: already has thumbnail`)
       processed.add(slug)
       continue
     }
@@ -142,9 +145,9 @@ export async function seedCatalogImages(prisma: PrismaClient): Promise<void> {
 
     try {
       await processAndUploadCatalogImage(fileBuffer, key)
-      await prisma.catalogSubject.update({
+      await prisma.subject.update({
         where: { slug },
-        data: { thumbnailKey: key },
+        data: { thumbnail: key },
       })
       uploadCount++
       console.log(`  Uploaded ${slug} (banner: ${filename})`)
@@ -169,9 +172,9 @@ export async function seedCatalogImages(prisma: PrismaClient): Promise<void> {
     }
 
     // Check subject exists
-    const subject = await prisma.catalogSubject.findUnique({
+    const subject = await prisma.subject.findUnique({
       where: { slug },
-      select: { id: true, thumbnailKey: true },
+      select: { id: true, thumbnail: true },
     })
     if (!subject) {
       console.log(`  Skipping ${slug}: not found in database`)
@@ -179,8 +182,8 @@ export async function seedCatalogImages(prisma: PrismaClient): Promise<void> {
     }
 
     // Skip if already has a thumbnail
-    if (subject.thumbnailKey) {
-      console.log(`  Skipping ${slug}: already has thumbnailKey`)
+    if (subject.thumbnail) {
+      console.log(`  Skipping ${slug}: already has thumbnail`)
       processed.add(slug)
       continue
     }
@@ -190,9 +193,9 @@ export async function seedCatalogImages(prisma: PrismaClient): Promise<void> {
 
     try {
       await processAndUploadCatalogImage(fileBuffer, key)
-      await prisma.catalogSubject.update({
+      await prisma.subject.update({
         where: { slug },
-        data: { thumbnailKey: key },
+        data: { thumbnail: key },
       })
       uploadCount++
       console.log(`  Uploaded ${slug} (${path.basename(imagePath)})`)
@@ -269,16 +272,16 @@ export async function seedCatalogImages(prisma: PrismaClient): Promise<void> {
       continue
     }
 
-    const subject = await prisma.catalogSubject.findUnique({
+    const subject = await prisma.subject.findUnique({
       where: { slug },
-      select: { id: true, thumbnailKey: true },
+      select: { id: true, thumbnail: true },
     })
     if (!subject) {
       console.log(`  Skipping ${slug}: not found in database`)
       continue
     }
-    if (subject.thumbnailKey) {
-      console.log(`  Skipping ${slug}: already has thumbnailKey`)
+    if (subject.thumbnail) {
+      console.log(`  Skipping ${slug}: already has thumbnail`)
       processed.add(slug)
       continue
     }
@@ -289,9 +292,9 @@ export async function seedCatalogImages(prisma: PrismaClient): Promise<void> {
 
     try {
       await processAndUploadCatalogImage(fileBuffer, key)
-      await prisma.catalogSubject.update({
+      await prisma.subject.update({
         where: { slug },
-        data: { thumbnailKey: key },
+        data: { thumbnail: key },
       })
       uploadCount++
       console.log(`  Uploaded ${slug} (${fileName})`)
@@ -316,9 +319,9 @@ export async function seedCatalogImages(prisma: PrismaClient): Promise<void> {
       continue
     }
 
-    const subject = await prisma.catalogSubject.findUnique({
+    const subject = await prisma.subject.findUnique({
       where: { slug },
-      select: { id: true, bannerUrl: true },
+      select: { id: true, banner: true },
     })
     if (!subject) {
       console.log(`  Skipping banner ${slug}: not found in database`)
@@ -326,7 +329,7 @@ export async function seedCatalogImages(prisma: PrismaClient): Promise<void> {
     }
 
     // Skip if already has an S3 banner key (not a local path)
-    if (subject.bannerUrl && !subject.bannerUrl.startsWith("/")) {
+    if (subject.banner && !subject.banner.startsWith("/")) {
       console.log(`  Skipping banner ${slug}: already has S3 key`)
       continue
     }
@@ -336,9 +339,9 @@ export async function seedCatalogImages(prisma: PrismaClient): Promise<void> {
 
     try {
       await processAndUploadCatalogImage(fileBuffer, key)
-      await prisma.catalogSubject.update({
+      await prisma.subject.update({
         where: { slug },
-        data: { bannerUrl: key },
+        data: { banner: key },
       })
       bannerUploadCount++
       console.log(`  Uploaded banner ${slug} (${filename})`)

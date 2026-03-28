@@ -1,0 +1,80 @@
+// Document — unified file registry for all document types (NO schoolId)
+// PDFs, presentations, spreadsheets, audio, and more
+// Follows the hierarchy attachment pattern (subject + chapter? + lesson?)
+//
+// Usage examples:
+//   documentType="TEXTBOOK_PDF"   → Official textbook PDF for a subject
+//   documentType="EXAM_PAPER"     → Exam paper PDF at chapter/lesson level
+//   documentType="WORKSHEET"      → Practice worksheet (PDF/DOCX)
+//   documentType="PRESENTATION"   → Lesson slides (PPTX/PDF)
+//   documentType="SYLLABUS"       → Subject syllabus
+//   documentType="GUIDE"          → Study guide / lab manual
+//   documentType="AUDIO"          → Language lesson, recitation (MP3/WAV)
+//   documentType="ANSWER_KEY"     → Exam answer key PDF
+//   documentType="REPORT_CARD"    → Report template
+//   documentType="CERTIFICATE"    → Certificate template
+//   documentType="OTHER"          → Catch-all
+
+model Document {
+  id        String  @id @default(cuid())
+  subjectId String?
+  chapterId String?
+  lessonId  String?
+
+  title        String
+  slug         String
+  lang         String  @default("ar")
+  description  String? @db.Text
+  documentType String  // TEXTBOOK_PDF, EXAM_PAPER, WORKSHEET, PRESENTATION, SYLLABUS, GUIDE, AUDIO, ANSWER_KEY, REPORT_CARD, CERTIFICATE, OTHER
+
+  // File storage (unified for all types)
+  fileKey  String  // S3 key
+  fileUrl  String? // Public CDN URL
+  fileSize Int?    // bytes
+  mimeType String  // application/pdf, application/vnd.openxmlformats-officedocument.*, audio/mpeg, etc.
+
+  // PDF-specific (null for non-PDFs)
+  pageCount Int?
+  tocData   Json? // Extracted table of contents
+
+  // Generated assets
+  thumbnailKey String? // Cover/preview image (WebP)
+  coverColor   String?
+  previewUrl   String? // Online preview link (Google Viewer, etc.)
+
+  // Search/discovery
+  grades Int[]         @default([])
+  levels SchoolLevel[]
+  tags   String[]      @default([])
+  status ContentStatus @default(PUBLISHED)
+
+  // Contribution pattern
+  contributedBy       String?
+  contributedSchoolId String?
+  approvalStatus      ApprovalStatus    @default(PENDING)
+  visibility          ContentVisibility @default(PUBLIC)
+
+  // Engagement metrics
+  usageCount    Int @default(0)
+  downloadCount Int @default(0)
+  viewCount     Int @default(0)
+
+  // Relations
+  subject Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  chapter Chapter? @relation(fields: [chapterId], references: [id], onDelete: SetNull)
+  lesson  Lesson?  @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([subjectId, slug])
+  @@index([subjectId])
+  @@index([chapterId])
+  @@index([lessonId])
+  @@index([documentType])
+  @@index([mimeType])
+  @@index([status])
+  @@index([approvalStatus, visibility])
+  @@index([contributedBy])
+  @@map("catalog_documents")
+}

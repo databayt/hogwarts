@@ -10,6 +10,7 @@ import { useLocale } from "@/components/internationalization/use-locale"
 
 import { useApplySession } from "../application-context"
 import type { LocationStepData } from "../types"
+import { getApplyStepDict } from "../utils"
 import { useApplyValidation } from "../validation-context"
 import { LOCATION_STEP_CONFIG } from "./config"
 import { LocationForm } from "./form"
@@ -22,8 +23,7 @@ interface Props {
 export default function LocationContent({ dictionary }: Props) {
   const params = useParams()
   const router = useRouter()
-  const { locale } = useLocale()
-  const isRTL = locale === "ar"
+  const { locale, isRTL } = useLocale()
   const id = params.id as string
 
   const { enableNext, disableNext, setCustomNavigation } = useApplyValidation()
@@ -31,6 +31,9 @@ export default function LocationContent({ dictionary }: Props) {
   const locationFormRef = useRef<LocationFormRef>(null)
 
   const initialData = getStepData("location")
+
+  // Location doesn't have a dedicated step in the dictionary steps, use config fallback
+  const stepDict = getApplyStepDict(dictionary, "location")
 
   const onNext = useCallback(async () => {
     if (locationFormRef.current) {
@@ -70,8 +73,10 @@ export default function LocationContent({ dictionary }: Props) {
   return (
     <FormLayout>
       <FormHeading
-        title={LOCATION_STEP_CONFIG.label(isRTL)}
-        description={LOCATION_STEP_CONFIG.description(isRTL)}
+        title={stepDict.title || LOCATION_STEP_CONFIG.label(isRTL)}
+        description={
+          stepDict.description || LOCATION_STEP_CONFIG.description(isRTL)
+        }
       />
       <LocationForm
         ref={locationFormRef}

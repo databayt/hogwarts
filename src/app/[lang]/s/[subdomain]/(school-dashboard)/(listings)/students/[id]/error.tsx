@@ -8,6 +8,7 @@ import Link from "next/link"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Icons } from "@/components/icons"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface ErrorProps {
   error: Error & { digest?: string }
@@ -15,6 +16,9 @@ interface ErrorProps {
 }
 
 export default function StudentDetailError({ error, reset }: ErrorProps) {
+  const { dictionary } = useDictionary()
+  const d = (dictionary?.school as any)?.students?.errorBoundary
+
   useEffect(() => {
     console.error("Student detail page error:", error)
   }, [error])
@@ -23,12 +27,17 @@ export default function StudentDetailError({ error, reset }: ErrorProps) {
     <div className="grid gap-8">
       <Alert variant="destructive">
         <Icons.alertCircle className="h-4 w-4" />
-        <AlertTitle>Unable to load student details</AlertTitle>
+        <AlertTitle>
+          {d?.detailTitle || "Unable to load student details"}
+        </AlertTitle>
         <AlertDescription className="mt-2 space-y-2">
-          <p>An unexpected error occurred while loading the student details.</p>
+          <p>
+            {d?.detailDescription ||
+              "An unexpected error occurred while loading the student details."}
+          </p>
           {error.digest && (
             <p className="text-muted-foreground text-xs">
-              Error reference: {error.digest}
+              {d?.errorRef || "Error reference"}: {error.digest}
             </p>
           )}
         </AlertDescription>
@@ -37,12 +46,12 @@ export default function StudentDetailError({ error, reset }: ErrorProps) {
       <div className="flex gap-4">
         <Button onClick={reset} variant="outline" className="gap-2">
           <Icons.refresh className="h-4 w-4" />
-          Try again
+          {d?.tryAgain || "Try again"}
         </Button>
         <Button variant="ghost" asChild className="gap-2">
           <Link href="../">
             <Icons.arrowLeft className="h-4 w-4" />
-            Back to students
+            {d?.backToStudents || "Back to students"}
           </Link>
         </Button>
       </div>

@@ -1,0 +1,56 @@
+{
+  "subject": "french",
+  "subjectNameAr": "اللغة الفرنسية",
+  "grade": 10,
+  "level": "secondary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "",
+  "chapters": [
+    {
+      "nameAr": "الوحدة الأولى: أنا اسمي",
+      "name": "Module 1: ALLONS-Y!",
+      "slug": "module-1-allons-y",
+      "sequenceOrder": 1,
+      "lessons": [
+        {
+          "nameAr": "تعليمات الفصل",
+          "name": "Consignes de classe",
+          "slug": "consignes-de-classe",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الوحدة 1: أنا اسمي",
+          "name": "Unité 1: Je m'appelle",
+          "slug": "unite-1-je-mappelle",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الوحدة 2: من هذا؟",
+          "name": "Unité 2: Qui c'est ?",
+          "slug": "unite-2-qui-cest",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "الوحدة 3: أحب، لا أحب",
+          "name": "Unité 3: J'aime, je n'aime pas",
+          "slug": "unite-3-jaime-je-naime-pas",
+          "sequenceOrder": 4
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة الثانية",
+      "name": "Module 2",
+      "slug": "module-2",
+      "sequenceOrder": 2,
+      "lessons": [
+        {
+          "nameAr": "الوحدة 4: هذه عائلتي",
+          "name": "Unité 4: Voici ma famille",
+          "slug": "unite-4-voici-ma-famille",
+          "sequenceOrder": 1
+        }
+      ]
+    }
+  ]
+}

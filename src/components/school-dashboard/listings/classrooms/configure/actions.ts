@@ -298,7 +298,7 @@ export async function generateSections(
 }
 
 /**
- * Bulk generate Class records for a grade based on SchoolSubjectSelection.
+ * Bulk generate Class records for a grade based on SubjectSelection.
  * Each selection becomes a Class record (subject x grade x term).
  */
 export async function generateClassesForGrade(
@@ -408,7 +408,7 @@ export async function generateClassesForGrade(
       })
       if (!grade) continue
 
-      const selections = await db.schoolSubjectSelection.findMany({
+      const selections = await db.subjectSelection.findMany({
         where: { schoolId, gradeId, isActive: true },
         include: {
           subject: { select: { id: true, name: true } },

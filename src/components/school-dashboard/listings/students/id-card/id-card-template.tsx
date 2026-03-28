@@ -15,12 +15,14 @@ interface IDCardTemplateProps {
   data: IDCardData
   template: IDCardTemplate
   side?: "front" | "back"
+  dictionary?: any
 }
 
 export const IDCardTemplateComponent = forwardRef<
   HTMLDivElement,
   IDCardTemplateProps
->(({ data, template, side = "front" }, ref) => {
+>(({ data, template, side = "front", dictionary }, ref) => {
+  const d = dictionary?.school?.students?.idCard?.template
   const barcodeRef = useRef<SVGSVGElement>(null)
 
   useEffect(() => {
@@ -116,16 +118,16 @@ export const IDCardTemplateComponent = forwardRef<
 
             <div style={{ fontSize: "9px", color: "#444", lineHeight: 1.4 }}>
               <p style={{ margin: "1mm 0" }}>
-                <strong>Class:</strong> {data.class}{" "}
+                <strong>{d?.class || "Class"}:</strong> {data.class}{" "}
                 {data.section && `- ${data.section}`}
               </p>
               <p style={{ margin: "1mm 0" }}>
-                <strong>DOB:</strong>{" "}
+                <strong>{d?.dob || "DOB"}:</strong>{" "}
                 {format(new Date(data.dateOfBirth), "dd/MM/yyyy")}
               </p>
               {data.bloodGroup && (
                 <p style={{ margin: "1mm 0" }}>
-                  <strong>Blood:</strong> {data.bloodGroup}
+                  <strong>{d?.blood || "Blood"}:</strong> {data.bloodGroup}
                 </p>
               )}
             </div>
@@ -143,7 +145,8 @@ export const IDCardTemplateComponent = forwardRef<
             fontSize: "10px",
           }}
         >
-          <strong>Academic Year:</strong> {data.academicYear}
+          <strong>{d?.academicYear || "Academic Year"}:</strong>{" "}
+          {data.academicYear}
         </div>
 
         {/* Barcode */}
@@ -177,7 +180,8 @@ export const IDCardTemplateComponent = forwardRef<
             color: "#999",
           }}
         >
-          Issued: {format(new Date(data.issueDate), "MMM yyyy")}
+          {d?.issued || "Issued"}:{" "}
+          {format(new Date(data.issueDate), "MMM yyyy")}
         </div>
       </div>
     )
@@ -196,7 +200,7 @@ export const IDCardTemplateComponent = forwardRef<
           }}
         >
           <h4 style={{ fontSize: "12px", fontWeight: "bold", margin: 0 }}>
-            STUDENT ID CARD
+            {d?.studentIdCard || "STUDENT ID CARD"}
           </h4>
         </div>
 
@@ -211,16 +215,17 @@ export const IDCardTemplateComponent = forwardRef<
               marginTop: 0,
             }}
           >
-            Contact Information
+            {d?.contactInformation || "Contact Information"}
           </h5>
           {data.mobileNumber && (
             <p style={{ margin: "1mm 0" }}>
-              <strong>Mobile:</strong> {data.mobileNumber}
+              <strong>{d?.mobile || "Mobile"}:</strong> {data.mobileNumber}
             </p>
           )}
           {data.emergencyContact && (
             <p style={{ margin: "1mm 0" }}>
-              <strong>Emergency:</strong> {data.emergencyContact}
+              <strong>{d?.emergency || "Emergency"}:</strong>{" "}
+              {data.emergencyContact}
             </p>
           )}
         </div>
@@ -243,13 +248,17 @@ export const IDCardTemplateComponent = forwardRef<
               margin: "0 0 2mm 0",
             }}
           >
-            School Contact
+            {d?.schoolContact || "School Contact"}
           </h5>
           {data.schoolPhone && (
-            <p style={{ margin: "1mm 0" }}>Tel: {data.schoolPhone}</p>
+            <p style={{ margin: "1mm 0" }}>
+              {d?.tel || "Tel"}: {data.schoolPhone}
+            </p>
           )}
           {data.schoolWebsite && (
-            <p style={{ margin: "1mm 0" }}>Web: {data.schoolWebsite}</p>
+            <p style={{ margin: "1mm 0" }}>
+              {d?.web || "Web"}: {data.schoolWebsite}
+            </p>
           )}
         </div>
 
@@ -265,13 +274,14 @@ export const IDCardTemplateComponent = forwardRef<
           }}
         >
           <p style={{ margin: "1mm 0", fontStyle: "italic" }}>
-            • This card must be carried at all times
+            • {d?.carryAtAllTimes || "This card must be carried at all times"}
           </p>
           <p style={{ margin: "1mm 0", fontStyle: "italic" }}>
-            • If found, please return to school
+            • {d?.returnToSchool || "If found, please return to school"}
           </p>
           <p style={{ margin: "1mm 0", fontStyle: "italic" }}>
-            • Valid until: {format(new Date(data.validUntil), "MMM yyyy")}
+            • {d?.validUntil || "Valid until"}:{" "}
+            {format(new Date(data.validUntil), "MMM yyyy")}
           </p>
         </div>
 
@@ -292,7 +302,7 @@ export const IDCardTemplateComponent = forwardRef<
               paddingTop: "1mm",
             }}
           >
-            Principal Signature
+            {d?.principalSignature || "Principal Signature"}
           </div>
         </div>
 
@@ -307,7 +317,8 @@ export const IDCardTemplateComponent = forwardRef<
               color: "#999",
             }}
           >
-            Card #{data.cardNumber}
+            {d?.cardNumber || "Card #"}
+            {data.cardNumber}
           </div>
         )}
       </div>

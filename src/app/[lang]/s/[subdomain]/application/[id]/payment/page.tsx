@@ -19,6 +19,7 @@ interface Props {
   searchParams: Promise<{
     number?: string
     cancelled?: string
+    token?: string
   }>
 }
 
@@ -27,6 +28,12 @@ export default async function PaymentPage({ params, searchParams }: Props) {
   const resolvedSearch = await searchParams
 
   const { subdomain, id: applicationId, lang } = resolvedParams
+  const accessToken = resolvedSearch.token
+
+  // Access token is required to prevent IDOR attacks
+  if (!accessToken) {
+    notFound()
+  }
 
   // Resolve school
   const schoolResult = await getSchoolBySubdomain(subdomain)
@@ -38,12 +45,14 @@ export default async function PaymentPage({ params, searchParams }: Props) {
   const currency = schoolResult.data.currency ?? "USD"
 
   // Fetch application + campaign fee from DB (never trust URL params for these)
+  // accessToken in where clause ensures the caller owns this application
   const application = await db.application.findFirst({
-    where: { id: applicationId, schoolId },
+    where: { id: applicationId, schoolId, accessToken },
     select: {
       id: true,
       applicationNumber: true,
       applicationFeePaid: true,
+      accessToken: true,
       status: true,
       campaign: {
         select: { applicationFee: true },
@@ -87,13 +96,20 @@ export default async function PaymentPage({ params, searchParams }: Props) {
   // Resolve available payment gateways from admission settings
   const settings = await db.admissionSettings.findUnique({
     where: { schoolId },
-    select: { paymentMethods: true },
+    select: { paymentMethods: true, enableOnlinePayment: true },
   })
 
   const defaultMethods = ["stripe", "cash"]
-  const methods = Array.isArray(settings?.paymentMethods)
+  let methods = Array.isArray(settings?.paymentMethods)
     ? (settings.paymentMethods as string[])
     : defaultMethods
+
+  // When online payment is disabled, filter out electronic gateways
+  if (!settings?.enableOnlinePayment) {
+    methods = methods.filter((m) => m !== "stripe" && m !== "tap")
+    // Ensure at least cash is available
+    if (methods.length === 0) methods = ["cash"]
+  }
 
   const dictionary = await getDictionary(lang)
 
@@ -101,6 +117,7 @@ export default async function PaymentPage({ params, searchParams }: Props) {
     <PaymentContent
       applicationNumber={resolvedSearch.number ?? application.applicationNumber}
       applicationId={application.id}
+      accessToken={accessToken}
       fee={fee}
       currency={currency}
       methods={methods}

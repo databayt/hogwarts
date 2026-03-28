@@ -16,7 +16,7 @@ export async function getExamSchedule(
     const { schoolId } = await getTenantContext()
     if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
-    const exam = await db.exam.findFirst({
+    const exam = await db.schoolExam.findFirst({
       where: { id: examId, schoolId },
       select: {
         examDate: true,
@@ -61,7 +61,7 @@ export async function updateExamSchedule(
 
     const parsed = scheduleSchema.parse(input)
 
-    await db.exam.updateMany({
+    await db.schoolExam.updateMany({
       where: { id: examId, schoolId },
       data: {
         examDate: parsed.examDate,

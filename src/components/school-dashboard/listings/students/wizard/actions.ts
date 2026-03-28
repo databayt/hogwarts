@@ -16,7 +16,8 @@ import type { StudentWizardData } from "./use-student-wizard"
 export async function getStudentForWizard(
   studentId: string
 ): Promise<
-  { success: true; data: StudentWizardData } | { success: false; error: string }
+  | { success: true; data: StudentWizardData }
+  | { success: false; error: string; details?: string }
 > {
   try {
     const { schoolId } = await getTenantContext()
@@ -36,6 +37,12 @@ export async function getStudentForWizard(
               campaign: { select: { name: true, academicYear: true } },
             },
           },
+          studentGuardians: {
+            include: {
+              guardian: true,
+              guardianType: true,
+            },
+          },
         },
       }),
       db.school.findUnique({
@@ -51,13 +58,23 @@ export async function getStudentForWizard(
       data: {
         ...(student as unknown as StudentWizardData),
         nameFormat: school?.nameFormat ?? "full",
+        guardians: (student.studentGuardians || []).map((sg) => ({
+          guardianId: sg.guardianId,
+          firstName: sg.guardian.firstName,
+          lastName: sg.guardian.lastName,
+          typeName: sg.guardianType.name,
+          isPrimary: sg.isPrimary,
+          phone: null,
+          email: sg.guardian.emailAddress,
+          occupation: sg.occupation,
+        })),
       },
     }
   } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to load student",
-    }
+    return actionError(
+      ACTION_ERRORS.LOAD_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -89,11 +106,10 @@ export async function createDraftStudent(): Promise<
 
     return { success: true, data: { id: student.id } }
   } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to create student",
-    }
+    return actionError(
+      ACTION_ERRORS.STUDENT_CREATE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -123,10 +139,7 @@ export async function completeStudentWizard(
     }
 
     if (!student.firstName || !student.lastName) {
-      return {
-        success: false,
-        error: "Name is required before completing",
-      }
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
 
     await db.student.updateMany({
@@ -137,13 +150,10 @@ export async function completeStudentWizard(
     revalidatePath("/students")
     return { success: true }
   } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to complete student wizard",
-    }
+    return actionError(
+      ACTION_ERRORS.STUDENT_UPDATE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -196,12 +206,9 @@ export async function deleteDraftStudent(
 
     return { success: true }
   } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to delete draft student",
-    }
+    return actionError(
+      ACTION_ERRORS.STUDENT_DELETE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }

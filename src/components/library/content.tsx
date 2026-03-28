@@ -48,14 +48,14 @@ export default async function LibraryContent({
   }
 
   // Get hidden book IDs for this school (books explicitly deactivated)
-  const hiddenSelections = await db.schoolBookSelection.findMany({
+  const hiddenSelections = await db.bookSelection.findMany({
     where: { schoolId, isActive: false },
     select: { catalogBookId: true },
   })
   const hiddenBookIds = new Set(hiddenSelections.map((s) => s.catalogBookId))
 
   // Query global catalog books (visible to all schools)
-  const catalogBooks = await db.catalogBook.findMany({
+  const catalogBooks = await db.schoolBook.findMany({
     where: {
       ...CATALOG_VISIBLE,
       ...(hiddenBookIds.size > 0
@@ -75,7 +75,7 @@ export default async function LibraryContent({
     },
   })
 
-  // Map CatalogBook to the shape BookCard/BookList expects
+  // Map Book to the shape BookCard/BookList expects
   const books = catalogBooks.map((cb) => ({
     id: cb.id,
     title: cb.title,

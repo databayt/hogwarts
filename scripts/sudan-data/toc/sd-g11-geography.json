@@ -1,0 +1,138 @@
+{
+  "subject": "geography",
+  "subjectNameAr": "الجغرافيا والدراسات البيئية",
+  "grade": 11,
+  "level": "secondary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "الطبعة المنقحة 2012م",
+  "chapters": [
+    {
+      "nameAr": "الوحدة الأولى: الأسس البشرية للجغرافيا",
+      "name": "Unit 1: Human Foundations of Geography",
+      "slug": "human-foundations-geography",
+      "sequenceOrder": 1,
+      "lessons": [
+        {
+          "nameAr": "ديناميكية السكان",
+          "name": "Population Dynamics",
+          "slug": "population-dynamics",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "تركيب السكان",
+          "name": "Population Structure",
+          "slug": "population-structure",
+          "sequenceOrder": 2
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة الثانية: خرائط التوزيعات",
+      "name": "Unit 2: Distribution Maps",
+      "slug": "distribution-maps",
+      "sequenceOrder": 2,
+      "lessons": [
+        {
+          "nameAr": "تمرين مراجعة",
+          "name": "Review Exercise",
+          "slug": "review-exercise",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الأشكال البيانية",
+          "name": "Graphical Forms",
+          "slug": "graphical-forms",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "خرائط التوزيعات",
+          "name": "Distribution Maps",
+          "slug": "distribution-maps-lesson",
+          "sequenceOrder": 3
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة الثالثة: الجغرافيا الإقليمية",
+      "name": "Unit 3: Regional Geography",
+      "slug": "regional-geography",
+      "sequenceOrder": 3,
+      "lessons": [
+        {
+          "nameAr": "الجغرافيا الإقليمية",
+          "name": "Regional Geography",
+          "slug": "regional-geography-intro",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "أقاليم جغرافية مختارة",
+          "name": "Selected Geographic Regions",
+          "slug": "selected-geographic-regions",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "قارة آسيا",
+          "name": "Continent of Asia",
+          "slug": "continent-asia",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "قارة أوروبا",
+          "name": "Continent of Europe",
+          "slug": "continent-europe",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "قارة أمريكا الشمالية",
+          "name": "Continent of North America",
+          "slug": "continent-north-america",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "قارة إفريقيا",
+          "name": "Continent of Africa",
+          "slug": "continent-africa",
+          "sequenceOrder": 6
+        },
+        {
+          "nameAr": "قارة أمريكا الجنوبية",
+          "name": "Continent of South America",
+          "slug": "continent-south-america",
+          "sequenceOrder": 7
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة الرابعة: جغرافية السودان",
+      "name": "Unit 4: Geography of Sudan",
+      "slug": "geography-sudan",
+      "sequenceOrder": 4,
+      "lessons": [
+        {
+          "nameAr": "جغرافية السودان - الأساس الطبيعي",
+          "name": "Geography of Sudan - Natural Foundations",
+          "slug": "sudan-natural-foundations",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "سكان السودان",
+          "name": "Population of Sudan",
+          "slug": "population-sudan",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "النشاط الاقتصادي",
+          "name": "Economic Activity",
+          "slug": "economic-activity",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "مشكلات السودان البيئية",
+          "name": "Environmental Problems of Sudan",
+          "slug": "environmental-problems-sudan",
+          "sequenceOrder": 4
+        }
+      ]
+    }
+  ]
+}

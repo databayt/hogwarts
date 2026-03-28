@@ -65,6 +65,7 @@ export function StudentRegistrationForm({
   onCancel,
   dictionary,
 }: StudentRegistrationFormProps) {
+  const reg = dictionary?.school?.students?.registration?.form
   const [currentStep, setCurrentStep] = useState(0)
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set())
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -140,8 +141,10 @@ export function StudentRegistrationForm({
 
       if (result.success) {
         toast({
-          title: isEdit ? "Student Updated" : "Student Registered",
-          description: `${data.firstName} ${data.lastName} has been successfully ${isEdit ? "updated" : "registered"}.`,
+          title: isEdit
+            ? reg?.studentUpdated || "Student Updated"
+            : reg?.studentRegistered || "Student Registered",
+          description: `${data.firstName} ${data.lastName} ${isEdit ? reg?.successDescription?.replace("{name}", "").replace("{action}", reg?.updated || "updated") || "has been successfully updated" : reg?.successDescription?.replace("{name}", "").replace("{action}", reg?.registered || "registered") || "has been successfully registered"}.`,
         })
 
         if (onSuccess && result.data) {
@@ -151,14 +154,17 @@ export function StudentRegistrationForm({
         }
       } else {
         toast({
-          title: "Error",
-          description: result.error || "Failed to register student",
+          title: reg?.error || "Error",
+          description:
+            result.error ||
+            reg?.failedToRegister ||
+            "Failed to register student",
         })
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "An unexpected error occurred",
+        title: reg?.error || "Error",
+        description: reg?.unexpectedError || "An unexpected error occurred",
       })
     } finally {
       setIsSubmitting(false)
@@ -169,8 +175,10 @@ export function StudentRegistrationForm({
     const data = form.getValues()
     // TODO: Implement save draft functionality
     toast({
-      title: "Progress Saved",
-      description: "Your progress has been saved. You can continue later.",
+      title: reg?.progressSaved || "Progress Saved",
+      description:
+        reg?.progressSavedDescription ||
+        "Your progress has been saved. You can continue later.",
     })
   }
 
@@ -180,9 +188,14 @@ export function StudentRegistrationForm({
       <div className="space-y-2">
         <div className="text-muted-foreground flex justify-between text-sm">
           <span>
-            Step {currentStep + 1} of {totalSteps}
+            {reg?.stepOf
+              ?.replace("{current}", String(currentStep + 1))
+              .replace("{total}", String(totalSteps)) ||
+              `Step ${currentStep + 1} of ${totalSteps}`}
           </span>
-          <span>{Math.round(progress)}% Complete</span>
+          <span>
+            {Math.round(progress)}% {reg?.complete || "Complete"}
+          </span>
         </div>
         <Progress value={progress} className="h-2" />
       </div>
@@ -233,7 +246,8 @@ export function StudentRegistrationForm({
             <CardHeader>
               <CardTitle>{currentStepConfig.title}</CardTitle>
               <CardDescription>
-                {isEdit ? "Update" : "Enter"} the student's{" "}
+                {isEdit ? reg?.update || "Update" : reg?.enter || "Enter"}{" "}
+                {reg?.theStudents || "the student's"}{" "}
                 {currentStepConfig.title.toLowerCase()}
               </CardDescription>
             </CardHeader>
@@ -251,12 +265,12 @@ export function StudentRegistrationForm({
                     onClick={handlePrevious}
                   >
                     <Icons.chevronLeft className="me-1 h-4 w-4" />
-                    Previous
+                    {reg?.previous || "Previous"}
                   </Button>
                 )}
 
                 <Button type="button" variant="outline" onClick={onCancel}>
-                  Cancel
+                  {reg?.cancel || "Cancel"}
                 </Button>
               </div>
 
@@ -267,21 +281,21 @@ export function StudentRegistrationForm({
                   onClick={handleSaveProgress}
                 >
                   <Icons.save className="me-1 h-4 w-4" />
-                  Save Progress
+                  {reg?.saveProgress || "Save Progress"}
                 </Button>
 
                 {currentStep < totalSteps - 1 ? (
                   <Button type="button" onClick={handleNext}>
-                    Next
+                    {reg?.next || "Next"}
                     <Icons.chevronRight className="ms-1 h-4 w-4" />
                   </Button>
                 ) : (
                   <Button type="submit" disabled={isSubmitting}>
                     {isSubmitting
-                      ? "Submitting..."
+                      ? reg?.submitting || "Submitting..."
                       : isEdit
-                        ? "Update Student"
-                        : "Register Student"}
+                        ? reg?.updateStudent || "Update Student"
+                        : reg?.registerStudent || "Register Student"}
                   </Button>
                 )}
               </div>

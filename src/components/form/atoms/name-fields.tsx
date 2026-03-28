@@ -66,7 +66,7 @@ export function NameFields({
 
   return (
     <>
-      <FieldGroup className="grid grid-cols-2">
+      <FieldGroup className="grid grid-cols-1 sm:grid-cols-2">
         <InputField
           name={fields.firstName}
           label={required ? `${labels.firstName} *` : labels.firstName}

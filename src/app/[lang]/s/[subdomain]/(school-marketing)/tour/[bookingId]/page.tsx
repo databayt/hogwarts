@@ -57,7 +57,7 @@ export default async function BookingPage({ params }: BookingPageProps) {
   const isRTL = lang === "ar"
 
   // Fetch booking details
-  const bookingResult = await getBookingDetails(bookingId)
+  const bookingResult = await getBookingDetails(subdomain, bookingId)
 
   if (!bookingResult.success || !bookingResult.data) {
     return (

@@ -15,7 +15,7 @@ import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 import { Shell as PageContainer } from "@/components/table/shell"
 
-import type { CatalogAssignmentRow } from "./assignment-columns"
+import type { AssignmentRow } from "./assignment-columns"
 import { AssignmentTable } from "./assignment-table"
 import { CreateAssignmentDialog } from "./create-assignment-dialog"
 
@@ -25,7 +25,7 @@ interface Props {
 }
 
 export async function AssignmentContent({ lang }: Props) {
-  const assignments = await db.catalogAssignment.findMany({
+  const assignments = await db.assignment.findMany({
     orderBy: { createdAt: "desc" },
     select: {
       id: true,
@@ -60,7 +60,7 @@ export async function AssignmentContent({ lang }: Props) {
         ).toFixed(1)
       : "0"
 
-  const rows: CatalogAssignmentRow[] = assignments.map((a) => ({
+  const rows: AssignmentRow[] = assignments.map((a) => ({
     ...a,
     totalPoints: a.totalPoints ? Number(a.totalPoints) : null,
     approvalStatus: a.approvalStatus as string,

@@ -33,7 +33,7 @@ async function main() {
   }
 
   // Find all standalone books (no catalog link)
-  const standaloneBooks = await prisma.book.findMany({
+  const standaloneBooks = await prisma.schoolBook.findMany({
     where: { catalogBookId: null },
     select: {
       id: true,
@@ -66,7 +66,7 @@ async function main() {
 
   for (const book of standaloneBooks) {
     // Try to match to existing CatalogBook
-    const catalogBook = await prisma.catalogBook.findFirst({
+    const catalogBook = await prisma.book.findFirst({
       where: { title: book.title, author: book.author },
     })
 
@@ -75,18 +75,18 @@ async function main() {
 
       if (!isDryRun) {
         // Link the book
-        await prisma.book.update({
+        await prisma.schoolBook.update({
           where: { id: book.id },
           data: { catalogBookId: catalogBook.id },
         })
 
         // Ensure SchoolBookSelection exists
-        const existingSelection = await prisma.schoolBookSelection.findFirst({
+        const existingSelection = await prisma.bookSelection.findFirst({
           where: { schoolId: book.schoolId, catalogBookId: catalogBook.id },
         })
 
         if (!existingSelection) {
-          await prisma.schoolBookSelection.create({
+          await prisma.bookSelection.create({
             data: {
               schoolId: book.schoolId,
               catalogBookId: catalogBook.id,
@@ -98,10 +98,10 @@ async function main() {
         }
 
         // Update usage count
-        const usageCount = await prisma.schoolBookSelection.count({
+        const usageCount = await prisma.bookSelection.count({
           where: { catalogBookId: catalogBook.id },
         })
-        await prisma.catalogBook.update({
+        await prisma.book.update({
           where: { id: catalogBook.id },
           data: { usageCount },
         })
@@ -122,7 +122,7 @@ async function main() {
       )
 
       if (!isDryRun) {
-        const newCatalogBook = await prisma.catalogBook.create({
+        const newCatalogBook = await prisma.book.create({
           data: {
             title: book.title,
             slug,
@@ -148,13 +148,13 @@ async function main() {
         })
 
         // Link the book
-        await prisma.book.update({
+        await prisma.schoolBook.update({
           where: { id: book.id },
           data: { catalogBookId: newCatalogBook.id },
         })
 
         // Create SchoolBookSelection
-        await prisma.schoolBookSelection.create({
+        await prisma.bookSelection.create({
           data: {
             schoolId: book.schoolId,
             catalogBookId: newCatalogBook.id,
@@ -164,7 +164,7 @@ async function main() {
           },
         })
 
-        await prisma.catalogBook.update({
+        await prisma.book.update({
           where: { id: newCatalogBook.id },
           data: { usageCount: 1 },
         })

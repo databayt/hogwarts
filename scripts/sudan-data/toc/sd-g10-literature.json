@@ -1,0 +1,38 @@
+{
+  "subject": "literature",
+  "subjectNameAr": "المطالعة والأدب",
+  "grade": 10,
+  "level": "secondary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "2009",
+  "chapters": [
+    {
+      "nameAr": "الباب الأول: المطالعة",
+      "name": "Chapter 1: Reading",
+      "slug": "reading",
+      "sequenceOrder": 1,
+      "lessons": []
+    },
+    {
+      "nameAr": "الباب الثاني: الأدب في العصر الجاهلي",
+      "name": "Chapter 2: Literature in the Pre-Islamic Era",
+      "slug": "literature-pre-islamic-era",
+      "sequenceOrder": 2,
+      "lessons": []
+    },
+    {
+      "nameAr": "الباب الثالث: الأدب في صدر الإسلام",
+      "name": "Chapter 3: Literature in Early Islam",
+      "slug": "literature-early-islam",
+      "sequenceOrder": 3,
+      "lessons": []
+    },
+    {
+      "nameAr": "الباب الرابع: النصوص الأدبية",
+      "name": "Chapter 4: Literary Texts",
+      "slug": "literary-texts",
+      "sequenceOrder": 4,
+      "lessons": []
+    }
+  ]
+}

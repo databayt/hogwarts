@@ -4,13 +4,13 @@
 import type {
   BloomLevel,
   DifficultyLevel,
-  ExamTemplate,
   GeneratedExam,
   GeneratedExamQuestion,
   QuestionAnalytics,
   QuestionBank,
   QuestionSource,
   QuestionType,
+  SchoolExamTemplate,
 } from "@prisma/client"
 
 // ========== Question Bank Types ==========
@@ -112,7 +112,7 @@ export type AIGenerationResponse = {
 
 // ========== Exam Template Types ==========
 
-export type ExamTemplateDTO = ExamTemplate & {
+export type ExamTemplateDTO = SchoolExamTemplate & {
   subject?: {
     id: string
     name: string

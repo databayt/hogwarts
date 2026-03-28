@@ -58,14 +58,14 @@ export async function saveTemplate(
 
     if (input.id) {
       // Update existing template
-      const existing = await db.examTemplate.findUnique({
+      const existing = await db.schoolExamTemplate.findUnique({
         where: { id: input.id, schoolId },
       })
       if (!existing) {
         return actionError(ACTION_ERRORS.NOT_FOUND)
       }
 
-      await db.examTemplate.update({
+      await db.schoolExamTemplate.update({
         where: { id: input.id },
         data: {
           name: input.name,
@@ -85,7 +85,7 @@ export async function saveTemplate(
     }
 
     // Create new template
-    const template = await db.examTemplate.create({
+    const template = await db.schoolExamTemplate.create({
       data: {
         schoolId,
         name: input.name,

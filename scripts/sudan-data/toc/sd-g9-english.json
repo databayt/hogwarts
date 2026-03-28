@@ -1,0 +1,17 @@
+{
+  "subject": "english",
+  "subjectNameAr": "اللغة الإنجليزية",
+  "grade": 9,
+  "level": "middle",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "",
+  "chapters": [
+    {
+      "nameAr": "اللغة الإنجليزية",
+      "name": "English Language",
+      "slug": "english-language",
+      "sequenceOrder": 1,
+      "lessons": []
+    }
+  ]
+}

@@ -6,7 +6,7 @@ import { notFound } from "next/navigation"
 import { db } from "@/lib/db"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import { CatalogBookDetailView } from "@/components/saas-dashboard/catalog/book-detail"
+import { BookDetailView } from "@/components/saas-dashboard/catalog/book-detail"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 
 export const metadata = {
@@ -18,15 +18,15 @@ interface Props {
   params: Promise<{ lang: Locale; bookId: string }>
 }
 
-export default async function CatalogBookDetailPage({ params }: Props) {
+export default async function BookDetailPage({ params }: Props) {
   const { lang, bookId } = await params
   const dictionary = await getDictionary(lang)
 
-  const book = await db.catalogBook.findUnique({
+  const book = await db.book.findUnique({
     where: { id: bookId },
     include: {
       _count: {
-        select: { schoolSelections: true, books: true },
+        select: { bookSelections: true, schoolBooks: true },
       },
     },
   })
@@ -36,7 +36,7 @@ export default async function CatalogBookDetailPage({ params }: Props) {
   return (
     <>
       <PageHeadingSetter title={book.title} />
-      <CatalogBookDetailView book={book} lang={lang} dictionary={dictionary} />
+      <BookDetailView book={book} lang={lang} dictionary={dictionary} />
     </>
   )
 }

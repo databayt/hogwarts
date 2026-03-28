@@ -43,7 +43,7 @@ export async function startExam(
     }
 
     // Get exam with generated questions
-    const exam = await db.exam.findFirst({
+    const exam = await db.schoolExam.findFirst({
       where: {
         id: examId,
         schoolId,
@@ -86,7 +86,7 @@ export async function startExam(
     }
 
     // Update exam status
-    await db.exam.updateMany({
+    await db.schoolExam.updateMany({
       where: { id: examId, schoolId },
       data: {
         status: "IN_PROGRESS",
@@ -141,7 +141,7 @@ export async function completeExam(
       }
     }
 
-    const exam = await db.exam.findFirst({
+    const exam = await db.schoolExam.findFirst({
       where: {
         id: examId,
         schoolId,
@@ -165,7 +165,7 @@ export async function completeExam(
     }
 
     // Update exam status
-    await db.exam.updateMany({
+    await db.schoolExam.updateMany({
       where: { id: examId, schoolId },
       data: {
         status: "COMPLETED",
@@ -232,7 +232,7 @@ export async function cancelExam(
       }
     }
 
-    const exam = await db.exam.findFirst({
+    const exam = await db.schoolExam.findFirst({
       where: {
         id: examId,
         schoolId,
@@ -255,7 +255,7 @@ export async function cancelExam(
       }
     }
 
-    await db.exam.updateMany({
+    await db.schoolExam.updateMany({
       where: { id: examId, schoolId },
       data: {
         status: "CANCELLED",
@@ -351,7 +351,7 @@ export async function getExamForTaking(examId: string): Promise<
       }
     }
 
-    const exam = await db.exam.findFirst({
+    const exam = await db.schoolExam.findFirst({
       where: {
         id: examId,
         schoolId,
@@ -516,7 +516,7 @@ export async function submitExamAnswers(
     }
 
     // Verify exam is IN_PROGRESS
-    const exam = await db.exam.findFirst({
+    const exam = await db.schoolExam.findFirst({
       where: {
         id: examId,
         schoolId,

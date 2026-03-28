@@ -2,9 +2,9 @@
  * Seed Catalog Exam Templates, Blueprints, and Paper Templates
  *
  * Creates:
- * - ~8 CatalogExamBlueprint (one per subject category)
- * - CatalogExamTemplate records (2 per published subject)
- * - ~8 CatalogPaperTemplate defaults
+ * - ~8 ExamBlueprint (one per subject category)
+ * - ExamTemplate records (2 per published subject)
+ * - ~8 PaperTemplate defaults
  *
  * Usage:
  *   pnpm db:seed:single catalog-exam-templates
@@ -640,13 +640,13 @@ const PAPER_TEMPLATES = [
 // MAIN SEED FUNCTION
 // ============================================================================
 
-export async function seedCatalogExamTemplates(prisma: PrismaClient) {
+export async function seedExamTemplates(prisma: PrismaClient) {
   console.log("\n--- Seed Catalog Exam Templates ---")
 
   // 1. Seed blueprints
   let blueprintCount = 0
   for (const bp of BLUEPRINT_CATEGORIES) {
-    await prisma.catalogExamBlueprint.upsert({
+    await prisma.examBlueprint.upsert({
       where: { category: bp.category },
       update: {
         name: bp.name,
@@ -673,7 +673,7 @@ export async function seedCatalogExamTemplates(prisma: PrismaClient) {
   console.log(`  Created/updated ${blueprintCount} blueprints`)
 
   // 2. Seed exam templates (2 per published subject)
-  const subjects = await prisma.catalogSubject.findMany({
+  const subjects = await prisma.subject.findMany({
     where: { status: "PUBLISHED" },
     select: { id: true, name: true, levels: true },
   })
@@ -703,7 +703,7 @@ export async function seedCatalogExamTemplates(prisma: PrismaClient) {
         },
       }
 
-      await prisma.catalogExamTemplate.upsert({
+      await prisma.examTemplate.upsert({
         where: {
           id: `tpl-${subject.id}-${examType}`.slice(0, 25),
         },
@@ -730,11 +730,11 @@ export async function seedCatalogExamTemplates(prisma: PrismaClient) {
   // 3. Seed paper templates
   let paperCount = 0
   for (const pt of PAPER_TEMPLATES) {
-    const existing = await prisma.catalogPaperTemplate.findFirst({
+    const existing = await prisma.paperTemplate.findFirst({
       where: { name: pt.name },
     })
     if (!existing) {
-      await prisma.catalogPaperTemplate.create({
+      await prisma.paperTemplate.create({
         data: {
           name: pt.name,
           template: pt.template,
@@ -757,7 +757,7 @@ export async function seedCatalogExamTemplates(prisma: PrismaClient) {
 if (require.main === module) {
   const { PrismaClient } = require("@prisma/client")
   const _prisma = new PrismaClient()
-  seedCatalogExamTemplates(_prisma)
+  seedExamTemplates(_prisma)
     .then(() => _prisma.$disconnect())
     .catch((e: unknown) => {
       console.error(e)

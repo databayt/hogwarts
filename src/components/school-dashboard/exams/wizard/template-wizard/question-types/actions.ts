@@ -38,7 +38,7 @@ export async function updateTemplateQuestionTypes(
       }
     }
 
-    await db.examTemplate.updateMany({
+    await db.schoolExamTemplate.updateMany({
       where: { id: templateId, schoolId },
       data: { distribution },
     })

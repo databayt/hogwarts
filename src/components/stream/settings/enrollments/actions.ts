@@ -79,7 +79,7 @@ export async function bulkEnrollStudents(data: {
   }
 
   // Verify subject exists
-  const subject = await db.catalogSubject.findUnique({
+  const subject = await db.subject.findUnique({
     where: { id: data.catalogSubjectId },
     select: { id: true, name: true },
   })

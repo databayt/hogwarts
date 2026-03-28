@@ -10,13 +10,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 
-import { getEnrolledCatalogSubjectIds } from "../lib/scope"
+import { getEnrolledSubjectIds } from "../lib/scope"
 import { getStudentAttempts } from "../shared/attempt-actions"
 import { AttemptHistory } from "../shared/attempt-history"
 import {
-  getCatalogSubjectsForMockFilter,
   getMockExams,
   getSchoolMockExams,
+  getSubjectsForMockFilter,
 } from "./actions"
 import { MockExamList } from "./list"
 
@@ -29,9 +29,9 @@ export async function MockContent({ lang = "ar" }: { lang?: Locale }) {
   const mc = dictionary?.school?.exams?.mockContent
 
   // For students/guardians, scope to enrolled catalog subjects
-  const enrolledCatalogSubjectIds =
+  const enrolledSubjectIds =
     schoolId && ["STUDENT", "GUARDIAN"].includes(role || "")
-      ? await getEnrolledCatalogSubjectIds(role, session?.user?.id, schoolId)
+      ? await getEnrolledSubjectIds(role, session?.user?.id, schoolId)
       : null
 
   // For school mocks, get enrolled school subject IDs (for student/guardian)
@@ -74,9 +74,9 @@ export async function MockContent({ lang = "ar" }: { lang?: Locale }) {
 
   const [exams, subjects, schoolMocks, attempts] = await Promise.all([
     getMockExams({
-      enrolledCatalogSubjectIds: enrolledCatalogSubjectIds ?? undefined,
+      enrolledSubjectIds: enrolledSubjectIds ?? undefined,
     }),
-    getCatalogSubjectsForMockFilter(enrolledCatalogSubjectIds ?? undefined),
+    getSubjectsForMockFilter(enrolledSubjectIds ?? undefined),
     schoolId
       ? getSchoolMockExams(schoolId, enrolledSchoolSubjectIds)
       : Promise.resolve([]),

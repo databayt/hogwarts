@@ -40,10 +40,10 @@ export async function getStudentLocation(
       },
     }
   } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to load",
-    }
+    return actionError(
+      ACTION_ERRORS.LOAD_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -70,9 +70,9 @@ export async function updateStudentLocation(
 
     return { success: true }
   } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to save",
-    }
+    return actionError(
+      ACTION_ERRORS.SAVE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }

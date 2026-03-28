@@ -29,24 +29,24 @@ export async function getTeacherStats(): Promise<TeacherStats> {
 
   const [totalVideos, pendingVideos, approvedVideos, viewsResult] =
     await Promise.all([
-      db.lessonVideo.count({
+      db.video.count({
         where: { userId: session.user.id, schoolId },
       }),
-      db.lessonVideo.count({
+      db.video.count({
         where: {
           userId: session.user.id,
           schoolId,
           approvalStatus: "PENDING",
         },
       }),
-      db.lessonVideo.count({
+      db.video.count({
         where: {
           userId: session.user.id,
           schoolId,
           approvalStatus: "APPROVED",
         },
       }),
-      db.lessonVideo.aggregate({
+      db.video.aggregate({
         where: { userId: session.user.id, schoolId },
         _sum: { viewCount: true },
       }),
@@ -91,7 +91,7 @@ export async function getMyVideos(): Promise<TeacherVideo[]> {
     return []
   }
 
-  const videos = await db.lessonVideo.findMany({
+  const videos = await db.video.findMany({
     where: {
       userId: session.user.id,
       schoolId,

@@ -1,0 +1,106 @@
+{
+  "subject": "technical-education",
+  "subjectNameAr": "التقنية",
+  "grade": 9,
+  "level": "middle",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "",
+  "chapters": [
+    {
+      "nameAr": "التكنولوجيا",
+      "name": "Technology",
+      "slug": "technology",
+      "sequenceOrder": 1,
+      "lessons": [
+        {
+          "nameAr": "مفهوم التكنولوجيا",
+          "name": "Concept of Technology",
+          "slug": "concept-of-technology",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "تعريف التكنولوجيا",
+          "name": "Definition of Technology",
+          "slug": "definition-of-technology",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "أهمية التكنولوجيا",
+          "name": "Importance of Technology",
+          "slug": "importance-of-technology",
+          "sequenceOrder": 3
+        }
+      ]
+    },
+    {
+      "nameAr": "مجالات التكنولوجيا",
+      "name": "Fields of Technology",
+      "slug": "fields-of-technology",
+      "sequenceOrder": 2,
+      "lessons": [
+        {
+          "nameAr": "الغذاء والدواء والأغذية",
+          "name": "Food and Medicine",
+          "slug": "food-and-medicine",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "المسكن والنسيج والملبس",
+          "name": "Housing, Textiles and Clothing",
+          "slug": "housing-textiles-clothing",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "المنشآت والبناء",
+          "name": "Construction and Buildings",
+          "slug": "construction-buildings",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "وسائل النقل والمواصلات",
+          "name": "Transportation",
+          "slug": "transportation",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "الاتصالات",
+          "name": "Communications",
+          "slug": "communications",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "الرياضة والترفيه",
+          "name": "Sports and Entertainment",
+          "slug": "sports-entertainment",
+          "sequenceOrder": 6
+        }
+      ]
+    },
+    {
+      "nameAr": "مشروع تكنولوجي",
+      "name": "Technology Project",
+      "slug": "technology-project",
+      "sequenceOrder": 3,
+      "lessons": [
+        {
+          "nameAr": "المشكلة التكنولوجية",
+          "name": "The Technological Problem",
+          "slug": "technological-problem",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "حل المشكلة وتصميم الحل الأفضل",
+          "name": "Problem Solving and Designing the Best Solution",
+          "slug": "problem-solving-design",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "تنفيذ وتقييم المشروع",
+          "name": "Project Implementation and Evaluation",
+          "slug": "project-implementation-evaluation",
+          "sequenceOrder": 3
+        }
+      ]
+    }
+  ]
+}

@@ -141,9 +141,14 @@ export async function requestStatusOTP(
           error: "Failed to send verification code. Please try again.",
         }
       }
-    } else {
-      // For development without Resend
+    } else if (process.env.NODE_ENV === "development") {
+      // For development without Resend — NEVER log OTP in production
       console.log(`[DEV] OTP for ${email}: ${otp}`)
+    } else {
+      console.error(
+        "[requestStatusOTP] No RESEND_API_KEY configured in production"
+      )
+      return { success: false, error: "Email service not configured" }
     }
 
     return {
@@ -269,11 +274,19 @@ export async function verifyStatusOTP(
  * Get application status with access token
  */
 export async function getApplicationStatus(
+  subdomain: string,
   accessToken: string
 ): Promise<ActionResult<ApplicationStatus>> {
   try {
+    // Resolve schoolId for tenant isolation
+    const schoolResult = await getSchoolBySubdomain(subdomain)
+    if (!schoolResult.success || !schoolResult.data) {
+      return { success: false, error: "School not found" }
+    }
+
     const application = await db.application.findFirst({
       where: {
+        schoolId: schoolResult.data.id,
         accessToken,
         accessTokenExpiry: { gte: new Date() },
       },

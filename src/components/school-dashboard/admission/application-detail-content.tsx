@@ -3,7 +3,6 @@
 
 import { notFound } from "next/navigation"
 import { auth } from "@/auth"
-import { FileText, Signature } from "lucide-react"
 
 import { getDisplayFields } from "@/lib/content-display"
 import { db } from "@/lib/db"
@@ -12,6 +11,8 @@ import { Separator } from "@/components/ui/separator"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
+import { DocumentsSection } from "./ai/documents-section"
+import type { ProcessedDocument } from "./ai/types"
 import ApplicationDetailActions from "./application-detail-actions"
 import { getApplicationDetail } from "./queries"
 
@@ -61,49 +62,33 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   )
 }
 
-const ISO_NAMES: Record<string, string> = {
-  SA: "Saudi Arabia",
-  SD: "Sudan",
-  AE: "United Arab Emirates",
-  EG: "Egypt",
-  JO: "Jordan",
-  KW: "Kuwait",
-  QA: "Qatar",
-  BH: "Bahrain",
-  OM: "Oman",
-  IQ: "Iraq",
-  US: "United States",
-  GB: "United Kingdom",
-  DZ: "Algeria",
-  MA: "Morocco",
-  TN: "Tunisia",
-  LB: "Lebanon",
-  SY: "Syria",
-  YE: "Yemen",
-  LY: "Libya",
-  PS: "Palestine",
-  PK: "Pakistan",
-  IN: "India",
-  TR: "Turkey",
-  DE: "Germany",
-  FR: "France",
-  CA: "Canada",
-  AU: "Australia",
-}
-
-function formatISOName(code: string | null | undefined): string | null {
+function formatISOName(
+  code: string | null | undefined,
+  locale: string = "en"
+): string | null {
   if (!code) return null
-  return ISO_NAMES[code] || code
+  try {
+    const displayNames = new Intl.DisplayNames([locale], { type: "region" })
+    return displayNames.of(code) || code
+  } catch {
+    return code
+  }
 }
 
-function formatDate(date: Date | string | null | undefined): string | null {
+function formatDate(
+  date: Date | string | null | undefined,
+  locale?: string
+): string | null {
   if (!date) return null
-  return new Date(date).toLocaleDateString()
+  return new Date(date).toLocaleDateString(locale)
 }
 
-function formatDateTime(date: Date | string | null | undefined): string | null {
+function formatDateTime(
+  date: Date | string | null | undefined,
+  locale?: string
+): string | null {
   if (!date) return null
-  return new Date(date).toLocaleString()
+  return new Date(date).toLocaleString(locale)
 }
 
 // ---------------------------------------------------------------------------
@@ -193,8 +178,8 @@ export default async function ApplicationDetailContent({
       reviewer?.username || reviewer?.email || application.reviewedBy
   }
 
-  // Parse documents JSON
-  let documents: Array<{ name: string; url: string }> = []
+  // Parse documents JSON — supports both legacy {name, url} and ProcessedDocument formats
+  let documents: ProcessedDocument[] = []
   if (application.documents) {
     try {
       const parsed =
@@ -202,7 +187,17 @@ export default async function ApplicationDetailContent({
           ? JSON.parse(application.documents)
           : application.documents
       if (Array.isArray(parsed)) {
-        documents = parsed
+        documents = parsed.map((doc: any) => ({
+          type: doc.type ?? "other",
+          url: doc.url ?? "",
+          fileName: doc.fileName ?? doc.name ?? "",
+          status: doc.status ?? undefined,
+          confidence: doc.confidence ?? undefined,
+          extractedData: doc.extractedData ?? undefined,
+          jobId: doc.jobId ?? undefined,
+          error: doc.error ?? undefined,
+          processedAt: doc.processedAt ?? undefined,
+        }))
       }
     } catch {
       // ignore parse errors
@@ -241,7 +236,7 @@ export default async function ApplicationDetailContent({
           {application.alternatePhone && <p>{application.alternatePhone}</p>}
           {(application.country || application.city) && (
             <p className="text-muted-foreground">
-              {[formatISOName(application.country), application.city]
+              {[formatISOName(application.country, lang), application.city]
                 .filter(Boolean)
                 .join(", ")}
             </p>
@@ -276,7 +271,7 @@ export default async function ApplicationDetailContent({
             )}
             {application.submittedAt && (
               <>
-                {" · "} {formatDate(application.submittedAt)}
+                {" · "} {formatDate(application.submittedAt, lang)}
               </>
             )}
           </p>
@@ -301,7 +296,7 @@ export default async function ApplicationDetailContent({
             />
             <InfoRow
               label={t?.applicationDetail?.dateOfBirth || "Date of Birth"}
-              value={formatDate(application.dateOfBirth)}
+              value={formatDate(application.dateOfBirth, lang)}
             />
             <InfoRow
               label={t?.applicationDetail?.gender || "Gender"}
@@ -309,7 +304,7 @@ export default async function ApplicationDetailContent({
             />
             <InfoRow
               label={t?.applicationDetail?.nationality || "Nationality"}
-              value={formatISOName(application.nationality)}
+              value={formatISOName(application.nationality, lang)}
             />
             <InfoRow
               label={t?.applicationDetail?.religion || "Religion"}
@@ -486,11 +481,11 @@ export default async function ApplicationDetailContent({
             />
             <InfoRow
               label={t?.applicationDetail?.offerDate || "Offer Date"}
-              value={formatDate(application.offerDate)}
+              value={formatDate(application.offerDate, lang)}
             />
             <InfoRow
               label={t?.applicationDetail?.offerExpiryDate || "Offer Expiry"}
-              value={formatDate(application.offerExpiryDate)}
+              value={formatDate(application.offerExpiryDate, lang)}
             />
             <InfoRow
               label={
@@ -507,7 +502,7 @@ export default async function ApplicationDetailContent({
               label={
                 t?.applicationDetail?.confirmationDate || "Confirmation Date"
               }
-              value={formatDate(application.confirmationDate)}
+              value={formatDate(application.confirmationDate, lang)}
             />
             <InfoRow
               label={
@@ -529,7 +524,7 @@ export default async function ApplicationDetailContent({
             />
             <InfoRow
               label={t?.applicationDetail?.paymentDate || "Payment Date"}
-              value={formatDate(application.paymentDate)}
+              value={formatDate(application.paymentDate, lang)}
             />
           </div>
         </section>
@@ -551,15 +546,15 @@ export default async function ApplicationDetailContent({
             />
             <InfoRow
               label={t?.applicationDetail?.reviewedAt || "Reviewed At"}
-              value={formatDateTime(application.reviewedAt)}
+              value={formatDateTime(application.reviewedAt, lang)}
             />
             <InfoRow
               label={t?.applicationDetail?.createdAt || "Created"}
-              value={formatDateTime(application.createdAt)}
+              value={formatDateTime(application.createdAt, lang)}
             />
             <InfoRow
               label={t?.applicationDetail?.updatedAt || "Last Updated"}
-              value={formatDateTime(application.updatedAt)}
+              value={formatDateTime(application.updatedAt, lang)}
             />
           </div>
         </section>
@@ -570,78 +565,13 @@ export default async function ApplicationDetailContent({
             {t?.applicationDetail?.documents || "Documents"}
           </h2>
           <Separator className="my-3" />
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
-            {/* Photo */}
-            {application.photoUrl && (
-              <a
-                href={application.photoUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group hover:border-foreground/20 flex h-32 flex-col items-center justify-center overflow-hidden rounded-lg border transition-colors"
-              >
-                <img
-                  src={application.photoUrl}
-                  alt={t?.applicationDetail?.photo || "Photo"}
-                  className="h-full w-full object-cover"
-                />
-              </a>
-            )}
-            {/* Signature */}
-            {application.signatureUrl && (
-              <a
-                href={application.signatureUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group hover:border-foreground/20 flex h-32 flex-col items-center justify-center gap-2 rounded-lg border p-4 transition-colors"
-              >
-                <Signature className="text-muted-foreground h-8 w-8" />
-                <p className="text-sm font-medium">
-                  {t?.applicationDetail?.signature || "Signature"}
-                </p>
-              </a>
-            )}
-            {/* Uploaded documents */}
-            {documents.map((doc, i) => {
-              const isImage = /\.(jpe?g|png|gif|webp|bmp|svg)$/i.test(
-                doc.url || ""
-              )
-              return (
-                <a
-                  key={i}
-                  href={doc.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group hover:border-foreground/20 flex h-32 flex-col items-center justify-center overflow-hidden rounded-lg border transition-colors"
-                >
-                  {isImage ? (
-                    <img
-                      src={doc.url}
-                      alt={doc.name || `Document ${i + 1}`}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex flex-col items-center gap-2 p-4">
-                      <FileText className="text-muted-foreground h-8 w-8" />
-                      <p className="max-w-full truncate text-sm font-medium">
-                        {doc.name || `Document ${i + 1}`}
-                      </p>
-                    </div>
-                  )}
-                </a>
-              )
-            })}
-            {/* Empty state */}
-            {!application.photoUrl &&
-              !application.signatureUrl &&
-              documents.length === 0 && (
-                <div className="col-span-full flex h-32 items-center justify-center rounded-lg border border-dashed">
-                  <p className="text-muted-foreground text-sm">
-                    {t?.applicationDetail?.noDocuments ||
-                      "No documents uploaded"}
-                  </p>
-                </div>
-              )}
-          </div>
+          <DocumentsSection
+            documents={documents}
+            photoUrl={application.photoUrl}
+            signatureUrl={application.signatureUrl}
+            dictionary={dictionary}
+            applicationId={applicationId}
+          />
         </section>
       </div>
     </div>

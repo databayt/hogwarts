@@ -76,7 +76,11 @@ export default function ApplicationDetailActions({
         SuccessToast(t?.applicationDetail?.statusUpdated || "Status updated")
         router.refresh()
       } else {
-        ErrorToast(result.error || "Failed to update status")
+        ErrorToast(
+          result.error ||
+            t?.applicationDetail?.statusUpdateFailed ||
+            "Failed to update status"
+        )
       }
     })
   }
@@ -90,7 +94,9 @@ export default function ApplicationDetailActions({
         )
         router.refresh()
       } else {
-        ErrorToast(result.error || "Failed to confirm enrollment")
+        ErrorToast(
+          result.error || t?.applicationDetail?.statusUpdateFailed || "Failed"
+        )
       }
     })
   }

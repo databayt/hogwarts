@@ -1,0 +1,162 @@
+{
+  "subject": "history",
+  "subjectNameAr": "التاريخ والتربية الوطنية",
+  "grade": 4,
+  "level": "elementary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "الطبعة الأولى 2018م",
+  "chapters": [
+    {
+      "nameAr": "الوحدة الأولى: وطننا السودان",
+      "name": "Unit 1: Our Homeland Sudan",
+      "slug": "our-homeland-sudan",
+      "sequenceOrder": 1,
+      "lessons": [
+        {
+          "nameAr": "الدرس الأول: التقويم",
+          "name": "Lesson 1: The Calendar",
+          "slug": "the-calendar",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الدرس الثاني: حضارة العصور الحجرية في السودان",
+          "name": "Lesson 2: Stone Age Civilization in Sudan",
+          "slug": "stone-age-civilization-in-sudan",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الدرس الثالث: حضارة كرمة",
+          "name": "Lesson 3: Kerma Civilization",
+          "slug": "kerma-civilization",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "الدرس الرابع: حضارة كوش",
+          "name": "Lesson 4: Kush Civilization",
+          "slug": "kush-civilization",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "الدرس الخامس: ممالك النوبة المسيحية",
+          "name": "Lesson 5: Christian Nubian Kingdoms",
+          "slug": "christian-nubian-kingdoms",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "الدرس السادس: حضارة المدن الحجرية في دارفور",
+          "name": "Lesson 6: Stone City Civilizations in Darfur",
+          "slug": "stone-city-civilizations-in-darfur",
+          "sequenceOrder": 6
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة الثانية: دولتنا الإسلامية",
+      "name": "Unit 2: Our Islamic State",
+      "slug": "our-islamic-state",
+      "sequenceOrder": 2,
+      "lessons": [
+        {
+          "nameAr": "الدرس الأول: الخلفاء الراشدون",
+          "name": "Lesson 1: The Rightly Guided Caliphs",
+          "slug": "rightly-guided-caliphs",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الدرس الثاني: خلافة سيدنا أبي بكر الصديق",
+          "name": "Lesson 2: Caliphate of Abu Bakr Al-Siddiq",
+          "slug": "caliphate-of-abu-bakr",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الدرس الثالث: خلافة سيدنا عمر بن الخطاب",
+          "name": "Lesson 3: Caliphate of Umar ibn Al-Khattab",
+          "slug": "caliphate-of-umar",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "الدرس الرابع: خلافة سيدنا عثمان بن عفان",
+          "name": "Lesson 4: Caliphate of Uthman ibn Affan",
+          "slug": "caliphate-of-uthman",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "الدرس الخامس: خلافة سيدنا علي بن أبي طالب",
+          "name": "Lesson 5: Caliphate of Ali ibn Abi Talib",
+          "slug": "caliphate-of-ali",
+          "sequenceOrder": 5
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة الثالثة: قارتنا إفريقيا",
+      "name": "Unit 3: Our Continent Africa",
+      "slug": "our-continent-africa",
+      "sequenceOrder": 3,
+      "lessons": [
+        {
+          "nameAr": "الدرس الأول: موقع إفريقيا وسكانها",
+          "name": "Lesson 1: Location and People of Africa",
+          "slug": "location-and-people-of-africa",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الدرس الثاني: نماذج من حضارات إفريقيا القديمة",
+          "name": "Lesson 2: Examples of Ancient African Civilizations",
+          "slug": "ancient-african-civilizations",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الدرس الثالث: دخول المسيحية إلى إفريقيا",
+          "name": "Lesson 3: Christianity Entering Africa",
+          "slug": "christianity-entering-africa",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "الدرس الرابع: انتشار الإسلام في إفريقيا",
+          "name": "Lesson 4: Spread of Islam in Africa",
+          "slug": "spread-of-islam-in-africa",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "الدرس الخامس: دخول الإسلام إلى السودان",
+          "name": "Lesson 5: Islam Entering Sudan",
+          "slug": "islam-entering-sudan",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "الدرس السادس: علاقة السودان بإفريقيا",
+          "name": "Lesson 6: Sudan's Relationship with Africa",
+          "slug": "sudans-relationship-with-africa",
+          "sequenceOrder": 6
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة الرابعة: نحن سودانيون",
+      "name": "Unit 4: We Are Sudanese",
+      "slug": "we-are-sudanese",
+      "sequenceOrder": 4,
+      "lessons": [
+        {
+          "nameAr": "الدرس الأول: خصائص الإنسان السوداني",
+          "name": "Lesson 1: Characteristics of the Sudanese Person",
+          "slug": "characteristics-of-sudanese-person",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الدرس الثاني: خصائص المجتمع السوداني",
+          "name": "Lesson 2: Characteristics of Sudanese Society",
+          "slug": "characteristics-of-sudanese-society",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الدرس الثالث: مزايا الأرض السودانية",
+          "name": "Lesson 3: Advantages of Sudanese Land",
+          "slug": "advantages-of-sudanese-land",
+          "sequenceOrder": 3
+        }
+      ]
+    }
+  ]
+}

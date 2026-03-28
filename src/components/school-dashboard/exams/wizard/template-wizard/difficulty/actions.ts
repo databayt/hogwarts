@@ -18,7 +18,7 @@ export async function updateTemplateDifficulty(
     const { schoolId } = await getTenantContext()
     if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
-    const template = await db.examTemplate.findFirst({
+    const template = await db.schoolExamTemplate.findFirst({
       where: { id: templateId, schoolId },
       select: { distribution: true },
     })
@@ -28,7 +28,7 @@ export async function updateTemplateDifficulty(
       (template.distribution as Record<string, Record<string, number>>) || {}
     distribution[questionType] = difficulty
 
-    await db.examTemplate.updateMany({
+    await db.schoolExamTemplate.updateMany({
       where: { id: templateId, schoolId },
       data: { distribution: distribution as unknown as Prisma.InputJsonValue },
     })

@@ -1,5 +1,7 @@
-// Enrollment models — replaces StreamEnrollment/Progress/Certificate
-// schoolId is OPTIONAL: individuals can enroll without a school
+// Enrollment — user enrolls in a Subject (optional Stripe payment)
+// LessonProgress — tracks video/lesson completion
+// SubjectCertificate — completion certificates
+// EnrollmentStatus enum stays here (not a catalog enum)
 
 enum EnrollmentStatus {
   PENDING
@@ -13,7 +15,7 @@ model Enrollment {
   id               String @id @default(cuid())
   userId           String
   catalogSubjectId String
-  schoolId         String? // Optional — individuals don't need a school
+  schoolId         String?
 
   // Stripe payment
   stripeCustomerId        String?
@@ -24,9 +26,9 @@ model Enrollment {
   isActive Boolean          @default(true)
 
   // Relations
-  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  subject     CatalogSubject   @relation(fields: [catalogSubjectId], references: [id], onDelete: Cascade)
-  school      School?          @relation(fields: [schoolId], references: [id], onDelete: SetNull)
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject     Subject             @relation(fields: [catalogSubjectId], references: [id], onDelete: Cascade)
+  school      School?             @relation(fields: [schoolId], references: [id], onDelete: SetNull)
   progress    LessonProgress[]
   certificate SubjectCertificate?
 
@@ -45,20 +47,20 @@ model LessonProgress {
   userId          String
   catalogLessonId String
   enrollmentId    String
-  lessonVideoId   String? // Which specific video they're watching
+  lessonVideoId   String?
 
-  isCompleted   Boolean   @default(false)
-  completedAt   DateTime?
-  watchedSeconds Int       @default(0) // Resume position
-  totalSeconds   Int? // Video duration in seconds (cached)
+  isCompleted    Boolean   @default(false)
+  completedAt    DateTime?
+  watchedSeconds Int       @default(0)
+  totalSeconds   Int?
   lastWatchedAt  DateTime  @default(now())
   watchCount     Int       @default(0)
 
   // Relations
-  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  lesson     CatalogLesson @relation(fields: [catalogLessonId], references: [id], onDelete: Cascade)
-  enrollment Enrollment    @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
-  video      LessonVideo?  @relation(fields: [lessonVideoId], references: [id], onDelete: SetNull)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson     Lesson     @relation(fields: [catalogLessonId], references: [id], onDelete: Cascade)
+  enrollment Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  video      Video?     @relation(fields: [lessonVideoId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -78,15 +80,15 @@ model SubjectCertificate {
   schoolId         String?
 
   certificateNumber String   @unique
-  subjectTitle      String // Snapshot at completion
+  subjectTitle      String
   completedAt       DateTime
   issuedAt          DateTime @default(now())
 
   // Relations
-  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  subject    CatalogSubject @relation(fields: [catalogSubjectId], references: [id], onDelete: Cascade)
-  enrollment Enrollment     @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
-  school     School?        @relation(fields: [schoolId], references: [id], onDelete: SetNull)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject    Subject    @relation(fields: [catalogSubjectId], references: [id], onDelete: Cascade)
+  enrollment Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  school     School?    @relation(fields: [schoolId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -38,7 +38,7 @@ export interface ExamContributionsResult {
 }
 
 /**
- * Returns contributed CatalogExam records for the current school.
+ * Returns contributed Exam records for the current school.
  * MUST include schoolId for multi-tenant isolation.
  */
 export async function getMyExamContributions(): Promise<ExamContributionsResult> {
@@ -70,7 +70,7 @@ export async function getMyExamContributions(): Promise<ExamContributionsResult>
     }
   }
 
-  const contributions = await db.catalogExam.findMany({
+  const contributions = await db.exam.findMany({
     where: { contributedSchoolId: schoolId },
     select: {
       id: true,
@@ -141,7 +141,7 @@ export interface TemplateContributionsResult {
 }
 
 /**
- * Returns contributed CatalogExamTemplate records for the current school.
+ * Returns contributed ExamTemplate records for the current school.
  * MUST include schoolId for multi-tenant isolation.
  */
 export async function getMyTemplateContributions(): Promise<TemplateContributionsResult> {
@@ -173,7 +173,7 @@ export async function getMyTemplateContributions(): Promise<TemplateContribution
     }
   }
 
-  const contributions = await db.catalogExamTemplate.findMany({
+  const contributions = await db.examTemplate.findMany({
     where: { contributedSchoolId: schoolId },
     select: {
       id: true,

@@ -1,0 +1,17 @@
+{
+  "subject": "arabic-advanced",
+  "subjectNameAr": "اللغة العربية [الخاصة]",
+  "grade": 11,
+  "level": "secondary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "",
+  "chapters": [
+    {
+      "nameAr": "اللغة العربية الخاصة",
+      "name": "Advanced Arabic Language",
+      "slug": "advanced-arabic",
+      "sequenceOrder": 1,
+      "lessons": []
+    }
+  ]
+}

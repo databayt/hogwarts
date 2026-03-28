@@ -91,7 +91,7 @@ export async function getSchoolAssignments(
       where.classId = classId
     }
 
-    const assignments = await db.assignment.findMany({
+    const assignments = await db.schoolAssignment.findMany({
       where,
       select: { id: true, title: true, totalPoints: true },
       orderBy: { createdAt: "desc" },

@@ -33,7 +33,7 @@ model Class {
   prerequisiteId String? // Parent course (course hierarchy)
 
   school       School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  subject      CatalogSubject @relation(fields: [subjectId], references: [id])
+  subject      Subject @relation(fields: [subjectId], references: [id])
   teacher      Teacher        @relation(fields: [teacherId], references: [id])
   term         Term           @relation(fields: [termId], references: [id])
   startPeriod  Period         @relation("ClassStartPeriod", fields: [startPeriodId], references: [id])
@@ -43,11 +43,11 @@ model Class {
   prerequisite Class?         @relation("CoursePrerequisites", fields: [prerequisiteId], references: [id], onDelete: SetNull)
 
   studentClasses   StudentClass[]
-  assignments      Assignment[]
-  attendances      Attendance[]
-  announcements    Announcement[]
-  timetables       Timetable[]
-  exams            Exam[]
+  schoolAssignments SchoolAssignment[]
+  attendances       Attendance[]
+  announcements     Announcement[]
+  timetables        Timetable[]
+  schoolExams       SchoolExam[]
   results          Result[]
   dependentCourses Class[]        @relation("CoursePrerequisites")
   classTeachers    ClassTeacher[] // Co-teaching support

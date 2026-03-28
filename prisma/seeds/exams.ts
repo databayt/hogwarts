@@ -92,12 +92,12 @@ export async function seedExams(
       )
 
       try {
-        const existing = await prisma.exam.findFirst({
+        const existing = await prisma.schoolExam.findFirst({
           where: { schoolId, classId: classInfo.id, title: examTitle },
         })
 
         if (!existing) {
-          const exam = await prisma.exam.create({
+          const exam = await prisma.schoolExam.create({
             data: {
               schoolId,
               classId: classInfo.id,
@@ -143,7 +143,7 @@ export async function seedExamResults(
 ): Promise<number> {
   let resultCount = 0
 
-  const exams = await prisma.exam.findMany({
+  const exams = await prisma.schoolExam.findMany({
     where: { schoolId },
     select: { id: true, classId: true, totalMarks: true },
   })

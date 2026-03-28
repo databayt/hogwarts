@@ -1,0 +1,820 @@
+{
+  "version": "1.0",
+  "country": "FR",
+  "curriculum": "french-national",
+  "lang": "fr",
+  "officialName": "Programme de l'Éducation Nationale",
+  "organization": "Ministère de l'Éducation Nationale et de la Jeunesse",
+  "website": "https://www.education.gouv.fr",
+  "description": "Le programme officiel de l'Éducation nationale française, utilisé en France métropolitaine et dans de nombreux pays francophones d'Afrique (Sénégal, Côte d'Ivoire, Cameroun, Gabon, Mali, Maroc, Tunisie, Algérie, etc.).",
+  "gradeRange": "1-12",
+  "structureCode": "5+4+3",
+  "francophoneCountries": [
+    "FR",
+    "SN",
+    "CI",
+    "CM",
+    "GA",
+    "ML",
+    "BF",
+    "NE",
+    "TD",
+    "CG",
+    "CD",
+    "MG",
+    "DJ",
+    "KM",
+    "MR",
+    "TG",
+    "BJ",
+    "GN",
+    "RW",
+    "BI",
+    "MA",
+    "TN",
+    "DZ",
+    "LB",
+    "HT"
+  ],
+  "structure": {
+    "ecole_maternelle": {
+      "name": "École Maternelle",
+      "nameAr": "الروضة",
+      "cycle": "Cycle 1 — Apprentissages premiers",
+      "grades": [-2, -1, 0],
+      "gradeNames": {
+        "-2": "Petite Section (PS)",
+        "-1": "Moyenne Section (MS)",
+        "0": "Grande Section (GS)"
+      },
+      "ageRange": [3, 6],
+      "level": "PRESCHOOL"
+    },
+    "ecole_elementaire": {
+      "name": "École Élémentaire",
+      "nameAr": "المرحلة الابتدائية",
+      "cycles": [
+        "Cycle 2 — Apprentissages fondamentaux (CP, CE1, CE2)",
+        "Cycle 3 — Consolidation (CM1, CM2)"
+      ],
+      "grades": [1, 2, 3, 4, 5],
+      "gradeNames": {
+        "1": "Cours Préparatoire (CP)",
+        "2": "Cours Élémentaire 1 (CE1)",
+        "3": "Cours Élémentaire 2 (CE2)",
+        "4": "Cours Moyen 1 (CM1)",
+        "5": "Cours Moyen 2 (CM2)"
+      },
+      "ageRange": [6, 11],
+      "level": "ELEMENTARY"
+    },
+    "college": {
+      "name": "Collège",
+      "nameAr": "المرحلة المتوسطة",
+      "cycles": [
+        "Cycle 3 — Consolidation (6ème)",
+        "Cycle 4 — Approfondissement (5ème, 4ème, 3ème)"
+      ],
+      "grades": [6, 7, 8, 9],
+      "gradeNames": {
+        "6": "Sixième (6ème)",
+        "7": "Cinquième (5ème)",
+        "8": "Quatrième (4ème)",
+        "9": "Troisième (3ème)"
+      },
+      "ageRange": [11, 15],
+      "level": "MIDDLE",
+      "note": "Ends with Diplôme National du Brevet (DNB)"
+    },
+    "lycee": {
+      "name": "Lycée",
+      "nameAr": "المرحلة الثانوية",
+      "cycle": "Cycle Terminal",
+      "grades": [10, 11, 12],
+      "gradeNames": {
+        "10": "Seconde (2nde)",
+        "11": "Première (1ère)",
+        "12": "Terminale (Tle)"
+      },
+      "ageRange": [15, 18],
+      "level": "HIGH",
+      "note": "Ends with Baccalauréat"
+    }
+  },
+  "subjects": [
+    {
+      "name": "Français",
+      "slug": "francais",
+      "department": "Langues",
+      "concept": "language-arts",
+      "color": "#2563eb",
+      "grades": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+      "hoursPerWeek": {
+        "cycle2": 10,
+        "cycle3": 8,
+        "6eme": 4.5,
+        "5eme-3eme": 4.5,
+        "seconde": 4,
+        "premiere": 4
+      },
+      "note": "Replaced by Philosophie in Terminale. Core subject at all levels: lecture, écriture, grammaire, littérature, expression orale."
+    },
+    {
+      "name": "Philosophie",
+      "slug": "philosophie",
+      "department": "Humanités",
+      "concept": "philosophy",
+      "color": "#7c3aed",
+      "grades": [12],
+      "hoursPerWeek": {
+        "terminale": 4
+      },
+      "note": "Replaces Français in Terminale. Mandatory for all Bac Général students."
+    },
+    {
+      "name": "Mathématiques",
+      "slug": "mathematiques",
+      "department": "Sciences",
+      "concept": "math",
+      "color": "#dc2626",
+      "grades": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+      "hoursPerWeek": {
+        "cycle2": 5,
+        "cycle3": 5,
+        "6eme": 4.5,
+        "5eme-3eme": 3.5,
+        "seconde": 4,
+        "premiere-terminale": "spécialité or enseignement scientifique"
+      },
+      "note": "In Seconde it is a common subject (4h). In 1ère/Tle it is a spécialité (6h) or included in enseignement scientifique (2h) for non-specialist students."
+    },
+    {
+      "name": "Histoire-Géographie",
+      "slug": "histoire-geographie",
+      "department": "Sciences humaines",
+      "concept": "history",
+      "color": "#d97706",
+      "grades": [4, 5, 6, 7, 8, 9, 10, 11, 12],
+      "hoursPerWeek": {
+        "CM1-CM2": 2.5,
+        "6eme": 3,
+        "5eme-3eme": 3,
+        "seconde": 3,
+        "premiere": 3,
+        "terminale": 3
+      },
+      "note": "Combined subject. In Cycle 2 (CP-CE2), it is part of 'Questionner le monde'. Becomes standalone from CM1."
+    },
+    {
+      "name": "Questionner le monde",
+      "slug": "questionner-le-monde",
+      "department": "Sciences humaines",
+      "concept": "general-knowledge",
+      "color": "#059669",
+      "grades": [1, 2, 3],
+      "hoursPerWeek": {
+        "cycle2": 2.5
+      },
+      "note": "Cycle 2 only (CP-CE2). Covers basic science, history, geography, and civic topics. Splits into separate subjects in Cycle 3."
+    },
+    {
+      "name": "Sciences et Technologie",
+      "slug": "sciences-technologie",
+      "department": "Sciences",
+      "concept": "science",
+      "color": "#0891b2",
+      "grades": [4, 5, 6],
+      "hoursPerWeek": {
+        "CM1-CM2": 2,
+        "6eme": 4
+      },
+      "note": "Combined science in Cycle 3 (CM1, CM2, 6ème). Splits into SVT, Physique-Chimie, and Technologie from 5ème."
+    },
+    {
+      "name": "Sciences de la Vie et de la Terre (SVT)",
+      "slug": "svt",
+      "department": "Sciences",
+      "concept": "biology",
+      "color": "#16a34a",
+      "grades": [7, 8, 9, 10],
+      "hoursPerWeek": {
+        "5eme-3eme": 1.5,
+        "seconde": 1.5
+      },
+      "note": "Biology and earth science. Available as spécialité in 1ère/Tle (6h)."
+    },
+    {
+      "name": "Physique-Chimie",
+      "slug": "physique-chimie",
+      "department": "Sciences",
+      "concept": "physics",
+      "color": "#4f46e5",
+      "grades": [7, 8, 9, 10],
+      "hoursPerWeek": {
+        "5eme-3eme": 1.5,
+        "seconde": 3
+      },
+      "note": "Physics and chemistry. Available as spécialité in 1ère/Tle (6h)."
+    },
+    {
+      "name": "Technologie",
+      "slug": "technologie",
+      "department": "Sciences",
+      "concept": "technology",
+      "color": "#64748b",
+      "grades": [7, 8, 9],
+      "hoursPerWeek": {
+        "5eme-3eme": 1.5
+      },
+      "note": "Design, programming, robotics, systems understanding. College only (5ème-3ème)."
+    },
+    {
+      "name": "Enseignement Scientifique",
+      "slug": "enseignement-scientifique",
+      "department": "Sciences",
+      "concept": "science",
+      "color": "#0d9488",
+      "grades": [11, 12],
+      "hoursPerWeek": {
+        "premiere": 2,
+        "terminale": 2
+      },
+      "note": "Mandatory common science course for all Bac Général students in 1ère and Tle. Includes 1.5h maths for students who did not choose Maths spécialité."
+    },
+    {
+      "name": "Sciences Numériques et Technologie (SNT)",
+      "slug": "snt",
+      "department": "Sciences",
+      "concept": "computer-science",
+      "color": "#6366f1",
+      "grades": [10],
+      "hoursPerWeek": {
+        "seconde": 1.5
+      },
+      "note": "Digital sciences: internet, data, algorithms, social networks. Seconde only."
+    },
+    {
+      "name": "Langue Vivante A (LVA)",
+      "slug": "langue-vivante-a",
+      "department": "Langues",
+      "concept": "languages",
+      "color": "#e11d48",
+      "grades": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+      "hoursPerWeek": {
+        "cycle2": 1.5,
+        "cycle3": 1.5,
+        "6eme": 4,
+        "5eme-3eme": 3,
+        "seconde": "5.5 (LVA+LVB combined)",
+        "premiere-terminale": "4.5 (LVA+LVB combined)"
+      },
+      "note": "First foreign language (typically English). Mandatory from CP through Terminale."
+    },
+    {
+      "name": "Langue Vivante B (LVB)",
+      "slug": "langue-vivante-b",
+      "department": "Langues",
+      "concept": "languages",
+      "color": "#be185d",
+      "grades": [7, 8, 9, 10, 11, 12],
+      "hoursPerWeek": {
+        "5eme": 2.5,
+        "4eme-3eme": 2.5,
+        "seconde": "included in 5.5h LVA+LVB",
+        "premiere-terminale": "included in 4.5h LVA+LVB"
+      },
+      "note": "Second foreign language (Spanish, German, Italian, etc.). Starts in 5ème."
+    },
+    {
+      "name": "Éducation Physique et Sportive (EPS)",
+      "slug": "eps",
+      "department": "Sport",
+      "concept": "physical-education",
+      "color": "#ea580c",
+      "grades": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+      "hoursPerWeek": {
+        "elementaire": 3,
+        "6eme": 4,
+        "5eme-3eme": 3,
+        "seconde": 2,
+        "premiere-terminale": 2
+      },
+      "note": "Physical education. Mandatory at all levels."
+    },
+    {
+      "name": "Arts Plastiques",
+      "slug": "arts-plastiques",
+      "department": "Arts",
+      "concept": "art",
+      "color": "#c026d3",
+      "grades": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+      "hoursPerWeek": {
+        "elementaire": "included in artistic education",
+        "college": 1
+      },
+      "note": "Visual arts. Mandatory through 3ème. Available as spécialité (Arts) in lycée."
+    },
+    {
+      "name": "Éducation Musicale",
+      "slug": "education-musicale",
+      "department": "Arts",
+      "concept": "music",
+      "color": "#a21caf",
+      "grades": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+      "hoursPerWeek": {
+        "elementaire": "included in artistic education",
+        "college": 1
+      },
+      "note": "Music education. Mandatory through 3ème. Available as spécialité (Arts) in lycée."
+    },
+    {
+      "name": "Enseignement Moral et Civique (EMC)",
+      "slug": "emc",
+      "department": "Sciences humaines",
+      "concept": "civics",
+      "color": "#0369a1",
+      "grades": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+      "hoursPerWeek": {
+        "all_levels": 0.5
+      },
+      "note": "Moral and civic education. 18 hours per year (roughly 30 min/week). Mandatory at all levels."
+    },
+    {
+      "name": "Sciences Économiques et Sociales (SES)",
+      "slug": "ses",
+      "department": "Sciences humaines",
+      "concept": "economics",
+      "color": "#b45309",
+      "grades": [10],
+      "hoursPerWeek": {
+        "seconde": 1.5
+      },
+      "note": "Introduction to economics and social sciences. Mandatory in Seconde. Available as spécialité in 1ère/Tle (6h)."
+    },
+    {
+      "name": "Histoire des Arts",
+      "slug": "histoire-des-arts",
+      "department": "Arts",
+      "concept": "art-history",
+      "color": "#92400e",
+      "grades": [4, 5, 6, 7, 8, 9],
+      "hoursPerWeek": {
+        "note": "Transversal — taught across multiple subjects, not a standalone timetable slot."
+      },
+      "note": "Art history taught across subjects. Cycle 3 and Cycle 4. Exam component at Brevet."
+    }
+  ],
+  "maternelleSubjects": [
+    {
+      "name": "Mobiliser le langage dans toutes ses dimensions",
+      "slug": "langage-maternelle",
+      "department": "Langues",
+      "concept": "language-arts",
+      "color": "#2563eb",
+      "note": "Oral and written language development"
+    },
+    {
+      "name": "Agir, s'exprimer, comprendre à travers l'activité physique",
+      "slug": "activite-physique-maternelle",
+      "department": "Sport",
+      "concept": "physical-education",
+      "color": "#ea580c",
+      "note": "Physical activity and motor skills"
+    },
+    {
+      "name": "Agir, s'exprimer, comprendre à travers les activités artistiques",
+      "slug": "activites-artistiques-maternelle",
+      "department": "Arts",
+      "concept": "art",
+      "color": "#c026d3",
+      "note": "Artistic expression: drawing, painting, music, dance"
+    },
+    {
+      "name": "Acquérir les premiers outils mathématiques",
+      "slug": "outils-mathematiques-maternelle",
+      "department": "Sciences",
+      "concept": "math",
+      "color": "#dc2626",
+      "note": "Early numeracy: counting, shapes, spatial awareness"
+    },
+    {
+      "name": "Explorer le monde",
+      "slug": "explorer-le-monde-maternelle",
+      "department": "Sciences humaines",
+      "concept": "general-knowledge",
+      "color": "#059669",
+      "note": "Exploring the world: time, space, living things, objects, matter"
+    }
+  ],
+  "bacGeneral": {
+    "name": "Baccalauréat Général",
+    "enseignementsCommuns": {
+      "seconde": [
+        { "name": "Français", "hours": 4 },
+        { "name": "Histoire-Géographie", "hours": 3 },
+        { "name": "Langues Vivantes A et B", "hours": 5.5 },
+        { "name": "Sciences Économiques et Sociales", "hours": 1.5 },
+        { "name": "Mathématiques", "hours": 4 },
+        { "name": "Physique-Chimie", "hours": 3 },
+        { "name": "Sciences de la Vie et de la Terre", "hours": 1.5 },
+        { "name": "Éducation Physique et Sportive", "hours": 2 },
+        { "name": "Enseignement Moral et Civique", "hours": 0.5 },
+        { "name": "Sciences Numériques et Technologie", "hours": 1.5 }
+      ],
+      "premiere": [
+        { "name": "Français", "hours": 4 },
+        { "name": "Histoire-Géographie", "hours": 3 },
+        { "name": "Langues Vivantes A et B", "hours": 4.5 },
+        { "name": "Enseignement Scientifique", "hours": 2 },
+        { "name": "Éducation Physique et Sportive", "hours": 2 },
+        { "name": "Enseignement Moral et Civique", "hours": 0.5 }
+      ],
+      "terminale": [
+        { "name": "Philosophie", "hours": 4 },
+        { "name": "Histoire-Géographie", "hours": 3 },
+        { "name": "Langues Vivantes A et B", "hours": 4 },
+        { "name": "Enseignement Scientifique", "hours": 2 },
+        { "name": "Éducation Physique et Sportive", "hours": 2 },
+        { "name": "Enseignement Moral et Civique", "hours": 0.5 }
+      ]
+    },
+    "specialites": [
+      {
+        "name": "Arts",
+        "slug": "spe-arts",
+        "code": "ARTS",
+        "hours": 6,
+        "color": "#c026d3",
+        "subOptions": [
+          "Arts plastiques",
+          "Cinéma-audiovisuel",
+          "Danse",
+          "Histoire des arts",
+          "Musique",
+          "Théâtre",
+          "Arts du cirque"
+        ],
+        "note": "Choose one sub-option"
+      },
+      {
+        "name": "Biologie-Écologie",
+        "slug": "spe-biologie-ecologie",
+        "code": "BIO-ECO",
+        "hours": 6,
+        "color": "#65a30d",
+        "note": "Only available in lycées agricoles (enseignement agricole)"
+      },
+      {
+        "name": "Éducation Physique, Pratiques et Culture Sportives (EPPCS)",
+        "slug": "spe-eppcs",
+        "code": "EPPCS",
+        "hours": 6,
+        "color": "#ea580c",
+        "note": "New spécialité added in 2021. Sports science and culture."
+      },
+      {
+        "name": "Histoire-Géographie, Géopolitique et Sciences Politiques (HGGSP)",
+        "slug": "spe-hggsp",
+        "code": "HGGSP",
+        "hours": 6,
+        "color": "#d97706",
+        "note": "History, geography, geopolitics, and political science"
+      },
+      {
+        "name": "Humanités, Littérature et Philosophie (HLP)",
+        "slug": "spe-hlp",
+        "code": "HLP",
+        "hours": 6,
+        "color": "#7c3aed",
+        "note": "Humanities, literature, and philosophy"
+      },
+      {
+        "name": "Langues, Littératures et Cultures Étrangères et Régionales (LLCER)",
+        "slug": "spe-llcer",
+        "code": "LLCER",
+        "hours": 6,
+        "color": "#e11d48",
+        "note": "Foreign and regional languages, literatures, and cultures (English, Spanish, German, Italian, etc.)"
+      },
+      {
+        "name": "Littérature, Langues et Cultures de l'Antiquité (LLCA)",
+        "slug": "spe-llca",
+        "code": "LLCA",
+        "hours": 6,
+        "color": "#9f1239",
+        "note": "Latin and/or Greek literature and cultures"
+      },
+      {
+        "name": "Mathématiques",
+        "slug": "spe-mathematiques",
+        "code": "MATHS",
+        "hours": 6,
+        "color": "#dc2626",
+        "note": "Advanced mathematics. Most popular spécialité (~48% of students)."
+      },
+      {
+        "name": "Numérique et Sciences Informatiques (NSI)",
+        "slug": "spe-nsi",
+        "code": "NSI",
+        "hours": 6,
+        "color": "#6366f1",
+        "note": "Computer science: programming, algorithms, data structures, networks"
+      },
+      {
+        "name": "Physique-Chimie",
+        "slug": "spe-physique-chimie",
+        "code": "PC",
+        "hours": 6,
+        "color": "#4f46e5",
+        "note": "Physics and chemistry. Third most popular spécialité (~32%)."
+      },
+      {
+        "name": "Sciences de la Vie et de la Terre (SVT)",
+        "slug": "spe-svt",
+        "code": "SVT",
+        "hours": 6,
+        "color": "#16a34a",
+        "note": "Life sciences and earth sciences"
+      },
+      {
+        "name": "Sciences de l'Ingénieur (SI)",
+        "slug": "spe-si",
+        "code": "SI",
+        "hours": 6,
+        "color": "#475569",
+        "note": "Engineering sciences: mechanics, electronics, information systems"
+      },
+      {
+        "name": "Sciences Économiques et Sociales (SES)",
+        "slug": "spe-ses",
+        "code": "SES",
+        "hours": 6,
+        "color": "#b45309",
+        "note": "Economics and social sciences. Second most popular spécialité (~35%)."
+      }
+    ],
+    "note": "Students choose 3 spécialités in Première, then keep 2 in Terminale (each 6h/week)."
+  },
+  "bacTechnologique": {
+    "name": "Baccalauréat Technologique",
+    "enseignementsCommuns": [
+      "Français (1ère) / Philosophie (Tle)",
+      "Histoire-Géographie",
+      "Langues Vivantes A et B (+ ETLV: enseignement technologique en langue vivante)",
+      "Mathématiques",
+      "Éducation Physique et Sportive",
+      "Enseignement Moral et Civique"
+    ],
+    "series": [
+      {
+        "name": "STMG — Sciences et Technologies du Management et de la Gestion",
+        "slug": "stmg",
+        "code": "STMG",
+        "color": "#b45309",
+        "specialites": {
+          "premiere": [
+            "Sciences de gestion et numérique",
+            "Management",
+            "Droit et économie"
+          ],
+          "terminale": [
+            "Management, sciences de gestion et numérique (with option: Gestion et finance / Mercatique / Ressources humaines et communication / Systèmes d'information de gestion)",
+            "Droit et économie"
+          ]
+        }
+      },
+      {
+        "name": "STI2D — Sciences et Technologies de l'Industrie et du Développement Durable",
+        "slug": "sti2d",
+        "code": "STI2D",
+        "color": "#475569",
+        "specialites": {
+          "premiere": [
+            "Innovation technologique",
+            "Ingénierie et développement durable",
+            "Physique-chimie et mathématiques"
+          ],
+          "terminale": [
+            "Ingénierie, innovation et développement durable (with option: Architecture et construction / Énergie et environnement / Innovation technologique et éco-conception / Systèmes d'information et numérique)",
+            "Physique-chimie et mathématiques"
+          ]
+        }
+      },
+      {
+        "name": "STL — Sciences et Technologies de Laboratoire",
+        "slug": "stl",
+        "code": "STL",
+        "color": "#0891b2",
+        "specialites": {
+          "premiere": [
+            "Biochimie-biologie",
+            "Biotechnologies ou Sciences physiques et chimiques en laboratoire",
+            "Physique-chimie et mathématiques"
+          ],
+          "terminale": [
+            "Biochimie-biologie-biotechnologies ou Sciences physiques et chimiques en laboratoire",
+            "Physique-chimie et mathématiques"
+          ]
+        }
+      },
+      {
+        "name": "ST2S — Sciences et Technologies de la Santé et du Social",
+        "slug": "st2s",
+        "code": "ST2S",
+        "color": "#e11d48",
+        "specialites": {
+          "premiere": [
+            "Sciences et techniques sanitaires et sociales",
+            "Biologie et physiopathologie humaines",
+            "Physique-chimie pour la santé"
+          ],
+          "terminale": [
+            "Sciences et techniques sanitaires et sociales",
+            "Chimie, biologie et physiopathologie humaines"
+          ]
+        }
+      },
+      {
+        "name": "STD2A — Sciences et Technologies du Design et des Arts Appliqués",
+        "slug": "std2a",
+        "code": "STD2A",
+        "color": "#c026d3",
+        "specialites": {
+          "premiere": [
+            "Physique-chimie",
+            "Outils et langages numériques",
+            "Design et métiers d'art"
+          ],
+          "terminale": [
+            "Analyse et méthodes en design",
+            "Conception et création en design et métiers d'art"
+          ]
+        }
+      },
+      {
+        "name": "STHR — Sciences et Technologies de l'Hôtellerie et de la Restauration",
+        "slug": "sthr",
+        "code": "STHR",
+        "color": "#ea580c",
+        "specialites": {
+          "premiere": [
+            "Enseignement scientifique alimentation-environnement",
+            "Sciences et technologies culinaires et des services",
+            "Économie-gestion hôtelière"
+          ],
+          "terminale": [
+            "Sciences et technologies culinaires et des services (with option: Sciences et technologies culinaires / Sciences et technologies des services)",
+            "Économie-gestion hôtelière"
+          ]
+        }
+      },
+      {
+        "name": "S2TMD — Sciences et Techniques du Théâtre, de la Musique et de la Danse",
+        "slug": "s2tmd",
+        "code": "S2TMD",
+        "color": "#a21caf",
+        "specialites": {
+          "premiere": [
+            "Économie, droit et environnement du spectacle vivant",
+            "Culture et sciences chorégraphiques / Culture et sciences musicales / Culture et sciences théâtrales",
+            "Pratique chorégraphique / Pratique musicale / Pratique théâtrale"
+          ],
+          "terminale": [
+            "Culture et sciences chorégraphiques / Culture et sciences musicales / Culture et sciences théâtrales",
+            "Pratique chorégraphique / Pratique musicale / Pratique théâtrale"
+          ]
+        }
+      },
+      {
+        "name": "STAV — Sciences et Technologies de l'Agronomie et du Vivant",
+        "slug": "stav",
+        "code": "STAV",
+        "color": "#65a30d",
+        "specialites": {
+          "premiere": [
+            "Gestion des ressources et de l'alimentation",
+            "Territoires et sociétés",
+            "Technologie (Aménagement / Production / Transformation)"
+          ],
+          "terminale": [
+            "Gestion des ressources et de l'alimentation",
+            "Territoires et technologie (with option: Aménagement / Production / Transformation)"
+          ]
+        },
+        "note": "Only available in lycées agricoles"
+      }
+    ]
+  },
+  "bacProfessionnel": {
+    "name": "Baccalauréat Professionnel",
+    "note": "Over 100 specializations across sectors: industry, services, commerce, agriculture. 3-year program (2nde Pro, 1ère Pro, Tle Pro) with significant workplace training (22 weeks of stages). Common academic core: Français, Histoire-Géographie-EMC, Mathématiques, Langues Vivantes, Arts Appliqués, EPS.",
+    "enseignementsGeneraux": [
+      "Français",
+      "Histoire-Géographie et EMC",
+      "Mathématiques",
+      "Langues Vivantes A et B",
+      "Arts Appliqués et Cultures Artistiques",
+      "Éducation Physique et Sportive",
+      "Prévention Santé Environnement (PSE)",
+      "Économie-Droit or Économie-Gestion (depending on sector)"
+    ]
+  },
+  "collegeOptionalSubjects": [
+    {
+      "name": "Langues et Cultures de l'Antiquité (Latin)",
+      "slug": "latin",
+      "department": "Langues",
+      "concept": "languages",
+      "color": "#78350f",
+      "grades": [7, 8, 9],
+      "hoursPerWeek": 2,
+      "note": "Optional from 5ème"
+    },
+    {
+      "name": "Langues et Cultures de l'Antiquité (Grec ancien)",
+      "slug": "grec-ancien",
+      "department": "Langues",
+      "concept": "languages",
+      "color": "#713f12",
+      "grades": [8, 9],
+      "hoursPerWeek": 2,
+      "note": "Optional from 4ème"
+    },
+    {
+      "name": "Langue Vivante C (LVC)",
+      "slug": "langue-vivante-c",
+      "department": "Langues",
+      "concept": "languages",
+      "color": "#881337",
+      "grades": [6, 7, 8, 9],
+      "hoursPerWeek": 2,
+      "note": "Optional third foreign language, possible from 6ème as LV2 anticipation"
+    },
+    {
+      "name": "Langues et Cultures Régionales",
+      "slug": "langues-regionales",
+      "department": "Langues",
+      "concept": "languages",
+      "color": "#7f1d1d",
+      "grades": [6, 7, 8, 9],
+      "note": "Breton, Basque, Occitan, Alsatian, Corsican, Catalan, Créole, etc."
+    },
+    {
+      "name": "Chant choral",
+      "slug": "chant-choral",
+      "department": "Arts",
+      "concept": "music",
+      "color": "#a21caf",
+      "grades": [6, 7, 8, 9],
+      "hoursPerWeek": 1,
+      "note": "Optional choral singing"
+    }
+  ],
+  "lyceeOptions": [
+    {
+      "name": "Langue Vivante C",
+      "slug": "option-lvc",
+      "grades": [10, 11, 12],
+      "hours": 3
+    },
+    {
+      "name": "Langues et Cultures de l'Antiquité (Latin ou Grec)",
+      "slug": "option-lca",
+      "grades": [10, 11, 12],
+      "hours": 3
+    },
+    {
+      "name": "Arts (au choix: arts plastiques, cinéma-audiovisuel, danse, histoire des arts, musique, théâtre)",
+      "slug": "option-arts",
+      "grades": [10, 11, 12],
+      "hours": 3
+    },
+    {
+      "name": "Éducation Physique et Sportive (option)",
+      "slug": "option-eps",
+      "grades": [10, 11, 12],
+      "hours": 3
+    },
+    {
+      "name": "Mathématiques complémentaires",
+      "slug": "option-maths-complementaires",
+      "grades": [12],
+      "hours": 3,
+      "note": "For Terminale students who dropped Maths spécialité but need maths (e.g. medicine, economics)"
+    },
+    {
+      "name": "Mathématiques expertes",
+      "slug": "option-maths-expertes",
+      "grades": [12],
+      "hours": 3,
+      "note": "For Terminale students who kept Maths spécialité and want additional depth"
+    },
+    {
+      "name": "Droit et Grands Enjeux du Monde Contemporain",
+      "slug": "option-dgemc",
+      "grades": [12],
+      "hours": 3,
+      "note": "Law and contemporary issues. Terminale only."
+    }
+  ]
+}

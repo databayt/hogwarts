@@ -1,0 +1,286 @@
+{
+  "subject": "science",
+  "subjectNameAr": "العلوم الطبيعية",
+  "grade": 2,
+  "level": "elementary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "الطبعة الأولى 2022م",
+  "chapters": [
+    {
+      "nameAr": "طبيعة العلم",
+      "name": "Nature of Science",
+      "slug": "nature-of-science",
+      "sequenceOrder": 1,
+      "lessons": [
+        {
+          "nameAr": "العلم وعملياته",
+          "name": "Science and Its Processes",
+          "slug": "science-processes",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الممارسة العلمية",
+          "name": "Scientific Practice",
+          "slug": "scientific-practice",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الطريقة العلمية",
+          "name": "Scientific Method",
+          "slug": "scientific-method",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "النظرية العلمية",
+          "name": "Scientific Theory",
+          "slug": "scientific-theory",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "القوانين العلمية",
+          "name": "Scientific Laws",
+          "slug": "scientific-laws",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "النظم في العلوم",
+          "name": "Systems in Science",
+          "slug": "systems-in-science",
+          "sequenceOrder": 6
+        },
+        {
+          "nameAr": "فروع العلوم",
+          "name": "Branches of Science",
+          "slug": "branches-of-science",
+          "sequenceOrder": 7
+        },
+        {
+          "nameAr": "العلوم والتكنولوجيا",
+          "name": "Science and Technology",
+          "slug": "science-and-technology",
+          "sequenceOrder": 8
+        }
+      ]
+    },
+    {
+      "nameAr": "الشغل والآلات البسيطة",
+      "name": "Work and Simple Machines",
+      "slug": "work-and-simple-machines",
+      "sequenceOrder": 2,
+      "lessons": [
+        {
+          "nameAr": "الشغل",
+          "name": "Work",
+          "slug": "work",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الآلات البسيطة",
+          "name": "Simple Machines",
+          "slug": "simple-machines",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "البكرة",
+          "name": "The Pulley",
+          "slug": "pulley",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "الرافعة",
+          "name": "The Lever",
+          "slug": "lever",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "العجلة والمحور",
+          "name": "Wheel and Axle",
+          "slug": "wheel-and-axle",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "المستوى المائل",
+          "name": "The Inclined Plane",
+          "slug": "inclined-plane",
+          "sequenceOrder": 6
+        },
+        {
+          "nameAr": "المسمار اللولبي",
+          "name": "The Screw",
+          "slug": "screw",
+          "sequenceOrder": 7
+        }
+      ]
+    },
+    {
+      "nameAr": "تركيب المادة",
+      "name": "Structure of Matter",
+      "slug": "structure-of-matter",
+      "sequenceOrder": 3,
+      "lessons": [
+        {
+          "nameAr": "الذرة",
+          "name": "The Atom",
+          "slug": "atom",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الخصائص الرئيسة للذرة",
+          "name": "Main Properties of the Atom",
+          "slug": "atom-properties",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "التركيب الإلكتروني",
+          "name": "Electronic Structure",
+          "slug": "electronic-structure",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "التركيب الإلكتروني والنشاط الكيميائي",
+          "name": "Electronic Structure and Chemical Activity",
+          "slug": "electronic-structure-chemical-activity",
+          "sequenceOrder": 4
+        }
+      ]
+    },
+    {
+      "nameAr": "الحيوانات الفقارية",
+      "name": "Vertebrate Animals",
+      "slug": "vertebrate-animals",
+      "sequenceOrder": 4,
+      "lessons": [
+        {
+          "nameAr": "الحبليات والحيوانات الفقارية",
+          "name": "Chordates and Vertebrates",
+          "slug": "chordates-vertebrates",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الأسماك",
+          "name": "Fish",
+          "slug": "fish",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "البرمائيات",
+          "name": "Amphibians",
+          "slug": "amphibians",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "الزواحف",
+          "name": "Reptiles",
+          "slug": "reptiles",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "الطيور",
+          "name": "Birds",
+          "slug": "birds",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "الثدييات",
+          "name": "Mammals",
+          "slug": "mammals",
+          "sequenceOrder": 6
+        }
+      ]
+    },
+    {
+      "nameAr": "البناء الضوئي والنقل في النبات",
+      "name": "Photosynthesis and Transport in Plants",
+      "slug": "photosynthesis-transport-plants",
+      "sequenceOrder": 5,
+      "lessons": [
+        {
+          "nameAr": "البناء الضوئي في النبات",
+          "name": "Photosynthesis in Plants",
+          "slug": "photosynthesis",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "العلاقة بين التمثيل الضوئي والتنفس",
+          "name": "Relationship Between Photosynthesis and Respiration",
+          "slug": "photosynthesis-respiration",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "العوامل التي تؤثر على عملية التمثيل الضوئي",
+          "name": "Factors Affecting Photosynthesis",
+          "slug": "factors-affecting-photosynthesis",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "النقل في النبات",
+          "name": "Transport in Plants",
+          "slug": "plant-transport",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "نقل الماء والأملاح في النبات",
+          "name": "Water and Mineral Transport in Plants",
+          "slug": "water-mineral-transport",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "نقل الغذاء في النبات",
+          "name": "Food Transport in Plants",
+          "slug": "food-transport",
+          "sequenceOrder": 6
+        },
+        {
+          "nameAr": "تركيب أجزاء النقل في النبات",
+          "name": "Structure of Transport Parts in Plants",
+          "slug": "transport-parts-structure",
+          "sequenceOrder": 7
+        }
+      ]
+    },
+    {
+      "nameAr": "البيئة",
+      "name": "Environment",
+      "slug": "environment",
+      "sequenceOrder": 6,
+      "lessons": [
+        {
+          "nameAr": "دورات المادة",
+          "name": "Material Cycles",
+          "slug": "material-cycles",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "دورة الماء",
+          "name": "Water Cycle",
+          "slug": "water-cycle",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "دورة النيتروجين",
+          "name": "Nitrogen Cycle",
+          "slug": "nitrogen-cycle",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "التصحر",
+          "name": "Desertification",
+          "slug": "desertification",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "إزالة الغابات",
+          "name": "Deforestation",
+          "slug": "deforestation",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "فقدان التنوع الحيوي",
+          "name": "Loss of Biodiversity",
+          "slug": "loss-of-biodiversity",
+          "sequenceOrder": 6
+        }
+      ]
+    }
+  ]
+}

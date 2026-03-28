@@ -30,7 +30,7 @@ type ApiResponse = {
  * Mark a catalog lesson as complete.
  * Migration: Uses LessonProgress + SubjectCertificate instead of Stream models.
  */
-export async function markCatalogLessonComplete(
+export async function markLessonComplete(
   lessonId: string,
   slug: string
 ): Promise<ApiResponse> {
@@ -42,7 +42,7 @@ export async function markCatalogLessonComplete(
 
   try {
     // Verify lesson exists and get subject context
-    const lesson = await db.catalogLesson.findUnique({
+    const lesson = await db.lesson.findUnique({
       where: { id: lessonId },
       select: {
         id: true,
@@ -129,7 +129,7 @@ export async function markCatalogLessonComplete(
     })
 
     // Check if all lessons in the subject are completed
-    const allLessons = await db.catalogLesson.findMany({
+    const allLessons = await db.lesson.findMany({
       where: {
         chapter: { subjectId },
         status: "PUBLISHED",
@@ -226,7 +226,7 @@ export async function markCatalogLessonComplete(
 /**
  * Mark a catalog lesson as incomplete.
  */
-export async function markCatalogLessonIncomplete(
+export async function markLessonIncomplete(
   lessonId: string,
   slug: string
 ): Promise<ApiResponse> {
@@ -260,7 +260,7 @@ export async function markCatalogLessonIncomplete(
 /**
  * Get catalog lesson progress.
  */
-export async function getCatalogLessonProgress(lessonId: string): Promise<{
+export async function getLessonProgress(lessonId: string): Promise<{
   isCompleted: boolean
   watchedSeconds: number
   totalSeconds: number | null
@@ -295,7 +295,7 @@ export async function getCatalogLessonProgress(lessonId: string): Promise<{
 /**
  * Update video playback progress for resume functionality.
  */
-export async function updateCatalogLessonProgress(data: {
+export async function updateLessonProgress(data: {
   lessonId: string
   watchedSeconds: number
   totalSeconds: number
@@ -308,7 +308,7 @@ export async function updateCatalogLessonProgress(data: {
 
   try {
     // Get enrollment for linking
-    const lesson = await db.catalogLesson.findUnique({
+    const lesson = await db.lesson.findUnique({
       where: { id: data.lessonId },
       select: { chapter: { select: { subjectId: true } } },
     })

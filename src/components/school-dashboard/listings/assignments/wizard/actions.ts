@@ -24,7 +24,7 @@ export async function getAssignmentForWizard(
     const { schoolId } = await getTenantContext()
     if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
-    const assignment = await db.assignment.findFirst({
+    const assignment = await db.schoolAssignment.findFirst({
       where: { id: assignmentId, schoolId },
       select: {
         id: true,
@@ -89,7 +89,7 @@ export async function createDraftAssignment(): Promise<
     const dueDate = new Date()
     dueDate.setDate(dueDate.getDate() + 7)
 
-    const assignment = await db.assignment.create({
+    const assignment = await db.schoolAssignment.create({
       data: {
         schoolId,
         classId: firstClass.id,
@@ -128,7 +128,7 @@ export async function completeAssignmentWizard(
     }
 
     // Validate required fields are present
-    const assignment = await db.assignment.findFirst({
+    const assignment = await db.schoolAssignment.findFirst({
       where: { id: assignmentId, schoolId },
       select: { title: true },
     })
@@ -141,7 +141,7 @@ export async function completeAssignmentWizard(
       return actionError(ACTION_ERRORS.VALIDATION_ERROR, "title_required")
     }
 
-    await db.assignment.updateMany({
+    await db.schoolAssignment.updateMany({
       where: { id: assignmentId, schoolId },
       data: { wizardStep: null },
     })
@@ -168,7 +168,7 @@ export async function updateAssignmentWizardStep(
     const { schoolId } = await getTenantContext()
     if (!schoolId) return
 
-    await db.assignment.updateMany({
+    await db.schoolAssignment.updateMany({
       where: { id: assignmentId, schoolId },
       data: { wizardStep: step },
     })
@@ -193,7 +193,7 @@ export async function deleteDraftAssignment(
     }
 
     // Atomic delete — only if it's still a draft
-    const { count } = await db.assignment.deleteMany({
+    const { count } = await db.schoolAssignment.deleteMany({
       where: { id: assignmentId, schoolId, wizardStep: { not: null } },
     })
 

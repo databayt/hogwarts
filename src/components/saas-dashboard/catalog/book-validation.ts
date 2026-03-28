@@ -34,4 +34,4 @@ export const catalogBookSchema = z.object({
     .default("PENDING"),
 })
 
-export type CatalogBookInput = z.infer<typeof catalogBookSchema>
+export type BookInput = z.infer<typeof catalogBookSchema>

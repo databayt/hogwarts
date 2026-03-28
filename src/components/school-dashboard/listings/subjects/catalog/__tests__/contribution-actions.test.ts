@@ -276,9 +276,7 @@ describe("Catalog Contribution Actions", () => {
       setupAuth()
 
       const mockMaterial = { id: "m-1" }
-      vi.mocked(db.catalogMaterial.create).mockResolvedValue(
-        mockMaterial as any
-      )
+      vi.mocked(db.material.create).mockResolvedValue(mockMaterial as any)
 
       const result = await submitMaterial({
         catalogSubjectId: "subject-1",
@@ -290,7 +288,7 @@ describe("Catalog Contribution Actions", () => {
 
       expect(result.success).toBe(true)
       expect(result.data).toEqual({ id: "m-1" })
-      expect(db.catalogMaterial.create).toHaveBeenCalledWith({
+      expect(db.material.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           catalogSubjectId: "subject-1",
           title: "Study Guide: Algebra",
@@ -315,7 +313,7 @@ describe("Catalog Contribution Actions", () => {
 
       expect(result.success).toBe(false)
       expect(result.error).toBe("Title is required")
-      expect(db.catalogMaterial.create).not.toHaveBeenCalled()
+      expect(db.material.create).not.toHaveBeenCalled()
     })
   })
 
@@ -328,7 +326,7 @@ describe("Catalog Contribution Actions", () => {
       setupAuth()
 
       const mockAssignment = { id: "a-1" }
-      vi.mocked(db.catalogAssignment.create).mockResolvedValue(
+      vi.mocked(db.schoolAssignment.create).mockResolvedValue(
         mockAssignment as any
       )
 
@@ -343,7 +341,7 @@ describe("Catalog Contribution Actions", () => {
 
       expect(result.success).toBe(true)
       expect(result.data).toEqual({ id: "a-1" })
-      expect(db.catalogAssignment.create).toHaveBeenCalledWith({
+      expect(db.schoolAssignment.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           catalogSubjectId: "subject-1",
           title: "Lab Report: Photosynthesis",
@@ -368,7 +366,7 @@ describe("Catalog Contribution Actions", () => {
 
       expect(result.success).toBe(false)
       expect(result.error).toBe("Title is required")
-      expect(db.catalogAssignment.create).not.toHaveBeenCalled()
+      expect(db.schoolAssignment.create).not.toHaveBeenCalled()
     })
   })
 
@@ -380,11 +378,11 @@ describe("Catalog Contribution Actions", () => {
     it("updates visibility for owned question", async () => {
       setupAuth()
 
-      vi.mocked(db.catalogQuestion.findFirst).mockResolvedValue({
+      vi.mocked(db.question.findFirst).mockResolvedValue({
         id: "q-1",
         contributedBy: "teacher-1",
       } as any)
-      vi.mocked(db.catalogQuestion.update).mockResolvedValue({} as any)
+      vi.mocked(db.question.update).mockResolvedValue({} as any)
 
       const result = await updateContributionVisibility(
         "question",
@@ -393,10 +391,10 @@ describe("Catalog Contribution Actions", () => {
       )
 
       expect(result.success).toBe(true)
-      expect(db.catalogQuestion.findFirst).toHaveBeenCalledWith({
+      expect(db.question.findFirst).toHaveBeenCalledWith({
         where: { id: "q-1", contributedBy: "teacher-1" },
       })
-      expect(db.catalogQuestion.update).toHaveBeenCalledWith({
+      expect(db.question.update).toHaveBeenCalledWith({
         where: { id: "q-1" },
         data: { visibility: "SCHOOL" },
       })
@@ -405,7 +403,7 @@ describe("Catalog Contribution Actions", () => {
     it("returns error for non-owned content", async () => {
       setupAuth()
 
-      vi.mocked(db.catalogQuestion.findFirst).mockResolvedValue(null)
+      vi.mocked(db.question.findFirst).mockResolvedValue(null)
 
       const result = await updateContributionVisibility(
         "question",
@@ -415,7 +413,7 @@ describe("Catalog Contribution Actions", () => {
 
       expect(result.success).toBe(false)
       expect(result.error).toBe("Question not found or not owned by you")
-      expect(db.catalogQuestion.update).not.toHaveBeenCalled()
+      expect(db.question.update).not.toHaveBeenCalled()
     })
 
     it("returns error for unknown content type", async () => {
@@ -468,13 +466,9 @@ describe("Catalog Contribution Actions", () => {
         },
       ]
 
-      vi.mocked(db.catalogQuestion.findMany).mockResolvedValue(
-        mockQuestions as any
-      )
-      vi.mocked(db.catalogMaterial.findMany).mockResolvedValue(
-        mockMaterials as any
-      )
-      vi.mocked(db.catalogAssignment.findMany).mockResolvedValue(
+      vi.mocked(db.question.findMany).mockResolvedValue(mockQuestions as any)
+      vi.mocked(db.material.findMany).mockResolvedValue(mockMaterials as any)
+      vi.mocked(db.schoolAssignment.findMany).mockResolvedValue(
         mockAssignments as any
       )
 
@@ -485,19 +479,19 @@ describe("Catalog Contribution Actions", () => {
       expect(result.assignments).toEqual(mockAssignments)
 
       // Verify each query filters by contributedBy = userId
-      expect(db.catalogQuestion.findMany).toHaveBeenCalledWith(
+      expect(db.question.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { contributedBy: "teacher-1" },
           orderBy: { createdAt: "desc" },
         })
       )
-      expect(db.catalogMaterial.findMany).toHaveBeenCalledWith(
+      expect(db.material.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { contributedBy: "teacher-1" },
           orderBy: { createdAt: "desc" },
         })
       )
-      expect(db.catalogAssignment.findMany).toHaveBeenCalledWith(
+      expect(db.schoolAssignment.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { contributedBy: "teacher-1" },
           orderBy: { createdAt: "desc" },

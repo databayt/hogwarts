@@ -202,14 +202,14 @@ export default async function ExamsContent({
       lastMonthExamsCount,
       lastMonthQuestionsCount,
     ] = await Promise.all([
-      db.exam.count({
+      db.schoolExam.count({
         where: { schoolId, ...examDateWhere, ...subjectGradeWhere },
       }),
       db.questionBank.count({
         where: { schoolId, ...(subjectId ? { subjectId } : {}) },
       }),
-      db.examTemplate.count({ where: { schoolId } }),
-      db.exam.count({
+      db.schoolExamTemplate.count({ where: { schoolId } }),
+      db.schoolExam.count({
         where: {
           schoolId,
           status: "IN_PROGRESS",
@@ -217,7 +217,7 @@ export default async function ExamsContent({
           ...subjectGradeWhere,
         },
       }),
-      db.exam.count({
+      db.schoolExam.count({
         where: {
           schoolId,
           status: { in: ["PLANNED", "IN_PROGRESS"] },
@@ -227,7 +227,7 @@ export default async function ExamsContent({
           ...subjectGradeWhere,
         },
       }),
-      db.exam.count({
+      db.schoolExam.count({
         where: {
           schoolId,
           status: "COMPLETED",
@@ -243,7 +243,7 @@ export default async function ExamsContent({
         },
       }),
       db.student.count({ where: { schoolId } }),
-      db.exam.count({
+      db.schoolExam.count({
         where: {
           schoolId,
           createdAt: { lt: lastMonth },
@@ -261,7 +261,7 @@ export default async function ExamsContent({
     ])
 
     // Fetch next upcoming exam separately for proper type inference
-    nextExam = await db.exam.findFirst({
+    nextExam = await db.schoolExam.findFirst({
       where: {
         schoolId,
         status: { in: ["PLANNED", "IN_PROGRESS"] },

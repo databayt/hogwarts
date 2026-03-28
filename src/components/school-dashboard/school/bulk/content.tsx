@@ -155,7 +155,6 @@ interface DropZoneConfig {
   type: ImportType
   icon: React.ComponentType<{ className?: string }>
   label: string
-  labelAr: string
   templateContent: string
   templateFilename: string
 }
@@ -188,19 +187,18 @@ function DropZone({
   config,
   state,
   inputRef,
-  isArabic,
+  t,
   onUpload,
   onBrowse,
 }: {
   config: DropZoneConfig
   state: SectionState
   inputRef: (el: HTMLInputElement | null) => void
-  isArabic: boolean
+  t: Record<string, string>
   onUpload: (file: File) => void
   onBrowse: () => void
 }) {
   const hasResult = state.result || state.error
-  const label = isArabic ? config.labelAr : config.label
   const Icon = config.icon
 
   const handleDrop = useCallback(
@@ -247,35 +245,26 @@ function DropZone({
                       <CheckCircle2 className="h-4 w-4 shrink-0" />
                     )}
                     {state.result.imported}{" "}
-                    {state.importing
-                      ? isArabic
-                        ? "جاري الاستيراد..."
-                        : "importing..."
-                      : isArabic
-                        ? "تم الاستيراد بنجاح"
-                        : "imported successfully"}
+                    {state.importing ? t.importing : t.imported}
                   </div>
                 )}
                 {state.result.skipped > 0 && (
                   <div className="text-muted-foreground flex items-center gap-2">
                     <Info className="h-4 w-4 shrink-0" />
                     {state.result.skipped}{" "}
-                    {isArabic
-                      ? "تم تخطيها (موجودة)"
-                      : "skipped (already exist)"}
+                    {t.skipped || "skipped (already exist)"}
                   </div>
                 )}
                 {state.result.failed > 0 && (
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-red-600">
                       <AlertCircle className="h-4 w-4 shrink-0" />
-                      {state.result.failed} {isArabic ? "فشل" : "failed"}
+                      {state.result.failed} {t.failed}
                     </div>
                     <div className="max-h-[80px] overflow-y-auto rounded border p-2 text-xs">
                       {state.result.errors.map((err, i) => (
                         <div key={i} className="text-muted-foreground py-0.5">
-                          {isArabic ? `صف ${err.row}` : `Row ${err.row}`}:{" "}
-                          {err.error}
+                          {t.row} {err.row}: {err.error}
                         </div>
                       ))}
                     </div>
@@ -298,7 +287,7 @@ function DropZone({
                   onClick={onBrowse}
                   className="text-muted-foreground hover:text-foreground mt-1 text-xs underline underline-offset-2"
                 >
-                  {isArabic ? "رفع ملف آخر" : "Upload another file"}
+                  {t.uploadAnother}
                 </button>
               </div>
             )}
@@ -326,9 +315,8 @@ function DropZone({
               <Upload className="text-muted-foreground h-4 w-4" />
             </div>
             <p className="text-sm">
-              {isArabic ? "اسحب ملف " : "Drop "}
-              <span className="font-semibold">{label}</span>
-              {isArabic ? " أو تصفح" : " file or browse"}
+              {t.dropFile} <span className="font-semibold">{config.label}</span>{" "}
+              {t.fileSuffix}
             </p>
             <p className="text-muted-foreground/60 text-xs">CSV, Excel, JSON</p>
             <input
@@ -355,7 +343,7 @@ function DropZone({
             downloadTemplate(config.templateContent, config.templateFilename)
           }}
           className="text-muted-foreground hover:text-foreground absolute end-2 top-2 rounded p-1 transition-colors"
-          title={isArabic ? "تحميل القالب" : "Download Template"}
+          title={t.downloadTemplate}
         >
           <Download className="h-4 w-4" />
         </button>
@@ -367,7 +355,8 @@ function DropZone({
 // ---------- Main Component ----------
 
 export default function BulkContent({ dictionary, lang }: Props) {
-  const isArabic = lang === "ar"
+  const t = ((dictionary?.school as Record<string, unknown>)?.bulk ??
+    {}) as Record<string, string>
   const [activeAcademic, setActiveAcademic] = useState("years")
 
   // People import state (onboarding two-phase pattern)
@@ -390,32 +379,28 @@ export default function BulkContent({ dictionary, lang }: Props) {
     {
       type: "students",
       icon: GraduationCap,
-      label: "Students",
-      labelAr: "الطلاب",
+      label: t.students || "Students",
       templateContent: STUDENT_TEMPLATE,
       templateFilename: "students-template.csv",
     },
     {
       type: "teachers",
       icon: UserCheck,
-      label: "Teachers",
-      labelAr: "المعلمين",
+      label: t.teachers || "Teachers",
       templateContent: TEACHER_TEMPLATE,
       templateFilename: "teachers-template.csv",
     },
     {
       type: "staff",
       icon: Users,
-      label: "Staff",
-      labelAr: "الموظفين",
+      label: t.staff || "Staff",
       templateContent: STAFF_TEMPLATE,
       templateFilename: "staff-template.csv",
     },
     {
       type: "guardians",
       icon: Shield,
-      label: "Guardians",
-      labelAr: "أولياء الأمور",
+      label: t.guardians || "Guardians",
       templateContent: GUARDIAN_TEMPLATE,
       templateFilename: "guardians-template.csv",
     },
@@ -487,42 +472,32 @@ export default function BulkContent({ dictionary, lang }: Props) {
     {
       id: "years",
       icon: Calendar,
-      title: isArabic ? "السنوات الدراسية" : "Academic Years",
-      description: isArabic
-        ? "إنشاء وإدارة السنوات الدراسية"
-        : "Create and manage school years",
+      title: t.academicYears || "Academic Years",
+      description: t.academicYearsDesc || "Create and manage school years",
     },
     {
       id: "terms",
       icon: Layers,
-      title: isArabic ? "الفصول الدراسية" : "Terms",
-      description: isArabic
-        ? "تحديد فصول السنة الدراسية"
-        : "Define terms within the academic year",
+      title: t.terms || "Terms",
+      description: t.termsDesc || "Define terms within the academic year",
     },
     {
       id: "periods",
       icon: Clock,
-      title: isArabic ? "الحصص" : "Periods",
-      description: isArabic
-        ? "إعداد جدول الحصص اليومية"
-        : "Configure daily class periods",
+      title: t.periods || "Periods",
+      description: t.periodsDesc || "Configure daily class periods",
     },
     {
       id: "levels",
       icon: GraduationCap,
-      title: isArabic ? "المراحل الدراسية" : "Year Levels",
-      description: isArabic
-        ? "تعريف المراحل والصفوف الدراسية"
-        : "Define grades and year levels",
+      title: t.yearLevels || "Year Levels",
+      description: t.yearLevelsDesc || "Define grades and year levels",
     },
     {
       id: "grading",
       icon: Target,
-      title: isArabic ? "نظام الدرجات" : "Grading Scale",
-      description: isArabic
-        ? "إعداد نظام التقييم والدرجات"
-        : "Configure grading and score ranges",
+      title: t.gradingScale || "Grading Scale",
+      description: t.gradingScaleDesc || "Configure grading and score ranges",
     },
   ]
 
@@ -530,76 +505,64 @@ export default function BulkContent({ dictionary, lang }: Props) {
     {
       id: "departments",
       icon: Building,
-      title: isArabic ? "الأقسام" : "Departments",
-      description: isArabic
-        ? "إدارة أقسام المدرسة"
-        : "Manage school departments",
+      title: t.departments || "Departments",
+      description: t.departmentsDesc || "Manage school departments",
       placeholder: true,
     },
     {
       id: "classrooms",
       icon: Box,
-      title: isArabic ? "الفصول" : "Classrooms",
-      description: isArabic
-        ? "إدارة الفصول الدراسية"
-        : "Manage classroom assignments",
+      title: t.classrooms || "Classrooms",
+      description: t.classroomsDesc || "Manage classroom assignments",
       placeholder: true,
     },
   ]
 
   const placeholderSections = [
     {
-      title: isArabic ? "الحضور" : "Attendance",
+      title: t.attendance || "Attendance",
       cards: [
         {
           id: "attendance",
           icon: ClipboardList,
-          title: isArabic ? "استيراد الحضور" : "Attendance Import",
-          description: isArabic
-            ? "استيراد سجلات الحضور"
-            : "Import attendance records",
+          title: t.attendanceImport || "Attendance Import",
+          description: t.attendanceImportDesc || "Import attendance records",
           placeholder: true,
         },
       ] satisfies BulkCardItem[],
     },
     {
-      title: isArabic ? "الجدول" : "Timetable",
+      title: t.timetable || "Timetable",
       cards: [
         {
           id: "timetable",
           icon: Clock,
-          title: isArabic ? "استيراد الجدول" : "Timetable Import",
-          description: isArabic
-            ? "استيراد جدول الحصص"
-            : "Import timetable schedule",
+          title: t.timetableImport || "Timetable Import",
+          description: t.timetableImportDesc || "Import timetable schedule",
           placeholder: true,
         },
       ] satisfies BulkCardItem[],
     },
     {
-      title: isArabic ? "الامتحانات" : "Exams",
+      title: t.exams || "Exams",
       cards: [
         {
           id: "exams",
           icon: FileText,
-          title: isArabic ? "استيراد الدرجات" : "Exam Scores Import",
-          description: isArabic
-            ? "استيراد درجات الامتحانات"
-            : "Import exam score records",
+          title: t.examScoresImport || "Exam Scores Import",
+          description: t.examScoresImportDesc || "Import exam score records",
           placeholder: true,
         },
       ] satisfies BulkCardItem[],
     },
     {
-      title: isArabic ? "المواد" : "Materials",
+      title: t.materials || "Materials",
       cards: [
         {
           id: "materials",
           icon: BookOpen,
-          title: isArabic ? "استيراد المواد" : "Materials Import",
-          description: isArabic
-            ? "استيراد المواد التعليمية"
-            : "Import educational materials",
+          title: t.materialsImport || "Materials Import",
+          description: t.materialsImportDesc || "Import educational materials",
           placeholder: true,
         },
       ] satisfies BulkCardItem[],
@@ -610,9 +573,7 @@ export default function BulkContent({ dictionary, lang }: Props) {
     <div className="space-y-10">
       {/* People (DropZone-based import) */}
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold">
-          {isArabic ? "الأشخاص" : "People"}
-        </h2>
+        <h2 className="text-lg font-semibold">{t.people || "People"}</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {dropZoneConfigs.map((config) => (
             <DropZone
@@ -622,7 +583,7 @@ export default function BulkContent({ dictionary, lang }: Props) {
               inputRef={(el) => {
                 inputRefs.current[config.type] = el
               }}
-              isArabic={isArabic}
+              t={t}
               onUpload={(file) => handleUpload(file, config.type)}
               onBrowse={() => inputRefs.current[config.type]?.click()}
             />
@@ -632,9 +593,7 @@ export default function BulkContent({ dictionary, lang }: Props) {
 
       {/* Academic */}
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold">
-          {isArabic ? "أكاديمي" : "Academic"}
-        </h2>
+        <h2 className="text-lg font-semibold">{t.academic || "Academic"}</h2>
         <ScrollRow
           items={academicCards}
           activeId={activeAcademic}
@@ -665,9 +624,7 @@ export default function BulkContent({ dictionary, lang }: Props) {
 
       {/* Structure */}
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold">
-          {isArabic ? "الهيكل" : "Structure"}
-        </h2>
+        <h2 className="text-lg font-semibold">{t.structure || "Structure"}</h2>
         <ScrollRow items={structureCards} activeId={null} onSelect={() => {}} />
       </section>
 

@@ -19,7 +19,7 @@ export async function updateTemplateDurationMarks(
 
     const parsed = durationMarksSchema.parse(input)
 
-    await db.examTemplate.updateMany({
+    await db.schoolExamTemplate.updateMany({
       where: { id: templateId, schoolId },
       data: {
         duration: parsed.duration,

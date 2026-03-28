@@ -15,9 +15,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-import { deleteCatalogAssignment } from "./assignment-actions"
+import { deleteAssignment } from "./assignment-actions"
 
-export interface CatalogAssignmentRow {
+export interface AssignmentRow {
   id: string
   title: string
   description: string | null
@@ -49,7 +49,7 @@ function getApprovalVariant(
   }
 }
 
-export const assignmentColumns: ColumnDef<CatalogAssignmentRow>[] = [
+export const assignmentColumns: ColumnDef<AssignmentRow>[] = [
   {
     accessorKey: "title",
     header: "Title",
@@ -130,7 +130,7 @@ export const assignmentColumns: ColumnDef<CatalogAssignmentRow>[] = [
 
       async function handleDelete() {
         if (!confirm("Are you sure you want to delete this assignment?")) return
-        await deleteCatalogAssignment(id)
+        await deleteAssignment(id)
       }
 
       return (

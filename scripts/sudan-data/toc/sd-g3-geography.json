@@ -1,0 +1,80 @@
+{
+  "subject": "geography",
+  "subjectNameAr": "الجغرافيا",
+  "grade": 3,
+  "level": "elementary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "الطبعة الأولى 2016م",
+  "chapters": [
+    {
+      "nameAr": "البيئة من حولنا",
+      "name": "The Environment Around Us",
+      "slug": "environment-around-us",
+      "sequenceOrder": 1,
+      "lessons": [
+        {
+          "nameAr": "مفهوم الجغرافيا",
+          "name": "Concept of Geography",
+          "slug": "concept-of-geography",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الأرض",
+          "name": "The Earth",
+          "slug": "the-earth",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الأرض اليابسة والماء",
+          "name": "Land and Water",
+          "slug": "land-and-water",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "شروق الشمس وغروبها",
+          "name": "Sunrise and Sunset",
+          "slug": "sunrise-and-sunset",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "الفصول الأربعة",
+          "name": "The Four Seasons",
+          "slug": "four-seasons",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "الاتجاهات الأصلية والفرعية",
+          "name": "Cardinal and Intermediate Directions",
+          "slug": "cardinal-intermediate-directions",
+          "sequenceOrder": 6
+        },
+        {
+          "nameAr": "الخريطة وعناصرها",
+          "name": "Maps and Their Elements",
+          "slug": "maps-and-elements",
+          "sequenceOrder": 7
+        }
+      ]
+    },
+    {
+      "nameAr": "بيئتي المدرسية",
+      "name": "My School Environment",
+      "slug": "school-environment",
+      "sequenceOrder": 2,
+      "lessons": [
+        {
+          "nameAr": "فصلي (1)",
+          "name": "My Classroom (1)",
+          "slug": "my-classroom-1",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "فصلي (2)",
+          "name": "My Classroom (2)",
+          "slug": "my-classroom-2",
+          "sequenceOrder": 2
+        }
+      ]
+    }
+  ]
+}

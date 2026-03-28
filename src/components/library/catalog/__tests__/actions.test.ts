@@ -9,8 +9,8 @@ import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import {
-  deselectCatalogBook,
-  selectCatalogBook,
+  deselectBook,
+  selectBook,
   toggleBookSelection,
   updateBookSelection,
 } from "../actions"
@@ -96,7 +96,7 @@ function mockNoSchoolContext() {
   } as any)
 }
 
-const mockCatalogBook = {
+const mockBook = {
   title: "Test Book",
   author: "Author",
   genre: "Fiction",
@@ -124,16 +124,14 @@ describe("Library Catalog Actions", () => {
   })
 
   // ==========================================================================
-  // selectCatalogBook
+  // selectBook
   // ==========================================================================
 
-  describe("selectCatalogBook", () => {
+  describe("selectBook", () => {
     it("creates selection + Book in transaction", async () => {
       mockAdminSession()
-      vi.mocked(db.schoolBookSelection.findFirst).mockResolvedValue(null)
-      vi.mocked(db.catalogBook.findUnique).mockResolvedValue(
-        mockCatalogBook as any
-      )
+      vi.mocked(db.bookSelection.findFirst).mockResolvedValue(null)
+      vi.mocked(db.schoolBook.findUnique).mockResolvedValue(mockBook as any)
 
       let txSelectionCreate: ReturnType<typeof vi.fn>
       let txBookCreate: ReturnType<typeof vi.fn>
@@ -151,7 +149,7 @@ describe("Library Catalog Actions", () => {
         return callback(tx)
       })
 
-      const result = await selectCatalogBook("cat-book-1", 5, "Shelf A")
+      const result = await selectBook("cat-book-1", 5, "Shelf A")
 
       expect(result).toEqual({ success: true })
       expect(db.$transaction).toHaveBeenCalledTimes(1)
@@ -184,10 +182,8 @@ describe("Library Catalog Actions", () => {
 
     it("sets shelfLocation to null when not provided", async () => {
       mockAdminSession()
-      vi.mocked(db.schoolBookSelection.findFirst).mockResolvedValue(null)
-      vi.mocked(db.catalogBook.findUnique).mockResolvedValue(
-        mockCatalogBook as any
-      )
+      vi.mocked(db.bookSelection.findFirst).mockResolvedValue(null)
+      vi.mocked(db.schoolBook.findUnique).mockResolvedValue(mockBook as any)
 
       let txSelectionCreate: ReturnType<typeof vi.fn>
       vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
@@ -203,7 +199,7 @@ describe("Library Catalog Actions", () => {
         return callback(tx)
       })
 
-      await selectCatalogBook("cat-book-1", 3)
+      await selectBook("cat-book-1", 3)
 
       expect(txSelectionCreate!).toHaveBeenCalledWith({
         data: expect.objectContaining({
@@ -214,11 +210,11 @@ describe("Library Catalog Actions", () => {
 
     it("returns error for already-selected book (prevents duplicates)", async () => {
       mockAdminSession()
-      vi.mocked(db.schoolBookSelection.findFirst).mockResolvedValue({
+      vi.mocked(db.bookSelection.findFirst).mockResolvedValue({
         id: "existing",
       } as any)
 
-      const result = await selectCatalogBook("cat-book-1", 5)
+      const result = await selectBook("cat-book-1", 5)
 
       expect(result).toEqual({
         success: false,
@@ -229,10 +225,10 @@ describe("Library Catalog Actions", () => {
 
     it("returns error for non-existent catalog book", async () => {
       mockAdminSession()
-      vi.mocked(db.schoolBookSelection.findFirst).mockResolvedValue(null)
-      vi.mocked(db.catalogBook.findUnique).mockResolvedValue(null)
+      vi.mocked(db.bookSelection.findFirst).mockResolvedValue(null)
+      vi.mocked(db.schoolBook.findUnique).mockResolvedValue(null)
 
-      const result = await selectCatalogBook("nonexistent", 5)
+      const result = await selectBook("nonexistent", 5)
 
       expect(result).toEqual({
         success: false,
@@ -244,19 +240,19 @@ describe("Library Catalog Actions", () => {
     it("requires ADMIN or DEVELOPER role", async () => {
       mockUnauthorizedSession("TEACHER")
 
-      const result = await selectCatalogBook("cat-book-1", 5)
+      const result = await selectBook("cat-book-1", 5)
 
       expect(result).toEqual({
         success: false,
         error: "Unauthorized: ADMIN or DEVELOPER role required",
       })
-      expect(db.schoolBookSelection.findFirst).not.toHaveBeenCalled()
+      expect(db.bookSelection.findFirst).not.toHaveBeenCalled()
     })
 
     it("rejects STUDENT role", async () => {
       mockUnauthorizedSession("STUDENT")
 
-      const result = await selectCatalogBook("cat-book-1", 5)
+      const result = await selectBook("cat-book-1", 5)
 
       expect(result).toEqual({
         success: false,
@@ -267,7 +263,7 @@ describe("Library Catalog Actions", () => {
     it("rejects STAFF role", async () => {
       mockUnauthorizedSession("STAFF")
 
-      const result = await selectCatalogBook("cat-book-1", 5)
+      const result = await selectBook("cat-book-1", 5)
 
       expect(result).toEqual({
         success: false,
@@ -278,7 +274,7 @@ describe("Library Catalog Actions", () => {
     it("requires school context", async () => {
       mockNoSchoolContext()
 
-      const result = await selectCatalogBook("cat-book-1", 5)
+      const result = await selectBook("cat-book-1", 5)
 
       expect(result).toEqual({
         success: false,
@@ -288,10 +284,8 @@ describe("Library Catalog Actions", () => {
 
     it("allows DEVELOPER role", async () => {
       mockDeveloperSession()
-      vi.mocked(db.schoolBookSelection.findFirst).mockResolvedValue(null)
-      vi.mocked(db.catalogBook.findUnique).mockResolvedValue(
-        mockCatalogBook as any
-      )
+      vi.mocked(db.bookSelection.findFirst).mockResolvedValue(null)
+      vi.mocked(db.schoolBook.findUnique).mockResolvedValue(mockBook as any)
       vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
         const tx = {
           schoolBookSelection: {
@@ -304,40 +298,38 @@ describe("Library Catalog Actions", () => {
         return callback(tx)
       })
 
-      const result = await selectCatalogBook("cat-book-1", 5)
+      const result = await selectBook("cat-book-1", 5)
 
       expect(result).toEqual({ success: true })
     })
 
     it("updates usageCount inside transaction", async () => {
       mockAdminSession()
-      vi.mocked(db.schoolBookSelection.findFirst).mockResolvedValue(null)
-      vi.mocked(db.catalogBook.findUnique).mockResolvedValue(
-        mockCatalogBook as any
-      )
+      vi.mocked(db.bookSelection.findFirst).mockResolvedValue(null)
+      vi.mocked(db.schoolBook.findUnique).mockResolvedValue(mockBook as any)
 
-      let txCatalogBookUpdate: ReturnType<typeof vi.fn>
+      let txBookUpdate: ReturnType<typeof vi.fn>
       let txSelectionCount: ReturnType<typeof vi.fn>
       vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
         txSelectionCount = vi.fn().mockResolvedValue(3)
-        txCatalogBookUpdate = vi.fn().mockResolvedValue({})
+        txBookUpdate = vi.fn().mockResolvedValue({})
         const tx = {
           schoolBookSelection: {
             create: vi.fn().mockResolvedValue({}),
             count: txSelectionCount,
           },
           book: { create: vi.fn().mockResolvedValue({}) },
-          catalogBook: { update: txCatalogBookUpdate },
+          catalogBook: { update: txBookUpdate },
         }
         return callback(tx)
       })
 
-      await selectCatalogBook("cat-book-1", 5)
+      await selectBook("cat-book-1", 5)
 
       expect(txSelectionCount!).toHaveBeenCalledWith({
         where: { catalogBookId: "cat-book-1" },
       })
-      expect(txCatalogBookUpdate!).toHaveBeenCalledWith({
+      expect(txBookUpdate!).toHaveBeenCalledWith({
         where: { id: "cat-book-1" },
         data: { usageCount: 3 },
       })
@@ -345,15 +337,15 @@ describe("Library Catalog Actions", () => {
 
     it("copies catalog book fields to Book correctly", async () => {
       mockAdminSession()
-      vi.mocked(db.schoolBookSelection.findFirst).mockResolvedValue(null)
+      vi.mocked(db.bookSelection.findFirst).mockResolvedValue(null)
 
       const catalogWithNulls = {
-        ...mockCatalogBook,
+        ...mockBook,
         description: null,
         summary: null,
         coverUrl: null,
       }
-      vi.mocked(db.catalogBook.findUnique).mockResolvedValue(
+      vi.mocked(db.schoolBook.findUnique).mockResolvedValue(
         catalogWithNulls as any
       )
 
@@ -371,7 +363,7 @@ describe("Library Catalog Actions", () => {
         return callback(tx)
       })
 
-      await selectCatalogBook("cat-book-1", 2)
+      await selectBook("cat-book-1", 2)
 
       expect(txBookCreate!).toHaveBeenCalledWith({
         data: expect.objectContaining({
@@ -384,24 +376,24 @@ describe("Library Catalog Actions", () => {
   })
 
   // ==========================================================================
-  // deselectCatalogBook
+  // deselectBook
   // ==========================================================================
 
-  describe("deselectCatalogBook", () => {
+  describe("deselectBook", () => {
     it("removes selection and unlinks books (does not delete books)", async () => {
       mockAdminSession()
-      vi.mocked(db.schoolBookSelection.findFirst).mockResolvedValue({
+      vi.mocked(db.bookSelection.findFirst).mockResolvedValue({
         id: "sel-1",
       } as any)
 
       let txSelectionDelete: ReturnType<typeof vi.fn>
       let txBookUpdateMany: ReturnType<typeof vi.fn>
-      let txCatalogBookUpdate: ReturnType<typeof vi.fn>
+      let txBookUpdate: ReturnType<typeof vi.fn>
       let txSelectionCount: ReturnType<typeof vi.fn>
       vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
         txSelectionDelete = vi.fn().mockResolvedValue({})
         txBookUpdateMany = vi.fn().mockResolvedValue({ count: 1 })
-        txCatalogBookUpdate = vi.fn().mockResolvedValue({})
+        txBookUpdate = vi.fn().mockResolvedValue({})
         txSelectionCount = vi.fn().mockResolvedValue(0)
         const tx = {
           schoolBookSelection: {
@@ -409,12 +401,12 @@ describe("Library Catalog Actions", () => {
             count: txSelectionCount,
           },
           book: { updateMany: txBookUpdateMany },
-          catalogBook: { update: txCatalogBookUpdate },
+          catalogBook: { update: txBookUpdate },
         }
         return callback(tx)
       })
 
-      const result = await deselectCatalogBook("cat-book-1")
+      const result = await deselectBook("cat-book-1")
 
       expect(result).toEqual({ success: true })
       expect(db.$transaction).toHaveBeenCalledTimes(1)
@@ -434,7 +426,7 @@ describe("Library Catalog Actions", () => {
       expect(txSelectionCount!).toHaveBeenCalledWith({
         where: { catalogBookId: "cat-book-1" },
       })
-      expect(txCatalogBookUpdate!).toHaveBeenCalledWith({
+      expect(txBookUpdate!).toHaveBeenCalledWith({
         where: { id: "cat-book-1" },
         data: { usageCount: 0 },
       })
@@ -446,9 +438,9 @@ describe("Library Catalog Actions", () => {
 
     it("returns error if selection not found", async () => {
       mockAdminSession()
-      vi.mocked(db.schoolBookSelection.findFirst).mockResolvedValue(null)
+      vi.mocked(db.bookSelection.findFirst).mockResolvedValue(null)
 
-      const result = await deselectCatalogBook("cat-book-1")
+      const result = await deselectBook("cat-book-1")
 
       expect(result).toEqual({
         success: false,
@@ -460,19 +452,19 @@ describe("Library Catalog Actions", () => {
     it("requires ADMIN or DEVELOPER role", async () => {
       mockUnauthorizedSession("STUDENT")
 
-      const result = await deselectCatalogBook("cat-book-1")
+      const result = await deselectBook("cat-book-1")
 
       expect(result).toEqual({
         success: false,
         error: "Unauthorized: ADMIN or DEVELOPER role required",
       })
-      expect(db.schoolBookSelection.findFirst).not.toHaveBeenCalled()
+      expect(db.bookSelection.findFirst).not.toHaveBeenCalled()
     })
 
     it("requires school context", async () => {
       mockNoSchoolContext()
 
-      const result = await deselectCatalogBook("cat-book-1")
+      const result = await deselectBook("cat-book-1")
 
       expect(result).toEqual({
         success: false,
@@ -482,11 +474,11 @@ describe("Library Catalog Actions", () => {
 
     it("scopes findFirst query by schoolId", async () => {
       mockAdminSession()
-      vi.mocked(db.schoolBookSelection.findFirst).mockResolvedValue(null)
+      vi.mocked(db.bookSelection.findFirst).mockResolvedValue(null)
 
-      await deselectCatalogBook("cat-book-1")
+      await deselectBook("cat-book-1")
 
-      expect(db.schoolBookSelection.findFirst).toHaveBeenCalledWith({
+      expect(db.bookSelection.findFirst).toHaveBeenCalledWith({
         where: { schoolId: "school-1", catalogBookId: "cat-book-1" },
       })
     })
@@ -499,10 +491,10 @@ describe("Library Catalog Actions", () => {
   describe("updateBookSelection", () => {
     it("updates with valid data", async () => {
       mockAdminSession()
-      vi.mocked(db.schoolBookSelection.findFirst).mockResolvedValue({
+      vi.mocked(db.bookSelection.findFirst).mockResolvedValue({
         id: "sel-1",
       } as any)
-      vi.mocked(db.schoolBookSelection.update).mockResolvedValue({} as any)
+      vi.mocked(db.bookSelection.update).mockResolvedValue({} as any)
 
       const result = await updateBookSelection("sel-1", {
         totalCopies: 10,
@@ -510,7 +502,7 @@ describe("Library Catalog Actions", () => {
       })
 
       expect(result).toEqual({ success: true })
-      expect(db.schoolBookSelection.update).toHaveBeenCalledWith({
+      expect(db.bookSelection.update).toHaveBeenCalledWith({
         where: { id: "sel-1" },
         data: { totalCopies: 10, shelfLocation: "Shelf B" },
       })
@@ -521,7 +513,7 @@ describe("Library Catalog Actions", () => {
 
     it("returns error if selection not found", async () => {
       mockAdminSession()
-      vi.mocked(db.schoolBookSelection.findFirst).mockResolvedValue(null)
+      vi.mocked(db.bookSelection.findFirst).mockResolvedValue(null)
 
       const result = await updateBookSelection("nonexistent", {
         totalCopies: 5,
@@ -531,19 +523,19 @@ describe("Library Catalog Actions", () => {
         success: false,
         error: "Selection not found",
       })
-      expect(db.schoolBookSelection.update).not.toHaveBeenCalled()
+      expect(db.bookSelection.update).not.toHaveBeenCalled()
     })
 
     it("verifies ownership by scoping findFirst with schoolId", async () => {
       mockAdminSession()
-      vi.mocked(db.schoolBookSelection.findFirst).mockResolvedValue({
+      vi.mocked(db.bookSelection.findFirst).mockResolvedValue({
         id: "sel-1",
       } as any)
-      vi.mocked(db.schoolBookSelection.update).mockResolvedValue({} as any)
+      vi.mocked(db.bookSelection.update).mockResolvedValue({} as any)
 
       await updateBookSelection("sel-1", { totalCopies: 5 })
 
-      expect(db.schoolBookSelection.findFirst).toHaveBeenCalledWith({
+      expect(db.bookSelection.findFirst).toHaveBeenCalledWith({
         where: { id: "sel-1", schoolId: "school-1" },
       })
     })
@@ -559,7 +551,7 @@ describe("Library Catalog Actions", () => {
       expect(result.success).toBe(false)
       expect(result.error).toBeDefined()
       // Zod strict() rejects before findFirst is reached
-      expect(db.schoolBookSelection.findFirst).not.toHaveBeenCalled()
+      expect(db.bookSelection.findFirst).not.toHaveBeenCalled()
     })
 
     it("validates totalCopies must be a positive integer", async () => {
@@ -586,10 +578,10 @@ describe("Library Catalog Actions", () => {
 
     it("accepts all valid optional fields", async () => {
       mockAdminSession()
-      vi.mocked(db.schoolBookSelection.findFirst).mockResolvedValue({
+      vi.mocked(db.bookSelection.findFirst).mockResolvedValue({
         id: "sel-1",
       } as any)
-      vi.mocked(db.schoolBookSelection.update).mockResolvedValue({} as any)
+      vi.mocked(db.bookSelection.update).mockResolvedValue({} as any)
 
       const result = await updateBookSelection("sel-1", {
         totalCopies: 10,
@@ -601,7 +593,7 @@ describe("Library Catalog Actions", () => {
       })
 
       expect(result).toEqual({ success: true })
-      expect(db.schoolBookSelection.update).toHaveBeenCalledWith({
+      expect(db.bookSelection.update).toHaveBeenCalledWith({
         where: { id: "sel-1" },
         data: {
           totalCopies: 10,
@@ -616,17 +608,17 @@ describe("Library Catalog Actions", () => {
 
     it("accepts nullable gradeId", async () => {
       mockAdminSession()
-      vi.mocked(db.schoolBookSelection.findFirst).mockResolvedValue({
+      vi.mocked(db.bookSelection.findFirst).mockResolvedValue({
         id: "sel-1",
       } as any)
-      vi.mocked(db.schoolBookSelection.update).mockResolvedValue({} as any)
+      vi.mocked(db.bookSelection.update).mockResolvedValue({} as any)
 
       const result = await updateBookSelection("sel-1", {
         gradeId: null,
       })
 
       expect(result).toEqual({ success: true })
-      expect(db.schoolBookSelection.update).toHaveBeenCalledWith({
+      expect(db.bookSelection.update).toHaveBeenCalledWith({
         where: { id: "sel-1" },
         data: { gradeId: null },
       })
@@ -662,16 +654,16 @@ describe("Library Catalog Actions", () => {
   describe("toggleBookSelection", () => {
     it("toggles isActive to false", async () => {
       mockAdminSession()
-      vi.mocked(db.schoolBookSelection.findFirst).mockResolvedValue({
+      vi.mocked(db.bookSelection.findFirst).mockResolvedValue({
         id: "sel-1",
         isActive: true,
       } as any)
-      vi.mocked(db.schoolBookSelection.update).mockResolvedValue({} as any)
+      vi.mocked(db.bookSelection.update).mockResolvedValue({} as any)
 
       const result = await toggleBookSelection("cat-book-1", false)
 
       expect(result).toEqual({ success: true })
-      expect(db.schoolBookSelection.update).toHaveBeenCalledWith({
+      expect(db.bookSelection.update).toHaveBeenCalledWith({
         where: { id: "sel-1" },
         data: { isActive: false },
       })
@@ -682,16 +674,16 @@ describe("Library Catalog Actions", () => {
 
     it("toggles isActive to true", async () => {
       mockAdminSession()
-      vi.mocked(db.schoolBookSelection.findFirst).mockResolvedValue({
+      vi.mocked(db.bookSelection.findFirst).mockResolvedValue({
         id: "sel-1",
         isActive: false,
       } as any)
-      vi.mocked(db.schoolBookSelection.update).mockResolvedValue({} as any)
+      vi.mocked(db.bookSelection.update).mockResolvedValue({} as any)
 
       const result = await toggleBookSelection("cat-book-1", true)
 
       expect(result).toEqual({ success: true })
-      expect(db.schoolBookSelection.update).toHaveBeenCalledWith({
+      expect(db.bookSelection.update).toHaveBeenCalledWith({
         where: { id: "sel-1" },
         data: { isActive: true },
       })
@@ -699,7 +691,7 @@ describe("Library Catalog Actions", () => {
 
     it("returns error if selection not found", async () => {
       mockAdminSession()
-      vi.mocked(db.schoolBookSelection.findFirst).mockResolvedValue(null)
+      vi.mocked(db.bookSelection.findFirst).mockResolvedValue(null)
 
       const result = await toggleBookSelection("cat-book-1", true)
 
@@ -707,7 +699,7 @@ describe("Library Catalog Actions", () => {
         success: false,
         error: "Selection not found",
       })
-      expect(db.schoolBookSelection.update).not.toHaveBeenCalled()
+      expect(db.bookSelection.update).not.toHaveBeenCalled()
     })
 
     it("requires ADMIN or DEVELOPER role", async () => {
@@ -719,7 +711,7 @@ describe("Library Catalog Actions", () => {
         success: false,
         error: "Unauthorized: ADMIN or DEVELOPER role required",
       })
-      expect(db.schoolBookSelection.findFirst).not.toHaveBeenCalled()
+      expect(db.bookSelection.findFirst).not.toHaveBeenCalled()
     })
 
     it("requires school context", async () => {
@@ -735,30 +727,30 @@ describe("Library Catalog Actions", () => {
 
     it("scopes findFirst query by schoolId and catalogBookId", async () => {
       mockAdminSession()
-      vi.mocked(db.schoolBookSelection.findFirst).mockResolvedValue({
+      vi.mocked(db.bookSelection.findFirst).mockResolvedValue({
         id: "sel-1",
         isActive: true,
       } as any)
-      vi.mocked(db.schoolBookSelection.update).mockResolvedValue({} as any)
+      vi.mocked(db.bookSelection.update).mockResolvedValue({} as any)
 
       await toggleBookSelection("cat-book-1", false)
 
-      expect(db.schoolBookSelection.findFirst).toHaveBeenCalledWith({
+      expect(db.bookSelection.findFirst).toHaveBeenCalledWith({
         where: { schoolId: "school-1", catalogBookId: "cat-book-1" },
       })
     })
 
     it("uses selection.id for update, not catalogBookId", async () => {
       mockAdminSession()
-      vi.mocked(db.schoolBookSelection.findFirst).mockResolvedValue({
+      vi.mocked(db.bookSelection.findFirst).mockResolvedValue({
         id: "actual-selection-id",
         isActive: true,
       } as any)
-      vi.mocked(db.schoolBookSelection.update).mockResolvedValue({} as any)
+      vi.mocked(db.bookSelection.update).mockResolvedValue({} as any)
 
       await toggleBookSelection("cat-book-1", false)
 
-      expect(db.schoolBookSelection.update).toHaveBeenCalledWith({
+      expect(db.bookSelection.update).toHaveBeenCalledWith({
         where: { id: "actual-selection-id" },
         data: { isActive: false },
       })

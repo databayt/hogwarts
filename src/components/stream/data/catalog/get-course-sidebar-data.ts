@@ -15,7 +15,7 @@ export async function getCatalogCourseSidebarData(
   slug: string,
   schoolId: string | null
 ) {
-  const subject = await db.catalogSubject.findFirst({
+  const subject = await db.subject.findFirst({
     where: {
       slug,
       status: "PUBLISHED",
@@ -51,8 +51,7 @@ export async function getCatalogCourseSidebarData(
               sequenceOrder: true,
               durationMinutes: true,
               status: true,
-              imageKey: true,
-              thumbnailKey: true,
+              thumbnail: true,
             },
           },
         },
@@ -70,7 +69,7 @@ export async function getCatalogCourseSidebarData(
     title: chapter.name,
     position: chapter.sequenceOrder,
     isPublished: true,
-    imageUrl: getCatalogImageUrl(chapter.thumbnailKey, chapter.imageKey, "sm"),
+    imageUrl: getCatalogImageUrl(chapter.thumbnail, "sm"),
     color: chapter.color,
     lessons: chapter.lessons.map((lesson) => ({
       id: lesson.id,
@@ -80,7 +79,7 @@ export async function getCatalogCourseSidebarData(
       isFree: true,
       duration: lesson.durationMinutes,
       videoUrl: null as string | null,
-      imageUrl: getCatalogImageUrl(lesson.thumbnailKey, lesson.imageKey, "md"),
+      imageUrl: getCatalogImageUrl(lesson.thumbnail, "md"),
     })),
   })
 
@@ -92,8 +91,7 @@ export async function getCatalogCourseSidebarData(
       slug: subject.slug,
       description: subject.description,
       imageUrl: getCatalogImageUrl(
-        subject.bannerUrl ?? subject.thumbnailKey,
-        subject.imageKey,
+        subject.banner ?? subject.thumbnail,
         "original"
       ),
       isPublished: true,

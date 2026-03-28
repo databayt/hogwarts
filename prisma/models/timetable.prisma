@@ -25,7 +25,7 @@ model Timetable {
   period    Period          @relation(fields: [periodId], references: [id])
   class     Class?          @relation(fields: [classId], references: [id])
   section   Section?        @relation(fields: [sectionId], references: [id])
-  subject   CatalogSubject? @relation(fields: [subjectId], references: [id])
+  subject   Subject? @relation(fields: [subjectId], references: [id])
   teacher   Teacher?        @relation(fields: [teacherId], references: [id])
   classroom Classroom       @relation(fields: [classroomId], references: [id])
 

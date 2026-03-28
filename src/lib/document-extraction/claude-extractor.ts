@@ -26,53 +26,64 @@ export async function extractWithClaude(
   fileUrl: string,
   stepId: OnboardingStep
 ) {
+  const schema = stepSchemaMap[stepId]
+  const prompt = getPromptForStep(stepId)
+  return extractWithClaudeGeneric(fileUrl, schema, prompt, stepId)
+}
+
+/**
+ * Generic extraction: accepts any Zod schema and prompt
+ * Used by both onboarding (via extractWithClaude wrapper) and domain-specific extractors
+ */
+export async function extractWithClaudeGeneric(
+  input: string,
+  schema: import("zod").ZodType,
+  prompt: string,
+  context?: string,
+  options?: { systemPrompt?: string; useTextInput?: boolean }
+) {
   const startTime = Date.now()
 
   try {
     logger.info("Starting document extraction with Claude", {
       action: "extract_document_data",
-      stepId,
-      fileUrl: fileUrl.substring(0, 50) + "...", // Log truncated URL
+      context: context || "generic",
+      inputPreview: input.substring(0, 50) + "...",
     })
 
-    // Get the appropriate schema for this step
-    const schema = stepSchemaMap[stepId]
-    const prompt = getPromptForStep(stepId)
+    const sysPrompt = options?.systemPrompt || systemMessage
 
-    // Determine if fileUrl is a URL or base64 data
-    const isBase64 = fileUrl.startsWith("data:")
-    const imageInput = isBase64 ? fileUrl : fileUrl
+    // Build message content based on input type
+    const isBase64OrUrl = input.startsWith("data:") || input.startsWith("http")
+    const useAsImage = isBase64OrUrl && !options?.useTextInput
 
-    // Extract data using Vercel AI SDK with Claude 3.5 Sonnet
+    const content: Array<
+      { type: "image"; image: string } | { type: "text"; text: string }
+    > = useAsImage
+      ? [
+          { type: "image", image: input },
+          { type: "text", text: `${sysPrompt}\n\n${prompt}` },
+        ]
+      : [
+          {
+            type: "text",
+            text: `${sysPrompt}\n\n${prompt}\n\n--- DOCUMENT CONTENT ---\n${input}`,
+          },
+        ]
+
     const result = await generateObject({
       model: anthropic("claude-3-5-sonnet-20241022"),
       schema,
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "image",
-              image: imageInput,
-            },
-            {
-              type: "text",
-              text: `${systemMessage}
-
-${prompt}`,
-            },
-          ],
-        },
-      ],
+      messages: [{ role: "user", content }],
     })
 
     const processingTime = Date.now() - startTime
 
     logger.info("Document extraction completed", {
       action: "extract_document_success",
-      stepId,
+      context: context || "generic",
       processingTime,
-      fields: Object.keys(result.object).length,
+      fields: Object.keys(result.object as Record<string, unknown>).length,
     })
 
     return {
@@ -88,7 +99,7 @@ ${prompt}`,
       error instanceof Error ? error : new Error("Unknown error"),
       {
         action: "extract_document_error",
-        stepId,
+        context: context || "generic",
         processingTime,
       }
     )

@@ -1,0 +1,130 @@
+{
+  "subject": "computer-science",
+  "subjectNameAr": "علوم الحاسوب",
+  "grade": 10,
+  "level": "secondary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "2009",
+  "chapters": [
+    {
+      "nameAr": "الوحدة الأولى: مقدمة في الحاسوب",
+      "name": "Unit 1: Introduction to Computers",
+      "slug": "introduction-to-computers",
+      "sequenceOrder": 1,
+      "lessons": [
+        {
+          "nameAr": "تعريف الحاسوب",
+          "name": "Definition of Computer",
+          "slug": "definition-of-computer",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "تعريف الحاسوب ومكوناته",
+          "name": "Computer Definition and Components",
+          "slug": "computer-definition-components",
+          "sequenceOrder": 2
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة الثانية: البرمجيات",
+      "name": "Unit 2: Software",
+      "slug": "software",
+      "sequenceOrder": 2,
+      "lessons": [
+        {
+          "nameAr": "أنظمة التشغيل",
+          "name": "Operating Systems",
+          "slug": "operating-systems",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "البرامج التطبيقية",
+          "name": "Application Software",
+          "slug": "application-software",
+          "sequenceOrder": 2
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة الثالثة: معالجة النصوص",
+      "name": "Unit 3: Word Processing",
+      "slug": "word-processing",
+      "sequenceOrder": 3,
+      "lessons": [
+        {
+          "nameAr": "معالج النصوص",
+          "name": "Word Processor",
+          "slug": "word-processor",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "تنسيق النصوص وتحريرها",
+          "name": "Text Formatting and Editing",
+          "slug": "text-formatting-editing",
+          "sequenceOrder": 2
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة الرابعة: الجداول الإلكترونية",
+      "name": "Unit 4: Spreadsheets",
+      "slug": "spreadsheets",
+      "sequenceOrder": 4,
+      "lessons": [
+        {
+          "nameAr": "مقدمة في الجداول الإلكترونية",
+          "name": "Introduction to Spreadsheets",
+          "slug": "introduction-to-spreadsheets",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الصيغ والدوال",
+          "name": "Formulas and Functions",
+          "slug": "formulas-and-functions",
+          "sequenceOrder": 2
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة الخامسة: الإنترنت",
+      "name": "Unit 5: The Internet",
+      "slug": "the-internet",
+      "sequenceOrder": 5,
+      "lessons": [
+        {
+          "nameAr": "مقدمة في الإنترنت",
+          "name": "Introduction to the Internet",
+          "slug": "introduction-to-internet",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "خدمات الإنترنت",
+          "name": "Internet Services",
+          "slug": "internet-services",
+          "sequenceOrder": 2
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة السادسة: أمن المعلومات",
+      "name": "Unit 6: Information Security",
+      "slug": "information-security",
+      "sequenceOrder": 6,
+      "lessons": [
+        {
+          "nameAr": "حماية البيانات",
+          "name": "Data Protection",
+          "slug": "data-protection",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الفيروسات والبرامج الضارة",
+          "name": "Viruses and Malware",
+          "slug": "viruses-and-malware",
+          "sequenceOrder": 2
+        }
+      ]
+    }
+  ]
+}

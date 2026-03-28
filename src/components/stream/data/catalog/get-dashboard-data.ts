@@ -29,8 +29,7 @@ export async function getCatalogDashboardData(
           name: true,
           slug: true,
           description: true,
-          imageKey: true,
-          thumbnailKey: true,
+          thumbnail: true,
           color: true,
           totalChapters: true,
           totalLessons: true,
@@ -95,11 +94,7 @@ export async function getCatalogDashboardData(
       title: subject.name,
       slug: subject.slug,
       description: subject.description,
-      imageUrl: getCatalogImageUrl(
-        subject.thumbnailKey,
-        subject.imageKey,
-        "original"
-      ),
+      imageUrl: getCatalogImageUrl(subject.thumbnail, "original"),
       enrollmentId: enrollment.id,
       enrolledAt: enrollment.createdAt,
       progressPercent,
@@ -110,7 +105,7 @@ export async function getCatalogDashboardData(
   })
 
   // Fetch available catalog subjects not yet enrolled
-  const availableSubjects = await db.catalogSubject.findMany({
+  const availableSubjects = await db.subject.findMany({
     where: {
       status: "PUBLISHED",
       ...(enrolledSubjectIds.length > 0
@@ -124,8 +119,7 @@ export async function getCatalogDashboardData(
       name: true,
       slug: true,
       description: true,
-      imageKey: true,
-      thumbnailKey: true,
+      thumbnail: true,
       color: true,
       totalChapters: true,
       totalLessons: true,
@@ -139,11 +133,7 @@ export async function getCatalogDashboardData(
     title: subject.name,
     slug: subject.slug,
     description: subject.description,
-    imageUrl: getCatalogImageUrl(
-      subject.thumbnailKey,
-      subject.imageKey,
-      "original"
-    ),
+    imageUrl: getCatalogImageUrl(subject.thumbnail, "original"),
     price: null as number | null,
     chapters: Array.from({ length: subject.totalChapters }, () => ({
       lessons: Array.from(

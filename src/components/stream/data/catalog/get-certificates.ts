@@ -86,36 +86,34 @@ export const getCatalogCertificateByNumber = cache(
 /**
  * Get certificate for a specific catalog subject.
  */
-export const getCatalogSubjectCertificate = cache(
-  async (catalogSubjectId: string) => {
-    const session = await auth()
+export const getSubjectCertificate = cache(async (catalogSubjectId: string) => {
+  const session = await auth()
 
-    if (!session?.user?.id) {
-      return null
-    }
-
-    const certificate = await db.subjectCertificate.findFirst({
-      where: {
-        userId: session.user.id,
-        catalogSubjectId,
-      },
-      select: {
-        id: true,
-        certificateNumber: true,
-        subjectTitle: true,
-        completedAt: true,
-        issuedAt: true,
-      },
-    })
-
-    if (!certificate) return null
-
-    return {
-      id: certificate.id,
-      certificateNumber: certificate.certificateNumber,
-      courseTitle: certificate.subjectTitle,
-      completedAt: certificate.completedAt,
-      issuedAt: certificate.issuedAt,
-    }
+  if (!session?.user?.id) {
+    return null
   }
-)
+
+  const certificate = await db.subjectCertificate.findFirst({
+    where: {
+      userId: session.user.id,
+      catalogSubjectId,
+    },
+    select: {
+      id: true,
+      certificateNumber: true,
+      subjectTitle: true,
+      completedAt: true,
+      issuedAt: true,
+    },
+  })
+
+  if (!certificate) return null
+
+  return {
+    id: certificate.id,
+    certificateNumber: certificate.certificateNumber,
+    courseTitle: certificate.subjectTitle,
+    completedAt: certificate.completedAt,
+    issuedAt: certificate.issuedAt,
+  }
+})

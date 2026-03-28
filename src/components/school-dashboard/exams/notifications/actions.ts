@@ -40,7 +40,7 @@ export async function sendExamNotification(
   }
 
   // Get exam details if not provided
-  const exam = await db.exam.findFirst({
+  const exam = await db.schoolExam.findFirst({
     where: { id: data.examId, schoolId },
     include: {
       class: {
@@ -109,7 +109,7 @@ export async function notifyExamScheduled(examId: string) {
     throw new Error("Unauthorized")
   }
 
-  const exam = await db.exam.findFirst({
+  const exam = await db.schoolExam.findFirst({
     where: { id: examId, schoolId },
     include: {
       subject: true,
@@ -147,7 +147,7 @@ export async function notifyExamReminder(examId: string, hoursUntil: number) {
     throw new Error("Unauthorized")
   }
 
-  const exam = await db.exam.findFirst({
+  const exam = await db.schoolExam.findFirst({
     where: { id: examId, schoolId },
     include: {
       subject: true,
@@ -295,7 +295,7 @@ export async function notifyRetakeAvailable(
     throw new Error("Unauthorized")
   }
 
-  const exam = await db.exam.findFirst({
+  const exam = await db.schoolExam.findFirst({
     where: { id: examId, schoolId },
     include: {
       subject: true,

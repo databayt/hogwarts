@@ -1,0 +1,31 @@
+{
+  "subject": "commerce",
+  "subjectNameAr": "العلوم التجارية",
+  "grade": 11,
+  "level": "secondary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "",
+  "chapters": [
+    {
+      "nameAr": "الباب الأول: المعاملة المالية",
+      "name": "Chapter 1: Financial Transactions",
+      "slug": "financial-transactions",
+      "sequenceOrder": 1,
+      "lessons": []
+    },
+    {
+      "nameAr": "الباب الثاني: الاقتصاد الكلي",
+      "name": "Chapter 2: Macroeconomics",
+      "slug": "macroeconomics",
+      "sequenceOrder": 2,
+      "lessons": []
+    },
+    {
+      "nameAr": "الباب الثالث: المعاملة التجارية",
+      "name": "Chapter 3: Commercial Transactions",
+      "slug": "commercial-transactions",
+      "sequenceOrder": 3,
+      "lessons": []
+    }
+  ]
+}

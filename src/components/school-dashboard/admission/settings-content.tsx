@@ -13,11 +13,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
+import { Textarea } from "@/components/ui/textarea"
 import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -31,7 +34,6 @@ interface Props {
 
 export default function SettingsContent({ dictionary, lang }: Props) {
   const t = dictionary.admission?.settings
-  const isRTL = lang === "ar"
   const [isPending, startTransition] = useTransition()
   const [isLoading, setIsLoading] = useState(true)
 
@@ -43,6 +45,15 @@ export default function SettingsContent({ dictionary, lang }: Props) {
     offerExpiryDays: 14,
     autoEmailNotifications: true,
     enableOnlinePayment: false,
+    paymentMethods: ["stripe", "cash"] as string[],
+    bankDetails: {
+      bankName: "",
+      accountName: "",
+      accountNumber: "",
+      iban: "",
+      swiftCode: "",
+    },
+    cashPaymentInstructions: "",
     academicWeight: 40,
     entranceWeight: 35,
     interviewWeight: 25,
@@ -53,6 +64,7 @@ export default function SettingsContent({ dictionary, lang }: Props) {
     const loadSettings = async () => {
       const result = await getAdmissionSettings()
       if (result.success && result.data) {
+        const bd = result.data.bankDetails as Record<string, string> | null
         setSettings({
           allowMultipleApplications: result.data.allowMultipleApplications,
           requireDocuments: result.data.requireDocuments,
@@ -60,6 +72,19 @@ export default function SettingsContent({ dictionary, lang }: Props) {
           offerExpiryDays: result.data.offerExpiryDays,
           autoEmailNotifications: result.data.autoEmailNotifications,
           enableOnlinePayment: result.data.enableOnlinePayment,
+          paymentMethods: (result.data.paymentMethods as string[]) ?? [
+            "stripe",
+            "cash",
+          ],
+          bankDetails: {
+            bankName: bd?.bankName ?? "",
+            accountName: bd?.accountName ?? "",
+            accountNumber: bd?.accountNumber ?? "",
+            iban: bd?.iban ?? "",
+            swiftCode: bd?.swiftCode ?? "",
+          },
+          cashPaymentInstructions:
+            (result.data.cashPaymentInstructions as string) ?? "",
           academicWeight: result.data.academicWeight,
           entranceWeight: result.data.entranceWeight,
           interviewWeight: result.data.interviewWeight,
@@ -77,11 +102,7 @@ export default function SettingsContent({ dictionary, lang }: Props) {
       settings.entranceWeight +
       settings.interviewWeight
     if (totalWeight !== 100) {
-      ErrorToast(
-        isRTL
-          ? "يجب أن يكون مجموع أوزان الجدارة 100%"
-          : "Merit weights must sum to 100%"
-      )
+      ErrorToast(t?.weightsMustSum || "Merit weights must sum to 100%")
       return
     }
 
@@ -93,17 +114,28 @@ export default function SettingsContent({ dictionary, lang }: Props) {
         offerExpiryDays: settings.offerExpiryDays,
         autoEmailNotifications: settings.autoEmailNotifications,
         enableOnlinePayment: settings.enableOnlinePayment,
+        paymentMethods: settings.paymentMethods as (
+          | "stripe"
+          | "cash"
+          | "bank_transfer"
+        )[],
+        bankDetails: settings.paymentMethods.includes("bank_transfer")
+          ? settings.bankDetails
+          : null,
+        cashPaymentInstructions: settings.paymentMethods.includes("cash")
+          ? settings.cashPaymentInstructions || null
+          : null,
         academicWeight: settings.academicWeight,
         entranceWeight: settings.entranceWeight,
         interviewWeight: settings.interviewWeight,
       })
 
       if (result.success) {
-        SuccessToast(
-          isRTL ? "تم حفظ الإعدادات بنجاح" : "Settings saved successfully"
-        )
+        SuccessToast(t?.settingsSaved || "Settings saved successfully")
       } else {
-        ErrorToast(result.error || "Failed to save settings")
+        ErrorToast(
+          result.error || t?.settingsFailed || "Failed to save settings"
+        )
       }
     })
   }
@@ -267,6 +299,190 @@ export default function SettingsContent({ dictionary, lang }: Props) {
               }
             />
           </div>
+
+          <Separator />
+
+          {/* Payment Methods */}
+          <div className="space-y-3">
+            <Label>{t?.paymentMethods || "Payment Methods"}</Label>
+            <p className="text-muted-foreground text-sm">
+              {t?.paymentMethodsDesc ||
+                "Select which payment methods applicants can use"}
+            </p>
+            <div className="flex flex-col gap-3">
+              {(
+                [
+                  {
+                    value: "stripe",
+                    label: t?.methodStripe || "Credit/Debit Card (Stripe)",
+                  },
+                  { value: "cash", label: t?.methodCash || "Cash at School" },
+                  {
+                    value: "bank_transfer",
+                    label: t?.methodBankTransfer || "Bank Transfer",
+                  },
+                ] as const
+              ).map((method) => (
+                <div key={method.value} className="flex items-center gap-2">
+                  <Checkbox
+                    id={`method-${method.value}`}
+                    checked={settings.paymentMethods.includes(method.value)}
+                    onCheckedChange={(checked) => {
+                      setSettings((s) => ({
+                        ...s,
+                        paymentMethods: checked
+                          ? [...s.paymentMethods, method.value]
+                          : s.paymentMethods.filter((m) => m !== method.value),
+                      }))
+                    }}
+                  />
+                  <Label
+                    htmlFor={`method-${method.value}`}
+                    className="font-normal"
+                  >
+                    {method.label}
+                  </Label>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Cash Instructions — shown when cash is selected */}
+          {settings.paymentMethods.includes("cash") && (
+            <>
+              <Separator />
+              <div className="space-y-2">
+                <Label htmlFor="cashInstructions">
+                  {t?.cashInstructions || "Cash Payment Instructions"}
+                </Label>
+                <p className="text-muted-foreground text-sm">
+                  {t?.cashInstructionsDesc ||
+                    "Custom instructions shown to applicants choosing cash payment"}
+                </p>
+                <Textarea
+                  id="cashInstructions"
+                  value={settings.cashPaymentInstructions}
+                  onChange={(e) =>
+                    setSettings((s) => ({
+                      ...s,
+                      cashPaymentInstructions: e.target.value,
+                    }))
+                  }
+                  placeholder={
+                    t?.cashInstructionsPlaceholder ||
+                    "e.g. Visit the school office during working hours with your reference number"
+                  }
+                  rows={3}
+                />
+              </div>
+            </>
+          )}
+
+          {/* Bank Details — shown when bank_transfer is selected */}
+          {settings.paymentMethods.includes("bank_transfer") && (
+            <>
+              <Separator />
+              <div className="space-y-4">
+                <div>
+                  <Label>{t?.bankDetails || "Bank Account Details"}</Label>
+                  <p className="text-muted-foreground text-sm">
+                    {t?.bankDetailsDesc ||
+                      "Bank details shown to applicants choosing bank transfer"}
+                  </p>
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="bankName">
+                      {t?.bankName || "Bank Name"}
+                    </Label>
+                    <Input
+                      id="bankName"
+                      value={settings.bankDetails.bankName}
+                      onChange={(e) =>
+                        setSettings((s) => ({
+                          ...s,
+                          bankDetails: {
+                            ...s.bankDetails,
+                            bankName: e.target.value,
+                          },
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="accountName">
+                      {t?.accountName || "Account Name"}
+                    </Label>
+                    <Input
+                      id="accountName"
+                      value={settings.bankDetails.accountName}
+                      onChange={(e) =>
+                        setSettings((s) => ({
+                          ...s,
+                          bankDetails: {
+                            ...s.bankDetails,
+                            accountName: e.target.value,
+                          },
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="accountNumber">
+                      {t?.accountNumber || "Account Number"}
+                    </Label>
+                    <Input
+                      id="accountNumber"
+                      value={settings.bankDetails.accountNumber}
+                      onChange={(e) =>
+                        setSettings((s) => ({
+                          ...s,
+                          bankDetails: {
+                            ...s.bankDetails,
+                            accountNumber: e.target.value,
+                          },
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="iban">IBAN</Label>
+                    <Input
+                      id="iban"
+                      value={settings.bankDetails.iban}
+                      onChange={(e) =>
+                        setSettings((s) => ({
+                          ...s,
+                          bankDetails: {
+                            ...s.bankDetails,
+                            iban: e.target.value,
+                          },
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="swiftCode">
+                      {t?.swiftCode || "SWIFT Code"}
+                    </Label>
+                    <Input
+                      id="swiftCode"
+                      value={settings.bankDetails.swiftCode}
+                      onChange={(e) =>
+                        setSettings((s) => ({
+                          ...s,
+                          bankDetails: {
+                            ...s.bankDetails,
+                            swiftCode: e.target.value,
+                          },
+                        }))
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
 
@@ -346,7 +562,7 @@ export default function SettingsContent({ dictionary, lang }: Props) {
                 settings.interviewWeight !==
                 100 && (
                 <span className="text-destructive ms-2">
-                  (should equal 100%)
+                  ({t?.shouldEqual100 || "should equal 100%"})
                 </span>
               )}
             </div>
@@ -360,7 +576,7 @@ export default function SettingsContent({ dictionary, lang }: Props) {
           {isPending ? (
             <>
               <Save className="h-4 w-4 animate-spin" />
-              {isRTL ? "جاري الحفظ..." : "Saving..."}
+              {t?.saving || "Saving..."}
             </>
           ) : (
             <>

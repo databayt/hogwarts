@@ -4,6 +4,7 @@
 import { z } from "zod"
 
 import type { NameFormat } from "@/lib/name-utils"
+import type { ValidationHelper } from "@/components/internationalization/helpers"
 
 const nonNameFields = {
   dateOfBirth: z.coerce.date().optional(),
@@ -12,24 +13,35 @@ const nonNameFields = {
   profilePhotoUrl: z.string().optional(),
 }
 
-export const personalSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  middleName: z.string().optional(),
-  lastName: z.string().min(1, "Last name is required"),
-  ...nonNameFields,
-})
+export function createPersonalSchema(v?: ValidationHelper) {
+  return z.object({
+    firstName: z
+      .string()
+      .min(1, v?.get("firstNameRequired") || "First name is required"),
+    middleName: z.string().optional(),
+    lastName: z
+      .string()
+      .min(1, v?.get("lastNameRequired") || "Last name is required"),
+    ...nonNameFields,
+  })
+}
 
-export function getPersonalSchema(nameFormat: NameFormat = "full") {
+export const personalSchema = createPersonalSchema()
+
+export function getPersonalSchema(
+  nameFormat: NameFormat = "full",
+  v?: ValidationHelper
+) {
   if (nameFormat === "full") {
     return z.object({
-      _fullName: z.string().min(1, "Full name is required"),
+      _fullName: z.string().min(1, v?.required() || "Full name is required"),
       firstName: z.string().default(""),
       middleName: z.string().optional(),
       lastName: z.string().default(""),
       ...nonNameFields,
     })
   }
-  return personalSchema
+  return createPersonalSchema(v)
 }
 
 export type PersonalFormData = z.infer<typeof personalSchema>

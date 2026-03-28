@@ -7,7 +7,7 @@ import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 import type { SupportedLanguage } from "@/components/translation/types"
 
-import type { CatalogSubjectRow } from "./columns"
+import type { SubjectRow } from "./columns"
 import { CatalogTable } from "./table"
 
 interface Props {
@@ -16,7 +16,7 @@ interface Props {
 }
 
 export async function CatalogContent({ lang }: Props) {
-  const subjects = await db.catalogSubject.findMany({
+  const subjects = await db.subject.findMany({
     orderBy: { sortOrder: "asc" },
     select: {
       id: true,
@@ -30,7 +30,6 @@ export async function CatalogContent({ lang }: Props) {
       totalLessons: true,
       usageCount: true,
       color: true,
-      imageKey: true,
       lang: true,
     },
   })
@@ -38,7 +37,7 @@ export async function CatalogContent({ lang }: Props) {
   const totalChapters = subjects.reduce((s, sub) => s + sub.totalChapters, 0)
   const totalLessons = subjects.reduce((s, sub) => s + sub.totalLessons, 0)
 
-  const rows: CatalogSubjectRow[] = await Promise.all(
+  const rows: SubjectRow[] = await Promise.all(
     subjects.map(async ({ lang: contentLang, ...s }) => ({
       ...s,
       name: await getDisplayText(

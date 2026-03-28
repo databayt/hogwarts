@@ -25,14 +25,13 @@ const prisma = new PrismaClient()
 
 // Map subject slugs to concept names
 function slugToConcept(slug: string): string {
-  // Strip grade prefix: "us-math-grade-3" → "math"
+  // Strip grade prefix: "us-g3-math" → "math", "sd-g1-math" → "math"
   // Strip level prefix: "elementary-math" → "math"
   const cleaned = slug
-    .replace(/^us-/, "")
+    .replace(/^[a-z]+-g\d+-/, "") // us-g3-math, sd-g1-math, gb-g7-math
     .replace(/^elementary-/, "")
     .replace(/^middle-/, "")
     .replace(/^high-/, "")
-    .replace(/-grade-\d+$/, "")
 
   return cleaned
 }
@@ -49,7 +48,7 @@ function filenameToConcept(filename: string): string {
 async function populateSubjectConcepts(): Promise<void> {
   console.log("\n1. Populating concept field on subjects...")
 
-  const subjects = await prisma.catalogSubject.findMany({
+  const subjects = await prisma.subject.findMany({
     where: {
       curriculum: "us-k12",
       concept: null,
@@ -66,7 +65,7 @@ async function populateSubjectConcepts(): Promise<void> {
   let count = 0
   for (const subject of subjects) {
     const concept = slugToConcept(subject.slug)
-    await prisma.catalogSubject.update({
+    await prisma.subject.update({
       where: { id: subject.id },
       data: { concept },
     })
@@ -111,15 +110,15 @@ async function mapLocalIllustrations(): Promise<void> {
   // Update subjects that match these concepts with imageKey pointing to local path
   let updated = 0
   for (const [concept, filePath] of conceptMap) {
-    const result = await prisma.catalogSubject.updateMany({
+    const result = await prisma.subject.updateMany({
       where: {
         concept,
         curriculum: "us-k12",
         status: "PUBLISHED",
       },
       data: {
-        // Set imageKey to S3-ready path (will be uploaded by S3 migration step)
-        imageKey: `catalog/subjects/${concept}.webp`,
+        // Set thumbnail to S3-ready path (will be uploaded by S3 migration step)
+        thumbnail: `catalog/subjects/${concept}.webp`,
       },
     })
     updated += result.count
@@ -134,27 +133,27 @@ async function mapLocalIllustrations(): Promise<void> {
 async function catalogLessonImageStats(): Promise<void> {
   console.log("\n3. Lesson image statistics...")
 
-  const totalLessons = await prisma.catalogLesson.count({
+  const totalLessons = await prisma.lesson.count({
     where: {
       chapter: { subject: { curriculum: "us-k12" } },
     },
   })
 
-  const lessonsWithImages = await prisma.catalogLesson.count({
+  const lessonsWithImages = await prisma.lesson.count({
     where: {
       chapter: { subject: { curriculum: "us-k12" } },
-      imageKey: { not: null },
+      thumbnail: { not: null },
     },
   })
 
-  const lessonsWithClickviewImages = await prisma.catalogLesson.count({
+  const lessonsWithClickviewImages = await prisma.lesson.count({
     where: {
       chapter: { subject: { curriculum: "us-k12" } },
-      imageKey: { contains: "clickviewapp.com" },
+      thumbnail: { contains: "clickviewapp.com" },
     },
   })
 
-  const lessonsWithCoverIds = await prisma.catalogLesson.count({
+  const lessonsWithCoverIds = await prisma.lesson.count({
     where: {
       chapter: { subject: { curriculum: "us-k12" } },
       clickviewCoverId: { not: null },
@@ -177,7 +176,7 @@ async function catalogLessonImageStats(): Promise<void> {
 async function populateChapterConcepts(): Promise<void> {
   console.log("\n4. Populating concept field on chapters...")
 
-  const chapters = await prisma.catalogChapter.findMany({
+  const chapters = await prisma.chapter.findMany({
     where: {
       concept: null,
       subject: { curriculum: "us-k12", status: "PUBLISHED" },
@@ -198,7 +197,7 @@ async function populateChapterConcepts(): Promise<void> {
   let count = 0
   for (const chapter of chapters) {
     if (chapter.subject.concept) {
-      await prisma.catalogChapter.update({
+      await prisma.chapter.update({
         where: { id: chapter.id },
         data: { concept: chapter.subject.concept },
       })

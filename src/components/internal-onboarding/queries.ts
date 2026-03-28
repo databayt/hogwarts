@@ -13,7 +13,7 @@ export async function getSchoolGrades(schoolId: string) {
 }
 
 export async function getSchoolSubjects(schoolId: string) {
-  const selections = await db.schoolSubjectSelection.findMany({
+  const selections = await db.subjectSelection.findMany({
     where: { schoolId, isActive: true },
     select: { subject: { select: { id: true, name: true } } },
     distinct: ["catalogSubjectId"],

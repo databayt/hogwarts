@@ -39,7 +39,7 @@ export async function updateExamDetails(
     const endMins = endMinutes % 60
     const endTime = `${String(endHours).padStart(2, "0")}:${String(endMins).padStart(2, "0")}`
 
-    await db.exam.updateMany({
+    await db.schoolExam.updateMany({
       where: { id: genExam.examId, schoolId },
       data: {
         title: parsed.title,

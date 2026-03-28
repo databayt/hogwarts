@@ -46,12 +46,12 @@ export async function AnalyticsContent({ lang }: Props) {
     topSubjectsByUsage,
     topLessonsByUsage,
   ] = await Promise.all([
-    db.catalogSubject.count(),
-    db.catalogQuestion.count(),
-    db.catalogMaterial.count(),
-    db.catalogAssignment.count(),
-    db.lessonVideo.count(),
-    db.catalogSubject.findMany({
+    db.subject.count(),
+    db.question.count(),
+    db.material.count(),
+    db.schoolAssignment.count(),
+    db.video.count(),
+    db.subject.findMany({
       orderBy: { usageCount: "desc" },
       take: 10,
       select: {
@@ -65,7 +65,7 @@ export async function AnalyticsContent({ lang }: Props) {
         status: true,
       },
     }),
-    db.catalogLesson.findMany({
+    db.lesson.findMany({
       orderBy: { usageCount: "desc" },
       take: 10,
       select: {

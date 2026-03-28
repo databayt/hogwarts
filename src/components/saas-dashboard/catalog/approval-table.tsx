@@ -33,15 +33,15 @@ function getContentTypeBadge(
   contentType: string
 ): "default" | "secondary" | "destructive" | "outline" {
   switch (contentType) {
-    case "CatalogQuestion":
+    case "Question":
       return "default"
-    case "CatalogMaterial":
+    case "Material":
       return "secondary"
-    case "CatalogAssignment":
+    case "Assignment":
       return "outline"
-    case "CatalogBook":
+    case "Book":
       return "secondary"
-    case "LessonVideo":
+    case "Video":
       return "destructive"
     default:
       return "outline"
@@ -50,15 +50,15 @@ function getContentTypeBadge(
 
 function getContentTypeLabel(contentType: string): string {
   switch (contentType) {
-    case "CatalogQuestion":
+    case "Question":
       return "Question"
-    case "CatalogMaterial":
+    case "Material":
       return "Material"
-    case "CatalogAssignment":
+    case "Assignment":
       return "Assignment"
-    case "CatalogBook":
+    case "Book":
       return "Book"
-    case "LessonVideo":
+    case "Video":
       return "Video"
     default:
       return contentType

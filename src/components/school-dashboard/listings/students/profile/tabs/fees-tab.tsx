@@ -31,9 +31,11 @@ import type { Student } from "../../registration/types"
 
 interface FeesTabProps {
   student: Student
+  dictionary?: any
 }
 
-export function FeesTab({ student }: FeesTabProps) {
+export function FeesTab({ student, dictionary }: FeesTabProps) {
+  const d = dictionary
   // Use real fee records from the database
   const feeRecords = student.feeRecords || []
 
@@ -97,9 +99,11 @@ export function FeesTab({ student }: FeesTabProps) {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-sm">Total Fees</p>
+                <p className="text-muted-foreground text-sm">
+                  {d?.totalFees || "Total Fees"}
+                </p>
                 <p className="text-2xl font-bold">
-                  SAR {totalFees.toLocaleString()}
+                  {d?.currency || "SAR"} {totalFees.toLocaleString()}
                 </p>
               </div>
               <DollarSign className="text-muted-foreground h-8 w-8" />
@@ -111,9 +115,11 @@ export function FeesTab({ student }: FeesTabProps) {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-sm">Paid</p>
+                <p className="text-muted-foreground text-sm">
+                  {d?.paid || "Paid"}
+                </p>
                 <p className="text-2xl font-bold text-green-600">
-                  SAR {totalPaid.toLocaleString()}
+                  {d?.currency || "SAR"} {totalPaid.toLocaleString()}
                 </p>
               </div>
               <CircleCheck className="h-8 w-8 text-green-600" />
@@ -125,9 +131,11 @@ export function FeesTab({ student }: FeesTabProps) {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-sm">Pending</p>
+                <p className="text-muted-foreground text-sm">
+                  {d?.pending || "Pending"}
+                </p>
                 <p className="text-2xl font-bold text-yellow-600">
-                  SAR {totalPending.toLocaleString()}
+                  {d?.currency || "SAR"} {totalPending.toLocaleString()}
                 </p>
               </div>
               <Clock className="h-8 w-8 text-yellow-600" />
@@ -139,9 +147,11 @@ export function FeesTab({ student }: FeesTabProps) {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-sm">Overdue</p>
+                <p className="text-muted-foreground text-sm">
+                  {d?.overdue || "Overdue"}
+                </p>
                 <p className="text-2xl font-bold text-red-600">
-                  SAR {totalOverdue.toLocaleString()}
+                  {d?.currency || "SAR"} {totalOverdue.toLocaleString()}
                 </p>
               </div>
               <TriangleAlert className="h-8 w-8 text-red-600" />
@@ -153,21 +163,26 @@ export function FeesTab({ student }: FeesTabProps) {
       {/* Payment Progress */}
       <Card>
         <CardHeader>
-          <CardTitle>Payment Progress</CardTitle>
+          <CardTitle>{d?.paymentProgress || "Payment Progress"}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span>Academic Year 2024</span>
               <span className="font-medium">
-                {paymentProgress.toFixed(1)}% Complete
+                {paymentProgress.toFixed(1)}% {d?.complete || "Complete"}
               </span>
             </div>
             <Progress value={paymentProgress} className="h-3" />
             <div className="text-muted-foreground flex justify-between text-xs">
-              <span>SAR {totalPaid.toLocaleString()} paid</span>
               <span>
-                SAR {(totalFees - totalPaid).toLocaleString()} remaining
+                {d?.currency || "SAR"} {totalPaid.toLocaleString()}{" "}
+                {d?.paidLabel || "paid"}
+              </span>
+              <span>
+                {d?.currency || "SAR"}{" "}
+                {(totalFees - totalPaid).toLocaleString()}{" "}
+                {d?.remaining || "remaining"}
               </span>
             </div>
           </div>
@@ -180,15 +195,20 @@ export function FeesTab({ student }: FeesTabProps) {
           <TriangleAlert className="h-4 w-4 text-red-600" />
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="font-medium text-red-900">Payment Overdue</h4>
+              <h4 className="font-medium text-red-900">
+                {d?.paymentOverdue || "Payment Overdue"}
+              </h4>
               <p className="mt-1 text-sm text-red-700">
-                You have overdue fees totaling SAR{" "}
-                {totalOverdue.toLocaleString()}. Please make payment immediately
-                to avoid late fees.
+                {d?.overdueMessage
+                  ? d.overdueMessage.replace(
+                      "{amount}",
+                      `${d?.currency || "SAR"} ${totalOverdue.toLocaleString()}`
+                    )
+                  : `You have overdue fees totaling ${d?.currency || "SAR"} ${totalOverdue.toLocaleString()}. Please make payment immediately to avoid late fees.`}
               </p>
             </div>
             <Button variant="destructive" size="sm">
-              Pay Now
+              {d?.payNow || "Pay Now"}
             </Button>
           </div>
         </Alert>
@@ -198,12 +218,12 @@ export function FeesTab({ student }: FeesTabProps) {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Fee Records</CardTitle>
+            <CardTitle>{d?.feeRecords || "Fee Records"}</CardTitle>
             {feeRecords.length > 0 && (
               <div className="flex gap-2">
                 <Button variant="outline" size="sm">
                   <Download className="me-2 h-4 w-4" />
-                  Download Statement
+                  {d?.downloadStatement || "Download Statement"}
                 </Button>
               </div>
             )}
@@ -214,13 +234,13 @@ export function FeesTab({ student }: FeesTabProps) {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Fee Type</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Due Date</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Payment Date</TableHead>
-                  <TableHead>Receipt</TableHead>
-                  <TableHead>Action</TableHead>
+                  <TableHead>{d?.feeType || "Fee Type"}</TableHead>
+                  <TableHead>{d?.amount || "Amount"}</TableHead>
+                  <TableHead>{d?.dueDate || "Due Date"}</TableHead>
+                  <TableHead>{d?.status || "Status"}</TableHead>
+                  <TableHead>{d?.paymentDate || "Payment Date"}</TableHead>
+                  <TableHead>{d?.receipt || "Receipt"}</TableHead>
+                  <TableHead>{d?.action || "Action"}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -234,10 +254,12 @@ export function FeesTab({ student }: FeesTabProps) {
                     </TableCell>
                     <TableCell>
                       <div>
-                        SAR {Number(fee.amount).toLocaleString()}
+                        {d?.currency || "SAR"}{" "}
+                        {Number(fee.amount).toLocaleString()}
                         {fee.lateFee && (
                           <p className="text-xs text-red-600">
-                            +{Number(fee.lateFee).toLocaleString()} (late fee)
+                            +{Number(fee.lateFee).toLocaleString()} (
+                            {d?.lateFee || "late fee"})
                           </p>
                         )}
                       </div>
@@ -285,7 +307,7 @@ export function FeesTab({ student }: FeesTabProps) {
                         </Button>
                       ) : (
                         <Button variant="default" size="sm">
-                          Pay
+                          {d?.pay || "Pay"}
                         </Button>
                       )}
                     </TableCell>
@@ -296,7 +318,7 @@ export function FeesTab({ student }: FeesTabProps) {
           ) : (
             <div className="text-muted-foreground flex flex-col items-center justify-center py-8">
               <CreditCard className="mb-4 h-12 w-12" />
-              <p>No fee records yet</p>
+              <p>{d?.noFeeRecords || "No fee records yet"}</p>
             </div>
           )}
         </CardContent>
@@ -305,7 +327,7 @@ export function FeesTab({ student }: FeesTabProps) {
       {/* Payment History */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Payments</CardTitle>
+          <CardTitle>{d?.recentPayments || "Recent Payments"}</CardTitle>
         </CardHeader>
         <CardContent>
           {feeRecords.filter((f: any) => f.status === "PAID").length > 0 ? (
@@ -339,7 +361,8 @@ export function FeesTab({ student }: FeesTabProps) {
                     </div>
                     <div className="text-end">
                       <p className="font-medium">
-                        SAR {Number(fee.paidAmount || 0).toLocaleString()}
+                        {d?.currency || "SAR"}{" "}
+                        {Number(fee.paidAmount || 0).toLocaleString()}
                       </p>
                       <p className="text-muted-foreground text-xs">
                         {fee.paymentDate &&
@@ -352,7 +375,7 @@ export function FeesTab({ student }: FeesTabProps) {
           ) : (
             <div className="text-muted-foreground flex flex-col items-center justify-center py-8">
               <Receipt className="mb-4 h-12 w-12" />
-              <p>No payments recorded yet</p>
+              <p>{d?.noPayments || "No payments recorded yet"}</p>
             </div>
           )}
         </CardContent>

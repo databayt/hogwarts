@@ -1,0 +1,90 @@
+{
+  "subject": "islamic-studies",
+  "subjectNameAr": "التربية الإسلامية",
+  "grade": 9,
+  "level": "middle",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "",
+  "chapters": [
+    {
+      "nameAr": "القرآن الكريم",
+      "name": "The Holy Quran",
+      "slug": "holy-quran",
+      "sequenceOrder": 1,
+      "lessons": [
+        {
+          "nameAr": "أحكام المد الفرعي",
+          "name": "Rules of Secondary Elongation",
+          "slug": "secondary-elongation-rules",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "المد بسبب الهمز والمد بسبب السكون",
+          "name": "Elongation Due to Hamza and Due to Sukoon",
+          "slug": "elongation-hamza-sukoon",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "أنواع المد الفرعي بسبب السكون",
+          "name": "Types of Secondary Elongation Due to Sukoon",
+          "slug": "types-secondary-elongation",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "المد اللازم والمد العارض",
+          "name": "Obligatory and Incidental Elongation",
+          "slug": "obligatory-incidental-elongation",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "أحكام المدود",
+          "name": "Rules of Elongations",
+          "slug": "elongation-comprehensive-rules",
+          "sequenceOrder": 5
+        }
+      ]
+    },
+    {
+      "nameAr": "الحديث النبوي الشريف",
+      "name": "Prophetic Hadith",
+      "slug": "prophetic-hadith",
+      "sequenceOrder": 2,
+      "lessons": [
+        {
+          "nameAr": "صنف الأمثلة التي تليه في الجدول أدناه",
+          "name": "Classification of Examples in the Table",
+          "slug": "hadith-classification",
+          "sequenceOrder": 1
+        }
+      ]
+    },
+    {
+      "nameAr": "العقيدة",
+      "name": "Creed",
+      "slug": "creed",
+      "sequenceOrder": 3,
+      "lessons": []
+    },
+    {
+      "nameAr": "الفقه",
+      "name": "Jurisprudence",
+      "slug": "jurisprudence",
+      "sequenceOrder": 4,
+      "lessons": []
+    },
+    {
+      "nameAr": "السيرة النبوية",
+      "name": "Prophetic Biography",
+      "slug": "prophetic-biography",
+      "sequenceOrder": 5,
+      "lessons": []
+    },
+    {
+      "nameAr": "الدراسات الإسلامية",
+      "name": "Islamic Studies",
+      "slug": "islamic-studies-general",
+      "sequenceOrder": 6,
+      "lessons": []
+    }
+  ]
+}

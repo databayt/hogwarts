@@ -77,8 +77,8 @@ export async function submitQuestion(data: {
 
     // Create in catalog + auto-mirror to school's QuestionBank
     const result = await db.$transaction(async (tx) => {
-      // 1. Create CatalogQuestion
-      const question = await tx.catalogQuestion.create({
+      // 1. Create Question
+      const question = await tx.question.create({
         data: {
           catalogSubjectId: data.catalogSubjectId,
           catalogChapterId: data.catalogChapterId ?? null,
@@ -101,7 +101,7 @@ export async function submitQuestion(data: {
       })
 
       // 2. Auto-mirror to school's QuestionBank
-      // Class.subjectId now points directly to CatalogSubject
+      // Class.subjectId now points directly to Subject
       {
         const mirror = await tx.questionBank.create({
           data: {
@@ -179,7 +179,7 @@ export async function submitMaterial(data: {
       return { success: false, error: "Title is required" }
     }
 
-    const material = await db.catalogMaterial.create({
+    const material = await db.material.create({
       data: {
         catalogSubjectId: data.catalogSubjectId,
         catalogChapterId: data.catalogChapterId ?? null,
@@ -235,7 +235,7 @@ export async function submitAssignment(data: {
       return { success: false, error: "Title is required" }
     }
 
-    const assignment = await db.catalogAssignment.create({
+    const assignment = await db.assignment.create({
       data: {
         catalogSubjectId: data.catalogSubjectId,
         catalogChapterId: data.catalogChapterId ?? null,
@@ -280,7 +280,7 @@ export async function updateContributionVisibility(
     const { userId } = await requireContributor()
 
     if (type === "question") {
-      const item = await db.catalogQuestion.findFirst({
+      const item = await db.question.findFirst({
         where: { id, contributedBy: userId },
       })
       if (!item) {
@@ -290,12 +290,12 @@ export async function updateContributionVisibility(
         }
       }
 
-      await db.catalogQuestion.update({
+      await db.question.update({
         where: { id },
         data: { visibility },
       })
     } else if (type === "material") {
-      const item = await db.catalogMaterial.findFirst({
+      const item = await db.material.findFirst({
         where: { id, contributedBy: userId },
       })
       if (!item) {
@@ -305,12 +305,12 @@ export async function updateContributionVisibility(
         }
       }
 
-      await db.catalogMaterial.update({
+      await db.material.update({
         where: { id },
         data: { visibility },
       })
     } else if (type === "assignment") {
-      const item = await db.catalogAssignment.findFirst({
+      const item = await db.assignment.findFirst({
         where: { id, contributedBy: userId },
       })
       if (!item) {
@@ -320,7 +320,7 @@ export async function updateContributionVisibility(
         }
       }
 
-      await db.catalogAssignment.update({
+      await db.assignment.update({
         where: { id },
         data: { visibility },
       })
@@ -351,7 +351,7 @@ export async function getMyContributions() {
     const { userId } = await requireContributor()
 
     const [questions, materials, assignments] = await Promise.all([
-      db.catalogQuestion.findMany({
+      db.question.findMany({
         where: { contributedBy: userId },
         include: {
           catalogSubject: { select: { id: true, name: true } },
@@ -360,7 +360,7 @@ export async function getMyContributions() {
         },
         orderBy: { createdAt: "desc" },
       }),
-      db.catalogMaterial.findMany({
+      db.material.findMany({
         where: { contributedBy: userId },
         include: {
           catalogSubject: { select: { id: true, name: true } },
@@ -369,7 +369,7 @@ export async function getMyContributions() {
         },
         orderBy: { createdAt: "desc" },
       }),
-      db.catalogAssignment.findMany({
+      db.assignment.findMany({
         where: { contributedBy: userId },
         include: {
           catalogSubject: { select: { id: true, name: true } },

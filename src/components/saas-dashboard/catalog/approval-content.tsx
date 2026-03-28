@@ -19,12 +19,7 @@ import { ApprovalTable } from "./approval-table"
 
 export interface PendingItem {
   id: string
-  contentType:
-    | "CatalogQuestion"
-    | "CatalogMaterial"
-    | "CatalogAssignment"
-    | "CatalogBook"
-    | "LessonVideo"
+  contentType: "Question" | "Material" | "Assignment" | "Book" | "Video"
   title: string
   description: string | null
   contributedBy: string | null
@@ -44,7 +39,7 @@ export async function ApprovalContent({ lang }: Props) {
     pendingBooks,
     pendingVideos,
   ] = await Promise.all([
-    db.catalogQuestion.findMany({
+    db.question.findMany({
       where: { approvalStatus: "PENDING" },
       orderBy: { createdAt: "asc" },
       select: {
@@ -54,7 +49,7 @@ export async function ApprovalContent({ lang }: Props) {
         createdAt: true,
       },
     }),
-    db.catalogMaterial.findMany({
+    db.material.findMany({
       where: { approvalStatus: "PENDING" },
       orderBy: { createdAt: "asc" },
       select: {
@@ -65,7 +60,7 @@ export async function ApprovalContent({ lang }: Props) {
         createdAt: true,
       },
     }),
-    db.catalogAssignment.findMany({
+    db.assignment.findMany({
       where: { approvalStatus: "PENDING" },
       orderBy: { createdAt: "asc" },
       select: {
@@ -76,7 +71,7 @@ export async function ApprovalContent({ lang }: Props) {
         createdAt: true,
       },
     }),
-    db.catalogBook.findMany({
+    db.book.findMany({
       where: { approvalStatus: "PENDING" },
       orderBy: { createdAt: "asc" },
       select: {
@@ -87,7 +82,7 @@ export async function ApprovalContent({ lang }: Props) {
         createdAt: true,
       },
     }),
-    db.lessonVideo.findMany({
+    db.video.findMany({
       where: { approvalStatus: "PENDING" },
       orderBy: { createdAt: "asc" },
       select: {
@@ -103,7 +98,7 @@ export async function ApprovalContent({ lang }: Props) {
   const items: PendingItem[] = [
     ...pendingQuestions.map((q) => ({
       id: q.id,
-      contentType: "CatalogQuestion" as const,
+      contentType: "Question" as const,
       title:
         q.questionText.length > 100
           ? q.questionText.slice(0, 100) + "..."
@@ -114,7 +109,7 @@ export async function ApprovalContent({ lang }: Props) {
     })),
     ...pendingMaterials.map((m) => ({
       id: m.id,
-      contentType: "CatalogMaterial" as const,
+      contentType: "Material" as const,
       title: m.title,
       description: m.description,
       contributedBy: m.contributedBy,
@@ -122,7 +117,7 @@ export async function ApprovalContent({ lang }: Props) {
     })),
     ...pendingAssignments.map((a) => ({
       id: a.id,
-      contentType: "CatalogAssignment" as const,
+      contentType: "Assignment" as const,
       title: a.title,
       description: a.description,
       contributedBy: a.contributedBy,
@@ -130,7 +125,7 @@ export async function ApprovalContent({ lang }: Props) {
     })),
     ...pendingBooks.map((b) => ({
       id: b.id,
-      contentType: "CatalogBook" as const,
+      contentType: "Book" as const,
       title: b.title,
       description: b.description,
       contributedBy: b.contributedBy,
@@ -138,7 +133,7 @@ export async function ApprovalContent({ lang }: Props) {
     })),
     ...pendingVideos.map((v) => ({
       id: v.id,
-      contentType: "LessonVideo" as const,
+      contentType: "Video" as const,
       title: v.title,
       description: v.description,
       contributedBy: v.userId,

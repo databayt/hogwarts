@@ -36,7 +36,7 @@ export default async function TemplatesContent({
   let subjects: { id: string; name: string }[] = []
 
   if (schoolId) {
-    const where: Prisma.ExamTemplateWhereInput = {
+    const where: Prisma.SchoolExamTemplateWhereInput = {
       schoolId, // CRITICAL: Multi-tenant scope
       ...(sp.subjectId ? { subjectId: sp.subjectId } : {}),
       ...(sp.isActive !== undefined && sp.isActive !== null
@@ -54,17 +54,17 @@ export default async function TemplatesContent({
 
     const skip = (sp.page - 1) * sp.perPage
     const take = sp.perPage
-    const orderBy: Prisma.ExamTemplateOrderByWithRelationInput[] =
+    const orderBy: Prisma.SchoolExamTemplateOrderByWithRelationInput[] =
       sp.sort && Array.isArray(sp.sort) && sp.sort.length
         ? [
             {
               [sp.sort[0]]: sp.sort[1] === "desc" ? "desc" : "asc",
-            } as Prisma.ExamTemplateOrderByWithRelationInput,
+            } as Prisma.SchoolExamTemplateOrderByWithRelationInput,
           ]
         : [{ createdAt: "desc" }]
 
     const [rows, count, fetchedSubjects] = await Promise.all([
-      db.examTemplate.findMany({
+      db.schoolExamTemplate.findMany({
         where,
         orderBy,
         skip,
@@ -83,7 +83,7 @@ export default async function TemplatesContent({
           },
         },
       }),
-      db.examTemplate.count({ where }),
+      db.schoolExamTemplate.count({ where }),
       getSchoolSubjectOptions(schoolId!),
     ])
 

@@ -17,7 +17,7 @@ export async function updateTemplateFooterLayout(
     const { schoolId } = await getTenantContext()
     if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
-    const template = await db.examTemplate.findFirst({
+    const template = await db.schoolExamTemplate.findFirst({
       where: { id: templateId, schoolId },
       select: { blockConfig: true },
     })
@@ -26,7 +26,7 @@ export async function updateTemplateFooterLayout(
     const blockConfig = (template.blockConfig as Record<string, unknown>) || {}
     const slots = (blockConfig.slots as Record<string, string>) || {}
 
-    await db.examTemplate.updateMany({
+    await db.schoolExamTemplate.updateMany({
       where: { id: templateId, schoolId },
       data: {
         blockConfig: {

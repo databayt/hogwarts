@@ -1,0 +1,178 @@
+{
+  "subject": "family-sciences",
+  "subjectNameAr": "العلوم الأسرية",
+  "grade": 11,
+  "level": "secondary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "الطبعة المنقحة 2010م",
+  "chapters": [
+    {
+      "nameAr": "الوحدة الأولى: مدخل لدراسة العلوم الأسرية",
+      "name": "Unit 1: Introduction to Family Sciences",
+      "slug": "introduction-family-sciences",
+      "sequenceOrder": 1,
+      "lessons": [
+        {
+          "nameAr": "مدخل لدراسة العلوم الأسرية",
+          "name": "Introduction to Family Sciences Study",
+          "slug": "intro-family-sciences-study",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "المفهوم المعاصر للأسرة",
+          "name": "Modern Concept of Family",
+          "slug": "modern-concept-family",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "وظيفة الأسرة",
+          "name": "Functions of the Family",
+          "slug": "functions-family",
+          "sequenceOrder": 3
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة الثانية: علم تغذية الإنسان",
+      "name": "Unit 2: Human Nutrition Science",
+      "slug": "human-nutrition-science",
+      "sequenceOrder": 2,
+      "lessons": [
+        {
+          "nameAr": "علم تغذية الإنسان ودور الغذاء في الجسم",
+          "name": "Human Nutrition and the Role of Food in the Body",
+          "slug": "nutrition-role-food-body",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "العناصر الأساسية في الغذاء",
+          "name": "Essential Elements in Food",
+          "slug": "essential-elements-food",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الطاقة الغذائية واحتياجات الجسم",
+          "name": "Nutritional Energy and Body Needs",
+          "slug": "nutritional-energy-body-needs",
+          "sequenceOrder": 3
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة الثالثة: مشاكل التغذية",
+      "name": "Unit 3: Nutrition Problems",
+      "slug": "nutrition-problems",
+      "sequenceOrder": 3,
+      "lessons": [
+        {
+          "nameAr": "مشاكل نقص وزيادة الوزن",
+          "name": "Weight Loss and Gain Problems",
+          "slug": "weight-problems",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "السكان والتغذية",
+          "name": "Population and Nutrition",
+          "slug": "population-nutrition",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "المجموعات الغذائية",
+          "name": "Food Groups",
+          "slug": "food-groups",
+          "sequenceOrder": 3
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة الرابعة: علوم الصحة",
+      "name": "Unit 4: Health Sciences",
+      "slug": "health-sciences",
+      "sequenceOrder": 4,
+      "lessons": [
+        {
+          "nameAr": "مدخل لعلوم الصحة",
+          "name": "Introduction to Health Sciences",
+          "slug": "intro-health-sciences",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "البيئة وصحة الإنسان",
+          "name": "Environment and Human Health",
+          "slug": "environment-human-health",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الثقافة والوعي الصحي وأهمية مشاركة المجتمع",
+          "name": "Health Culture, Awareness, and Community Participation",
+          "slug": "health-culture-awareness",
+          "sequenceOrder": 3
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة الخامسة: صحة الأسرة",
+      "name": "Unit 5: Family Health",
+      "slug": "family-health",
+      "sequenceOrder": 5,
+      "lessons": [
+        {
+          "nameAr": "صحة الأسرة",
+          "name": "Family Health",
+          "slug": "family-health-intro",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الأمراض المعدية",
+          "name": "Infectious Diseases",
+          "slug": "infectious-diseases",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "العادات الضارة في المجتمع",
+          "name": "Harmful Habits in Society",
+          "slug": "harmful-habits-society",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "الإعداد للحياة الزوجية",
+          "name": "Preparation for Married Life",
+          "slug": "preparation-married-life",
+          "sequenceOrder": 4
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة السادسة: إعداد الأطعمة والمهارات الأسرية",
+      "name": "Unit 6: Food Preparation and Family Skills",
+      "slug": "food-preparation-family-skills",
+      "sequenceOrder": 6,
+      "lessons": [
+        {
+          "nameAr": "إعداد الأطعمة وتأثير الطهي",
+          "name": "Food Preparation and Cooking Effects",
+          "slug": "food-preparation-cooking",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "حفظ وتصنيع الأغذية",
+          "name": "Food Preservation and Processing",
+          "slug": "food-preservation-processing",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "مدخل للمهارات الأسرية - صناعة بعض المنتجات الغذائية بالمنزل",
+          "name": "Introduction to Family Skills - Making Food Products at Home",
+          "slug": "family-skills-home-food-products",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "معالجات الخياطة والتفصيل",
+          "name": "Sewing and Tailoring Techniques",
+          "slug": "sewing-tailoring-techniques",
+          "sequenceOrder": 4
+        }
+      ]
+    }
+  ]
+}

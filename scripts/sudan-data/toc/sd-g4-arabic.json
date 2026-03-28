@@ -1,0 +1,58 @@
+{
+  "subject": "arabic",
+  "subjectNameAr": "اللغة العربية",
+  "grade": 4,
+  "level": "elementary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "الطبعة الأولى 2020م",
+  "chapters": [
+    {
+      "nameAr": "الوحدة الأولى: قيم وآداب",
+      "name": "Unit 1: Values and Manners",
+      "slug": "values-and-manners",
+      "sequenceOrder": 1,
+      "lessons": [
+        {
+          "nameAr": "الدرس الأول: ابتهالات",
+          "name": "Lesson 1: Supplications",
+          "slug": "supplications",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الدرس الثاني: الصداقة كنز لا يفنى",
+          "name": "Lesson 2: Friendship is an Everlasting Treasure",
+          "slug": "friendship-everlasting-treasure",
+          "sequenceOrder": 2
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة الثانية: البيئة",
+      "name": "Unit 2: The Environment",
+      "slug": "the-environment",
+      "sequenceOrder": 2,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الثالثة: عظماء من بلادي",
+      "name": "Unit 3: Great Figures from My Country",
+      "slug": "great-figures-from-my-country",
+      "sequenceOrder": 3,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الرابعة: من قصص الحيوان",
+      "name": "Unit 4: Animal Stories",
+      "slug": "animal-stories",
+      "sequenceOrder": 4,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الخامسة: موضوعات متنوعة",
+      "name": "Unit 5: Miscellaneous Topics",
+      "slug": "miscellaneous-topics",
+      "sequenceOrder": 5,
+      "lessons": []
+    }
+  ]
+}

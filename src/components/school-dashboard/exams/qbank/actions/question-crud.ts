@@ -73,7 +73,7 @@ export async function createQuestion(
     const question = await db.$transaction(async (tx) => {
       // 1. Create in catalog first (single source of truth)
       // subjectId IS the catalogSubjectId now
-      const catalogQuestion = await tx.catalogQuestion.create({
+      const catalogQuestion = await tx.question.create({
         data: {
           catalogSubjectId: validated.subjectId ?? null,
           questionText: validated.questionText,
@@ -224,16 +224,16 @@ export async function updateQuestion(
         },
       })
 
-      // Sync changes back to CatalogQuestion if this school is the contributor
+      // Sync changes back to Question if this school is the contributor
       if (updated.catalogQuestionId) {
-        const catalogQ = await tx.catalogQuestion.findFirst({
+        const catalogQ = await tx.question.findFirst({
           where: {
             id: updated.catalogQuestionId,
             contributedSchoolId: schoolId,
           },
         })
         if (catalogQ) {
-          await tx.catalogQuestion.update({
+          await tx.question.update({
             where: { id: catalogQ.id },
             data: {
               questionText: validated.questionText,
@@ -378,20 +378,20 @@ export async function deleteQuestion(
         },
       })
 
-      // Clean up CatalogQuestion if this school is the contributor and no other schools use it
+      // Clean up Question if this school is the contributor and no other schools use it
       if (question?.catalogQuestionId) {
         const otherMirrors = await tx.questionBank.count({
           where: { catalogQuestionId: question.catalogQuestionId },
         })
         if (otherMirrors === 0) {
-          const catalogQ = await tx.catalogQuestion.findFirst({
+          const catalogQ = await tx.question.findFirst({
             where: {
               id: question.catalogQuestionId,
               contributedSchoolId: schoolId,
             },
           })
           if (catalogQ) {
-            await tx.catalogQuestion.delete({
+            await tx.question.delete({
               where: { id: catalogQ.id },
             })
           }
@@ -567,11 +567,11 @@ export async function duplicateQuestion(
       }
     }
 
-    // Create duplicate with transaction: new CatalogQuestion + new QuestionBank mirror
+    // Create duplicate with transaction: new Question + new QuestionBank mirror
     const duplicate = await db.$transaction(async (tx) => {
-      // 1. Create new CatalogQuestion for the duplicate
+      // 1. Create new Question for the duplicate
       // subjectId IS the catalogSubjectId now
-      const catalogQuestion = await tx.catalogQuestion.create({
+      const catalogQuestion = await tx.question.create({
         data: {
           catalogSubjectId: original.subjectId,
           questionText: `${original.questionText} (Copy)`,

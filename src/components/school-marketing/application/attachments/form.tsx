@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import React, {
   forwardRef,
+  useCallback,
   useEffect,
   useImperativeHandle,
   useState,
@@ -24,28 +25,34 @@ import { FileUploadField } from "@/components/form/atoms/file-upload"
 
 import { useApplySession } from "../application-context"
 import type { AttachmentsStepData } from "../types"
+import { getApplyDict } from "../utils"
 import { saveAttachmentsStep } from "./actions"
+import { extractForAutoFill, type AutoFillResult } from "./extract-action"
 import type { AttachmentsFormProps, AttachmentsFormRef } from "./types"
 import { attachmentsSchema, type AttachmentsFormData } from "./validation"
 
-const DOCUMENT_SLOTS = [
+const DOCUMENT_SLOT_KEYS = [
   {
     key: "degreeUrl" as const,
-    label: "Degree",
+    dictKey: "degree",
     icon: asset("/icons/degree.png"),
   },
   {
     key: "transcriptUrl" as const,
-    label: "Transcript",
+    dictKey: "transcript",
     icon: asset("/icons/transcript.png"),
   },
-  { key: "idUrl" as const, label: "ID", icon: asset("/icons/id.png") },
+  { key: "idUrl" as const, dictKey: "id", icon: asset("/icons/id.png") },
   {
     key: "resumeUrl" as const,
-    label: "Resume",
+    dictKey: "resume",
     icon: asset("/icons/resume.png"),
   },
-  { key: "otherUrl" as const, label: "Other", icon: asset("/icons/files.png") },
+  {
+    key: "otherUrl" as const,
+    dictKey: "other",
+    icon: asset("/icons/files.png"),
+  },
 ]
 
 function DocumentCard({
@@ -54,12 +61,16 @@ function DocumentCard({
   icon,
   disabled,
   schoolId,
+  uploadedLabel,
+  onUploaded,
 }: {
   name: string
   label: string
   icon: string
   disabled?: boolean
   schoolId?: string
+  uploadedLabel?: string
+  onUploaded?: (fileUrl: string) => void
 }) {
   const form = useFormContext()
   const currentValue = form.watch(name)
@@ -76,6 +87,10 @@ function DocumentCard({
     schoolId,
     onSuccess: (result) => {
       form.setValue(name, result)
+      // Trigger silent AI extraction for auto-fill
+      const url =
+        typeof result === "string" ? result : (result as { url?: string })?.url
+      if (url && onUploaded) onUploaded(url)
     },
   })
 
@@ -158,7 +173,9 @@ function DocumentCard({
           ) : (
             <div className="flex flex-1 flex-col items-center justify-center gap-1">
               <CheckCircle className="h-8 w-8 text-green-500" />
-              <p className="text-muted-foreground text-xs">Uploaded</p>
+              <p className="text-muted-foreground text-xs">
+                {uploadedLabel || "Uploaded"}
+              </p>
             </div>
           )}
         </>
@@ -176,9 +193,22 @@ export const AttachmentsForm = forwardRef<
   AttachmentsFormRef,
   AttachmentsFormProps
 >(({ initialData, onSuccess, dictionary }, ref) => {
-  const { updateStepData } = useApplySession()
+  const { updateStepData, getStepData } = useApplySession()
   const params = useParams()
   const [schoolId, setSchoolId] = useState<string>()
+  const dict = getApplyDict(dictionary, "attachments")
+
+  // Silent AI extraction → auto-fill subsequent steps
+  // schoolId is resolved server-side by getTenantContext() — no need to pass it
+  const handleDocumentUploaded = useCallback(
+    (slotKey: string, fileUrl: string) => {
+      extractForAutoFill(fileUrl, slotKey).then((result) => {
+        if (!result.success || !result.data) return
+        mergeAutoFillData(result.data, getStepData, updateStepData)
+      })
+    },
+    [getStepData, updateStepData]
+  )
 
   // Resolve schoolId from subdomain so applicants (who have no school) can upload
   useEffect(() => {
@@ -242,7 +272,7 @@ export const AttachmentsForm = forwardRef<
 
   return (
     <Form {...form}>
-      <form className="grid grid-cols-3 gap-4">
+      <form className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
         {/* Photo - avatar upload */}
         <div className="flex items-center justify-center">
           <FileUploadField
@@ -260,20 +290,22 @@ export const AttachmentsForm = forwardRef<
               quality: 85,
               format: "webp",
             }}
-            placeholder="Photo"
+            placeholder={dict.photo || "Photo"}
             placeholderImage={asset("/icons/image.png")}
             schoolId={schoolId}
           />
         </div>
 
         {/* Document slots */}
-        {DOCUMENT_SLOTS.map(({ key, label, icon }) => (
+        {DOCUMENT_SLOT_KEYS.map(({ key, dictKey, icon }) => (
           <DocumentCard
             key={key}
             name={key}
-            label={label}
+            label={dict[dictKey] || dictKey}
             icon={icon}
             schoolId={schoolId}
+            uploadedLabel={dict.uploaded}
+            onUploaded={(fileUrl) => handleDocumentUploaded(key, fileUrl)}
           />
         ))}
       </form>
@@ -282,3 +314,34 @@ export const AttachmentsForm = forwardRef<
 })
 
 AttachmentsForm.displayName = "AttachmentsForm"
+
+// ---------------------------------------------------------------------------
+// Merge AI-extracted data into step context, only filling empty fields
+// ---------------------------------------------------------------------------
+
+function mergeAutoFillData(
+  data: AutoFillResult,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  getStepData: (step: any) => any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  updateStepData: (step: any, value: any) => void
+) {
+  for (const [step, fields] of Object.entries(data)) {
+    if (!fields || Object.keys(fields).length === 0) continue
+
+    const existing = (getStepData(step) as Record<string, unknown>) || {}
+    const merged = { ...existing }
+    let hasNew = false
+
+    for (const [key, value] of Object.entries(fields)) {
+      if (value && !existing[key]) {
+        merged[key] = value
+        hasNew = true
+      }
+    }
+
+    if (hasNew) {
+      updateStepData(step, merged)
+    }
+  }
+}

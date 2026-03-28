@@ -26,7 +26,7 @@ export default async function RecentPage({ params }: Props) {
   const { schoolId } = await getTenantContext()
 
   const recentExams = schoolId
-    ? await db.exam.findMany({
+    ? await db.schoolExam.findMany({
         where: {
           schoolId,
           status: "COMPLETED",

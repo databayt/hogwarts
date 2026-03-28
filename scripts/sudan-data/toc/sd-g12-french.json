@@ -1,0 +1,56 @@
+{
+  "subject": "french",
+  "subjectNameAr": "اللغة الفرنسية",
+  "grade": 12,
+  "level": "secondary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "",
+  "chapters": [
+    {
+      "nameAr": "الوحدة الخامسة",
+      "name": "Module 5",
+      "slug": "module-5",
+      "sequenceOrder": 1,
+      "lessons": [
+        {
+          "nameAr": "الوحدة 13: هذا غالٍ جداً!",
+          "name": "Unit 13: C'est trop cher!",
+          "slug": "unit-13-cest-trop-cher",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الوحدة 14: نحن نلبس!",
+          "name": "Unit 14: On s'habille!",
+          "slug": "unit-14-on-shabille",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الوحدة 15: أبحث عن عمل طلابي",
+          "name": "Unit 15: Je cherche un emploi d'etudiant",
+          "slug": "unit-15-je-cherche-un-emploi",
+          "sequenceOrder": 3
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة السادسة",
+      "name": "Module 6",
+      "slug": "module-6",
+      "sequenceOrder": 2,
+      "lessons": [
+        {
+          "nameAr": "الوحدة 16: في العناوين الرئيسية!",
+          "name": "Unit 16: A la une!",
+          "slug": "unit-16-a-la-une",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الوحدة 17: عاشت الفرنكوفونية!",
+          "name": "Unit 17: Vive la Francophonie!",
+          "slug": "unit-17-vive-la-francophonie",
+          "sequenceOrder": 2
+        }
+      ]
+    }
+  ]
+}

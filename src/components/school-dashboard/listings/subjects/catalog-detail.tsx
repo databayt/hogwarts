@@ -15,7 +15,7 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 // Types (exported for catalog-hero.tsx and catalog-chapters.tsx)
 // ---------------------------------------------------------------------------
 
-export interface CatalogLessonItem {
+export interface LessonItem {
   id: string
   name: string
   slug: string
@@ -26,17 +26,17 @@ export interface CatalogLessonItem {
   imageUrl: string | null
 }
 
-export interface CatalogChapterItem {
+export interface ChapterItem {
   id: string
   name: string
   slug: string
   description: string | null
   totalLessons: number
   imageUrl: string | null
-  lessons: CatalogLessonItem[]
+  lessons: LessonItem[]
 }
 
-export interface CatalogSubjectSummary {
+export interface SubjectSummary {
   name: string
   slug: string
   description: string | null
@@ -54,8 +54,8 @@ export interface CatalogSubjectSummary {
 }
 
 interface Props {
-  subject: CatalogSubjectSummary
-  chapters: CatalogChapterItem[]
+  subject: SubjectSummary
+  chapters: ChapterItem[]
   lang: Locale
 }
 
@@ -195,7 +195,7 @@ function TopicCard({
   chapter,
   fallbackColor,
 }: {
-  chapter: CatalogChapterItem
+  chapter: ChapterItem
   fallbackColor: string | null
 }) {
   const [failed, setFailed] = useState(false)
@@ -239,7 +239,7 @@ export function ChapterSection({
   subjectColor,
   t,
 }: {
-  chapter: CatalogChapterItem
+  chapter: ChapterItem
   subjectColor: string | null
   t: { min: string; videos: string; resources: string }
 }) {
@@ -271,7 +271,7 @@ function LessonCard({
   fallbackColor,
   t,
 }: {
-  lesson: CatalogLessonItem
+  lesson: LessonItem
   fallbackColor: string | null
   t: { min: string; videos: string; resources: string }
 }) {

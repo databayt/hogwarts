@@ -15,9 +15,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-import { deleteCatalogQuestion } from "./question-actions"
+import { deleteQuestion } from "./question-actions"
 
-export interface CatalogQuestionRow {
+export interface QuestionRow {
   id: string
   questionText: string
   questionType: string
@@ -68,7 +68,7 @@ function getDifficultyVariant(
   }
 }
 
-export const questionColumns: ColumnDef<CatalogQuestionRow>[] = [
+export const questionColumns: ColumnDef<QuestionRow>[] = [
   {
     accessorKey: "questionText",
     header: "Question",
@@ -140,7 +140,7 @@ export const questionColumns: ColumnDef<CatalogQuestionRow>[] = [
 
       async function handleDelete() {
         if (!confirm("Are you sure you want to delete this question?")) return
-        await deleteCatalogQuestion(id)
+        await deleteQuestion(id)
       }
 
       return (

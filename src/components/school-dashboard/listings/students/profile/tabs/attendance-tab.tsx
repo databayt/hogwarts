@@ -26,9 +26,19 @@ import type { Student } from "../../registration/types"
 
 interface AttendanceTabProps {
   student: Student
+  dictionary?: any
 }
 
-export function AttendanceTab({ student }: AttendanceTabProps) {
+export function AttendanceTab({ student, dictionary }: AttendanceTabProps) {
+  const d = dictionary
+
+  const statusMap: Record<string, string> = {
+    present: d?.present || "Present",
+    absent: d?.absent || "Absent",
+    late: d?.late || "Late",
+    excused: d?.excused || "Excused",
+  }
+
   // Use real attendance data from the database
   const realAttendances = student.attendances || []
 
@@ -156,7 +166,9 @@ export function AttendanceTab({ student }: AttendanceTabProps) {
         <Card>
           <CardContent className="p-4">
             <div className="space-y-1">
-              <p className="text-muted-foreground text-sm">Attendance Rate</p>
+              <p className="text-muted-foreground text-sm">
+                {d?.attendanceRate || "Attendance Rate"}
+              </p>
               <p
                 className={`text-2xl font-bold ${getAttendanceColor(attendancePercentage)}`}
               >
@@ -170,11 +182,15 @@ export function AttendanceTab({ student }: AttendanceTabProps) {
         <Card>
           <CardContent className="p-4">
             <div className="space-y-1">
-              <p className="text-muted-foreground text-sm">Present Days</p>
+              <p className="text-muted-foreground text-sm">
+                {d?.presentDays || "Present Days"}
+              </p>
               <p className="text-2xl font-bold text-green-600">
                 {stats.present}
               </p>
-              <p className="text-muted-foreground text-xs">This month</p>
+              <p className="text-muted-foreground text-xs">
+                {d?.thisMonth || "This month"}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -182,9 +198,13 @@ export function AttendanceTab({ student }: AttendanceTabProps) {
         <Card>
           <CardContent className="p-4">
             <div className="space-y-1">
-              <p className="text-muted-foreground text-sm">Absent Days</p>
+              <p className="text-muted-foreground text-sm">
+                {d?.absentDays || "Absent Days"}
+              </p>
               <p className="text-2xl font-bold text-red-600">{stats.absent}</p>
-              <p className="text-muted-foreground text-xs">This month</p>
+              <p className="text-muted-foreground text-xs">
+                {d?.thisMonth || "This month"}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -192,9 +212,13 @@ export function AttendanceTab({ student }: AttendanceTabProps) {
         <Card>
           <CardContent className="p-4">
             <div className="space-y-1">
-              <p className="text-muted-foreground text-sm">Late Arrivals</p>
+              <p className="text-muted-foreground text-sm">
+                {d?.lateArrivals || "Late Arrivals"}
+              </p>
               <p className="text-2xl font-bold text-yellow-600">{stats.late}</p>
-              <p className="text-muted-foreground text-xs">This month</p>
+              <p className="text-muted-foreground text-xs">
+                {d?.thisMonth || "This month"}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -202,9 +226,13 @@ export function AttendanceTab({ student }: AttendanceTabProps) {
         <Card>
           <CardContent className="p-4">
             <div className="space-y-1">
-              <p className="text-muted-foreground text-sm">School Days</p>
+              <p className="text-muted-foreground text-sm">
+                {d?.schoolDays || "School Days"}
+              </p>
               <p className="text-2xl font-bold">{stats.totalSchoolDays}</p>
-              <p className="text-muted-foreground text-xs">This month</p>
+              <p className="text-muted-foreground text-xs">
+                {d?.thisMonth || "This month"}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -214,13 +242,22 @@ export function AttendanceTab({ student }: AttendanceTabProps) {
       <Card>
         <CardHeader>
           <CardTitle>
-            Attendance Calendar - {format(currentMonth, "MMMM yyyy")}
+            {d?.attendanceCalendar || "Attendance Calendar"} -{" "}
+            {format(currentMonth, "MMMM yyyy")}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-7 gap-2">
             {/* Day headers */}
-            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+            {[
+              d?.sun || "Sun",
+              d?.mon || "Mon",
+              d?.tue || "Tue",
+              d?.wed || "Wed",
+              d?.thu || "Thu",
+              d?.fri || "Fri",
+              d?.sat || "Sat",
+            ].map((day) => (
               <div
                 key={day}
                 className="text-muted-foreground py-2 text-center text-sm font-medium"
@@ -258,23 +295,23 @@ export function AttendanceTab({ student }: AttendanceTabProps) {
           <div className="mt-6 flex flex-wrap gap-4 text-sm">
             <div className="flex items-center gap-2">
               <CircleCheck className="h-4 w-4 text-green-600" />
-              <span>Present</span>
+              <span>{d?.present || "Present"}</span>
             </div>
             <div className="flex items-center gap-2">
               <CircleX className="h-4 w-4 text-red-600" />
-              <span>Absent</span>
+              <span>{d?.absent || "Absent"}</span>
             </div>
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-yellow-600" />
-              <span>Late</span>
+              <span>{d?.late || "Late"}</span>
             </div>
             <div className="flex items-center gap-2">
               <CircleCheck className="h-4 w-4 text-blue-600" />
-              <span>Excused</span>
+              <span>{d?.excused || "Excused"}</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="bg-muted h-4 w-4 rounded" />
-              <span>Weekend/Holiday</span>
+              <span>{d?.weekendHoliday || "Weekend/Holiday"}</span>
             </div>
           </div>
         </CardContent>
@@ -283,13 +320,15 @@ export function AttendanceTab({ student }: AttendanceTabProps) {
       {/* Attendance Trends */}
       <Card>
         <CardHeader>
-          <CardTitle>Attendance Trends</CardTitle>
+          <CardTitle>{d?.attendanceTrends || "Attendance Trends"}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div className="flex items-center justify-between rounded-lg border p-3">
               <div>
-                <p className="text-muted-foreground text-sm">This Month</p>
+                <p className="text-muted-foreground text-sm">
+                  {d?.thisMonth || "This Month"}
+                </p>
                 <p className="text-xl font-bold">
                   {attendancePercentage.toFixed(1)}%
                 </p>
@@ -299,7 +338,9 @@ export function AttendanceTab({ student }: AttendanceTabProps) {
 
             <div className="flex items-center justify-between rounded-lg border p-3">
               <div>
-                <p className="text-muted-foreground text-sm">Last Month</p>
+                <p className="text-muted-foreground text-sm">
+                  {d?.lastMonth || "Last Month"}
+                </p>
                 <p className="text-xl font-bold">92.5%</p>
               </div>
               <TrendingUp className="h-6 w-6 text-green-600" />
@@ -307,7 +348,9 @@ export function AttendanceTab({ student }: AttendanceTabProps) {
 
             <div className="flex items-center justify-between rounded-lg border p-3">
               <div>
-                <p className="text-muted-foreground text-sm">Year Average</p>
+                <p className="text-muted-foreground text-sm">
+                  {d?.yearAverage || "Year Average"}
+                </p>
                 <p className="text-xl font-bold">89.2%</p>
               </div>
               <TrendingDown className="h-6 w-6 text-yellow-600" />
@@ -319,7 +362,9 @@ export function AttendanceTab({ student }: AttendanceTabProps) {
       {/* Recent Attendance Records */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Attendance Records</CardTitle>
+          <CardTitle>
+            {d?.recentRecords || "Recent Attendance Records"}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {attendanceRecords.filter(
@@ -343,15 +388,15 @@ export function AttendanceTab({ student }: AttendanceTabProps) {
                         </p>
                         {record.checkInTime && (
                           <p className="text-muted-foreground text-xs">
-                            In: {record.checkInTime}
+                            {d?.checkIn || "In:"} {record.checkInTime}
                             {record.checkOutTime
-                              ? ` • Out: ${record.checkOutTime}`
+                              ? ` • ${d?.checkOut || "Out:"} ${record.checkOutTime}`
                               : ""}
                           </p>
                         )}
                         {record.notes && (
                           <p className="text-muted-foreground text-xs">
-                            Note: {record.notes}
+                            {d?.note || "Note:"} {record.notes}
                           </p>
                         )}
                       </div>
@@ -367,7 +412,7 @@ export function AttendanceTab({ student }: AttendanceTabProps) {
                               : "secondary"
                       }
                     >
-                      {record.status}
+                      {statusMap[record.status] || record.status}
                     </Badge>
                   </div>
                 ))}
@@ -375,7 +420,7 @@ export function AttendanceTab({ student }: AttendanceTabProps) {
           ) : (
             <div className="text-muted-foreground flex flex-col items-center justify-center py-8">
               <CalendarIcon className="mb-4 h-12 w-12" />
-              <p>No attendance records yet</p>
+              <p>{d?.noRecords || "No attendance records yet"}</p>
             </div>
           )}
         </CardContent>

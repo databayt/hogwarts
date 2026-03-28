@@ -246,7 +246,7 @@ export async function validateExamSession(params: {
   const { studentId, examId, schoolId } = params
 
   // Check if exam exists and is active
-  const exam = await db.exam.findFirst({
+  const exam = await db.schoolExam.findFirst({
     where: {
       id: examId,
       schoolId,

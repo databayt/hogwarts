@@ -44,7 +44,7 @@ export async function GET(
       )
     }
 
-    const assignment = await db.assignment.findFirst({
+    const assignment = await db.schoolAssignment.findFirst({
       where: {
         id: (await params).id,
         schoolId,

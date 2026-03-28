@@ -79,7 +79,7 @@ const MATERIAL_TYPE_ORDER = [
 // Component
 // ---------------------------------------------------------------------------
 
-export function CatalogMaterialsContent({
+export function MaterialsContent({
   subject,
   materials,
   lang,

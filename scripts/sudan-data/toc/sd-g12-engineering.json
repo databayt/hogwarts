@@ -1,0 +1,38 @@
+{
+  "subject": "engineering",
+  "subjectNameAr": "العلوم الهندسية",
+  "grade": 12,
+  "level": "secondary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "",
+  "chapters": [
+    {
+      "nameAr": "الوحدة الأولى: الرسم الهندسي",
+      "name": "Unit 1: Engineering Drawing",
+      "slug": "engineering-drawing",
+      "sequenceOrder": 1,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الثانية: الهندسة الميكانيكية",
+      "name": "Unit 2: Mechanical Engineering",
+      "slug": "mechanical-engineering",
+      "sequenceOrder": 2,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الثالثة: الهندسة المدنية",
+      "name": "Unit 3: Civil Engineering",
+      "slug": "civil-engineering",
+      "sequenceOrder": 3,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الرابعة: الهندسة الكهربائية والإلكترونية",
+      "name": "Unit 4: Electrical and Electronic Engineering",
+      "slug": "electrical-electronic-engineering",
+      "sequenceOrder": 4,
+      "lessons": []
+    }
+  ]
+}

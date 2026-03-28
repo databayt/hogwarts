@@ -19,7 +19,7 @@ export async function updateTemplateScoring(
     const { schoolId } = await getTenantContext()
     if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
-    const template = await db.examTemplate.findFirst({
+    const template = await db.schoolExamTemplate.findFirst({
       where: { id: templateId, schoolId },
       select: { scoringConfig: true },
     })
@@ -27,7 +27,7 @@ export async function updateTemplateScoring(
 
     const existing = (template.scoringConfig as Record<string, unknown>) || {}
 
-    await db.examTemplate.updateMany({
+    await db.schoolExamTemplate.updateMany({
       where: { id: templateId, schoolId },
       data: {
         scoringConfig: {

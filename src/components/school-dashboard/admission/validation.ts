@@ -3,48 +3,76 @@
 
 import { z } from "zod"
 
-// Campaign validation schema - matches AdmissionCampaign Prisma model
-export const campaignSchema = z.object({
-  name: z
-    .string()
-    .min(3, "Name must be at least 3 characters")
-    .max(100, "Name must be at most 100 characters"),
-  academicYear: z
-    .string()
-    .min(4, "Academic year is required")
-    .max(20, "Academic year must be at most 20 characters"),
-  startDate: z.coerce.date({ message: "Start date is required" }),
-  endDate: z.coerce.date({ message: "End date is required" }),
-  status: z.enum(["DRAFT", "OPEN", "CLOSED", "PROCESSING", "COMPLETED"], {
-    message: "Status is required",
-  }),
-  description: z.string().max(500).optional().nullable(),
-  totalSeats: z
-    .number({ message: "Total seats is required" })
-    .min(1, "Must have at least 1 seat"),
-  applicationFee: z
-    .number()
-    .min(0, "Application fee cannot be negative")
-    .optional()
-    .nullable(),
-})
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
-// Refine to check end date is after start date
-export const campaignSchemaWithValidation = campaignSchema.refine(
-  (data) => data.endDate > data.startDate,
-  {
-    message: "End date must be after start date",
-    path: ["endDate"],
+// ---------------------------------------------------------------------------
+// Validation message helpers (i18n-safe)
+// ---------------------------------------------------------------------------
+
+type V = NonNullable<Dictionary["school"]["admission"]["validation"]>
+
+function v(dict?: V) {
+  return {
+    nameMin: dict?.nameMin || "Name must be at least 3 characters",
+    nameMax: dict?.nameMax || "Name must be at most 100 characters",
+    academicYearRequired:
+      dict?.academicYearRequired || "Academic year is required",
+    academicYearMax:
+      dict?.academicYearMax || "Academic year must be at most 20 characters",
+    startDateRequired: dict?.startDateRequired || "Start date is required",
+    endDateRequired: dict?.endDateRequired || "End date is required",
+    statusRequired: dict?.statusRequired || "Status is required",
+    totalSeatsRequired: dict?.totalSeatsRequired || "Total seats is required",
+    totalSeatsMin: dict?.totalSeatsMin || "Must have at least 1 seat",
+    feeNonNegative:
+      dict?.feeNonNegative || "Application fee cannot be negative",
+    endDateAfterStart:
+      dict?.endDateAfterStart || "End date must be after start date",
   }
-)
+}
 
-export type CampaignFormData = z.infer<typeof campaignSchema>
+// ---------------------------------------------------------------------------
+// Campaign schema factory
+// ---------------------------------------------------------------------------
 
-// Status options for select
-export const campaignStatusOptions = [
-  { value: "DRAFT", label: "Draft" },
-  { value: "OPEN", label: "Open" },
-  { value: "CLOSED", label: "Closed" },
-  { value: "PROCESSING", label: "Processing" },
-  { value: "COMPLETED", label: "Completed" },
+export function createCampaignSchema(dict?: V) {
+  const m = v(dict)
+
+  const base = z.object({
+    name: z.string().min(3, m.nameMin).max(100, m.nameMax),
+    academicYear: z
+      .string()
+      .min(4, m.academicYearRequired)
+      .max(20, m.academicYearMax),
+    startDate: z.coerce.date({ message: m.startDateRequired }),
+    endDate: z.coerce.date({ message: m.endDateRequired }),
+    status: z.enum(["DRAFT", "OPEN", "CLOSED", "PROCESSING", "COMPLETED"], {
+      message: m.statusRequired,
+    }),
+    description: z.string().max(500).optional().nullable(),
+    totalSeats: z
+      .number({ message: m.totalSeatsRequired })
+      .min(1, m.totalSeatsMin),
+    applicationFee: z.number().min(0, m.feeNonNegative).optional().nullable(),
+  })
+
+  return base.refine((data) => data.endDate > data.startDate, {
+    message: m.endDateAfterStart,
+    path: ["endDate"],
+  })
+}
+
+// Static schema (for server-side validation where dictionary is unavailable)
+export const campaignSchema = createCampaignSchema()
+export const campaignSchemaWithValidation = campaignSchema
+
+export type CampaignFormData = z.infer<ReturnType<typeof createCampaignSchema>>
+
+// Status option values (labels resolved from dictionary at render time)
+export const CAMPAIGN_STATUS_VALUES = [
+  "DRAFT",
+  "OPEN",
+  "CLOSED",
+  "PROCESSING",
+  "COMPLETED",
 ] as const

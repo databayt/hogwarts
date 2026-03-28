@@ -7,16 +7,16 @@ import { useMemo } from "react"
 import { DataTable } from "@/components/table/data-table"
 import { useDataTable } from "@/components/table/use-data-table"
 
-import { questionColumns, type CatalogQuestionRow } from "./question-columns"
+import { questionColumns, type QuestionRow } from "./question-columns"
 
 interface Props {
-  data: CatalogQuestionRow[]
+  data: QuestionRow[]
 }
 
 export function QuestionTable({ data }: Props) {
   const columns = useMemo(() => questionColumns, [])
 
-  const { table } = useDataTable<CatalogQuestionRow>({
+  const { table } = useDataTable<QuestionRow>({
     data,
     columns,
     pageCount: 1,

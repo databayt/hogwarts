@@ -125,6 +125,8 @@
       "UPDATE_FAILED": "Failed to update",
       "DELETE_FAILED": "Failed to delete",
       "SAVE_FAILED": "Failed to save",
+      "LOAD_FAILED": "Failed to load data",
+      "HAS_DEPENDENCIES": "Cannot delete item with existing dependencies",
       "STUDENT_NOT_FOUND": "Student not found",
       "STUDENT_CREATE_FAILED": "Failed to create student",
       "STUDENT_UPDATE_FAILED": "Failed to update student",

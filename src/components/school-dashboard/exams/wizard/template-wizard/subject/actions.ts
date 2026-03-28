@@ -38,7 +38,7 @@ export async function updateTemplateSubject(
 
     const parsed = subjectSchema.parse(input)
 
-    await db.examTemplate.updateMany({
+    await db.schoolExamTemplate.updateMany({
       where: { id: templateId, schoolId },
       data: { subjectId: parsed.subjectId },
     })

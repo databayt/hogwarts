@@ -30,7 +30,7 @@ export async function getExamAnalytics(input: {
 
     // Fetch exam and results in parallel
     const [exam, results] = await Promise.all([
-      db.exam.findFirst({
+      db.schoolExam.findFirst({
         where: { id: examId, schoolId },
         select: {
           id: true,
@@ -190,7 +190,7 @@ export async function getClassPerformance(input: {
       where.termId = termId
     }
 
-    const exams = await db.exam.findMany({
+    const exams = await db.schoolExam.findMany({
       where,
       include: {
         examResults: {
@@ -298,7 +298,7 @@ export async function getExamStandardsCoverage(examId: string): Promise<
     const questionIds = generatedExam?.questions.map((q) => q.questionId) || []
 
     // Get the exam's subject to scope standards
-    const exam = await db.exam.findFirst({
+    const exam = await db.schoolExam.findFirst({
       where: { id: examId, schoolId },
       select: { subjectId: true },
     })
@@ -439,7 +439,7 @@ export async function getSubjectAnalytics(input: {
     }
 
     // Get exams and results
-    const exams = await db.exam.findMany({
+    const exams = await db.schoolExam.findMany({
       where,
       include: {
         examResults: {

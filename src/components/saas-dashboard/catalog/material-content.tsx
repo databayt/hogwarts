@@ -16,7 +16,7 @@ import type { getDictionary } from "@/components/internationalization/dictionari
 import { Shell as PageContainer } from "@/components/table/shell"
 
 import { CreateMaterialDialog } from "./create-material-dialog"
-import type { CatalogMaterialRow } from "./material-columns"
+import type { MaterialRow } from "./material-columns"
 import { MaterialTable } from "./material-table"
 
 interface Props {
@@ -25,7 +25,7 @@ interface Props {
 }
 
 export async function MaterialContent({ lang }: Props) {
-  const materials = await db.catalogMaterial.findMany({
+  const materials = await db.material.findMany({
     orderBy: { createdAt: "desc" },
     select: {
       id: true,
@@ -60,7 +60,7 @@ export async function MaterialContent({ lang }: Props) {
         ).toFixed(1)
       : "0"
 
-  const rows: CatalogMaterialRow[] = materials.map((m) => ({
+  const rows: MaterialRow[] = materials.map((m) => ({
     ...m,
     type: m.type as string,
     approvalStatus: m.approvalStatus as string,

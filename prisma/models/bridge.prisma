@@ -1,0 +1,108 @@
+// Bridge models — connect schools to the catalog (all schoolId-scoped)
+// SubjectSelection — school adopts a Subject per grade+stream
+// ContentOverride — school hides Chapter/Lesson/Video
+// InstructorPreference — per-subject instructor preference
+// BookSelection — school adopts a Book into its library
+
+model SubjectSelection {
+  id               String  @id @default(cuid())
+  schoolId         String
+  catalogSubjectId String
+  gradeId          String
+  streamId         String? // null = applies to all streams
+
+  isRequired    Boolean @default(true) // Core vs elective
+  weeklyPeriods Int?
+  customName    String? // School-specific rename
+  isActive      Boolean @default(true)
+
+  // Relations
+  school  School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  subject Subject         @relation(fields: [catalogSubjectId], references: [id], onDelete: Cascade)
+  grade   AcademicGrade   @relation(fields: [gradeId], references: [id], onDelete: Cascade)
+  stream  AcademicStream? @relation(fields: [streamId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, catalogSubjectId, gradeId, streamId])
+  @@index([schoolId, gradeId])
+  @@index([schoolId, gradeId, streamId])
+  @@index([catalogSubjectId])
+  @@index([schoolId, isActive])
+  @@map("school_subject_selections")
+}
+
+model ContentOverride {
+  id               String  @id @default(cuid())
+  schoolId         String
+  catalogChapterId String?
+  catalogLessonId  String?
+  lessonVideoId    String?
+
+  isHidden     Boolean @default(true)
+  reason       String?
+  overriddenBy String // userId who made the override
+
+  // Relations
+  school  School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  chapter Chapter? @relation("ChapterOverrides", fields: [catalogChapterId], references: [id], onDelete: Cascade)
+  lesson  Lesson?  @relation("LessonOverrides", fields: [catalogLessonId], references: [id], onDelete: Cascade)
+  video   Video?   @relation("VideoOverrides", fields: [lessonVideoId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, catalogChapterId, catalogLessonId, lessonVideoId])
+  @@index([schoolId, catalogChapterId])
+  @@index([schoolId, catalogLessonId])
+  @@index([schoolId, lessonVideoId])
+  @@map("school_content_overrides")
+}
+
+model InstructorPreference {
+  id               String @id @default(cuid())
+  schoolId         String
+  catalogSubjectId String
+
+  preferredSchoolId String?
+  preferredUserId   String?
+
+  // Relations
+  school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [catalogSubjectId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, catalogSubjectId])
+  @@index([schoolId])
+  @@map("school_instructor_preferences")
+}
+
+model BookSelection {
+  id            String  @id @default(cuid())
+  schoolId      String
+  catalogBookId String
+  gradeId       String?
+
+  totalCopies     Int     @default(1)
+  availableCopies Int     @default(1)
+  shelfLocation   String?
+  customName      String?
+  isActive        Boolean @default(true)
+
+  // Relations
+  school      School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  catalogBook Book           @relation(fields: [catalogBookId], references: [id], onDelete: Cascade)
+  grade       AcademicGrade? @relation(fields: [gradeId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, catalogBookId])
+  @@index([schoolId])
+  @@index([catalogBookId])
+  @@index([gradeId])
+  @@map("school_book_selections")
+}

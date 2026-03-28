@@ -44,7 +44,7 @@ export async function GET(
       )
     }
 
-    const subject = await db.catalogSubject.findFirst({
+    const subject = await db.subject.findFirst({
       where: {
         id: (await params).id,
       },

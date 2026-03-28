@@ -47,7 +47,7 @@ describe("Exam Notification Actions", () => {
 
   describe("sendExamNotification", () => {
     it("uses findFirst with schoolId (not findUnique)", async () => {
-      vi.mocked(db.exam.findFirst).mockResolvedValue({
+      vi.mocked(db.schoolExam.findFirst).mockResolvedValue({
         id: "exam-1",
         schoolId: SCHOOL_A,
         class: { studentClasses: [] },
@@ -64,7 +64,7 @@ describe("Exam Notification Actions", () => {
       })
 
       // Verify findFirst is called with schoolId in where clause
-      expect(db.exam.findFirst).toHaveBeenCalledWith(
+      expect(db.schoolExam.findFirst).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             id: "exam-1",
@@ -75,7 +75,7 @@ describe("Exam Notification Actions", () => {
     })
 
     it("throws error when exam not in school", async () => {
-      vi.mocked(db.exam.findFirst).mockResolvedValue(null)
+      vi.mocked(db.schoolExam.findFirst).mockResolvedValue(null)
 
       await expect(
         sendExamNotification({
@@ -92,7 +92,7 @@ describe("Exam Notification Actions", () => {
 
   describe("notifyExamScheduled", () => {
     it("reads exam with schoolId scope", async () => {
-      vi.mocked(db.exam.findFirst).mockResolvedValue({
+      vi.mocked(db.schoolExam.findFirst).mockResolvedValue({
         id: "exam-1",
         schoolId: SCHOOL_A,
         title: "Midterm",
@@ -107,7 +107,7 @@ describe("Exam Notification Actions", () => {
       await notifyExamScheduled("exam-1")
 
       // The first findFirst call (from notifyExamScheduled) must include schoolId
-      const firstCall = vi.mocked(db.exam.findFirst).mock.calls[0]
+      const firstCall = vi.mocked(db.schoolExam.findFirst).mock.calls[0]
       expect(firstCall[0]?.where).toEqual(
         expect.objectContaining({ id: "exam-1", schoolId: SCHOOL_A })
       )
@@ -116,7 +116,7 @@ describe("Exam Notification Actions", () => {
 
   describe("notifyExamReminder", () => {
     it("reads exam with schoolId scope", async () => {
-      vi.mocked(db.exam.findFirst).mockResolvedValue({
+      vi.mocked(db.schoolExam.findFirst).mockResolvedValue({
         id: "exam-1",
         schoolId: SCHOOL_A,
         title: "Final",
@@ -128,7 +128,7 @@ describe("Exam Notification Actions", () => {
 
       await notifyExamReminder("exam-1", 24)
 
-      const firstCall = vi.mocked(db.exam.findFirst).mock.calls[0]
+      const firstCall = vi.mocked(db.schoolExam.findFirst).mock.calls[0]
       expect(firstCall[0]?.where).toEqual(
         expect.objectContaining({ id: "exam-1", schoolId: SCHOOL_A })
       )
@@ -137,7 +137,7 @@ describe("Exam Notification Actions", () => {
 
   describe("notifyRetakeAvailable", () => {
     it("reads exam with schoolId scope", async () => {
-      vi.mocked(db.exam.findFirst).mockResolvedValue({
+      vi.mocked(db.schoolExam.findFirst).mockResolvedValue({
         id: "exam-1",
         schoolId: SCHOOL_A,
         title: "Quiz 1",
@@ -152,7 +152,7 @@ describe("Exam Notification Actions", () => {
 
       await notifyRetakeAvailable("exam-1", "student-1", 2)
 
-      const firstCall = vi.mocked(db.exam.findFirst).mock.calls[0]
+      const firstCall = vi.mocked(db.schoolExam.findFirst).mock.calls[0]
       expect(firstCall[0]?.where).toEqual(
         expect.objectContaining({ id: "exam-1", schoolId: SCHOOL_A })
       )

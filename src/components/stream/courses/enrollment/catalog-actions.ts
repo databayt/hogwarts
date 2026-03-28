@@ -35,7 +35,7 @@ function extractLocaleFromUrl(url: string): string | null {
  * Supports both free (immediate) and paid (Stripe checkout) enrollment.
  * schoolId is optional — individuals can enroll without a school.
  */
-export async function enrollInCatalogSubject(catalogSubjectId: string) {
+export async function enrollInSubject(catalogSubjectId: string) {
   const session = await auth()
   const { schoolId } = await getTenantContext()
   const headersList = await headers()
@@ -52,7 +52,7 @@ export async function enrollInCatalogSubject(catalogSubjectId: string) {
 
   try {
     // Find catalog subject (no schoolId — global)
-    const subject = await db.catalogSubject.findFirst({
+    const subject = await db.subject.findFirst({
       where: {
         id: catalogSubjectId,
         status: "PUBLISHED",
@@ -132,7 +132,7 @@ export async function enrollInCatalogSubject(catalogSubjectId: string) {
         }
 
         // Find first lesson for direct redirect (skip intermediate page)
-        const firstLesson = await tx.catalogLesson.findFirst({
+        const firstLesson = await tx.lesson.findFirst({
           where: {
             chapter: { subjectId: subject.id },
           },

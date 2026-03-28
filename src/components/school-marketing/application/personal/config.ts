@@ -3,6 +3,7 @@
 
 // Personal Step Configuration
 
+// Fallback labels (used when dictionary is unavailable)
 export const PERSONAL_STEP_CONFIG = {
   id: "personal",
   label: (isRTL: boolean) =>
@@ -13,35 +14,30 @@ export const PERSONAL_STEP_CONFIG = {
       : "Enter the student's personal information",
 }
 
-export const GENDER_OPTIONS = (isRTL: boolean) =>
-  [
-    { value: "MALE", label: isRTL ? "ذكر" : "Male" },
-    { value: "FEMALE", label: isRTL ? "أنثى" : "Female" },
-  ] as const
+type OptionDict = Record<string, string>
 
-export const NATIONALITY_OPTIONS = (isRTL: boolean) =>
-  [
-    { value: "SD", label: isRTL ? "سوداني" : "Sudanese" },
-    { value: "EG", label: isRTL ? "مصري" : "Egyptian" },
-    { value: "SA", label: isRTL ? "سعودي" : "Saudi" },
-    { value: "AE", label: isRTL ? "إماراتي" : "Emirati" },
-    { value: "JO", label: isRTL ? "أردني" : "Jordanian" },
-    { value: "OTHER", label: isRTL ? "أخرى" : "Other" },
-  ] as const
+export const getGenderOptions = (d: OptionDict) => [
+  { value: "MALE", label: d.MALE || "Male" },
+  { value: "FEMALE", label: d.FEMALE || "Female" },
+]
 
-export const RELIGION_OPTIONS = (isRTL: boolean) =>
-  [
-    { value: "islam", label: isRTL ? "الإسلام" : "Islam" },
-    { value: "christianity", label: isRTL ? "المسيحية" : "Christianity" },
-    { value: "other", label: isRTL ? "أخرى" : "Other" },
-  ] as const
+export const getNationalityOptions = (d: OptionDict) => [
+  { value: "SD", label: d.SD || "Sudanese" },
+  { value: "EG", label: d.EG || "Egyptian" },
+  { value: "SA", label: d.SA || "Saudi" },
+  { value: "AE", label: d.AE || "Emirati" },
+  { value: "JO", label: d.JO || "Jordanian" },
+  { value: "OTHER", label: d.OTHER || "Other" },
+]
 
-export const CATEGORY_OPTIONS = (isRTL: boolean) =>
-  [
-    { value: "general", label: isRTL ? "عام" : "General" },
-    {
-      value: "special_needs",
-      label: isRTL ? "ذوي الاحتياجات الخاصة" : "Special Needs",
-    },
-    { value: "scholarship", label: isRTL ? "منحة دراسية" : "Scholarship" },
-  ] as const
+export const getReligionOptions = (d: OptionDict) => [
+  { value: "islam", label: d.islam || "Islam" },
+  { value: "christianity", label: d.christianity || "Christianity" },
+  { value: "other", label: d.other || "Other" },
+]
+
+export const getCategoryOptions = (d: OptionDict) => [
+  { value: "general", label: d.general || "General" },
+  { value: "special_needs", label: d.special_needs || "Special Needs" },
+  { value: "scholarship", label: d.scholarship || "Scholarship" },
+]

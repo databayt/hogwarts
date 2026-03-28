@@ -22,7 +22,7 @@ interface Props {
 }
 
 async function getSubjectsWithInstructors(schoolId: string) {
-  const selections = await db.schoolSubjectSelection.findMany({
+  const selections = await db.subjectSelection.findMany({
     where: { schoolId, isActive: true },
     select: {
       catalogSubjectId: true,
@@ -34,8 +34,7 @@ async function getSubjectsWithInstructors(schoolId: string) {
           slug: true,
           department: true,
           color: true,
-          imageKey: true,
-          thumbnailKey: true,
+          thumbnail: true,
         },
       },
     },
@@ -56,7 +55,7 @@ async function getSubjectsWithInstructors(schoolId: string) {
   }
 
   const subjectIds = Array.from(uniqueSubjects.keys())
-  const videos = await db.lessonVideo.findMany({
+  const videos = await db.video.findMany({
     where: {
       lesson: { chapter: { subjectId: { in: subjectIds } } },
       approvalStatus: "APPROVED",
@@ -72,7 +71,7 @@ async function getSubjectsWithInstructors(schoolId: string) {
     },
   })
 
-  const preferences = await db.schoolInstructorPreference.findMany({
+  const preferences = await db.instructorPreference.findMany({
     where: { schoolId, catalogSubjectId: { in: subjectIds } },
   })
   const prefMap = new Map(preferences.map((p) => [p.catalogSubjectId, p]))
@@ -175,13 +174,13 @@ export default async function StreamSettingsPage({
   // Fetch overview stats for admin
   async function getOverviewStats(sid: string) {
     const [totalSubjects, totalEnrollments, totalVideos] = await Promise.all([
-      db.schoolSubjectSelection.count({
+      db.subjectSelection.count({
         where: { schoolId: sid, isActive: true },
       }),
       db.enrollment.count({
         where: { isActive: true, OR: [{ schoolId: sid }, { schoolId: null }] },
       }),
-      db.lessonVideo.count({ where: { schoolId: sid } }),
+      db.video.count({ where: { schoolId: sid } }),
     ])
     const now = new Date()
     const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)

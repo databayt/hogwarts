@@ -13,7 +13,7 @@ const MOCK_EXAM_TYPES = ["final", "midterm", "chapter_test", "practice"]
 export async function getMockExams(filters?: {
   catalogSubjectId?: string
   examType?: string
-  enrolledCatalogSubjectIds?: string[]
+  enrolledSubjectIds?: string[]
 }): Promise<MockExamItem[]> {
   const where: Record<string, unknown> = {
     status: "PUBLISHED",
@@ -22,15 +22,15 @@ export async function getMockExams(filters?: {
 
   if (filters?.catalogSubjectId) {
     where.subjectId = filters.catalogSubjectId
-  } else if (filters?.enrolledCatalogSubjectIds) {
-    where.subjectId = { in: filters.enrolledCatalogSubjectIds }
+  } else if (filters?.enrolledSubjectIds) {
+    where.subjectId = { in: filters.enrolledSubjectIds }
   }
 
   if (filters?.examType && MOCK_EXAM_TYPES.includes(filters.examType)) {
     where.examType = filters.examType
   }
 
-  const exams = await db.catalogExam.findMany({
+  const exams = await db.exam.findMany({
     where,
     include: {
       subject: { select: { name: true, slug: true, color: true } },
@@ -54,14 +54,12 @@ export async function getMockExams(filters?: {
   }))
 }
 
-export async function getCatalogSubjectsForMockFilter(
-  enrolledCatalogSubjectIds?: string[]
+export async function getSubjectsForMockFilter(
+  enrolledSubjectIds?: string[]
 ): Promise<MockSubjectFilter[]> {
-  const subjects = await db.catalogSubject.findMany({
+  const subjects = await db.subject.findMany({
     where: {
-      ...(enrolledCatalogSubjectIds
-        ? { id: { in: enrolledCatalogSubjectIds } }
-        : {}),
+      ...(enrolledSubjectIds ? { id: { in: enrolledSubjectIds } } : {}),
       exams: {
         some: {
           status: "PUBLISHED",

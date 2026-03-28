@@ -1,0 +1,50 @@
+{
+  "subject": "family-sciences",
+  "subjectNameAr": "العلوم الأسرية",
+  "grade": 12,
+  "level": "secondary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "",
+  "chapters": [
+    {
+      "nameAr": "الباب الأول: التغذية العامة",
+      "name": "Chapter 1: General Nutrition",
+      "slug": "general-nutrition",
+      "sequenceOrder": 1,
+      "lessons": [
+        {
+          "nameAr": "الفصل الأول: السلوكيات العامة والسلوك الغذائي وأثرهما على تغذية الأفراد",
+          "name": "Lesson 1: General Behaviors and Dietary Behavior and Their Impact on Individual Nutrition",
+          "slug": "general-dietary-behavior",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الفصل الثاني: الأساسيات المطلوبة لتغذية المجموعات الخاصة",
+          "name": "Lesson 2: Nutrition Essentials for Special Groups",
+          "slug": "nutrition-essentials-special-groups",
+          "sequenceOrder": 2
+        }
+      ]
+    },
+    {
+      "nameAr": "الباب الثاني: الأمراض المرتبطة بسوء التغذية",
+      "name": "Chapter 2: Diseases Related to Malnutrition",
+      "slug": "diseases-malnutrition",
+      "sequenceOrder": 2,
+      "lessons": [
+        {
+          "nameAr": "الفصل الأول: أمراض سوء التغذية والأمراض المصاحبة",
+          "name": "Lesson 1: Malnutrition Diseases and Associated Conditions",
+          "slug": "malnutrition-diseases-associated",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الفصل الثاني: التغذية العلاجية",
+          "name": "Lesson 2: Therapeutic Nutrition",
+          "slug": "therapeutic-nutrition",
+          "sequenceOrder": 2
+        }
+      ]
+    }
+  ]
+}

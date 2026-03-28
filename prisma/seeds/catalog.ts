@@ -14,24 +14,26 @@
 
 import type { PrismaClient } from "@prisma/client"
 
-import { seedClickViewCatalog } from "./clickview-catalog"
-import type { CatalogSubjectRef } from "./types"
+import { seedSudanCatalog } from "./sd-catalog"
+import type { SubjectRef } from "./types"
+import { seedUsCatalog } from "./us-catalog"
 import { logSuccess } from "./utils"
 
-export async function seedCatalog(
-  prisma: PrismaClient
-): Promise<CatalogSubjectRef[]> {
-  // US K-12 curriculum (ClickView-inspired)
-  await seedClickViewCatalog(prisma)
+export async function seedCatalog(prisma: PrismaClient): Promise<SubjectRef[]> {
+  // US K-12 curriculum
+  await seedUsCatalog(prisma)
+
+  // Sudan national curriculum
+  await seedSudanCatalog(prisma)
 
   // Return all published subjects for downstream consumers
-  const subjects = await prisma.catalogSubject.findMany({
+  const subjects = await prisma.subject.findMany({
     where: { status: "PUBLISHED" },
     select: { id: true, name: true, slug: true },
     orderBy: { sortOrder: "asc" },
   })
 
-  logSuccess("CatalogSubjects", subjects.length, "US K-12 catalog")
+  logSuccess("Subjects", subjects.length, "catalog")
 
   return subjects.map((s) => ({
     id: s.id,

@@ -19,7 +19,7 @@ interface Props {
   params: Promise<{ lang: Locale; subdomain: string; slug: string }>
 }
 
-export default async function CatalogSubjectDetailPage({ params }: Props) {
+export default async function SubjectDetailPage({ params }: Props) {
   const { lang, subdomain, slug } = await params
   const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
@@ -34,7 +34,7 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
       : Promise.resolve(text ?? "")
 
   // Try catalog slug first, then fallback to school subject by ID
-  let subject = await db.catalogSubject.findUnique({
+  let subject = await db.subject.findUnique({
     where: { slug },
     select: {
       id: true,
@@ -44,9 +44,8 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
       department: true,
       lang: true,
       color: true,
-      imageKey: true,
-      thumbnailKey: true,
-      bannerUrl: true,
+      thumbnail: true,
+      banner: true,
       levels: true,
       grades: true,
       totalChapters: true,
@@ -63,8 +62,7 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
           slug: true,
           description: true,
           color: true,
-          imageKey: true,
-          thumbnailKey: true,
+          thumbnail: true,
           totalLessons: true,
           lessons: {
             where: { status: "PUBLISHED" },
@@ -75,8 +73,7 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
               slug: true,
               description: true,
               color: true,
-              imageKey: true,
-              thumbnailKey: true,
+              thumbnail: true,
               durationMinutes: true,
               videoCount: true,
               resourceCount: true,
@@ -89,7 +86,7 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
 
   // Fallback: if slug didn't match a catalog subject, try looking up by ID directly
   if (!subject) {
-    subject = await db.catalogSubject.findUnique({
+    subject = await db.subject.findUnique({
       where: { id: slug },
       select: {
         id: true,
@@ -99,9 +96,8 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
         department: true,
         lang: true,
         color: true,
-        imageKey: true,
-        thumbnailKey: true,
-        bannerUrl: true,
+        thumbnail: true,
+        banner: true,
         levels: true,
         grades: true,
         totalChapters: true,
@@ -118,8 +114,7 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
             slug: true,
             description: true,
             color: true,
-            imageKey: true,
-            thumbnailKey: true,
+            thumbnail: true,
             totalLessons: true,
             lessons: {
               where: { status: "PUBLISHED" },
@@ -130,8 +125,7 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
                 slug: true,
                 description: true,
                 color: true,
-                imageKey: true,
-                thumbnailKey: true,
+                thumbnail: true,
                 durationMinutes: true,
                 videoCount: true,
                 resourceCount: true,
@@ -156,7 +150,7 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
   // Parallel content queries (short-circuit when no lessons/chapters)
   const [materials, exams, questionStats, assignments] = await Promise.all([
     // Materials - linked at subject, chapter, or lesson level
-    db.catalogMaterial.findMany({
+    db.material.findMany({
       where: {
         status: "PUBLISHED",
         OR: [
@@ -183,7 +177,7 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
     }),
 
     // Exams - linked at subject level (no take limit — aggregate by type in UI)
-    db.catalogExam.findMany({
+    db.exam.findMany({
       where: {
         subjectId: subject.id,
         status: "PUBLISHED",
@@ -201,7 +195,7 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
     }),
 
     // Questions - count + groupBy for summary card
-    db.catalogQuestion
+    db.question
       .groupBy({
         by: ["questionType", "difficulty"],
         where: {
@@ -240,7 +234,7 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
       }),
 
     // Assignments - linked at subject, chapter, or lesson level
-    db.catalogAssignment.findMany({
+    db.assignment.findMany({
       where: {
         status: "PUBLISHED",
         OR: [
@@ -266,12 +260,8 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
     }),
   ])
 
-  const heroImageUrl = getCatalogImageUrl(subject.bannerUrl, null, "original")
-  const subjectImageUrl = getCatalogImageUrl(
-    subject.thumbnailKey,
-    subject.imageKey,
-    "sm"
-  )
+  const heroImageUrl = getCatalogImageUrl(subject.banner, "original")
+  const subjectImageUrl = getCatalogImageUrl(subject.thumbnail, "sm")
 
   // Translate all content names for the current locale
   const sLang = subject.lang
@@ -289,7 +279,7 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
       slug: ch.slug,
       description: ch.description,
       totalLessons: ch.totalLessons,
-      imageUrl: getCatalogImageUrl(ch.thumbnailKey, ch.imageKey, "sm"),
+      imageUrl: getCatalogImageUrl(ch.thumbnail, "sm"),
       lessons: await Promise.all(
         ch.lessons.map(async (l) => ({
           id: l.id,
@@ -299,7 +289,7 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
           durationMinutes: l.durationMinutes,
           videoCount: l.videoCount,
           resourceCount: l.resourceCount,
-          imageUrl: getCatalogImageUrl(l.thumbnailKey, l.imageKey, "md"),
+          imageUrl: getCatalogImageUrl(l.thumbnail, "md"),
         }))
       ),
     }))
@@ -311,8 +301,7 @@ export default async function CatalogSubjectDetailPage({ params }: Props) {
       ch.lessons.map(async (l) => ({
         id: l.id,
         title: await t(l.name, sLang),
-        thumbnailUrl:
-          getCatalogImageUrl(l.thumbnailKey, l.imageKey, "original") ?? null,
+        thumbnailUrl: getCatalogImageUrl(l.thumbnail, "original") ?? null,
         durationSeconds: (l.durationMinutes ?? 0) * 60,
         viewCount: 0,
         isFeatured: false,

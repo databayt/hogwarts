@@ -10,11 +10,11 @@ import { db } from "@/lib/db"
  * Fetches a catalog lesson by ID for admin viewing/editing.
  * Includes videos, attachments, and school-specific content.
  */
-export async function adminGetCatalogLesson(
+export async function adminGetLesson(
   lessonId: string,
   schoolId: string | null
 ) {
-  const lesson = await db.catalogLesson.findFirst({
+  const lesson = await db.lesson.findFirst({
     where: {
       id: lessonId,
     },
@@ -39,7 +39,7 @@ export async function adminGetCatalogLesson(
   }
 
   // Get all videos for this lesson (admin sees all, not just approved)
-  const videos = await db.lessonVideo.findMany({
+  const videos = await db.video.findMany({
     where: {
       catalogLessonId: lessonId,
       ...(schoolId ? { OR: [{ schoolId }, { visibility: "PUBLIC" }] } : {}),
@@ -57,7 +57,7 @@ export async function adminGetCatalogLesson(
   })
 
   // Get attachments
-  const attachments = await db.lessonAttachment.findMany({
+  const attachments = await db.attachment.findMany({
     where: { catalogLessonId: lessonId },
     select: {
       id: true,

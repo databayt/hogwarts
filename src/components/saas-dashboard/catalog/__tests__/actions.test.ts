@@ -8,17 +8,17 @@ import { db } from "@/lib/db"
 import { requireDeveloper } from "@/components/saas-dashboard/lib/operator-auth"
 
 import {
-  createCatalogChapter,
-  createCatalogLesson,
-  createCatalogSubject,
-  deleteCatalogChapter,
-  deleteCatalogLesson,
-  deleteCatalogSubject,
-  reorderCatalogChapters,
-  reorderCatalogLessons,
-  updateCatalogChapter,
-  updateCatalogLesson,
-  updateCatalogSubject,
+  createChapter,
+  createLesson,
+  createSubject,
+  deleteChapter,
+  deleteLesson,
+  deleteSubject,
+  reorderChapters,
+  reorderLessons,
+  updateChapter,
+  updateLesson,
+  updateSubject,
 } from "../actions"
 
 // ============================================================================
@@ -138,25 +138,25 @@ describe("Catalog Actions", () => {
   })
 
   // ==========================================================================
-  // createCatalogSubject
+  // createSubject
   // ==========================================================================
 
-  describe("createCatalogSubject", () => {
+  describe("createSubject", () => {
     it("creates subject with valid FormData", async () => {
       mockAuthSuccess()
-      vi.mocked(db.catalogSubject.create).mockResolvedValue({
+      vi.mocked(db.subject.create).mockResolvedValue({
         id: "subject-1",
         name: "Math",
       } as any)
 
       const formData = makeSubjectFormData()
-      const result = await createCatalogSubject(formData)
+      const result = await createSubject(formData)
 
       expect(result).toEqual({
         success: true,
         subject: { id: "subject-1", name: "Math" },
       })
-      expect(db.catalogSubject.create).toHaveBeenCalledWith({
+      expect(db.subject.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           name: "Math",
           slug: "math",
@@ -168,7 +168,7 @@ describe("Catalog Actions", () => {
 
     it("parses levels, grades, and schoolTypes as arrays from FormData", async () => {
       mockAuthSuccess()
-      vi.mocked(db.catalogSubject.create).mockResolvedValue({
+      vi.mocked(db.subject.create).mockResolvedValue({
         id: "subject-2",
       } as any)
 
@@ -177,9 +177,9 @@ describe("Catalog Actions", () => {
       formData.append("grades", "2")
       formData.append("schoolTypes", "PRIVATE")
 
-      await createCatalogSubject(formData)
+      await createSubject(formData)
 
-      expect(db.catalogSubject.create).toHaveBeenCalledWith({
+      expect(db.subject.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           levels: expect.arrayContaining(["ELEMENTARY", "MIDDLE"]),
           grades: expect.arrayContaining([1, 2]),
@@ -190,11 +190,11 @@ describe("Catalog Actions", () => {
 
     it("revalidates /catalog path", async () => {
       mockAuthSuccess()
-      vi.mocked(db.catalogSubject.create).mockResolvedValue({
+      vi.mocked(db.subject.create).mockResolvedValue({
         id: "subject-1",
       } as any)
 
-      await createCatalogSubject(makeSubjectFormData())
+      await createSubject(makeSubjectFormData())
 
       expect(revalidatePath).toHaveBeenCalledWith("/catalog")
     })
@@ -202,34 +202,34 @@ describe("Catalog Actions", () => {
     it("requires DEVELOPER role", async () => {
       mockAuthFailure()
 
-      await expect(createCatalogSubject(makeSubjectFormData())).rejects.toThrow(
+      await expect(createSubject(makeSubjectFormData())).rejects.toThrow(
         "Unauthorized: DEVELOPER role required"
       )
 
-      expect(db.catalogSubject.create).not.toHaveBeenCalled()
+      expect(db.subject.create).not.toHaveBeenCalled()
     })
   })
 
   // ==========================================================================
-  // updateCatalogSubject
+  // updateSubject
   // ==========================================================================
 
-  describe("updateCatalogSubject", () => {
+  describe("updateSubject", () => {
     it("updates subject by id", async () => {
       mockAuthSuccess()
-      vi.mocked(db.catalogSubject.update).mockResolvedValue({
+      vi.mocked(db.subject.update).mockResolvedValue({
         id: "subject-1",
         name: "Updated Math",
       } as any)
 
       const formData = makeSubjectFormData({ name: "Updated Math" })
-      const result = await updateCatalogSubject("subject-1", formData)
+      const result = await updateSubject("subject-1", formData)
 
       expect(result).toEqual({
         success: true,
         subject: { id: "subject-1", name: "Updated Math" },
       })
-      expect(db.catalogSubject.update).toHaveBeenCalledWith({
+      expect(db.subject.update).toHaveBeenCalledWith({
         where: { id: "subject-1" },
         data: expect.objectContaining({ name: "Updated Math" }),
       })
@@ -237,11 +237,11 @@ describe("Catalog Actions", () => {
 
     it("revalidates /catalog and /catalog/:id paths", async () => {
       mockAuthSuccess()
-      vi.mocked(db.catalogSubject.update).mockResolvedValue({
+      vi.mocked(db.subject.update).mockResolvedValue({
         id: "subject-1",
       } as any)
 
-      await updateCatalogSubject("subject-1", makeSubjectFormData())
+      await updateSubject("subject-1", makeSubjectFormData())
 
       expect(revalidatePath).toHaveBeenCalledWith("/catalog")
       expect(revalidatePath).toHaveBeenCalledWith("/catalog/subject-1")
@@ -251,35 +251,35 @@ describe("Catalog Actions", () => {
       mockAuthFailure()
 
       await expect(
-        updateCatalogSubject("subject-1", makeSubjectFormData())
+        updateSubject("subject-1", makeSubjectFormData())
       ).rejects.toThrow("Unauthorized: DEVELOPER role required")
 
-      expect(db.catalogSubject.update).not.toHaveBeenCalled()
+      expect(db.subject.update).not.toHaveBeenCalled()
     })
   })
 
   // ==========================================================================
-  // deleteCatalogSubject
+  // deleteSubject
   // ==========================================================================
 
-  describe("deleteCatalogSubject", () => {
+  describe("deleteSubject", () => {
     it("deletes subject by id", async () => {
       mockAuthSuccess()
-      vi.mocked(db.catalogSubject.delete).mockResolvedValue({} as any)
+      vi.mocked(db.subject.delete).mockResolvedValue({} as any)
 
-      const result = await deleteCatalogSubject("subject-1")
+      const result = await deleteSubject("subject-1")
 
       expect(result).toEqual({ success: true })
-      expect(db.catalogSubject.delete).toHaveBeenCalledWith({
+      expect(db.subject.delete).toHaveBeenCalledWith({
         where: { id: "subject-1" },
       })
     })
 
     it("revalidates /catalog path", async () => {
       mockAuthSuccess()
-      vi.mocked(db.catalogSubject.delete).mockResolvedValue({} as any)
+      vi.mocked(db.subject.delete).mockResolvedValue({} as any)
 
-      await deleteCatalogSubject("subject-1")
+      await deleteSubject("subject-1")
 
       expect(revalidatePath).toHaveBeenCalledWith("/catalog")
     })
@@ -287,36 +287,36 @@ describe("Catalog Actions", () => {
     it("requires DEVELOPER role", async () => {
       mockAuthFailure()
 
-      await expect(deleteCatalogSubject("subject-1")).rejects.toThrow(
+      await expect(deleteSubject("subject-1")).rejects.toThrow(
         "Unauthorized: DEVELOPER role required"
       )
 
-      expect(db.catalogSubject.delete).not.toHaveBeenCalled()
+      expect(db.subject.delete).not.toHaveBeenCalled()
     })
   })
 
   // ==========================================================================
-  // createCatalogChapter
+  // createChapter
   // ==========================================================================
 
-  describe("createCatalogChapter", () => {
+  describe("createChapter", () => {
     it("creates chapter with valid FormData", async () => {
       mockAuthSuccess()
-      vi.mocked(db.catalogChapter.create).mockResolvedValue({
+      vi.mocked(db.chapter.create).mockResolvedValue({
         id: "chapter-1",
         name: "Chapter 1",
       } as any)
-      vi.mocked(db.catalogChapter.count).mockResolvedValue(3)
-      vi.mocked(db.catalogSubject.update).mockResolvedValue({} as any)
+      vi.mocked(db.chapter.count).mockResolvedValue(3)
+      vi.mocked(db.subject.update).mockResolvedValue({} as any)
 
       const formData = makeChapterFormData()
-      const result = await createCatalogChapter(formData)
+      const result = await createChapter(formData)
 
       expect(result).toEqual({
         success: true,
         chapter: { id: "chapter-1", name: "Chapter 1" },
       })
-      expect(db.catalogChapter.create).toHaveBeenCalledWith({
+      expect(db.chapter.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           subjectId: "subject-1",
           name: "Chapter 1",
@@ -328,18 +328,18 @@ describe("Catalog Actions", () => {
 
     it("updates denormalized totalChapters count on subject", async () => {
       mockAuthSuccess()
-      vi.mocked(db.catalogChapter.create).mockResolvedValue({
+      vi.mocked(db.chapter.create).mockResolvedValue({
         id: "chapter-1",
       } as any)
-      vi.mocked(db.catalogChapter.count).mockResolvedValue(5)
-      vi.mocked(db.catalogSubject.update).mockResolvedValue({} as any)
+      vi.mocked(db.chapter.count).mockResolvedValue(5)
+      vi.mocked(db.subject.update).mockResolvedValue({} as any)
 
-      await createCatalogChapter(makeChapterFormData())
+      await createChapter(makeChapterFormData())
 
-      expect(db.catalogChapter.count).toHaveBeenCalledWith({
+      expect(db.chapter.count).toHaveBeenCalledWith({
         where: { subjectId: "subject-1" },
       })
-      expect(db.catalogSubject.update).toHaveBeenCalledWith({
+      expect(db.subject.update).toHaveBeenCalledWith({
         where: { id: "subject-1" },
         data: { totalChapters: 5 },
       })
@@ -347,13 +347,13 @@ describe("Catalog Actions", () => {
 
     it("revalidates /catalog/:subjectId path", async () => {
       mockAuthSuccess()
-      vi.mocked(db.catalogChapter.create).mockResolvedValue({
+      vi.mocked(db.chapter.create).mockResolvedValue({
         id: "chapter-1",
       } as any)
-      vi.mocked(db.catalogChapter.count).mockResolvedValue(1)
-      vi.mocked(db.catalogSubject.update).mockResolvedValue({} as any)
+      vi.mocked(db.chapter.count).mockResolvedValue(1)
+      vi.mocked(db.subject.update).mockResolvedValue({} as any)
 
-      await createCatalogChapter(makeChapterFormData())
+      await createChapter(makeChapterFormData())
 
       expect(revalidatePath).toHaveBeenCalledWith("/catalog/subject-1")
     })
@@ -361,29 +361,29 @@ describe("Catalog Actions", () => {
     it("requires DEVELOPER role", async () => {
       mockAuthFailure()
 
-      await expect(createCatalogChapter(makeChapterFormData())).rejects.toThrow(
+      await expect(createChapter(makeChapterFormData())).rejects.toThrow(
         "Unauthorized: DEVELOPER role required"
       )
 
-      expect(db.catalogChapter.create).not.toHaveBeenCalled()
+      expect(db.chapter.create).not.toHaveBeenCalled()
     })
   })
 
   // ==========================================================================
-  // updateCatalogChapter
+  // updateChapter
   // ==========================================================================
 
-  describe("updateCatalogChapter", () => {
+  describe("updateChapter", () => {
     it("updates chapter by id", async () => {
       mockAuthSuccess()
-      vi.mocked(db.catalogChapter.update).mockResolvedValue({
+      vi.mocked(db.chapter.update).mockResolvedValue({
         id: "chapter-1",
         subjectId: "subject-1",
         name: "Updated Chapter",
       } as any)
 
       const formData = makeChapterFormData({ name: "Updated Chapter" })
-      const result = await updateCatalogChapter("chapter-1", formData)
+      const result = await updateChapter("chapter-1", formData)
 
       expect(result).toEqual({
         success: true,
@@ -393,7 +393,7 @@ describe("Catalog Actions", () => {
           name: "Updated Chapter",
         },
       })
-      expect(db.catalogChapter.update).toHaveBeenCalledWith({
+      expect(db.chapter.update).toHaveBeenCalledWith({
         where: { id: "chapter-1" },
         data: expect.objectContaining({ name: "Updated Chapter" }),
       })
@@ -401,12 +401,12 @@ describe("Catalog Actions", () => {
 
     it("revalidates path using returned chapter subjectId", async () => {
       mockAuthSuccess()
-      vi.mocked(db.catalogChapter.update).mockResolvedValue({
+      vi.mocked(db.chapter.update).mockResolvedValue({
         id: "chapter-1",
         subjectId: "subject-42",
       } as any)
 
-      await updateCatalogChapter("chapter-1", makeChapterFormData())
+      await updateChapter("chapter-1", makeChapterFormData())
 
       expect(revalidatePath).toHaveBeenCalledWith("/catalog/subject-42")
     })
@@ -415,54 +415,54 @@ describe("Catalog Actions", () => {
       mockAuthFailure()
 
       await expect(
-        updateCatalogChapter("chapter-1", makeChapterFormData())
+        updateChapter("chapter-1", makeChapterFormData())
       ).rejects.toThrow("Unauthorized: DEVELOPER role required")
 
-      expect(db.catalogChapter.update).not.toHaveBeenCalled()
+      expect(db.chapter.update).not.toHaveBeenCalled()
     })
   })
 
   // ==========================================================================
-  // deleteCatalogChapter
+  // deleteChapter
   // ==========================================================================
 
-  describe("deleteCatalogChapter", () => {
+  describe("deleteChapter", () => {
     it("deletes chapter by id", async () => {
       mockAuthSuccess()
-      vi.mocked(db.catalogChapter.findUniqueOrThrow).mockResolvedValue({
+      vi.mocked(db.chapter.findUniqueOrThrow).mockResolvedValue({
         subjectId: "subject-1",
       } as any)
-      vi.mocked(db.catalogChapter.delete).mockResolvedValue({} as any)
-      vi.mocked(db.catalogChapter.count).mockResolvedValue(2)
-      vi.mocked(db.catalogSubject.update).mockResolvedValue({} as any)
+      vi.mocked(db.chapter.delete).mockResolvedValue({} as any)
+      vi.mocked(db.chapter.count).mockResolvedValue(2)
+      vi.mocked(db.subject.update).mockResolvedValue({} as any)
 
-      const result = await deleteCatalogChapter("chapter-1")
+      const result = await deleteChapter("chapter-1")
 
       expect(result).toEqual({ success: true })
-      expect(db.catalogChapter.findUniqueOrThrow).toHaveBeenCalledWith({
+      expect(db.chapter.findUniqueOrThrow).toHaveBeenCalledWith({
         where: { id: "chapter-1" },
         select: { subjectId: true },
       })
-      expect(db.catalogChapter.delete).toHaveBeenCalledWith({
+      expect(db.chapter.delete).toHaveBeenCalledWith({
         where: { id: "chapter-1" },
       })
     })
 
     it("updates denormalized totalChapters count after deletion", async () => {
       mockAuthSuccess()
-      vi.mocked(db.catalogChapter.findUniqueOrThrow).mockResolvedValue({
+      vi.mocked(db.chapter.findUniqueOrThrow).mockResolvedValue({
         subjectId: "subject-1",
       } as any)
-      vi.mocked(db.catalogChapter.delete).mockResolvedValue({} as any)
-      vi.mocked(db.catalogChapter.count).mockResolvedValue(4)
-      vi.mocked(db.catalogSubject.update).mockResolvedValue({} as any)
+      vi.mocked(db.chapter.delete).mockResolvedValue({} as any)
+      vi.mocked(db.chapter.count).mockResolvedValue(4)
+      vi.mocked(db.subject.update).mockResolvedValue({} as any)
 
-      await deleteCatalogChapter("chapter-1")
+      await deleteChapter("chapter-1")
 
-      expect(db.catalogChapter.count).toHaveBeenCalledWith({
+      expect(db.chapter.count).toHaveBeenCalledWith({
         where: { subjectId: "subject-1" },
       })
-      expect(db.catalogSubject.update).toHaveBeenCalledWith({
+      expect(db.subject.update).toHaveBeenCalledWith({
         where: { id: "subject-1" },
         data: { totalChapters: 4 },
       })
@@ -470,14 +470,14 @@ describe("Catalog Actions", () => {
 
     it("revalidates /catalog/:subjectId path", async () => {
       mockAuthSuccess()
-      vi.mocked(db.catalogChapter.findUniqueOrThrow).mockResolvedValue({
+      vi.mocked(db.chapter.findUniqueOrThrow).mockResolvedValue({
         subjectId: "subject-1",
       } as any)
-      vi.mocked(db.catalogChapter.delete).mockResolvedValue({} as any)
-      vi.mocked(db.catalogChapter.count).mockResolvedValue(0)
-      vi.mocked(db.catalogSubject.update).mockResolvedValue({} as any)
+      vi.mocked(db.chapter.delete).mockResolvedValue({} as any)
+      vi.mocked(db.chapter.count).mockResolvedValue(0)
+      vi.mocked(db.subject.update).mockResolvedValue({} as any)
 
-      await deleteCatalogChapter("chapter-1")
+      await deleteChapter("chapter-1")
 
       expect(revalidatePath).toHaveBeenCalledWith("/catalog/subject-1")
     })
@@ -485,42 +485,42 @@ describe("Catalog Actions", () => {
     it("requires DEVELOPER role", async () => {
       mockAuthFailure()
 
-      await expect(deleteCatalogChapter("chapter-1")).rejects.toThrow(
+      await expect(deleteChapter("chapter-1")).rejects.toThrow(
         "Unauthorized: DEVELOPER role required"
       )
 
-      expect(db.catalogChapter.findUniqueOrThrow).not.toHaveBeenCalled()
+      expect(db.chapter.findUniqueOrThrow).not.toHaveBeenCalled()
     })
   })
 
   // ==========================================================================
-  // createCatalogLesson
+  // createLesson
   // ==========================================================================
 
-  describe("createCatalogLesson", () => {
+  describe("createLesson", () => {
     it("creates lesson with valid FormData", async () => {
       mockAuthSuccess()
-      vi.mocked(db.catalogLesson.create).mockResolvedValue({
+      vi.mocked(db.lesson.create).mockResolvedValue({
         id: "lesson-1",
         name: "Lesson 1",
       } as any)
-      vi.mocked(db.catalogChapter.findUniqueOrThrow).mockResolvedValue({
+      vi.mocked(db.chapter.findUniqueOrThrow).mockResolvedValue({
         subjectId: "subject-1",
       } as any)
-      vi.mocked(db.catalogLesson.count)
+      vi.mocked(db.lesson.count)
         .mockResolvedValueOnce(3) // chapter lesson count
         .mockResolvedValueOnce(10) // total subject lesson count
-      vi.mocked(db.catalogChapter.update).mockResolvedValue({} as any)
-      vi.mocked(db.catalogSubject.update).mockResolvedValue({} as any)
+      vi.mocked(db.chapter.update).mockResolvedValue({} as any)
+      vi.mocked(db.subject.update).mockResolvedValue({} as any)
 
       const formData = makeLessonFormData()
-      const result = await createCatalogLesson(formData)
+      const result = await createLesson(formData)
 
       expect(result).toEqual({
         success: true,
         lesson: { id: "lesson-1", name: "Lesson 1" },
       })
-      expect(db.catalogLesson.create).toHaveBeenCalledWith({
+      expect(db.lesson.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           chapterId: "chapter-1",
           name: "Lesson 1",
@@ -532,21 +532,21 @@ describe("Catalog Actions", () => {
 
     it("updates chapter totalLessons denormalized count", async () => {
       mockAuthSuccess()
-      vi.mocked(db.catalogLesson.create).mockResolvedValue({
+      vi.mocked(db.lesson.create).mockResolvedValue({
         id: "lesson-1",
       } as any)
-      vi.mocked(db.catalogChapter.findUniqueOrThrow).mockResolvedValue({
+      vi.mocked(db.chapter.findUniqueOrThrow).mockResolvedValue({
         subjectId: "subject-1",
       } as any)
-      vi.mocked(db.catalogLesson.count)
+      vi.mocked(db.lesson.count)
         .mockResolvedValueOnce(7) // chapter lesson count
         .mockResolvedValueOnce(20) // total subject lesson count
-      vi.mocked(db.catalogChapter.update).mockResolvedValue({} as any)
-      vi.mocked(db.catalogSubject.update).mockResolvedValue({} as any)
+      vi.mocked(db.chapter.update).mockResolvedValue({} as any)
+      vi.mocked(db.subject.update).mockResolvedValue({} as any)
 
-      await createCatalogLesson(makeLessonFormData())
+      await createLesson(makeLessonFormData())
 
-      expect(db.catalogChapter.update).toHaveBeenCalledWith({
+      expect(db.chapter.update).toHaveBeenCalledWith({
         where: { id: "chapter-1" },
         data: { totalLessons: 7 },
       })
@@ -554,21 +554,21 @@ describe("Catalog Actions", () => {
 
     it("updates subject totalLessons denormalized count", async () => {
       mockAuthSuccess()
-      vi.mocked(db.catalogLesson.create).mockResolvedValue({
+      vi.mocked(db.lesson.create).mockResolvedValue({
         id: "lesson-1",
       } as any)
-      vi.mocked(db.catalogChapter.findUniqueOrThrow).mockResolvedValue({
+      vi.mocked(db.chapter.findUniqueOrThrow).mockResolvedValue({
         subjectId: "subject-1",
       } as any)
-      vi.mocked(db.catalogLesson.count)
+      vi.mocked(db.lesson.count)
         .mockResolvedValueOnce(3) // chapter lesson count
         .mockResolvedValueOnce(15) // total subject lesson count
-      vi.mocked(db.catalogChapter.update).mockResolvedValue({} as any)
-      vi.mocked(db.catalogSubject.update).mockResolvedValue({} as any)
+      vi.mocked(db.chapter.update).mockResolvedValue({} as any)
+      vi.mocked(db.subject.update).mockResolvedValue({} as any)
 
-      await createCatalogLesson(makeLessonFormData())
+      await createLesson(makeLessonFormData())
 
-      expect(db.catalogSubject.update).toHaveBeenCalledWith({
+      expect(db.subject.update).toHaveBeenCalledWith({
         where: { id: "subject-1" },
         data: { totalLessons: 15 },
       })
@@ -576,41 +576,41 @@ describe("Catalog Actions", () => {
 
     it("parses durationMinutes from FormData when provided", async () => {
       mockAuthSuccess()
-      vi.mocked(db.catalogLesson.create).mockResolvedValue({
+      vi.mocked(db.lesson.create).mockResolvedValue({
         id: "lesson-1",
       } as any)
-      vi.mocked(db.catalogChapter.findUniqueOrThrow).mockResolvedValue({
+      vi.mocked(db.chapter.findUniqueOrThrow).mockResolvedValue({
         subjectId: "subject-1",
       } as any)
-      vi.mocked(db.catalogLesson.count)
+      vi.mocked(db.lesson.count)
         .mockResolvedValueOnce(1)
         .mockResolvedValueOnce(1)
-      vi.mocked(db.catalogChapter.update).mockResolvedValue({} as any)
-      vi.mocked(db.catalogSubject.update).mockResolvedValue({} as any)
+      vi.mocked(db.chapter.update).mockResolvedValue({} as any)
+      vi.mocked(db.subject.update).mockResolvedValue({} as any)
 
       const formData = makeLessonFormData({ durationMinutes: "45" })
-      await createCatalogLesson(formData)
+      await createLesson(formData)
 
-      expect(db.catalogLesson.create).toHaveBeenCalledWith({
+      expect(db.lesson.create).toHaveBeenCalledWith({
         data: expect.objectContaining({ durationMinutes: 45 }),
       })
     })
 
     it("revalidates /catalog/:subjectId path", async () => {
       mockAuthSuccess()
-      vi.mocked(db.catalogLesson.create).mockResolvedValue({
+      vi.mocked(db.lesson.create).mockResolvedValue({
         id: "lesson-1",
       } as any)
-      vi.mocked(db.catalogChapter.findUniqueOrThrow).mockResolvedValue({
+      vi.mocked(db.chapter.findUniqueOrThrow).mockResolvedValue({
         subjectId: "subject-1",
       } as any)
-      vi.mocked(db.catalogLesson.count)
+      vi.mocked(db.lesson.count)
         .mockResolvedValueOnce(1)
         .mockResolvedValueOnce(1)
-      vi.mocked(db.catalogChapter.update).mockResolvedValue({} as any)
-      vi.mocked(db.catalogSubject.update).mockResolvedValue({} as any)
+      vi.mocked(db.chapter.update).mockResolvedValue({} as any)
+      vi.mocked(db.subject.update).mockResolvedValue({} as any)
 
-      await createCatalogLesson(makeLessonFormData())
+      await createLesson(makeLessonFormData())
 
       expect(revalidatePath).toHaveBeenCalledWith("/catalog/subject-1")
     })
@@ -618,32 +618,32 @@ describe("Catalog Actions", () => {
     it("requires DEVELOPER role", async () => {
       mockAuthFailure()
 
-      await expect(createCatalogLesson(makeLessonFormData())).rejects.toThrow(
+      await expect(createLesson(makeLessonFormData())).rejects.toThrow(
         "Unauthorized: DEVELOPER role required"
       )
 
-      expect(db.catalogLesson.create).not.toHaveBeenCalled()
+      expect(db.lesson.create).not.toHaveBeenCalled()
     })
   })
 
   // ==========================================================================
-  // updateCatalogLesson
+  // updateLesson
   // ==========================================================================
 
-  describe("updateCatalogLesson", () => {
+  describe("updateLesson", () => {
     it("updates lesson by id", async () => {
       mockAuthSuccess()
-      vi.mocked(db.catalogLesson.update).mockResolvedValue({
+      vi.mocked(db.lesson.update).mockResolvedValue({
         id: "lesson-1",
         chapterId: "chapter-1",
         name: "Updated Lesson",
       } as any)
-      vi.mocked(db.catalogChapter.findUniqueOrThrow).mockResolvedValue({
+      vi.mocked(db.chapter.findUniqueOrThrow).mockResolvedValue({
         subjectId: "subject-1",
       } as any)
 
       const formData = makeLessonFormData({ name: "Updated Lesson" })
-      const result = await updateCatalogLesson("lesson-1", formData)
+      const result = await updateLesson("lesson-1", formData)
 
       expect(result).toEqual({
         success: true,
@@ -653,7 +653,7 @@ describe("Catalog Actions", () => {
           name: "Updated Lesson",
         },
       })
-      expect(db.catalogLesson.update).toHaveBeenCalledWith({
+      expect(db.lesson.update).toHaveBeenCalledWith({
         where: { id: "lesson-1" },
         data: expect.objectContaining({ name: "Updated Lesson" }),
       })
@@ -661,17 +661,17 @@ describe("Catalog Actions", () => {
 
     it("looks up chapter to revalidate correct subject path", async () => {
       mockAuthSuccess()
-      vi.mocked(db.catalogLesson.update).mockResolvedValue({
+      vi.mocked(db.lesson.update).mockResolvedValue({
         id: "lesson-1",
         chapterId: "chapter-99",
       } as any)
-      vi.mocked(db.catalogChapter.findUniqueOrThrow).mockResolvedValue({
+      vi.mocked(db.chapter.findUniqueOrThrow).mockResolvedValue({
         subjectId: "subject-55",
       } as any)
 
-      await updateCatalogLesson("lesson-1", makeLessonFormData())
+      await updateLesson("lesson-1", makeLessonFormData())
 
-      expect(db.catalogChapter.findUniqueOrThrow).toHaveBeenCalledWith({
+      expect(db.chapter.findUniqueOrThrow).toHaveBeenCalledWith({
         where: { id: "chapter-99" },
         select: { subjectId: true },
       })
@@ -682,62 +682,62 @@ describe("Catalog Actions", () => {
       mockAuthFailure()
 
       await expect(
-        updateCatalogLesson("lesson-1", makeLessonFormData())
+        updateLesson("lesson-1", makeLessonFormData())
       ).rejects.toThrow("Unauthorized: DEVELOPER role required")
 
-      expect(db.catalogLesson.update).not.toHaveBeenCalled()
+      expect(db.lesson.update).not.toHaveBeenCalled()
     })
   })
 
   // ==========================================================================
-  // deleteCatalogLesson
+  // deleteLesson
   // ==========================================================================
 
-  describe("deleteCatalogLesson", () => {
+  describe("deleteLesson", () => {
     it("deletes lesson by id", async () => {
       mockAuthSuccess()
-      vi.mocked(db.catalogLesson.findUniqueOrThrow).mockResolvedValue({
+      vi.mocked(db.lesson.findUniqueOrThrow).mockResolvedValue({
         chapterId: "chapter-1",
         chapter: { subjectId: "subject-1" },
       } as any)
-      vi.mocked(db.catalogLesson.delete).mockResolvedValue({} as any)
-      vi.mocked(db.catalogLesson.count)
+      vi.mocked(db.lesson.delete).mockResolvedValue({} as any)
+      vi.mocked(db.lesson.count)
         .mockResolvedValueOnce(2) // chapter lesson count
         .mockResolvedValueOnce(8) // total subject lesson count
-      vi.mocked(db.catalogChapter.update).mockResolvedValue({} as any)
-      vi.mocked(db.catalogSubject.update).mockResolvedValue({} as any)
+      vi.mocked(db.chapter.update).mockResolvedValue({} as any)
+      vi.mocked(db.subject.update).mockResolvedValue({} as any)
 
-      const result = await deleteCatalogLesson("lesson-1")
+      const result = await deleteLesson("lesson-1")
 
       expect(result).toEqual({ success: true })
-      expect(db.catalogLesson.findUniqueOrThrow).toHaveBeenCalledWith({
+      expect(db.lesson.findUniqueOrThrow).toHaveBeenCalledWith({
         where: { id: "lesson-1" },
         select: {
           chapterId: true,
           chapter: { select: { subjectId: true } },
         },
       })
-      expect(db.catalogLesson.delete).toHaveBeenCalledWith({
+      expect(db.lesson.delete).toHaveBeenCalledWith({
         where: { id: "lesson-1" },
       })
     })
 
     it("updates chapter totalLessons denormalized count after deletion", async () => {
       mockAuthSuccess()
-      vi.mocked(db.catalogLesson.findUniqueOrThrow).mockResolvedValue({
+      vi.mocked(db.lesson.findUniqueOrThrow).mockResolvedValue({
         chapterId: "chapter-1",
         chapter: { subjectId: "subject-1" },
       } as any)
-      vi.mocked(db.catalogLesson.delete).mockResolvedValue({} as any)
-      vi.mocked(db.catalogLesson.count)
+      vi.mocked(db.lesson.delete).mockResolvedValue({} as any)
+      vi.mocked(db.lesson.count)
         .mockResolvedValueOnce(4) // chapter lesson count
         .mockResolvedValueOnce(12) // total subject lesson count
-      vi.mocked(db.catalogChapter.update).mockResolvedValue({} as any)
-      vi.mocked(db.catalogSubject.update).mockResolvedValue({} as any)
+      vi.mocked(db.chapter.update).mockResolvedValue({} as any)
+      vi.mocked(db.subject.update).mockResolvedValue({} as any)
 
-      await deleteCatalogLesson("lesson-1")
+      await deleteLesson("lesson-1")
 
-      expect(db.catalogChapter.update).toHaveBeenCalledWith({
+      expect(db.chapter.update).toHaveBeenCalledWith({
         where: { id: "chapter-1" },
         data: { totalLessons: 4 },
       })
@@ -745,20 +745,20 @@ describe("Catalog Actions", () => {
 
     it("updates subject totalLessons denormalized count after deletion", async () => {
       mockAuthSuccess()
-      vi.mocked(db.catalogLesson.findUniqueOrThrow).mockResolvedValue({
+      vi.mocked(db.lesson.findUniqueOrThrow).mockResolvedValue({
         chapterId: "chapter-1",
         chapter: { subjectId: "subject-1" },
       } as any)
-      vi.mocked(db.catalogLesson.delete).mockResolvedValue({} as any)
-      vi.mocked(db.catalogLesson.count)
+      vi.mocked(db.lesson.delete).mockResolvedValue({} as any)
+      vi.mocked(db.lesson.count)
         .mockResolvedValueOnce(2) // chapter lesson count
         .mockResolvedValueOnce(9) // total subject lesson count
-      vi.mocked(db.catalogChapter.update).mockResolvedValue({} as any)
-      vi.mocked(db.catalogSubject.update).mockResolvedValue({} as any)
+      vi.mocked(db.chapter.update).mockResolvedValue({} as any)
+      vi.mocked(db.subject.update).mockResolvedValue({} as any)
 
-      await deleteCatalogLesson("lesson-1")
+      await deleteLesson("lesson-1")
 
-      expect(db.catalogSubject.update).toHaveBeenCalledWith({
+      expect(db.subject.update).toHaveBeenCalledWith({
         where: { id: "subject-1" },
         data: { totalLessons: 9 },
       })
@@ -766,18 +766,18 @@ describe("Catalog Actions", () => {
 
     it("revalidates /catalog/:subjectId path", async () => {
       mockAuthSuccess()
-      vi.mocked(db.catalogLesson.findUniqueOrThrow).mockResolvedValue({
+      vi.mocked(db.lesson.findUniqueOrThrow).mockResolvedValue({
         chapterId: "chapter-1",
         chapter: { subjectId: "subject-1" },
       } as any)
-      vi.mocked(db.catalogLesson.delete).mockResolvedValue({} as any)
-      vi.mocked(db.catalogLesson.count)
+      vi.mocked(db.lesson.delete).mockResolvedValue({} as any)
+      vi.mocked(db.lesson.count)
         .mockResolvedValueOnce(0)
         .mockResolvedValueOnce(0)
-      vi.mocked(db.catalogChapter.update).mockResolvedValue({} as any)
-      vi.mocked(db.catalogSubject.update).mockResolvedValue({} as any)
+      vi.mocked(db.chapter.update).mockResolvedValue({} as any)
+      vi.mocked(db.subject.update).mockResolvedValue({} as any)
 
-      await deleteCatalogLesson("lesson-1")
+      await deleteLesson("lesson-1")
 
       expect(revalidatePath).toHaveBeenCalledWith("/catalog/subject-1")
     })
@@ -785,19 +785,19 @@ describe("Catalog Actions", () => {
     it("requires DEVELOPER role", async () => {
       mockAuthFailure()
 
-      await expect(deleteCatalogLesson("lesson-1")).rejects.toThrow(
+      await expect(deleteLesson("lesson-1")).rejects.toThrow(
         "Unauthorized: DEVELOPER role required"
       )
 
-      expect(db.catalogLesson.findUniqueOrThrow).not.toHaveBeenCalled()
+      expect(db.lesson.findUniqueOrThrow).not.toHaveBeenCalled()
     })
   })
 
   // ==========================================================================
-  // reorderCatalogChapters
+  // reorderChapters
   // ==========================================================================
 
-  describe("reorderCatalogChapters", () => {
+  describe("reorderChapters", () => {
     it("reorders chapters via $transaction", async () => {
       mockAuthSuccess()
       vi.mocked(db.$transaction).mockResolvedValue([])
@@ -808,7 +808,7 @@ describe("Catalog Actions", () => {
         { id: "ch-3", position: 2 },
       ]
 
-      const result = await reorderCatalogChapters("subject-1", chapters)
+      const result = await reorderChapters("subject-1", chapters)
 
       expect(result).toEqual({ success: true })
       expect(db.$transaction).toHaveBeenCalledWith(
@@ -824,7 +824,7 @@ describe("Catalog Actions", () => {
       mockAuthSuccess()
       vi.mocked(db.$transaction).mockResolvedValue([])
 
-      await reorderCatalogChapters("subject-1", [{ id: "ch-1", position: 0 }])
+      await reorderChapters("subject-1", [{ id: "ch-1", position: 0 }])
 
       expect(revalidatePath).toHaveBeenCalledWith("/catalog/subject-1")
     })
@@ -833,7 +833,7 @@ describe("Catalog Actions", () => {
       mockAuthFailure()
 
       await expect(
-        reorderCatalogChapters("subject-1", [{ id: "ch-1", position: 0 }])
+        reorderChapters("subject-1", [{ id: "ch-1", position: 0 }])
       ).rejects.toThrow("Unauthorized: DEVELOPER role required")
 
       expect(db.$transaction).not.toHaveBeenCalled()
@@ -841,13 +841,13 @@ describe("Catalog Actions", () => {
   })
 
   // ==========================================================================
-  // reorderCatalogLessons
+  // reorderLessons
   // ==========================================================================
 
-  describe("reorderCatalogLessons", () => {
+  describe("reorderLessons", () => {
     it("reorders lessons via $transaction", async () => {
       mockAuthSuccess()
-      vi.mocked(db.catalogChapter.findUniqueOrThrow).mockResolvedValue({
+      vi.mocked(db.chapter.findUniqueOrThrow).mockResolvedValue({
         subjectId: "subject-1",
       } as any)
       vi.mocked(db.$transaction).mockResolvedValue([])
@@ -857,7 +857,7 @@ describe("Catalog Actions", () => {
         { id: "ls-2", position: 1 },
       ]
 
-      const result = await reorderCatalogLessons("chapter-1", lessons)
+      const result = await reorderLessons("chapter-1", lessons)
 
       expect(result).toEqual({ success: true })
       expect(db.$transaction).toHaveBeenCalledWith(
@@ -867,14 +867,14 @@ describe("Catalog Actions", () => {
 
     it("looks up chapter to determine subject for revalidation", async () => {
       mockAuthSuccess()
-      vi.mocked(db.catalogChapter.findUniqueOrThrow).mockResolvedValue({
+      vi.mocked(db.chapter.findUniqueOrThrow).mockResolvedValue({
         subjectId: "subject-42",
       } as any)
       vi.mocked(db.$transaction).mockResolvedValue([])
 
-      await reorderCatalogLessons("chapter-1", [{ id: "ls-1", position: 0 }])
+      await reorderLessons("chapter-1", [{ id: "ls-1", position: 0 }])
 
-      expect(db.catalogChapter.findUniqueOrThrow).toHaveBeenCalledWith({
+      expect(db.chapter.findUniqueOrThrow).toHaveBeenCalledWith({
         where: { id: "chapter-1" },
         select: { subjectId: true },
       })
@@ -885,7 +885,7 @@ describe("Catalog Actions", () => {
       mockAuthFailure()
 
       await expect(
-        reorderCatalogLessons("chapter-1", [{ id: "ls-1", position: 0 }])
+        reorderLessons("chapter-1", [{ id: "ls-1", position: 0 }])
       ).rejects.toThrow("Unauthorized: DEVELOPER role required")
 
       expect(db.$transaction).not.toHaveBeenCalled()

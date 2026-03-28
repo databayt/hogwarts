@@ -72,7 +72,7 @@ export async function syncStudentClassToEnrollment(
   classId: string
 ): Promise<void> {
   try {
-    // Get class -> subject (CatalogSubject) ID
+    // Get class -> subject (Subject) ID
     const classData = await db.class.findFirst({
       where: { id: classId, schoolId },
       select: {

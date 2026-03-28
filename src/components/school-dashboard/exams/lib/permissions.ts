@@ -268,7 +268,7 @@ export async function canAccessExam(
   if (context.userRole === "DEVELOPER") return true
 
   // Check exam exists in user's school
-  const exam = await db.exam.findFirst({
+  const exam = await db.schoolExam.findFirst({
     where: {
       id: examId,
       schoolId: context.schoolId,
@@ -336,7 +336,7 @@ export async function canModifyExam(
 
   // Teachers can only modify their own exams
   if (context.isTeacher && context.teacherId) {
-    const exam = await db.exam.findFirst({
+    const exam = await db.schoolExam.findFirst({
       where: {
         id: examId,
         schoolId: context.schoolId,

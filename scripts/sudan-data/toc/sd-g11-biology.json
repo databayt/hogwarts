@@ -1,0 +1,52 @@
+{
+  "subject": "biology",
+  "subjectNameAr": "علم الأحياء",
+  "grade": 11,
+  "level": "secondary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "",
+  "chapters": [
+    {
+      "nameAr": "الوحدة الأولى: التغذية في الكائنات الحية",
+      "name": "Unit 1: Nutrition in Living Organisms",
+      "slug": "nutrition-living-organisms",
+      "sequenceOrder": 1,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الثانية: النقل في الكائنات الحية",
+      "name": "Unit 2: Transport in Living Organisms",
+      "slug": "transport-living-organisms",
+      "sequenceOrder": 2,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الثالثة: التنفس والإخراج",
+      "name": "Unit 3: Respiration and Excretion",
+      "slug": "respiration-excretion",
+      "sequenceOrder": 3,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الرابعة: التنسيق والحركة",
+      "name": "Unit 4: Coordination and Movement",
+      "slug": "coordination-movement",
+      "sequenceOrder": 4,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الخامسة: التكاثر والوراثة",
+      "name": "Unit 5: Reproduction and Genetics",
+      "slug": "reproduction-genetics",
+      "sequenceOrder": 5,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة السادسة: العلاقات البيئية",
+      "name": "Unit 6: Ecological Relationships",
+      "slug": "ecological-relationships",
+      "sequenceOrder": 6,
+      "lessons": []
+    }
+  ]
+}

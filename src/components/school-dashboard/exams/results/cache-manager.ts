@@ -84,7 +84,7 @@ export async function warmExamCaches(schoolId: string) {
     await warmCache.preload(schoolId, db)
 
     // Additionally, preload recent exam analytics
-    const recentExams = await db.exam.findMany({
+    const recentExams = await db.schoolExam.findMany({
       where: {
         schoolId,
         examDate: {
@@ -137,7 +137,7 @@ export function clearSchoolCaches(schoolId: string) {
  * Calculate exam analytics (helper for cache warming)
  */
 async function calculateExamAnalytics(examId: string, schoolId: string) {
-  const exam = await db.exam.findFirst({
+  const exam = await db.schoolExam.findFirst({
     where: { id: examId, schoolId },
     include: {
       examResults: {

@@ -8,13 +8,13 @@
 
 import type {
   BloomLevel,
-  CatalogSubject,
   DifficultyLevel,
-  ExamTemplate,
   GeneratedExam,
   QuestionAnalytics,
   QuestionBank,
   QuestionType,
+  SchoolExamTemplate,
+  Subject,
 } from "@prisma/client"
 
 /**
@@ -28,7 +28,7 @@ export type ActionResponse<T = void> =
 // Question Bank types
 export interface QuestionWithAnalytics extends QuestionBank {
   analytics?: QuestionAnalytics | null
-  subject?: Pick<CatalogSubject, "id" | "name"> | null
+  subject?: Pick<Subject, "id" | "name"> | null
   _count?: {
     generatedExamQuestions: number
   }
@@ -51,8 +51,8 @@ export interface CreateQuestionData {
 }
 
 // Template types
-export interface TemplateWithStats extends ExamTemplate {
-  subject?: Pick<CatalogSubject, "id" | "name"> | null
+export interface TemplateWithStats extends SchoolExamTemplate {
+  subject?: Pick<Subject, "id" | "name"> | null
   _count?: {
     generatedExams: number
   }

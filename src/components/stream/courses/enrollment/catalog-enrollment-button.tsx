@@ -9,7 +9,7 @@ import { toast } from "sonner"
 import { tryCatch } from "@/hooks/try-catch"
 import { Button } from "@/components/ui/button"
 
-import { enrollInCatalogSubject } from "./catalog-actions"
+import { enrollInSubject } from "./catalog-actions"
 
 interface CatalogEnrollmentButtonProps {
   catalogSubjectId: string
@@ -58,7 +58,7 @@ export function CatalogEnrollmentButton({
 
   function onSubmit() {
     startTransition(async () => {
-      const { error } = await tryCatch(enrollInCatalogSubject(catalogSubjectId))
+      const { error } = await tryCatch(enrollInSubject(catalogSubjectId))
 
       if (error) {
         toast.error(

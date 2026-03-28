@@ -4,7 +4,7 @@ const steps = [
   {
     id: "1",
     label: "Global Catalog",
-    desc: "~220 grade-specific US K-12 subjects shared across all schools. No schoolId. CatalogSubject → CatalogBook → CatalogMaterial. Expandable to British, Sudanese, IB curricula.",
+    desc: "~220 grade-specific US K-12 subjects shared across all schools. No schoolId. Subject → Book → Material. Expandable to British, Sudanese, IB curricula.",
   },
   {
     id: "2",
@@ -19,7 +19,7 @@ const steps = [
   {
     id: "4",
     label: "Subject Selection",
-    desc: "Bridges CatalogSubject to school Subject per grade. Subject.catalogSubjectId links to LMS content and books. setupCatalogForSchool() auto-populates. Schools can add custom subjects.",
+    desc: "Bridges Subject to school Subject per grade. Subject.catalogSubjectId links to LMS content and books. setupCatalogForSchool() auto-populates. Schools can add custom subjects.",
   },
 ]
 

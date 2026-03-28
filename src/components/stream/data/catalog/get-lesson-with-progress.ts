@@ -28,7 +28,7 @@ export interface AvailableVideo {
   }
 }
 
-export interface CatalogLessonWithProgress {
+export interface LessonWithProgress {
   id: string
   title: string
   description: string | null
@@ -86,9 +86,9 @@ export interface CatalogLessonWithProgress {
  * Fetches catalog lesson with progress data and video sources.
  * Migration: Replaces get-lesson-with-progress.ts which queries StreamLesson.
  */
-export async function getCatalogLessonWithProgress(
+export async function getLessonWithProgress(
   lessonId: string
-): Promise<CatalogLessonWithProgress | null> {
+): Promise<LessonWithProgress | null> {
   const session = await auth()
   const { schoolId } = await getTenantContext()
 
@@ -97,7 +97,7 @@ export async function getCatalogLessonWithProgress(
   }
 
   try {
-    const lesson = await db.catalogLesson.findFirst({
+    const lesson = await db.lesson.findFirst({
       where: {
         id: lessonId,
         status: "PUBLISHED",
@@ -148,7 +148,7 @@ export async function getCatalogLessonWithProgress(
 
     // Block non-enrolled users only for paid content; free content is accessible to all
     if (!isEnrolled && !isAdmin) {
-      const subject = await db.catalogSubject.findUnique({
+      const subject = await db.subject.findUnique({
         where: { id: lesson.chapter.subject.id },
         select: { price: true },
       })
@@ -175,7 +175,7 @@ export async function getCatalogLessonWithProgress(
     })
 
     // Get attachments
-    const attachments = await db.lessonAttachment.findMany({
+    const attachments = await db.attachment.findMany({
       where: { catalogLessonId: lessonId },
       select: {
         id: true,
@@ -185,8 +185,8 @@ export async function getCatalogLessonWithProgress(
     })
 
     // Get ALL approved videos for this lesson (multi-instructor support)
-    // Excludes videos hidden by the school via SchoolContentOverride
-    const videos = await db.lessonVideo.findMany({
+    // Excludes videos hidden by the school via ContentOverride
+    const videos = await db.video.findMany({
       where: {
         catalogLessonId: lessonId,
         approvalStatus: "APPROVED",
@@ -225,7 +225,7 @@ export async function getCatalogLessonWithProgress(
 
     // Resolve instructor preference: re-sort videos to prioritize preferred source
     if (schoolId && videos.length > 1) {
-      const preference = await db.schoolInstructorPreference.findUnique({
+      const preference = await db.instructorPreference.findUnique({
         where: {
           schoolId_catalogSubjectId: {
             schoolId,
@@ -258,8 +258,8 @@ export async function getCatalogLessonWithProgress(
     const video = videos[0] ?? null
 
     // Get all lessons in the subject for navigation
-    // Excludes hidden chapters and lessons via SchoolContentOverride
-    const allLessons = await db.catalogLesson.findMany({
+    // Excludes hidden chapters and lessons via ContentOverride
+    const allLessons = await db.lesson.findMany({
       where: {
         chapter: {
           subjectId: lesson.chapter.subject.id,
@@ -284,8 +284,7 @@ export async function getCatalogLessonWithProgress(
         id: true,
         name: true,
         sequenceOrder: true,
-        thumbnailKey: true,
-        imageKey: true,
+        thumbnail: true,
         color: true,
         durationMinutes: true,
         chapter: {
@@ -367,9 +366,7 @@ export async function getCatalogLessonWithProgress(
       title: lesson.name,
       description: lesson.description,
       videoUrl: transformedVideoUrl,
-      thumbnailUrl:
-        getCatalogImageUrl(lesson.thumbnailKey, lesson.imageKey, "original") ??
-        null,
+      thumbnailUrl: getCatalogImageUrl(lesson.thumbnail, "original") ?? null,
       duration:
         lesson.durationMinutes ??
         (lesson.videoCount > 0 ? lesson.videoCount * 5 : null),
@@ -418,8 +415,7 @@ export async function getCatalogLessonWithProgress(
         .map((l) => ({
           id: l.id,
           title: l.name,
-          thumbnailUrl:
-            getCatalogImageUrl(l.thumbnailKey, l.imageKey, "original") ?? null,
+          thumbnailUrl: getCatalogImageUrl(l.thumbnail, "original") ?? null,
           color: l.color ?? l.chapter.color ?? null,
           duration: l.durationMinutes,
           lessonPosition: l.sequenceOrder,
@@ -431,7 +427,7 @@ export async function getCatalogLessonWithProgress(
       availableVideos,
     }
   } catch (error) {
-    console.error("[getCatalogLessonWithProgress] Prisma error:", {
+    console.error("[getLessonWithProgress] Prisma error:", {
       name: (error as Error)?.constructor?.name,
       code: (error as Record<string, unknown>)?.code,
       message: (error as Error)?.message,

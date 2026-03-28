@@ -48,7 +48,7 @@ export async function createExam(
     }
 
     // Check if subject exists and belongs to school
-    const subjectExists = await db.schoolSubjectSelection.findFirst({
+    const subjectExists = await db.subjectSelection.findFirst({
       where: {
         catalogSubjectId: parsed.subjectId,
         schoolId,
@@ -100,7 +100,7 @@ export async function createExam(
       }
     }
 
-    const exam = await db.exam.create({
+    const exam = await db.schoolExam.create({
       data: {
         schoolId,
         title: parsed.title,
@@ -185,7 +185,7 @@ export async function updateExam(
     const { id, ...rest } = parsed
 
     // Check if exam exists and belongs to school
-    const examExists = await db.exam.findFirst({
+    const examExists = await db.schoolExam.findFirst({
       where: {
         id,
         schoolId,
@@ -276,7 +276,7 @@ export async function updateExam(
       }
     }
 
-    await db.exam.updateMany({
+    await db.schoolExam.updateMany({
       where: { id, schoolId },
       data,
     })
@@ -323,7 +323,7 @@ export async function deleteExam(input: {
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
     // Check if exam exists and belongs to school
-    const examExists = await db.exam.findFirst({
+    const examExists = await db.schoolExam.findFirst({
       where: {
         id,
         schoolId,
@@ -354,7 +354,7 @@ export async function deleteExam(input: {
       }
     }
 
-    await db.exam.deleteMany({
+    await db.schoolExam.deleteMany({
       where: { id, schoolId },
     })
 

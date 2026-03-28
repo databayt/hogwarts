@@ -87,7 +87,7 @@ export async function submitSubjectProposal(
     const { userId, schoolId } = await requireProposer()
     const parsed = subjectProposalDataSchema.parse(data)
 
-    const proposal = await db.catalogProposal.create({
+    const proposal = await db.proposal.create({
       data: {
         schoolId,
         proposedBy: userId,
@@ -122,7 +122,7 @@ export async function submitChapterProposal(
     const { userId, schoolId } = await requireProposer()
     const parsed = chapterProposalDataSchema.parse(data)
 
-    const proposal = await db.catalogProposal.create({
+    const proposal = await db.proposal.create({
       data: {
         schoolId,
         proposedBy: userId,
@@ -158,7 +158,7 @@ export async function submitLessonProposal(
     const { userId, schoolId } = await requireProposer()
     const parsed = lessonProposalDataSchema.parse(data)
 
-    const proposal = await db.catalogProposal.create({
+    const proposal = await db.proposal.create({
       data: {
         schoolId,
         proposedBy: userId,
@@ -183,7 +183,7 @@ export async function submitLessonProposal(
 }
 
 // ============================================================================
-// Submit video proposal (request video for a CatalogLesson)
+// Submit video proposal (request video for a Lesson)
 // ============================================================================
 
 export async function submitVideoProposal(
@@ -194,7 +194,7 @@ export async function submitVideoProposal(
     const { userId, schoolId } = await requireProposer()
     const parsed = videoProposalDataSchema.parse(data)
 
-    const proposal = await db.catalogProposal.create({
+    const proposal = await db.proposal.create({
       data: {
         schoolId,
         proposedBy: userId,
@@ -238,7 +238,7 @@ export async function getMyProposals(): Promise<
   try {
     const { schoolId } = await requireProposer()
 
-    const proposals = await db.catalogProposal.findMany({
+    const proposals = await db.proposal.findMany({
       where: { schoolId },
       orderBy: { createdAt: "desc" },
       select: {
@@ -279,7 +279,7 @@ export async function updateProposal(
   try {
     const { schoolId } = await requireProposer()
 
-    const proposal = await db.catalogProposal.findFirst({
+    const proposal = await db.proposal.findFirst({
       where: { id, schoolId },
       select: { status: true, type: true },
     })
@@ -305,7 +305,7 @@ export async function updateProposal(
     }
     const parsed = schema.parse(data)
 
-    await db.catalogProposal.update({
+    await db.proposal.update({
       where: { id },
       data: {
         data: parsed as any,

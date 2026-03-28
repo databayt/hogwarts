@@ -61,13 +61,8 @@ export interface DepartmentRef {
 export interface SubjectRef {
   id: string
   name: string
-  department: string
-}
-
-export interface CatalogSubjectRef {
-  id: string
-  name: string
-  slug: string
+  department?: string
+  slug?: string
 }
 
 export interface YearLevelRef {

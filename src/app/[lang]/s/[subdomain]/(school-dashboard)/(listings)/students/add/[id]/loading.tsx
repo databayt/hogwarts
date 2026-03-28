@@ -1,0 +1,23 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
+import { Skeleton } from "@/components/ui/skeleton"
+
+export default function WizardStepLoading() {
+  return (
+    <div className="space-y-6">
+      {/* Form card skeleton */}
+      <div className="rounded-lg border p-6">
+        <div className="space-y-4">
+          {/* Form fields */}
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="space-y-2">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}

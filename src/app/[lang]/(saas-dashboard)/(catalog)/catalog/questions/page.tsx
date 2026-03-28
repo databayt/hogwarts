@@ -15,7 +15,7 @@ interface Props {
   params: Promise<{ lang: Locale }>
 }
 
-export default async function CatalogQuestionsPage({ params }: Props) {
+export default async function QuestionsPage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
 

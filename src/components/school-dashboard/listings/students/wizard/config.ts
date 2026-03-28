@@ -8,6 +8,7 @@ export const STUDENT_WIZARD_CONFIG: WizardConfig = {
   steps: [
     "attachments",
     "personal",
+    "guardian",
     "enrollment",
     "contact",
     "location",
@@ -15,7 +16,7 @@ export const STUDENT_WIZARD_CONFIG: WizardConfig = {
     "previous-education",
   ],
   groups: {
-    1: ["attachments", "personal", "enrollment"],
+    1: ["attachments", "personal", "guardian", "enrollment"],
     2: ["contact", "location"],
     3: ["health", "previous-education"],
   },

@@ -1,0 +1,32 @@
+// Image — central media registry for all catalog imagery (NO schoolId)
+// Generic and reusable across ALL curricula
+// Stores thumbnails, banners, covers, and icons per concept
+// Supports multiple formats including PDF
+
+model Image {
+  id      String       @id @default(cuid())
+  concept String                        // "math", "science", "algebra"
+  variant String       @default("thumbnail") // thumbnail, banner, cover, icon
+  level   SchoolLevel?                  // null = universal across levels
+
+  // File storage
+  imageKey     String                   // S3 key for original image
+  thumbnailKey String?                  // S3 prefix for processed WebP variants (sm/md/lg)
+  pdfKey       String?                  // S3 key for PDF version (textbook covers, etc.)
+
+  // Metadata
+  color    String?                      // Brand color (#hex)
+  altText  String?
+  width    Int?
+  height   Int?
+  mimeType String?                      // image/webp, image/png, application/pdf
+  fileSize Int?                         // bytes
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([concept, variant, level])
+  @@index([concept])
+  @@index([variant])
+  @@map("catalog_images")
+}

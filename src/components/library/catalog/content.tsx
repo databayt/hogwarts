@@ -39,7 +39,7 @@ export async function LibraryCatalogContent({ lang }: Props) {
   }
 
   const [catalogBooks, selections] = await Promise.all([
-    db.catalogBook.findMany({
+    db.book.findMany({
       where: {
         status: "PUBLISHED",
         approvalStatus: "APPROVED",
@@ -64,7 +64,7 @@ export async function LibraryCatalogContent({ lang }: Props) {
         lang: true,
       },
     }),
-    db.schoolBookSelection.findMany({
+    db.bookSelection.findMany({
       where: { schoolId },
       select: {
         id: true,

@@ -8,9 +8,9 @@ import { db } from "@/lib/db"
 import { requireDeveloper } from "@/components/saas-dashboard/lib/operator-auth"
 
 import {
-  createCatalogAssignment,
-  deleteCatalogAssignment,
-  updateCatalogAssignment,
+  createAssignment,
+  deleteAssignment,
+  updateAssignment,
 } from "../assignment-actions"
 
 // ============================================================================
@@ -78,24 +78,24 @@ describe("Assignment Actions", () => {
   })
 
   // ==========================================================================
-  // createCatalogAssignment
+  // createAssignment
   // ==========================================================================
 
-  describe("createCatalogAssignment", () => {
+  describe("createAssignment", () => {
     it("creates assignment with valid FormData", async () => {
       mockDeveloperAuth()
-      vi.mocked(db.catalogAssignment.create).mockResolvedValue({
+      vi.mocked(db.assignment.create).mockResolvedValue({
         id: "assignment-1",
       } as any)
 
       const formData = makeAssignmentFormData()
-      const result = await createCatalogAssignment(formData)
+      const result = await createAssignment(formData)
 
       expect(result).toEqual({
         success: true,
         data: { id: "assignment-1" },
       })
-      expect(db.catalogAssignment.create).toHaveBeenCalledWith({
+      expect(db.assignment.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           title: "Test Assignment",
           approvalStatus: "APPROVED",
@@ -110,26 +110,26 @@ describe("Assignment Actions", () => {
       mockUnauthorized()
 
       const formData = makeAssignmentFormData()
-      const result = await createCatalogAssignment(formData)
+      const result = await createAssignment(formData)
 
       expect(result).toEqual({
         success: false,
         error: "Unauthorized: DEVELOPER role required",
       })
-      expect(db.catalogAssignment.create).not.toHaveBeenCalled()
+      expect(db.assignment.create).not.toHaveBeenCalled()
     })
 
     it("sets approvalStatus to APPROVED regardless of client input", async () => {
       mockDeveloperAuth()
-      vi.mocked(db.catalogAssignment.create).mockResolvedValue({
+      vi.mocked(db.assignment.create).mockResolvedValue({
         id: "assignment-2",
       } as any)
 
       const formData = makeAssignmentFormData({ approvalStatus: "PENDING" })
-      const result = await createCatalogAssignment(formData)
+      const result = await createAssignment(formData)
 
       expect(result.success).toBe(true)
-      expect(db.catalogAssignment.create).toHaveBeenCalledWith({
+      expect(db.assignment.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           approvalStatus: "APPROVED",
           status: "PUBLISHED",
@@ -139,7 +139,7 @@ describe("Assignment Actions", () => {
 
     it("handles totalPoints and estimatedTime number conversion", async () => {
       mockDeveloperAuth()
-      vi.mocked(db.catalogAssignment.create).mockResolvedValue({
+      vi.mocked(db.assignment.create).mockResolvedValue({
         id: "assignment-3",
       } as any)
 
@@ -147,10 +147,10 @@ describe("Assignment Actions", () => {
         totalPoints: "100",
         estimatedTime: "45",
       })
-      const result = await createCatalogAssignment(formData)
+      const result = await createAssignment(formData)
 
       expect(result.success).toBe(true)
-      expect(db.catalogAssignment.create).toHaveBeenCalledWith({
+      expect(db.assignment.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           totalPoints: 100,
           estimatedTime: 45,
@@ -164,21 +164,21 @@ describe("Assignment Actions", () => {
       // Missing required title
       const formData = new FormData()
       formData.set("title", "")
-      const result = await createCatalogAssignment(formData)
+      const result = await createAssignment(formData)
 
       expect(result.success).toBe(false)
       expect(result.error).toBeDefined()
-      expect(db.catalogAssignment.create).not.toHaveBeenCalled()
+      expect(db.assignment.create).not.toHaveBeenCalled()
     })
 
     it("returns error on database failure", async () => {
       mockDeveloperAuth()
-      vi.mocked(db.catalogAssignment.create).mockRejectedValue(
+      vi.mocked(db.assignment.create).mockRejectedValue(
         new Error("Unique constraint violation")
       )
 
       const formData = makeAssignmentFormData()
-      const result = await createCatalogAssignment(formData)
+      const result = await createAssignment(formData)
 
       expect(result).toEqual({
         success: false,
@@ -188,27 +188,27 @@ describe("Assignment Actions", () => {
   })
 
   // ==========================================================================
-  // updateCatalogAssignment
+  // updateAssignment
   // ==========================================================================
 
-  describe("updateCatalogAssignment", () => {
+  describe("updateAssignment", () => {
     it("updates assignment by id", async () => {
       mockDeveloperAuth()
-      vi.mocked(db.catalogAssignment.findUnique).mockResolvedValue({
+      vi.mocked(db.assignment.findUnique).mockResolvedValue({
         id: "assignment-1",
       } as any)
-      vi.mocked(db.catalogAssignment.update).mockResolvedValue({
+      vi.mocked(db.assignment.update).mockResolvedValue({
         id: "assignment-1",
       } as any)
 
       const formData = makeAssignmentFormData({ title: "Updated Title" })
-      const result = await updateCatalogAssignment("assignment-1", formData)
+      const result = await updateAssignment("assignment-1", formData)
 
       expect(result).toEqual({
         success: true,
         data: { id: "assignment-1" },
       })
-      expect(db.catalogAssignment.update).toHaveBeenCalledWith({
+      expect(db.assignment.update).toHaveBeenCalledWith({
         where: { id: "assignment-1" },
         data: expect.objectContaining({ title: "Updated Title" }),
       })
@@ -217,24 +217,24 @@ describe("Assignment Actions", () => {
 
     it("returns error for non-existent id", async () => {
       mockDeveloperAuth()
-      vi.mocked(db.catalogAssignment.findUnique).mockResolvedValue(null)
+      vi.mocked(db.assignment.findUnique).mockResolvedValue(null)
 
       const formData = makeAssignmentFormData()
-      const result = await updateCatalogAssignment("nonexistent", formData)
+      const result = await updateAssignment("nonexistent", formData)
 
       expect(result).toEqual({
         success: false,
         error: "Assignment not found",
       })
-      expect(db.catalogAssignment.update).not.toHaveBeenCalled()
+      expect(db.assignment.update).not.toHaveBeenCalled()
     })
 
     it("strips approvalStatus, visibility, and status from update data", async () => {
       mockDeveloperAuth()
-      vi.mocked(db.catalogAssignment.findUnique).mockResolvedValue({
+      vi.mocked(db.assignment.findUnique).mockResolvedValue({
         id: "assignment-1",
       } as any)
-      vi.mocked(db.catalogAssignment.update).mockResolvedValue({
+      vi.mocked(db.assignment.update).mockResolvedValue({
         id: "assignment-1",
       } as any)
 
@@ -243,10 +243,10 @@ describe("Assignment Actions", () => {
         visibility: "PRIVATE",
         status: "DRAFT",
       })
-      const result = await updateCatalogAssignment("assignment-1", formData)
+      const result = await updateAssignment("assignment-1", formData)
 
       expect(result.success).toBe(true)
-      const updateCall = vi.mocked(db.catalogAssignment.update).mock.calls[0][0]
+      const updateCall = vi.mocked(db.assignment.update).mock.calls[0][0]
       expect(updateCall.data).not.toHaveProperty("approvalStatus")
       expect(updateCall.data).not.toHaveProperty("visibility")
       expect(updateCall.data).not.toHaveProperty("status")
@@ -256,26 +256,26 @@ describe("Assignment Actions", () => {
       mockUnauthorized()
 
       const formData = makeAssignmentFormData()
-      const result = await updateCatalogAssignment("assignment-1", formData)
+      const result = await updateAssignment("assignment-1", formData)
 
       expect(result).toEqual({
         success: false,
         error: "Unauthorized: DEVELOPER role required",
       })
-      expect(db.catalogAssignment.findUnique).not.toHaveBeenCalled()
+      expect(db.assignment.findUnique).not.toHaveBeenCalled()
     })
 
     it("returns error on database failure", async () => {
       mockDeveloperAuth()
-      vi.mocked(db.catalogAssignment.findUnique).mockResolvedValue({
+      vi.mocked(db.assignment.findUnique).mockResolvedValue({
         id: "assignment-1",
       } as any)
-      vi.mocked(db.catalogAssignment.update).mockRejectedValue(
+      vi.mocked(db.assignment.update).mockRejectedValue(
         new Error("Database connection lost")
       )
 
       const formData = makeAssignmentFormData()
-      const result = await updateCatalogAssignment("assignment-1", formData)
+      const result = await updateAssignment("assignment-1", formData)
 
       expect(result).toEqual({
         success: false,
@@ -285,21 +285,21 @@ describe("Assignment Actions", () => {
   })
 
   // ==========================================================================
-  // deleteCatalogAssignment
+  // deleteAssignment
   // ==========================================================================
 
-  describe("deleteCatalogAssignment", () => {
+  describe("deleteAssignment", () => {
     it("deletes assignment by id", async () => {
       mockDeveloperAuth()
-      vi.mocked(db.catalogAssignment.findUnique).mockResolvedValue({
+      vi.mocked(db.assignment.findUnique).mockResolvedValue({
         id: "assignment-1",
       } as any)
-      vi.mocked(db.catalogAssignment.delete).mockResolvedValue({} as any)
+      vi.mocked(db.assignment.delete).mockResolvedValue({} as any)
 
-      const result = await deleteCatalogAssignment("assignment-1")
+      const result = await deleteAssignment("assignment-1")
 
       expect(result).toEqual({ success: true })
-      expect(db.catalogAssignment.delete).toHaveBeenCalledWith({
+      expect(db.assignment.delete).toHaveBeenCalledWith({
         where: { id: "assignment-1" },
       })
       expect(revalidatePath).toHaveBeenCalledWith("/catalog/assignments")
@@ -307,39 +307,39 @@ describe("Assignment Actions", () => {
 
     it("returns error for non-existent id", async () => {
       mockDeveloperAuth()
-      vi.mocked(db.catalogAssignment.findUnique).mockResolvedValue(null)
+      vi.mocked(db.assignment.findUnique).mockResolvedValue(null)
 
-      const result = await deleteCatalogAssignment("nonexistent")
+      const result = await deleteAssignment("nonexistent")
 
       expect(result).toEqual({
         success: false,
         error: "Assignment not found",
       })
-      expect(db.catalogAssignment.delete).not.toHaveBeenCalled()
+      expect(db.assignment.delete).not.toHaveBeenCalled()
     })
 
     it("requires DEVELOPER role", async () => {
       mockUnauthorized()
 
-      const result = await deleteCatalogAssignment("assignment-1")
+      const result = await deleteAssignment("assignment-1")
 
       expect(result).toEqual({
         success: false,
         error: "Unauthorized: DEVELOPER role required",
       })
-      expect(db.catalogAssignment.findUnique).not.toHaveBeenCalled()
+      expect(db.assignment.findUnique).not.toHaveBeenCalled()
     })
 
     it("returns error on database failure", async () => {
       mockDeveloperAuth()
-      vi.mocked(db.catalogAssignment.findUnique).mockResolvedValue({
+      vi.mocked(db.assignment.findUnique).mockResolvedValue({
         id: "assignment-1",
       } as any)
-      vi.mocked(db.catalogAssignment.delete).mockRejectedValue(
+      vi.mocked(db.assignment.delete).mockRejectedValue(
         new Error("Foreign key constraint")
       )
 
-      const result = await deleteCatalogAssignment("assignment-1")
+      const result = await deleteAssignment("assignment-1")
 
       expect(result).toEqual({
         success: false,

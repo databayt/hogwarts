@@ -1,0 +1,220 @@
+{
+  "subject": "geography",
+  "subjectNameAr": "الجغرافيا والدراسات البيئية",
+  "grade": 10,
+  "level": "secondary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "الطبعة المنقحة 2012",
+  "chapters": [
+    {
+      "nameAr": "الوحدة الأولى: أسس الجغرافيا الطبيعية",
+      "name": "Unit 1: Foundations of Physical Geography",
+      "slug": "foundations-physical-geography",
+      "sequenceOrder": 1,
+      "lessons": [
+        {
+          "nameAr": "الكون",
+          "name": "The Universe",
+          "slug": "the-universe",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الأرض",
+          "name": "The Earth",
+          "slug": "the-earth",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "دوائر العرض وخطوط الطول",
+          "name": "Latitudes and Longitudes",
+          "slug": "latitudes-and-longitudes",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "خسوف القمر",
+          "name": "Lunar Eclipse",
+          "slug": "lunar-eclipse",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "كسوف الشمس",
+          "name": "Solar Eclipse",
+          "slug": "solar-eclipse",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "قشرة الأرض",
+          "name": "Earth's Crust",
+          "slug": "earths-crust",
+          "sequenceOrder": 6
+        },
+        {
+          "nameAr": "العوامل المؤثرة في تضاريس القشرة الأرضية",
+          "name": "Factors Affecting Earth's Crust Relief",
+          "slug": "factors-affecting-earths-crust-relief",
+          "sequenceOrder": 7
+        },
+        {
+          "nameAr": "البراكين",
+          "name": "Volcanoes",
+          "slug": "volcanoes",
+          "sequenceOrder": 8
+        },
+        {
+          "nameAr": "الحركات البطيئة",
+          "name": "Slow Movements",
+          "slug": "slow-movements",
+          "sequenceOrder": 9
+        },
+        {
+          "nameAr": "عملية التعرية",
+          "name": "Erosion Process",
+          "slug": "erosion-process",
+          "sequenceOrder": 10
+        },
+        {
+          "nameAr": "الغلاف المائي",
+          "name": "Hydrosphere",
+          "slug": "hydrosphere",
+          "sequenceOrder": 11
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة الثانية: المناخ والنبات الطبيعي",
+      "name": "Unit 2: Climate and Natural Vegetation",
+      "slug": "climate-and-natural-vegetation",
+      "sequenceOrder": 2,
+      "lessons": [
+        {
+          "nameAr": "طبيعة علم المناخ",
+          "name": "Nature of Climatology",
+          "slug": "nature-of-climatology",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الطقس والمناخ",
+          "name": "Weather and Climate",
+          "slug": "weather-and-climate",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "عناصر المناخ",
+          "name": "Climate Elements",
+          "slug": "climate-elements",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "تأثير الغلاف الجوي على الطاقة الشمسية",
+          "name": "Atmospheric Effect on Solar Energy",
+          "slug": "atmospheric-effect-solar-energy",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "قياس درجة الحرارة وتسجيلها",
+          "name": "Measuring and Recording Temperature",
+          "slug": "measuring-recording-temperature",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "المناطق الحرارية",
+          "name": "Thermal Zones",
+          "slug": "thermal-zones",
+          "sequenceOrder": 6
+        },
+        {
+          "nameAr": "الضغط الجوي والرياح",
+          "name": "Atmospheric Pressure and Wind",
+          "slug": "atmospheric-pressure-and-wind",
+          "sequenceOrder": 7
+        },
+        {
+          "nameAr": "الرياح",
+          "name": "Winds",
+          "slug": "winds",
+          "sequenceOrder": 8
+        },
+        {
+          "nameAr": "الرطوبة",
+          "name": "Humidity",
+          "slug": "humidity",
+          "sequenceOrder": 9
+        },
+        {
+          "nameAr": "الأمطار",
+          "name": "Rainfall",
+          "slug": "rainfall",
+          "sequenceOrder": 10
+        },
+        {
+          "nameAr": "الأقاليم المناخية",
+          "name": "Climatic Regions",
+          "slug": "climatic-regions",
+          "sequenceOrder": 11
+        },
+        {
+          "nameAr": "النباتات الطبيعية",
+          "name": "Natural Vegetation",
+          "slug": "natural-vegetation",
+          "sequenceOrder": 12
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة الثالثة: الخرائط",
+      "name": "Unit 3: Maps",
+      "slug": "maps",
+      "sequenceOrder": 3,
+      "lessons": [
+        {
+          "nameAr": "تطور علم الخرائط",
+          "name": "Development of Cartography",
+          "slug": "development-of-cartography",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "أنواع الخرائط",
+          "name": "Types of Maps",
+          "slug": "types-of-maps",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "المقومات الأساسية للخريطة",
+          "name": "Basic Map Components",
+          "slug": "basic-map-components",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "طرق الانتفاع بمقياس الرسم",
+          "name": "Methods of Using Map Scale",
+          "slug": "methods-using-map-scale",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "خرائط التضاريس",
+          "name": "Relief Maps",
+          "slug": "relief-maps",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "القطاعات التضاريسية",
+          "name": "Relief Cross-Sections",
+          "slug": "relief-cross-sections",
+          "sequenceOrder": 6
+        },
+        {
+          "nameAr": "قراءة التضاريس وتحليلها من الخرائط الكنتورية",
+          "name": "Reading and Analyzing Relief from Contour Maps",
+          "slug": "reading-analyzing-contour-maps",
+          "sequenceOrder": 7
+        },
+        {
+          "nameAr": "قراءة الخرائط وتطبيقات عامة",
+          "name": "Map Reading and General Applications",
+          "slug": "map-reading-general-applications",
+          "sequenceOrder": 8
+        }
+      ]
+    }
+  ]
+}

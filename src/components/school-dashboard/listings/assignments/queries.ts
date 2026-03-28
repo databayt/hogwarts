@@ -169,8 +169,11 @@ export const assignmentDetailSelect = {
 export function buildAssignmentWhere(
   schoolId: string,
   filters: AssignmentListFilters = {}
-): Prisma.AssignmentWhereInput {
-  const where: Prisma.AssignmentWhereInput = { schoolId, wizardStep: null }
+): Prisma.SchoolAssignmentWhereInput {
+  const where: Prisma.SchoolAssignmentWhereInput = {
+    schoolId,
+    wizardStep: null,
+  }
 
   // Search by title, description, or class name
   if (filters.search) {
@@ -232,7 +235,7 @@ export function buildAssignmentWhere(
  */
 export function buildAssignmentOrderBy(
   sortParams?: SortParam[]
-): Prisma.AssignmentOrderByWithRelationInput[] {
+): Prisma.SchoolAssignmentOrderByWithRelationInput[] {
   if (sortParams?.length) {
     return sortParams.map((s) => ({
       [s.id]: s.desc ? Prisma.SortOrder.desc : Prisma.SortOrder.asc,
@@ -267,14 +270,14 @@ export async function getAssignmentList(
   const { skip, take } = buildPagination(params.page ?? 1, params.perPage ?? 20)
 
   const [rows, count] = await Promise.all([
-    db.assignment.findMany({
+    db.schoolAssignment.findMany({
       where,
       orderBy,
       skip,
       take,
       select: assignmentListSelect,
     }),
-    db.assignment.count({ where }),
+    db.schoolAssignment.count({ where }),
   ])
 
   return { rows, count }
@@ -284,7 +287,7 @@ export async function getAssignmentList(
  * Get single assignment by ID
  */
 export async function getAssignmentDetail(schoolId: string, id: string) {
-  return db.assignment.findFirst({
+  return db.schoolAssignment.findFirst({
     where: { id, schoolId },
     select: assignmentDetailSelect,
   })
@@ -294,7 +297,7 @@ export async function getAssignmentDetail(schoolId: string, id: string) {
  * Get assignments for a specific class
  */
 export async function getClassAssignments(schoolId: string, classId: string) {
-  return db.assignment.findMany({
+  return db.schoolAssignment.findMany({
     where: {
       schoolId,
       classId,
@@ -310,7 +313,7 @@ export async function getClassAssignments(schoolId: string, classId: string) {
 export async function getUpcomingAssignments(schoolId: string, limit = 5) {
   const now = new Date()
 
-  return db.assignment.findMany({
+  return db.schoolAssignment.findMany({
     where: {
       schoolId,
       dueDate: { gte: now },
@@ -328,7 +331,7 @@ export async function getUpcomingAssignments(schoolId: string, limit = 5) {
 export async function getOverdueAssignments(schoolId: string) {
   const now = new Date()
 
-  return db.assignment.findMany({
+  return db.schoolAssignment.findMany({
     where: {
       schoolId,
       dueDate: { lt: now },
@@ -346,7 +349,7 @@ export async function verifyAssignmentOwnership(
   schoolId: string,
   assignmentIds: string[]
 ) {
-  const assignments = await db.assignment.findMany({
+  const assignments = await db.schoolAssignment.findMany({
     where: {
       id: { in: assignmentIds },
       schoolId,
@@ -366,18 +369,18 @@ export async function getAssignmentStats(schoolId: string) {
   const now = new Date()
 
   const [total, byStatus, byType, overdue] = await Promise.all([
-    db.assignment.count({ where: { schoolId } }),
-    db.assignment.groupBy({
+    db.schoolAssignment.count({ where: { schoolId } }),
+    db.schoolAssignment.groupBy({
       by: ["status"],
       where: { schoolId },
       _count: { status: true },
     }),
-    db.assignment.groupBy({
+    db.schoolAssignment.groupBy({
       by: ["type"],
       where: { schoolId },
       _count: { type: true },
     }),
-    db.assignment.count({
+    db.schoolAssignment.count({
       where: {
         schoolId,
         dueDate: { lt: now },

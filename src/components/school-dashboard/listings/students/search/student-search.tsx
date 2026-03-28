@@ -62,56 +62,66 @@ interface StudentSearchProps {
   onAddStudent?: () => void
   onBulkImport?: () => void
   onExport?: () => void
+  dictionary?: any
 }
-
-const statusOptions = [
-  { value: "ACTIVE", label: "Active", color: "bg-green-100 text-green-800" },
-  { value: "INACTIVE", label: "Inactive", color: "bg-gray-100 text-gray-800" },
-  { value: "SUSPENDED", label: "Suspended", color: "bg-red-100 text-red-800" },
-  {
-    value: "GRADUATED",
-    label: "Graduated",
-    color: "bg-blue-100 text-blue-800",
-  },
-  {
-    value: "TRANSFERRED",
-    label: "Transferred",
-    color: "bg-yellow-100 text-yellow-800",
-  },
-  {
-    value: "DROPPED_OUT",
-    label: "Dropped Out",
-    color: "bg-red-100 text-red-800",
-  },
-]
-
-const typeOptions = [
-  { value: "REGULAR", label: "Regular" },
-  { value: "TRANSFER", label: "Transfer" },
-  { value: "INTERNATIONAL", label: "International" },
-  { value: "EXCHANGE", label: "Exchange" },
-]
-
-const genderOptions = [
-  { value: "Male", label: "Male" },
-  { value: "Female", label: "Female" },
-  { value: "Other", label: "Other" },
-]
-
-const categoryOptions = [
-  { value: "General", label: "General" },
-  { value: "SC", label: "SC" },
-  { value: "ST", label: "ST" },
-  { value: "OBC", label: "OBC" },
-  { value: "EWS", label: "EWS" },
-]
 
 export function StudentSearch({
   onStudentSelect,
   onAddStudent,
   onBulkImport,
   onExport,
+  dictionary,
 }: StudentSearchProps) {
+  const d = dictionary?.school?.students?.search
+
+  const statusOptions = [
+    {
+      value: "ACTIVE",
+      label: d?.statusOptions?.active || "Active",
+      color: "bg-green-100 text-green-800",
+    },
+    {
+      value: "INACTIVE",
+      label: d?.statusOptions?.inactive || "Inactive",
+      color: "bg-gray-100 text-gray-800",
+    },
+    {
+      value: "SUSPENDED",
+      label: d?.statusOptions?.suspended || "Suspended",
+      color: "bg-red-100 text-red-800",
+    },
+    {
+      value: "GRADUATED",
+      label: d?.statusOptions?.graduated || "Graduated",
+      color: "bg-blue-100 text-blue-800",
+    },
+    {
+      value: "TRANSFERRED",
+      label: d?.statusOptions?.transferred || "Transferred",
+      color: "bg-yellow-100 text-yellow-800",
+    },
+    {
+      value: "DROPPED_OUT",
+      label: d?.statusOptions?.droppedOut || "Dropped Out",
+      color: "bg-red-100 text-red-800",
+    },
+  ]
+
+  const typeOptions = [
+    { value: "REGULAR", label: d?.typeOptions?.regular || "Regular" },
+    { value: "TRANSFER", label: d?.typeOptions?.transfer || "Transfer" },
+    {
+      value: "INTERNATIONAL",
+      label: d?.typeOptions?.international || "International",
+    },
+    { value: "EXCHANGE", label: d?.typeOptions?.exchange || "Exchange" },
+  ]
+
+  const genderOptions = [
+    { value: "Male", label: d?.genderOptions?.male || "Male" },
+    { value: "Female", label: d?.genderOptions?.female || "Female" },
+    { value: "Other", label: d?.genderOptions?.other || "Other" },
+  ]
   const [viewMode, setViewMode] = useState<"table" | "grid">("table")
   const [searchQuery, setSearchQuery] = useState("")
   const [showFilters, setShowFilters] = useState(false)
@@ -251,7 +261,10 @@ export function StudentSearch({
           <div className="relative">
             <Search className="text-muted-foreground absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 transform" />
             <Input
-              placeholder="Search by name, GR number, email, or phone..."
+              placeholder={
+                d?.searchPlaceholder ||
+                "Search by name, GR number, email, or phone..."
+              }
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="ps-10"
@@ -264,7 +277,7 @@ export function StudentSearch({
             <SheetTrigger asChild>
               <Button variant="outline" className="relative">
                 <ListFilter className="me-2 h-4 w-4" />
-                Filters
+                {d?.filters || "Filters"}
                 {activeFilterCount > 0 && (
                   <Badge
                     variant="destructive"
@@ -277,16 +290,19 @@ export function StudentSearch({
             </SheetTrigger>
             <SheetContent className="w-[400px]">
               <SheetHeader>
-                <SheetTitle>Advanced Filters</SheetTitle>
+                <SheetTitle>
+                  {d?.advancedFilters || "Advanced Filters"}
+                </SheetTitle>
                 <SheetDescription>
-                  ListFilter students by multiple criteria
+                  {d?.filterDescription ||
+                    "Filter students by multiple criteria"}
                 </SheetDescription>
               </SheetHeader>
 
               <div className="mt-6 space-y-6">
                 {/* Status ListFilter */}
                 <div className="space-y-3">
-                  <Label>Status</Label>
+                  <Label>{d?.status || "Status"}</Label>
                   <div className="space-y-2">
                     {statusOptions.map((option) => (
                       <div
@@ -330,7 +346,7 @@ export function StudentSearch({
 
                 {/* Type ListFilter */}
                 <div className="space-y-3">
-                  <Label>Student Type</Label>
+                  <Label>{d?.studentType || "Student Type"}</Label>
                   <div className="space-y-2">
                     {typeOptions.map((option) => (
                       <div
@@ -370,7 +386,7 @@ export function StudentSearch({
 
                 {/* Gender ListFilter */}
                 <div className="space-y-3">
-                  <Label>Gender</Label>
+                  <Label>{d?.gender || "Gender"}</Label>
                   <div className="space-y-2">
                     {genderOptions.map((option) => (
                       <div
@@ -407,7 +423,9 @@ export function StudentSearch({
 
                 {/* Date Range ListFilter */}
                 <div className="space-y-3">
-                  <Label>Enrollment Date Range</Label>
+                  <Label>
+                    {d?.enrollmentDateRange || "Enrollment Date Range"}
+                  </Label>
                   <div className="grid grid-cols-2 gap-2">
                     <Popover>
                       <PopoverTrigger asChild>
@@ -421,7 +439,7 @@ export function StudentSearch({
                           <CalendarIcon className="me-2 h-4 w-4" />
                           {filters.dateFrom
                             ? format(filters.dateFrom, "MMM dd, yyyy")
-                            : "From"}
+                            : d?.from || "From"}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0">
@@ -448,7 +466,7 @@ export function StudentSearch({
                           <CalendarIcon className="me-2 h-4 w-4" />
                           {filters.dateTo
                             ? format(filters.dateTo, "MMM dd, yyyy")
-                            : "To"}
+                            : d?.to || "To"}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0">
@@ -469,7 +487,7 @@ export function StudentSearch({
 
                 {/* Additional Filters */}
                 <div className="space-y-3">
-                  <Label>Additional Filters</Label>
+                  <Label>{d?.additionalFilters || "Additional Filters"}</Label>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <Checkbox
@@ -482,7 +500,7 @@ export function StudentSearch({
                         }}
                       />
                       <Label className="cursor-pointer font-normal">
-                        Has uploaded documents
+                        {d?.hasUploadedDocuments || "Has uploaded documents"}
                       </Label>
                     </div>
                     <div className="flex items-center gap-2">
@@ -496,7 +514,7 @@ export function StudentSearch({
                         }}
                       />
                       <Label className="cursor-pointer font-normal">
-                        Has pending fees
+                        {d?.hasPendingFees || "Has pending fees"}
                       </Label>
                     </div>
                   </div>
@@ -509,7 +527,7 @@ export function StudentSearch({
                   onClick={clearFilters}
                   disabled={activeFilterCount === 0}
                 >
-                  Clear All Filters
+                  {d?.clearAllFilters || "Clear All Filters"}
                 </Button>
               </div>
             </SheetContent>
@@ -517,17 +535,17 @@ export function StudentSearch({
 
           <Button variant="outline" onClick={onAddStudent}>
             <UserPlus className="me-2 h-4 w-4" />
-            Add Student
+            {d?.addStudent || "Add Student"}
           </Button>
 
           <Button variant="outline" onClick={onBulkImport}>
             <Upload className="me-2 h-4 w-4" />
-            Import
+            {d?.import || "Import"}
           </Button>
 
           <Button variant="outline" onClick={onExport}>
             <Download className="me-2 h-4 w-4" />
-            Export
+            {d?.export || "Export"}
           </Button>
         </div>
       </div>
@@ -537,13 +555,19 @@ export function StudentSearch({
         <div className="flex items-center gap-4">
           <h3 className="font-medium">
             {filteredStudents.length}{" "}
-            {filteredStudents.length === 1 ? "Student" : "Students"} Found
+            {filteredStudents.length === 1
+              ? d?.studentFound || "Student"
+              : d?.studentsFound || "Students"}{" "}
+            {d?.found || "Found"}
           </h3>
           {activeFilterCount > 0 && (
             <div className="flex items-center gap-2">
               <Badge variant="secondary">
                 {activeFilterCount}{" "}
-                {activeFilterCount === 1 ? "ListFilter" : "Filters"} Applied
+                {activeFilterCount === 1
+                  ? d?.filterApplied || "Filter"
+                  : d?.filtersApplied || "Filters"}{" "}
+                {d?.applied || "Applied"}
               </Badge>
               <Button variant="ghost" size="sm" onClick={clearFilters}>
                 <X className="h-3 w-3" />
@@ -559,14 +583,14 @@ export function StudentSearch({
             size="sm"
             onClick={() => setViewMode("table")}
           >
-            Table
+            {d?.table || "Table"}
           </Button>
           <Button
             variant={viewMode === "grid" ? "default" : "ghost"}
             size="sm"
             onClick={() => setViewMode("grid")}
           >
-            Grid
+            {d?.grid || "Grid"}
           </Button>
         </div>
       </div>
@@ -576,11 +600,13 @@ export function StudentSearch({
         <StudentTable
           students={filteredStudents}
           onStudentSelect={onStudentSelect}
+          dictionary={dictionary}
         />
       ) : (
         <StudentGrid
           students={filteredStudents}
           onStudentSelect={onStudentSelect}
+          dictionary={dictionary}
         />
       )}
 
@@ -589,15 +615,19 @@ export function StudentSearch({
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Users className="text-muted-foreground mb-4 h-12 w-12" />
-            <h3 className="mb-2 font-medium">No Students Found</h3>
+            <h3 className="mb-2 font-medium">
+              {d?.noStudentsFound || "No Students Found"}
+            </h3>
             <p className="text-muted-foreground max-w-md text-center text-sm">
               {searchQuery || activeFilterCount > 0
-                ? "Try adjusting your search criteria or filters to find what you're looking for."
-                : "Start by adding your first student to the system."}
+                ? d?.noResultsWithFilter ||
+                  "Try adjusting your search criteria or filters to find what you're looking for."
+                : d?.noResultsEmpty ||
+                  "Start by adding your first student to the system."}
             </p>
             {(searchQuery || activeFilterCount > 0) && (
               <Button variant="outline" className="mt-4" onClick={clearFilters}>
-                Clear Filters
+                {d?.clearFilters || "Clear Filters"}
               </Button>
             )}
           </CardContent>

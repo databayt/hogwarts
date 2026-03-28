@@ -1,0 +1,80 @@
+// Document Processing Queue & AI Usage Tracking
+// Supports async document processing across all domains (admission, finance, textbooks, etc.)
+
+model DocumentProcessingJob {
+  id        String   @id @default(cuid())
+  schoolId  String
+  userId    String?
+
+  // Job configuration
+  jobType   String   // ProcessingJobType: admission_document, bank_receipt, textbook_metadata, etc.
+  status    String   @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
+  priority  Int      @default(0) // Higher = processed first
+
+  // Input
+  fileUrl   String
+  fileName  String?
+  mimeType  String?
+  fileSize  Int?
+  metadata  Json?    // Domain-specific input metadata (e.g., applicationId, documentType)
+
+  // Output
+  resultData    Json?    // Extracted/processed data
+  confidence    Float?   // Overall confidence score (0-1)
+  errorMessage  String?
+  errorCode     String?
+
+  // Processing metrics
+  processingTimeMs  Int?
+  costUsd           Float?   // AI API cost for this job
+  modelUsed         String?  // e.g., "claude-3-5-sonnet-20241022"
+
+  // Retry
+  retryCount    Int      @default(0)
+  maxRetries    Int      @default(3)
+  nextRetryAt   DateTime?
+
+  // Relations
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  @@index([schoolId])
+  @@index([status, priority])
+  @@index([schoolId, jobType, status])
+  @@index([nextRetryAt])
+  @@map("document_processing_jobs")
+}
+
+model AIUsageLog {
+  id        String   @id @default(cuid())
+  schoolId  String
+  userId    String?
+
+  // What was done
+  jobType   String   // Same as DocumentProcessingJob.jobType
+  model     String   // AI model used
+  provider  String   // anthropic, openai, groq
+
+  // Cost tracking
+  inputTokens   Int?
+  outputTokens  Int?
+  costUsd       Float    // Actual cost in USD
+
+  // Reference
+  jobId     String?  // Link to DocumentProcessingJob if applicable
+
+  // Relations
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([schoolId])
+  @@index([schoolId, createdAt])
+  @@index([schoolId, jobType])
+  @@map("ai_usage_logs")
+}

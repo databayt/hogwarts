@@ -51,7 +51,7 @@ export async function createGeneratedExamForPaper(
     }
 
     // Fetch the exam and verify school ownership
-    const exam = await db.exam.findFirst({
+    const exam = await db.schoolExam.findFirst({
       where: { id: examId, schoolId },
       select: { id: true, subjectId: true },
     })

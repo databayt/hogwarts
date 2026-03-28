@@ -18,7 +18,6 @@ interface CatalogImageUploadProps {
   entityType: "subject" | "chapter" | "lesson"
   entityId: string
   currentThumbnailKey?: string | null
-  currentImageKey?: string | null
   className?: string
 }
 
@@ -26,14 +25,13 @@ export function CatalogImageUpload({
   entityType,
   entityId,
   currentThumbnailKey,
-  currentImageKey,
   className,
 }: CatalogImageUploadProps) {
-  const [thumbnailKey, setThumbnailKey] = useState(currentThumbnailKey)
+  const [thumbnail, setThumbnailKey] = useState(currentThumbnailKey)
   const [preview, setPreview] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
-  const currentUrl = getCatalogImageUrl(thumbnailKey, currentImageKey, "md")
+  const currentUrl = getCatalogImageUrl(thumbnail, "md")
 
   const onDrop = useCallback(
     (accepted: File[]) => {
@@ -52,8 +50,8 @@ export function CatalogImageUpload({
           entityType,
           entityId
         )
-        if (result.status === "success" && result.thumbnailKey) {
-          setThumbnailKey(result.thumbnailKey)
+        if (result.status === "success" && result.thumbnail) {
+          setThumbnailKey(result.thumbnail)
           setPreview(null)
           toast.success("Thumbnail uploaded")
         } else {
@@ -91,7 +89,7 @@ export function CatalogImageUpload({
               alt="Preview"
               className="h-48 w-full object-cover"
             />
-          ) : thumbnailKey ? (
+          ) : thumbnail ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={displaySrc}
@@ -150,7 +148,7 @@ export function CatalogImageUpload({
       </Dropzone>
 
       {/* Delete button */}
-      {thumbnailKey && (
+      {thumbnail && (
         <Button
           variant="ghost"
           size="sm"

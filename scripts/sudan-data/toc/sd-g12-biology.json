@@ -1,0 +1,31 @@
+{
+  "subject": "biology",
+  "subjectNameAr": "علوم الأحياء",
+  "grade": 12,
+  "level": "secondary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "",
+  "chapters": [
+    {
+      "nameAr": "الوحدة الأولى: التكاثر",
+      "name": "Unit 1: Reproduction",
+      "slug": "reproduction",
+      "sequenceOrder": 1,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الثانية: الوراثة",
+      "name": "Unit 2: Genetics",
+      "slug": "genetics",
+      "sequenceOrder": 2,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الثالثة: النظام البيئي",
+      "name": "Unit 3: Ecosystem",
+      "slug": "ecosystem",
+      "sequenceOrder": 3,
+      "lessons": []
+    }
+  ]
+}

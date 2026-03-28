@@ -1,0 +1,17 @@
+{
+  "subject": "history",
+  "subjectNameAr": "التاريخ",
+  "grade": 6,
+  "level": "elementary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "",
+  "chapters": [
+    {
+      "nameAr": "التاريخ",
+      "name": "History",
+      "slug": "history",
+      "sequenceOrder": 1,
+      "lessons": []
+    }
+  ]
+}

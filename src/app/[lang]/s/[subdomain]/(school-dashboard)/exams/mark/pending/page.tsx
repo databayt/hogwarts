@@ -37,7 +37,7 @@ export default async function PendingPage({ params }: Props) {
   today.setHours(0, 0, 0, 0)
 
   const pendingExams = schoolId
-    ? await db.exam.findMany({
+    ? await db.schoolExam.findMany({
         where: {
           schoolId,
           status: "IN_PROGRESS",

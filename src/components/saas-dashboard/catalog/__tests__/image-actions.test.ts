@@ -99,22 +99,22 @@ describe("Image Actions", () => {
       vi.mocked(processAndUploadCatalogImage).mockResolvedValue(
         "catalog/subjects/subj-1/thumbnail"
       )
-      vi.mocked(db.catalogSubject.update).mockResolvedValue({} as any)
+      vi.mocked(db.subject.update).mockResolvedValue({} as any)
 
       const formData = makeImageFormData()
       const result = await uploadCatalogThumbnail(formData, "subject", "subj-1")
 
       expect(result).toEqual({
         status: "success",
-        thumbnailKey: "catalog/subjects/subj-1/thumbnail",
+        thumbnail: "catalog/subjects/subj-1/thumbnail",
       })
       expect(processAndUploadCatalogImage).toHaveBeenCalledWith(
         expect.any(Buffer),
         "catalog/subjects/subj-1/thumbnail"
       )
-      expect(db.catalogSubject.update).toHaveBeenCalledWith({
+      expect(db.subject.update).toHaveBeenCalledWith({
         where: { id: "subj-1" },
-        data: { thumbnailKey: "catalog/subjects/subj-1/thumbnail" },
+        data: { thumbnail: "catalog/subjects/subj-1/thumbnail" },
       })
     })
 
@@ -123,22 +123,22 @@ describe("Image Actions", () => {
       vi.mocked(processAndUploadCatalogImage).mockResolvedValue(
         "catalog/chapters/chap-1/thumbnail"
       )
-      vi.mocked(db.catalogChapter.update).mockResolvedValue({} as any)
+      vi.mocked(db.chapter.update).mockResolvedValue({} as any)
 
       const formData = makeImageFormData()
       const result = await uploadCatalogThumbnail(formData, "chapter", "chap-1")
 
       expect(result).toEqual({
         status: "success",
-        thumbnailKey: "catalog/chapters/chap-1/thumbnail",
+        thumbnail: "catalog/chapters/chap-1/thumbnail",
       })
       expect(processAndUploadCatalogImage).toHaveBeenCalledWith(
         expect.any(Buffer),
         "catalog/chapters/chap-1/thumbnail"
       )
-      expect(db.catalogChapter.update).toHaveBeenCalledWith({
+      expect(db.chapter.update).toHaveBeenCalledWith({
         where: { id: "chap-1" },
-        data: { thumbnailKey: "catalog/chapters/chap-1/thumbnail" },
+        data: { thumbnail: "catalog/chapters/chap-1/thumbnail" },
       })
     })
 
@@ -147,22 +147,22 @@ describe("Image Actions", () => {
       vi.mocked(processAndUploadCatalogImage).mockResolvedValue(
         "catalog/lessons/les-1/thumbnail"
       )
-      vi.mocked(db.catalogLesson.update).mockResolvedValue({} as any)
+      vi.mocked(db.lesson.update).mockResolvedValue({} as any)
 
       const formData = makeImageFormData()
       const result = await uploadCatalogThumbnail(formData, "lesson", "les-1")
 
       expect(result).toEqual({
         status: "success",
-        thumbnailKey: "catalog/lessons/les-1/thumbnail",
+        thumbnail: "catalog/lessons/les-1/thumbnail",
       })
       expect(processAndUploadCatalogImage).toHaveBeenCalledWith(
         expect.any(Buffer),
         "catalog/lessons/les-1/thumbnail"
       )
-      expect(db.catalogLesson.update).toHaveBeenCalledWith({
+      expect(db.lesson.update).toHaveBeenCalledWith({
         where: { id: "les-1" },
-        data: { thumbnailKey: "catalog/lessons/les-1/thumbnail" },
+        data: { thumbnail: "catalog/lessons/les-1/thumbnail" },
       })
     })
 
@@ -235,23 +235,23 @@ describe("Image Actions", () => {
         status: "error",
         error: "S3 upload timeout",
       })
-      expect(db.catalogSubject.update).not.toHaveBeenCalled()
+      expect(db.subject.update).not.toHaveBeenCalled()
     })
 
-    it("stores thumbnailKey in the correct DB model for each entity type", async () => {
+    it("stores thumbnail in the correct DB model for each entity type", async () => {
       mockDeveloperSession()
       vi.mocked(processAndUploadCatalogImage).mockResolvedValue(
         "catalog/chapters/chap-2/thumbnail"
       )
-      vi.mocked(db.catalogChapter.update).mockResolvedValue({} as any)
+      vi.mocked(db.chapter.update).mockResolvedValue({} as any)
 
       const formData = makeImageFormData()
       await uploadCatalogThumbnail(formData, "chapter", "chap-2")
 
       // chapter update called, subject and lesson NOT called
-      expect(db.catalogChapter.update).toHaveBeenCalledTimes(1)
-      expect(db.catalogSubject.update).not.toHaveBeenCalled()
-      expect(db.catalogLesson.update).not.toHaveBeenCalled()
+      expect(db.chapter.update).toHaveBeenCalledTimes(1)
+      expect(db.subject.update).not.toHaveBeenCalled()
+      expect(db.lesson.update).not.toHaveBeenCalled()
     })
   })
 
@@ -262,107 +262,107 @@ describe("Image Actions", () => {
   describe("deleteCatalogThumbnail", () => {
     it("deletes for subject entity type", async () => {
       mockDeveloperSession()
-      vi.mocked(db.catalogSubject.findUnique).mockResolvedValue({
-        thumbnailKey: "catalog/subjects/subj-1/thumbnail",
+      vi.mocked(db.subject.findUnique).mockResolvedValue({
+        thumbnail: "catalog/subjects/subj-1/thumbnail",
       } as any)
-      vi.mocked(db.catalogSubject.update).mockResolvedValue({} as any)
+      vi.mocked(db.subject.update).mockResolvedValue({} as any)
       vi.mocked(deleteCatalogImage).mockResolvedValue(undefined)
 
       const result = await deleteCatalogThumbnail("subject", "subj-1")
 
       expect(result).toEqual({ status: "success" })
-      expect(db.catalogSubject.findUnique).toHaveBeenCalledWith({
+      expect(db.subject.findUnique).toHaveBeenCalledWith({
         where: { id: "subj-1" },
-        select: { thumbnailKey: true },
+        select: { thumbnail: true },
       })
       expect(deleteCatalogImage).toHaveBeenCalledWith(
         "catalog/subjects/subj-1/thumbnail"
       )
-      expect(db.catalogSubject.update).toHaveBeenCalledWith({
+      expect(db.subject.update).toHaveBeenCalledWith({
         where: { id: "subj-1" },
-        data: { thumbnailKey: null },
+        data: { thumbnail: null },
       })
     })
 
     it("deletes for chapter entity type", async () => {
       mockDeveloperSession()
-      vi.mocked(db.catalogChapter.findUnique).mockResolvedValue({
-        thumbnailKey: "catalog/chapters/chap-1/thumbnail",
+      vi.mocked(db.chapter.findUnique).mockResolvedValue({
+        thumbnail: "catalog/chapters/chap-1/thumbnail",
       } as any)
-      vi.mocked(db.catalogChapter.update).mockResolvedValue({} as any)
+      vi.mocked(db.chapter.update).mockResolvedValue({} as any)
       vi.mocked(deleteCatalogImage).mockResolvedValue(undefined)
 
       const result = await deleteCatalogThumbnail("chapter", "chap-1")
 
       expect(result).toEqual({ status: "success" })
-      expect(db.catalogChapter.findUnique).toHaveBeenCalledWith({
+      expect(db.chapter.findUnique).toHaveBeenCalledWith({
         where: { id: "chap-1" },
-        select: { thumbnailKey: true },
+        select: { thumbnail: true },
       })
       expect(deleteCatalogImage).toHaveBeenCalledWith(
         "catalog/chapters/chap-1/thumbnail"
       )
-      expect(db.catalogChapter.update).toHaveBeenCalledWith({
+      expect(db.chapter.update).toHaveBeenCalledWith({
         where: { id: "chap-1" },
-        data: { thumbnailKey: null },
+        data: { thumbnail: null },
       })
     })
 
     it("deletes for lesson entity type", async () => {
       mockDeveloperSession()
-      vi.mocked(db.catalogLesson.findUnique).mockResolvedValue({
-        thumbnailKey: "catalog/lessons/les-1/thumbnail",
+      vi.mocked(db.lesson.findUnique).mockResolvedValue({
+        thumbnail: "catalog/lessons/les-1/thumbnail",
       } as any)
-      vi.mocked(db.catalogLesson.update).mockResolvedValue({} as any)
+      vi.mocked(db.lesson.update).mockResolvedValue({} as any)
       vi.mocked(deleteCatalogImage).mockResolvedValue(undefined)
 
       const result = await deleteCatalogThumbnail("lesson", "les-1")
 
       expect(result).toEqual({ status: "success" })
-      expect(db.catalogLesson.findUnique).toHaveBeenCalledWith({
+      expect(db.lesson.findUnique).toHaveBeenCalledWith({
         where: { id: "les-1" },
-        select: { thumbnailKey: true },
+        select: { thumbnail: true },
       })
       expect(deleteCatalogImage).toHaveBeenCalledWith(
         "catalog/lessons/les-1/thumbnail"
       )
-      expect(db.catalogLesson.update).toHaveBeenCalledWith({
+      expect(db.lesson.update).toHaveBeenCalledWith({
         where: { id: "les-1" },
-        data: { thumbnailKey: null },
+        data: { thumbnail: null },
       })
     })
 
-    it("clears thumbnailKey in DB after S3 deletion", async () => {
+    it("clears thumbnail in DB after S3 deletion", async () => {
       mockDeveloperSession()
-      vi.mocked(db.catalogSubject.findUnique).mockResolvedValue({
-        thumbnailKey: "catalog/subjects/subj-1/thumbnail",
+      vi.mocked(db.subject.findUnique).mockResolvedValue({
+        thumbnail: "catalog/subjects/subj-1/thumbnail",
       } as any)
-      vi.mocked(db.catalogSubject.update).mockResolvedValue({} as any)
+      vi.mocked(db.subject.update).mockResolvedValue({} as any)
       vi.mocked(deleteCatalogImage).mockResolvedValue(undefined)
 
       await deleteCatalogThumbnail("subject", "subj-1")
 
-      expect(db.catalogSubject.update).toHaveBeenCalledWith({
+      expect(db.subject.update).toHaveBeenCalledWith({
         where: { id: "subj-1" },
-        data: { thumbnailKey: null },
+        data: { thumbnail: null },
       })
     })
 
-    it("handles missing thumbnailKey gracefully — skips S3 delete", async () => {
+    it("handles missing thumbnail gracefully — skips S3 delete", async () => {
       mockDeveloperSession()
-      vi.mocked(db.catalogSubject.findUnique).mockResolvedValue({
-        thumbnailKey: null,
+      vi.mocked(db.subject.findUnique).mockResolvedValue({
+        thumbnail: null,
       } as any)
-      vi.mocked(db.catalogSubject.update).mockResolvedValue({} as any)
+      vi.mocked(db.subject.update).mockResolvedValue({} as any)
 
       const result = await deleteCatalogThumbnail("subject", "subj-1")
 
       expect(result).toEqual({ status: "success" })
       expect(deleteCatalogImage).not.toHaveBeenCalled()
       // Still clears DB field
-      expect(db.catalogSubject.update).toHaveBeenCalledWith({
+      expect(db.subject.update).toHaveBeenCalledWith({
         where: { id: "subj-1" },
-        data: { thumbnailKey: null },
+        data: { thumbnail: null },
       })
     })
 
@@ -375,13 +375,13 @@ describe("Image Actions", () => {
         status: "error",
         error: "Unauthorized",
       })
-      expect(db.catalogSubject.findUnique).not.toHaveBeenCalled()
+      expect(db.subject.findUnique).not.toHaveBeenCalled()
     })
 
     it("handles S3 delete failure gracefully — returns error", async () => {
       mockDeveloperSession()
-      vi.mocked(db.catalogSubject.findUnique).mockResolvedValue({
-        thumbnailKey: "catalog/subjects/subj-1/thumbnail",
+      vi.mocked(db.subject.findUnique).mockResolvedValue({
+        thumbnail: "catalog/subjects/subj-1/thumbnail",
       } as any)
       vi.mocked(deleteCatalogImage).mockRejectedValue(
         new Error("S3 delete failed")
@@ -397,7 +397,7 @@ describe("Image Actions", () => {
 
     it("returns error when entity findUnique fails", async () => {
       mockDeveloperSession()
-      vi.mocked(db.catalogLesson.findUnique).mockRejectedValue(
+      vi.mocked(db.lesson.findUnique).mockRejectedValue(
         new Error("Record not found")
       )
 

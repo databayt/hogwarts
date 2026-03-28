@@ -17,17 +17,17 @@ import type { getDictionary } from "@/components/internationalization/dictionari
 import { Shell as PageContainer } from "@/components/table/shell"
 import type { SupportedLanguage } from "@/components/translation/types"
 
-import type { CatalogBookRow } from "./book-columns"
-import { CatalogBookTable } from "./book-table"
+import type { BookRow } from "./book-columns"
+import { BookTable } from "./book-table"
 
 interface Props {
   dictionary: Awaited<ReturnType<typeof getDictionary>>
   lang: Locale
 }
 
-export async function CatalogBookContent({ lang }: Props) {
+export async function BookContent({ lang }: Props) {
   const [books, approvedCount, pendingCount, schoolsUsing] = await Promise.all([
-    db.catalogBook.findMany({
+    db.book.findMany({
       orderBy: { createdAt: "desc" },
       select: {
         id: true,
@@ -44,15 +44,15 @@ export async function CatalogBookContent({ lang }: Props) {
         lang: true,
       },
     }),
-    db.catalogBook.count({ where: { approvalStatus: "APPROVED" } }),
-    db.catalogBook.count({ where: { approvalStatus: "PENDING" } }),
-    db.schoolBookSelection.groupBy({
+    db.book.count({ where: { approvalStatus: "APPROVED" } }),
+    db.book.count({ where: { approvalStatus: "PENDING" } }),
+    db.bookSelection.groupBy({
       by: ["schoolId"],
       _count: true,
     }),
   ])
 
-  const rows: CatalogBookRow[] = await Promise.all(
+  const rows: BookRow[] = await Promise.all(
     books.map(async ({ lang: contentLang, ...b }) => ({
       ...b,
       title: await getDisplayText(
@@ -125,7 +125,7 @@ export async function CatalogBookContent({ lang }: Props) {
         </Card>
       </div>
 
-      <CatalogBookTable data={rows} />
+      <BookTable data={rows} />
     </PageContainer>
   )
 }

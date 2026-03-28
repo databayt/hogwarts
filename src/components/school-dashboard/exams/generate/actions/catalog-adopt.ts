@@ -21,7 +21,7 @@ interface AdoptExamResult {
  * Adopt a catalog exam into the school.
  * Creates school Exam + GeneratedExam + mirrors questions into school QBank.
  */
-export async function adoptCatalogExam(input: {
+export async function adoptExam(input: {
   catalogExamId: string
   classId: string
   examDate: Date
@@ -42,7 +42,7 @@ export async function adoptCatalogExam(input: {
     const userId = session.user.id
 
     // 1. Verify catalog exam is accessible
-    const catalogExam = await db.catalogExam.findFirst({
+    const catalogExam = await db.exam.findFirst({
       where: {
         id: input.catalogExamId,
         status: "PUBLISHED",
@@ -52,7 +52,7 @@ export async function adoptCatalogExam(input: {
       include: {
         examQuestions: {
           include: {
-            catalogQuestion: true,
+            question: true,
           },
           orderBy: { order: "asc" },
         },
@@ -68,7 +68,7 @@ export async function adoptCatalogExam(input: {
     }
 
     // 2. Verify school has selected this catalog subject
-    const subjectSelection = await db.schoolSubjectSelection.findFirst({
+    const subjectSelection = await db.subjectSelection.findFirst({
       where: {
         schoolId,
         catalogSubjectId: catalogExam.subjectId,
@@ -109,7 +109,7 @@ export async function adoptCatalogExam(input: {
     // 5. Create everything in a transaction
     const result = await db.$transaction(async (tx) => {
       // Create school Exam with catalog bridge FKs
-      const exam = await tx.exam.create({
+      const exam = await tx.schoolExam.create({
         data: {
           schoolId,
           title: catalogExam.title,
@@ -135,15 +135,15 @@ export async function adoptCatalogExam(input: {
         data: {
           schoolId,
           examId: exam.id,
-          totalQuestions: catalogExam.examQuestions.length,
+          totalQuestions: catalogExam.examQuestions?.length ?? 0,
           generatedBy: userId,
           generationNotes: `Adopted from catalog exam: ${catalogExam.title}`,
         },
       })
 
-      // For each CatalogExamQuestion, find/create school QuestionBank mirror
-      for (const ceq of catalogExam.examQuestions) {
-        const cq = ceq.catalogQuestion
+      // For each ExamQuestion, find/create school QuestionBank mirror
+      for (const ceq of catalogExam.examQuestions ?? []) {
+        const cq = ceq.question
 
         // Check if already adopted
         let schoolQuestion = await tx.questionBank.findFirst({
@@ -182,7 +182,7 @@ export async function adoptCatalogExam(input: {
           })
 
           // Increment catalog question usage
-          await tx.catalogQuestion.update({
+          await tx.question.update({
             where: { id: cq.id },
             data: { usageCount: { increment: 1 } },
           })
@@ -200,8 +200,8 @@ export async function adoptCatalogExam(input: {
         })
       }
 
-      // Increment CatalogExam.usageCount
-      await tx.catalogExam.update({
+      // Increment Exam.usageCount
+      await tx.exam.update({
         where: { id: catalogExam.id },
         data: { usageCount: { increment: 1 } },
       })
@@ -234,7 +234,7 @@ interface AdoptTemplateResult {
   data?: { templateId: string }
 }
 
-export async function adoptCatalogExamTemplate(
+export async function adoptExamTemplate(
   catalogExamTemplateId: string,
   subjectId: string
 ): Promise<AdoptTemplateResult> {
@@ -252,7 +252,7 @@ export async function adoptCatalogExamTemplate(
     const userId = session.user.id
 
     // Verify template is accessible
-    const catalogTemplate = await db.catalogExamTemplate.findFirst({
+    const catalogTemplate = await db.examTemplate.findFirst({
       where: {
         id: catalogExamTemplateId,
         status: "PUBLISHED",
@@ -270,7 +270,7 @@ export async function adoptCatalogExamTemplate(
     }
 
     // Check not already adopted
-    const existing = await db.examTemplate.findFirst({
+    const existing = await db.schoolExamTemplate.findFirst({
       where: { schoolId, catalogExamTemplateId },
     })
     if (existing) {
@@ -282,7 +282,7 @@ export async function adoptCatalogExamTemplate(
     }
 
     // Verify subject belongs to school
-    const subjectSelection = await db.schoolSubjectSelection.findFirst({
+    const subjectSelection = await db.subjectSelection.findFirst({
       where: { catalogSubjectId: subjectId, schoolId, isActive: true },
     })
     if (!subjectSelection) {
@@ -294,7 +294,7 @@ export async function adoptCatalogExamTemplate(
     }
 
     const template = await db.$transaction(async (tx) => {
-      const newTemplate = await tx.examTemplate.create({
+      const newTemplate = await tx.schoolExamTemplate.create({
         data: {
           schoolId,
           name: catalogTemplate.name,
@@ -310,7 +310,7 @@ export async function adoptCatalogExamTemplate(
       })
 
       // Increment usage count
-      await tx.catalogExamTemplate.update({
+      await tx.examTemplate.update({
         where: { id: catalogExamTemplateId },
         data: { usageCount: { increment: 1 } },
       })

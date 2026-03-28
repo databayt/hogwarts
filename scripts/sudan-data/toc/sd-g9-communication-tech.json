@@ -1,0 +1,108 @@
+{
+  "subject": "communication-tech",
+  "subjectNameAr": "تكنولوجيا المعلومات والاتصالات",
+  "grade": 9,
+  "level": "middle",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "",
+  "chapters": [
+    {
+      "nameAr": "أساسيات البرمجة",
+      "name": "Programming Basics",
+      "slug": "programming-basics",
+      "sequenceOrder": 1,
+      "lessons": [
+        {
+          "nameAr": "ما هي البرمجة",
+          "name": "What is Programming",
+          "slug": "what-is-programming",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "أهمية البرمجة",
+          "name": "Importance of Programming",
+          "slug": "importance-of-programming",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "مراحل بناء البرنامج",
+          "name": "Stages of Building a Program",
+          "slug": "stages-building-program",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "مكونات لغات البرمجة الأساسية",
+          "name": "Components of Basic Programming Languages",
+          "slug": "programming-language-components",
+          "sequenceOrder": 4
+        }
+      ]
+    },
+    {
+      "nameAr": "مدخل إلى لغات البرمجة",
+      "name": "Introduction to Programming Languages",
+      "slug": "intro-programming-languages",
+      "sequenceOrder": 2,
+      "lessons": [
+        {
+          "nameAr": "أنواع لغات البرمجة",
+          "name": "Types of Programming Languages",
+          "slug": "types-programming-languages",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "المفاهيم المشتركة بين لغات البرمجة",
+          "name": "Common Concepts Between Programming Languages",
+          "slug": "common-programming-concepts",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "كيفية تنفيذ الحاسوب للبرامج",
+          "name": "How Computers Execute Programs",
+          "slug": "computer-program-execution",
+          "sequenceOrder": 3
+        }
+      ]
+    },
+    {
+      "nameAr": "الخوارزميات والمخططات الانسيابية",
+      "name": "Algorithms and Flowcharts",
+      "slug": "algorithms-and-flowcharts",
+      "sequenceOrder": 3,
+      "lessons": [
+        {
+          "nameAr": "المشكلات البرمجية القابلة للحل بواسطة الحاسوب",
+          "name": "Computational Problems Solvable by Computer",
+          "slug": "computational-problems",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "صياغة الحلول في خطوات متسلسلة",
+          "name": "Formulating Solutions in Sequential Steps",
+          "slug": "sequential-solutions",
+          "sequenceOrder": 2
+        }
+      ]
+    },
+    {
+      "nameAr": "مبادئ البرمجة بلغة سكراتش",
+      "name": "Programming Principles with Scratch",
+      "slug": "programming-with-scratch",
+      "sequenceOrder": 4,
+      "lessons": [
+        {
+          "nameAr": "التعرف على لغة سكراتش",
+          "name": "Introduction to Scratch",
+          "slug": "introduction-to-scratch",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "تطوير الألعاب بلغة سكراتش",
+          "name": "Game Development with Scratch",
+          "slug": "game-development-scratch",
+          "sequenceOrder": 2
+        }
+      ]
+    }
+  ]
+}

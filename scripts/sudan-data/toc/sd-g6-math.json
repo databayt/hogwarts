@@ -1,0 +1,17 @@
+{
+  "subject": "math",
+  "subjectNameAr": "الرياضيات",
+  "grade": 6,
+  "level": "elementary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "",
+  "chapters": [
+    {
+      "nameAr": "الرياضيات",
+      "name": "Mathematics",
+      "slug": "mathematics",
+      "sequenceOrder": 1,
+      "lessons": []
+    }
+  ]
+}

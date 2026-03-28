@@ -43,7 +43,7 @@ export interface MockExamResult {
  * Get a catalog exam with questions for mock taking.
  * Strips correct answers from the response for student use.
  */
-export async function getCatalogExamForTaking(
+export async function getExamForTaking(
   catalogExamId: string
 ): Promise<{ success: boolean; data?: MockExamData; error?: string }> {
   try {
@@ -52,7 +52,7 @@ export async function getCatalogExamForTaking(
       return { success: false, error: "Not authenticated" }
     }
 
-    const exam = await db.catalogExam.findFirst({
+    const exam = await db.exam.findFirst({
       where: {
         id: catalogExamId,
         status: "PUBLISHED",
@@ -62,7 +62,7 @@ export async function getCatalogExamForTaking(
         examQuestions: {
           orderBy: { order: "asc" },
           include: {
-            catalogQuestion: {
+            question: {
               select: {
                 id: true,
                 questionText: true,
@@ -81,14 +81,14 @@ export async function getCatalogExamForTaking(
     }
 
     // Increment usage count
-    await db.catalogExam.update({
+    await db.exam.update({
       where: { id: catalogExamId },
       data: { usageCount: { increment: 1 } },
     })
 
     // Strip correct answers from options
     const questions: MockQuestion[] = exam.examQuestions.map((eq) => {
-      const q = eq.catalogQuestion
+      const q = eq.question
       let options: { text: string; id: string }[] = []
 
       if (Array.isArray(q.options)) {
@@ -149,7 +149,7 @@ export async function submitMockExam(input: {
       return { success: false, error: "Not authenticated" }
     }
 
-    const exam = await db.catalogExam.findFirst({
+    const exam = await db.exam.findFirst({
       where: {
         id: input.catalogExamId,
         status: "PUBLISHED",
@@ -158,7 +158,7 @@ export async function submitMockExam(input: {
         examQuestions: {
           orderBy: { order: "asc" },
           include: {
-            catalogQuestion: {
+            question: {
               select: {
                 id: true,
                 questionText: true,
@@ -183,7 +183,7 @@ export async function submitMockExam(input: {
 
     const questionsWithAnswers: MockQuestionWithAnswer[] =
       exam.examQuestions.map((eq) => {
-        const q = eq.catalogQuestion
+        const q = eq.question
         const points = Number(q.points || eq.points)
         totalPoints += points
 

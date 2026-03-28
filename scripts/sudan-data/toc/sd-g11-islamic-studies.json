@@ -1,0 +1,45 @@
+{
+  "subject": "islamic-studies",
+  "subjectNameAr": "الدراسات الإسلامية",
+  "grade": 11,
+  "level": "secondary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "",
+  "chapters": [
+    {
+      "nameAr": "الوحدة الأولى: العقيدة الإسلامية",
+      "name": "Unit 1: Islamic Creed",
+      "slug": "islamic-creed",
+      "sequenceOrder": 1,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الثانية: العبادات",
+      "name": "Unit 2: Worship",
+      "slug": "worship",
+      "sequenceOrder": 2,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الثالثة: المعاملات",
+      "name": "Unit 3: Transactions",
+      "slug": "transactions",
+      "sequenceOrder": 3,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الرابعة: السيرة النبوية",
+      "name": "Unit 4: Prophetic Biography",
+      "slug": "prophetic-biography",
+      "sequenceOrder": 4,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الخامسة: الأخلاق والآداب الإسلامية",
+      "name": "Unit 5: Islamic Ethics and Manners",
+      "slug": "islamic-ethics-manners",
+      "sequenceOrder": 5,
+      "lessons": []
+    }
+  ]
+}

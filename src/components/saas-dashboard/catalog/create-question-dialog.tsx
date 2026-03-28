@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 
-import { createCatalogQuestion } from "./question-actions"
+import { createQuestion } from "./question-actions"
 
 const QUESTION_TYPES = [
   { value: "MULTIPLE_CHOICE", label: "Multiple Choice" },
@@ -120,7 +120,7 @@ export function CreateQuestionDialog() {
           formData.append("tags", tag)
         }
 
-        const result = await createCatalogQuestion(formData)
+        const result = await createQuestion(formData)
         if (result.success) {
           toast.success("Question created")
           setOpen(false)

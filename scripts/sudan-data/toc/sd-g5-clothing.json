@@ -1,0 +1,17 @@
+{
+  "subject": "clothing",
+  "subjectNameAr": "الملبسنا",
+  "grade": 5,
+  "level": "elementary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "الطبعة الأولى 2021م",
+  "chapters": [
+    {
+      "nameAr": "الملبسنا",
+      "name": "Our Clothing",
+      "slug": "our-clothing",
+      "sequenceOrder": 1,
+      "lessons": []
+    }
+  ]
+}

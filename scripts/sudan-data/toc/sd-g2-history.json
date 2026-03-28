@@ -1,0 +1,192 @@
+{
+  "subject": "history",
+  "subjectNameAr": "التاريخ",
+  "grade": 2,
+  "level": "elementary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "الطبعة الأولى 2022م",
+  "chapters": [
+    {
+      "nameAr": "من تاريخ السودان",
+      "name": "From the History of Sudan",
+      "slug": "history-of-sudan",
+      "sequenceOrder": 1,
+      "lessons": [
+        {
+          "nameAr": "هجرة العرب إلى السودان",
+          "name": "Arab Migration to Sudan",
+          "slug": "arab-migration-to-sudan",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "المعاهدات بين العرب المسلمين والنوبة والبجا",
+          "name": "Treaties Between Muslim Arabs, Nubians and Beja",
+          "slug": "treaties-arabs-nubians-beja",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "نتائج دخول العرب المسلمين إلى السودان",
+          "name": "Results of Muslim Arab Entry to Sudan",
+          "slug": "results-arab-entry-sudan",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "السلطنات الإسلامية في السودان (1) سلطنة الفونج",
+          "name": "Islamic Sultanates in Sudan (1) Funj Sultanate",
+          "slug": "funj-sultanate",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "السلطنات الإسلامية في السودان (2) مشيخة العبدلاب",
+          "name": "Islamic Sultanates in Sudan (2) Abdallabi Sheikhdom",
+          "slug": "abdallabi-sheikhdom",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "السلطنات الإسلامية في السودان (3) مملكة تقلي",
+          "name": "Islamic Sultanates in Sudan (3) Taqali Kingdom",
+          "slug": "taqali-kingdom",
+          "sequenceOrder": 6
+        },
+        {
+          "nameAr": "السلطنات الإسلامية في السودان (4) سلطنة الفور",
+          "name": "Islamic Sultanates in Sudan (4) Fur Sultanate",
+          "slug": "fur-sultanate",
+          "sequenceOrder": 7
+        },
+        {
+          "nameAr": "الحكم التركي المصري للسودان (1) النظام الإداري",
+          "name": "Turco-Egyptian Rule of Sudan (1) Administrative System",
+          "slug": "turco-egyptian-admin",
+          "sequenceOrder": 8
+        },
+        {
+          "nameAr": "الحكم التركي المصري للسودان (2) استغلال موارد السودان",
+          "name": "Turco-Egyptian Rule of Sudan (2) Exploitation of Resources",
+          "slug": "turco-egyptian-resources",
+          "sequenceOrder": 9
+        },
+        {
+          "nameAr": "الحكم التركي المصري للسودان (3) مقاومة السودانيين",
+          "name": "Turco-Egyptian Rule of Sudan (3) Sudanese Resistance",
+          "slug": "turco-egyptian-resistance",
+          "sequenceOrder": 10
+        }
+      ]
+    },
+    {
+      "nameAr": "تطور الدولة الإسلامية في العهد الأموي",
+      "name": "Development of the Islamic State in the Umayyad Era",
+      "slug": "umayyad-era",
+      "sequenceOrder": 2,
+      "lessons": [
+        {
+          "nameAr": "تأسيس الدولة الأموية",
+          "name": "Founding of the Umayyad State",
+          "slug": "founding-umayyad-state",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "خلفاء الدولة الأموية",
+          "name": "Umayyad Caliphs",
+          "slug": "umayyad-caliphs",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الفتوحات الإسلامية في عهد الدولة الأموية",
+          "name": "Islamic Conquests in the Umayyad Era",
+          "slug": "umayyad-conquests",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "أهم إنجازات الدولة الأموية",
+          "name": "Key Achievements of the Umayyad State",
+          "slug": "umayyad-achievements",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "ضعف الدولة الأموية وسقوطها",
+          "name": "Decline and Fall of the Umayyad State",
+          "slug": "umayyad-decline-fall",
+          "sequenceOrder": 5
+        }
+      ]
+    },
+    {
+      "nameAr": "من تاريخ إفريقيا",
+      "name": "From the History of Africa",
+      "slug": "history-of-africa",
+      "sequenceOrder": 3,
+      "lessons": [
+        {
+          "nameAr": "انتشار الإسلام في إفريقيا",
+          "name": "Spread of Islam in Africa",
+          "slug": "islam-spread-africa",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "وسائل انتشار الإسلام",
+          "name": "Means of Islamic Spread",
+          "slug": "means-islamic-spread",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "مظاهر الحضارة الإسلامية في الممالك الإفريقية",
+          "name": "Islamic Civilization in African Kingdoms",
+          "slug": "islamic-civilization-african-kingdoms",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "الاستعمار الأوربي لإفريقيا",
+          "name": "European Colonization of Africa",
+          "slug": "european-colonization-africa",
+          "sequenceOrder": 4
+        }
+      ]
+    },
+    {
+      "nameAr": "من تاريخ أوربا",
+      "name": "From the History of Europe",
+      "slug": "history-of-europe",
+      "sequenceOrder": 4,
+      "lessons": [
+        {
+          "nameAr": "عصر النهضة الأوربية",
+          "name": "European Renaissance",
+          "slug": "european-renaissance",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "النهضة الأدبية الأوربية",
+          "name": "European Literary Renaissance",
+          "slug": "european-literary-renaissance",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "النهضة الفنية الأوربية",
+          "name": "European Artistic Renaissance",
+          "slug": "european-artistic-renaissance",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "حركة الكشوف الجغرافية",
+          "name": "Age of Discovery",
+          "slug": "age-of-discovery",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "الثورة الصناعية",
+          "name": "Industrial Revolution",
+          "slug": "industrial-revolution",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "أسباب قيام الثورة الفرنسية ونتائجها",
+          "name": "Causes and Results of the French Revolution",
+          "slug": "french-revolution",
+          "sequenceOrder": 6
+        }
+      ]
+    }
+  ]
+}

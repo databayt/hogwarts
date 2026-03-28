@@ -42,7 +42,7 @@ export async function submitAnswer(
     const validated = submitAnswerSchema.parse(formData)
 
     // Verify exam exists and belongs to school
-    const exam = await db.exam.findFirst({
+    const exam = await db.schoolExam.findFirst({
       where: {
         id: validated.examId,
         schoolId,

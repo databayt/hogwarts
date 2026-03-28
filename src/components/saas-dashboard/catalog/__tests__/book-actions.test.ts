@@ -7,11 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 
-import {
-  createCatalogBook,
-  deleteCatalogBook,
-  updateCatalogBook,
-} from "../book-actions"
+import { createBook, deleteBook, updateBook } from "../book-actions"
 
 // ============================================================================
 // Mocks
@@ -77,21 +73,21 @@ describe("Book Actions", () => {
   })
 
   // ==========================================================================
-  // createCatalogBook
+  // createBook
   // ==========================================================================
 
-  describe("createCatalogBook", () => {
+  describe("createBook", () => {
     it("creates book with valid FormData", async () => {
       mockDeveloperSession()
-      vi.mocked(db.catalogBook.create).mockResolvedValue({
+      vi.mocked(db.book.create).mockResolvedValue({
         id: "book-1",
       } as any)
 
       const formData = makeBookFormData()
-      const result = await createCatalogBook(formData)
+      const result = await createBook(formData)
 
       expect(result).toEqual({ success: true, data: { id: "book-1" } })
-      expect(db.catalogBook.create).toHaveBeenCalledWith({
+      expect(db.book.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           title: "Test Book",
           slug: "test-book",
@@ -107,15 +103,15 @@ describe("Book Actions", () => {
 
     it("strips client-sent approvalStatus — always sets APPROVED", async () => {
       mockDeveloperSession()
-      vi.mocked(db.catalogBook.create).mockResolvedValue({
+      vi.mocked(db.book.create).mockResolvedValue({
         id: "book-2",
       } as any)
 
       const formData = makeBookFormData({ approvalStatus: "PENDING" })
-      const result = await createCatalogBook(formData)
+      const result = await createBook(formData)
 
       expect(result.success).toBe(true)
-      expect(db.catalogBook.create).toHaveBeenCalledWith({
+      expect(db.book.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           approvalStatus: "APPROVED",
           status: "PUBLISHED",
@@ -127,13 +123,13 @@ describe("Book Actions", () => {
       mockNonDeveloperSession("ADMIN")
 
       const formData = makeBookFormData()
-      const result = await createCatalogBook(formData)
+      const result = await createBook(formData)
 
       expect(result).toEqual({
         success: false,
         error: "Unauthorized: DEVELOPER role required",
       })
-      expect(db.catalogBook.create).not.toHaveBeenCalled()
+      expect(db.book.create).not.toHaveBeenCalled()
     })
 
     it("returns error on Zod validation failure", async () => {
@@ -142,21 +138,21 @@ describe("Book Actions", () => {
       // Missing required fields
       const formData = new FormData()
       formData.set("title", "")
-      const result = await createCatalogBook(formData)
+      const result = await createBook(formData)
 
       expect(result.success).toBe(false)
       expect(result.error).toBeDefined()
-      expect(db.catalogBook.create).not.toHaveBeenCalled()
+      expect(db.book.create).not.toHaveBeenCalled()
     })
 
     it("returns error on database failure", async () => {
       mockDeveloperSession()
-      vi.mocked(db.catalogBook.create).mockRejectedValue(
+      vi.mocked(db.book.create).mockRejectedValue(
         new Error("Unique constraint violation")
       )
 
       const formData = makeBookFormData()
-      const result = await createCatalogBook(formData)
+      const result = await createBook(formData)
 
       expect(result).toEqual({
         success: false,
@@ -166,24 +162,24 @@ describe("Book Actions", () => {
   })
 
   // ==========================================================================
-  // updateCatalogBook
+  // updateBook
   // ==========================================================================
 
-  describe("updateCatalogBook", () => {
+  describe("updateBook", () => {
     it("updates book by id", async () => {
       mockDeveloperSession()
-      vi.mocked(db.catalogBook.findUnique).mockResolvedValue({
+      vi.mocked(db.book.findUnique).mockResolvedValue({
         id: "book-1",
       } as any)
-      vi.mocked(db.catalogBook.update).mockResolvedValue({
+      vi.mocked(db.book.update).mockResolvedValue({
         id: "book-1",
       } as any)
 
       const formData = makeBookFormData({ title: "Updated Title" })
-      const result = await updateCatalogBook("book-1", formData)
+      const result = await updateBook("book-1", formData)
 
       expect(result).toEqual({ success: true, data: { id: "book-1" } })
-      expect(db.catalogBook.update).toHaveBeenCalledWith({
+      expect(db.book.update).toHaveBeenCalledWith({
         where: { id: "book-1" },
         data: expect.objectContaining({ title: "Updated Title" }),
       })
@@ -193,48 +189,48 @@ describe("Book Actions", () => {
 
     it("returns error for non-existent id", async () => {
       mockDeveloperSession()
-      vi.mocked(db.catalogBook.findUnique).mockResolvedValue(null)
+      vi.mocked(db.book.findUnique).mockResolvedValue(null)
 
       const formData = makeBookFormData()
-      const result = await updateCatalogBook("nonexistent", formData)
+      const result = await updateBook("nonexistent", formData)
 
       expect(result).toEqual({
         success: false,
         error: "Catalog book not found",
       })
-      expect(db.catalogBook.update).not.toHaveBeenCalled()
+      expect(db.book.update).not.toHaveBeenCalled()
     })
 
     it("requires DEVELOPER role", async () => {
       mockNonDeveloperSession("TEACHER")
 
       const formData = makeBookFormData()
-      const result = await updateCatalogBook("book-1", formData)
+      const result = await updateBook("book-1", formData)
 
       expect(result).toEqual({
         success: false,
         error: "Unauthorized: DEVELOPER role required",
       })
-      expect(db.catalogBook.findUnique).not.toHaveBeenCalled()
+      expect(db.book.findUnique).not.toHaveBeenCalled()
     })
   })
 
   // ==========================================================================
-  // deleteCatalogBook
+  // deleteBook
   // ==========================================================================
 
-  describe("deleteCatalogBook", () => {
+  describe("deleteBook", () => {
     it("deletes book by id", async () => {
       mockDeveloperSession()
-      vi.mocked(db.catalogBook.findUnique).mockResolvedValue({
+      vi.mocked(db.book.findUnique).mockResolvedValue({
         id: "book-1",
       } as any)
-      vi.mocked(db.catalogBook.delete).mockResolvedValue({} as any)
+      vi.mocked(db.book.delete).mockResolvedValue({} as any)
 
-      const result = await deleteCatalogBook("book-1")
+      const result = await deleteBook("book-1")
 
       expect(result).toEqual({ success: true })
-      expect(db.catalogBook.delete).toHaveBeenCalledWith({
+      expect(db.book.delete).toHaveBeenCalledWith({
         where: { id: "book-1" },
       })
       expect(revalidatePath).toHaveBeenCalledWith("/catalog/books")
@@ -242,27 +238,27 @@ describe("Book Actions", () => {
 
     it("returns error for non-existent id", async () => {
       mockDeveloperSession()
-      vi.mocked(db.catalogBook.findUnique).mockResolvedValue(null)
+      vi.mocked(db.book.findUnique).mockResolvedValue(null)
 
-      const result = await deleteCatalogBook("nonexistent")
+      const result = await deleteBook("nonexistent")
 
       expect(result).toEqual({
         success: false,
         error: "Catalog book not found",
       })
-      expect(db.catalogBook.delete).not.toHaveBeenCalled()
+      expect(db.book.delete).not.toHaveBeenCalled()
     })
 
     it("requires DEVELOPER role", async () => {
       mockNonDeveloperSession("STUDENT")
 
-      const result = await deleteCatalogBook("book-1")
+      const result = await deleteBook("book-1")
 
       expect(result).toEqual({
         success: false,
         error: "Unauthorized: DEVELOPER role required",
       })
-      expect(db.catalogBook.findUnique).not.toHaveBeenCalled()
+      expect(db.book.findUnique).not.toHaveBeenCalled()
     })
   })
 })

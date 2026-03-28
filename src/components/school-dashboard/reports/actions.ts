@@ -76,7 +76,7 @@ export async function generateReportCards(input: {
       ...(input.classId ? { classId: input.classId } : {}),
     }
 
-    const exams = await db.exam.findMany({
+    const exams = await db.schoolExam.findMany({
       where: examWhere,
       select: { id: true, classId: true, subjectId: true },
     })

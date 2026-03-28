@@ -15,9 +15,9 @@ type ApiResponse = {
 
 /**
  * Upload a video for a catalog lesson.
- * Creates a LessonVideo record with PENDING approval status.
+ * Creates a Video record with PENDING approval status.
  */
-export async function uploadLessonVideo(data: {
+export async function uploadVideo(data: {
   catalogLessonId: string
   title: string
   videoUrl: string
@@ -42,7 +42,7 @@ export async function uploadLessonVideo(data: {
 
   try {
     // Verify the lesson exists
-    const lesson = await db.catalogLesson.findUnique({
+    const lesson = await db.lesson.findUnique({
       where: { id: data.catalogLessonId },
       select: {
         id: true,
@@ -60,7 +60,7 @@ export async function uploadLessonVideo(data: {
       return { status: "error", message: "Lesson not found" }
     }
 
-    await db.lessonVideo.create({
+    await db.video.create({
       data: {
         catalogLessonId: data.catalogLessonId,
         userId: session.user.id,
@@ -109,7 +109,7 @@ export async function updateVideoApproval(
 
   try {
     // Verify video belongs to current school via lesson→chapter→course chain
-    const video = await db.lessonVideo.findFirst({
+    const video = await db.video.findFirst({
       where: {
         id: videoId,
         schoolId,
@@ -120,7 +120,7 @@ export async function updateVideoApproval(
       return { status: "error", message: "Video not found" }
     }
 
-    await db.lessonVideo.update({
+    await db.video.update({
       where: { id: videoId },
       data: { approvalStatus: status },
     })

@@ -1,0 +1,38 @@
+{
+  "subject": "literature",
+  "subjectNameAr": "المطالعة والأدب",
+  "grade": 11,
+  "level": "secondary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "",
+  "chapters": [
+    {
+      "nameAr": "الأدب العباسي",
+      "name": "Abbasid Literature",
+      "slug": "abbasid-literature",
+      "sequenceOrder": 1,
+      "lessons": []
+    },
+    {
+      "nameAr": "الأدب في العصرين المملوكي والعثماني",
+      "name": "Literature in the Mamluk and Ottoman Eras",
+      "slug": "mamluk-ottoman-literature",
+      "sequenceOrder": 2,
+      "lessons": []
+    },
+    {
+      "nameAr": "الأدب الأندلسي",
+      "name": "Andalusian Literature",
+      "slug": "andalusian-literature",
+      "sequenceOrder": 3,
+      "lessons": []
+    },
+    {
+      "nameAr": "الأدب الحديث",
+      "name": "Modern Literature",
+      "slug": "modern-literature",
+      "sequenceOrder": 4,
+      "lessons": []
+    }
+  ]
+}

@@ -6,7 +6,7 @@ import { useEffect } from "react"
 
 import { Button } from "@/components/ui/button"
 
-export default function CatalogSubjectError({
+export default function SubjectError({
   error,
   reset,
 }: {

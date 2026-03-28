@@ -21,7 +21,7 @@ async function main() {
     console.log("=====================================\n")
 
     // Find all Sudanese catalog subjects
-    const sdSubjects = await prisma.catalogSubject.findMany({
+    const sdSubjects = await prisma.subject.findMany({
       where: { country: "SD", curriculum: "national" },
       select: { id: true, name: true, slug: true },
     })
@@ -40,7 +40,7 @@ async function main() {
     const subjectIds = sdSubjects.map((s) => s.id)
 
     // 1. Delete SchoolSubjectSelection records pointing to these subjects
-    const deletedSelections = await prisma.schoolSubjectSelection.deleteMany({
+    const deletedSelections = await prisma.subjectSelection.deleteMany({
       where: { catalogSubjectId: { in: subjectIds } },
     })
     console.log(
@@ -48,25 +48,25 @@ async function main() {
     )
 
     // 2. Delete CatalogLessons (via chapters)
-    const chapters = await prisma.catalogChapter.findMany({
+    const chapters = await prisma.chapter.findMany({
       where: { subjectId: { in: subjectIds } },
       select: { id: true },
     })
     const chapterIds = chapters.map((c) => c.id)
 
-    const deletedLessons = await prisma.catalogLesson.deleteMany({
+    const deletedLessons = await prisma.lesson.deleteMany({
       where: { chapterId: { in: chapterIds } },
     })
     console.log(`Deleted ${deletedLessons.count} CatalogLesson records`)
 
     // 3. Delete CatalogChapters
-    const deletedChapters = await prisma.catalogChapter.deleteMany({
+    const deletedChapters = await prisma.chapter.deleteMany({
       where: { subjectId: { in: subjectIds } },
     })
     console.log(`Deleted ${deletedChapters.count} CatalogChapter records`)
 
     // 4. Delete CatalogSubjects
-    const deletedSubjects = await prisma.catalogSubject.deleteMany({
+    const deletedSubjects = await prisma.subject.deleteMany({
       where: { id: { in: subjectIds } },
     })
     console.log(`Deleted ${deletedSubjects.count} CatalogSubject records`)

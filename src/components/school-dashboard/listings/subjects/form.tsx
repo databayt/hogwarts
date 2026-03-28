@@ -16,8 +16,8 @@ import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import {
   createSubject,
-  getCatalogSubjectsForPicker,
   getSubject,
+  getSubjectsForPicker,
   updateSubject,
 } from "@/components/school-dashboard/listings/subjects/actions"
 import { subjectCreateSchema } from "@/components/school-dashboard/listings/subjects/validation"
@@ -66,7 +66,7 @@ export function SubjectCreateForm({ onSuccess }: SubjectCreateFormProps) {
   // Load catalog subjects for the picker
   useEffect(() => {
     const loadCatalog = async () => {
-      const res = await getCatalogSubjectsForPicker()
+      const res = await getSubjectsForPicker()
       if (res.success && res.data) {
         setCatalogOptions(res.data)
       }

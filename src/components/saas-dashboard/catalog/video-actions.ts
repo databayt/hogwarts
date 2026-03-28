@@ -60,7 +60,7 @@ function extractExternalId(url: string): string | null {
 // CRUD
 // ============================================================================
 
-export async function createLessonVideo(input: {
+export async function createVideo(input: {
   catalogLessonId: string
   title: string
   description?: string
@@ -74,7 +74,7 @@ export async function createLessonVideo(input: {
   const validated = lessonVideoSchema.parse(input)
   const provider = detectProvider(validated.videoUrl)
 
-  const video = await db.lessonVideo.create({
+  const video = await db.video.create({
     data: {
       catalogLessonId: validated.catalogLessonId,
       userId: session.user.id,
@@ -98,10 +98,10 @@ export async function createLessonVideo(input: {
   return { success: true, video }
 }
 
-export async function getLessonVideos(catalogLessonId: string) {
+export async function getVideos(catalogLessonId: string) {
   await requireDeveloper()
 
-  const videos = await db.lessonVideo.findMany({
+  const videos = await db.video.findMany({
     where: { catalogLessonId },
     orderBy: [{ isFeatured: "desc" }, { createdAt: "desc" }],
     select: {
@@ -121,10 +121,10 @@ export async function getLessonVideos(catalogLessonId: string) {
   return videos
 }
 
-export async function deleteLessonVideo(videoId: string) {
+export async function deleteVideo(videoId: string) {
   await requireDeveloper()
 
-  const video = await db.lessonVideo.findUniqueOrThrow({
+  const video = await db.video.findUniqueOrThrow({
     where: { id: videoId },
     select: { storageKey: true, catalogLessonId: true },
   })
@@ -148,21 +148,21 @@ export async function deleteLessonVideo(videoId: string) {
     }
   }
 
-  await db.lessonVideo.delete({ where: { id: videoId } })
+  await db.video.delete({ where: { id: videoId } })
 
   revalidatePath("/catalog")
   return { success: true }
 }
 
-export async function toggleLessonVideoFeatured(videoId: string) {
+export async function toggleVideoFeatured(videoId: string) {
   await requireDeveloper()
 
-  const video = await db.lessonVideo.findUniqueOrThrow({
+  const video = await db.video.findUniqueOrThrow({
     where: { id: videoId },
     select: { isFeatured: true },
   })
 
-  const updated = await db.lessonVideo.update({
+  const updated = await db.video.update({
     where: { id: videoId },
     data: { isFeatured: !video.isFeatured },
   })

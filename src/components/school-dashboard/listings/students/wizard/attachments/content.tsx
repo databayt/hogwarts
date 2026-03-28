@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useRef, useState } from "react"
+import { useCallback, useRef, useState } from "react"
 import { useParams } from "next/navigation"
 
 import { FormHeading, FormLayout } from "@/components/form"
@@ -12,13 +12,15 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { useStudentWizard } from "../use-student-wizard"
 import { getStudentAttachments } from "./actions"
+import { extractStudentAutoFill } from "./extract-action"
+import type { StudentAutoFillResult } from "./extract-action"
 import { AttachmentsForm } from "./form"
 
 export default function AttachmentsContent() {
   const params = useParams()
   const studentId = params.id as string
   const formRef = useRef<WizardFormRef>(null)
-  const { isLoading } = useStudentWizard()
+  const { isLoading, updateData } = useStudentWizard()
   const [isValid, setIsValid] = useState(true)
   const [initialData, setInitialData] = useState<Record<string, string>>()
   const [loaded, setLoaded] = useState(false)
@@ -36,6 +38,24 @@ export default function AttachmentsContent() {
       }
     })
   }
+
+  // AI auto-fill: fire-and-forget extraction on document upload
+  const handleDocumentUploaded = useCallback(
+    (slotKey: string, fileUrl: string) => {
+      extractStudentAutoFill(fileUrl, slotKey).then((result) => {
+        if (result.success && result.data) {
+          const d = result.data as StudentAutoFillResult
+          // Merge into wizard data for downstream steps to auto-fill from
+          if (d.personal || d.contact || d.previousEducation) {
+            updateData?.({
+              autoFillResults: d,
+            } as Record<string, unknown>)
+          }
+        }
+      })
+    },
+    [updateData]
+  )
 
   return (
     <WizardStep
@@ -57,6 +77,7 @@ export default function AttachmentsContent() {
           studentId={studentId}
           initialData={initialData}
           onValidChange={setIsValid}
+          onDocumentUploaded={handleDocumentUploaded}
           dictionary={t}
         />
       </FormLayout>

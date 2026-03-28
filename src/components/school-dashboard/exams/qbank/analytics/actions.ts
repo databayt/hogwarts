@@ -213,7 +213,7 @@ export async function analyzeExamQuestions(examId: string) {
 
   try {
     // Get exam with questions
-    const exam = await db.exam.findFirst({
+    const exam = await db.schoolExam.findFirst({
       where: { id: examId, schoolId },
       include: {
         generatedExam: {

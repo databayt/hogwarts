@@ -4,11 +4,11 @@
 /**
  * Catalog Videos Seed
  *
- * Dynamically creates 2 LessonVideo records per catalog subject
+ * Dynamically creates 2 Video records per catalog subject
  * (one for each of the first 2 lessons). Reuses S3 video files
  * uploaded under the old level-based slug format.
  *
- * Slug mapping: us-math-grade-3 -> elementary-math (S3 key)
+ * Slug mapping: us-g3-math -> elementary-math (S3 key)
  *
  * Usage:
  *   pnpm db:seed:single catalog-videos
@@ -18,14 +18,14 @@ import { PrismaClient } from "@prisma/client"
 
 /**
  * Derive the old level-based slug from a grade-specific slug.
- * us-{base}-grade-{N} -> {level}-{base}
+ * us-g{N}-{base} -> {level}-{base}
  */
 function deriveOldSlug(slug: string): string | null {
-  const match = slug.match(/^us-(.+)-grade-(\d+)$/)
+  const match = slug.match(/^us-g(\d+)-(.+)$/)
   if (!match) return null
 
-  const base = match[1]
-  const gradeNum = parseInt(match[2])
+  const gradeNum = parseInt(match[1])
+  const base = match[2]
 
   const level = gradeNum <= 6 ? "elementary" : gradeNum <= 9 ? "middle" : "high"
 
@@ -50,7 +50,7 @@ export async function seedCatalogVideos(prisma: PrismaClient): Promise<void> {
   }
 
   // Query all published ClickView subjects with their first 2 chapters' lessons
-  const subjects = await prisma.catalogSubject.findMany({
+  const subjects = await prisma.subject.findMany({
     where: { status: "PUBLISHED", curriculum: "us-k12" },
     select: {
       id: true,
@@ -98,7 +98,7 @@ export async function seedCatalogVideos(prisma: PrismaClient): Promise<void> {
       const videoUrl = `https://${cloudfrontDomain}/${s3Key}`
       const seedId = `seed-vid-${lesson.id}`
 
-      await prisma.lessonVideo.upsert({
+      await prisma.video.upsert({
         where: { id: seedId },
         create: {
           id: seedId,

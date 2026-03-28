@@ -11,10 +11,10 @@ import { requireDeveloper } from "@/components/saas-dashboard/lib/operator-auth"
 import { catalogAssignmentSchema } from "./assignment-validation"
 
 // ============================================================================
-// CatalogAssignment CRUD
+// Assignment CRUD
 // ============================================================================
 
-export async function createCatalogAssignment(
+export async function createAssignment(
   data: FormData
 ): Promise<ActionResponse> {
   try {
@@ -30,7 +30,7 @@ export async function createCatalogAssignment(
       estimatedTime: raw.estimatedTime ? Number(raw.estimatedTime) : undefined,
     })
 
-    const assignment = await db.catalogAssignment.create({
+    const assignment = await db.assignment.create({
       data: {
         ...validated,
         // Server-controlled: SaaS admin = auto-approved
@@ -51,14 +51,14 @@ export async function createCatalogAssignment(
   }
 }
 
-export async function updateCatalogAssignment(
+export async function updateAssignment(
   id: string,
   data: FormData
 ): Promise<ActionResponse> {
   try {
     await requireDeveloper()
 
-    const existing = await db.catalogAssignment.findUnique({ where: { id } })
+    const existing = await db.assignment.findUnique({ where: { id } })
     if (!existing) {
       return { success: false, error: "Assignment not found" }
     }
@@ -76,7 +76,7 @@ export async function updateCatalogAssignment(
     // Strip server-controlled fields — prevent client from bypassing review
     const { approvalStatus, visibility, status, ...safeData } = validated
 
-    const assignment = await db.catalogAssignment.update({
+    const assignment = await db.assignment.update({
       where: { id },
       data: safeData,
     })
@@ -92,18 +92,16 @@ export async function updateCatalogAssignment(
   }
 }
 
-export async function deleteCatalogAssignment(
-  id: string
-): Promise<ActionResponse> {
+export async function deleteAssignment(id: string): Promise<ActionResponse> {
   try {
     await requireDeveloper()
 
-    const existing = await db.catalogAssignment.findUnique({ where: { id } })
+    const existing = await db.assignment.findUnique({ where: { id } })
     if (!existing) {
       return { success: false, error: "Assignment not found" }
     }
 
-    await db.catalogAssignment.delete({ where: { id } })
+    await db.assignment.delete({ where: { id } })
 
     revalidatePath("/catalog/assignments")
     return { success: true }

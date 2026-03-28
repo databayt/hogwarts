@@ -24,25 +24,25 @@ import { submitAssignment } from "./contribution-actions"
 // Types
 // ============================================================================
 
-interface CatalogLesson {
+interface Lesson {
   id: string
   name: string
 }
 
-interface CatalogChapter {
+interface Chapter {
   id: string
   name: string
-  lessons: CatalogLesson[]
+  lessons: Lesson[]
 }
 
-interface CatalogSubjectOption {
+interface SubjectOption {
   id: string
   name: string
-  chapters: CatalogChapter[]
+  chapters: Chapter[]
 }
 
 interface Props {
-  catalogSubjects: CatalogSubjectOption[]
+  catalogSubjects: SubjectOption[]
 }
 
 // ============================================================================

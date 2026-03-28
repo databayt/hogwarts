@@ -8,17 +8,17 @@ import { db } from "@/lib/db"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
-import { CatalogMaterialsContent } from "@/components/school-dashboard/listings/subjects/catalog-materials"
+import { MaterialsContent } from "@/components/school-dashboard/listings/subjects/catalog-materials"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string; slug: string }>
 }
 
-export default async function CatalogMaterialsPage({ params }: Props) {
+export default async function MaterialsPage({ params }: Props) {
   const { lang, subdomain, slug } = await params
   const dictionary = await getDictionary(lang)
 
-  const subject = await db.catalogSubject.findUnique({
+  const subject = await db.subject.findUnique({
     where: { slug },
     select: {
       id: true,
@@ -47,7 +47,7 @@ export default async function CatalogMaterialsPage({ params }: Props) {
     ch.lessons.map((l) => l.id)
   )
 
-  const materials = await db.catalogMaterial.findMany({
+  const materials = await db.material.findMany({
     where: {
       status: "PUBLISHED",
       OR: [
@@ -72,13 +72,13 @@ export default async function CatalogMaterialsPage({ params }: Props) {
       mimeType: true,
       tags: true,
       catalogLesson: {
-        select: { imageKey: true, thumbnailKey: true, color: true },
+        select: { thumbnail: true, color: true },
       },
       catalogChapter: {
-        select: { imageKey: true, thumbnailKey: true, color: true },
+        select: { thumbnail: true, color: true },
       },
       catalogSubject: {
-        select: { imageKey: true, thumbnailKey: true, color: true },
+        select: { thumbnail: true, color: true },
       },
     },
   })
@@ -91,7 +91,7 @@ export default async function CatalogMaterialsPage({ params }: Props) {
     for (const src of sources) {
       if (!src) continue
       if (!imageUrl) {
-        imageUrl = getCatalogImageUrl(src.thumbnailKey, src.imageKey, "sm")
+        imageUrl = getCatalogImageUrl(src.thumbnail, "sm")
       }
       if (!color && src.color) {
         color = src.color
@@ -116,7 +116,7 @@ export default async function CatalogMaterialsPage({ params }: Props) {
   return (
     <>
       <PageHeadingSetter title="" />
-      <CatalogMaterialsContent
+      <MaterialsContent
         subject={{
           name: subject.name,
           slug: subject.slug,

@@ -1,0 +1,53 @@
+{
+  "subject": "islamic-studies",
+  "subjectNameAr": "التربية الإسلامية",
+  "grade": 1,
+  "level": "elementary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "الطبعة الأولى 2020",
+  "sourceFile": "1slm.pdf (not islamic1.pdf which is Grade 7 Middle School)",
+  "chapters": [
+    {
+      "nameAr": "سور من القرآن الكريم",
+      "name": "Surahs from the Holy Quran",
+      "slug": "quran-surahs",
+      "sequenceOrder": 1,
+      "pages": "1-9"
+    },
+    {
+      "nameAr": "أحاديث من الحديث النبوي الشريف",
+      "name": "Prophetic Hadith",
+      "slug": "prophetic-hadith",
+      "sequenceOrder": 2,
+      "pages": "10-13"
+    },
+    {
+      "nameAr": "الإسلام والإيمان",
+      "name": "Islam and Faith",
+      "slug": "islam-and-faith",
+      "sequenceOrder": 3,
+      "pages": "14-16"
+    },
+    {
+      "nameAr": "الطهارة والوضوء",
+      "name": "Purification and Ablution",
+      "slug": "purification-and-ablution",
+      "sequenceOrder": 4,
+      "pages": "17-22"
+    },
+    {
+      "nameAr": "التهذيب والآداب",
+      "name": "Manners and Etiquette",
+      "slug": "manners-and-etiquette",
+      "sequenceOrder": 5,
+      "pages": "23-30"
+    },
+    {
+      "nameAr": "السيرة النبوية الشريفة",
+      "name": "Prophet's Biography",
+      "slug": "prophets-biography",
+      "sequenceOrder": 6,
+      "pages": "31-32"
+    }
+  ]
+}

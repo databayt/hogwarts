@@ -10,8 +10,7 @@ import {
 import { cn } from "@/lib/utils"
 
 interface CatalogImageProps {
-  thumbnailKey?: string | null
-  imageKey?: string | null
+  thumbnail?: string | null
   size?: CatalogImageSize
   alt: string
   width?: number
@@ -31,8 +30,7 @@ const SIZE_DIMENSIONS: Record<
 }
 
 export function CatalogImage({
-  thumbnailKey,
-  imageKey,
+  thumbnail,
   size = "original",
   alt,
   width,
@@ -40,8 +38,8 @@ export function CatalogImage({
   className,
   priority = false,
 }: CatalogImageProps) {
-  const src = getCatalogImageUrl(thumbnailKey, imageKey, size)
-  const srcSet = getCatalogImageSrcSet(thumbnailKey)
+  const src = getCatalogImageUrl(thumbnail, size)
+  const srcSet = getCatalogImageSrcSet(thumbnail)
   const dimensions = SIZE_DIMENSIONS[size]
 
   if (!src) {
@@ -61,8 +59,8 @@ export function CatalogImage({
     )
   }
 
-  // CDN images (thumbnailKey) are external URLs
-  if (thumbnailKey) {
+  // CDN images (thumbnail) are external URLs
+  if (thumbnail) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img

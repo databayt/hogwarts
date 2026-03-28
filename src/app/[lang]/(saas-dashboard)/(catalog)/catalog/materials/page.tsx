@@ -10,7 +10,7 @@ interface Props {
   params: Promise<{ lang: Locale }>
 }
 
-export default async function CatalogMaterialsPage({ params }: Props) {
+export default async function MaterialsPage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
 

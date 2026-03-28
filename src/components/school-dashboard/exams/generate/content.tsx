@@ -71,7 +71,7 @@ export default async function GenerateContent({
 
   if (schoolId) {
     const [templateRows, generatedRows] = await Promise.all([
-      db.examTemplate.findMany({
+      db.schoolExamTemplate.findMany({
         where: { schoolId, isActive: true },
         orderBy: { updatedAt: "desc" },
         take: 12,

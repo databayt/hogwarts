@@ -202,7 +202,7 @@ export async function getAnalyticsDashboard(): Promise<
       typeStats,
     ] = await Promise.all([
       db.questionBank.count({ where: { schoolId } }),
-      db.examTemplate.count({ where: { schoolId } }),
+      db.schoolExamTemplate.count({ where: { schoolId } }),
       db.generatedExam.count({ where: { schoolId } }),
       db.questionBank.findMany({
         where: { schoolId },

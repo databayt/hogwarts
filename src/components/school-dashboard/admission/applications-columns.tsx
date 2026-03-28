@@ -89,10 +89,14 @@ function ApplicationActionsCell({
         status,
       })
       if (result.success) {
-        SuccessToast("Status updated")
+        SuccessToast(t?.applicationDetail?.statusUpdated || "Status updated")
         router.refresh()
       } else {
-        ErrorToast(result.error || "Failed to update status")
+        ErrorToast(
+          result.error ||
+            t?.applicationDetail?.statusUpdateFailed ||
+            "Failed to update status"
+        )
       }
     })
   }
@@ -137,7 +141,7 @@ function ApplicationActionsCell({
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="h-8 w-8 p-0" disabled={isPending}>
           <Ellipsis className="h-4 w-4" />
-          <span className="sr-only">Open menu</span>
+          <span className="sr-only">{t?.toolbar?.openMenu || "Open menu"}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
@@ -296,7 +300,7 @@ export const getApplicationColumns = (
         const date = getValue<string | null>()
         return date ? (
           <span className="text-muted-foreground text-xs tabular-nums">
-            {new Date(date).toLocaleDateString()}
+            {new Date(date).toLocaleDateString(locale)}
           </span>
         ) : (
           <span className="text-muted-foreground">-</span>

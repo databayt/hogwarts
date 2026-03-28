@@ -38,7 +38,7 @@ export async function publishSchool(schoolId: string): Promise<ActionResponse> {
         name: true,
         domain: true,
         country: true,
-        curriculum: true,
+        timetableStructure: true,
       },
     })
 
@@ -57,9 +57,12 @@ export async function publishSchool(schoolId: string): Promise<ActionResponse> {
 
     // Auto-setup timetable structure (school year, terms, periods)
     // Non-blocking: timetable setup failure should NOT prevent publishing
-    if (school.curriculum) {
+    if (school.timetableStructure) {
       try {
-        await applyTimetableStructureForNewSchool(schoolId, school.curriculum)
+        await applyTimetableStructureForNewSchool(
+          schoolId,
+          school.timetableStructure
+        )
       } catch (timetableError) {
         console.error(
           `[publishSchool] Timetable setup failed for school ${schoolId}:`,

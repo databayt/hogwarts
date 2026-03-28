@@ -26,7 +26,7 @@ export async function getLessonContent(
 
   try {
     // Fetch approved questions for this lesson
-    const questions = await db.catalogQuestion.findMany({
+    const questions = await db.question.findMany({
       where: {
         catalogLessonId,
         approvalStatus: "APPROVED",

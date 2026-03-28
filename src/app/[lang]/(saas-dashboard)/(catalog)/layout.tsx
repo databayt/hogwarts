@@ -19,9 +19,9 @@ export default async function CatalogLayout({ children, params }: Props) {
 
   // Get pending counts for badges
   const [questionPending, bookPending, proposalPending] = await Promise.all([
-    db.catalogQuestion.count({ where: { approvalStatus: "PENDING" } }),
-    db.catalogBook.count({ where: { approvalStatus: "PENDING" } }),
-    db.catalogProposal.count({ where: { status: "SUBMITTED" } }),
+    db.question.count({ where: { approvalStatus: "PENDING" } }),
+    db.book.count({ where: { approvalStatus: "PENDING" } }),
+    db.proposal.count({ where: { status: "SUBMITTED" } }),
   ])
   const pendingCount = questionPending + bookPending
 

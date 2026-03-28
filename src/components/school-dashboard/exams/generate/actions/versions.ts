@@ -50,7 +50,7 @@ export async function getExamVersions(
     }
 
     // Verify exam belongs to this school
-    const exam = await db.exam.findFirst({
+    const exam = await db.schoolExam.findFirst({
       where: { id: examId, schoolId },
       select: { id: true, title: true },
     })
@@ -137,7 +137,7 @@ export async function createExamVersion(
     const userId = session.user.id
 
     // Fetch the exam with its subject
-    const exam = await db.exam.findFirst({
+    const exam = await db.schoolExam.findFirst({
       where: { id: examId, schoolId },
       select: {
         id: true,
@@ -169,7 +169,7 @@ export async function createExamVersion(
       distribution = latestVersion.template.distribution as TemplateDistribution
     } else if (latestVersion?.templateId) {
       // Template ID exists but template may have been deleted
-      const template = await db.examTemplate.findFirst({
+      const template = await db.schoolExamTemplate.findFirst({
         where: { id: latestVersion.templateId, schoolId },
       })
       if (template) {

@@ -52,7 +52,7 @@ describe("Exam Take Actions", () => {
   describe("startExamSession", () => {
     it("includes schoolId in questionBank findMany for option shuffling", async () => {
       // Setup: exam with shuffle options enabled
-      vi.mocked(db.exam.findFirst).mockResolvedValue({
+      vi.mocked(db.schoolExam.findFirst).mockResolvedValue({
         id: EXAM_ID,
         schoolId: SCHOOL_ID,
         status: "IN_PROGRESS",

@@ -22,9 +22,11 @@ import type { HealthRecord, Student } from "../../registration/types"
 
 interface HealthTabProps {
   student: Student
+  dictionary?: any
 }
 
-export function HealthTab({ student }: HealthTabProps) {
+export function HealthTab({ student, dictionary }: HealthTabProps) {
+  const d = dictionary
   // Use real health records from database
   const healthRecords = student.healthRecords || []
 
@@ -73,7 +75,7 @@ export function HealthTab({ student }: HealthTabProps) {
       <div className="flex justify-end">
         <Button variant="outline" size="sm">
           <Plus className="me-2 h-4 w-4" />
-          Add Health Record
+          {d?.addHealthRecord || "Add Health Record"}
         </Button>
       </div>
 
@@ -81,7 +83,9 @@ export function HealthTab({ student }: HealthTabProps) {
       {student.allergies && (
         <Alert className="border-red-200 bg-red-50">
           <TriangleAlert className="h-4 w-4 text-red-600" />
-          <AlertTitle className="text-red-900">Allergies</AlertTitle>
+          <AlertTitle className="text-red-900">
+            {d?.allergies || "Allergies"}
+          </AlertTitle>
           <AlertDescription className="text-red-700">
             {student.allergies}
           </AlertDescription>
@@ -93,7 +97,7 @@ export function HealthTab({ student }: HealthTabProps) {
         <Alert className="border-yellow-200 bg-yellow-50">
           <Heart className="h-4 w-4 text-yellow-600" />
           <AlertTitle className="text-yellow-900">
-            Medical Conditions
+            {d?.medicalConditions || "Medical Conditions"}
           </AlertTitle>
           <AlertDescription className="text-yellow-700">
             {student.medicalConditions}
@@ -106,26 +110,32 @@ export function HealthTab({ student }: HealthTabProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Heart className="h-5 w-5" />
-            Basic Health Information
+            {d?.basicHealthInformation || "Basic Health Information"}
           </CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
           <div>
-            <p className="text-muted-foreground text-sm">Blood Group</p>
+            <p className="text-muted-foreground text-sm">
+              {d?.bloodGroup || "Blood Group"}
+            </p>
             <p className="text-lg font-medium">
-              {student.bloodGroup || "Not specified"}
+              {student.bloodGroup || d?.notSpecified || "Not specified"}
             </p>
           </div>
           <div>
-            <p className="text-muted-foreground text-sm">Regular Medications</p>
+            <p className="text-muted-foreground text-sm">
+              {d?.regularMedications || "Regular Medications"}
+            </p>
             <p className="font-medium">
-              {student.medicationRequired || "None"}
+              {student.medicationRequired || d?.none || "None"}
             </p>
           </div>
           <div>
-            <p className="text-muted-foreground text-sm">Family Doctor</p>
+            <p className="text-muted-foreground text-sm">
+              {d?.familyDoctor || "Family Doctor"}
+            </p>
             <p className="font-medium">
-              {student.doctorName || "Not specified"}
+              {student.doctorName || d?.notSpecified || "Not specified"}
             </p>
             {student.doctorContact && (
               <p className="text-muted-foreground text-sm">
@@ -134,13 +144,15 @@ export function HealthTab({ student }: HealthTabProps) {
             )}
           </div>
           <div>
-            <p className="text-muted-foreground text-sm">Health Insurance</p>
+            <p className="text-muted-foreground text-sm">
+              {d?.healthInsurance || "Health Insurance"}
+            </p>
             <p className="font-medium">
-              {student.insuranceProvider || "Not specified"}
+              {student.insuranceProvider || d?.notSpecified || "Not specified"}
             </p>
             {student.insuranceNumber && (
               <p className="text-muted-foreground text-sm">
-                Policy: {student.insuranceNumber}
+                {d?.policy || "Policy:"} {student.insuranceNumber}
               </p>
             )}
           </div>
@@ -152,7 +164,7 @@ export function HealthTab({ student }: HealthTabProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" />
-            Vaccination Records
+            {d?.vaccinationRecords || "Vaccination Records"}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -187,7 +199,7 @@ export function HealthTab({ student }: HealthTabProps) {
               ))
             ) : (
               <p className="text-muted-foreground py-4 text-center">
-                No vaccination records
+                {d?.noVaccinationRecords || "No vaccination records"}
               </p>
             )}
           </div>
@@ -199,7 +211,7 @@ export function HealthTab({ student }: HealthTabProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TriangleAlert className="h-5 w-5" />
-            Health Incidents
+            {d?.healthIncidents || "Health Incidents"}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -218,7 +230,7 @@ export function HealthTab({ student }: HealthTabProps) {
                           variant="secondary"
                           className={getSeverityColor(record.severity)}
                         >
-                          {record.severity} Severity
+                          {record.severity} {d?.severity || "Severity"}
                         </Badge>
                       </div>
                     </div>
@@ -233,7 +245,7 @@ export function HealthTab({ student }: HealthTabProps) {
                     <div className="bg-muted rounded p-2">
                       <p className="flex items-center gap-1 text-xs font-medium">
                         <Pill className="h-3 w-3" />
-                        Prescription
+                        {d?.prescription || "Prescription"}
                       </p>
                       <p className="text-muted-foreground text-xs">
                         {record.prescription}
@@ -242,7 +254,7 @@ export function HealthTab({ student }: HealthTabProps) {
                   )}
                   {record.followUpDate && (
                     <p className="text-muted-foreground mt-2 text-xs">
-                      Follow-up:{" "}
+                      {d?.followUp || "Follow-up:"}{" "}
                       {format(new Date(record.followUpDate), "dd MMM yyyy")}
                     </p>
                   )}
@@ -250,7 +262,7 @@ export function HealthTab({ student }: HealthTabProps) {
               ))
             ) : (
               <p className="text-muted-foreground py-4 text-center">
-                No health incidents recorded
+                {d?.noHealthIncidents || "No health incidents recorded"}
               </p>
             )}
           </div>
@@ -262,7 +274,7 @@ export function HealthTab({ student }: HealthTabProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            Medical History Timeline
+            {d?.medicalHistoryTimeline || "Medical History Timeline"}
           </CardTitle>
         </CardHeader>
         <CardContent>

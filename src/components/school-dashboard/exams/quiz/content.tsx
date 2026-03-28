@@ -7,13 +7,13 @@ import { BookOpen, GraduationCap, HelpCircle, Zap } from "lucide-react"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
-import { getEnrolledCatalogSubjectIds } from "../lib/scope"
+import { getEnrolledSubjectIds } from "../lib/scope"
 import { getStudentAttempts } from "../shared/attempt-actions"
 import { AttemptHistory } from "../shared/attempt-history"
 import {
-  getCatalogSubjectsForQuizFilter,
   getQuizQuestionStats,
   getQuizzes,
+  getSubjectsForQuizFilter,
 } from "./actions"
 import { QuizList } from "./list"
 
@@ -23,19 +23,19 @@ export async function QuizContent() {
   const role = session?.user?.role
 
   // For students/guardians, scope to enrolled catalog subjects
-  const enrolledCatalogSubjectIds =
+  const enrolledSubjectIds =
     schoolId && ["STUDENT", "GUARDIAN"].includes(role || "")
-      ? await getEnrolledCatalogSubjectIds(role, session?.user?.id, schoolId)
+      ? await getEnrolledSubjectIds(role, session?.user?.id, schoolId)
       : null
 
   const isStudentOrGuardian = ["STUDENT", "GUARDIAN"].includes(role || "")
 
   const [quizzes, questionStats, subjects, attempts] = await Promise.all([
     getQuizzes({
-      enrolledCatalogSubjectIds: enrolledCatalogSubjectIds ?? undefined,
+      enrolledSubjectIds: enrolledSubjectIds ?? undefined,
     }),
-    getQuizQuestionStats(undefined, enrolledCatalogSubjectIds ?? undefined),
-    getCatalogSubjectsForQuizFilter(enrolledCatalogSubjectIds ?? undefined),
+    getQuizQuestionStats(undefined, enrolledSubjectIds ?? undefined),
+    getSubjectsForQuizFilter(enrolledSubjectIds ?? undefined),
     isStudentOrGuardian ? getStudentAttempts() : Promise.resolve([]),
   ])
 

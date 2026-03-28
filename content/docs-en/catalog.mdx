@@ -12,9 +12,9 @@ The Catalog is the **universal shared backbone** of the platform. All curriculum
 |                    UNIVERSAL CATALOG                         |
 |  (Global, no schoolId -- the single source of truth)        |
 |                                                             |
-|  CatalogSubject (~220 US K-12 + future: GB, IB...)         |
-|    > CatalogChapter (~800 topic groups)                     |
-|        > CatalogLesson (~4000 sub-topics)                   |
+|  CatalogSubject (240 US K-12 + 97 Sudan national)          |
+|    > CatalogChapter (~1,156 topic groups)                   |
+|        > CatalogLesson (~5,042 sub-topics)                  |
 |                                                             |
 |  Built-in at each level:                                    |
 |  +-- Exams (CatalogExam)                                    |
@@ -169,7 +169,7 @@ The first complete curriculum set replicates ClickView's exact US K-12 hierarchy
 
 All subjects use `country: "US"`, `curriculum: "us-k12"`. Each subject has `grades: [N]` (single grade number) instead of spanning multiple grades.
 
-**Slug convention:** `us-{subject-slug}-grade-{N}` (e.g., `us-math-grade-3`, `us-chemistry-grade-11`)
+**Slug convention:** `us-g{N}-{subject-slug}` (e.g., `us-g3-math`, `us-g11-chemistry`)
 
 **Old slug convention (deprecated):** `{level}-{subject-slug}` (e.g., `elementary-math`, `high-chemistry`). Old level-based subjects are automatically deprecated when the new grade-specific seed runs.
 

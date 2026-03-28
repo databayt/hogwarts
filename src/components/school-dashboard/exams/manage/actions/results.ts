@@ -279,7 +279,7 @@ export async function publishResults(input: {
     const { examId, notifyStudents = true } = input
 
     // Check if exam exists and all results are entered
-    const exam = await db.exam.findFirst({
+    const exam = await db.schoolExam.findFirst({
       where: { id: examId, schoolId },
       include: {
         _count: {
@@ -320,7 +320,7 @@ export async function publishResults(input: {
     }
 
     // Update exam status to indicate results are published
-    await db.exam.updateMany({
+    await db.schoolExam.updateMany({
       where: { id: examId, schoolId },
       data: {
         status: "COMPLETED",

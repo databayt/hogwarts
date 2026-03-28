@@ -49,9 +49,9 @@ import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { Shell as PageContainer } from "@/components/table/shell"
 
-import { deleteCatalogBook, updateCatalogBook } from "./book-actions"
+import { deleteBook, updateBook } from "./book-actions"
 
-interface CatalogBookDetail {
+interface BookDetail {
   id: string
   title: string
   slug: string
@@ -76,11 +76,11 @@ interface CatalogBookDetail {
   visibility: string
   usageCount: number
   downloadCount: number
-  _count: { schoolSelections: number; books: number }
+  _count: { bookSelections: number; schoolBooks: number }
 }
 
 interface Props {
-  book: CatalogBookDetail
+  book: BookDetail
   lang: Locale
   dictionary?: Dictionary
 }
@@ -93,7 +93,7 @@ const STATUS_OPTIONS = [
   "DEPRECATED",
 ] as const
 
-export function CatalogBookDetailView({ book, lang, dictionary }: Props) {
+export function BookDetailView({ book, lang, dictionary }: Props) {
   const d = dictionary?.operator?.catalog
   const actions = dictionary?.operator?.common?.actions
   const [isPending, startTransition] = useTransition()
@@ -133,7 +133,7 @@ export function CatalogBookDetailView({ book, lang, dictionary }: Props) {
         formData.set("status", status)
         formData.set("coverColor", coverColor)
 
-        const result = await updateCatalogBook(book.id, formData)
+        const result = await updateBook(book.id, formData)
         if (!result.success) {
           toast.error(d?.failedToUpdate || "Failed to update book")
           return
@@ -149,7 +149,7 @@ export function CatalogBookDetailView({ book, lang, dictionary }: Props) {
   function handleDelete() {
     startTransition(async () => {
       try {
-        await deleteCatalogBook(book.id)
+        await deleteBook(book.id)
         toast.success(d?.bookDeleted || "Book deleted")
         setIsDeleted(true)
       } catch {
@@ -214,7 +214,7 @@ export function CatalogBookDetailView({ book, lang, dictionary }: Props) {
             <GraduationCap className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{book._count.schoolSelections}</p>
+            <p className="text-2xl font-bold">{book._count.bookSelections}</p>
           </CardContent>
         </Card>
         <Card>
@@ -225,7 +225,7 @@ export function CatalogBookDetailView({ book, lang, dictionary }: Props) {
             <BookOpen className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{book._count.books}</p>
+            <p className="text-2xl font-bold">{book._count.schoolBooks}</p>
           </CardContent>
         </Card>
         <Card>

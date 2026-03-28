@@ -1,0 +1,62 @@
+{
+  "subject": "french",
+  "subjectNameAr": "اللغة الفرنسية",
+  "grade": 11,
+  "level": "secondary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "Allons-y ! 2",
+  "chapters": [
+    {
+      "nameAr": "الوحدة الثالثة - MODULE 3",
+      "name": "Module 3",
+      "slug": "module-3",
+      "sequenceOrder": 1,
+      "lessons": [
+        {
+          "nameAr": "الوحدة 7: بالعافية! - UNITÉ 7: Bon appétit !",
+          "name": "Unit 7: Bon appétit !",
+          "slug": "unite-7-bon-appetit",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الوحدة 8: عندي موعد - UNITÉ 8: J'ai rendez-vous",
+          "name": "Unit 8: J'ai rendez-vous",
+          "slug": "unite-8-jai-rendez-vous",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الوحدة 9: إلى أين تذهب؟ - UNITÉ 9: Où tu vas ?",
+          "name": "Unit 9: Où tu vas ?",
+          "slug": "unite-9-ou-tu-vas",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "تقييم 3 - Bilan 3",
+          "name": "Assessment 3 - Bilan 3",
+          "slug": "bilan-3",
+          "sequenceOrder": 4
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة الرابعة - MODULE 4",
+      "name": "Module 4",
+      "slug": "module-4",
+      "sequenceOrder": 2,
+      "lessons": [
+        {
+          "nameAr": "الوحدة 10: كيف الطقس؟ - UNITÉ 10: Quel temps fait-il ?",
+          "name": "Unit 10: Quel temps fait-il ?",
+          "slug": "unite-10-quel-temps-fait-il",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الوحدة 11: هيا بنا! - UNITÉ 11: Allons-y !",
+          "name": "Unit 11: Allons-y !",
+          "slug": "unite-11-allons-y",
+          "sequenceOrder": 2
+        }
+      ]
+    }
+  ]
+}

@@ -112,6 +112,7 @@ interface AcademicRecordsProps {
   achievements: Achievement[]
   onGenerateTranscript?: () => void
   onDownloadReport?: (format: "pdf" | "excel") => void
+  dictionary?: any
 }
 
 export function AcademicRecords({
@@ -120,7 +121,9 @@ export function AcademicRecords({
   achievements,
   onGenerateTranscript,
   onDownloadReport,
+  dictionary,
 }: AcademicRecordsProps) {
+  const d = dictionary?.school?.students?.academicRecords
   const [selectedYear, setSelectedYear] = useState<string>("all")
   const [selectedTerm, setSelectedTerm] = useState<string>("all")
 
@@ -192,7 +195,9 @@ export function AcademicRecords({
                 >
                   {stats.averagePercentage.toFixed(1)}%
                 </p>
-                <p className="text-muted-foreground text-sm">Average Score</p>
+                <p className="text-muted-foreground text-sm">
+                  {d?.averageScore || "Average Score"}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -205,7 +210,7 @@ export function AcademicRecords({
               <div>
                 <p className="text-2xl font-bold">{stats.highestPercentage}%</p>
                 <p className="text-muted-foreground text-sm">
-                  Best Performance
+                  {d?.bestPerformance || "Best Performance"}
                 </p>
               </div>
             </div>
@@ -220,7 +225,9 @@ export function AcademicRecords({
                 <p className="text-2xl font-bold">
                   {stats.averageAttendance.toFixed(1)}%
                 </p>
-                <p className="text-muted-foreground text-sm">Attendance</p>
+                <p className="text-muted-foreground text-sm">
+                  {d?.attendance || "Attendance"}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -232,7 +239,9 @@ export function AcademicRecords({
               <Trophy className="h-8 w-8 text-yellow-500" />
               <div>
                 <p className="text-2xl font-bold">{stats.totalAchievements}</p>
-                <p className="text-muted-foreground text-sm">Achievements</p>
+                <p className="text-muted-foreground text-sm">
+                  {d?.achievements || "Achievements"}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -243,19 +252,19 @@ export function AcademicRecords({
         <TabsList className="grid w-full max-w-2xl grid-cols-4">
           <TabsTrigger value="grades">
             <BarChart className="me-2 h-4 w-4" />
-            Grades
+            {d?.grades || "Grades"}
           </TabsTrigger>
           <TabsTrigger value="subjects">
             <FileText className="me-2 h-4 w-4" />
-            Subjects
+            {d?.subjects || "Subjects"}
           </TabsTrigger>
           <TabsTrigger value="achievements">
             <Award className="me-2 h-4 w-4" />
-            Achievements
+            {d?.achievements || "Achievements"}
           </TabsTrigger>
           <TabsTrigger value="transcript">
             <FileText className="me-2 h-4 w-4" />
-            Transcript
+            {d?.transcript || "Transcript"}
           </TabsTrigger>
         </TabsList>
 
@@ -265,31 +274,46 @@ export function AcademicRecords({
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>Academic Performance</CardTitle>
+                  <CardTitle>
+                    {d?.academicPerformance || "Academic Performance"}
+                  </CardTitle>
                   <CardDescription>
-                    Term-wise grades and performance metrics
+                    {d?.termWiseDescription ||
+                      "Term-wise grades and performance metrics"}
                   </CardDescription>
                 </div>
                 <div className="flex gap-2">
                   <Select value={selectedYear} onValueChange={setSelectedYear}>
                     <SelectTrigger className="w-[150px]">
-                      <SelectValue placeholder="Academic Year" />
+                      <SelectValue
+                        placeholder={d?.academicYear || "Academic Year"}
+                      />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Years</SelectItem>
+                      <SelectItem value="all">
+                        {d?.allYears || "All Years"}
+                      </SelectItem>
                       <SelectItem value="2024-25">2024-25</SelectItem>
                       <SelectItem value="2023-24">2023-24</SelectItem>
                     </SelectContent>
                   </Select>
                   <Select value={selectedTerm} onValueChange={setSelectedTerm}>
                     <SelectTrigger className="w-[150px]">
-                      <SelectValue placeholder="Term" />
+                      <SelectValue placeholder={d?.term || "Term"} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Terms</SelectItem>
-                      <SelectItem value="term1">Term 1</SelectItem>
-                      <SelectItem value="term2">Term 2</SelectItem>
-                      <SelectItem value="term3">Term 3</SelectItem>
+                      <SelectItem value="all">
+                        {d?.allTerms || "All Terms"}
+                      </SelectItem>
+                      <SelectItem value="term1">
+                        {d?.term || "Term"} 1
+                      </SelectItem>
+                      <SelectItem value="term2">
+                        {d?.term || "Term"} 2
+                      </SelectItem>
+                      <SelectItem value="term3">
+                        {d?.term || "Term"} 3
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -299,14 +323,14 @@ export function AcademicRecords({
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Academic Year</TableHead>
-                    <TableHead>Term</TableHead>
-                    <TableHead>Total Marks</TableHead>
-                    <TableHead>Obtained</TableHead>
-                    <TableHead>Percentage</TableHead>
-                    <TableHead>Grade</TableHead>
-                    <TableHead>Rank</TableHead>
-                    <TableHead>Attendance</TableHead>
+                    <TableHead>{d?.academicYear || "Academic Year"}</TableHead>
+                    <TableHead>{d?.term || "Term"}</TableHead>
+                    <TableHead>{d?.totalMarks || "Total Marks"}</TableHead>
+                    <TableHead>{d?.obtained || "Obtained"}</TableHead>
+                    <TableHead>{d?.percentage || "Percentage"}</TableHead>
+                    <TableHead>{d?.grade || "Grade"}</TableHead>
+                    <TableHead>{d?.rank || "Rank"}</TableHead>
+                    <TableHead>{d?.attendance || "Attendance"}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -348,9 +372,12 @@ export function AcademicRecords({
           {/* Performance Trends */}
           <Card>
             <CardHeader>
-              <CardTitle>Performance Trends</CardTitle>
+              <CardTitle>
+                {d?.performanceTrends || "Performance Trends"}
+              </CardTitle>
               <CardDescription>
-                Visual representation of academic progress over time
+                {d?.performanceTrendsDescription ||
+                  "Visual representation of academic progress over time"}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -382,20 +409,21 @@ export function AcademicRecords({
                   {record.academicYearId} - {record.termId}
                 </CardTitle>
                 <CardDescription>
-                  Subject-wise performance breakdown
+                  {d?.subjectWiseBreakdown ||
+                    "Subject-wise performance breakdown"}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Subject</TableHead>
-                      <TableHead>Code</TableHead>
-                      <TableHead>Max Marks</TableHead>
-                      <TableHead>Obtained</TableHead>
-                      <TableHead>Percentage</TableHead>
-                      <TableHead>Grade</TableHead>
-                      <TableHead>Remarks</TableHead>
+                      <TableHead>{d?.subject || "Subject"}</TableHead>
+                      <TableHead>{d?.code || "Code"}</TableHead>
+                      <TableHead>{d?.maxMarks || "Max Marks"}</TableHead>
+                      <TableHead>{d?.obtained || "Obtained"}</TableHead>
+                      <TableHead>{d?.percentage || "Percentage"}</TableHead>
+                      <TableHead>{d?.grade || "Grade"}</TableHead>
+                      <TableHead>{d?.remarks || "Remarks"}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -436,13 +464,13 @@ export function AcademicRecords({
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-muted-foreground text-sm">
-                        Overall Performance
+                        {d?.overallPerformance || "Overall Performance"}
                       </p>
                       <p className="text-2xl font-bold">{record.grade}</p>
                     </div>
                     <div className="text-end">
                       <p className="text-muted-foreground text-sm">
-                        Total Score
+                        {d?.totalScore || "Total Score"}
                       </p>
                       <p className="text-xl font-medium">
                         {record.obtainedMarks}/{record.totalMarks}
@@ -461,12 +489,17 @@ export function AcademicRecords({
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>Achievements & Awards</CardTitle>
+                  <CardTitle>
+                    {d?.achievementsAndAwards || "Achievements & Awards"}
+                  </CardTitle>
                   <CardDescription>
-                    Academic and extracurricular achievements
+                    {d?.achievementsDescription ||
+                      "Academic and extracurricular achievements"}
                   </CardDescription>
                 </div>
-                <Badge variant="secondary">{achievements.length} Total</Badge>
+                <Badge variant="secondary">
+                  {achievements.length} {d?.total || "Total"}
+                </Badge>
               </div>
             </CardHeader>
             <CardContent>
@@ -499,12 +532,12 @@ export function AcademicRecords({
                               </Badge>
                               {achievement.level && (
                                 <Badge variant="outline">
-                                  {achievement.level} Level
+                                  {achievement.level} {d?.level || "Level"}
                                 </Badge>
                               )}
                               {achievement.position && (
                                 <Badge variant="secondary">
-                                  Rank #{achievement.position}
+                                  {d?.rank || "Rank"} #{achievement.position}
                                 </Badge>
                               )}
                             </div>
@@ -518,7 +551,7 @@ export function AcademicRecords({
                             </p>
                             {achievement.issuedBy && (
                               <p className="text-muted-foreground mt-1 text-xs">
-                                by {achievement.issuedBy}
+                                {d?.by || "by"} {achievement.issuedBy}
                               </p>
                             )}
                           </div>
@@ -529,7 +562,7 @@ export function AcademicRecords({
                             size="sm"
                             className="mt-2 h-auto p-0"
                           >
-                            View Certificate
+                            {d?.viewCertificate || "View Certificate"}
                           </Button>
                         )}
                       </div>
@@ -538,7 +571,7 @@ export function AcademicRecords({
 
                   {achievements.length === 0 && (
                     <div className="text-muted-foreground py-8 text-center">
-                      No achievements recorded yet
+                      {d?.noAchievements || "No achievements recorded yet"}
                     </div>
                   )}
                 </div>
@@ -559,7 +592,9 @@ export function AcademicRecords({
                           .length
                       }
                     </p>
-                    <p className="text-muted-foreground text-sm">Academic</p>
+                    <p className="text-muted-foreground text-sm">
+                      {d?.academic || "Academic"}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -576,7 +611,9 @@ export function AcademicRecords({
                           .length
                       }
                     </p>
-                    <p className="text-muted-foreground text-sm">Sports</p>
+                    <p className="text-muted-foreground text-sm">
+                      {d?.sports || "Sports"}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -596,7 +633,7 @@ export function AcademicRecords({
                       }
                     </p>
                     <p className="text-muted-foreground text-sm">
-                      Extra-curricular
+                      {d?.extraCurricular || "Extra-curricular"}
                     </p>
                   </div>
                 </div>
@@ -611,9 +648,12 @@ export function AcademicRecords({
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>Official Transcript</CardTitle>
+                  <CardTitle>
+                    {d?.officialTranscript || "Official Transcript"}
+                  </CardTitle>
                   <CardDescription>
-                    Complete academic record and transcript generation
+                    {d?.transcriptDescription ||
+                      "Complete academic record and transcript generation"}
                   </CardDescription>
                 </div>
                 <div className="flex gap-2">
@@ -622,18 +662,18 @@ export function AcademicRecords({
                     onClick={() => onDownloadReport?.("excel")}
                   >
                     <Download className="me-2 h-4 w-4" />
-                    Export Excel
+                    {d?.exportExcel || "Export Excel"}
                   </Button>
                   <Button
                     variant="outline"
                     onClick={() => onDownloadReport?.("pdf")}
                   >
                     <Download className="me-2 h-4 w-4" />
-                    Download PDF
+                    {d?.downloadPdf || "Download PDF"}
                   </Button>
                   <Button onClick={onGenerateTranscript}>
                     <Printer className="me-2 h-4 w-4" />
-                    Generate Transcript
+                    {d?.generateTranscript || "Generate Transcript"}
                   </Button>
                 </div>
               </div>
@@ -643,7 +683,9 @@ export function AcademicRecords({
               <div className="space-y-6 rounded-lg border p-6">
                 {/* Header */}
                 <div className="border-b pb-4 text-center">
-                  <h3 className="text-xl font-bold">Academic Transcript</h3>
+                  <h3 className="text-xl font-bold">
+                    {d?.academicTranscript || "Academic Transcript"}
+                  </h3>
                   <p className="text-muted-foreground mt-1 text-sm">
                     {student.firstName} {student.middleName} {student.lastName}
                   </p>
@@ -655,11 +697,13 @@ export function AcademicRecords({
                 {/* Academic Summary */}
                 <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <h4 className="mb-2 font-medium">Academic Summary</h4>
+                    <h4 className="mb-2 font-medium">
+                      {d?.academicSummary || "Academic Summary"}
+                    </h4>
                     <div className="space-y-1 text-sm">
                       <p>
                         <span className="text-muted-foreground">
-                          Enrollment Date:
+                          {d?.enrollmentDate || "Enrollment Date"}:
                         </span>{" "}
                         {student.enrollmentDate &&
                           format(
@@ -669,13 +713,13 @@ export function AcademicRecords({
                       </p>
                       <p>
                         <span className="text-muted-foreground">
-                          Current Status:
+                          {d?.currentStatus || "Current Status"}:
                         </span>{" "}
                         <Badge variant="outline">{student.status}</Badge>
                       </p>
                       <p>
                         <span className="text-muted-foreground">
-                          Total Terms:
+                          {d?.totalTerms || "Total Terms"}:
                         </span>{" "}
                         {academicRecords.length}
                       </p>
@@ -683,11 +727,13 @@ export function AcademicRecords({
                   </div>
 
                   <div>
-                    <h4 className="mb-2 font-medium">Performance Metrics</h4>
+                    <h4 className="mb-2 font-medium">
+                      {d?.performanceMetrics || "Performance Metrics"}
+                    </h4>
                     <div className="space-y-1 text-sm">
                       <p>
                         <span className="text-muted-foreground">
-                          Overall Average:
+                          {d?.overallAverage || "Overall Average"}:
                         </span>{" "}
                         <span
                           className={`font-medium ${getPercentageColor(stats.averagePercentage)}`}
@@ -697,13 +743,13 @@ export function AcademicRecords({
                       </p>
                       <p>
                         <span className="text-muted-foreground">
-                          Best Performance:
+                          {d?.bestPerformance || "Best Performance"}:
                         </span>{" "}
                         {stats.highestPercentage}%
                       </p>
                       <p>
                         <span className="text-muted-foreground">
-                          Total Achievements:
+                          {d?.totalAchievements || "Total Achievements"}:
                         </span>{" "}
                         {achievements.length}
                       </p>
@@ -713,15 +759,17 @@ export function AcademicRecords({
 
                 {/* Academic Records Table */}
                 <div>
-                  <h4 className="mb-3 font-medium">Academic Records</h4>
+                  <h4 className="mb-3 font-medium">
+                    {d?.academicRecords || "Academic Records"}
+                  </h4>
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Year</TableHead>
-                        <TableHead>Term</TableHead>
-                        <TableHead>Score</TableHead>
-                        <TableHead>Grade</TableHead>
-                        <TableHead>Attendance</TableHead>
+                        <TableHead>{d?.year || "Year"}</TableHead>
+                        <TableHead>{d?.term || "Term"}</TableHead>
+                        <TableHead>{d?.score || "Score"}</TableHead>
+                        <TableHead>{d?.grade || "Grade"}</TableHead>
+                        <TableHead>{d?.attendance || "Attendance"}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -748,11 +796,12 @@ export function AcademicRecords({
                 {/* Footer */}
                 <div className="text-muted-foreground border-t pt-4 text-center text-xs">
                   <p>
-                    Generated on{" "}
+                    {d?.generatedOn || "Generated on"}{" "}
                     {format(new Date(), "MMMM dd, yyyy 'at' hh:mm a")}
                   </p>
                   <p className="mt-1">
-                    This is an official academic transcript
+                    {d?.officialTranscriptNote ||
+                      "This is an official academic transcript"}
                   </p>
                 </div>
               </div>

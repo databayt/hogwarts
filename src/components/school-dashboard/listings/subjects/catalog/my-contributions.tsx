@@ -35,7 +35,7 @@ interface SubjectRef {
   name: string
 }
 
-interface CatalogQuestionContribution {
+interface QuestionContribution {
   id: string
   questionText: string
   questionType: string
@@ -46,7 +46,7 @@ interface CatalogQuestionContribution {
   catalogSubject: SubjectRef | null
 }
 
-interface CatalogMaterialContribution {
+interface MaterialContribution {
   id: string
   title: string
   type: string
@@ -56,7 +56,7 @@ interface CatalogMaterialContribution {
   catalogSubject: SubjectRef | null
 }
 
-interface CatalogAssignmentContribution {
+interface AssignmentContribution {
   id: string
   title: string
   assignmentType: string | null
@@ -68,9 +68,9 @@ interface CatalogAssignmentContribution {
 
 interface Props {
   contributions: {
-    questions: CatalogQuestionContribution[]
-    materials: CatalogMaterialContribution[]
-    assignments: CatalogAssignmentContribution[]
+    questions: QuestionContribution[]
+    materials: MaterialContribution[]
+    assignments: AssignmentContribution[]
   }
 }
 

@@ -20,20 +20,18 @@ import {
   SelectField,
 } from "@/components/form"
 import { createI18nHelpers } from "@/components/internationalization/helpers"
-import { useLocale } from "@/components/internationalization/use-locale"
 
 import { useApplySession } from "../application-context"
 import type { PersonalStepData } from "../types"
-import { getApplyDict } from "../utils"
+import { useAutoFillMerge } from "../use-auto-fill-merge"
+import { getApplyDict, getApplyOptionsDict } from "../utils"
 import { savePersonalStep } from "./actions"
-import { CATEGORY_OPTIONS, GENDER_OPTIONS } from "./config"
+import { getCategoryOptions, getGenderOptions } from "./config"
 import type { PersonalFormProps, PersonalFormRef } from "./types"
 import { getPersonalSchema, type PersonalSchemaType } from "./validation"
 
 export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
   ({ initialData, onSuccess, dictionary }, ref) => {
-    const { locale } = useLocale()
-    const isRTL = locale === "ar"
     const { updateStepData, nameFormat } = useApplySession()
 
     const { v } = useMemo(() => {
@@ -70,7 +68,11 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
       },
     })
 
+    // Merge AI-extracted data into empty fields (late-arrival insurance)
+    useAutoFillMerge(form, initialData)
+
     const dict = getApplyDict(dictionary, "personal")
+    const optionsDict = getApplyOptionsDict(dictionary)
 
     const prevDataRef = React.useRef<string>("")
     useEffect(() => {
@@ -132,7 +134,7 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
             }}
             required
           />
-          <div className="grid grid-cols-2 gap-7">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-7">
             <DateField
               name="dateOfBirth"
               label={`${dict.dateOfBirth} *`}
@@ -144,13 +146,10 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
               name="gender"
               label={`${dict.gender} *`}
               placeholder={dict.selectGender}
-              options={GENDER_OPTIONS(isRTL).map((o) => ({
-                value: o.value,
-                label: o.label,
-              }))}
+              options={getGenderOptions(optionsDict.gender || {})}
             />
           </div>
-          <div className="grid grid-cols-2 gap-7">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-7">
             <CountryField
               name="nationality"
               label={dict.nationality}
@@ -160,10 +159,7 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
               name="category"
               label={dict.category}
               placeholder={dict.selectCategory}
-              options={CATEGORY_OPTIONS(isRTL).map((o) => ({
-                value: o.value,
-                label: o.label,
-              }))}
+              options={getCategoryOptions(optionsDict.category || {})}
             />
           </div>
         </form>

@@ -7,6 +7,7 @@ import React, {
   SetStateAction,
   useCallback,
   useEffect,
+  useMemo,
   useState,
 } from "react"
 import Link from "next/link"
@@ -25,6 +26,7 @@ interface ApplicationSuccessModalProps {
   setShowModal: Dispatch<SetStateAction<boolean>>
   isRTL?: boolean
   locale?: string
+  dictionary?: Record<string, unknown>
 }
 
 export default function ApplicationSuccessModal({
@@ -36,9 +38,17 @@ export default function ApplicationSuccessModal({
   setShowModal,
   isRTL = false,
   locale = "en",
+  dictionary,
 }: ApplicationSuccessModalProps) {
   const [copied, setCopied] = useState(false)
   const [animationData, setAnimationData] = useState<object | null>(null)
+
+  const dict = useMemo(() => {
+    const d = dictionary as Record<string, unknown> | undefined
+    const admission = d?.admission as Record<string, unknown> | undefined
+    const apply = admission?.apply as Record<string, unknown> | undefined
+    return (apply?.successModal as Record<string, string>) ?? {}
+  }, [dictionary])
 
   useEffect(() => {
     fetch(asset("/animations/confetti.json"))
@@ -49,24 +59,24 @@ export default function ApplicationSuccessModal({
 
   const handleCopy = useCallback(() => {
     const lines = [
-      `${isRTL ? "رقم الطلب" : "Application No"}: ${applicationNumber}`,
+      `${dict.applicationNo || "Application No"}: ${applicationNumber}`,
     ]
     if (applicantEmail) {
-      lines.push(`${isRTL ? "البريد" : "Email"}: ${applicantEmail}`)
+      lines.push(`${dict.email || "Email"}: ${applicantEmail}`)
     }
     if (password) {
-      lines.push(`${isRTL ? "كلمة المرور" : "Password"}: ${password}`)
+      lines.push(`${dict.password || "Password"}: ${password}`)
     }
     if (schoolUrl) {
-      lines.push(`${isRTL ? "الموقع" : "School"}: ${schoolUrl}`)
+      lines.push(`${dict.school || "School"}: ${schoolUrl}`)
     }
-    lines.push(`${isRTL ? "المستندات" : "Docs"}: ed.databayt.org/docs`)
+    lines.push(`${dict.docs || "Docs"}: ed.databayt.org/docs`)
 
     navigator.clipboard.writeText(lines.join("\n")).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     })
-  }, [applicationNumber, applicantEmail, password, schoolUrl, isRTL])
+  }, [applicationNumber, applicantEmail, password, schoolUrl, dict])
 
   return (
     <Modal
@@ -75,7 +85,7 @@ export default function ApplicationSuccessModal({
       className="md:max-w-sm"
       preventDefaultClose
     >
-      <div className="px-8 py-12 text-center">
+      <div className="px-4 py-8 text-center sm:px-8 sm:py-12">
         {/* Celebration Animation */}
         <div className="mx-auto mb-4 h-32 w-32">
           {animationData && (
@@ -85,7 +95,7 @@ export default function ApplicationSuccessModal({
 
         {/* Success Message */}
         <p className="text-muted-foreground mb-6">
-          {isRTL ? "تم تقديم الطلب" : "Application submitted"}
+          {dict.submitted || "Application submitted"}
         </p>
 
         {/* Copy details */}
@@ -93,18 +103,18 @@ export default function ApplicationSuccessModal({
           {copied ? (
             <>
               <span className="text-xs text-green-700">
-                {isRTL ? "تم النسخ" : "Copied to clipboard"}
+                {dict.copied || "Copied to clipboard"}
               </span>
               <Check className="h-3 w-3 text-green-700" />
             </>
           ) : (
             <>
               <span className="text-muted-foreground text-xs">
-                {isRTL ? "نسخ التفاصيل" : "Copy details to clipboard"}
+                {dict.copyDetails || "Copy details to clipboard"}
               </span>
               <button
                 onClick={handleCopy}
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="text-muted-foreground hover:text-foreground -m-2 p-2 transition-colors"
                 aria-label="Copy application details"
               >
                 <Copy className="h-3.5 w-3.5" />
@@ -119,7 +129,7 @@ export default function ApplicationSuccessModal({
             href={`/${locale}`}
             className="text-primary text-sm underline transition-colors hover:opacity-80"
           >
-            {isRTL ? "العودة للرئيسية" : "Back to Home"}
+            {dict.backToHome || "Back to Home"}
           </Link>
         </div>
       </div>

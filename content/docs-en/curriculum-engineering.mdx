@@ -1,0 +1,404 @@
+---
+title: "Curriculum Engineering"
+description: "Engineering reference for the multi-curriculum catalog system — database schema, runtime flow, scale analysis, and areas for improvement."
+---
+
+## 1. Database Schema
+
+Three tables form the catalog hierarchy. All are global (no `schoolId`).
+
+```
+CatalogSubject (337 rows)
+  ├── id, slug (unique), name, lang
+  ├── country, curriculum          ← multi-curriculum routing
+  ├── concept                      ← cross-curriculum image key
+  ├── thumbnailKey, imageKey       ← S3/CDN paths
+  ├── grades[], levels[]           ← grade-specific
+  ├── department, color, status
+  ├── totalChapters, totalLessons  ← denormalized counts
+  │
+  └── CatalogChapter (1,156 rows)
+        ├── id, slug, name, lang
+        ├── subjectId (FK)
+        ├── sequenceOrder, grades[], levels[]
+        ├── totalLessons, totalContent   ← denormalized
+        │
+        └── CatalogLesson (5,042 rows)
+              ├── id, slug, name, lang
+              ├── chapterId (FK)
+              ├── sequenceOrder, grades[], levels[]
+```
+
+### Key Fields for Multi-Curriculum
+
+```prisma
+model CatalogSubject {
+  country     String    @default("SD")       // ISO 3166-1 alpha-2
+  curriculum  String    @default("national") // "us-k12", "national", "british", "ib"
+  concept     String?                        // "math" — image lookup across curricula
+  thumbnailKey String?                       // S3 key for WebP variants
+  imageKey     String?                       // legacy ClickView illustration path
+  grades      Int[]     @default([])         // [5] = grade 5 only
+  levels      SchoolLevel[]                  // [ELEMENTARY]
+  slug        String    @unique              // "sd-g5-math" or "us-g5-math"
+}
+```
+
+### Unique Constraint
+
+`slug` is the primary upsert key. Slug encodes country + grade + subject:
+
+```
+sd-g5-math  → country=SD, grade=5, subject=math
+us-g5-math  → country=US, grade=5, subject=math
+gb-g7-math  → country=GB, grade=7, subject=math
+```
+
+No compound unique on `(country, curriculum, grade, name)` — slug handles it.
+
+---
+
+## 2. Runtime Flow
+
+### School Onboarding
+
+When a school is created, `setupCatalogForSchool()` runs:
+
+```
+School.country = "SD"
+        │
+        ▼
+inferCurriculum("SD") → "national"
+        │
+        ▼
+findCatalogSubjects("SD", "national")
+        │
+        ├── Step 1: Exact (country + curriculum + schoolType)
+        ├── Step 2: Broad (country + curriculum)  ← SD hits here (97 subjects)
+        ├── Step 3: Universal (country="*")
+        └── Step 4: Fallback (US + us-k12)        ← unknown countries land here
+        │
+        ▼
+Filter by school.schoolLevel:
+  "primary"   → grades 1-6  (ELEMENTARY)
+  "secondary" → grades 7-12 (MIDDLE + HIGH)
+  "both"      → grades 1-12 (all)
+        │
+        ▼
+Create SchoolSubjectSelection rows (bridge)
+Create YearLevel, Department, Stream, ScoreRange defaults
+```
+
+### Subject Display
+
+```
+School dashboard → GET /subjects
+        │
+        ▼
+SchoolSubjectSelection.findMany({ schoolId })
+        │
+        ▼
+Join CatalogSubject → get thumbnailKey, concept
+        │
+        ▼
+getCatalogImageUrl(thumbnailKey, imageKey, "sm")
+        │
+        ├── thumbnailKey exists? → CDN: catalog/concepts/math/thumbnail-sm.webp
+        ├── imageKey exists?     → CDN: /clickview/illustrations/elementary-math.jpg
+        └── concept exists?      → static: SUBJECT_IMAGE_MAP["math"]
+```
+
+---
+
+## 3. Seed Architecture
+
+Two independent seed scripts, both idempotent (upsert):
+
+```
+clickview-catalog.ts                    sudan-catalog.ts
+─────────────────────                   ────────────────────
+Source: master-inventory.json           Source: sudan-curriculum.json
+        (ClickView scrape)                      (pdftotext → TOC JSON → assemble)
+
+Creates: 240 subjects                  Creates: 97 subjects
+         750 chapters                           406 chapters
+         3,993 lessons                          1,049 lessons
+
+Slug:    us-g{N}-{subject}             Slug:    sd-g{N}-{subject}
+Country: US                            Country: SD
+Curric:  us-k12                        Curric:  national
+Lang:    en                            Lang:    ar
+
+sortIdx: 0-999                         sortIdx: 1000+
+```
+
+A third seed, `concept-images.ts`, runs after both:
+
+```
+concept-images.ts
+─────────────────
+1. Reads public/subjects/concepts/*.jpg (24 images)
+2. Sharp → 4 WebP variants → S3 upload
+3. Backfills `concept` field on all subjects via NAME_TO_CONCEPT map
+4. Sets `thumbnailKey` on subjects that don't have one
+```
+
+---
+
+## 4. Scale Analysis
+
+### Current State
+
+| Metric         |              US |                SD |    Total |
+| -------------- | --------------: | ----------------: | -------: |
+| CatalogSubject |             240 |                97 |      337 |
+| CatalogChapter |             750 |               406 |    1,156 |
+| CatalogLesson  |           3,993 |             1,049 |    5,042 |
+| S3 thumbnails  | 240 per-subject | 19 shared concept | 259 keys |
+| WebP files     |   960 (240 x 4) |       96 (24 x 4) |    1,056 |
+
+### Adding a Country
+
+Adding Egypt (EG) with ~30 subjects x 12 grades = ~360 subjects:
+
+| What changes                       | What doesn't                                      |
+| ---------------------------------- | ------------------------------------------------- |
+| +360 CatalogSubject rows           | Schema unchanged                                  |
+| +~1,500 chapters, +~5,000 lessons  | No migration needed                               |
+| +0 to ~5 new concept images        | Existing 24 concepts cover most                   |
+| New seed script `egypt-catalog.ts` | `catalog-setup.ts` already maps `EG → "national"` |
+| New `egypt-curriculum.json`        | `concept-images.ts` auto-applies to new subjects  |
+
+### Query Performance
+
+All catalog queries are global (no `schoolId` filter). With 337 subjects:
+
+- `findCatalogSubjects` → one `findMany` with `country + curriculum` filter → ~100 rows max
+- Subject list in UI → via `SchoolSubjectSelection` bridge (indexed on `schoolId`)
+- No N+1: denormalized `totalChapters`, `totalLessons` on subject row
+
+At 10 curricula x ~300 subjects each = ~3,000 subjects — still trivial for PostgreSQL.
+
+---
+
+## 5. Areas for Improvement
+
+### 5.1 Unified Seed Pattern
+
+**Problem:** Two seed scripts (`clickview-catalog.ts`, `sudan-catalog.ts`) with duplicated logic — same upsert pattern, same denormalized count update, same chapter/lesson creation loop.
+
+**Solution:** Extract a shared `seedCurriculumFromJSON()` function:
+
+```typescript
+// prisma/seeds/shared/seed-curriculum.ts
+
+interface CurriculumInput {
+  country: string
+  curriculum: string
+  lang: string
+  sortIdxStart: number
+  dataPath: string // path to curriculum JSON
+}
+
+export async function seedCurriculumFromJSON(
+  prisma: PrismaClient,
+  input: CurriculumInput
+): Promise<{ subjects: number; chapters: number; lessons: number }>
+```
+
+Both seeds become thin wrappers:
+
+```typescript
+// clickview-catalog.ts
+await seedCurriculumFromJSON(prisma, {
+  country: "US",
+  curriculum: "us-k12",
+  lang: "en",
+  sortIdxStart: 0,
+  dataPath: "master-inventory-normalized.json",
+})
+
+// sudan-catalog.ts
+await seedCurriculumFromJSON(prisma, {
+  country: "SD",
+  curriculum: "national",
+  lang: "ar",
+  sortIdxStart: 1000,
+  dataPath: "sudan-curriculum.json",
+})
+```
+
+**Prerequisite:** Normalize `master-inventory.json` (ClickView) to the same shape as `sudan-curriculum.json`. Current shapes differ:
+
+```
+ClickView: { inventory: [{ subject, level, chapters: [{ topics }] }] }
+Sudan:     { subjects: [{ slug, gradeChapters: { "1": { chapters: [{ lessons }] } } }] }
+```
+
+### 5.2 Consistent JSON Schema
+
+**Problem:** ClickView and Sudan use different JSON structures. Adding a third curriculum means picking one or writing another adapter.
+
+**Solution:** Define a canonical `curriculum.schema.json`:
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["country", "curriculum", "lang", "subjects"],
+  "properties": {
+    "country": { "type": "string" },
+    "curriculum": { "type": "string" },
+    "lang": { "type": "string" },
+    "subjects": {
+      "type": "array",
+      "items": {
+        "required": ["name", "slug", "department", "concept", "gradeChapters"],
+        "properties": {
+          "name": { "type": "string" },
+          "slug": { "type": "string" },
+          "gradeChapters": {
+            "type": "object",
+            "additionalProperties": {
+              "required": ["level", "chapters"],
+              "properties": {
+                "level": { "enum": ["elementary", "middle", "secondary"] },
+                "chapters": { "type": "array" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+All future curricula write to this shape. ClickView normalizer converts its format once.
+
+### 5.3 Slug Convention (Unified)
+
+All curricula use the same slug pattern: `{cc}-g{N}-{subject}` (e.g., `us-g5-math`, `sd-g1-math`, `gb-g7-math`). This was unified in March 2026 — the US K-12 seed migrates old `us-{subject}-grade-{N}` slugs automatically on run.
+
+### 5.4 Image Layer Unification
+
+**Problem:** US subjects have two image layers (`thumbnailKey` per-subject + `imageKey` ClickView), SD subjects have one (`thumbnailKey` shared concept). The `getCatalogImageUrl()` function handles three fallback layers.
+
+**Solution:** Migrate US to shared concept thumbnails too, then deprecate `imageKey`:
+
+```
+Current:
+  US  → thumbnailKey (per-subject) → imageKey (ClickView) → static fallback
+  SD  → thumbnailKey (shared concept) → null → static fallback
+
+Target:
+  ALL → thumbnailKey (shared concept) → static fallback
+```
+
+Steps:
+
+1. Verify all US concept fields are set (already done — 240/240 have `concept`)
+2. Update US `thumbnailKey` to concept-based path: `catalog/concepts/{concept}/thumbnail`
+3. Remove `imageKey` references from seed and display code
+4. Drop `imageKey` column (breaking — do last)
+
+**Benefit:** 240 per-subject S3 keys become 24 shared concept keys. Same visual result, simpler code.
+
+### 5.5 TOC Extraction Quality
+
+**Problem:** Many Sudan PDFs (especially grades 6-8, 10-12 secondary) produced garbled or empty text via `pdftotext`. These subjects have chapters but 0 lessons.
+
+| Grade Range | Subjects with Lessons | Subjects with 0 Lessons |
+| ----------- | --------------------: | ----------------------: |
+| 1-5         |              31 (89%) |                 4 (11%) |
+| 6-9         |               8 (40%) |                12 (60%) |
+| 10-12       |              14 (29%) |                34 (71%) |
+
+**Solutions by priority:**
+
+1. **OCR pass** — Run Tesseract with Arabic model on scanned PDFs (grade 6 geography, math, history)
+2. **Manual entry** — For 10-12 subjects with 0 lessons, manually add lesson titles from textbooks
+3. **Community contribution** — Teachers fill in missing lessons via the content layer
+
+### 5.6 `NAME_TO_CONCEPT` Maintainability
+
+**Problem:** The `NAME_TO_CONCEPT` map in `concept-images.ts` is a hardcoded Record with ~60 entries covering US and Sudan subject names. Adding a third curriculum means more entries.
+
+**Solution:** Move to database. Add a `concept_mappings` table or use tags:
+
+```prisma
+// Option A: concept inferred from name at seed time (current — works fine to ~200 entries)
+// Option B: concept stored on CatalogSubject directly (already done — concept field exists)
+```
+
+**Recommendation:** No change needed. The `concept` field is already on `CatalogSubject` and set at seed time. The `NAME_TO_CONCEPT` map is only used during seeding to backfill subjects that don't have `concept` set. As long as new seeds set `concept` directly (which Sudan does), the map only needs entries for legacy subjects.
+
+### 5.7 Denormalized Count Update Performance
+
+**Problem:** The count update loop after seeding runs N+1 queries:
+
+```typescript
+// For each of 97 subjects:
+//   1 query to get chapters
+//   1 query to count lessons
+//   1 update
+// For each of 406 chapters:
+//   1 query to count lessons
+//   1 update
+// Total: ~97*3 + 406*2 = 1,103 queries
+```
+
+Sudan seed took 822s, mostly on this loop.
+
+**Solution:** Replace with two bulk SQL statements:
+
+```sql
+-- Update chapter counts
+UPDATE catalog_chapters SET
+  "totalLessons" = sub.count,
+  "totalContent" = sub.count
+FROM (SELECT "chapterId", COUNT(*) as count FROM catalog_lessons GROUP BY "chapterId") sub
+WHERE catalog_chapters.id = sub."chapterId";
+
+-- Update subject counts
+UPDATE catalog_subjects SET
+  "totalChapters" = ch.count,
+  "totalLessons" = ls.count,
+  "totalContent" = ls.count
+FROM
+  (SELECT "subjectId", COUNT(*) as count FROM catalog_chapters GROUP BY "subjectId") ch,
+  (SELECT c."subjectId", COUNT(*) as count FROM catalog_lessons l
+   JOIN catalog_chapters c ON l."chapterId" = c.id GROUP BY c."subjectId") ls
+WHERE catalog_subjects.id = ch."subjectId" AND catalog_subjects.id = ls."subjectId";
+```
+
+**Expected improvement:** 822s → ~5s for the count update phase.
+
+---
+
+## 6. File Map
+
+```
+prisma/
+  models/catalog.prisma              ← schema (Subject, Chapter, Lesson)
+  seeds/
+    clickview-catalog.ts             ← US K-12 seed (240 subjects)
+    sudan-catalog.ts                 ← Sudan seed (97 subjects)
+    concept-images.ts                ← shared image upload + backfill
+    catalog.ts                       ← orchestrator (calls both seeds)
+    single.ts                        ← CLI registry
+
+scripts/
+  sudan-data/
+    sudan-curriculum.json            ← master data (32 subjects, 97 grade-levels)
+    toc/sd-g{N}-{subject}.json       ← per-textbook TOC (97 files)
+    pdfs/grade-{N}/                  ← organized textbook PDFs
+  assemble-sudan-curriculum.ts       ← TOC files → master JSON
+
+src/lib/
+  catalog-setup.ts                   ← findCatalogSubjects(), inferCurriculum()
+  catalog-image.ts                   ← Sharp pipeline (processAndUploadCatalogImage)
+  catalog-image-url.ts               ← getCatalogImageUrl() resolution chain
+
+public/subjects/concepts/*.jpg       ← source images (24 concepts)
+```

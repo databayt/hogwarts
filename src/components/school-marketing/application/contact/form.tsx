@@ -16,6 +16,7 @@ import { InputField, PhoneField } from "@/components/form"
 import { createI18nHelpers } from "@/components/internationalization/helpers"
 
 import { useApplySession } from "../application-context"
+import { useAutoFillMerge } from "../use-auto-fill-merge"
 import { getApplyDict } from "../utils"
 import { saveContactStep } from "./actions"
 import type { ContactFormProps, ContactFormRef } from "./types"
@@ -46,6 +47,9 @@ export const ContactForm = forwardRef<ContactFormRef, ContactFormProps>(
         alternatePhone: initialData?.alternatePhone || "",
       },
     })
+
+    // Merge AI-extracted data into empty fields (late-arrival insurance)
+    useAutoFillMerge(form, initialData)
 
     const dict = getApplyDict(dictionary, "contact")
 

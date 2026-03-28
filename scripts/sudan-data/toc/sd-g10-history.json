@@ -1,0 +1,168 @@
+{
+  "subject": "history",
+  "subjectNameAr": "التاريخ",
+  "grade": 10,
+  "level": "secondary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "",
+  "chapters": [
+    {
+      "nameAr": "الوحدة الأولى: بناء الدولة الإسلامية",
+      "name": "Unit 1: Building the Islamic State",
+      "slug": "building-the-islamic-state",
+      "sequenceOrder": 1,
+      "lessons": [
+        {
+          "nameAr": "جغرافية شبه الجزيرة العربية",
+          "name": "Geography of the Arabian Peninsula",
+          "slug": "geography-arabian-peninsula",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "بناء الدولة الإسلامية (العهد النبوي)",
+          "name": "Building the Islamic State (The Prophetic Era)",
+          "slug": "building-islamic-state-prophetic-era",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "نمو الدولة الإسلامية في عهد الخلفاء الراشدين",
+          "name": "Growth of the Islamic State During the Rightly Guided Caliphs",
+          "slug": "growth-islamic-state-rightly-guided-caliphs",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "الدولة الإسلامية في عهد بني أمية",
+          "name": "The Islamic State During the Umayyad Dynasty",
+          "slug": "islamic-state-umayyad-dynasty",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "الدولة الإسلامية في عهد بني العباس",
+          "name": "The Islamic State During the Abbasid Dynasty",
+          "slug": "islamic-state-abbasid-dynasty",
+          "sequenceOrder": 5
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة الثانية: الحضارة الإسلامية",
+      "name": "Unit 2: Islamic Civilization",
+      "slug": "islamic-civilization",
+      "sequenceOrder": 2,
+      "lessons": [
+        {
+          "nameAr": "خصائص الحضارة الإسلامية",
+          "name": "Characteristics of Islamic Civilization",
+          "slug": "characteristics-islamic-civilization",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "مراكز الحضارة الإسلامية",
+          "name": "Centers of Islamic Civilization",
+          "slug": "centers-islamic-civilization",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "النظم الإسلامية (1)",
+          "name": "Islamic Systems (1)",
+          "slug": "islamic-systems-1",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "النظم الإسلامية (2)",
+          "name": "Islamic Systems (2)",
+          "slug": "islamic-systems-2",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "النظم الإسلامية (3)",
+          "name": "Islamic Systems (3)",
+          "slug": "islamic-systems-3",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "الحضارة الإسلامية - العلوم",
+          "name": "Islamic Civilization - Sciences",
+          "slug": "islamic-civilization-sciences",
+          "sequenceOrder": 6
+        },
+        {
+          "nameAr": "من علماء المسلمين - العلوم الكونية",
+          "name": "Muslim Scholars - Cosmic Sciences",
+          "slug": "muslim-scholars-cosmic-sciences",
+          "sequenceOrder": 7
+        },
+        {
+          "nameAr": "نماذج من الحضارة الإسلامية - العمارة والفنون",
+          "name": "Examples of Islamic Civilization - Architecture and Arts",
+          "slug": "islamic-civilization-architecture-arts",
+          "sequenceOrder": 8
+        },
+        {
+          "nameAr": "أثر الحضارة الإسلامية على النهضة الأوروبية",
+          "name": "Impact of Islamic Civilization on the European Renaissance",
+          "slug": "impact-islamic-civilization-european-renaissance",
+          "sequenceOrder": 9
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة الثالثة: نماذج من تاريخ إفريقيا وحضارتها قبل الإسلام",
+      "name": "Unit 3: Examples from African History and Civilization Before Islam",
+      "slug": "african-history-civilization-before-islam",
+      "sequenceOrder": 3,
+      "lessons": [
+        {
+          "nameAr": "إفريقيا البيئة الطبيعية والسكان",
+          "name": "Africa: Natural Environment and Population",
+          "slug": "africa-natural-environment-population",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الحضارة الفرعونية",
+          "name": "Pharaonic Civilization",
+          "slug": "pharaonic-civilization",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "السودان القديم",
+          "name": "Ancient Sudan",
+          "slug": "ancient-sudan",
+          "sequenceOrder": 3
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة الرابعة: انتشار الإسلام في إفريقيا",
+      "name": "Unit 4: Spread of Islam in Africa",
+      "slug": "spread-of-islam-in-africa",
+      "sequenceOrder": 4,
+      "lessons": [
+        {
+          "nameAr": "وسائل وأساليب انتشار الإسلام في إفريقيا",
+          "name": "Means and Methods of the Spread of Islam in Africa",
+          "slug": "means-methods-spread-islam-africa",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "انتشار الإسلام في شمال إفريقيا",
+          "name": "Spread of Islam in North Africa",
+          "slug": "spread-islam-north-africa",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "نشأة الدويلات المستقلة في بلاد المغرب العربي",
+          "name": "Rise of Independent States in the Arab Maghreb",
+          "slug": "rise-independent-states-arab-maghreb",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "انتشار الإسلام في غرب إفريقيا",
+          "name": "Spread of Islam in West Africa",
+          "slug": "spread-islam-west-africa",
+          "sequenceOrder": 4
+        }
+      ]
+    }
+  ]
+}

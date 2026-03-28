@@ -14,10 +14,10 @@ import {
 } from "./validation"
 
 // ============================================================================
-// CatalogSubject CRUD
+// Subject CRUD
 // ============================================================================
 
-export async function createCatalogSubject(data: FormData) {
+export async function createSubject(data: FormData) {
   await requireDeveloper()
 
   const raw = Object.fromEntries(data)
@@ -36,7 +36,7 @@ export async function createCatalogSubject(data: FormData) {
     sortOrder: raw.sortOrder ? Number(raw.sortOrder) : 0,
   })
 
-  const subject = await db.catalogSubject.create({
+  const subject = await db.subject.create({
     data: validated,
   })
 
@@ -44,7 +44,7 @@ export async function createCatalogSubject(data: FormData) {
   return { success: true, subject }
 }
 
-export async function updateCatalogSubject(id: string, data: FormData) {
+export async function updateSubject(id: string, data: FormData) {
   await requireDeveloper()
 
   const raw = Object.fromEntries(data)
@@ -65,7 +65,7 @@ export async function updateCatalogSubject(id: string, data: FormData) {
     sortOrder: raw.sortOrder ? Number(raw.sortOrder) : undefined,
   })
 
-  const subject = await db.catalogSubject.update({
+  const subject = await db.subject.update({
     where: { id },
     data: validated,
   })
@@ -75,20 +75,20 @@ export async function updateCatalogSubject(id: string, data: FormData) {
   return { success: true, subject }
 }
 
-export async function deleteCatalogSubject(id: string) {
+export async function deleteSubject(id: string) {
   await requireDeveloper()
 
-  await db.catalogSubject.delete({ where: { id } })
+  await db.subject.delete({ where: { id } })
 
   revalidatePath("/catalog")
   return { success: true }
 }
 
 // ============================================================================
-// CatalogChapter CRUD
+// Chapter CRUD
 // ============================================================================
 
-export async function createCatalogChapter(data: FormData) {
+export async function createChapter(data: FormData) {
   await requireDeveloper()
 
   const raw = Object.fromEntries(data)
@@ -97,15 +97,15 @@ export async function createCatalogChapter(data: FormData) {
     sequenceOrder: Number(raw.sequenceOrder) || 0,
   })
 
-  const chapter = await db.catalogChapter.create({
+  const chapter = await db.chapter.create({
     data: validated,
   })
 
   // Update denormalized count
-  const count = await db.catalogChapter.count({
+  const count = await db.chapter.count({
     where: { subjectId: validated.subjectId },
   })
-  await db.catalogSubject.update({
+  await db.subject.update({
     where: { id: validated.subjectId },
     data: { totalChapters: count },
   })
@@ -114,7 +114,7 @@ export async function createCatalogChapter(data: FormData) {
   return { success: true, chapter }
 }
 
-export async function updateCatalogChapter(id: string, data: FormData) {
+export async function updateChapter(id: string, data: FormData) {
   await requireDeveloper()
 
   const raw = Object.fromEntries(data)
@@ -123,7 +123,7 @@ export async function updateCatalogChapter(id: string, data: FormData) {
     sequenceOrder: raw.sequenceOrder ? Number(raw.sequenceOrder) : undefined,
   })
 
-  const chapter = await db.catalogChapter.update({
+  const chapter = await db.chapter.update({
     where: { id },
     data: validated,
   })
@@ -132,21 +132,21 @@ export async function updateCatalogChapter(id: string, data: FormData) {
   return { success: true, chapter }
 }
 
-export async function deleteCatalogChapter(id: string) {
+export async function deleteChapter(id: string) {
   await requireDeveloper()
 
-  const chapter = await db.catalogChapter.findUniqueOrThrow({
+  const chapter = await db.chapter.findUniqueOrThrow({
     where: { id },
     select: { subjectId: true },
   })
 
-  await db.catalogChapter.delete({ where: { id } })
+  await db.chapter.delete({ where: { id } })
 
   // Update denormalized count
-  const count = await db.catalogChapter.count({
+  const count = await db.chapter.count({
     where: { subjectId: chapter.subjectId },
   })
-  await db.catalogSubject.update({
+  await db.subject.update({
     where: { id: chapter.subjectId },
     data: { totalChapters: count },
   })
@@ -156,10 +156,10 @@ export async function deleteCatalogChapter(id: string) {
 }
 
 // ============================================================================
-// CatalogLesson CRUD
+// Lesson CRUD
 // ============================================================================
 
-export async function createCatalogLesson(data: FormData) {
+export async function createLesson(data: FormData) {
   await requireDeveloper()
 
   const raw = Object.fromEntries(data)
@@ -171,28 +171,28 @@ export async function createCatalogLesson(data: FormData) {
       : undefined,
   })
 
-  const lesson = await db.catalogLesson.create({
+  const lesson = await db.lesson.create({
     data: validated,
   })
 
   // Update denormalized counts
-  const chapter = await db.catalogChapter.findUniqueOrThrow({
+  const chapter = await db.chapter.findUniqueOrThrow({
     where: { id: validated.chapterId },
     select: { subjectId: true },
   })
 
-  const chapterLessonCount = await db.catalogLesson.count({
+  const chapterLessonCount = await db.lesson.count({
     where: { chapterId: validated.chapterId },
   })
-  await db.catalogChapter.update({
+  await db.chapter.update({
     where: { id: validated.chapterId },
     data: { totalLessons: chapterLessonCount },
   })
 
-  const totalLessons = await db.catalogLesson.count({
+  const totalLessons = await db.lesson.count({
     where: { chapter: { subjectId: chapter.subjectId } },
   })
-  await db.catalogSubject.update({
+  await db.subject.update({
     where: { id: chapter.subjectId },
     data: { totalLessons },
   })
@@ -201,7 +201,7 @@ export async function createCatalogLesson(data: FormData) {
   return { success: true, lesson }
 }
 
-export async function updateCatalogLesson(id: string, data: FormData) {
+export async function updateLesson(id: string, data: FormData) {
   await requireDeveloper()
 
   const raw = Object.fromEntries(data)
@@ -213,12 +213,12 @@ export async function updateCatalogLesson(id: string, data: FormData) {
       : undefined,
   })
 
-  const lesson = await db.catalogLesson.update({
+  const lesson = await db.lesson.update({
     where: { id },
     data: validated,
   })
 
-  const chapter = await db.catalogChapter.findUniqueOrThrow({
+  const chapter = await db.chapter.findUniqueOrThrow({
     where: { id: lesson.chapterId },
     select: { subjectId: true },
   })
@@ -231,7 +231,7 @@ export async function updateCatalogLesson(id: string, data: FormData) {
 // Reorder Actions
 // ============================================================================
 
-export async function reorderCatalogChapters(
+export async function reorderChapters(
   subjectId: string,
   chapters: { id: string; position: number }[]
 ) {
@@ -239,7 +239,7 @@ export async function reorderCatalogChapters(
 
   await db.$transaction(
     chapters.map((ch) =>
-      db.catalogChapter.update({
+      db.chapter.update({
         where: { id: ch.id, subjectId },
         data: { sequenceOrder: ch.position },
       })
@@ -250,20 +250,20 @@ export async function reorderCatalogChapters(
   return { success: true }
 }
 
-export async function reorderCatalogLessons(
+export async function reorderLessons(
   chapterId: string,
   lessons: { id: string; position: number }[]
 ) {
   await requireDeveloper()
 
-  const chapter = await db.catalogChapter.findUniqueOrThrow({
+  const chapter = await db.chapter.findUniqueOrThrow({
     where: { id: chapterId },
     select: { subjectId: true },
   })
 
   await db.$transaction(
     lessons.map((l) =>
-      db.catalogLesson.update({
+      db.lesson.update({
         where: { id: l.id, chapterId },
         data: { sequenceOrder: l.position },
       })
@@ -274,10 +274,10 @@ export async function reorderCatalogLessons(
   return { success: true }
 }
 
-export async function deleteCatalogLesson(id: string) {
+export async function deleteLesson(id: string) {
   await requireDeveloper()
 
-  const lesson = await db.catalogLesson.findUniqueOrThrow({
+  const lesson = await db.lesson.findUniqueOrThrow({
     where: { id },
     select: {
       chapterId: true,
@@ -285,21 +285,21 @@ export async function deleteCatalogLesson(id: string) {
     },
   })
 
-  await db.catalogLesson.delete({ where: { id } })
+  await db.lesson.delete({ where: { id } })
 
   // Update denormalized counts
-  const chapterLessonCount = await db.catalogLesson.count({
+  const chapterLessonCount = await db.lesson.count({
     where: { chapterId: lesson.chapterId },
   })
-  await db.catalogChapter.update({
+  await db.chapter.update({
     where: { id: lesson.chapterId },
     data: { totalLessons: chapterLessonCount },
   })
 
-  const totalLessons = await db.catalogLesson.count({
+  const totalLessons = await db.lesson.count({
     where: { chapter: { subjectId: lesson.chapter.subjectId } },
   })
-  await db.catalogSubject.update({
+  await db.subject.update({
     where: { id: lesson.chapter.subjectId },
     data: { totalLessons },
   })

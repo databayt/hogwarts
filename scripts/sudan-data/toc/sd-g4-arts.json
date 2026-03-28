@@ -1,0 +1,118 @@
+{
+  "subject": "arts",
+  "subjectNameAr": "التربية الفنية",
+  "grade": 4,
+  "level": "elementary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "الطبعة الأولى 2021م",
+  "chapters": [
+    {
+      "nameAr": "المجال الأول: الرسم",
+      "name": "Domain 1: Drawing",
+      "slug": "drawing",
+      "sequenceOrder": 1,
+      "lessons": [
+        {
+          "nameAr": "الدرس الأول: دراسة الأشكال البسيطة",
+          "name": "Lesson 1: Studying Simple Shapes",
+          "slug": "studying-simple-shapes",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الدرس الثاني: الضوء والظلال",
+          "name": "Lesson 2: Light and Shadows",
+          "slug": "light-and-shadows",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الدرس الثالث: رسم النبات",
+          "name": "Lesson 3: Drawing Plants",
+          "slug": "drawing-plants",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "الدرس الرابع: التكوين الفني",
+          "name": "Lesson 4: Artistic Composition",
+          "slug": "artistic-composition",
+          "sequenceOrder": 4
+        }
+      ]
+    },
+    {
+      "nameAr": "المجال الثاني: التصميم والزخرفة",
+      "name": "Domain 2: Design and Decoration",
+      "slug": "design-and-decoration",
+      "sequenceOrder": 2,
+      "lessons": [
+        {
+          "nameAr": "الدرس الأول: عناصر التصميم الفني",
+          "name": "Lesson 1: Elements of Artistic Design",
+          "slug": "elements-of-artistic-design",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الدرس الثاني: أسس التصميم الفني",
+          "name": "Lesson 2: Foundations of Artistic Design",
+          "slug": "foundations-of-artistic-design",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الدرس الثالث: التراث الفني السوداني",
+          "name": "Lesson 3: Sudanese Artistic Heritage",
+          "slug": "sudanese-artistic-heritage",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "الدرس الرابع: الزخرفة",
+          "name": "Lesson 4: Ornamentation",
+          "slug": "ornamentation",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "الدرس الخامس: الخط العربي",
+          "name": "Lesson 5: Arabic Calligraphy",
+          "slug": "arabic-calligraphy",
+          "sequenceOrder": 5
+        }
+      ]
+    },
+    {
+      "nameAr": "المجال الثالث: التشكيل والتركيب",
+      "name": "Domain 3: Sculpting and Assembly",
+      "slug": "sculpting-and-assembly",
+      "sequenceOrder": 3,
+      "lessons": [
+        {
+          "nameAr": "الدرس الأول: التشكيل بأعمال الطين والخزف",
+          "name": "Lesson 1: Clay and Pottery Work",
+          "slug": "clay-and-pottery-work",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الدرس الثاني: أعمال المخلفات المنزلية",
+          "name": "Lesson 2: Household Waste Crafts",
+          "slug": "household-waste-crafts",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الدرس الثالث: الطباعة اليدوية",
+          "name": "Lesson 3: Hand Printing",
+          "slug": "hand-printing",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "الدرس الرابع: النسيج والأعمال الورقية",
+          "name": "Lesson 4: Weaving and Paper Crafts",
+          "slug": "weaving-and-paper-crafts",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "الدرس الخامس: التشكيل بالورق",
+          "name": "Lesson 5: Paper Sculpting",
+          "slug": "paper-sculpting",
+          "sequenceOrder": 5
+        }
+      ]
+    }
+  ]
+}

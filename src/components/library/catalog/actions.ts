@@ -46,7 +46,7 @@ async function requireSchoolAdmin() {
 // Select a catalog book (add to school library)
 // ============================================================================
 
-export async function selectCatalogBook(
+export async function selectBook(
   catalogBookId: string,
   totalCopies: number,
   shelfLocation?: string
@@ -55,7 +55,7 @@ export async function selectCatalogBook(
     const { schoolId } = await requireSchoolAdmin()
 
     // Check if already selected
-    const existing = await db.schoolBookSelection.findFirst({
+    const existing = await db.bookSelection.findFirst({
       where: { schoolId, catalogBookId },
     })
 
@@ -64,7 +64,7 @@ export async function selectCatalogBook(
     }
 
     // Get catalog book data
-    const catalogBook = await db.catalogBook.findUnique({
+    const catalogBook = await db.book.findUnique({
       where: { id: catalogBookId },
       select: {
         title: true,
@@ -91,7 +91,7 @@ export async function selectCatalogBook(
 
     // Create selection + school Book + update usage count in a single transaction
     await db.$transaction(async (tx) => {
-      await tx.schoolBookSelection.create({
+      await tx.bookSelection.create({
         data: {
           schoolId,
           catalogBookId,
@@ -102,7 +102,7 @@ export async function selectCatalogBook(
         },
       })
 
-      await tx.book.create({
+      await tx.schoolBook.create({
         data: {
           schoolId,
           catalogBookId,
@@ -126,10 +126,10 @@ export async function selectCatalogBook(
         },
       })
 
-      const usageCount = await tx.schoolBookSelection.count({
+      const usageCount = await tx.bookSelection.count({
         where: { catalogBookId },
       })
-      await tx.catalogBook.update({
+      await tx.book.update({
         where: { id: catalogBookId },
         data: { usageCount },
       })
@@ -154,13 +154,13 @@ export async function selectCatalogBook(
 // Deselect a catalog book (remove from school library)
 // ============================================================================
 
-export async function deselectCatalogBook(
+export async function deselectBook(
   catalogBookId: string
 ): Promise<ActionResponse> {
   try {
     const { schoolId } = await requireSchoolAdmin()
 
-    const existing = await db.schoolBookSelection.findFirst({
+    const existing = await db.bookSelection.findFirst({
       where: { schoolId, catalogBookId },
     })
 
@@ -170,18 +170,18 @@ export async function deselectCatalogBook(
 
     // Delete selection, unlink books, and update usage count in a single transaction
     await db.$transaction(async (tx) => {
-      await tx.schoolBookSelection.delete({ where: { id: existing.id } })
+      await tx.bookSelection.delete({ where: { id: existing.id } })
 
-      // Unlink books but don't delete (they may have borrow records)
-      await tx.book.updateMany({
+      // Unlink school books but don't delete (they may have borrow records)
+      await tx.schoolBook.updateMany({
         where: { schoolId, catalogBookId },
         data: { catalogBookId: null },
       })
 
-      const usageCount = await tx.schoolBookSelection.count({
+      const usageCount = await tx.bookSelection.count({
         where: { catalogBookId },
       })
-      await tx.catalogBook.update({
+      await tx.book.update({
         where: { id: catalogBookId },
         data: { usageCount },
       })
@@ -215,7 +215,7 @@ export async function updateBookSelection(
 
     const validated = updateSelectionSchema.parse(data)
 
-    const selection = await db.schoolBookSelection.findFirst({
+    const selection = await db.bookSelection.findFirst({
       where: { id: selectionId, schoolId },
     })
 
@@ -223,7 +223,7 @@ export async function updateBookSelection(
       return { success: false, error: "Selection not found" }
     }
 
-    await db.schoolBookSelection.update({
+    await db.bookSelection.update({
       where: { id: selectionId },
       data: validated,
     })
@@ -254,7 +254,7 @@ export async function toggleBookSelection(
   try {
     const { schoolId } = await requireSchoolAdmin()
 
-    const selection = await db.schoolBookSelection.findFirst({
+    const selection = await db.bookSelection.findFirst({
       where: { schoolId, catalogBookId },
     })
 
@@ -262,7 +262,7 @@ export async function toggleBookSelection(
       return { success: false, error: "Selection not found" }
     }
 
-    await db.schoolBookSelection.update({
+    await db.bookSelection.update({
       where: { id: selection.id },
       data: { isActive },
     })

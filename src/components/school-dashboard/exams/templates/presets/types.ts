@@ -37,11 +37,11 @@ export function getRegionPreset(id: string): RegionPreset | undefined {
  */
 export function detectRegionPreset(school: {
   country?: string | null
-  curriculum?: string | null
+  timetableStructure?: string | null
   schoolType?: string | null
 }): string | undefined {
   const country = school.country?.toLowerCase()
-  const curriculum = school.curriculum?.toLowerCase()
+  const curriculum = school.timetableStructure?.toLowerCase()
 
   if (country === "sd" || country === "sudan") return "sd-national"
   if (country === "sa" || country === "saudi arabia") return "sa-national"

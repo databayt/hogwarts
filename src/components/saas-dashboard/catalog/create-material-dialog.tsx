@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 
-import { createCatalogMaterial } from "./material-actions"
+import { createMaterial } from "./material-actions"
 
 const MATERIAL_TYPES = [
   { value: "TEXTBOOK", label: "Textbook" },
@@ -90,7 +90,7 @@ export function CreateMaterialDialog() {
           formData.append("tags", tag)
         }
 
-        const result = await createCatalogMaterial(formData)
+        const result = await createMaterial(formData)
         if (result.success) {
           toast.success("Material created")
           setOpen(false)

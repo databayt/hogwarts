@@ -58,6 +58,7 @@ export default function EnrollStudentContent({
   students = [],
 }: Props) {
   const d = dictionary?.students
+  const e = (d as any)?.enroll
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [studentId, setStudentId] = useState("")
@@ -75,7 +76,7 @@ export default function EnrollStudentContent({
 
   const handleEnroll = () => {
     if (!studentId) {
-      toast.error("Please select a student")
+      toast.error(e?.pleaseSelectStudent || "Please select a student")
       return
     }
 
@@ -88,10 +89,12 @@ export default function EnrollStudentContent({
       })
 
       if (result.success) {
-        toast.success("Student enrolled successfully")
+        toast.success(e?.enrolledSuccess || "Student enrolled successfully")
         router.refresh()
       } else {
-        toast.error(result.error || "Failed to enroll student")
+        toast.error(
+          result.error || e?.enrollFailed || "Failed to enroll student"
+        )
       }
     })
   }
@@ -105,10 +108,12 @@ export default function EnrollStudentContent({
         <CardContent className="space-y-4">
           {/* Student Selection */}
           <div className="space-y-2">
-            <Label>Student</Label>
+            <Label>{e?.student || "Student"}</Label>
             <Select value={studentId} onValueChange={setStudentId}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select student" />
+                <SelectValue
+                  placeholder={e?.selectStudent || "Select student"}
+                />
               </SelectTrigger>
               <SelectContent>
                 {students.map((s) => (
@@ -123,7 +128,7 @@ export default function EnrollStudentContent({
           {/* Grade Selection */}
           {academicGrades.length > 0 && (
             <div className="space-y-2">
-              <Label>Academic Grade</Label>
+              <Label>{e?.academicGrade || "Academic Grade"}</Label>
               <Select
                 value={gradeId}
                 onValueChange={(v) => {
@@ -133,7 +138,7 @@ export default function EnrollStudentContent({
                 }}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select grade" />
+                  <SelectValue placeholder={e?.selectGrade || "Select grade"} />
                 </SelectTrigger>
                 <SelectContent>
                   {academicGrades.map((grade) => (
@@ -150,10 +155,10 @@ export default function EnrollStudentContent({
           {/* Class Selection */}
           {filteredClasses.length > 0 && (
             <div className="space-y-2">
-              <Label>Class</Label>
+              <Label>{e?.class || "Class"}</Label>
               <Select value={classId} onValueChange={setClassId}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select class" />
+                  <SelectValue placeholder={e?.selectClass || "Select class"} />
                 </SelectTrigger>
                 <SelectContent>
                   {filteredClasses.map((cls) => (
@@ -169,10 +174,10 @@ export default function EnrollStudentContent({
           {/* Batch Selection */}
           {batches.length > 0 && (
             <div className="space-y-2">
-              <Label>Batch</Label>
+              <Label>{e?.batch || "Batch"}</Label>
               <Select value={batchId} onValueChange={setBatchId}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select batch" />
+                  <SelectValue placeholder={e?.selectBatch || "Select batch"} />
                 </SelectTrigger>
                 <SelectContent>
                   {batches.map((batch) => (
@@ -190,7 +195,9 @@ export default function EnrollStudentContent({
             disabled={isPending || !studentId}
             className="w-full"
           >
-            {isPending ? "Enrolling..." : "Enroll Student"}
+            {isPending
+              ? e?.enrolling || "Enrolling..."
+              : e?.title || "Enroll Student"}
           </Button>
         </CardContent>
       </Card>

@@ -293,7 +293,7 @@ export async function createTemplate(
 
     const validated = examTemplateSchema.parse(data)
 
-    const template = await db.examTemplate.create({
+    const template = await db.schoolExamTemplate.create({
       data: {
         ...validated,
         schoolId,
@@ -325,7 +325,7 @@ export async function getTemplates(filters?: {
 
     const schoolId = session.user.schoolId
 
-    const templates = await db.examTemplate.findMany({
+    const templates = await db.schoolExamTemplate.findMany({
       where: {
         schoolId, // CRITICAL: Multi-tenant scope
         ...(filters?.subjectId && { subjectId: filters.subjectId }),
@@ -387,7 +387,7 @@ export async function generateExam(
     // Get template if specified
     let distribution = validated.customDistribution
     if (validated.templateId && !distribution) {
-      const template = await db.examTemplate.findUnique({
+      const template = await db.schoolExamTemplate.findUnique({
         where: {
           id: validated.templateId,
           schoolId,
@@ -406,7 +406,7 @@ export async function generateExam(
     }
 
     // Get available questions
-    const exam = await db.exam.findUnique({
+    const exam = await db.schoolExam.findUnique({
       where: { id: validated.examId, schoolId },
     })
 
@@ -554,7 +554,7 @@ export async function getAnalyticsDashboard() {
     const [totalQuestions, totalTemplates, totalGeneratedExams, questions] =
       await Promise.all([
         db.questionBank.count({ where: { schoolId } }),
-        db.examTemplate.count({ where: { schoolId } }),
+        db.schoolExamTemplate.count({ where: { schoolId } }),
         db.generatedExam.count({ where: { schoolId } }),
         db.questionBank.findMany({
           where: { schoolId },

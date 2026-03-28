@@ -460,7 +460,7 @@ async function main() {
 
   try {
     // 1. Fetch all catalog subjects
-    const subjects = await prisma.catalogSubject.findMany({
+    const subjects = await prisma.subject.findMany({
       where: { status: "PUBLISHED" },
       select: { id: true, slug: true, name: true },
     })
@@ -688,7 +688,7 @@ async function main() {
     }
 
     // Get all catalog lessons grouped by subject slug
-    const allLessons = await prisma.catalogLesson.findMany({
+    const allLessons = await prisma.lesson.findMany({
       where: { status: "PUBLISHED" },
       select: {
         id: true,
@@ -733,7 +733,7 @@ async function main() {
 
     // Delete existing self-hosted platform videos to avoid duplicates
     if (!DRY_RUN) {
-      const deleted = await prisma.lessonVideo.deleteMany({
+      const deleted = await prisma.video.deleteMany({
         where: { provider: "self-hosted", schoolId: null },
       })
       if (deleted.count > 0) {
@@ -756,7 +756,7 @@ async function main() {
         const batch = lessons.slice(i, i + DB_BATCH_SIZE)
 
         if (!DRY_RUN) {
-          await prisma.lessonVideo.createMany({
+          await prisma.video.createMany({
             data: batch.map((lesson, batchIdx) => {
               const globalIdx = i + batchIdx
               const entry = entries[globalIdx % entries.length]

@@ -4,8 +4,8 @@
 /**
  * Catalog Books Seed
  *
- * 51 books with real Open Library covers as global CatalogBook entries.
- * Creates SchoolBookSelection records for demo school.
+ * 51 books with real Open Library covers as global Book entries.
+ * Creates BookSelection records for demo school.
  *
  * All books are seeded as APPROVED + PUBLISHED + PUBLIC.
  */
@@ -18,7 +18,7 @@ import { logPhase, logSuccess } from "./utils"
 // BOOK DATA - 51 books with Open Library covers
 // ============================================================================
 
-interface CatalogBookSeed {
+interface BookSeed {
   title: string
   author: string
   genre: string
@@ -240,7 +240,7 @@ const COVER_DATA: Record<string, { isbn?: string; coverUrl: string }> = {
   },
 }
 
-const BOOKS: CatalogBookSeed[] = [
+const BOOKS: BookSeed[] = [
   // Arabic Literature (7)
   {
     title: "المعلقات السبع",
@@ -977,20 +977,17 @@ function slugify(text: string): string {
 // MAIN SEED FUNCTION
 // ============================================================================
 
-export async function seedCatalogBooks(
-  prisma: PrismaClient,
-  schoolId?: string
-) {
+export async function seedBooks(prisma: PrismaClient, schoolId?: string) {
   logPhase(0, "CATALOG BOOKS", "كتالوج الكتب")
 
   let catalogBookIds: string[] = []
 
-  // Create CatalogBook entries
+  // Create Book entries
   for (const bookData of BOOKS) {
     const slug = slugify(bookData.title) || `book-${Date.now().toString(36)}`
 
     try {
-      const existing = await prisma.catalogBook.findFirst({
+      const existing = await prisma.book.findFirst({
         where: { title: bookData.title, author: bookData.author },
       })
 
@@ -1002,7 +999,7 @@ export async function seedCatalogBooks(
           existing.coverUrl !== newCoverUrl ||
           (coverData?.isbn && !existing.isbn)
         if (needsUpdate) {
-          await prisma.catalogBook.update({
+          await prisma.book.update({
             where: { id: existing.id },
             data: {
               coverUrl: newCoverUrl,
@@ -1015,7 +1012,7 @@ export async function seedCatalogBooks(
         catalogBookIds.push(existing.id)
       } else {
         const coverData = COVER_DATA[bookData.title]
-        const book = await prisma.catalogBook.create({
+        const book = await prisma.book.create({
           data: {
             title: bookData.title,
             slug,
@@ -1047,7 +1044,7 @@ export async function seedCatalogBooks(
 
   logSuccess("Catalog Books", catalogBookIds.length, "global catalog entries")
 
-  // Create SchoolBookSelection for demo school if schoolId provided
+  // Create BookSelection for demo school if schoolId provided
   if (schoolId && catalogBookIds.length > 0) {
     let selectionCount = 0
 
@@ -1056,13 +1053,13 @@ export async function seedCatalogBooks(
       const bookData = BOOKS[i]
 
       try {
-        const existing = await prisma.schoolBookSelection.findFirst({
+        const existing = await prisma.bookSelection.findFirst({
           where: { schoolId, catalogBookId },
         })
 
         if (!existing) {
           // Get full catalog book data for Book row creation
-          const catalogBook = await prisma.catalogBook.findUnique({
+          const catalogBook = await prisma.book.findUnique({
             where: { id: catalogBookId },
             select: {
               title: true,
@@ -1084,12 +1081,12 @@ export async function seedCatalogBooks(
           })
 
           if (catalogBook) {
-            // Check if a Book row already exists for this catalog book in this school
-            const existingBook = await prisma.book.findFirst({
+            // Check if a SchoolBook row already exists for this catalog book in this school
+            const existingBook = await prisma.schoolBook.findFirst({
               where: { schoolId, catalogBookId },
             })
 
-            await prisma.schoolBookSelection.create({
+            await prisma.bookSelection.create({
               data: {
                 schoolId,
                 catalogBookId,
@@ -1100,7 +1097,7 @@ export async function seedCatalogBooks(
             })
 
             if (!existingBook) {
-              await prisma.book.create({
+              await prisma.schoolBook.create({
                 data: {
                   schoolId,
                   catalogBookId,
@@ -1135,10 +1132,10 @@ export async function seedCatalogBooks(
 
     // Update usage counts
     for (const catalogBookId of catalogBookIds) {
-      const count = await prisma.schoolBookSelection.count({
+      const count = await prisma.bookSelection.count({
         where: { catalogBookId },
       })
-      await prisma.catalogBook.update({
+      await prisma.book.update({
         where: { id: catalogBookId },
         data: { usageCount: count },
       })

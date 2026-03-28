@@ -82,7 +82,7 @@ const statusColors = {
   DROPPED_OUT: "bg-destructive",
 }
 
-const statusLabels = {
+const defaultStatusLabels = {
   ACTIVE: "Active",
   INACTIVE: "Inactive",
   SUSPENDED: "Suspended",
@@ -100,6 +100,19 @@ export function StudentProfile({
   gradeBoundaries,
 }: StudentProfileProps) {
   const [activeTab, setActiveTab] = useState("personal")
+
+  const p = dictionary?.students?.profile
+  const h = p?.header
+  const tabs = p?.tabs
+  const statusOpts = dictionary?.students?.enrollment?.statusOptions
+  const statusLabels = {
+    ACTIVE: statusOpts?.active || defaultStatusLabels.ACTIVE,
+    INACTIVE: statusOpts?.inactive || defaultStatusLabels.INACTIVE,
+    SUSPENDED: statusOpts?.suspended || defaultStatusLabels.SUSPENDED,
+    GRADUATED: statusOpts?.graduated || defaultStatusLabels.GRADUATED,
+    TRANSFERRED: statusOpts?.transferred || defaultStatusLabels.TRANSFERRED,
+    DROPPED_OUT: statusOpts?.droppedOut || defaultStatusLabels.DROPPED_OUT,
+  }
 
   const getInitials = () => {
     return `${student.firstName?.[0] || ""}${student.lastName?.[0] || ""}`.toUpperCase()
@@ -173,13 +186,13 @@ export function StudentProfile({
                     {student.grNumber && (
                       <span className="flex items-center gap-1">
                         <FileText className="h-4 w-4" />
-                        GR: {student.grNumber}
+                        {h?.grNumber || "GR"}: {student.grNumber}
                       </span>
                     )}
                     {student.admissionNumber && (
                       <span className="flex items-center gap-1">
                         <School className="h-4 w-4" />
-                        Admission: {student.admissionNumber}
+                        {h?.admission || "Admission"}: {student.admissionNumber}
                       </span>
                     )}
                   </div>
@@ -190,7 +203,7 @@ export function StudentProfile({
                   {isOwner && (
                     <Button variant="outline" size="sm" onClick={onEdit}>
                       <Pencil className="me-2 h-4 w-4" />
-                      Edit
+                      {h?.edit || "Edit"}
                     </Button>
                   )}
                   <DropdownMenu>
@@ -200,23 +213,25 @@ export function StudentProfile({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuLabel>
+                        {h?.actions || "Actions"}
+                      </DropdownMenuLabel>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={handlePrint}>
                         <Printer className="me-2 h-4 w-4" />
-                        Print Profile
+                        {h?.printProfile || "Print Profile"}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={handleDownload}>
                         <Download className="me-2 h-4 w-4" />
-                        Download PDF
+                        {h?.downloadPdf || "Download PDF"}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={handleShare}>
                         <Share2 className="me-2 h-4 w-4" />
-                        Share Profile
+                        {h?.shareProfile || "Share Profile"}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem className="text-red-600">
-                        Generate ID Card
+                        {h?.generateIdCard || "Generate ID Card"}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -226,7 +241,9 @@ export function StudentProfile({
               {/* Quick Info Grid */}
               <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                 <div className="space-y-1">
-                  <p className="text-muted-foreground text-sm">Date of Birth</p>
+                  <p className="text-muted-foreground text-sm">
+                    {h?.dateOfBirth || "Date of Birth"}
+                  </p>
                   <p className="font-medium">
                     {student.dateOfBirth
                       ? format(new Date(student.dateOfBirth), "dd MMM yyyy")
@@ -234,20 +251,26 @@ export function StudentProfile({
                   </p>
                   {getAge() && (
                     <p className="text-muted-foreground text-xs">
-                      {getAge()} years old
+                      {getAge()} {h?.yearsOld || "years old"}
                     </p>
                   )}
                 </div>
                 <div className="space-y-1">
-                  <p className="text-muted-foreground text-sm">Gender</p>
+                  <p className="text-muted-foreground text-sm">
+                    {h?.gender || "Gender"}
+                  </p>
                   <p className="font-medium">{student.gender || "-"}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-muted-foreground text-sm">Blood Group</p>
+                  <p className="text-muted-foreground text-sm">
+                    {h?.bloodGroup || "Blood Group"}
+                  </p>
                   <p className="font-medium">{student.bloodGroup || "-"}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-muted-foreground text-sm">Nationality</p>
+                  <p className="text-muted-foreground text-sm">
+                    {h?.nationality || "Nationality"}
+                  </p>
                   <p className="font-medium">{student.nationality || "-"}</p>
                 </div>
               </div>
@@ -287,7 +310,9 @@ export function StudentProfile({
                 <div className="flex items-center gap-2 rounded-lg bg-red-50 p-3 dark:bg-red-950/20">
                   <TriangleAlert className="h-4 w-4 text-red-600" />
                   <div className="text-sm">
-                    <span className="font-medium">Emergency Contact:</span>{" "}
+                    <span className="font-medium">
+                      {h?.emergencyContact || "Emergency Contact"}:
+                    </span>{" "}
                     {student.emergencyContactName} (
                     {student.emergencyContactRelation}) -{" "}
                     <a
@@ -318,93 +343,97 @@ export function StudentProfile({
                 className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent"
               >
                 <User className="me-2 h-4 w-4" />
-                Personal
+                {tabs?.personal || "Personal"}
               </TabsTrigger>
               <TabsTrigger
                 value="academic"
                 className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent"
               >
                 <School className="me-2 h-4 w-4" />
-                Academic
+                {tabs?.academic || "Academic"}
               </TabsTrigger>
               <TabsTrigger
                 value="guardian"
                 className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent"
               >
                 <User className="me-2 h-4 w-4" />
-                Guardians
+                {tabs?.guardians || "Guardians"}
               </TabsTrigger>
               <TabsTrigger
                 value="documents"
                 className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent"
               >
                 <FileText className="me-2 h-4 w-4" />
-                Documents
+                {tabs?.documents || "Documents"}
               </TabsTrigger>
               <TabsTrigger
                 value="health"
                 className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent"
               >
                 <Heart className="me-2 h-4 w-4" />
-                Health
+                {tabs?.health || "Health"}
               </TabsTrigger>
               <TabsTrigger
                 value="achievements"
                 className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent"
               >
                 <Award className="me-2 h-4 w-4" />
-                Achievements
+                {tabs?.achievements || "Achievements"}
               </TabsTrigger>
               <TabsTrigger
                 value="attendance"
                 className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent"
               >
                 <Calendar className="me-2 h-4 w-4" />
-                Attendance
+                {tabs?.attendance || "Attendance"}
               </TabsTrigger>
               <TabsTrigger
                 value="fees"
                 className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent"
               >
                 <CreditCard className="me-2 h-4 w-4" />
-                Fees
+                {tabs?.fees || "Fees"}
               </TabsTrigger>
             </TabsList>
 
             <div className="p-6">
               <TabsContent value="personal" className="mt-0">
-                <PersonalTab student={student} />
+                <PersonalTab student={student} dictionary={p?.personal} />
               </TabsContent>
 
               <TabsContent value="academic" className="mt-0">
                 <AcademicTab
                   student={student}
                   gradeBoundaries={gradeBoundaries}
+                  dictionary={p?.academic}
                 />
               </TabsContent>
 
               <TabsContent value="guardian" className="mt-0">
-                <GuardianTab student={student} />
+                <GuardianTab student={student} dictionary={p?.guardian} />
               </TabsContent>
 
               <TabsContent value="documents" className="mt-0">
-                <DocumentsTab student={student} />
+                <DocumentsTab student={student} dictionary={p?.documents} />
               </TabsContent>
 
               <TabsContent value="health" className="mt-0">
-                <HealthTab student={student} />
+                <HealthTab student={student} dictionary={p?.health} />
               </TabsContent>
 
               <TabsContent value="achievements" className="mt-0">
-                <AchievementsTab student={student} />
+                <AchievementsTab
+                  student={student}
+                  dictionary={p?.achievements}
+                />
               </TabsContent>
 
               <TabsContent value="attendance" className="mt-0">
-                <AttendanceTab student={student} />
+                <AttendanceTab student={student} dictionary={p?.attendance} />
               </TabsContent>
 
               <TabsContent value="fees" className="mt-0">
-                <FeesTab student={student} />
+                <FeesTab student={student} dictionary={p?.fees} />
               </TabsContent>
             </div>
           </Tabs>

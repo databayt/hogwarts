@@ -1,0 +1,38 @@
+{
+  "subject": "rhetoric",
+  "subjectNameAr": "البلاغة والتعبير",
+  "grade": 11,
+  "level": "secondary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "",
+  "chapters": [
+    {
+      "nameAr": "الوحدة الأولى: علم البيان",
+      "name": "Unit 1: Science of Eloquence (Bayan)",
+      "slug": "science-of-bayan",
+      "sequenceOrder": 1,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الثانية: علم المعاني",
+      "name": "Unit 2: Science of Meanings (Maani)",
+      "slug": "science-of-maani",
+      "sequenceOrder": 2,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الثالثة: علم البديع",
+      "name": "Unit 3: Science of Rhetoric (Badee)",
+      "slug": "science-of-badee",
+      "sequenceOrder": 3,
+      "lessons": []
+    },
+    {
+      "nameAr": "الوحدة الرابعة: التعبير",
+      "name": "Unit 4: Expression and Composition",
+      "slug": "expression-composition",
+      "sequenceOrder": 4,
+      "lessons": []
+    }
+  ]
+}

@@ -36,7 +36,7 @@ export async function getAllCatalogCourses(
   const displayLang = (params.lang || "en") as SupportedLanguage
 
   // Get catalog subjects that this school has selected
-  const selections = await db.schoolSubjectSelection.findMany({
+  const selections = await db.subjectSelection.findMany({
     where: {
       schoolId,
       isActive: true,
@@ -60,7 +60,7 @@ export async function getAllCatalogCourses(
     : new Map<string, string>()
 
   // Build where clause — show ALL published ClickView subjects (matching subjects page)
-  const where: Prisma.CatalogSubjectWhereInput = {
+  const where: Prisma.SubjectWhereInput = {
     status: "PUBLISHED",
     curriculum: "us-k12",
     ...(params.title
@@ -76,14 +76,14 @@ export async function getAllCatalogCourses(
   }
 
   const [subjects, count] = await Promise.all([
-    db.catalogSubject.findMany({
+    db.subject.findMany({
       where,
       orderBy: { sortOrder: "asc" },
       skip,
       take: perPage,
       select: subjectSelect,
     }),
-    db.catalogSubject.count({ where }),
+    db.subject.count({ where }),
   ])
 
   const rows = await Promise.all(
@@ -100,9 +100,8 @@ const subjectSelect = {
   name: true,
   slug: true,
   description: true,
-  imageKey: true,
-  thumbnailKey: true,
-  bannerUrl: true,
+  thumbnail: true,
+  banner: true,
   color: true,
   lang: true,
   department: true,
@@ -116,16 +115,15 @@ const subjectSelect = {
   updatedAt: true,
 } as const
 
-/** Map CatalogSubject → PublicCourseType-compatible shape with translation */
+/** Map Subject → PublicCourseType-compatible shape with translation */
 async function toCourseShape(
   subject: {
     id: string
     name: string
     slug: string
     description: string | null
-    imageKey: string | null
-    thumbnailKey: string | null
-    bannerUrl: string | null
+    thumbnail: string | null
+    banner: string | null
     color: string | null
     lang: string
     department: string
@@ -154,7 +152,7 @@ async function toCourseShape(
     title,
     slug: subject.slug,
     description,
-    imageUrl: getCatalogImageUrl(subject.thumbnailKey, subject.imageKey, "sm"),
+    imageUrl: getCatalogImageUrl(subject.thumbnail, "sm"),
     price: null as number | null,
     lang: subject.lang,
     createdAt: subject.createdAt,
@@ -168,9 +166,8 @@ async function toCourseShape(
     },
     _catalog: {
       color: subject.color,
-      bannerUrl: subject.bannerUrl,
-      imageKey: subject.imageKey,
-      thumbnailKey: subject.thumbnailKey,
+      banner: subject.banner,
+      thumbnail: subject.thumbnail,
       totalLessons: subject.totalLessons,
       averageRating: subject.averageRating,
       levels: subject.levels,

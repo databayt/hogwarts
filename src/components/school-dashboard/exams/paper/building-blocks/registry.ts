@@ -1,7 +1,7 @@
 /**
  * Paper Building Block Registry
  *
- * Each block accepts serializable config (storable in CatalogPaperTemplate.blockConfig).
+ * Each block accepts serializable config (storable in PaperTemplate.blockConfig).
  * Blocks are toggled on/off and configured via the Block Composer UI.
  */
 

@@ -11,10 +11,10 @@ import { requireDeveloper } from "@/components/saas-dashboard/lib/operator-auth"
 import { catalogBookSchema } from "./book-validation"
 
 // ============================================================================
-// CatalogBook CRUD
+// Book CRUD
 // ============================================================================
 
-export async function createCatalogBook(
+export async function createBook(
   data: FormData
 ): Promise<ActionResponse<{ id: string }>> {
   try {
@@ -35,7 +35,7 @@ export async function createCatalogBook(
         : undefined,
     })
 
-    const book = await db.catalogBook.create({
+    const book = await db.book.create({
       data: {
         ...validated,
         approvalStatus: "APPROVED",
@@ -57,14 +57,14 @@ export async function createCatalogBook(
   }
 }
 
-export async function updateCatalogBook(
+export async function updateBook(
   id: string,
   data: FormData
 ): Promise<ActionResponse<{ id: string }>> {
   try {
     await requireDeveloper()
 
-    const existing = await db.catalogBook.findUnique({ where: { id } })
+    const existing = await db.book.findUnique({ where: { id } })
     if (!existing) {
       return { success: false, error: "Catalog book not found" }
     }
@@ -87,7 +87,7 @@ export async function updateCatalogBook(
     // Strip server-controlled fields — prevent client from bypassing review
     const { approvalStatus, visibility, status, ...safeData } = validated
 
-    const book = await db.catalogBook.update({
+    const book = await db.book.update({
       where: { id },
       data: safeData,
     })
@@ -106,16 +106,16 @@ export async function updateCatalogBook(
   }
 }
 
-export async function deleteCatalogBook(id: string): Promise<ActionResponse> {
+export async function deleteBook(id: string): Promise<ActionResponse> {
   try {
     await requireDeveloper()
 
-    const existing = await db.catalogBook.findUnique({ where: { id } })
+    const existing = await db.book.findUnique({ where: { id } })
     if (!existing) {
       return { success: false, error: "Catalog book not found" }
     }
 
-    await db.catalogBook.delete({ where: { id } })
+    await db.book.delete({ where: { id } })
 
     revalidatePath("/catalog/books")
     return { success: true }

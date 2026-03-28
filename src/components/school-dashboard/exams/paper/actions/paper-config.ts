@@ -80,7 +80,7 @@ export async function createPaperConfig(
     // Auto-detect region preset from school metadata
     const school = await db.school.findUnique({
       where: { id: schoolId },
-      select: { country: true, curriculum: true, schoolType: true },
+      select: { country: true, timetableStructure: true, schoolType: true },
     })
     const autoPreset = school ? detectRegionPreset(school) : undefined
 
@@ -161,7 +161,10 @@ export async function createPaperConfig(
 
     revalidatePath(`/exams/paper/${input.generatedExamId}`)
 
-    return { success: true, data: config as PaperConfigWithRelations }
+    return {
+      success: true,
+      data: config as unknown as PaperConfigWithRelations,
+    }
   } catch (error) {
     console.error("Error creating paper config:", error)
     return {
@@ -213,7 +216,10 @@ export async function getPaperConfig(
       },
     })
 
-    return { success: true, data: config as PaperConfigWithRelations | null }
+    return {
+      success: true,
+      data: config as unknown as PaperConfigWithRelations | null,
+    }
   } catch (error) {
     console.error("Error fetching paper config:", error)
     return {
@@ -316,7 +322,10 @@ export async function updatePaperConfig(
 
     revalidatePath(`/exams/paper/${existing.generatedExamId}`)
 
-    return { success: true, data: config as PaperConfigWithRelations }
+    return {
+      success: true,
+      data: config as unknown as PaperConfigWithRelations,
+    }
   } catch (error) {
     console.error("Error updating paper config:", error)
     return {

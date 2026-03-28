@@ -15,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-export interface CatalogSubjectRow {
+export interface SubjectRow {
   id: string
   name: string
   slug: string
@@ -27,10 +27,9 @@ export interface CatalogSubjectRow {
   totalLessons: number
   usageCount: number
   color: string | null
-  imageKey: string | null
 }
 
-export const catalogColumns: ColumnDef<CatalogSubjectRow>[] = [
+export const catalogColumns: ColumnDef<SubjectRow>[] = [
   {
     accessorKey: "name",
     header: "Subject",

@@ -47,7 +47,7 @@ export async function createTemplate(
     const validated = examTemplateSchema.parse(data)
 
     // Verify subject exists and belongs to school
-    const subjectSelection = await db.schoolSubjectSelection.findFirst({
+    const subjectSelection = await db.subjectSelection.findFirst({
       where: {
         catalogSubjectId: validated.subjectId,
         schoolId,
@@ -63,7 +63,7 @@ export async function createTemplate(
       }
     }
 
-    const template = await db.examTemplate.create({
+    const template = await db.schoolExamTemplate.create({
       data: {
         ...validated,
         schoolId,
@@ -130,7 +130,7 @@ export async function updateTemplate(
     const validated = examTemplateSchema.parse(data)
 
     // Update with schoolId scope
-    await db.examTemplate.update({
+    await db.schoolExamTemplate.update({
       where: {
         id: templateId,
         schoolId, // CRITICAL: Multi-tenant scope
@@ -192,7 +192,7 @@ export async function deleteTemplate(
     }
 
     // Delete with schoolId scope
-    const deleted = await db.examTemplate.deleteMany({
+    const deleted = await db.schoolExamTemplate.deleteMany({
       where: {
         id: templateId,
         schoolId, // CRITICAL: Multi-tenant scope
@@ -236,7 +236,7 @@ export async function getTemplates(
 
     const schoolId = session.user.schoolId
 
-    const templates = await db.examTemplate.findMany({
+    const templates = await db.schoolExamTemplate.findMany({
       where: {
         schoolId, // CRITICAL: Multi-tenant scope
         ...(filters?.subjectId && { subjectId: filters.subjectId }),
@@ -278,7 +278,7 @@ export async function getTemplates(
       },
     })
 
-    return templates
+    return templates as unknown as TemplateWithStats[]
   } catch (error) {
     console.error("Get templates error:", error)
     throw error
@@ -299,7 +299,7 @@ export async function getTemplateById(
 
     const schoolId = session.user.schoolId
 
-    const template = await db.examTemplate.findFirst({
+    const template = await db.schoolExamTemplate.findFirst({
       where: {
         id: templateId,
         schoolId, // CRITICAL: Multi-tenant scope
@@ -319,7 +319,7 @@ export async function getTemplateById(
       },
     })
 
-    return template
+    return template as unknown as TemplateWithStats | null
   } catch (error) {
     console.error("Get template error:", error)
     throw error
@@ -345,7 +345,7 @@ export async function toggleTemplateStatus(
     const schoolId = session.user.schoolId
 
     // Get current status
-    const template = await db.examTemplate.findFirst({
+    const template = await db.schoolExamTemplate.findFirst({
       where: {
         id: templateId,
         schoolId,
@@ -364,7 +364,7 @@ export async function toggleTemplateStatus(
     }
 
     // Toggle status
-    await db.examTemplate.update({
+    await db.schoolExamTemplate.update({
       where: {
         id: templateId,
       },
@@ -408,7 +408,7 @@ export async function duplicateTemplate(
     const userId = session.user.id
 
     // Get original template
-    const original = await db.examTemplate.findFirst({
+    const original = await db.schoolExamTemplate.findFirst({
       where: {
         id: templateId,
         schoolId,
@@ -428,7 +428,7 @@ export async function duplicateTemplate(
       original as any
 
     // Create duplicate
-    const duplicate = await db.examTemplate.create({
+    const duplicate = await db.schoolExamTemplate.create({
       data: {
         ...templateData,
         name: `${original.name} (Copy)`,

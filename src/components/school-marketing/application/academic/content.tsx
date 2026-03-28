@@ -131,7 +131,7 @@ export default function AcademicContent({ dictionary }: Props) {
       // Route based on payment requirement
       if (result.data.requiresPayment) {
         router.push(
-          `/${locale}/application/${result.data.applicationId}/payment?number=${result.data.applicationNumber}`
+          `/${locale}/application/${result.data.applicationId}/payment?number=${result.data.applicationNumber}&token=${encodeURIComponent(result.data.accessToken)}`
         )
       } else {
         setSubmitResult(result.data)

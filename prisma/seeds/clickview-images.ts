@@ -4,13 +4,11 @@
 /**
  * ClickView Images Seed
  *
- * Processes ClickView images through Sharp → WebP → S3/CloudFront
- * for US/ClickView catalog subjects.
- *
- * Sources (priority order):
- *   1. Illustration images from public/clickview/illustrations/ (discover page covers)
- *   2. Banner images from public/clickview/banners/ (detail page heroes)
- *   3. imageKey pointing to a local file
+ * @deprecated Superseded by the concept-based image system.
+ * US K-12 subjects now get thumbnail/banner set directly by
+ * us-catalog.ts using grade-based concept paths. The source
+ * directories (public/clickview/illustrations/, public/clickview/banners/)
+ * no longer exist on disk. Kept for reference only.
  *
  * Usage: pnpm db:seed:single clickview-images
  */
@@ -34,16 +32,16 @@ export async function seedClickViewImages(prisma: PrismaClient): Promise<void> {
 }
 
 /**
- * Process illustration images → S3 thumbnails (thumbnailKey).
- * Skips subjects that already have a thumbnailKey.
+ * Process illustration images → S3 thumbnails (thumbnail).
+ * Skips subjects that already have a thumbnail.
  */
 async function processThumbnails(prisma: PrismaClient): Promise<void> {
-  const subjects = await prisma.catalogSubject.findMany({
+  const subjects = await prisma.subject.findMany({
     where: {
       curriculum: "us-k12",
-      thumbnailKey: null,
+      thumbnail: null,
     },
-    select: { id: true, slug: true, name: true, imageKey: true },
+    select: { id: true, slug: true, name: true },
   })
 
   if (subjects.length === 0) {
@@ -58,7 +56,7 @@ async function processThumbnails(prisma: PrismaClient): Promise<void> {
   let uploadCount = 0
 
   for (const subject of subjects) {
-    const filePath = findImageFile(subject.slug, subject.imageKey)
+    const filePath = findImageFile(subject.slug, null)
 
     if (!filePath) {
       console.log(`  Skipped ${subject.slug} (no local image found)`)
@@ -70,9 +68,9 @@ async function processThumbnails(prisma: PrismaClient): Promise<void> {
 
     try {
       await processAndUploadCatalogImage(fileBuffer, key)
-      await prisma.catalogSubject.update({
+      await prisma.subject.update({
         where: { id: subject.id },
-        data: { thumbnailKey: key },
+        data: { thumbnail: key },
       })
       uploadCount++
       console.log(`  Uploaded thumbnail ${subject.slug}`)
@@ -85,16 +83,16 @@ async function processThumbnails(prisma: PrismaClient): Promise<void> {
 }
 
 /**
- * Process banner images → S3 banners (bannerUrl).
- * Skips subjects that already have a bannerUrl.
+ * Process banner images → S3 banners (banner).
+ * Skips subjects that already have a banner.
  */
 async function processBanners(prisma: PrismaClient): Promise<void> {
-  const subjects = await prisma.catalogSubject.findMany({
+  const subjects = await prisma.subject.findMany({
     where: {
       curriculum: "us-k12",
-      OR: [{ bannerUrl: null }, { bannerUrl: { startsWith: "/" } }],
+      OR: [{ banner: null }, { banner: { startsWith: "/" } }],
     },
-    select: { id: true, slug: true, name: true, imageKey: true },
+    select: { id: true, slug: true, name: true },
   })
 
   if (subjects.length === 0) {
@@ -112,7 +110,7 @@ async function processBanners(prisma: PrismaClient): Promise<void> {
     // Try grade-specific slug first, then legacy slug from imageKey
     let bannerPath = path.join(BANNERS_DIR, `${subject.slug}.jpg`)
     if (!fs.existsSync(bannerPath)) {
-      const legacySlug = extractLegacySlug(subject.imageKey)
+      const legacySlug = extractLegacySlug(null)
       if (legacySlug) {
         bannerPath = path.join(BANNERS_DIR, `${legacySlug}.jpg`)
       }
@@ -127,9 +125,9 @@ async function processBanners(prisma: PrismaClient): Promise<void> {
 
     try {
       await processAndUploadCatalogImage(fileBuffer, key)
-      await prisma.catalogSubject.update({
+      await prisma.subject.update({
         where: { id: subject.id },
-        data: { bannerUrl: key },
+        data: { banner: key },
       })
       uploadCount++
       console.log(`  Uploaded banner ${subject.slug}`)
@@ -169,20 +167,20 @@ function trySlugPaths(slug: string): string | null {
 }
 
 /**
- * For grade-specific slugs like "us-math-grade-5", derive the level-based
+ * For grade-specific slugs like "us-g5-math", derive the level-based
  * illustration filename: "elementary-math". Maps grade to level:
- *   K-5 → elementary, 6-8 → middle, 9-12 → high
+ *   1-6 → elementary, 7-9 → middle, 10-12 → high
  */
 function deriveGradeLevelSlug(slug: string): string | null {
-  const match = slug.match(/^us-(.+)-grade-(\d+)$/)
+  const match = slug.match(/^us-g(\d+)-(.+)$/)
   if (!match) return null
 
-  const [, subject, gradeStr] = match
+  const [, gradeStr, subject] = match
   const grade = parseInt(gradeStr, 10)
 
   let level: string
-  if (grade <= 5) level = "elementary"
-  else if (grade <= 8) level = "middle"
+  if (grade <= 6) level = "elementary"
+  else if (grade <= 9) level = "middle"
   else level = "high"
 
   return `${level}-${subject}`
@@ -204,7 +202,7 @@ function findImageFile(slug: string, imageKey: string | null): string | null {
     if (byLegacy) return byLegacy
   }
 
-  // 3. Try grade-to-level mapping (us-math-grade-5 → elementary-math)
+  // 3. Try grade-to-level mapping (us-g5-math → elementary-math)
   const gradeLevelSlug = deriveGradeLevelSlug(slug)
   if (gradeLevelSlug) {
     const byGradeLevel = trySlugPaths(gradeLevelSlug)

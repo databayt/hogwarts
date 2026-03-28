@@ -55,6 +55,17 @@ export interface StudentWizardData {
   transferCertificateNo: string | null
   transferDate: Date | null
   previousAcademicRecord: string | null
+  // Guardians
+  guardians: Array<{
+    guardianId: string
+    firstName: string
+    lastName: string
+    typeName: string
+    isPrimary: boolean
+    phone: string | null
+    email: string | null
+    occupation: string | null
+  }>
   // Admission back-reference
   applicationId: string | null
   application: {
@@ -65,6 +76,12 @@ export interface StudentWizardData {
     confirmationDate: Date | null
     campaign: { name: string; academicYear: string }
   } | null
+  // AI auto-fill results from document extraction
+  autoFillResults?: {
+    personal?: Record<string, string>
+    contact?: Record<string, string>
+    previousEducation?: Record<string, string>
+  }
   // Wizard
   wizardStep: string | null
 }

@@ -12,9 +12,11 @@ import type { Achievement, Student } from "../../registration/types"
 
 interface AchievementsTabProps {
   student: Student
+  dictionary?: any
 }
 
-export function AchievementsTab({ student }: AchievementsTabProps) {
+export function AchievementsTab({ student, dictionary }: AchievementsTabProps) {
+  const d = dictionary
   // Use real achievements from database
   const achievements: Achievement[] = student.achievements || []
 
@@ -88,7 +90,7 @@ export function AchievementsTab({ student }: AchievementsTabProps) {
       <div className="flex justify-end">
         <Button variant="outline" size="sm">
           <Plus className="me-2 h-4 w-4" />
-          Add Achievement
+          {d?.addAchievement || "Add Achievement"}
         </Button>
       </div>
 
@@ -99,7 +101,7 @@ export function AchievementsTab({ student }: AchievementsTabProps) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-muted-foreground text-sm">
-                  Total Achievements
+                  {d?.totalAchievements || "Total Achievements"}
                 </p>
                 <p className="text-2xl font-bold">{achievements.length}</p>
               </div>
@@ -112,7 +114,9 @@ export function AchievementsTab({ student }: AchievementsTabProps) {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-sm">Total Points</p>
+                <p className="text-muted-foreground text-sm">
+                  {d?.totalPoints || "Total Points"}
+                </p>
                 <p className="text-2xl font-bold">{totalPoints}</p>
               </div>
               <Star className="h-8 w-8 text-yellow-600" />
@@ -124,7 +128,9 @@ export function AchievementsTab({ student }: AchievementsTabProps) {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-sm">Academic</p>
+                <p className="text-muted-foreground text-sm">
+                  {d?.academic || "Academic"}
+                </p>
                 <p className="text-2xl font-bold">
                   {categoryCounts["ACADEMIC"] || 0}
                 </p>
@@ -138,7 +144,9 @@ export function AchievementsTab({ student }: AchievementsTabProps) {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-sm">Sports</p>
+                <p className="text-muted-foreground text-sm">
+                  {d?.sports || "Sports"}
+                </p>
                 <p className="text-2xl font-bold">
                   {categoryCounts["SPORTS"] || 0}
                 </p>
@@ -198,7 +206,7 @@ export function AchievementsTab({ student }: AchievementsTabProps) {
                         )}
                         {achievement.points && achievement.points > 0 && (
                           <Badge variant="outline">
-                            {achievement.points} points
+                            {achievement.points} {d?.points || "points"}
                           </Badge>
                         )}
                       </div>
@@ -213,14 +221,18 @@ export function AchievementsTab({ student }: AchievementsTabProps) {
                         {achievement.issuedBy && (
                           <>
                             <span>•</span>
-                            <span>Issued by: {achievement.issuedBy}</span>
+                            <span>
+                              {d?.issuedBy || "Issued by:"}{" "}
+                              {achievement.issuedBy}
+                            </span>
                           </>
                         )}
                         {achievement.certificateNo && (
                           <>
                             <span>•</span>
                             <span>
-                              Certificate: {achievement.certificateNo}
+                              {d?.certificate || "Certificate:"}{" "}
+                              {achievement.certificateNo}
                             </span>
                           </>
                         )}
@@ -232,7 +244,7 @@ export function AchievementsTab({ student }: AchievementsTabProps) {
                   {achievement.certificateUrl && (
                     <Button variant="outline" size="sm">
                       <Award className="me-1 h-4 w-4" />
-                      View Certificate
+                      {d?.viewCertificate || "View Certificate"}
                     </Button>
                   )}
                 </div>
@@ -247,11 +259,11 @@ export function AchievementsTab({ student }: AchievementsTabProps) {
           <CardContent className="flex flex-col items-center justify-center py-8">
             <Trophy className="text-muted-foreground mb-4 h-12 w-12" />
             <p className="text-muted-foreground">
-              No achievements recorded yet
+              {d?.noAchievements || "No achievements recorded yet"}
             </p>
             <Button variant="outline" className="mt-4">
               <Plus className="me-2 h-4 w-4" />
-              Add First Achievement
+              {d?.addFirstAchievement || "Add First Achievement"}
             </Button>
           </CardContent>
         </Card>
@@ -261,7 +273,9 @@ export function AchievementsTab({ student }: AchievementsTabProps) {
       {achievements.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Achievement Timeline</CardTitle>
+            <CardTitle className="text-lg">
+              {d?.achievementTimeline || "Achievement Timeline"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">

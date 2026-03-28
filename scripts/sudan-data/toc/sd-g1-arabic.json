@@ -1,0 +1,348 @@
+{
+  "subject": "arabic",
+  "subjectNameAr": "اللغة العربية",
+  "grade": 1,
+  "level": "elementary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "الطبعة الأولى 2020",
+  "chapters": [
+    {
+      "nameAr": "دروس اللغة العربية",
+      "name": "Arabic Language Lessons",
+      "slug": "arabic-lessons",
+      "sequenceOrder": 1,
+      "lessons": [
+        {
+          "nameAr": "الدرس الأول",
+          "name": "Lesson 1",
+          "slug": "lesson-1",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الدرس الثاني",
+          "name": "Lesson 2",
+          "slug": "lesson-2",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الدرس الثالث",
+          "name": "Lesson 3",
+          "slug": "lesson-3",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "الدرس الرابع",
+          "name": "Lesson 4",
+          "slug": "lesson-4",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "الدرس الخامس",
+          "name": "Lesson 5",
+          "slug": "lesson-5",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "الدرس السادس",
+          "name": "Lesson 6",
+          "slug": "lesson-6",
+          "sequenceOrder": 6
+        },
+        {
+          "nameAr": "الدرس السابع",
+          "name": "Lesson 7",
+          "slug": "lesson-7",
+          "sequenceOrder": 7
+        },
+        {
+          "nameAr": "الدرس الثامن",
+          "name": "Lesson 8",
+          "slug": "lesson-8",
+          "sequenceOrder": 8
+        },
+        {
+          "nameAr": "الدرس التاسع",
+          "name": "Lesson 9",
+          "slug": "lesson-9",
+          "sequenceOrder": 9
+        },
+        {
+          "nameAr": "الدرس العاشر",
+          "name": "Lesson 10",
+          "slug": "lesson-10",
+          "sequenceOrder": 10
+        },
+        {
+          "nameAr": "الدرس الحادي عشر",
+          "name": "Lesson 11",
+          "slug": "lesson-11",
+          "sequenceOrder": 11
+        },
+        {
+          "nameAr": "الدرس الثاني عشر",
+          "name": "Lesson 12",
+          "slug": "lesson-12",
+          "sequenceOrder": 12
+        },
+        {
+          "nameAr": "الدرس الثالث عشر",
+          "name": "Lesson 13",
+          "slug": "lesson-13",
+          "sequenceOrder": 13
+        },
+        {
+          "nameAr": "الدرس الرابع عشر",
+          "name": "Lesson 14",
+          "slug": "lesson-14",
+          "sequenceOrder": 14
+        },
+        {
+          "nameAr": "الدرس الخامس عشر",
+          "name": "Lesson 15",
+          "slug": "lesson-15",
+          "sequenceOrder": 15
+        },
+        {
+          "nameAr": "الدرس السادس عشر",
+          "name": "Lesson 16",
+          "slug": "lesson-16",
+          "sequenceOrder": 16
+        },
+        {
+          "nameAr": "الدرس السابع عشر",
+          "name": "Lesson 17",
+          "slug": "lesson-17",
+          "sequenceOrder": 17
+        },
+        {
+          "nameAr": "الدرس الثامن عشر",
+          "name": "Lesson 18",
+          "slug": "lesson-18",
+          "sequenceOrder": 18
+        },
+        {
+          "nameAr": "الدرس التاسع عشر",
+          "name": "Lesson 19",
+          "slug": "lesson-19",
+          "sequenceOrder": 19
+        },
+        {
+          "nameAr": "الدرس العشرون",
+          "name": "Lesson 20",
+          "slug": "lesson-20",
+          "sequenceOrder": 20
+        },
+        {
+          "nameAr": "الدرس الحادي والعشرون",
+          "name": "Lesson 21",
+          "slug": "lesson-21",
+          "sequenceOrder": 21
+        },
+        {
+          "nameAr": "الدرس الثاني والعشرون",
+          "name": "Lesson 22",
+          "slug": "lesson-22",
+          "sequenceOrder": 22
+        },
+        {
+          "nameAr": "الدرس الثالث والعشرون",
+          "name": "Lesson 23",
+          "slug": "lesson-23",
+          "sequenceOrder": 23
+        },
+        {
+          "nameAr": "الدرس الرابع والعشرون",
+          "name": "Lesson 24",
+          "slug": "lesson-24",
+          "sequenceOrder": 24
+        },
+        {
+          "nameAr": "الدرس الخامس والعشرون",
+          "name": "Lesson 25",
+          "slug": "lesson-25",
+          "sequenceOrder": 25
+        },
+        {
+          "nameAr": "الدرس السادس والعشرون",
+          "name": "Lesson 26",
+          "slug": "lesson-26",
+          "sequenceOrder": 26
+        },
+        {
+          "nameAr": "الدرس السابع والعشرون",
+          "name": "Lesson 27",
+          "slug": "lesson-27",
+          "sequenceOrder": 27
+        },
+        {
+          "nameAr": "الدرس الثامن والعشرون",
+          "name": "Lesson 28",
+          "slug": "lesson-28",
+          "sequenceOrder": 28
+        },
+        {
+          "nameAr": "الدرس التاسع والعشرون",
+          "name": "Lesson 29",
+          "slug": "lesson-29",
+          "sequenceOrder": 29
+        },
+        {
+          "nameAr": "الدرس الثلاثون",
+          "name": "Lesson 30",
+          "slug": "lesson-30",
+          "sequenceOrder": 30
+        },
+        {
+          "nameAr": "الدرس الحادي والثلاثون",
+          "name": "Lesson 31",
+          "slug": "lesson-31",
+          "sequenceOrder": 31
+        },
+        {
+          "nameAr": "الدرس الثاني والثلاثون",
+          "name": "Lesson 32",
+          "slug": "lesson-32",
+          "sequenceOrder": 32
+        },
+        {
+          "nameAr": "الدرس الثالث والثلاثون",
+          "name": "Lesson 33",
+          "slug": "lesson-33",
+          "sequenceOrder": 33
+        },
+        {
+          "nameAr": "الدرس الرابع والثلاثون",
+          "name": "Lesson 34",
+          "slug": "lesson-34",
+          "sequenceOrder": 34
+        },
+        {
+          "nameAr": "الدرس الخامس والثلاثون",
+          "name": "Lesson 35",
+          "slug": "lesson-35",
+          "sequenceOrder": 35
+        },
+        {
+          "nameAr": "الدرس السادس والثلاثون",
+          "name": "Lesson 36",
+          "slug": "lesson-36",
+          "sequenceOrder": 36
+        },
+        {
+          "nameAr": "الدرس السابع والثلاثون",
+          "name": "Lesson 37",
+          "slug": "lesson-37",
+          "sequenceOrder": 37
+        },
+        {
+          "nameAr": "الدرس الثامن والثلاثون",
+          "name": "Lesson 38",
+          "slug": "lesson-38",
+          "sequenceOrder": 38
+        },
+        {
+          "nameAr": "الدرس التاسع والثلاثون",
+          "name": "Lesson 39",
+          "slug": "lesson-39",
+          "sequenceOrder": 39
+        },
+        {
+          "nameAr": "الدرس الأربعون",
+          "name": "Lesson 40",
+          "slug": "lesson-40",
+          "sequenceOrder": 40
+        },
+        {
+          "nameAr": "الدرس الحادي والأربعون",
+          "name": "Lesson 41",
+          "slug": "lesson-41",
+          "sequenceOrder": 41
+        },
+        {
+          "nameAr": "الدرس الثاني والأربعون",
+          "name": "Lesson 42",
+          "slug": "lesson-42",
+          "sequenceOrder": 42
+        },
+        {
+          "nameAr": "الدرس الثالث والأربعون",
+          "name": "Lesson 43",
+          "slug": "lesson-43",
+          "sequenceOrder": 43
+        },
+        {
+          "nameAr": "الدرس الرابع والأربعون",
+          "name": "Lesson 44",
+          "slug": "lesson-44",
+          "sequenceOrder": 44
+        },
+        {
+          "nameAr": "الدرس الخامس والأربعون",
+          "name": "Lesson 45",
+          "slug": "lesson-45",
+          "sequenceOrder": 45
+        },
+        {
+          "nameAr": "الدرس السادس والأربعون",
+          "name": "Lesson 46",
+          "slug": "lesson-46",
+          "sequenceOrder": 46
+        },
+        {
+          "nameAr": "الدرس السابع والأربعون",
+          "name": "Lesson 47",
+          "slug": "lesson-47",
+          "sequenceOrder": 47
+        },
+        {
+          "nameAr": "الدرس الثامن والأربعون",
+          "name": "Lesson 48",
+          "slug": "lesson-48",
+          "sequenceOrder": 48
+        },
+        {
+          "nameAr": "الدرس التاسع والأربعون",
+          "name": "Lesson 49",
+          "slug": "lesson-49",
+          "sequenceOrder": 49
+        },
+        {
+          "nameAr": "الدرس الخمسون",
+          "name": "Lesson 50",
+          "slug": "lesson-50",
+          "sequenceOrder": 50
+        },
+        {
+          "nameAr": "الدرس الحادي والخمسون",
+          "name": "Lesson 51",
+          "slug": "lesson-51",
+          "sequenceOrder": 51
+        },
+        {
+          "nameAr": "الدرس الثاني والخمسون",
+          "name": "Lesson 52",
+          "slug": "lesson-52",
+          "sequenceOrder": 52
+        },
+        {
+          "nameAr": "الدرس الثالث والخمسون",
+          "name": "Lesson 53",
+          "slug": "lesson-53",
+          "sequenceOrder": 53
+        },
+        {
+          "nameAr": "الدرس الرابع والخمسون",
+          "name": "Lesson 54",
+          "slug": "lesson-54",
+          "sequenceOrder": 54
+        },
+        {
+          "nameAr": "الدرس الخامس والخمسون",
+          "name": "Lesson 55",
+          "slug": "lesson-55",
+          "sequenceOrder": 55
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "subject": "resources",
+  "subjectNameAr": "الموارد",
+  "grade": 5,
+  "level": "elementary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "الطبعة الأولى 2021م",
+  "chapters": [
+    {
+      "nameAr": "الموارد",
+      "name": "Resources",
+      "slug": "resources",
+      "sequenceOrder": 1,
+      "lessons": []
+    }
+  ]
+}

@@ -49,7 +49,7 @@ import { seedAuditLogs } from "./audit"
 import { seedAllUsers } from "./auth"
 import { seedBanking } from "./banking"
 import { seedCatalog } from "./catalog"
-import { seedCatalogBooks } from "./catalog-books"
+import { seedBooks } from "./catalog-books"
 import { seedAllClasses } from "./classes"
 import { seedClassrooms } from "./classrooms"
 import { seedEvents } from "./events"
@@ -226,9 +226,7 @@ async function main() {
       seedLibrary(prisma, school.id, students)
     )
 
-    await measureDuration("Catalog Books", () =>
-      seedCatalogBooks(prisma, school.id)
-    )
+    await measureDuration("Catalog Books", () => seedBooks(prisma, school.id))
 
     // ========================================================================
     // PHASE 8: ASSIGNMENTS

@@ -32,7 +32,7 @@ export async function getExamRecommendations(
   const { schoolId } = await getTenantContext()
   if (!schoolId) return []
 
-  // Get school's subjects (all are CatalogSubject records now)
+  // Get school's subjects (all are Subject records now)
   const allSubjects = await getSchoolSubjects(schoolId)
   const subjects = subjectId
     ? allSubjects.filter((s) => s.id === subjectId)
@@ -43,7 +43,7 @@ export async function getExamRecommendations(
   const catalogSubjectIds = subjects.map((s) => s.id)
 
   // Get already-adopted exam IDs
-  const adopted = await db.exam.findMany({
+  const adopted = await db.schoolExam.findMany({
     where: { schoolId, catalogExamId: { not: null } },
     select: { catalogExamId: true },
   })
@@ -52,7 +52,7 @@ export async function getExamRecommendations(
   )
 
   // Get subjects that already have school exams
-  const existingExamSubjects = await db.exam.findMany({
+  const existingExamSubjects = await db.schoolExam.findMany({
     where: { schoolId },
     select: { subjectId: true },
     distinct: ["subjectId"],
@@ -62,7 +62,7 @@ export async function getExamRecommendations(
   )
 
   // Fetch catalog exams for school's subjects
-  const catalogExams = await db.catalogExam.findMany({
+  const catalogExams = await db.exam.findMany({
     where: {
       subjectId: { in: catalogSubjectIds },
       status: "PUBLISHED",

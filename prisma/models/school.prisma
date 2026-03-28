@@ -18,7 +18,7 @@ model School {
   // School classification
   schoolType  String? // private, public, international, technical, special
   schoolLevel String? // primary, secondary, both
-  curriculum  String? // us-k12, national, british, ib
+  timetableStructure  String? @map("curriculum") // timetable structure slug, e.g. "us-standard"
   description String? @db.Text
 
   // Location breakdown (address stays as street address)
@@ -96,7 +96,7 @@ model School {
   studentClasses           StudentClass[]
   classTeachers            ClassTeacher[]
   scoreRanges              ScoreRange[]
-  assignments              Assignment[]
+  schoolAssignments        SchoolAssignment[]
   assignmentSubmissions    AssignmentSubmission[]
   attendances              Attendance[]
   announcements              Announcement[]
@@ -136,7 +136,7 @@ model School {
   eventRegistrations       EventRegistration[]
 
   // Examination relations
-  exams            Exam[]
+  schoolExams      SchoolExam[]
   examResults      ExamResult[]
   gradeBoundaries  GradeBoundary[]
   // Gradebook relations
@@ -151,7 +151,7 @@ model School {
   streamCertificates StreamCertificate[]
 
   // Library relations
-  books         Book[]
+  schoolBooks   SchoolBook[]
   borrowRecords BorrowRecord[]
 
   // Student management relations
@@ -337,11 +337,11 @@ model School {
   membershipRequests     MembershipRequest[]
 
   // Catalog Bridge relations
-  schoolSubjectSelections    SchoolSubjectSelection[]
-  schoolContentOverrides     SchoolContentOverride[]
-  schoolInstructorPreferences SchoolInstructorPreference[]
-  schoolBookSelections       SchoolBookSelection[]
-  catalogProposals           CatalogProposal[]
+  subjectSelections          SubjectSelection[]
+  contentOverrides           ContentOverride[]
+  instructorPreferences      InstructorPreference[]
+  bookSelections             BookSelection[]
+  proposals                  Proposal[]
 
   // Enrollment relations (catalog)
   catalogEnrollments     Enrollment[]
@@ -351,12 +351,18 @@ model School {
   gradingSchemes GradingScheme[]
 
   // Lesson Content relations
-  lessonVideos LessonVideo[]
+  videos Video[]
+
+  // AI & Document Processing
+  aiMonthlyBudget       Decimal?                @db.Decimal(10, 2) // Monthly AI budget in USD, null = unlimited
+  aiEnabledDomains      Json?                   // Array of enabled domains: ["admission", "exams", "finance"]
+  documentProcessingJobs DocumentProcessingJob[]
+  aiUsageLogs            AIUsageLog[]
 
   createdAt             DateTime                @default(now())
   updatedAt             DateTime                @updatedAt
   QuestionBank          QuestionBank[]
-  ExamTemplate          ExamTemplate[]
+  schoolExamTemplates   SchoolExamTemplate[]
   GeneratedExam         GeneratedExam[]
   GeneratedExamQuestion GeneratedExamQuestion[]
   QuestionAnalytics     QuestionAnalytics[]

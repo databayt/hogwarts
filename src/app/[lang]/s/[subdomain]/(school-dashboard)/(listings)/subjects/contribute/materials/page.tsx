@@ -16,7 +16,7 @@ export default async function ContributeMaterialsPage({ params }: Props) {
   const dictionary = await getDictionary(lang)
   const isAr = lang === "ar"
 
-  const catalogSubjects = await db.catalogSubject.findMany({
+  const catalogSubjects = await db.subject.findMany({
     where: { status: "PUBLISHED" },
     orderBy: { name: "asc" },
     select: {

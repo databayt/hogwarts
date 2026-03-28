@@ -22,6 +22,7 @@ interface ContactInfoStepProps {
 }
 
 export function ContactInfoStep({ form, dictionary }: ContactInfoStepProps) {
+  const reg = dictionary?.school?.students?.registration?.contact
   const sameAsPermanent = form.watch("sameAsPermanent")
 
   useEffect(() => {
@@ -37,18 +38,18 @@ export function ContactInfoStep({ form, dictionary }: ContactInfoStepProps) {
   return (
     <div className="grid gap-6">
       {/* Contact Details */}
-      <h4>Contact Information</h4>
+      <h4>{reg?.title || "Contact Information"}</h4>
       <div className="grid gap-4 md:grid-cols-3">
         <FormField
           control={form.control}
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email Address</FormLabel>
+              <FormLabel>{reg?.email || "Email Address"}</FormLabel>
               <FormControl>
                 <Input
                   type="email"
-                  placeholder="student@example.com"
+                  placeholder={reg?.emailPlaceholder || "student@example.com"}
                   {...field}
                 />
               </FormControl>
@@ -62,9 +63,13 @@ export function ContactInfoStep({ form, dictionary }: ContactInfoStepProps) {
           name="mobileNumber"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Mobile Number</FormLabel>
+              <FormLabel>{reg?.mobileNumber || "Mobile Number"}</FormLabel>
               <FormControl>
-                <Input type="tel" placeholder="+966 XX XXX XXXX" {...field} />
+                <Input
+                  type="tel"
+                  placeholder={reg?.mobilePlaceholder || "+966 XX XXX XXXX"}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -76,9 +81,13 @@ export function ContactInfoStep({ form, dictionary }: ContactInfoStepProps) {
           name="alternatePhone"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Alternate Phone</FormLabel>
+              <FormLabel>{reg?.alternatePhone || "Alternate Phone"}</FormLabel>
               <FormControl>
-                <Input type="tel" placeholder="+966 XX XXX XXXX" {...field} />
+                <Input
+                  type="tel"
+                  placeholder={reg?.mobilePlaceholder || "+966 XX XXX XXXX"}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -87,17 +96,20 @@ export function ContactInfoStep({ form, dictionary }: ContactInfoStepProps) {
       </div>
 
       {/* Current Address */}
-      <h4>Current Address</h4>
+      <h4>{reg?.currentAddress || "Current Address"}</h4>
       <div className="grid gap-4">
         <FormField
           control={form.control}
           name="currentAddress"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Address *</FormLabel>
+              <FormLabel>{reg?.address || "Address *"}</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Enter complete address including building, street, area"
+                  placeholder={
+                    reg?.addressPlaceholder ||
+                    "Enter complete address including building, street, area"
+                  }
                   {...field}
                 />
               </FormControl>
@@ -112,9 +124,12 @@ export function ContactInfoStep({ form, dictionary }: ContactInfoStepProps) {
             name="city"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>City *</FormLabel>
+                <FormLabel>{reg?.city || "City *"}</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter city" {...field} />
+                  <Input
+                    placeholder={reg?.enterCity || "Enter city"}
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -126,9 +141,14 @@ export function ContactInfoStep({ form, dictionary }: ContactInfoStepProps) {
             name="state"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>State/Province *</FormLabel>
+                <FormLabel>
+                  {reg?.stateProvince || "State/Province *"}
+                </FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter state" {...field} />
+                  <Input
+                    placeholder={reg?.enterState || "Enter state"}
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -140,9 +160,12 @@ export function ContactInfoStep({ form, dictionary }: ContactInfoStepProps) {
             name="postalCode"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Postal Code</FormLabel>
+                <FormLabel>{reg?.postalCode || "Postal Code"}</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter postal code" {...field} />
+                  <Input
+                    placeholder={reg?.enterPostalCode || "Enter postal code"}
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -154,9 +177,12 @@ export function ContactInfoStep({ form, dictionary }: ContactInfoStepProps) {
             name="country"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Country</FormLabel>
+                <FormLabel>{reg?.country || "Country"}</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter country" {...field} />
+                  <Input
+                    placeholder={reg?.enterCountry || "Enter country"}
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -168,7 +194,7 @@ export function ContactInfoStep({ form, dictionary }: ContactInfoStepProps) {
       {/* Permanent Address */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
-          <h4>Permanent Address</h4>
+          <h4>{reg?.permanentAddress || "Permanent Address"}</h4>
           <FormField
             control={form.control}
             name="sameAsPermanent"
@@ -181,7 +207,7 @@ export function ContactInfoStep({ form, dictionary }: ContactInfoStepProps) {
                   />
                 </FormControl>
                 <FormLabel className="cursor-pointer text-sm font-normal">
-                  Same as current address
+                  {reg?.sameAsCurrent || "Same as current address"}
                 </FormLabel>
                 <FormMessage />
               </FormItem>
@@ -196,10 +222,14 @@ export function ContactInfoStep({ form, dictionary }: ContactInfoStepProps) {
               name="permanentAddress"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Permanent Address</FormLabel>
+                  <FormLabel>
+                    {reg?.permanentAddress || "Permanent Address"}
+                  </FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Enter permanent address"
+                      placeholder={
+                        reg?.addressPlaceholder || "Enter permanent address"
+                      }
                       {...field}
                     />
                   </FormControl>
@@ -214,9 +244,12 @@ export function ContactInfoStep({ form, dictionary }: ContactInfoStepProps) {
                 name="permanentCity"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>City</FormLabel>
+                    <FormLabel>{reg?.city || "City"}</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter city" {...field} />
+                      <Input
+                        placeholder={reg?.enterCity || "Enter city"}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -228,9 +261,14 @@ export function ContactInfoStep({ form, dictionary }: ContactInfoStepProps) {
                 name="permanentState"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>State/Province</FormLabel>
+                    <FormLabel>
+                      {reg?.stateProvince || "State/Province"}
+                    </FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter state" {...field} />
+                      <Input
+                        placeholder={reg?.enterState || "Enter state"}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -242,9 +280,14 @@ export function ContactInfoStep({ form, dictionary }: ContactInfoStepProps) {
                 name="permanentPostalCode"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Postal Code</FormLabel>
+                    <FormLabel>{reg?.postalCode || "Postal Code"}</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter postal code" {...field} />
+                      <Input
+                        placeholder={
+                          reg?.enterPostalCode || "Enter postal code"
+                        }
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -256,9 +299,12 @@ export function ContactInfoStep({ form, dictionary }: ContactInfoStepProps) {
                 name="permanentCountry"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Country</FormLabel>
+                    <FormLabel>{reg?.country || "Country"}</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter country" {...field} />
+                      <Input
+                        placeholder={reg?.enterCountry || "Enter country"}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

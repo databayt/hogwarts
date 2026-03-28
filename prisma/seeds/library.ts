@@ -844,7 +844,7 @@ export async function seedBooks(
   for (const bookData of BOOKS) {
     try {
       // Check if a Book already exists for this school
-      const existingBook = await prisma.book.findFirst({
+      const existingBook = await prisma.schoolBook.findFirst({
         where: { schoolId, title: bookData.title, author: bookData.author },
       })
 
@@ -855,20 +855,19 @@ export async function seedBooks(
 
         let catalogBookId = existingBook.catalogBookId
         if (!catalogBookId) {
-          // Try to find matching CatalogBook to link
-          const catalogBook = await prisma.catalogBook.findFirst({
+          // Try to find matching Book to link
+          const catalogBook = await prisma.schoolBook.findFirst({
             where: { title: bookData.title, author: bookData.author },
           })
           if (catalogBook) {
             catalogBookId = catalogBook.id
 
-            // Ensure SchoolBookSelection exists
-            const existingSelection =
-              await prisma.schoolBookSelection.findFirst({
-                where: { schoolId, catalogBookId: catalogBook.id },
-              })
+            // Ensure BookSelection exists
+            const existingSelection = await prisma.bookSelection.findFirst({
+              where: { schoolId, catalogBookId: catalogBook.id },
+            })
             if (!existingSelection) {
-              await prisma.schoolBookSelection.create({
+              await prisma.bookSelection.create({
                 data: {
                   schoolId,
                   catalogBookId: catalogBook.id,
@@ -881,7 +880,7 @@ export async function seedBooks(
           }
         }
 
-        await prisma.book.update({
+        await prisma.schoolBook.update({
           where: { id: existingBook.id },
           data: {
             ...(existingBook.coverUrl !== newCoverUrl
@@ -898,20 +897,20 @@ export async function seedBooks(
         })
         bookIds.push(existingBook.id)
       } else {
-        // Try to find CatalogBook to link
-        const catalogBook = await prisma.catalogBook.findFirst({
+        // Try to find Book to link
+        const catalogBook = await prisma.schoolBook.findFirst({
           where: { title: bookData.title, author: bookData.author },
         })
 
         const coverData = COVER_DATA[bookData.title]
 
         if (catalogBook) {
-          // Catalog-linked path: create SchoolBookSelection + Book with catalogBookId
-          const existingSelection = await prisma.schoolBookSelection.findFirst({
+          // Catalog-linked path: create BookSelection + Book with catalogBookId
+          const existingSelection = await prisma.bookSelection.findFirst({
             where: { schoolId, catalogBookId: catalogBook.id },
           })
           if (!existingSelection) {
-            await prisma.schoolBookSelection.create({
+            await prisma.bookSelection.create({
               data: {
                 schoolId,
                 catalogBookId: catalogBook.id,
@@ -922,7 +921,7 @@ export async function seedBooks(
             })
           }
 
-          const book = await prisma.book.create({
+          const book = await prisma.schoolBook.create({
             data: {
               schoolId,
               catalogBookId: catalogBook.id,
@@ -948,7 +947,7 @@ export async function seedBooks(
           bookIds.push(book.id)
         } else {
           // Fallback: create standalone Book (no catalog entry found)
-          const book = await prisma.book.create({
+          const book = await prisma.schoolBook.create({
             data: {
               schoolId,
               title: bookData.title,
@@ -993,7 +992,7 @@ export async function seedBorrowRecords(
 ): Promise<number> {
   let borrowCount = 0
 
-  const books = await prisma.book.findMany({
+  const books = await prisma.schoolBook.findMany({
     where: { schoolId },
     select: { id: true, availableCopies: true },
   })
@@ -1094,7 +1093,7 @@ export async function seedBorrowRecords(
         })
 
         if (!config.isReturned) {
-          await prisma.book.update({
+          await prisma.schoolBook.update({
             where: { id: bookId },
             data: { availableCopies: { decrement: 1 } },
           })

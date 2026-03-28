@@ -23,22 +23,22 @@ export interface TemplateComponent {
 
 export const TEMPLATE_REGISTRY: Record<ExamPaperTemplate, TemplateComponent> = {
   CLASSIC: {
-    component: ComposableDocument,
+    component: ComposableDocument as unknown as TemplateComponent["component"],
     name: "كلاسيكي أكاديمي",
     description: "تنسيق الاختبار التقليدي مع رأس المدرسة والأسئلة المرقمة",
   },
   MODERN: {
-    component: ComposableDocument,
+    component: ComposableDocument as unknown as TemplateComponent["component"],
     name: "حديث بسيط",
     description: "تخطيط نظيف وواسع مع زخارف قليلة",
   },
   FORMAL: {
-    component: ComposableDocument,
+    component: ComposableDocument as unknown as TemplateComponent["component"],
     name: "رسمي",
     description: "نمط الاختبار الحكومي مع تنسيق صارم وعلامات مائية",
   },
   CUSTOM: {
-    component: ComposableDocument,
+    component: ComposableDocument as unknown as TemplateComponent["component"],
     name: "مخصص",
     description: "يستخدم ألوان العلامة التجارية للمدرسة والتنسيق المخصص",
   },

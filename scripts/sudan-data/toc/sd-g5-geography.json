@@ -1,0 +1,100 @@
+{
+  "subject": "geography",
+  "subjectNameAr": "الجغرافيا",
+  "grade": 5,
+  "level": "elementary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "الطبعة الأولى 2021م",
+  "chapters": [
+    {
+      "nameAr": "الوحدة الأولى: البيئة من حولنا",
+      "name": "Unit 1: The Environment Around Us",
+      "slug": "the-environment-around-us",
+      "sequenceOrder": 1,
+      "lessons": [
+        {
+          "nameAr": "ما هي الجغرافيا؟",
+          "name": "What is Geography?",
+          "slug": "what-is-geography",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الصورة والخريطة",
+          "name": "Photos and Maps",
+          "slug": "photos-and-maps",
+          "sequenceOrder": 2
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة الثانية: مدرستي",
+      "name": "Unit 2: My School",
+      "slug": "my-school",
+      "sequenceOrder": 2,
+      "lessons": [
+        {
+          "nameAr": "فصلي (1)",
+          "name": "My Classroom (1)",
+          "slug": "my-classroom-1",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "فصلي (2)",
+          "name": "My Classroom (2)",
+          "slug": "my-classroom-2",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "فصلي (3)",
+          "name": "My Classroom (3)",
+          "slug": "my-classroom-3",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "مدرستي (1)",
+          "name": "My School (1)",
+          "slug": "my-school-1",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "مدرستي (2)",
+          "name": "My School (2)",
+          "slug": "my-school-2",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "مدرستي (3)",
+          "name": "My School (3)",
+          "slug": "my-school-3",
+          "sequenceOrder": 6
+        },
+        {
+          "nameAr": "مدرستي (4)",
+          "name": "My School (4)",
+          "slug": "my-school-4",
+          "sequenceOrder": 7
+        },
+        {
+          "nameAr": "تطبيقات ومراجعات",
+          "name": "Applications and Reviews",
+          "slug": "applications-and-reviews",
+          "sequenceOrder": 8
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة الثالثة: وطني السودان",
+      "name": "Unit 3: My Homeland Sudan",
+      "slug": "my-homeland-sudan",
+      "sequenceOrder": 3,
+      "lessons": [
+        {
+          "nameAr": "موقع السودان",
+          "name": "Location of Sudan",
+          "slug": "location-of-sudan",
+          "sequenceOrder": 1
+        }
+      ]
+    }
+  ]
+}

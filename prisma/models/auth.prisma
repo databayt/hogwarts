@@ -161,8 +161,11 @@ model User {
   eventRegistrations EventRegistration[] @relation("EventRegistrations")
 
   // Lesson Content relations
-  lessonVideos      LessonVideo[]
-  lessonAttachments LessonAttachment[]
+  videos       Video[]
+  attachments  Attachment[]
+
+  // Document Processing relations
+  documentProcessingJobs DocumentProcessingJob[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

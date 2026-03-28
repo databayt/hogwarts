@@ -1,0 +1,52 @@
+// Chapter — second level of the catalog hierarchy (Subject → Chapter → Lesson)
+
+model Chapter {
+  id            String        @id @default(cuid())
+  subjectId     String
+  name          String
+  slug          String
+  lang          String        @default("ar")
+  description   String?       @db.Text
+  sequenceOrder Int
+  concept       String?                              // "algebra", "geometry" — image lookup key
+  thumbnail     String?  @map("thumbnailKey")        // S3 key prefix for thumbnail WebP variants
+  color         String?
+  gradeRange    String?
+  grades        Int[]         @default([])
+  levels        SchoolLevel[]
+  status        ContentStatus @default(PUBLISHED)
+
+  // Denormalized counts
+  totalLessons Int @default(0)
+  totalContent Int @default(0)
+
+  // Engagement metrics
+  usageCount    Int   @default(0)
+  averageRating Float @default(0)
+  ratingCount   Int   @default(0)
+
+  // Relations
+  subject   Subject               @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  lessons   Lesson[]
+  exams     Exam[]
+  overrides ContentOverride[]     @relation("ChapterOverrides")
+
+  // Content relations
+  questions    Question[]
+  materials    Material[]
+  assignments  Assignment[]
+  quizzes      Quiz[]
+  documents    Document[]
+
+  // School-scoped reverse relations (FK bridges)
+  schoolQuestionBanks QuestionBank[]
+  schoolExams         SchoolExam[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([subjectId, slug])
+  @@index([subjectId, sequenceOrder])
+  @@index([status])
+  @@map("catalog_chapters")
+}

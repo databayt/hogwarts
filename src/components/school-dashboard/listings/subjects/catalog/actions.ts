@@ -53,7 +53,7 @@ export async function toggleSubjectSelection(
     const { schoolId } = authResult
 
     // Verify subject is PUBLISHED before allowing selection
-    const existing = await db.schoolSubjectSelection.findFirst({
+    const existing = await db.subjectSelection.findFirst({
       where: {
         schoolId,
         catalogSubjectId,
@@ -63,7 +63,7 @@ export async function toggleSubjectSelection(
     })
 
     if (!existing) {
-      const subject = await db.catalogSubject.findFirst({
+      const subject = await db.subject.findFirst({
         where: { id: catalogSubjectId, status: "PUBLISHED" },
         select: { id: true },
       })
@@ -77,13 +77,13 @@ export async function toggleSubjectSelection(
 
     if (existing) {
       // Remove selection
-      await db.schoolSubjectSelection.delete({ where: { id: existing.id } })
+      await db.subjectSelection.delete({ where: { id: existing.id } })
 
       // Update usage count
-      const usageCount = await db.schoolSubjectSelection.count({
+      const usageCount = await db.subjectSelection.count({
         where: { catalogSubjectId },
       })
-      await db.catalogSubject.update({
+      await db.subject.update({
         where: { id: catalogSubjectId },
         data: { usageCount },
       })
@@ -93,7 +93,7 @@ export async function toggleSubjectSelection(
     }
 
     // Add selection
-    await db.schoolSubjectSelection.create({
+    await db.subjectSelection.create({
       data: {
         schoolId,
         catalogSubjectId,
@@ -105,10 +105,10 @@ export async function toggleSubjectSelection(
     })
 
     // Update usage count
-    const usageCount = await db.schoolSubjectSelection.count({
+    const usageCount = await db.subjectSelection.count({
       where: { catalogSubjectId },
     })
-    await db.catalogSubject.update({
+    await db.subject.update({
       where: { id: catalogSubjectId },
       data: { usageCount },
     })
@@ -141,7 +141,7 @@ export async function bulkSelectSubjects(
     const { schoolId } = authResult
 
     // Batch insert with skipDuplicates instead of N+1 find+create loop
-    const { count: added } = await db.schoolSubjectSelection.createMany({
+    const { count: added } = await db.subjectSelection.createMany({
       data: catalogSubjectIds.map((catalogSubjectId) => ({
         schoolId,
         catalogSubjectId,
@@ -199,7 +199,7 @@ export async function updateSubjectSelection(
     // Validate input
     const parsed = subjectSelectionUpdateSchema.parse(data)
 
-    const selection = await db.schoolSubjectSelection.findFirst({
+    const selection = await db.subjectSelection.findFirst({
       where: { id: selectionId, schoolId },
     })
 
@@ -207,7 +207,7 @@ export async function updateSubjectSelection(
       return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
-    await db.schoolSubjectSelection.update({
+    await db.subjectSelection.update({
       where: { id: selectionId },
       data: parsed,
     })
@@ -262,12 +262,12 @@ export async function toggleContentOverride(input: {
 
     // Verify the school has selected the parent subject for this content
     if (validated.catalogChapterId) {
-      const chapter = await db.catalogChapter.findFirst({
+      const chapter = await db.chapter.findFirst({
         where: { id: validated.catalogChapterId },
         select: { subjectId: true },
       })
       if (chapter) {
-        const hasSelection = await db.schoolSubjectSelection.findFirst({
+        const hasSelection = await db.subjectSelection.findFirst({
           where: { schoolId, catalogSubjectId: chapter.subjectId },
           select: { id: true },
         })
@@ -281,7 +281,7 @@ export async function toggleContentOverride(input: {
     }
 
     // Check for existing override
-    const existing = await db.schoolContentOverride.findFirst({
+    const existing = await db.contentOverride.findFirst({
       where: {
         schoolId,
         catalogChapterId: validated.catalogChapterId ?? null,
@@ -293,10 +293,10 @@ export async function toggleContentOverride(input: {
     if (existing) {
       if (!validated.isHidden) {
         // Remove override (unhide)
-        await db.schoolContentOverride.delete({ where: { id: existing.id } })
+        await db.contentOverride.delete({ where: { id: existing.id } })
       } else {
         // Update override
-        await db.schoolContentOverride.update({
+        await db.contentOverride.update({
           where: { id: existing.id },
           data: {
             isHidden: validated.isHidden,
@@ -307,7 +307,7 @@ export async function toggleContentOverride(input: {
       }
     } else if (validated.isHidden) {
       // Create new override
-      await db.schoolContentOverride.create({
+      await db.contentOverride.create({
         data: {
           schoolId,
           catalogChapterId: validated.catalogChapterId ?? null,
@@ -344,7 +344,7 @@ export async function getSchoolCatalogSelections(): Promise<ActionResponse> {
     if (!authResult.ok) return { success: false, error: authResult.error }
     const { schoolId } = authResult
 
-    const selections = await db.schoolSubjectSelection.findMany({
+    const selections = await db.subjectSelection.findMany({
       where: { schoolId },
       include: {
         subject: {
@@ -355,7 +355,6 @@ export async function getSchoolCatalogSelections(): Promise<ActionResponse> {
             department: true,
             levels: true,
             color: true,
-            imageKey: true,
             status: true,
             totalChapters: true,
             totalLessons: true,
@@ -404,7 +403,7 @@ export async function setInstructorPreference(input: {
 
     const validated = instructorPreferenceSchema.parse(input)
 
-    await db.schoolInstructorPreference.upsert({
+    await db.instructorPreference.upsert({
       where: {
         schoolId_catalogSubjectId: {
           schoolId,
@@ -445,7 +444,7 @@ export async function getInstructorPreference(
     if (!authResult.ok) return { success: false, error: authResult.error }
     const { schoolId } = authResult
 
-    const preference = await db.schoolInstructorPreference.findUnique({
+    const preference = await db.instructorPreference.findUnique({
       where: {
         schoolId_catalogSubjectId: {
           schoolId,
@@ -480,7 +479,7 @@ export async function getAvailableInstructors(
     const { schoolId } = authResult
 
     // Get all approved videos for lessons in this subject
-    const videos = await db.lessonVideo.findMany({
+    const videos = await db.video.findMany({
       where: {
         lesson: { chapter: { subjectId: catalogSubjectId } },
         approvalStatus: "APPROVED",
@@ -541,7 +540,7 @@ export async function getAvailableInstructors(
     }
 
     // Get current preference
-    const preference = await db.schoolInstructorPreference.findUnique({
+    const preference = await db.instructorPreference.findUnique({
       where: {
         schoolId_catalogSubjectId: { schoolId, catalogSubjectId },
       },

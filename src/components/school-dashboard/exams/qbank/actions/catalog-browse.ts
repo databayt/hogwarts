@@ -23,7 +23,7 @@ export interface CatalogBrowseFilters {
   page?: number
 }
 
-export interface CatalogQuestionRow {
+export interface QuestionRow {
   id: string
   questionText: string
   questionType: string
@@ -39,9 +39,9 @@ export interface CatalogQuestionRow {
   isAdopted: boolean
 }
 
-export async function browseCatalogQuestions(
+export async function browseQuestions(
   filters: CatalogBrowseFilters
-): Promise<{ questions: CatalogQuestionRow[]; total: number }> {
+): Promise<{ questions: QuestionRow[]; total: number }> {
   const { schoolId } = await getTenantContext()
   if (!schoolId) {
     return { questions: [], total: 0 }
@@ -83,7 +83,7 @@ export async function browseCatalogQuestions(
   const take = 20
 
   const [questions, total] = await Promise.all([
-    db.catalogQuestion.findMany({
+    db.question.findMany({
       where,
       include: {
         catalogSubject: { select: { name: true } },
@@ -93,7 +93,7 @@ export async function browseCatalogQuestions(
       skip: page * take,
       orderBy: [{ usageCount: "desc" }, { createdAt: "desc" }],
     }),
-    db.catalogQuestion.count({ where }),
+    db.question.count({ where }),
   ])
 
   return {
@@ -120,7 +120,7 @@ export async function browseCatalogQuestions(
 // Adopt a catalog question into the school's question bank
 // ============================================================================
 
-export async function adoptCatalogQuestion(
+export async function adoptQuestion(
   catalogQuestionId: string
 ): Promise<ActionResponse<{ id: string }>> {
   try {
@@ -137,7 +137,7 @@ export async function adoptCatalogQuestion(
     const userId = session.user.id
 
     // Verify question exists and is accessible
-    const catalogQ = await db.catalogQuestion.findFirst({
+    const catalogQ = await db.question.findFirst({
       where: {
         id: catalogQuestionId,
         status: "PUBLISHED",
@@ -166,7 +166,7 @@ export async function adoptCatalogQuestion(
       }
     }
 
-    // Find matching school subject via SchoolSubjectSelection bridge
+    // Find matching school subject via SubjectSelection bridge
     if (!catalogQ.catalogSubjectId) {
       return {
         success: false,
@@ -174,7 +174,7 @@ export async function adoptCatalogQuestion(
         code: "SUBJECT_NOT_FOUND",
       }
     }
-    const subjectSelection = await db.schoolSubjectSelection.findFirst({
+    const subjectSelection = await db.subjectSelection.findFirst({
       where: {
         schoolId,
         catalogSubjectId: catalogQ.catalogSubjectId,
@@ -220,7 +220,7 @@ export async function adoptCatalogQuestion(
       })
 
       // Increment catalog usage count
-      await tx.catalogQuestion.update({
+      await tx.question.update({
         where: { id: catalogQuestionId },
         data: { usageCount: { increment: 1 } },
       })
@@ -247,7 +247,7 @@ export async function adoptCatalogQuestion(
 // Bulk adopt multiple catalog questions
 // ============================================================================
 
-export async function bulkAdoptCatalogQuestions(
+export async function bulkAdoptQuestions(
   catalogQuestionIds: string[]
 ): Promise<ActionResponse<{ adopted: number; skipped: number }>> {
   try {
@@ -264,7 +264,7 @@ export async function bulkAdoptCatalogQuestions(
     let skipped = 0
 
     for (const id of catalogQuestionIds) {
-      const result = await adoptCatalogQuestion(id)
+      const result = await adoptQuestion(id)
       if (result.success) {
         adopted++
       } else {
@@ -288,10 +288,10 @@ export async function bulkAdoptCatalogQuestions(
 // Get catalog subjects for filter dropdown
 // ============================================================================
 
-export async function getCatalogSubjectsForBrowse(): Promise<
+export async function getSubjectsForBrowse(): Promise<
   { id: string; name: string }[]
 > {
-  const subjects = await db.catalogSubject.findMany({
+  const subjects = await db.subject.findMany({
     where: { status: "PUBLISHED" },
     select: { id: true, name: true },
     orderBy: { sortOrder: "asc" },

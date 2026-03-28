@@ -1,0 +1,91 @@
+{
+  "subject": "math",
+  "subjectNameAr": "الرياضيات",
+  "grade": 9,
+  "level": "middle",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "",
+  "chapters": [
+    {
+      "nameAr": "العلاقات",
+      "name": "Relations",
+      "slug": "relations",
+      "sequenceOrder": 1,
+      "lessons": [
+        {
+          "nameAr": "درس مراجعة - العلاقات",
+          "name": "Review Lesson - Relations",
+          "slug": "review-relations",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "مفهوم العلاقة بين مجموعتين",
+          "name": "Concept of Relation Between Two Sets",
+          "slug": "relation-concept",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "مجال العلاقة والمجال المقابل",
+          "name": "Domain and Range of a Relation",
+          "slug": "domain-and-range",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "مدى العلاقة",
+          "name": "Range of a Relation",
+          "slug": "range-of-relation",
+          "sequenceOrder": 4
+        }
+      ]
+    },
+    {
+      "nameAr": "المضلعات والدوائر",
+      "name": "Polygons and Circles",
+      "slug": "polygons-and-circles",
+      "sequenceOrder": 2,
+      "lessons": []
+    },
+    {
+      "nameAr": "معادلة الدائرة",
+      "name": "Circle Equations",
+      "slug": "circle-equations",
+      "sequenceOrder": 3,
+      "lessons": []
+    },
+    {
+      "nameAr": "المعادلات والمتطابقات من الدرجة الثانية",
+      "name": "Quadratic Equations and Identities",
+      "slug": "quadratic-equations-identities",
+      "sequenceOrder": 4,
+      "lessons": []
+    },
+    {
+      "nameAr": "الدوال اللوغاريتمية والأسية",
+      "name": "Logarithmic and Exponential Functions",
+      "slug": "logarithmic-exponential-functions",
+      "sequenceOrder": 5,
+      "lessons": []
+    },
+    {
+      "nameAr": "تحليل وتجريب المتتابعات الحسابية",
+      "name": "Analysis and Experimentation of Arithmetic Sequences",
+      "slug": "arithmetic-sequences",
+      "sequenceOrder": 6,
+      "lessons": []
+    },
+    {
+      "nameAr": "الحجوم",
+      "name": "Volume",
+      "slug": "volume",
+      "sequenceOrder": 7,
+      "lessons": []
+    },
+    {
+      "nameAr": "الإحصاء",
+      "name": "Statistics",
+      "slug": "statistics",
+      "sequenceOrder": 8,
+      "lessons": []
+    }
+  ]
+}

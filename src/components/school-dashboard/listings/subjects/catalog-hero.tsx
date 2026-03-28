@@ -11,7 +11,7 @@ import { StarRating } from "@/components/ui/star-rating"
 import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
-import type { CatalogSubjectSummary } from "./catalog-detail"
+import type { SubjectSummary } from "./catalog-detail"
 
 // ---------------------------------------------------------------------------
 // Grade label helper
@@ -27,7 +27,7 @@ function gradeLabel(g: number, lang: "en" | "ar"): string {
 // ---------------------------------------------------------------------------
 
 interface Props {
-  subject: CatalogSubjectSummary
+  subject: SubjectSummary
   gradeSiblings?: { grade: number; slug: string }[]
   lang: Locale
 }

@@ -86,7 +86,7 @@ export async function startExamSession(input: StartExamSessionInput) {
 
   try {
     // Get exam with proctoring settings
-    const exam = await db.exam.findFirst({
+    const exam = await db.schoolExam.findFirst({
       where: { id: examId, schoolId },
       include: {
         generatedExam: {

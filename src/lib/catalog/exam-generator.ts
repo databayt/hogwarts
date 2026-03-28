@@ -1,14 +1,14 @@
 /**
  * Catalog-Level Exam Generation
  *
- * Pure function that generates a CatalogExam + CatalogExamQuestion records
- * from CatalogExamBlueprint + CatalogQuestion pool.
+ * Pure function that generates a Exam + ExamQuestion records
+ * from ExamBlueprint + Question pool.
  * Used by seeds and admin actions.
  */
 
 import type { PrismaClient } from "@prisma/client"
 
-interface GenerateCatalogExamInput {
+interface GenerateExamInput {
   catalogSubjectId: string
   examType: string // midterm, final, chapter_test, quiz, practice, diagnostic
   title: string
@@ -18,7 +18,7 @@ interface GenerateCatalogExamInput {
   blueprintCategory?: string // If not provided, auto-detected from subject
 }
 
-interface GenerateCatalogExamResult {
+interface GenerateExamResult {
   catalogExamId: string
   questionsUsed: number
   totalMarks: number
@@ -27,17 +27,17 @@ interface GenerateCatalogExamResult {
 }
 
 /**
- * Generate a CatalogExam from CatalogQuestion pool using blueprint rules.
+ * Generate a Exam from Question pool using blueprint rules.
  * Falls back to simple distribution if no blueprint is found.
  */
-export async function generateCatalogExam(
+export async function generateExam(
   prisma: PrismaClient,
-  input: GenerateCatalogExamInput
-): Promise<GenerateCatalogExamResult> {
+  input: GenerateExamInput
+): Promise<GenerateExamResult> {
   // 1. Find or auto-detect blueprint
   let blueprint = null
   if (input.blueprintCategory) {
-    blueprint = await prisma.catalogExamBlueprint.findFirst({
+    blueprint = await prisma.examBlueprint.findFirst({
       where: { category: input.blueprintCategory, isActive: true },
     })
   }
@@ -51,7 +51,7 @@ export async function generateCatalogExam(
   if (input.chapterId) questionWhere.catalogChapterId = input.chapterId
   if (input.lessonId) questionWhere.catalogLessonId = input.lessonId
 
-  const questions = await prisma.catalogQuestion.findMany({
+  const questions = await prisma.question.findMany({
     where: questionWhere as any,
     orderBy: [{ usageCount: "asc" }, { createdAt: "desc" }],
   })
@@ -195,14 +195,14 @@ export async function generateCatalogExam(
     }
   }
 
-  // 5. Create CatalogExam + CatalogExamQuestion in transaction
+  // 5. Create Exam + ExamQuestion in transaction
   const actualTotalMarks = selectedQuestions.reduce(
     (sum, q) => sum + q.points,
     0
   )
 
   const catalogExam = await prisma.$transaction(async (tx) => {
-    const exam = await tx.catalogExam.create({
+    const exam = await tx.exam.create({
       data: {
         subjectId: input.catalogSubjectId,
         chapterId: input.chapterId,
@@ -223,7 +223,7 @@ export async function generateCatalogExam(
     })
 
     if (selectedQuestions.length > 0) {
-      await tx.catalogExamQuestion.createMany({
+      await tx.examQuestion.createMany({
         data: selectedQuestions.map((sq) => ({
           catalogExamId: exam.id,
           catalogQuestionId: sq.id,

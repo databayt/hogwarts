@@ -1,0 +1,99 @@
+// School Assignment — school-scoped assignments (has schoolId)
+// Renamed from Assignment to avoid conflict with catalog Assignment
+
+enum AssessmentType {
+  HOMEWORK
+  QUIZ
+  TEST
+  MIDTERM
+  FINAL_EXAM
+  PROJECT
+  LAB_REPORT
+  ESSAY
+  PRESENTATION
+}
+
+enum AssessmentStatus {
+  DRAFT
+  PUBLISHED
+  IN_PROGRESS
+  COMPLETED
+  GRADED
+}
+
+model SchoolAssignment {
+  id           String           @id @default(cuid())
+  schoolId     String
+  classId      String
+  title        String
+  description  String?          @db.Text
+  type         AssessmentType
+  status       AssessmentStatus @default(DRAFT)
+  totalPoints  Decimal          @db.Decimal(5, 2)
+  weight       Decimal          @db.Decimal(5, 2)
+  dueDate      DateTime
+  publishDate  DateTime?
+  instructions String?          @db.Text
+
+  // Optional catalog FK bridge
+  catalogLessonId     String?
+  catalogAssignmentId String?
+
+  school              School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  class               Class       @relation(fields: [classId], references: [id], onDelete: Cascade)
+  catalogLesson       Lesson?     @relation(fields: [catalogLessonId], references: [id], onDelete: SetNull)
+  catalogAssignment   Assignment? @relation(fields: [catalogAssignmentId], references: [id], onDelete: SetNull)
+  submissions         AssignmentSubmission[]
+  results             Result[]
+
+  wizardStep String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId])
+  @@index([classId])
+  @@index([schoolId, classId])
+  @@index([dueDate])
+  @@index([status])
+  @@index([catalogAssignmentId])
+  @@map("assignments")
+}
+
+enum SubmissionStatus {
+  NOT_SUBMITTED
+  DRAFT
+  SUBMITTED
+  LATE_SUBMITTED
+  GRADED
+  RETURNED
+}
+
+model AssignmentSubmission {
+  id           String           @id @default(cuid())
+  schoolId     String
+  assignmentId String
+  studentId    String
+  status       SubmissionStatus @default(NOT_SUBMITTED)
+  submittedAt  DateTime?
+  content      String?          @db.Text
+  attachments  String[]
+  score        Decimal?         @db.Decimal(5, 2)
+  feedback     String?          @db.Text
+  gradedAt     DateTime?
+  gradedBy     String?
+
+  school     School           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  assignment SchoolAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  student    Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, assignmentId, studentId])
+  @@index([schoolId])
+  @@index([assignmentId])
+  @@index([studentId])
+  @@index([status])
+  @@map("assignment_submissions")
+}

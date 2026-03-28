@@ -29,18 +29,20 @@ interface GuardianInfoStepProps {
   dictionary?: any
 }
 
-const relationOptions = [
-  "Father",
-  "Mother",
-  "Legal Guardian",
-  "Uncle",
-  "Aunt",
-  "Grandfather",
-  "Grandmother",
-  "Other",
-]
-
 export function GuardianInfoStep({ form, dictionary }: GuardianInfoStepProps) {
+  const reg = dictionary?.school?.students?.registration?.guardian
+
+  const relationOptions = [
+    { value: "Father", label: reg?.father || "Father" },
+    { value: "Mother", label: reg?.mother || "Mother" },
+    { value: "Legal Guardian", label: reg?.legalGuardian || "Legal Guardian" },
+    { value: "Uncle", label: reg?.uncle || "Uncle" },
+    { value: "Aunt", label: reg?.aunt || "Aunt" },
+    { value: "Grandfather", label: reg?.grandfather || "Grandfather" },
+    { value: "Grandmother", label: reg?.grandmother || "Grandmother" },
+    { value: "Other", label: reg?.other || "Other" },
+  ]
+
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "guardians",
@@ -71,7 +73,7 @@ export function GuardianInfoStep({ form, dictionary }: GuardianInfoStepProps) {
             <CardTitle className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4" />
-                Guardian {index + 1}
+                {reg?.title || "Guardian"} {index + 1}
               </div>
               {fields.length > 1 && (
                 <Button
@@ -92,9 +94,12 @@ export function GuardianInfoStep({ form, dictionary }: GuardianInfoStepProps) {
                 name={`guardians.${index}.firstName`}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>First Name *</FormLabel>
+                    <FormLabel>{reg?.firstName || "First Name *"}</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter first name" {...field} />
+                      <Input
+                        placeholder={reg?.enterFirstName || "Enter first name"}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -106,9 +111,12 @@ export function GuardianInfoStep({ form, dictionary }: GuardianInfoStepProps) {
                 name={`guardians.${index}.lastName`}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Last Name *</FormLabel>
+                    <FormLabel>{reg?.lastName || "Last Name *"}</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter last name" {...field} />
+                      <Input
+                        placeholder={reg?.enterLastName || "Enter last name"}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -120,20 +128,26 @@ export function GuardianInfoStep({ form, dictionary }: GuardianInfoStepProps) {
                 name={`guardians.${index}.relation`}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Relationship *</FormLabel>
+                    <FormLabel>
+                      {reg?.relationship || "Relationship *"}
+                    </FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select relationship" />
+                          <SelectValue
+                            placeholder={
+                              reg?.selectRelationship || "Select relationship"
+                            }
+                          />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {relationOptions.map((relation) => (
-                          <SelectItem key={relation} value={relation}>
-                            {relation}
+                        {relationOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -150,11 +164,13 @@ export function GuardianInfoStep({ form, dictionary }: GuardianInfoStepProps) {
                 name={`guardians.${index}.email`}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>{reg?.email || "Email"}</FormLabel>
                     <FormControl>
                       <Input
                         type="email"
-                        placeholder="guardian@example.com"
+                        placeholder={
+                          reg?.emailPlaceholder || "guardian@example.com"
+                        }
                         {...field}
                       />
                     </FormControl>
@@ -168,11 +184,15 @@ export function GuardianInfoStep({ form, dictionary }: GuardianInfoStepProps) {
                 name={`guardians.${index}.mobileNumber`}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Mobile Number *</FormLabel>
+                    <FormLabel>
+                      {reg?.mobileNumber || "Mobile Number *"}
+                    </FormLabel>
                     <FormControl>
                       <Input
                         type="tel"
-                        placeholder="+966 XX XXX XXXX"
+                        placeholder={
+                          reg?.mobilePlaceholder || "+966 XX XXX XXXX"
+                        }
                         {...field}
                       />
                     </FormControl>
@@ -186,9 +206,12 @@ export function GuardianInfoStep({ form, dictionary }: GuardianInfoStepProps) {
                 name={`guardians.${index}.occupation`}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Occupation</FormLabel>
+                    <FormLabel>{reg?.occupation || "Occupation"}</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter occupation" {...field} />
+                      <Input
+                        placeholder={reg?.enterOccupation || "Enter occupation"}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -218,7 +241,8 @@ export function GuardianInfoStep({ form, dictionary }: GuardianInfoStepProps) {
                     />
                   </FormControl>
                   <FormLabel className="cursor-pointer text-sm font-normal">
-                    Primary Guardian (will receive all school communications)
+                    {reg?.primaryGuardian ||
+                      "Primary Guardian (will receive all school communications)"}
                   </FormLabel>
                   <FormMessage />
                 </FormItem>
@@ -235,7 +259,7 @@ export function GuardianInfoStep({ form, dictionary }: GuardianInfoStepProps) {
         className="w-full"
       >
         <Plus className="me-2 h-4 w-4" />
-        Add Another Guardian
+        {reg?.addAnother || "Add Another Guardian"}
       </Button>
     </div>
   )

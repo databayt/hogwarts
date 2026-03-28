@@ -8,7 +8,7 @@ import { db } from "@/lib/db"
 import {
   _testing,
   applyTimetableStructureForNewSchool,
-  getRankedLessonVideos,
+  getRankedVideos,
   recordVideoView,
   setupCatalogForSchool,
   setupDefaultsForSchool,
@@ -473,21 +473,17 @@ describe("Catalog Setup", () => {
     })
   })
 
-  describe("findCatalogSubjects (progressive fallback)", () => {
+  describe("findSubjects (progressive fallback)", () => {
     it("returns exact match when country + curriculum + schoolType matches", async () => {
-      vi.mocked(db.catalogSubject.findMany).mockResolvedValueOnce([
+      vi.mocked(db.subject.findMany).mockResolvedValueOnce([
         { id: "s1", name: "Math", levels: ["ELEMENTARY"], grades: [] },
       ] as any)
 
-      const result = await _testing.findCatalogSubjects(
-        "SD",
-        "national",
-        "public"
-      )
+      const result = await _testing.findSubjects("SD", "national", "public")
 
       expect(result).toHaveLength(1)
       // First call should include schoolType filter
-      expect(db.catalogSubject.findMany).toHaveBeenCalledWith(
+      expect(db.subject.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             schoolTypes: { has: "public" },
@@ -498,58 +494,50 @@ describe("Catalog Setup", () => {
 
     it("falls back to broad match when no exact match", async () => {
       // Step 1 (exact): no results
-      vi.mocked(db.catalogSubject.findMany).mockResolvedValueOnce([])
+      vi.mocked(db.subject.findMany).mockResolvedValueOnce([])
       // Step 2 (broad): results
-      vi.mocked(db.catalogSubject.findMany).mockResolvedValueOnce([
+      vi.mocked(db.subject.findMany).mockResolvedValueOnce([
         { id: "s1", name: "Math", levels: ["ELEMENTARY"], grades: [] },
       ] as any)
 
-      const result = await _testing.findCatalogSubjects(
-        "SD",
-        "national",
-        "public"
-      )
+      const result = await _testing.findSubjects("SD", "national", "public")
 
       expect(result).toHaveLength(1)
-      expect(db.catalogSubject.findMany).toHaveBeenCalledTimes(2)
+      expect(db.subject.findMany).toHaveBeenCalledTimes(2)
     })
 
     it("falls back to universal match (country=*)", async () => {
       // Step 1 (exact): no results
-      vi.mocked(db.catalogSubject.findMany).mockResolvedValueOnce([])
+      vi.mocked(db.subject.findMany).mockResolvedValueOnce([])
       // Step 2 (broad): no results
-      vi.mocked(db.catalogSubject.findMany).mockResolvedValueOnce([])
+      vi.mocked(db.subject.findMany).mockResolvedValueOnce([])
       // Step 3 (universal): results
-      vi.mocked(db.catalogSubject.findMany).mockResolvedValueOnce([
+      vi.mocked(db.subject.findMany).mockResolvedValueOnce([
         { id: "s1", name: "IB Math", levels: ["HIGH"], grades: [] },
       ] as any)
 
-      const result = await _testing.findCatalogSubjects("SD", "ib", "private")
+      const result = await _testing.findSubjects("SD", "ib", "private")
 
       expect(result).toHaveLength(1)
-      expect(db.catalogSubject.findMany).toHaveBeenCalledTimes(3)
+      expect(db.subject.findMany).toHaveBeenCalledTimes(3)
     })
 
     it("falls back to US K-12 baseline as last resort", async () => {
       // Steps 1-3: no results
-      vi.mocked(db.catalogSubject.findMany)
+      vi.mocked(db.subject.findMany)
         .mockResolvedValueOnce([])
         .mockResolvedValueOnce([])
         .mockResolvedValueOnce([])
       // Step 4 (baseline): results
-      vi.mocked(db.catalogSubject.findMany).mockResolvedValueOnce([
+      vi.mocked(db.subject.findMany).mockResolvedValueOnce([
         { id: "s1", name: "US Math", levels: ["ELEMENTARY"], grades: [] },
       ] as any)
 
-      const result = await _testing.findCatalogSubjects(
-        "BR",
-        "national",
-        "public"
-      )
+      const result = await _testing.findSubjects("BR", "national", "public")
 
       expect(result).toHaveLength(1)
       // Baseline query should use US + us-k12
-      expect(db.catalogSubject.findMany).toHaveBeenLastCalledWith(
+      expect(db.subject.findMany).toHaveBeenLastCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             country: "US",
@@ -560,32 +548,28 @@ describe("Catalog Setup", () => {
     })
 
     it("returns empty array when no subjects found at any level", async () => {
-      vi.mocked(db.catalogSubject.findMany)
+      vi.mocked(db.subject.findMany)
         .mockResolvedValueOnce([])
         .mockResolvedValueOnce([])
         .mockResolvedValueOnce([])
         .mockResolvedValueOnce([])
 
-      const result = await _testing.findCatalogSubjects(
-        "BR",
-        "national",
-        "public"
-      )
+      const result = await _testing.findSubjects("BR", "national", "public")
 
       expect(result).toEqual([])
     })
 
     it("skips exact match step when no schoolType provided", async () => {
       // Step 2 (broad, first call without schoolType): results
-      vi.mocked(db.catalogSubject.findMany).mockResolvedValueOnce([
+      vi.mocked(db.subject.findMany).mockResolvedValueOnce([
         { id: "s1", name: "Math", levels: ["ELEMENTARY"], grades: [] },
       ] as any)
 
-      const result = await _testing.findCatalogSubjects("SD", "national")
+      const result = await _testing.findSubjects("SD", "national")
 
       expect(result).toHaveLength(1)
       // Only 1 call (no exact match attempted)
-      expect(db.catalogSubject.findMany).toHaveBeenCalledTimes(1)
+      expect(db.subject.findMany).toHaveBeenCalledTimes(1)
     })
   })
 
@@ -630,7 +614,7 @@ describe("Catalog Setup", () => {
         schoolLevel: "both",
         country: "SD",
       } as any)
-      vi.mocked(db.catalogSubject.findMany).mockResolvedValue([])
+      vi.mocked(db.subject.findMany).mockResolvedValue([])
       vi.mocked(db.yearLevel.findMany).mockResolvedValue([])
 
       const result = await setupCatalogForSchool(schoolId, {
@@ -649,7 +633,7 @@ describe("Catalog Setup", () => {
         schoolLevel: "both",
         country: "SD",
       } as any)
-      vi.mocked(db.catalogSubject.findMany).mockResolvedValue([])
+      vi.mocked(db.subject.findMany).mockResolvedValue([])
       vi.mocked(db.yearLevel.findMany).mockResolvedValue([])
 
       const result = await setupCatalogForSchool(schoolId)
@@ -666,7 +650,7 @@ describe("Catalog Setup", () => {
         schoolLevel: "primary",
         country: "SD",
       } as any)
-      vi.mocked(db.catalogSubject.findMany).mockResolvedValue([
+      vi.mocked(db.subject.findMany).mockResolvedValue([
         { id: "cs1", name: "رياضيات", levels: ["ELEMENTARY"], grades: [] },
       ] as any)
       vi.mocked(db.yearLevel.findMany).mockResolvedValue([])
@@ -711,7 +695,7 @@ describe("Catalog Setup", () => {
         schoolLevel: "primary",
         country: "SD",
       } as any)
-      vi.mocked(db.catalogSubject.findMany).mockResolvedValue([
+      vi.mocked(db.subject.findMany).mockResolvedValue([
         { id: "cs1", name: "Math", levels: ["ELEMENTARY", "HIGH"], grades: [] },
       ] as any)
       vi.mocked(db.yearLevel.findMany).mockResolvedValue([])
@@ -750,7 +734,7 @@ describe("Catalog Setup", () => {
         schoolLevel: "secondary",
         country: "SD",
       } as any)
-      vi.mocked(db.catalogSubject.findMany).mockResolvedValue([
+      vi.mocked(db.subject.findMany).mockResolvedValue([
         { id: "cs1", name: "Science", levels: ["HIGH"], grades: [] },
       ] as any)
       vi.mocked(db.yearLevel.findMany).mockResolvedValue([])
@@ -799,13 +783,13 @@ describe("Catalog Setup", () => {
         schoolLevel: "both",
         country: "EG",
       } as any)
-      vi.mocked(db.catalogSubject.findMany).mockResolvedValue([])
+      vi.mocked(db.subject.findMany).mockResolvedValue([])
       vi.mocked(db.yearLevel.findMany).mockResolvedValue([])
 
       await setupCatalogForSchool(schoolId, { country: "SD" })
 
       // Should use EG from school, not SD from options
-      expect(db.catalogSubject.findMany).toHaveBeenCalledWith(
+      expect(db.subject.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({ country: "EG" }),
         })
@@ -862,10 +846,10 @@ describe("Catalog Setup", () => {
   })
 
   // ========================================================================
-  // getRankedLessonVideos
+  // getRankedVideos
   // ========================================================================
 
-  describe("getRankedLessonVideos", () => {
+  describe("getRankedVideos", () => {
     it("returns ranked videos for a lesson", async () => {
       const mockVideos = [
         {
@@ -884,9 +868,9 @@ describe("Catalog Setup", () => {
           school: { name: "Test School" },
         },
       ]
-      vi.mocked(db.lessonVideo.findMany).mockResolvedValue(mockVideos as any)
+      vi.mocked(db.video.findMany).mockResolvedValue(mockVideos as any)
 
-      const result = await getRankedLessonVideos("lesson-1", schoolId)
+      const result = await getRankedVideos("lesson-1", schoolId)
 
       expect(result).toHaveLength(1)
       expect(result[0]).toEqual(
@@ -901,11 +885,11 @@ describe("Catalog Setup", () => {
     })
 
     it("filters by PUBLIC visibility when no schoolId", async () => {
-      vi.mocked(db.lessonVideo.findMany).mockResolvedValue([])
+      vi.mocked(db.video.findMany).mockResolvedValue([])
 
-      await getRankedLessonVideos("lesson-1", null)
+      await getRankedVideos("lesson-1", null)
 
-      expect(db.lessonVideo.findMany).toHaveBeenCalledWith(
+      expect(db.video.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             visibility: "PUBLIC",
@@ -915,13 +899,13 @@ describe("Catalog Setup", () => {
     })
 
     it("filters to school-only when includeSchoolOnly is true", async () => {
-      vi.mocked(db.lessonVideo.findMany).mockResolvedValue([])
+      vi.mocked(db.video.findMany).mockResolvedValue([])
 
-      await getRankedLessonVideos("lesson-1", schoolId, {
+      await getRankedVideos("lesson-1", schoolId, {
         includeSchoolOnly: true,
       })
 
-      expect(db.lessonVideo.findMany).toHaveBeenCalledWith(
+      expect(db.video.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             schoolId,
@@ -931,11 +915,11 @@ describe("Catalog Setup", () => {
     })
 
     it("respects limit option", async () => {
-      vi.mocked(db.lessonVideo.findMany).mockResolvedValue([])
+      vi.mocked(db.video.findMany).mockResolvedValue([])
 
-      await getRankedLessonVideos("lesson-1", schoolId, { limit: 5 })
+      await getRankedVideos("lesson-1", schoolId, { limit: 5 })
 
-      expect(db.lessonVideo.findMany).toHaveBeenCalledWith(
+      expect(db.video.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ take: 5 })
       )
     })
@@ -947,11 +931,11 @@ describe("Catalog Setup", () => {
 
   describe("recordVideoView", () => {
     it("increments view count", async () => {
-      vi.mocked(db.lessonVideo.update).mockResolvedValue({} as any)
+      vi.mocked(db.video.update).mockResolvedValue({} as any)
 
       await recordVideoView("v1")
 
-      expect(db.lessonVideo.update).toHaveBeenCalledWith({
+      expect(db.video.update).toHaveBeenCalledWith({
         where: { id: "v1" },
         data: { viewCount: { increment: 1 } },
       })
@@ -963,7 +947,7 @@ describe("Catalog Setup", () => {
   // ========================================================================
 
   describe("setupLibraryForSchool", () => {
-    const mockCatalogBooks = [
+    const mockBooks = [
       {
         id: "cb-1",
         title: "Book One",
@@ -1003,10 +987,8 @@ describe("Catalog Setup", () => {
     ]
 
     it("creates books from catalog for a new school", async () => {
-      vi.mocked(db.book.count).mockResolvedValue(0)
-      vi.mocked(db.catalogBook.findMany).mockResolvedValue(
-        mockCatalogBooks as any
-      )
+      vi.mocked(db.schoolBook.count).mockResolvedValue(0)
+      vi.mocked(db.schoolBook.findMany).mockResolvedValue(mockBooks as any)
       vi.mocked(db.$transaction).mockImplementation(async (cb: any) => {
         const tx = {
           schoolBookSelection: {
@@ -1016,18 +998,18 @@ describe("Catalog Setup", () => {
           book: { create: vi.fn() },
         }
         await cb(tx)
-        return mockCatalogBooks.length
+        return mockBooks.length
       })
-      vi.mocked(db.schoolBookSelection.count).mockResolvedValue(1)
-      vi.mocked(db.catalogBook.update).mockResolvedValue({} as any)
+      vi.mocked(db.bookSelection.count).mockResolvedValue(1)
+      vi.mocked(db.schoolBook.update).mockResolvedValue({} as any)
 
       const result = await setupLibraryForSchool(schoolId)
 
       expect(result).toEqual({ skipped: false, books: 2 })
-      expect(db.book.count).toHaveBeenCalledWith({
+      expect(db.schoolBook.count).toHaveBeenCalledWith({
         where: { schoolId },
       })
-      expect(db.catalogBook.findMany).toHaveBeenCalledWith(
+      expect(db.schoolBook.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {
             status: "PUBLISHED",
@@ -1039,7 +1021,7 @@ describe("Catalog Setup", () => {
     })
 
     it("skips if school already has books (idempotent)", async () => {
-      vi.mocked(db.book.count).mockResolvedValue(10)
+      vi.mocked(db.schoolBook.count).mockResolvedValue(10)
 
       const result = await setupLibraryForSchool(schoolId)
 
@@ -1048,13 +1030,13 @@ describe("Catalog Setup", () => {
         books: 0,
         message: "School already has library books",
       })
-      expect(db.catalogBook.findMany).not.toHaveBeenCalled()
+      expect(db.schoolBook.findMany).not.toHaveBeenCalled()
       expect(db.$transaction).not.toHaveBeenCalled()
     })
 
     it("skips when no catalog books exist", async () => {
-      vi.mocked(db.book.count).mockResolvedValue(0)
-      vi.mocked(db.catalogBook.findMany).mockResolvedValue([])
+      vi.mocked(db.schoolBook.count).mockResolvedValue(0)
+      vi.mocked(db.schoolBook.findMany).mockResolvedValue([])
 
       const result = await setupLibraryForSchool(schoolId)
 
@@ -1066,11 +1048,9 @@ describe("Catalog Setup", () => {
       expect(db.$transaction).not.toHaveBeenCalled()
     })
 
-    it("creates SchoolBookSelection and Book for each catalog book", async () => {
-      vi.mocked(db.book.count).mockResolvedValue(0)
-      vi.mocked(db.catalogBook.findMany).mockResolvedValue(
-        mockCatalogBooks as any
-      )
+    it("creates BookSelection and Book for each catalog book", async () => {
+      vi.mocked(db.schoolBook.count).mockResolvedValue(0)
+      vi.mocked(db.schoolBook.findMany).mockResolvedValue(mockBooks as any)
 
       const txSelectionCreate = vi.fn()
       const txBookCreate = vi.fn()
@@ -1083,10 +1063,10 @@ describe("Catalog Setup", () => {
           book: { create: txBookCreate },
         }
         await cb(tx)
-        return mockCatalogBooks.length
+        return mockBooks.length
       })
-      vi.mocked(db.schoolBookSelection.count).mockResolvedValue(1)
-      vi.mocked(db.catalogBook.update).mockResolvedValue({} as any)
+      vi.mocked(db.bookSelection.count).mockResolvedValue(1)
+      vi.mocked(db.schoolBook.update).mockResolvedValue({} as any)
 
       await setupLibraryForSchool(schoolId)
 
@@ -1124,10 +1104,8 @@ describe("Catalog Setup", () => {
     })
 
     it("skips catalog books that already have a selection", async () => {
-      vi.mocked(db.book.count).mockResolvedValue(0)
-      vi.mocked(db.catalogBook.findMany).mockResolvedValue(
-        mockCatalogBooks as any
-      )
+      vi.mocked(db.schoolBook.count).mockResolvedValue(0)
+      vi.mocked(db.schoolBook.findMany).mockResolvedValue(mockBooks as any)
 
       const txSelectionCreate = vi.fn()
       const txBookCreate = vi.fn()
@@ -1145,8 +1123,8 @@ describe("Catalog Setup", () => {
         await cb(tx)
         return 1
       })
-      vi.mocked(db.schoolBookSelection.count).mockResolvedValue(1)
-      vi.mocked(db.catalogBook.update).mockResolvedValue({} as any)
+      vi.mocked(db.bookSelection.count).mockResolvedValue(1)
+      vi.mocked(db.schoolBook.update).mockResolvedValue({} as any)
 
       await setupLibraryForSchool(schoolId)
 

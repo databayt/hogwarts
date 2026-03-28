@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { ErrorToast, InfoToast, SuccessToast } from "@/components/atom/toast"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import {
   getAvailableSectionsForPlacement,
@@ -34,6 +35,7 @@ interface PlacementDialogProps {
   applicationId: string
   studentName: string
   applyingForClass: string
+  dictionary: Dictionary["school"]["admission"]
   onSuccess?: () => void
 }
 
@@ -43,8 +45,10 @@ export function PlacementDialog({
   applicationId,
   studentName,
   applyingForClass,
+  dictionary,
   onSuccess,
 }: PlacementDialogProps) {
+  const t = dictionary?.placementDialog
   const [sections, setSections] = useState<
     Array<{
       id: string
@@ -75,7 +79,12 @@ export function PlacementDialog({
       })
 
       if (result.success) {
-        SuccessToast(`${studentName} placed successfully`)
+        SuccessToast(
+          (t?.placedSuccess || "{name} placed successfully").replace(
+            "{name}",
+            studentName
+          )
+        )
         if (result.warning) {
           InfoToast(result.warning)
         }
@@ -83,7 +92,7 @@ export function PlacementDialog({
         setSelectedSectionId("")
         onSuccess?.()
       } else {
-        ErrorToast(result.error || "Failed to place student")
+        ErrorToast(result.error || t?.placeFailed || "Failed to place student")
       }
     })
   }
@@ -92,10 +101,14 @@ export function PlacementDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Place Student in Section</DialogTitle>
+          <DialogTitle>{t?.title || "Place Student in Section"}</DialogTitle>
           <DialogDescription>
-            Assign {studentName} (applying for {applyingForClass}) to a homeroom
-            section.
+            {(
+              t?.description ||
+              "Assign {name} (applying for {class}) to a homeroom section."
+            )
+              .replace("{name}", studentName)
+              .replace("{class}", applyingForClass)}
           </DialogDescription>
         </DialogHeader>
 
@@ -105,7 +118,9 @@ export function PlacementDialog({
             onValueChange={setSelectedSectionId}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select a section" />
+              <SelectValue
+                placeholder={t?.selectSection || "Select a section"}
+              />
             </SelectTrigger>
             <SelectContent>
               {sections.map((sec) => {
@@ -129,21 +144,23 @@ export function PlacementDialog({
 
           {sections.length === 0 && (
             <p className="text-muted-foreground text-sm">
-              No sections available. Create sections in Classrooms &gt;
-              Configure first.
+              {t?.noSections ||
+                "No sections available. Create sections in Classrooms > Configure first."}
             </p>
           )}
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t?.cancel || "Cancel"}
           </Button>
           <Button
             onClick={handlePlace}
             disabled={!selectedSectionId || isPending}
           >
-            {isPending ? "Placing..." : "Place Student"}
+            {isPending
+              ? t?.placing || "Placing..."
+              : t?.placeStudent || "Place Student"}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -3,6 +3,17 @@
 
 import { z } from "zod"
 
+// Bank details sub-schema
+const bankDetailsSchema = z.object({
+  bankName: z.string().default(""),
+  accountName: z.string().default(""),
+  accountNumber: z.string().default(""),
+  iban: z.string().optional().default(""),
+  swiftCode: z.string().optional().default(""),
+})
+
+export type BankDetailsFormData = z.infer<typeof bankDetailsSchema>
+
 // Settings validation schema - matches fields displayed in settings-content.tsx
 export const admissionSettingsSchema = z
   .object({
@@ -17,6 +28,11 @@ export const admissionSettingsSchema = z
 
     // Payment Settings
     enableOnlinePayment: z.boolean().default(false),
+    paymentMethods: z
+      .array(z.enum(["stripe", "cash", "bank_transfer"]))
+      .default(["stripe", "cash"]),
+    bankDetails: bankDetailsSchema.optional().nullable(),
+    cashPaymentInstructions: z.string().optional().nullable(),
 
     // Merit Criteria Weights (must sum to 100)
     academicWeight: z.number().min(0).max(100).default(40),

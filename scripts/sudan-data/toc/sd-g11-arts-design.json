@@ -1,0 +1,136 @@
+{
+  "subject": "arts-design",
+  "subjectNameAr": "الفنون والتصميم",
+  "grade": 11,
+  "level": "secondary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "",
+  "chapters": [
+    {
+      "nameAr": "الباب الأول: الثقافة الفنية",
+      "name": "Chapter 1: Art Culture",
+      "slug": "art-culture",
+      "sequenceOrder": 1,
+      "lessons": [
+        {
+          "nameAr": "المقدمة",
+          "name": "Introduction",
+          "slug": "introduction",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الفن والإنسان",
+          "name": "Art and Humanity",
+          "slug": "art-and-humanity",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الفن في العصر المسيحي في السودان",
+          "name": "Art in the Christian Era in Sudan",
+          "slug": "art-christian-era-sudan",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "نشأة الفن الإسلامي",
+          "name": "Origin of Islamic Art",
+          "slug": "origin-islamic-art",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "الفنون الصناعية",
+          "name": "Industrial Arts",
+          "slug": "industrial-arts",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "تطور الخط العربي والزخرفة وصناعة الكتاب",
+          "name": "Development of Arabic Calligraphy, Ornamentation, and Bookmaking",
+          "slug": "arabic-calligraphy-ornamentation",
+          "sequenceOrder": 6
+        },
+        {
+          "nameAr": "مدارس الفن الإسلامي",
+          "name": "Schools of Islamic Art",
+          "slug": "schools-islamic-art",
+          "sequenceOrder": 7
+        }
+      ]
+    },
+    {
+      "nameAr": "الباب الثاني: الرسم",
+      "name": "Chapter 2: Drawing",
+      "slug": "drawing",
+      "sequenceOrder": 2,
+      "lessons": [
+        {
+          "nameAr": "المفهوم العلمي للرسم",
+          "name": "Scientific Concept of Drawing",
+          "slug": "scientific-concept-drawing",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "مفاهيم حول الرسم",
+          "name": "Concepts About Drawing",
+          "slug": "concepts-about-drawing",
+          "sequenceOrder": 2
+        }
+      ]
+    },
+    {
+      "nameAr": "الباب الثالث: التصميم",
+      "name": "Chapter 3: Design",
+      "slug": "design",
+      "sequenceOrder": 3,
+      "lessons": [
+        {
+          "nameAr": "التصميم",
+          "name": "Design",
+          "slug": "design-intro",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "التصميم الصناعي",
+          "name": "Industrial Design",
+          "slug": "industrial-design",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "التصميم الإيضاحي",
+          "name": "Illustrative Design",
+          "slug": "illustrative-design",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "تصميم وطباعة المنسوجات",
+          "name": "Textile Design and Printing",
+          "slug": "textile-design-printing",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "مصادر التصميم",
+          "name": "Sources of Design",
+          "slug": "sources-of-design",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "أسس التصميم",
+          "name": "Foundations of Design",
+          "slug": "foundations-of-design",
+          "sequenceOrder": 6
+        },
+        {
+          "nameAr": "أدوات التصميم ومواده",
+          "name": "Design Tools and Materials",
+          "slug": "design-tools-materials",
+          "sequenceOrder": 7
+        },
+        {
+          "nameAr": "إرشادات للطالب",
+          "name": "Student Guidelines",
+          "slug": "student-guidelines",
+          "sequenceOrder": 8
+        }
+      ]
+    }
+  ]
+}

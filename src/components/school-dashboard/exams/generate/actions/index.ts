@@ -4,12 +4,12 @@ export {
 } from "./catalog-contribute"
 
 export {
-  browseCatalogExams,
-  browseCatalogExamTemplates,
-  getCatalogExamDetail,
+  browseExams,
+  browseExamTemplates,
+  getExamDetail,
 } from "./catalog-browse"
 
-export { adoptCatalogExam, adoptCatalogExamTemplate } from "./catalog-adopt"
+export { adoptExam, adoptExamTemplate } from "./catalog-adopt"
 
 export {
   syncTemplateBackToCatalog,

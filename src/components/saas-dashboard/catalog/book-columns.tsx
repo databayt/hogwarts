@@ -15,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-export interface CatalogBookRow {
+export interface BookRow {
   id: string
   title: string
   slug: string
@@ -29,7 +29,7 @@ export interface CatalogBookRow {
   rating: number
 }
 
-export const catalogBookColumns: ColumnDef<CatalogBookRow>[] = [
+export const catalogBookColumns: ColumnDef<BookRow>[] = [
   {
     accessorKey: "title",
     header: "Title",

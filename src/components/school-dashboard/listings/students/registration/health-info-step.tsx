@@ -39,6 +39,7 @@ interface HealthInfoStepProps {
 }
 
 export function HealthInfoStep({ form, dictionary }: HealthInfoStepProps) {
+  const reg = dictionary?.school?.students?.registration?.health
   const hasSpecialNeeds = form.watch("hasSpecialNeeds")
 
   const {
@@ -54,10 +55,10 @@ export function HealthInfoStep({ form, dictionary }: HealthInfoStepProps) {
     <div className="grid gap-6">
       <Alert>
         <Heart className="h-4 w-4" />
-        <AlertTitle>Medical Information</AlertTitle>
+        <AlertTitle>{reg?.title || "Medical Information"}</AlertTitle>
         <AlertDescription>
-          This information helps us provide appropriate care and respond
-          effectively in case of medical emergencies.
+          {reg?.description ||
+            "This information helps us provide appropriate care and respond effectively in case of medical emergencies."}
         </AlertDescription>
       </Alert>
 
@@ -68,10 +69,15 @@ export function HealthInfoStep({ form, dictionary }: HealthInfoStepProps) {
           name="medicalConditions"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Medical Conditions</FormLabel>
+              <FormLabel>
+                {reg?.medicalConditions || "Medical Conditions"}
+              </FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="List any chronic conditions, disabilities, or ongoing medical issues"
+                  placeholder={
+                    reg?.medicalConditionsPlaceholder ||
+                    "List any chronic conditions, disabilities, or ongoing medical issues"
+                  }
                   {...field}
                 />
               </FormControl>
@@ -86,12 +92,15 @@ export function HealthInfoStep({ form, dictionary }: HealthInfoStepProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>
-                Allergies
+                {reg?.allergies || "Allergies"}
                 <TriangleAlert className="ms-2 inline h-4 w-4 text-yellow-500" />
               </FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="List all allergies (food, medicine, environmental, etc.)"
+                  placeholder={
+                    reg?.allergiesPlaceholder ||
+                    "List all allergies (food, medicine, environmental, etc.)"
+                  }
                   {...field}
                 />
               </FormControl>
@@ -105,10 +114,15 @@ export function HealthInfoStep({ form, dictionary }: HealthInfoStepProps) {
           name="medicationRequired"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Regular Medications</FormLabel>
+              <FormLabel>
+                {reg?.regularMedications || "Regular Medications"}
+              </FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="List any medications taken regularly with dosage and timing"
+                  placeholder={
+                    reg?.regularMedicationsPlaceholder ||
+                    "List any medications taken regularly with dosage and timing"
+                  }
                   {...field}
                 />
               </FormControl>
@@ -119,16 +133,19 @@ export function HealthInfoStep({ form, dictionary }: HealthInfoStepProps) {
       </div>
 
       {/* Doctor Information */}
-      <h4>Family Doctor Information</h4>
+      <h4>{reg?.familyDoctorInfo || "Family Doctor Information"}</h4>
       <div className="grid gap-4 md:grid-cols-3">
         <FormField
           control={form.control}
           name="doctorName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Doctor Name</FormLabel>
+              <FormLabel>{reg?.doctorName || "Doctor Name"}</FormLabel>
               <FormControl>
-                <Input placeholder="Dr. Name" {...field} />
+                <Input
+                  placeholder={reg?.doctorNamePlaceholder || "Dr. Name"}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -140,9 +157,15 @@ export function HealthInfoStep({ form, dictionary }: HealthInfoStepProps) {
           name="doctorContact"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Doctor Contact</FormLabel>
+              <FormLabel>{reg?.doctorContact || "Doctor Contact"}</FormLabel>
               <FormControl>
-                <Input type="tel" placeholder="+966 XX XXX XXXX" {...field} />
+                <Input
+                  type="tel"
+                  placeholder={
+                    reg?.doctorContactPlaceholder || "+966 XX XXX XXXX"
+                  }
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -154,9 +177,16 @@ export function HealthInfoStep({ form, dictionary }: HealthInfoStepProps) {
           name="hospitalPreference"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Preferred Hospital</FormLabel>
+              <FormLabel>
+                {reg?.preferredHospital || "Preferred Hospital"}
+              </FormLabel>
               <FormControl>
-                <Input placeholder="Hospital name" {...field} />
+                <Input
+                  placeholder={
+                    reg?.preferredHospitalPlaceholder || "Hospital name"
+                  }
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -165,16 +195,24 @@ export function HealthInfoStep({ form, dictionary }: HealthInfoStepProps) {
       </div>
 
       {/* Insurance Information */}
-      <h4>Health Insurance</h4>
+      <h4>{reg?.healthInsurance || "Health Insurance"}</h4>
       <div className="grid gap-4 md:grid-cols-3">
         <FormField
           control={form.control}
           name="insuranceProvider"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Insurance Provider</FormLabel>
+              <FormLabel>
+                {reg?.insuranceProvider || "Insurance Provider"}
+              </FormLabel>
               <FormControl>
-                <Input placeholder="Insurance company name" {...field} />
+                <Input
+                  placeholder={
+                    reg?.insuranceProviderPlaceholder ||
+                    "Insurance company name"
+                  }
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -186,9 +224,14 @@ export function HealthInfoStep({ form, dictionary }: HealthInfoStepProps) {
           name="insuranceNumber"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Policy Number</FormLabel>
+              <FormLabel>{reg?.policyNumber || "Policy Number"}</FormLabel>
               <FormControl>
-                <Input placeholder="Policy/Member number" {...field} />
+                <Input
+                  placeholder={
+                    reg?.policyNumberPlaceholder || "Policy/Member number"
+                  }
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -200,7 +243,7 @@ export function HealthInfoStep({ form, dictionary }: HealthInfoStepProps) {
           name="insuranceValidTill"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Valid Until</FormLabel>
+              <FormLabel>{reg?.validUntil || "Valid Until"}</FormLabel>
               <Popover>
                 <PopoverTrigger asChild>
                   <FormControl>
@@ -214,7 +257,7 @@ export function HealthInfoStep({ form, dictionary }: HealthInfoStepProps) {
                       {field.value ? (
                         format(field.value, "PPP")
                       ) : (
-                        <span>Pick a date</span>
+                        <span>{reg?.pickADate || "Pick a date"}</span>
                       )}
                       <CalendarIcon className="ms-auto h-4 w-4 opacity-50" />
                     </Button>
@@ -239,7 +282,7 @@ export function HealthInfoStep({ form, dictionary }: HealthInfoStepProps) {
       {/* Vaccination Records */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h4>Vaccination Records</h4>
+          <h4>{reg?.vaccinationRecords || "Vaccination Records"}</h4>
           <Button
             type="button"
             variant="outline"
@@ -249,7 +292,7 @@ export function HealthInfoStep({ form, dictionary }: HealthInfoStepProps) {
             }
           >
             <Plus className="me-2 h-4 w-4" />
-            Add Vaccination
+            {reg?.addVaccination || "Add Vaccination"}
           </Button>
         </div>
 
@@ -257,7 +300,7 @@ export function HealthInfoStep({ form, dictionary }: HealthInfoStepProps) {
           <Card key={field.id}>
             <CardHeader className="py-3">
               <CardTitle className="flex items-center justify-between text-sm">
-                Vaccination {index + 1}
+                {reg?.vaccination || "Vaccination"} {index + 1}
                 <Button
                   type="button"
                   variant="ghost"
@@ -274,9 +317,14 @@ export function HealthInfoStep({ form, dictionary }: HealthInfoStepProps) {
                 name={`vaccinations.${index}.name`}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Vaccine Name</FormLabel>
+                    <FormLabel>{reg?.vaccineName || "Vaccine Name"}</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., COVID-19, MMR" {...field} />
+                      <Input
+                        placeholder={
+                          reg?.vaccineNamePlaceholder || "e.g., COVID-19, MMR"
+                        }
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

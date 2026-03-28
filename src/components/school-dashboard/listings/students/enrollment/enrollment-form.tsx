@@ -75,6 +75,7 @@ export function EnrollmentForm({
 }: EnrollmentFormProps) {
   const { dictionary } = useDictionary()
   const t = dictionary?.messages?.toast
+  const ef = dictionary?.school?.students?.enrollmentForm
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedBatch, setSelectedBatch] = useState<Batch | null>(null)
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null)
@@ -134,19 +135,19 @@ export function EnrollmentForm({
           <TabsList className="grid w-full max-w-2xl grid-cols-4">
             <TabsTrigger value="student">
               <Users className="me-2 h-4 w-4" />
-              Student
+              {ef?.tabs?.student || "Student"}
             </TabsTrigger>
             <TabsTrigger value="academic">
               <BookOpen className="me-2 h-4 w-4" />
-              Academic
+              {ef?.tabs?.academic || "Academic"}
             </TabsTrigger>
             <TabsTrigger value="fees">
               <CreditCard className="me-2 h-4 w-4" />
-              Fees & Services
+              {ef?.tabs?.feesServices || "Fees & Services"}
             </TabsTrigger>
             <TabsTrigger value="documents">
               <Icons.fileText className="me-2 h-4 w-4" />
-              Documents
+              {ef?.tabs?.documents || "Documents"}
             </TabsTrigger>
           </TabsList>
 
@@ -154,9 +155,12 @@ export function EnrollmentForm({
           <TabsContent value="student" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Student Information</CardTitle>
+                <CardTitle>
+                  {ef?.studentInfo?.title || "Student Information"}
+                </CardTitle>
                 <CardDescription>
-                  Basic enrollment details for the student
+                  {ef?.studentInfo?.description ||
+                    "Basic enrollment details for the student"}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -164,7 +168,7 @@ export function EnrollmentForm({
                   <Alert>
                     <Icons.info className="h-4 w-4" />
                     <AlertDescription>
-                      Enrolling:{" "}
+                      {ef?.studentInfo?.enrolling || "Enrolling:"}{" "}
                       <strong>
                         {student.firstName} {student.lastName}
                       </strong>
@@ -179,23 +183,36 @@ export function EnrollmentForm({
                     name="enrollmentType"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Enrollment Type</FormLabel>
+                        <FormLabel>
+                          {ef?.studentInfo?.enrollmentType || "Enrollment Type"}
+                        </FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           defaultValue={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select enrollment type" />
+                              <SelectValue
+                                placeholder={
+                                  ef?.studentInfo?.selectEnrollmentType ||
+                                  "Select enrollment type"
+                                }
+                              />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="NEW">New Admission</SelectItem>
-                            <SelectItem value="TRANSFER">Transfer</SelectItem>
-                            <SelectItem value="READMISSION">
-                              Readmission
+                            <SelectItem value="NEW">
+                              {ef?.studentInfo?.newAdmission || "New Admission"}
                             </SelectItem>
-                            <SelectItem value="PROMOTION">Promotion</SelectItem>
+                            <SelectItem value="TRANSFER">
+                              {ef?.studentInfo?.transfer || "Transfer"}
+                            </SelectItem>
+                            <SelectItem value="READMISSION">
+                              {ef?.studentInfo?.readmission || "Readmission"}
+                            </SelectItem>
+                            <SelectItem value="PROMOTION">
+                              {ef?.studentInfo?.promotion || "Promotion"}
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -208,7 +225,9 @@ export function EnrollmentForm({
                     name="enrollmentDate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Enrollment Date</FormLabel>
+                        <FormLabel>
+                          {ef?.studentInfo?.enrollmentDate || "Enrollment Date"}
+                        </FormLabel>
                         <Popover>
                           <PopoverTrigger asChild>
                             <FormControl>
@@ -222,7 +241,7 @@ export function EnrollmentForm({
                                 <Icons.calendar className="me-2 h-4 w-4" />
                                 {field.value
                                   ? format(field.value, "PPP")
-                                  : "Pick a date"}
+                                  : ef?.studentInfo?.pickDate || "Pick a date"}
                               </Button>
                             </FormControl>
                           </PopoverTrigger>
@@ -249,7 +268,8 @@ export function EnrollmentForm({
                   enrollmentType === "READMISSION") && (
                   <div className="space-y-4 border-t pt-4">
                     <h4 className="text-sm font-medium">
-                      Previous Institution Details
+                      {ef?.studentInfo?.previousInstitution ||
+                        "Previous Institution Details"}
                     </h4>
 
                     <FormField
@@ -257,10 +277,16 @@ export function EnrollmentForm({
                       name="previousSchoolId"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Previous School</FormLabel>
+                          <FormLabel>
+                            {ef?.studentInfo?.previousSchool ||
+                              "Previous School"}
+                          </FormLabel>
                           <FormControl>
                             <Input
-                              placeholder="Enter previous school name"
+                              placeholder={
+                                ef?.studentInfo?.enterPreviousSchool ||
+                                "Enter previous school name"
+                              }
                               {...field}
                             />
                           </FormControl>
@@ -275,14 +301,18 @@ export function EnrollmentForm({
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>
-                            Reason for{" "}
                             {enrollmentType === "TRANSFER"
-                              ? "Transfer"
-                              : "Readmission"}
+                              ? ef?.studentInfo?.reasonForTransfer ||
+                                "Reason for Transfer"
+                              : ef?.studentInfo?.reasonForReadmission ||
+                                "Reason for Readmission"}
                           </FormLabel>
                           <FormControl>
                             <Textarea
-                              placeholder="Provide detailed reason..."
+                              placeholder={
+                                ef?.studentInfo?.provideReason ||
+                                "Provide detailed reason..."
+                              }
                               className="min-h-[100px]"
                               {...field}
                             />
@@ -301,9 +331,12 @@ export function EnrollmentForm({
           <TabsContent value="academic" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Academic Details</CardTitle>
+                <CardTitle>
+                  {ef?.academic?.title || "Academic Details"}
+                </CardTitle>
                 <CardDescription>
-                  Select batch, course, and subjects for enrollment
+                  {ef?.academic?.description ||
+                    "Select batch, course, and subjects for enrollment"}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -313,14 +346,21 @@ export function EnrollmentForm({
                     name="academicYearId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Academic Year</FormLabel>
+                        <FormLabel>
+                          {ef?.academic?.academicYear || "Academic Year"}
+                        </FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           defaultValue={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select academic year" />
+                              <SelectValue
+                                placeholder={
+                                  ef?.academic?.selectAcademicYear ||
+                                  "Select academic year"
+                                }
+                              />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -338,7 +378,7 @@ export function EnrollmentForm({
                     name="batchId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Batch</FormLabel>
+                        <FormLabel>{ef?.academic?.batch || "Batch"}</FormLabel>
                         <Select
                           onValueChange={(value) => {
                             field.onChange(value)
@@ -349,7 +389,11 @@ export function EnrollmentForm({
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select batch" />
+                              <SelectValue
+                                placeholder={
+                                  ef?.academic?.selectBatch || "Select batch"
+                                }
+                              />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -371,7 +415,9 @@ export function EnrollmentForm({
                     name="courseId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Course (Optional)</FormLabel>
+                        <FormLabel>
+                          {ef?.academic?.courseOptional || "Course (Optional)"}
+                        </FormLabel>
                         <Select
                           onValueChange={(value) => {
                             field.onChange(value)
@@ -382,7 +428,11 @@ export function EnrollmentForm({
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select course" />
+                              <SelectValue
+                                placeholder={
+                                  ef?.academic?.selectCourse || "Select course"
+                                }
+                              />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -394,7 +444,8 @@ export function EnrollmentForm({
                           </SelectContent>
                         </Select>
                         <FormDescription>
-                          Select if student is enrolling in a specific course
+                          {ef?.academic?.courseDescription ||
+                            "Select if student is enrolling in a specific course"}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -406,21 +457,30 @@ export function EnrollmentForm({
                     name="sectionId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Section (Optional)</FormLabel>
+                        <FormLabel>
+                          {ef?.academic?.sectionOptional ||
+                            "Section (Optional)"}
+                        </FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           defaultValue={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select section" />
+                              <SelectValue
+                                placeholder={
+                                  ef?.academic?.selectSection ||
+                                  "Select section"
+                                }
+                              />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
                             {batchSections.map((section) => (
                               <SelectItem key={section.id} value={section.id}>
-                                Section {section.name} (
-                                {section.currentStrength}/{section.capacity})
+                                {ef?.academic?.section || "Section"}{" "}
+                                {section.name} ({section.currentStrength}/
+                                {section.capacity})
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -433,7 +493,9 @@ export function EnrollmentForm({
 
                 {/* Subject Selection */}
                 <div className="space-y-4 border-t pt-4">
-                  <h4 className="text-sm font-medium">Subject Selection</h4>
+                  <h4 className="text-sm font-medium">
+                    {ef?.academic?.subjectSelection || "Subject Selection"}
+                  </h4>
 
                   {/* Mandatory Subjects */}
                   <FormField
@@ -441,9 +503,13 @@ export function EnrollmentForm({
                     name="mandatorySubjects"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Mandatory Subjects</FormLabel>
+                        <FormLabel>
+                          {ef?.academic?.mandatorySubjects ||
+                            "Mandatory Subjects"}
+                        </FormLabel>
                         <FormDescription>
-                          These subjects are required for the selected course
+                          {ef?.academic?.mandatoryDescription ||
+                            "These subjects are required for the selected course"}
                         </FormDescription>
                         <div className="mt-2 grid grid-cols-2 gap-3">
                           {mandatorySubjects.map((subject) => (
@@ -469,7 +535,8 @@ export function EnrollmentForm({
                                     variant="outline"
                                     className="ms-2 text-xs"
                                   >
-                                    {subject.credits} credits
+                                    {subject.credits}{" "}
+                                    {ef?.academic?.credits || "credits"}
                                   </Badge>
                                 )}
                               </label>
@@ -488,9 +555,13 @@ export function EnrollmentForm({
                       name="electiveSubjects"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Elective Subjects</FormLabel>
+                          <FormLabel>
+                            {ef?.academic?.electiveSubjects ||
+                              "Elective Subjects"}
+                          </FormLabel>
                           <FormDescription>
-                            Choose optional subjects based on student preference
+                            {ef?.academic?.electiveDescription ||
+                              "Choose optional subjects based on student preference"}
                           </FormDescription>
                           <div className="mt-2 grid grid-cols-2 gap-3">
                             {electiveSubjects.map((subject) => (
@@ -516,7 +587,8 @@ export function EnrollmentForm({
                                       variant="outline"
                                       className="ms-2 text-xs"
                                     >
-                                      {subject.credits} credits
+                                      {subject.credits}{" "}
+                                      {ef?.academic?.credits || "credits"}
                                     </Badge>
                                   )}
                                 </label>
@@ -536,14 +608,22 @@ export function EnrollmentForm({
                       name="languagePreference"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Language Preference</FormLabel>
+                          <FormLabel>
+                            {ef?.academic?.languagePreference ||
+                              "Language Preference"}
+                          </FormLabel>
                           <Select
                             onValueChange={field.onChange}
                             defaultValue={field.value}
                           >
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select language" />
+                                <SelectValue
+                                  placeholder={
+                                    ef?.academic?.selectLanguage ||
+                                    "Select language"
+                                  }
+                                />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -566,7 +646,10 @@ export function EnrollmentForm({
                   name="expectedGraduationDate"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Expected Graduation Date (Optional)</FormLabel>
+                      <FormLabel>
+                        {ef?.academic?.expectedGraduation ||
+                          "Expected Graduation Date (Optional)"}
+                      </FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
                           <FormControl>
@@ -580,7 +663,7 @@ export function EnrollmentForm({
                               <Icons.calendar className="me-2 h-4 w-4" />
                               {field.value
                                 ? format(field.value, "PPP")
-                                : "Pick a date"}
+                                : ef?.studentInfo?.pickDate || "Pick a date"}
                             </Button>
                           </FormControl>
                         </PopoverTrigger>
@@ -606,9 +689,12 @@ export function EnrollmentForm({
           <TabsContent value="fees" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Fees & Additional Services</CardTitle>
+                <CardTitle>
+                  {ef?.fees?.title || "Fees & Additional Services"}
+                </CardTitle>
                 <CardDescription>
-                  Configure fee structure and additional services
+                  {ef?.fees?.description ||
+                    "Configure fee structure and additional services"}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -618,24 +704,33 @@ export function EnrollmentForm({
                     name="feeStructureId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Fee Structure (Optional)</FormLabel>
+                        <FormLabel>
+                          {ef?.fees?.feeStructure || "Fee Structure (Optional)"}
+                        </FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           defaultValue={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select fee structure" />
+                              <SelectValue
+                                placeholder={
+                                  ef?.fees?.selectFeeStructure ||
+                                  "Select fee structure"
+                                }
+                              />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
                             <SelectItem value="standard">
-                              Standard Fee
+                              {ef?.fees?.standardFee || "Standard Fee"}
                             </SelectItem>
                             <SelectItem value="subsidized">
-                              Subsidized Fee
+                              {ef?.fees?.subsidizedFee || "Subsidized Fee"}
                             </SelectItem>
-                            <SelectItem value="premium">Premium Fee</SelectItem>
+                            <SelectItem value="premium">
+                              {ef?.fees?.premiumFee || "Premium Fee"}
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -648,25 +743,35 @@ export function EnrollmentForm({
                     name="scholarshipId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Scholarship (Optional)</FormLabel>
+                        <FormLabel>
+                          {ef?.fees?.scholarship || "Scholarship (Optional)"}
+                        </FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           defaultValue={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select scholarship" />
+                              <SelectValue
+                                placeholder={
+                                  ef?.fees?.selectScholarship ||
+                                  "Select scholarship"
+                                }
+                              />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
                             <SelectItem value="merit">
-                              Merit Scholarship
+                              {ef?.fees?.meritScholarship ||
+                                "Merit Scholarship"}
                             </SelectItem>
                             <SelectItem value="sports">
-                              Sports Scholarship
+                              {ef?.fees?.sportsScholarship ||
+                                "Sports Scholarship"}
                             </SelectItem>
                             <SelectItem value="need">
-                              Need-Based Scholarship
+                              {ef?.fees?.needBasedScholarship ||
+                                "Need-Based Scholarship"}
                             </SelectItem>
                           </SelectContent>
                         </Select>
@@ -680,7 +785,10 @@ export function EnrollmentForm({
                     name="discountPercentage"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Discount Percentage (Optional)</FormLabel>
+                        <FormLabel>
+                          {ef?.fees?.discountPercentage ||
+                            "Discount Percentage (Optional)"}
+                        </FormLabel>
                         <FormControl>
                           <Input
                             type="number"
@@ -692,7 +800,8 @@ export function EnrollmentForm({
                           />
                         </FormControl>
                         <FormDescription>
-                          Additional discount on fees (if applicable)
+                          {ef?.fees?.discountDescription ||
+                            "Additional discount on fees (if applicable)"}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -701,7 +810,9 @@ export function EnrollmentForm({
                 </div>
 
                 <div className="space-y-4 border-t pt-4">
-                  <h4 className="text-sm font-medium">Additional Services</h4>
+                  <h4 className="text-sm font-medium">
+                    {ef?.fees?.additionalServices || "Additional Services"}
+                  </h4>
 
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
@@ -716,9 +827,13 @@ export function EnrollmentForm({
                             />
                           </FormControl>
                           <div className="space-y-1 leading-none">
-                            <FormLabel>Transport Required</FormLabel>
+                            <FormLabel>
+                              {ef?.fees?.transportRequired ||
+                                "Transport Required"}
+                            </FormLabel>
                             <FormDescription>
-                              School bus/van service needed
+                              {ef?.fees?.transportDescription ||
+                                "School bus/van service needed"}
                             </FormDescription>
                           </div>
                         </FormItem>
@@ -737,9 +852,12 @@ export function EnrollmentForm({
                             />
                           </FormControl>
                           <div className="space-y-1 leading-none">
-                            <FormLabel>Hostel Required</FormLabel>
+                            <FormLabel>
+                              {ef?.fees?.hostelRequired || "Hostel Required"}
+                            </FormLabel>
                             <FormDescription>
-                              Accommodation needed
+                              {ef?.fees?.hostelDescription ||
+                                "Accommodation needed"}
                             </FormDescription>
                           </div>
                         </FormItem>
@@ -758,9 +876,12 @@ export function EnrollmentForm({
                             />
                           </FormControl>
                           <div className="space-y-1 leading-none">
-                            <FormLabel>Library Access</FormLabel>
+                            <FormLabel>
+                              {ef?.fees?.libraryAccess || "Library Access"}
+                            </FormLabel>
                             <FormDescription>
-                              Access to school library
+                              {ef?.fees?.libraryDescription ||
+                                "Access to school library"}
                             </FormDescription>
                           </div>
                         </FormItem>
@@ -779,9 +900,12 @@ export function EnrollmentForm({
                             />
                           </FormControl>
                           <div className="space-y-1 leading-none">
-                            <FormLabel>Lab Access</FormLabel>
+                            <FormLabel>
+                              {ef?.fees?.labAccess || "Lab Access"}
+                            </FormLabel>
                             <FormDescription>
-                              Access to science/computer labs
+                              {ef?.fees?.labDescription ||
+                                "Access to science/computer labs"}
                             </FormDescription>
                           </div>
                         </FormItem>
@@ -797,9 +921,12 @@ export function EnrollmentForm({
           <TabsContent value="documents" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Required Documents</CardTitle>
+                <CardTitle>
+                  {ef?.documents?.title || "Required Documents"}
+                </CardTitle>
                 <CardDescription>
-                  Mark documents that have been submitted
+                  {ef?.documents?.description ||
+                    "Mark documents that have been submitted"}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -807,7 +934,8 @@ export function EnrollmentForm({
                   <Alert>
                     <TriangleAlert className="h-4 w-4" />
                     <AlertDescription>
-                      Transfer students must submit additional documents
+                      {ef?.documents?.transferAlert ||
+                        "Transfer students must submit additional documents"}
                     </AlertDescription>
                   </Alert>
                 )}
@@ -825,9 +953,13 @@ export function EnrollmentForm({
                           />
                         </FormControl>
                         <div className="space-y-1 leading-none">
-                          <FormLabel>Transfer Certificate</FormLabel>
+                          <FormLabel>
+                            {ef?.documents?.transferCertificate ||
+                              "Transfer Certificate"}
+                          </FormLabel>
                           <FormDescription>
-                            Original TC from previous school
+                            {ef?.documents?.transferCertificateDesc ||
+                              "Original TC from previous school"}
                           </FormDescription>
                         </div>
                       </FormItem>
@@ -846,9 +978,13 @@ export function EnrollmentForm({
                           />
                         </FormControl>
                         <div className="space-y-1 leading-none">
-                          <FormLabel>Previous Marksheets</FormLabel>
+                          <FormLabel>
+                            {ef?.documents?.previousMarksheets ||
+                              "Previous Marksheets"}
+                          </FormLabel>
                           <FormDescription>
-                            Last 2 years academic records
+                            {ef?.documents?.previousMarksheetsDesc ||
+                              "Last 2 years academic records"}
                           </FormDescription>
                         </div>
                       </FormItem>
@@ -867,9 +1003,13 @@ export function EnrollmentForm({
                           />
                         </FormControl>
                         <div className="space-y-1 leading-none">
-                          <FormLabel>Migration Certificate</FormLabel>
+                          <FormLabel>
+                            {ef?.documents?.migrationCertificate ||
+                              "Migration Certificate"}
+                          </FormLabel>
                           <FormDescription>
-                            Required for inter-state transfers
+                            {ef?.documents?.migrationCertificateDesc ||
+                              "Required for inter-state transfers"}
                           </FormDescription>
                         </div>
                       </FormItem>
@@ -882,10 +1022,16 @@ export function EnrollmentForm({
                   name="notes"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Additional Notes (Optional)</FormLabel>
+                      <FormLabel>
+                        {ef?.documents?.additionalNotes ||
+                          "Additional Notes (Optional)"}
+                      </FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="Any additional information about the enrollment..."
+                          placeholder={
+                            ef?.documents?.additionalNotesPlaceholder ||
+                            "Any additional information about the enrollment..."
+                          }
                           className="min-h-[100px]"
                           {...field}
                         />
@@ -902,13 +1048,15 @@ export function EnrollmentForm({
         {/* Action Buttons */}
         <div className="flex justify-end gap-3">
           <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
+            {ef?.actions?.cancel || "Cancel"}
           </Button>
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting && (
               <Icons.circleCheck className="me-2 h-4 w-4 animate-spin" />
             )}
-            {isSubmitting ? "Enrolling..." : "Enroll Student"}
+            {isSubmitting
+              ? ef?.actions?.enrolling || "Enrolling..."
+              : ef?.actions?.enrollStudent || "Enroll Student"}
           </Button>
         </div>
       </form>

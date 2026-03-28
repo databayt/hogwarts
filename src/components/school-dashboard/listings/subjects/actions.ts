@@ -26,7 +26,7 @@ import {
 // ============================================================================
 
 /**
- * Select a catalog subject into a school (create SchoolSubjectSelection).
+ * Select a catalog subject into a school (create SubjectSelection).
  * Replaces the old createSubject that created a Subject record.
  */
 export async function createSubject(
@@ -53,7 +53,7 @@ export async function createSubject(
     const parsed = subjectCreateSchema.parse(input)
 
     // Check if already selected for this grade
-    const existing = await db.schoolSubjectSelection.findFirst({
+    const existing = await db.subjectSelection.findFirst({
       where: {
         schoolId,
         catalogSubjectId: parsed.catalogSubjectId,
@@ -65,7 +65,7 @@ export async function createSubject(
     if (existing) {
       // Reactivate if inactive
       if (!existing.isActive) {
-        await db.schoolSubjectSelection.updateMany({
+        await db.subjectSelection.updateMany({
           where: { id: existing.id, schoolId },
           data: { isActive: true },
         })
@@ -78,7 +78,7 @@ export async function createSubject(
       }
     }
 
-    const row = await db.schoolSubjectSelection.create({
+    const row = await db.subjectSelection.create({
       data: {
         schoolId,
         catalogSubjectId: parsed.catalogSubjectId,
@@ -110,7 +110,7 @@ export async function createSubject(
 }
 
 /**
- * Update a SchoolSubjectSelection record (customName, isRequired, weeklyPeriods).
+ * Update a SubjectSelection record (customName, isRequired, weeklyPeriods).
  */
 export async function updateSubject(
   input: z.infer<typeof subjectUpdateSchema>
@@ -137,7 +137,7 @@ export async function updateSubject(
     const { id, ...rest } = parsed
 
     // Verify selection exists and belongs to this school
-    const existing = await db.schoolSubjectSelection.findFirst({
+    const existing = await db.subjectSelection.findFirst({
       where: { id, schoolId },
       select: { id: true },
     })
@@ -155,7 +155,7 @@ export async function updateSubject(
       data.weeklyPeriods = rest.weeklyPeriods
     if (typeof rest.isActive !== "undefined") data.isActive = rest.isActive
 
-    await db.schoolSubjectSelection.updateMany({
+    await db.subjectSelection.updateMany({
       where: { id, schoolId },
       data,
     })
@@ -181,7 +181,7 @@ export async function updateSubject(
 }
 
 /**
- * Delete (deactivate) a SchoolSubjectSelection record.
+ * Delete (deactivate) a SubjectSelection record.
  */
 export async function deleteSubject(input: {
   id: string
@@ -207,7 +207,7 @@ export async function deleteSubject(input: {
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
     // Verify selection exists
-    const existing = await db.schoolSubjectSelection.findFirst({
+    const existing = await db.subjectSelection.findFirst({
       where: { id, schoolId },
       select: { id: true, subject: { select: { name: true } } },
     })
@@ -217,7 +217,7 @@ export async function deleteSubject(input: {
     }
 
     // Soft-delete by deactivating
-    await db.schoolSubjectSelection.updateMany({
+    await db.subjectSelection.updateMany({
       where: { id, schoolId },
       data: { isActive: false },
     })
@@ -280,7 +280,7 @@ export async function getSubject(input: {
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
     // Look up via catalog subject
-    const catalogSubject = await db.catalogSubject.findFirst({
+    const catalogSubject = await db.subject.findFirst({
       where: { id },
       select: {
         id: true,
@@ -429,7 +429,7 @@ export async function bulkDeleteSubjects(input: {
       .parse(input)
 
     // Soft-delete by deactivating all matching selections
-    const result = await db.schoolSubjectSelection.updateMany({
+    const result = await db.subjectSelection.updateMany({
       where: { id: { in: ids }, schoolId },
       data: { isActive: false },
     })
@@ -448,7 +448,7 @@ export async function bulkDeleteSubjects(input: {
   }
 }
 
-export async function getCatalogSubjectsForPicker(
+export async function getSubjectsForPicker(
   search?: string
 ): Promise<
   ActionResponse<
@@ -469,7 +469,7 @@ export async function getCatalogSubjectsForPicker(
       ]
     }
 
-    const subjects = await db.catalogSubject.findMany({
+    const subjects = await db.subject.findMany({
       where,
       select: { id: true, name: true, department: true, slug: true },
       orderBy: { name: "asc" },
@@ -478,7 +478,7 @@ export async function getCatalogSubjectsForPicker(
 
     return { success: true, data: subjects }
   } catch (error) {
-    console.error("[getCatalogSubjectsForPicker] Error:", error)
+    console.error("[getSubjectsForPicker] Error:", error)
     return {
       success: false,
       error:

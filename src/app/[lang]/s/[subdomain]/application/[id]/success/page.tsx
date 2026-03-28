@@ -33,6 +33,7 @@ export default async function SuccessPage({ params, searchParams }: Props) {
   let paymentReference: string | null = null
   let applicationFeePaid = false
   let requiresPayment = false
+  let accessToken: string | null = null
 
   if (applicationNumber) {
     const application = await db.application.findFirst({
@@ -44,6 +45,7 @@ export default async function SuccessPage({ params, searchParams }: Props) {
         paymentMethod: true,
         paymentReference: true,
         applicationFeePaid: true,
+        accessToken: true,
         campaign: {
           select: { applicationFee: true },
         },
@@ -53,6 +55,7 @@ export default async function SuccessPage({ params, searchParams }: Props) {
       paymentMethod = application.paymentMethod
       paymentReference = application.paymentReference
       applicationFeePaid = application.applicationFeePaid
+      accessToken = application.accessToken
       requiresPayment =
         !!application.campaign.applicationFee &&
         Number(application.campaign.applicationFee) > 0
@@ -68,6 +71,7 @@ export default async function SuccessPage({ params, searchParams }: Props) {
       paymentReference={paymentReference}
       applicationFeePaid={applicationFeePaid}
       requiresPayment={requiresPayment}
+      accessToken={accessToken}
     />
   )
 }

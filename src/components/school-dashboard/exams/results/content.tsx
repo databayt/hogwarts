@@ -282,7 +282,7 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
   }> = []
 
   if (schoolId) {
-    const completedExams = await db.exam.findMany({
+    const completedExams = await db.schoolExam.findMany({
       where: {
         schoolId,
         status: "COMPLETED",

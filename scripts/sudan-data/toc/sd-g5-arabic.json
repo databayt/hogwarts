@@ -1,0 +1,180 @@
+{
+  "subject": "arabic",
+  "subjectNameAr": "اللغة العربية",
+  "grade": 5,
+  "level": "elementary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "الطبعة الأولى 2019م",
+  "chapters": [
+    {
+      "nameAr": "الوحدة الأولى: مراجعة",
+      "name": "Unit 1: Review",
+      "slug": "review",
+      "sequenceOrder": 1,
+      "lessons": [
+        {
+          "nameAr": "الدرس الأول: المرافق العامة",
+          "name": "Lesson 1: Public Facilities",
+          "slug": "public-facilities",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الدرس الثاني: الولد العطوف",
+          "name": "Lesson 2: The Kind Boy",
+          "slug": "the-kind-boy",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الدرس الثالث: من وصايا لقمان",
+          "name": "Lesson 3: From Luqman's Wisdom",
+          "slug": "from-luqmans-wisdom",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "الدرس الرابع: الببغاء واللص",
+          "name": "Lesson 4: The Parrot and the Thief",
+          "slug": "the-parrot-and-the-thief",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "الدرس الخامس: مفتاح المحبة",
+          "name": "Lesson 5: The Key to Love",
+          "slug": "the-key-to-love",
+          "sequenceOrder": 5
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة الثانية: قيم وآداب",
+      "name": "Unit 2: Values and Manners",
+      "slug": "values-and-manners",
+      "sequenceOrder": 2,
+      "lessons": [
+        {
+          "nameAr": "الدرس الأول: الأمانة",
+          "name": "Lesson 1: Trustworthiness",
+          "slug": "trustworthiness",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الدرس الثاني: العمل",
+          "name": "Lesson 2: Work",
+          "slug": "work",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الدرس الثالث: أيها العمال",
+          "name": "Lesson 3: O Workers",
+          "slug": "o-workers",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "الدرس الرابع: الرياء يبطل العمل",
+          "name": "Lesson 4: Hypocrisy Nullifies Deeds",
+          "slug": "hypocrisy-nullifies-deeds",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "الدرس الخامس: أهمية التعاون",
+          "name": "Lesson 5: Importance of Cooperation",
+          "slug": "importance-of-cooperation",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "الدرس السادس: فضل التعاون",
+          "name": "Lesson 6: Virtue of Cooperation",
+          "slug": "virtue-of-cooperation",
+          "sequenceOrder": 6
+        },
+        {
+          "nameAr": "الدرس السابع: صلة الرحم",
+          "name": "Lesson 7: Kinship Ties",
+          "slug": "kinship-ties",
+          "sequenceOrder": 7
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة الثالثة: الأسرة والمجتمع",
+      "name": "Unit 3: Family and Society",
+      "slug": "family-and-society",
+      "sequenceOrder": 3,
+      "lessons": [
+        {
+          "nameAr": "الدرس الأول: تربية الأبناء",
+          "name": "Lesson 1: Raising Children",
+          "slug": "raising-children",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الدرس الثاني: حقوق الوالدين",
+          "name": "Lesson 2: Parents' Rights",
+          "slug": "parents-rights",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الدرس الثالث: وصية أب لابنه",
+          "name": "Lesson 3: A Father's Advice to His Son",
+          "slug": "fathers-advice-to-son",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "الدرس الرابع: الصديق الذكي",
+          "name": "Lesson 4: The Clever Friend",
+          "slug": "the-clever-friend",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "الدرس الخامس: التكافل الاجتماعي",
+          "name": "Lesson 5: Social Solidarity",
+          "slug": "social-solidarity",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "الدرس السادس: الكريم",
+          "name": "Lesson 6: The Generous One",
+          "slug": "the-generous-one",
+          "sequenceOrder": 6
+        }
+      ]
+    },
+    {
+      "nameAr": "الوحدة الرابعة: البيئة والصحة",
+      "name": "Unit 4: Environment and Health",
+      "slug": "environment-and-health",
+      "sequenceOrder": 4,
+      "lessons": [
+        {
+          "nameAr": "الدرس الأول: صحة الفم والأسنان",
+          "name": "Lesson 1: Oral and Dental Health",
+          "slug": "oral-and-dental-health",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الدرس الثاني: نشيد أحم الطبيعة يا فتى",
+          "name": "Lesson 2: Song - Protect Nature, O Youth",
+          "slug": "protect-nature-song",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الدرس الثالث: عند طبيب العيون",
+          "name": "Lesson 3: At the Eye Doctor",
+          "slug": "at-the-eye-doctor",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "الدرس الرابع: تدوير النفايات",
+          "name": "Lesson 4: Waste Recycling",
+          "slug": "waste-recycling",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "الدرس الخامس: الدواء في الغذاء",
+          "name": "Lesson 5: Medicine in Food",
+          "slug": "medicine-in-food",
+          "sequenceOrder": 5
+        }
+      ]
+    }
+  ]
+}

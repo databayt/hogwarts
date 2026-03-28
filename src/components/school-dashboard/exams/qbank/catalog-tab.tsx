@@ -24,11 +24,11 @@ import {
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import {
-  adoptCatalogQuestion,
-  browseCatalogQuestions,
-  getCatalogSubjectsForBrowse,
+  adoptQuestion,
+  browseQuestions,
+  getSubjectsForBrowse,
   type CatalogBrowseFilters,
-  type CatalogQuestionRow,
+  type QuestionRow,
 } from "./actions/catalog-browse"
 
 const DIFFICULTY_COLORS: Record<string, string> = {
@@ -53,7 +53,7 @@ export function CatalogBrowseTab() {
   const t = dictionary?.school?.exams?.qbankUi?.catalog as
     | Record<string, any>
     | undefined
-  const [questions, setQuestions] = useState<CatalogQuestionRow[]>([])
+  const [questions, setQuestions] = useState<QuestionRow[]>([])
   const [total, setTotal] = useState(0)
   const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([])
   const [filters, setFilters] = useState<CatalogBrowseFilters>({})
@@ -63,7 +63,7 @@ export function CatalogBrowseTab() {
 
   const fetchQuestions = useCallback(() => {
     startTransition(async () => {
-      const result = await browseCatalogQuestions({ ...filters, page })
+      const result = await browseQuestions({ ...filters, page })
       setQuestions(result.questions)
       setTotal(result.total)
     })
@@ -74,13 +74,13 @@ export function CatalogBrowseTab() {
   }, [fetchQuestions])
 
   useEffect(() => {
-    getCatalogSubjectsForBrowse().then(setSubjects)
+    getSubjectsForBrowse().then(setSubjects)
   }, [])
 
   const handleAdopt = async (questionId: string) => {
     setAdoptingId(questionId)
     try {
-      const result = await adoptCatalogQuestion(questionId)
+      const result = await adoptQuestion(questionId)
       if (result.success) {
         setQuestions((prev) =>
           prev.map((q) => (q.id === questionId ? { ...q, isAdopted: true } : q))

@@ -41,7 +41,7 @@ export async function generateQuestionsAI(
     const parsed = aiGenerationSchema.parse(input)
 
     // Resolve subject name
-    const subject = await db.catalogSubject.findFirst({
+    const subject = await db.subject.findFirst({
       where: { id: parsed.subjectId },
       select: { name: true },
     })
@@ -126,7 +126,7 @@ export async function saveAIGeneratedQuestions(input: {
     for (const q of input.questions) {
       await db.$transaction(async (tx) => {
         // Create in catalog — subjectId IS the catalogSubjectId now
-        const catalogQuestion = await tx.catalogQuestion.create({
+        const catalogQuestion = await tx.question.create({
           data: {
             catalogSubjectId: input.subjectId ?? null,
             questionText: q.questionText,
@@ -135,7 +135,7 @@ export async function saveAIGeneratedQuestions(input: {
             bloomLevel: q.bloomLevel,
             points: q.points,
             options: q.options as Parameters<
-              typeof tx.catalogQuestion.create
+              typeof tx.question.create
             >[0]["data"]["options"],
             sampleAnswer: q.sampleAnswer ?? null,
             explanation: q.explanation ?? null,

@@ -182,7 +182,7 @@ export async function importQuestionsFromCSV(
     const parsed = importQuestionsSchema.parse(input)
 
     // Verify subject exists and belongs to school
-    const subjectSelection = await db.schoolSubjectSelection.findFirst({
+    const subjectSelection = await db.subjectSelection.findFirst({
       where: {
         catalogSubjectId: parsed.subjectId,
         schoolId,

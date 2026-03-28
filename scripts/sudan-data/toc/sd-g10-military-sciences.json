@@ -1,0 +1,38 @@
+{
+  "subject": "military-sciences",
+  "subjectNameAr": "العلوم العسكرية",
+  "grade": 10,
+  "level": "secondary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "",
+  "chapters": [
+    {
+      "nameAr": "الباب الأول: مقدمة في العلوم العسكرية",
+      "name": "Chapter 1: Introduction to Military Sciences",
+      "slug": "introduction-to-military-sciences",
+      "sequenceOrder": 1,
+      "lessons": []
+    },
+    {
+      "nameAr": "الباب الثاني: اللياقة البدنية",
+      "name": "Chapter 2: Physical Fitness",
+      "slug": "physical-fitness",
+      "sequenceOrder": 2,
+      "lessons": []
+    },
+    {
+      "nameAr": "الباب الثالث: التدريب العسكري",
+      "name": "Chapter 3: Military Training",
+      "slug": "military-training",
+      "sequenceOrder": 3,
+      "lessons": []
+    },
+    {
+      "nameAr": "الباب الرابع: الإسعافات الأولية",
+      "name": "Chapter 4: First Aid",
+      "slug": "first-aid",
+      "sequenceOrder": 4,
+      "lessons": []
+    }
+  ]
+}

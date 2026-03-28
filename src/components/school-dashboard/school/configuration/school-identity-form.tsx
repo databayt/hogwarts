@@ -39,7 +39,7 @@ const schoolIdentitySchema = z.object({
   description: z.string().optional(),
   schoolType: z.string().optional(),
   schoolLevel: z.string().optional(),
-  curriculum: z.string().optional(),
+  timetableStructure: z.string().optional(),
   preferredLanguage: z.string().optional(),
 })
 
@@ -244,10 +244,10 @@ export function SchoolIdentityForm({ schoolId, initialData, lang }: Props) {
                   Curriculum System
                 </Label>
                 <p className="font-medium capitalize">
-                  {initialData.curriculum
+                  {initialData.timetableStructure
                     ? SCHOOL_CURRICULA.find(
-                        (s) => s.value === initialData.curriculum
-                      )?.label || initialData.curriculum
+                        (s) => s.value === initialData.timetableStructure
+                      )?.label || initialData.timetableStructure
                     : "Not set"}
                 </p>
               </div>
@@ -442,10 +442,12 @@ export function SchoolIdentityForm({ schoolId, initialData, lang }: Props) {
       {/* Curriculum & Language */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="curriculum">Curriculum System</Label>
+          <Label htmlFor="timetableStructure">Curriculum System</Label>
           <Select
-            value={form.watch("curriculum") || ""}
-            onValueChange={(value) => form.setValue("curriculum", value)}
+            value={form.watch("timetableStructure") || ""}
+            onValueChange={(value) =>
+              form.setValue("timetableStructure", value)
+            }
             disabled={isPending}
           >
             <SelectTrigger>

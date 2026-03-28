@@ -18,7 +18,7 @@ export async function GET(
 
     const { id } = await params
 
-    const lesson = await db.catalogLesson.findUnique({
+    const lesson = await db.lesson.findUnique({
       where: { id },
       select: { name: true },
     })

@@ -18,7 +18,7 @@ export async function getTemplateName(
     const { schoolId } = await getTenantContext()
     if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
-    const template = await db.examTemplate.findFirst({
+    const template = await db.schoolExamTemplate.findFirst({
       where: { id: templateId, schoolId },
       select: {
         name: true,
@@ -59,14 +59,14 @@ export async function updateTemplateName(
     const parsed = nameSchema.parse(input)
 
     // Read existing blockConfig to merge examType into it
-    const existing = await db.examTemplate.findFirst({
+    const existing = await db.schoolExamTemplate.findFirst({
       where: { id: templateId, schoolId },
       select: { blockConfig: true },
     })
 
     const blockConfig = (existing?.blockConfig as Record<string, unknown>) || {}
 
-    await db.examTemplate.updateMany({
+    await db.schoolExamTemplate.updateMany({
       where: { id: templateId, schoolId },
       data: {
         name: parsed.name,

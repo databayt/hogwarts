@@ -5,7 +5,7 @@
  * Query builders for Subjects module
  *
  * Since the Subject model has been removed, all queries now go through
- * SchoolSubjectSelection (bridge) → CatalogSubject.
+ * SubjectSelection (bridge) → Subject.
  *
  * Centralizes query logic for:
  * - Filtering, sorting, pagination
@@ -45,7 +45,7 @@ export type SubjectQueryParams = SubjectListFilters &
 
 /**
  * Get subjects list with filtering, sorting, pagination.
- * Uses SchoolSubjectSelection → CatalogSubject.
+ * Uses SubjectSelection → Subject.
  */
 export async function getSubjectList(
   schoolId: string,
@@ -96,10 +96,10 @@ export async function getSubjectList(
 }
 
 /**
- * Get single subject by CatalogSubject ID (verified for school).
+ * Get single subject by Subject ID (verified for school).
  */
 export async function getSubjectDetail(schoolId: string, id: string) {
-  const selection = await db.schoolSubjectSelection.findFirst({
+  const selection = await db.subjectSelection.findFirst({
     where: { schoolId, catalogSubjectId: id, isActive: true },
     include: {
       subject: true,
@@ -128,7 +128,7 @@ export async function verifySubjectOwnership(
   schoolId: string,
   subjectIds: string[]
 ) {
-  const selections = await db.schoolSubjectSelection.findMany({
+  const selections = await db.subjectSelection.findMany({
     where: {
       schoolId,
       catalogSubjectId: { in: subjectIds },

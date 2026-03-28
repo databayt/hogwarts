@@ -1,0 +1,38 @@
+{
+  "subject": "engineering",
+  "subjectNameAr": "العلوم الهندسية",
+  "grade": 10,
+  "level": "secondary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "2009",
+  "chapters": [
+    {
+      "nameAr": "الباب الأول: الرسم الهندسي",
+      "name": "Chapter 1: Engineering Drawing",
+      "slug": "engineering-drawing",
+      "sequenceOrder": 1,
+      "lessons": []
+    },
+    {
+      "nameAr": "الباب الثاني: الإسقاط",
+      "name": "Chapter 2: Projection",
+      "slug": "projection",
+      "sequenceOrder": 2,
+      "lessons": []
+    },
+    {
+      "nameAr": "الباب الثالث: المساقط",
+      "name": "Chapter 3: Views",
+      "slug": "views",
+      "sequenceOrder": 3,
+      "lessons": []
+    },
+    {
+      "nameAr": "الباب الرابع: القطاعات",
+      "name": "Chapter 4: Sections",
+      "slug": "sections",
+      "sequenceOrder": 4,
+      "lessons": []
+    }
+  ]
+}

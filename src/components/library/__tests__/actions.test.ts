@@ -164,7 +164,7 @@ describe("Library Actions", () => {
   describe("createBook", () => {
     it("creates a book successfully with valid input and catalogBookId", async () => {
       mockAdminSession()
-      vi.mocked(db.book.create).mockResolvedValue(mockBook as any)
+      vi.mocked(db.schoolBook.create).mockResolvedValue(mockBook as any)
 
       const result = await createBook(validBookData)
 
@@ -173,7 +173,7 @@ describe("Library Actions", () => {
         message: "Book created successfully",
         data: mockBook,
       })
-      expect(db.book.create).toHaveBeenCalledWith({
+      expect(db.schoolBook.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           title: "The Great Gatsby",
           author: "F. Scott Fitzgerald",
@@ -195,7 +195,7 @@ describe("Library Actions", () => {
         message:
           "Books must be added from the catalog. Use Browse Catalog or Contribute Book instead.",
       })
-      expect(db.book.create).not.toHaveBeenCalled()
+      expect(db.schoolBook.create).not.toHaveBeenCalled()
     })
 
     it("fails without authentication", async () => {
@@ -207,7 +207,7 @@ describe("Library Actions", () => {
         success: false,
         message: "Not authenticated",
       })
-      expect(db.book.create).not.toHaveBeenCalled()
+      expect(db.schoolBook.create).not.toHaveBeenCalled()
     })
 
     it("fails without school context", async () => {
@@ -219,7 +219,7 @@ describe("Library Actions", () => {
         success: false,
         message: "School context not found",
       })
-      expect(db.book.create).not.toHaveBeenCalled()
+      expect(db.schoolBook.create).not.toHaveBeenCalled()
     })
 
     it("fails when user role lacks create permission", async () => {
@@ -229,12 +229,12 @@ describe("Library Actions", () => {
 
       // assertLibraryPermission throws for STUDENT on "create"
       expect(result.success).toBe(false)
-      expect(db.book.create).not.toHaveBeenCalled()
+      expect(db.schoolBook.create).not.toHaveBeenCalled()
     })
 
     it("handles database errors gracefully", async () => {
       mockAdminSession()
-      vi.mocked(db.book.create).mockRejectedValue(
+      vi.mocked(db.schoolBook.create).mockRejectedValue(
         new Error("Unique constraint violation")
       )
 
@@ -260,9 +260,9 @@ describe("Library Actions", () => {
 
     it("updates a book successfully with partial data", async () => {
       mockAdminSession()
-      vi.mocked(db.book.findFirst).mockResolvedValue(mockBook as any)
+      vi.mocked(db.schoolBook.findFirst).mockResolvedValue(mockBook as any)
       const updatedBook = { ...mockBook, title: "The Great Gatsby - Revised" }
-      vi.mocked(db.book.update).mockResolvedValue(updatedBook as any)
+      vi.mocked(db.schoolBook.update).mockResolvedValue(updatedBook as any)
 
       const result = await updateBook(updateData)
 
@@ -271,10 +271,10 @@ describe("Library Actions", () => {
         message: "Book updated successfully",
         data: updatedBook,
       })
-      expect(db.book.findFirst).toHaveBeenCalledWith({
+      expect(db.schoolBook.findFirst).toHaveBeenCalledWith({
         where: { id: updateData.id, schoolId: SCHOOL_ID },
       })
-      expect(db.book.update).toHaveBeenCalledWith({
+      expect(db.schoolBook.update).toHaveBeenCalledWith({
         where: { id: updateData.id },
         data: expect.objectContaining({
           title: "The Great Gatsby - Revised",
@@ -296,7 +296,7 @@ describe("Library Actions", () => {
         success: false,
         message: "Not authenticated",
       })
-      expect(db.book.findFirst).not.toHaveBeenCalled()
+      expect(db.schoolBook.findFirst).not.toHaveBeenCalled()
     })
 
     it("fails without school context", async () => {
@@ -308,12 +308,12 @@ describe("Library Actions", () => {
         success: false,
         message: "School context not found",
       })
-      expect(db.book.findFirst).not.toHaveBeenCalled()
+      expect(db.schoolBook.findFirst).not.toHaveBeenCalled()
     })
 
     it("fails when book does not belong to the school", async () => {
       mockAdminSession()
-      vi.mocked(db.book.findFirst).mockResolvedValue(null)
+      vi.mocked(db.schoolBook.findFirst).mockResolvedValue(null)
 
       const result = await updateBook(updateData)
 
@@ -321,13 +321,13 @@ describe("Library Actions", () => {
         success: false,
         message: "Book not found",
       })
-      expect(db.book.update).not.toHaveBeenCalled()
+      expect(db.schoolBook.update).not.toHaveBeenCalled()
     })
 
     it("handles database errors gracefully", async () => {
       mockAdminSession()
-      vi.mocked(db.book.findFirst).mockResolvedValue(mockBook as any)
-      vi.mocked(db.book.update).mockRejectedValue(
+      vi.mocked(db.schoolBook.findFirst).mockResolvedValue(mockBook as any)
+      vi.mocked(db.schoolBook.update).mockRejectedValue(
         new Error("Database connection error")
       )
 
@@ -356,14 +356,14 @@ describe("Library Actions", () => {
       vi.mocked(db.user.findUnique).mockResolvedValue({
         id: STUDENT_ID,
       } as any)
-      vi.mocked(db.book.findFirst).mockResolvedValue({
+      vi.mocked(db.schoolBook.findFirst).mockResolvedValue({
         ...mockBook,
         availableCopies: 2,
       } as any)
       vi.mocked(db.borrowRecord.findFirst).mockResolvedValue(null)
       // Mock the individual operations that form the transaction array
       vi.mocked(db.borrowRecord.create).mockResolvedValue({} as any)
-      vi.mocked(db.book.update).mockResolvedValue({} as any)
+      vi.mocked(db.schoolBook.update).mockResolvedValue({} as any)
       vi.mocked(db.$transaction).mockResolvedValue([{}, {}] as any)
 
       const result = await borrowBook(borrowData)
@@ -374,7 +374,7 @@ describe("Library Actions", () => {
         where: { id: STUDENT_ID },
         select: { id: true },
       })
-      expect(db.book.findFirst).toHaveBeenCalledWith({
+      expect(db.schoolBook.findFirst).toHaveBeenCalledWith({
         where: { id: borrowData.bookId, schoolId: SCHOOL_ID },
       })
       expect(db.borrowRecord.findFirst).toHaveBeenCalledWith({
@@ -410,7 +410,7 @@ describe("Library Actions", () => {
         success: false,
         message: "Not authenticated",
       })
-      expect(db.book.findFirst).not.toHaveBeenCalled()
+      expect(db.schoolBook.findFirst).not.toHaveBeenCalled()
     })
 
     it("fails without school context", async () => {
@@ -422,7 +422,7 @@ describe("Library Actions", () => {
         success: false,
         message: "School context not found",
       })
-      expect(db.book.findFirst).not.toHaveBeenCalled()
+      expect(db.schoolBook.findFirst).not.toHaveBeenCalled()
     })
 
     it("fails when user does not exist", async () => {
@@ -435,7 +435,7 @@ describe("Library Actions", () => {
         success: false,
         message: "User not found. Please log in again.",
       })
-      expect(db.book.findFirst).not.toHaveBeenCalled()
+      expect(db.schoolBook.findFirst).not.toHaveBeenCalled()
     })
 
     it("fails when book is not found", async () => {
@@ -443,7 +443,7 @@ describe("Library Actions", () => {
       vi.mocked(db.user.findUnique).mockResolvedValue({
         id: STUDENT_ID,
       } as any)
-      vi.mocked(db.book.findFirst).mockResolvedValue(null)
+      vi.mocked(db.schoolBook.findFirst).mockResolvedValue(null)
 
       const result = await borrowBook(borrowData)
 
@@ -459,7 +459,7 @@ describe("Library Actions", () => {
       vi.mocked(db.user.findUnique).mockResolvedValue({
         id: STUDENT_ID,
       } as any)
-      vi.mocked(db.book.findFirst).mockResolvedValue({
+      vi.mocked(db.schoolBook.findFirst).mockResolvedValue({
         ...mockBook,
         availableCopies: 0,
       } as any)
@@ -478,7 +478,7 @@ describe("Library Actions", () => {
       vi.mocked(db.user.findUnique).mockResolvedValue({
         id: STUDENT_ID,
       } as any)
-      vi.mocked(db.book.findFirst).mockResolvedValue({
+      vi.mocked(db.schoolBook.findFirst).mockResolvedValue({
         ...mockBook,
         availableCopies: 2,
       } as any)
@@ -500,7 +500,7 @@ describe("Library Actions", () => {
       vi.mocked(db.user.findUnique).mockResolvedValue({
         id: STUDENT_ID,
       } as any)
-      vi.mocked(db.book.findFirst).mockResolvedValue({
+      vi.mocked(db.schoolBook.findFirst).mockResolvedValue({
         ...mockBook,
         availableCopies: 2,
       } as any)
@@ -536,7 +536,7 @@ describe("Library Actions", () => {
       } as any)
       // Mock the individual operations that form the transaction array
       vi.mocked(db.borrowRecord.update).mockResolvedValue({} as any)
-      vi.mocked(db.book.update).mockResolvedValue({} as any)
+      vi.mocked(db.schoolBook.update).mockResolvedValue({} as any)
       vi.mocked(db.$transaction).mockResolvedValue([{}, {}] as any)
 
       const result = await returnBook(returnData)
@@ -655,9 +655,9 @@ describe("Library Actions", () => {
 
     it("deletes a book successfully when no active borrows exist", async () => {
       mockAdminSession()
-      vi.mocked(db.book.findFirst).mockResolvedValue(mockBook as any)
+      vi.mocked(db.schoolBook.findFirst).mockResolvedValue(mockBook as any)
       vi.mocked(db.borrowRecord.count).mockResolvedValue(0)
-      vi.mocked(db.book.delete).mockResolvedValue(mockBook as any)
+      vi.mocked(db.schoolBook.delete).mockResolvedValue(mockBook as any)
 
       const result = await deleteBook(deleteData)
 
@@ -665,7 +665,7 @@ describe("Library Actions", () => {
         success: true,
         message: "Book deleted successfully",
       })
-      expect(db.book.findFirst).toHaveBeenCalledWith({
+      expect(db.schoolBook.findFirst).toHaveBeenCalledWith({
         where: { id: deleteData.id, schoolId: SCHOOL_ID },
       })
       expect(db.borrowRecord.count).toHaveBeenCalledWith({
@@ -675,7 +675,7 @@ describe("Library Actions", () => {
           status: "BORROWED",
         },
       })
-      expect(db.book.delete).toHaveBeenCalledWith({
+      expect(db.schoolBook.delete).toHaveBeenCalledWith({
         where: { id: deleteData.id },
       })
       expect(revalidatePath).toHaveBeenCalledWith("/library")
@@ -691,7 +691,7 @@ describe("Library Actions", () => {
         success: false,
         message: "Not authenticated",
       })
-      expect(db.book.findFirst).not.toHaveBeenCalled()
+      expect(db.schoolBook.findFirst).not.toHaveBeenCalled()
     })
 
     it("fails without school context", async () => {
@@ -703,12 +703,12 @@ describe("Library Actions", () => {
         success: false,
         message: "School context not found",
       })
-      expect(db.book.findFirst).not.toHaveBeenCalled()
+      expect(db.schoolBook.findFirst).not.toHaveBeenCalled()
     })
 
     it("fails when book does not belong to the school", async () => {
       mockAdminSession()
-      vi.mocked(db.book.findFirst).mockResolvedValue(null)
+      vi.mocked(db.schoolBook.findFirst).mockResolvedValue(null)
 
       const result = await deleteBook(deleteData)
 
@@ -717,12 +717,12 @@ describe("Library Actions", () => {
         message: "Book not found",
       })
       expect(db.borrowRecord.count).not.toHaveBeenCalled()
-      expect(db.book.delete).not.toHaveBeenCalled()
+      expect(db.schoolBook.delete).not.toHaveBeenCalled()
     })
 
     it("blocks deletion when active borrows exist", async () => {
       mockAdminSession()
-      vi.mocked(db.book.findFirst).mockResolvedValue(mockBook as any)
+      vi.mocked(db.schoolBook.findFirst).mockResolvedValue(mockBook as any)
       vi.mocked(db.borrowRecord.count).mockResolvedValue(2)
 
       const result = await deleteBook(deleteData)
@@ -731,7 +731,7 @@ describe("Library Actions", () => {
         success: false,
         message: "Cannot delete book with active borrows",
       })
-      expect(db.book.delete).not.toHaveBeenCalled()
+      expect(db.schoolBook.delete).not.toHaveBeenCalled()
     })
 
     it("fails when user role lacks delete permission", async () => {
@@ -741,14 +741,14 @@ describe("Library Actions", () => {
 
       // assertLibraryPermission throws for STUDENT on "delete"
       expect(result.success).toBe(false)
-      expect(db.book.delete).not.toHaveBeenCalled()
+      expect(db.schoolBook.delete).not.toHaveBeenCalled()
     })
 
     it("handles database errors gracefully", async () => {
       mockAdminSession()
-      vi.mocked(db.book.findFirst).mockResolvedValue(mockBook as any)
+      vi.mocked(db.schoolBook.findFirst).mockResolvedValue(mockBook as any)
       vi.mocked(db.borrowRecord.count).mockResolvedValue(0)
-      vi.mocked(db.book.delete).mockRejectedValue(
+      vi.mocked(db.schoolBook.delete).mockRejectedValue(
         new Error("Foreign key constraint")
       )
 

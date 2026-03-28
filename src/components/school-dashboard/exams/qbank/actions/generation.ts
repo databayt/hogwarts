@@ -53,7 +53,7 @@ export async function generateExam(
     const validated = examGeneratorSchema.parse(data)
 
     // Verify exam exists and belongs to school
-    const exam = await db.exam.findFirst({
+    const exam = await db.schoolExam.findFirst({
       where: {
         id: validated.examId,
         schoolId,
@@ -78,7 +78,7 @@ export async function generateExam(
     const templateId = validated.templateId
 
     if (templateId && !distribution) {
-      const template = await db.examTemplate.findFirst({
+      const template = await db.schoolExamTemplate.findFirst({
         where: {
           id: templateId,
           schoolId,

@@ -1,0 +1,27 @@
+// Curriculum — formalizes country + framework metadata (NEW model)
+
+model Curriculum {
+  id           String        @id @default(cuid())
+  name         String                       // "Sudan National Curriculum"
+  slug         String        @unique        // "sd-national"
+  code         String                       // "national", "us-k12", "ib", "british"
+  country      String                       // "SD", "US", "*"
+  lang         String        @default("ar")
+  description  String?       @db.Text
+  organization String?                      // "Ministry of Education, Sudan"
+  website      String?
+  gradeRange   String?                      // "1-12"
+  structure    String?                      // "6+3+3" (elementary+middle+high split)
+  status       ContentStatus @default(PUBLISHED)
+
+  // Relations
+  subjects     Subject[]
+  textbooks    Textbook[]
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([country, code])
+  @@index([status])
+  @@map("catalog_curricula")
+}

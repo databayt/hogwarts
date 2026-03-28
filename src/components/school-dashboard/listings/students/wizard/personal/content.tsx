@@ -50,7 +50,7 @@ export default function PersonalContent() {
   return (
     <WizardStep
       entityId={studentId}
-      nextStep={`/students/add/${studentId}/enrollment`}
+      nextStep={`/students/add/${studentId}/guardian`}
       isValid={isValid}
       formRef={formRef}
       isLoading={isLoading}

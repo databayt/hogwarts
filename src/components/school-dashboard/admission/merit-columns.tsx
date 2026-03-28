@@ -76,10 +76,14 @@ function MeritActionsCell({
         status,
       })
       if (result.success) {
-        SuccessToast("Status updated successfully")
+        SuccessToast(t?.applicationDetail?.statusUpdated || "Status updated")
         router.refresh()
       } else {
-        ErrorToast(result.error || "Failed to update status")
+        ErrorToast(
+          result.error ||
+            t?.applicationDetail?.statusUpdateFailed ||
+            "Failed to update status"
+        )
       }
     })
   }
@@ -89,7 +93,7 @@ function MeritActionsCell({
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="h-8 w-8 p-0" disabled={isPending}>
           <Ellipsis className="h-4 w-4" />
-          <span className="sr-only">Open menu</span>
+          <span className="sr-only">{t?.toolbar?.openMenu || "Open menu"}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
@@ -182,10 +186,10 @@ export const getMeritColumns = (
         label: t?.columns?.category || "Category",
         variant: "select",
         options: [
-          { label: "General", value: "General" },
-          { label: "OBC", value: "OBC" },
-          { label: "SC", value: "SC" },
-          { label: "ST", value: "ST" },
+          { label: t?.columns?.categoryGeneral || "General", value: "General" },
+          { label: t?.columns?.categoryOBC || "OBC", value: "OBC" },
+          { label: t?.columns?.categorySC || "SC", value: "SC" },
+          { label: t?.columns?.categoryST || "ST", value: "ST" },
         ],
       },
       enableColumnFilter: true,
@@ -213,7 +217,10 @@ export const getMeritColumns = (
     {
       accessorKey: "entranceScore",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Entrance" />
+        <DataTableColumnHeader
+          column={column}
+          title={t?.columns?.entrance || "Entrance"}
+        />
       ),
       cell: ({ getValue }) => {
         const score = getValue<string | null>()
@@ -229,7 +236,10 @@ export const getMeritColumns = (
     {
       accessorKey: "interviewScore",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Interview" />
+        <DataTableColumnHeader
+          column={column}
+          title={t?.columns?.interview || "Interview"}
+        />
       ),
       cell: ({ getValue }) => {
         const score = getValue<string | null>()

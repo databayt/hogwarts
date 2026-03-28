@@ -1,0 +1,290 @@
+{
+  "subject": "english",
+  "subjectNameAr": "اللغة الإنجليزية",
+  "grade": 2,
+  "level": "elementary",
+  "publisher": "المركز القومي للمناهج والبحث التربوي - بخت الرضا",
+  "edition": "2nd Edition 2020",
+  "chapters": [
+    {
+      "nameAr": "المنزل",
+      "name": "Home",
+      "slug": "home",
+      "sequenceOrder": 1,
+      "lessons": [
+        {
+          "nameAr": "الدرس الأول",
+          "name": "Lesson 1",
+          "slug": "lesson-1",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الدرس الثاني",
+          "name": "Lesson 2",
+          "slug": "lesson-2",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الدرس الثالث",
+          "name": "Lesson 3",
+          "slug": "lesson-3",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "الدرس الرابع",
+          "name": "Lesson 4",
+          "slug": "lesson-4",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "الدرس الخامس",
+          "name": "Lesson 5",
+          "slug": "lesson-5",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "الدرس السادس",
+          "name": "Lesson 6",
+          "slug": "lesson-6",
+          "sequenceOrder": 6
+        },
+        {
+          "nameAr": "الدرس السابع",
+          "name": "Lesson 7",
+          "slug": "lesson-7",
+          "sequenceOrder": 7
+        },
+        {
+          "nameAr": "الدرس الثامن",
+          "name": "Lesson 8",
+          "slug": "lesson-8",
+          "sequenceOrder": 8
+        }
+      ]
+    },
+    {
+      "nameAr": "عائلتي",
+      "name": "My Family",
+      "slug": "my-family",
+      "sequenceOrder": 2,
+      "lessons": [
+        {
+          "nameAr": "الدرس الأول",
+          "name": "Lesson 1",
+          "slug": "lesson-1",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الدرس الثاني",
+          "name": "Lesson 2",
+          "slug": "lesson-2",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الدرس الثالث",
+          "name": "Lesson 3",
+          "slug": "lesson-3",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "الدرس الرابع",
+          "name": "Lesson 4",
+          "slug": "lesson-4",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "الدرس الخامس",
+          "name": "Lesson 5",
+          "slug": "lesson-5",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "الدرس السادس",
+          "name": "Lesson 6",
+          "slug": "lesson-6",
+          "sequenceOrder": 6
+        },
+        {
+          "nameAr": "الدرس السابع",
+          "name": "Lesson 7",
+          "slug": "lesson-7",
+          "sequenceOrder": 7
+        },
+        {
+          "nameAr": "الدرس الثامن",
+          "name": "Lesson 8",
+          "slug": "lesson-8",
+          "sequenceOrder": 8
+        }
+      ]
+    },
+    {
+      "nameAr": "الألعاب",
+      "name": "Toys and Games",
+      "slug": "toys-and-games",
+      "sequenceOrder": 3,
+      "lessons": [
+        {
+          "nameAr": "الدرس الأول",
+          "name": "Lesson 1",
+          "slug": "lesson-1",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الدرس الثاني",
+          "name": "Lesson 2",
+          "slug": "lesson-2",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الدرس الثالث",
+          "name": "Lesson 3",
+          "slug": "lesson-3",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "الدرس الرابع",
+          "name": "Lesson 4",
+          "slug": "lesson-4",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "الدرس الخامس",
+          "name": "Lesson 5",
+          "slug": "lesson-5",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "الدرس السادس",
+          "name": "Lesson 6",
+          "slug": "lesson-6",
+          "sequenceOrder": 6
+        },
+        {
+          "nameAr": "الدرس السابع",
+          "name": "Lesson 7",
+          "slug": "lesson-7",
+          "sequenceOrder": 7
+        },
+        {
+          "nameAr": "الدرس الثامن",
+          "name": "Lesson 8",
+          "slug": "lesson-8",
+          "sequenceOrder": 8
+        }
+      ]
+    },
+    {
+      "nameAr": "الحيوانات",
+      "name": "Animals",
+      "slug": "animals",
+      "sequenceOrder": 4,
+      "lessons": [
+        {
+          "nameAr": "الدرس الأول",
+          "name": "Lesson 1",
+          "slug": "lesson-1",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الدرس الثاني",
+          "name": "Lesson 2",
+          "slug": "lesson-2",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الدرس الثالث",
+          "name": "Lesson 3",
+          "slug": "lesson-3",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "الدرس الرابع",
+          "name": "Lesson 4",
+          "slug": "lesson-4",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "الدرس الخامس",
+          "name": "Lesson 5",
+          "slug": "lesson-5",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "الدرس السادس",
+          "name": "Lesson 6",
+          "slug": "lesson-6",
+          "sequenceOrder": 6
+        },
+        {
+          "nameAr": "الدرس السابع",
+          "name": "Lesson 7",
+          "slug": "lesson-7",
+          "sequenceOrder": 7
+        },
+        {
+          "nameAr": "الدرس الثامن",
+          "name": "Lesson 8",
+          "slug": "lesson-8",
+          "sequenceOrder": 8
+        }
+      ]
+    },
+    {
+      "nameAr": "الطعام والشراب",
+      "name": "Food and Drink",
+      "slug": "food-and-drink",
+      "sequenceOrder": 5,
+      "lessons": [
+        {
+          "nameAr": "الدرس الأول",
+          "name": "Lesson 1",
+          "slug": "lesson-1",
+          "sequenceOrder": 1
+        },
+        {
+          "nameAr": "الدرس الثاني",
+          "name": "Lesson 2",
+          "slug": "lesson-2",
+          "sequenceOrder": 2
+        },
+        {
+          "nameAr": "الدرس الثالث",
+          "name": "Lesson 3",
+          "slug": "lesson-3",
+          "sequenceOrder": 3
+        },
+        {
+          "nameAr": "الدرس الرابع",
+          "name": "Lesson 4",
+          "slug": "lesson-4",
+          "sequenceOrder": 4
+        },
+        {
+          "nameAr": "الدرس الخامس",
+          "name": "Lesson 5",
+          "slug": "lesson-5",
+          "sequenceOrder": 5
+        },
+        {
+          "nameAr": "الدرس السادس",
+          "name": "Lesson 6",
+          "slug": "lesson-6",
+          "sequenceOrder": 6
+        },
+        {
+          "nameAr": "الدرس السابع",
+          "name": "Lesson 7",
+          "slug": "lesson-7",
+          "sequenceOrder": 7
+        },
+        {
+          "nameAr": "الدرس الثامن",
+          "name": "Lesson 8",
+          "slug": "lesson-8",
+          "sequenceOrder": 8
+        }
+      ]
+    }
+  ]
+}

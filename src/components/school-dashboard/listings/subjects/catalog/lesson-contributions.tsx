@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
-import { uploadLessonVideo } from "@/components/stream/video/video-actions"
+import { uploadVideo } from "@/components/stream/video/video-actions"
 
 import {
   submitAssignment,
@@ -169,7 +169,7 @@ export function LessonContributionDialog({
 
     startTransition(async () => {
       try {
-        const result = await uploadLessonVideo({
+        const result = await uploadVideo({
           catalogLessonId,
           title: videoTitle.trim() || lessonName,
           videoUrl: videoUrl.trim(),

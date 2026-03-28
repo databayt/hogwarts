@@ -73,6 +73,7 @@ export function IDCardGenerator({
 }: IDCardGeneratorProps) {
   const { dictionary } = useDictionary()
   const t = dictionary?.messages?.toast
+  const d = (dictionary?.school?.students as any)?.idCard?.generator
   const [selectedStudents, setSelectedStudents] = useState<Set<string>>(
     new Set()
   )
@@ -284,7 +285,9 @@ export function IDCardGenerator({
               <Users className="h-8 w-8 text-blue-500" />
               <div>
                 <p className="text-2xl font-bold">{students.length}</p>
-                <p className="text-muted-foreground text-sm">Total Students</p>
+                <p className="text-muted-foreground text-sm">
+                  {d?.totalStudents || "Total Students"}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -295,7 +298,9 @@ export function IDCardGenerator({
               <CircleCheck className="h-8 w-8 text-green-500" />
               <div>
                 <p className="text-2xl font-bold">{selectedStudents.size}</p>
-                <p className="text-muted-foreground text-sm">Selected</p>
+                <p className="text-muted-foreground text-sm">
+                  {d?.selected || "Selected"}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -306,7 +311,9 @@ export function IDCardGenerator({
               <CreditCard className="h-8 w-8 text-purple-500" />
               <div>
                 <p className="text-2xl font-bold">{idCardTemplates.length}</p>
-                <p className="text-muted-foreground text-sm">Templates</p>
+                <p className="text-muted-foreground text-sm">
+                  {d?.templates || "Templates"}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -316,8 +323,10 @@ export function IDCardGenerator({
             <div className="flex items-center gap-3">
               <Printer className="h-8 w-8 text-orange-500" />
               <div>
-                <p className="text-2xl font-bold">Ready</p>
-                <p className="text-muted-foreground text-sm">Print Status</p>
+                <p className="text-2xl font-bold">{d?.ready || "Ready"}</p>
+                <p className="text-muted-foreground text-sm">
+                  {d?.printStatus || "Print Status"}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -328,15 +337,15 @@ export function IDCardGenerator({
         <TabsList className="grid w-[400px] grid-cols-3">
           <TabsTrigger value="students">
             <Users className="me-2 h-4 w-4" />
-            Students
+            {d?.studentsTab || "Students"}
           </TabsTrigger>
           <TabsTrigger value="template">
             <Palette className="me-2 h-4 w-4" />
-            Template
+            {d?.templateTab || "Template"}
           </TabsTrigger>
           <TabsTrigger value="preview" disabled={selectedStudents.size === 0}>
             <FileText className="me-2 h-4 w-4" />
-            Preview
+            {d?.previewTab || "Preview"}
           </TabsTrigger>
         </TabsList>
 
@@ -344,9 +353,10 @@ export function IDCardGenerator({
         <TabsContent value="students" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Select Students</CardTitle>
+              <CardTitle>{d?.selectStudents || "Select Students"}</CardTitle>
               <CardDescription>
-                Choose which students to generate ID cards for
+                {d?.selectStudentsDesc ||
+                  "Choose which students to generate ID cards for"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -355,7 +365,9 @@ export function IDCardGenerator({
                 <div className="relative flex-1">
                   <Search className="text-muted-foreground absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 transform" />
                   <Input
-                    placeholder="Search by name or GR number..."
+                    placeholder={
+                      d?.searchPlaceholder || "Search by name or GR number..."
+                    }
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="ps-9"
@@ -363,10 +375,12 @@ export function IDCardGenerator({
                 </div>
                 <Select value={filterClass} onValueChange={setFilterClass}>
                   <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="All Classes" />
+                    <SelectValue placeholder={d?.allClasses || "All Classes"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Classes</SelectItem>
+                    <SelectItem value="all">
+                      {d?.allClasses || "All Classes"}
+                    </SelectItem>
                     <SelectItem value="grade-10">Grade 10</SelectItem>
                     <SelectItem value="grade-11">Grade 11</SelectItem>
                     <SelectItem value="grade-12">Grade 12</SelectItem>
@@ -374,12 +388,18 @@ export function IDCardGenerator({
                 </Select>
                 <Select value={filterStatus} onValueChange={setFilterStatus}>
                   <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="All Status" />
+                    <SelectValue placeholder={d?.allStatus || "All Status"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="ACTIVE">Active</SelectItem>
-                    <SelectItem value="INACTIVE">Inactive</SelectItem>
+                    <SelectItem value="all">
+                      {d?.allStatus || "All Status"}
+                    </SelectItem>
+                    <SelectItem value="ACTIVE">
+                      {d?.active || "Active"}
+                    </SelectItem>
+                    <SelectItem value="INACTIVE">
+                      {d?.inactive || "Inactive"}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -388,15 +408,15 @@ export function IDCardGenerator({
               <div className="flex items-center justify-between">
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" onClick={selectAll}>
-                    Select All ({filteredStudents.length})
+                    {d?.selectAll || "Select All"} ({filteredStudents.length})
                   </Button>
                   <Button variant="outline" size="sm" onClick={clearSelection}>
-                    Clear Selection
+                    {d?.clearSelection || "Clear Selection"}
                   </Button>
                 </div>
                 <p className="text-muted-foreground text-sm">
-                  {selectedStudents.size} of {filteredStudents.length} students
-                  selected
+                  {selectedStudents.size} / {filteredStudents.length}{" "}
+                  {d?.studentsSelected || "students selected"}
                 </p>
               </div>
 
@@ -467,9 +487,10 @@ export function IDCardGenerator({
         <TabsContent value="template" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Choose Template</CardTitle>
+              <CardTitle>{d?.chooseTemplate || "Choose Template"}</CardTitle>
               <CardDescription>
-                Select a design template for the ID cards
+                {d?.chooseTemplateDesc ||
+                  "Select a design template for the ID cards"}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -499,9 +520,12 @@ export function IDCardGenerator({
                             <div className="space-y-2">
                               <h4 className="font-medium">{template.name}</h4>
                               <div className="text-muted-foreground space-y-1 text-sm">
-                                <p>Orientation: {template.orientation}</p>
                                 <p>
-                                  Size: {template.size.width}x
+                                  {d?.orientation || "Orientation"}:{" "}
+                                  {template.orientation}
+                                </p>
+                                <p>
+                                  {d?.size || "Size"}: {template.size.width}x
                                   {template.size.height}
                                   {template.size.unit}
                                 </p>
@@ -511,7 +535,7 @@ export function IDCardGenerator({
                                       variant="outline"
                                       className="text-xs"
                                     >
-                                      Barcode
+                                      {d?.barcode || "Barcode"}
                                     </Badge>
                                   )}
                                   {template.includeQRCode && (
@@ -519,7 +543,7 @@ export function IDCardGenerator({
                                       variant="outline"
                                       className="text-xs"
                                     >
-                                      QR Code
+                                      {d?.qrCode || "QR Code"}
                                     </Badge>
                                   )}
                                 </div>
@@ -557,11 +581,12 @@ export function IDCardGenerator({
               data={previewData}
               template={selectedTemplate}
               onPrint={handlePrint}
+              dictionary={dictionary}
               onDownload={(format) => {
                 if (format === "pdf") {
                   generatePDF()
                 } else {
-                  toast.info("Image export coming soon")
+                  toast.info(d?.imageExportSoon || "Image export coming soon")
                 }
               }}
             />
@@ -570,7 +595,8 @@ export function IDCardGenerator({
               <CardContent className="p-8 text-center">
                 <CircleX className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
                 <p className="text-muted-foreground">
-                  Please select at least one student to preview ID cards
+                  {d?.selectAtLeastOne ||
+                    "Please select at least one student to preview ID cards"}
                 </p>
               </CardContent>
             </Card>
@@ -584,10 +610,14 @@ export function IDCardGenerator({
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium">Ready to Generate</p>
+                <p className="font-medium">
+                  {d?.readyToGenerate || "Ready to Generate"}
+                </p>
                 <p className="text-muted-foreground text-sm">
-                  {selectedStudents.size} ID cards will be generated using the{" "}
-                  {selectedTemplate.name} template
+                  {selectedStudents.size}{" "}
+                  {d?.cardsWillBeGenerated ||
+                    "ID cards will be generated using the"}{" "}
+                  {selectedTemplate.name} {d?.templateSuffix || "template"}
                 </p>
               </div>
               <div className="flex gap-3">
@@ -597,11 +627,11 @@ export function IDCardGenerator({
                   disabled={isGenerating}
                 >
                   <Download className="me-2 h-4 w-4" />
-                  Download All
+                  {d?.downloadAll || "Download All"}
                 </Button>
                 <Button onClick={handlePrint} disabled={isGenerating}>
                   <Printer className="me-2 h-4 w-4" />
-                  Print All
+                  {d?.printAll || "Print All"}
                 </Button>
               </div>
             </div>

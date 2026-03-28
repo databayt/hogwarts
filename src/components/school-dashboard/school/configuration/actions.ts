@@ -24,7 +24,7 @@ const schoolIdentitySchema = z.object({
   description: z.string().optional(),
   schoolType: z.string().optional(),
   schoolLevel: z.string().optional(),
-  curriculum: z.string().optional(),
+  timetableStructure: z.string().optional(),
   preferredLanguage: z.string().optional(),
 })
 
@@ -90,7 +90,7 @@ export async function updateSchoolIdentity(
         description: validatedData.description || null,
         schoolType: validatedData.schoolType || null,
         schoolLevel: validatedData.schoolLevel || null,
-        curriculum: validatedData.curriculum || null,
+        timetableStructure: validatedData.timetableStructure || null,
         preferredLanguage: validatedData.preferredLanguage || "ar",
       },
     })

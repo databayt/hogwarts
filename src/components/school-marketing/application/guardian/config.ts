@@ -3,19 +3,14 @@
 
 export const GUARDIAN_STEP_CONFIG = {
   id: "guardian",
-  label: (isRTL: boolean) =>
-    isRTL ? "معلومات ولي الأمر" : "Guardian Information",
-  description: (isRTL: boolean) =>
-    isRTL
-      ? "أدخل معلومات الوالدين أو ولي الأمر"
-      : "Enter parent or guardian details",
 }
 
-export const GUARDIAN_RELATION_OPTIONS = (isRTL: boolean) =>
-  [
-    { value: "grandfather", label: isRTL ? "الجد" : "Grandfather" },
-    { value: "grandmother", label: isRTL ? "الجدة" : "Grandmother" },
-    { value: "uncle", label: isRTL ? "العم/الخال" : "Uncle" },
-    { value: "aunt", label: isRTL ? "العمة/الخالة" : "Aunt" },
-    { value: "other", label: isRTL ? "أخرى" : "Other" },
-  ] as const
+type OptionDict = Record<string, string>
+
+export const getGuardianRelationOptions = (d: OptionDict) => [
+  { value: "grandfather", label: d.grandfather || "Grandfather" },
+  { value: "grandmother", label: d.grandmother || "Grandmother" },
+  { value: "uncle", label: d.uncle || "Uncle" },
+  { value: "aunt", label: d.aunt || "Aunt" },
+  { value: "other", label: d.other || "Other" },
+]

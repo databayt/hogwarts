@@ -8,10 +8,7 @@ import Link from "next/link"
 import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
-import type {
-  CatalogChapterItem,
-  CatalogSubjectSummary,
-} from "./catalog-detail"
+import type { ChapterItem, SubjectSummary } from "./catalog-detail"
 import { ChapterSection } from "./catalog-detail"
 
 // ---------------------------------------------------------------------------
@@ -19,12 +16,12 @@ import { ChapterSection } from "./catalog-detail"
 // ---------------------------------------------------------------------------
 
 interface Props {
-  subject: CatalogSubjectSummary
-  chapters: CatalogChapterItem[]
+  subject: SubjectSummary
+  chapters: ChapterItem[]
   lang: Locale
 }
 
-export function CatalogChaptersContent({ subject, chapters, lang }: Props) {
+export function ChaptersContent({ subject, chapters, lang }: Props) {
   const { dictionary } = useDictionary()
   const cat = dictionary?.school?.subjects?.catalog as
     | Record<string, string>
