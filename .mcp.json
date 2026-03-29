@@ -9,6 +9,11 @@
       },
       "description": "Development database queries and management"
     },
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["@playwright/mcp@latest", "--headed"]
+    },
     "svg-tools": {
       "type": "stdio",
       "command": "npx",

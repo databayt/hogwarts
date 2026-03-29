@@ -17,8 +17,8 @@ import {
 
 describe("Timetable Structures", () => {
   describe("TIMETABLE_STRUCTURES", () => {
-    it("contains exactly 10 structures", () => {
-      expect(TIMETABLE_STRUCTURES).toHaveLength(10)
+    it("contains expected number of structures", () => {
+      expect(TIMETABLE_STRUCTURES).toHaveLength(23)
     })
 
     it("all structures have valid periods with non-overlapping times", () => {
@@ -79,14 +79,15 @@ describe("Timetable Structures", () => {
       expect(slugs).toContain("gulf-standard")
     })
 
-    it("places Gulf structures in others for SA without schoolType (score=25 < 30)", () => {
-      // SA maps to GULF region (+25 only), below recommended threshold of 30
+    it("recommends SA-specific structures for SA (country match score=40 >= 30)", () => {
       const result = getRecommendedStructures("SA")
-      const otherSlugs = result.others.map((s) => s.slug)
+      const slugs = result.recommended.map((s) => s.slug)
 
+      expect(slugs).toContain("sa-primary")
+      expect(slugs).toContain("sa-secondary")
+      // Gulf structures still in others (region match = 25 < 30)
+      const otherSlugs = result.others.map((s) => s.slug)
       expect(otherSlugs).toContain("gulf-standard")
-      expect(otherSlugs).toContain("gulf-private")
-      expect(result.recommended).toHaveLength(0)
     })
 
     it("recommends MENA structures for country=EG with schoolLevel (region mapping)", () => {
@@ -97,13 +98,15 @@ describe("Timetable Structures", () => {
       expect(slugs).toContain("mena-standard")
     })
 
-    it("places MENA structures in others for EG without extras (score=25 < 30)", () => {
-      // EG maps to MENA region (+25 only), below recommended threshold of 30
+    it("recommends EG-specific structures for EG (country match score=40 >= 30)", () => {
       const result = getRecommendedStructures("EG")
-      const otherSlugs = result.others.map((s) => s.slug)
+      const slugs = result.recommended.map((s) => s.slug)
 
+      expect(slugs).toContain("eg-primary")
+      expect(slugs).toContain("eg-secondary")
+      // MENA structures still in others (region match = 25 < 30)
+      const otherSlugs = result.others.map((s) => s.slug)
       expect(otherSlugs).toContain("mena-standard")
-      expect(result.recommended).toHaveLength(0)
     })
 
     it("recommends US structures for country=US", () => {
@@ -120,11 +123,11 @@ describe("Timetable Structures", () => {
       expect(result.autoSelect!.slug).toBe("sd-gov-default")
     })
 
-    it("auto-selects gulf-standard for SA+public+secondary (score>=50)", () => {
+    it("auto-selects sa-secondary for SA+public+secondary (score>=50)", () => {
       const result = getRecommendedStructures("SA", "public", "secondary")
 
       expect(result.autoSelect).not.toBeNull()
-      expect(result.autoSelect!.slug).toBe("gulf-standard")
+      expect(result.autoSelect!.slug).toBe("sa-secondary")
     })
 
     it("does not auto-select when best score < 50", () => {
@@ -228,10 +231,16 @@ describe("Timetable Structures", () => {
     it("groups all structures by country", () => {
       const grouped = getStructuresByCountry()
 
-      expect(grouped["SD"]).toHaveLength(5)
+      expect(grouped["SD"]).toHaveLength(6)
       expect(grouped["GULF"]).toHaveLength(2)
       expect(grouped["MENA"]).toHaveLength(1)
-      expect(grouped["US"]).toHaveLength(1)
+      expect(grouped["US"]).toHaveLength(2)
+      expect(grouped["SA"]).toHaveLength(2)
+      expect(grouped["EG"]).toHaveLength(2)
+      expect(grouped["KW"]).toHaveLength(2)
+      expect(grouped["AE"]).toHaveLength(2)
+      expect(grouped["JO"]).toHaveLength(2)
+      expect(grouped["QA"]).toHaveLength(1)
       expect(grouped["*"]).toHaveLength(1)
     })
 
@@ -242,7 +251,7 @@ describe("Timetable Structures", () => {
       expect(grouped["*"][0].slug).toBe("intl-default")
     })
 
-    it("SD group contains all 5 Sudan structures", () => {
+    it("SD group contains all 6 Sudan structures", () => {
       const grouped = getStructuresByCountry()
       const sdSlugs = grouped["SD"].map((s) => s.slug)
 

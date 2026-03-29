@@ -22,22 +22,40 @@ export default async function SubjectPage({ params }: Props) {
   const { lang, subjectId } = await params
   const dictionary = await getDictionary(lang)
 
-  const subject = await db.subject.findUnique({
-    where: { id: subjectId },
-    include: {
-      chapters: {
-        orderBy: { sequenceOrder: "asc" },
-        include: {
-          lessons: {
-            orderBy: { sequenceOrder: "asc" },
-            include: {
-              _count: { select: { videos: true } },
+  // Support both slug (human-readable URLs) and cuid (table links)
+  const subject =
+    (await db.subject.findUnique({
+      where: { slug: subjectId },
+      include: {
+        chapters: {
+          orderBy: { sequenceOrder: "asc" },
+          include: {
+            lessons: {
+              orderBy: { sequenceOrder: "asc" },
+              include: {
+                _count: { select: { videos: true } },
+              },
             },
           },
         },
       },
-    },
-  })
+    })) ??
+    (await db.subject.findUnique({
+      where: { id: subjectId },
+      include: {
+        chapters: {
+          orderBy: { sequenceOrder: "asc" },
+          include: {
+            lessons: {
+              orderBy: { sequenceOrder: "asc" },
+              include: {
+                _count: { select: { videos: true } },
+              },
+            },
+          },
+        },
+      },
+    }))
 
   if (!subject) notFound()
 

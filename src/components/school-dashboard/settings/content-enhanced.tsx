@@ -121,7 +121,7 @@ export function EnhancedSettingsContent({ dictionary, lang }: Props) {
         {/* Tab Navigation with Bottom Border Indicator */}
         <div className="border-b">
           <ScrollArea className="max-w-[600px] lg:max-w-none">
-            <nav className="flex items-center gap-6 rtl:flex-row-reverse">
+            <nav className="flex items-center gap-6">
               {tabs.map((tab) => {
                 return (
                   <button
@@ -273,7 +273,7 @@ function AdvancedSettings({
       {/* Database Operations */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 rtl:flex-row-reverse">
+          <CardTitle className="flex items-center gap-2">
             <Database className="h-5 w-5" />
             {dictionary?.school?.settings?.databaseOperations ||
               "Database Operations"}
@@ -286,7 +286,7 @@ function AdvancedSettings({
 
         <CardContent className="space-y-4">
           {/* Data Export */}
-          <div className="bg-background flex items-center justify-between rounded-xl p-4 rtl:flex-row-reverse">
+          <div className="bg-background flex items-center justify-between rounded-xl p-4">
             <div>
               <p className="font-medium">
                 {dictionary?.school?.settings?.exportSchoolData ||
@@ -309,7 +309,7 @@ function AdvancedSettings({
           </div>
 
           {/* Cache Management */}
-          <div className="bg-background flex items-center justify-between rounded-xl p-4 rtl:flex-row-reverse">
+          <div className="bg-background flex items-center justify-between rounded-xl p-4">
             <div>
               <p className="font-medium">
                 {dictionary?.school?.settings?.clearCache || "Clear Cache"}
@@ -335,25 +335,25 @@ function AdvancedSettings({
               {dictionary?.school?.settings?.systemInfo || "System Information"}
             </p>
             <div className="space-y-1 text-sm">
-              <div className="flex justify-between rtl:flex-row-reverse">
+              <div className="flex justify-between">
                 <span className="text-muted-foreground">
                   {dictionary?.school?.settings?.schoolId || "School ID:"}
                 </span>
                 <span className="font-mono">{schoolId || "N/A"}</span>
               </div>
-              <div className="flex justify-between rtl:flex-row-reverse">
+              <div className="flex justify-between">
                 <span className="text-muted-foreground">
                   {dictionary?.school?.settings?.version || "Version:"}
                 </span>
                 <span>v1.0.0</span>
               </div>
-              <div className="flex justify-between rtl:flex-row-reverse">
+              <div className="flex justify-between">
                 <span className="text-muted-foreground">
                   {dictionary?.school?.settings?.environment || "Environment:"}
                 </span>
                 <span>{process.env.NODE_ENV}</span>
               </div>
-              <div className="flex justify-between rtl:flex-row-reverse">
+              <div className="flex justify-between">
                 <span className="text-muted-foreground">
                   {dictionary?.school?.settings?.apiStatus || "API Status:"}
                 </span>
@@ -408,7 +408,7 @@ function AdvancedSettings({
             <p className="mb-2 font-medium">
               {dictionary?.school?.settings?.apiKey || "API Key"}
             </p>
-            <div className="flex items-center gap-2 rtl:flex-row-reverse">
+            <div className="flex items-center gap-2">
               <input
                 type="password"
                 value="sk_live_••••••••••••••••"
@@ -457,7 +457,7 @@ function AdvancedSettings({
 
           <CardContent className="space-y-4">
             {/* Reset School Data */}
-            <div className="bg-background flex items-center justify-between rounded-xl p-4 rtl:flex-row-reverse">
+            <div className="bg-background flex items-center justify-between rounded-xl p-4">
               <div>
                 <p className="text-destructive font-medium">
                   {dictionary?.school?.settings?.resetSchoolData ||
@@ -475,7 +475,7 @@ function AdvancedSettings({
 
             {/* Delete School */}
             {isDeveloper && (
-              <div className="bg-background flex items-center justify-between rounded-xl p-4 rtl:flex-row-reverse">
+              <div className="bg-background flex items-center justify-between rounded-xl p-4">
                 <div>
                   <p className="text-destructive font-medium">
                     {dictionary?.school?.settings?.deleteSchool ||

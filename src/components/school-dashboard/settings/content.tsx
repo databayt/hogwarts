@@ -71,13 +71,21 @@ export const SettingsContent = React.memo(function SettingsContent({
     setSubmitting(true)
     try {
       await updateSchoolSettings({ name, timezone, locale, logoUrl })
-      SuccessToast("Settings updated successfully")
+      SuccessToast(
+        dictionary?.school?.settings?.settingsUpdated ||
+          "Settings updated successfully"
+      )
     } catch (e) {
-      ErrorToast(e instanceof Error ? e.message : "Failed to update settings")
+      ErrorToast(
+        e instanceof Error
+          ? e.message
+          : dictionary?.school?.settings?.settingsUpdateFailed ||
+              "Failed to update settings"
+      )
     } finally {
       setSubmitting(false)
     }
-  }, [name, timezone, locale, logoUrl])
+  }, [name, timezone, locale, logoUrl, dictionary])
 
   return (
     <Card>
@@ -98,7 +106,10 @@ export const SettingsContent = React.memo(function SettingsContent({
           </Label>
           <Input
             id="school-name"
-            placeholder="Enter school name"
+            placeholder={
+              dictionary?.school?.settings?.enterSchoolName ||
+              "Enter school name"
+            }
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
@@ -113,7 +124,11 @@ export const SettingsContent = React.memo(function SettingsContent({
             onValueChange={(value) => setTimezone(value as SupportedTimezone)}
           >
             <SelectTrigger id="timezone">
-              <SelectValue placeholder="Select timezone">
+              <SelectValue
+                placeholder={
+                  dictionary?.school?.settings?.timezone || "Timezone"
+                }
+              >
                 {getTimezoneDisplayName(timezone)}
               </SelectValue>
             </SelectTrigger>
@@ -122,8 +137,10 @@ export const SettingsContent = React.memo(function SettingsContent({
                 <SelectItem key={tz} value={tz}>
                   <div className="flex flex-col items-start">
                     <span>{getTimezoneDisplayName(tz)}</span>
-                    <span className="text-xs text-gray-500">
-                      Current time: {getCurrentTimeInTimezone(tz)}
+                    <span className="text-muted-foreground text-xs">
+                      {dictionary?.school?.settings?.currentTimeIn ||
+                        "Current time in"}
+                      : {getCurrentTimeInTimezone(tz)}
                     </span>
                   </div>
                 </SelectItem>
@@ -132,7 +149,8 @@ export const SettingsContent = React.memo(function SettingsContent({
           </Select>
           {currentTime && (
             <p className="text-muted-foreground text-xs">
-              Current time in {getTimezoneDisplayName(timezone)}:{" "}
+              {dictionary?.school?.settings?.currentTimeIn || "Current time in"}{" "}
+              {getTimezoneDisplayName(timezone)}:{" "}
               <span className="font-mono">{currentTime}</span>
             </p>
           )}
@@ -160,23 +178,27 @@ export const SettingsContent = React.memo(function SettingsContent({
 
         <div className="space-y-2">
           <Label htmlFor="logo-url" className="text-sm font-medium">
-            {dictionary?.school?.settings?.schoolLogo || "Logo URL"} (Optional)
+            {dictionary?.school?.settings?.schoolLogo || "School Logo"}{" "}
+            {dictionary?.school?.settings?.optional || "(Optional)"}
           </Label>
           <Input
             id="logo-url"
             type="url"
-            placeholder="https://example.com/logo.png"
+            placeholder={
+              dictionary?.school?.settings?.logoUrlPlaceholder ||
+              "https://example.com/logo.png"
+            }
             value={logoUrl}
             onChange={(e) => setLogoUrl(e.target.value)}
           />
           {logoUrl && (
             <p className="text-muted-foreground text-xs">
-              Preview:{" "}
+              {dictionary?.school?.settings?.preview || "Preview:"}{" "}
               <a
                 href={logoUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
+                className="text-primary hover:underline"
               >
                 {logoUrl}
               </a>

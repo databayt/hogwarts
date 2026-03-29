@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { db } from "@/lib/db"
+import { getReferenceWeeklyPeriods } from "@/lib/timetable-reference"
 
 /**
  * Grade-to-level mapping for Sudanese education system.
@@ -582,7 +583,15 @@ export async function setupCatalogForSchool(
             gradeId: gradeRecord.id,
             isRequired: true,
             isActive: true,
-            weeklyPeriods: getDefaultWeeklyPeriods(subject.name, gradeNumber),
+            weeklyPeriods: getReferenceWeeklyPeriods(
+              subject.name,
+              gradeNumber,
+              {
+                country,
+                curriculum,
+                schoolType,
+              }
+            ),
           }
 
           const subjectStreamType =
