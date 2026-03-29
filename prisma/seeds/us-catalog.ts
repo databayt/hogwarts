@@ -960,39 +960,6 @@ const NAME_TO_CONCEPT: Record<string, string> = {
   "World Languages": "languages",
 }
 
-// Concept → old curated banner S3 slug (wide 2048x378 images from ClickView)
-const CONCEPT_BANNER_SLUG: Record<string, string> = {
-  arts: "the-arts",
-  english: "english",
-  languages: "french",
-  math: "mathematics",
-  science: "science",
-  physics: "physics",
-  chemistry: "chemistry",
-  biology: "biology",
-  "earth-science": "earth-space-sciences",
-  "computer-science": "computer-science",
-  history: "history",
-  geography: "geography",
-  civics: "social-studies",
-  economics: "business-economics",
-  psychology: "psychology",
-  religion: "islamic-education",
-  pe: "physical-education",
-  health: "health",
-  "life-skills": "life-skills",
-  "career-tech": "career-education",
-  celebrations: "celebrations",
-  "teacher-pd": "teacher-development",
-  sociology: "sociology",
-}
-
-function conceptBannerKey(concept: string | null): string | null {
-  if (!concept) return null
-  const slug = CONCEPT_BANNER_SLUG[concept]
-  return slug ? `catalog/subjects/${slug}/banner` : null
-}
-
 // ============================================================================
 // Main seed function
 // ============================================================================
@@ -1153,7 +1120,7 @@ export async function seedUsCatalog(prisma: PrismaClient): Promise<void> {
           thumbnail: gradeConceptPrefix
             ? `${gradeConceptPrefix}/thumbnail`
             : null,
-          banner: conceptBannerKey(concept),
+          banner: gradeConceptPrefix ? `${gradeConceptPrefix}/banner` : null,
           cover: concept ? `catalog/concepts/${concept}/cover` : null,
           ...(usCurriculum ? { curriculumId: usCurriculum.id } : {}),
           sortOrder: currentSort,
@@ -1182,7 +1149,7 @@ export async function seedUsCatalog(prisma: PrismaClient): Promise<void> {
           thumbnail: gradeConceptPrefix
             ? `${gradeConceptPrefix}/thumbnail`
             : null,
-          banner: conceptBannerKey(concept),
+          banner: gradeConceptPrefix ? `${gradeConceptPrefix}/banner` : null,
           cover: concept ? `catalog/concepts/${concept}/cover` : null,
           sortOrder: currentSort,
           status: "PUBLISHED",

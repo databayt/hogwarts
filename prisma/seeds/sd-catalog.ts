@@ -82,39 +82,6 @@ function levelToSchoolLevel(level: string): SchoolLevel {
   }
 }
 
-// Concept → old curated banner S3 slug (wide 2048x378 images from ClickView)
-const CONCEPT_BANNER_SLUG: Record<string, string> = {
-  arts: "the-arts",
-  english: "english",
-  languages: "french",
-  math: "mathematics",
-  science: "science",
-  physics: "physics",
-  chemistry: "chemistry",
-  biology: "biology",
-  "earth-science": "earth-space-sciences",
-  "computer-science": "computer-science",
-  history: "history",
-  geography: "geography",
-  civics: "social-studies",
-  economics: "business-economics",
-  psychology: "psychology",
-  religion: "islamic-education",
-  pe: "physical-education",
-  health: "health",
-  "life-skills": "life-skills",
-  "career-tech": "career-education",
-  celebrations: "celebrations",
-  "teacher-pd": "teacher-development",
-  sociology: "sociology",
-}
-
-function conceptBannerKey(concept: string | null): string | null {
-  if (!concept) return null
-  const slug = CONCEPT_BANNER_SLUG[concept]
-  return slug ? `catalog/subjects/${slug}/banner` : null
-}
-
 // ============================================================================
 // Main seed function
 // ============================================================================
@@ -175,7 +142,7 @@ export async function seedSudanCatalog(prisma: PrismaClient): Promise<void> {
           gradeRange: String(grade),
           sortOrder: currentSort,
           thumbnail: `${gradeConceptPrefix}/thumbnail`,
-          banner: conceptBannerKey(entry.concept),
+          banner: `${gradeConceptPrefix}/banner`,
           cover: `catalog/concepts/${entry.concept}/cover`,
           ...(sdCurriculum ? { curriculumId: sdCurriculum.id } : {}),
         },
@@ -193,7 +160,7 @@ export async function seedSudanCatalog(prisma: PrismaClient): Promise<void> {
           concept: entry.concept,
           color: entry.color,
           thumbnail: `${gradeConceptPrefix}/thumbnail`,
-          banner: conceptBannerKey(entry.concept),
+          banner: `${gradeConceptPrefix}/banner`,
           cover: `catalog/concepts/${entry.concept}/cover`,
           sortOrder: currentSort,
           status: "PUBLISHED",
