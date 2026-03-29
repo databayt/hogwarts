@@ -2,7 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import type { Metadata } from "next"
-import { notFound, redirect } from "next/navigation"
+import { notFound } from "next/navigation"
 import { auth } from "@/auth"
 
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
@@ -22,16 +22,29 @@ interface ApplyPageProps {
 export async function generateMetadata({
   params,
 }: ApplyPageProps): Promise<Metadata> {
-  const { subdomain } = await params
-  const result = await getSchoolBySubdomain(subdomain)
+  const { lang, subdomain } = await params
+  const [result, d] = await Promise.all([
+    getSchoolBySubdomain(subdomain),
+    getDictionary(lang),
+  ])
+
+  const applyLabel =
+    (
+      d as Record<string, unknown> & {
+        school?: { admission?: { apply?: { title?: string } } }
+      }
+    )?.school?.admission?.apply?.title ?? (lang === "ar" ? "التقديم" : "Apply")
 
   if (!result.success || !result.data) {
-    return { title: "Apply" }
+    return { title: applyLabel }
   }
 
   return {
-    title: `Apply - ${result.data.name}`,
-    description: `Apply for admission to ${result.data.name}. Start your application today.`,
+    title: `${applyLabel} - ${result.data.name}`,
+    description:
+      lang === "ar"
+        ? `قدم للقبول في ${result.data.name}. ابدأ طلبك اليوم.`
+        : `Apply for admission to ${result.data.name}. Start your application today.`,
   }
 }
 

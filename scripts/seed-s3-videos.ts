@@ -10,7 +10,7 @@
  * Flow:
  *   1. Search Pexels API for educational videos per subject (landscape, HD)
  *   2. Pick up to 5 longest videos per subject (60s-600s, 720p-1080p)
- *   3. Upload to S3 as sample-{slug}-{n}.mp4
+ *   3. Upload to S3 as catalog/lessons/{lesson-slug}/video/sample-{n}.mp4
  *   4. Cycle videos across ALL LessonVideo records (not just first 2)
  *
  * Prerequisites:
@@ -27,6 +27,7 @@ import * as http from "http"
 import * as https from "https"
 import * as path from "path"
 import {
+  CopyObjectCommand,
   HeadObjectCommand,
   PutObjectCommand,
   S3Client,
@@ -44,7 +45,7 @@ const AWS_S3_BUCKET = process.env.AWS_S3_BUCKET
 const AWS_REGION = process.env.AWS_REGION || "us-east-1"
 const CLOUDFRONT_DOMAIN = process.env.CLOUDFRONT_DOMAIN
 
-const S3_KEY_PREFIX = "stream/platform/video"
+const S3_VIDEO_BASE = "catalog/lessons"
 const TMP_DIR = path.join("/tmp", "pexels-videos")
 
 const VIDEOS_PER_SUBJECT = 5
@@ -237,6 +238,23 @@ async function s3ObjectExists(s3: S3Client, key: string): Promise<boolean> {
   } catch {
     return false
   }
+}
+
+async function s3CopyObject(
+  s3: S3Client,
+  sourceKey: string,
+  destKey: string
+): Promise<void> {
+  await s3.send(
+    new CopyObjectCommand({
+      Bucket: AWS_S3_BUCKET!,
+      CopySource: `${AWS_S3_BUCKET}/${sourceKey}`,
+      Key: destKey,
+      ContentType: "video/mp4",
+      CacheControl: "public, max-age=31536000, immutable",
+      MetadataDirective: "REPLACE",
+    })
+  )
 }
 
 async function searchPexelsVideos(
@@ -535,8 +553,8 @@ async function main() {
             )
           }
           subjectVideoMap[subject.slug] = picks.map((p, i) => ({
-            cloudFrontUrl: `https://cdn.example.com/sample-${subject.slug}-${i + 1}.mp4`,
-            s3Key: `${S3_KEY_PREFIX}/sample-${subject.slug}-${i + 1}.mp4`,
+            cloudFrontUrl: `https://cdn.example.com/${S3_VIDEO_BASE}/placeholder/video/source-${subject.slug}-${i + 1}.mp4`,
+            s3Key: `${S3_VIDEO_BASE}/placeholder/video/source-${subject.slug}-${i + 1}.mp4`,
             duration: p.video.duration,
           }))
           downloaded++
@@ -553,7 +571,8 @@ async function main() {
         for (let i = 0; i < picks.length; i++) {
           const pick = picks[i]
           const suffix = i + 1
-          const s3Key = `${S3_KEY_PREFIX}/sample-${subject.slug}-${suffix}.mp4`
+          // Upload source files to a pool; they get S3-copied to lesson paths later
+          const s3Key = `${S3_VIDEO_BASE}/_source/${subject.slug}-${suffix}.mp4`
           const tmpFile = path.join(
             TMP_DIR,
             `pexels-${subject.slug}-${suffix}.mp4`
@@ -693,6 +712,7 @@ async function main() {
       select: {
         id: true,
         name: true,
+        slug: true,
         sequenceOrder: true,
         chapter: {
           select: {
@@ -715,7 +735,13 @@ async function main() {
     // Group by subject slug
     const lessonsBySlug: Record<
       string,
-      { id: string; name: string; chapterOrder: number; lessonOrder: number }[]
+      {
+        id: string
+        name: string
+        slug: string
+        chapterOrder: number
+        lessonOrder: number
+      }[]
     > = {}
     for (const lesson of allLessons) {
       const slug = lesson.chapter.subject.slug
@@ -723,6 +749,7 @@ async function main() {
       lessonsBySlug[slug].push({
         id: lesson.id,
         name: lesson.name,
+        slug: lesson.slug,
         chapterOrder: lesson.chapter.sequenceOrder,
         lessonOrder: lesson.sequenceOrder,
       })
@@ -743,7 +770,8 @@ async function main() {
       }
     }
 
-    // Create LessonVideo for each lesson, cycling through subject's videos
+    // Create LessonVideo for each lesson, cycling through subject's source videos
+    // Each lesson gets its own S3 path: catalog/lessons/{lesson-slug}/video/{video-id}.mp4
     for (const [slug, lessons] of Object.entries(lessonsBySlug)) {
       const entries = subjectVideoMap[slug]
       if (!entries || entries.length === 0) {
@@ -756,26 +784,39 @@ async function main() {
         const batch = lessons.slice(i, i + DB_BATCH_SIZE)
 
         if (!DRY_RUN) {
-          await prisma.video.createMany({
-            data: batch.map((lesson, batchIdx) => {
+          // S3-copy source videos to each lesson's path
+          const videoData = await Promise.all(
+            batch.map(async (lesson, batchIdx) => {
               const globalIdx = i + batchIdx
               const entry = entries[globalIdx % entries.length]
+              const videoId = `seed-vid-${lesson.id}`
+              const lessonS3Key = `${S3_VIDEO_BASE}/${lesson.slug}/video/${videoId}.mp4`
+
+              // Copy source file to lesson path (skip if already exists)
+              if (s3 && !(await s3ObjectExists(s3, lessonS3Key))) {
+                await s3CopyObject(s3, entry.s3Key, lessonS3Key)
+              }
+
               return {
                 catalogLessonId: lesson.id,
                 userId: devUser.id,
                 title: `${lesson.name} - Video`,
                 description: `HD educational video for ${lesson.name}`,
                 lang: "en",
-                videoUrl: entry.cloudFrontUrl,
+                videoUrl: getCloudFrontUrl(lessonS3Key),
                 durationSeconds: entry.duration,
                 provider: "self-hosted",
                 storageProvider: "aws_s3",
-                storageKey: entry.s3Key,
-                visibility: "PUBLIC",
-                approvalStatus: "APPROVED",
+                storageKey: lessonS3Key,
+                visibility: "PUBLIC" as const,
+                approvalStatus: "APPROVED" as const,
                 isFeatured: globalIdx === 0,
               }
-            }),
+            })
+          )
+
+          await prisma.video.createMany({
+            data: videoData,
             skipDuplicates: true,
           })
         }
@@ -784,7 +825,7 @@ async function main() {
       }
 
       console.log(
-        `   ${slug}: ${lessons.length} lessons seeded (${entries.length} videos cycled)`
+        `   ${slug}: ${lessons.length} lessons → ${S3_VIDEO_BASE}/{lesson-slug}/video/ (${entries.length} source videos cycled)`
       )
     }
 

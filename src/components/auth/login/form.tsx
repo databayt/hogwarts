@@ -97,6 +97,27 @@ export const LoginForm = ({
   const urlError =
     searchParams.get("error") === "OAuthAccountNotLinked" ? oauthError : ""
 
+  // Map server error codes to localized messages
+  const authErrors = dictionary?.messages?.errors?.auth
+  const validationMsgs = dictionary?.messages?.validation
+  const errorCodeMap: Record<string, string> = {
+    EMAIL_NOT_FOUND:
+      authErrors?.accountNotFound ??
+      validationMsgs?.accountNotFound ??
+      "Account not found",
+    INVALID_CREDENTIALS:
+      authErrors?.invalidCredentials ??
+      validationMsgs?.invalidCredentials ??
+      "Invalid email or password",
+    INVALID_CODE: validationMsgs?.invalidCode ?? "Invalid code",
+    CODE_EXPIRED: validationMsgs?.codeExpired ?? "Code expired",
+    INVALID_FIELDS: validationMsgs?.requiredField ?? "Invalid fields",
+    SOMETHING_WENT_WRONG: authErrors?.sessionExpired
+      ? "Something went wrong"
+      : "Something went wrong",
+  }
+  const resolveError = (code: string) => errorCodeMap[code] ?? code
+
   const [showTwoFactor, setShowTwoFactor] = useState(false)
   const [mode, setMode] = useState<"login" | "verify">("login")
   const [verifyEmail, setVerifyEmail] = useState("")
@@ -276,7 +297,7 @@ export const LoginForm = ({
         .then((data) => {
           if (data?.error) {
             form.reset()
-            setError(data.error)
+            setError(resolveError(data.error))
           }
           if (data?.success) {
             form.reset()

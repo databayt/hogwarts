@@ -70,8 +70,10 @@ export default async function PlatformLayout({
     session.user.role !== "DEVELOPER" &&
     session.user.schoolId !== school.id
   ) {
+    const isAr = lang === "ar"
     return (
       <div
+        dir={isAr ? "rtl" : "ltr"}
         style={{
           fontFamily:
             'system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
@@ -84,10 +86,12 @@ export default async function PlatformLayout({
         }}
       >
         <h1 style={{ fontSize: 24, fontWeight: 500, marginBottom: 16 }}>
-          Access Denied
+          {isAr ? "تم رفض الوصول" : "Access Denied"}
         </h1>
         <p style={{ color: "#666", marginBottom: 24 }}>
-          You don&apos;t have permission to access this school&apos;s dashboard.
+          {isAr
+            ? "ليس لديك صلاحية للوصول إلى لوحة تحكم هذه المدرسة."
+            : "You don't have permission to access this school's dashboard."}
         </p>
         <a
           href={`/${lang}`}
@@ -96,7 +100,7 @@ export default async function PlatformLayout({
             textDecoration: "underline",
           }}
         >
-          Go to homepage
+          {isAr ? "الذهاب إلى الصفحة الرئيسية" : "Go to homepage"}
         </a>
       </div>
     )

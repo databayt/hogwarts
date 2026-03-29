@@ -96,11 +96,13 @@ export const ContactForm = forwardRef<ContactFormRef, ContactFormProps>(
             name="phone"
             label={`${dict.phone} *`}
             placeholder={dict.phonePlaceholder}
+            selectCountryLabel={dict.selectCountry}
           />
           <PhoneField
             name="alternatePhone"
             label={dict.alternatePhone}
             placeholder={dict.alternatePhonePlaceholder}
+            selectCountryLabel={dict.selectCountry}
           />
         </form>
       </Form>

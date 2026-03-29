@@ -4,11 +4,8 @@
 /**
  * Catalog Videos Seed
  *
- * Dynamically creates 2 Video records per catalog subject
- * (one for each of the first 2 lessons). Reuses S3 video files
- * uploaded under the old level-based slug format.
- *
- * Slug mapping: us-g3-math -> elementary-math (S3 key)
+ * Creates Video records for catalog lessons.
+ * S3 path convention: catalog/lessons/{lesson-slug}/video/{video-id}.mp4
  *
  * Usage:
  *   pnpm db:seed:single catalog-videos
@@ -16,21 +13,8 @@
 
 import { PrismaClient } from "@prisma/client"
 
-/**
- * Derive the old level-based slug from a grade-specific slug.
- * us-g{N}-{base} -> {level}-{base}
- */
-function deriveOldSlug(slug: string): string | null {
-  const match = slug.match(/^us-g(\d+)-(.+)$/)
-  if (!match) return null
-
-  const gradeNum = parseInt(match[1])
-  const base = match[2]
-
-  const level = gradeNum <= 6 ? "elementary" : gradeNum <= 9 ? "middle" : "high"
-
-  return `${level}-${base}`
-}
+/** S3 path convention for lesson videos */
+const S3_VIDEO_BASE = "catalog/lessons"
 
 export async function seedCatalogVideos(prisma: PrismaClient): Promise<void> {
   const cloudfrontDomain = process.env.CLOUDFRONT_DOMAIN
@@ -86,17 +70,11 @@ export async function seedCatalogVideos(prisma: PrismaClient): Promise<void> {
       continue
     }
 
-    const oldSlug = deriveOldSlug(subject.slug)
-    if (!oldSlug) {
-      skipped++
-      continue
-    }
-
     for (let i = 0; i < first2.length; i++) {
       const lesson = first2[i]
-      const s3Key = `stream/platform/video/sample-${oldSlug}-${i + 1}.mp4`
-      const videoUrl = `https://${cloudfrontDomain}/${s3Key}`
       const seedId = `seed-vid-${lesson.id}`
+      const s3Key = `${S3_VIDEO_BASE}/${lesson.slug}/video/${seedId}.mp4`
+      const videoUrl = `https://${cloudfrontDomain}/${s3Key}`
 
       await prisma.video.upsert({
         where: { id: seedId },

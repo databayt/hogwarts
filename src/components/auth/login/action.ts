@@ -71,7 +71,7 @@ export const login = async (
   const validatedFields = LoginSchema.safeParse(values)
 
   if (!validatedFields.success) {
-    return { error: "Invalid fields!" }
+    return { error: "INVALID_FIELDS" }
   }
 
   const { email, password, code } = validatedFields.data
@@ -103,7 +103,7 @@ export const login = async (
       failureReason: "USER_NOT_FOUND",
       schoolId: null,
     })
-    return { error: "Email does not exist!" }
+    return { error: "EMAIL_NOT_FOUND" }
   }
 
   if (!existingUser.emailVerified) {
@@ -127,17 +127,17 @@ export const login = async (
       const twoFactorToken = await getTwoFactorTokenByEmail(existingUser.email)
 
       if (!twoFactorToken) {
-        return { error: "Invalid code!" }
+        return { error: "INVALID_CODE" }
       }
 
       if (twoFactorToken.token !== code) {
-        return { error: "Invalid code!" }
+        return { error: "INVALID_CODE" }
       }
 
       const hasExpired = new Date(twoFactorToken.expires) < new Date()
 
       if (hasExpired) {
-        return { error: "Code expired!" }
+        return { error: "CODE_EXPIRED" }
       }
 
       await db.twoFactorToken.delete({
@@ -369,9 +369,9 @@ export const login = async (
       })
       switch (error.type) {
         case "CredentialsSignin":
-          return { error: "Invalid credentials!" }
+          return { error: "INVALID_CREDENTIALS" }
         default:
-          return { error: "Something went wrong!" }
+          return { error: "SOMETHING_WENT_WRONG" }
       }
     }
 

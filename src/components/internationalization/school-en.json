@@ -8377,6 +8377,7 @@
             "lastNamePlaceholder": "Enter last name",
             "fullNamePlaceholder": "Enter full name",
             "dateOfBirth": "Date of Birth",
+            "pickDate": "Pick a date",
             "gender": "Gender",
             "selectGender": "Select gender",
             "nationality": "Nationality",
@@ -8392,7 +8393,8 @@
             "phone": "Phone",
             "phonePlaceholder": "+249 XXX XXX XXXX",
             "alternatePhone": "Alternate Phone",
-            "alternatePhonePlaceholder": "+249 XXX XXX XXXX"
+            "alternatePhonePlaceholder": "+249 XXX XXX XXXX",
+            "selectCountry": "Select country"
           },
           "location": {
             "address": "Current Address",
@@ -8420,7 +8422,8 @@
             "phone": "Phone",
             "email": "Email",
             "phonePlaceholder": "+249 XXX XXX XXXX",
-            "emailPlaceholder": "email@example.com"
+            "emailPlaceholder": "email@example.com",
+            "selectCountry": "Select country"
           },
           "academic": {
             "previousSchool": "Previous School",

@@ -20,6 +20,7 @@ import type { BaseFieldProps } from "../types"
 interface PhoneFieldProps extends BaseFieldProps {
   defaultCountry?: string
   onCountryChange?: (data: CountryData | undefined) => void
+  selectCountryLabel?: string
 }
 
 export function PhoneField({
@@ -32,6 +33,7 @@ export function PhoneField({
   className,
   defaultCountry,
   onCountryChange,
+  selectCountryLabel,
 }: PhoneFieldProps) {
   const form = useFormContext()
 
@@ -55,6 +57,7 @@ export function PhoneField({
               defaultCountry={defaultCountry}
               onCountryChange={onCountryChange}
               disabled={disabled}
+              selectCountryLabel={selectCountryLabel}
             />
           </FormControl>
           {description && <FormDescription>{description}</FormDescription>}

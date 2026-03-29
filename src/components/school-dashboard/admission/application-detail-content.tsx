@@ -118,6 +118,13 @@ export default async function ApplicationDetailContent({
     t?.status?.[application.status as keyof typeof t.status] ||
     application.status
 
+  // Safely look up enum labels from apply.options (e.g. gender.MALE → "ذكر")
+  const applyOptions = (t?.apply as Record<string, unknown>)?.options as
+    | Record<string, Record<string, string>>
+    | undefined
+  const enumLabel = (group: string, value: string | null | undefined) =>
+    value ? applyOptions?.[group]?.[value] : undefined
+
   // Detect content language from the data itself
   // Application has no `lang` field, so we detect from a known text field
   const sampleText = application.applyingForClass || application.firstName || ""
@@ -300,7 +307,7 @@ export default async function ApplicationDetailContent({
             />
             <InfoRow
               label={t?.applicationDetail?.gender || "Gender"}
-              value={d("gender")}
+              value={enumLabel("gender", application.gender) || d("gender")}
             />
             <InfoRow
               label={t?.applicationDetail?.nationality || "Nationality"}
@@ -308,11 +315,15 @@ export default async function ApplicationDetailContent({
             />
             <InfoRow
               label={t?.applicationDetail?.religion || "Religion"}
-              value={d("religion")}
+              value={
+                enumLabel("religion", application.religion) || d("religion")
+              }
             />
             <InfoRow
               label={t?.applicationDetail?.category || "Category"}
-              value={d("category")}
+              value={
+                enumLabel("category", application.category) || d("category")
+              }
             />
           </div>
         </section>
@@ -362,7 +373,10 @@ export default async function ApplicationDetailContent({
             />
             <InfoRow
               label={t?.applicationDetail?.relation || "Relation"}
-              value={d("guardianRelation")}
+              value={
+                enumLabel("guardianRelation", application.guardianRelation) ||
+                d("guardianRelation")
+              }
             />
             <InfoRow
               label={t?.applicationDetail?.phone || "Phone"}

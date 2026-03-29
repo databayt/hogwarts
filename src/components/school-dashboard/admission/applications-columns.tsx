@@ -70,16 +70,18 @@ const getStatusVariant = (status: string) => {
 function ApplicationActionsCell({
   application,
   dictionary,
+  locale,
 }: {
   application: ApplicationRow
   dictionary: Dictionary["school"]["admission"]
+  locale: Locale
 }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const t = dictionary
 
   const onView = () => {
-    router.push(`/admission/applications/${application.id}`)
+    router.push(`/${locale}/admission/applications/${application.id}`)
   }
 
   const onUpdateStatus = (status: string) => {
@@ -316,6 +318,7 @@ export const getApplicationColumns = (
         <ApplicationActionsCell
           application={row.original}
           dictionary={dictionary}
+          locale={locale}
         />
       ),
       enableSorting: false,

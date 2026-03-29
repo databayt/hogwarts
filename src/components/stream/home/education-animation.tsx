@@ -5,8 +5,6 @@
 import { useEffect, useState } from "react"
 import Lottie from "lottie-react"
 
-import { asset } from "@/lib/asset-url"
-
 interface EducationAnimationProps {
   className?: string
 }
@@ -15,7 +13,7 @@ export function EducationAnimation({ className }: EducationAnimationProps) {
   const [animationData, setAnimationData] = useState<object | null>(null)
 
   useEffect(() => {
-    fetch(asset("/animations/education.json"))
+    fetch("/animations/education.json")
       .then((res) => res.json())
       .then((data) => setAnimationData(data))
       .catch(console.error)

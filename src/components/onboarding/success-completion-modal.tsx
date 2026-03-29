@@ -13,7 +13,6 @@ import Lottie from "lottie-react"
 import { Check, Copy } from "lucide-react"
 import { useSession } from "next-auth/react"
 
-import { asset } from "@/lib/asset-url"
 import { Modal } from "@/components/atom/modal"
 
 interface SuccessCompletionModalProps {
@@ -44,7 +43,7 @@ export default function SuccessCompletionModal({
   }, [])
 
   useEffect(() => {
-    fetch(asset("/animations/confetti.json"))
+    fetch("/animations/confetti.json")
       .then((res) => res.json())
       .then((data) => setAnimationData(data))
       .catch(console.error)

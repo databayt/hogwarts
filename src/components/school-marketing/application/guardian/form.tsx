@@ -137,6 +137,7 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
             name={`${namePrefix}Phone`}
             label={dict.phone}
             placeholder={dict.phonePlaceholder}
+            selectCountryLabel={dict.selectCountry}
           />
           <InputField
             name={`${namePrefix}Email`}

@@ -8385,6 +8385,7 @@
             "lastNamePlaceholder": "أدخل اسم العائلة",
             "fullNamePlaceholder": "أدخل الاسم الكامل",
             "dateOfBirth": "تاريخ الميلاد",
+            "pickDate": "اختر تاريخاً",
             "gender": "الجنس",
             "selectGender": "اختر الجنس",
             "nationality": "الجنسية",
@@ -8400,7 +8401,8 @@
             "phone": "الهاتف",
             "phonePlaceholder": "+249 XXX XXX XXXX",
             "alternatePhone": "هاتف بديل",
-            "alternatePhonePlaceholder": "+249 XXX XXX XXXX"
+            "alternatePhonePlaceholder": "+249 XXX XXX XXXX",
+            "selectCountry": "اختر الدولة"
           },
           "location": {
             "address": "العنوان الحالي",
@@ -8428,7 +8430,8 @@
             "phone": "الهاتف",
             "email": "البريد الإلكتروني",
             "phonePlaceholder": "+249 XXX XXX XXXX",
-            "emailPlaceholder": "email@example.com"
+            "emailPlaceholder": "email@example.com",
+            "selectCountry": "اختر الدولة"
           },
           "academic": {
             "previousSchool": "المدرسة السابقة",

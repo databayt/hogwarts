@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { Locale } from "date-fns"
 import type { ZodSchema } from "zod"
 
 /**
@@ -278,6 +279,8 @@ export interface DateFieldProps extends BaseFieldProps {
   startMonth?: Date
   /** Latest month shown in dropdown (default: current month) */
   endMonth?: Date
+  /** date-fns locale for formatting (e.g. ar, en-US) */
+  locale?: Locale
 }
 
 // =============================================================================

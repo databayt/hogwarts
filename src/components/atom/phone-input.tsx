@@ -67,6 +67,9 @@ interface PhoneInputProps extends Omit<
   defaultCountry?: string
   className?: string
   inline?: boolean
+  selectCountryLabel?: string
+  searchPlaceholder?: string
+  emptyMessage?: string
 }
 
 export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
@@ -79,6 +82,9 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
       placeholder,
       defaultCountry,
       inline = false,
+      selectCountryLabel,
+      searchPlaceholder,
+      emptyMessage,
       ...props
     },
     ref
@@ -195,7 +201,7 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
                 <button
                   type="button"
                   className="hover:bg-accent flex h-7 w-7 shrink-0 items-center justify-center rounded-sm transition-colors"
-                  aria-label="Select country"
+                  aria-label={selectCountryLabel ?? "Select country"}
                 >
                   {displayFlag ? (
                     <div className="h-4 w-4 shrink-0 rounded-full">
@@ -208,9 +214,13 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
               </PopoverTrigger>
               <PopoverContent className="w-60 p-0" align="start">
                 <Command>
-                  <CommandInput placeholder="Search country..." />
+                  <CommandInput
+                    placeholder={searchPlaceholder ?? "Search country..."}
+                  />
                   <CommandList>
-                    <CommandEmpty>No country found.</CommandEmpty>
+                    <CommandEmpty>
+                      {emptyMessage ?? "No country found."}
+                    </CommandEmpty>
                     <CommandGroup>
                       {allCountries.map((country) => (
                         <CommandItem

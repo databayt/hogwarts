@@ -153,12 +153,12 @@ export function EnrollmentTable({
   const toolbarTranslations = {
     search: t?.columns?.applicant || "Search applicants...",
     create: "",
-    reset: "Reset",
-    tableView: "Table",
-    gridView: "Grid",
-    export: "Export",
-    exportCSV: "Export CSV",
-    exporting: "Exporting...",
+    reset: t?.toolbar?.reset || "Reset",
+    tableView: t?.toolbar?.tableView || "Table",
+    gridView: t?.toolbar?.gridView || "Grid",
+    export: t?.toolbar?.export || "Export",
+    exportCSV: t?.toolbar?.exportCSV || "Export CSV",
+    exporting: t?.toolbar?.exporting || "Exporting...",
   }
 
   return (
@@ -288,7 +288,9 @@ export function EnrollmentTable({
                 disabled={isLoading}
                 className="hover:bg-accent rounded-md border px-4 py-2 text-sm disabled:opacity-50"
               >
-                {isLoading ? "Loading..." : "Load More"}
+                {isLoading
+                  ? t?.toolbar?.loading || "Loading..."
+                  : t?.toolbar?.loadMore || "Load More"}
               </button>
             </div>
           )}

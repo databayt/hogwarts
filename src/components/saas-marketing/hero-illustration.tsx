@@ -5,13 +5,11 @@
 import { useEffect, useState } from "react"
 import Lottie from "lottie-react"
 
-import { asset } from "@/lib/asset-url"
-
 export function HeroIllustration() {
   const [animationData, setAnimationData] = useState<object | null>(null)
 
   useEffect(() => {
-    fetch(asset("/animations/anthropic-hero.json"))
+    fetch("/animations/anthropic-hero.json")
       .then((res) => res.json())
       .then((data) => setAnimationData(data))
       .catch(console.error)

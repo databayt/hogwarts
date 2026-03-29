@@ -8,7 +8,10 @@ import React, {
   useImperativeHandle,
   useMemo,
 } from "react"
+import { useParams } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { ar } from "date-fns/locale/ar"
+import { enUS } from "date-fns/locale/en-US"
 import { useForm } from "react-hook-form"
 
 import { composeFullName } from "@/lib/name-utils"
@@ -32,6 +35,9 @@ import { getPersonalSchema, type PersonalSchemaType } from "./validation"
 
 export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
   ({ initialData, onSuccess, dictionary }, ref) => {
+    const params = useParams()
+    const lang = params.lang as string
+    const dateLocale = lang === "ar" ? ar : enUS
     const { updateStepData, nameFormat } = useApplySession()
 
     const { v } = useMemo(() => {
@@ -138,9 +144,11 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
             <DateField
               name="dateOfBirth"
               label={`${dict.dateOfBirth} *`}
+              placeholder={dict.pickDate}
               captionLayout="dropdown"
               startMonth={new Date(1990, 0)}
               endMonth={new Date()}
+              locale={dateLocale}
             />
             <SelectField
               name="gender"

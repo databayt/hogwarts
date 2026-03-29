@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import { format } from "date-fns"
+import type { Locale } from "date-fns"
 import { CalendarIcon } from "lucide-react"
 import { useFormContext } from "react-hook-form"
 
@@ -63,6 +64,10 @@ export function DateField({
   minDate,
   maxDate,
   disabledDays,
+  captionLayout,
+  startMonth,
+  endMonth,
+  locale,
 }: DateFieldProps) {
   const form = useFormContext()
 
@@ -99,7 +104,11 @@ export function DateField({
                 >
                   <CalendarIcon className="me-2 h-4 w-4" />
                   {field.value ? (
-                    format(new Date(field.value), "PPP")
+                    format(
+                      new Date(field.value),
+                      "PPP",
+                      locale ? { locale } : undefined
+                    )
                   ) : (
                     <span>{placeholder}</span>
                   )}
@@ -114,6 +123,10 @@ export function DateField({
                   field.onChange(date?.toISOString().split("T")[0])
                 }
                 disabled={isDateDisabled}
+                captionLayout={captionLayout}
+                startMonth={startMonth}
+                endMonth={endMonth}
+                locale={locale}
                 autoFocus
               />
             </PopoverContent>

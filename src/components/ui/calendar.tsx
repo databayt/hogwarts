@@ -40,8 +40,10 @@ function Calendar({
       )}
       captionLayout={captionLayout}
       formatters={{
-        formatMonthDropdown: (date) =>
-          date.toLocaleString("default", { month: "short" }),
+        formatMonthDropdown: (date) => {
+          const loc = props.locale as { code?: string } | undefined
+          return date.toLocaleString(loc?.code ?? "default", { month: "short" })
+        },
         ...formatters,
       }}
       classNames={{

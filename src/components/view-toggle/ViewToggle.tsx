@@ -25,6 +25,13 @@ export interface ViewToggleProps {
   className?: string
   /** Show tooltip */
   showTooltip?: boolean
+  /** Labels for i18n */
+  labels?: {
+    grid?: string
+    list?: string
+    switchToGrid?: string
+    switchToList?: string
+  }
 }
 
 export function ViewToggle({
@@ -35,6 +42,7 @@ export function ViewToggle({
   size = "icon",
   className,
   showTooltip = true,
+  labels,
 }: ViewToggleProps) {
   // Use controlled or uncontrolled mode
   const isControlled = controlledValue !== undefined
@@ -72,7 +80,9 @@ export function ViewToggle({
 
   const Icon = currentValue === "list" ? LayoutGrid : List
   const tooltipText =
-    currentValue === "list" ? "Switch to grid view" : "Switch to list view"
+    currentValue === "list"
+      ? (labels?.switchToGrid ?? "Switch to grid view")
+      : (labels?.switchToList ?? "Switch to list view")
 
   return (
     <Button
@@ -91,7 +101,9 @@ export function ViewToggle({
       />
       {size !== "icon" && (
         <span className="ms-2">
-          {currentValue === "list" ? "Grid" : "List"}
+          {currentValue === "list"
+            ? (labels?.grid ?? "Grid")
+            : (labels?.list ?? "List")}
         </span>
       )}
     </Button>
