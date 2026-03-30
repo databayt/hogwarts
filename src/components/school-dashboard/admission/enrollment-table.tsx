@@ -157,6 +157,8 @@ export function EnrollmentTable({
     reset: tb?.reset || "Reset",
     tableView: tb?.tableView || "Table",
     gridView: tb?.gridView || "Grid",
+    switchToTable: tb?.switchToTable || "Switch to table view",
+    switchToGrid: tb?.switchToGrid || "Switch to grid view",
     export: tb?.export || "Export",
     exportCSV: tb?.exportCSV || "Export CSV",
     exporting: tb?.exporting || "Exporting...",

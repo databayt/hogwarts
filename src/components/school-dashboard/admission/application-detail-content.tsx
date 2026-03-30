@@ -53,7 +53,8 @@ function getStatusVariant(status: string) {
 }
 
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
-  if (value === null || value === undefined || value === "") return null
+  if (value === null || value === undefined || value === "" || value === "null")
+    return null
   return (
     <div className="py-1.5">
       <span className="text-muted-foreground text-xs">{label}</span>
@@ -118,8 +119,11 @@ export default async function ApplicationDetailContent({
     t?.status?.[application.status as keyof typeof t.status] ||
     application.status
 
-  // Safely look up enum labels from apply.options (e.g. gender.MALE → "ذكر")
-  const applyOptions = (t?.apply as Record<string, unknown>)?.options as
+  // Safely look up enum labels from apply.form.options (e.g. gender.MALE → "ذكر")
+  const applyForm = (t?.apply as Record<string, unknown>)?.form as
+    | Record<string, unknown>
+    | undefined
+  const applyOptions = applyForm?.options as
     | Record<string, Record<string, string>>
     | undefined
   const enumLabel = (group: string, value: string | null | undefined) =>
