@@ -7,7 +7,7 @@ import { searchPlaces, type MapboxFeature } from "@/lib/mapbox"
 
 import { useDebounce } from "./use-debounce"
 
-export function useMapboxSearch(debounceMs = 300) {
+export function useMapboxSearch(debounceMs = 300, language?: string) {
   const [query, setQueryRaw] = useState("")
   const [results, setResults] = useState<MapboxFeature[]>([])
   const [loading, setLoading] = useState(false)
@@ -27,7 +27,7 @@ export function useMapboxSearch(debounceMs = 300) {
     setLoading(true)
 
     try {
-      const features = await searchPlaces(trimmed)
+      const features = await searchPlaces(trimmed, 5, language)
       if (latestQueryRef.current === trimmed) {
         setResults(features)
       }

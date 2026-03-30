@@ -90,9 +90,9 @@ export function CampaignForm({
     descriptionPlaceholder:
       t?.descriptionPlaceholder || "Optional campaign description...",
     totalSeats: t?.totalSeats || "Total Seats",
-    cancel: "Cancel",
-    create: "Create",
-    update: "Update",
+    cancel: dictionary?.toolbar?.cancel || "Cancel",
+    create: dictionary?.toolbar?.create || "Create",
+    update: dictionary?.toolbar?.update || "Update",
     pickDateRange: t?.pickDateRange || "Pick a date range",
     createSuccess: t?.campaignCreated || "Campaign created successfully",
     updateSuccess: t?.campaignUpdated || "Campaign updated successfully",
@@ -275,6 +275,7 @@ export function CampaignForm({
           create: labels.create,
           save: labels.update,
           saving: isEdit ? labels.update : labels.create,
+          stepOf: dictionary?.toolbar?.stepOf,
         }}
       />
     </Form>

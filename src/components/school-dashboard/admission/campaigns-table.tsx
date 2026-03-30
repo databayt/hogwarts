@@ -158,6 +158,16 @@ export function CampaignsTable({
     export: tb?.export || "Export",
     exportCSV: tb?.exportCSV || "Export CSV",
     exporting: tb?.exporting || "Exporting...",
+    view: tb?.view || "View",
+    searchColumns: tb?.searchColumns || "Search columns...",
+    noColumns: tb?.noColumns || "No columns found.",
+    all: tb?.all || "All",
+  }
+
+  const dataTableTranslations = {
+    noResults: tb?.noResults || "No results.",
+    loadMore: tb?.loadMore || "Load More",
+    loading: tb?.loading || "Loading...",
   }
 
   return (
@@ -181,6 +191,7 @@ export function CampaignsTable({
           hasMore={hasMore}
           isLoading={isLoading}
           onLoadMore={loadMore}
+          translations={dataTableTranslations}
         />
       ) : (
         <>

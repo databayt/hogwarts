@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { ErrorToast } from "@/components/atom/toast"
 import { InputField, TextareaField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { updateTeacherLocation } from "./actions"
 import { locationSchema, type LocationFormData } from "./validation"
@@ -43,6 +44,12 @@ export const LocationForm = forwardRef<WizardFormRef, LocationFormProps>(
   ({ teacherId, initialData, onValidChange }, ref) => {
     const [isPending, startTransition] = useTransition()
     const hasMapbox = !!process.env.NEXT_PUBLIC_MAPBOX_TOKEN
+    const { dictionary } = useDictionary()
+    const teachers = (dictionary?.school as Record<string, unknown>)
+      ?.teachers as Record<string, unknown> | undefined
+    const wizard = teachers?.wizard as Record<string, unknown> | undefined
+    const t = wizard?.location as Record<string, string> | undefined
+    const tWizard = wizard as Record<string, string> | undefined
 
     const form = useForm<LocationFormData>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -68,19 +75,26 @@ export const LocationForm = forwardRef<WizardFormRef, LocationFormProps>(
             try {
               const valid = await form.trigger()
               if (!valid) {
-                reject(new Error("Validation failed"))
+                reject(
+                  new Error(tWizard?.validationFailed || "Validation failed")
+                )
                 return
               }
               const data = form.getValues()
               const result = await updateTeacherLocation(teacherId, data)
               if (!result.success) {
-                ErrorToast(result.error || "Failed to save")
+                ErrorToast(
+                  result.error || tWizard?.failedToSave || "Failed to save"
+                )
                 reject(new Error(result.error))
                 return
               }
               resolve()
             } catch (err) {
-              const msg = err instanceof Error ? err.message : "Failed to save"
+              const msg =
+                err instanceof Error
+                  ? err.message
+                  : tWizard?.failedToSave || "Failed to save"
               ErrorToast(msg)
               reject(err)
             }
@@ -115,7 +129,7 @@ export const LocationForm = forwardRef<WizardFormRef, LocationFormProps>(
             <MapboxLocationPicker
               value={pickerValue}
               onChange={handleLocationChange}
-              placeholder="Search for an address..."
+              placeholder={t?.searchAddress || "Search for an address..."}
             />
           </form>
         </Form>
@@ -128,32 +142,34 @@ export const LocationForm = forwardRef<WizardFormRef, LocationFormProps>(
         <form className="space-y-6">
           <TextareaField
             name="currentAddress"
-            label="Current Address"
-            placeholder="Enter current address"
+            label={t?.currentAddress || "Current Address"}
+            placeholder={
+              t?.currentAddressPlaceholder || "Enter current address"
+            }
             disabled={isPending}
           />
           <InputField
             name="city"
-            label="City"
-            placeholder="Enter city"
+            label={t?.city || "City"}
+            placeholder={t?.cityPlaceholder || "Enter city"}
             disabled={isPending}
           />
           <InputField
             name="state"
-            label="State"
-            placeholder="Enter state"
+            label={t?.state || "State"}
+            placeholder={t?.statePlaceholder || "Enter state"}
             disabled={isPending}
           />
           <InputField
             name="postalCode"
-            label="Postal Code"
-            placeholder="Enter postal code"
+            label={t?.postalCode || "Postal Code"}
+            placeholder={t?.postalCodePlaceholder || "Enter postal code"}
             disabled={isPending}
           />
           <InputField
             name="country"
-            label="Country"
-            placeholder="Enter country"
+            label={t?.country || "Country"}
+            placeholder={t?.countryPlaceholder || "Enter country"}
             disabled={isPending}
           />
         </form>

@@ -24,6 +24,7 @@ interface SuccessCompletionModalProps {
   showModal: boolean
   setShowModal: Dispatch<SetStateAction<boolean>>
   onGoToDashboard: () => void
+  dictionary?: any
 }
 
 export default function SuccessCompletionModal({
@@ -31,7 +32,9 @@ export default function SuccessCompletionModal({
   showModal,
   setShowModal,
   onGoToDashboard,
+  dictionary,
 }: SuccessCompletionModalProps) {
+  const dict = dictionary?.school?.onboarding || {}
   const { data: session } = useSession()
   const [copied, setCopied] = useState(false)
   const [animationData, setAnimationData] = useState<object | null>(null)
@@ -86,7 +89,9 @@ export default function SuccessCompletionModal({
         </div>
 
         {/* Success Message */}
-        <p className="text-muted-foreground mb-2">Your school lives at</p>
+        <p className="text-muted-foreground mb-2">
+          {dict.yourSchoolLivesAt || "Your school lives at"}
+        </p>
 
         <h5 className="mb-6">
           <a
@@ -104,14 +109,14 @@ export default function SuccessCompletionModal({
           {copied ? (
             <>
               <span className="text-xs text-green-700">
-                Copied to clipboard
+                {dict.copiedToClipboard || "Copied to clipboard"}
               </span>
               <Check className="h-3 w-3 text-green-700" />
             </>
           ) : (
             <>
               <span className="text-muted-foreground text-xs">
-                Copy details to clipboard
+                {dict.copyDetailsToClipboard || "Copy details to clipboard"}
               </span>
               <button
                 onClick={handleCopy}

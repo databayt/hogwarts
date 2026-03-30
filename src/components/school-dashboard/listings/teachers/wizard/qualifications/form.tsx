@@ -18,18 +18,10 @@ import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { InputField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { updateTeacherQualifications } from "./actions"
 import { qualificationsSchema, type QualificationsFormData } from "./validation"
-
-const DOCUMENT_CATEGORIES = [
-  { key: "degrees", label: "Degrees", icon: GraduationCap },
-  { key: "certifications", label: "Certifications", icon: Award },
-  { key: "cv", label: "CV", icon: FileText },
-  { key: "id", label: "ID", icon: IdCard },
-  { key: "licenses", label: "Licenses", icon: ScrollText },
-  { key: "other", label: "Other", icon: FolderOpen },
-] as const
 
 interface QualificationsFormProps {
   teacherId: string
@@ -42,6 +34,26 @@ export const QualificationsForm = forwardRef<
   QualificationsFormProps
 >(({ teacherId, initialData, onValidChange }, ref) => {
   const [isPending, startTransition] = useTransition()
+  const { dictionary } = useDictionary()
+  const teachers = (dictionary?.school as Record<string, unknown>)?.teachers as
+    | Record<string, unknown>
+    | undefined
+  const wizard = teachers?.wizard as Record<string, unknown> | undefined
+  const t = wizard?.qualifications as Record<string, string> | undefined
+  const tWizard = wizard as Record<string, string> | undefined
+
+  const documentCategories = [
+    { key: "degrees", label: t?.degrees || "Degrees", icon: GraduationCap },
+    {
+      key: "certifications",
+      label: t?.certifications || "Certifications",
+      icon: Award,
+    },
+    { key: "cv", label: t?.cv || "CV", icon: FileText },
+    { key: "id", label: t?.idDoc || "ID", icon: IdCard },
+    { key: "licenses", label: t?.licenses || "Licenses", icon: ScrollText },
+    { key: "other", label: t?.other || "Other", icon: FolderOpen },
+  ] as const
 
   const form = useForm<QualificationsFormData>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -68,19 +80,26 @@ export const QualificationsForm = forwardRef<
           try {
             const valid = await form.trigger()
             if (!valid) {
-              reject(new Error("Validation failed"))
+              reject(
+                new Error(tWizard?.validationFailed || "Validation failed")
+              )
               return
             }
             const data = form.getValues()
             const result = await updateTeacherQualifications(teacherId, data)
             if (!result.success) {
-              ErrorToast(result.error || "Failed to save")
+              ErrorToast(
+                result.error || tWizard?.failedToSave || "Failed to save"
+              )
               reject(new Error(result.error))
               return
             }
             resolve()
           } catch (err) {
-            const msg = err instanceof Error ? err.message : "Failed to save"
+            const msg =
+              err instanceof Error
+                ? err.message
+                : tWizard?.failedToSave || "Failed to save"
             ErrorToast(msg)
             reject(err)
           }
@@ -91,7 +110,7 @@ export const QualificationsForm = forwardRef<
   return (
     <Form {...form}>
       <form className="grid grid-cols-3 gap-4">
-        {DOCUMENT_CATEGORIES.map(({ key, label, icon: Icon }) => (
+        {documentCategories.map(({ key, label, icon: Icon }) => (
           <div
             key={key}
             className="flex flex-col items-center gap-2 rounded-lg border p-4"
@@ -101,7 +120,7 @@ export const QualificationsForm = forwardRef<
             <InputField
               name={key}
               label=""
-              placeholder="Upload or enter URL"
+              placeholder={t?.uploadOrEnterUrl || "Upload or enter URL"}
               disabled={isPending}
             />
           </div>

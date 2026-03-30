@@ -8,6 +8,7 @@ import { useParams } from "next/navigation"
 import { FormHeading, FormLayout } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { useTeacherWizard } from "../use-teacher-wizard"
 import { ContactForm } from "./form"
@@ -17,6 +18,12 @@ export default function ContactContent() {
   const teacherId = params.id as string
   const formRef = useRef<WizardFormRef>(null)
   const { data, isLoading } = useTeacherWizard()
+  const { dictionary } = useDictionary()
+  const teachers = (dictionary?.school as Record<string, unknown>)?.teachers as
+    | Record<string, unknown>
+    | undefined
+  const wizard = teachers?.wizard as Record<string, unknown> | undefined
+  const t = wizard?.contact as Record<string, string> | undefined
   const [isValid, setIsValid] = useState(false)
 
   useEffect(() => {
@@ -40,8 +47,10 @@ export default function ContactContent() {
     >
       <FormLayout>
         <FormHeading
-          title="Contact Details"
-          description="Add the teacher's email and phone numbers."
+          title={t?.title || "Contact Details"}
+          description={
+            t?.description || "Add the teacher's email and phone numbers."
+          }
         />
         <ContactForm
           ref={formRef}

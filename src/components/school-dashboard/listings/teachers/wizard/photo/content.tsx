@@ -8,6 +8,7 @@ import { useParams } from "next/navigation"
 import { FormHeading, FormLayout } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { useTeacherWizard } from "../use-teacher-wizard"
 import { PhotoForm } from "./form"
@@ -17,6 +18,12 @@ export default function PhotoContent() {
   const teacherId = params.id as string
   const formRef = useRef<WizardFormRef>(null)
   const { data, isLoading } = useTeacherWizard()
+  const { dictionary } = useDictionary()
+  const teachers = (dictionary?.school as Record<string, unknown>)?.teachers as
+    | Record<string, unknown>
+    | undefined
+  const wizard = teachers?.wizard as Record<string, unknown> | undefined
+  const t = wizard?.photo as Record<string, string> | undefined
   const [isValid, setIsValid] = useState(true)
 
   return (
@@ -29,8 +36,10 @@ export default function PhotoContent() {
     >
       <FormLayout>
         <FormHeading
-          title="Photo"
-          description="Upload a profile photo for the teacher."
+          title={t?.title || "Photo"}
+          description={
+            t?.description || "Upload a profile photo for the teacher."
+          }
         />
         <PhotoForm
           ref={formRef}

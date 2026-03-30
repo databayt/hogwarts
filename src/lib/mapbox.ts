@@ -38,7 +38,8 @@ export interface LocationResult {
  */
 export async function searchPlaces(
   query: string,
-  limit = 5
+  limit = 5,
+  language?: string
 ): Promise<MapboxFeature[]> {
   if (!query.trim() || !MAPBOX_ACCESS_TOKEN) {
     return []
@@ -50,7 +51,8 @@ export async function searchPlaces(
       `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedQuery}.json?` +
       `access_token=${MAPBOX_ACCESS_TOKEN}` +
       `&limit=${limit}` +
-      `&types=address,poi,place,locality,neighborhood`
+      `&types=address,poi,place,locality,neighborhood` +
+      (language ? `&language=${language}` : "")
 
     const response = await fetch(url)
     if (!response.ok) {
@@ -69,7 +71,8 @@ export async function searchPlaces(
  */
 export async function reverseGeocode(
   latitude: number,
-  longitude: number
+  longitude: number,
+  language?: string
 ): Promise<LocationResult | null> {
   if (!MAPBOX_ACCESS_TOKEN) {
     return {
@@ -87,7 +90,8 @@ export async function reverseGeocode(
     const url =
       `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?` +
       `access_token=${MAPBOX_ACCESS_TOKEN}` +
-      `&types=address,poi,place,locality,neighborhood,region`
+      `&types=address,poi,place,locality,neighborhood,region` +
+      (language ? `&language=${language}` : "")
 
     const response = await fetch(url)
     if (!response.ok) {

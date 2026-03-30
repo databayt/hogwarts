@@ -22,3 +22,15 @@ export const TEACHER_WIZARD_CONFIG: WizardConfig = {
   skipToComplete: true,
   finalLabel: "Create",
 }
+
+/** Get localized wizard config overrides */
+export function getTeacherWizardLabels(wizard?: Record<string, unknown>) {
+  const gl = wizard?.groupLabels as Record<string, string> | undefined
+  return {
+    groupLabels: [
+      gl?.personalDetails || "Personal Details",
+      gl?.professionalBackground || "Professional Background",
+    ],
+    finalLabel: (wizard as Record<string, string>)?.create || "Create",
+  }
+}

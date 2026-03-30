@@ -16,6 +16,7 @@ import ApplicationSuccessModal from "../success-modal"
 import type { AcademicStepData } from "../types"
 import { getApplyErrorDict, getApplyStepDict } from "../utils"
 import { useApplyValidation } from "../validation-context"
+import { getStepValidationStatus } from "../validation-helpers"
 import { ACADEMIC_STEP_CONFIG } from "./config"
 import { AcademicForm } from "./form"
 import type { AcademicFormRef } from "./types"
@@ -59,18 +60,21 @@ export default function AcademicContent({ dictionary }: Props) {
 
       // Use ref to get latest session (avoids stale closure)
       const currentSession = sessionRef.current
-      const { personal, contact, guardian, academic } = currentSession.formData
 
-      // Check completeness
-      if (
-        !personal?.firstName ||
-        !personal?.lastName ||
-        !contact?.email ||
-        !contact?.phone ||
-        (!guardian?.fatherName && !guardian?.motherName) ||
-        !academic?.applyingForClass
-      ) {
-        throw new Error(errorDict.completeAllSteps)
+      // Validate each step individually and report the first incomplete one
+      const stepStatus = getStepValidationStatus(currentSession.formData)
+      const stepErrorMap: Record<string, string> = {
+        personal: errorDict.incompletePersonal || errorDict.completeAllSteps,
+        contact: errorDict.incompleteContact || errorDict.completeAllSteps,
+        location: errorDict.incompleteLocation || errorDict.completeAllSteps,
+        guardian: errorDict.incompleteGuardian || errorDict.completeAllSteps,
+        academic: errorDict.incompleteAcademic || errorDict.completeAllSteps,
+      }
+
+      for (const [step, isValid] of Object.entries(stepStatus)) {
+        if (!isValid) {
+          throw new Error(stepErrorMap[step])
+        }
       }
 
       // Ensure session is saved before submitting (handles race with auto-save)
@@ -109,11 +113,11 @@ export default function AcademicContent({ dictionary }: Props) {
       // Build flat form data and submit
       const formData = {
         campaignId: id,
-        ...personal,
-        ...contact,
+        ...currentSession.formData.personal,
+        ...currentSession.formData.contact,
         ...currentSession.formData.location,
-        ...guardian,
-        ...academic,
+        ...currentSession.formData.guardian,
+        ...currentSession.formData.academic,
         photoUrl: extractUrl(attachments?.profilePhotoUrl),
         ...(documents.length > 0 ? { documents } : {}),
       }

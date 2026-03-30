@@ -52,12 +52,9 @@ export const TitleForm = forwardRef<TitleFormRef, TitleFormProps>(
 
     const getErrorMessage = (error: string): string => {
       if (error === "SUBDOMAIN_TAKEN") {
-        return (
-          dict.subdomainTaken ||
-          "This subdomain is already taken. Please choose another one."
-        )
+        return dict.subdomainTaken
       }
-      return error || dict.unexpectedError || "An unexpected error occurred"
+      return error || dict.unexpectedError
     }
 
     const saveAndNext = async () => {
@@ -84,9 +81,7 @@ export const TitleForm = forwardRef<TitleFormRef, TitleFormProps>(
           } catch (err) {
             console.error("Exception in saveAndNext:", err)
             const errorMessage =
-              err instanceof Error
-                ? err.message
-                : dict.unexpectedError || "An unexpected error occurred"
+              err instanceof Error ? err.message : dict.unexpectedError
             ErrorToast(errorMessage)
             reject(err)
           }
@@ -142,7 +137,7 @@ export const TitleForm = forwardRef<TitleFormRef, TitleFormProps>(
                 <FormControl>
                   <Textarea
                     {...field}
-                    placeholder={dict.schoolNamePlaceholder || "School Name"}
+                    placeholder={dict.schoolNamePlaceholder}
                     className="border-input focus:border-ring h-[80px] w-full resize-none rounded-lg border p-4 text-start text-sm transition-colors focus:outline-none sm:h-[100px] sm:p-6 sm:text-base"
                     maxLength={maxLength}
                     disabled={isPending}
@@ -166,8 +161,7 @@ export const TitleForm = forwardRef<TitleFormRef, TitleFormProps>(
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-muted-foreground text-start text-sm">
-                  {dict.schoolAvailableAt ||
-                    "Your school will be available at:"}
+                  {dict.schoolAvailableAt}
                 </FormLabel>
                 <FormControl>
                   <div
@@ -176,7 +170,7 @@ export const TitleForm = forwardRef<TitleFormRef, TitleFormProps>(
                   >
                     <Input
                       {...field}
-                      placeholder={dict.subdomainPlaceholder || "Subdomain"}
+                      placeholder={dict.subdomainPlaceholder}
                       className="rounded-e-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                       disabled={isPending}
                     />

@@ -162,6 +162,7 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
               name="nationality"
               label={dict.nationality}
               placeholder={dict.selectNationality}
+              locale={lang}
             />
             <SelectField
               name="category"

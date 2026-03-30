@@ -17,7 +17,7 @@ import {
   SelectField,
 } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
-import { GENDER_OPTIONS } from "@/components/school-dashboard/listings/teachers/config"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { updateTeacherInformation } from "./actions"
 import { getInformationSchema, type InformationFormData } from "./validation"
@@ -32,6 +32,12 @@ interface InformationFormProps {
 export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
   ({ teacherId, initialData, nameFormat = "full", onValidChange }, ref) => {
     const [isPending, startTransition] = useTransition()
+    const { dictionary } = useDictionary()
+    const teachers = (dictionary?.school as Record<string, unknown>)
+      ?.teachers as Record<string, unknown> | undefined
+    const wizard = teachers?.wizard as Record<string, unknown> | undefined
+    const t = wizard?.information as Record<string, string> | undefined
+    const tWizard = wizard as Record<string, string> | undefined
 
     const schema = getInformationSchema(nameFormat)
 
@@ -76,7 +82,9 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
             try {
               const valid = await form.trigger()
               if (!valid) {
-                reject(new Error("Validation failed"))
+                reject(
+                  new Error(tWizard?.validationFailed || "Validation failed")
+                )
                 return
               }
               const data = form.getValues()
@@ -88,19 +96,29 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
                 saveData as InformationFormData
               )
               if (!result.success) {
-                ErrorToast(result.error || "Failed to save")
+                ErrorToast(
+                  result.error || tWizard?.failedToSave || "Failed to save"
+                )
                 reject(new Error(result.error))
                 return
               }
               resolve()
             } catch (err) {
-              const msg = err instanceof Error ? err.message : "Failed to save"
+              const msg =
+                err instanceof Error
+                  ? err.message
+                  : tWizard?.failedToSave || "Failed to save"
               ErrorToast(msg)
               reject(err)
             }
           })
         }),
     }))
+
+    const genderOptions = [
+      { value: "male", label: t?.male || "Male" },
+      { value: "female", label: t?.female || "Female" },
+    ]
 
     return (
       <Form {...form}>
@@ -113,14 +131,14 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
               lastName: "lastName",
             }}
             labels={{
-              firstName: "First Name",
-              lastName: "Last Name",
-              fullName: "Full Name",
+              firstName: t?.firstName || "First Name",
+              lastName: t?.lastName || "Last Name",
+              fullName: t?.fullName || "Full Name",
             }}
             placeholders={{
-              firstName: "Enter first name",
-              lastName: "Enter last name",
-              fullName: "Enter full name",
+              firstName: t?.firstNamePlaceholder || "Enter first name",
+              lastName: t?.lastNamePlaceholder || "Enter last name",
+              fullName: t?.fullNamePlaceholder || "Enter full name",
             }}
             required
             disabled={isPending}
@@ -128,20 +146,20 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
           <div className="grid grid-cols-2 gap-7">
             <DateField
               name="birthDate"
-              label="Date of Birth"
+              label={t?.dateOfBirth || "Date of Birth"}
               disabled={isPending}
             />
             <SelectField
               name="gender"
-              label="Gender"
-              options={[...GENDER_OPTIONS]}
+              label={t?.gender || "Gender"}
+              options={genderOptions}
               disabled={isPending}
             />
           </div>
           <CountryField
             name="nationality"
-            label="Nationality"
-            placeholder="Select nationality"
+            label={t?.nationality || "Nationality"}
+            placeholder={t?.nationalityPlaceholder || "Select nationality"}
             disabled={isPending}
             className="max-w-xs"
           />

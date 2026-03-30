@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select"
 import { ErrorToast } from "@/components/atom/toast"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import {
   updateTeacherExpertise,
@@ -42,6 +43,13 @@ interface ExpertiseFormProps {
 export const ExpertiseForm = forwardRef<WizardFormRef, ExpertiseFormProps>(
   ({ teacherId, grades, initialData, onValidChange }, ref) => {
     const [isPending, startTransition] = useTransition()
+    const { dictionary } = useDictionary()
+    const teachers = (dictionary?.school as Record<string, unknown>)
+      ?.teachers as Record<string, unknown> | undefined
+    const wizard = teachers?.wizard as Record<string, unknown> | undefined
+    const t = wizard?.expertise as Record<string, string> | undefined
+    const tWizard = wizard as Record<string, string> | undefined
+
     const [selectedGradeIds, setSelectedGradeIds] = useState<Set<string>>(
       new Set()
     )
@@ -182,13 +190,18 @@ export const ExpertiseForm = forwardRef<WizardFormRef, ExpertiseFormProps>(
                 subjectExpertise,
               })
               if (!result.success) {
-                ErrorToast(result.error || "Failed to save")
+                ErrorToast(
+                  result.error || tWizard?.failedToSave || "Failed to save"
+                )
                 reject(new Error(result.error))
                 return
               }
               resolve()
             } catch (err) {
-              const msg = err instanceof Error ? err.message : "Failed to save"
+              const msg =
+                err instanceof Error
+                  ? err.message
+                  : tWizard?.failedToSave || "Failed to save"
               ErrorToast(msg)
               reject(err)
             }
@@ -201,8 +214,10 @@ export const ExpertiseForm = forwardRef<WizardFormRef, ExpertiseFormProps>(
         {/* Grade filter — simple number badges */}
         <div className="space-y-4">
           <div>
-            <p className="font-semibold">Grades</p>
-            <p className="text-muted-foreground text-xs">Select one or more</p>
+            <p className="font-semibold">{t?.grades || "Grades"}</p>
+            <p className="text-muted-foreground text-xs">
+              {t?.selectOneOrMore || "Select one or more"}
+            </p>
           </div>
           <div className="flex flex-wrap gap-1.5">
             {grades.map((grade) => {
@@ -238,7 +253,9 @@ export const ExpertiseForm = forwardRef<WizardFormRef, ExpertiseFormProps>(
             value=""
           >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Primary Subjects" />
+              <SelectValue
+                placeholder={t?.primarySubjects || "Primary Subjects"}
+              />
             </SelectTrigger>
             <SelectContent>
               {primaryOptions.map((s) => (
@@ -276,7 +293,9 @@ export const ExpertiseForm = forwardRef<WizardFormRef, ExpertiseFormProps>(
             value=""
           >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Secondary Subjects" />
+              <SelectValue
+                placeholder={t?.secondarySubjects || "Secondary Subjects"}
+              />
             </SelectTrigger>
             <SelectContent>
               {secondaryOptions.map((s) => (

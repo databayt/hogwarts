@@ -9,6 +9,7 @@ import { FormHeading, FormLayout } from "@/components/form"
 import { useWizardValidation } from "@/components/form/template/wizard-validation-context"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { completeTeacherWizard } from "../actions"
 import { useTeacherWizard } from "../use-teacher-wizard"
@@ -20,6 +21,12 @@ export default function EmploymentContent() {
   const teacherId = params.id as string
   const formRef = useRef<WizardFormRef>(null)
   const { data, isLoading } = useTeacherWizard()
+  const { dictionary } = useDictionary()
+  const teachers = (dictionary?.school as Record<string, unknown>)?.teachers as
+    | Record<string, unknown>
+    | undefined
+  const wizard = teachers?.wizard as Record<string, unknown> | undefined
+  const t = wizard?.employment as Record<string, string> | undefined
   const [isValid, setIsValid] = useState(true) // optional step
   const { setCustomNavigation } = useWizardValidation()
   const isSavingRef = useRef(false)
@@ -56,8 +63,11 @@ export default function EmploymentContent() {
     >
       <FormLayout>
         <FormHeading
-          title="Employment Details"
-          description="Add employment information. This step is optional."
+          title={t?.title || "Employment Details"}
+          description={
+            t?.description ||
+            "Add employment information. This step is optional."
+          }
         />
         <EmploymentForm
           ref={formRef}

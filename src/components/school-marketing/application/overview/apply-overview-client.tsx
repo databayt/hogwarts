@@ -109,7 +109,9 @@ const ApplyOverviewClient: React.FC<ApplyOverviewClientProps> = ({
                 >
                   <div className="flex flex-1 gap-3 rtl:flex-row-reverse">
                     <div className="flex-shrink-0">
-                      <h4 className="text-foreground">{stage.number}.</h4>
+                      <h4 className="text-foreground">
+                        {isRTL ? `.${stage.number}` : `${stage.number}.`}
+                      </h4>
                     </div>
                     <div className="text-start">
                       <h4 className="mb-1 font-semibold">{stage.title}</h4>

@@ -10,10 +10,7 @@ import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { DateField, InputField, SelectField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
-import {
-  EMPLOYMENT_STATUS_OPTIONS,
-  EMPLOYMENT_TYPE_OPTIONS,
-} from "@/components/school-dashboard/listings/teachers/config"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { updateTeacherEmployment } from "./actions"
 import { employmentSchema, type EmploymentFormData } from "./validation"
@@ -27,6 +24,12 @@ interface EmploymentFormProps {
 export const EmploymentForm = forwardRef<WizardFormRef, EmploymentFormProps>(
   ({ teacherId, initialData, onValidChange }, ref) => {
     const [isPending, startTransition] = useTransition()
+    const { dictionary } = useDictionary()
+    const teachers = (dictionary?.school as Record<string, unknown>)
+      ?.teachers as Record<string, unknown> | undefined
+    const wizard = teachers?.wizard as Record<string, unknown> | undefined
+    const t = wizard?.employment as Record<string, string> | undefined
+    const tWizard = wizard as Record<string, string> | undefined
 
     const form = useForm<EmploymentFormData>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -53,19 +56,26 @@ export const EmploymentForm = forwardRef<WizardFormRef, EmploymentFormProps>(
             try {
               const valid = await form.trigger()
               if (!valid) {
-                reject(new Error("Validation failed"))
+                reject(
+                  new Error(tWizard?.validationFailed || "Validation failed")
+                )
                 return
               }
               const data = form.getValues()
               const result = await updateTeacherEmployment(teacherId, data)
               if (!result.success) {
-                ErrorToast(result.error || "Failed to save")
+                ErrorToast(
+                  result.error || tWizard?.failedToSave || "Failed to save"
+                )
                 reject(new Error(result.error))
                 return
               }
               resolve()
             } catch (err) {
-              const msg = err instanceof Error ? err.message : "Failed to save"
+              const msg =
+                err instanceof Error
+                  ? err.message
+                  : tWizard?.failedToSave || "Failed to save"
               ErrorToast(msg)
               reject(err)
             }
@@ -75,32 +85,46 @@ export const EmploymentForm = forwardRef<WizardFormRef, EmploymentFormProps>(
 
     const employmentType = form.watch("employmentType")
 
+    const statusOptions = [
+      { value: "ACTIVE", label: t?.active || "Active" },
+      { value: "ON_LEAVE", label: t?.onLeave || "On Leave" },
+      { value: "TERMINATED", label: t?.terminated || "Terminated" },
+      { value: "RETIRED", label: t?.retired || "Retired" },
+    ]
+
+    const typeOptions = [
+      { value: "FULL_TIME", label: t?.fullTime || "Full-Time" },
+      { value: "PART_TIME", label: t?.partTime || "Part-Time" },
+      { value: "CONTRACT", label: t?.contract || "Contract" },
+      { value: "SUBSTITUTE", label: t?.substitute || "Substitute" },
+    ]
+
     return (
       <Form {...form}>
         <form className="space-y-6">
           <InputField
             name="employeeId"
-            label="Employee ID"
-            placeholder="EMP-001"
+            label={t?.employeeId || "Employee ID"}
+            placeholder={t?.employeeIdPlaceholder || "EMP-001"}
             disabled={isPending}
           />
           <DateField
             name="joiningDate"
-            label="Joining Date"
+            label={t?.joiningDate || "Joining Date"}
             disabled={isPending}
           />
           <div className="grid grid-cols-2 gap-4">
             <SelectField
               name="employmentStatus"
-              label="Employment Status"
-              options={[...EMPLOYMENT_STATUS_OPTIONS]}
+              label={t?.employmentStatus || "Employment Status"}
+              options={statusOptions}
               disabled={isPending}
               className="w-full"
             />
             <SelectField
               name="employmentType"
-              label="Employment Type"
-              options={[...EMPLOYMENT_TYPE_OPTIONS]}
+              label={t?.employmentType || "Employment Type"}
+              options={typeOptions}
               disabled={isPending}
               className="w-full"
             />
@@ -109,12 +133,12 @@ export const EmploymentForm = forwardRef<WizardFormRef, EmploymentFormProps>(
             <>
               <DateField
                 name="contractStartDate"
-                label="Contract Start Date"
+                label={t?.contractStartDate || "Contract Start Date"}
                 disabled={isPending}
               />
               <DateField
                 name="contractEndDate"
-                label="Contract End Date"
+                label={t?.contractEndDate || "Contract End Date"}
                 disabled={isPending}
               />
             </>

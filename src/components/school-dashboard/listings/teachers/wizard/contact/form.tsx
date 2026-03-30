@@ -8,8 +8,9 @@ import { useForm } from "react-hook-form"
 
 import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
-import { InputField, PhoneField, SelectField } from "@/components/form"
+import { InputField, PhoneField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { updateTeacherContact } from "./actions"
 import { contactSchema, type ContactFormData } from "./validation"
@@ -23,6 +24,12 @@ interface ContactFormProps {
 export const ContactForm = forwardRef<WizardFormRef, ContactFormProps>(
   ({ teacherId, initialData, onValidChange }, ref) => {
     const [isPending, startTransition] = useTransition()
+    const { dictionary } = useDictionary()
+    const teachers = (dictionary?.school as Record<string, unknown>)
+      ?.teachers as Record<string, unknown> | undefined
+    const wizard = teachers?.wizard as Record<string, unknown> | undefined
+    const t = wizard?.contact as Record<string, string> | undefined
+    const tWizard = wizard as Record<string, string> | undefined
 
     const form = useForm<ContactFormData>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -46,19 +53,26 @@ export const ContactForm = forwardRef<WizardFormRef, ContactFormProps>(
             try {
               const valid = await form.trigger()
               if (!valid) {
-                reject(new Error("Validation failed"))
+                reject(
+                  new Error(tWizard?.validationFailed || "Validation failed")
+                )
                 return
               }
               const data = form.getValues()
               const result = await updateTeacherContact(teacherId, data)
               if (!result.success) {
-                ErrorToast(result.error || "Failed to save")
+                ErrorToast(
+                  result.error || tWizard?.failedToSave || "Failed to save"
+                )
                 reject(new Error(result.error))
                 return
               }
               resolve()
             } catch (err) {
-              const msg = err instanceof Error ? err.message : "Failed to save"
+              const msg =
+                err instanceof Error
+                  ? err.message
+                  : tWizard?.failedToSave || "Failed to save"
               ErrorToast(msg)
               reject(err)
             }
@@ -71,23 +85,23 @@ export const ContactForm = forwardRef<WizardFormRef, ContactFormProps>(
         <form className="space-y-6">
           <InputField
             name="emailAddress"
-            label="Email Address"
+            label={t?.emailAddress || "Email Address"}
             type="email"
-            placeholder="teacher@school.edu"
+            placeholder={t?.emailPlaceholder || "teacher@school.edu"}
             required
             disabled={isPending}
           />
 
           <PhoneField
             name="phone1"
-            label="Phone 1"
-            placeholder="+1234567890"
+            label={t?.phone1 || "Phone 1"}
+            placeholder={t?.phonePlaceholder || "+1234567890"}
             disabled={isPending}
           />
           <PhoneField
             name="phone2"
-            label="Phone 2"
-            placeholder="+1234567890"
+            label={t?.phone2 || "Phone 2"}
+            placeholder={t?.phonePlaceholder || "+1234567890"}
             disabled={isPending}
           />
         </form>

@@ -4,6 +4,7 @@
 import { notFound } from "next/navigation"
 
 import { getCatalogImageUrl } from "@/lib/catalog-image-url"
+import { getCloudFrontUrl } from "@/lib/cloudfront-url"
 import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -46,6 +47,8 @@ export default async function SubjectDetailPage({ params }: Props) {
       color: true,
       thumbnail: true,
       banner: true,
+      cover: true,
+      pdf: true,
       levels: true,
       grades: true,
       totalChapters: true,
@@ -98,6 +101,8 @@ export default async function SubjectDetailPage({ params }: Props) {
         color: true,
         thumbnail: true,
         banner: true,
+        cover: true,
+        pdf: true,
         levels: true,
         grades: true,
         totalChapters: true,
@@ -375,6 +380,10 @@ export default async function SubjectDetailPage({ params }: Props) {
         subdomain={subdomain}
         subjectSlug={subject.slug}
         catalogSubjectId={subject.id}
+        textbookPdfUrl={subject.pdf ? getCloudFrontUrl(subject.pdf) : null}
+        textbookCoverUrl={
+          subject.cover ? getCloudFrontUrl(subject.cover) : null
+        }
       />
     </>
   )

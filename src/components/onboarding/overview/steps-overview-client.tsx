@@ -152,18 +152,20 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({
               {steps.map((step) => (
                 <div
                   key={step.number}
-                  className="flex items-start justify-between gap-6 rtl:flex-row-reverse"
+                  className="flex items-start justify-between gap-6"
                 >
-                  <div className="flex flex-1 gap-3 rtl:flex-row-reverse">
+                  <div className="flex flex-1 gap-3">
                     <div className="flex-shrink-0">
-                      <h4 className="text-foreground">{step.number}.</h4>
+                      <h4 className="text-foreground">
+                        {isRTL ? `.${step.number}` : `${step.number}.`}
+                      </h4>
                     </div>
                     <div className="text-start">
                       <h4 className="mb-1 font-semibold">{step.title}</h4>
                       <p>{step.description}</p>
                     </div>
                   </div>
-                  <div className="hidden flex-shrink-0 justify-end md:flex rtl:justify-start">
+                  <div className="hidden flex-shrink-0 md:flex">
                     <div className="relative h-14 w-14 overflow-hidden">
                       <Image
                         src={step.illustration}

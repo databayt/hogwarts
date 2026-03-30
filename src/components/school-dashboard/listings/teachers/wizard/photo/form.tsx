@@ -10,6 +10,7 @@ import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { FileUploadField } from "@/components/form/atoms/file-upload"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { updateTeacherPhoto } from "./actions"
 import { photoSchema, type PhotoFormData } from "./validation"
@@ -23,6 +24,12 @@ interface PhotoFormProps {
 export const PhotoForm = forwardRef<WizardFormRef, PhotoFormProps>(
   ({ teacherId, initialData, onValidChange }, ref) => {
     const [isPending, startTransition] = useTransition()
+    const { dictionary } = useDictionary()
+    const teachers = (dictionary?.school as Record<string, unknown>)
+      ?.teachers as Record<string, unknown> | undefined
+    const wizard = teachers?.wizard as Record<string, unknown> | undefined
+    const t = wizard?.photo as Record<string, string> | undefined
+    const tWizard = wizard as Record<string, string> | undefined
 
     const form = useForm<PhotoFormData>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -45,13 +52,18 @@ export const PhotoForm = forwardRef<WizardFormRef, PhotoFormProps>(
               const data = form.getValues()
               const result = await updateTeacherPhoto(teacherId, data)
               if (!result.success) {
-                ErrorToast(result.error || "Failed to save")
+                ErrorToast(
+                  result.error || tWizard?.failedToSave || "Failed to save"
+                )
                 reject(new Error(result.error))
                 return
               }
               resolve()
             } catch (err) {
-              const msg = err instanceof Error ? err.message : "Failed to save"
+              const msg =
+                err instanceof Error
+                  ? err.message
+                  : tWizard?.failedToSave || "Failed to save"
               ErrorToast(msg)
               reject(err)
             }
@@ -78,7 +90,7 @@ export const PhotoForm = forwardRef<WizardFormRef, PhotoFormProps>(
               format: "webp",
             }}
             disabled={isPending}
-            placeholder="Upload teacher photo"
+            placeholder={t?.uploadPhoto || "Upload teacher photo"}
           />
         </form>
       </Form>

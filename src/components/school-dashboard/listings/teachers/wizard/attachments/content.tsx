@@ -8,6 +8,7 @@ import { useParams } from "next/navigation"
 import { FormHeading, FormLayout } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { useTeacherWizard } from "../use-teacher-wizard"
 import { AttachmentsForm } from "./form"
@@ -17,6 +18,12 @@ export default function AttachmentsContent() {
   const teacherId = params.id as string
   const formRef = useRef<WizardFormRef>(null)
   const { data, isLoading } = useTeacherWizard()
+  const { dictionary } = useDictionary()
+  const teachers = (dictionary?.school as Record<string, unknown>)?.teachers as
+    | Record<string, unknown>
+    | undefined
+  const wizard = teachers?.wizard as Record<string, unknown> | undefined
+  const t = wizard?.attachments as Record<string, string> | undefined
   const [isValid, setIsValid] = useState(true)
 
   return (
@@ -29,8 +36,11 @@ export default function AttachmentsContent() {
     >
       <FormLayout>
         <FormHeading
-          title="Attachments"
-          description="Upload teacher photo and documents. This step is optional."
+          title={t?.title || "Attachments"}
+          description={
+            t?.description ||
+            "Upload teacher photo and documents. This step is optional."
+          }
         />
         <AttachmentsForm
           ref={formRef}

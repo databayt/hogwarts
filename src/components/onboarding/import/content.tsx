@@ -92,7 +92,7 @@ export default function ImportContent({ dictionary }: Props) {
         .catch((err) => {
           setState((prev) => ({
             ...prev,
-            error: err instanceof Error ? err.message : "Import failed",
+            error: err instanceof Error ? err.message : dict.importFailed,
             importing: false,
           }))
         })
@@ -100,7 +100,7 @@ export default function ImportContent({ dictionary }: Props) {
       setState({
         uploading: false,
         result: null,
-        error: err instanceof Error ? err.message : "Import failed",
+        error: err instanceof Error ? err.message : dict.importFailed,
         importing: false,
       })
     }
@@ -133,12 +133,9 @@ export default function ImportContent({ dictionary }: Props) {
       <div className="grid grid-cols-1 items-start gap-20 lg:grid-cols-2">
         {/* Left side */}
         <div className="space-y-3 sm:space-y-4">
-          <h1 className="text-3xl font-bold">
-            {dict.importData || "Import your data"}
-          </h1>
+          <h1 className="text-3xl font-bold">{dict.importData}</h1>
           <p className="text-muted-foreground text-sm sm:text-base">
-            {dict.importDescription ||
-              "Upload your student records in any format. You can do it or fine-tune it later."}
+            {dict.importDescription}
           </p>
           <ExpectedFieldsDialog dict={dict} />
         </div>
@@ -147,8 +144,9 @@ export default function ImportContent({ dictionary }: Props) {
         <div className="space-y-6 lg:justify-self-end">
           <DropZone
             type="students"
-            label={dict.students || "Students"}
+            label={dict.students}
             state={students}
+            dict={dict}
             inputRef={studentInputRef}
             onFileChange={(e) => handleFileChange(e, "students")}
             onDrop={(e) => handleDrop(e, "students")}
@@ -158,8 +156,9 @@ export default function ImportContent({ dictionary }: Props) {
 
           <DropZone
             type="teachers"
-            label={dict.teachers || "Teachers"}
+            label={dict.teachers}
             state={teachers}
+            dict={dict}
             inputRef={teacherInputRef}
             onFileChange={(e) => handleFileChange(e, "teachers")}
             onDrop={(e) => handleDrop(e, "teachers")}
@@ -181,6 +180,7 @@ function DropZone({
   onDrop,
   onDragOver,
   onBrowse,
+  dict,
 }: {
   type: ImportType
   label: string
@@ -190,6 +190,7 @@ function DropZone({
   onDrop: (e: React.DragEvent) => void
   onDragOver: (e: React.DragEvent) => void
   onBrowse: () => void
+  dict: any
 }) {
   const hasResult = state.result || state.error
 
@@ -226,25 +227,27 @@ function DropZone({
                       <CheckCircle2 className="h-4 w-4 shrink-0" />
                     )}
                     {state.result.imported}{" "}
-                    {state.importing ? "importing..." : "imported successfully"}
+                    {state.importing
+                      ? dict.importingStatus
+                      : dict.importedSuccessfullyCount}
                   </div>
                 )}
                 {state.result.skipped > 0 && (
                   <div className="text-muted-foreground flex items-center gap-2">
                     <Info className="h-4 w-4 shrink-0" />
-                    {state.result.skipped} skipped (already exist)
+                    {state.result.skipped} {dict.skippedAlreadyExist}
                   </div>
                 )}
                 {state.result.failed > 0 && (
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-red-600">
                       <AlertCircle className="h-4 w-4 shrink-0" />
-                      {state.result.failed} failed
+                      {state.result.failed} {dict.failed}
                     </div>
                     <div className="max-h-[80px] overflow-y-auto rounded border p-2 text-xs">
                       {state.result.errors.map((err, i) => (
                         <div key={i} className="text-muted-foreground py-0.5">
-                          Row {err.row}: {err.error}
+                          {dict.row} {err.row}: {err.error}
                         </div>
                       ))}
                     </div>
@@ -269,7 +272,7 @@ function DropZone({
                   onClick={onBrowse}
                   className="text-muted-foreground hover:text-foreground mt-1 text-xs underline underline-offset-2"
                 >
-                  Upload another file
+                  {dict.uploadAnotherFile}
                 </button>
               </div>
             )}
@@ -290,10 +293,11 @@ function DropZone({
           >
             <Upload className="text-muted-foreground h-5 w-5" />
             <p className="text-sm">
-              Drop <span className="font-semibold">{label}</span> file or browse
+              {dict.dropFile} <span className="font-semibold">{label}</span>{" "}
+              {dict.fileOrBrowse}
             </p>
             <p className="text-muted-foreground/60 text-xs">
-              CSV, Excel, or JSON
+              {dict.csvExcelJson}
             </p>
             <input
               ref={inputRef}
@@ -315,16 +319,16 @@ function ExpectedFieldsDialog({ dict }: { dict: any }) {
       <DialogTrigger asChild>
         <button className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm underline-offset-4 hover:underline">
           <Info className="h-4 w-4" />
-          {dict.seeExpectedFields || "See expected fields"}
+          {dict.seeExpectedFields}
         </button>
       </DialogTrigger>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Expected fields</DialogTitle>
+          <DialogTitle>{dict.expectedFields}</DialogTitle>
         </DialogHeader>
         <div className="space-y-5 text-sm">
           <div>
-            <h4 className="mb-2 font-medium">Students</h4>
+            <h4 className="mb-2 font-medium">{dict.students}</h4>
             <div className="space-y-1">
               <FieldRow name="name" required />
               <FieldRow name="studentId" required />
@@ -343,7 +347,7 @@ function ExpectedFieldsDialog({ dict }: { dict: any }) {
           </div>
 
           <div>
-            <h4 className="mb-2 font-medium">Teachers</h4>
+            <h4 className="mb-2 font-medium">{dict.teachers}</h4>
             <div className="space-y-1">
               <FieldRow name="name" required />
               <FieldRow name="email" required />
@@ -356,11 +360,7 @@ function ExpectedFieldsDialog({ dict }: { dict: any }) {
           </div>
 
           <p className="text-muted-foreground text-xs">
-            Missing fields will be left empty. We auto-detect common column
-            names in English and Arabic (e.g. &quot;Full Name&quot;,
-            &quot;Student Number&quot;, &quot;الاسم&quot;). If your file has
-            &quot;First Name&quot; and &quot;Last Name&quot; columns, they will
-            be combined automatically.
+            {dict.missingFieldsNote}
           </p>
         </div>
       </DialogContent>
@@ -372,7 +372,7 @@ function FieldRow({ name, required }: { name: string; required?: boolean }) {
   return (
     <div className="text-muted-foreground flex items-center gap-2">
       <code className="bg-muted rounded px-1.5 py-0.5 text-xs">{name}</code>
-      {required && <span className="text-xs text-red-500">required</span>}
+      {required && <span className="text-xs text-red-500">*</span>}
     </div>
   )
 }

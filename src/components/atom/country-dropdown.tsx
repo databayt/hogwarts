@@ -33,9 +33,20 @@ interface CountryDropdownProps {
   emptyMessage?: string
   disabled?: boolean
   className?: string
+  locale?: string
 }
 
 const countries = Country.getAllCountries()
+
+function getCountryName(country: ICountry, locale?: string): string {
+  if (!locale || locale === "en") return country.name
+  try {
+    const displayNames = new Intl.DisplayNames([locale], { type: "region" })
+    return displayNames.of(country.isoCode) || country.name
+  } catch {
+    return country.name
+  }
+}
 
 export function CountryDropdown({
   value,
@@ -45,6 +56,7 @@ export function CountryDropdown({
   emptyMessage = "No country found.",
   disabled,
   className,
+  locale,
 }: CountryDropdownProps) {
   const [open, setOpen] = React.useState(false)
 
@@ -76,7 +88,7 @@ export function CountryDropdown({
                   width={16}
                 />
               </span>
-              {selected.name}
+              {getCountryName(selected, locale)}
             </span>
           ) : (
             placeholder
@@ -96,7 +108,7 @@ export function CountryDropdown({
               {countries.map((country) => (
                 <CommandItem
                   key={country.isoCode}
-                  value={country.name}
+                  value={`${country.name} ${getCountryName(country, locale)}`}
                   className="gap-2 px-2"
                   onSelect={() => {
                     onChange?.(country.isoCode, country)
@@ -110,7 +122,9 @@ export function CountryDropdown({
                       width={16}
                     />
                   </span>
-                  <span className="truncate">{country.name}</span>
+                  <span className="truncate">
+                    {getCountryName(country, locale)}
+                  </span>
                   {value === country.isoCode && (
                     <Check className="ms-auto h-3.5 w-3.5 shrink-0" />
                   )}

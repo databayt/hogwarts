@@ -37,6 +37,32 @@ function levelLabel(level: string, lang: Locale): string {
   return labels[level]?.[lang] ?? level
 }
 
+const AR_ORDINALS: Record<number, string> = {
+  1: "الأول",
+  2: "الثاني",
+  3: "الثالث",
+  4: "الرابع",
+  5: "الخامس",
+  6: "السادس",
+  7: "السابع",
+  8: "الثامن",
+  9: "التاسع",
+  10: "العاشر",
+  11: "الحادي عشر",
+  12: "الثاني عشر",
+}
+
+function gradeLabel(grades: number[], lang: Locale): string | null {
+  if (grades.length === 0) return null
+  if (lang === "ar") {
+    if (grades.length === 1)
+      return `الصف ${AR_ORDINALS[grades[0]] ?? grades[0]}`
+    return `الصف ${AR_ORDINALS[grades[0]] ?? grades[0]} - ${AR_ORDINALS[grades[grades.length - 1]] ?? grades[grades.length - 1]}`
+  }
+  if (grades.length === 1) return `Grade ${grades[0]}`
+  return `Grade ${grades[0]}-${grades[grades.length - 1]}`
+}
+
 interface Props {
   subjects: SubjectItem[]
   lang: Locale
@@ -93,6 +119,14 @@ export function SubjectsGrid({ subjects, lang, subdomain }: Props) {
                   >
                     {levelLabel(subject.level, lang)}
                   </Badge>
+                  {subject.grades.length > 0 && (
+                    <Badge
+                      variant="outline"
+                      className="px-1.5 py-0 text-[10px]"
+                    >
+                      {gradeLabel(subject.grades, lang)}
+                    </Badge>
+                  )}
                 </div>
                 {subject.averageRating > 0 && (
                   <StarRating

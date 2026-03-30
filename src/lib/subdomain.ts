@@ -102,8 +102,114 @@ export function normalizeSubdomain(subdomain: string): string {
  * Generates a beautiful, short subdomain from a school name
  * Prioritizes unique meaningful words and creates elegant suggestions
  */
+/**
+ * Transliterates Arabic text to Latin characters for subdomain generation
+ */
+function transliterateArabic(text: string): string {
+  const map: Record<string, string> = {
+    ا: "a",
+    أ: "a",
+    إ: "i",
+    آ: "a",
+    ب: "b",
+    ت: "t",
+    ث: "th",
+    ج: "j",
+    ح: "h",
+    خ: "kh",
+    د: "d",
+    ذ: "th",
+    ر: "r",
+    ز: "z",
+    س: "s",
+    ش: "sh",
+    ص: "s",
+    ض: "d",
+    ط: "t",
+    ظ: "z",
+    ع: "a",
+    غ: "gh",
+    ف: "f",
+    ق: "q",
+    ك: "k",
+    ل: "l",
+    م: "m",
+    ن: "n",
+    ه: "h",
+    و: "w",
+    ي: "y",
+    ى: "a",
+    ة: "a",
+    ئ: "e",
+    ؤ: "o",
+    ء: "",
+    "َ": "a",
+    "ُ": "u",
+    "ِ": "i",
+    "ّ": "",
+    "ْ": "",
+    "ً": "",
+    "ٌ": "",
+    "ٍ": "",
+  }
+
+  // Common Arabic filter words (school, academy, etc.)
+  const arabicFilterWords = [
+    "مدرسة",
+    "أكاديمية",
+    "كلية",
+    "جامعة",
+    "معهد",
+    "مؤسسة",
+    "الدولية",
+    "الوطنية",
+    "الخاصة",
+    "الحكومية",
+    "العامة",
+    "الابتدائية",
+    "الثانوية",
+    "المتوسطة",
+    "الإعدادية",
+    "ال",
+    "و",
+    "في",
+    "من",
+  ]
+
+  // Remove Arabic filter words
+  let cleaned = text
+  for (const word of arabicFilterWords) {
+    cleaned = cleaned.replace(new RegExp(word, "g"), " ")
+  }
+
+  // Transliterate character by character
+  let result = ""
+  for (const char of cleaned) {
+    if (map[char] !== undefined) {
+      result += map[char]
+    } else if (/[a-z0-9\s-]/.test(char)) {
+      result += char
+    } else if (char === " ") {
+      result += " "
+    }
+  }
+
+  return result.replace(/\s+/g, " ").trim()
+}
+
 export function generateSubdomain(schoolName: string): string {
   if (!schoolName) return ""
+
+  // Check if input contains Arabic characters and transliterate
+  const hasArabic = /[\u0600-\u06FF]/.test(schoolName)
+  if (hasArabic) {
+    const transliterated = transliterateArabic(schoolName)
+    if (transliterated) {
+      // Recursively generate subdomain from transliterated text
+      return generateSubdomain(transliterated)
+    }
+    return "school"
+  }
 
   // Common words to filter out (expanded list for better filtering)
   const filterWords = [

@@ -19,6 +19,7 @@ import type { BaseFieldProps } from "../types"
 interface CountryFieldProps extends BaseFieldProps {
   searchPlaceholder?: string
   emptyMessage?: string
+  locale?: string
 }
 
 export function CountryField({
@@ -31,6 +32,7 @@ export function CountryField({
   className,
   searchPlaceholder,
   emptyMessage,
+  locale,
 }: CountryFieldProps) {
   const form = useFormContext()
 
@@ -53,6 +55,7 @@ export function CountryField({
             searchPlaceholder={searchPlaceholder}
             emptyMessage={emptyMessage}
             disabled={disabled}
+            locale={locale}
           />
           {description && <FormDescription>{description}</FormDescription>}
           <FormMessage />

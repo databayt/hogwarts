@@ -55,7 +55,7 @@ export default async function LibraryContent({
   const hiddenBookIds = new Set(hiddenSelections.map((s) => s.catalogBookId))
 
   // Query global catalog books (visible to all schools)
-  const catalogBooks = await db.schoolBook.findMany({
+  const catalogBooks = await db.book.findMany({
     where: {
       ...CATALOG_VISIBLE,
       ...(hiddenBookIds.size > 0

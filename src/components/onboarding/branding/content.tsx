@@ -87,11 +87,8 @@ export default function BrandingContent({ dictionary }: Props) {
     <div className="w-full">
       <FormLayout>
         <FormHeading
-          title={dict.schoolBranding || "Upload your school logo"}
-          description={
-            dict.brandingDescription ||
-            "Add your school's logo to personalize your school-dashboard. This is optional - you can always add it later."
-          }
+          title={dict.uploadSchoolLogo}
+          description={dict.brandingDescription}
         />
         <div className="h-[300px]">
           {!logo ? (
@@ -120,7 +117,7 @@ export default function BrandingContent({ dictionary }: Props) {
               </Button>
               <Image
                 src={logo}
-                alt="School logo"
+                alt={dict.uploadSchoolLogo}
                 width={200}
                 height={200}
                 className="object-contain"

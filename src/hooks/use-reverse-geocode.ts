@@ -5,7 +5,7 @@ import { useCallback, useRef, useState } from "react"
 
 import { reverseGeocode, type LocationResult } from "@/lib/mapbox"
 
-export function useReverseGeocode() {
+export function useReverseGeocode(language?: string) {
   const [loading, setLoading] = useState(false)
   const latestRequestRef = useRef("")
 
@@ -20,7 +20,7 @@ export function useReverseGeocode() {
       setLoading(true)
 
       try {
-        const data = await reverseGeocode(latitude, longitude)
+        const data = await reverseGeocode(latitude, longitude, language)
 
         if (latestRequestRef.current === requestKey) {
           setLoading(false)
@@ -35,7 +35,7 @@ export function useReverseGeocode() {
         return null
       }
     },
-    []
+    [language]
   )
 
   return { geocode, loading }

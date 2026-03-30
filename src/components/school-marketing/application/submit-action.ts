@@ -30,24 +30,31 @@ const submitInputSchema = z.object({
   sessionToken: z.string().min(20).max(100),
 })
 
-const applicationFormDataSchema = z.object({
-  campaignId: z.string().min(1),
-  firstName: z.string().min(1),
-  lastName: z.string().min(1),
-  dateOfBirth: z.string().min(1),
-  gender: z.string().min(1),
-  nationality: z.string().min(1),
-  email: z.string().email(),
-  phone: z.string().min(1),
-  address: z.string().min(1),
-  city: z.string().min(1),
-  state: z.string().min(1),
-  postalCode: z.string(),
-  country: z.string().min(1),
-  fatherName: z.string().min(1),
-  motherName: z.string().min(1),
-  applyingForClass: z.string().min(1),
-})
+const applicationFormDataSchema = z
+  .object({
+    campaignId: z.string().min(1),
+    firstName: z.string().min(1),
+    lastName: z.string().min(1),
+    dateOfBirth: z.string().min(1),
+    gender: z.string().min(1),
+    nationality: z.string().min(1),
+    email: z.string().email(),
+    phone: z.string().min(1),
+    address: z.string().min(1),
+    city: z.string().min(1),
+    state: z.string().min(1),
+    postalCode: z.string(),
+    country: z.string().min(1),
+    fatherName: z.string().optional().or(z.literal("")),
+    motherName: z.string().optional().or(z.literal("")),
+    applyingForClass: z.string().min(1),
+  })
+  .refine(
+    (data) =>
+      (data.fatherName && data.fatherName.length >= 1) ||
+      (data.motherName && data.motherName.length >= 1),
+    { message: "At least one parent name is required", path: ["fatherName"] }
+  )
 
 export async function submitApplicationAction(
   subdomain: string,
@@ -70,7 +77,13 @@ export async function submitApplicationAction(
     // Validate required ApplicationFormData fields instead of unsafe cast
     const formResult = applicationFormDataSchema.safeParse(dataWithCampaign)
     if (!formResult.success) {
-      return { success: false, error: "INVALID_INPUT" }
+      const missingFields = formResult.error.issues
+        .map((issue) => issue.path.join("."))
+        .join(", ")
+      return {
+        success: false,
+        error: `INVALID_INPUT: ${missingFields}`,
+      }
     }
 
     // Safe to treat as ApplicationFormData now that required fields are validated

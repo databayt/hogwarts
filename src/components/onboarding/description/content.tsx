@@ -77,17 +77,13 @@ export default function DescriptionContent({ dictionary }: Props) {
       <FormHeading
         title={
           step === "type"
-            ? (dict.describeEducationModel || "Describe your school's") +
-              "\n" +
-              (dict.educationModel || "education model")
-            : dict.selectGradeLevels || "Select your grade levels"
+            ? dict.describeEducationModel + "\n" + dict.educationModel
+            : dict.selectGradeLevels
         }
         description={
           step === "type"
-            ? dict.selectSchoolTypeDescription ||
-              "Select the type that best describes your school's educational approach and governance structure."
-            : dict.selectGradeLevelsDescription ||
-              "Choose the academic levels your school serves."
+            ? dict.selectSchoolTypeDescription
+            : dict.selectGradeLevelsDescription
         }
       />
       <DescriptionForm

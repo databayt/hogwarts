@@ -17,6 +17,7 @@ import {
   TextareaField,
 } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { updateTeacherExperiences } from "./actions"
 import { experiencesSchema, type ExperiencesFormData } from "./validation"
@@ -30,6 +31,12 @@ interface ExperienceFormProps {
 export const ExperienceForm = forwardRef<WizardFormRef, ExperienceFormProps>(
   ({ teacherId, initialData, onValidChange }, ref) => {
     const [isPending, startTransition] = useTransition()
+    const { dictionary } = useDictionary()
+    const teachers = (dictionary?.school as Record<string, unknown>)
+      ?.teachers as Record<string, unknown> | undefined
+    const wizard = teachers?.wizard as Record<string, unknown> | undefined
+    const t = wizard?.experience as Record<string, string> | undefined
+    const tWizard = wizard as Record<string, string> | undefined
 
     const form = useForm<ExperiencesFormData>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -56,19 +63,26 @@ export const ExperienceForm = forwardRef<WizardFormRef, ExperienceFormProps>(
             try {
               const valid = await form.trigger()
               if (!valid) {
-                reject(new Error("Validation failed"))
+                reject(
+                  new Error(tWizard?.validationFailed || "Validation failed")
+                )
                 return
               }
               const data = form.getValues()
               const result = await updateTeacherExperiences(teacherId, data)
               if (!result.success) {
-                ErrorToast(result.error || "Failed to save")
+                ErrorToast(
+                  result.error || tWizard?.failedToSave || "Failed to save"
+                )
                 reject(new Error(result.error))
                 return
               }
               resolve()
             } catch (err) {
-              const msg = err instanceof Error ? err.message : "Failed to save"
+              const msg =
+                err instanceof Error
+                  ? err.message
+                  : tWizard?.failedToSave || "Failed to save"
               ErrorToast(msg)
               reject(err)
             }
@@ -81,7 +95,9 @@ export const ExperienceForm = forwardRef<WizardFormRef, ExperienceFormProps>(
         <form className="space-y-6">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h4 className="font-medium">Work Experience</h4>
+              <h4 className="font-medium">
+                {t?.workExperience || "Work Experience"}
+              </h4>
               <Button
                 type="button"
                 variant="outline"
@@ -99,7 +115,7 @@ export const ExperienceForm = forwardRef<WizardFormRef, ExperienceFormProps>(
                 disabled={isPending}
               >
                 <Plus className="me-1 h-4 w-4" />
-                Add Experience
+                {t?.addExperience || "Add Experience"}
               </Button>
             </div>
 
@@ -116,21 +132,26 @@ export const ExperienceForm = forwardRef<WizardFormRef, ExperienceFormProps>(
                       <div className="grid grid-cols-3 gap-4">
                         <InputField
                           name={`experiences.${index}.institution`}
-                          label="Institution"
-                          placeholder="Previous school or organization"
+                          label={t?.institution || "Institution"}
+                          placeholder={
+                            t?.institutionPlaceholder ||
+                            "Previous school or organization"
+                          }
                           required
                           disabled={isPending}
                         />
                         <InputField
                           name={`experiences.${index}.position`}
-                          label="Position"
-                          placeholder="Job title or role"
+                          label={t?.position || "Position"}
+                          placeholder={
+                            t?.positionPlaceholder || "Job title or role"
+                          }
                           required
                           disabled={isPending}
                         />
                         <DateField
                           name={`experiences.${index}.startDate`}
-                          label="Start Date"
+                          label={t?.startDate || "Start Date"}
                           disabled={isPending}
                         />
                       </div>
@@ -148,21 +169,26 @@ export const ExperienceForm = forwardRef<WizardFormRef, ExperienceFormProps>(
                   </div>
                   <CheckboxField
                     name={`experiences.${index}.isCurrent`}
-                    label="Current Position"
-                    checkboxLabel="I currently work here"
+                    label={t?.currentPosition || "Current Position"}
+                    checkboxLabel={
+                      t?.currentlyWorkHere || "I currently work here"
+                    }
                     disabled={isPending}
                   />
                   {!isCurrent && (
                     <DateField
                       name={`experiences.${index}.endDate`}
-                      label="End Date"
+                      label={t?.endDate || "End Date"}
                       disabled={isPending}
                     />
                   )}
                   <TextareaField
                     name={`experiences.${index}.description`}
-                    label="Description"
-                    placeholder="Responsibilities, achievements..."
+                    label={t?.description || "Description"}
+                    placeholder={
+                      t?.descriptionPlaceholder ||
+                      "Responsibilities, achievements..."
+                    }
                     disabled={isPending}
                   />
                 </div>

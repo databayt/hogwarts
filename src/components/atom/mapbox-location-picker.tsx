@@ -17,6 +17,7 @@ import { useReverseGeocode } from "@/hooks/use-reverse-geocode"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 import "mapbox-gl/dist/mapbox-gl.css"
 
@@ -48,14 +49,34 @@ export function MapboxLocationPicker({
   const [showResults, setShowResults] = useState(false)
   const [gpsLoading, setGpsLoading] = useState(false)
 
+  const { locale, isRTL } = useLocale()
   const {
     query,
     setQuery,
     results,
     loading: searchLoading,
     clearResults,
-  } = useMapboxSearch()
-  const { geocode, loading: geocodeLoading } = useReverseGeocode()
+  } = useMapboxSearch(300, locale)
+  const { geocode, loading: geocodeLoading } = useReverseGeocode(locale)
+
+  // Load Mapbox RTL text plugin for Arabic/Hebrew label rendering
+  useEffect(() => {
+    if (
+      isRTL &&
+      !(mapboxgl as any).getRTLTextPluginStatus?.() &&
+      typeof (mapboxgl as any).setRTLTextPlugin === "function"
+    ) {
+      try {
+        ;(mapboxgl as any).setRTLTextPlugin(
+          "https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-rtl-text/v0.3.0/mapbox-gl-rtl-text.js",
+          null,
+          true
+        )
+      } catch {
+        // Plugin may already be loaded
+      }
+    }
+  }, [isRTL])
 
   // Stable ref for onChange to avoid map re-init
   const onChangeRef = useRef(onChange)
@@ -93,6 +114,7 @@ export function MapboxLocationPicker({
       zoom: value ? 15 : DEFAULT_ZOOM,
       projection: "globe",
       attributionControl: false,
+      locale: locale === "ar" ? { "Map.Title": "خريطة" } : undefined,
       config: {
         basemap: {
           theme: "faded",
@@ -105,6 +127,13 @@ export function MapboxLocationPicker({
           showRoadLabels: true,
         },
       },
+    })
+
+    // Set map language for labels
+    map.on("style.load", () => {
+      if (locale === "ar") {
+        map.setLanguage("ar")
+      }
     })
 
     map.on("load", () => {

@@ -99,6 +99,8 @@ interface Props {
   subdomain: string
   subjectSlug: string
   catalogSubjectId: string
+  textbookPdfUrl: string | null
+  textbookCoverUrl: string | null
 }
 
 // ---------------------------------------------------------------------------
@@ -194,6 +196,8 @@ export function CatalogContentSections({
   subdomain,
   subjectSlug,
   catalogSubjectId,
+  textbookPdfUrl,
+  textbookCoverUrl,
 }: Props) {
   // This component needs dictionary passed as prop - for now use useDictionary
   // since it's a client component that doesn't receive dictionary prop
@@ -259,10 +263,13 @@ export function CatalogContentSections({
       presentation: cat?.assignmentTypes?.presentation || "Presentation",
       seeAll: cat?.seeAll || "See all",
       exploreQBank: cat?.exploreQBank || "Explore QBank",
+      textbook: cat?.textbook || "Textbook",
+      openTextbook: cat?.openTextbook || "Open Textbook",
     }),
     [cat]
   )
 
+  const hasTextbook = !!textbookPdfUrl
   const hasVideos = data.videos.length > 0
   const hasMaterials = data.materials.length > 0
   const hasExams = data.exams.length > 0
@@ -270,6 +277,7 @@ export function CatalogContentSections({
   const hasAssignments = data.assignments.length > 0
 
   if (
+    !hasTextbook &&
     !hasVideos &&
     !hasMaterials &&
     !hasExams &&
@@ -283,6 +291,45 @@ export function CatalogContentSections({
 
   return (
     <div className="mt-8 space-y-8">
+      {hasTextbook && (
+        <ContentSection title={t.textbook} accentColor={accentColor}>
+          <a
+            href={textbookPdfUrl!}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group hover:bg-accent flex w-fit items-center gap-4 rounded-xl border p-3 transition-colors"
+          >
+            {textbookCoverUrl ? (
+              <Image
+                src={textbookCoverUrl}
+                alt={t.textbook}
+                width={80}
+                height={112}
+                className="rounded-md object-cover"
+                unoptimized
+              />
+            ) : (
+              <div
+                className="flex size-20 items-center justify-center rounded-md"
+                style={{ backgroundColor: `${accentColor}20` }}
+              >
+                <BookOpen className="size-8" style={{ color: accentColor }} />
+              </div>
+            )}
+            <div className="space-y-1">
+              <p className="text-sm font-semibold">{name}</p>
+              <p
+                className="flex items-center gap-1.5 text-xs font-medium"
+                style={{ color: accentColor }}
+              >
+                <BookOpen className="size-3.5" />
+                {t.openTextbook}
+              </p>
+            </div>
+          </a>
+        </ContentSection>
+      )}
+
       {hasVideos && (
         <ContentSection
           title={t.videos}

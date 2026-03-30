@@ -53,12 +53,12 @@ export default async function AttendanceLayout({ children, params }: Props) {
     },
     { name: d?.excuses || "Excuses", href: `${basePath}/excuses` },
     {
-      name: d?.earlyWarning || "Early Warning",
+      name: d?.earlyWarning?.title || "Early Warning",
       href: `${basePath}/early-warning`,
       hidden: !isStaff,
     },
     {
-      name: d?.interventions || "Interventions",
+      name: d?.interventions?.title || "Interventions",
       href: `${basePath}/interventions`,
       hidden: !isStaff,
     },

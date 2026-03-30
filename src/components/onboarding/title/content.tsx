@@ -82,15 +82,8 @@ export default function TitleContent({ dictionary }: Props) {
   return (
     <FormLayout>
       <FormHeading
-        title={
-          (dict.nameYourSchool || "Name your") +
-          "\n" +
-          (dict.school || "school")
-        }
-        description={
-          dict.schoolNameDescription ||
-          "Choose a clear name that families will recognize. You can always change it later."
-        }
+        title={dict.nameYourSchool + "\n" + dict.nameYourSchoolBreak}
+        description={dict.schoolNameDescription}
       />
       <TitleForm
         ref={formRef}

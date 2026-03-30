@@ -132,15 +132,14 @@ const LegalContent = (props: Props) => {
           showModal={showSuccessModal}
           setShowModal={setShowSuccessModal}
           onGoToDashboard={handleGoToDashboard}
+          dictionary={dictionary}
         />
       )}
 
       <div>
         {/* Title at the top */}
         <div className="mb-6 sm:mb-8">
-          <h1 className="text-3xl font-bold">
-            {dict.shareSafetyDetails || "Share safety details"}
-          </h1>
+          <h1 className="text-3xl font-bold">{dict.shareSafetyDetails}</h1>
         </div>
 
         {/* Two sections side by side */}
@@ -148,10 +147,7 @@ const LegalContent = (props: Props) => {
           {/* Left column - Hosting type */}
           <div className="lg:col-span-2">
             <div className="mb-3 flex items-center gap-2 sm:mb-4">
-              <h5 className="text-foreground">
-                {dict.operationalStatus ||
-                  "What is your school's operational status?"}
-              </h5>
+              <h5 className="text-foreground">{dict.operationalStatus}</h5>
               <HelpCircle
                 size={16}
                 className="text-muted-foreground sm:h-4.5 sm:w-4.5"
@@ -182,8 +178,7 @@ const LegalContent = (props: Props) => {
                   )}
                 </div>
                 <small className="text-foreground">
-                  {dict.existingSchoolLicenses ||
-                    "Existing school with valid licenses"}
+                  {dict.existingSchoolLicenses}
                 </small>
               </label>
 
@@ -210,8 +205,7 @@ const LegalContent = (props: Props) => {
                   )}
                 </div>
                 <small className="text-foreground">
-                  {dict.newSchoolRegistration ||
-                    "New school seeking registration"}
+                  {dict.newSchoolRegistration}
                 </small>
               </label>
             </div>
@@ -222,10 +216,7 @@ const LegalContent = (props: Props) => {
             {/* Safety Features */}
             <div>
               <div className="mb-3 flex items-center gap-2">
-                <h5 className="text-foreground">
-                  {dict.schoolSafetyFeatures ||
-                    "Does your school have any of these?"}
-                </h5>
+                <h5 className="text-foreground">{dict.schoolSafetyFeatures}</h5>
                 <HelpCircle
                   size={16}
                   className="text-muted-foreground sm:h-4.5 sm:w-4.5"
@@ -236,7 +227,7 @@ const LegalContent = (props: Props) => {
                 {safetyOptions.map((option) => (
                   <label
                     key={option}
-                    className="flex cursor-pointer items-center justify-between rtl:flex-row-reverse"
+                    className="flex cursor-pointer items-center justify-between"
                   >
                     <small className="text-foreground">{option}</small>
                     <input
@@ -246,7 +237,7 @@ const LegalContent = (props: Props) => {
                       className="sr-only"
                     />
                     <div
-                      className={`flex h-4 w-4 items-center justify-center rounded border-2 ${
+                      className={`flex h-4 w-4 flex-shrink-0 items-center justify-center rounded border-2 ${
                         safetyFeatures.includes(option)
                           ? "border-foreground bg-foreground"
                           : "border-muted-foreground bg-background"
@@ -275,24 +266,16 @@ const LegalContent = (props: Props) => {
 
             {/* Important Information */}
             <div className="space-y-3">
-              <h6 className="text-foreground">
-                {dict.importantThingsToKnow || "Important things to know"}
-              </h6>
+              <h6 className="text-foreground">{dict.importantThingsToKnow}</h6>
               <small className="text-muted-foreground block leading-relaxed">
-                {dict.complianceNotice || "Be sure to comply with your"}{" "}
+                {dict.complianceNotice}{" "}
+                <span className="underline">{dict.localEducationLaws}</span>{" "}
+                {dict.andReviewOur}{" "}
                 <span className="underline">
-                  {dict.localEducationLaws || "local education laws"}
+                  {dict.schoolRegistrationGuidelines}
                 </span>{" "}
-                {dict.andReviewOur || "and review our"}{" "}
-                <span className="underline">
-                  {dict.schoolRegistrationGuidelines ||
-                    "school registration guidelines"}
-                </span>{" "}
-                {dict.and || "and"}{" "}
-                <span className="underline">
-                  {dict.feeStructure || "fee structure"}
-                </span>
-                .
+                {dict.and}{" "}
+                <span className="underline">{dict.feeStructure}</span>.
               </small>
             </div>
           </div>

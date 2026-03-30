@@ -16,29 +16,10 @@ import { ErrorToast } from "@/components/atom/toast"
 import { useUpload } from "@/components/file/upload/use-upload"
 import { FileUploadField } from "@/components/form/atoms/file-upload"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { updateTeacherAttachments } from "./actions"
 import { attachmentsSchema, type AttachmentsFormData } from "./validation"
-
-const ATTACHMENT_SLOTS = [
-  {
-    key: "degreeUrl" as const,
-    label: "Degree",
-    icon: asset("/icons/degree.png"),
-  },
-  {
-    key: "resumeUrl" as const,
-    label: "Resume",
-    icon: asset("/icons/resume.png"),
-  },
-  { key: "idUrl" as const, label: "ID", icon: asset("/icons/id.png") },
-  {
-    key: "certificationUrl" as const,
-    label: "Certification",
-    icon: asset("/icons/transcript.png"),
-  },
-  { key: "otherUrl" as const, label: "Other", icon: asset("/icons/files.png") },
-]
 
 /**
  * A single document upload card — the entire box is the drop target.
@@ -116,6 +97,40 @@ interface AttachmentsFormProps {
 export const AttachmentsForm = forwardRef<WizardFormRef, AttachmentsFormProps>(
   ({ teacherId, initialData, onValidChange }, ref) => {
     const [isPending, startTransition] = useTransition()
+    const { dictionary } = useDictionary()
+    const teachers = (dictionary?.school as Record<string, unknown>)
+      ?.teachers as Record<string, unknown> | undefined
+    const wizard = teachers?.wizard as Record<string, unknown> | undefined
+    const t = wizard?.attachments as Record<string, string> | undefined
+    const tWizard = wizard as Record<string, string> | undefined
+
+    const attachmentSlots = [
+      {
+        key: "degreeUrl" as const,
+        label: t?.degree || "Degree",
+        icon: asset("/icons/degree.png"),
+      },
+      {
+        key: "resumeUrl" as const,
+        label: t?.resume || "Resume",
+        icon: asset("/icons/resume.png"),
+      },
+      {
+        key: "idUrl" as const,
+        label: t?.id || "ID",
+        icon: asset("/icons/id.png"),
+      },
+      {
+        key: "certificationUrl" as const,
+        label: t?.certification || "Certification",
+        icon: asset("/icons/transcript.png"),
+      },
+      {
+        key: "otherUrl" as const,
+        label: t?.other || "Other",
+        icon: asset("/icons/files.png"),
+      },
+    ]
 
     const form = useForm<AttachmentsFormData>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -143,13 +158,18 @@ export const AttachmentsForm = forwardRef<WizardFormRef, AttachmentsFormProps>(
               const data = form.getValues()
               const result = await updateTeacherAttachments(teacherId, data)
               if (!result.success) {
-                ErrorToast(result.error || "Failed to save")
+                ErrorToast(
+                  result.error || tWizard?.failedToSave || "Failed to save"
+                )
                 reject(new Error(result.error))
                 return
               }
               resolve()
             } catch (err) {
-              const msg = err instanceof Error ? err.message : "Failed to save"
+              const msg =
+                err instanceof Error
+                  ? err.message
+                  : tWizard?.failedToSave || "Failed to save"
               ErrorToast(msg)
               reject(err)
             }
@@ -178,13 +198,13 @@ export const AttachmentsForm = forwardRef<WizardFormRef, AttachmentsFormProps>(
                 format: "webp",
               }}
               disabled={isPending}
-              placeholder="Photo"
+              placeholder={t?.photo || "Photo"}
               placeholderImage={asset("/icons/image.png")}
             />
           </div>
 
           {/* Document slots — entire card is clickable */}
-          {ATTACHMENT_SLOTS.map(({ key, label, icon }) => (
+          {attachmentSlots.map(({ key, label, icon }) => (
             <DocumentCard
               key={key}
               name={key}

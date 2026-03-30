@@ -78,7 +78,7 @@ export function DescriptionForm({
         if (result.success) {
           onSuccess?.()
         } else {
-          setError(result.error || "Failed to update school description")
+          setError(result.error || dict.unexpectedError)
           if (result.errors) {
             Object.entries(result.errors).forEach(([field, message]) => {
               form.setError(field as keyof DescriptionFormData, { message })
@@ -86,7 +86,7 @@ export function DescriptionForm({
           }
         }
       } catch (err) {
-        setError("An unexpected error occurred")
+        setError(dict.unexpectedError)
       }
     })
   }
@@ -94,27 +94,27 @@ export function DescriptionForm({
   const schoolTypes = [
     {
       id: "private",
-      title: dict.privateSchool || "Private",
+      title: dict.privateSchool,
       image: asset("/illustrations/private.png"),
     },
     {
       id: "public",
-      title: dict.publicSchool || "Public",
+      title: dict.publicSchool,
       image: asset("/illustrations/onboarding-public.png"),
     },
     {
       id: "international",
-      title: dict.internationalSchool || "International",
+      title: dict.internationalSchool,
       image: asset("/illustrations/international.png"),
     },
     {
       id: "technical",
-      title: dict.technicalSchool || "Technical",
+      title: dict.technicalSchool,
       image: asset("/illustrations/techincal.png"),
     },
     {
       id: "special",
-      title: dict.specialSchool || "Special",
+      title: dict.specialSchool,
       image: asset("/illustrations/espical.png"),
     },
   ]
@@ -122,20 +122,20 @@ export function DescriptionForm({
   const schoolLevels = [
     {
       id: "primary" as const,
-      title: dict.primaryLevel || "Primary",
-      subtitle: dict.primaryGrades || "Grades 1-6",
+      title: dict.primaryLevel,
+      subtitle: dict.primaryGrades,
       icon: School,
     },
     {
       id: "secondary" as const,
-      title: dict.secondaryLevel || "Secondary",
-      subtitle: dict.secondaryGrades || "Grades 7-12",
+      title: dict.secondaryLevel,
+      subtitle: dict.secondaryGrades,
       icon: GraduationCap,
     },
     {
       id: "both" as const,
-      title: dict.bothLevels || "Both",
-      subtitle: dict.bothGrades || "Grades 1-12",
+      title: dict.bothLevels,
+      subtitle: dict.bothGrades,
       icon: Layers,
     },
   ]
