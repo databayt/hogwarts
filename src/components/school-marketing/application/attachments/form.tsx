@@ -259,7 +259,7 @@ export const AttachmentsForm = forwardRef<
     }
     const result = await saveAttachmentsStep(data)
 
-    if (!result.success) throw new Error(result.error || "Failed to save")
+    if (!result.success) throw new Error(result.error || "SAVE_FAILED")
 
     if (result.data) {
       updateStepData("attachments", result.data as AttachmentsStepData)

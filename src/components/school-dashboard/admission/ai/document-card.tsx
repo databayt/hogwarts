@@ -40,6 +40,7 @@ export function DocumentCard({
 }: DocumentCardProps) {
   const [isPending, startTransition] = useTransition()
   const isImage = /\.(jpe?g|png|gif|webp|bmp|svg)$/i.test(doc.url || "")
+  const isPdf = /\.pdf$/i.test(doc.url || "")
 
   const statusMap: Record<
     string,
@@ -70,6 +71,13 @@ export function DocumentCard({
             src={doc.url}
             alt={doc.fileName || `Document ${index + 1}`}
             className="h-full w-full object-cover"
+          />
+        ) : isPdf ? (
+          <iframe
+            src={`${doc.url}#page=1&view=FitH`}
+            title={doc.fileName || `Document ${index + 1}`}
+            className="pointer-events-none h-full w-full scale-100"
+            tabIndex={-1}
           />
         ) : (
           <FileText className="text-muted-foreground h-10 w-10" />

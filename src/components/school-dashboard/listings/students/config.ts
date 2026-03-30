@@ -3,12 +3,6 @@
 
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
-/** Default gender options (English fallback) */
-export const GENDER_OPTIONS = [
-  { label: "Male", value: "male" },
-  { label: "Female", value: "female" },
-] as const
-
 /** Dictionary-driven gender options */
 export function getGenderOptions(
   dictionary?: Dictionary["school"]["students"]
@@ -19,9 +13,3 @@ export function getGenderOptions(
     { label: info?.female || "Female", value: "female" },
   ]
 }
-
-/** Simple lang-based gender options */
-export const getGenderOptionsByLang = (lang?: string) => [
-  { value: "male", label: lang === "ar" ? "ذكر" : "Male" },
-  { value: "female", label: lang === "ar" ? "أنثى" : "Female" },
-]

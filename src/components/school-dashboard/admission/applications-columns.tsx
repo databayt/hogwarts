@@ -15,9 +15,6 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { ErrorToast, SuccessToast } from "@/components/atom/toast"
@@ -132,6 +129,7 @@ function ApplicationActionsCell({
     { value: "SELECTED", label: t?.status?.SELECTED || "Selected" },
     { value: "WAITLISTED", label: t?.status?.WAITLISTED || "Waitlisted" },
     { value: "REJECTED", label: t?.status?.REJECTED || "Rejected" },
+    { value: "WITHDRAWN", label: t?.status?.WITHDRAWN || "Withdrawn" },
   ]
 
   const statusOptions = allStatusOptions.filter((opt) =>
@@ -154,11 +152,12 @@ function ApplicationActionsCell({
         <DropdownMenuItem onClick={onView}>
           {t?.applications?.viewDetails || "View Details"}
         </DropdownMenuItem>
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger>
-            {t?.applications?.updateStatus || "Update Status"}
-          </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent>
+        {statusOptions.length > 0 && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel className="text-muted-foreground text-xs font-normal">
+              {t?.applications?.updateStatus || "Update Status"}
+            </DropdownMenuLabel>
             {statusOptions.map((opt) => (
               <DropdownMenuItem
                 key={opt.value}
@@ -167,8 +166,9 @@ function ApplicationActionsCell({
                 {opt.label}
               </DropdownMenuItem>
             ))}
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
+          </>
+        )}
+        <DropdownMenuSeparator />
         <DropdownMenuItem onClick={onSendEmail}>
           {t?.applications?.sendEmail || "Send Email"}
         </DropdownMenuItem>

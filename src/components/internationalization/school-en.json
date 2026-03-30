@@ -1546,6 +1546,7 @@
         "genderRequired": "Gender is required",
         "fullName": "Full Name",
         "fullNamePlaceholder": "Enter full name",
+        "fullNameRequired": "Full name is required",
         "nationality": "Nationality",
         "nationalityPlaceholder": "Select nationality"
       },
@@ -8835,7 +8836,8 @@
         "cashLabel": "Pay at School",
         "cashDesc": "Pay in cash at the school office",
         "bankTransferLabel": "Bank Transfer",
-        "bankTransferDesc": "Transfer to the school bank account"
+        "bankTransferDesc": "Transfer to the school bank account",
+        "paymentAlreadyRecorded": "Payment has already been recorded for this application"
       },
       "validation": {
         "nameMin": "Name must be at least 3 characters",

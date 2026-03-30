@@ -129,15 +129,16 @@ export function ApplicationsTable({
     return { label, variant: getStatusVariant(status) as any }
   }
 
+  const tb = t?.toolbar
   const toolbarTranslations = {
     search: t?.applications?.searchPlaceholder || "Search applications...",
     create: "",
-    reset: "Reset",
-    tableView: "Table",
-    gridView: "Grid",
+    reset: tb?.reset || "Reset",
+    tableView: tb?.tableView || "Table",
+    gridView: tb?.gridView || "Grid",
     export: t?.applications?.export || "Export",
-    exportCSV: "Export CSV",
-    exporting: "Exporting...",
+    exportCSV: tb?.exportCSV || "Export CSV",
+    exporting: tb?.exporting || "Exporting...",
   }
 
   return (

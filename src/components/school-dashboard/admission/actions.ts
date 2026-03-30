@@ -28,6 +28,57 @@ import {
   type CampaignFormData,
 } from "./validation"
 
+// Bilingual notification messages (keyed by lang)
+const NOTIF = {
+  statusUpdate: {
+    title: { ar: "تحديث حالة الطلب", en: "Application Status Update" },
+    SHORTLISTED: {
+      ar: "تم إدراجك في القائمة المختصرة",
+      en: "You have been shortlisted",
+    },
+    SELECTED: {
+      ar: "تهانينا! تم قبولك. يرجى إكمال عملية الدفع لتأكيد التسجيل",
+      en: "Congratulations! You have been accepted. Please complete payment to confirm enrollment.",
+    },
+    REJECTED: {
+      ar: "نأسف، لم يتم قبول طلبك",
+      en: "We regret to inform you that your application was not accepted",
+    },
+    WAITLISTED: {
+      ar: "تم وضعك في قائمة الانتظار",
+      en: "You have been placed on the waiting list",
+    },
+    fallback: (status: string) => ({
+      ar: `حالة الطلب: ${status}`,
+      en: `Application status: ${status}`,
+    }),
+  },
+  enrollment: {
+    title: { ar: "تم تأكيد القبول", en: "Enrollment Confirmed" },
+    body: (enrollmentNumber: string) => ({
+      ar: `تهانينا! تم تأكيد تسجيلك بالمدرسة. رقم التسجيل: ${enrollmentNumber}`,
+      en: `Congratulations! Your enrollment has been confirmed. Enrollment #: ${enrollmentNumber}`,
+    }),
+  },
+  feeDue: {
+    title: { ar: "رسوم دراسية جديدة", en: "New Tuition Fees" },
+    body: (count: number, total: string) => ({
+      ar: `تم تعيين ${count} رسوم بقيمة ${total} لحسابك`,
+      en: `${count} fee(s) totaling ${total} have been assigned to your account`,
+    }),
+  },
+  guardianEnrollment: {
+    title: { ar: "تم تأكيد القبول", en: "Enrollment Confirmed" },
+    body: (name: string) => ({
+      ar: `تم تأكيد تسجيل ${name} في المدرسة`,
+      en: `${name} has been enrolled in the school`,
+    }),
+  },
+} as const
+
+const t = (msg: { ar: string; en: string }, lang: string) =>
+  lang === "en" ? msg.en : msg.ar
+
 // ============================================================================
 // Campaign Actions
 // ============================================================================
@@ -42,10 +93,13 @@ export async function getCampaigns(params: {
   try {
     const session = await auth()
     const schoolId = session?.user?.schoolId
+    const role = session?.user?.role
 
-    if (!schoolId) {
+    if (!schoolId || !role) {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
+
+    assertAdmissionPermission(role, "viewApplications")
 
     const result = await getCampaignsList(schoolId, params)
 
@@ -278,10 +332,13 @@ export async function getApplications(params: {
   try {
     const session = await auth()
     const schoolId = session?.user?.schoolId
+    const role = session?.user?.role
 
-    if (!schoolId) {
+    if (!schoolId || !role) {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
+
+    assertAdmissionPermission(role, "viewApplications")
 
     const result = await getApplicationsList(schoolId, params)
 
@@ -389,25 +446,29 @@ export async function updateApplicationStatus(params: {
       },
     })
     if (application?.userId) {
-      const statusMessages: Record<string, string> = {
-        SHORTLISTED: "تم إدراجك في القائمة المختصرة",
-        SELECTED: "تهانينا! تم قبولك. يرجى إكمال عملية الدفع لتأكيد التسجيل",
-        REJECTED: "نأسف، لم يتم قبول طلبك",
-        WAITLISTED: "تم وضعك في قائمة الانتظار",
-      }
-      const statusMessage =
-        statusMessages[params.status] || `حالة الطلب: ${params.status}`
       const school = await db.school.findFirst({
         where: { id: schoolId },
         select: { preferredLanguage: true },
       })
+      const notifLang = school?.preferredLanguage ?? "ar"
+      const statusMsgMap: Record<string, { ar: string; en: string }> = {
+        SHORTLISTED: NOTIF.statusUpdate.SHORTLISTED,
+        SELECTED: NOTIF.statusUpdate.SELECTED,
+        REJECTED: NOTIF.statusUpdate.REJECTED,
+        WAITLISTED: NOTIF.statusUpdate.WAITLISTED,
+      }
+      const statusMessage = t(
+        statusMsgMap[params.status] ||
+          NOTIF.statusUpdate.fallback(params.status),
+        notifLang
+      )
       dispatchNotification({
         schoolId,
         userId: application.userId,
         type: "system_alert",
-        title: "تحديث حالة الطلب",
+        title: t(NOTIF.statusUpdate.title, notifLang),
         body: statusMessage,
-        lang: school?.preferredLanguage ?? "ar",
+        lang: notifLang,
         priority: params.status === "SELECTED" ? "high" : "normal",
         channels: ["in_app", "email"],
         metadata: {
@@ -446,10 +507,13 @@ export async function getMeritListData(params: {
   try {
     const session = await auth()
     const schoolId = session?.user?.schoolId
+    const role = session?.user?.role
 
-    if (!schoolId) {
+    if (!schoolId || !role) {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
+
+    assertAdmissionPermission(role, "viewApplications")
 
     const result = await getMeritList(schoolId, params)
 
@@ -541,10 +605,13 @@ export async function getEnrollmentData(params: {
   try {
     const session = await auth()
     const schoolId = session?.user?.schoolId
+    const role = session?.user?.role
 
-    if (!schoolId) {
+    if (!schoolId || !role) {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
+
+    assertAdmissionPermission(role, "viewApplications")
 
     const result = await getEnrollmentList(schoolId, params)
 
@@ -1138,8 +1205,8 @@ export async function confirmEnrollment(params: {
         schoolId,
         userId: effectiveUserId,
         type: "account_created",
-        title: "تم تأكيد القبول",
-        body: `تهانينا! تم تأكيد تسجيلك بالمدرسة. رقم التسجيل: ${enrollmentNumber}`,
+        title: t(NOTIF.enrollment.title, schoolLang),
+        body: t(NOTIF.enrollment.body(enrollmentNumber), schoolLang),
         lang: schoolLang,
         priority: "high",
         channels: ["in_app", "email"],
@@ -1173,8 +1240,14 @@ export async function confirmEnrollment(params: {
             schoolId,
             userId: effectiveUserId,
             type: "fee_due",
-            title: "رسوم دراسية جديدة",
-            body: `تم تعيين ${pendingFees.length} رسوم بقيمة ${totalAmount.toLocaleString()} لحسابك`,
+            title: t(NOTIF.feeDue.title, schoolLang),
+            body: t(
+              NOTIF.feeDue.body(
+                pendingFees.length,
+                totalAmount.toLocaleString()
+              ),
+              schoolLang
+            ),
             lang: schoolLang,
             priority: "high",
             channels: ["in_app", "email"],
@@ -1203,12 +1276,16 @@ export async function confirmEnrollment(params: {
         })
         for (const link of guardianLinks) {
           if (link.guardian?.userId) {
+            const studentFullName = `${application.firstName} ${application.lastName}`
             dispatchNotification({
               schoolId,
               userId: link.guardian.userId,
               type: "account_created",
-              title: "تم تأكيد القبول",
-              body: `تم تأكيد تسجيل ${application.firstName} ${application.lastName} في المدرسة`,
+              title: t(NOTIF.guardianEnrollment.title, schoolLang),
+              body: t(
+                NOTIF.guardianEnrollment.body(studentFullName),
+                schoolLang
+              ),
               lang: schoolLang,
               priority: "high",
               channels: ["in_app", "email"],

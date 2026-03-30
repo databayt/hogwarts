@@ -39,6 +39,7 @@ const ALL_STATUS_OPTIONS = [
   { value: "SELECTED", fallback: "Selected" },
   { value: "WAITLISTED", fallback: "Waitlisted" },
   { value: "REJECTED", fallback: "Rejected" },
+  { value: "WITHDRAWN", fallback: "Withdrawn" },
 ] as const
 
 // Must match VALID_TRANSITIONS in actions.ts

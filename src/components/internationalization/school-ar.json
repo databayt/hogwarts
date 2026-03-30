@@ -1546,6 +1546,7 @@
         "genderRequired": "الجنس مطلوب",
         "fullName": "الاسم الكامل",
         "fullNamePlaceholder": "أدخل الاسم الكامل",
+        "fullNameRequired": "الاسم الكامل مطلوب",
         "nationality": "الجنسية",
         "nationalityPlaceholder": "اختر الجنسية"
       },
@@ -8843,7 +8844,8 @@
         "cashLabel": "الدفع في المدرسة",
         "cashDesc": "ادفع نقداً في مقر المدرسة",
         "bankTransferLabel": "تحويل بنكي",
-        "bankTransferDesc": "حوّل المبلغ إلى حساب المدرسة البنكي"
+        "bankTransferDesc": "حوّل المبلغ إلى حساب المدرسة البنكي",
+        "paymentAlreadyRecorded": "تم تسجيل الدفع مسبقاً لهذا الطلب"
       },
       "validation": {
         "nameMin": "يجب أن يكون الاسم 3 أحرف على الأقل",

@@ -94,12 +94,12 @@ export const LocationForm = forwardRef<LocationFormRef, LocationFormProps>(
 
     const saveAndNext = async () => {
       const isValid = await form.trigger()
-      if (!isValid) throw new Error("Form validation failed")
+      if (!isValid) throw new Error("VALIDATION_FAILED")
 
       const data = form.getValues()
       const result = await saveLocationStep(data)
 
-      if (!result.success) throw new Error(result.error || "Failed to save")
+      if (!result.success) throw new Error(result.error || "SAVE_FAILED")
 
       if (result.data) {
         updateStepData("location", result.data)

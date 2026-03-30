@@ -15,13 +15,9 @@ const nonNameFields = {
 
 export function createPersonalSchema(v?: ValidationHelper) {
   return z.object({
-    firstName: z
-      .string()
-      .min(1, v?.get("firstNameRequired") || "First name is required"),
+    firstName: z.string().min(1, v?.required() || "First name is required"),
     middleName: z.string().optional(),
-    lastName: z
-      .string()
-      .min(1, v?.get("lastNameRequired") || "Last name is required"),
+    lastName: z.string().min(1, v?.required() || "Last name is required"),
     ...nonNameFields,
   })
 }
@@ -34,7 +30,7 @@ export function getPersonalSchema(
 ) {
   if (nameFormat === "full") {
     return z.object({
-      _fullName: z.string().min(1, v?.required() || "Full name is required"),
+      _fullName: z.string().min(1, v?.required() || "Required"),
       firstName: z.string().default(""),
       middleName: z.string().optional(),
       lastName: z.string().default(""),

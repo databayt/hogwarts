@@ -21,7 +21,15 @@ export const STUDENT_WIZARD_CONFIG: WizardConfig = {
     3: ["health", "previous-education"],
   },
   groupLabels: ["Essentials", "Contact Details", "Health & History"],
+  i18nGroupLabels: {
+    ar: ["الأساسيات", "بيانات الاتصال", "الصحة والسجل"],
+    en: ["Essentials", "Contact Details", "Health & History"],
+  },
   requiredSteps: ["personal"],
   skipToComplete: true,
   finalLabel: "Create",
+  i18nFinalLabel: {
+    ar: "إنشاء",
+    en: "Create",
+  },
 }
