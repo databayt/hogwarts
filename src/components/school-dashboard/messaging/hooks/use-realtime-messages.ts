@@ -7,6 +7,7 @@ import { useSession } from "next-auth/react"
 
 import socketService, { SocketEvents } from "@/lib/websocket/socket-service"
 import { toast } from "@/components/ui/use-toast"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 /**
  * Real-time messaging hook
@@ -133,6 +134,8 @@ export function useRealtimeMessages(
   options: UseRealtimeMessagesOptions = {}
 ): UseRealtimeMessagesReturn {
   const { data: session } = useSession()
+  const { dictionary } = useDictionary()
+  const m = dictionary?.messaging
   const [isConnected, setIsConnected] = useState(false)
   const [typingUsers, setTypingUsers] = useState<TypingUser[]>([])
 
@@ -366,8 +369,10 @@ export function useRealtimeMessages(
 
           if (showNotifications) {
             toast({
-              title: "Participant added",
-              description: "A new member joined the conversation",
+              title: m?.notifications?.participant_added || "Participant added",
+              description:
+                m?.notifications?.new_member_joined ||
+                "A new member joined the conversation",
             })
           }
         }

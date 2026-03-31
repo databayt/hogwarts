@@ -173,28 +173,28 @@ export function StreamAdminDashboardContent({
           className={buttonVariants({ variant: "outline" })}
           href={`/${lang}/stream/courses`}
         >
-          <BookOpen className="mr-2 size-4" />
+          <BookOpen className="me-2 size-4" />
           {d?.viewAllCourses || "Browse Courses"}
         </Link>
         <Link
           className={buttonVariants({ variant: "outline" })}
           href={`/${lang}/stream/settings?tab=enrollments`}
         >
-          <Users className="mr-2 size-4" />
+          <Users className="me-2 size-4" />
           {d?.manageEnrollments || "Manage Enrollments"}
         </Link>
         <Link
           className={buttonVariants({ variant: "outline" })}
           href={`/${lang}/stream/settings?tab=instructors`}
         >
-          <UserCog className="mr-2 size-4" />
+          <UserCog className="me-2 size-4" />
           {d?.instructorSettings || "Instructor Settings"}
         </Link>
         <Link
           className={buttonVariants({ variant: "outline" })}
           href={`/${lang}/stream/settings?tab=videos`}
         >
-          <Video className="mr-2 size-4" />
+          <Video className="me-2 size-4" />
           {d?.manageVideos || "Video Library"}
         </Link>
       </div>

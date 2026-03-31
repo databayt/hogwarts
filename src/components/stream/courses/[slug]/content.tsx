@@ -10,6 +10,9 @@ import { Check, Pencil } from "lucide-react"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { CatalogEnrollmentButton } from "@/components/stream/courses/enrollment/catalog-enrollment-button"
 import type { CatalogIndividualCourseType } from "@/components/stream/data/catalog/get-course"
+import type { CourseProgressData } from "@/components/stream/data/catalog/get-course-progress"
+
+import { CourseProgressBar } from "./course-progress-bar"
 
 // Skilljar color palette
 const colors = {
@@ -72,6 +75,7 @@ interface Props {
   course: CatalogIndividualCourseType
   isEnrolled: boolean
   userRole?: string | null
+  courseProgress?: CourseProgressData | null
 }
 
 export function StreamCourseDetailContent({
@@ -81,6 +85,7 @@ export function StreamCourseDetailContent({
   course,
   isEnrolled,
   userRole,
+  courseProgress,
 }: Props) {
   const { dictionary: dict } = useDictionary()
 
@@ -223,6 +228,11 @@ export function StreamCourseDetailContent({
                 </Link>
               )}
             </div>
+
+            {/* Course progress (shown when enrolled and has progress) */}
+            {isEnrolled && courseProgress && (
+              <CourseProgressBar progress={courseProgress} />
+            )}
 
             {/* Already registered */}
             {!isEnrolled && (

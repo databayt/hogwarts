@@ -69,8 +69,7 @@ export function ConversationListEmpty({
     <div className="flex h-64 flex-col items-center justify-center p-6 text-center">
       <MessageSquare className="text-muted-foreground/40 mb-3 h-10 w-10" />
       <p className="text-foreground mb-1 font-medium">
-        {(m?.ui as Record<string, string>)?.no_conversations ||
-          "No conversations yet"}
+        {m?.ui?.no_conversations || "No conversations yet"}
       </p>
       <p className="text-muted-foreground mb-4 max-w-[240px] text-sm">
         {m?.ui?.welcome_description ||

@@ -88,6 +88,12 @@ interface AttachmentUploadProps {
       attachment?: string
       attachments?: string
       download?: string
+      file_rejected?: string
+      upload_failed?: string
+      drop_files?: string
+      drop_or_click?: string
+      file_limits?: string
+      uploaded?: string
     }
     actions?: {
       upload_file?: string
@@ -199,7 +205,10 @@ export function AttachmentUpload({
             file: rejected.file,
             status: "error",
             progress: 0,
-            error: rejected.errors[0]?.message || "File rejected",
+            error:
+              rejected.errors[0]?.message ||
+              dictionary?.ui?.file_rejected ||
+              "File rejected",
           })
         })
 
@@ -289,7 +298,10 @@ export function AttachmentUpload({
                     ...f,
                     status: "error" as const,
                     progress: 0,
-                    error: "error" in result ? result.error : "Upload failed",
+                    error:
+                      "error" in result
+                        ? result.error
+                        : dictionary?.ui?.upload_failed || "Upload failed",
                   }
                 : f
             )
@@ -304,7 +316,9 @@ export function AttachmentUpload({
                   status: "error" as const,
                   progress: 0,
                   error:
-                    error instanceof Error ? error.message : "Upload failed",
+                    error instanceof Error
+                      ? error.message
+                      : dictionary?.ui?.upload_failed || "Upload failed",
                 }
               : f
           )
@@ -358,12 +372,12 @@ export function AttachmentUpload({
         <Upload className="text-muted-foreground mb-2 h-6 w-6" />
         <p className="text-muted-foreground text-sm">
           {isDragActive
-            ? "Drop files here..."
-            : dictionary?.actions?.attach_file ||
-              "Drop files or click to upload"}
+            ? dictionary?.ui?.drop_files || "Drop files here..."
+            : dictionary?.ui?.drop_or_click || "Drop files or click to upload"}
         </p>
         <p className="text-muted-foreground/60 mt-1 text-xs">
-          Max {maxFiles} files. Images, videos, audio, documents.
+          {dictionary?.ui?.file_limits?.replace("{max}", String(maxFiles)) ||
+            `Max ${maxFiles} files. Images, videos, audio, documents.`}
         </p>
       </div>
 
@@ -417,7 +431,9 @@ export function AttachmentUpload({
 
                 {/* Status indicator */}
                 {file.status === "success" && (
-                  <span className="text-success text-xs">Uploaded</span>
+                  <span className="text-success text-xs">
+                    {dictionary?.ui?.uploaded || "Uploaded"}
+                  </span>
                 )}
 
                 {/* Remove button */}

@@ -170,6 +170,9 @@ export const CHANNEL_CONFIG: Record<
   sms: {
     enabled: false,
   },
+  whatsapp: {
+    enabled: false,
+  },
 }
 
 // Default notification preferences by user role
@@ -182,36 +185,42 @@ export const DEFAULT_NOTIFICATION_PREFERENCES: Record<
     email: true,
     push: false,
     sms: false,
+    whatsapp: false,
   },
   TEACHER: {
     in_app: true,
     email: true,
     push: false,
     sms: false,
+    whatsapp: false,
   },
   STUDENT: {
     in_app: true,
     email: false,
     push: false,
     sms: false,
+    whatsapp: false,
   },
   GUARDIAN: {
     in_app: true,
     email: true,
     push: false,
     sms: false,
+    whatsapp: false,
   },
   ACCOUNTANT: {
     in_app: true,
     email: true,
     push: false,
     sms: false,
+    whatsapp: false,
   },
   STAFF: {
     in_app: true,
     email: false,
     push: false,
     sms: false,
+    whatsapp: false,
   },
 }
 

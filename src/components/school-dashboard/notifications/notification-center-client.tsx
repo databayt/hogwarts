@@ -103,13 +103,8 @@ export function NotificationCenterClient({
 
   return (
     <div className="relative">
-      {/* Connection indicator */}
-      {!isConnected && (
-        <div className="text-muted-foreground absolute end-0 top-0 flex items-center gap-2 text-xs">
-          <span className="bg-muted-foreground h-2 w-2 animate-pulse rounded-full" />
-          <span>{dictionary.connection.connecting}</span>
-        </div>
-      )}
+      {/* Connection indicator - hidden since WebSocket server is not deployed;
+         polling fallback handles real-time updates silently */}
 
       <NotificationList
         notifications={allNotifications}

@@ -7,8 +7,10 @@ import Link from "next/link"
 import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
+import type { ContinueWatchingItem } from "../data/catalog/get-continue-watching"
 import type { StreamContentProps } from "../types"
 import { AIFluencySection } from "./ai-fluency-section"
+import { ContinueWatchingSection } from "./continue-watching-section"
 import { CurriculumSection } from "./curriculum-section"
 import { EducationAnimation } from "./education-animation"
 import { HotReleasesSection } from "./hot-releases-section"
@@ -158,6 +160,7 @@ const ProgressTrackingIcon = () => (
 interface StreamHomeProps extends StreamContentProps {
   isAuthenticated?: boolean
   isAdmin?: boolean
+  continueWatching?: ContinueWatchingItem[]
 }
 
 export function StreamHomeContent({
@@ -166,6 +169,7 @@ export function StreamHomeContent({
   schoolId,
   isAuthenticated = false,
   isAdmin = false,
+  continueWatching = [],
 }: StreamHomeProps) {
   // Get features from dictionary or use defaults
   const features: Feature[] = dictionary?.home?.features || [
@@ -261,14 +265,14 @@ export function StreamHomeContent({
           >
             <CardHeader>
               <div className="mb-4 text-start text-4xl">
-                {feature.title === "Curated Courses" ? (
+                {index === 0 ? (
                   <ComprehensiveCoursesIcon />
-                ) : feature.title === "Interactive Learning" ? (
+                ) : index === 1 ? (
                   <InteractiveLearningIcon />
-                ) : feature.title === "Community Support" ? (
-                  <CommunityIcon />
-                ) : feature.title === "Progress Tracking" ? (
+                ) : index === 2 ? (
                   <ProgressTrackingIcon />
+                ) : index === 3 ? (
+                  <CommunityIcon />
                 ) : (
                   feature.icon
                 )}
@@ -283,6 +287,14 @@ export function StreamHomeContent({
           </Card>
         ))}
       </section>
+
+      {continueWatching.length > 0 && (
+        <ContinueWatchingSection
+          items={continueWatching}
+          lang={lang}
+          dictionary={dictionary}
+        />
+      )}
 
       <AIFluencySection dictionary={dictionary} lang={lang} />
 

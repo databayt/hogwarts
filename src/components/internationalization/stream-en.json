@@ -80,7 +80,8 @@
       "overview": "Overview",
       "enrollments": "Enrollments",
       "instructors": "Instructors",
-      "videos": "Videos"
+      "videos": "Videos",
+      "review": "Review"
     },
     "payment": {
       "success": {
@@ -154,6 +155,18 @@
       "profile": "Profile"
     },
     "teach": "Teach",
+    "teachDashboard": {
+      "title": "Teacher Dashboard",
+      "description": "Manage your content contributions and uploads",
+      "myVideos": "My Videos",
+      "totalVideos": "Total Videos",
+      "pendingReview": "Pending Review",
+      "approved": "Approved",
+      "totalViews": "Total Views",
+      "quickActions": "Quick Actions",
+      "viewMyVideos": "View My Videos",
+      "browseCatalog": "Browse Catalog"
+    },
     "studentDashboard": {
       "myCourses": "My Courses",
       "continueFromWhereYouLeftOff": "Continue learning where you left off",
@@ -204,6 +217,11 @@
       "createFirstCourse": "Create your first course to get started",
       "createCourse": "Create Course"
     },
+    "parentDashboard": {
+      "title": "Children's Progress",
+      "noStudents": "No linked students found. Please contact your school administrator.",
+      "notEnrolled": "Not enrolled in any courses yet."
+    },
     "paymentSuccess": {
       "invalidSession": "Invalid Session",
       "noSessionFound": "No payment session ID found. Please try again.",
@@ -214,6 +232,20 @@
       "congratulations": "Congratulations! You are now enrolled in \"{title}\". You can start learning now.",
       "startLearning": "Start Learning",
       "goToDashboard": "Go to Dashboard"
+    },
+    "enrollments": {
+      "title": "Enrollments",
+      "description": "Manage student enrollments across all subjects",
+      "total": "total",
+      "allEnrollments": "All Enrollments",
+      "noEnrollments": "No enrollments yet.",
+      "student": "Student",
+      "email": "Email",
+      "subject": "Subject",
+      "status": "Status",
+      "completed": "Completed",
+      "enrolled": "Enrolled",
+      "lessons": "lessons"
     },
     "enrollmentButton": {
       "loading": "Loading...",

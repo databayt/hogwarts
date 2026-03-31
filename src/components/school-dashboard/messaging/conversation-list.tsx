@@ -158,11 +158,10 @@ export function ConversationList({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem>
-                {(m?.ui as Record<string, string>)?.archived || "Archived"}
+                {m?.ui?.archived || "Archived"}
               </DropdownMenuItem>
               <DropdownMenuItem>
-                {(m?.ui as Record<string, string>)?.starred ||
-                  "Starred messages"}
+                {m?.ui?.starred || "Starred messages"}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

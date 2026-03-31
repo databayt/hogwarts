@@ -46,7 +46,7 @@ export function StreamCoursesContent({
   userId,
 }: Props) {
   const isRTL = lang === "ar"
-  const df = dictionary?.stream?.coursesFilter
+  const df = dictionary?.coursesFilter
   const isAdmin =
     userRole === "ADMIN" || userRole === "TEACHER" || userRole === "DEVELOPER"
   const router = useRouter()
@@ -104,9 +104,7 @@ export function StreamCoursesContent({
           </div>
           <div className="text-center md:text-start">
             <h1 className="text-4xl leading-none font-bold md:text-5xl">
-              {dictionary?.courses?.heroTitle || "Explore"}
-              <br />
-              {dictionary?.courses?.heroSubtitle || "courses"}
+              {dictionary?.courses?.title || "Explore Courses"}
             </h1>
             {isAdmin && (
               <div className="mt-4">
@@ -115,7 +113,7 @@ export function StreamCoursesContent({
                   className={buttonVariants({ size: "sm" })}
                 >
                   <Plus className="me-2 size-4" />
-                  {dictionary?.courses?.manageCourses || "Manage Courses"}
+                  {dictionary?.settings?.title || "Manage Courses"}
                 </Link>
               </div>
             )}

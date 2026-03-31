@@ -23,9 +23,9 @@ async function requireProposer() {
     throw new Error("Unauthorized: must be logged in")
   }
 
-  const allowedRoles = ["ADMIN", "DEVELOPER"]
+  const allowedRoles = ["ADMIN", "DEVELOPER", "TEACHER"]
   if (!role || !allowedRoles.includes(role)) {
-    throw new Error("Unauthorized: ADMIN or DEVELOPER role required")
+    throw new Error("Unauthorized: ADMIN, DEVELOPER, or TEACHER role required")
   }
 
   const { schoolId } = await getTenantContext()

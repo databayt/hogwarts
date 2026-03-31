@@ -46,6 +46,7 @@ model Section {
   students        Student[]
   timetables      Timetable[]
   attendances     Attendance[]
+  whatsappGroups  WhatsAppGroup[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -1767,7 +1767,9 @@
       "Sales": "المبيعات",
       "Classrooms": "الفصول",
       "Stats": "الإحصائيات",
-      "Staff": "الموظفون"
+      "Staff": "الموظفون",
+      "WhatsApp": "واتساب",
+      "Messages": "الرسائل"
     },
     "breadcrumb": {
       "dashboard": "لوحة التحكم",
@@ -1813,7 +1815,12 @@
       "manage": "إدارة",
       "schedule": "الجدول",
       "analytics": "التحليلات",
-      "overview": "نظرة عامة"
+      "overview": "نظرة عامة",
+      "whatsapp": "واتساب",
+      "notifications": "الإشعارات",
+      "messages": "الرسائل",
+      "unread": "غير مقروءة",
+      "preferences": "التفضيلات"
     },
     "notifications": "الإشعارات",
     "messages": "الرسائل"

@@ -12,10 +12,12 @@ import {
   isRTL as checkIsRTL,
   type Locale,
 } from "@/components/internationalization/config"
+import { getPlatformCoreDictionary } from "@/components/internationalization/dictionaries"
 import { PageHeadingProvider } from "@/components/school-dashboard/context/page-heading-context"
 import { PageHeadingDisplay } from "@/components/school-dashboard/context/page-heading-display"
 import { SchoolProvider } from "@/components/school-dashboard/context/school-context"
 import { ForceChangePasswordModal } from "@/components/school-dashboard/force-change-password-modal"
+import { WelcomeDialog } from "@/components/school-dashboard/welcome/welcome-dialog"
 import PlatformHeader from "@/components/template/platform-header/content"
 import PlatformSidebar from "@/components/template/platform-sidebar/content"
 
@@ -42,9 +44,10 @@ export default async function PlatformLayout({
   params,
 }: Readonly<PlatformLayoutProps>) {
   const { subdomain, lang } = await params
-  const [result, session] = await Promise.all([
+  const [result, session, dictionary] = await Promise.all([
     getSchoolBySubdomain(subdomain),
     auth(),
+    getPlatformCoreDictionary(lang as Locale),
   ])
 
   if (!result.success) {
@@ -145,6 +148,12 @@ export default async function PlatformLayout({
               {mustChangePassword && (
                 <ForceChangePasswordModal
                   hasPassword={!!currentUser?.password}
+                />
+              )}
+              {!mustChangePassword && (
+                <WelcomeDialog
+                  userId={session.user.id}
+                  dictionary={dictionary?.school?.dashboard?.welcomeDialog}
                 />
               )}
             </div>

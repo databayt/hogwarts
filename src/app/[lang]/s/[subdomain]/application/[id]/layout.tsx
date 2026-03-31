@@ -151,6 +151,7 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
 export default function ApplyLayout({ children }: ApplyLayoutProps) {
   const params = useParams()
   const subdomain = params.subdomain as string
+  const id = params.id as string
   const [nameFormat, setNameFormat] = useState<NameFormat>("full")
 
   useEffect(() => {
@@ -165,7 +166,11 @@ export default function ApplyLayout({ children }: ApplyLayoutProps) {
 
   return (
     <ErrorBoundary>
-      <ApplySessionProvider nameFormat={nameFormat}>
+      <ApplySessionProvider
+        initialSubdomain={subdomain}
+        initialCampaignId={id}
+        nameFormat={nameFormat}
+      >
         <ApplyValidationProvider>
           <ApplyLayoutContent>{children}</ApplyLayoutContent>
         </ApplyValidationProvider>

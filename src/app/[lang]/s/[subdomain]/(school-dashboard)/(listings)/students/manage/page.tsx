@@ -5,10 +5,8 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
-import { PageNav, type PageNavItem } from "@/components/atom/page-nav"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 import {
   generateDefaultMetadata,
   generateSchoolMetadata,
@@ -46,48 +44,20 @@ export default async function StudentsManage({ params }: StudentsManageProps) {
     notFound()
   }
 
-  const school = result.data
   const dict = dictionary.school.students
 
-  const studentPages: PageNavItem[] = [
-    {
-      name: dict.overview || "Overview",
-      href: `/${lang}/students`,
-    },
-    {
-      name: dict.manage || "Manage",
-      href: `/${lang}/students/manage`,
-    },
-    {
-      name: dict.analysis || "Analysis",
-      href: `/${lang}/students/analysis`,
-    },
-  ]
-
   return (
-    <div
-      className="school-content"
-      data-school-id={school.id}
-      data-subdomain={subdomain}
-    >
-      <div className="space-y-6">
-        <PageHeadingSetter title={dict.title} />
-        <PageNav pages={studentPages} />
-        <div className="bg-card rounded-lg border p-8">
-          <div className="space-y-4">
-            <h3 className="text-foreground">
-              {dict.manage || "Manage Students"}
-            </h3>
-            <p className="text-muted-foreground">
-              This page is under construction. Student management features will
-              be available here soon.
-            </p>
-            <p className="text-muted-foreground">
-              Planned features: Bulk operations, class assignments, promotions,
-              transfers, and more.
-            </p>
-          </div>
-        </div>
+    <div className="bg-card rounded-lg border p-8">
+      <div className="space-y-4">
+        <h3 className="text-foreground">{dict.manage || "Manage Students"}</h3>
+        <p className="text-muted-foreground">
+          {dict.manageDescription ||
+            "Student management features will be available here soon."}
+        </p>
+        <p className="text-muted-foreground">
+          {dict.managePlanned ||
+            "Planned features: Bulk operations, class assignments, promotions, transfers, and more."}
+        </p>
       </div>
     </div>
   )

@@ -138,7 +138,7 @@ export function MessageSearch({
             size="icon"
             onClick={handlePrevResult}
             className="h-7 w-7"
-            aria-label="Previous result"
+            aria-label={m?.accessibility?.previous_result || "Previous result"}
           >
             <ChevronUp className="h-4 w-4" />
           </Button>
@@ -147,7 +147,7 @@ export function MessageSearch({
             size="icon"
             onClick={handleNextResult}
             className="h-7 w-7"
-            aria-label="Next result"
+            aria-label={m?.accessibility?.next_result || "Next result"}
           >
             <ChevronDown className="h-4 w-4" />
           </Button>

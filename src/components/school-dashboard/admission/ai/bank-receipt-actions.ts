@@ -99,7 +99,7 @@ export async function processApplicationBankReceipt(
     }
 
     await db.application.update({
-      where: { id: applicationId },
+      where: { id: applicationId, schoolId },
       data: { documents: existingDocs as unknown as any },
     })
 
@@ -255,7 +255,7 @@ export async function matchReceiptToPayment(
     if (matched) {
       // Update application payment fields
       await db.application.update({
-        where: { id: applicationId },
+        where: { id: applicationId, schoolId },
         data: {
           applicationFeePaid: true,
           paymentDate: extractedData.transferDate
@@ -280,7 +280,7 @@ export async function matchReceiptToPayment(
         existingDocs[docIndex].confidence = job.confidence ?? undefined
 
         await db.application.update({
-          where: { id: applicationId },
+          where: { id: applicationId, schoolId },
           data: { documents: existingDocs as unknown as any },
         })
       }

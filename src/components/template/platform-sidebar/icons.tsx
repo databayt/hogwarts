@@ -24,6 +24,7 @@ import {
   Mail,
   Medal,
   Megaphone,
+  MessageCircle,
   MonitorSmartphone,
   Pencil,
   Receipt,
@@ -77,4 +78,5 @@ export const Icons = {
   sales: Target,
   doorOpen: DoorOpen,
   building: Building2,
+  whatsapp: MessageCircle,
 }

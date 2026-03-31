@@ -2,9 +2,9 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import { getTenantContext } from "@/components/saas-dashboard/lib/tenant"
 import EnrollStudentContent from "@/components/school-dashboard/listings/students/enroll/content"
 
 export const metadata = { title: "Dashboard: Enroll Student" }

@@ -11,26 +11,29 @@ import { Progress } from "@/components/ui/progress"
 import type { ChildProgress } from "./actions"
 
 interface Props {
-  dictionary: Record<string, unknown>
+  dictionary: Record<string, any>
   lang: string
   childrenProgress: ChildProgress[]
 }
 
 export function ParentProgressContent({
+  dictionary,
   childrenProgress: childrenData,
 }: Props) {
+  const d = dictionary?.parentDashboard
+
   if (childrenData.length === 0) {
     return (
       <div className="space-y-6">
         <h1 className="text-2xl font-semibold tracking-tight">
-          Children&apos;s Progress
+          {d?.title || "Children\u2019s Progress"}
         </h1>
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <GraduationCap className="text-muted-foreground mb-4 size-12" />
             <p className="text-muted-foreground text-sm">
-              No linked students found. Please contact your school
-              administrator.
+              {d?.noStudents ||
+                "No linked students found. Please contact your school administrator."}
             </p>
           </CardContent>
         </Card>
@@ -41,7 +44,7 @@ export function ParentProgressContent({
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold tracking-tight">
-        Children&apos;s Progress
+        {d?.title || "Children\u2019s Progress"}
       </h1>
 
       {childrenData.map((child) => (
@@ -55,7 +58,7 @@ export function ParentProgressContent({
           <CardContent>
             {child.enrollments.length === 0 ? (
               <p className="text-muted-foreground text-sm">
-                Not enrolled in any courses yet.
+                {d?.notEnrolled || "Not enrolled in any courses yet."}
               </p>
             ) : (
               <div className="space-y-4">

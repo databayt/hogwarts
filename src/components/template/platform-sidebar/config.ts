@@ -143,6 +143,12 @@ export const platformNav: PlatformNavItem[] = [
       "STAFF",
     ],
   },
+  {
+    title: "WhatsApp",
+    href: "/whatsapp",
+    icon: "whatsapp",
+    roles: ["ADMIN", "DEVELOPER"],
+  },
 
   // Profile and Settings
   { title: "Profile", href: "/profile", icon: "user", roles: ALL_ROLES },

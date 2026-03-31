@@ -82,16 +82,18 @@ const getOfferBadge = (
 function EnrollmentActionsCell({
   enrollment,
   dictionary,
+  locale,
 }: {
   enrollment: EnrollmentRow
   dictionary: Dictionary["school"]["admission"]
+  locale: Locale
 }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const t = dictionary
 
   const onView = () => {
-    router.push(`/admission/applications/${enrollment.id}`)
+    router.push(`/${locale}/admission/applications/${enrollment.id}`)
   }
 
   const onRecordPayment = () => {
@@ -126,7 +128,7 @@ function EnrollmentActionsCell({
   }
 
   const onVerifyDocuments = () => {
-    router.push(`/admission/applications/${enrollment.id}`)
+    router.push(`/${locale}/admission/applications/${enrollment.id}`)
   }
 
   const onSendReminder = () => {
@@ -330,6 +332,7 @@ export const getEnrollmentColumns = (
         <EnrollmentActionsCell
           enrollment={row.original}
           dictionary={dictionary}
+          locale={locale}
         />
       ),
       enableSorting: false,

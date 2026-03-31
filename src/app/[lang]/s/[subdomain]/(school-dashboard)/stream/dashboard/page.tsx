@@ -15,6 +15,7 @@ import { ParentProgressContent } from "@/components/stream/dashboard/parent/cont
 import { getCatalogDashboardData } from "@/components/stream/data/catalog/get-dashboard-data"
 import { StreamAdminDashboardContent } from "@/components/stream/settings/overview"
 import { getTeacherStats } from "@/components/stream/teach/actions"
+import { getProposableLessons } from "@/components/stream/teach/get-proposable-lessons"
 import { TeachOverviewContent } from "@/components/stream/teach/overview-content"
 
 interface Props {
@@ -196,7 +197,7 @@ export default async function StreamDashboardPage({ params }: Props) {
     return (
       <div className="space-y-12">
         <StreamAdminDashboardContent
-          dictionary={dictionary.stream}
+          dictionary={dictionary}
           lang={lang}
           schoolId={schoolId}
           userId={session.user.id}
@@ -219,11 +220,12 @@ export default async function StreamDashboardPage({ params }: Props) {
 
   // Teacher: show teacher stats + enrolled courses
   if (role === "TEACHER") {
-    const [teacherStats, dashboardData] = await Promise.all([
+    const [teacherStats, dashboardData, proposableLessons] = await Promise.all([
       getTeacherStats(),
       schoolId
         ? getCatalogDashboardData(session.user.id, schoolId)
         : { enrolledCourses: [], availableCourses: [] },
+      getProposableLessons(),
     ])
 
     return (
@@ -233,6 +235,7 @@ export default async function StreamDashboardPage({ params }: Props) {
           lang={lang}
           stats={teacherStats}
           subdomain={subdomain}
+          proposableLessons={proposableLessons}
         />
         {dashboardData.enrolledCourses.length > 0 && (
           <StreamDashboardContent

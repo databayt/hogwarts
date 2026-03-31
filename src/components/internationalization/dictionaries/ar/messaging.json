@@ -1,6 +1,7 @@
 {
   "ui": {
     "title": "الرسائل",
+    "description": "إرسال واستقبال الرسائل، التواصل مع مجتمع المدرسة",
     "empty_inbox": "لا توجد محادثات بعد",
     "empty_inbox_description": "ابدأ محادثة مع شخص ما للبدء",
     "start_conversation": "ابدأ محادثة",
@@ -69,7 +70,21 @@
     "details": "التفاصيل",
     "voice_call": "مكالمة صوتية",
     "video_call": "مكالمة فيديو",
-    "search_dots": "بحث..."
+    "search_dots": "بحث...",
+    "archived": "الأرشيف",
+    "starred": "الرسائل المميزة",
+    "back": "رجوع",
+    "someone": "شخص ما",
+    "no_conversations": "لا توجد محادثات بعد",
+    "file_rejected": "تم رفض الملف",
+    "upload_failed": "فشل الرفع",
+    "drop_files": "أفلت الملفات هنا...",
+    "drop_or_click": "أفلت الملفات أو انقر للرفع",
+    "file_limits": "حد أقصى {max} ملفات. صور، فيديو، صوت، مستندات.",
+    "uploaded": "تم الرفع",
+    "unable_to_load": "تعذر تحميل الرسائل",
+    "unexpected_error": "حدث خطأ غير متوقع أثناء تحميل رسائلك.",
+    "error_reference": "مرجع الخطأ"
   },
   "actions": {
     "send": "إرسال",
@@ -107,7 +122,8 @@
     "cancel": "إلغاء",
     "confirm": "تأكيد",
     "copy": "نسخ",
-    "start_chat": "بدء المحادثة"
+    "start_chat": "بدء المحادثة",
+    "try_again": "حاول مرة أخرى"
   },
   "errors": {
     "send_failed": "فشل إرسال الرسالة",
@@ -178,7 +194,9 @@
     "error": "خطأ",
     "conversation_created": "تم إنشاء المحادثة",
     "group_created": "تم إنشاء المجموعة",
-    "upload_success": "تم رفع {count} ملف"
+    "upload_success": "تم رفع {count} ملف",
+    "participant_added": "تمت إضافة مشارك",
+    "new_member_joined": "انضم عضو جديد إلى المحادثة"
   },
   "confirmation": {
     "delete_message": "هل أنت متأكد من حذف هذه الرسالة؟",
@@ -234,7 +252,9 @@
     "open_conversation": "فتح المحادثة",
     "scroll_to_newest": "التمرير لأحدث الرسائل",
     "message_from": "رسالة من {sender}",
-    "unread_indicator": "رسائل غير مقروءة أدناه"
+    "unread_indicator": "رسائل غير مقروءة أدناه",
+    "previous_result": "النتيجة السابقة",
+    "next_result": "النتيجة التالية"
   },
   "contacts": {
     "search_placeholder": "بحث في جهات الاتصال...",
@@ -243,6 +263,8 @@
     "favourites": "المفضلة",
     "no_contacts": "لا توجد جهات اتصال",
     "no_results": "لا توجد نتائج",
+    "no_unread": "لا توجد رسائل غير مقروءة",
+    "no_favourites": "لا توجد مفضلات بعد",
     "start_chat": "بدء محادثة",
     "categories": {
       "teachers": "المعلمون",

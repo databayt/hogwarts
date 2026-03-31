@@ -319,13 +319,13 @@ function StudentsTableInner({
     exportCSV: dictionary?.exportCSV || "Export CSV",
     exporting: dictionary?.exporting || "Exporting...",
     view: t.view,
-    tableView: (dictionary as any)?.tableView || "Table",
-    gridView: (dictionary as any)?.gridView || "Grid",
-    switchToTable: (dictionary as any)?.switchToTable || "Switch to table view",
-    switchToGrid: (dictionary as any)?.switchToGrid || "Switch to grid view",
-    searchColumns: (dictionary as any)?.searchColumns || "Search columns...",
-    noColumns: (dictionary as any)?.noColumns || "No columns found.",
-    all: (dictionary as any)?.all || "All",
+    tableView: dictionary?.tableView || "Table",
+    gridView: dictionary?.gridView || "Grid",
+    switchToTable: dictionary?.switchToTable || "Switch to table view",
+    switchToGrid: dictionary?.switchToGrid || "Switch to grid view",
+    searchColumns: dictionary?.searchColumns || "Search columns...",
+    noColumns: dictionary?.noColumns || "No columns found.",
+    all: dictionary?.all || "All",
   }
 
   return (

@@ -78,13 +78,20 @@ export function MapForm({
       }
     : null
 
+  const dict = dictionary?.onboarding || {}
+
   return (
     <MapboxLocationPicker
       value={pickerValue}
       onChange={handleLocationChange}
-      placeholder={
-        dictionary?.onboarding?.searchAddress || "Search for an address..."
-      }
+      placeholder={dict.searchAddress || "Search for an address..."}
+      labels={{
+        tapToPin: dict.tapToPin,
+        detectingAddress: dict.detectingAddress,
+        locationBlocked: dict.locationBlocked,
+        locationDenied: dict.locationDenied,
+        locationTimeout: dict.locationTimeout,
+      }}
     />
   )
 }

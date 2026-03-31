@@ -1,0 +1,182 @@
+// WhatsApp Integration (Evolution API)
+
+// Session status for WhatsApp connection
+enum WhatsAppSessionStatus {
+  connected
+  disconnected
+  connecting
+  qr_pending
+}
+
+// Group types for organizing WhatsApp groups
+enum WhatsAppGroupType {
+  section_parents // Auto-created for academic sections
+  class_parents // Auto-created for class/course
+  teachers // Staff group
+  announcement // School-wide broadcast
+  custom // Manually created
+}
+
+// Message content types
+enum WhatsAppMessageType {
+  text
+  image
+  document
+  audio
+  video
+  location
+  contact
+}
+
+// Message direction
+enum WhatsAppMessageDirection {
+  incoming
+  outgoing
+}
+
+// Message delivery status
+enum WhatsAppMessageStatus {
+  pending
+  queued
+  sent
+  delivered
+  read
+  failed
+}
+
+// One session per school (one WhatsApp number per school)
+model WhatsAppSession {
+  id           String                @id @default(cuid())
+  schoolId     String                @unique // One session per school
+  instanceName String                @unique // Evolution API instance name
+  phoneNumber  String? // Connected phone number (E.164)
+  status       WhatsAppSessionStatus @default(disconnected)
+  qrCode       String?               @db.Text // Base64 QR code for connection
+  webhookUrl   String? // Webhook URL for this instance
+  connectedAt  DateTime?
+  metadata     Json? // Additional session data from Evolution API
+
+  school   School           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  groups   WhatsAppGroup[]
+  messages WhatsAppMessage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@map("whatsapp_sessions")
+}
+
+// WhatsApp group linked to academic sections or custom groups
+model WhatsAppGroup {
+  id          String           @id @default(cuid())
+  schoolId    String // Multi-tenant scoping (CRITICAL)
+  sessionId   String
+  groupJid    String // WhatsApp group JID (unique identifier)
+  name        String
+  description String?          @db.Text
+  imageUrl    String?
+  type        WhatsAppGroupType @default(section_parents)
+  sectionId   String? // Link to academic section
+  classId     String? // Link to class/course
+  isActive    Boolean          @default(true)
+  memberCount Int              @default(0)
+  metadata    Json?
+
+  school  School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  session WhatsAppSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  section Section?        @relation(fields: [sectionId], references: [id], onDelete: SetNull)
+  class   Class?          @relation(fields: [classId], references: [id], onDelete: SetNull)
+  members WhatsAppGroupMember[]
+  messages WhatsAppMessage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, groupJid])
+  @@index([schoolId])
+  @@index([sessionId])
+  @@index([sectionId])
+  @@index([classId])
+  @@map("whatsapp_groups")
+}
+
+// Group membership tracking
+model WhatsAppGroupMember {
+  id       String @id @default(cuid())
+  schoolId String // Multi-tenant scoping (CRITICAL)
+  groupId  String
+  phone    String // Phone number in E.164 format
+  name     String? // Display name
+  userId   String? // Optional link to platform user
+  isAdmin  Boolean @default(false)
+
+  school School        @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  group  WhatsAppGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user   User?         @relation("UserWhatsAppMemberships", fields: [userId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@unique([groupId, phone])
+  @@index([schoolId])
+  @@index([userId])
+  @@map("whatsapp_group_members")
+}
+
+// Message log for audit and status tracking
+model WhatsAppMessage {
+  id             String                   @id @default(cuid())
+  schoolId       String // Multi-tenant scoping (CRITICAL)
+  sessionId      String
+  groupId        String? // For group messages
+  recipientPhone String? // For direct messages (E.164)
+  waMessageId    String? // WhatsApp message ID from Evolution API
+  content        String                   @db.Text
+  contentType    WhatsAppMessageType      @default(text)
+  mediaUrl       String? // URL of attached media
+  mediaCaption   String? // Caption for media
+  direction      WhatsAppMessageDirection @default(outgoing)
+  status         WhatsAppMessageStatus    @default(pending)
+  triggerType    String? // What triggered: attendance, fee, emergency, manual
+  triggerId      String? // ID of the triggering entity
+  error          String?                  @db.Text
+  sentAt         DateTime?
+  deliveredAt    DateTime?
+  readAt         DateTime?
+  metadata       Json?
+
+  school  School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  session WhatsAppSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  group   WhatsAppGroup?  @relation(fields: [groupId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([schoolId, createdAt(sort: Desc)])
+  @@index([sessionId])
+  @@index([groupId])
+  @@index([status])
+  @@index([waMessageId])
+  @@index([triggerType, triggerId])
+  @@map("whatsapp_messages")
+}
+
+// Local message templates (no Meta approval needed)
+model WhatsAppMessageTemplate {
+  id       String  @id @default(cuid())
+  schoolId String? // null = platform-wide default templates
+  name     String // Template name/slug
+  content  String  @db.Text // With {{variable}} placeholders
+  type     String // attendance, fee, emergency, grade, announcement
+  lang     String  @default("ar")
+  isActive Boolean @default(true)
+
+  school School? @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, name])
+  @@index([schoolId, type])
+  @@index([type, isActive])
+  @@map("whatsapp_message_templates")
+}

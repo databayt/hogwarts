@@ -181,7 +181,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo ''; echo '═══════════════════════════════════════'; echo '📊 SESSION END'; echo '═══════════════════════════════════════'; UNCOMMITTED=$(git status --porcelain 2>/dev/null | wc -l | tr -d ' '); if [ \"$UNCOMMITTED\" -gt 0 ]; then echo \"📝 $UNCOMMITTED uncommitted changes\"; echo '💡 Say \"push\" to deploy when ready'; else echo '✅ No uncommitted changes'; fi; echo '═══════════════════════════════════════'; exit 0"
+            "command": "echo ''; echo '═══════════════════════════════════════'; echo '📊 SESSION END'; echo '═══════════════════════════════════════'; UNCOMMITTED=$(git status --porcelain 2>/dev/null | wc -l | tr -d ' '); if [ \"$UNCOMMITTED\" -gt 0 ]; then echo \"📝 $UNCOMMITTED uncommitted changes\"; echo '💡 Say \"push\" to deploy when ready'; else echo '✅ No uncommitted changes'; fi; ZOMBIES=$(pgrep -f 'playwright-mcp' 2>/dev/null | wc -l | tr -d ' '); if [ \"$ZOMBIES\" -gt 0 ]; then pkill -f 'playwright-mcp' 2>/dev/null; echo \"🧹 Cleaned $ZOMBIES Playwright MCP processes\"; fi; echo '═══════════════════════════════════════'; exit 0"
           }
         ]
       }

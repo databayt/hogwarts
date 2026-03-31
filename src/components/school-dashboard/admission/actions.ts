@@ -48,9 +48,21 @@ const NOTIF = {
       ar: "تم وضعك في قائمة الانتظار",
       en: "You have been placed on the waiting list",
     },
+    UNDER_REVIEW: {
+      ar: "طلبك قيد المراجعة حالياً",
+      en: "Your application is currently under review",
+    },
+    WITHDRAWN: {
+      ar: "تم سحب الطلب",
+      en: "Your application has been withdrawn",
+    },
+    SUBMITTED: {
+      ar: "تم تقديم طلبك بنجاح",
+      en: "Your application has been submitted successfully",
+    },
     fallback: (status: string) => ({
-      ar: `حالة الطلب: ${status}`,
-      en: `Application status: ${status}`,
+      ar: `تم تحديث حالة الطلب`,
+      en: `Application status has been updated`,
     }),
   },
   enrollment: {
@@ -72,6 +84,13 @@ const NOTIF = {
     body: (name: string) => ({
       ar: `تم تأكيد تسجيل ${name} في المدرسة`,
       en: `${name} has been enrolled in the school`,
+    }),
+  },
+  sectionPlacement: {
+    title: { ar: "تعيين القسم", en: "Section Placement" },
+    body: (sectionName: string) => ({
+      ar: `تم تعيينك في قسم "${sectionName}"`,
+      en: `You have been placed in section "${sectionName}"`,
     }),
   },
 } as const
@@ -456,6 +475,9 @@ export async function updateApplicationStatus(params: {
         SELECTED: NOTIF.statusUpdate.SELECTED,
         REJECTED: NOTIF.statusUpdate.REJECTED,
         WAITLISTED: NOTIF.statusUpdate.WAITLISTED,
+        UNDER_REVIEW: NOTIF.statusUpdate.UNDER_REVIEW,
+        WITHDRAWN: NOTIF.statusUpdate.WITHDRAWN,
+        SUBMITTED: NOTIF.statusUpdate.SUBMITTED,
       }
       const statusMessage = t(
         statusMsgMap[params.status] ||
@@ -576,7 +598,7 @@ export async function generateMeritList(params: {
     await Promise.all(
       applications.map((app, i) =>
         db.application.update({
-          where: { id: app.id },
+          where: { id: app.id, schoolId },
           data: { meritRank: i + 1 },
         })
       )
@@ -686,457 +708,460 @@ export async function confirmEnrollment(params: {
     const enrollmentNumber = `ENR-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
     let enrolledStudentId: string | null = null
 
-    const txUserId = await db.$transaction(async (tx) => {
-      // 2. Update application status to ADMITTED
-      await tx.application.update({
-        where: { id: params.id, schoolId },
-        data: {
-          status: "ADMITTED",
-          admissionConfirmed: true,
-          confirmationDate: new Date(),
-          enrollmentNumber,
-        },
-      })
-
-      // 3. Resolve userId — create a User for guest applications
-      let userId = application.userId
-      if (!userId) {
-        // Find existing user by email to avoid unique constraint violation
-        const existingUser = await tx.user.findFirst({
-          where: { email: application.email },
-          select: { id: true },
-        })
-
-        if (existingUser) {
-          userId = existingUser.id
-        } else {
-          const guestUser = await tx.user.create({
-            data: {
-              email: application.email,
-              username: `${application.firstName} ${application.lastName}`,
-              role: "STUDENT",
-              schoolId,
-              emailVerified: new Date(),
-            },
-          })
-          userId = guestUser.id
-        }
-
-        // Link the application to the new user
+    const txUserId = await db.$transaction(
+      async (tx) => {
+        // 2. Update application status to ADMITTED
         await tx.application.update({
-          where: { id: params.id },
-          data: { userId },
-        })
-      }
-
-      {
-        // Check if student already exists and belongs to a different school
-        const existingStudent = await tx.student.findUnique({
-          where: { userId },
-          select: { id: true, schoolId: true },
+          where: { id: params.id, schoolId },
+          data: {
+            status: "ADMITTED",
+            admissionConfirmed: true,
+            confirmationDate: new Date(),
+            enrollmentNumber,
+          },
         })
 
-        if (existingStudent && existingStudent.schoolId !== schoolId) {
-          throw new Error("Student is already enrolled in another school")
-        }
-
-        // Build previous academic record from application marks
-        const previousAcademicParts: string[] = []
-        if (application.previousMarks)
-          previousAcademicParts.push(`Marks: ${application.previousMarks}`)
-        if (application.previousPercentage)
-          previousAcademicParts.push(
-            `Percentage: ${application.previousPercentage}%`
-          )
-        if (application.achievements)
-          previousAcademicParts.push(
-            `Achievements: ${application.achievements}`
-          )
-
-        const student = existingStudent
-          ? existingStudent
-          : await tx.student.create({
-              data: {
-                schoolId,
-                userId,
-                firstName: application.firstName,
-                middleName: application.middleName,
-                lastName: application.lastName,
-                dateOfBirth: application.dateOfBirth,
-                gender: application.gender,
-                nationality: application.nationality ?? undefined,
-                email: application.email,
-                mobileNumber: application.phone,
-                alternatePhone: application.alternatePhone ?? undefined,
-                currentAddress: application.address,
-                city: application.city,
-                state: application.state,
-                postalCode: application.postalCode,
-                country: application.country,
-                applicationId: application.id,
-                admissionNumber: enrollmentNumber,
-                admissionDate: new Date(),
-                enrollmentDate: new Date(),
-                status: "ACTIVE",
-                category: application.category ?? undefined,
-                profilePhotoUrl: application.photoUrl ?? undefined,
-                previousSchoolName: application.previousSchool ?? undefined,
-                previousGrade: application.previousClass ?? undefined,
-                previousAcademicRecord:
-                  previousAcademicParts.length > 0
-                    ? previousAcademicParts.join("; ")
-                    : undefined,
-                // Map guardian/parent info to emergency contact
-                emergencyContactName:
-                  application.guardianName ||
-                  application.fatherName ||
-                  undefined,
-                emergencyContactPhone:
-                  application.guardianPhone ||
-                  application.fatherPhone ||
-                  undefined,
-                emergencyContactRelation:
-                  application.guardianRelation || "Parent",
-                // Detect language from the applicant's name
-                lang: detectLanguage(
-                  [application.firstName, application.lastName]
-                    .filter(Boolean)
-                    .join(" ")
-                ),
-                // Application provides all required fields — wizard is complete
-                wizardStep: null,
-              },
-            })
-
-        // 4. Try to match applyingForClass to a YearLevel and create StudentYearLevel
-        let matchedYearLevelId: string | null = null
-        try {
-          // Cascading search: exact -> case-insensitive -> grade number
-          let yearLevel = await tx.yearLevel.findFirst({
-            where: {
-              schoolId,
-              levelName: application.applyingForClass,
-            },
+        // 3. Resolve userId — create a User for guest applications
+        let userId = application.userId
+        if (!userId) {
+          // Find existing user by email to avoid unique constraint violation
+          const existingUser = await tx.user.findFirst({
+            where: { email: application.email },
+            select: { id: true },
           })
 
-          if (!yearLevel) {
-            yearLevel = await tx.yearLevel.findFirst({
-              where: {
+          if (existingUser) {
+            userId = existingUser.id
+          } else {
+            const guestUser = await tx.user.create({
+              data: {
+                email: application.email,
+                username: `${application.firstName} ${application.lastName}`,
+                role: "STUDENT",
                 schoolId,
-                levelName: {
-                  equals: application.applyingForClass,
-                  mode: "insensitive",
-                },
+                emailVerified: new Date(),
               },
             })
+            userId = guestUser.id
           }
 
-          if (!yearLevel) {
-            const gradeNum = extractGradeNumber(
-              application.applyingForClass ?? ""
+          // Link the application to the new user
+          await tx.application.update({
+            where: { id: params.id, schoolId },
+            data: { userId },
+          })
+        }
+
+        {
+          // Check if student already exists and belongs to a different school
+          const existingStudent = await tx.student.findUnique({
+            where: { userId },
+            select: { id: true, schoolId: true },
+          })
+
+          if (existingStudent && existingStudent.schoolId !== schoolId) {
+            throw new Error("Student is already enrolled in another school")
+          }
+
+          // Build previous academic record from application marks
+          const previousAcademicParts: string[] = []
+          if (application.previousMarks)
+            previousAcademicParts.push(`Marks: ${application.previousMarks}`)
+          if (application.previousPercentage)
+            previousAcademicParts.push(
+              `Percentage: ${application.previousPercentage}%`
             )
-            if (gradeNum) {
-              // Match via AcademicGrade.gradeNumber (not levelOrder, which
-              // includes KG levels and shifts the numbering)
-              const academicGrade = await tx.academicGrade.findFirst({
-                where: { schoolId, gradeNumber: gradeNum },
-                select: { yearLevelId: true },
+          if (application.achievements)
+            previousAcademicParts.push(
+              `Achievements: ${application.achievements}`
+            )
+
+          const student = existingStudent
+            ? existingStudent
+            : await tx.student.create({
+                data: {
+                  schoolId,
+                  userId,
+                  firstName: application.firstName,
+                  middleName: application.middleName,
+                  lastName: application.lastName,
+                  dateOfBirth: application.dateOfBirth,
+                  gender: application.gender,
+                  nationality: application.nationality ?? undefined,
+                  email: application.email,
+                  mobileNumber: application.phone,
+                  alternatePhone: application.alternatePhone ?? undefined,
+                  currentAddress: application.address,
+                  city: application.city,
+                  state: application.state,
+                  postalCode: application.postalCode,
+                  country: application.country,
+                  applicationId: application.id,
+                  admissionNumber: enrollmentNumber,
+                  admissionDate: new Date(),
+                  enrollmentDate: new Date(),
+                  status: "ACTIVE",
+                  category: application.category ?? undefined,
+                  profilePhotoUrl: application.photoUrl ?? undefined,
+                  previousSchoolName: application.previousSchool ?? undefined,
+                  previousGrade: application.previousClass ?? undefined,
+                  previousAcademicRecord:
+                    previousAcademicParts.length > 0
+                      ? previousAcademicParts.join("; ")
+                      : undefined,
+                  // Map guardian/parent info to emergency contact
+                  emergencyContactName:
+                    application.guardianName ||
+                    application.fatherName ||
+                    undefined,
+                  emergencyContactPhone:
+                    application.guardianPhone ||
+                    application.fatherPhone ||
+                    undefined,
+                  emergencyContactRelation:
+                    application.guardianRelation || "Parent",
+                  // Detect language from the applicant's name
+                  lang: detectLanguage(
+                    [application.firstName, application.lastName]
+                      .filter(Boolean)
+                      .join(" ")
+                  ),
+                  // Application provides all required fields — wizard is complete
+                  wizardStep: null,
+                },
               })
-              if (academicGrade?.yearLevelId) {
-                yearLevel = await tx.yearLevel.findFirst({
-                  where: { id: academicGrade.yearLevelId, schoolId },
-                })
-              }
-              // Fallback to levelOrder if no AcademicGrade match
-              if (!yearLevel) {
-                yearLevel = await tx.yearLevel.findFirst({
-                  where: { schoolId, levelOrder: gradeNum },
-                })
-              }
-            }
-          }
 
-          if (yearLevel) {
-            matchedYearLevelId = yearLevel.id
-
-            // Find the school year matching the campaign's academic year
-            const schoolYear = await tx.schoolYear.findFirst({
+          // 4. Try to match applyingForClass to a YearLevel and create StudentYearLevel
+          let matchedYearLevelId: string | null = null
+          try {
+            // Cascading search: exact -> case-insensitive -> grade number
+            let yearLevel = await tx.yearLevel.findFirst({
               where: {
                 schoolId,
-                yearName: application.campaign.academicYear,
+                levelName: application.applyingForClass,
               },
             })
 
-            if (schoolYear) {
-              // Upsert to be idempotent (unique on [schoolId, studentId, yearId])
-              await tx.studentYearLevel.upsert({
+            if (!yearLevel) {
+              yearLevel = await tx.yearLevel.findFirst({
                 where: {
-                  schoolId_studentId_yearId: {
-                    schoolId,
-                    studentId: student.id,
-                    yearId: schoolYear.id,
+                  schoolId,
+                  levelName: {
+                    equals: application.applyingForClass,
+                    mode: "insensitive",
                   },
                 },
-                create: {
+              })
+            }
+
+            if (!yearLevel) {
+              const gradeNum = extractGradeNumber(
+                application.applyingForClass ?? ""
+              )
+              if (gradeNum) {
+                // Match via AcademicGrade.gradeNumber (not levelOrder, which
+                // includes KG levels and shifts the numbering)
+                const academicGrade = await tx.academicGrade.findFirst({
+                  where: { schoolId, gradeNumber: gradeNum },
+                  select: { yearLevelId: true },
+                })
+                if (academicGrade?.yearLevelId) {
+                  yearLevel = await tx.yearLevel.findFirst({
+                    where: { id: academicGrade.yearLevelId, schoolId },
+                  })
+                }
+                // Fallback to levelOrder if no AcademicGrade match
+                if (!yearLevel) {
+                  yearLevel = await tx.yearLevel.findFirst({
+                    where: { schoolId, levelOrder: gradeNum },
+                  })
+                }
+              }
+            }
+
+            if (yearLevel) {
+              matchedYearLevelId = yearLevel.id
+
+              // Find the school year matching the campaign's academic year
+              const schoolYear = await tx.schoolYear.findFirst({
+                where: {
                   schoolId,
-                  studentId: student.id,
-                  levelId: yearLevel.id,
-                  yearId: schoolYear.id,
-                },
-                update: {
-                  levelId: yearLevel.id,
+                  yearName: application.campaign.academicYear,
                 },
               })
+
+              if (schoolYear) {
+                // Upsert to be idempotent (unique on [schoolId, studentId, yearId])
+                await tx.studentYearLevel.upsert({
+                  where: {
+                    schoolId_studentId_yearId: {
+                      schoolId,
+                      studentId: student.id,
+                      yearId: schoolYear.id,
+                    },
+                  },
+                  create: {
+                    schoolId,
+                    studentId: student.id,
+                    levelId: yearLevel.id,
+                    yearId: schoolYear.id,
+                  },
+                  update: {
+                    levelId: yearLevel.id,
+                  },
+                })
+              } else {
+                console.warn(
+                  `[confirmEnrollment] No SchoolYear found for academicYear="${application.campaign.academicYear}" in school=${schoolId}`
+                )
+              }
+
+              // 4b. Set academicGradeId from the matched YearLevel
+              const academicGrade = await tx.academicGrade.findFirst({
+                where: { schoolId, yearLevelId: yearLevel.id },
+              })
+              if (academicGrade) {
+                await tx.student.update({
+                  where: { id: student.id },
+                  data: { academicGradeId: academicGrade.id },
+                })
+              }
             } else {
               console.warn(
-                `[confirmEnrollment] No SchoolYear found for academicYear="${application.campaign.academicYear}" in school=${schoolId}`
+                `[confirmEnrollment] No YearLevel found matching applyingForClass="${application.applyingForClass}" in school=${schoolId}. Available levels should be checked in Year Level settings.`
               )
             }
-
-            // 4b. Set academicGradeId from the matched YearLevel
-            const academicGrade = await tx.academicGrade.findFirst({
-              where: { schoolId, yearLevelId: yearLevel.id },
-            })
-            if (academicGrade) {
-              await tx.student.update({
-                where: { id: student.id },
-                data: { academicGradeId: academicGrade.id },
-              })
-            }
-          } else {
+          } catch (ylError) {
+            // Don't break enrollment if year level matching fails
             console.warn(
-              `[confirmEnrollment] No YearLevel found matching applyingForClass="${application.applyingForClass}" in school=${schoolId}. Available levels should be checked in Year Level settings.`
+              "[confirmEnrollment] Failed to create StudentYearLevel:",
+              ylError
             )
           }
-        } catch (ylError) {
-          // Don't break enrollment if year level matching fails
-          console.warn(
-            "[confirmEnrollment] Failed to create StudentYearLevel:",
-            ylError
-          )
-        }
 
-        // 5. Update user role to STUDENT if not already a higher role
-        try {
-          const user = await tx.user.findUnique({
-            where: { id: userId },
-            select: { role: true, schoolId: true },
-          })
-
-          if (user && user.role === "USER") {
-            await tx.user.update({
+          // 5. Update user role to STUDENT if not already a higher role
+          try {
+            const user = await tx.user.findUnique({
               where: { id: userId },
-              data: { role: "STUDENT", schoolId },
+              select: { role: true, schoolId: true },
             })
-          }
-        } catch (roleError) {
-          console.warn(
-            "[confirmEnrollment] Failed to update user role:",
-            roleError
-          )
-        }
 
-        // 6. Auto-assign fees if matching FeeStructure exists
-        // Only assign school-wide (classId=null) or grade-matching fee structures
-        try {
-          const studentGrade = await tx.student.findUnique({
-            where: { id: student.id },
-            select: { academicGradeId: true },
-          })
-
-          const gradeClassIds: string[] = []
-          if (studentGrade?.academicGradeId) {
-            const matchingClasses = await tx.class.findMany({
-              where: { schoolId, gradeId: studentGrade.academicGradeId },
-              select: { id: true },
-            })
-            gradeClassIds.push(...matchingClasses.map((c) => c.id))
+            if (user && user.role === "USER") {
+              await tx.user.update({
+                where: { id: userId },
+                data: { role: "STUDENT", schoolId },
+              })
+            }
+          } catch (roleError) {
+            console.warn(
+              "[confirmEnrollment] Failed to update user role:",
+              roleError
+            )
           }
 
-          const feeStructures = await tx.feeStructure.findMany({
-            where: {
-              schoolId,
-              academicYear: application.campaign.academicYear,
-              isActive: true,
-              OR: [
-                { classId: null }, // School-wide fee structures
-                ...(gradeClassIds.length > 0
-                  ? [{ classId: { in: gradeClassIds } }]
-                  : []),
-              ],
-            },
-          })
+          // 6. Auto-assign fees if matching FeeStructure exists
+          // Only assign school-wide (classId=null) or grade-matching fee structures
+          try {
+            const studentGrade = await tx.student.findUnique({
+              where: { id: student.id },
+              select: { academicGradeId: true },
+            })
 
-          await Promise.all(
-            feeStructures.map((fs) =>
-              tx.feeAssignment.upsert({
-                where: {
-                  studentId_feeStructureId_academicYear: {
+            const gradeClassIds: string[] = []
+            if (studentGrade?.academicGradeId) {
+              const matchingClasses = await tx.class.findMany({
+                where: { schoolId, gradeId: studentGrade.academicGradeId },
+                select: { id: true },
+              })
+              gradeClassIds.push(...matchingClasses.map((c) => c.id))
+            }
+
+            const feeStructures = await tx.feeStructure.findMany({
+              where: {
+                schoolId,
+                academicYear: application.campaign.academicYear,
+                isActive: true,
+                OR: [
+                  { classId: null }, // School-wide fee structures
+                  ...(gradeClassIds.length > 0
+                    ? [{ classId: { in: gradeClassIds } }]
+                    : []),
+                ],
+              },
+            })
+
+            await Promise.all(
+              feeStructures.map((fs) =>
+                tx.feeAssignment.upsert({
+                  where: {
+                    studentId_feeStructureId_academicYear: {
+                      studentId: student.id,
+                      feeStructureId: fs.id,
+                      academicYear: application.campaign.academicYear,
+                    },
+                  },
+                  create: {
+                    schoolId,
                     studentId: student.id,
                     feeStructureId: fs.id,
                     academicYear: application.campaign.academicYear,
+                    finalAmount: fs.totalAmount,
+                    status: "PENDING",
                   },
-                },
-                create: {
-                  schoolId,
-                  studentId: student.id,
-                  feeStructureId: fs.id,
-                  academicYear: application.campaign.academicYear,
-                  finalAmount: fs.totalAmount,
-                  status: "PENDING",
-                },
-                update: {}, // Don't overwrite existing
-              })
+                  update: {}, // Don't overwrite existing
+                })
+              )
             )
-          )
-        } catch (feeError) {
-          console.warn(
-            "[confirmEnrollment] Fee auto-assignment failed:",
-            feeError
-          )
-        }
-
-        // 7. Create Guardian records from application parent/guardian data
-        try {
-          const { createOrLinkGuardian, fromFullName } =
-            await import("@/lib/guardian-utils")
-
-          const guardianEntries: Array<{
-            typeName: string
-            fullName: string
-            email: string | null
-            phone: string | null
-            occupation: string | null
-            isPrimary: boolean
-          }> = []
-
-          if (application.fatherName) {
-            guardianEntries.push({
-              typeName: "father",
-              fullName: application.fatherName,
-              email: application.fatherEmail,
-              phone: application.fatherPhone,
-              occupation: application.fatherOccupation,
-              isPrimary: true,
-            })
-          }
-          if (application.motherName) {
-            guardianEntries.push({
-              typeName: "mother",
-              fullName: application.motherName,
-              email: application.motherEmail,
-              phone: application.motherPhone,
-              occupation: application.motherOccupation,
-              isPrimary: !application.fatherName,
-            })
-          }
-          if (
-            application.guardianName &&
-            application.guardianName !== application.fatherName &&
-            application.guardianName !== application.motherName
-          ) {
-            guardianEntries.push({
-              typeName:
-                application.guardianRelation?.toLowerCase() || "guardian",
-              fullName: application.guardianName,
-              email: application.guardianEmail,
-              phone: application.guardianPhone,
-              occupation: null,
-              isPrimary: false,
-            })
+          } catch (feeError) {
+            console.warn(
+              "[confirmEnrollment] Fee auto-assignment failed:",
+              feeError
+            )
           }
 
-          for (const entry of guardianEntries) {
-            await createOrLinkGuardian(tx, {
-              schoolId,
-              studentId: student.id,
-              ...fromFullName(entry),
-            })
-          }
-        } catch (guardianError) {
-          console.warn(
-            "[confirmEnrollment] Guardian creation failed:",
-            guardianError
-          )
-        }
+          // 7. Create Guardian records from application parent/guardian data
+          try {
+            const { createOrLinkGuardian, fromFullName } =
+              await import("@/lib/guardian-utils")
 
-        // 8. Copy application documents to StudentDocument records
-        try {
-          const appDocs = application.documents as Array<{
-            type?: string
-            name?: string
-            url?: string
-            uploadedAt?: string
-          }> | null
+            const guardianEntries: Array<{
+              typeName: string
+              fullName: string
+              email: string | null
+              phone: string | null
+              occupation: string | null
+              isPrimary: boolean
+            }> = []
 
-          if (appDocs && Array.isArray(appDocs)) {
-            for (const doc of appDocs) {
-              if (!doc.url) continue
-              await tx.studentDocument.create({
-                data: {
-                  schoolId,
-                  studentId: student.id,
-                  documentType: doc.type || "Other",
-                  documentName: doc.name || doc.type || "Document",
-                  fileUrl: doc.url,
-                  uploadedAt: doc.uploadedAt
-                    ? new Date(doc.uploadedAt)
-                    : new Date(),
-                },
+            if (application.fatherName) {
+              guardianEntries.push({
+                typeName: "father",
+                fullName: application.fatherName,
+                email: application.fatherEmail,
+                phone: application.fatherPhone,
+                occupation: application.fatherOccupation,
+                isPrimary: true,
               })
             }
+            if (application.motherName) {
+              guardianEntries.push({
+                typeName: "mother",
+                fullName: application.motherName,
+                email: application.motherEmail,
+                phone: application.motherPhone,
+                occupation: application.motherOccupation,
+                isPrimary: !application.fatherName,
+              })
+            }
+            if (
+              application.guardianName &&
+              application.guardianName !== application.fatherName &&
+              application.guardianName !== application.motherName
+            ) {
+              guardianEntries.push({
+                typeName:
+                  application.guardianRelation?.toLowerCase() || "guardian",
+                fullName: application.guardianName,
+                email: application.guardianEmail,
+                phone: application.guardianPhone,
+                occupation: null,
+                isPrimary: false,
+              })
+            }
+
+            for (const entry of guardianEntries) {
+              await createOrLinkGuardian(tx, {
+                schoolId,
+                studentId: student.id,
+                ...fromFullName(entry),
+              })
+            }
+          } catch (guardianError) {
+            console.warn(
+              "[confirmEnrollment] Guardian creation failed:",
+              guardianError
+            )
           }
-        } catch (docError) {
-          console.warn("[confirmEnrollment] Document copy failed:", docError)
-        }
 
-        // 6b. Auto-generate invoice from fee assignments (inside transaction for atomicity)
-        try {
-          const feeAssignments = await tx.feeAssignment.findMany({
-            where: {
-              schoolId,
-              studentId: student.id,
-              academicYear: application.campaign.academicYear,
-              status: "PENDING",
-            },
-            include: {
-              feeStructure: { select: { name: true } },
-            },
-          })
+          // 8. Copy application documents to StudentDocument records
+          try {
+            const appDocs = application.documents as Array<{
+              type?: string
+              name?: string
+              url?: string
+              uploadedAt?: string
+            }> | null
 
-          if (feeAssignments.length > 0) {
-            const school = await tx.school.findUnique({
-              where: { id: schoolId },
-              select: { name: true, address: true, currency: true },
+            if (appDocs && Array.isArray(appDocs)) {
+              for (const doc of appDocs) {
+                if (!doc.url) continue
+                await tx.studentDocument.create({
+                  data: {
+                    schoolId,
+                    studentId: student.id,
+                    documentType: doc.type || "Other",
+                    documentName: doc.name || doc.type || "Document",
+                    fileUrl: doc.url,
+                    uploadedAt: doc.uploadedAt
+                      ? new Date(doc.uploadedAt)
+                      : new Date(),
+                  },
+                })
+              }
+            }
+          } catch (docError) {
+            console.warn("[confirmEnrollment] Document copy failed:", docError)
+          }
+
+          // 6b. Auto-generate invoice from fee assignments (inside transaction for atomicity)
+          try {
+            const feeAssignments = await tx.feeAssignment.findMany({
+              where: {
+                schoolId,
+                studentId: student.id,
+                academicYear: application.campaign.academicYear,
+                status: "PENDING",
+              },
+              include: {
+                feeStructure: { select: { name: true } },
+              },
             })
 
-            await createInvoiceFromEnrollment({
-              schoolId,
-              userId,
-              studentName: `${application.firstName} ${application.lastName}`,
-              studentEmail: application.email,
-              schoolName: school?.name ?? "School",
-              schoolAddress: school?.address ?? "",
-              currency: school?.currency ?? "USD",
-              items: feeAssignments.map((fa) => ({
-                name: fa.feeStructure.name,
-                amount: Number(fa.finalAmount),
-              })),
-              tx,
-            })
+            if (feeAssignments.length > 0) {
+              const school = await tx.school.findUnique({
+                where: { id: schoolId },
+                select: { name: true, address: true, currency: true },
+              })
+
+              await createInvoiceFromEnrollment({
+                schoolId,
+                userId,
+                studentName: `${application.firstName} ${application.lastName}`,
+                studentEmail: application.email,
+                schoolName: school?.name ?? "School",
+                schoolAddress: school?.address ?? "",
+                currency: school?.currency ?? "USD",
+                items: feeAssignments.map((fa) => ({
+                  name: fa.feeStructure.name,
+                  amount: Number(fa.finalAmount),
+                })),
+                tx,
+              })
+            }
+          } catch (invoiceError) {
+            console.warn(
+              "[confirmEnrollment] Invoice auto-generation failed:",
+              invoiceError
+            )
           }
-        } catch (invoiceError) {
-          console.warn(
-            "[confirmEnrollment] Invoice auto-generation failed:",
-            invoiceError
-          )
+
+          enrolledStudentId = student.id
         }
 
-        enrolledStudentId = student.id
-      }
-
-      return userId
-    })
+        return userId
+      },
+      { timeout: 30000 }
+    )
 
     // Check for suggested section placement (auto-suggest when a matching section has capacity)
     let suggestedSectionId: string | null = null
@@ -1503,17 +1528,11 @@ export async function placeStudentInSection(params: {
     if (!sectionData) return actionError(ACTION_ERRORS.NOT_FOUND)
 
     if ("full" in sectionData && sectionData.full) {
-      return {
-        success: false,
-        error: `Section "${sectionData.name}" is at full capacity (${sectionData._count.students}/${sectionData.maxCapacity})`,
-      }
+      return actionError(ACTION_ERRORS.SECTION_AT_CAPACITY)
     }
 
     if ("alreadyPlaced" in sectionData && sectionData.alreadyPlaced) {
-      return {
-        success: false,
-        error: `${application.firstName} ${application.lastName} is already in "${sectionData.name}"`,
-      }
+      return actionError(ACTION_ERRORS.STUDENT_ALREADY_IN_SECTION)
     }
 
     // Create StudentClass entries
@@ -1534,13 +1553,14 @@ export async function placeStudentInSection(params: {
         where: { id: schoolId },
         select: { preferredLanguage: true },
       })
+      const lang = schoolLang2?.preferredLanguage ?? "ar"
       dispatchNotification({
         schoolId,
         userId: application.userId,
         type: "system_alert",
-        title: "تعيين القسم",
-        body: `تم تعيينك في قسم "${sectionData.name}"`,
-        lang: schoolLang2?.preferredLanguage ?? "ar",
+        title: t(NOTIF.sectionPlacement.title, lang),
+        body: t(NOTIF.sectionPlacement.body(sectionData.name), lang),
+        lang,
         priority: "normal",
         channels: ["in_app"],
         metadata: {
@@ -1562,8 +1582,7 @@ export async function placeStudentInSection(params: {
       return {
         success: true,
         data: null,
-        warning:
-          "No classes found for this grade. Student was placed in section but has no class enrollments. Create classes first in Classrooms > Configure.",
+        warning: ACTION_ERRORS.NO_CLASSES_FOR_GRADE,
       }
     }
 

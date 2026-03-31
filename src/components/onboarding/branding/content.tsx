@@ -104,6 +104,13 @@ export default function BrandingContent({ dictionary }: Props) {
               onUploadComplete={handleUploadComplete}
               onUploadError={handleUploadError}
               className="h-full [&>div]:h-full"
+              labels={{
+                dropOrBrowse: dict.dropOrBrowse,
+                dropHere: dict.dropHere,
+                fileNotAccepted: dict.fileNotAccepted,
+                singleFile: dict.singleFile,
+                uploading: dict.uploading,
+              }}
             />
           ) : (
             <div className="relative flex h-full items-center justify-center rounded-lg border-2 border-dashed">

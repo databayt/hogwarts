@@ -57,16 +57,18 @@ const getStatusVariant = (status: string) => {
 function MeritActionsCell({
   merit,
   dictionary,
+  locale,
 }: {
   merit: MeritRow
   dictionary: Dictionary["school"]["admission"]
+  locale: Locale
 }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const t = dictionary
 
   const onView = () => {
-    router.push(`/admission/applications/${merit.id}`)
+    router.push(`/${locale}/admission/applications/${merit.id}`)
   }
 
   const onStatusChange = (status: string) => {
@@ -287,7 +289,11 @@ export const getMeritColumns = (
         <span className="sr-only">{t?.columns?.actions || "Actions"}</span>
       ),
       cell: ({ row }) => (
-        <MeritActionsCell merit={row.original} dictionary={dictionary} />
+        <MeritActionsCell
+          merit={row.original}
+          dictionary={dictionary}
+          locale={locale}
+        />
       ),
       enableSorting: false,
       enableColumnFilter: false,

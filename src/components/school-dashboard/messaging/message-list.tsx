@@ -10,6 +10,7 @@ import { ArrowDown, LoaderCircle } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { AutoScroller, useIsAtBottom } from "./auto-scroller"
@@ -213,7 +214,7 @@ export function MessageList({
                   style={{
                     position: "absolute",
                     top: 0,
-                    left: 0,
+                    insetInlineStart: 0,
                     width: "100%",
                     transform: `translateY(${virtualItem.start}px)`,
                   }}
@@ -352,7 +353,7 @@ export function MessageListSkeleton({
     <div className="bg-msg-chat-bg flex-1 px-4 py-4">
       {/* Date pill skeleton */}
       <div className="my-3 flex items-center justify-center">
-        <div className="bg-msg-date-pill h-6 w-20 animate-pulse rounded-lg" />
+        <Skeleton className="h-6 w-20 rounded-lg" />
       </div>
 
       {/* Message group skeletons */}
@@ -366,12 +367,10 @@ export function MessageListSkeleton({
                 groupIndex % 2 === 0 ? "justify-end" : "justify-start"
               )}
             >
-              <div
+              <Skeleton
                 className={cn(
-                  "animate-pulse rounded-lg",
-                  groupIndex % 2 === 0
-                    ? "bg-msg-outgoing rounded-se-sm"
-                    : "bg-msg-incoming rounded-ss-sm",
+                  "rounded-lg",
+                  groupIndex % 2 === 0 ? "rounded-se-sm" : "rounded-ss-sm",
                   msgIndex % 3 === 0
                     ? "h-10 w-44"
                     : msgIndex % 3 === 1

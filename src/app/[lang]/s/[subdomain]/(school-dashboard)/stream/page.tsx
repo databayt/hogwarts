@@ -7,6 +7,7 @@ import { auth } from "@/auth"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { getContinueWatching } from "@/components/stream/data/catalog/get-continue-watching"
 import { StreamHomeContent } from "@/components/stream/home/content"
 
 interface Props {
@@ -36,6 +37,8 @@ export default async function StreamHomePage({ params }: Props) {
     session?.user?.role === "TEACHER" ||
     session?.user?.role === "DEVELOPER"
 
+  const continueWatching = session?.user ? await getContinueWatching() : []
+
   return (
     <StreamHomeContent
       dictionary={dictionary.stream}
@@ -43,6 +46,7 @@ export default async function StreamHomePage({ params }: Props) {
       schoolId={schoolId}
       isAuthenticated={!!session?.user}
       isAdmin={isAdmin}
+      continueWatching={continueWatching}
     />
   )
 }

@@ -168,7 +168,7 @@ export function FeesTab({ student, dictionary }: FeesTabProps) {
         <CardContent>
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span>Academic Year 2024</span>
+              <span>{d?.academicYear || "Academic Year"}</span>
               <span className="font-medium">
                 {paymentProgress.toFixed(1)}% {d?.complete || "Complete"}
               </span>

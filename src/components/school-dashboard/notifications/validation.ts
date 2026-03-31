@@ -82,6 +82,7 @@ export const notificationChannelSchema = z.enum([
   "email",
   "push",
   "sms",
+  "whatsapp",
 ])
 
 // Create notification schema

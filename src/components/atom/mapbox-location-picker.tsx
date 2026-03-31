@@ -31,6 +31,14 @@ interface MapboxLocationPickerProps {
   value?: LocationResult | null
   onChange: (result: LocationResult) => void
   placeholder?: string
+  labels?: {
+    tapToPin?: string
+    detectingAddress?: string
+    mapboxNotConfigured?: string
+    locationBlocked?: string
+    locationDenied?: string
+    locationTimeout?: string
+  }
   className?: string
   mapHeight?: number
 }
@@ -39,6 +47,7 @@ export function MapboxLocationPicker({
   value,
   onChange,
   placeholder = "Search for an address...",
+  labels,
   className,
   mapHeight = 320,
 }: MapboxLocationPickerProps) {
@@ -209,7 +218,8 @@ export function MapboxLocationPicker({
       })
       if (permission.state === "denied") {
         alert(
-          "Location access is blocked. Please enable it in your browser settings."
+          labels?.locationBlocked ||
+            "Location access is blocked. Please enable it in your browser settings."
         )
         return
       }
@@ -230,10 +240,14 @@ export function MapboxLocationPicker({
         setGpsLoading(false)
         if (error.code === error.PERMISSION_DENIED) {
           alert(
-            "Location access denied. Please allow location in your browser settings."
+            labels?.locationDenied ||
+              "Location access denied. Please allow location in your browser settings."
           )
         } else if (error.code === error.TIMEOUT) {
-          alert("Could not get your location. Please try again.")
+          alert(
+            labels?.locationTimeout ||
+              "Could not get your location. Please try again."
+          )
         }
       },
       { enableHighAccuracy: true, timeout: 10000 }
@@ -259,7 +273,7 @@ export function MapboxLocationPicker({
   if (!MAPBOX_TOKEN) {
     return (
       <div className="text-muted-foreground text-sm">
-        Mapbox token not configured
+        {labels?.mapboxNotConfigured || "Mapbox token not configured"}
       </div>
     )
   }
@@ -350,7 +364,7 @@ export function MapboxLocationPicker({
         {!value?.latitude && !value?.longitude && mapReady && (
           <div className="bg-background/90 pointer-events-none absolute start-3 end-3 top-3 rounded-lg px-3 py-2 text-center">
             <p className="text-muted-foreground text-xs">
-              Tap on the map to place a pin
+              {labels?.tapToPin || "Tap on the map to place a pin"}
             </p>
           </div>
         )}
@@ -363,7 +377,7 @@ export function MapboxLocationPicker({
           <div className="min-w-0 flex-1">
             {geocodeLoading ? (
               <p className="text-muted-foreground text-sm">
-                Detecting address...
+                {labels?.detectingAddress || "Detecting address..."}
               </p>
             ) : (
               <>

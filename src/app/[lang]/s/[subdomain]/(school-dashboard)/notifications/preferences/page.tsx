@@ -6,7 +6,7 @@ import { Suspense } from "react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { Locale } from "@/components/internationalization/config"
-import { getDictionary } from "@/components/internationalization/dictionaries"
+import { getNotificationDictionary } from "@/components/internationalization/dictionaries"
 import { NotificationPreferencesContent } from "@/components/school-dashboard/notifications/preferences-content"
 
 interface NotificationPreferencesPageProps {
@@ -20,13 +20,11 @@ export async function generateMetadata({
   params,
 }: NotificationPreferencesPageProps) {
   const { lang } = await params
-  const dict = await getDictionary(lang)
+  const dict = await getNotificationDictionary(lang)
 
   return {
-    title: dict.notifications?.preferences?.title ?? "Notification Preferences",
-    description:
-      dict.notifications?.preferences?.description ??
-      "Manage your notification preferences and settings",
+    title: dict.notifications.preferences.title,
+    description: dict.notifications.preferences.description,
   }
 }
 

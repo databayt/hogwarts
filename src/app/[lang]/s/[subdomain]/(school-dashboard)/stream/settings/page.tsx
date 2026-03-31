@@ -231,6 +231,7 @@ export default async function StreamSettingsPage({
     <StreamSettingsContent
       activeTab={activeTab}
       userRole={role}
+      dictionary={dictionary.stream || {}}
       overviewContent={
         <StreamAdminDashboardContent
           dictionary={dictionary}

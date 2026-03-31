@@ -170,8 +170,8 @@ export function AccessCodeDialog({
         <DialogHeader>
           <DialogTitle>
             {studentIds.length === 1
-              ? t?.generateOne || "Generate Access Code"
-              : `${t?.generateMultiple || "Generate Access Codes"} (${studentIds.length})`}
+              ? t?.generateTitle || "Generate Access Code"
+              : `${t?.generateTitlePlural?.replace("{count}", String(studentIds.length)) || `Generate Access Codes (${studentIds.length})`}`}
           </DialogTitle>
           <DialogDescription>
             {t?.description ||

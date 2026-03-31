@@ -80,7 +80,8 @@
       "overview": "نظرة عامة",
       "enrollments": "التسجيلات",
       "instructors": "المدربين",
-      "videos": "الفيديوهات"
+      "videos": "الفيديوهات",
+      "review": "المراجعة"
     },
     "payment": {
       "success": {
@@ -154,6 +155,18 @@
       "profile": "الملف الشخصي"
     },
     "teach": "تدريس",
+    "teachDashboard": {
+      "title": "لوحة تحكم المعلم",
+      "description": "إدارة المساهمات والمحتوى المرفوع",
+      "myVideos": "فيديوهاتي",
+      "totalVideos": "إجمالي الفيديوهات",
+      "pendingReview": "قيد المراجعة",
+      "approved": "معتمد",
+      "totalViews": "إجمالي المشاهدات",
+      "quickActions": "إجراءات سريعة",
+      "viewMyVideos": "عرض فيديوهاتي",
+      "browseCatalog": "تصفح الكتالوج"
+    },
     "studentDashboard": {
       "myCourses": "دوراتي",
       "continueFromWhereYouLeftOff": "تابع التعلم من حيث توقفت",
@@ -204,6 +217,11 @@
       "createFirstCourse": "أنشئ أول دورة للبدء",
       "createCourse": "إنشاء دورة"
     },
+    "parentDashboard": {
+      "title": "تقدم الأبناء",
+      "noStudents": "لم يتم العثور على طلاب مرتبطين. يرجى التواصل مع إدارة المدرسة.",
+      "notEnrolled": "غير مسجل في أي دورة بعد."
+    },
     "paymentSuccess": {
       "invalidSession": "جلسة غير صالحة",
       "noSessionFound": "لم يتم العثور على معرف جلسة الدفع. يرجى المحاولة مرة أخرى.",
@@ -214,6 +232,20 @@
       "congratulations": "تهانينا! تم تفعيل اشتراكك في \"{title}\". يمكنك البدء بالتعلم الآن.",
       "startLearning": "ابدأ التعلم",
       "goToDashboard": "لوحة التحكم"
+    },
+    "enrollments": {
+      "title": "التسجيلات",
+      "description": "إدارة تسجيلات الطلاب في جميع المواد",
+      "total": "إجمالي",
+      "allEnrollments": "جميع التسجيلات",
+      "noEnrollments": "لا توجد تسجيلات بعد.",
+      "student": "الطالب",
+      "email": "البريد الإلكتروني",
+      "subject": "المادة",
+      "status": "الحالة",
+      "completed": "المكتمل",
+      "enrolled": "تاريخ التسجيل",
+      "lessons": "درس"
     },
     "enrollmentButton": {
       "loading": "جاري التحميل...",

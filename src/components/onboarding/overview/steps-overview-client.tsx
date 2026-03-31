@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
-import { useLocale } from "@/components/internationalization/use-locale"
 
 import TemplateGallery from "./template-gallery"
 
@@ -39,8 +38,6 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({
   const [selectedTemplateId, setSelectedTemplateId] = React.useState<
     string | undefined
   >()
-  const { isRTL } = useLocale()
-
   const isTemplateMode = searchParams.get("template") === "true"
 
   const steps: Step[] = [
@@ -156,9 +153,7 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({
                 >
                   <div className="flex flex-1 gap-3">
                     <div className="flex-shrink-0">
-                      <h4 className="text-foreground">
-                        {isRTL ? `.${step.number}` : `${step.number}.`}
-                      </h4>
+                      <h4 className="text-foreground">{step.number}.</h4>
                     </div>
                     <div className="text-start">
                       <h4 className="mb-1 font-semibold">{step.title}</h4>
@@ -197,7 +192,7 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({
       {/* Fixed footer - matches FormFooter positioning */}
       <footer className="bg-background fixed start-0 end-0 bottom-0 px-4 py-3 sm:px-6 sm:py-4 md:px-12 lg:px-20">
         <Separator className="mx-auto mb-3 w-full max-w-5xl sm:mb-4" />
-        <div className="mx-auto flex w-full max-w-5xl justify-end rtl:justify-start">
+        <div className="mx-auto flex w-full max-w-5xl justify-end">
           <Button onClick={handleGetStarted} disabled={isCreating}>
             {dictionary.getStarted}
           </Button>

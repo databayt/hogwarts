@@ -176,7 +176,7 @@ export function ContactsPanel({
       {/* Header */}
       <div className="bg-msg-header-bg flex h-[60px] flex-shrink-0 items-center justify-between px-4">
         <h2 className="text-foreground text-xl font-bold">
-          {m?.ui?.title ?? (locale === "ar" ? "الرسائل" : "Messages")}
+          {m?.ui?.title ?? "Messages"}
         </h2>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -224,20 +224,12 @@ export function ContactsPanel({
           <div className="flex h-64 flex-col items-center justify-center p-4 text-center">
             <p className="text-muted-foreground">
               {search
-                ? (m?.contacts?.no_results ??
-                  (locale === "ar" ? "لا توجد نتائج" : "No contacts found"))
+                ? m?.contacts?.no_results || "No contacts found"
                 : activeFilter === "unread"
-                  ? locale === "ar"
-                    ? "لا توجد رسائل غير مقروءة"
-                    : "No unread messages"
+                  ? m?.contacts?.no_unread || "No unread messages"
                   : activeFilter === "favourites"
-                    ? locale === "ar"
-                      ? "لا توجد مفضلات"
-                      : "No favourites yet"
-                    : (m?.contacts?.no_contacts ??
-                      (locale === "ar"
-                        ? "لا توجد جهات اتصال"
-                        : "No contacts available"))}
+                    ? m?.contacts?.no_favourites || "No favourites yet"
+                    : m?.contacts?.no_contacts || "No contacts available"}
             </p>
           </div>
         ) : (

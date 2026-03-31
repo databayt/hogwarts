@@ -18,11 +18,13 @@ import {
   useThumbnailSeek,
   useVideoPlayer,
   useVideoProgress,
+  useVideoProtection,
 } from "./hooks"
 import type { VideoPlayerProps } from "./types"
 import { VideoOverlay } from "./video-overlay"
 import { VideoProgressBar } from "./video-progress-bar"
 import { VideoUpNext } from "./video-up-next"
+import { VideoWatermark } from "./video-watermark"
 
 // Format time as MM:SS or HH:MM:SS
 function formatTime(seconds: number): string {
@@ -248,6 +250,12 @@ export function VideoPlayer({
   const { generateThumbnail } = useThumbnailSeek({
     videoRef,
     enabled: !url.includes("youtube") && !url.includes("vimeo"),
+  })
+
+  // Video protection (anti-download, anti-screenshot)
+  useVideoProtection({
+    containerRef,
+    videoRef,
   })
 
   // Handle resume on load
@@ -483,6 +491,7 @@ export function VideoPlayer({
   return (
     <div
       ref={containerRef}
+      data-video-protected
       className={cn(
         "group relative overflow-hidden",
         "bg-black",
@@ -503,7 +512,12 @@ export function VideoPlayer({
         playsInline
         onClick={actions.togglePlay}
         aria-label={title}
+        controlsList="nodownload"
+        onDragStart={(e) => e.preventDefault()}
       />
+
+      {/* Dynamic watermark for video ownership protection */}
+      <VideoWatermark userId={userId} />
 
       {/* Center overlay (play/pause, loading) */}
       <VideoOverlay

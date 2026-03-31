@@ -1,6 +1,7 @@
 {
   "ui": {
     "title": "Messages",
+    "description": "Send and receive messages, communicate with your school community",
     "empty_inbox": "No conversations yet",
     "empty_inbox_description": "Start a conversation with someone to get started",
     "start_conversation": "Start a conversation",
@@ -69,7 +70,21 @@
     "details": "Details",
     "voice_call": "Voice call",
     "video_call": "Video call",
-    "search_dots": "Search..."
+    "search_dots": "Search...",
+    "archived": "Archived",
+    "starred": "Starred messages",
+    "back": "Back",
+    "someone": "Someone",
+    "no_conversations": "No conversations yet",
+    "file_rejected": "File rejected",
+    "upload_failed": "Upload failed",
+    "drop_files": "Drop files here...",
+    "drop_or_click": "Drop files or click to upload",
+    "file_limits": "Max {max} files. Images, videos, audio, documents.",
+    "uploaded": "Uploaded",
+    "unable_to_load": "Unable to load messages",
+    "unexpected_error": "An unexpected error occurred while loading your messages.",
+    "error_reference": "Error reference"
   },
   "actions": {
     "send": "Send",
@@ -107,7 +122,8 @@
     "cancel": "Cancel",
     "confirm": "Confirm",
     "copy": "Copy",
-    "start_chat": "Start Chat"
+    "start_chat": "Start Chat",
+    "try_again": "Try again"
   },
   "errors": {
     "send_failed": "Failed to send message",
@@ -178,7 +194,9 @@
     "error": "Error",
     "conversation_created": "Conversation created",
     "group_created": "Group created",
-    "upload_success": "Uploaded {count} file(s)"
+    "upload_success": "Uploaded {count} file(s)",
+    "participant_added": "Participant added",
+    "new_member_joined": "A new member joined the conversation"
   },
   "confirmation": {
     "delete_message": "Are you sure you want to delete this message?",
@@ -234,7 +252,9 @@
     "open_conversation": "Open conversation",
     "scroll_to_newest": "Scroll to newest messages",
     "message_from": "Message from {sender}",
-    "unread_indicator": "Unread messages below"
+    "unread_indicator": "Unread messages below",
+    "previous_result": "Previous result",
+    "next_result": "Next result"
   },
   "contacts": {
     "search_placeholder": "Search contacts...",
@@ -243,6 +263,8 @@
     "favourites": "Favourites",
     "no_contacts": "No contacts available",
     "no_results": "No contacts found",
+    "no_unread": "No unread messages",
+    "no_favourites": "No favourites yet",
     "start_chat": "Start conversation",
     "categories": {
       "teachers": "Teachers",

@@ -26,11 +26,16 @@ export default async function StreamCourseSlugRoute({ params }: Props) {
     redirect(`/${lang}/stream/courses/${slug}/${firstLesson.id}`)
   }
 
+  const d = dictionary.stream?.courses
+
   return (
     <div className="flex h-full items-center justify-center text-center">
-      <h2 className="mb-2 text-2xl font-bold">No lessons available</h2>
+      <h2 className="mb-2 text-2xl font-bold">
+        {d?.noCourses || "No lessons available"}
+      </h2>
       <p className="text-muted-foreground">
-        This course does not have any lessons yet!
+        {d?.noCoursesDescription ||
+          "This course does not have any lessons yet!"}
       </p>
     </div>
   )

@@ -156,7 +156,7 @@ export async function processApplicationDocument(
     }
 
     await db.application.update({
-      where: { id: applicationId },
+      where: { id: applicationId, schoolId },
       data: { documents: existingDocs as any },
     })
 
@@ -260,7 +260,7 @@ export async function getDocumentProcessingStatus(
 
       // Persist synced statuses back to the application
       await db.application.update({
-        where: { id: applicationId },
+        where: { id: applicationId, schoolId },
         data: { documents: docs as any },
       })
     }

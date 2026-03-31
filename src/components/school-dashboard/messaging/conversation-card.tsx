@@ -30,6 +30,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Skeleton } from "@/components/ui/skeleton"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { CONVERSATION_TYPE_CONFIG } from "./config"
@@ -57,7 +58,8 @@ export interface ConversationCardProps {
  */
 function formatConversationTime(
   date: Date | string,
-  locale: "ar" | "en"
+  locale: "ar" | "en",
+  _yesterday = "Yesterday"
 ): string {
   const d = new Date(date)
   const dateLocale = locale === "ar" ? ar : enUS
@@ -66,7 +68,7 @@ function formatConversationTime(
     return format(d, "p", { locale: dateLocale })
   }
   if (isYesterday(d)) {
-    return locale === "ar" ? "أمس" : "Yesterday"
+    return _yesterday
   }
   if (differenceInCalendarDays(new Date(), d) < 7) {
     return format(d, "EEEE", { locale: dateLocale })
@@ -116,7 +118,11 @@ export const ConversationCard = memo(function ConversationCard({
 
   // WhatsApp-style short time
   const lastMessageTime = conversation.lastMessageAt
-    ? formatConversationTime(conversation.lastMessageAt, locale)
+    ? formatConversationTime(
+        conversation.lastMessageAt,
+        locale,
+        m?.ui?.yesterday || "Yesterday"
+      )
     : null
 
   // Last message preview
@@ -133,7 +139,7 @@ export const ConversationCard = memo(function ConversationCard({
     <div
       onClick={() => onClick?.(conversation.id)}
       className={cn(
-        "group flex h-[72px] cursor-pointer items-center gap-3 px-3 transition-colors",
+        "group relative flex h-[72px] cursor-pointer items-center gap-3 px-3 transition-colors",
         "hover:bg-msg-hover",
         isActive && "bg-msg-hover",
         className
@@ -276,13 +282,13 @@ export const ConversationCard = memo(function ConversationCard({
 export function ConversationCardSkeleton() {
   return (
     <div className="flex h-[72px] items-center gap-3 px-3">
-      <div className="bg-muted h-[49px] w-[49px] animate-pulse rounded-full" />
+      <Skeleton className="h-[49px] w-[49px] rounded-full" />
       <div className="border-border flex-1 space-y-2 border-b py-3">
         <div className="flex items-center justify-between">
-          <div className="bg-muted h-4 w-28 animate-pulse rounded" />
-          <div className="bg-muted h-3 w-12 animate-pulse rounded" />
+          <Skeleton className="h-4 w-28 rounded" />
+          <Skeleton className="h-3 w-12 rounded" />
         </div>
-        <div className="bg-muted h-3 w-44 animate-pulse rounded" />
+        <Skeleton className="h-3 w-44 rounded" />
       </div>
     </div>
   )

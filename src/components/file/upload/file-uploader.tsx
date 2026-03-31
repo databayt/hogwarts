@@ -71,6 +71,16 @@ export interface FileUploaderProps {
   onUploadError?: (error: string) => void
   /** Custom class name */
   className?: string
+  /** i18n labels for localization */
+  labels?: {
+    dropOrBrowse?: string
+    dropHere?: string
+    fileNotAccepted?: string
+    singleFile?: string
+    uploading?: string
+    upload?: string
+    cancel?: string
+  }
 }
 
 interface UploadedFile {
@@ -136,6 +146,7 @@ export function FileUploader({
   onUploadComplete,
   onUploadError,
   className,
+  labels,
 }: FileUploaderProps) {
   const [files, setFiles] = useState<UploadedFile[]>([])
   const [isOptimizing, setIsOptimizing] = useState(false)
@@ -397,18 +408,24 @@ export function FileUploader({
             <Upload className="text-muted-foreground mb-2 h-8 w-8" />
             {isDragActive ? (
               isDragReject ? (
-                <p className="text-destructive text-sm">File not accepted</p>
+                <p className="text-destructive text-sm">
+                  {labels?.fileNotAccepted || "File not accepted"}
+                </p>
               ) : (
-                <p className="text-primary text-sm">Drop here</p>
+                <p className="text-primary text-sm">
+                  {labels?.dropHere || "Drop here"}
+                </p>
               )
             ) : (
               <>
                 <p className="text-sm font-medium">
-                  Drop file or click to browse
+                  {labels?.dropOrBrowse || "Drop file or click to browse"}
                 </p>
                 <p className="text-muted-foreground mt-1 text-xs">
-                  {multiple ? `Up to ${maxFiles} files` : "Single file"} • Max{" "}
-                  {formatBytes(maxSize)}
+                  {multiple
+                    ? `Up to ${maxFiles} files`
+                    : labels?.singleFile || "Single file"}{" "}
+                  • Max {formatBytes(maxSize)}
                 </p>
               </>
             )}
@@ -421,7 +438,9 @@ export function FileUploader({
         ) : autoUpload ? (
           <div className="flex h-full flex-col items-center justify-center p-6">
             <Upload className="text-muted-foreground mb-2 h-8 w-8 animate-pulse" />
-            <p className="text-muted-foreground text-sm">Uploading...</p>
+            <p className="text-muted-foreground text-sm">
+              {labels?.uploading || "Uploading..."}
+            </p>
           </div>
         ) : (
           <div className="flex h-full flex-col justify-center p-4">
@@ -450,7 +469,7 @@ export function FileUploader({
                   disabled={isUploading || isOptimizing}
                   className="flex-1"
                 >
-                  Upload
+                  {labels?.upload || "Upload"}
                 </Button>
                 <Button
                   size="sm"
@@ -458,7 +477,7 @@ export function FileUploader({
                   onClick={clearAll}
                   disabled={isUploading || isOptimizing}
                 >
-                  Cancel
+                  {labels?.cancel || "Cancel"}
                 </Button>
               </div>
             )}

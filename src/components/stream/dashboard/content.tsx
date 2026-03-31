@@ -66,12 +66,12 @@ export function StreamDashboardContent({
   availableCourses,
 }: Props) {
   const isRTL = lang === "ar"
-  const d = dictionary?.stream?.studentDashboard
+  const d = dictionary?.studentDashboard
 
   // Format price
   const formatPrice = (price: number | null) => {
     if (!price || price === 0) {
-      return d?.free || dictionary?.stream?.courses?.free || "Free"
+      return d?.free || dictionary?.courses?.free || "Free"
     }
     return new Intl.NumberFormat(lang, {
       style: "currency",

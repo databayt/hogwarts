@@ -1,0 +1,117 @@
+{
+  "title": "WhatsApp",
+  "description": "WhatsApp integration for school communication",
+  "tabs": {
+    "connection": "Connection",
+    "groups": "Groups",
+    "messages": "Messages",
+    "templates": "Templates"
+  },
+  "connection": {
+    "title": "WhatsApp Connection",
+    "status": "Status",
+    "connected": "Connected",
+    "disconnected": "Disconnected",
+    "connecting": "Connecting...",
+    "qrPending": "Scan QR Code",
+    "connect": "Connect WhatsApp",
+    "disconnect": "Disconnect",
+    "refresh": "Refresh Status",
+    "scanQR": "Scan this QR code with your school's WhatsApp to connect",
+    "phoneNumber": "Phone Number",
+    "connectedSince": "Connected Since",
+    "waitingForScan": "Waiting for QR code scan..."
+  },
+  "groups": {
+    "title": "WhatsApp Groups",
+    "create": "Create Group",
+    "autoCreate": "Auto-create from Section",
+    "name": "Group Name",
+    "description": "Description",
+    "type": "Type",
+    "members": "Members",
+    "section": "Section",
+    "class": "Class",
+    "participants": "Participants",
+    "addParticipants": "Add Participants",
+    "removeParticipants": "Remove Participants",
+    "delete": "Delete Group",
+    "deleteConfirm": "Are you sure you want to delete this group?",
+    "noGroups": "No WhatsApp groups yet",
+    "types": {
+      "section_parents": "Section Parents",
+      "class_parents": "Class Parents",
+      "teachers": "Teachers",
+      "announcement": "Announcement",
+      "custom": "Custom"
+    }
+  },
+  "messages": {
+    "title": "Messages",
+    "send": "Send Message",
+    "compose": "Compose Message",
+    "recipient": "Recipient",
+    "selectGroup": "Select Group",
+    "phoneNumber": "Phone Number",
+    "content": "Message",
+    "broadcast": "Broadcast",
+    "broadcastDesc": "Send to multiple groups",
+    "noMessages": "No messages yet",
+    "status": {
+      "pending": "Pending",
+      "queued": "Queued",
+      "sent": "Sent",
+      "delivered": "Delivered",
+      "read": "Read",
+      "failed": "Failed"
+    }
+  },
+  "templates": {
+    "title": "Message Templates",
+    "create": "Create Template",
+    "name": "Template Name",
+    "content": "Content",
+    "type": "Type",
+    "language": "Language",
+    "active": "Active",
+    "inactive": "Inactive",
+    "noTemplates": "No templates yet",
+    "variables": "Available variables: {{studentName}}, {{schoolName}}, {{date}}, {{amount}}, etc.",
+    "types": {
+      "attendance": "Attendance",
+      "fee": "Fees",
+      "emergency": "Emergency",
+      "grade": "Grades",
+      "announcement": "Announcement",
+      "event": "Events",
+      "assignment": "Assignment",
+      "meeting": "Meeting"
+    }
+  },
+  "stats": {
+    "connected": "Connected",
+    "notConnected": "Not Connected",
+    "totalGroups": "Total Groups",
+    "messagesToday": "Messages Today",
+    "dailyLimit": "Daily Limit"
+  },
+  "errors": {
+    "connectionFailed": "Failed to connect WhatsApp",
+    "sendFailed": "Failed to send message",
+    "groupCreateFailed": "Failed to create group",
+    "notConnected": "WhatsApp is not connected",
+    "rateLimited": "Rate limit reached. Try again later.",
+    "loadFailed": "Failed to load WhatsApp data",
+    "tryAgain": "Try Again"
+  },
+  "success": {
+    "connected": "WhatsApp connected successfully",
+    "disconnected": "WhatsApp disconnected",
+    "messageSent": "Message sent",
+    "groupCreated": "Group created",
+    "groupDeleted": "Group deleted",
+    "templateSaved": "Template saved",
+    "templateDeleted": "Template deleted",
+    "broadcastSent": "Broadcast sent"
+  }
+}

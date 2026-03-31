@@ -1,0 +1,117 @@
+{
+  "title": "واتساب",
+  "description": "تكامل واتساب للتواصل المدرسي",
+  "tabs": {
+    "connection": "الاتصال",
+    "groups": "المجموعات",
+    "messages": "الرسائل",
+    "templates": "القوالب"
+  },
+  "connection": {
+    "title": "اتصال واتساب",
+    "status": "الحالة",
+    "connected": "متصل",
+    "disconnected": "غير متصل",
+    "connecting": "جاري الاتصال...",
+    "qrPending": "امسح رمز QR",
+    "connect": "ربط واتساب",
+    "disconnect": "قطع الاتصال",
+    "refresh": "تحديث الحالة",
+    "scanQR": "امسح رمز QR هذا بواتساب المدرسة للاتصال",
+    "phoneNumber": "رقم الهاتف",
+    "connectedSince": "متصل منذ",
+    "waitingForScan": "في انتظار مسح رمز QR..."
+  },
+  "groups": {
+    "title": "مجموعات واتساب",
+    "create": "إنشاء مجموعة",
+    "autoCreate": "إنشاء تلقائي من الشعبة",
+    "name": "اسم المجموعة",
+    "description": "الوصف",
+    "type": "النوع",
+    "members": "الأعضاء",
+    "section": "الشعبة",
+    "class": "الفصل",
+    "participants": "المشاركون",
+    "addParticipants": "إضافة مشاركين",
+    "removeParticipants": "إزالة مشاركين",
+    "delete": "حذف المجموعة",
+    "deleteConfirm": "هل أنت متأكد من حذف هذه المجموعة؟",
+    "noGroups": "لا توجد مجموعات واتساب بعد",
+    "types": {
+      "section_parents": "أولياء أمور الشعبة",
+      "class_parents": "أولياء أمور الفصل",
+      "teachers": "المعلمون",
+      "announcement": "إعلانات",
+      "custom": "مخصص"
+    }
+  },
+  "messages": {
+    "title": "الرسائل",
+    "send": "إرسال رسالة",
+    "compose": "كتابة رسالة",
+    "recipient": "المستلم",
+    "selectGroup": "اختر مجموعة",
+    "phoneNumber": "رقم الهاتف",
+    "content": "الرسالة",
+    "broadcast": "بث",
+    "broadcastDesc": "إرسال لعدة مجموعات",
+    "noMessages": "لا توجد رسائل بعد",
+    "status": {
+      "pending": "قيد الانتظار",
+      "queued": "في الطابور",
+      "sent": "تم الإرسال",
+      "delivered": "تم التسليم",
+      "read": "تمت القراءة",
+      "failed": "فشل"
+    }
+  },
+  "templates": {
+    "title": "قوالب الرسائل",
+    "create": "إنشاء قالب",
+    "name": "اسم القالب",
+    "content": "المحتوى",
+    "type": "النوع",
+    "language": "اللغة",
+    "active": "نشط",
+    "inactive": "غير نشط",
+    "noTemplates": "لا توجد قوالب بعد",
+    "variables": "المتغيرات المتاحة: {{studentName}}، {{schoolName}}، {{date}}، {{amount}}، إلخ.",
+    "types": {
+      "attendance": "الحضور",
+      "fee": "الرسوم",
+      "emergency": "طوارئ",
+      "grade": "الدرجات",
+      "announcement": "إعلان",
+      "event": "فعاليات",
+      "assignment": "واجب",
+      "meeting": "اجتماع"
+    }
+  },
+  "stats": {
+    "connected": "متصل",
+    "notConnected": "غير متصل",
+    "totalGroups": "إجمالي المجموعات",
+    "messagesToday": "رسائل اليوم",
+    "dailyLimit": "الحد اليومي"
+  },
+  "errors": {
+    "connectionFailed": "فشل الاتصال بواتساب",
+    "sendFailed": "فشل إرسال الرسالة",
+    "groupCreateFailed": "فشل إنشاء المجموعة",
+    "notConnected": "واتساب غير متصل",
+    "rateLimited": "تم الوصول للحد الأقصى. حاول لاحقاً.",
+    "loadFailed": "فشل تحميل بيانات واتساب",
+    "tryAgain": "حاول مجدداً"
+  },
+  "success": {
+    "connected": "تم ربط واتساب بنجاح",
+    "disconnected": "تم قطع اتصال واتساب",
+    "messageSent": "تم إرسال الرسالة",
+    "groupCreated": "تم إنشاء المجموعة",
+    "groupDeleted": "تم حذف المجموعة",
+    "templateSaved": "تم حفظ القالب",
+    "templateDeleted": "تم حذف القالب",
+    "broadcastSent": "تم إرسال البث"
+  }
+}

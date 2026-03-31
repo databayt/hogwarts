@@ -1763,7 +1763,9 @@
       "Sales": "Sales",
       "Classrooms": "Classrooms",
       "Stats": "Stats",
-      "Staff": "Staff"
+      "Staff": "Staff",
+      "WhatsApp": "WhatsApp",
+      "Messages": "Messages"
     },
     "breadcrumb": {
       "dashboard": "Dashboard",
@@ -1809,7 +1811,12 @@
       "manage": "Manage",
       "schedule": "Schedule",
       "analytics": "Analytics",
-      "overview": "Overview"
+      "overview": "Overview",
+      "whatsapp": "WhatsApp",
+      "notifications": "Notifications",
+      "messages": "Messages",
+      "unread": "Unread",
+      "preferences": "Preferences"
     },
     "notifications": "Notifications",
     "messages": "Messages"

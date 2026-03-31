@@ -24,6 +24,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "@/components/ui/use-toast"
 import type { UploadedFileResult } from "@/components/file"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
@@ -414,7 +415,7 @@ export function ChatInterface({
           size="icon"
           onClick={onBack}
           className="h-10 w-10 flex-shrink-0 rounded-full md:hidden"
-          aria-label={(m?.ui as Record<string, string>)?.back || "Back"}
+          aria-label={m?.ui?.back || "Back"}
         >
           <ArrowLeft className="h-5 w-5 rtl:rotate-180" />
         </Button>
@@ -435,7 +436,7 @@ export function ChatInterface({
           {typingUsers.length > 0 ? (
             <p className="text-msg-unread-badge text-xs">
               {typingUsers.length === 1
-                ? `${typingUsers[0].user.username || (m?.ui as Record<string, string>)?.someone || "Someone"} ${m?.ui?.is_typing || "is typing..."}`
+                ? `${typingUsers[0].user.username || m?.ui?.someone || "Someone"} ${m?.ui?.is_typing || "is typing..."}`
                 : `${typingUsers.length} ${m?.ui?.are_typing || "are typing..."}`}
             </p>
           ) : conversation.type !== "direct" && participantNames ? (
@@ -559,16 +560,16 @@ export function ChatInterfaceSkeleton({
     <div className="flex h-full flex-col">
       {/* Header skeleton */}
       <div className="bg-msg-header-bg border-border flex h-[60px] items-center gap-3 border-b px-3">
-        <div className="bg-muted h-10 w-10 animate-pulse rounded-full" />
+        <Skeleton className="h-10 w-10 rounded-full" />
         <div className="flex-1 space-y-1.5">
-          <div className="bg-muted h-4 w-28 animate-pulse rounded" />
-          <div className="bg-muted h-3 w-20 animate-pulse rounded" />
+          <Skeleton className="h-4 w-28 rounded" />
+          <Skeleton className="h-3 w-20 rounded" />
         </div>
       </div>
       <MessageListSkeleton locale={locale} />
       {/* Input skeleton */}
       <div className="bg-msg-header-bg border-border border-t px-3 py-2">
-        <div className="bg-msg-input-bg h-[42px] animate-pulse rounded-[21px]" />
+        <Skeleton className="h-[42px] rounded-[21px]" />
       </div>
     </div>
   )

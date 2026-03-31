@@ -119,7 +119,7 @@ export function MeritTable({
 
   const handleView = useCallback(
     (id: string) => {
-      router.push(`/admission/applications/${id}`)
+      router.push(`/${lang}/admission/applications/${id}`)
     },
     [router]
   )

@@ -9,12 +9,22 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 import type { TeacherStats } from "./actions"
+import { ProposeVideoDialog } from "./propose-video-dialog"
+
+interface LessonOption {
+  id: string
+  name: string
+  chapterName: string
+  subjectName: string
+  subjectSlug: string
+}
 
 interface Props {
-  dictionary: Record<string, unknown>
+  dictionary: Record<string, any>
   lang: string
   stats: TeacherStats
   subdomain: string
+  proposableLessons?: LessonOption[]
 }
 
 export function TeachOverviewContent({
@@ -22,24 +32,26 @@ export function TeachOverviewContent({
   lang,
   stats,
   subdomain,
+  proposableLessons = [],
 }: Props) {
   const base = `/${lang}/stream/settings`
+  const d = dictionary?.teachDashboard
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">
-            Teacher Dashboard
+            {d?.title || "Teacher Dashboard"}
           </h1>
           <p className="text-muted-foreground text-sm">
-            Manage your content contributions and uploads
+            {d?.description || "Manage your content contributions and uploads"}
           </p>
         </div>
         <Link href={`${base}?tab=videos`}>
           <Button>
             <Film className="me-2 size-4" />
-            My Videos
+            {d?.myVideos || "My Videos"}
           </Button>
         </Link>
       </div>
@@ -48,7 +60,9 @@ export function TeachOverviewContent({
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Videos</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {d?.totalVideos || "Total Videos"}
+            </CardTitle>
             <Film className="text-muted-foreground size-4" />
           </CardHeader>
           <CardContent>
@@ -59,7 +73,7 @@ export function TeachOverviewContent({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Pending Review
+              {d?.pendingReview || "Pending Review"}
             </CardTitle>
             <Clock className="text-muted-foreground size-4" />
           </CardHeader>
@@ -70,7 +84,9 @@ export function TeachOverviewContent({
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Approved</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {d?.approved || "Approved"}
+            </CardTitle>
             <CheckCircle2 className="text-muted-foreground size-4" />
           </CardHeader>
           <CardContent>
@@ -80,7 +96,9 @@ export function TeachOverviewContent({
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Views</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {d?.totalViews || "Total Views"}
+            </CardTitle>
             <Eye className="text-muted-foreground size-4" />
           </CardHeader>
           <CardContent>
@@ -92,17 +110,20 @@ export function TeachOverviewContent({
       {/* Quick actions */}
       <Card>
         <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
+          <CardTitle>{d?.quickActions || "Quick Actions"}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-3">
+          <ProposeVideoDialog lessons={proposableLessons} />
           <Link href={`${base}?tab=videos`}>
             <Button variant="outline">
               <Film className="me-2 size-4" />
-              View My Videos
+              {d?.viewMyVideos || "View My Videos"}
             </Button>
           </Link>
           <Link href={`/${lang}/stream/courses`}>
-            <Button variant="outline">Browse Catalog</Button>
+            <Button variant="outline">
+              {d?.browseCatalog || "Browse Catalog"}
+            </Button>
           </Link>
         </CardContent>
       </Card>

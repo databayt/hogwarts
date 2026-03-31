@@ -331,6 +331,8 @@ export const roleRoutes: Record<string, Role[]> = {
   "/announcements/*": ["ADMIN", "TEACHER", "STAFF", "ACCOUNTANT", "DEVELOPER"],
   "/messaging": ["ADMIN", "TEACHER", "STAFF", "ACCOUNTANT", "DEVELOPER"],
   "/messaging/*": ["ADMIN", "TEACHER", "STAFF", "ACCOUNTANT", "DEVELOPER"],
+  "/whatsapp": ["ADMIN", "DEVELOPER"],
+  "/whatsapp/*": ["ADMIN", "DEVELOPER"],
 
   // ============================================================================
   // Student/Guardian self-service routes

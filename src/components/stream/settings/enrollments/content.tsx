@@ -18,7 +18,7 @@ import {
 import type { EnrollmentRecord } from "./actions"
 
 interface Props {
-  dictionary: Record<string, unknown>
+  dictionary: Record<string, any>
   lang: string
   enrollments: EnrollmentRecord[]
 }
@@ -34,38 +34,46 @@ const statusVariant: Record<
   EXPIRED: "destructive",
 }
 
-export function EnrollmentsContent({ enrollments }: Props) {
+export function EnrollmentsContent({ dictionary, enrollments }: Props) {
+  const d = dictionary?.enrollments
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Enrollments</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {d?.title || "Enrollments"}
+          </h1>
           <p className="text-muted-foreground text-sm">
-            Manage student enrollments across all subjects
+            {d?.description || "Manage student enrollments across all subjects"}
           </p>
         </div>
-        <Badge variant="outline">{enrollments.length} total</Badge>
+        <Badge variant="outline">
+          {enrollments.length} {d?.total || "total"}
+        </Badge>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>All Enrollments</CardTitle>
+          <CardTitle>{d?.allEnrollments || "All Enrollments"}</CardTitle>
         </CardHeader>
         <CardContent>
           {enrollments.length === 0 ? (
             <p className="text-muted-foreground py-8 text-center text-sm">
-              No enrollments yet.
+              {d?.noEnrollments || "No enrollments yet."}
             </p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Student</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Subject</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-end">Completed</TableHead>
-                  <TableHead>Enrolled</TableHead>
+                  <TableHead>{d?.student || "Student"}</TableHead>
+                  <TableHead>{d?.email || "Email"}</TableHead>
+                  <TableHead>{d?.subject || "Subject"}</TableHead>
+                  <TableHead>{d?.status || "Status"}</TableHead>
+                  <TableHead className="text-end">
+                    {d?.completed || "Completed"}
+                  </TableHead>
+                  <TableHead>{d?.enrolled || "Enrolled"}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -86,7 +94,7 @@ export function EnrollmentsContent({ enrollments }: Props) {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-end">
-                      {enrollment.completedLessons} lessons
+                      {enrollment.completedLessons} {d?.lessons || "lessons"}
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">
                       {format(new Date(enrollment.createdAt), "MMM d, yyyy")}

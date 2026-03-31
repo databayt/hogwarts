@@ -7,31 +7,42 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 interface Props {
   activeTab: string
   userRole: string
+  dictionary?: Record<string, any>
   overviewContent?: React.ReactNode
   enrollmentsContent: React.ReactNode
   instructorsContent: React.ReactNode
   videosContent: React.ReactNode
+  reviewContent?: React.ReactNode
+  pendingReviewCount?: number
 }
 
 export function StreamSettingsContent({
   activeTab,
   userRole,
+  dictionary,
   overviewContent,
   enrollmentsContent,
   instructorsContent,
   videosContent,
+  reviewContent,
+  pendingReviewCount = 0,
 }: Props) {
   const isFullAdmin = userRole === "ADMIN" || userRole === "DEVELOPER"
+  const d = dictionary?.settings
 
   const tabs = [
     ...(isFullAdmin
       ? [
-          { value: "overview", label: "Overview" },
-          { value: "enrollments", label: "Enrollments" },
-          { value: "instructors", label: "Instructors" },
+          { value: "overview", label: d?.overview || "Overview" },
+          { value: "enrollments", label: d?.enrollments || "Enrollments" },
+          { value: "instructors", label: d?.instructors || "Instructors" },
+          {
+            value: "review",
+            label: `${d?.review || "Review"}${pendingReviewCount > 0 ? ` (${pendingReviewCount})` : ""}`,
+          },
         ]
       : []),
-    { value: "videos", label: "Videos" },
+    { value: "videos", label: d?.videos || "Videos" },
   ]
 
   const defaultTab = isFullAdmin ? activeTab || "overview" : "videos"
@@ -39,9 +50,10 @@ export function StreamSettingsContent({
   return (
     <div className="space-y-6">
       <div>
-        <h2>Stream Settings</h2>
+        <h2>{d?.title || "Stream Settings"}</h2>
         <p className="muted">
-          Manage enrollments, instructor preferences, and video content
+          {d?.description ||
+            "Manage enrollments, instructor preferences, and video content"}
         </p>
       </div>
 
@@ -59,6 +71,9 @@ export function StreamSettingsContent({
             <TabsContent value="overview">{overviewContent}</TabsContent>
             <TabsContent value="enrollments">{enrollmentsContent}</TabsContent>
             <TabsContent value="instructors">{instructorsContent}</TabsContent>
+            {reviewContent && (
+              <TabsContent value="review">{reviewContent}</TabsContent>
+            )}
           </>
         )}
 

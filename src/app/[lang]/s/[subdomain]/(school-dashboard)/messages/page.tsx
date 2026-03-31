@@ -5,7 +5,7 @@ import { Suspense } from "react"
 import type { Metadata } from "next"
 
 import { type Locale } from "@/components/internationalization/config"
-import { getDictionary } from "@/components/internationalization/dictionaries"
+import { getMessagingDictionary } from "@/components/internationalization/dictionaries"
 import {
   MessagingContent,
   MessagingContentSkeleton,
@@ -25,13 +25,11 @@ export async function generateMetadata({
   params,
 }: MessagesPageProps): Promise<Metadata> {
   const { lang } = await params
-  const dictionary = await getDictionary(lang)
+  const dict = await getMessagingDictionary(lang)
+  const m = dict?.messaging
   return {
-    title: lang === "ar" ? "الرسائل | هوغوارتس" : "Messages | Hogwarts",
-    description:
-      lang === "ar"
-        ? "إرسال واستقبال الرسائل، التواصل مع مجتمع المدرسة"
-        : "Send and receive messages, communicate with your school community",
+    title: m?.ui?.title || "Messages",
+    description: m?.ui?.description || "Send and receive messages",
   }
 }
 

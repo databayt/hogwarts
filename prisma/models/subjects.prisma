@@ -66,6 +66,9 @@ model Class {
   // Progress Report relations
   progressReportSchedules  ProgressReportSchedule[]
 
+  // WhatsApp group relation
+  whatsappGroups WhatsAppGroup[]
+
   // Wizard support
   wizardStep String? // null = complete, non-null = current wizard step slug
 

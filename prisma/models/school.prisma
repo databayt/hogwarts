@@ -378,6 +378,13 @@ model School {
   promotionCandidates  PromotionCandidate[]
   transcripts          Transcript[]
 
+  // WhatsApp Integration
+  whatsappSession          WhatsAppSession?
+  whatsappGroups           WhatsAppGroup[]
+  whatsappGroupMembers     WhatsAppGroupMember[]
+  whatsappMessages         WhatsAppMessage[]
+  whatsappMessageTemplates WhatsAppMessageTemplate[]
+
   @@map("schools")
 }
 

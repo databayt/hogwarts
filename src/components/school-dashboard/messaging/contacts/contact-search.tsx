@@ -33,17 +33,14 @@ export function ContactSearch({
 
   const getLabel = (chip: { key: SidebarFilter; label: string }) => {
     if (chip.key === "all") {
-      return m?.contacts?.filter_all ?? (locale === "ar" ? "الكل" : "All")
+      return m?.contacts?.filter_all ?? "All"
     }
     if (chip.key === "unread") {
-      const base =
-        m?.contacts?.unread ?? (locale === "ar" ? "غير مقروءة" : "Unread")
+      const base = m?.contacts?.unread ?? "Unread"
       return unreadCount > 0 ? `${base} (${unreadCount})` : base
     }
     if (chip.key === "favourites") {
-      return (
-        m?.contacts?.favourites ?? (locale === "ar" ? "المفضلة" : "Favourites")
-      )
+      return m?.contacts?.favourites ?? "Favourites"
     }
     // Role category
     const categories = m?.contacts?.categories as
@@ -61,10 +58,7 @@ export function ContactSearch({
           type="text"
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
-          placeholder={
-            m?.contacts?.search_placeholder ??
-            (locale === "ar" ? "بحث في جهات الاتصال..." : "Search contacts...")
-          }
+          placeholder={m?.contacts?.search_placeholder ?? "Search contacts..."}
           className={cn(
             "bg-msg-search-bg text-msg-search-text placeholder:text-msg-search-placeholder w-full rounded-[21px] py-1.5 ps-9 pe-3 text-sm",
             "focus:ring-msg-search-focus focus:ring-1 focus:outline-none"

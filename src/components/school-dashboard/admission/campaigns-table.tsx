@@ -132,7 +132,7 @@ export function CampaignsTable({
 
   const handleView = useCallback(
     (id: string) => {
-      router.push(`/admission/campaigns/${id}`)
+      router.push(`/${lang}/admission/campaigns/${id}`)
     },
     [router]
   )

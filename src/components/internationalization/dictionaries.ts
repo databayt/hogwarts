@@ -146,6 +146,14 @@ const messagingDictionaries = {
     import("./dictionaries/ar/messaging.json").then((module) => module.default),
 } as const
 
+// WhatsApp module dictionaries (WhatsApp integration)
+const whatsappDictionaries = {
+  en: () =>
+    import("./dictionaries/en/whatsapp.json").then((module) => module.default),
+  ar: () =>
+    import("./dictionaries/ar/whatsapp.json").then((module) => module.default),
+} as const
+
 // ============================================================================
 // Route-Specific Dictionary Loaders (Optimized)
 // ============================================================================
@@ -457,6 +465,33 @@ export const getMessagingDictionary = async (locale: Locale) => {
   }
 }
 
+/**
+ * WhatsApp pages - school-dashboard core + whatsapp
+ * Used for: WhatsApp integration, groups, messages, templates
+ */
+export const getWhatsAppDictionary = async (locale: Locale) => {
+  try {
+    const [general, school, operator, messages, whatsapp] = await Promise.all([
+      generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
+      schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
+      operatorDictionaries[locale]?.() ?? operatorDictionaries["en"](),
+      messagesDictionaries[locale]?.() ?? messagesDictionaries["en"](),
+      whatsappDictionaries[locale]?.() ?? whatsappDictionaries["en"](),
+    ])
+    return { ...general, ...school, ...operator, messages, whatsapp }
+  } catch (error) {
+    console.warn(`Failed to load whatsapp dictionary for locale: ${locale}`)
+    const [general, school, operator, messages, whatsapp] = await Promise.all([
+      generalDictionaries["en"](),
+      schoolDictionaries["en"](),
+      operatorDictionaries["en"](),
+      messagesDictionaries["en"](),
+      whatsappDictionaries["en"](),
+    ])
+    return { ...general, ...school, ...operator, messages, whatsapp }
+  }
+}
+
 // ============================================================================
 // Full Dictionary Loader (Default)
 // ============================================================================
@@ -487,6 +522,7 @@ export const getDictionary = async (locale: Locale) => {
       sales,
       attendance,
       messaging,
+      whatsapp,
     ] = await Promise.all([
       generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
       schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
@@ -507,6 +543,7 @@ export const getDictionary = async (locale: Locale) => {
       salesDictionaries[locale]?.() ?? salesDictionaries["en"](),
       attendanceDictionaries[locale]?.() ?? attendanceDictionaries["en"](),
       messagingDictionaries[locale]?.() ?? messagingDictionaries["en"](),
+      whatsappDictionaries[locale]?.() ?? whatsappDictionaries["en"](),
     ])
 
     // Merge dictionaries with module-specific keys nested under their respective namespaces
@@ -529,6 +566,7 @@ export const getDictionary = async (locale: Locale) => {
       sales,
       attendance,
       messaging,
+      whatsapp,
     }
   } catch (error) {
     console.warn(
@@ -553,6 +591,7 @@ export const getDictionary = async (locale: Locale) => {
       sales,
       attendance,
       messaging,
+      whatsapp,
     ] = await Promise.all([
       generalDictionaries["en"](),
       schoolDictionaries["en"](),
@@ -572,6 +611,7 @@ export const getDictionary = async (locale: Locale) => {
       salesDictionaries["en"](),
       attendanceDictionaries["en"](),
       messagingDictionaries["en"](),
+      whatsappDictionaries["en"](),
     ])
     return {
       ...general,
@@ -592,6 +632,7 @@ export const getDictionary = async (locale: Locale) => {
       sales,
       attendance,
       messaging,
+      whatsapp,
     }
   }
 }

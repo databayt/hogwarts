@@ -10,6 +10,7 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 import { StreamCourseDetailContent } from "@/components/stream/courses/[slug]/content"
 import { checkCatalogEnrollment } from "@/components/stream/data/catalog/check-enrollment"
 import { getCatalogCourse } from "@/components/stream/data/catalog/get-course"
+import { getCourseProgress } from "@/components/stream/data/catalog/get-course-progress"
 
 export const dynamic = "force-dynamic"
 
@@ -44,7 +45,10 @@ export default async function StreamCourseDetailPage({ params }: Props) {
   ])
 
   const course = await getCatalogCourse(slug, schoolId, lang)
-  const isEnrolled = await checkCatalogEnrollment(course.id)
+  const [isEnrolled, courseProgress] = await Promise.all([
+    checkCatalogEnrollment(course.id),
+    getCourseProgress(course.id),
+  ])
 
   return (
     <StreamCourseDetailContent
@@ -54,6 +58,7 @@ export default async function StreamCourseDetailPage({ params }: Props) {
       course={course}
       isEnrolled={isEnrolled}
       userRole={session?.user?.role || null}
+      courseProgress={courseProgress}
     />
   )
 }

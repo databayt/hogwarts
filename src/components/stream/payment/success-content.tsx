@@ -37,7 +37,7 @@ export function StreamPaymentSuccessContent({
   const triggerConfetti = useConfetti()
   const isRTL = lang === "ar"
   const ArrowIcon = isRTL ? ArrowLeft : ArrowRight
-  const d = dictionary?.stream?.paymentSuccess
+  const d = dictionary?.paymentSuccess
 
   useEffect(() => {
     // Only trigger confetti if payment was successful

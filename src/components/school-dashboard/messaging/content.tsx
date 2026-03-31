@@ -5,6 +5,7 @@ import { Suspense } from "react"
 import { auth } from "@/auth"
 
 import { getTenantContext } from "@/lib/tenant-context"
+import { Skeleton } from "@/components/ui/skeleton"
 import { getMessagingDictionary } from "@/components/internationalization/dictionaries"
 
 import { MessagingClient } from "./messaging-client"
@@ -112,23 +113,27 @@ export async function MessagingContent({
   )
 }
 
-export function MessagingContentSkeleton({
+export async function MessagingContentSkeleton({
   locale = "en",
 }: {
   locale?: "ar" | "en"
 }) {
+  const dict = await getMessagingDictionary(locale)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const m = dict?.messaging as Record<string, any> | undefined
+
   return (
     <div className="bg-background flex h-full">
       {/* Sidebar skeleton - responsive */}
       <div className="border-border w-full flex-shrink-0 space-y-4 border-e p-4 sm:w-96 md:w-[430px]">
-        <div className="bg-muted h-10 animate-pulse rounded" />
-        <div className="bg-muted h-10 animate-pulse rounded" />
+        <Skeleton className="h-10 w-full rounded" />
+        <Skeleton className="h-10 w-full rounded" />
         {Array.from({ length: 8 }).map((_, i) => (
           <div key={i} className="flex gap-3">
-            <div className="bg-muted h-12 w-12 animate-pulse rounded-full" />
+            <Skeleton className="h-12 w-12 rounded-full" />
             <div className="flex-1 space-y-2">
-              <div className="bg-muted h-4 w-32 animate-pulse rounded" />
-              <div className="bg-muted h-3 w-48 animate-pulse rounded" />
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-3 w-48" />
             </div>
           </div>
         ))}
@@ -137,9 +142,7 @@ export function MessagingContentSkeleton({
       {/* Chat skeleton - hidden on mobile, visible on desktop */}
       <div className="bg-muted/20 hidden flex-1 items-center justify-center md:flex">
         <p className="text-muted-foreground">
-          {locale === "ar"
-            ? "اختر محادثة للبدء"
-            : "Select a conversation to start"}
+          {m?.ui?.select_conversation_start || "Select a conversation to start"}
         </p>
       </div>
     </div>

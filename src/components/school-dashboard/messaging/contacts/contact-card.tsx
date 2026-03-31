@@ -15,6 +15,8 @@ import { Pin } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import type { ContactDTO } from "./types"
 
@@ -39,32 +41,15 @@ const ROLE_COLORS: Record<string, string> = {
   DEVELOPER: "bg-pink-100 text-pink-700 dark:bg-pink-950 dark:text-pink-400",
 }
 
-const ROLE_LABELS: Record<string, Record<string, string>> = {
-  en: {
-    ADMIN: "Admin",
-    TEACHER: "Teacher",
-    STUDENT: "Student",
-    GUARDIAN: "Parent",
-    STAFF: "Staff",
-    ACCOUNTANT: "Accountant",
-    DEVELOPER: "Developer",
-  },
-  ar: {
-    ADMIN: "مدير",
-    TEACHER: "معلم",
-    STUDENT: "طالب",
-    GUARDIAN: "ولي أمر",
-    STAFF: "موظف",
-    ACCOUNTANT: "محاسب",
-    DEVELOPER: "مطور",
-  },
-}
-
-function formatTime(date: Date | string, locale: "ar" | "en"): string {
+function formatTime(
+  date: Date | string,
+  locale: "ar" | "en",
+  yesterdayLabel = "Yesterday"
+): string {
   const d = new Date(date)
   const dateLocale = locale === "ar" ? ar : enUS
   if (isToday(d)) return format(d, "p", { locale: dateLocale })
-  if (isYesterday(d)) return locale === "ar" ? "أمس" : "Yesterday"
+  if (isYesterday(d)) return yesterdayLabel
   if (differenceInCalendarDays(new Date(), d) < 7)
     return format(d, "EEEE", { locale: dateLocale })
   return format(d, "P", { locale: dateLocale })
@@ -77,12 +62,17 @@ export const ContactCard = memo(function ContactCard({
   onClick,
   className,
 }: ContactCardProps) {
+  const { dictionary } = useDictionary()
+  const roleLabels = (dictionary?.school?.settings as Record<string, any>)
+    ?.roleSwitcher?.roleLabels
+  const m = dictionary?.messaging
+
   const initials =
     `${contact.firstName?.[0] ?? ""}${contact.lastName?.[0] ?? ""}`.toUpperCase() ||
     "?"
   const hasConversation = !!contact.conversationId
   const hasUnread = (contact.unreadCount ?? 0) > 0
-  const roleLabel = ROLE_LABELS[locale]?.[contact.role] ?? contact.role
+  const roleLabel = roleLabels?.[contact.role?.toLowerCase()] ?? contact.role
   const roleColor = ROLE_COLORS[contact.role] ?? ""
 
   return (
@@ -124,7 +114,11 @@ export const ContactCard = memo(function ContactCard({
                   : "text-muted-foreground"
               )}
             >
-              {formatTime(contact.lastMessageAt, locale)}
+              {formatTime(
+                contact.lastMessageAt,
+                locale,
+                m?.ui?.yesterday || "Yesterday"
+              )}
             </span>
           ) : (
             <Badge
@@ -140,8 +134,7 @@ export const ContactCard = memo(function ContactCard({
         <div className="flex items-center justify-between gap-2">
           <p className="text-muted-foreground truncate text-sm">
             {hasConversation
-              ? contact.lastMessage ||
-                (locale === "ar" ? "لا توجد رسائل" : "No messages")
+              ? contact.lastMessage || m?.ui?.no_messages || "No messages"
               : contact.contextLabel || roleLabel}
           </p>
           <div className="flex flex-shrink-0 items-center gap-1">
@@ -163,10 +156,10 @@ export const ContactCard = memo(function ContactCard({
 export function ContactCardSkeleton() {
   return (
     <div className="flex h-[72px] items-center gap-3 px-3">
-      <div className="bg-muted h-[49px] w-[49px] animate-pulse rounded-full" />
+      <Skeleton className="h-[49px] w-[49px] rounded-full" />
       <div className="flex-1 space-y-2">
-        <div className="bg-muted h-4 w-32 animate-pulse rounded" />
-        <div className="bg-muted h-3 w-24 animate-pulse rounded" />
+        <Skeleton className="h-4 w-32 rounded" />
+        <Skeleton className="h-3 w-24 rounded" />
       </div>
     </div>
   )

@@ -41,7 +41,7 @@ export default async function NotificationsLayout({ children, params }: Props) {
 
   return (
     <div className="space-y-6">
-      <PageHeadingSetter title={d.title || "Notifications"} />
+      <PageHeadingSetter title={d.title} />
       <PageNav pages={notificationPages} />
       <MarkAllReadButton label={d.markAllAsRead} unreadCount={unreadCount} />
       {children}

@@ -297,11 +297,11 @@ export function NotificationListGrouped({
       const yesterday = new Date(today)
       yesterday.setDate(yesterday.getDate() - 1)
 
-      let key = "Older"
+      let key = "older"
       if (date.toDateString() === today.toDateString()) {
-        key = "Today"
+        key = "today"
       } else if (date.toDateString() === yesterday.toDateString()) {
-        key = "Yesterday"
+        key = "yesterday"
       }
 
       if (!acc[key]) acc[key] = []
@@ -311,7 +311,7 @@ export function NotificationListGrouped({
     {} as Record<string, NotificationDTO[]>
   )
 
-  const order = ["Today", "Yesterday", "Older"]
+  const order = ["today", "yesterday", "older"]
   const sortedGroups = order.filter((key) => grouped[key])
 
   if (sortedGroups.length === 0) {
@@ -335,9 +335,9 @@ export function NotificationListGrouped({
   }
 
   const groupLabels: Record<string, string> = {
-    Today: dictionary.grouping.today,
-    Yesterday: dictionary.grouping.yesterday,
-    Older: dictionary.grouping.older,
+    today: dictionary.grouping.today,
+    yesterday: dictionary.grouping.yesterday,
+    older: dictionary.grouping.older,
   }
 
   return (

@@ -159,7 +159,7 @@ export function NewConversationDialog({
           if (onConversationCreated) {
             onConversationCreated(result.data.id)
           } else {
-            router.push(`/messages?conversation=${result.data.id}`)
+            router.push(`/${locale}/messages?conversation=${result.data.id}`)
           }
         } else {
           toast({
@@ -326,7 +326,10 @@ export function NewConversationDialog({
                       )}
                     </div>
                     <Badge variant="outline" className="text-xs">
-                      {user.role}
+                      {(dictionary?.school?.settings as Record<string, any>)
+                        ?.roleSwitcher?.roleLabels?.[
+                        user.role?.toLowerCase()
+                      ] || user.role}
                     </Badge>
                   </button>
                 ))}

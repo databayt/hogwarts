@@ -2,10 +2,13 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { useMemo, useState } from "react"
+import { useRouter } from "next/navigation"
 import { format } from "date-fns"
-import { Eye, Film } from "lucide-react"
+import { CheckCircle2, Clock, Eye, Film, Settings, XCircle } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Table,
@@ -15,8 +18,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import type { TeacherVideo } from "./actions"
+import { VideoSettingsDialog } from "./video-settings-dialog"
 
 interface Props {
   dictionary: Record<string, unknown>
@@ -34,7 +39,35 @@ const statusVariant: Record<
   REJECTED: "destructive",
 }
 
+type StatusFilter = "all" | "APPROVED" | "PENDING" | "REJECTED"
+
 export function TeachVideosContent({ videos }: Props) {
+  const [filter, setFilter] = useState<StatusFilter>("all")
+  const router = useRouter()
+
+  const filteredVideos = useMemo(
+    () =>
+      filter === "all"
+        ? videos
+        : videos.filter((v) => v.approvalStatus === filter),
+    [videos, filter]
+  )
+
+  const counts = useMemo(
+    () => ({
+      all: videos.length,
+      APPROVED: videos.filter((v) => v.approvalStatus === "APPROVED").length,
+      PENDING: videos.filter((v) => v.approvalStatus === "PENDING").length,
+      REJECTED: videos.filter((v) => v.approvalStatus === "REJECTED").length,
+    }),
+    [videos]
+  )
+
+  const totalViews = useMemo(
+    () => videos.reduce((sum, v) => sum + v.viewCount, 0),
+    [videos]
+  )
+
   if (videos.length === 0) {
     return (
       <div className="space-y-6">
@@ -46,7 +79,7 @@ export function TeachVideosContent({ videos }: Props) {
               You haven&apos;t uploaded any videos yet.
             </p>
             <p className="text-muted-foreground mt-1 text-xs">
-              Upload videos through the admin course editor or subject catalog.
+              Use the &quot;Propose a Video&quot; button from your dashboard.
             </p>
           </CardContent>
         </Card>
@@ -61,11 +94,62 @@ export function TeachVideosContent({ videos }: Props) {
         <Badge variant="outline">{videos.length} videos</Badge>
       </div>
 
+      {/* Summary stats */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Card>
+          <CardContent className="flex items-center gap-3 pt-4">
+            <Film className="text-muted-foreground size-5" />
+            <div>
+              <p className="text-xl font-bold">{counts.all}</p>
+              <p className="text-muted-foreground text-xs">Total</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex items-center gap-3 pt-4">
+            <CheckCircle2 className="size-5 text-green-600" />
+            <div>
+              <p className="text-xl font-bold">{counts.APPROVED}</p>
+              <p className="text-muted-foreground text-xs">Approved</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex items-center gap-3 pt-4">
+            <Clock className="size-5 text-yellow-600" />
+            <div>
+              <p className="text-xl font-bold">{counts.PENDING}</p>
+              <p className="text-muted-foreground text-xs">Pending</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex items-center gap-3 pt-4">
+            <Eye className="text-muted-foreground size-5" />
+            <div>
+              <p className="text-xl font-bold">{totalViews.toLocaleString()}</p>
+              <p className="text-muted-foreground text-xs">Total Views</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filter tabs */}
+      <Tabs value={filter} onValueChange={(v) => setFilter(v as StatusFilter)}>
+        <TabsList>
+          <TabsTrigger value="all">All ({counts.all})</TabsTrigger>
+          <TabsTrigger value="APPROVED">
+            Approved ({counts.APPROVED})
+          </TabsTrigger>
+          <TabsTrigger value="PENDING">Pending ({counts.PENDING})</TabsTrigger>
+          <TabsTrigger value="REJECTED">
+            Rejected ({counts.REJECTED})
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+
       <Card>
-        <CardHeader>
-          <CardTitle>Uploaded Videos</CardTitle>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-4">
           <Table>
             <TableHeader>
               <TableRow>
@@ -76,10 +160,11 @@ export function TeachVideosContent({ videos }: Props) {
                 <TableHead>Visibility</TableHead>
                 <TableHead className="text-end">Views</TableHead>
                 <TableHead>Date</TableHead>
+                <TableHead className="w-10" />
               </TableRow>
             </TableHeader>
             <TableBody>
-              {videos.map((video) => (
+              {filteredVideos.map((video) => (
                 <TableRow key={video.id}>
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-2">
@@ -119,12 +204,48 @@ export function TeachVideosContent({ videos }: Props) {
                   <TableCell className="text-muted-foreground text-sm">
                     {format(new Date(video.createdAt), "MMM d, yyyy")}
                   </TableCell>
+                  <TableCell>
+                    <VideoSettingsDialog
+                      video={{
+                        id: video.id,
+                        title: video.title,
+                        visibility: video.visibility,
+                        approvalStatus: video.approvalStatus,
+                        viewCount: video.viewCount,
+                        lessonName: video.lesson.name,
+                        courseName: video.lesson.chapter.subject.name,
+                      }}
+                      onUpdate={() => router.refresh()}
+                    >
+                      <Button variant="ghost" size="icon" className="size-8">
+                        <Settings className="size-3.5" />
+                      </Button>
+                    </VideoSettingsDialog>
+                  </TableCell>
                 </TableRow>
               ))}
+              {filteredVideos.length === 0 && (
+                <TableRow>
+                  <TableCell
+                    colSpan={8}
+                    className="text-muted-foreground py-8 text-center text-sm"
+                  >
+                    No {filter !== "all" ? filter.toLowerCase() : ""} videos
+                    found.
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
+
+      {/* Ownership reminder */}
+      <p className="text-muted-foreground text-center text-xs">
+        You retain full ownership of all your videos. Use the{" "}
+        <Settings className="inline size-3" /> button to manage visibility or
+        delete.
+      </p>
     </div>
   )
 }
