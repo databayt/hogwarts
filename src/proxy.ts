@@ -339,7 +339,17 @@ export async function proxy(req: NextRequest) {
     // NOT within subdomain structure /[lang]/s/[subdomain]/(auth)/*
     // GOTCHA: If you add auth routes to subdomain structure, users see 404
     if (isAuth) {
-      return NextResponse.next()
+      const requestHeaders = new Headers(req.headers)
+      requestHeaders.set("x-locale", locale)
+      const response = NextResponse.next({
+        request: { headers: requestHeaders },
+      })
+      response.cookies.set("NEXT_LOCALE", locale, {
+        maxAge: 31536000,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+      })
+      return response
     }
 
     // URL REWRITE: This is the core multi-tenant magic
@@ -355,10 +365,19 @@ export async function proxy(req: NextRequest) {
       url.pathname = `/${locale}/s/${subdomain}${pathWithoutLocale}`
     }
 
-    const response = NextResponse.rewrite(url)
+    const requestHeaders = new Headers(req.headers)
+    requestHeaders.set("x-locale", locale)
+    const response = NextResponse.rewrite(url, {
+      request: { headers: requestHeaders },
+    })
     // Pass subdomain to downstream components via header
     // Consumed by: src/lib/tenant-context.ts getTenantContext()
     response.headers.set("x-subdomain", subdomain)
+    response.cookies.set("NEXT_LOCALE", locale, {
+      maxAge: 31536000,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+    })
     return response
   }
 
@@ -374,7 +393,18 @@ export async function proxy(req: NextRequest) {
     return response
   }
 
-  return NextResponse.next()
+  // Path already has locale — ensure cookie stays in sync
+  const requestHeaders = new Headers(req.headers)
+  requestHeaders.set("x-locale", locale)
+  const response = NextResponse.next({
+    request: { headers: requestHeaders },
+  })
+  response.cookies.set("NEXT_LOCALE", locale, {
+    maxAge: 31536000,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+  })
+  return response
 }
 
 export const config = {

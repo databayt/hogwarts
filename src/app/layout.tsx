@@ -2,7 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import type { Metadata } from "next"
-import { cookies } from "next/headers"
+import { cookies, headers } from "next/headers"
 
 import { fontRubik } from "@/components/atom/fonts"
 
@@ -18,8 +18,12 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const headersList = await headers()
   const cookieStore = await cookies()
-  const locale = cookieStore.get("NEXT_LOCALE")?.value || "ar"
+  const locale =
+    headersList.get("x-locale") ||
+    cookieStore.get("NEXT_LOCALE")?.value ||
+    "ar"
   const dir = locale === "ar" ? "rtl" : "ltr"
 
   return (
