@@ -10,6 +10,7 @@ import {
   isRTL as checkIsRTL,
   type Locale,
 } from "@/components/internationalization/config"
+import { ReportIssue } from "@/components/report-issue"
 import { PageHeadingProvider } from "@/components/school-dashboard/context/page-heading-context"
 import { PageHeadingDisplay } from "@/components/school-dashboard/context/page-heading-display"
 import SaasHeader from "@/components/template/saas-header/content"
@@ -63,6 +64,9 @@ export default async function OperatorLayout({
               <div className="dashboard-container overflow-x-clip pb-10 transition-[margin] duration-200 ease-in-out">
                 <PageHeadingDisplay />
                 {children}
+                <div className="text-muted-foreground py-4 text-center text-sm">
+                  <ReportIssue />
+                </div>
               </div>
             </div>
           </div>

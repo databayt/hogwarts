@@ -13,6 +13,7 @@ import {
   type Locale,
 } from "@/components/internationalization/config"
 import { getPlatformCoreDictionary } from "@/components/internationalization/dictionaries"
+import { ReportIssue } from "@/components/report-issue"
 import { PageHeadingProvider } from "@/components/school-dashboard/context/page-heading-context"
 import { PageHeadingDisplay } from "@/components/school-dashboard/context/page-heading-display"
 import { SchoolProvider } from "@/components/school-dashboard/context/school-context"
@@ -143,6 +144,9 @@ export default async function PlatformLayout({
                 <div className="dashboard-container overflow-x-clip pb-10 transition-[margin] duration-200 ease-in-out">
                   <PageHeadingDisplay />
                   {children}
+                  <div className="text-muted-foreground py-4 text-center text-sm">
+                    <ReportIssue />
+                  </div>
                 </div>
               </div>
               {mustChangePassword && (

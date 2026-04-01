@@ -8,6 +8,7 @@ import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 import { Chatbot } from "@/components/chatbot"
 import { type Locale } from "@/components/internationalization/config"
 import { LoadingWrapper } from "@/components/marketing/loading"
+import { ReportIssue } from "@/components/report-issue"
 import { ApplicationStatusBanner } from "@/components/school-marketing/admission/application-status-banner"
 import SiteHeader from "@/components/template/site-header/content"
 
@@ -60,6 +61,9 @@ export default async function SiteLayout({
         <main data-slot="main-content" role="main">
           {children}
         </main>
+        <div className="text-muted-foreground py-4 text-center text-sm">
+          <ReportIssue />
+        </div>
         {/* <SiteFooter /> */}
         <Chatbot
           lang={lang as Locale}
