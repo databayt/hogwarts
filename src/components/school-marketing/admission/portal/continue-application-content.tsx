@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -43,12 +43,14 @@ interface Props {
   initialToken?: string
 }
 
-const continueSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  sessionToken: z.string().optional(),
-})
+function createContinueSchema(messages: Record<string, string>) {
+  return z.object({
+    email: z.string().email(messages.invalidEmail || "Invalid email address"),
+    sessionToken: z.string().optional(),
+  })
+}
 
-type ContinueFormData = z.infer<typeof continueSchema>
+type ContinueFormData = z.infer<ReturnType<typeof createContinueSchema>>
 
 export default function ContinueApplicationContent({
   school,
@@ -67,6 +69,8 @@ export default function ContinueApplicationContent({
         school?: { admission?: { continueApp?: Record<string, string> } }
       }
     )?.school?.admission?.continueApp ?? {}
+
+  const continueSchema = useMemo(() => createContinueSchema(dict), [dict])
 
   const form = useForm<ContinueFormData>({
     resolver: zodResolver(continueSchema),

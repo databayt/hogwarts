@@ -8926,7 +8926,10 @@
         "invalidCode": "رمز التحقق غير صحيح",
         "verificationFailed": "فشل في التحقق",
         "newCodeSent": "تم إرسال رمز جديد",
-        "failedToResend": "فشل في إعادة الإرسال"
+        "failedToResend": "فشل في إعادة الإرسال",
+        "applicationNumberRequired": "رقم الطلب مطلوب",
+        "invalidEmail": "عنوان بريد إلكتروني غير صالح",
+        "otpLength": "رمز التحقق يجب أن يكون 6 أرقام"
       },
       "statusDisplay": {
         "back": "رجوع",

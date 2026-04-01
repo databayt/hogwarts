@@ -8918,7 +8918,10 @@
         "invalidCode": "Invalid verification code",
         "verificationFailed": "Verification failed",
         "newCodeSent": "New code sent",
-        "failedToResend": "Failed to resend"
+        "failedToResend": "Failed to resend",
+        "applicationNumberRequired": "Application number is required",
+        "invalidEmail": "Invalid email address",
+        "otpLength": "OTP must be 6 digits"
       },
       "statusDisplay": {
         "back": "Back",

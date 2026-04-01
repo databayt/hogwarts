@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2 } from "lucide-react"
 import { useForm } from "react-hook-form"
@@ -50,14 +50,18 @@ interface Props {
 
 type Step = "request" | "verify" | "display"
 
-const requestSchema = z.object({
-  applicationNumber: z.string().min(1, "Application number is required"),
-  email: z.string().email("Invalid email address"),
-})
+function createRequestSchema(messages: Record<string, string>) {
+  return z.object({
+    applicationNumber: z.string().min(1, messages.applicationNumberRequired || "Application number is required"),
+    email: z.string().email(messages.invalidEmail || "Invalid email address"),
+  })
+}
 
-const verifySchema = z.object({
-  otp: z.string().length(6, "OTP must be 6 digits"),
-})
+function createVerifySchema(messages: Record<string, string>) {
+  return z.object({
+    otp: z.string().length(6, messages.otpLength || "OTP must be 6 digits"),
+  })
+}
 
 export default function StatusTrackerContent({
   school,
@@ -82,6 +86,9 @@ export default function StatusTrackerContent({
         school?: { admission?: { statusTracker?: Record<string, string> } }
       }
     )?.school?.admission?.statusTracker ?? {}
+
+  const requestSchema = useMemo(() => createRequestSchema(dict), [dict])
+  const verifySchema = useMemo(() => createVerifySchema(dict), [dict])
 
   const requestForm = useForm({
     resolver: zodResolver(requestSchema),
