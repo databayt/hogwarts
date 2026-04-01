@@ -1448,7 +1448,9 @@ export async function getAvailableSectionsForPlacement(params: {
   try {
     const session = await auth()
     const schoolId = session?.user?.schoolId
-    if (!schoolId) return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    const role = session?.user?.role
+    if (!schoolId || !role) return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    assertAdmissionPermission(role, "viewApplications")
 
     // Cascading match: text contains OR grade number
     const gradeNum = extractGradeNumber(params.applyingForClass)
@@ -1514,7 +1516,9 @@ export async function placeStudentInSection(params: {
   try {
     const session = await auth()
     const schoolId = session?.user?.schoolId
-    if (!schoolId) return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    const role = session?.user?.role
+    if (!schoolId || !role) return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    assertAdmissionPermission(role, "placeStudents")
 
     // Get the application and verify it's ADMITTED
     const application = await db.application.findUnique({
