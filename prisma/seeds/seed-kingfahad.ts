@@ -16,7 +16,7 @@ import bcrypt from "bcryptjs"
 
 const prisma = new PrismaClient()
 
-const ADMIN_PASSWORD = "kingfahad2026"
+const ADMIN_PASSWORD = "1234"
 const ADMIN_EMAIL = "admin@kingfahad.edu"
 
 async function createSchool() {
