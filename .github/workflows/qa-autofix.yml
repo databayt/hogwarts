@@ -1,0 +1,185 @@
+name: QA Auto-Fix
+
+on:
+  issue_comment:
+    types: [created]
+
+concurrency:
+  group: qa-autofix
+  cancel-in-progress: false
+
+jobs:
+  autofix:
+    name: Fix QA Bug Report
+    if: |
+      github.event.issue.number == 115 &&
+      !github.event.issue.pull_request &&
+      contains(fromJson('["alitaworkem","abdout"]'), github.event.comment.user.login)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Save bug report
+        env:
+          BUG_REPORT: ${{ github.event.comment.body }}
+        run: printenv BUG_REPORT > /tmp/bug-report.txt
+
+      - name: Acknowledge
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: 115,
+              body: '**Picked up** -- analyzing and fixing now...'
+            });
+
+      - name: Fix bug with Claude Code
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          claude -p "$(cat <<'PROMPT'
+          Read the file /tmp/bug-report.txt — it contains a QA bug report from Ali.
+
+          If the content is NOT a bug report (e.g. "thanks", "looks good", a question, general discussion), output "NOT_A_BUG" and make no file changes.
+
+          If it IS a bug report, find and fix the bug in the codebase:
+
+          Stack: Next.js 16 (App Router), React 19, Prisma 6, TypeScript 5, Tailwind CSS 4, shadcn/ui
+          Bilingual: Arabic RTL (default) + English LTR
+
+          Key paths:
+          - Pages: src/app/[lang]/s/[subdomain]/
+          - Admission portal: src/components/school-marketing/admission/
+          - Application flow: src/components/school-marketing/application/
+          - Admin dashboard: src/components/school-dashboard/admission/
+          - Server actions: actions.ts files in component directories
+          - Prisma schema: prisma/schema/
+
+          Rules:
+          - Only fix what was reported — no refactoring, no extra features
+          - If the bug is unclear, make no changes (the workflow will ask for clarification)
+          - Keep fixes minimal and targeted
+          PROMPT
+          )" --allowedTools "Bash,Read,Write,Edit,Glob,Grep" --model "claude-sonnet-4-6" --max-turns 25
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "### Changed files:"
+            git diff --name-only
+          fi
+
+      - name: Commit and push
+        if: steps.changes.outputs.has_changes == 'true'
+        run: |
+          git config user.name "Claude Code"
+          git config user.email "noreply@anthropic.com"
+          git add -A
+          git commit -m "fix: QA auto-fix from #115
+
+          Co-Authored-By: Claude Code <noreply@anthropic.com>"
+          git push origin main
+
+      - name: Wait for Vercel deployment
+        if: steps.changes.outputs.has_changes == 'true'
+        run: sleep 150
+
+      - name: Verify production
+        if: steps.changes.outputs.has_changes == 'true'
+        id: verify
+        run: |
+          APP=$(curl -s -o /dev/null -w "%{http_code}" -L https://kingfahad.databayt.org/ar/s/kingfahad/application)
+          HOME=$(curl -s -o /dev/null -w "%{http_code}" -L https://kingfahad.databayt.org)
+          echo "app_status=$APP" >> $GITHUB_OUTPUT
+          echo "home_status=$HOME" >> $GITHUB_OUTPUT
+
+      - name: Report fix
+        if: steps.changes.outputs.has_changes == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const appStatus = '${{ steps.verify.outputs.app_status }}';
+            const homeStatus = '${{ steps.verify.outputs.home_status }}';
+            const ok = s => ['200','302','307'].includes(s);
+
+            let verify = '';
+            if (ok(appStatus) && ok(homeStatus)) {
+              verify = 'Production verified — site and application pages responding';
+            } else {
+              verify = `Production check: home=${homeStatus}, application=${appStatus}`;
+            }
+
+            let files = '(unknown)';
+            let sha = '(unknown)';
+            try {
+              files = require('child_process').execSync('git diff --name-only HEAD~1').toString().trim();
+              sha = require('child_process').execSync('git rev-parse --short HEAD').toString().trim();
+            } catch {}
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: 115,
+              body: [
+                '**Auto-fix deployed**',
+                '',
+                `Commit: \`${sha}\``,
+                'Files changed:',
+                '```',
+                files,
+                '```',
+                '',
+                verify,
+                '',
+                'https://kingfahad.databayt.org',
+                '',
+                '@alitaworkem please re-test the reported issue.'
+              ].join('\n')
+            });
+
+      - name: Report no fix
+        if: steps.changes.outputs.has_changes == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const report = require('fs').readFileSync('/tmp/bug-report.txt', 'utf8').trim();
+            const isNotBug = report.length < 20 || /^(thanks|thank|ok|good|nice|done)/i.test(report);
+
+            if (isNotBug) return; // Don't comment on non-bug messages
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: 115,
+              body: [
+                '**Analyzed**',
+                '',
+                'Read the report but could not identify a code fix. This may need manual investigation or a clearer description.',
+                '',
+                'Please include: URL + what you expected vs what happened.',
+                '',
+                '@abdout may need to look at this.'
+              ].join('\n')
+            });
