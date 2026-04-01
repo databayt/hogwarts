@@ -8897,7 +8897,9 @@
         "applyForAdmission": "قدم طلب التحاق",
         "scheduleTour": "حجز جولة",
         "inquirySubmitted": "تم إرسال استفسارك بنجاح",
-        "failedToSubmit": "فشل في إرسال الاستفسار"
+        "failedToSubmit": "فشل في إرسال الاستفسار",
+        "nameRequired": "الاسم مطلوب",
+        "invalidEmail": "عنوان بريد إلكتروني غير صالح"
       },
       "statusTracker": {
         "title": "تتبع حالة الطلب",

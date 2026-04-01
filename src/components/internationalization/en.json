@@ -1154,6 +1154,8 @@
           "tourDuration": "Tours typically last about 60 minutes",
           "arriveEarly": "Please arrive 10 minutes before your scheduled time",
           "cancellationPolicy": "You can cancel or reschedule up to 24 hours in advance",
+          "nameRequired": "Name is required",
+          "invalidEmail": "Invalid email address",
           "errors": {
             "failedToFetchSlots": "Failed to fetch available slots",
             "pleaseSelectSlot": "Please select a time slot",

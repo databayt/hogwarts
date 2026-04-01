@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { format } from "date-fns"
@@ -60,17 +60,20 @@ interface TourWizardProps {
   schoolPeriods?: SchoolPeriod[]
 }
 
-const bookingSchema = z.object({
-  parentName: z.string().min(2, "Name is required"),
-  email: z.string().email("Invalid email address"),
-  phone: z.string().optional(),
-  studentName: z.string().optional(),
-  interestedGrade: z.string().optional(),
-  numberOfAttendees: z.number().min(1).max(5),
-  specialRequests: z.string().optional(),
-})
+function createBookingSchema(messages: Record<string, unknown>) {
+  const m = (key: string, fallback: string) => (typeof messages[key] === "string" ? messages[key] : fallback)
+  return z.object({
+    parentName: z.string().min(2, m("nameRequired", "Name is required")),
+    email: z.string().email(m("invalidEmail", "Invalid email address")),
+    phone: z.string().optional(),
+    studentName: z.string().optional(),
+    interestedGrade: z.string().optional(),
+    numberOfAttendees: z.number().min(1).max(5),
+    specialRequests: z.string().optional(),
+  })
+}
 
-type BookingFormData = z.infer<typeof bookingSchema>
+type BookingFormData = z.infer<ReturnType<typeof createBookingSchema>>
 
 const STEP_ORDER: Step[] = ["date", "time", "info", "confirm"]
 
@@ -99,6 +102,8 @@ export function TourWizard({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [confirmation, setConfirmation] =
     useState<TourBookingConfirmation | null>(null)
+
+  const bookingSchema = useMemo(() => createBookingSchema(tour ?? {}), [tour])
 
   const form = useForm<BookingFormData>({
     resolver: zodResolver(bookingSchema),

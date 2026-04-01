@@ -54,19 +54,21 @@ interface Props {
   subdomain: string
 }
 
-const inquirySchema = z.object({
-  parentName: z.string().min(2, "Name is required"),
-  email: z.string().email("Invalid email address"),
-  phone: z.string().optional(),
-  studentName: z.string().optional(),
-  studentDOB: z.string().optional(),
-  interestedGrade: z.string().optional(),
-  source: z.string().optional(),
-  message: z.string().optional(),
-  subscribeNewsletter: z.boolean(),
-})
+function createInquirySchema(messages: Record<string, string>) {
+  return z.object({
+    parentName: z.string().min(2, messages.nameRequired || "Name is required"),
+    email: z.string().email(messages.invalidEmail || "Invalid email address"),
+    phone: z.string().optional(),
+    studentName: z.string().optional(),
+    studentDOB: z.string().optional(),
+    interestedGrade: z.string().optional(),
+    source: z.string().optional(),
+    message: z.string().optional(),
+    subscribeNewsletter: z.boolean(),
+  })
+}
 
-type InquiryForm = z.infer<typeof inquirySchema>
+type InquiryForm = z.infer<ReturnType<typeof createInquirySchema>>
 
 export default function InquiryFormContent({
   school,
@@ -85,6 +87,8 @@ export default function InquiryFormContent({
         school?: { admission?: { inquiryPage?: Record<string, string> } }
       }
     )?.school?.admission?.inquiryPage ?? {}
+
+  const inquirySchema = useMemo(() => createInquirySchema(dict), [dict])
 
   const form = useForm<InquiryForm>({
     resolver: zodResolver(inquirySchema),

@@ -8889,7 +8889,9 @@
         "applyForAdmission": "Apply Now",
         "scheduleTour": "Schedule a Tour",
         "inquirySubmitted": "Inquiry submitted successfully",
-        "failedToSubmit": "Failed to submit inquiry"
+        "failedToSubmit": "Failed to submit inquiry",
+        "nameRequired": "Name is required",
+        "invalidEmail": "Invalid email address"
       },
       "statusTracker": {
         "title": "Track Application Status",

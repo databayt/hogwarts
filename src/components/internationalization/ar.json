@@ -1154,6 +1154,8 @@
           "tourDuration": "مدة الجولة حوالي 60 دقيقة",
           "arriveEarly": "يرجى الوصول قبل 10 دقائق من الموعد",
           "cancellationPolicy": "يمكنك إلغاء أو إعادة جدولة الجولة قبل 24 ساعة",
+          "nameRequired": "الاسم مطلوب",
+          "invalidEmail": "عنوان بريد إلكتروني غير صالح",
           "errors": {
             "failedToFetchSlots": "فشل في جلب المواعيد",
             "pleaseSelectSlot": "يرجى اختيار موعد",
