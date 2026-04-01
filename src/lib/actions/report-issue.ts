@@ -23,20 +23,34 @@ export async function reportIssue(data: {
     `**Time**: ${new Date().toISOString()}`,
   ].join("\n")
 
-  const response = await fetch(`https://api.github.com/repos/${repo}/issues`, {
+  // Try with label first, fall back without if label doesn't exist
+  const payload: Record<string, unknown> = { title, body, labels: ["report"] }
+
+  let response = await fetch(`https://api.github.com/repos/${repo}/issues`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
       Accept: "application/vnd.github+json",
     },
-    body: JSON.stringify({
-      title,
-      body,
-      labels: ["report"],
-    }),
+    body: JSON.stringify(payload),
   })
 
+  // If 422 (label doesn't exist), retry without labels
+  if (response.status === 422) {
+    delete payload.labels
+    response = await fetch(`https://api.github.com/repos/${repo}/issues`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/vnd.github+json",
+      },
+      body: JSON.stringify(payload),
+    })
+  }
+
   if (!response.ok) {
+    const text = await response.text().catch(() => "")
+    console.error(`[report-issue] GitHub API ${response.status}: ${text}`)
     throw new Error(`GitHub API error: ${response.status}`)
   }
 }

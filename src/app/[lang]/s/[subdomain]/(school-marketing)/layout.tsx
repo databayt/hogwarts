@@ -61,7 +61,7 @@ export default async function SiteLayout({
         <main data-slot="main-content" role="main">
           {children}
         </main>
-        <div className="text-muted-foreground py-4 text-center text-sm">
+        <div className="text-muted-foreground pt-8 pb-4 text-start text-sm">
           <ReportIssue />
         </div>
         {/* <SiteFooter /> */}

@@ -64,7 +64,7 @@ export default async function OperatorLayout({
               <div className="dashboard-container overflow-x-clip pb-10 transition-[margin] duration-200 ease-in-out">
                 <PageHeadingDisplay />
                 {children}
-                <div className="text-muted-foreground py-4 text-center text-sm">
+                <div className="text-muted-foreground pt-8 pb-4 text-start text-sm">
                   <ReportIssue />
                 </div>
               </div>
