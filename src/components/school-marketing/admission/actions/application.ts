@@ -446,7 +446,10 @@ export async function getDraftApplicationsByUser(
 /**
  * Resume application from session token
  */
-export async function resumeApplicationSession(sessionToken: string): Promise<
+export async function resumeApplicationSession(
+  sessionToken: string,
+  subdomain?: string
+): Promise<
   ActionResult<{
     formData: Partial<ApplicationFormData>
     currentStep: number
@@ -459,13 +462,25 @@ export async function resumeApplicationSession(sessionToken: string): Promise<
       where: { sessionToken },
       include: {
         school: {
-          select: { domain: true },
+          select: { id: true, domain: true },
         },
       },
     })
 
     if (!session) {
       return { success: false, error: "Session not found" }
+    }
+
+    // Verify tenant isolation — session must belong to the requested school
+    if (subdomain) {
+      const schoolResult = await getSchoolBySubdomain(subdomain)
+      if (
+        schoolResult.success &&
+        schoolResult.data &&
+        session.schoolId !== schoolResult.data.id
+      ) {
+        return { success: false, error: "Session not found" }
+      }
     }
 
     if (session.expiresAt < new Date()) {
