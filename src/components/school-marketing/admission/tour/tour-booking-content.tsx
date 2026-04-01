@@ -61,7 +61,8 @@ interface Props {
 }
 
 function createBookingSchema(messages: Record<string, unknown>) {
-  const m = (key: string, fallback: string) => (typeof messages[key] === "string" ? messages[key] : fallback)
+  const m = (key: string, fallback: string) =>
+    typeof messages[key] === "string" ? messages[key] : fallback
   return z.object({
     parentName: z.string().min(2, m("nameRequired", "Name is required")),
     email: z.string().email(m("invalidEmail", "Invalid email address")),

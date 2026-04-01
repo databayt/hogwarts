@@ -19,9 +19,7 @@ export default async function ApplicationAuthLayout({
   const session = await auth()
 
   if (!session?.user) {
-    redirect(
-      `/${lang}/login?callbackUrl=/${lang}/s/${subdomain}/application`
-    )
+    redirect(`/${lang}/login?callbackUrl=/${lang}/s/${subdomain}/application`)
   }
 
   return <>{children}</>

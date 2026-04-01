@@ -19,7 +19,9 @@ export function createDateStepSchema(m: Messages) {
 // Step 2: Time Selection
 export function createTimeStepSchema(m: Messages) {
   return z.object({
-    startTime: z.string().min(1, m.selectTimeSlot || "Please select a time slot"),
+    startTime: z
+      .string()
+      .min(1, m.selectTimeSlot || "Please select a time slot"),
     endTime: z.string().optional(),
   })
 }
@@ -31,13 +33,17 @@ export function createInfoStepSchema(m: Messages) {
       .string()
       .min(2, m.nameMinLength || "Name must be at least 2 characters")
       .max(100, m.nameMaxLength || "Name must be less than 100 characters"),
-    email: z.string().email(m.invalidEmail || "Please enter a valid email address"),
+    email: z
+      .string()
+      .email(m.invalidEmail || "Please enter a valid email address"),
     phone: z
       .string()
       .min(10, m.phoneMinLength || "Phone number must be at least 10 digits")
       .optional()
       .or(z.literal("")),
-    purpose: z.string().min(1, m.selectPurpose || "Please select a visit purpose"),
+    purpose: z
+      .string()
+      .min(1, m.selectPurpose || "Please select a visit purpose"),
     visitors: z
       .number()
       .min(1, m.minVisitors || "At least 1 visitor required")

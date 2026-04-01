@@ -20,8 +20,7 @@ export async function generateMetadata({
   const steps = d?.school?.admission?.apply?.steps
   return {
     title: `${steps?.payment?.title ?? "Payment"} | ${lang === "ar" ? "التقديم" : "Apply"}`,
-    description:
-      steps?.payment?.description ?? "Pay your application fee.",
+    description: steps?.payment?.description ?? "Pay your application fee.",
   }
 }
 

@@ -52,7 +52,12 @@ type Step = "request" | "verify" | "display"
 
 function createRequestSchema(messages: Record<string, string>) {
   return z.object({
-    applicationNumber: z.string().min(1, messages.applicationNumberRequired || "Application number is required"),
+    applicationNumber: z
+      .string()
+      .min(
+        1,
+        messages.applicationNumberRequired || "Application number is required"
+      ),
     email: z.string().email(messages.invalidEmail || "Invalid email address"),
   })
 }
