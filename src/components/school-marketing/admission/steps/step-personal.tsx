@@ -2,6 +2,9 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { useMemo } from "react"
+import { ar } from "date-fns/locale/ar"
+import { enUS } from "date-fns/locale/en-US"
 import { useFormContext } from "react-hook-form"
 
 import {
@@ -19,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { DateField } from "@/components/form"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -45,6 +49,7 @@ const GENDERS = [
 export default function StepPersonal({ dictionary, lang }: Props) {
   const { control } = useFormContext<ApplicationFormData>()
   const isRTL = lang === "ar"
+  const dateLocale = useMemo(() => (lang === "ar" ? ar : enUS), [lang])
 
   const dict =
     (
@@ -119,25 +124,16 @@ export default function StepPersonal({ dictionary, lang }: Props) {
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {/* Date of Birth */}
-        <FormField
-          control={control}
+        <DateField
           name="dateOfBirth"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>
-                {dict.dateOfBirth || "Date of Birth"}{" "}
-                <span className="text-destructive">*</span>
-              </FormLabel>
-              <FormControl>
-                <Input
-                  {...field}
-                  type="date"
-                  max={new Date().toISOString().split("T")[0]}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          label={`${dict.dateOfBirth || "Date of Birth"} *`}
+          placeholder={dict.pickDate || "Pick a date"}
+          captionLayout="dropdown"
+          startMonth={new Date(1990, 0)}
+          endMonth={new Date()}
+          maxDate={new Date()}
+          locale={dateLocale}
+          required
         />
 
         {/* Gender */}

@@ -64,8 +64,11 @@ export default async function PaymentPage({ params, searchParams }: Props) {
     notFound()
   }
 
+  const dictionary = await getDictionary(lang)
+
   // Already paid guard
   if (application.applicationFeePaid) {
+    const isAr = lang === "ar"
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4">
         <div className="rounded-full bg-emerald-100 p-4 dark:bg-emerald-900/30">
@@ -83,9 +86,13 @@ export default async function PaymentPage({ params, searchParams }: Props) {
             />
           </svg>
         </div>
-        <h2 className="text-xl font-semibold">تم الدفع بنجاح</h2>
+        <h2 className="text-xl font-semibold">
+          {isAr ? "تم الدفع بنجاح" : "Payment Successful"}
+        </h2>
         <p className="text-muted-foreground text-sm">
-          تم دفع رسوم الطلب بالفعل. رقم الطلب: {application.applicationNumber}
+          {isAr
+            ? `تم دفع رسوم الطلب بالفعل. رقم الطلب: ${application.applicationNumber}`
+            : `Application fee has already been paid. Application #: ${application.applicationNumber}`}
         </p>
       </div>
     )
@@ -110,8 +117,6 @@ export default async function PaymentPage({ params, searchParams }: Props) {
     // Ensure at least cash is available
     if (methods.length === 0) methods = ["cash"]
   }
-
-  const dictionary = await getDictionary(lang)
 
   return (
     <PaymentContent

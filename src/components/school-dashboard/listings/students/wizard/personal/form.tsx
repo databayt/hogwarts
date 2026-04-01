@@ -2,8 +2,15 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React, { forwardRef, useImperativeHandle, useTransition } from "react"
+import React, {
+  forwardRef,
+  useImperativeHandle,
+  useMemo,
+  useTransition,
+} from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { ar } from "date-fns/locale/ar"
+import { enUS } from "date-fns/locale/en-US"
 import { useForm } from "react-hook-form"
 
 import type { NameFormat } from "@/lib/name-utils"
@@ -18,6 +25,7 @@ import {
 } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { useLocale } from "@/components/internationalization/use-locale"
 import { getGenderOptions } from "@/components/school-dashboard/listings/students/config"
 
 import { updateStudentPersonal } from "./actions"
@@ -33,6 +41,8 @@ interface PersonalFormProps {
 export const PersonalForm = forwardRef<WizardFormRef, PersonalFormProps>(
   ({ studentId, initialData, nameFormat = "full", onValidChange }, ref) => {
     const [isPending, startTransition] = useTransition()
+    const { locale } = useLocale()
+    const dateLocale = useMemo(() => (locale === "ar" ? ar : enUS), [locale])
     const { dictionary } = useDictionary()
     const students = (dictionary?.school as Record<string, unknown>)
       ?.students as Record<string, unknown> | undefined
@@ -146,6 +156,11 @@ export const PersonalForm = forwardRef<WizardFormRef, PersonalFormProps>(
               name="dateOfBirth"
               label={t?.dateOfBirth || "Date of Birth"}
               disabled={isPending}
+              captionLayout="dropdown"
+              startMonth={new Date(1970, 0)}
+              endMonth={new Date()}
+              maxDate={new Date()}
+              locale={dateLocale}
             />
             <SelectField
               name="gender"

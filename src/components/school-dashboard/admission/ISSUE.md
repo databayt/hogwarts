@@ -1,8 +1,8 @@
 # Admission (Dashboard) — Production Readiness Tracker
 
 **Status:** 🟡 IN PROGRESS
-**Completion:** 90%
-**Last Updated:** 2026-03-19
+**Completion:** 95%
+**Last Updated:** 2026-04-01
 
 ---
 
@@ -20,7 +20,7 @@
 - [x] RBAC authorization (ADMIN, STAFF, ACCOUNTANT)
 - [x] Zod validation schemas
 - [x] Unit tests for actions and validation
-- [ ] Email notifications on status changes (partially wired)
+- [x] Email notifications on status changes (immediate via dispatchAdmissionNotification)
 - [ ] Application fee payment integration verification
 
 ## Known Issues
@@ -31,7 +31,7 @@
 
 ### P1 — High
 
-- Email notifications for status transitions need end-to-end verification
+- ~~Email notifications for status transitions~~ (DONE — immediate sending via dispatchAdmissionNotification)
 - Payment recording flow for application fees needs integration testing with payment block
 
 ### P2 — Medium

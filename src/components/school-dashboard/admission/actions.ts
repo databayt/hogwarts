@@ -4,7 +4,11 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
-import type { AdmissionApplicationStatus } from "@prisma/client"
+import type {
+  AdmissionApplicationStatus,
+  NotificationPriority,
+  NotificationType,
+} from "@prisma/client"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
@@ -13,6 +17,7 @@ import { dispatchNotification } from "@/lib/dispatch-notification"
 import { enrollStudentInGradeClasses } from "@/lib/enrollment-sync"
 import { extractGradeNumber } from "@/lib/grade-utils"
 import { createInvoiceFromEnrollment } from "@/components/school-dashboard/finance/invoice/actions"
+import { sendNotificationEmail } from "@/components/school-dashboard/notifications/email-service"
 import { detectLanguage } from "@/components/translation/util"
 
 import { assertAdmissionPermission } from "./authorization"
@@ -97,6 +102,50 @@ const NOTIF = {
 
 const t = (msg: { ar: string; en: string }, lang: string) =>
   lang === "en" ? msg.en : msg.ar
+
+/**
+ * Dispatch in-app notification AND send email immediately.
+ * Replaces the pattern of dispatchNotification() + daily cron for admission.
+ */
+async function dispatchAdmissionNotification(params: {
+  schoolId: string
+  userId: string
+  type: NotificationType
+  title: string
+  body: string
+  lang: string
+  priority?: NotificationPriority
+  channels?: ("in_app" | "email")[]
+  metadata?: Record<string, unknown>
+  actorId?: string
+}): Promise<void> {
+  const channels = params.channels ?? ["in_app", "email"]
+  const notificationId = await dispatchNotification({
+    ...params,
+    channels,
+    priority: params.priority ?? "normal",
+  })
+
+  if (!notificationId || !channels.includes("email")) return
+
+  // Send email immediately instead of waiting for daily cron
+  const user = await db.user.findUnique({
+    where: { id: params.userId },
+    select: { email: true, username: true },
+  })
+  if (!user?.email) return
+
+  await sendNotificationEmail({
+    notificationId,
+    to: user.email,
+    locale: (params.lang === "en" ? "en" : "ar") as "ar" | "en",
+    type: params.type,
+    priority: params.priority ?? "normal",
+    title: params.title,
+    body: params.body,
+    metadata: params.metadata,
+  })
+}
 
 // ============================================================================
 // Campaign Actions
@@ -484,7 +533,7 @@ export async function updateApplicationStatus(params: {
           NOTIF.statusUpdate.fallback(params.status),
         notifLang
       )
-      dispatchNotification({
+      dispatchAdmissionNotification({
         schoolId,
         userId: application.userId,
         type: "system_alert",
@@ -1226,7 +1275,7 @@ export async function confirmEnrollment(params: {
 
     const effectiveUserId = txUserId || application.userId
     if (effectiveUserId) {
-      dispatchNotification({
+      dispatchAdmissionNotification({
         schoolId,
         userId: effectiveUserId,
         type: "account_created",
@@ -1261,7 +1310,7 @@ export async function confirmEnrollment(params: {
             (sum, fa) => sum + Number(fa.finalAmount),
             0
           )
-          dispatchNotification({
+          dispatchAdmissionNotification({
             schoolId,
             userId: effectiveUserId,
             type: "fee_due",
@@ -1302,7 +1351,7 @@ export async function confirmEnrollment(params: {
         for (const link of guardianLinks) {
           if (link.guardian?.userId) {
             const studentFullName = `${application.firstName} ${application.lastName}`
-            dispatchNotification({
+            dispatchAdmissionNotification({
               schoolId,
               userId: link.guardian.userId,
               type: "account_created",
@@ -1554,7 +1603,7 @@ export async function placeStudentInSection(params: {
         select: { preferredLanguage: true },
       })
       const lang = schoolLang2?.preferredLanguage ?? "ar"
-      dispatchNotification({
+      dispatchAdmissionNotification({
         schoolId,
         userId: application.userId,
         type: "system_alert",
@@ -1562,7 +1611,7 @@ export async function placeStudentInSection(params: {
         body: t(NOTIF.sectionPlacement.body(sectionData.name), lang),
         lang,
         priority: "normal",
-        channels: ["in_app"],
+        channels: ["in_app", "email"],
         metadata: {
           applicationId: params.applicationId,
           sectionId: params.sectionId,

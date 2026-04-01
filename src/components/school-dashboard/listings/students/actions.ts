@@ -83,6 +83,7 @@ import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
+import { getGradeLabel } from "@/lib/grade-label"
 import { getModelOrThrow } from "@/lib/prisma-guards"
 import { buildTranslatedSearchConditions } from "@/lib/search-with-translation"
 import { syncStudentGrades } from "@/lib/sync-student-grades"
@@ -725,23 +726,6 @@ export async function getStudent(input: {
  * @param input - Query parameters
  * @returns Action response with students and total count
  */
-/**
- * Format grade for display:
- * - English: "Grade 3", "Kindergarten", "Nursery" from gradeNumber
- * - Arabic: translated via getDisplayText with overrides
- */
-// Override Google Translate results for grade terms
-const AR_GRADE_OVERRIDES: Record<string, string> = {
-  "رياض الأطفال": "الروضة",
-  حضانة: "الحضانة",
-}
-
-function applyGradeOverrides(translated: string, lang: string): string {
-  if (lang !== "ar") return translated
-  const overridden = AR_GRADE_OVERRIDES[translated] || translated
-  return overridden.replace(/^الصف /, "")
-}
-
 // Transliterate Latin letters to Arabic in room codes (Google Translate skips these)
 const LATIN_TO_AR: Record<string, string> = {
   A: "أ",
@@ -760,20 +744,6 @@ function transliterateRoomCode(code: string, lang: string): string {
 }
 
 const hasLatin = (s: string) => /[a-zA-Z]/.test(s)
-
-function formatGradeLabel(
-  grade: { name?: string | null; gradeNumber?: number | null } | null
-): string | null {
-  if (!grade) return null
-  if (grade.gradeNumber != null) {
-    const n = grade.gradeNumber
-    if (n < 0) return "Nursery"
-    if (n === 0) return "Kindergarten"
-    return `Grade ${n}`
-  }
-  if (grade.name) return grade.name
-  return null
-}
 
 export async function getStudents(
   input: Partial<z.infer<typeof getStudentsSchema>>
@@ -900,30 +870,6 @@ export async function getStudents(
       studentModel.count({ where }),
     ])
 
-    // Translate grade labels for current locale
-    const gradeTranslations = new Map<string, string>()
-    if (displayLang !== "en") {
-      const uniqueGrades = new Set<string>()
-      for (const s of rows as Array<any>) {
-        const label = formatGradeLabel(s.academicGrade)
-        if (label) uniqueGrades.add(label)
-      }
-      await Promise.all(
-        Array.from(uniqueGrades).map(async (label) => {
-          const translated = await getDisplayText(
-            label,
-            "en",
-            displayLang as "ar",
-            schoolId
-          )
-          gradeTranslations.set(
-            label,
-            applyGradeOverrides(translated, displayLang)
-          )
-        })
-      )
-    }
-
     // Translate student names for current locale
     const nameTranslations = new Map<string, string>()
     const uniqueNames = new Map<string, string>()
@@ -990,12 +936,10 @@ export async function getStudents(
 
     // Map results
     const mapped = (rows as Array<any>).map((s) => {
-      const enGrade = formatGradeLabel(s.academicGrade)
-      const gradeName = enGrade
-        ? displayLang !== "en"
-          ? gradeTranslations.get(enGrade) || enGrade
-          : enGrade
-        : null
+      const gradeName =
+        s.academicGrade?.gradeNumber != null
+          ? getGradeLabel(s.academicGrade.gradeNumber, displayLang)
+          : null
 
       const rawName = [s.firstName, s.lastName].filter(Boolean).join(" ")
       const mapTextLang = hasLatin(rawName) ? "en" : "ar"
