@@ -2,9 +2,11 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import Link from "next/link"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { ar } from "date-fns/locale/ar"
+import { enUS } from "date-fns/locale/en-US"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
@@ -35,6 +37,7 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { ErrorToast, SuccessToast } from "@/components/atom/toast"
+import { DateField } from "@/components/form"
 import { AnthropicIcons, Icons } from "@/components/icons"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -74,6 +77,7 @@ export default function InquiryFormContent({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const isRTL = lang === "ar"
+  const dateLocale = useMemo(() => (lang === "ar" ? ar : enUS), [lang])
 
   const dict =
     (
@@ -291,20 +295,15 @@ export default function InquiryFormContent({
                       </FormItem>
                     )}
                   />
-                  <FormField
-                    control={form.control}
+                  <DateField
                     name="studentDOB"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          {dict.studentDOB || "Student Date of Birth"}
-                        </FormLabel>
-                        <FormControl>
-                          <Input {...field} type="date" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    label={dict.studentDOB || "Student Date of Birth"}
+                    placeholder={dict.pickDate || "Pick a date"}
+                    captionLayout="dropdown"
+                    startMonth={new Date(1990, 0)}
+                    endMonth={new Date()}
+                    maxDate={new Date()}
+                    locale={dateLocale}
                   />
                 </div>
                 <FormField
