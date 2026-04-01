@@ -17,6 +17,7 @@ export interface School {
   maxStudents?: number
   maxTeachers?: number
   isActive?: boolean
+  enabledModules?: string[] | null
   createdAt?: Date
   updatedAt?: Date
 }

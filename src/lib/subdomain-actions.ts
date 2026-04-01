@@ -257,6 +257,7 @@ const SCHOOL_SELECT = {
   maxStudents: true,
   maxTeachers: true,
   isActive: true,
+  enabledModules: true,
   currency: true,
   createdAt: true,
   updatedAt: true,

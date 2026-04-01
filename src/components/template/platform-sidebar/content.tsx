@@ -70,9 +70,19 @@ export default function PlatformSidebar({
         <SidebarGroup className="p-2 pb-16">
           <SidebarMenu className="list-none space-y-1">
             {platformNav
-              .filter((item) =>
-                currentRole ? item.roles.includes(currentRole) : false
-              )
+              .filter((item) => {
+                if (!currentRole || !item.roles.includes(currentRole))
+                  return false
+                // Module visibility: alwaysVisible items always show;
+                // if school has enabledModules configured, only show listed ones
+                if (item.alwaysVisible) return true
+                const enabled = school?.enabledModules as
+                  | string[]
+                  | null
+                  | undefined
+                if (!enabled) return true // null = all visible
+                return enabled.includes(item.key)
+              })
               .map((item) => {
                 // Prepend locale to href to preserve language when navigating
                 const localizedHref = `/${locale}${item.href}`

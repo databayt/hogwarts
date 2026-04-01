@@ -353,6 +353,9 @@ model School {
   // Lesson Content relations
   videos Video[]
 
+  // Sidebar module visibility (null = all visible, array = only listed modules shown)
+  enabledModules        Json?                   // Array of module keys: ["students", "teachers", "exams"]
+
   // AI & Document Processing
   aiMonthlyBudget       Decimal?                @db.Decimal(10, 2) // Monthly AI budget in USD, null = unlimited
   aiEnabledDomains      Json?                   // Array of enabled domains: ["admission", "exams", "finance"]

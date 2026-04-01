@@ -485,6 +485,10 @@
           "title": "Custom Domain",
           "description": "Request a custom domain for your school"
         },
+        "modules": {
+          "title": "Sidebar Modules",
+          "description": "Control which modules appear in the sidebar"
+        },
         "configured": "Configured",
         "incomplete": "Incomplete",
         "notSet": "Not Set",

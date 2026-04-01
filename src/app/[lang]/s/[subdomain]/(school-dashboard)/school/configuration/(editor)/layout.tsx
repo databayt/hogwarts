@@ -51,6 +51,7 @@ export default async function EditorLayout({ children, params }: Props) {
               tuitionFee: true,
               currency: true,
               paymentSchedule: true,
+              enabledModules: true,
             },
           })
           .catch(() => null)
@@ -96,6 +97,7 @@ export default async function EditorLayout({ children, params }: Props) {
     "name-format",
     "join",
     "visibility",
+    "modules",
     "price",
     "discount",
     "legal",
@@ -167,6 +169,14 @@ export default async function EditorLayout({ children, params }: Props) {
           : "No active discounts"
       case "legal":
         return school.planType ? `${school.planType} plan` : null
+      case "modules": {
+        const em = school.enabledModules as string[] | null
+        if (!em)
+          return lang === "ar" ? "جميع الوحدات مفعلة" : "All modules enabled"
+        return lang === "ar"
+          ? `${em.length} وحدة مفعلة`
+          : `${em.length} modules enabled`
+      }
       case "name-format":
         return school.nameFormat === "full"
           ? "Full Name (single field)"

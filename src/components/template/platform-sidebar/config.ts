@@ -4,10 +4,12 @@
 type IconKey = keyof typeof import("./icons").Icons
 
 export type PlatformNavItem = {
+  key: string
   title: string
   href: string
   icon: IconKey
   roles: Role[]
+  alwaysVisible?: boolean
   className?: string
 }
 
@@ -33,32 +35,50 @@ const ALL_ROLES: Role[] = [
 ]
 
 export const platformNav: PlatformNavItem[] = [
-  // Admin lab – admin only
-  { title: "Overview", href: "/dashboard", icon: "pieChart", roles: ALL_ROLES },
+  // Core – always visible, not toggleable
   {
+    key: "dashboard",
+    title: "Overview",
+    href: "/dashboard",
+    icon: "pieChart",
+    roles: ALL_ROLES,
+    alwaysVisible: true,
+  },
+  {
+    key: "school",
     title: "School",
     href: "/school",
     icon: "admin",
     roles: ["ADMIN", "DEVELOPER"],
+    alwaysVisible: true,
     className: "-ms-[1.5px] h-4.5 w-4.5",
   },
+
+  // Toggleable modules
   {
+    key: "sales",
     title: "Sales",
     href: "/sales",
     icon: "sales",
     roles: ["ADMIN", "DEVELOPER"],
   },
-
-  // School school-dashboard – recommended visibility
   {
+    key: "announcements",
     title: "Announcements",
     href: "/announcements",
     icon: "speaker",
     roles: ALL_ROLES,
     className: "h-4.5 w-4.5",
   },
-  { title: "Finance", href: "/finance", icon: "creditCard", roles: ALL_ROLES },
   {
+    key: "finance",
+    title: "Finance",
+    href: "/finance",
+    icon: "creditCard",
+    roles: ALL_ROLES,
+  },
+  {
+    key: "grades",
     title: "Grades",
     href: "/grades",
     icon: "grades",
@@ -66,6 +86,7 @@ export const platformNav: PlatformNavItem[] = [
     className: "-ms-[1px] h-4.5 w-4.5",
   },
   {
+    key: "subjects",
     title: "Subjects",
     href: "/subjects",
     icon: "subject",
@@ -73,36 +94,42 @@ export const platformNav: PlatformNavItem[] = [
     className: "",
   },
   {
+    key: "parents",
     title: "Parents",
     href: "/parents",
     icon: "users",
     roles: ["ADMIN", "STAFF"],
   },
   {
+    key: "admission",
     title: "Admission",
     href: "/admission",
     icon: "userPlus",
     roles: ["ADMIN", "STAFF"],
   },
   {
+    key: "students",
     title: "Students",
     href: "/students",
     icon: "graduationCap",
     roles: ["ADMIN", "STAFF", "TEACHER"],
   },
   {
+    key: "teachers",
     title: "Teachers",
     href: "/teachers",
     icon: "userCheck",
     roles: ["ADMIN", "STAFF"],
   },
   {
+    key: "classrooms",
     title: "Classrooms",
     href: "/classrooms",
     icon: "box",
     roles: ["ADMIN", "STAFF", "TEACHER"],
   },
   {
+    key: "exams",
     title: "Exams",
     href: "/exams",
     icon: "exam",
@@ -110,26 +137,42 @@ export const platformNav: PlatformNavItem[] = [
     className: "-ms-[1px] h-4.5 w-4.5",
   },
   {
+    key: "events",
     title: "Events",
     href: "/events",
     icon: "calendar",
     roles: ["ADMIN", "STAFF", "TEACHER"],
   },
   {
+    key: "attendance",
     title: "Attendance",
     href: "/attendance",
     icon: "checkCircle",
     roles: ["ADMIN", "STAFF", "TEACHER", "STUDENT", "GUARDIAN"],
   },
   {
+    key: "timetable",
     title: "Timetable",
     href: "/timetable",
     icon: "clock",
     roles: ["ADMIN", "TEACHER", "STUDENT"],
   },
-  { title: "Library", href: "/library", icon: "bookOpen", roles: ALL_ROLES },
-  { title: "Stream", href: "/stream", icon: "video", roles: ALL_ROLES },
   {
+    key: "library",
+    title: "Library",
+    href: "/library",
+    icon: "bookOpen",
+    roles: ALL_ROLES,
+  },
+  {
+    key: "stream",
+    title: "Stream",
+    href: "/stream",
+    icon: "video",
+    roles: ALL_ROLES,
+  },
+  {
+    key: "messages",
     title: "Messages",
     href: "/messages",
     icon: "envelope",
@@ -144,23 +187,56 @@ export const platformNav: PlatformNavItem[] = [
     ],
   },
   {
+    key: "whatsapp",
     title: "WhatsApp",
     href: "/whatsapp",
     icon: "whatsapp",
     roles: ["ADMIN", "DEVELOPER"],
   },
 
-  // Profile and Settings
-  { title: "Profile", href: "/profile", icon: "user", roles: ALL_ROLES },
-  { title: "Settings", href: "/settings", icon: "cog", roles: ALL_ROLES },
-
-  // Showcase components – admin only (at the end)
-  { title: "Charts", href: "/charts", icon: "barChart", roles: ["ADMIN"] },
-  { title: "Stats", href: "/stats", icon: "trendingUp", roles: ["ADMIN"] },
+  // Core – always visible, not toggleable
   {
+    key: "profile",
+    title: "Profile",
+    href: "/profile",
+    icon: "user",
+    roles: ALL_ROLES,
+    alwaysVisible: true,
+  },
+  {
+    key: "settings",
+    title: "Settings",
+    href: "/settings",
+    icon: "cog",
+    roles: ALL_ROLES,
+    alwaysVisible: true,
+  },
+
+  // Showcase – admin only
+  {
+    key: "charts",
+    title: "Charts",
+    href: "/charts",
+    icon: "barChart",
+    roles: ["ADMIN"],
+  },
+  {
+    key: "stats",
+    title: "Stats",
+    href: "/stats",
+    icon: "trendingUp",
+    roles: ["ADMIN"],
+  },
+  {
+    key: "billing",
     title: "Billing",
     href: "/billing",
     icon: "receipt",
     roles: ["ADMIN", "DEVELOPER"],
   },
 ]
+
+/** Toggleable module items (excludes alwaysVisible core items) */
+export const toggleableModules = platformNav.filter(
+  (item) => !item.alwaysVisible
+)

@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
+import { Prisma } from "@prisma/client"
 import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
@@ -363,6 +364,51 @@ export async function updateSchoolCapacity(
     return { success: true }
   } catch (error) {
     console.error("Error updating school capacity:", error)
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: error.issues.map((e) => e.message).join(", "),
+      }
+    }
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
+  }
+}
+
+// Schema for enabled modules update
+const enabledModulesSchema = z.object({
+  enabledModules: z.array(z.string()).nullable(),
+})
+
+export async function updateEnabledModules(
+  schoolId: string,
+  data: z.infer<typeof enabledModulesSchema>
+): Promise<ActionResult> {
+  try {
+    const session = await auth()
+    const userSchoolId = session?.user?.schoolId
+
+    if (!userSchoolId || userSchoolId !== schoolId) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
+    const validatedData = enabledModulesSchema.parse(data)
+
+    await db.school.update({
+      where: { id: schoolId },
+      data: {
+        enabledModules:
+          validatedData.enabledModules === null
+            ? Prisma.DbNull
+            : validatedData.enabledModules,
+      },
+    })
+
+    revalidatePath("/school/configuration")
+    revalidatePath("/school/configuration/modules")
+
+    return { success: true }
+  } catch (error) {
+    console.error("Error updating enabled modules:", error)
     if (error instanceof z.ZodError) {
       return {
         success: false,
