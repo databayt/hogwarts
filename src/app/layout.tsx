@@ -2,6 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import type { Metadata } from "next"
+import { cookies } from "next/headers"
 
 import { fontRubik } from "@/components/atom/fonts"
 
@@ -12,15 +13,19 @@ export const metadata: Metadata = {
   description: "School automation",
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const cookieStore = await cookies()
+  const locale = cookieStore.get("NEXT_LOCALE")?.value || "ar"
+  const dir = locale === "ar" ? "rtl" : "ltr"
+
   return (
     <html
-      lang="ar"
-      dir="rtl"
+      lang={locale}
+      dir={dir}
       className={fontRubik.variable}
       suppressHydrationWarning
     >
