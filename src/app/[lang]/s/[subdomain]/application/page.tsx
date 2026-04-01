@@ -62,6 +62,8 @@ export default async function ApplyPage({ params }: ApplyPageProps) {
     notFound()
   }
 
+  // Auth is enforced by the layout — session.user is guaranteed here
+
   const campaigns = campaignsResult.success ? campaignsResult.data || [] : []
 
   // No active campaigns → show enrollment closed
