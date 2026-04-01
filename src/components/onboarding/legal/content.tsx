@@ -133,6 +133,7 @@ const LegalContent = (props: Props) => {
           setShowModal={setShowSuccessModal}
           onGoToDashboard={handleGoToDashboard}
           dictionary={dictionary}
+          lang={lang}
         />
       )}
 

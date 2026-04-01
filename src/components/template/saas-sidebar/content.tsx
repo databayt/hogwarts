@@ -34,11 +34,7 @@ export default function SaasSidebar() {
   }, [setOpenMobile])
 
   return (
-    <Sidebar
-      className="top-16 w-56"
-      collapsible="offcanvas"
-      side={isRTL ? "right" : "left"}
-    >
+    <Sidebar className="top-16 w-56" collapsible="offcanvas">
       <SidebarContent className="border-0 bg-transparent">
         <ScrollArea className="h-full" dir={isRTL ? "rtl" : "ltr"}>
           <SidebarGroup className="p-2">

@@ -63,7 +63,8 @@ export const TitleForm = forwardRef<TitleFormRef, TitleFormProps>(
       return new Promise<void>((resolve, reject) => {
         startTransition(async () => {
           try {
-            const result = await updateSchoolTitle(schoolId, data)
+            const locale = window.location.pathname.split("/")[1] || "ar"
+            const result = await updateSchoolTitle(schoolId, data, locale)
 
             if (result.success) {
               onSuccess?.()

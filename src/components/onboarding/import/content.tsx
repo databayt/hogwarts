@@ -330,8 +330,12 @@ function ExpectedFieldsDialog({ dict }: { dict: any }) {
           <div>
             <h4 className="mb-2 font-medium">{dict.students}</h4>
             <div className="space-y-1">
-              <FieldRow name="name" required />
-              <FieldRow name="studentId" required />
+              <FieldRow name="name" required requiredLabel={dict.required} />
+              <FieldRow
+                name="studentId"
+                required
+                requiredLabel={dict.required}
+              />
               <FieldRow name="email" />
               <FieldRow name="middleName" />
               <FieldRow name="section" />
@@ -349,9 +353,13 @@ function ExpectedFieldsDialog({ dict }: { dict: any }) {
           <div>
             <h4 className="mb-2 font-medium">{dict.teachers}</h4>
             <div className="space-y-1">
-              <FieldRow name="name" required />
-              <FieldRow name="email" required />
-              <FieldRow name="employeeId" required />
+              <FieldRow name="name" required requiredLabel={dict.required} />
+              <FieldRow name="email" required requiredLabel={dict.required} />
+              <FieldRow
+                name="employeeId"
+                required
+                requiredLabel={dict.required}
+              />
               <FieldRow name="department" />
               <FieldRow name="phoneNumber" />
               <FieldRow name="subjects" />
@@ -368,11 +376,21 @@ function ExpectedFieldsDialog({ dict }: { dict: any }) {
   )
 }
 
-function FieldRow({ name, required }: { name: string; required?: boolean }) {
+function FieldRow({
+  name,
+  required,
+  requiredLabel,
+}: {
+  name: string
+  required?: boolean
+  requiredLabel?: string
+}) {
   return (
     <div className="text-muted-foreground flex items-center gap-2">
       <code className="bg-muted rounded px-1.5 py-0.5 text-xs">{name}</code>
-      {required && <span className="text-xs text-red-500">*</span>}
+      {required && (
+        <span className="text-xs text-red-500">* {requiredLabel}</span>
+      )}
     </div>
   )
 }

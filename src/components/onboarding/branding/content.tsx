@@ -17,6 +17,8 @@ import { FormHeading, FormLayout } from "@/components/form"
 import { useHostValidation } from "@/components/onboarding/host-validation-context"
 import { useListing } from "@/components/onboarding/use-listing"
 
+import { saveSchoolLogo } from "./actions"
+
 interface Props {
   dictionary?: any
 }
@@ -45,6 +47,8 @@ export default function BrandingContent({ dictionary }: Props) {
 
   const handleNext = async () => {
     try {
+      // Persist logo to database
+      await saveSchoolLogo(id, logo || null)
       if (logo) {
         updateListingData({ logoUrl: logo })
       }

@@ -58,6 +58,25 @@ export async function updateSchoolBranding(
   }
 }
 
+export async function saveSchoolLogo(
+  schoolId: string,
+  logoUrl: string | null
+): Promise<ActionResponse> {
+  try {
+    await requireSchoolOwnership(schoolId)
+
+    await db.school.update({
+      where: { id: schoolId },
+      data: { logoUrl: logoUrl || null },
+    })
+
+    revalidatePath(`/onboarding/${schoolId}/branding`)
+    return createActionResponse({ success: true })
+  } catch (error) {
+    return createActionResponse(undefined, error)
+  }
+}
+
 export async function getSchoolBranding(
   schoolId: string
 ): Promise<ActionResponse> {

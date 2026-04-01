@@ -21,6 +21,20 @@ import { useLocale } from "@/components/internationalization/use-locale"
 
 import "mapbox-gl/dist/mapbox-gl.css"
 
+// Load RTL text plugin at module level — MUST happen before any map instance
+// renders Arabic/Hebrew text, otherwise letters appear disconnected
+try {
+  const status = (mapboxgl as any).getRTLTextPluginStatus?.()
+  if (!status || status === "unavailable") {
+    ;(mapboxgl as any).setRTLTextPlugin(
+      "https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-rtl-text/v0.3.0/mapbox-gl-rtl-text.js",
+      true
+    )
+  }
+} catch {
+  // Plugin may already be loaded
+}
+
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || ""
 
 // Default center (world view)
@@ -58,7 +72,7 @@ export function MapboxLocationPicker({
   const [showResults, setShowResults] = useState(false)
   const [gpsLoading, setGpsLoading] = useState(false)
 
-  const { locale, isRTL } = useLocale()
+  const { locale } = useLocale()
   const {
     query,
     setQuery,
@@ -67,25 +81,6 @@ export function MapboxLocationPicker({
     clearResults,
   } = useMapboxSearch(300, locale)
   const { geocode, loading: geocodeLoading } = useReverseGeocode(locale)
-
-  // Load Mapbox RTL text plugin for Arabic/Hebrew label rendering
-  useEffect(() => {
-    if (
-      isRTL &&
-      !(mapboxgl as any).getRTLTextPluginStatus?.() &&
-      typeof (mapboxgl as any).setRTLTextPlugin === "function"
-    ) {
-      try {
-        ;(mapboxgl as any).setRTLTextPlugin(
-          "https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-rtl-text/v0.3.0/mapbox-gl-rtl-text.js",
-          null,
-          true
-        )
-      } catch {
-        // Plugin may already be loaded
-      }
-    }
-  }, [isRTL])
 
   // Stable ref for onChange to avoid map re-init
   const onChangeRef = useRef(onChange)
@@ -138,10 +133,19 @@ export function MapboxLocationPicker({
       },
     })
 
-    // Set map language for labels
+    // Set map language for Arabic labels via Standard style config
     map.on("style.load", () => {
-      if (locale === "ar") {
-        map.setLanguage("ar")
+      try {
+        map.setConfigProperty(
+          "basemap",
+          "language",
+          locale === "ar" ? "ar" : "en"
+        )
+      } catch {
+        // Fallback for non-Standard styles
+        if (locale === "ar") {
+          map.setLanguage?.("ar")
+        }
       }
     })
 

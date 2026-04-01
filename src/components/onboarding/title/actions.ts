@@ -38,7 +38,8 @@ export async function getSchoolTitle(
 
 export async function updateSchoolTitle(
   schoolId: string,
-  data: TitleFormData
+  data: TitleFormData,
+  locale?: string
 ): Promise<ActionResponse> {
   try {
     await requireSchoolOwnership(schoolId)
@@ -80,6 +81,7 @@ export async function updateSchoolTitle(
       data: {
         name: validated.title,
         ...(shouldUpdateDomain ? { domain: validated.subdomain } : {}),
+        ...(locale ? { preferredLanguage: locale } : {}),
       },
     })
 

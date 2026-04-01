@@ -7215,6 +7215,7 @@
       "nameYourSchoolBreak": "school",
       "optional": "(Optional)",
       "brandingDescription": "Upload your logo and customize your school's visual style.",
+      "searchAddress": "Search for an address...",
       "tapToPin": "Tap on the map to place a pin",
       "detectingAddress": "Detecting address...",
       "locationBlocked": "Location access is blocked. Please enable it in your browser settings.",

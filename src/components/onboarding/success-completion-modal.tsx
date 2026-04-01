@@ -25,6 +25,7 @@ interface SuccessCompletionModalProps {
   setShowModal: Dispatch<SetStateAction<boolean>>
   onGoToDashboard: () => void
   dictionary?: any
+  lang?: string
 }
 
 export default function SuccessCompletionModal({
@@ -33,6 +34,7 @@ export default function SuccessCompletionModal({
   setShowModal,
   onGoToDashboard,
   dictionary,
+  lang,
 }: SuccessCompletionModalProps) {
   const dict = dictionary?.school?.onboarding || {}
   const { data: session } = useSession()
@@ -95,7 +97,7 @@ export default function SuccessCompletionModal({
 
         <h5 className="mb-6">
           <a
-            href={`http://${fullDomain}`}
+            href={`http://${fullDomain}${lang ? `/${lang}` : ""}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-primary underline transition-colors hover:opacity-80"

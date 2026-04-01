@@ -14,6 +14,7 @@ import {
   Users,
 } from "lucide-react"
 
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -21,7 +22,6 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { FormStepProgress } from "@/components/form/progress"
 import { useSchool } from "@/components/school-dashboard/context/school-context"
 
 const TOTAL_STEPS = 3
@@ -81,6 +81,22 @@ function getStorageKey(userId: string) {
   return `welcome-seen-${userId}`
 }
 
+function DotIndicator({ total, current }: { total: number; current: number }) {
+  return (
+    <div className="flex items-center gap-2">
+      {Array.from({ length: total }).map((_, i) => (
+        <div
+          key={i}
+          className={cn(
+            "size-2 rounded-full transition-colors duration-200",
+            i === current ? "bg-primary" : "bg-muted"
+          )}
+        />
+      ))}
+    </div>
+  )
+}
+
 export function WelcomeDialog({ userId, dictionary: d }: WelcomeDialogProps) {
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState(0)
@@ -116,21 +132,14 @@ export function WelcomeDialog({ userId, dictionary: d }: WelcomeDialogProps) {
   if (!open) return null
 
   const slideVariants = {
-    enter: (dir: number) => ({ x: dir > 0 ? 80 : -80, opacity: 0 }),
+    enter: (dir: number) => ({ x: dir > 0 ? 40 : -40, opacity: 0 }),
     center: { x: 0, opacity: 1 },
-    exit: (dir: number) => ({ x: dir > 0 ? -80 : 80, opacity: 0 }),
+    exit: (dir: number) => ({ x: dir > 0 ? -40 : 40, opacity: 0 }),
   }
 
   return (
-    <Dialog open modal>
-      <DialogContent
-        className="gap-0 overflow-hidden p-0 sm:max-w-3xl"
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onEscapeKeyDown={dismiss}
-        showCloseButton
-        onCloseAutoFocus={dismiss}
-      >
-        {/* Hidden accessible title */}
+    <Dialog open={open} onOpenChange={(v) => !v && dismiss()}>
+      <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-3xl">
         <DialogTitle className="sr-only">
           {d.step1Title.replace("{schoolName}", school.name)}
         </DialogTitle>
@@ -139,18 +148,11 @@ export function WelcomeDialog({ userId, dictionary: d }: WelcomeDialogProps) {
         </DialogDescription>
 
         <div className="flex flex-col sm:flex-row">
-          {/* Left column: text + navigation */}
-          <div className="flex flex-1 flex-col justify-between p-6 sm:p-8">
-            {/* Dot pagination */}
-            <FormStepProgress
-              current={step}
-              total={TOTAL_STEPS}
-              variant="dots"
-              className="mb-6 !justify-start"
-            />
+          {/* Left column */}
+          <div className="flex flex-1 flex-col p-6 sm:p-8">
+            <DotIndicator total={TOTAL_STEPS} current={step} />
 
-            {/* Step content with animation */}
-            <div className="relative min-h-[200px] flex-1">
+            <div className="mt-5 overflow-hidden">
               <AnimatePresence mode="wait" custom={direction}>
                 <motion.div
                   key={step}
@@ -159,8 +161,7 @@ export function WelcomeDialog({ userId, dictionary: d }: WelcomeDialogProps) {
                   initial="enter"
                   animate="center"
                   exit="exit"
-                  transition={{ duration: 0.25, ease: "easeInOut" }}
-                  className="absolute inset-0"
+                  transition={{ duration: 0.2, ease: "easeInOut" }}
                 >
                   {step === 0 && (
                     <StepWelcome dictionary={d} schoolName={school.name} />
@@ -171,28 +172,31 @@ export function WelcomeDialog({ userId, dictionary: d }: WelcomeDialogProps) {
               </AnimatePresence>
             </div>
 
-            {/* Navigation buttons */}
             <div className="mt-6 flex items-center gap-3">
               {step > 0 && (
-                <Button variant="outline" onClick={back}>
+                <Button variant="outline" size="sm" onClick={back}>
                   {d.back}
                 </Button>
               )}
               {step < TOTAL_STEPS - 1 ? (
-                <Button onClick={next}>{d.next}</Button>
+                <Button size="sm" onClick={next}>
+                  {d.next}
+                </Button>
               ) : (
-                <Button onClick={dismiss}>{d.getStarted}</Button>
+                <Button size="sm" onClick={dismiss}>
+                  {d.getStarted}
+                </Button>
               )}
             </div>
           </div>
 
           {/* Right column: illustration */}
-          <div className="bg-muted/30 hidden items-center justify-center p-6 sm:flex sm:w-[320px]">
+          <div className="bg-muted/30 hidden items-center justify-center p-6 sm:flex sm:w-[300px]">
             <Image
               src="/illustrations/welcome-characters.svg"
               alt=""
-              width={280}
-              height={280}
+              width={260}
+              height={260}
               className="h-auto w-full"
               priority
             />
@@ -211,13 +215,11 @@ function StepWelcome({
   schoolName: string
 }) {
   return (
-    <div className="flex flex-col gap-3">
-      <h2 className="text-2xl font-bold tracking-tight">
+    <div>
+      <h2 className="text-xl font-semibold">
         {d.step1Title.replace("{schoolName}", schoolName)}
       </h2>
-      <p className="text-muted-foreground leading-relaxed">
-        {d.step1Description}
-      </p>
+      <p className="text-muted-foreground mt-2 text-sm">{d.step1Description}</p>
     </div>
   )
 }
@@ -228,19 +230,17 @@ function StepFeatures({
   dictionary: WelcomeDialogDictionary
 }) {
   return (
-    <div className="flex flex-col gap-3">
-      <h2 className="text-2xl font-bold tracking-tight">{d.step2Title}</h2>
-      <p className="text-muted-foreground mb-2 leading-relaxed">
-        {d.step2Description}
-      </p>
-      <div className="grid grid-cols-2 gap-2">
+    <div>
+      <h2 className="text-xl font-semibold">{d.step2Title}</h2>
+      <p className="text-muted-foreground mt-2 text-sm">{d.step2Description}</p>
+      <div className="mt-3 grid grid-cols-2 gap-2">
         {FEATURES.map(({ key, icon: Icon }) => (
           <div
             key={key}
-            className="bg-muted/50 flex items-center gap-2.5 rounded-lg p-2.5"
+            className="bg-muted/50 flex items-center gap-2 rounded-md px-2.5 py-2"
           >
-            <Icon className="text-primary size-4 shrink-0" />
-            <span className="text-sm">{d.features[key]}</span>
+            <Icon className="text-primary size-3.5 shrink-0" />
+            <span className="text-xs">{d.features[key]}</span>
           </div>
         ))}
       </div>
@@ -254,18 +254,16 @@ function StepQuickActions({
   dictionary: WelcomeDialogDictionary
 }) {
   return (
-    <div className="flex flex-col gap-3">
-      <h2 className="text-2xl font-bold tracking-tight">{d.step3Title}</h2>
-      <p className="text-muted-foreground mb-2 leading-relaxed">
-        {d.step3Description}
-      </p>
-      <div className="space-y-2">
+    <div>
+      <h2 className="text-xl font-semibold">{d.step3Title}</h2>
+      <p className="text-muted-foreground mt-2 text-sm">{d.step3Description}</p>
+      <div className="mt-3 space-y-1.5">
         {QUICK_ACTIONS.map(({ key, icon: Icon }) => (
-          <div key={key} className="flex items-center gap-3 py-1">
-            <div className="bg-primary/10 flex size-7 items-center justify-center rounded-md">
-              <Icon className="text-primary size-3.5" />
+          <div key={key} className="flex items-center gap-2.5">
+            <div className="bg-primary/10 flex size-6 items-center justify-center rounded">
+              <Icon className="text-primary size-3" />
             </div>
-            <span className="text-sm">{d.quickActions[key]}</span>
+            <span className="text-xs">{d.quickActions[key]}</span>
           </div>
         ))}
       </div>
