@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { ErrorToast, SuccessToast } from "@/components/atom/toast"
+import { uploadFile } from "@/components/file/upload/actions"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -38,6 +39,7 @@ interface Props {
   dictionary: Dictionary
   lang: Locale
   campaign: PublicCampaign
+  schoolId: string
 }
 
 // Default required documents if campaign doesn't specify
@@ -76,7 +78,7 @@ const ALLOWED_TYPES = [
   "application/pdf",
 ]
 
-export default function StepDocuments({ dictionary, lang, campaign }: Props) {
+export default function StepDocuments({ dictionary, lang, campaign, schoolId }: Props) {
   const { control, setValue, watch } = useFormContext<ApplicationFormData>()
   const isRTL = lang === "ar"
 
@@ -101,7 +103,6 @@ export default function StepDocuments({ dictionary, lang, campaign }: Props) {
       docType: string,
       fieldName?: "photoUrl" | "signatureUrl"
     ) => {
-      // Validate file
       if (!ALLOWED_TYPES.includes(file.type)) {
         ErrorToast(dict.fileTypeNotSupported || "File type not supported")
         return
@@ -115,17 +116,21 @@ export default function StepDocuments({ dictionary, lang, campaign }: Props) {
       setUploading(docType)
 
       try {
-        // Create form data for upload
         const formData = new FormData()
         formData.append("file", file)
-        formData.append("type", docType)
 
-        // TODO: Replace with actual upload endpoint
-        // For now, create a local URL for preview
-        const fileUrl = URL.createObjectURL(file)
+        const result = await uploadFile(formData, {
+          category: fieldName ? "image" : "document",
+          folder: `admission/${docType}`,
+          schoolId,
+        })
 
-        // Simulate upload delay
-        await new Promise((resolve) => setTimeout(resolve, 500))
+        if (!result.success) {
+          ErrorToast(result.error || dict.failedToUpload || "Failed to upload file")
+          return
+        }
+
+        const fileUrl = result.url
 
         if (fieldName) {
           setValue(fieldName, fileUrl)
@@ -137,19 +142,18 @@ export default function StepDocuments({ dictionary, lang, campaign }: Props) {
             uploadedAt: new Date().toISOString(),
           }
 
-          // Remove existing doc of same type and add new one
           const updatedDocs = documents.filter((d) => d.type !== docType)
           setValue("documents", [...updatedDocs, newDoc])
         }
 
         SuccessToast(dict.fileUploaded || "File uploaded successfully")
-      } catch (error) {
+      } catch {
         ErrorToast(dict.failedToUpload || "Failed to upload file")
       } finally {
         setUploading(null)
       }
     },
-    [documents, setValue, isRTL]
+    [documents, setValue, schoolId]
   )
 
   const removeDocument = useCallback(

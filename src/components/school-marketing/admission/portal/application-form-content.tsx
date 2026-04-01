@@ -321,6 +321,7 @@ export default function ApplicationFormContent({
             dictionary={dictionary}
             lang={lang}
             campaign={campaign}
+            schoolId={school.id}
           />
         )
       case "review":
