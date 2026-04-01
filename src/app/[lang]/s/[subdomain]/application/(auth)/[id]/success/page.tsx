@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { db } from "@/lib/db"
@@ -9,8 +10,15 @@ import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import SuccessContent from "@/components/school-marketing/application/success/content"
 
-export const metadata = {
-  title: "Application Submitted",
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: Locale }>
+}): Promise<Metadata> {
+  const { lang } = await params
+  return {
+    title: lang === "ar" ? "تم تقديم الطلب" : "Application Submitted",
+  }
 }
 
 interface Props {

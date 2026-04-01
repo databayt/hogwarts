@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { db } from "@/lib/db"
@@ -9,9 +10,19 @@ import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import PaymentContent from "@/components/school-marketing/application/payment/content"
 
-export const metadata = {
-  title: "Payment | Apply",
-  description: "Pay your application fee.",
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: Locale }>
+}): Promise<Metadata> {
+  const { lang } = await params
+  const d = await getDictionary(lang)
+  const steps = d?.school?.admission?.apply?.steps
+  return {
+    title: `${steps?.payment?.title ?? "Payment"} | ${lang === "ar" ? "التقديم" : "Apply"}`,
+    description:
+      steps?.payment?.description ?? "Pay your application fee.",
+  }
 }
 
 interface Props {
