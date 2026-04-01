@@ -345,13 +345,180 @@
       "relatedFeatures": "Related Features"
     },
     "pricing": {
-      "title": "Pricing",
-      "subtitle": "Choose the plan that works for you",
-      "monthly": "Monthly",
-      "yearly": "Yearly",
-      "free": "Free",
-      "pro": "Pro",
-      "enterprise": "Enterprise"
+      "badge": "ROI Guaranteed",
+      "title": "Simple. Transparent.",
+      "subtitle": "All components and building blocks are open source — we charge for crafting fully functional masterpieces and ensuring their ongoing reliability.",
+      "headerSection": {
+        "label": "Pricing",
+        "title": "Transform your digital presence",
+        "subtitle": "Choose the perfect plan for your business needs"
+      },
+      "plans": {
+        "hobby": {
+          "title": "Hobby",
+          "description": "Get started for free",
+          "benefits": [
+            "Up to 5 pages website",
+            "Basic responsive design",
+            "Contact form integration"
+          ]
+        },
+        "pro": {
+          "title": "Pro",
+          "description": "For growing businesses",
+          "benefits": [
+            "Up to 15 pages website",
+            "Advanced animations",
+            "SEO optimization",
+            "Custom branding"
+          ]
+        },
+        "ultra": {
+          "title": "Ultra",
+          "description": "For large organizations",
+          "benefits": [
+            "Unlimited pages and features",
+            "Custom integrations"
+          ]
+        }
+      },
+      "constants": {
+        "free": "Free",
+        "includes": "Includes",
+        "everythingInHobby": "Everything in Hobby, plus",
+        "everythingInPro": "Everything in Pro, plus",
+        "startTrial": "Start Trial",
+        "getPro": "Get Pro",
+        "getUltra": "Get Ultra",
+        "monthly": "Monthly",
+        "yearly": "Yearly (save 20%)",
+        "perMonth": "/mo",
+        "moreInfo": "More info",
+        "loading": "Loading...",
+        "unavailable": "Unavailable",
+        "manageSubscription": "Manage Subscription",
+        "getPlan": "Get plan"
+      },
+      "planNames": {
+        "hobby": "Hobby",
+        "pro": "Pro",
+        "ultra": "Ultra",
+        "enterprise": "Enterprise"
+      },
+      "enterprise": {
+        "badge": "Enterprise",
+        "title": "Need Something Bigger?",
+        "description": "For enterprises and large organizations, we offer custom solutions with dedicated teams, SLAs, and specialized support tailored to your unique requirements.",
+        "talkToSales": "Talk to Sales"
+      },
+      "comparePlans": {
+        "title": "Compare Plans",
+        "subtitle": "Find the perfect plan tailored for your business needs!",
+        "features": {
+          "websitePages": "Website pages",
+          "responsiveDesign": "Responsive design",
+          "customBranding": "Custom branding",
+          "seoOptimization": "SEO optimization",
+          "contactForms": "Contact forms",
+          "animationsEffects": "Animations & effects",
+          "contentManagement": "Content management",
+          "performanceOptimization": "Performance optimization",
+          "securityFeatures": "Security features",
+          "analyticsReporting": "Analytics & reporting",
+          "support": "Support",
+          "revisions": "Revisions",
+          "hosting": "Hosting",
+          "backupMaintenance": "Backup & maintenance",
+          "customIntegrations": "Custom integrations",
+          "trainingDocumentation": "Training & documentation",
+          "launchAssistance": "Launch assistance",
+          "performanceMonitoring": "Performance monitoring"
+        },
+        "values": {
+          "upTo5": "Up to 5",
+          "upTo15": "Up to 15",
+          "unlimited": "Unlimited",
+          "basic": "Basic",
+          "advanced": "Advanced",
+          "premium": "Premium",
+          "custom": "Custom",
+          "static": "Static",
+          "basicCms": "Basic CMS",
+          "advancedCms": "Advanced CMS",
+          "customCms": "Custom CMS",
+          "basicSsl": "Basic SSL",
+          "advancedSsl": "Advanced SSL",
+          "premiumSsl": "Premium SSL",
+          "customSecurity": "Custom Security",
+          "email": "Email",
+          "priority": "Priority",
+          "support24_7": "24/7",
+          "support24_7Manager": "24/7 + Manager",
+          "oneRound": "1 round",
+          "threeRounds": "3 rounds",
+          "shared": "Shared",
+          "vps": "VPS",
+          "dedicated": "Dedicated",
+          "monthly": "Monthly",
+          "weekly": "Weekly",
+          "daily": "Daily",
+          "realTime": "Real-time",
+          "selfService": "Self-service",
+          "guided": "Guided",
+          "fullService": "Full service",
+          "whiteGlove": "White-glove",
+          "basicGuides": "Basic guides",
+          "videoTutorials": "Video tutorials",
+          "customTraining": "Custom training"
+        },
+        "tooltips": {
+          "websitePages": "Number of website pages included in your plan.",
+          "responsiveDesign": "Mobile-friendly design optimization level.",
+          "customBranding": "Brand colors and logo available from Pro.",
+          "seoOptimization": "Search engine optimization and meta tag setup.",
+          "contactForms": "Contact form functionality and integration options.",
+          "animationsEffects": "Interactive animations and visual effects.",
+          "contentManagement": "Content management system capabilities.",
+          "performanceOptimization": "Website speed and performance optimization.",
+          "securityFeatures": "Security certificates and protection features.",
+          "analyticsReporting": "Website analytics and performance reporting.",
+          "support": "Customer support level and response time.",
+          "revisions": "Number of design revisions included.",
+          "hosting": "Website hosting infrastructure type.",
+          "backupMaintenance": "Backup frequency and maintenance schedule.",
+          "customIntegrations": "Third-party service integrations and APIs.",
+          "trainingDocumentation": "User training and documentation provided.",
+          "launchAssistance": "Website launch and deployment assistance.",
+          "performanceMonitoring": "Ongoing website performance monitoring."
+        }
+      },
+      "faqs": {
+        "title": "Frequently Asked Questions",
+        "subtitle": "Your guide to pricing and plans with Databayt.",
+        "questions": [
+          {
+            "question": "What's included in the One Project plan?",
+            "answer": "The One Project plan includes complete custom development for a single automation solution, including consultation, development, testing, and deployment."
+          },
+          {
+            "question": "How does the hourly billing work for Strategic Partner?",
+            "answer": "With Strategic Partner, you get access to our development team at $10/hour. Perfect for ongoing projects, maintenance, or when you need flexible development resources."
+          },
+          {
+            "question": "Can I switch between plans?",
+            "answer": "Yes, you can upgrade or downgrade your plan at any time. Changes will be reflected in your next billing cycle."
+          },
+          {
+            "question": "Do you offer enterprise solutions?",
+            "answer": "Absolutely! For enterprise needs, we offer custom solutions with dedicated teams, SLAs, and specialized support. Contact us for a tailored quote."
+          }
+        ]
+      },
+      "securePayment": {
+        "title": "Secure Payment",
+        "description": "Your security is our priority. We use industry-leading encryption and security protocols to ensure your payment information is always protected.",
+        "poweredBy": "Powered by"
+      }
     },
     "logoCloud": {
       "trustedBy": "Trusted by amazing\nsponsors"
@@ -369,7 +536,8 @@
     },
     "openSource": {
       "title": "Proudly Open Source",
-      "description": "Hogwarts is open source and powered by open source software. The code is available on",
+      "description": "Hogwarts is open source and powered by open source software.",
+      "descriptionLine2": "The code is available on",
       "github": "GitHub",
       "contributors": "Contributors"
     },
@@ -562,13 +730,6 @@
       "description": "Every great brand started with a single step. Take yours today and join hundreds of brands who have wrote their story in our magical world of design.",
       "startJourney": "Let the journey begin",
       "scheduleMeeting": "Schedule a Meeting"
-    },
-    "openSource": {
-      "title": "Proudly Open Source",
-      "description": "Hogwarts is open source and powered by open source software.",
-      "descriptionLine2": "The code is available on",
-      "github": "GitHub",
-      "contributors": "Contributors"
     },
     "readyToBuild": {
       "quote": "This platform transformed how we manage client relationships. The intuitive design and powerful features helped us scale from a small agency to serving Fortune 500 companies.",
@@ -765,179 +926,6 @@
           "title": "Excellence",
           "description": "Every product we ship meets the highest standards of quality, security, and performance. Our reputation is built on reliable, enterprise-grade solutions."
         }
-      }
-    },
-    "pricing": {
-      "badge": "ROI Guaranteed",
-      "title": "Simple. Transparent.",
-      "subtitle": "All components and building blocks are open source — we charge for crafting fully functional masterpieces and ensuring their ongoing reliability.",
-      "headerSection": {
-        "label": "Pricing",
-        "title": "Transform your digital presence",
-        "subtitle": "Choose the perfect plan for your business needs"
-      },
-      "plans": {
-        "hobby": {
-          "title": "Hobby",
-          "description": "Get started for free",
-          "benefits": [
-            "Up to 5 pages website",
-            "Basic responsive design",
-            "Contact form integration"
-          ]
-        },
-        "pro": {
-          "title": "Pro",
-          "description": "For growing businesses",
-          "benefits": [
-            "Up to 15 pages website",
-            "Advanced animations",
-            "SEO optimization",
-            "Custom branding"
-          ]
-        },
-        "ultra": {
-          "title": "Ultra",
-          "description": "For large organizations",
-          "benefits": ["Unlimited pages and features", "Custom integrations"]
-        }
-      },
-      "constants": {
-        "free": "Free",
-        "includes": "Includes",
-        "everythingInHobby": "Everything in Hobby, plus",
-        "everythingInPro": "Everything in Pro, plus",
-        "startTrial": "Start Trial",
-        "getPro": "Get Pro",
-        "getUltra": "Get Ultra",
-        "monthly": "Monthly",
-        "yearly": "Yearly (save 20%)",
-        "perMonth": "/mo",
-        "moreInfo": "More info",
-        "loading": "Loading...",
-        "unavailable": "Unavailable",
-        "manageSubscription": "Manage Subscription",
-        "getPlan": "Get plan"
-      },
-      "planNames": {
-        "hobby": "Hobby",
-        "pro": "Pro",
-        "ultra": "Ultra",
-        "enterprise": "Enterprise"
-      },
-      "enterprise": {
-        "badge": "Enterprise",
-        "title": "Need Something Bigger?",
-        "description": "For enterprises and large organizations, we offer custom solutions with dedicated teams, SLAs, and specialized support tailored to your unique requirements.",
-        "talkToSales": "Talk to Sales"
-      },
-      "comparePlans": {
-        "title": "Compare Plans",
-        "subtitle": "Find the perfect plan tailored for your business needs!",
-        "features": {
-          "websitePages": "Website pages",
-          "responsiveDesign": "Responsive design",
-          "customBranding": "Custom branding",
-          "seoOptimization": "SEO optimization",
-          "contactForms": "Contact forms",
-          "animationsEffects": "Animations & effects",
-          "contentManagement": "Content management",
-          "performanceOptimization": "Performance optimization",
-          "securityFeatures": "Security features",
-          "analyticsReporting": "Analytics & reporting",
-          "support": "Support",
-          "revisions": "Revisions",
-          "hosting": "Hosting",
-          "backupMaintenance": "Backup & maintenance",
-          "customIntegrations": "Custom integrations",
-          "trainingDocumentation": "Training & documentation",
-          "launchAssistance": "Launch assistance",
-          "performanceMonitoring": "Performance monitoring"
-        },
-        "values": {
-          "upTo5": "Up to 5",
-          "upTo15": "Up to 15",
-          "unlimited": "Unlimited",
-          "basic": "Basic",
-          "advanced": "Advanced",
-          "premium": "Premium",
-          "custom": "Custom",
-          "static": "Static",
-          "basicCms": "Basic CMS",
-          "advancedCms": "Advanced CMS",
-          "customCms": "Custom CMS",
-          "basicSsl": "Basic SSL",
-          "advancedSsl": "Advanced SSL",
-          "premiumSsl": "Premium SSL",
-          "customSecurity": "Custom Security",
-          "email": "Email",
-          "priority": "Priority",
-          "support24_7": "24/7",
-          "support24_7Manager": "24/7 + Manager",
-          "oneRound": "1 round",
-          "threeRounds": "3 rounds",
-          "shared": "Shared",
-          "vps": "VPS",
-          "dedicated": "Dedicated",
-          "monthly": "Monthly",
-          "weekly": "Weekly",
-          "daily": "Daily",
-          "realTime": "Real-time",
-          "selfService": "Self-service",
-          "guided": "Guided",
-          "fullService": "Full service",
-          "whiteGlove": "White-glove",
-          "basicGuides": "Basic guides",
-          "videoTutorials": "Video tutorials",
-          "customTraining": "Custom training"
-        },
-        "tooltips": {
-          "websitePages": "Number of website pages included in your plan.",
-          "responsiveDesign": "Mobile-friendly design optimization level.",
-          "customBranding": "Brand colors and logo available from Pro.",
-          "seoOptimization": "Search engine optimization and meta tag setup.",
-          "contactForms": "Contact form functionality and integration options.",
-          "animationsEffects": "Interactive animations and visual effects.",
-          "contentManagement": "Content management system capabilities.",
-          "performanceOptimization": "Website speed and performance optimization.",
-          "securityFeatures": "Security certificates and protection features.",
-          "analyticsReporting": "Website analytics and performance reporting.",
-          "support": "Customer support level and response time.",
-          "revisions": "Number of design revisions included.",
-          "hosting": "Website hosting infrastructure type.",
-          "backupMaintenance": "Backup frequency and maintenance schedule.",
-          "customIntegrations": "Third-party service integrations and APIs.",
-          "trainingDocumentation": "User training and documentation provided.",
-          "launchAssistance": "Website launch and deployment assistance.",
-          "performanceMonitoring": "Ongoing website performance monitoring."
-        }
-      },
-      "faqs": {
-        "title": "Frequently Asked Questions",
-        "subtitle": "Your guide to pricing and plans with Databayt.",
-        "questions": [
-          {
-            "question": "What's included in the One Project plan?",
-            "answer": "The One Project plan includes complete custom development for a single automation solution, including consultation, development, testing, and deployment."
-          },
-          {
-            "question": "How does the hourly billing work for Strategic Partner?",
-            "answer": "With Strategic Partner, you get access to our development team at $10/hour. Perfect for ongoing projects, maintenance, or when you need flexible development resources."
-          },
-          {
-            "question": "Can I switch between plans?",
-            "answer": "Yes, you can upgrade or downgrade your plan at any time. Changes will be reflected in your next billing cycle."
-          },
-          {
-            "question": "Do you offer enterprise solutions?",
-            "answer": "Absolutely! For enterprise needs, we offer custom solutions with dedicated teams, SLAs, and specialized support. Contact us for a tailored quote."
-          }
-        ]
-      },
-      "securePayment": {
-        "title": "Secure Payment",
-        "description": "Your security is our priority. We use industry-leading encryption and security protocols to ensure your payment information is always protected.",
-        "poweredBy": "Powered by"
       }
     },
     "services": {
@@ -1320,10 +1308,22 @@
           }
         ],
         "stats": [
-          { "number": "98%", "label": "Graduation Rate" },
-          { "number": "15:1", "label": "Student-Teacher Ratio" },
-          { "number": "40+", "label": "Magical Programs" },
-          { "number": "25", "label": "Years of Excellence" }
+          {
+            "number": "98%",
+            "label": "Graduation Rate"
+          },
+          {
+            "number": "15:1",
+            "label": "Student-Teacher Ratio"
+          },
+          {
+            "number": "40+",
+            "label": "Magical Programs"
+          },
+          {
+            "number": "25",
+            "label": "Years of Excellence"
+          }
         ]
       },
       "core": {
@@ -1352,10 +1352,22 @@
         "title": "Faculty",
         "description": "Meet the wizards who make learning magical",
         "stats": [
-          { "label": "Average Experience", "value": "15+ Years" },
-          { "label": "Advanced Degrees", "value": "100%" },
-          { "label": "Published Researchers", "value": "85%" },
-          { "label": "Student Satisfaction", "value": "98%" }
+          {
+            "label": "Average Experience",
+            "value": "15+ Years"
+          },
+          {
+            "label": "Advanced Degrees",
+            "value": "100%"
+          },
+          {
+            "label": "Published Researchers",
+            "value": "85%"
+          },
+          {
+            "label": "Student Satisfaction",
+            "value": "98%"
+          }
         ],
         "professors": [
           {
@@ -1363,7 +1375,11 @@
             "title": "Headmaster & Chief Warlock",
             "subject": "Transfiguration & Ancient Magic",
             "description": "Leading our school with wisdom and extraordinary magical knowledge, Professor Dumbledore guides students through the most complex magical arts.",
-            "specialties": ["Ancient Magic", "Transfiguration", "Leadership"],
+            "specialties": [
+              "Ancient Magic",
+              "Transfiguration",
+              "Leadership"
+            ],
             "experience": "50+ years",
             "education": "Order of Merlin, First Class",
             "quote": "It is our choices that show what we truly are, far more than our abilities."
@@ -1373,7 +1389,11 @@
             "title": "Potions Master & Head of Slytherin",
             "subject": "Potions & Dark Arts Defense",
             "description": "With precision and dedication, Professor Snape guides students through the intricate art of potion-making and magical defense.",
-            "specialties": ["Potions", "Dark Arts Defense", "Occlumency"],
+            "specialties": [
+              "Potions",
+              "Dark Arts Defense",
+              "Occlumency"
+            ],
             "experience": "20+ years",
             "education": "Master of Potions, Hogwarts",
             "quote": "Attention to detail separates the exceptional from the merely adequate."
@@ -1383,7 +1403,11 @@
             "title": "Deputy & Head of Gryffindor",
             "subject": "Transfiguration",
             "description": "Professor McGonagall transforms students' understanding of magic through her mastery of Transfiguration and unwavering dedication to excellence.",
-            "specialties": ["Transfiguration", "Animagus Studies", "Quidditch"],
+            "specialties": [
+              "Transfiguration",
+              "Animagus Studies",
+              "Quidditch"
+            ],
             "experience": "40+ years",
             "education": "Transfiguration Mistress, Hogwarts",
             "quote": "We teachers are rather good at magic, you know."
@@ -1408,10 +1432,22 @@
         "title": "Testimonials",
         "description": "Hear from our students, alumni, and parents about the transformative power of education and the magical moments that happen within our school community every day.",
         "stats": [
-          { "value": "4.9/5", "label": "Parent Satisfaction" },
-          { "value": "98%", "label": "College Acceptance" },
-          { "value": "500+", "label": "Happy Families" },
-          { "value": "25+", "label": "Years of Trust" }
+          {
+            "value": "4.9/5",
+            "label": "Parent Satisfaction"
+          },
+          {
+            "value": "98%",
+            "label": "College Acceptance"
+          },
+          {
+            "value": "500+",
+            "label": "Happy Families"
+          },
+          {
+            "value": "25+",
+            "label": "Years of Trust"
+          }
         ],
         "items": [
           {
@@ -1713,9 +1749,22 @@
         "WordPress",
         "Shopify"
       ],
-      "company": ["About", "Careers", "Blog", "Case Studies"],
-      "services": ["Startups", "Agencies"],
-      "support": ["Help Center", "Contact", "Documentation", "Service Status"]
+      "company": [
+        "About",
+        "Careers",
+        "Blog",
+        "Case Studies"
+      ],
+      "services": [
+        "Startups",
+        "Agencies"
+      ],
+      "support": [
+        "Help Center",
+        "Contact",
+        "Documentation",
+        "Service Status"
+      ]
     },
     "links": {
       "product": "Product",
@@ -1724,10 +1773,29 @@
       "legal": "Legal"
     },
     "sections": {
-      "product": ["Features", "Pricing", "Updates", "Roadmap"],
-      "company": ["About", "Blog", "Careers", "Partners"],
-      "support": ["Help Center", "Contact", "Documentation", "Service Status"],
-      "legal": ["Privacy", "Terms", "License"]
+      "product": [
+        "Features",
+        "Pricing",
+        "Updates",
+        "Roadmap"
+      ],
+      "company": [
+        "About",
+        "Blog",
+        "Careers",
+        "Partners"
+      ],
+      "support": [
+        "Help Center",
+        "Contact",
+        "Documentation",
+        "Service Status"
+      ],
+      "legal": [
+        "Privacy",
+        "Terms",
+        "License"
+      ]
     }
   },
   "errors": {
@@ -1983,5 +2051,14 @@
       "title": "Technology",
       "description": "AI-powered insights, multi-campus support, mobile apps, and open source flexibility"
     }
+  },
+  "reportIssue": {
+    "link": "Report an issue",
+    "title": "Report an issue",
+    "placeholder": "Describe the issue...",
+    "submit": "Submit",
+    "submitting": "Submitting...",
+    "success": "Submitted. Thank you!",
+    "error": "Something went wrong. Try again."
   }
 }
