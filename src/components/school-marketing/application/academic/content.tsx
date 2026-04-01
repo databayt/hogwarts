@@ -132,6 +132,13 @@ export default function AcademicContent({ dictionary }: Props) {
         throw new Error(result.error || errorDict.failedToSubmit)
       }
 
+      // Clean up localStorage draft after successful submission
+      try {
+        localStorage.removeItem(`hogwarts_apply_session_${id}`)
+      } catch {
+        // localStorage may not be available
+      }
+
       // Route based on payment requirement
       if (result.data.requiresPayment) {
         router.push(

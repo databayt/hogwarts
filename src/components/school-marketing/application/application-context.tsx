@@ -196,7 +196,7 @@ export const ApplySessionProvider: React.FC<ApplySessionProviderProps> = ({
     setSession((prev) => ({ ...prev, isLoading: true, error: null }))
 
     try {
-      const result = await resumeApplicationSession(token)
+      const result = await resumeApplicationSession(token, subdomain ?? undefined)
 
       if (result.success && result.data) {
         const data = result.data

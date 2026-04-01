@@ -16,8 +16,15 @@ export async function generateMetadata({
   params: Promise<{ lang: Locale }>
 }): Promise<Metadata> {
   const { lang } = await params
+  const d = await getDictionary(lang)
+  const steps = d?.school?.admission?.apply?.steps
   return {
-    title: lang === "ar" ? "تم تقديم الطلب" : "Application Submitted",
+    title: `${steps?.success?.title ?? (lang === "ar" ? "تم تقديم الطلب" : "Application Submitted")} | ${lang === "ar" ? "التقديم" : "Apply"}`,
+    description:
+      steps?.success?.description ??
+      (lang === "ar"
+        ? "تم تقديم طلبك بنجاح"
+        : "Your application has been submitted successfully."),
   }
 }
 
