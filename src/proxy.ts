@@ -89,12 +89,14 @@ const authRoutes = ["/login", "/join", "/error", "/reset", "/new-password"]
 
 // Public school-marketing routes (school subdomain public pages - no auth required)
 // NOTE: /application removed - requires auth to couple application to userId
+// NOTE: /application/status is public because it uses OTP verification, not session auth
 const publicSiteRoutes = [
   "/about",
   "/academic",
   "/admissions",
   "/tour",
   "/inquiry",
+  "/application/status",
 ]
 
 // Lightweight locale detection
