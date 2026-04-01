@@ -344,7 +344,23 @@ export const AttachmentsForm = forwardRef<WizardFormRef, AttachmentsFormProps>(
         new Promise<void>((resolve, reject) => {
           startTransition(async () => {
             try {
-              const data = form.getValues()
+              const raw = form.getValues()
+              // Upload results are stored as objects { url, mimeType, ... }
+              // but the server action expects plain URL strings
+              const extractUrl = (v: unknown): string =>
+                typeof v === "object" && v !== null && "url" in v
+                  ? (v as { url: string }).url
+                  : typeof v === "string"
+                    ? v
+                    : ""
+              const data: AttachmentsFormData = {
+                profilePhotoUrl: extractUrl(raw.profilePhotoUrl),
+                degreeUrl: extractUrl(raw.degreeUrl),
+                transcriptUrl: extractUrl(raw.transcriptUrl),
+                idUrl: extractUrl(raw.idUrl),
+                resumeUrl: extractUrl(raw.resumeUrl),
+                otherUrl: extractUrl(raw.otherUrl),
+              }
               const result = await updateStudentAttachments(studentId, data)
               if (!result.success) {
                 ErrorToast(
