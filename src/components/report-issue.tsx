@@ -23,7 +23,7 @@ import {
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface ReportIssueProps {
-  variant?: "text" | "icons"
+  variant?: "text" | "icon"
 }
 
 export function ReportIssue({ variant = "text" }: ReportIssueProps) {
