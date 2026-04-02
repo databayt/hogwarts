@@ -5,6 +5,7 @@ import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { ReportIssue } from "@/components/report-issue"
 import { ConfigSidebar } from "@/components/school-dashboard/school/configuration/config-sidebar"
 
 interface Props {
@@ -213,8 +214,13 @@ export default async function EditorLayout({ children, params }: Props) {
         <div className="grid h-full grid-cols-1 gap-8 lg:grid-cols-[auto_1fr]">
           <ConfigSidebar lang={lang} sectionLinks={sectionLinks} />
           <div className="lg:overflow-y-auto">
-            <div className="flex h-full items-center justify-center">
-              <div className="w-full max-w-[400px]">{children}</div>
+            <div className="flex min-h-full items-start justify-center py-8">
+              <div className="w-full max-w-[400px]">
+                {children}
+                <div className="text-muted-foreground pt-8 pb-4 text-sm">
+                  <ReportIssue />
+                </div>
+              </div>
             </div>
           </div>
         </div>
