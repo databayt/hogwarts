@@ -62,7 +62,7 @@ export default async function SiteLayout({
           {children}
         </main>
         <div className="text-muted-foreground pt-8 pb-4 text-start text-sm">
-          <ReportIssue />
+          <ReportIssue variant="icons" />
         </div>
         {/* <SiteFooter /> */}
         <Chatbot

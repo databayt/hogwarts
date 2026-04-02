@@ -12,6 +12,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog"
 import {
   Tooltip,
@@ -21,7 +22,11 @@ import {
 } from "@/components/ui/tooltip"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
-export function ReportIssue() {
+interface ReportIssueProps {
+  variant?: "text" | "icons"
+}
+
+export function ReportIssue({ variant = "text" }: ReportIssueProps) {
   const [open, setOpen] = useState(false)
   const [dismissed, setDismissed] = useState(false)
   const [description, setDescription] = useState("")
@@ -48,6 +53,56 @@ export function ReportIssue() {
   }
 
   if (dismissed) return null
+
+  const dialog = (
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        setOpen(v)
+        if (!v) setStatus("idle")
+      }}
+    >
+      {variant === "text" && (
+        <DialogTrigger asChild>
+          <button className="cursor-pointer font-medium underline underline-offset-4">
+            {t?.link || "Report an issue"}
+          </button>
+        </DialogTrigger>
+      )}
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{t?.title || "Report an issue"}</DialogTitle>
+        </DialogHeader>
+        <textarea
+          className="border-input placeholder:text-muted-foreground focus-visible:ring-ring min-h-[120px] w-full rounded-md border bg-transparent px-3 py-2 text-sm focus-visible:ring-1 focus-visible:outline-none"
+          placeholder={t?.placeholder || "Describe the issue..."}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+        {status === "error" && (
+          <p className="text-destructive text-sm">
+            {t?.error || "Something went wrong. Try again."}
+          </p>
+        )}
+        {status === "success" ? (
+          <p className="text-sm text-green-600">
+            {t?.success || "Submitted. Thank you!"}
+          </p>
+        ) : (
+          <Button
+            onClick={handleSubmit}
+            disabled={!description.trim() || status === "loading"}
+          >
+            {status === "loading"
+              ? t?.submitting || "Submitting..."
+              : t?.submit || "Submit"}
+          </Button>
+        )}
+      </DialogContent>
+    </Dialog>
+  )
+
+  if (variant === "text") return dialog
 
   return (
     <TooltipProvider delayDuration={300}>
@@ -110,44 +165,7 @@ export function ReportIssue() {
         </Tooltip>
       </div>
 
-      <Dialog
-        open={open}
-        onOpenChange={(v) => {
-          setOpen(v)
-          if (!v) setStatus("idle")
-        }}
-      >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t?.title || "Report an issue"}</DialogTitle>
-          </DialogHeader>
-          <textarea
-            className="border-input placeholder:text-muted-foreground focus-visible:ring-ring min-h-[120px] w-full rounded-md border bg-transparent px-3 py-2 text-sm focus-visible:ring-1 focus-visible:outline-none"
-            placeholder={t?.placeholder || "Describe the issue..."}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-          {status === "error" && (
-            <p className="text-destructive text-sm">
-              {t?.error || "Something went wrong. Try again."}
-            </p>
-          )}
-          {status === "success" ? (
-            <p className="text-sm text-green-600">
-              {t?.success || "Submitted. Thank you!"}
-            </p>
-          ) : (
-            <Button
-              onClick={handleSubmit}
-              disabled={!description.trim() || status === "loading"}
-            >
-              {status === "loading"
-                ? t?.submitting || "Submitting..."
-                : t?.submit || "Submit"}
-            </Button>
-          )}
-        </DialogContent>
-      </Dialog>
+      {dialog}
     </TooltipProvider>
   )
 }
