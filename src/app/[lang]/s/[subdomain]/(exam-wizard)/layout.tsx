@@ -3,6 +3,7 @@
 
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
+import { ReportIssue } from "@/components/report-issue"
 
 interface ExamWizardLayoutProps {
   children: React.ReactNode
@@ -22,5 +23,12 @@ export default async function ExamWizardLayout({
     redirect(`/${lang}/exams`)
   }
 
-  return <main className="h-dvh">{children}</main>
+  return (
+    <main className="relative h-dvh">
+      {children}
+      <div className="text-muted-foreground absolute bottom-4 start-6 text-sm">
+        <ReportIssue />
+      </div>
+    </main>
+  )
 }
