@@ -37,7 +37,6 @@ const ATOMS_LINKS = [
   { name: "Activity Goal", href: "/atoms/activity-goal" },
   { name: "Calendar", href: "/atoms/calendar" },
   { name: "Metric", href: "/atoms/metric" },
-  { name: "Report Issue", href: "/atoms/report-issue" },
   { name: "Share", href: "/atoms/share" },
   { name: "Stats", href: "/atoms/stats" },
 

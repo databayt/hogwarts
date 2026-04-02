@@ -54,7 +54,6 @@ import { PaymentMethodSelector } from "@/components/atom/payment-method-selector
 import { ProgressiveBlur } from "@/components/atom/progressive-blur"
 import { PromptInput } from "@/components/atom/prompt-input"
 import { Reasoning } from "@/components/atom/reasoning"
-import { CardsReportIssue } from "@/components/atom/report-issue"
 import { Response } from "@/components/atom/response"
 import { SettingsToggleRow } from "@/components/atom/settings-toggle-row"
 import { CardsShare } from "@/components/atom/share"
@@ -385,7 +384,6 @@ const mdxComponents = {
   Icons: IconsPreview,
   Fonts: FontsPreview,
   ActivityGoal: () => <CardsActivityGoal dictionary={defaultDictionary} />,
-  ReportIssue: () => <CardsReportIssue dictionary={defaultDictionary} />,
   Share: () => <CardsShare dictionary={defaultDictionary} />,
   Calendar: () => <CardsCalendar dictionary={defaultDictionary} />,
   Metric: () => <CardsMetricSingle dictionary={defaultDictionary} />,

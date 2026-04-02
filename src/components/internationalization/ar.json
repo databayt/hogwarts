@@ -2055,6 +2055,11 @@
   "reportIssue": {
     "link": "الإبلاغ عن مشكلة",
     "title": "الإبلاغ عن مشكلة",
+    "categoryPlaceholder": "اختر الفئة",
+    "categoryVisual": "مظهر / تخطيط",
+    "categoryBroken": "شيء معطّل",
+    "categoryConfusing": "مربك / صعب الاستخدام",
+    "categoryOther": "أخرى",
     "placeholder": "صف المشكلة...",
     "submit": "إرسال",
     "submitting": "جاري الإرسال...",

@@ -303,12 +303,6 @@ export const AtomsIndex: Record<string, AtomEntry> = {
       { path: "src/components/atom/reasoning.tsx", type: "registry:atom" },
     ],
   },
-  "report-issue": {
-    name: "report-issue",
-    files: [
-      { path: "src/components/atom/report-issue.tsx", type: "registry:atom" },
-    ],
-  },
   response: {
     name: "response",
     files: [

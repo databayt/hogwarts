@@ -2055,6 +2055,11 @@
   "reportIssue": {
     "link": "Report an issue",
     "title": "Report an issue",
+    "categoryPlaceholder": "Select category",
+    "categoryVisual": "Visual / Layout",
+    "categoryBroken": "Something broken",
+    "categoryConfusing": "Confusing / Hard to use",
+    "categoryOther": "Other",
     "placeholder": "Describe the issue...",
     "submit": "Submit",
     "submitting": "Submitting...",
