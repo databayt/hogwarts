@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { formatRelativeTime } from "@/components/file/formatters"
 import { useLocale } from "@/components/internationalization/use-locale"
+import { ReportIssue } from "@/components/report-issue"
 
 // =============================================================================
 // TYPES
@@ -83,6 +84,8 @@ export interface FormFooterProps {
   logoSrc?: string
   /** Show help button */
   showHelp?: boolean
+  /** Show report issue button */
+  showReport?: boolean
   /** Show save button */
   showSave?: boolean
   /** Custom validation context hook */
@@ -133,6 +136,7 @@ export function FormFooter({
   showLogo = true,
   logoSrc = asset("/icons/logo.png"),
   showHelp = true,
+  showReport = true,
   showSave = true,
   useValidation,
   showSaveStatus = false,
@@ -352,6 +356,11 @@ export function FormFooter({
             >
               <HelpCircle className="h-6 w-6" strokeWidth={1} />
             </button>
+          )}
+          {showReport && (
+            <div className="flex h-8 w-8 items-center justify-center">
+              <ReportIssue variant="icon" />
+            </div>
           )}
           {showSave && (
             <button
