@@ -12,7 +12,7 @@ import React, {
 import Image from "next/image"
 import { useParams } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { CheckCircle, Loader2 } from "lucide-react"
+import { CheckCircle, Loader2, X } from "lucide-react"
 import { useDropzone } from "react-dropzone"
 import { useForm, useFormContext } from "react-hook-form"
 
@@ -79,6 +79,14 @@ function DocumentCard({
     ((typeof currentValue === "object" && currentValue?.url) ||
       (typeof currentValue === "string" && currentValue.length > 0))
 
+  const handleClear = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      form.setValue(name, "")
+    },
+    [form, name]
+  )
+
   const { isUploading, uploadedFiles, upload, getAcceptedTypes } = useUpload({
     category: "document",
     folder: "apply-documents",
@@ -137,6 +145,14 @@ function DocumentCard({
         </div>
       ) : uploaded && fileUrl ? (
         <>
+          <button
+            type="button"
+            onClick={handleClear}
+            className="absolute top-1.5 end-1.5 z-20 flex h-5 w-5 items-center justify-center rounded-full bg-black/50 text-white transition-colors hover:bg-black/70"
+            aria-label="Remove attachment"
+          >
+            <X className="h-3 w-3" />
+          </button>
           <p
             className="absolute inset-x-0 bottom-0 z-10 truncate px-2 pt-4 pb-1.5 text-center text-sm font-medium text-black dark:text-white"
             style={{
