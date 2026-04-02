@@ -61,10 +61,8 @@ export default async function SiteLayout({
         <main data-slot="main-content" role="main">
           {children}
         </main>
-        <div className="text-muted-foreground pt-8 pb-4 text-start text-sm">
-          <ReportIssue />
-        </div>
         {/* <SiteFooter /> */}
+        <ReportIssue />
         <Chatbot
           lang={lang as Locale}
           promptType="schoolSite"

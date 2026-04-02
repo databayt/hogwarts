@@ -146,7 +146,12 @@ export function ReportIssue({ variant = "text" }: ReportIssueProps) {
     </Dialog>
   )
 
-  if (variant === "text") return dialog
+  if (variant === "text")
+    return (
+      <div className="fixed bottom-4 left-4 z-50 text-muted-foreground text-sm">
+        {dialog}
+      </div>
+    )
 
   return (
     <TooltipProvider delayDuration={300}>

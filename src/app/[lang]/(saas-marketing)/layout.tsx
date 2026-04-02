@@ -32,10 +32,8 @@ export default async function MarketingLayout({
         </Suspense>
         <SiteHeader dictionary={dictionary} locale={lang} />
         <main className="flex-1">{children}</main>
-        <div className="text-muted-foreground pt-8 pb-4 text-start text-sm">
-          <ReportIssue />
-        </div>
         <SiteFooter dictionary={dictionary} locale={lang} />
+        <ReportIssue />
         <Chatbot lang={lang as Locale} promptType="saasMarketing" />
       </div>
     </LoadingWrapper>
