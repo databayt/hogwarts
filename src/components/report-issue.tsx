@@ -1,7 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { usePathname } from "next/navigation"
+import Image from "next/image"
+import Link from "next/link"
+import { Bug, CircleHelp, X } from "lucide-react"
 
 import { reportIssue } from "@/lib/actions/report-issue"
 import { Button } from "@/components/ui/button"
@@ -10,17 +12,22 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 export function ReportIssue() {
   const [open, setOpen] = useState(false)
+  const [dismissed, setDismissed] = useState(false)
   const [description, setDescription] = useState("")
   const [status, setStatus] = useState<
     "idle" | "loading" | "success" | "error"
   >("idle")
-  const pathname = usePathname()
   const { dictionary } = useDictionary()
   const t = dictionary?.reportIssue
 
@@ -28,7 +35,7 @@ export function ReportIssue() {
     if (!description.trim()) return
     setStatus("loading")
     try {
-      await reportIssue({ description, pageUrl: pathname })
+      await reportIssue({ description, pageUrl: window.location.href })
       setStatus("success")
       setDescription("")
       setTimeout(() => {
@@ -40,49 +47,107 @@ export function ReportIssue() {
     }
   }
 
+  if (dismissed) return null
+
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(v) => {
-        setOpen(v)
-        if (!v) setStatus("idle")
-      }}
-    >
-      <DialogTrigger asChild>
-        <button className="cursor-pointer font-medium underline underline-offset-4">
-          {t?.link || "Report an issue"}
-        </button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{t?.title || "Report an issue"}</DialogTitle>
-        </DialogHeader>
-        <textarea
-          className="border-input placeholder:text-muted-foreground focus-visible:ring-ring min-h-[120px] w-full rounded-md border bg-transparent px-3 py-2 text-sm focus-visible:ring-1 focus-visible:outline-none"
-          placeholder={t?.placeholder || "Describe the issue..."}
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-        {status === "error" && (
-          <p className="text-destructive text-sm">
-            {t?.error || "Something went wrong. Try again."}
-          </p>
-        )}
-        {status === "success" ? (
-          <p className="text-sm text-green-600">
-            {t?.success || "Submitted. Thank you!"}
-          </p>
-        ) : (
-          <Button
-            onClick={handleSubmit}
-            disabled={!description.trim() || status === "loading"}
-          >
-            {status === "loading"
-              ? t?.submitting || "Submitting..."
-              : t?.submit || "Submit"}
-          </Button>
-        )}
-      </DialogContent>
-    </Dialog>
+    <TooltipProvider delayDuration={300}>
+      <div className="flex items-center gap-3">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={() => setOpen(true)}
+              className="text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+            >
+              <Bug className="h-4 w-4" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{t?.link || "Report an issue"}</p>
+          </TooltipContent>
+        </Tooltip>
+
+        <Link
+          href="https://databayt.org"
+          target="_blank"
+          className="text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <Image
+            src="/b.png"
+            alt="Databayt"
+            width={16}
+            height={16}
+            className="dark:invert"
+          />
+        </Link>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Link
+              href="https://github.com/databayt/hogwarts/issues"
+              target="_blank"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <CircleHelp className="h-4 w-4" />
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{(dictionary?.common as Record<string, string>)?.help || "Help"}</p>
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={() => setDismissed(true)}
+              className="text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{(dictionary?.common as Record<string, string>)?.close || "Close"}</p>
+          </TooltipContent>
+        </Tooltip>
+      </div>
+
+      <Dialog
+        open={open}
+        onOpenChange={(v) => {
+          setOpen(v)
+          if (!v) setStatus("idle")
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t?.title || "Report an issue"}</DialogTitle>
+          </DialogHeader>
+          <textarea
+            className="border-input placeholder:text-muted-foreground focus-visible:ring-ring min-h-[120px] w-full rounded-md border bg-transparent px-3 py-2 text-sm focus-visible:ring-1 focus-visible:outline-none"
+            placeholder={t?.placeholder || "Describe the issue..."}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+          {status === "error" && (
+            <p className="text-destructive text-sm">
+              {t?.error || "Something went wrong. Try again."}
+            </p>
+          )}
+          {status === "success" ? (
+            <p className="text-sm text-green-600">
+              {t?.success || "Submitted. Thank you!"}
+            </p>
+          ) : (
+            <Button
+              onClick={handleSubmit}
+              disabled={!description.trim() || status === "loading"}
+            >
+              {status === "loading"
+                ? t?.submitting || "Submitting..."
+                : t?.submit || "Submit"}
+            </Button>
+          )}
+        </DialogContent>
+      </Dialog>
+    </TooltipProvider>
   )
 }
