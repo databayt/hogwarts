@@ -244,6 +244,7 @@ export async function updateSubdomain(
 const SCHOOL_SELECT = {
   id: true,
   name: true,
+  nameEn: true,
   domain: true,
   logoUrl: true,
   address: true,

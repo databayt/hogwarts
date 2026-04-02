@@ -19,6 +19,7 @@ import { SiteMobileNav } from "./site-mobile-nav"
 interface School {
   id: string
   name: string
+  nameEn?: string | null
   domain: string
   logoUrl?: string | null
   address?: string | null
@@ -48,15 +49,15 @@ export default async function SiteHeader({ school, locale }: SiteHeaderProps) {
     | undefined
 
   // Translate nav items via dictionary
-  // Translate school name for the current locale
+  // Use nameEn for English locale if available, otherwise fall back to translation
   const contentLang = (school.preferredLanguage || "ar") as "ar" | "en"
   const displayLang = locale as "ar" | "en"
-  const displayName = await getDisplayText(
-    school.name,
-    contentLang,
-    displayLang,
-    school.id
-  )
+  const displayName =
+    displayLang === "en" && school.nameEn
+      ? school.nameEn
+      : displayLang === "ar"
+        ? school.name
+        : await getDisplayText(school.name, contentLang, displayLang, school.id)
 
   const translatedNav = marketingConfig.mainNav.map((item) => ({
     ...item,

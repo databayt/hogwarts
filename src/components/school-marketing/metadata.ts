@@ -24,9 +24,11 @@ export async function generateSchoolMetadata({
 
   let displayName = school.name
   if (locale) {
-    const contentLang = (school.preferredLanguage || "ar") as "ar" | "en"
     const displayLang = locale as "ar" | "en"
-    if (contentLang !== displayLang) {
+    if (displayLang === "en" && school.nameEn) {
+      displayName = school.nameEn
+    } else if (displayLang !== (school.preferredLanguage || "ar")) {
+      const contentLang = (school.preferredLanguage || "ar") as "ar" | "en"
       displayName =
         (await getDisplayText(
           school.name,

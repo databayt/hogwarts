@@ -3,6 +3,7 @@
 model School {
   id          String   @id @default(cuid())
   name        String
+  nameEn      String?  // English name (used when locale is "en", avoids translation API)
   domain      String   @unique // e.g., "hogwarts" for hogwarts.schoolapp.com
   logoUrl     String?
   address     String?
