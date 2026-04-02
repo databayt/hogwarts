@@ -38,11 +38,6 @@ export async function reportIssue(data: {
     "---",
     "",
     `**Page**: ${data.pageUrl}`,
-    `**Category**: ${data.category || "other"}`,
-    ...(data.viewport ? [`**Viewport**: ${data.viewport}`] : []),
-    ...(data.direction ? [`**Direction**: ${data.direction}`] : []),
-    ...(data.browser ? [`**Browser**: ${data.browser}`] : []),
-    `**Reporter**: ${reporter}`,
     `**Time**: ${new Date().toISOString()}`,
   ].join("\n")
 
