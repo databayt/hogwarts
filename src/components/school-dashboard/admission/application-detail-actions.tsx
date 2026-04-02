@@ -42,16 +42,7 @@ const ALL_STATUS_OPTIONS = [
   { value: "WITHDRAWN", fallback: "Withdrawn" },
 ] as const
 
-// Must match VALID_TRANSITIONS in actions.ts
-const VALID_TRANSITIONS: Record<string, string[]> = {
-  SUBMITTED: ["UNDER_REVIEW", "WITHDRAWN"],
-  UNDER_REVIEW: ["SHORTLISTED", "REJECTED", "WITHDRAWN"],
-  SHORTLISTED: ["SELECTED", "WAITLISTED", "REJECTED", "WITHDRAWN"],
-  SELECTED: ["WAITLISTED", "REJECTED", "WITHDRAWN"],
-  WAITLISTED: ["SELECTED", "REJECTED", "WITHDRAWN"],
-  REJECTED: [],
-  WITHDRAWN: [],
-}
+const ALL_STATUSES = ALL_STATUS_OPTIONS.map((o) => o.value)
 
 // ---------------------------------------------------------------------------
 // Component
@@ -131,8 +122,8 @@ export default function ApplicationDetailActions({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-52">
-          {ALL_STATUS_OPTIONS.filter((opt) =>
-            VALID_TRANSITIONS[currentStatus]?.includes(opt.value)
+          {ALL_STATUS_OPTIONS.filter(
+            (opt) => opt.value !== currentStatus
           ).map((opt) => (
             <DropdownMenuItem
               key={opt.value}

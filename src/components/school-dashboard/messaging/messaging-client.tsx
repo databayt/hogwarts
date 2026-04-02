@@ -217,7 +217,7 @@ export function MessagingClient({
       <div
         className={cn(
           "bg-msg-sidebar-bg border-border flex min-h-0 flex-shrink-0 flex-col overflow-hidden border-e",
-          "w-full md:w-[420px] md:max-w-[35vw]",
+          "w-full md:w-[320px] md:max-w-[28vw]",
           activeConversation ? "hidden md:flex" : "flex"
         )}
       >

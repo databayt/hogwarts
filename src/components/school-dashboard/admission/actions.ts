@@ -439,17 +439,16 @@ export async function getApplications(params: {
   }
 }
 
-// Valid status transitions — prevents arbitrary jumps (e.g., DRAFT→ADMITTED)
-const VALID_TRANSITIONS: Record<string, string[]> = {
-  SUBMITTED: ["UNDER_REVIEW", "WITHDRAWN"],
-  UNDER_REVIEW: ["SHORTLISTED", "REJECTED", "WITHDRAWN"],
-  SHORTLISTED: ["SELECTED", "WAITLISTED", "REJECTED", "WITHDRAWN"],
-  SELECTED: ["WAITLISTED", "REJECTED", "WITHDRAWN"],
-  WAITLISTED: ["SELECTED", "REJECTED", "WITHDRAWN"],
-  REJECTED: [],
-  WITHDRAWN: [],
-  // ADMITTED is only reachable via confirmEnrollment, never via status dropdown
-}
+// All valid statuses for the dropdown (ADMITTED only via confirmEnrollment)
+const VALID_STATUSES = [
+  "SUBMITTED",
+  "UNDER_REVIEW",
+  "SHORTLISTED",
+  "SELECTED",
+  "WAITLISTED",
+  "REJECTED",
+  "WITHDRAWN",
+]
 
 export async function updateApplicationStatus(params: {
   id: string
@@ -465,17 +464,18 @@ export async function updateApplicationStatus(params: {
 
     assertAdmissionPermission(session.user.role, "updateStatus")
 
-    // Validate status transition
+    // Validate target status is a known status
+    if (!VALID_STATUSES.includes(params.status)) {
+      return actionError(ACTION_ERRORS.APPLICATION_STATUS_INVALID)
+    }
+
+    // Verify application exists and belongs to this school
     const current = await db.application.findUnique({
       where: { id: params.id, schoolId },
       select: { status: true },
     })
     if (!current) {
       return actionError(ACTION_ERRORS.ADMISSION_NOT_FOUND)
-    }
-    const allowed = VALID_TRANSITIONS[current.status]
-    if (!allowed || !allowed.includes(params.status)) {
-      return actionError(ACTION_ERRORS.APPLICATION_STATUS_INVALID)
     }
 
     const data: Record<string, unknown> = {
