@@ -7,7 +7,6 @@ import { Chatbot } from "@/components/chatbot"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { LoadingWrapper } from "@/components/marketing/loading"
-import { ReportIssue } from "@/components/report-issue"
 import { AccessCheck } from "@/components/saas-marketing/access-check"
 import { SiteFooter } from "@/components/template/marketing-header/site-footer"
 import { SiteHeader } from "@/components/template/marketing-header/site-header"
@@ -33,7 +32,6 @@ export default async function MarketingLayout({
         <SiteHeader dictionary={dictionary} locale={lang} />
         <main className="flex-1">{children}</main>
         <SiteFooter dictionary={dictionary} locale={lang} />
-        <ReportIssue />
         <Chatbot lang={lang as Locale} promptType="saasMarketing" />
       </div>
     </LoadingWrapper>

@@ -15,13 +15,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -54,7 +47,6 @@ export function ReportIssue({ variant = "text" }: ReportIssueProps) {
   const [open, setOpen] = useState(false)
   const [dismissed, setDismissed] = useState(false)
   const [description, setDescription] = useState("")
-  const [category, setCategory] = useState("other")
   const [status, setStatus] = useState<
     "idle" | "loading" | "success" | "error"
   >("idle")
@@ -68,14 +60,12 @@ export function ReportIssue({ variant = "text" }: ReportIssueProps) {
       await reportIssue({
         description,
         pageUrl: window.location.href,
-        category,
         viewport: `${window.innerWidth}x${window.innerHeight}`,
         direction: document.documentElement.dir || "ltr",
         browser: parseBrowser(navigator.userAgent),
       })
       setStatus("success")
       setDescription("")
-      setCategory("other")
       setTimeout(() => {
         setOpen(false)
         setStatus("idle")
@@ -106,17 +96,6 @@ export function ReportIssue({ variant = "text" }: ReportIssueProps) {
         <DialogHeader>
           <DialogTitle>{t?.title || "Report an issue"}</DialogTitle>
         </DialogHeader>
-        <Select value={category} onValueChange={setCategory}>
-          <SelectTrigger>
-            <SelectValue placeholder={t?.categoryPlaceholder || "Select category"} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="visual">{t?.categoryVisual || "Visual / Layout"}</SelectItem>
-            <SelectItem value="broken">{t?.categoryBroken || "Something broken"}</SelectItem>
-            <SelectItem value="confusing">{t?.categoryConfusing || "Confusing / Hard to use"}</SelectItem>
-            <SelectItem value="other">{t?.categoryOther || "Other"}</SelectItem>
-          </SelectContent>
-        </Select>
         <textarea
           className="border-input placeholder:text-muted-foreground focus-visible:ring-ring min-h-[120px] w-full rounded-md border bg-transparent px-3 py-2 text-sm focus-visible:ring-1 focus-visible:outline-none"
           placeholder={t?.placeholder || "Describe the issue..."}
@@ -146,12 +125,7 @@ export function ReportIssue({ variant = "text" }: ReportIssueProps) {
     </Dialog>
   )
 
-  if (variant === "text")
-    return (
-      <div className="fixed bottom-4 left-4 z-50 text-muted-foreground text-sm">
-        {dialog}
-      </div>
-    )
+  if (variant === "text") return dialog
 
   return (
     <TooltipProvider delayDuration={300}>

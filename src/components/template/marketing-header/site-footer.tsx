@@ -2,6 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { ReportIssue } from "@/components/report-issue"
 
 import { siteConfig } from "./config"
 
@@ -45,6 +46,8 @@ export function SiteFooter({ dictionary, locale = "en" }: SiteFooterProps) {
           >
             GitHub
           </a>
+          {" · "}
+          <ReportIssue />
         </p>
       </div>
     </footer>
