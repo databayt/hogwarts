@@ -25,7 +25,7 @@ interface AcademicProps {
 export async function generateMetadata({
   params,
 }: AcademicProps): Promise<Metadata> {
-  const { subdomain } = await params
+  const { subdomain, lang } = await params
   const result = await getSchoolBySubdomain(subdomain)
   const { rootDomain } = await getCurrentDomain()
 
@@ -37,6 +37,7 @@ export async function generateMetadata({
     school: result.data,
     subdomain,
     rootDomain,
+    locale: lang,
   })
 }
 

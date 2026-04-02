@@ -3,29 +3,48 @@
 
 import type { Metadata } from "next"
 
+import { getDisplayText } from "@/lib/content-display"
+
 import { formatFullDomain } from "./utils"
 
 export interface SchoolMetadataProps {
   school: any
   subdomain: string
   rootDomain: string
+  locale?: string
 }
 
-export function generateSchoolMetadata({
+export async function generateSchoolMetadata({
   school,
   subdomain,
   rootDomain,
-}: SchoolMetadataProps): Metadata {
+  locale,
+}: SchoolMetadataProps): Promise<Metadata> {
   const fullDomain = formatFullDomain(subdomain, rootDomain)
 
+  let displayName = school.name
+  if (locale) {
+    const contentLang = (school.preferredLanguage || "ar") as "ar" | "en"
+    const displayLang = locale as "ar" | "en"
+    if (contentLang !== displayLang) {
+      displayName =
+        (await getDisplayText(
+          school.name,
+          contentLang,
+          displayLang,
+          school.id
+        )) || school.name
+    }
+  }
+
   return {
-    title: `${school.name} | ${fullDomain}`,
-    description: `Welcome to ${school.name} - Your school management portal`,
+    title: `${displayName} | ${fullDomain}`,
+    description: `Welcome to ${displayName} - Your school management portal`,
     openGraph: {
-      title: `${school.name} | ${fullDomain}`,
-      description: `Welcome to ${school.name} - Your school management portal`,
+      title: `${displayName} | ${fullDomain}`,
+      description: `Welcome to ${displayName} - Your school management portal`,
       url: `https://${fullDomain}`,
-      siteName: school.name,
+      siteName: displayName,
     },
   }
 }
