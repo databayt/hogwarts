@@ -3,13 +3,11 @@
 import { useCallback, useState, useTransition } from "react"
 
 import { cn } from "@/lib/utils"
-import { Card, CardHeader, CardTitle } from "@/components/ui/card"
 import { useSchool } from "@/components/school-dashboard/context/school-context"
 import {
   toggleableModules,
   type PlatformNavItem,
 } from "@/components/template/platform-sidebar/config"
-import { Icons } from "@/components/template/platform-sidebar/icons"
 
 import { updateEnabledModules } from "./actions"
 
@@ -74,7 +72,7 @@ export function ConfigModulesForm({ dictionary }: ConfigModulesFormProps) {
   }, [allEnabled, school.id])
 
   return (
-    <div className="w-full max-w-[480px] space-y-6">
+    <div className="w-full max-w-[560px] space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-muted-foreground text-sm">
@@ -92,7 +90,7 @@ export function ConfigModulesForm({ dictionary }: ConfigModulesFormProps) {
         </button>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-4 gap-3">
         {toggleableModules.map((item) => (
           <ModuleCard
             key={item.key}
@@ -121,26 +119,22 @@ function ModuleCard({
   isPending: boolean
   dictionary?: Record<string, string>
 }) {
-  const Icon = Icons[item.icon]
   const label = dictionary?.[item.title] ?? item.title
 
   return (
-    <Card
+    <button
+      type="button"
       className={cn(
-        "cursor-pointer transition-colors select-none",
-        !enabled && "opacity-50",
-        enabled && "border-foreground/20"
+        "cursor-pointer rounded-lg px-3 py-2.5 text-center text-xs font-medium transition-colors select-none",
+        enabled
+          ? "bg-foreground text-background"
+          : "bg-muted text-muted-foreground hover:bg-muted/80"
       )}
       onClick={() => {
         if (!isPending) onToggle(item.key, !enabled)
       }}
     >
-      <CardHeader className="flex flex-col items-center gap-2 p-3">
-        <span className="text-muted-foreground inline-flex size-6 items-center justify-center">
-          {Icon && <Icon className="h-5 w-5" />}
-        </span>
-        <CardTitle className="text-center text-xs">{label}</CardTitle>
-      </CardHeader>
-    </Card>
+      {label}
+    </button>
   )
 }
