@@ -358,6 +358,7 @@ export default function BulkContent({ dictionary, lang }: Props) {
   const t = ((dictionary?.school as Record<string, unknown>)?.bulk ??
     {}) as Record<string, string>
   const [activeAcademic, setActiveAcademic] = useState("years")
+  const [activePeople, setActivePeople] = useState<ImportType>("students")
 
   // People import state (onboarding two-phase pattern)
   const [sectionStates, setSectionStates] = useState<
@@ -403,6 +404,33 @@ export default function BulkContent({ dictionary, lang }: Props) {
       label: t.guardians || "Guardians",
       templateContent: GUARDIAN_TEMPLATE,
       templateFilename: "guardians-template.csv",
+    },
+  ]
+
+  const peopleCards: BulkCardItem[] = [
+    {
+      id: "students",
+      icon: GraduationCap,
+      title: t.students || "Students",
+      description: t.studentsDesc || "Import student records",
+    },
+    {
+      id: "teachers",
+      icon: UserCheck,
+      title: t.teachers || "Teachers",
+      description: t.teachersDesc || "Import teacher records",
+    },
+    {
+      id: "staff",
+      icon: Users,
+      title: t.staff || "Staff",
+      description: t.staffDesc || "Import staff records",
+    },
+    {
+      id: "guardians",
+      icon: Shield,
+      title: t.guardians || "Guardians",
+      description: t.guardiansDesc || "Import guardian records",
     },
   ]
 
@@ -571,23 +599,30 @@ export default function BulkContent({ dictionary, lang }: Props) {
 
   return (
     <div className="space-y-10">
-      {/* People (DropZone-based import) */}
+      {/* People (card row + single DropZone) */}
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">{t.people || "People"}</h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {dropZoneConfigs.map((config) => (
-            <DropZone
-              key={config.type}
-              config={config}
-              state={sectionStates[config.type]}
-              inputRef={(el) => {
-                inputRefs.current[config.type] = el
-              }}
-              t={t}
-              onUpload={(file) => handleUpload(file, config.type)}
-              onBrowse={() => inputRefs.current[config.type]?.click()}
-            />
-          ))}
+        <ScrollRow
+          items={peopleCards}
+          activeId={activePeople}
+          onSelect={(id) => setActivePeople(id as ImportType)}
+        />
+        <div className="pt-2">
+          {dropZoneConfigs
+            .filter((config) => config.type === activePeople)
+            .map((config) => (
+              <DropZone
+                key={config.type}
+                config={config}
+                state={sectionStates[config.type]}
+                inputRef={(el) => {
+                  inputRefs.current[config.type] = el
+                }}
+                t={t}
+                onUpload={(file) => handleUpload(file, config.type)}
+                onBrowse={() => inputRefs.current[config.type]?.click()}
+              />
+            ))}
         </div>
       </section>
 
