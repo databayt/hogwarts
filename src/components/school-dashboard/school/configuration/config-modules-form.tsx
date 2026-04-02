@@ -4,7 +4,6 @@ import { useCallback, useState, useTransition } from "react"
 
 import { cn } from "@/lib/utils"
 import { Card, CardHeader, CardTitle } from "@/components/ui/card"
-import { Switch } from "@/components/ui/switch"
 import { useSchool } from "@/components/school-dashboard/context/school-context"
 import {
   toggleableModules,
@@ -93,7 +92,7 @@ export function ConfigModulesForm({ dictionary }: ConfigModulesFormProps) {
         </button>
       </div>
 
-      <div className="space-y-2">
+      <div className="grid grid-cols-3 gap-3">
         {toggleableModules.map((item) => (
           <ModuleCard
             key={item.key}
@@ -126,19 +125,21 @@ function ModuleCard({
   const label = dictionary?.[item.title] ?? item.title
 
   return (
-    <Card className={cn("transition-colors", !enabled && "opacity-50")}>
-      <CardHeader className="flex-row items-center justify-between p-3">
-        <div className="flex items-center gap-3">
-          <span className="text-muted-foreground inline-flex size-5 items-center justify-center">
-            {Icon && <Icon className="h-4 w-4" />}
-          </span>
-          <CardTitle className="text-sm">{label}</CardTitle>
-        </div>
-        <Switch
-          checked={enabled}
-          onCheckedChange={(checked) => onToggle(item.key, checked)}
-          disabled={isPending}
-        />
+    <Card
+      className={cn(
+        "cursor-pointer transition-colors select-none",
+        !enabled && "opacity-50",
+        enabled && "border-foreground/20"
+      )}
+      onClick={() => {
+        if (!isPending) onToggle(item.key, !enabled)
+      }}
+    >
+      <CardHeader className="flex flex-col items-center gap-2 p-3">
+        <span className="text-muted-foreground inline-flex size-6 items-center justify-center">
+          {Icon && <Icon className="h-5 w-5" />}
+        </span>
+        <CardTitle className="text-center text-xs">{label}</CardTitle>
       </CardHeader>
     </Card>
   )
