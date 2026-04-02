@@ -145,7 +145,7 @@ export default async function PlatformLayout({
                   <PageHeadingDisplay />
                   {children}
                   <div className="text-muted-foreground pt-8 pb-4 text-start text-sm">
-                    <ReportIssue variant="icon" />
+                    <ReportIssue />
                   </div>
                 </div>
               </div>
