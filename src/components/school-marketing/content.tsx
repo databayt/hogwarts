@@ -4,6 +4,8 @@
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
+import { ReportIssue } from "@/components/report-issue"
+
 import { CTA } from "./admission-process"
 import { Core } from "./core"
 import EventCard from "./event"
@@ -71,6 +73,9 @@ export default function SiteContent({
       <Newsletter />
       <FAQs />
       <NewComers lang={lang} subdomain={subdomainValue} />
+      <div className="text-muted-foreground py-4 text-sm">
+        <ReportIssue />
+      </div>
       <Footer />
     </div>
   )
