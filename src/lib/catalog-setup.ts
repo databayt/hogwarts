@@ -1498,6 +1498,161 @@ export async function setupLibraryForSchool(schoolId: string) {
   return { skipped: false, books: result }
 }
 
+// ============================================================================
+// ensureSubjectSelections — Lazy provisioning for the subjects page
+// ============================================================================
+
+/**
+ * Ensure a school has subject selections. If the school already has academic
+ * grades but no SubjectSelection records (e.g. `after()` timed out during
+ * onboarding), this provisions just the selections without recreating the
+ * entire academic structure.
+ *
+ * If no academic structure exists at all, falls back to the full
+ * `setupCatalogForSchool` pipeline (which also runs `setupDefaultsForSchool`
+ * as a prerequisite).
+ *
+ * Idempotent — returns early if selections already exist.
+ */
+export async function ensureSubjectSelections(
+  schoolId: string
+): Promise<{ provisioned: boolean; selections: number }> {
+  // Already have selections → nothing to do
+  const existing = await db.subjectSelection.count({
+    where: { schoolId, isActive: true },
+  })
+  if (existing > 0) return { provisioned: false, selections: existing }
+
+  // Check if academic structure exists
+  const gradeCount = await db.academicGrade.count({ where: { schoolId } })
+
+  if (gradeCount === 0) {
+    // No structure at all — need the full pipeline.
+    // Ensure year levels/departments exist first (setupCatalogForSchool needs them).
+    const school = await db.school.findUnique({
+      where: { id: schoolId },
+      select: { schoolLevel: true, country: true, schoolType: true },
+    })
+
+    await setupDefaultsForSchool(schoolId, school?.schoolLevel || "both")
+    const result = await setupCatalogForSchool(schoolId, {
+      country: school?.country || undefined,
+      schoolType: school?.schoolType || undefined,
+    })
+
+    const count =
+      result && "selections" in result ? (result.selections as number) : 0
+    return { provisioned: count > 0, selections: count }
+  }
+
+  // Structure exists but no selections — provision only the bridge records.
+  const school = await db.school.findUnique({
+    where: { id: schoolId },
+    select: { country: true, schoolType: true, schoolLevel: true },
+  })
+  const country = school?.country || "US"
+  const schoolType = school?.schoolType || undefined
+  const curriculum = inferCurriculum(country, schoolType ?? null)
+  const allowedLevels =
+    SCHOOL_LEVEL_TO_CATALOG[school?.schoolLevel ?? "both"] ??
+    SCHOOL_LEVEL_TO_CATALOG.both
+
+  const catalogSubjects = await findSubjects(country, curriculum, schoolType)
+  if (catalogSubjects.length === 0) {
+    return { provisioned: false, selections: 0 }
+  }
+
+  // Load existing grades and streams
+  const grades = await db.academicGrade.findMany({
+    where: { schoolId },
+    select: { id: true, gradeNumber: true },
+  })
+  const streams = await db.academicStream.findMany({
+    where: { schoolId },
+    select: { id: true, gradeId: true, streamType: true },
+  })
+
+  const allowedGradeNumbers = new Set(grades.map((g) => g.gradeNumber))
+  const selectionData: Array<{
+    schoolId: string
+    catalogSubjectId: string
+    gradeId: string
+    isRequired: boolean
+    isActive: boolean
+    weeklyPeriods: number
+    streamId?: string
+  }> = []
+
+  for (const subject of catalogSubjects) {
+    let applicableGrades: number[]
+
+    if (subject.grades.length > 0) {
+      applicableGrades = subject.grades.filter((g) =>
+        allowedGradeNumbers.has(g)
+      )
+    } else {
+      const levelToGrades = (level: string): number[] => {
+        if (!allowedLevels.includes(level)) return []
+        switch (level) {
+          case "ELEMENTARY":
+            return [1, 2, 3, 4, 5, 6]
+          case "MIDDLE":
+            return [7, 8, 9]
+          case "HIGH":
+            return [10, 11, 12]
+          default:
+            return []
+        }
+      }
+      applicableGrades = subject.levels.flatMap(levelToGrades)
+    }
+
+    for (const gradeNumber of applicableGrades) {
+      const gradeRecord = grades.find((g) => g.gradeNumber === gradeNumber)
+      if (!gradeRecord) continue
+
+      const baseData = {
+        schoolId,
+        catalogSubjectId: subject.id,
+        gradeId: gradeRecord.id,
+        isRequired: true,
+        isActive: true,
+        weeklyPeriods: getReferenceWeeklyPeriods(subject.name, gradeNumber, {
+          country,
+          curriculum,
+          schoolType,
+        }),
+      }
+
+      const subjectStreamType =
+        gradeNumber >= 10 ? getSubjectStreamType(subject.name) : null
+      const gradeStreams = streams.filter(
+        (s) => s.gradeId === gradeRecord.id
+      )
+
+      if (subjectStreamType && gradeStreams.length > 0) {
+        const matchingStreams = gradeStreams.filter(
+          (s) => s.streamType === subjectStreamType
+        )
+        for (const stream of matchingStreams) {
+          selectionData.push({ ...baseData, streamId: stream.id })
+        }
+      } else {
+        selectionData.push(baseData)
+      }
+    }
+  }
+
+  if (selectionData.length > 0) {
+    await db.subjectSelection.createMany({
+      data: selectionData,
+      skipDuplicates: true,
+    })
+  }
+
+  return { provisioned: selectionData.length > 0, selections: selectionData.length }
+}
+
 /** @internal Exported for testing only */
 export const _testing = {
   inferCurriculum,

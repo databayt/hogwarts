@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { ensureSubjectSelections } from "@/lib/catalog-setup"
 import { getCatalogImageUrl } from "@/lib/catalog-image-url"
 import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
@@ -9,6 +10,31 @@ import { type Locale } from "@/components/internationalization/config"
 import type { SupportedLanguage } from "@/components/translation/types"
 
 import { SubjectsGrid, type SubjectItem } from "./catalog-subjects-grid"
+
+const SELECTION_SELECT = {
+  catalogSubjectId: true,
+  customName: true,
+  subject: {
+    select: {
+      id: true,
+      clickviewId: true,
+      name: true,
+      slug: true,
+      department: true,
+      levels: true,
+      grades: true,
+      color: true,
+      thumbnail: true,
+      lang: true,
+      totalChapters: true,
+      totalLessons: true,
+      averageRating: true,
+      usageCount: true,
+      ratingCount: true,
+      status: true,
+    },
+  },
+} as const
 
 interface Props {
   lang: Locale
@@ -22,33 +48,34 @@ export default async function SubjectsContent({ lang, level }: Props) {
   if (schoolId) {
     try {
       // Get school's active catalog selections with their catalog subjects
-      const selections = await db.subjectSelection.findMany({
+      let selections = await db.subjectSelection.findMany({
         where: { schoolId, isActive: true },
-        select: {
-          catalogSubjectId: true,
-          customName: true,
-          subject: {
-            select: {
-              id: true,
-              clickviewId: true,
-              name: true,
-              slug: true,
-              department: true,
-              levels: true,
-              grades: true,
-              color: true,
-              thumbnail: true,
-              lang: true,
-              totalChapters: true,
-              totalLessons: true,
-              averageRating: true,
-              usageCount: true,
-              ratingCount: true,
-              status: true,
-            },
-          },
-        },
+        select: SELECTION_SELECT,
       })
+
+      // Auto-provision: if no selections exist, the school was likely created
+      // without catalog setup completing (e.g. after() callback failed on
+      // serverless, or provisioning never ran). Attempt to provision now so
+      // the user sees subjects immediately instead of an empty page.
+      if (selections.length === 0) {
+        try {
+          const { provisioned } = await ensureSubjectSelections(schoolId)
+          if (provisioned) {
+            // Re-fetch after provisioning
+            selections = await db.subjectSelection.findMany({
+              where: { schoolId, isActive: true },
+              select: SELECTION_SELECT,
+            })
+          }
+        } catch (provisionError) {
+          console.error(
+            "[Subjects] Auto-provision failed:",
+            provisionError instanceof Error
+              ? provisionError.message
+              : String(provisionError)
+          )
+        }
+      }
 
       const customNames = new Map(
         selections
