@@ -547,7 +547,24 @@ export async function sendMessage(
       )
     }
 
-    // 3. Audit log (non-blocking)
+    // 3. WhatsApp dispatch (non-blocking)
+    if ((conversation as any).whatsappEnabled) {
+      import("./whatsapp-bridge")
+        .then(({ dispatchMessageToWhatsApp }) =>
+          dispatchMessageToWhatsApp(
+            schoolId,
+            parsed.conversationId,
+            message.id,
+            parsed.content,
+            authContext.userId
+          )
+        )
+        .catch((err) =>
+          console.error("[sendMessage] WhatsApp dispatch error:", err)
+        )
+    }
+
+    // 4. Audit log (non-blocking)
     logMessageCreated(
       { schoolId, userId: authContext.userId },
       {
@@ -1639,6 +1656,235 @@ export async function fetchSearchSuggestions(input: {
       success: false,
       error:
         error instanceof Error ? error.message : "Failed to get suggestions",
+    }
+  }
+}
+
+/**
+ * Fetch a conversation and its messages for client-side switching.
+ * Used to avoid full page reloads when switching conversations.
+ */
+export async function fetchConversationData(input: {
+  conversationId: string
+  take?: number
+}): Promise<
+  ActionResponse<{
+    conversation: any
+    messages: any[]
+    hasMore: boolean
+  }>
+> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    }
+
+    const { getConversation, getMessagesList } = await import("./queries")
+    const { serializeConversation, serializeMessages } = await import(
+      "./serialization"
+    )
+
+    const take = input.take ?? 50
+
+    const [conversation, messagesResult] = await Promise.all([
+      getConversation(schoolId, authContext.userId, input.conversationId),
+      getMessagesList(schoolId, { conversationId: input.conversationId, page: 1, perPage: take }),
+    ])
+
+    if (!conversation) {
+      return actionError(ACTION_ERRORS.MESSAGE_SEND_FAILED)
+    }
+
+    return {
+      success: true,
+      data: {
+        conversation: serializeConversation(conversation),
+        messages: serializeMessages(messagesResult.rows),
+        hasMore: messagesResult.count > take,
+      },
+    }
+  } catch (error) {
+    console.error("[fetchConversationData] Error:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch conversation",
+    }
+  }
+}
+
+/**
+ * Poll for new messages in a conversation (fallback when Socket.IO unavailable).
+ */
+export async function pollNewMessages(input: {
+  conversationId: string
+  afterMessageId?: string
+}): Promise<ActionResponse<{ items: any[] }>> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    }
+
+    const isParticipant = await isConversationParticipant(
+      schoolId,
+      input.conversationId,
+      authContext.userId
+    )
+    if (!isParticipant) {
+      return actionError(ACTION_ERRORS.MESSAGE_SEND_FAILED)
+    }
+
+    const { serializeMessages } = await import("./serialization")
+
+    // If we have a cursor, fetch messages newer than it
+    if (input.afterMessageId) {
+      const cursorMessage = await db.message.findUnique({
+        where: { id: input.afterMessageId },
+        select: { createdAt: true },
+      })
+
+      if (cursorMessage) {
+        const newMessages = await db.message.findMany({
+          where: {
+            conversationId: input.conversationId,
+            createdAt: { gt: cursorMessage.createdAt },
+            isDeleted: false,
+          },
+          include: {
+            sender: { select: { id: true, username: true, email: true, image: true } },
+            attachments: true,
+            reactions: { include: { user: { select: { id: true, username: true } } } },
+            replyTo: { include: { sender: { select: { id: true, username: true } } } },
+          },
+          orderBy: { createdAt: "asc" },
+          take: 50,
+        })
+
+        return { success: true, data: { items: serializeMessages(newMessages) } }
+      }
+    }
+
+    // No cursor — return empty (initial load uses fetchConversationData)
+    return { success: true, data: { items: [] } }
+  } catch (error) {
+    console.error("[pollNewMessages] Error:", error)
+    return { success: false, error: "Failed to poll messages" }
+  }
+}
+
+/**
+ * Poll for conversation list updates (fallback when Socket.IO unavailable).
+ */
+export async function pollConversationUpdates(): Promise<
+  ActionResponse<{ conversations: any[] }>
+> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    }
+
+    const { getConversationsList } = await import("./queries")
+    const { serializeConversations } = await import("./serialization")
+
+    const result = await getConversationsList(schoolId, authContext.userId, {
+      page: 1,
+      perPage: 50,
+    })
+
+    return {
+      success: true,
+      data: { conversations: serializeConversations(result.rows) },
+    }
+  } catch (error) {
+    console.error("[pollConversationUpdates] Error:", error)
+    return { success: false, error: "Failed to poll conversations" }
+  }
+}
+
+/**
+ * Toggle WhatsApp delivery for a conversation.
+ * When enabling, resolves and caches phone numbers for all participants.
+ */
+export async function toggleConversationWhatsApp(input: {
+  conversationId: string
+  enabled: boolean
+}): Promise<ActionResponse<{ enabled: boolean }>> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    }
+
+    // Check participant is owner or admin
+    const participant = await getConversationParticipant(
+      schoolId,
+      input.conversationId,
+      authContext.userId
+    )
+    if (!participant || !["owner", "admin"].includes(participant.role)) {
+      return { success: false, error: "Only owner or admin can toggle WhatsApp" }
+    }
+
+    // If enabling, check school has active WhatsApp session
+    if (input.enabled) {
+      const waSession = await db.whatsAppSession.findUnique({
+        where: { schoolId },
+        select: { status: true },
+      })
+      if (!waSession || waSession.status !== "connected") {
+        return {
+          success: false,
+          error: "WhatsApp is not connected. Connect via the WhatsApp dashboard first.",
+        }
+      }
+
+      // Populate phone numbers for participants
+      const { populateParticipantPhones } = await import("./whatsapp-bridge")
+      await populateParticipantPhones(schoolId, input.conversationId)
+    }
+
+    await db.conversation.update({
+      where: { id: input.conversationId },
+      data: { whatsappEnabled: input.enabled },
+    })
+
+    revalidatePath(MESSAGES_PATH)
+
+    return { success: true, data: { enabled: input.enabled } }
+  } catch (error) {
+    console.error("[toggleConversationWhatsApp] Error:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to toggle WhatsApp",
     }
   }
 }

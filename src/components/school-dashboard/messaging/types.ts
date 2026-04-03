@@ -29,6 +29,7 @@ export type ConversationDTO = {
   directParticipant2Id: string | null
   lastMessageAt: Date
   isArchived: boolean
+  whatsappEnabled: boolean
   createdAt: Date
   updatedAt: Date
   participantCount: number
@@ -91,6 +92,8 @@ export type MessageDTO = {
   deletedAt: Date | null
   isSystem: boolean
   metadata: Record<string, unknown> | null
+  whatsappStatus: string | null
+  whatsappPhone: string | null
   createdAt: Date
   updatedAt: Date
   attachments: MessageAttachmentDTO[]

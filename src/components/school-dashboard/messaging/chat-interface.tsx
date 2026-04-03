@@ -29,7 +29,11 @@ import { toast } from "@/components/ui/use-toast"
 import type { UploadedFileResult } from "@/components/file"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
-import { markConversationAsRead } from "./actions"
+import {
+  markConversationAsRead,
+  pollNewMessages,
+  toggleConversationWhatsApp,
+} from "./actions"
 import { CONVERSATION_TYPE_CONFIG } from "./config"
 import { MessageInput } from "./message-input"
 import { MessageList, MessageListSkeleton } from "./message-list"
@@ -41,6 +45,7 @@ export interface ChatInterfaceProps {
   initialMessages: MessageDTO[]
   currentUserId: string
   locale?: "ar" | "en"
+  whatsappConnected?: boolean
   onSendMessage: (content: string, replyToId?: string) => Promise<void>
   onEditMessage: (messageId: string, content: string) => Promise<void>
   onDeleteMessage: (messageId: string) => Promise<void>
@@ -60,6 +65,7 @@ export function ChatInterface({
   initialMessages,
   currentUserId,
   locale = "en",
+  whatsappConnected = false,
   onSendMessage,
   onEditMessage,
   onDeleteMessage,
@@ -80,6 +86,10 @@ export function ChatInterface({
   const [editingMessage, setEditingMessage] = useState<MessageDTO | null>(null)
   const [typingUsers, setTypingUsers] = useState<TypingIndicatorDTO[]>([])
   const [isLoadingMessages, setIsLoadingMessages] = useState(false)
+  const [whatsappEnabled, setWhatsappEnabled] = useState(
+    conversation.whatsappEnabled ?? false
+  )
+  const [isTogglingWhatsApp, setIsTogglingWhatsApp] = useState(false)
 
   // Optimistic updates (React 19)
   const [optimisticMessages, addOptimisticMessage] = useOptimistic(
@@ -332,8 +342,9 @@ export function ChatInterface({
     }
   }, [conversation.id, currentUserId])
 
-  // Auto-remove typing indicators after 5s
+  // Auto-remove typing indicators after 5s (only when someone is typing)
   useEffect(() => {
+    if (typingUsers.length === 0) return
     const interval = setInterval(() => {
       setTypingUsers((prev) => {
         const now = new Date().getTime()
@@ -341,7 +352,35 @@ export function ChatInterface({
       })
     }, 1000)
     return () => clearInterval(interval)
-  }, [])
+  }, [typingUsers.length > 0])
+
+  // Polling fallback when Socket.IO is not connected
+  useEffect(() => {
+    if (socketService.isConnected()) return
+
+    let active = true
+    const poll = async () => {
+      if (!active) return
+      const lastMessage = messages[messages.length - 1]
+      if (!lastMessage) return
+      const result = await pollNewMessages({
+        conversationId: conversation.id,
+        afterMessageId: lastMessage.id,
+      })
+      if (result.success && result.data.items.length > 0) {
+        setMessages((prev) => [...prev, ...result.data.items])
+        markConversationAsRead({ conversationId: conversation.id }).catch(
+          () => {}
+        )
+      }
+    }
+
+    const timer = setInterval(poll, 5000)
+    return () => {
+      active = false
+      clearInterval(timer)
+    }
+  }, [conversation.id, messages.length])
 
   const handleSendMessage = async (content: string, replyToId?: string) => {
     try {
@@ -400,6 +439,31 @@ export function ChatInterface({
     socketService.sendTypingStop(conversation.id)
   }
 
+  const handleToggleWhatsApp = async () => {
+    setIsTogglingWhatsApp(true)
+    try {
+      const result = await toggleConversationWhatsApp({
+        conversationId: conversation.id,
+        enabled: !whatsappEnabled,
+      })
+      if (result.success) {
+        setWhatsappEnabled(result.data.enabled)
+      } else {
+        toast({
+          title: m?.notifications?.error || "Error",
+          description: result.error,
+        })
+      }
+    } catch {
+      toast({
+        title: m?.notifications?.error || "Error",
+        description: "Failed to toggle WhatsApp",
+      })
+    } finally {
+      setIsTogglingWhatsApp(false)
+    }
+  }
+
   const currentParticipant = conversation.participants?.find(
     (p) => p.userId === currentUserId
   )
@@ -430,8 +494,11 @@ export function ChatInterface({
 
         {/* Name + status */}
         <div className="min-w-0 flex-1">
-          <h2 className="text-foreground truncate font-medium">
+          <h2 className="text-foreground flex items-center gap-1.5 truncate font-medium">
             {displayName}
+            {whatsappEnabled && (
+              <span className="inline-block h-2.5 w-2.5 flex-shrink-0 rounded-full bg-green-500" title="WhatsApp" />
+            )}
           </h2>
           {typingUsers.length > 0 ? (
             <p className="text-msg-unread-badge text-xs">
@@ -476,6 +543,23 @@ export function ChatInterface({
                   {m?.ui?.members_label || "Members"}
                 </DropdownMenuItem>
               )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={handleToggleWhatsApp}
+                disabled={isTogglingWhatsApp || (!whatsappEnabled && !whatsappConnected)}
+              >
+                <span
+                  className={cn(
+                    "me-2 inline-block h-3 w-3 rounded-full",
+                    whatsappEnabled ? "bg-green-500" : "bg-muted-foreground"
+                  )}
+                />
+                {whatsappEnabled
+                  ? "WhatsApp On"
+                  : whatsappConnected
+                    ? "Enable WhatsApp"
+                    : "WhatsApp Disconnected"}
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem disabled>
                 <Phone className="me-2 h-4 w-4" />

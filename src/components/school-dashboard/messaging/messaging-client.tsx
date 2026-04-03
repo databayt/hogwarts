@@ -15,6 +15,9 @@ import {
   createConversation,
   deleteMessage,
   editMessage,
+  fetchConversationData,
+  loadMoreMessages,
+  pollConversationUpdates,
   removeReaction,
   sendMessage,
 } from "./actions"
@@ -73,10 +76,14 @@ export function MessagingClient({
   useEffect(() => {
     const connect = async () => {
       try {
-        setIsConnected(true)
-        socketService.subscribeToConversations(currentUserId)
+        const connected = socketService.isConnected()
+        setIsConnected(connected)
+        if (connected) {
+          socketService.subscribeToConversations(currentUserId)
+        }
       } catch (error) {
         console.error("Failed to connect to Socket.IO:", error)
+        setIsConnected(false)
       }
     }
 
@@ -86,6 +93,26 @@ export function MessagingClient({
       socketService.unsubscribeFromConversations(currentUserId)
     }
   }, [currentUserId])
+
+  // Polling fallback for conversation list when Socket.IO unavailable
+  useEffect(() => {
+    if (isConnected) return
+
+    let active = true
+    const poll = async () => {
+      if (!active) return
+      const result = await pollConversationUpdates()
+      if (result.success) {
+        setConversations(result.data.conversations)
+      }
+    }
+
+    const timer = setInterval(poll, 15000)
+    return () => {
+      active = false
+      clearInterval(timer)
+    }
+  }, [isConnected])
 
   // Listen for conversation updates
   useEffect(() => {
@@ -136,8 +163,15 @@ export function MessagingClient({
     }
   }, [isConnected])
 
+  const [hasMoreMessages, setHasMoreMessages] = useState(
+    initialMessages.length >= 50
+  )
+
   const handleBack = () => {
-    router.push(`/${locale}/messages`)
+    setActiveConversation(null)
+    setMessages([])
+    setHasMoreMessages(false)
+    window.history.replaceState(null, "", `/${locale}/messages`)
   }
 
   const handleSendMessage = async (content: string, replyToId?: string) => {
@@ -183,6 +217,20 @@ export function MessagingClient({
     }
   }
 
+  const switchToConversation = async (conversationId: string) => {
+    const result = await fetchConversationData({ conversationId })
+    if (result.success) {
+      setActiveConversation(result.data.conversation)
+      setMessages(result.data.messages)
+      setHasMoreMessages(result.data.hasMore)
+      window.history.replaceState(
+        null,
+        "",
+        `/${locale}/messages?conversation=${conversationId}`
+      )
+    }
+  }
+
   const handleContactClick = async (userId: string) => {
     try {
       const result = await createConversation({
@@ -190,8 +238,7 @@ export function MessagingClient({
         participantIds: [userId],
       })
       if (result.success) {
-        // Hard navigate with locale to guarantee server re-fetch
-        window.location.href = `/${locale}/messages?conversation=${result.data.id}`
+        await switchToConversation(result.data.id)
       } else {
         toast({
           title: m?.notifications?.error || "Error",
@@ -208,6 +255,21 @@ export function MessagingClient({
           m?.errors?.conversation_start_failed ||
           "Failed to start conversation",
       })
+    }
+  }
+
+  const handleLoadMoreMessages = async () => {
+    if (!activeConversation || messages.length === 0) return
+    const oldestMessage = messages[0]
+    const result = await loadMoreMessages({
+      conversationId: activeConversation.id,
+      cursor: oldestMessage.id,
+      take: 50,
+      direction: "before",
+    })
+    if (result.success) {
+      setMessages((prev) => [...result.data.items, ...prev])
+      setHasMoreMessages(result.data.hasMore)
     }
   }
 
@@ -240,6 +302,7 @@ export function MessagingClient({
       >
         {activeConversation ? (
           <ChatInterface
+            key={activeConversation.id}
             conversation={activeConversation}
             initialMessages={messages}
             currentUserId={currentUserId}
@@ -249,6 +312,8 @@ export function MessagingClient({
             onDeleteMessage={handleDeleteMessage}
             onReactToMessage={handleReactToMessage}
             onRemoveReaction={handleRemoveReaction}
+            onLoadMoreMessages={handleLoadMoreMessages}
+            hasMoreMessages={hasMoreMessages}
             onBack={handleBack}
           />
         ) : (

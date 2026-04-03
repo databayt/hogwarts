@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
       }
 
       case "MESSAGES_UPSERT": {
-        // Log incoming messages
+        // Log incoming messages and bridge to in-app conversations
         const messages = body.data ?? []
         for (const msg of Array.isArray(messages) ? messages : [messages]) {
           const key = msg.key
@@ -69,14 +69,17 @@ export async function POST(request: NextRequest) {
 
           if (!content) continue
 
+          const senderPhone = key.remoteJid?.includes("@g.us")
+            ? null
+            : (key.remoteJid?.replace("@s.whatsapp.net", "+") ?? null)
+
+          // Log to WhatsApp audit table
           await db.whatsAppMessage.create({
             data: {
               schoolId: session.schoolId,
               sessionId: session.id,
               waMessageId: key.id,
-              recipientPhone: key.remoteJid?.includes("@g.us")
-                ? null
-                : (key.remoteJid?.replace("@s.whatsapp.net", "+") ?? null),
+              recipientPhone: senderPhone,
               groupId: null,
               content,
               contentType: "text",
@@ -85,6 +88,54 @@ export async function POST(request: NextRequest) {
               sentAt: new Date(),
             },
           })
+
+          // Bridge incoming messages to in-app conversations
+          if (!isFromMe && senderPhone) {
+            try {
+              // Find participant with this WhatsApp phone in a whatsapp-enabled conversation
+              const participant =
+                await db.conversationParticipant.findFirst({
+                  where: {
+                    whatsappPhone: senderPhone,
+                    isActive: true,
+                    conversation: {
+                      schoolId: session.schoolId,
+                      whatsappEnabled: true,
+                    },
+                  },
+                  include: {
+                    conversation: { select: { id: true } },
+                  },
+                  orderBy: {
+                    conversation: { lastMessageAt: "desc" },
+                  },
+                })
+
+              if (participant) {
+                await db.message.create({
+                  data: {
+                    conversationId: participant.conversation.id,
+                    senderId: participant.userId,
+                    content,
+                    contentType: "text",
+                    status: "delivered",
+                    whatsappMessageId: key.id,
+                    whatsappStatus: "delivered",
+                    whatsappPhone: senderPhone,
+                  },
+                })
+                await db.conversation.update({
+                  where: { id: participant.conversation.id },
+                  data: { lastMessageAt: new Date() },
+                })
+              }
+            } catch (bridgeError) {
+              console.error(
+                "[WhatsApp Webhook] Bridge error:",
+                bridgeError
+              )
+            }
+          }
         }
         break
       }
@@ -115,6 +166,12 @@ export async function POST(request: NextRequest) {
                 : {}),
               ...(mappedStatus === "read" ? { readAt: new Date() } : {}),
             },
+          })
+
+          // Sync status to bridged in-app messages
+          await db.message.updateMany({
+            where: { whatsappMessageId: waMessageId },
+            data: { whatsappStatus: mappedStatus },
           })
         }
         break

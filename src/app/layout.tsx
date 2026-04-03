@@ -21,9 +21,7 @@ export default async function RootLayout({
   const headersList = await headers()
   const cookieStore = await cookies()
   const locale =
-    headersList.get("x-locale") ||
-    cookieStore.get("NEXT_LOCALE")?.value ||
-    "ar"
+    headersList.get("x-locale") || cookieStore.get("NEXT_LOCALE")?.value || "ar"
   const dir = locale === "ar" ? "rtl" : "ltr"
 
   return (

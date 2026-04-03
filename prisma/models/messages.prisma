@@ -50,8 +50,9 @@ model Conversation {
   departmentId String?
 
   // Settings
-  isLocked   Boolean @default(false) // Prevent new messages
-  isArchived Boolean @default(false)
+  isLocked        Boolean @default(false) // Prevent new messages
+  isArchived      Boolean @default(false)
+  whatsappEnabled Boolean @default(false) // WhatsApp dual-delivery toggle
 
   // Last activity for sorting
   lastMessageAt DateTime? @default(now())
@@ -90,6 +91,9 @@ model ConversationParticipant {
   // Notifications
   isMuted  Boolean @default(false)
   isPinned Boolean @default(false) // Pin conversation to top
+
+  // WhatsApp bridge
+  whatsappPhone String? // Cached WhatsApp-reachable phone (E.164)
 
   // Active status (for leaving/removing participants)
   isActive Boolean   @default(true)
@@ -137,6 +141,11 @@ model Message {
   // System message flag
   isSystem Boolean @default(false) // For "User joined", "Title changed", etc.
 
+  // WhatsApp bridge
+  whatsappMessageId String? // Evolution API message key.id
+  whatsappStatus    String? // pending|sent|delivered|read|failed
+  whatsappPhone     String? // Recipient phone or group JID
+
   // Metadata (for system messages or rich content)
   metadata Json? // { mentions: ["userId1"], links: ["url1"], etc. }
 
@@ -157,6 +166,7 @@ model Message {
   @@index([senderId, createdAt]) // User's messages
   @@index([replyToId]) // Thread lookup
   @@index([conversationId, isSystem]) // Filter system messages
+  @@index([whatsappMessageId]) // WhatsApp webhook status lookup
   @@map("messages")
 }
 

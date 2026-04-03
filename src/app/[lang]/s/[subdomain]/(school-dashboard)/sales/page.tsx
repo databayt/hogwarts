@@ -34,11 +34,12 @@ export async function generateMetadata({
   }
 
   return {
-    ...generateSchoolMetadata({
+    ...(await generateSchoolMetadata({
       school: result.data,
       subdomain,
       rootDomain,
-    }),
+      locale: lang,
+    })),
     title: lang === "ar" ? "المبيعات | العملاء المحتملين" : "Sales | Leads",
   }
 }

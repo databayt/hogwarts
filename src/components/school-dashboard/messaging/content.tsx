@@ -57,45 +57,32 @@ export async function MessagingContent({
   const schoolId = tenantContext.schoolId
   const userId = session.user.id
 
-  // Fetch conversations list
+  // Fetch all data in parallel
   let conversationsData: any[] = []
   let activeConversationData: any = null
   let messagesData: any[] = []
 
   try {
-    const conversationsResult = await getConversationsList(schoolId, userId, {
-      page: 1,
-      perPage: 50,
-    })
+    const [conversationsResult, activeConversation, messagesResult] =
+      await Promise.all([
+        getConversationsList(schoolId, userId, { page: 1, perPage: 50 }),
+        conversationId
+          ? getConversation(schoolId, userId, conversationId).catch(() => null)
+          : Promise.resolve(null),
+        conversationId
+          ? getMessagesList(schoolId, {
+              conversationId,
+              page: 1,
+              perPage: 50,
+            }).catch(() => ({ rows: [], count: 0 }))
+          : Promise.resolve({ rows: [], count: 0 }),
+      ])
 
-    // Serialize conversations using centralized utility
     conversationsData = serializeConversations(conversationsResult.rows)
 
-    // Fetch active conversation and messages if conversationId provided
-    if (conversationId) {
-      try {
-        const activeConversation = await getConversation(
-          schoolId,
-          userId,
-          conversationId
-        )
-
-        if (activeConversation) {
-          // Serialize active conversation using centralized utility
-          activeConversationData = serializeConversation(activeConversation)
-
-          const messagesResult = await getMessagesList(schoolId, {
-            conversationId,
-            page: 1,
-            perPage: 50,
-          })
-
-          // Serialize messages using centralized utility
-          messagesData = serializeMessages(messagesResult.rows)
-        }
-      } catch (error) {
-        console.error("[MessagingContent] Error fetching conversation:", error)
-      }
+    if (activeConversation) {
+      activeConversationData = serializeConversation(activeConversation)
+      messagesData = serializeMessages(messagesResult.rows)
     }
   } catch (error) {
     console.error("[MessagingContent] Error fetching conversations:", error)
