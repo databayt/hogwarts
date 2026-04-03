@@ -28,14 +28,45 @@ import { useSidebar } from "@/components/ui/sidebar"
 
 interface StaffDashboardProps {
   data: Record<string, unknown>
+  dictionary?: Record<string, any>
 }
 
 // Department overview
+const DEPARTMENT_STATS_KEYS = [
+  "totalStudents",
+  "totalTeachers",
+  "totalClasses",
+  "activeEvents",
+] as const
 const DEPARTMENT_STATS = [
-  { label: "Total Students", value: 1247, change: "+23", trend: "up" },
-  { label: "Total Teachers", value: 89, change: "+2", trend: "up" },
-  { label: "Total Classes", value: 156, change: "0", trend: "stable" },
-  { label: "Active Events", value: 8, change: "+3", trend: "up" },
+  {
+    label: "Total Students",
+    key: "totalStudents",
+    value: 1247,
+    change: "+23",
+    trend: "up",
+  },
+  {
+    label: "Total Teachers",
+    key: "totalTeachers",
+    value: 89,
+    change: "+2",
+    trend: "up",
+  },
+  {
+    label: "Total Classes",
+    key: "totalClasses",
+    value: 156,
+    change: "0",
+    trend: "stable",
+  },
+  {
+    label: "Active Events",
+    key: "activeEvents",
+    value: 8,
+    change: "+3",
+    trend: "up",
+  },
 ]
 
 // Pending tasks
@@ -94,7 +125,11 @@ const RECENT_ACTIVITIES = [
   },
 ]
 
-export default function StaffDashboard({ data }: StaffDashboardProps) {
+export default function StaffDashboard({
+  data,
+  dictionary,
+}: StaffDashboardProps) {
+  const st = dictionary?.staff
   const { open, isMobile } = useSidebar()
   const useMobileLayout = isMobile || open
 
@@ -129,7 +164,7 @@ export default function StaffDashboard({ data }: StaffDashboardProps) {
                 {idx === 1 && <Building2 className="size-4 text-purple-500" />}
                 {idx === 2 && <FileText className="size-4 text-emerald-500" />}
                 {idx === 3 && <Calendar className="size-4 text-orange-500" />}
-                {stat.label}
+                {st?.[stat.key] ?? stat.label}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -159,7 +194,7 @@ export default function StaffDashboard({ data }: StaffDashboardProps) {
                 )}
               </div>
               <p className="text-muted-foreground mt-1 text-xs">
-                This semester
+                {st?.thisSemester ?? "This semester"}
               </p>
             </CardContent>
           </Card>
@@ -178,10 +213,11 @@ export default function StaffDashboard({ data }: StaffDashboardProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <ClipboardList className="text-primary size-5" />
-              Pending Tasks
+              {st?.pendingTasks ?? "Pending Tasks"}
             </CardTitle>
             <CardDescription>
-              Administrative tasks requiring attention
+              {st?.tasksRequiringAttention ??
+                "Administrative tasks requiring attention"}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -213,7 +249,7 @@ export default function StaffDashboard({ data }: StaffDashboardProps) {
               </div>
             ))}
             <button className="text-primary w-full py-2 text-sm hover:underline">
-              View all tasks
+              {st?.viewAllTasks ?? "View all tasks"}
             </button>
           </CardContent>
         </Card>
@@ -223,9 +259,11 @@ export default function StaffDashboard({ data }: StaffDashboardProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Zap className="size-5 text-amber-500" />
-              Recent Activities
+              {st?.recentActivities ?? "Recent Activities"}
             </CardTitle>
-            <CardDescription>Latest department updates</CardDescription>
+            <CardDescription>
+              {st?.latestUpdates ?? "Latest department updates"}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {RECENT_ACTIVITIES.map((activity, idx) => (
@@ -258,7 +296,7 @@ export default function StaffDashboard({ data }: StaffDashboardProps) {
               </div>
             ))}
             <button className="text-primary w-full py-2 text-sm hover:underline">
-              View activity log
+              {st?.viewActivityLog ?? "View activity log"}
             </button>
           </CardContent>
         </Card>
@@ -267,8 +305,12 @@ export default function StaffDashboard({ data }: StaffDashboardProps) {
       {/* Department Distribution */}
       <Card className="border-border">
         <CardHeader>
-          <CardTitle className="text-base">Department Distribution</CardTitle>
-          <CardDescription>Staff allocation across departments</CardDescription>
+          <CardTitle className="text-base">
+            {st?.departmentDistribution ?? "Department Distribution"}
+          </CardTitle>
+          <CardDescription>
+            {st?.staffAllocation ?? "Staff allocation across departments"}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div
@@ -345,9 +387,11 @@ export default function StaffDashboard({ data }: StaffDashboardProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <TrendingUp className="size-5 text-emerald-500" />
-            School-wide Metrics
+            {st?.schoolWideMetrics ?? "School-wide Metrics"}
           </CardTitle>
-          <CardDescription>Key performance indicators</CardDescription>
+          <CardDescription>
+            {st?.keyPerformanceIndicators ?? "Key performance indicators"}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div
@@ -420,8 +464,12 @@ export default function StaffDashboard({ data }: StaffDashboardProps) {
       {/* Quick Actions */}
       <Card className="border-border">
         <CardHeader>
-          <CardTitle className="text-base">Quick Actions</CardTitle>
-          <CardDescription>Common administrative tasks</CardDescription>
+          <CardTitle className="text-base">
+            {st?.quickActions ?? "Quick Actions"}
+          </CardTitle>
+          <CardDescription>
+            {st?.commonTasks ?? "Common administrative tasks"}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div
@@ -431,20 +479,24 @@ export default function StaffDashboard({ data }: StaffDashboardProps) {
             )}
           >
             {[
-              { icon: Users, label: "Add Student", color: "text-blue-500" },
+              {
+                icon: Users,
+                label: st?.addStudent ?? "Add Student",
+                color: "text-blue-500",
+              },
               {
                 icon: Building2,
-                label: "Add Teacher",
+                label: st?.addTeacher ?? "Add Teacher",
                 color: "text-purple-500",
               },
               {
                 icon: FileText,
-                label: "Generate Report",
+                label: st?.generateReport ?? "Generate Report",
                 color: "text-emerald-500",
               },
               {
                 icon: Settings,
-                label: "System Settings",
+                label: st?.systemSettings ?? "System Settings",
                 color: "text-muted-foreground",
               },
             ].map((action, idx) => (

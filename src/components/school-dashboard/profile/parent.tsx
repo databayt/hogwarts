@@ -29,6 +29,7 @@ import { useSidebar } from "@/components/ui/sidebar"
 
 interface ParentDashboardProps {
   data: Record<string, unknown>
+  dictionary?: Record<string, any>
 }
 
 // Children's data
@@ -102,7 +103,11 @@ const NOTIFICATIONS = [
   },
 ]
 
-export default function ParentDashboard({ data }: ParentDashboardProps) {
+export default function ParentDashboard({
+  data,
+  dictionary,
+}: ParentDashboardProps) {
+  const pa = dictionary?.parent
   const { open, isMobile } = useSidebar()
   const useMobileLayout = isMobile || open
 
@@ -127,13 +132,13 @@ export default function ParentDashboard({ data }: ParentDashboardProps) {
           <CardHeader className="pb-2">
             <CardDescription className="flex items-center gap-2">
               <Users className="size-4 text-blue-500" />
-              Children
+              {pa?.children ?? "Children"}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <span className="text-3xl font-bold text-blue-500">3</span>
             <p className="text-muted-foreground mt-1 text-xs">
-              All active students
+              {pa?.allActiveStudents ?? "All active students"}
             </p>
           </CardContent>
         </Card>
@@ -142,12 +147,14 @@ export default function ParentDashboard({ data }: ParentDashboardProps) {
           <CardHeader className="pb-2">
             <CardDescription className="flex items-center gap-2">
               <TrendingUp className="size-4 text-emerald-500" />
-              Average GPA
+              {pa?.averageGPA ?? "Average GPA"}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <span className="text-3xl font-bold text-emerald-500">3.87</span>
-            <p className="text-muted-foreground mt-1 text-xs">Family average</p>
+            <p className="text-muted-foreground mt-1 text-xs">
+              {pa?.familyAverage ?? "Family average"}
+            </p>
           </CardContent>
         </Card>
 
@@ -155,13 +162,13 @@ export default function ParentDashboard({ data }: ParentDashboardProps) {
           <CardHeader className="pb-2">
             <CardDescription className="flex items-center gap-2">
               <Calendar className="size-4 text-purple-500" />
-              Attendance
+              {pa?.attendance ?? "Attendance"}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <span className="text-3xl font-bold text-purple-500">97.7%</span>
             <p className="text-muted-foreground mt-1 text-xs">
-              Combined average
+              {pa?.combinedAverage ?? "Combined average"}
             </p>
           </CardContent>
         </Card>
@@ -170,12 +177,14 @@ export default function ParentDashboard({ data }: ParentDashboardProps) {
           <CardHeader className="pb-2">
             <CardDescription className="flex items-center gap-2">
               <Bell className="size-4 text-orange-500" />
-              Upcoming Events
+              {pa?.upcomingEvents ?? "Upcoming Events"}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <span className="text-3xl font-bold text-orange-500">5</span>
-            <p className="text-muted-foreground mt-1 text-xs">This month</p>
+            <p className="text-muted-foreground mt-1 text-xs">
+              {pa?.thisMonth ?? "This month"}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -185,9 +194,11 @@ export default function ParentDashboard({ data }: ParentDashboardProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <GraduationCap className="text-primary size-5" />
-            Children's Progress
+            {pa?.childrenProgress ?? "Children's Progress"}
           </CardTitle>
-          <CardDescription>Academic performance overview</CardDescription>
+          <CardDescription>
+            {pa?.academicOverview ?? "Academic performance overview"}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div
@@ -244,7 +255,7 @@ export default function ParentDashboard({ data }: ParentDashboardProps) {
                   </div>
                 </div>
                 <button className="text-primary mt-4 w-full text-xs hover:underline">
-                  View detailed report
+                  {pa?.viewDetailedReport ?? "View detailed report"}
                 </button>
               </div>
             ))}
@@ -264,9 +275,11 @@ export default function ParentDashboard({ data }: ParentDashboardProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Calendar className="size-5 text-purple-500" />
-              Upcoming Events
+              {pa?.upcomingEvents ?? "Upcoming Events"}
             </CardTitle>
-            <CardDescription>School events and meetings</CardDescription>
+            <CardDescription>
+              {pa?.schoolEventsAndMeetings ?? "School events and meetings"}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {EVENTS.map((event, idx) => (
@@ -304,7 +317,7 @@ export default function ParentDashboard({ data }: ParentDashboardProps) {
               </div>
             ))}
             <button className="text-primary w-full py-2 text-sm hover:underline">
-              View all events
+              {pa?.viewAllEvents ?? "View all events"}
             </button>
           </CardContent>
         </Card>
@@ -314,9 +327,11 @@ export default function ParentDashboard({ data }: ParentDashboardProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Bell className="size-5 text-orange-500" />
-              Recent Notifications
+              {pa?.recentNotifications ?? "Recent Notifications"}
             </CardTitle>
-            <CardDescription>Updates about your children</CardDescription>
+            <CardDescription>
+              {pa?.updatesAboutChildren ?? "Updates about your children"}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {NOTIFICATIONS.map((notification, idx) => (
@@ -351,7 +366,7 @@ export default function ParentDashboard({ data }: ParentDashboardProps) {
               </div>
             ))}
             <button className="text-primary w-full py-2 text-sm hover:underline">
-              View all notifications
+              {pa?.viewAllNotifications ?? "View all notifications"}
             </button>
           </CardContent>
         </Card>
@@ -360,8 +375,12 @@ export default function ParentDashboard({ data }: ParentDashboardProps) {
       {/* Quick Actions */}
       <Card className="border-border">
         <CardHeader>
-          <CardTitle className="text-base">Quick Actions</CardTitle>
-          <CardDescription>Common tasks and requests</CardDescription>
+          <CardTitle className="text-base">
+            {pa?.quickActions ?? "Quick Actions"}
+          </CardTitle>
+          <CardDescription>
+            {pa?.commonTasksAndRequests ?? "Common tasks and requests"}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div
@@ -373,20 +392,24 @@ export default function ParentDashboard({ data }: ParentDashboardProps) {
             {[
               {
                 icon: MessageSquare,
-                label: "Contact Teacher",
+                label: pa?.contactTeacher ?? "Contact Teacher",
                 color: "text-blue-500",
               },
               {
                 icon: CreditCard,
-                label: "Pay Fees",
+                label: pa?.payFees ?? "Pay Fees",
                 color: "text-emerald-500",
               },
               {
                 icon: Calendar,
-                label: "Request Leave",
+                label: pa?.requestLeave ?? "Request Leave",
                 color: "text-purple-500",
               },
-              { icon: Award, label: "View Reports", color: "text-amber-500" },
+              {
+                icon: Award,
+                label: pa?.viewReports ?? "View Reports",
+                color: "text-amber-500",
+              },
             ].map((action, idx) => (
               <button
                 key={idx}

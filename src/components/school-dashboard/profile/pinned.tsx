@@ -35,6 +35,7 @@ import type { PinnedItem, ProfileRole } from "./types"
 interface PinnedItemsProps {
   role: ProfileRole
   data: Record<string, unknown>
+  dictionary?: Record<string, any>
 }
 
 function getPinnedItemsForRole(role: ProfileRole): PinnedItem[] {
@@ -275,9 +276,11 @@ function getPinnedItemsForRole(role: ProfileRole): PinnedItem[] {
 function PinnedCard({
   item,
   isOverlay,
+  pinnedDict,
 }: {
   item: PinnedItem
   isOverlay?: boolean
+  pinnedDict?: Record<string, any>
 }) {
   const {
     attributes,
@@ -312,7 +315,9 @@ function PinnedCard({
               variant="outline"
               className="h-4 shrink-0 px-1.5 py-0 text-[10px]"
             >
-              {item.isPrivate ? "Private" : "Public"}
+              {item.isPrivate
+                ? (pinnedDict?.private ?? "Private")
+                : (pinnedDict?.public ?? "Public")}
             </Badge>
           </div>
           <button
@@ -342,7 +347,12 @@ function PinnedCard({
   )
 }
 
-export default function PinnedItems({ role, data }: PinnedItemsProps) {
+export default function PinnedItems({
+  role,
+  data,
+  dictionary,
+}: PinnedItemsProps) {
+  const pinnedDict = dictionary?.overview
   const initialItems = getPinnedItemsForRole(role)
   const [items, setItems] = useState(initialItems)
   const [activeItem, setActiveItem] = useState<PinnedItem | null>(null)
@@ -385,23 +395,27 @@ export default function PinnedItems({ role, data }: PinnedItemsProps) {
     >
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-foreground text-sm font-medium">Pinned</h2>
+          <h2 className="text-foreground text-sm font-medium">
+            {pinnedDict?.pinned ?? "Pinned"}
+          </h2>
           <button className="text-xs text-[#0969da] transition-colors hover:text-[#0969da]/80">
-            Customize your pins
+            {pinnedDict?.customizePins ?? "Customize your pins"}
           </button>
         </div>
 
         <SortableContext items={itemIds} strategy={rectSortingStrategy}>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {items.map((item) => (
-              <PinnedCard key={item.id} item={item} />
+              <PinnedCard key={item.id} item={item} pinnedDict={pinnedDict} />
             ))}
           </div>
         </SortableContext>
       </div>
 
       <DragOverlay>
-        {activeItem && <PinnedCard item={activeItem} isOverlay />}
+        {activeItem && (
+          <PinnedCard item={activeItem} isOverlay pinnedDict={pinnedDict} />
+        )}
       </DragOverlay>
     </DndContext>
   )

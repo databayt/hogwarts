@@ -363,6 +363,7 @@ export default function ActivityGraph({
         {/* Legend */}
         <div className="text-muted-foreground ms-8 flex items-center justify-between text-xs">
           <a href="#" className="hover:text-primary transition-colors">
+            {/* Static dev label - not user-facing */}
             Learn how we count contributions
           </a>
           <div className="flex items-center gap-1">

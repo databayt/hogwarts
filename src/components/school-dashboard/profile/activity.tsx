@@ -17,6 +17,7 @@ interface ContributionActivityProps {
   data?: Record<string, unknown>
   selectedYear?: number
   onYearChange?: (year: number) => void
+  dictionary?: Record<string, any>
 }
 
 interface ActivityItem {
@@ -259,7 +260,9 @@ export default function ContributionActivity({
   data,
   selectedYear: selectedYearProp,
   onYearChange,
+  dictionary,
 }: ContributionActivityProps) {
+  const ov = dictionary?.overview
   const { locale } = useLocale()
   const currentYear = new Date().getFullYear()
   const [internalYear, setInternalYear] = useState(currentYear)
@@ -288,7 +291,7 @@ export default function ContributionActivity({
     <div className="space-y-4">
       {/* Header */}
       <h3 className="text-foreground text-sm font-medium">
-        Contribution activity
+        {ov?.contributionActivity ?? "Contribution activity"}
       </h3>
 
       {/* Activity timeline */}
@@ -355,8 +358,8 @@ export default function ContributionActivity({
                                     <span className="text-muted-foreground underline">
                                       {subItem.count}{" "}
                                       {subItem.count === 1
-                                        ? "commit"
-                                        : "commits"}
+                                        ? (ov?.commit ?? "commit")
+                                        : (ov?.commits ?? "commits")}
                                     </span>
                                     <div className="ms-auto flex items-center">
                                       <div
@@ -402,12 +405,17 @@ export default function ContributionActivity({
                               {expandedItems.has(item.id) ? (
                                 <>
                                   <ChevronUp className="size-3" />
-                                  Show less
+                                  {ov?.showLess ?? "Show less"}
                                 </>
                               ) : (
                                 <>
                                   <ChevronDown className="size-3" />
-                                  Show {item.items.length - 2} more
+                                  {(
+                                    ov?.showMore ?? "Show {count} more"
+                                  ).replace(
+                                    "{count}",
+                                    String(item.items.length - 2)
+                                  )}
                                 </>
                               )}
                             </button>
@@ -443,7 +451,12 @@ export default function ContributionActivity({
 
         {activities.size === 0 && (
           <div className="text-muted-foreground py-8 text-center">
-            <p className="text-sm">No activity recorded for {selectedYear}</p>
+            <p className="text-sm">
+              {(ov?.noActivity ?? "No activity recorded for {year}").replace(
+                "{year}",
+                String(selectedYear)
+              )}
+            </p>
           </div>
         )}
       </div>
@@ -451,7 +464,7 @@ export default function ContributionActivity({
       {/* Show more button */}
       <div className="pt-4">
         <Button variant="outline" className="w-full" size="sm">
-          Show more activity
+          {ov?.showMoreActivity ?? "Show more activity"}
         </Button>
       </div>
     </div>

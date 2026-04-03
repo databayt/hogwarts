@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useState, useTransition } from "react"
+import { useCallback, useRef, useState } from "react"
 
 import { cn } from "@/lib/utils"
 import { useSchool } from "@/components/school-dashboard/context/school-context"
@@ -11,13 +11,14 @@ import {
 
 import { updateEnabledModules } from "./actions"
 
+const DEBOUNCE_MS = 600
+
 interface ConfigModulesFormProps {
   dictionary?: Record<string, string>
 }
 
 export function ConfigModulesForm({ dictionary }: ConfigModulesFormProps) {
   const { school } = useSchool()
-  const [isPending, startTransition] = useTransition()
 
   // Current enabled state: null = all enabled
   const initialEnabled = school.enabledModules as string[] | null
@@ -31,6 +32,33 @@ export function ConfigModulesForm({ dictionary }: ConfigModulesFormProps) {
 
   const allEnabled = enabledSet.size === toggleableModules.length
 
+  // Debounced save: batches rapid toggles into a single server call
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const savingRef = useRef(false)
+
+  const scheduleSave = useCallback(
+    (nextSet: Set<string>) => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current)
+      }
+      debounceRef.current = setTimeout(async () => {
+        debounceRef.current = null
+        const allOn = nextSet.size === toggleableModules.length
+        const payload = allOn ? null : Array.from(nextSet)
+
+        savingRef.current = true
+        try {
+          await updateEnabledModules(school.id, {
+            enabledModules: payload,
+          })
+        } finally {
+          savingRef.current = false
+        }
+      }, DEBOUNCE_MS)
+    },
+    [school.id]
+  )
+
   const handleToggle = useCallback(
     (key: string, checked: boolean) => {
       setEnabledSet((prev) => {
@@ -40,21 +68,11 @@ export function ConfigModulesForm({ dictionary }: ConfigModulesFormProps) {
         } else {
           next.delete(key)
         }
-
-        // Save: if all enabled, store null (default); otherwise store the list
-        const allOn = next.size === toggleableModules.length
-        const payload = allOn ? null : Array.from(next)
-
-        startTransition(async () => {
-          await updateEnabledModules(school.id, {
-            enabledModules: payload,
-          })
-        })
-
+        scheduleSave(next)
         return next
       })
     },
-    [school.id]
+    [scheduleSave]
   )
 
   const handleToggleAll = useCallback(() => {
@@ -64,12 +82,8 @@ export function ConfigModulesForm({ dictionary }: ConfigModulesFormProps) {
       : new Set<string>()
 
     setEnabledSet(next)
-
-    const payload = newAllEnabled ? null : []
-    startTransition(async () => {
-      await updateEnabledModules(school.id, { enabledModules: payload })
-    })
-  }, [allEnabled, school.id])
+    scheduleSave(next)
+  }, [allEnabled, scheduleSave])
 
   return (
     <div className="w-full max-w-[560px] space-y-6">
@@ -97,7 +111,6 @@ export function ConfigModulesForm({ dictionary }: ConfigModulesFormProps) {
             item={item}
             enabled={enabledSet.has(item.key)}
             onToggle={handleToggle}
-            isPending={isPending}
             dictionary={dictionary}
           />
         ))}
@@ -110,13 +123,11 @@ function ModuleCard({
   item,
   enabled,
   onToggle,
-  isPending,
   dictionary,
 }: {
   item: PlatformNavItem
   enabled: boolean
   onToggle: (key: string, checked: boolean) => void
-  isPending: boolean
   dictionary?: Record<string, string>
 }) {
   const label = dictionary?.[item.title] ?? item.title
@@ -127,12 +138,10 @@ function ModuleCard({
       className={cn(
         "cursor-pointer rounded-lg px-3 py-2.5 text-center text-xs font-medium transition-colors select-none",
         enabled
-          ? "bg-muted border-foreground border-2 text-foreground"
+          ? "bg-muted border-foreground text-foreground border-2"
           : "bg-muted text-muted-foreground hover:bg-muted/80"
       )}
-      onClick={() => {
-        if (!isPending) onToggle(item.key, !enabled)
-      }}
+      onClick={() => onToggle(item.key, !enabled)}
     >
       {label}
     </button>

@@ -29,6 +29,7 @@ interface EditProfileFormProps {
   data: Record<string, unknown>
   onSave: () => void
   onCancel: () => void
+  dictionary?: Record<string, any>
 }
 
 const PRONOUNS_OPTIONS = [
@@ -62,7 +63,9 @@ export default function EditProfileForm({
   data,
   onSave,
   onCancel,
+  dictionary,
 }: EditProfileFormProps) {
+  const f = dictionary?.form
   const fullName =
     `${(data.firstName as string) || ""} ${(data.lastName as string) || ""}`.trim()
   const existingSocial = (data.socialLinks as SocialLinks) || {}
@@ -110,7 +113,7 @@ export default function EditProfileForm({
       if (result.success) {
         onSave()
       } else {
-        setError(result.error || "Failed to save")
+        setError(result.error || f?.failedToSave || "Failed to save")
       }
     })
   }
@@ -122,42 +125,43 @@ export default function EditProfileForm({
       {/* Name */}
       <div className="space-y-1.5">
         <Label htmlFor="edit-name" className="text-xs font-semibold">
-          Name
+          {f?.name ?? "Name"}
         </Label>
         <Input
           id="edit-name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Name"
+          placeholder={f?.namePlaceholder ?? "Name"}
         />
       </div>
 
       {/* Bio */}
       <div className="space-y-1.5">
         <Label htmlFor="edit-bio" className="text-xs font-semibold">
-          Bio
+          {f?.bio ?? "Bio"}
         </Label>
         <Textarea
           id="edit-bio"
           value={bio}
           onChange={(e) => setBio(e.target.value)}
-          placeholder="Tell us about yourself"
+          placeholder={f?.bioPlaceholder ?? "Tell us about yourself"}
           rows={3}
           className="resize-none"
         />
         <p className="text-muted-foreground text-xs">
-          You can @mention other users and organizations to link to them.
+          {f?.bioHint ??
+            "You can @mention other users and organizations to link to them."}
         </p>
       </div>
 
       {/* Pronouns */}
       <div className="space-y-1.5">
         <Label htmlFor="edit-pronouns" className="text-xs font-semibold">
-          Pronouns
+          {f?.pronouns ?? "Pronouns"}
         </Label>
         <Select value={pronouns} onValueChange={setPronouns}>
           <SelectTrigger id="edit-pronouns">
-            <SelectValue placeholder="Don't specify" />
+            <SelectValue placeholder={f?.dontSpecify ?? "Don't specify"} />
           </SelectTrigger>
           <SelectContent>
             {PRONOUNS_OPTIONS.map((opt) => (
@@ -174,7 +178,7 @@ export default function EditProfileForm({
           <Input
             value={customPronouns}
             onChange={(e) => setCustomPronouns(e.target.value)}
-            placeholder="Custom pronouns"
+            placeholder={f?.customPronouns ?? "Custom pronouns"}
             className="mt-1.5"
           />
         )}
@@ -183,7 +187,7 @@ export default function EditProfileForm({
       {/* Company */}
       <div className="space-y-1.5">
         <Label htmlFor="edit-company" className="text-xs font-semibold">
-          Company
+          {f?.company ?? "Company"}
         </Label>
         <div className="flex items-center gap-2">
           <OcticonOrganization className="text-muted-foreground size-4 shrink-0" />
@@ -191,7 +195,7 @@ export default function EditProfileForm({
             id="edit-company"
             value={company}
             onChange={(e) => setCompany(e.target.value)}
-            placeholder="Company"
+            placeholder={f?.companyPlaceholder ?? "Company"}
           />
         </div>
       </div>
@@ -199,7 +203,7 @@ export default function EditProfileForm({
       {/* Location */}
       <div className="space-y-1.5">
         <Label htmlFor="edit-location" className="text-xs font-semibold">
-          Location
+          {f?.location ?? "Location"}
         </Label>
         <div className="flex items-center gap-2">
           <MapPin className="text-muted-foreground size-4 shrink-0" />
@@ -207,7 +211,7 @@ export default function EditProfileForm({
             id="edit-location"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            placeholder="Location"
+            placeholder={f?.locationPlaceholder ?? "Location"}
           />
         </div>
       </div>
@@ -222,13 +226,15 @@ export default function EditProfileForm({
             onCheckedChange={(checked) => setShowLocalTime(checked === true)}
           />
           <Label htmlFor="edit-localtime" className="cursor-pointer text-xs">
-            Display current local time
+            {f?.displayLocalTime ?? "Display current local time"}
           </Label>
         </div>
         {showLocalTime && (
           <Select value={timezone} onValueChange={setTimezone}>
             <SelectTrigger className="ms-6">
-              <SelectValue placeholder="Select timezone" />
+              <SelectValue
+                placeholder={f?.selectTimezone ?? "Select timezone"}
+              />
             </SelectTrigger>
             <SelectContent>
               {TIMEZONE_OPTIONS.map((tz) => (
@@ -246,7 +252,7 @@ export default function EditProfileForm({
 
       {/* Email */}
       <div className="space-y-1.5">
-        <Label className="text-xs font-semibold">Email</Label>
+        <Label className="text-xs font-semibold">{f?.email ?? "Email"}</Label>
         <div className="flex items-center gap-2">
           <Mail className="text-muted-foreground size-4 shrink-0" />
           <Input
@@ -260,7 +266,7 @@ export default function EditProfileForm({
       {/* Website */}
       <div className="space-y-1.5">
         <Label htmlFor="edit-website" className="text-xs font-semibold">
-          Website
+          {f?.website ?? "Website"}
         </Label>
         <div className="flex items-center gap-2">
           <Link className="text-muted-foreground size-4 shrink-0" />
@@ -268,21 +274,23 @@ export default function EditProfileForm({
             id="edit-website"
             value={website}
             onChange={(e) => setWebsite(e.target.value)}
-            placeholder="https://example.com"
+            placeholder={f?.websitePlaceholder ?? "https://example.com"}
           />
         </div>
       </div>
 
       {/* Social accounts */}
       <div className="space-y-1.5">
-        <Label className="text-xs font-semibold">Social accounts</Label>
+        <Label className="text-xs font-semibold">
+          {f?.socialAccounts ?? "Social accounts"}
+        </Label>
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <Link className="text-muted-foreground size-4 shrink-0" />
             <Input
               value={socialGithub}
               onChange={(e) => setSocialGithub(e.target.value)}
-              placeholder="Link to social profile"
+              placeholder={f?.socialPlaceholder ?? "Link to social profile"}
             />
           </div>
           <div className="flex items-center gap-2">
@@ -290,7 +298,7 @@ export default function EditProfileForm({
             <Input
               value={socialTwitter}
               onChange={(e) => setSocialTwitter(e.target.value)}
-              placeholder="Link to social profile"
+              placeholder={f?.socialPlaceholder ?? "Link to social profile"}
             />
           </div>
           <div className="flex items-center gap-2">
@@ -298,7 +306,7 @@ export default function EditProfileForm({
             <Input
               value={socialLinkedin}
               onChange={(e) => setSocialLinkedin(e.target.value)}
-              placeholder="Link to social profile"
+              placeholder={f?.socialPlaceholder ?? "Link to social profile"}
             />
           </div>
         </div>
@@ -307,7 +315,7 @@ export default function EditProfileForm({
       {/* Footer */}
       <div className="flex items-center gap-3 pt-2">
         <Button size="sm" onClick={handleSave} disabled={isPending}>
-          {isPending ? "Saving..." : "Save"}
+          {isPending ? (f?.saving ?? "Saving...") : (f?.save ?? "Save")}
         </Button>
         <Button
           variant="ghost"
@@ -315,7 +323,7 @@ export default function EditProfileForm({
           onClick={onCancel}
           disabled={isPending}
         >
-          Cancel
+          {f?.cancel ?? "Cancel"}
         </Button>
       </div>
     </div>

@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useCallback, useRef, useState, useTransition } from "react"
+import { useCallback, useEffect, useRef, useState, useTransition } from "react"
 import { Check, Copy, Loader2, Printer } from "lucide-react"
 
 import { formatDate } from "@/lib/i18n-format"
@@ -150,18 +150,21 @@ export function AccessCodeDialog({
   }, [codes])
 
   // Auto-generate when dialog opens with students
+  useEffect(() => {
+    if (open && studentIds.length > 0 && codes.length === 0 && !isPending) {
+      handleGenerate()
+    }
+  }, [open, studentIds, codes.length, isPending, handleGenerate])
+
   const handleOpenChange = useCallback(
     (nextOpen: boolean) => {
-      if (nextOpen && studentIds.length > 0 && codes.length === 0) {
-        handleGenerate()
-      }
       if (!nextOpen) {
         setCodes([])
         setError(null)
       }
       onOpenChange(nextOpen)
     },
-    [studentIds, codes.length, handleGenerate, onOpenChange]
+    [onOpenChange]
   )
 
   return (

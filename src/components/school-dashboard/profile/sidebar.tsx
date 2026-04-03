@@ -42,6 +42,7 @@ interface ProfileSidebarProps {
   role: ProfileRole
   data: Record<string, unknown>
   isOwner?: boolean
+  dictionary?: Record<string, any>
 }
 
 function getAchievementBadgeSrc(badgeName: string): string {
@@ -471,10 +472,13 @@ function getRoleConfig(role: ProfileRole, data: Record<string, unknown>) {
   }
 }
 
-function formatDate(date: string | Date | undefined): string {
+function formatDate(date: string | Date | undefined, locale?: string): string {
   if (!date) return "N/A"
   const d = new Date(date)
-  return d.toLocaleDateString("en-US", { month: "short", year: "numeric" })
+  return d.toLocaleDateString(locale === "ar" ? "ar-SA" : "en-US", {
+    month: "short",
+    year: "numeric",
+  })
 }
 
 const achievementDetailBg: Record<string, string> = {
@@ -489,8 +493,10 @@ const achievementDetailBg: Record<string, string> = {
 
 function AchievementPopover({
   achievement,
+  dictionary,
 }: {
   achievement: ProfileAchievement
+  dictionary?: Record<string, any>
 }) {
   const earnedDate = achievement.earnedAt
     ? new Date(achievement.earnedAt).toLocaleDateString("en-US", {
@@ -549,13 +555,15 @@ function AchievementPopover({
             <hr className="border-border mx-4 mt-3" />
             <div className="space-y-1.5 px-4 pt-3 pb-3">
               <h4 className="text-muted-foreground mb-2 text-xs font-bold">
-                History
+                {dictionary?.sidebar?.history ?? "History"}
               </h4>
               {earnedDate && (
                 <div className="flex items-center gap-2 text-xs">
                   <OcticonTrophy className="text-muted-foreground size-4" />
                   <span className="text-muted-foreground">
-                    Unlocked on {earnedDate}
+                    {(
+                      dictionary?.sidebar?.unlockedOn ?? "Unlocked on {date}"
+                    ).replace("{date}", earnedDate)}
                   </span>
                 </div>
               )}
@@ -579,11 +587,13 @@ export default function ProfileSidebar({
   role,
   data,
   isOwner = false,
+  dictionary,
 }: ProfileSidebarProps) {
   const { isMobile } = useSidebar()
   const useMobileLayout = isMobile
   const config = getRoleConfig(role, data)
   const [isEditing, setIsEditing] = useState(false)
+  const p = dictionary
 
   return (
     <TooltipProvider>
@@ -613,6 +623,7 @@ export default function ProfileSidebar({
             data={data}
             onSave={() => setIsEditing(false)}
             onCancel={() => setIsEditing(false)}
+            dictionary={p}
           />
         ) : (
           <>
@@ -641,7 +652,7 @@ export default function ProfileSidebar({
                 size="sm"
                 onClick={() => setIsEditing(true)}
               >
-                Edit profile
+                {p?.sidebar?.editProfile ?? "Edit profile"}
               </Button>
             )}
 
@@ -680,13 +691,14 @@ export default function ProfileSidebar({
         {config.achievements.length > 0 && (
           <div className="border-border border-t pt-4">
             <h3 className="text-foreground mb-3 text-sm font-semibold">
-              Achievements
+              {p?.sidebar?.achievements ?? "Achievements"}
             </h3>
             <div className="flex flex-wrap gap-2">
               {config.achievements.map((achievement) => (
                 <AchievementPopover
                   key={achievement.id}
                   achievement={achievement}
+                  dictionary={p}
                 />
               ))}
             </div>
@@ -697,7 +709,7 @@ export default function ProfileSidebar({
         {config.organizations.length > 0 && (
           <div className="border-border border-t pt-4">
             <h3 className="text-foreground mb-3 text-sm font-semibold">
-              Organizations
+              {p?.sidebar?.organizations ?? "Organizations"}
             </h3>
             <div className="flex flex-wrap gap-2">
               {config.organizations.map((org) => (

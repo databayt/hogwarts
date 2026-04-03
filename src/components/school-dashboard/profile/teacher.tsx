@@ -31,6 +31,7 @@ import { ProfileEditSection } from "./edit-role-data"
 interface TeacherDashboardProps {
   data: Record<string, unknown>
   isOwner?: boolean
+  dictionary?: Record<string, any>
 }
 
 // Classes being taught
@@ -96,7 +97,9 @@ const TOP_STUDENTS = [
 export default function TeacherDashboard({
   data,
   isOwner,
+  dictionary,
 }: TeacherDashboardProps) {
+  const t = dictionary?.teacher
   const { open, isMobile } = useSidebar()
   const useMobileLayout = isMobile || open
 
@@ -106,9 +109,12 @@ export default function TeacherDashboard({
       {isOwner && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Edit Your Information</CardTitle>
+            <CardTitle className="text-base">
+              {t?.editTitle ?? "Edit Your Information"}
+            </CardTitle>
             <CardDescription>
-              Update your contact details, qualifications, and experience
+              {t?.editDescription ??
+                "Update your contact details, qualifications, and experience"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -133,13 +139,16 @@ export default function TeacherDashboard({
           <CardHeader className="pb-2">
             <CardDescription className="flex items-center gap-2">
               <Users className="size-4 text-blue-500" />
-              Total Students
+              {t?.totalStudents ?? "Total Students"}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <span className="text-3xl font-bold text-blue-500">127</span>
             <p className="text-muted-foreground mt-1 text-xs">
-              Across 6 classes
+              {(t?.acrossClasses ?? "Across {count} classes").replace(
+                "{count}",
+                "6"
+              )}
             </p>
           </CardContent>
         </Card>
@@ -148,13 +157,13 @@ export default function TeacherDashboard({
           <CardHeader className="pb-2">
             <CardDescription className="flex items-center gap-2">
               <FileText className="size-4 text-orange-500" />
-              Pending Grades
+              {t?.pendingGrades ?? "Pending Grades"}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <span className="text-3xl font-bold text-orange-500">23</span>
             <p className="text-muted-foreground mt-1 text-xs">
-              Assignments to grade
+              {t?.assignmentsToGrade ?? "Assignments to grade"}
             </p>
           </CardContent>
         </Card>
@@ -163,13 +172,13 @@ export default function TeacherDashboard({
           <CardHeader className="pb-2">
             <CardDescription className="flex items-center gap-2">
               <TrendingUp className="size-4 text-emerald-500" />
-              Class Average
+              {t?.classAverage ?? "Class Average"}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <span className="text-3xl font-bold text-emerald-500">B+</span>
             <p className="text-muted-foreground mt-1 text-xs">
-              All classes combined
+              {t?.allClassesCombined ?? "All classes combined"}
             </p>
           </CardContent>
         </Card>
@@ -178,13 +187,13 @@ export default function TeacherDashboard({
           <CardHeader className="pb-2">
             <CardDescription className="flex items-center gap-2">
               <Calendar className="size-4 text-purple-500" />
-              Classes Today
+              {t?.classesToday ?? "Classes Today"}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <span className="text-3xl font-bold text-purple-500">3</span>
             <p className="text-muted-foreground mt-1 text-xs">
-              Next at 9:00 AM
+              {(t?.nextAt ?? "Next at {time}").replace("{time}", "9:00 AM")}
             </p>
           </CardContent>
         </Card>
@@ -202,9 +211,11 @@ export default function TeacherDashboard({
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Calendar className="text-primary size-5" />
-              Today's Classes
+              {t?.todaysClasses ?? "Today's Classes"}
             </CardTitle>
-            <CardDescription>Your teaching schedule for today</CardDescription>
+            <CardDescription>
+              {t?.scheduleForToday ?? "Your teaching schedule for today"}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {CLASSES.map((cls, idx) => (
@@ -246,9 +257,11 @@ export default function TeacherDashboard({
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <FileText className="size-5 text-orange-500" />
-              Grading Queue
+              {t?.gradingQueue ?? "Grading Queue"}
             </CardTitle>
-            <CardDescription>Assignments waiting for review</CardDescription>
+            <CardDescription>
+              {t?.assignmentsWaiting ?? "Assignments waiting for review"}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {GRADING_TASKS.map((task, idx) => {
@@ -286,7 +299,7 @@ export default function TeacherDashboard({
               )
             })}
             <button className="text-primary w-full py-2 text-sm hover:underline">
-              View all assignments
+              {t?.viewAllAssignments ?? "View all assignments"}
             </button>
           </CardContent>
         </Card>
@@ -297,9 +310,11 @@ export default function TeacherDashboard({
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Award className="size-5 text-amber-500" />
-            Top Performing Students
+            {t?.topPerforming ?? "Top Performing Students"}
           </CardTitle>
-          <CardDescription>Students showing excellent progress</CardDescription>
+          <CardDescription>
+            {t?.excellentProgress ?? "Students showing excellent progress"}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div
@@ -344,8 +359,12 @@ export default function TeacherDashboard({
       {/* Teaching Load Summary */}
       <Card className="border-border">
         <CardHeader>
-          <CardTitle className="text-base">Weekly Teaching Load</CardTitle>
-          <CardDescription>Your class distribution this week</CardDescription>
+          <CardTitle className="text-base">
+            {t?.weeklyTeachingLoad ?? "Weekly Teaching Load"}
+          </CardTitle>
+          <CardDescription>
+            {t?.classDistribution ?? "Your class distribution this week"}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div

@@ -33,19 +33,23 @@ export function ProfileDetailContent({
 }: ProfileDetailContentProps) {
   const router = useRouter()
 
+  const p = (dictionary as any)?.profile
+
   // Error state
   if (error || !profileData) {
     return (
       <div className="space-y-4">
         <Alert variant="destructive">
           <CircleAlert className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
+          <AlertTitle>{p?.errors?.error ?? "Error"}</AlertTitle>
           <AlertDescription>
-            {error || "Failed to load profile"}
+            {error || p?.errors?.failedToLoad || "Failed to load profile"}
           </AlertDescription>
         </Alert>
         <div className="mt-4">
-          <Button onClick={() => router.back()}>Go Back</Button>
+          <Button onClick={() => router.back()}>
+            {p?.errors?.goBack ?? "Go Back"}
+          </Button>
         </div>
       </div>
     )

@@ -177,6 +177,8 @@ export default function ProfileContent({
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
   const [showBanner, setShowBanner] = useState(true)
 
+  const p = (dictionary as any)?.profile
+
   const years = Array.from(
     { length: 11 },
     (_, i) => new Date().getFullYear() - i
@@ -190,13 +192,13 @@ export default function ProfileContent({
   const getRoleDashboard = () => {
     switch (role) {
       case "student":
-        return <StudentDashboard data={data} isOwner={isOwner} />
+        return <StudentDashboard data={data} isOwner={isOwner} dictionary={p} />
       case "teacher":
-        return <TeacherDashboard data={data} isOwner={isOwner} />
+        return <TeacherDashboard data={data} isOwner={isOwner} dictionary={p} />
       case "staff":
-        return <StaffDashboard data={data} />
+        return <StaffDashboard data={data} dictionary={p} />
       case "parent":
-        return <ParentDashboard data={data} />
+        return <ParentDashboard data={data} dictionary={p} />
       default:
         return null
     }
@@ -215,7 +217,9 @@ export default function ProfileContent({
                 className="text-muted-foreground data-[state=active]:text-foreground hover:text-foreground data-[state=active]:border-b-primary relative gap-2 !rounded-none !border-0 !border-b-2 border-transparent px-1 py-3 text-[13px] font-medium !shadow-none !ring-0 transition-colors !outline-none focus-visible:!border-transparent focus-visible:!ring-0 focus-visible:!outline-none data-[state=active]:!border-0 data-[state=active]:!border-b-2 data-[state=active]:!bg-transparent data-[state=active]:!shadow-none"
               >
                 {tab.icon}
-                <span className="hidden sm:inline">{tab.label}</span>
+                <span className="hidden sm:inline">
+                  {p?.tabs?.[tab.id] ?? tab.label}
+                </span>
                 {tab.count !== undefined && (
                   <Badge
                     variant="secondary"
@@ -235,10 +239,10 @@ export default function ProfileContent({
           {isOwner && showBanner && (
             <div className="flex items-start gap-3 rounded border border-[#54aeff]/40 bg-[#ddf4ff] px-3 py-4 dark:border-blue-800/40 dark:bg-blue-950/30">
               <p className="text-foreground flex-1 text-xs">
-                You unlocked new Achievements with private contributions! Show
-                them off by including private contributions in your Profile in{" "}
+                {p?.overview?.bannerText ??
+                  "You unlocked new Achievements with private contributions! Show them off by including private contributions in your Profile in"}{" "}
                 <a href="#" className="text-[#0969da] hover:underline">
-                  settings
+                  {p?.overview?.settings ?? "settings"}
                 </a>
                 .
               </p>
@@ -252,7 +256,7 @@ export default function ProfileContent({
           )}
 
           {/* Pinned Section */}
-          <PinnedItems role={role} data={data} />
+          <PinnedItems role={role} data={data} dictionary={p} />
 
           {/* Content + Year Column */}
           <div className="flex gap-4">
@@ -261,10 +265,16 @@ export default function ProfileContent({
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <h3 className="text-foreground text-sm font-medium">
-                    1,086 contributions in {new Date().getFullYear()}
+                    {(
+                      p?.overview?.contributionsIn ??
+                      "1,086 contributions in {year}"
+                    )
+                      .replace("{count}", "1,086")
+                      .replace("{year}", String(new Date().getFullYear()))}
                   </h3>
                   <button className="text-muted-foreground flex items-center gap-0.5 text-xs transition-colors hover:text-[#0969da] hover:underline">
-                    Contribution settings
+                    {p?.overview?.contributionSettings ??
+                      "Contribution settings"}
                     <OcticonTriangleDown className="size-4" />
                   </button>
                 </div>
@@ -283,6 +293,7 @@ export default function ProfileContent({
                 data={data}
                 selectedYear={selectedYear}
                 onYearChange={setSelectedYear}
+                dictionary={p}
               />
             </div>
             <div className="hidden w-24 flex-col gap-1.5 pt-2 sm:flex">
@@ -305,7 +316,7 @@ export default function ProfileContent({
           {/* Icon Reference Grid */}
           <div className="border-border rounded-md border p-3">
             <h3 className="text-foreground mb-4 text-sm font-semibold">
-              Octicon Icons
+              {p?.overview?.octiconIcons ?? "Octicon Icons"}
             </h3>
             <div className="grid grid-cols-5 gap-4 sm:grid-cols-7 md:grid-cols-10">
               {[
@@ -374,9 +385,10 @@ export default function ProfileContent({
 
       {/* Footer Help Link */}
       <p className="text-muted-foreground pb-6 text-center text-sm">
-        Need help navigating the system? Check out the{" "}
+        {p?.overview?.footerHelp ??
+          "Need help navigating the system? Check out the"}{" "}
         <a href="#" className="text-primary hover:underline">
-          school portal guide
+          {p?.overview?.portalGuide ?? "school portal guide"}
         </a>
         .
       </p>
@@ -391,7 +403,12 @@ export default function ProfileContent({
           <div className="flex flex-col gap-6 px-4 pb-6">
             {/* Profile Sidebar - Left-aligned when stacked */}
             <div className="flex justify-start">
-              <ProfileSidebar role={role} data={data} isOwner={isOwner} />
+              <ProfileSidebar
+                role={role}
+                data={data}
+                isOwner={isOwner}
+                dictionary={p}
+              />
             </div>
 
             {/* Main Content - Full width below */}
@@ -404,7 +421,12 @@ export default function ProfileContent({
           <div className="grid grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-4 lg:px-0">
             {/* Left Sidebar */}
             <div className="min-w-0 lg:col-span-1">
-              <ProfileSidebar role={role} data={data} isOwner={isOwner} />
+              <ProfileSidebar
+                role={role}
+                data={data}
+                isOwner={isOwner}
+                dictionary={p}
+              />
             </div>
 
             {/* Main Content */}

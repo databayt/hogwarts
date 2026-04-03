@@ -30,6 +30,7 @@ import { ProfileEditSection } from "./edit-role-data"
 interface StudentDashboardProps {
   data: Record<string, unknown>
   isOwner?: boolean
+  dictionary?: Record<string, any>
 }
 
 // Subject performance data
@@ -135,7 +136,9 @@ const ACHIEVEMENTS = [
 export default function StudentDashboard({
   data,
   isOwner,
+  dictionary,
 }: StudentDashboardProps) {
+  const s = dictionary?.student
   const { open, isMobile } = useSidebar()
   const useMobileLayout = isMobile || open
 
@@ -158,9 +161,12 @@ export default function StudentDashboard({
       {isOwner && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Edit Your Information</CardTitle>
+            <CardTitle className="text-base">
+              {s?.editTitle ?? "Edit Your Information"}
+            </CardTitle>
             <CardDescription>
-              Update your contact details and emergency contacts
+              {s?.editDescription ??
+                "Update your contact details and emergency contacts"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -182,7 +188,7 @@ export default function StudentDashboard({
           <CardHeader className="pb-2">
             <CardDescription className="flex items-center gap-2">
               <TrendingUp className="size-4 text-emerald-500" />
-              Current GPA
+              {s?.currentGPA ?? "Current GPA"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -192,7 +198,10 @@ export default function StudentDashboard({
             </div>
             <Progress value={95} className="mt-2 h-1.5" />
             <p className="text-muted-foreground mt-2 text-xs">
-              Top 5% of class
+              {(s?.topPercent ?? "Top {percent}% of class").replace(
+                "{percent}",
+                "5"
+              )}
             </p>
           </CardContent>
         </Card>
@@ -201,7 +210,7 @@ export default function StudentDashboard({
           <CardHeader className="pb-2">
             <CardDescription className="flex items-center gap-2">
               <Calendar className="size-4 text-blue-500" />
-              Attendance Rate
+              {s?.attendanceRate ?? "Attendance Rate"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -209,7 +218,9 @@ export default function StudentDashboard({
               <span className="text-3xl font-bold text-blue-500">95%</span>
             </div>
             <Progress value={95} className="mt-2 h-1.5" />
-            <p className="text-muted-foreground mt-2 text-xs">This semester</p>
+            <p className="text-muted-foreground mt-2 text-xs">
+              {s?.thisSemester ?? "This semester"}
+            </p>
           </CardContent>
         </Card>
 
@@ -217,19 +228,22 @@ export default function StudentDashboard({
           <CardHeader className="pb-2">
             <CardDescription className="flex items-center gap-2">
               <Target className="size-4 text-purple-500" />
-              Assignments
+              {s?.assignments ?? "Assignments"}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-baseline gap-2">
               <span className="text-3xl font-bold text-purple-500">12</span>
               <span className="text-muted-foreground text-sm">
-                / 15 completed
+                / 15 {s?.completed ?? "completed"}
               </span>
             </div>
             <Progress value={80} className="mt-2 h-1.5" />
             <p className="text-muted-foreground mt-2 text-xs">
-              3 pending this week
+              {(s?.pendingThisWeek ?? "{count} pending this week").replace(
+                "{count}",
+                "3"
+              )}
             </p>
           </CardContent>
         </Card>
@@ -247,9 +261,11 @@ export default function StudentDashboard({
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <BookOpen className="text-primary size-5" />
-              Upcoming Assignments
+              {s?.upcomingAssignments ?? "Upcoming Assignments"}
             </CardTitle>
-            <CardDescription>Tasks due this week</CardDescription>
+            <CardDescription>
+              {s?.tasksDueThisWeek ?? "Tasks due this week"}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {ASSIGNMENTS.filter((a) => a.status !== "completed")
@@ -289,7 +305,7 @@ export default function StudentDashboard({
                 </div>
               ))}
             <button className="text-primary w-full py-2 text-sm hover:underline">
-              View all assignments
+              {s?.viewAllAssignments ?? "View all assignments"}
             </button>
           </CardContent>
         </Card>
@@ -299,9 +315,11 @@ export default function StudentDashboard({
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Trophy className="size-5 text-amber-500" />
-              Recent Achievements
+              {s?.recentAchievements ?? "Recent Achievements"}
             </CardTitle>
-            <CardDescription>Your latest accomplishments</CardDescription>
+            <CardDescription>
+              {s?.latestAccomplishments ?? "Your latest accomplishments"}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {ACHIEVEMENTS.map((achievement, idx) => (
@@ -324,7 +342,7 @@ export default function StudentDashboard({
               </div>
             ))}
             <button className="text-primary w-full py-2 text-sm hover:underline">
-              View all achievements
+              {s?.viewAllAchievements ?? "View all achievements"}
             </button>
           </CardContent>
         </Card>
@@ -333,8 +351,12 @@ export default function StudentDashboard({
       {/* Subject Performance */}
       <Card className="border-border">
         <CardHeader>
-          <CardTitle className="text-base">Subject Performance</CardTitle>
-          <CardDescription>Your grades across all subjects</CardDescription>
+          <CardTitle className="text-base">
+            {s?.subjectPerformance ?? "Subject Performance"}
+          </CardTitle>
+          <CardDescription>
+            {s?.gradesAcrossSubjects ?? "Your grades across all subjects"}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div
