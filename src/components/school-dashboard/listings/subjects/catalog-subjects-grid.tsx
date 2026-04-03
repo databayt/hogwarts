@@ -78,9 +78,13 @@ export function SubjectsGrid({ subjects, lang, subdomain }: Props) {
   const noResults = cat?.noSubjectsFound || "No subjects found"
 
   const sorted = useMemo(() => {
-    return [...subjects].sort((a, b) =>
-      a.name.localeCompare(b.name, lang === "ar" ? "ar" : "en")
-    )
+    return [...subjects].sort((a, b) => {
+      // Sort by lowest grade first, then by name
+      const gradeA = a.grades[0] ?? 0
+      const gradeB = b.grades[0] ?? 0
+      if (gradeA !== gradeB) return gradeA - gradeB
+      return a.name.localeCompare(b.name, lang === "ar" ? "ar" : "en")
+    })
   }, [subjects, lang])
 
   if (sorted.length === 0) {
