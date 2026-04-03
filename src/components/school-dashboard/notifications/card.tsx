@@ -127,6 +127,7 @@ export function NotificationCard({
           !notification.read ? "bg-accent/30" : "hover:bg-accent/50",
           isDeleting && "pointer-events-none opacity-50"
         )}
+        dir={locale === "ar" ? "rtl" : "ltr"}
         onClick={handleClick}
         role="article"
         aria-label={`${

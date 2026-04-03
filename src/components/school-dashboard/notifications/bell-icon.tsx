@@ -40,7 +40,7 @@ export function NotificationBellIcon({
     recentNotifications,
     markAsRead,
     markAllAsRead,
-  } = useNotificationBell()
+  } = useNotificationBell(locale)
 
   const handleNotificationRead = useCallback(
     (notificationId: string) => {
@@ -131,6 +131,7 @@ export function NotificationBellIcon({
           className="w-[380px] overflow-hidden p-0 sm:w-[420px]"
           align="end"
           sideOffset={8}
+          dir={locale === "ar" ? "rtl" : "ltr"}
         >
           <NotificationListScrollable
             notifications={recentNotifications}
@@ -156,7 +157,7 @@ export function NotificationBellIconCompact({
   className,
 }: Omit<NotificationBellIconProps, "showConnectionStatus">) {
   const router = useRouter()
-  const { unreadCount } = useNotificationBell()
+  const { unreadCount } = useNotificationBell(locale)
 
   const handleClick = useCallback(() => {
     router.push(`/${locale}/notifications`)

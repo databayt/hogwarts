@@ -22,6 +22,7 @@ interface UseNotificationsOptions {
   autoSubscribe?: boolean
   showToast?: boolean
   pollInterval?: number // Polling interval in ms (default: 30000)
+  locale?: "ar" | "en" // Display locale for translating notification content
   onNewNotification?: (notification: NotificationDTO) => void
   onNotificationRead?: (notificationId: string) => void
   onNotificationDeleted?: (notificationId: string) => void
@@ -187,7 +188,7 @@ export function useNotifications(
     const poll = async () => {
       if (!active) return
       try {
-        const data = await fetchNotificationBellData()
+        const data = await fetchNotificationBellData(options.locale)
         if (!active || !data) return
         setUnreadCount(data.unreadCount)
         if (data.recent.length > 0) {
@@ -224,7 +225,7 @@ export function useNotifications(
       active = false
       clearInterval(timer)
     }
-  }, [isConnected, session, options.pollInterval, options.showToast])
+  }, [isConnected, session, options.pollInterval, options.showToast, options.locale])
 
   // Set up notification event listeners
   useEffect(() => {
@@ -268,9 +269,10 @@ export function useNotifications(
           toast({
             title: notification.title,
             description: notification.body,
-            // @ts-ignore - variant exists
             variant:
-              notification.priority === "urgent" ? "destructive" : "default",
+              notification.priority === "urgent"
+                ? "destructive"
+                : ("default" as const),
           })
         }
 
@@ -339,8 +341,12 @@ export function useNotifications(
 /**
  * Hook for notification bell component
  * Simplified version with just count and recent notifications
+ *
+ * @param locale - Display locale so polled notifications are translated to the
+ *   correct language (en/ar). Without this, the server action falls back to
+ *   header sniffing which is unreliable for client-initiated fetches.
  */
-export function useNotificationBell() {
+export function useNotificationBell(locale?: "ar" | "en") {
   const {
     isConnected,
     unreadCount,
@@ -351,6 +357,7 @@ export function useNotificationBell() {
     autoConnect: true,
     autoSubscribe: true,
     showToast: false, // Don't show toast for bell, it has its own UI
+    locale,
   })
 
   return {
@@ -366,7 +373,7 @@ export function useNotificationBell() {
  * Hook for notification center component
  * Full-featured version with all notifications
  */
-export function useNotificationCenter() {
+export function useNotificationCenter(locale?: "ar" | "en") {
   const {
     isConnected,
     unreadCount,
@@ -378,6 +385,7 @@ export function useNotificationCenter() {
     autoConnect: true,
     autoSubscribe: true,
     showToast: true,
+    locale,
   })
 
   return {

@@ -206,7 +206,7 @@ export function NotificationListScrollable({
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full" dir={locale === "ar" ? "rtl" : "ltr"}>
       {/* Header - clean Airbnb style */}
       <div className="flex items-center justify-between border-b px-4 py-3">
         <h3 className="text-base font-semibold">{dictionary.title}</h3>
