@@ -557,7 +557,27 @@
         "classrooms": "الفصول",
         "yearLevels": "مستويات سنوية",
         "completeSetup": "أكمل إعداد مدرستك",
-        "steps": "خطوات"
+        "steps": "خطوات",
+        "logo": "شعار",
+        "plan": "خطة",
+        "types": {
+          "private": "خاص",
+          "public": "حكومي",
+          "international": "دولي",
+          "technical": "تقني",
+          "special": "تربية خاصة"
+        },
+        "levels": {
+          "primary": "ابتدائي",
+          "secondary": "ثانوي",
+          "both": "كلاهما (K-12)"
+        },
+        "plans": {
+          "free": "مجاني",
+          "starter": "أساسي",
+          "premium": "متميز",
+          "enterprise": "مؤسسي"
+        }
       }
     },
     "bulk": {

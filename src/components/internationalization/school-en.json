@@ -557,7 +557,27 @@
         "classrooms": "Classrooms",
         "yearLevels": "year levels",
         "completeSetup": "Complete Your School Setup",
-        "steps": "Steps"
+        "steps": "Steps",
+        "logo": "Logo",
+        "plan": "plan",
+        "types": {
+          "private": "Private",
+          "public": "Public",
+          "international": "International",
+          "technical": "Technical",
+          "special": "Special Education"
+        },
+        "levels": {
+          "primary": "Primary",
+          "secondary": "Secondary",
+          "both": "Both (K-12)"
+        },
+        "plans": {
+          "free": "Free",
+          "starter": "Starter",
+          "premium": "Premium",
+          "enterprise": "Enterprise"
+        }
       }
     },
     "bulk": {

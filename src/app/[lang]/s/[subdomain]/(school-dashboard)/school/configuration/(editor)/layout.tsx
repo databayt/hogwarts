@@ -110,12 +110,21 @@ export default async function EditorLayout({ children, params }: Props) {
     if (!school) return null
 
     const cs = d as Record<string, unknown> | undefined
+    const types = (cs?.types as Record<string, string>) ?? {}
+    const levels = (cs?.levels as Record<string, string>) ?? {}
+    const plans = (cs?.plans as Record<string, string>) ?? {}
 
     switch (key) {
       case "title":
         return school.name || null
       case "description": {
-        const parts = [school.schoolType, school.schoolLevel].filter(Boolean)
+        const translatedType = school.schoolType
+          ? (types[school.schoolType] ?? school.schoolType)
+          : null
+        const translatedLevel = school.schoolLevel
+          ? (levels[school.schoolLevel] ?? school.schoolLevel)
+          : null
+        const parts = [translatedType, translatedLevel].filter(Boolean)
         return parts.length > 0 ? parts.join(" · ") : null
       }
       case "location": {
@@ -125,8 +134,9 @@ export default async function EditorLayout({ children, params }: Props) {
         return parts.length > 0 ? parts.join(", ") : null
       }
       case "branding": {
+        const logoLabel = (cs?.logo as string) ?? "Logo"
         const parts = [
-          school.logoUrl ? "Logo" : null,
+          school.logoUrl ? logoLabel : null,
           branding?.primaryColor,
         ].filter(Boolean)
         return parts.length > 0 ? parts.join(" · ") : null
@@ -134,8 +144,11 @@ export default async function EditorLayout({ children, params }: Props) {
       case "plan": {
         if (!school.planType && !school.maxStudents) return null
         const studentsLabel = (cs?.students as string) ?? "students"
+        const translatedPlan = school.planType
+          ? (plans[school.planType] ?? school.planType)
+          : null
         const planParts = [
-          school.planType,
+          translatedPlan,
           school.maxStudents
             ? `${school.maxStudents} ${studentsLabel}`
             : null,
@@ -192,8 +205,12 @@ export default async function EditorLayout({ children, params }: Props) {
           return `${discountCount} ${discountLabel}`
         }
         return (cs?.noActiveDiscounts as string) ?? "No active discounts"
-      case "legal":
-        return school.planType ? `${school.planType} plan` : null
+      case "legal": {
+        if (!school.planType) return null
+        const translatedPlan = plans[school.planType] ?? school.planType
+        const planWord = (cs?.plan as string) ?? "plan"
+        return `${translatedPlan} ${planWord}`
+      }
       case "modules": {
         const em = school.enabledModules as string[] | null
         if (!em)
