@@ -208,7 +208,7 @@ export default async function EditorLayout({ children, params }: Props) {
       case "legal": {
         if (!school.planType) return null
         const translatedPlan = plans[school.planType] ?? school.planType
-        const planWord = (cs?.plan as string) ?? "plan"
+        const planWord = (cs?.planWord as string) ?? "plan"
         return `${translatedPlan} ${planWord}`
       }
       case "modules": {
