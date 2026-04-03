@@ -5,7 +5,6 @@ import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import { ReportIssue } from "@/components/report-issue"
 import { ConfigSidebar } from "@/components/school-dashboard/school/configuration/config-sidebar"
 
 interface Props {
@@ -106,9 +105,11 @@ export default async function EditorLayout({ children, params }: Props) {
     "domain",
   ] as const
 
-  // Build dynamic descriptions from live data
+  // Build dynamic descriptions from live data using dictionary strings
   function getDynamicDescription(key: string): string | null {
     if (!school) return null
+
+    const cs = d as Record<string, unknown> | undefined
 
     switch (key) {
       case "title":
@@ -132,16 +133,25 @@ export default async function EditorLayout({ children, params }: Props) {
       }
       case "plan": {
         if (!school.planType && !school.maxStudents) return null
+        const studentsLabel = (cs?.students as string) ?? "students"
         const planParts = [
           school.planType,
-          school.maxStudents ? `${school.maxStudents} students` : null,
+          school.maxStudents
+            ? `${school.maxStudents} ${studentsLabel}`
+            : null,
         ].filter(Boolean)
         return planParts.join(" · ")
       }
       case "capacity": {
+        const studentsLabel = (cs?.students as string) ?? "students"
+        const teachersLabel = (cs?.teachers as string) ?? "teachers"
         const capParts = [
-          school.maxStudents ? `${school.maxStudents} students` : null,
-          school.maxTeachers ? `${school.maxTeachers} teachers` : null,
+          school.maxStudents
+            ? `${school.maxStudents} ${studentsLabel}`
+            : null,
+          school.maxTeachers
+            ? `${school.maxTeachers} ${teachersLabel}`
+            : null,
         ].filter(Boolean)
         return capParts.length > 0 ? capParts.join(", ") : null
       }
@@ -154,41 +164,57 @@ export default async function EditorLayout({ children, params }: Props) {
         ].filter(Boolean)
         return priceParts.join(" ")
       }
-      case "schedule":
-        return `${yearCount} ${yearCount === 1 ? "year" : "years"}, ${termCount} ${termCount === 1 ? "term" : "terms"}`
+      case "schedule": {
+        const yearLabel =
+          yearCount === 1
+            ? ((cs?.year as string) ?? "year")
+            : ((cs?.years as string) ?? "years")
+        const termLabel =
+          termCount === 1
+            ? ((cs?.term as string) ?? "term")
+            : ((cs?.terms as string) ?? "terms")
+        return `${yearCount} ${yearLabel}, ${termCount} ${termLabel}`
+      }
       case "join":
         return branding?.allowSelfEnrollment
-          ? "Self-enrollment with codes"
-          : "Manual enrollment"
+          ? ((cs?.selfEnrollment as string) ?? "Self-enrollment with codes")
+          : ((cs?.manualEnrollment as string) ?? "Manual enrollment")
       case "visibility":
         return branding?.informationSharing === "full-transparency"
-          ? "Full transparency"
-          : "Limited sharing"
+          ? ((cs?.fullTransparency as string) ?? "Full transparency")
+          : ((cs?.limitedSharing as string) ?? "Limited sharing")
       case "discount":
-        return discountCount > 0
-          ? `${discountCount} active ${discountCount === 1 ? "discount" : "discounts"}`
-          : "No active discounts"
+        if (discountCount > 0) {
+          const discountLabel =
+            discountCount === 1
+              ? ((cs?.activeDiscount as string) ?? "active discount")
+              : ((cs?.activeDiscounts as string) ?? "active discounts")
+          return `${discountCount} ${discountLabel}`
+        }
+        return (cs?.noActiveDiscounts as string) ?? "No active discounts"
       case "legal":
         return school.planType ? `${school.planType} plan` : null
       case "modules": {
         const em = school.enabledModules as string[] | null
         if (!em)
-          return lang === "ar" ? "جميع الوحدات مفعلة" : "All modules enabled"
-        return lang === "ar"
-          ? `${em.length} وحدة مفعلة`
-          : `${em.length} modules enabled`
+          return (cs?.allModulesEnabled as string) ?? "All modules enabled"
+        const modulesLabel =
+          (cs?.modulesEnabled as string) ?? "modules enabled"
+        return `${em.length} ${modulesLabel}`
       }
       case "name-format":
         return school.nameFormat === "full"
-          ? "Full Name (single field)"
-          : "Split (First + Last)"
+          ? ((cs?.fullName as string) ?? "Full Name (single field)")
+          : ((cs?.splitName as string) ?? "Split (First + Last)")
       case "domain": {
         if (pendingDomainRequest) {
           const status =
-            pendingDomainRequest.status === "pending" ? "Pending" : "Active"
+            pendingDomainRequest.status === "pending"
+              ? ((cs?.pending as string) ?? "Pending")
+              : ((cs?.active as string) ?? "Active")
           return `${status}: ${pendingDomainRequest.domain}`
         }
-        return "No custom domain"
+        return (cs?.noCustomDomain as string) ?? "No custom domain"
       }
       default:
         return null
@@ -203,7 +229,7 @@ export default async function EditorLayout({ children, params }: Props) {
 
     return {
       key,
-      title: key,
+      title: section?.title ?? key,
       description: dynamicDesc ?? section?.description ?? "",
     }
   })
@@ -217,9 +243,6 @@ export default async function EditorLayout({ children, params }: Props) {
             <div className="flex min-h-full items-start justify-center py-8">
               <div className="w-full max-w-[400px]">
                 {children}
-                <div className="text-muted-foreground pt-8 pb-4 text-sm">
-                  <ReportIssue />
-                </div>
               </div>
             </div>
           </div>
