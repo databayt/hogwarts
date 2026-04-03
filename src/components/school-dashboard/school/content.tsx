@@ -3,26 +3,29 @@
 
 import Link from "next/link"
 import {
-  Activity,
+  ArrowRight,
   Bell,
+  BookOpen,
   Building,
   CheckCircle2,
-  CircleAlert,
   Cloud,
   Database,
   FileText,
+  GraduationCap,
   Mail,
   School,
   Server,
   Settings,
-  UserCheck,
+  Shield,
+  Upload,
   UserCog,
   Users,
 } from "lucide-react"
 
+import { cn } from "@/lib/utils"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import {
   Card,
   CardContent,
@@ -32,7 +35,6 @@ import {
 } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { TrialExpiryCardDemo } from "@/components/school-dashboard/billing/trial-expiry-card-demo"
 
 interface Props {
   dictionary: Dictionary
@@ -49,7 +51,6 @@ export default async function AdminContent({ dictionary, lang }: Props) {
   let totalDepartments = 0
   let totalClassrooms = 0
   let pendingApprovals = 0
-  const systemHealthScore = 95
 
   if (schoolId) {
     try {
@@ -91,316 +92,296 @@ export default async function AdminContent({ dictionary, lang }: Props) {
 
   const d = dictionary?.admin
 
+  // Stat card config with colors matching the dashboard Quick Look palette
+  const stats = [
+    {
+      label: d?.stats?.users || "Users",
+      value: totalUsers,
+      sub: `${activeUsers} ${d?.stats?.activeInLast30Days || "verified"}`,
+      icon: Users,
+      color: "text-[#D97757]",
+      bg: "bg-[#D97757]/10",
+    },
+    {
+      label: d?.stats?.teachers || "Teachers",
+      value: totalTeachers,
+      sub: d?.stats?.activeTeachers || "Active teachers",
+      icon: GraduationCap,
+      color: "text-[#6A9BCC]",
+      bg: "bg-[#6A9BCC]/10",
+    },
+    {
+      label: d?.stats?.students || "Students",
+      value: totalStudents,
+      sub: d?.stats?.enrolledStudents || "Enrolled students",
+      icon: School,
+      color: "text-[#CBCADB]",
+      bg: "bg-[#CBCADB]/10",
+    },
+    {
+      label: d?.stats?.departments || "Departments",
+      value: totalDepartments,
+      sub: d?.stats?.activeDepartments || "Active departments",
+      icon: Building,
+      color: "text-[#BCD1CA]",
+      bg: "bg-[#BCD1CA]/10",
+    },
+  ]
+
+  // Navigation modules — the main entry points into school management
+  const modules = [
+    {
+      title: d?.cards?.configuration?.viewSettings || "Configuration",
+      description:
+        d?.cards?.configuration?.details ||
+        "School profile, academic years, departments, and grading",
+      href: `/${lang}/school/configuration/title`,
+      icon: Settings,
+    },
+    {
+      title: d?.quickActions?.addUser || "Membership",
+      description:
+        d?.quickActions?.addUserDesc || "Users, roles, invitations, and accounts",
+      href: `/${lang}/school/membership`,
+      icon: UserCog,
+    },
+    {
+      title: d?.quickActions?.announce || "Communication",
+      description:
+        d?.quickActions?.announceDesc || "Announcements, notifications, and messaging",
+      href: `/${lang}/school/communication`,
+      icon: Bell,
+    },
+    {
+      title: d?.quickActions?.viewLogs || "Security",
+      description:
+        d?.quickActions?.viewLogsDesc || "Audit logs, sessions, and access control",
+      href: `/${lang}/school/security`,
+      icon: Shield,
+    },
+    {
+      title: d?.quickActions?.exportData || "Reports",
+      description:
+        d?.quickActions?.exportDataDesc || "Analytics, exports, and data insights",
+      href: `/${lang}/school/reports`,
+      icon: FileText,
+    },
+    {
+      title: d?.cards?.configuration?.schoolProfile || "Bulk Operations",
+      description: "Import, export, and batch process school data",
+      href: `/${lang}/school/bulk`,
+      icon: Upload,
+    },
+  ]
+
+  // System services status
+  const services = [
+    {
+      name: d?.systemStatus?.api || "API Services",
+      icon: Server,
+    },
+    {
+      name: d?.systemStatus?.database || "Database",
+      icon: Database,
+    },
+    {
+      name: d?.systemStatus?.storage || "Storage",
+      icon: Cloud,
+    },
+    {
+      name: d?.systemStatus?.email || "Email Service",
+      icon: Mail,
+    },
+  ]
+
   return (
-    <div className="space-y-6">
-      {/* Overview Stats */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {d?.stats?.users || "Users"}
-            </CardTitle>
-            <Users className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {totalUsers.toLocaleString()}
-            </div>
-            <p className="text-muted-foreground text-xs">
-              {activeUsers}{" "}
-              {d?.stats?.activeInLast30Days || "active in last 30 days"}
-            </p>
-          </CardContent>
-        </Card>
+    <div className="space-y-10">
+      {/* ------------------------------------------------------------------ */}
+      {/* Section 1: At-a-glance stats                                       */}
+      {/* Horizontal cards with colored icon badges — same palette as        */}
+      {/* the dashboard Quick Look section for visual consistency.            */}
+      {/* ------------------------------------------------------------------ */}
+      <section>
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {stats.map((stat) => {
+            const Icon = stat.icon
+            return (
+              <Card key={stat.label} className="border-none shadow-none bg-muted/50">
+                <CardContent className="p-5">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={cn(
+                        "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
+                        stat.bg
+                      )}
+                    >
+                      <Icon className={cn("h-5 w-5", stat.color)} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-muted-foreground text-xs">{stat.label}</p>
+                      <p className="text-2xl font-semibold tracking-tight">
+                        {stat.value.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-muted-foreground mt-2 text-xs">{stat.sub}</p>
+                </CardContent>
+              </Card>
+            )
+          })}
+        </div>
+      </section>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {d?.stats?.teachers || "Teachers"}
-            </CardTitle>
-            <Users className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalTeachers}</div>
-            <p className="text-muted-foreground text-xs">
-              {d?.stats?.activeTeachers || "Active teachers"}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {d?.stats?.students || "Students"}
-            </CardTitle>
-            <School className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalStudents}</div>
-            <p className="text-muted-foreground text-xs">
-              {d?.stats?.enrolledStudents || "Enrolled students"}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {d?.stats?.health || "Health"}
-            </CardTitle>
-            <Activity className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{systemHealthScore}%</div>
-            <p className="text-muted-foreground text-xs">
-              {d?.stats?.allSystemsOperational || "All systems operational"}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Organization & Operation */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
-              {d?.stats?.organization || "Organization"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col gap-6 py-2">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <UserCheck className="text-muted-foreground h-4 w-4" />
-                  <span className="text-muted-foreground text-xs">
-                    {d?.stats?.pendingActions || "Pending Approvals"}
-                  </span>
-                </div>
-                <div className="ps-6 text-2xl font-bold">
-                  {pendingApprovals.toLocaleString()}
-                </div>
-                <p className="text-muted-foreground ps-6 text-xs">
-                  {d?.stats?.requiresAttention || "Requires attention"}
+      {/* ------------------------------------------------------------------ */}
+      {/* Section 2: Organization snapshot                                    */}
+      {/* Two side-by-side cards with key operational numbers.                */}
+      {/* ------------------------------------------------------------------ */}
+      <section>
+        <div className="grid gap-4 md:grid-cols-3">
+          <Card className="border-none shadow-none bg-muted/50">
+            <CardContent className="flex items-center gap-4 p-5">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-500/10">
+                <BookOpen className="h-5 w-5 text-amber-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-semibold tracking-tight">
+                  {totalClassrooms}
+                </p>
+                <p className="text-muted-foreground text-xs">
+                  {d?.stats?.totalClassrooms || "Classrooms"}
                 </p>
               </div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <Building className="text-muted-foreground h-4 w-4" />
-                  <span className="text-muted-foreground text-xs">
-                    {d?.stats?.departments || "Departments"}
-                  </span>
-                </div>
-                <div className="ps-6 text-2xl font-bold">
-                  {totalDepartments}
-                </div>
-                <p className="text-muted-foreground ps-6 text-xs">
-                  {d?.stats?.activeDepartments || "Active departments"}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
-              {d?.stats?.operation || "Operation"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col gap-6 py-2">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <CircleAlert className="text-muted-foreground h-4 w-4" />
-                  <span className="text-muted-foreground text-xs">
-                    {d?.stats?.classrooms || "Classrooms"}
-                  </span>
-                </div>
-                <div className="ps-6 text-2xl font-bold">{totalClassrooms}</div>
-                <p className="text-muted-foreground ps-6 text-xs">
-                  {d?.stats?.totalClassrooms || "Total classrooms"}
-                </p>
+          <Card className="border-none shadow-none bg-muted/50">
+            <CardContent className="flex items-center gap-4 p-5">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-rose-500/10">
+                <Users className="h-5 w-5 text-rose-500" />
               </div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <Building className="text-muted-foreground h-4 w-4" />
-                  <span className="text-muted-foreground text-xs">
-                    {d?.stats?.classrooms || "Active Users"}
-                  </span>
-                </div>
-                <div className="ps-6 text-2xl font-bold">{activeUsers}</div>
-                <p className="text-muted-foreground ps-6 text-xs">
+              <div>
+                <p className="text-2xl font-semibold tracking-tight">
+                  {activeUsers}
+                </p>
+                <p className="text-muted-foreground text-xs">
                   {d?.stats?.currentlyLoggedIn || "Verified accounts"}
                 </p>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Button asChild variant="outline" className="h-auto justify-start py-3">
-          <Link href={`/${lang}/school/membership`}>
-            <UserCog className="me-2 h-4 w-4" />
-            <span className="flex flex-col items-start">
-              <span className="font-medium">
-                {d?.quickActions?.addUser || "Add User"}
-              </span>
-              <span className="text-muted-foreground text-xs">
-                {d?.quickActions?.addUserDesc || "Create new account"}
-              </span>
-            </span>
-          </Link>
-        </Button>
-        <Button asChild variant="outline" className="h-auto justify-start py-3">
-          <Link href={`/${lang}/school/communication`}>
-            <Bell className="me-2 h-4 w-4" />
-            <span className="flex flex-col items-start">
-              <span className="font-medium">
-                {d?.quickActions?.announce || "Announce"}
-              </span>
-              <span className="text-muted-foreground text-xs">
-                {d?.quickActions?.announceDesc || "Send notification"}
-              </span>
-            </span>
-          </Link>
-        </Button>
-        <Button asChild variant="outline" className="h-auto justify-start py-3">
-          <Link href={`/${lang}/school/security`}>
-            <FileText className="me-2 h-4 w-4" />
-            <span className="flex flex-col items-start">
-              <span className="font-medium">
-                {d?.quickActions?.viewLogs || "View Logs"}
-              </span>
-              <span className="text-muted-foreground text-xs">
-                {d?.quickActions?.viewLogsDesc || "Audit activity"}
-              </span>
-            </span>
-          </Link>
-        </Button>
-        <Button asChild variant="outline" className="h-auto justify-start py-3">
-          <Link href={`/${lang}/school/reports`}>
-            <Database className="me-2 h-4 w-4" />
-            <span className="flex flex-col items-start">
-              <span className="font-medium">
-                {d?.quickActions?.exportData || "Export Data"}
-              </span>
-              <span className="text-muted-foreground text-xs">
-                {d?.quickActions?.exportDataDesc || "Download reports"}
-              </span>
-            </span>
-          </Link>
-        </Button>
-      </div>
+          {pendingApprovals > 0 ? (
+            <Card className="border-none shadow-none bg-amber-500/5">
+              <CardContent className="flex items-center gap-4 p-5">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-500/10">
+                  <UserCog className="h-5 w-5 text-amber-600" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="text-2xl font-semibold tracking-tight">
+                      {pendingApprovals}
+                    </p>
+                    <Badge variant="secondary" className="bg-amber-500/10 text-amber-600 text-[10px]">
+                      {d?.stats?.requiresAttention || "Needs attention"}
+                    </Badge>
+                  </div>
+                  <p className="text-muted-foreground text-xs">
+                    {d?.stats?.pendingActions || "Pending approvals"}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="border-none shadow-none bg-muted/50">
+              <CardContent className="flex items-center gap-4 p-5">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                </div>
+                <div>
+                  <p className="text-2xl font-semibold tracking-tight">0</p>
+                  <p className="text-muted-foreground text-xs">
+                    {d?.stats?.pendingActions || "Pending approvals"}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </section>
 
-      {/* Trial & System Status Row */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <TrialExpiryCardDemo />
+      {/* ------------------------------------------------------------------ */}
+      {/* Section 3: Module navigation                                       */}
+      {/* Cards with hover effect linking to each school management area.     */}
+      {/* Inspired by Apple Settings / Airbnb category cards.                */}
+      {/* ------------------------------------------------------------------ */}
+      <section>
+        <h2 className="mb-4 text-lg font-semibold">
+          {d?.workflow?.title || "Manage"}
+        </h2>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {modules.map((mod) => {
+            const Icon = mod.icon
+            return (
+              <Link key={mod.href} href={mod.href} className="group">
+                <Card className="h-full border-none shadow-none bg-muted/50 transition-colors group-hover:bg-muted">
+                  <CardContent className="flex items-start gap-4 p-5">
+                    <div className="bg-background flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-sm">
+                      <Icon className="text-foreground h-5 w-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between">
+                        <p className="font-medium">{mod.title}</p>
+                        <ArrowRight className="text-muted-foreground h-4 w-4 opacity-0 transition-opacity group-hover:opacity-100 rtl:rotate-180" />
+                      </div>
+                      <p className="text-muted-foreground mt-0.5 text-sm leading-relaxed">
+                        {mod.description}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            )
+          })}
+        </div>
+      </section>
 
-        {/* System Status Card */}
-        <Card>
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base font-medium">
+      {/* ------------------------------------------------------------------ */}
+      {/* Section 4: System status                                           */}
+      {/* Compact horizontal status bar — all green = minimal footprint.     */}
+      {/* ------------------------------------------------------------------ */}
+      <section>
+        <Card className="border-none shadow-none bg-muted/50">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-medium">
                 {d?.systemStatus?.title || "System Status"}
-              </CardTitle>
-              <span className="flex items-center gap-1 text-xs text-green-600">
-                <CheckCircle2 className="h-3 w-3" />
-                {d?.systemStatus?.operational || "Operational"}
+              </h3>
+              <span className="flex items-center gap-1.5 text-xs text-emerald-600">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                </span>
+                {d?.systemStatus?.operational || "All systems operational"}
               </span>
             </div>
-            <CardDescription>
-              {d?.systemStatus?.description || "Current system health"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between border-b py-2">
-                <div className="flex items-center gap-2">
-                  <Server className="text-muted-foreground h-4 w-4" />
-                  <span className="text-sm">
-                    {d?.systemStatus?.api || "API Services"}
-                  </span>
-                </div>
-                <span className="flex items-center gap-1 text-xs text-green-600">
-                  <CheckCircle2 className="h-3 w-3" />
-                  {d?.systemStatus?.online || "Online"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between border-b py-2">
-                <div className="flex items-center gap-2">
-                  <Database className="text-muted-foreground h-4 w-4" />
-                  <span className="text-sm">
-                    {d?.systemStatus?.database || "Database"}
-                  </span>
-                </div>
-                <span className="flex items-center gap-1 text-xs text-green-600">
-                  <CheckCircle2 className="h-3 w-3" />
-                  {d?.systemStatus?.online || "Online"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between border-b py-2">
-                <div className="flex items-center gap-2">
-                  <Cloud className="text-muted-foreground h-4 w-4" />
-                  <span className="text-sm">
-                    {d?.systemStatus?.storage || "Storage"}
-                  </span>
-                </div>
-                <span className="flex items-center gap-1 text-xs text-green-600">
-                  <CheckCircle2 className="h-3 w-3" />
-                  {d?.systemStatus?.online || "Online"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <div className="flex items-center gap-2">
-                  <Mail className="text-muted-foreground h-4 w-4" />
-                  <span className="text-sm">
-                    {d?.systemStatus?.email || "Email Service"}
-                  </span>
-                </div>
-                <span className="flex items-center gap-1 text-xs text-green-600">
-                  <CheckCircle2 className="h-3 w-3" />
-                  {d?.systemStatus?.online || "Online"}
-                </span>
-              </div>
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              {services.map((service) => {
+                const Icon = service.icon
+                return (
+                  <div
+                    key={service.name}
+                    className="bg-background flex items-center gap-2.5 rounded-xl px-3 py-2.5"
+                  >
+                    <Icon className="text-muted-foreground h-4 w-4 shrink-0" />
+                    <span className="text-sm truncate">{service.name}</span>
+                    <CheckCircle2 className="ms-auto h-3.5 w-3.5 shrink-0 text-emerald-500" />
+                  </div>
+                )
+              })}
             </div>
           </CardContent>
         </Card>
-      </div>
-
-      {/* Admin Workflow Guide */}
-      <Card className="border-primary/20 hover:border-primary/40 transition-colors">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Settings className="text-primary h-5 w-5" />
-            {d?.workflow?.title || "Admin Workflow Guide"}
-          </CardTitle>
-          <CardDescription>
-            {d?.workflow?.description ||
-              "Step-by-step guide to managing your school"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <p className="text-muted-foreground text-sm">
-            {d?.cards?.configuration?.details ||
-              "Manage school profile, academic years, departments, grading scales, and classroom settings."}
-          </p>
-          <div className="flex flex-wrap gap-2">
-            <Button asChild>
-              <Link href={`/${lang}/school/configuration`}>
-                <Settings className="me-2 h-4 w-4" />
-                {d?.cards?.configuration?.viewSettings || "View Settings"}
-              </Link>
-            </Button>
-            <Button variant="outline" asChild>
-              <Link href={`/${lang}/school/bulk`}>
-                {d?.cards?.configuration?.schoolProfile || "Academic Setup"}
-              </Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      </section>
     </div>
   )
 }
