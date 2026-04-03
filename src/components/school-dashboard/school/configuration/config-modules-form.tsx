@@ -90,7 +90,7 @@ export function ConfigModulesForm({ dictionary }: ConfigModulesFormProps) {
         </button>
       </div>
 
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         {toggleableModules.map((item) => (
           <ModuleCard
             key={item.key}
@@ -127,7 +127,7 @@ function ModuleCard({
       className={cn(
         "cursor-pointer rounded-lg px-3 py-2.5 text-center text-xs font-medium transition-colors select-none",
         enabled
-          ? "bg-foreground text-background"
+          ? "bg-muted border-foreground border-2 text-foreground"
           : "bg-muted text-muted-foreground hover:bg-muted/80"
       )}
       onClick={() => {
