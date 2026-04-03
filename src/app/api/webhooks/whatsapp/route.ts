@@ -62,12 +62,36 @@ export async function POST(request: NextRequest) {
           if (!key) continue
 
           const isFromMe = key.fromMe === true
+          const msgData = msg.message ?? {}
+
+          // Extract text content from various message types
           const content =
-            msg.message?.conversation ||
-            msg.message?.extendedTextMessage?.text ||
+            msgData.conversation ||
+            msgData.extendedTextMessage?.text ||
+            msgData.imageMessage?.caption ||
+            msgData.videoMessage?.caption ||
+            msgData.documentMessage?.caption ||
             ""
 
-          if (!content) continue
+          // Detect media message types
+          const hasImage = !!msgData.imageMessage
+          const hasVideo = !!msgData.videoMessage
+          const hasAudio = !!msgData.audioMessage
+          const hasDocument = !!msgData.documentMessage
+          const hasMedia = hasImage || hasVideo || hasAudio || hasDocument
+
+          // Skip messages with no content and no media
+          if (!content && !hasMedia) continue
+
+          const contentType = hasImage
+            ? "image"
+            : hasVideo
+              ? "video"
+              : hasAudio
+                ? "audio"
+                : hasDocument
+                  ? "document"
+                  : "text"
 
           const senderPhone = key.remoteJid?.includes("@g.us")
             ? null
@@ -81,8 +105,8 @@ export async function POST(request: NextRequest) {
               waMessageId: key.id,
               recipientPhone: senderPhone,
               groupId: null,
-              content,
-              contentType: "text",
+              content: content || `[${contentType}]`,
+              contentType,
               direction: isFromMe ? "outgoing" : "incoming",
               status: "delivered",
               sentAt: new Date(),
@@ -93,47 +117,130 @@ export async function POST(request: NextRequest) {
           if (!isFromMe && senderPhone) {
             try {
               // Find participant with this WhatsApp phone in a whatsapp-enabled conversation
-              const participant =
-                await db.conversationParticipant.findFirst({
-                  where: {
-                    whatsappPhone: senderPhone,
-                    isActive: true,
-                    conversation: {
-                      schoolId: session.schoolId,
-                      whatsappEnabled: true,
-                    },
+              const participant = await db.conversationParticipant.findFirst({
+                where: {
+                  whatsappPhone: senderPhone,
+                  isActive: true,
+                  conversation: {
+                    schoolId: session.schoolId,
+                    whatsappEnabled: true,
                   },
-                  include: {
-                    conversation: { select: { id: true } },
-                  },
-                  orderBy: {
-                    conversation: { lastMessageAt: "desc" },
-                  },
-                })
+                },
+                include: {
+                  conversation: { select: { id: true } },
+                },
+                orderBy: {
+                  conversation: { lastMessageAt: "desc" },
+                },
+              })
 
               if (participant) {
-                await db.message.create({
+                // Create the bridged message
+                const bridgedMessage = await db.message.create({
                   data: {
                     conversationId: participant.conversation.id,
                     senderId: participant.userId,
                     content,
-                    contentType: "text",
+                    contentType,
                     status: "delivered",
                     whatsappMessageId: key.id,
                     whatsappStatus: "delivered",
                     whatsappPhone: senderPhone,
                   },
                 })
+
+                // Download and attach media if present
+                if (hasMedia) {
+                  try {
+                    const evolution = await import(
+                      "@/lib/whatsapp/evolution-client"
+                    )
+                    const mediaResult = await evolution.downloadMedia(
+                      instanceName,
+                      {
+                        remoteJid: key.remoteJid,
+                        fromMe: false,
+                        id: key.id,
+                      }
+                    )
+
+                    if (mediaResult.base64) {
+                      // Determine MIME type and filename
+                      const mimetype =
+                        mediaResult.mimetype ||
+                        msgData.imageMessage?.mimetype ||
+                        msgData.videoMessage?.mimetype ||
+                        msgData.audioMessage?.mimetype ||
+                        msgData.documentMessage?.mimetype ||
+                        "application/octet-stream"
+
+                      const fileName =
+                        mediaResult.fileName ||
+                        msgData.documentMessage?.fileName ||
+                        `wa-media-${key.id}.${mimetype.split("/")[1] || "bin"}`
+
+                      // Store as data URL for now (can be uploaded to S3 in a future step)
+                      const dataUrl = `data:${mimetype};base64,${mediaResult.base64}`
+
+                      // Estimate file size from base64 length
+                      const fileSize = Math.ceil(
+                        (mediaResult.base64.length * 3) / 4
+                      )
+
+                      await db.messageAttachment.create({
+                        data: {
+                          messageId: bridgedMessage.id,
+                          fileName,
+                          fileUrl: dataUrl,
+                          fileSize,
+                          fileType: mimetype,
+                          width: msgData.imageMessage?.width ?? null,
+                          height: msgData.imageMessage?.height ?? null,
+                          uploaded: true,
+                          uploadedAt: new Date(),
+                        },
+                      })
+                    }
+                  } catch (mediaError) {
+                    console.error(
+                      "[WhatsApp Webhook] Media download error:",
+                      mediaError
+                    )
+                  }
+                }
+
                 await db.conversation.update({
                   where: { id: participant.conversation.id },
                   data: { lastMessageAt: new Date() },
                 })
+
+                // Emit Socket.IO event for real-time push
+                try {
+                  const socketUrl =
+                    process.env.NEXT_PUBLIC_SOCKET_URL ||
+                    "http://localhost:3001"
+                  await fetch(`${socketUrl}/api/emit`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      room: `conversation:${participant.conversation.id}`,
+                      event: "message:new",
+                      data: {
+                        id: bridgedMessage.id,
+                        conversationId: participant.conversation.id,
+                        senderId: participant.userId,
+                        content,
+                        contentType,
+                        createdAt: bridgedMessage.createdAt.toISOString(),
+                      },
+                    }),
+                  })
+                } catch {
+                  // Socket.IO push is best-effort
+                }
               }
             } catch (bridgeError) {
-              console.error(
-                "[WhatsApp Webhook] Bridge error:",
-                bridgeError
-              )
+              console.error("[WhatsApp Webhook] Bridge error:", bridgeError)
             }
           }
         }
@@ -168,9 +275,12 @@ export async function POST(request: NextRequest) {
             },
           })
 
-          // Sync status to bridged in-app messages
+          // Sync status to bridged in-app messages (scoped by school)
           await db.message.updateMany({
-            where: { whatsappMessageId: waMessageId },
+            where: {
+              whatsappMessageId: waMessageId,
+              conversation: { schoolId: session.schoolId },
+            },
             data: { whatsappStatus: mappedStatus },
           })
         }

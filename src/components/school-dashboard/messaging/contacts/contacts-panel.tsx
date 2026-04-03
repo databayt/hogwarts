@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { EllipsisVertical } from "lucide-react"
 import { useDebouncedCallback } from "use-debounce"
 
@@ -65,18 +65,34 @@ export function ContactsPanel({
     return map
   }, [conversations, currentUserId])
 
-  // Fetch contacts
+  // Cache for initial (no-search) contacts
+  const cachedGroupsRef = useRef<ContactGroup[] | null>(null)
+
+  // Fetch contacts with caching for the no-search case
   const fetchContacts = useCallback(async (searchQuery?: string) => {
+    const isSearch = searchQuery && searchQuery.length >= 2
+
+    // Return cached data immediately for no-search case
+    if (!isSearch && cachedGroupsRef.current) {
+      setGroups(cachedGroupsRef.current)
+      setIsLoading(false)
+      return
+    }
+
     try {
       setIsLoading(true)
       const params = new URLSearchParams()
-      if (searchQuery && searchQuery.length >= 2) {
+      if (isSearch) {
         params.set("search", searchQuery)
       }
       const res = await fetch(`/api/contacts?${params.toString()}`)
       if (res.ok) {
         const data = await res.json()
-        setGroups(data.groups ?? [])
+        const newGroups = data.groups ?? []
+        setGroups(newGroups)
+        if (!isSearch) {
+          cachedGroupsRef.current = newGroups
+        }
       }
     } catch (error) {
       console.error("[ContactsPanel] Error fetching contacts:", error)

@@ -29,6 +29,9 @@ import { toast } from "@/components/ui/use-toast"
 import type { UploadedFileResult } from "@/components/file"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
+import { formatDistanceToNow } from "date-fns"
+import { ar, enUS } from "date-fns/locale"
+
 import {
   markConversationAsRead,
   pollNewMessages,
@@ -37,6 +40,7 @@ import {
 import { CONVERSATION_TYPE_CONFIG } from "./config"
 import { MessageInput } from "./message-input"
 import { MessageList, MessageListSkeleton } from "./message-list"
+import { useUserPresence } from "./hooks/use-presence"
 import { MessageSearch } from "./message-search"
 import type { ConversationDTO, MessageDTO, TypingIndicatorDTO } from "./types"
 
@@ -91,6 +95,15 @@ export function ChatInterface({
   )
   const [isTogglingWhatsApp, setIsTogglingWhatsApp] = useState(false)
 
+  // Presence tracking for direct conversations
+  const otherUserId =
+    conversation.type === "direct"
+      ? conversation.participants.find((p) => p.userId !== currentUserId)
+          ?.userId
+      : undefined
+  const otherPresence = useUserPresence(otherUserId)
+  const dateLocale = locale === "ar" ? ar : enUS
+
   // Optimistic updates (React 19)
   const [optimisticMessages, addOptimisticMessage] = useOptimistic(
     messages,
@@ -116,12 +129,15 @@ export function ChatInterface({
         replyTo: replyToId
           ? messages.find((m) => m.id === replyToId) || null
           : null,
+        forwardedFromId: null,
         isEdited: false,
         editedAt: null,
         isDeleted: false,
         deletedAt: null,
         isSystem: false,
         metadata: null,
+        whatsappStatus: null,
+        whatsappPhone: null,
         createdAt: new Date(),
         updatedAt: new Date(),
         attachments: [],
@@ -192,12 +208,15 @@ export function ChatInterface({
           status: "sent",
           replyToId: null,
           replyTo: null,
+          forwardedFromId: null,
           isEdited: false,
           editedAt: null,
           isDeleted: false,
           deletedAt: null,
           isSystem: false,
           metadata: null,
+          whatsappStatus: null,
+          whatsappPhone: null,
           createdAt: new Date(data.createdAt),
           updatedAt: new Date(data.createdAt),
           attachments: [],
@@ -352,7 +371,7 @@ export function ChatInterface({
       })
     }, 1000)
     return () => clearInterval(interval)
-  }, [typingUsers.length > 0])
+  }, [typingUsers.length])
 
   // Polling fallback when Socket.IO is not connected
   useEffect(() => {
@@ -497,7 +516,10 @@ export function ChatInterface({
           <h2 className="text-foreground flex items-center gap-1.5 truncate font-medium">
             {displayName}
             {whatsappEnabled && (
-              <span className="inline-block h-2.5 w-2.5 flex-shrink-0 rounded-full bg-green-500" title="WhatsApp" />
+              <span
+                className="inline-block h-2.5 w-2.5 flex-shrink-0 rounded-full bg-green-500"
+                title="WhatsApp"
+              />
             )}
           </h2>
           {typingUsers.length > 0 ? (
@@ -512,11 +534,22 @@ export function ChatInterface({
               {(conversation.participantCount ?? 0) > 3 &&
                 ` +${(conversation.participantCount ?? 0) - 3}`}
             </p>
-          ) : (
-            <p className="text-muted-foreground text-xs">
-              {m?.ui?.online || "online"}
+          ) : conversation.type === "direct" ? (
+            <p
+              className={cn(
+                "text-xs",
+                otherPresence.state === "online"
+                  ? "text-msg-unread-badge"
+                  : "text-muted-foreground"
+              )}
+            >
+              {otherPresence.state === "online"
+                ? m?.ui?.online || "online"
+                : otherPresence.state === "offline"
+                  ? `${m?.ui?.last_seen || "last seen"} ${formatDistanceToNow(otherPresence.lastSeenAt, { addSuffix: true, locale: dateLocale })}`
+                  : m?.ui?.online || "online"}
             </p>
-          )}
+          ) : null}
         </div>
 
         {/* Action icons */}
@@ -546,7 +579,9 @@ export function ChatInterface({
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={handleToggleWhatsApp}
-                disabled={isTogglingWhatsApp || (!whatsappEnabled && !whatsappConnected)}
+                disabled={
+                  isTogglingWhatsApp || (!whatsappEnabled && !whatsappConnected)
+                }
               >
                 <span
                   className={cn(
@@ -555,10 +590,10 @@ export function ChatInterface({
                   )}
                 />
                 {whatsappEnabled
-                  ? "WhatsApp On"
+                  ? m?.whatsapp?.enabled || "WhatsApp On"
                   : whatsappConnected
-                    ? "Enable WhatsApp"
-                    : "WhatsApp Disconnected"}
+                    ? m?.whatsapp?.enable || "Enable WhatsApp"
+                    : m?.whatsapp?.disconnected || "WhatsApp Disconnected"}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem disabled>
@@ -619,6 +654,7 @@ export function ChatInterface({
           conversationId={conversation.id}
           locale={locale}
           replyTo={replyTo}
+          whatsappEnabled={whatsappEnabled}
           onCancelReply={() => setReplyTo(null)}
           onFileUpload={onFileUpload}
           onTypingStart={handleTypingStart}

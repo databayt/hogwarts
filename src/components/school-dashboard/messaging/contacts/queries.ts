@@ -147,6 +147,7 @@ type ProfileData = {
   email: string | null
   image: string | null
   contextLabel?: string
+  hasWhatsApp?: boolean
 }
 
 async function getMembersByRole(
@@ -207,6 +208,7 @@ async function getMembersByRole(
       role: u.role,
       category,
       contextLabel: profile?.contextLabel,
+      hasWhatsApp: profile?.hasWhatsApp,
     }
   })
 }
@@ -268,6 +270,11 @@ async function enrichProfiles(
             select: { department: { select: { departmentName: true } } },
             take: 1,
           },
+          phoneNumbers: {
+            where: { isPrimary: true },
+            select: { id: true },
+            take: 1,
+          },
         },
       })
       for (const t of teachers) {
@@ -280,6 +287,7 @@ async function enrichProfiles(
             contextLabel:
               t.teacherDepartments[0]?.department?.departmentName ??
               t.homeroomSections[0]?.name,
+            hasWhatsApp: t.phoneNumbers.length > 0,
           })
         }
       }
@@ -325,6 +333,11 @@ async function enrichProfiles(
             },
             take: 2,
           },
+          phoneNumbers: {
+            where: { isPrimary: true },
+            select: { id: true },
+            take: 1,
+          },
         },
       })
       for (const g of guardians) {
@@ -338,6 +351,7 @@ async function enrichProfiles(
             email: g.emailAddress ?? null,
             image: g.profilePhotoUrl ?? null,
             contextLabel: childNames || undefined,
+            hasWhatsApp: g.phoneNumbers.length > 0,
           })
         }
       }

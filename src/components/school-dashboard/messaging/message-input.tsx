@@ -2,8 +2,10 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useActionState, useEffect, useRef, useState } from "react"
-import { Mic, Paperclip, Send, Smile, X } from "lucide-react"
+import { useActionState, useCallback, useEffect, useRef, useState } from "react"
+import data from "@emoji-mart/data"
+import Picker from "@emoji-mart/react"
+import { Mic, Paperclip, Send, Smile, Square, X } from "lucide-react"
 import { useFormStatus } from "react-dom"
 
 import { cn } from "@/lib/utils"
@@ -33,6 +35,7 @@ export interface MessageInputProps {
   replyTo?: MessageDTO | null
   disabled?: boolean
   maxLength?: number
+  whatsappEnabled?: boolean
   onCancelReply?: () => void
   onFileUpload?: (files: UploadedFileResult[]) => void
   onTypingStart?: () => void
@@ -48,6 +51,7 @@ export function MessageInput({
   replyTo,
   disabled = false,
   maxLength = 4000,
+  whatsappEnabled = false,
   onCancelReply,
   onFileUpload,
   onTypingStart,
@@ -184,56 +188,99 @@ export function MessageInput({
     }, 0)
   }
 
-  const commonEmojis = [
-    "😀",
-    "😃",
-    "😄",
-    "😁",
-    "😅",
-    "😂",
-    "🤣",
-    "😊",
-    "😇",
-    "🙂",
-    "🙃",
-    "😉",
-    "😌",
-    "😍",
-    "🥰",
-    "😘",
-    "😗",
-    "😙",
-    "😚",
-    "😋",
-    "😛",
-    "😝",
-    "😜",
-    "🤪",
-    "🤨",
-    "🧐",
-    "🤓",
-    "😎",
-    "🤩",
-    "🥳",
-    "😏",
-    "😒",
-    "👍",
-    "👎",
-    "👌",
-    "✌️",
-    "🤞",
-    "🤝",
-    "👏",
-    "🙌",
-    "❤️",
-    "🧡",
-    "💛",
-    "💚",
-    "💙",
-    "💜",
-    "🖤",
-    "🤍",
-  ]
+  // Voice recording state
+  const [isRecording, setIsRecording] = useState(false)
+  const [recordingDuration, setRecordingDuration] = useState(0)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const audioChunksRef = useRef<Blob[]>([])
+  const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null)
+
+  const startRecording = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+          ? "audio/webm;codecs=opus"
+          : "audio/webm",
+      })
+      mediaRecorderRef.current = mediaRecorder
+      audioChunksRef.current = []
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data)
+      }
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, {
+          type: "audio/webm",
+        })
+        stream.getTracks().forEach((t) => t.stop())
+
+        // Create a File from the blob and trigger upload
+        const file = new File(
+          [audioBlob],
+          `voice-${Date.now()}.webm`,
+          { type: "audio/webm" }
+        )
+        // Upload via the same file upload pipeline
+        const blobUrl = URL.createObjectURL(audioBlob)
+        onFileUpload?.([
+          {
+            fileId: `voice-${Date.now()}`,
+            url: blobUrl,
+            fileName: file.name,
+            fileUrl: blobUrl,
+            fileSize: audioBlob.size,
+            fileType: "audio/webm",
+            category: "OTHER" as const,
+          } as UploadedFileResult,
+        ])
+      }
+
+      mediaRecorder.start(100) // Collect data every 100ms
+      setIsRecording(true)
+      setRecordingDuration(0)
+      recordingIntervalRef.current = setInterval(() => {
+        setRecordingDuration((d) => d + 1)
+      }, 1000)
+    } catch {
+      toast({
+        title: m?.notifications?.error || "Error",
+        description: "Could not access microphone",
+      })
+    }
+  }, [onFileUpload, m])
+
+  const stopRecording = useCallback(() => {
+    mediaRecorderRef.current?.stop()
+    setIsRecording(false)
+    if (recordingIntervalRef.current) {
+      clearInterval(recordingIntervalRef.current)
+      recordingIntervalRef.current = null
+    }
+  }, [])
+
+  const cancelRecording = useCallback(() => {
+    if (mediaRecorderRef.current?.state === "recording") {
+      mediaRecorderRef.current.stream
+        .getTracks()
+        .forEach((t) => t.stop())
+      mediaRecorderRef.current = null
+    }
+    audioChunksRef.current = []
+    setIsRecording(false)
+    setRecordingDuration(0)
+    if (recordingIntervalRef.current) {
+      clearInterval(recordingIntervalRef.current)
+      recordingIntervalRef.current = null
+    }
+  }, [])
+
+  const formatDuration = (seconds: number) => {
+    const m = Math.floor(seconds / 60)
+    const s = seconds % 60
+    return `${m}:${s.toString().padStart(2, "0")}`
+  }
 
   return (
     <form
@@ -273,60 +320,109 @@ export function MessageInput({
       )}
 
       {/* Input area — WhatsApp layout: [Emoji] [Paperclip] [Input] [Send/Mic] */}
-      <div className="flex items-end gap-1.5 px-3 py-2">
-        {/* Emoji picker */}
-        <EmojiPickerButton
-          emojis={commonEmojis}
-          onEmojiClick={handleEmojiClick}
-          disabled={disabled}
-        />
-
-        {/* File upload */}
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={() => setShowFileUpload(true)}
-          disabled={disabled}
-          className="h-10 w-10 flex-shrink-0 rounded-full"
-        >
-          <Paperclip className="text-muted-foreground h-5 w-5" />
-        </Button>
-
-        {/* Text input — WhatsApp pill shape */}
-        <div className="relative flex-1">
-          <Textarea
-            ref={textareaRef}
-            name="content"
-            onChange={handleTextareaChange}
-            onKeyDown={handleKeyDown}
-            placeholder={placeholder || defaultPlaceholder}
-            disabled={disabled}
-            maxLength={maxLength}
-            rows={1}
-            className={cn(
-              "bg-msg-input-bg max-h-[120px] min-h-[42px] resize-none rounded-[21px] border-none px-4 py-2.5 text-sm",
-              "focus-visible:ring-0 focus-visible:ring-offset-0",
-              locale === "ar" && "text-end"
-            )}
-          />
-        </div>
-
-        {/* Send / Mic toggle */}
-        {hasContent ? (
-          <SubmitButton locale={locale} disabled={disabled} />
-        ) : (
+      {isRecording ? (
+        /* Voice recording UI */
+        <div className="flex items-center gap-3 px-3 py-2">
           <Button
             type="button"
             variant="ghost"
             size="icon"
+            onClick={cancelRecording}
+            className="h-10 w-10 flex-shrink-0 rounded-full"
+          >
+            <X className="text-destructive h-5 w-5" />
+          </Button>
+          <div className="flex flex-1 items-center gap-2">
+            <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-red-500" />
+            <span className="text-sm font-medium tabular-nums">
+              {formatDuration(recordingDuration)}
+            </span>
+            <div className="flex flex-1 items-center gap-0.5">
+              {Array.from({ length: 30 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="bg-msg-unread-badge/60 w-1 rounded-full"
+                  style={{
+                    height: `${Math.random() * 20 + 4}px`,
+                    animationDelay: `${i * 50}ms`,
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+          <Button
+            type="button"
+            size="icon"
+            onClick={stopRecording}
+            className="bg-msg-unread-badge hover:bg-msg-unread-badge/90 h-10 w-10 flex-shrink-0 rounded-full text-white"
+          >
+            <Send className="h-5 w-5" />
+          </Button>
+        </div>
+      ) : (
+        <div className="flex items-end gap-1.5 px-3 py-2">
+          {/* Emoji picker — emoji-mart */}
+          <EmojiPickerButton
+            onEmojiClick={handleEmojiClick}
+            disabled={disabled}
+            locale={locale}
+          />
+
+          {/* File upload */}
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowFileUpload(true)}
             disabled={disabled}
             className="h-10 w-10 flex-shrink-0 rounded-full"
           >
-            <Mic className="text-muted-foreground h-5 w-5" />
+            <Paperclip className="text-muted-foreground h-5 w-5" />
           </Button>
-        )}
-      </div>
+
+          {/* Text input — WhatsApp pill shape */}
+          <div className="relative flex-1">
+            <Textarea
+              ref={textareaRef}
+              name="content"
+              onChange={handleTextareaChange}
+              onKeyDown={handleKeyDown}
+              placeholder={placeholder || defaultPlaceholder}
+              disabled={disabled}
+              maxLength={maxLength}
+              rows={1}
+              className={cn(
+                "bg-msg-input-bg max-h-[120px] min-h-[42px] resize-none rounded-[21px] border-none px-4 py-2.5 text-sm",
+                "focus-visible:ring-0 focus-visible:ring-offset-0",
+                locale === "ar" && "text-end"
+              )}
+            />
+          </div>
+
+          {/* Send / Mic toggle — WhatsApp: send when text, mic when empty */}
+          {hasContent ? (
+            <div className="relative">
+              <SubmitButton locale={locale} disabled={disabled} />
+              {whatsappEnabled && (
+                <span className="absolute -end-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-green-500 text-[7px] font-bold text-white">
+                  W
+                </span>
+              )}
+            </div>
+          ) : (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              disabled={disabled}
+              onClick={startRecording}
+              className="h-10 w-10 flex-shrink-0 rounded-full"
+            >
+              <Mic className="text-muted-foreground h-5 w-5" />
+            </Button>
+          )}
+        </div>
+      )}
 
       {/* File upload dialog */}
       <Dialog open={showFileUpload} onOpenChange={setShowFileUpload}>
@@ -377,15 +473,15 @@ function SubmitButton({
   )
 }
 
-// Emoji picker button
+// Emoji picker button — powered by emoji-mart
 function EmojiPickerButton({
-  emojis,
   onEmojiClick,
   disabled,
+  locale,
 }: {
-  emojis: string[]
   onEmojiClick: (emoji: string) => void
   disabled?: boolean
+  locale?: "ar" | "en"
 }) {
   const [showPicker, setShowPicker] = useState(false)
 
@@ -408,22 +504,21 @@ function EmojiPickerButton({
             className="fixed inset-0 z-10"
             onClick={() => setShowPicker(false)}
           />
-          <div className="bg-card border-border absolute end-0 bottom-full z-20 mb-2 w-72 rounded-xl border p-3 shadow-lg">
-            <div className="grid max-h-52 grid-cols-8 gap-0.5 overflow-y-auto">
-              {emojis.map((emoji) => (
-                <button
-                  key={emoji}
-                  type="button"
-                  onClick={() => {
-                    onEmojiClick(emoji)
-                    setShowPicker(false)
-                  }}
-                  className="hover:bg-muted flex items-center justify-center rounded-lg p-1.5 text-xl transition-colors"
-                >
-                  {emoji}
-                </button>
-              ))}
-            </div>
+          <div className="absolute start-0 bottom-full z-20 mb-2">
+            <Picker
+              data={data}
+              onEmojiSelect={(emoji: { native: string }) => {
+                onEmojiClick(emoji.native)
+                setShowPicker(false)
+              }}
+              locale={locale === "ar" ? "ar" : "en"}
+              theme="auto"
+              set="native"
+              previewPosition="none"
+              skinTonePosition="search"
+              maxFrequentRows={2}
+              perLine={8}
+            />
           </div>
         </>
       )}

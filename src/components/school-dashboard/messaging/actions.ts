@@ -135,6 +135,9 @@ import {
   respondToInviteSchema,
   saveDraftSchema,
   unmuteConversationSchema,
+  forwardMessageSchema,
+  starMessageSchema,
+  unstarMessageSchema,
   unpinMessageSchema,
   updateConversationSchema,
   updateMessageSchema,
@@ -548,7 +551,7 @@ export async function sendMessage(
     }
 
     // 3. WhatsApp dispatch (non-blocking)
-    if ((conversation as any).whatsappEnabled) {
+    if (conversation.whatsappEnabled) {
       import("./whatsapp-bridge")
         .then(({ dispatchMessageToWhatsApp }) =>
           dispatchMessageToWhatsApp(
@@ -564,7 +567,26 @@ export async function sendMessage(
         )
     }
 
-    // 4. Audit log (non-blocking)
+    // 4. Link preview (non-blocking) — extract URL, unfurl OG metadata, store in metadata
+    import("./og-unfurl")
+      .then(async ({ unfurlUrl }) => {
+        const { extractFirstUrl } = await import("./link-preview")
+        const url = extractFirstUrl(parsed.content)
+        if (!url) return
+        const preview = await unfurlUrl(url)
+        if (!preview) return
+        await db.message.update({
+          where: { id: message.id },
+          data: {
+            metadata: { linkPreview: preview } as unknown as Prisma.InputJsonValue,
+          },
+        })
+      })
+      .catch((err) =>
+        console.error("[sendMessage] Link preview error:", err)
+      )
+
+    // 5. Audit log (non-blocking)
     logMessageCreated(
       { schoolId, userId: authContext.userId },
       {
@@ -895,6 +917,8 @@ export async function markConversationAsRead(
 
     const parsed = markConversationAsReadSchema.parse(input)
 
+    const { schoolId } = await getTenantContext()
+
     // Update participant's last read timestamp
     await db.conversationParticipant.updateMany({
       where: {
@@ -905,6 +929,40 @@ export async function markConversationAsRead(
         lastReadAt: new Date(),
       },
     })
+
+    // Sync read receipts to WhatsApp (non-blocking)
+    if (schoolId) {
+      const conversation = await db.conversation.findUnique({
+        where: { id: parsed.conversationId },
+        select: { whatsappEnabled: true },
+      })
+      if (conversation?.whatsappEnabled) {
+        // Get unread WhatsApp messages to sync
+        const unreadWaMessages = await db.message.findMany({
+          where: {
+            conversationId: parsed.conversationId,
+            whatsappMessageId: { not: null },
+            whatsappStatus: { not: "read" },
+            senderId: { not: authContext.userId },
+          },
+          select: { id: true },
+          take: 50,
+        })
+        if (unreadWaMessages.length > 0) {
+          import("./whatsapp-bridge")
+            .then(({ syncReadReceiptsToWhatsApp }) =>
+              syncReadReceiptsToWhatsApp(
+                schoolId,
+                parsed.conversationId,
+                unreadWaMessages.map((m) => m.id)
+              )
+            )
+            .catch((err) =>
+              console.error("[markConversationAsRead] WA read sync error:", err)
+            )
+        }
+      }
+    }
 
     revalidateTag(`conversation-${parsed.conversationId}`, "max")
 
@@ -1687,15 +1745,18 @@ export async function fetchConversationData(input: {
     }
 
     const { getConversation, getMessagesList } = await import("./queries")
-    const { serializeConversation, serializeMessages } = await import(
-      "./serialization"
-    )
+    const { serializeConversation, serializeMessages } =
+      await import("./serialization")
 
     const take = input.take ?? 50
 
     const [conversation, messagesResult] = await Promise.all([
       getConversation(schoolId, authContext.userId, input.conversationId),
-      getMessagesList(schoolId, { conversationId: input.conversationId, page: 1, perPage: take }),
+      getMessagesList(schoolId, {
+        conversationId: input.conversationId,
+        page: 1,
+        perPage: take,
+      }),
     ])
 
     if (!conversation) {
@@ -1715,9 +1776,7 @@ export async function fetchConversationData(input: {
     return {
       success: false,
       error:
-        error instanceof Error
-          ? error.message
-          : "Failed to fetch conversation",
+        error instanceof Error ? error.message : "Failed to fetch conversation",
     }
   }
 }
@@ -1767,16 +1826,25 @@ export async function pollNewMessages(input: {
             isDeleted: false,
           },
           include: {
-            sender: { select: { id: true, username: true, email: true, image: true } },
+            sender: {
+              select: { id: true, username: true, email: true, image: true },
+            },
             attachments: true,
-            reactions: { include: { user: { select: { id: true, username: true } } } },
-            replyTo: { include: { sender: { select: { id: true, username: true } } } },
+            reactions: {
+              include: { user: { select: { id: true, username: true } } },
+            },
+            replyTo: {
+              include: { sender: { select: { id: true, username: true } } },
+            },
           },
           orderBy: { createdAt: "asc" },
           take: 50,
         })
 
-        return { success: true, data: { items: serializeMessages(newMessages) } }
+        return {
+          success: true,
+          data: { items: serializeMessages(newMessages) },
+        }
       }
     }
 
@@ -1851,7 +1919,10 @@ export async function toggleConversationWhatsApp(input: {
       authContext.userId
     )
     if (!participant || !["owner", "admin"].includes(participant.role)) {
-      return { success: false, error: "Only owner or admin can toggle WhatsApp" }
+      return {
+        success: false,
+        error: "Only owner or admin can toggle WhatsApp",
+      }
     }
 
     // If enabling, check school has active WhatsApp session
@@ -1863,7 +1934,8 @@ export async function toggleConversationWhatsApp(input: {
       if (!waSession || waSession.status !== "connected") {
         return {
           success: false,
-          error: "WhatsApp is not connected. Connect via the WhatsApp dashboard first.",
+          error:
+            "WhatsApp is not connected. Connect via the WhatsApp dashboard first.",
         }
       }
 
@@ -1884,7 +1956,251 @@ export async function toggleConversationWhatsApp(input: {
     console.error("[toggleConversationWhatsApp] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to toggle WhatsApp",
+      error:
+        error instanceof Error ? error.message : "Failed to toggle WhatsApp",
+    }
+  }
+}
+
+/**
+ * Forward a message to one or more conversations
+ */
+export async function forwardMessage(
+  input: z.infer<typeof forwardMessageSchema>
+): Promise<ActionResponse<{ messageIds: string[] }>> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    }
+
+    const parsed = forwardMessageSchema.parse(input)
+
+    // Get original message
+    const originalMessage = await db.message.findUnique({
+      where: { id: parsed.messageId },
+      include: {
+        conversation: { select: { schoolId: true } },
+        attachments: true,
+      },
+    })
+
+    if (!originalMessage || originalMessage.conversation.schoolId !== schoolId) {
+      return { success: false, error: "Message not found" }
+    }
+
+    // Verify user is participant of the source conversation
+    const isSourceParticipant = await isConversationParticipant(
+      schoolId,
+      originalMessage.conversationId,
+      authContext.userId
+    )
+    if (!isSourceParticipant) {
+      return { success: false, error: "Not a participant of this conversation" }
+    }
+
+    const messageIds: string[] = []
+
+    for (const targetConversationId of parsed.targetConversationIds) {
+      // Verify user is participant of target conversation
+      const isTargetParticipant = await isConversationParticipant(
+        schoolId,
+        targetConversationId,
+        authContext.userId
+      )
+      if (!isTargetParticipant) continue
+
+      // Create forwarded message
+      const forwarded = await db.message.create({
+        data: {
+          conversationId: targetConversationId,
+          senderId: authContext.userId,
+          content: originalMessage.content,
+          contentType: originalMessage.contentType,
+          forwardedFromId: originalMessage.id,
+          status: "sent",
+          attachments: originalMessage.attachments.length > 0
+            ? {
+                create: originalMessage.attachments.map((a) => ({
+                  fileName: a.fileName,
+                  fileUrl: a.fileUrl,
+                  fileSize: a.fileSize,
+                  fileType: a.fileType,
+                  width: a.width,
+                  height: a.height,
+                  thumbnail: a.thumbnail,
+                  uploaded: true,
+                })),
+              }
+            : undefined,
+        },
+      })
+
+      messageIds.push(forwarded.id)
+
+      // Update conversation lastMessageAt
+      await db.conversation.update({
+        where: { id: targetConversationId },
+        data: { lastMessageAt: new Date() },
+      })
+    }
+
+    revalidatePath(MESSAGES_PATH)
+
+    return { success: true, data: { messageIds } }
+  } catch (error) {
+    console.error("[forwardMessage] Error:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to forward message",
+    }
+  }
+}
+
+/**
+ * Star a message
+ */
+export async function starMessage(
+  input: z.infer<typeof starMessageSchema>
+): Promise<ActionResponse<{ id: string }>> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    }
+
+    const parsed = starMessageSchema.parse(input)
+
+    // Verify participant
+    const isParticipant = await isConversationParticipant(
+      schoolId,
+      parsed.conversationId,
+      authContext.userId
+    )
+    if (!isParticipant) {
+      return { success: false, error: "Not a participant of this conversation" }
+    }
+
+    const starred = await db.starredMessage.upsert({
+      where: {
+        userId_messageId: {
+          userId: authContext.userId,
+          messageId: parsed.messageId,
+        },
+      },
+      create: {
+        userId: authContext.userId,
+        messageId: parsed.messageId,
+        conversationId: parsed.conversationId,
+      },
+      update: {},
+    })
+
+    return { success: true, data: { id: starred.id } }
+  } catch (error) {
+    console.error("[starMessage] Error:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to star message",
+    }
+  }
+}
+
+/**
+ * Unstar a message
+ */
+export async function unstarMessage(
+  input: z.infer<typeof unstarMessageSchema>
+): Promise<ActionResponse<{ success: boolean }>> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
+
+    await db.starredMessage.deleteMany({
+      where: {
+        userId: authContext.userId,
+        messageId: input.messageId,
+      },
+    })
+
+    return { success: true, data: { success: true } }
+  } catch (error) {
+    console.error("[unstarMessage] Error:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to unstar message",
+    }
+  }
+}
+
+/**
+ * Get starred messages for current user in a conversation
+ */
+export async function getStarredMessages(input: {
+  conversationId?: string
+  limit?: number
+  cursor?: string
+}): Promise<
+  ActionResponse<{
+    messageIds: string[]
+    nextCursor?: string
+  }>
+> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
+
+    const limit = input.limit || 50
+
+    const starred = await db.starredMessage.findMany({
+      where: {
+        userId: authContext.userId,
+        ...(input.conversationId && {
+          conversationId: input.conversationId,
+        }),
+      },
+      orderBy: { createdAt: "desc" },
+      take: limit + 1,
+      ...(input.cursor && { cursor: { id: input.cursor }, skip: 1 }),
+      select: { id: true, messageId: true },
+    })
+
+    const hasMore = starred.length > limit
+    const items = hasMore ? starred.slice(0, limit) : starred
+
+    return {
+      success: true,
+      data: {
+        messageIds: items.map((s) => s.messageId),
+        nextCursor: hasMore ? items[items.length - 1].id : undefined,
+      },
+    }
+  } catch (error) {
+    console.error("[getStarredMessages] Error:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to get starred messages",
     }
   }
 }

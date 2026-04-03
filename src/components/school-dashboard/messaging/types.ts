@@ -86,6 +86,7 @@ export type MessageDTO = {
       email: string | null
     }
   } | null
+  forwardedFromId: string | null
   isEdited: boolean
   editedAt: Date | null
   isDeleted: boolean

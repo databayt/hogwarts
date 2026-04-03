@@ -144,6 +144,13 @@ export interface SocketEvents {
     inviteeId: string
   }) => void
 
+  // Presence events
+  "presence:online": (data: { userId: string; timestamp: string }) => void
+  "presence:offline": (data: {
+    userId: string
+    lastSeenAt: string
+  }) => void
+
   // System events
   notification: (data: { type: string; message: string }) => void
   error: (data: { error: string }) => void
@@ -439,6 +446,14 @@ class SocketService {
 
     this.socket.on("conversation:invite", (data) => {
       this.emit("conversation:invite", data)
+    })
+
+    this.socket.on("presence:online", (data) => {
+      this.emit("presence:online", data)
+    })
+
+    this.socket.on("presence:offline", (data) => {
+      this.emit("presence:offline", data)
     })
 
     // Re-attach custom listeners

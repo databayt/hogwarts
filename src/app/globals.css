@@ -47,6 +47,9 @@
   --color-msg-hover: var(--msg-hover);
   --color-msg-date-pill: var(--msg-date-pill);
   --color-msg-typing-dot: var(--msg-typing-dot);
+  --color-msg-system-text: var(--msg-system-text);
+  --color-msg-link: var(--msg-link);
+  --color-msg-timestamp: var(--msg-timestamp);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -153,18 +156,21 @@
   --contribution-level-3: #30a14e;
   --contribution-level-4: #216e39;
 
-  /* WhatsApp-inspired messaging tokens (Light) */
-  --msg-outgoing: oklch(0.91 0.05 155);
-  --msg-incoming: oklch(1 0 0);
-  --msg-chat-bg: oklch(0.93 0.01 90);
-  --msg-sidebar-bg: oklch(1 0 0);
-  --msg-header-bg: oklch(0.97 0.005 155);
-  --msg-read-check: oklch(0.62 0.15 230);
-  --msg-unread-badge: oklch(0.65 0.2 155);
-  --msg-input-bg: oklch(1 0 0);
-  --msg-hover: oklch(0.96 0.005 155);
-  --msg-date-pill: oklch(0.85 0.02 200 / 85%);
-  --msg-typing-dot: oklch(0.55 0 0);
+  /* WhatsApp exact messaging tokens (Light) */
+  --msg-outgoing: oklch(0.957 0.067 141.1);  /* #d9fdd3 */
+  --msg-incoming: oklch(1.000 0.000 89.9);  /* #ffffff */
+  --msg-chat-bg: oklch(0.939 0.012 79.8);  /* #efeae2 */
+  --msg-sidebar-bg: oklch(1.000 0.000 89.9);  /* #ffffff */
+  --msg-header-bg: oklch(0.960 0.005 258.3);  /* #f0f2f5 — same as WhatsApp Web header */
+  --msg-read-check: oklch(0.755 0.117 229.7);  /* #53bdeb */
+  --msg-unread-badge: oklch(0.761 0.201 149.7);  /* #25d366 */
+  --msg-input-bg: oklch(0.960 0.005 258.3);  /* #f0f2f5 */
+  --msg-hover: oklch(0.960 0.005 258.3);  /* #f0f2f5 */
+  --msg-date-pill: oklch(0.277 0.020 230.0 / 85%);  /* #1e2a30 */
+  --msg-typing-dot: oklch(0.559 0.025 233.7);  /* #667781 */
+  --msg-system-text: oklch(0.496 0.026 233.9);  /* #54656f */
+  --msg-link: oklch(0.563 0.124 237.9);  /* #027eb5 */
+  --msg-timestamp: oklch(0.559 0.025 233.7);  /* #667781 */
 }
 
 :root[dir="rtl"] {
@@ -214,18 +220,21 @@
   --contribution-level-3: #26a641;
   --contribution-level-4: #39d353;
 
-  /* WhatsApp-inspired messaging tokens (Dark) */
-  --msg-outgoing: oklch(0.25 0.04 170);
-  --msg-incoming: oklch(0.22 0 0);
-  --msg-chat-bg: oklch(0.12 0.01 200);
-  --msg-sidebar-bg: oklch(0.15 0 0);
-  --msg-header-bg: oklch(0.18 0 0);
-  --msg-read-check: oklch(0.62 0.15 230);
-  --msg-unread-badge: oklch(0.65 0.2 155);
-  --msg-input-bg: oklch(0.2 0.005 200);
-  --msg-hover: oklch(0.2 0.01 170);
-  --msg-date-pill: oklch(0.25 0.02 200 / 85%);
-  --msg-typing-dot: oklch(0.6 0 0);
+  /* WhatsApp exact messaging tokens (Dark) */
+  --msg-outgoing: oklch(0.424 0.080 174.4);  /* #005c4b */
+  --msg-incoming: oklch(0.285 0.021 234.1);  /* #202c33 */
+  --msg-chat-bg: oklch(0.185 0.018 238.2);  /* #0b141a */
+  --msg-sidebar-bg: oklch(0.215 0.019 235.1);  /* #111b21 */
+  --msg-header-bg: oklch(0.285 0.021 234.1);  /* #202c33 */
+  --msg-read-check: oklch(0.755 0.117 229.7);  /* #53bdeb */
+  --msg-unread-badge: oklch(0.651 0.128 170.4);  /* #00a884 */
+  --msg-input-bg: oklch(0.335 0.025 234.9);  /* #2a3942 */
+  --msg-hover: oklch(0.335 0.025 234.9);  /* #2a3942 */
+  --msg-date-pill: oklch(0.246 0.020 239.1 / 85%);  /* #182229 */
+  --msg-typing-dot: oklch(0.664 0.024 235.2);  /* #8696a0 */
+  --msg-system-text: oklch(0.664 0.024 235.2);  /* #8696a0 */
+  --msg-link: oklch(0.755 0.117 229.7);  /* #53bdeb */
+  --msg-timestamp: oklch(0.664 0.024 235.2);  /* #8696a0 */
 }
 
 @layer base {
@@ -508,7 +517,16 @@ body {
   background-color: hsl(var(--background));
 }
 
-/* WhatsApp-style message bubble tails */
+/* WhatsApp doodle wallpaper pattern */
+.wa-doodle-bg {
+  background-color: var(--msg-chat-bg);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Cg fill='%23000' fill-opacity='0.03'%3E%3Cpath d='M20 10c0-3 2-5 5-5s5 2 5 5-2 5-5 5-5-2-5-5zm25 5l8-4 4 8-8 4zm30-8c2 0 4 2 4 4s-2 4-4 4-4-2-4-4 2-4 4-4zm35 12l-3-6h6zm25-4c0-2 2-4 4-4s4 2 4 4-2 4-4 4-4-2-4-4z'/%3E%3Cpath d='M15 55l5-3 3 5-5 3zm30 5c3 0 5 2 5 5s-2 5-5 5-5-2-5-5 2-5 5-5zm40-3l4 8-4 2-4-8zm20 8c2 0 4 2 4 4s-2 4-4 4-4-2-4-4 2-4 4-4zm35-5l6 3-3 6-6-3z'/%3E%3Cpath d='M25 100c0-3 2-5 5-5s5 2 5 5-2 5-5 5-5-2-5-5zm35 3l-4-8h8zm25-8c3 0 5 2 5 5s-2 5-5 5-5-2-5-5 2-5 5-5zm30 10l5-3 3 5-5 3zm25-5c0-2 2-4 4-4s4 2 4 4-2 4-4 4-4-2-4-4z'/%3E%3Cpath d='M10 145l8-4 4 8-8 4zm35-5c2 0 4 2 4 4s-2 4-4 4-4-2-4-4 2-4 4-4zm30 8l-3-6h6zm30-3c3 0 5 2 5 5s-2 5-5 5-5-2-5-5 2-5 5-5zm30 5l6 3-3 6-6-3z'/%3E%3Cpath d='M20 185c0-2 2-4 4-4s4 2 4 4-2 4-4 4-4-2-4-4zm40-3l5-3 3 5-5 3zm25 5c3 0 5 2 5 5s-2 5-5 5-5-2-5-5 2-5 5-5zm35-8l4 8-4 2-4-8zm25 6c0-3 2-5 5-5s5 2 5 5-2 5-5 5-5-2-5-5z'/%3E%3C/g%3E%3C/svg%3E");
+}
+.dark .wa-doodle-bg {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Cg fill='%23fff' fill-opacity='0.02'%3E%3Cpath d='M20 10c0-3 2-5 5-5s5 2 5 5-2 5-5 5-5-2-5-5zm25 5l8-4 4 8-8 4zm30-8c2 0 4 2 4 4s-2 4-4 4-4-2-4-4 2-4 4-4zm35 12l-3-6h6zm25-4c0-2 2-4 4-4s4 2 4 4-2 4-4 4-4-2-4-4z'/%3E%3Cpath d='M15 55l5-3 3 5-5 3zm30 5c3 0 5 2 5 5s-2 5-5 5-5-2-5-5 2-5 5-5zm40-3l4 8-4 2-4-8zm20 8c2 0 4 2 4 4s-2 4-4 4-4-2-4-4 2-4 4-4zm35-5l6 3-3 6-6-3z'/%3E%3Cpath d='M25 100c0-3 2-5 5-5s5 2 5 5-2 5-5 5-5-2-5-5zm35 3l-4-8h8zm25-8c3 0 5 2 5 5s-2 5-5 5-5-2-5-5 2-5 5-5zm30 10l5-3 3 5-5 3zm25-5c0-2 2-4 4-4s4 2 4 4-2 4-4 4-4-2-4-4z'/%3E%3Cpath d='M10 145l8-4 4 8-8 4zm35-5c2 0 4 2 4 4s-2 4-4 4-4-2-4-4 2-4 4-4zm30 8l-3-6h6zm30-3c3 0 5 2 5 5s-2 5-5 5-5-2-5-5 2-5 5-5zm30 5l6 3-3 6-6-3z'/%3E%3Cpath d='M20 185c0-2 2-4 4-4s4 2 4 4-2 4-4 4-4-2-4-4zm40-3l5-3 3 5-5 3zm25 5c3 0 5 2 5 5s-2 5-5 5-5-2-5-5 2-5 5-5zm35-8l4 8-4 2-4-8zm25 6c0-3 2-5 5-5s5 2 5 5-2 5-5 5-5-2-5-5z'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* WhatsApp-style curved message bubble tails */
 .wa-tail-out {
   position: relative;
 }
@@ -517,15 +535,10 @@ body {
   position: absolute;
   top: 0;
   inset-inline-end: -8px;
-  width: 0;
-  height: 0;
-  border-style: solid;
-  border-width: 0 0 10px 8px;
-  border-color: transparent transparent transparent var(--msg-outgoing);
-}
-[dir="rtl"] .wa-tail-out::before {
-  border-width: 0 8px 10px 0;
-  border-color: transparent var(--msg-outgoing) transparent transparent;
+  width: 8px;
+  height: 13px;
+  background-color: var(--msg-outgoing);
+  clip-path: path("M0 0C0 0 5 1.5 6.5 5C8 8.5 8 13 8 13L0 13Z");
 }
 
 .wa-tail-in {
@@ -536,13 +549,8 @@ body {
   position: absolute;
   top: 0;
   inset-inline-start: -8px;
-  width: 0;
-  height: 0;
-  border-style: solid;
-  border-width: 0 8px 10px 0;
-  border-color: transparent var(--msg-incoming) transparent transparent;
-}
-[dir="rtl"] .wa-tail-in::before {
-  border-width: 0 0 10px 8px;
-  border-color: transparent transparent transparent var(--msg-incoming);
+  width: 8px;
+  height: 13px;
+  background-color: var(--msg-incoming);
+  clip-path: path("M8 0C8 0 3 1.5 1.5 5C0 8.5 0 13 0 13L8 13Z");
 }

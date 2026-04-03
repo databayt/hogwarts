@@ -10,14 +10,19 @@ import { getTenantContext } from "@/lib/tenant-context"
 import {
   createConversation,
   deleteMessage,
+  forwardMessage,
+  getStarredMessages,
   markConversationAsRead,
   sendMessage,
+  starMessage,
+  unstarMessage,
 } from "../actions"
 import { getAuthContext } from "../authorization"
 import {
   getConversation,
   getConversationParticipant,
   getMessage,
+  isConversationParticipant,
 } from "../queries"
 
 vi.mock("@/lib/db", () => ({
@@ -26,12 +31,19 @@ vi.mock("@/lib/db", () => ({
       create: vi.fn(),
       update: vi.fn(),
       findFirst: vi.fn(),
+      findUnique: vi.fn(),
       findMany: vi.fn(),
     },
     message: {
       create: vi.fn(),
       update: vi.fn(),
       findFirst: vi.fn(),
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+    },
+    starredMessage: {
+      upsert: vi.fn(),
+      deleteMany: vi.fn(),
       findMany: vi.fn(),
     },
     conversationParticipant: {
@@ -252,6 +264,9 @@ describe("Messaging Actions", () => {
       vi.mocked(db.conversationParticipant.updateMany).mockResolvedValue({
         count: 1,
       })
+      vi.mocked(db.conversation.findUnique).mockResolvedValue({
+        whatsappEnabled: false,
+      } as any)
 
       const result = await markConversationAsRead({
         conversationId: "conv-1",
@@ -267,6 +282,379 @@ describe("Messaging Actions", () => {
           lastReadAt: expect.any(Date),
         },
       })
+    })
+  })
+
+  describe("forwardMessage", () => {
+    const mockOriginalMessage = {
+      id: "msg-original",
+      conversationId: "conv-source",
+      senderId: "other-user",
+      content: "Hello world",
+      contentType: "text",
+      attachments: [],
+      conversation: { schoolId: mockSchoolId },
+    }
+
+    it("returns NOT_AUTHENTICATED when no session", async () => {
+      vi.mocked(getAuthContext).mockReturnValue(null)
+
+      const result = await forwardMessage({
+        messageId: "msg-original",
+        targetConversationIds: ["conv-target"],
+      })
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("NOT_AUTHENTICATED")
+    })
+
+    it("returns MISSING_SCHOOL when no school", async () => {
+      vi.mocked(getTenantContext).mockResolvedValue({
+        schoolId: "",
+        subdomain: "",
+        role: "TEACHER",
+        locale: "en",
+      })
+
+      const result = await forwardMessage({
+        messageId: "msg-original",
+        targetConversationIds: ["conv-target"],
+      })
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("MISSING_SCHOOL")
+    })
+
+    it("returns error when original message not found", async () => {
+      vi.mocked(db.message.findUnique).mockResolvedValue(null)
+
+      const result = await forwardMessage({
+        messageId: "msg-nonexistent",
+        targetConversationIds: ["conv-target"],
+      })
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("Message not found")
+    })
+
+    it("returns error when user not participant of source conversation", async () => {
+      vi.mocked(db.message.findUnique).mockResolvedValue(
+        mockOriginalMessage as any
+      )
+      vi.mocked(isConversationParticipant).mockResolvedValueOnce(false)
+
+      const result = await forwardMessage({
+        messageId: "msg-original",
+        targetConversationIds: ["conv-target"],
+      })
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("Not a participant of this conversation")
+    })
+
+    it("skips target conversations where user is not participant", async () => {
+      vi.mocked(db.message.findUnique).mockResolvedValue(
+        mockOriginalMessage as any
+      )
+      // Source conversation: user IS participant
+      vi.mocked(isConversationParticipant).mockResolvedValueOnce(true)
+      // Target conv-1: user is NOT participant
+      vi.mocked(isConversationParticipant).mockResolvedValueOnce(false)
+      // Target conv-2: user IS participant
+      vi.mocked(isConversationParticipant).mockResolvedValueOnce(true)
+
+      vi.mocked(db.message.create).mockResolvedValue({
+        id: "msg-forwarded-2",
+      } as any)
+      vi.mocked(db.conversation.update).mockResolvedValue({} as any)
+
+      const result = await forwardMessage({
+        messageId: "msg-original",
+        targetConversationIds: ["conv-target-1", "conv-target-2"],
+      })
+
+      expect(result.success).toBe(true)
+      if (result.success) {
+        // Only one message created (skipped conv-target-1)
+        expect(result.data.messageIds).toEqual(["msg-forwarded-2"])
+      }
+      expect(db.message.create).toHaveBeenCalledTimes(1)
+    })
+
+    it("successfully creates forwarded messages with forwardedFromId set", async () => {
+      vi.mocked(db.message.findUnique).mockResolvedValue(
+        mockOriginalMessage as any
+      )
+      vi.mocked(isConversationParticipant).mockResolvedValue(true)
+      vi.mocked(db.message.create).mockResolvedValue({
+        id: "msg-forwarded",
+      } as any)
+      vi.mocked(db.conversation.update).mockResolvedValue({} as any)
+
+      const result = await forwardMessage({
+        messageId: "msg-original",
+        targetConversationIds: ["conv-target"],
+      })
+
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.messageIds).toEqual(["msg-forwarded"])
+      }
+      expect(db.message.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          conversationId: "conv-target",
+          senderId: mockUserId,
+          content: "Hello world",
+          contentType: "text",
+          forwardedFromId: "msg-original",
+          status: "sent",
+        }),
+      })
+    })
+
+    it("copies attachments to forwarded messages", async () => {
+      const messageWithAttachments = {
+        ...mockOriginalMessage,
+        attachments: [
+          {
+            fileName: "doc.pdf",
+            fileUrl: "https://example.com/doc.pdf",
+            fileSize: 1024,
+            fileType: "application/pdf",
+            width: null,
+            height: null,
+            thumbnail: null,
+          },
+        ],
+      }
+      vi.mocked(db.message.findUnique).mockResolvedValue(
+        messageWithAttachments as any
+      )
+      vi.mocked(isConversationParticipant).mockResolvedValue(true)
+      vi.mocked(db.message.create).mockResolvedValue({
+        id: "msg-forwarded",
+      } as any)
+      vi.mocked(db.conversation.update).mockResolvedValue({} as any)
+
+      const result = await forwardMessage({
+        messageId: "msg-original",
+        targetConversationIds: ["conv-target"],
+      })
+
+      expect(result.success).toBe(true)
+      expect(db.message.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          forwardedFromId: "msg-original",
+          attachments: {
+            create: [
+              {
+                fileName: "doc.pdf",
+                fileUrl: "https://example.com/doc.pdf",
+                fileSize: 1024,
+                fileType: "application/pdf",
+                width: null,
+                height: null,
+                thumbnail: null,
+                uploaded: true,
+              },
+            ],
+          },
+        }),
+      })
+    })
+
+    it("updates lastMessageAt on target conversations", async () => {
+      vi.mocked(db.message.findUnique).mockResolvedValue(
+        mockOriginalMessage as any
+      )
+      vi.mocked(isConversationParticipant).mockResolvedValue(true)
+      vi.mocked(db.message.create).mockResolvedValue({
+        id: "msg-forwarded",
+      } as any)
+      vi.mocked(db.conversation.update).mockResolvedValue({} as any)
+
+      await forwardMessage({
+        messageId: "msg-original",
+        targetConversationIds: ["conv-target"],
+      })
+
+      expect(db.conversation.update).toHaveBeenCalledWith({
+        where: { id: "conv-target" },
+        data: { lastMessageAt: expect.any(Date) },
+      })
+    })
+  })
+
+  describe("starMessage", () => {
+    it("returns NOT_AUTHENTICATED when no session", async () => {
+      vi.mocked(getAuthContext).mockReturnValue(null)
+
+      const result = await starMessage({
+        messageId: "msg-1",
+        conversationId: "conv-1",
+      })
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("NOT_AUTHENTICATED")
+    })
+
+    it("upserts starred message without failing if already starred", async () => {
+      vi.mocked(isConversationParticipant).mockResolvedValue(true)
+      vi.mocked(db.starredMessage.upsert).mockResolvedValue({
+        id: "starred-1",
+        userId: mockUserId,
+        messageId: "msg-1",
+        conversationId: "conv-1",
+      } as any)
+
+      const result = await starMessage({
+        messageId: "msg-1",
+        conversationId: "conv-1",
+      })
+
+      expect(result.success).toBe(true)
+      expect(db.starredMessage.upsert).toHaveBeenCalledWith({
+        where: {
+          userId_messageId: {
+            userId: mockUserId,
+            messageId: "msg-1",
+          },
+        },
+        create: {
+          userId: mockUserId,
+          messageId: "msg-1",
+          conversationId: "conv-1",
+        },
+        update: {},
+      })
+    })
+
+    it("returns the starred message id", async () => {
+      vi.mocked(isConversationParticipant).mockResolvedValue(true)
+      vi.mocked(db.starredMessage.upsert).mockResolvedValue({
+        id: "starred-1",
+        userId: mockUserId,
+        messageId: "msg-1",
+        conversationId: "conv-1",
+      } as any)
+
+      const result = await starMessage({
+        messageId: "msg-1",
+        conversationId: "conv-1",
+      })
+
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.id).toBe("starred-1")
+      }
+    })
+  })
+
+  describe("unstarMessage", () => {
+    it("returns NOT_AUTHENTICATED when no session", async () => {
+      vi.mocked(getAuthContext).mockReturnValue(null)
+
+      const result = await unstarMessage({
+        messageId: "msg-1",
+      })
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("NOT_AUTHENTICATED")
+    })
+
+    it("deletes starred message records matching userId and messageId", async () => {
+      vi.mocked(db.starredMessage.deleteMany).mockResolvedValue({ count: 1 })
+
+      const result = await unstarMessage({
+        messageId: "msg-1",
+      })
+
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.success).toBe(true)
+      }
+      expect(db.starredMessage.deleteMany).toHaveBeenCalledWith({
+        where: {
+          userId: mockUserId,
+          messageId: "msg-1",
+        },
+      })
+    })
+  })
+
+  describe("getStarredMessages", () => {
+    it("returns NOT_AUTHENTICATED when no session", async () => {
+      vi.mocked(getAuthContext).mockReturnValue(null)
+
+      const result = await getStarredMessages({})
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("NOT_AUTHENTICATED")
+    })
+
+    it("returns messageIds for current user", async () => {
+      vi.mocked(db.starredMessage.findMany).mockResolvedValue([
+        { id: "starred-1", messageId: "msg-1" },
+        { id: "starred-2", messageId: "msg-2" },
+      ] as any)
+
+      const result = await getStarredMessages({})
+
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.messageIds).toEqual(["msg-1", "msg-2"])
+      }
+      expect(db.starredMessage.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { userId: mockUserId },
+          orderBy: { createdAt: "desc" },
+          select: { id: true, messageId: true },
+        })
+      )
+    })
+
+    it("supports cursor-based pagination", async () => {
+      // Return limit+1 items to indicate hasMore
+      const items = Array.from({ length: 51 }, (_, i) => ({
+        id: `starred-${i}`,
+        messageId: `msg-${i}`,
+      }))
+      vi.mocked(db.starredMessage.findMany).mockResolvedValue(items as any)
+
+      const result = await getStarredMessages({ limit: 50, cursor: "starred-0" })
+
+      expect(result.success).toBe(true)
+      if (result.success) {
+        // Should return exactly 50 items (not 51)
+        expect(result.data.messageIds).toHaveLength(50)
+        // nextCursor should be the id of the last returned item
+        expect(result.data.nextCursor).toBe("starred-49")
+      }
+      expect(db.starredMessage.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          take: 51,
+          cursor: { id: "starred-0" },
+          skip: 1,
+        })
+      )
+    })
+
+    it("filters by conversationId when provided", async () => {
+      vi.mocked(db.starredMessage.findMany).mockResolvedValue([
+        { id: "starred-1", messageId: "msg-1" },
+      ] as any)
+
+      const result = await getStarredMessages({ conversationId: "conv-1" })
+
+      expect(result.success).toBe(true)
+      expect(db.starredMessage.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            userId: mockUserId,
+            conversationId: "conv-1",
+          },
+        })
+      )
     })
   })
 })

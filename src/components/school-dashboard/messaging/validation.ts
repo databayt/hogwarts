@@ -257,6 +257,26 @@ export const respondToInviteSchema = z.object({
   accept: z.boolean(),
 })
 
+// Forward message schema
+export const forwardMessageSchema = z.object({
+  messageId: z.string().min(1, "Message ID is required"),
+  targetConversationIds: z
+    .array(z.string().min(1))
+    .min(1, "At least one target conversation is required")
+    .max(5, "Cannot forward to more than 5 conversations at once"),
+})
+
+// Star message schema
+export const starMessageSchema = z.object({
+  messageId: z.string().min(1, "Message ID is required"),
+  conversationId: z.string().min(1, "Conversation ID is required"),
+})
+
+// Unstar message schema
+export const unstarMessageSchema = z.object({
+  messageId: z.string().min(1, "Message ID is required"),
+})
+
 // Typing indicator schema
 export const typingIndicatorSchema = z.object({
   conversationId: z.string().min(1, "Conversation ID is required"),

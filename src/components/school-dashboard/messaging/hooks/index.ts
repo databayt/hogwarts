@@ -6,3 +6,5 @@ export {
   useConversationListUpdates,
 } from "./use-realtime-messages"
 export type { default as useRealtimeMessagesType } from "./use-realtime-messages"
+export { usePresence, useUserPresence } from "./use-presence"
+export type { PresenceStatus } from "./use-presence"

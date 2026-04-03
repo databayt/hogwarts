@@ -16,6 +16,8 @@ export type ContactDTO = {
   category: ContactCategory
   /** Contextual info: section name, department, position */
   contextLabel?: string
+  /** Whether contact has a WhatsApp-reachable phone number */
+  hasWhatsApp?: boolean
   /** Conversation enrichment (client-side merge) */
   conversationId?: string
   lastMessage?: string | null

@@ -101,9 +101,18 @@ export const ContactCard = memo(function ContactCard({
         {/* Row 1: Name + time or role badge */}
         <div className="flex items-center justify-between gap-2">
           <span
-            className={cn("truncate", hasUnread ? "font-bold" : "font-medium")}
+            className={cn(
+              "flex items-center gap-1 truncate",
+              hasUnread ? "font-bold" : "font-medium"
+            )}
           >
             {contact.displayName}
+            {contact.hasWhatsApp && (
+              <span
+                className="inline-block h-2 w-2 flex-shrink-0 rounded-full bg-green-500"
+                title="WhatsApp"
+              />
+            )}
           </span>
           {hasConversation && contact.lastMessageAt ? (
             <span

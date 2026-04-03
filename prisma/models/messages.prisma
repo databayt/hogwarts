@@ -130,6 +130,10 @@ model Message {
   replyToId String?
   replyTo   Message? @relation("MessageReplies", fields: [replyToId], references: [id], onDelete: SetNull)
 
+  // Forwarding
+  forwardedFromId String?
+  forwardedFrom   Message? @relation("MessageForwards", fields: [forwardedFromId], references: [id], onDelete: SetNull)
+
   // Edited flag
   isEdited Boolean   @default(false)
   editedAt DateTime?
@@ -153,10 +157,12 @@ model Message {
   conversation   Conversation         @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   sender         User                 @relation("MessagesSent", fields: [senderId], references: [id], onDelete: Cascade)
   replies        Message[]            @relation("MessageReplies")
+  forwards       Message[]            @relation("MessageForwards")
   attachments    MessageAttachment[]
   reactions      MessageReaction[]
   readReceipts   MessageReadReceipt[]
   pinnedMessages PinnedMessage[]      @relation("PinnedMessage")
+  starredBy      StarredMessage[]     @relation("StarredMessage")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -167,6 +173,7 @@ model Message {
   @@index([replyToId]) // Thread lookup
   @@index([conversationId, isSystem]) // Filter system messages
   @@index([whatsappMessageId]) // WhatsApp webhook status lookup
+  @@index([forwardedFromId]) // Forwarded messages lookup
   @@map("messages")
 }
 
@@ -339,4 +346,23 @@ model ConversationInvite {
   @@index([inviteeId, status])
   @@index([expiresAt])
   @@map("conversation_invites")
+}
+
+// Starred messages (per user)
+model StarredMessage {
+  id             String @id @default(cuid())
+  userId         String
+  messageId      String
+  conversationId String // Denormalized for efficient queries
+
+  // Relationships
+  user    User    @relation("StarredMessages", fields: [userId], references: [id], onDelete: Cascade)
+  message Message @relation("StarredMessage", fields: [messageId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, messageId])
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([conversationId])
+  @@map("starred_messages")
 }

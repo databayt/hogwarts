@@ -190,7 +190,7 @@ export function MessageList({
   // Render virtualized list
   if (enableVirtualization) {
     return (
-      <div className={cn("bg-msg-chat-bg relative flex-1", className)}>
+      <div className={cn("wa-doodle-bg relative flex-1", className)}>
         <div
           ref={scrollContainerRef}
           className="h-full flex-1 overflow-x-hidden overflow-y-auto"
@@ -273,7 +273,7 @@ export function MessageList({
 
   // Non-virtualized fallback
   return (
-    <div className={cn("bg-msg-chat-bg relative flex-1", className)}>
+    <div className={cn("wa-doodle-bg relative flex-1", className)}>
       <AutoScroller
         ref={scrollContainerRef}
         className="h-full flex-1 overflow-x-hidden overflow-y-auto"
@@ -350,7 +350,7 @@ export function MessageListSkeleton({
   locale?: "ar" | "en"
 }) {
   return (
-    <div className="bg-msg-chat-bg flex-1 px-4 py-4">
+    <div className="wa-doodle-bg flex-1 px-4 py-4">
       {/* Date pill skeleton */}
       <div className="my-3 flex items-center justify-center">
         <Skeleton className="h-6 w-20 rounded-lg" />

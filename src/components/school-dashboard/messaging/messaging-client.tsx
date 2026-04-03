@@ -23,6 +23,7 @@ import {
 } from "./actions"
 import { ChatInterface } from "./chat-interface"
 import { ContactsPanel } from "./contacts/contacts-panel"
+import { ConversationInfoPanel } from "./conversation-info-panel"
 import { NoActiveConversation } from "./empty-state"
 import type { ConversationDTO, MessageDTO } from "./types"
 
@@ -33,6 +34,7 @@ export interface MessagingClientProps {
   currentUserId: string
   currentUserRole: string
   locale?: "ar" | "en"
+  whatsappConnected?: boolean
 }
 
 export function MessagingClient({
@@ -42,6 +44,7 @@ export function MessagingClient({
   currentUserId,
   currentUserRole,
   locale = "en",
+  whatsappConnected = false,
 }: MessagingClientProps) {
   const router = useRouter()
   const { dictionary } = useDictionary()
@@ -52,6 +55,7 @@ export function MessagingClient({
     useState<ConversationDTO | null>(initialActiveConversation)
   const [messages, setMessages] = useState<MessageDTO[]>(initialMessages)
   const [isConnected, setIsConnected] = useState(false)
+  const [showInfoPanel, setShowInfoPanel] = useState(false)
 
   // Sync state with server props on navigation (router.refresh)
   const prevActiveId = useRef(initialActiveConversation?.id)
@@ -132,6 +136,7 @@ export function MessagingClient({
             directParticipant2Id: null,
             lastMessageAt: new Date(),
             isArchived: false,
+            whatsappEnabled: false,
             participantCount: data.participantIds.length,
             unreadCount: 0,
             lastMessage: null,
@@ -171,6 +176,7 @@ export function MessagingClient({
     setActiveConversation(null)
     setMessages([])
     setHasMoreMessages(false)
+    setShowInfoPanel(false)
     window.history.replaceState(null, "", `/${locale}/messages`)
   }
 
@@ -307,6 +313,7 @@ export function MessagingClient({
             initialMessages={messages}
             currentUserId={currentUserId}
             locale={locale}
+            whatsappConnected={whatsappConnected}
             onSendMessage={handleSendMessage}
             onEditMessage={handleEditMessage}
             onDeleteMessage={handleDeleteMessage}
@@ -315,11 +322,25 @@ export function MessagingClient({
             onLoadMoreMessages={handleLoadMoreMessages}
             hasMoreMessages={hasMoreMessages}
             onBack={handleBack}
+            onViewDetails={() => setShowInfoPanel(!showInfoPanel)}
+            onViewParticipants={() => setShowInfoPanel(true)}
           />
         ) : (
           <NoActiveConversation locale={locale} />
         )}
       </div>
+
+      {/* Info panel — slide-in from end */}
+      {showInfoPanel && activeConversation && (
+        <div className="border-border hidden border-s md:block">
+          <ConversationInfoPanel
+            conversation={activeConversation}
+            currentUserId={currentUserId}
+            locale={locale}
+            onClose={() => setShowInfoPanel(false)}
+          />
+        </div>
+      )}
     </div>
   )
 }

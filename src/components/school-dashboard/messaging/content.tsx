@@ -4,6 +4,7 @@
 import { Suspense } from "react"
 import { auth } from "@/auth"
 
+import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getMessagingDictionary } from "@/components/internationalization/dictionaries"
@@ -62,8 +63,10 @@ export async function MessagingContent({
   let activeConversationData: any = null
   let messagesData: any[] = []
 
+  let whatsappConnected = false
+
   try {
-    const [conversationsResult, activeConversation, messagesResult] =
+    const [conversationsResult, activeConversation, messagesResult, waSession] =
       await Promise.all([
         getConversationsList(schoolId, userId, { page: 1, perPage: 50 }),
         conversationId
@@ -76,9 +79,13 @@ export async function MessagingContent({
               perPage: 50,
             }).catch(() => ({ rows: [], count: 0 }))
           : Promise.resolve({ rows: [], count: 0 }),
+        db.whatsAppSession
+          .findUnique({ where: { schoolId }, select: { status: true } })
+          .catch(() => null),
       ])
 
     conversationsData = serializeConversations(conversationsResult.rows)
+    whatsappConnected = waSession?.status === "connected"
 
     if (activeConversation) {
       activeConversationData = serializeConversation(activeConversation)
@@ -96,6 +103,7 @@ export async function MessagingContent({
       currentUserId={userId}
       currentUserRole={session.user.role}
       locale={locale}
+      whatsappConnected={whatsappConnected}
     />
   )
 }

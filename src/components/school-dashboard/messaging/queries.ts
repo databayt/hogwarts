@@ -50,6 +50,7 @@ export const conversationListSelect = {
     take: 1,
   },
   isArchived: true,
+  whatsappEnabled: true,
   createdById: true,
   createdBy: {
     select: {
@@ -119,12 +120,16 @@ export const messageListSelect = {
       },
     },
   },
+  forwardedFromId: true,
   isEdited: true,
   editedAt: true,
   isDeleted: true,
   deletedAt: true,
   isSystem: true,
   metadata: true,
+  whatsappMessageId: true,
+  whatsappStatus: true,
+  whatsappPhone: true,
   createdAt: true,
   updatedAt: true,
   attachments: {

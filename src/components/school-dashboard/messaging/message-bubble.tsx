@@ -11,9 +11,14 @@ import {
   ChevronDown,
   Clock,
   Copy,
+  Download,
+  FileText,
+  Forward,
   Pencil,
+  Play,
   Reply,
   Smile,
+  Star,
   Trash2,
 } from "lucide-react"
 
@@ -30,6 +35,7 @@ import {
 import { toast } from "@/components/ui/use-toast"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
+import { LinkPreview, type LinkPreviewData } from "./link-preview"
 import type { MessageDTO } from "./types"
 
 export interface MessageBubbleProps {
@@ -38,11 +44,15 @@ export interface MessageBubbleProps {
   locale?: "ar" | "en"
   showSender?: boolean
   compact?: boolean
+  isStarred?: boolean
   onReply?: (message: MessageDTO) => void
   onEdit?: (message: MessageDTO) => void
   onDelete?: (messageId: string) => void
   onReact?: (messageId: string, emoji: string) => void
   onRemoveReaction?: (reactionId: string) => void
+  onForward?: (message: MessageDTO) => void
+  onStar?: (messageId: string) => void
+  onUnstar?: (messageId: string) => void
 }
 
 export interface MessageBubbleOptimizedProps extends MessageBubbleProps {
@@ -92,17 +102,62 @@ function ReadReceiptIcon({ status }: { status: string }) {
   }
 }
 
+// WhatsApp delivery status indicator (small "W" badge)
+function WhatsAppStatusIcon({ status }: { status: string }) {
+  const color =
+    status === "read"
+      ? "text-green-500"
+      : status === "delivered"
+        ? "text-green-400"
+        : status === "sent"
+          ? "text-muted-foreground"
+          : status === "failed"
+            ? "text-destructive"
+            : "text-muted-foreground"
+
+  return (
+    <span
+      className={cn("text-[9px] leading-none font-bold", color)}
+      title={`WhatsApp: ${status}`}
+    >
+      W
+    </span>
+  )
+}
+
 const commonEmojis = ["👍", "❤️", "😂", "😮", "😢", "🙏"]
+
+function isImageType(fileType: string): boolean {
+  return fileType.startsWith("image/")
+}
+
+function isVideoType(fileType: string): boolean {
+  return fileType.startsWith("video/")
+}
+
+function isAudioType(fileType: string): boolean {
+  return fileType.startsWith("audio/")
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
 
 export const MessageBubble = memo(function MessageBubble({
   message,
   currentUserId,
   locale = "en",
+  isStarred = false,
   onReply,
   onEdit,
   onDelete,
   onReact,
   onRemoveReaction,
+  onForward,
+  onStar,
+  onUnstar,
   showAvatar = false,
   showSenderName = true,
   showTimestamp = true,
@@ -118,6 +173,13 @@ export const MessageBubble = memo(function MessageBubble({
   const isEdited = message.isEdited && !isDeleted
   const isPending = message.status === "sending"
   const dateLocale = locale === "ar" ? ar : enUS
+
+  // Detect if message is media-only (image/video with no text)
+  const hasMedia =
+    message.attachments?.some(
+      (a) => isImageType(a.fileType) || isVideoType(a.fileType)
+    ) ?? false
+  const isMediaOnly = hasMedia && !message.content?.trim()
 
   const handleCopy = async () => {
     try {
@@ -238,7 +300,8 @@ export const MessageBubble = memo(function MessageBubble({
           <div className="group/bubble relative">
             <div
               className={cn(
-                "relative rounded-lg px-2 py-1.5 break-words shadow-sm",
+                "relative rounded-lg break-words shadow-sm",
+                isMediaOnly ? "overflow-hidden p-0" : "px-2 py-1.5",
                 isOwnMessage
                   ? "bg-msg-outgoing text-foreground rounded-se-sm"
                   : "bg-msg-incoming text-foreground rounded-ss-sm",
@@ -249,6 +312,19 @@ export const MessageBubble = memo(function MessageBubble({
                 isPending && "opacity-70"
               )}
             >
+              {/* Forwarded label */}
+              {message.forwardedFromId && !isDeleted && (
+                <div className="text-msg-timestamp flex items-center gap-1 px-2 pt-1.5 text-[11px] italic">
+                  <Forward className="h-3 w-3" />
+                  <span>{"Forwarded"}</span>
+                </div>
+              )}
+
+              {/* Star indicator */}
+              {isStarred && !isDeleted && (
+                <Star className="text-msg-timestamp absolute top-1 end-1 h-3 w-3" />
+              )}
+
               {/* Message content */}
               {isDeleted ? (
                 <span className="text-muted-foreground text-sm">
@@ -256,40 +332,158 @@ export const MessageBubble = memo(function MessageBubble({
                 </span>
               ) : (
                 <>
-                  <p className="text-sm whitespace-pre-wrap">
-                    {message.content}
-                  </p>
+                  {message.content?.trim() && (
+                    <p
+                      className={cn(
+                        "text-sm whitespace-pre-wrap",
+                        hasMedia && "px-2 pt-1.5"
+                      )}
+                    >
+                      {message.content}
+                    </p>
+                  )}
 
-                  {/* Attachments */}
+                  {/* Link preview — from OG metadata stored in message.metadata */}
+                  {(message.metadata as Record<string, unknown>)
+                    ?.linkPreview && (
+                    <LinkPreview
+                      preview={
+                        (message.metadata as Record<string, unknown>)
+                          .linkPreview as LinkPreviewData
+                      }
+                      isOwnMessage={isOwnMessage}
+                    />
+                  )}
+
+                  {/* Attachments — WhatsApp inline rendering */}
                   {message.attachments && message.attachments.length > 0 && (
-                    <div className="mt-1.5 space-y-1">
-                      {message.attachments.map((attachment) => (
-                        <a
-                          key={attachment.id}
-                          href={attachment.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="bg-foreground/5 hover:bg-foreground/10 flex items-center gap-2 rounded p-1.5 transition-colors"
-                        >
-                          <span className="truncate text-xs">
-                            {attachment.name}
-                          </span>
-                          <span className="text-muted-foreground text-[10px]">
-                            {attachment.size}
-                          </span>
-                        </a>
-                      ))}
+                    <div className="-mx-2 -mt-1.5 mb-1 space-y-0.5">
+                      {message.attachments.map((attachment) => {
+                        // Inline images
+                        if (isImageType(attachment.fileType)) {
+                          return (
+                            <a
+                              key={attachment.id}
+                              href={attachment.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="relative block overflow-hidden rounded-lg"
+                            >
+                              <img
+                                src={attachment.thumbnail || attachment.url}
+                                alt={attachment.fileName}
+                                className="max-h-[330px] min-h-[100px] w-full object-cover"
+                                loading="lazy"
+                              />
+                            </a>
+                          )
+                        }
+
+                        // Inline videos
+                        if (isVideoType(attachment.fileType)) {
+                          return (
+                            <a
+                              key={attachment.id}
+                              href={attachment.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="relative block overflow-hidden rounded-lg"
+                            >
+                              {attachment.thumbnail ? (
+                                <img
+                                  src={attachment.thumbnail}
+                                  alt={attachment.fileName}
+                                  className="max-h-[330px] min-h-[100px] w-full object-cover"
+                                  loading="lazy"
+                                />
+                              ) : (
+                                <div className="bg-foreground/10 flex h-[200px] w-full items-center justify-center">
+                                  <Play className="h-12 w-12 text-white drop-shadow-lg" />
+                                </div>
+                              )}
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-black/40">
+                                  <Play className="h-6 w-6 text-white" />
+                                </div>
+                              </div>
+                              <div className="absolute bottom-2 start-2 rounded bg-black/50 px-1.5 py-0.5 text-[11px] text-white">
+                                {formatFileSize(attachment.fileSize)}
+                              </div>
+                            </a>
+                          )
+                        }
+
+                        // Audio messages — waveform placeholder
+                        if (isAudioType(attachment.fileType)) {
+                          return (
+                            <div
+                              key={attachment.id}
+                              className="flex items-center gap-3 px-2 py-2"
+                            >
+                              <button
+                                onClick={() => {
+                                  const audio = new Audio(attachment.url)
+                                  audio.play()
+                                }}
+                                className="bg-msg-unread-badge flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-white"
+                              >
+                                <Play className="h-5 w-5" />
+                              </button>
+                              <div className="flex flex-1 flex-col gap-1">
+                                <div className="bg-foreground/20 h-1 w-full rounded-full">
+                                  <div className="bg-msg-unread-badge h-1 w-0 rounded-full" />
+                                </div>
+                                <span className="text-msg-timestamp text-[11px]">
+                                  {formatFileSize(attachment.fileSize)}
+                                </span>
+                              </div>
+                            </div>
+                          )
+                        }
+
+                        // File attachments — WhatsApp document card
+                        return (
+                          <a
+                            key={attachment.id}
+                            href={attachment.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="bg-foreground/5 hover:bg-foreground/10 mx-2 mt-1.5 flex items-center gap-3 rounded-lg p-2.5 transition-colors"
+                          >
+                            <div className="bg-msg-unread-badge/20 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded">
+                              <FileText className="text-msg-unread-badge h-5 w-5" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-medium">
+                                {attachment.fileName}
+                              </p>
+                              <p className="text-msg-timestamp text-xs">
+                                {formatFileSize(attachment.fileSize)} &middot;{" "}
+                                {attachment.fileType
+                                  .split("/")[1]
+                                  ?.toUpperCase() || "FILE"}
+                              </p>
+                            </div>
+                            <Download className="text-muted-foreground h-4 w-4 flex-shrink-0" />
+                          </a>
+                        )
+                      })}
                     </div>
                   )}
 
                   {/* Timestamp + read receipts — inside bubble, bottom-end */}
+                  {/* For media-only: overlay on image. For text: inline float. */}
                   {showTimestamp && isLastInGroup && (
                     <span
                       className={cn(
-                        "float-end ms-2 mt-0.5 flex items-center gap-0.5 text-[11px]",
-                        isOwnMessage
-                          ? "text-foreground/50"
-                          : "text-muted-foreground"
+                        "flex items-center gap-0.5 text-[11px]",
+                        isMediaOnly
+                          ? "absolute end-2 bottom-2 rounded bg-black/50 px-1.5 py-0.5 text-white"
+                          : "float-end ms-2 mt-0.5",
+                        !isMediaOnly &&
+                          (isOwnMessage
+                            ? "text-foreground/50"
+                            : "text-muted-foreground")
                       )}
                     >
                       {isEdited && (
@@ -303,8 +497,13 @@ export const MessageBubble = memo(function MessageBubble({
                         })}
                       </span>
                       {isOwnMessage && (
-                        <span className="ms-0.5">
+                        <span className="ms-0.5 flex items-center gap-0.5">
                           <ReadReceiptIcon status={message.status} />
+                          {message.whatsappStatus && (
+                            <WhatsAppStatusIcon
+                              status={message.whatsappStatus}
+                            />
+                          )}
                         </span>
                       )}
                     </span>
@@ -351,6 +550,25 @@ export const MessageBubble = memo(function MessageBubble({
                     <DropdownMenuItem onClick={handleCopy}>
                       <Copy className="me-2 h-4 w-4" />
                       {m?.actions?.copy || "Copy"}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onForward?.(message)}>
+                      <Forward className="me-2 h-4 w-4" />
+                      {m?.actions?.forward || "Forward"}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() =>
+                        isStarred
+                          ? onUnstar?.(message.id)
+                          : onStar?.(message.id)
+                      }
+                    >
+                      <Star
+                        className={cn(
+                          "me-2 h-4 w-4",
+                          isStarred && "fill-current"
+                        )}
+                      />
+                      {isStarred ? "Unstar" : "Star"}
                     </DropdownMenuItem>
                     {isOwnMessage && (
                       <>

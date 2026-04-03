@@ -3,12 +3,13 @@
  *
  * Bridges the in-app messaging system (Conversation/Message) with WhatsApp
  * delivery via the Evolution API. Handles phone resolution, dispatch, and
- * status tracking.
+ * status tracking. Includes retry with exponential backoff for failed sends.
  */
 
 import { db } from "@/lib/db"
-import * as evolution from "@/lib/whatsapp/evolution-client"
-import { checkAndConsumeRateLimit } from "@/lib/whatsapp/rate-limiter"
+
+const MAX_RETRY_ATTEMPTS = 5
+const BASE_RETRY_DELAY_MS = 1000 // 1s, 2s, 4s, 8s, 16s
 
 /**
  * Resolve a user's WhatsApp-reachable phone number.
@@ -66,7 +67,20 @@ export async function populateParticipantPhones(
 }
 
 /**
+ * Map MIME type to Evolution API mediatype
+ */
+function mimeToMediaType(
+  mime: string
+): "image" | "document" | "audio" | "video" {
+  if (mime.startsWith("image/")) return "image"
+  if (mime.startsWith("video/")) return "video"
+  if (mime.startsWith("audio/")) return "audio"
+  return "document"
+}
+
+/**
  * Dispatch an in-app message to WhatsApp for all eligible participants.
+ * Handles text, images, documents, audio, and video.
  * Non-blocking — errors are logged but don't fail the in-app message.
  */
 export async function dispatchMessageToWhatsApp(
@@ -86,6 +100,22 @@ export async function dispatchMessageToWhatsApp(
     return // No active WhatsApp session
   }
 
+  // Get message attachments
+  const messageWithAttachments = await db.message.findUnique({
+    where: { id: messageId },
+    select: {
+      attachments: {
+        select: {
+          fileUrl: true,
+          fileType: true,
+          fileName: true,
+        },
+      },
+    },
+  })
+
+  const attachments = messageWithAttachments?.attachments ?? []
+
   // Get participants with WhatsApp phones (excluding sender)
   const participants = await db.conversationParticipant.findMany({
     where: {
@@ -98,6 +128,11 @@ export async function dispatchMessageToWhatsApp(
   })
 
   if (participants.length === 0) return
+
+  // Dynamic imports to avoid bundling WhatsApp client with messaging module
+  const evolution = await import("@/lib/whatsapp/evolution-client")
+  const { checkAndConsumeRateLimit } =
+    await import("@/lib/whatsapp/rate-limiter")
 
   for (const participant of participants) {
     const phone = participant.whatsappPhone!
@@ -113,11 +148,32 @@ export async function dispatchMessageToWhatsApp(
     }
 
     try {
-      const result = await evolution.sendText(
-        session.instanceName,
-        phone,
-        content
-      )
+      let result
+
+      if (attachments.length > 0) {
+        // Send each attachment as media message
+        for (const attachment of attachments) {
+          result = await evolution.sendMedia(
+            session.instanceName,
+            phone,
+            attachment.fileUrl,
+            {
+              mediatype: mimeToMediaType(attachment.fileType),
+              caption: content || undefined,
+              fileName: attachment.fileName,
+            }
+          )
+        }
+      } else {
+        // Text-only message
+        result = await evolution.sendText(
+          session.instanceName,
+          phone,
+          content
+        )
+      }
+
+      if (!result) continue
 
       // Update message with WhatsApp tracking info
       await db.message.update({
@@ -136,8 +192,10 @@ export async function dispatchMessageToWhatsApp(
           sessionId: session.id,
           waMessageId: result.key.id,
           recipientPhone: phone,
-          content,
-          contentType: "text",
+          content: content || attachments[0]?.fileName || "",
+          contentType: attachments.length > 0
+            ? mimeToMediaType(attachments[0].fileType)
+            : "text",
           direction: "outgoing",
           status: "sent",
           triggerType: "messaging",
@@ -158,5 +216,150 @@ export async function dispatchMessageToWhatsApp(
         },
       })
     }
+  }
+}
+
+/**
+ * Sync read receipts back to WhatsApp.
+ * Called when a user reads messages that were originally sent via WhatsApp.
+ */
+export async function syncReadReceiptsToWhatsApp(
+  schoolId: string,
+  conversationId: string,
+  messageIds: string[]
+): Promise<void> {
+  const session = await db.whatsAppSession.findUnique({
+    where: { schoolId },
+    select: { instanceName: true, status: true },
+  })
+
+  if (!session || session.status !== "connected") return
+
+  // Find messages with WhatsApp IDs that need read sync
+  const messages = await db.message.findMany({
+    where: {
+      id: { in: messageIds },
+      conversationId,
+      whatsappMessageId: { not: null },
+      whatsappStatus: { not: "read" },
+    },
+    select: { whatsappMessageId: true, whatsappPhone: true },
+  })
+
+  if (messages.length === 0) return
+
+  const evolution = await import("@/lib/whatsapp/evolution-client")
+
+  for (const msg of messages) {
+    if (!msg.whatsappMessageId || !msg.whatsappPhone) continue
+    try {
+      await evolution.readMessages(
+        session.instanceName,
+        msg.whatsappPhone,
+        [msg.whatsappMessageId]
+      )
+    } catch (error) {
+      console.error(
+        `[syncReadReceiptsToWhatsApp] Failed for ${msg.whatsappMessageId}:`,
+        error
+      )
+    }
+  }
+}
+
+/**
+ * Retry failed WhatsApp message dispatches.
+ * Called by cron job. Processes messages with whatsappStatus="failed" or "pending"
+ * that were triggered by the messaging system.
+ *
+ * Uses exponential backoff: 1s, 2s, 4s, 8s, 16s (based on retry count stored in metadata).
+ */
+export async function retryFailedMessageDispatches(): Promise<{
+  processed: number
+  sent: number
+  failed: number
+  skipped: number
+}> {
+  // Find messages that need retry
+  const failedMessages = await db.message.findMany({
+    where: {
+      whatsappStatus: { in: ["failed", "pending"] },
+      whatsappPhone: { not: null },
+      conversation: { whatsappEnabled: true },
+    },
+    select: {
+      id: true,
+      conversationId: true,
+      senderId: true,
+      content: true,
+      whatsappPhone: true,
+      metadata: true,
+      conversation: { select: { schoolId: true } },
+    },
+    take: 20,
+    orderBy: { createdAt: "asc" },
+  })
+
+  if (failedMessages.length === 0) {
+    return { processed: 0, sent: 0, failed: 0, skipped: 0 }
+  }
+
+  let sent = 0
+  let failed = 0
+  let skipped = 0
+
+  for (const msg of failedMessages) {
+    const metadata = (msg.metadata as Record<string, unknown>) ?? {}
+    const retryCount = (metadata.waRetryCount as number) ?? 0
+
+    // Skip if max retries exceeded
+    if (retryCount >= MAX_RETRY_ATTEMPTS) {
+      skipped++
+      continue
+    }
+
+    // Check backoff delay
+    const backoffMs = BASE_RETRY_DELAY_MS * Math.pow(2, retryCount)
+    const lastAttempt = metadata.waLastAttempt as string | undefined
+    if (lastAttempt) {
+      const elapsed = Date.now() - new Date(lastAttempt).getTime()
+      if (elapsed < backoffMs) {
+        skipped++
+        continue
+      }
+    }
+
+    // Update retry metadata
+    await db.message.update({
+      where: { id: msg.id },
+      data: {
+        metadata: {
+          ...metadata,
+          waRetryCount: retryCount + 1,
+          waLastAttempt: new Date().toISOString(),
+        },
+      },
+    })
+
+    try {
+      // Re-dispatch
+      await dispatchMessageToWhatsApp(
+        msg.conversation.schoolId,
+        msg.conversationId,
+        msg.id,
+        msg.content,
+        msg.senderId
+      )
+      sent++
+    } catch {
+      failed++
+    }
+  }
+
+  return {
+    processed: failedMessages.length,
+    sent,
+    failed,
+    skipped,
   }
 }

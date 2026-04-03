@@ -207,6 +207,46 @@ export async function sendMedia(
   })
 }
 
+/**
+ * Download media from a WhatsApp message.
+ * Returns the media as a base64-encoded string with MIME type.
+ */
+export async function downloadMedia(
+  instanceName: string,
+  messageKey: { remoteJid: string; fromMe: boolean; id: string }
+): Promise<{ base64: string; mimetype: string; fileName?: string }> {
+  return request(`/chat/getBase64FromMediaMessage/${instanceName}`, {
+    method: "POST",
+    body: JSON.stringify({
+      message: { key: messageKey },
+    }),
+  })
+}
+
+/**
+ * Mark messages as read on WhatsApp
+ */
+export async function readMessages(
+  instanceName: string,
+  remoteJid: string,
+  messageIds: string[]
+): Promise<void> {
+  const jid = remoteJid.includes("@")
+    ? remoteJid
+    : `${remoteJid.replace(/\+/g, "")}@s.whatsapp.net`
+
+  await request(`/chat/markMessageAsRead/${instanceName}`, {
+    method: "PUT",
+    body: JSON.stringify({
+      readMessages: messageIds.map((id) => ({
+        remoteJid: jid,
+        fromMe: false,
+        id,
+      })),
+    }),
+  })
+}
+
 // =============================================================================
 // Group Management
 // =============================================================================
