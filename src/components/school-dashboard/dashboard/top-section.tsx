@@ -268,7 +268,7 @@ export function TopSection({
         />
 
         {/* Weather */}
-        <div className="flex h-[280px] w-full max-w-sm flex-col justify-between">
+        <div className="flex h-[280px] w-full min-w-[280px] max-w-sm flex-col justify-between">
           <div>
             <div className="flex items-start justify-between">
               <div className="space-y-1">
@@ -317,13 +317,13 @@ export function TopSection({
               </Button>
             </div>
 
-            <div className="bg-muted/50 mt-4 flex justify-between rounded-lg p-3">
+            <div className="bg-muted/50 mt-4 flex justify-between gap-2 rounded-lg p-3">
               {forecast.map((item) => (
                 <div
                   key={item.day}
-                  className="flex flex-col items-center gap-1"
+                  className="flex min-w-0 flex-1 flex-col items-center gap-1"
                 >
-                  <span className="text-muted-foreground text-xs">
+                  <span className="text-muted-foreground truncate text-xs">
                     {item.day}
                   </span>
                   <WeatherIcon condition={item.condition} className="size-5" />

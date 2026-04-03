@@ -294,10 +294,10 @@ export function Weather({
         </div>
 
         {/* 6-day forecast strip */}
-        <div className="bg-muted/50 mt-3 flex justify-between gap-4 rounded-lg p-3">
+        <div className="bg-muted/50 mt-3 flex justify-between gap-2 rounded-lg p-3">
           {forecastData.slice(0, 6).map((item) => (
-            <div key={item.day} className="flex flex-col items-center gap-1">
-              <span className="text-muted-foreground text-xs">{item.day}</span>
+            <div key={item.day} className="flex min-w-0 flex-1 flex-col items-center gap-1">
+              <span className="text-muted-foreground truncate text-xs">{item.day}</span>
               <WeatherIcon condition={item.condition} className="size-5" />
               <span className="text-xs font-medium">
                 {item.temp}°{tempUnit.charAt(0)}
