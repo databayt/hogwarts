@@ -457,6 +457,14 @@
           "title": "هوية المدرسة",
           "description": "الاسم والتواصل والنوع وتفاصيل النظام"
         },
+        "title": {
+          "title": "اسم المدرسة",
+          "description": "الاسم الرسمي للمدرسة"
+        },
+        "description": {
+          "title": "الوصف",
+          "description": "نوع ومستوى المدرسة"
+        },
         "location": {
           "title": "تفاصيل الموقع",
           "description": "المدينة والولاية والدولة"
@@ -477,9 +485,37 @@
           "title": "الرسوم والتسعير",
           "description": "رسوم التعليم والتسجيل وجدول الدفع"
         },
+        "price": {
+          "title": "الرسوم الدراسية",
+          "description": "مبلغ الرسوم وجدول الدفع"
+        },
         "academic": {
           "title": "الهيكل الأكاديمي",
           "description": "السنوات والفصول والدرجات والجدول"
+        },
+        "schedule": {
+          "title": "الجدول الزمني",
+          "description": "السنوات والفصول الدراسية"
+        },
+        "name-format": {
+          "title": "تنسيق الاسم",
+          "description": "طريقة عرض أسماء الطلاب والموظفين"
+        },
+        "join": {
+          "title": "التسجيل",
+          "description": "طريقة انضمام الطلاب للمدرسة"
+        },
+        "visibility": {
+          "title": "الظهور",
+          "description": "إعدادات مشاركة المعلومات"
+        },
+        "discount": {
+          "title": "الخصومات",
+          "description": "برامج الخصم النشطة"
+        },
+        "legal": {
+          "title": "القانونية",
+          "description": "الإعدادات القانونية والامتثال"
         },
         "domain": {
           "title": "النطاق المخصص",
@@ -492,6 +528,26 @@
         "configured": "مكتمل",
         "incomplete": "غير مكتمل",
         "notSet": "غير محدد",
+        "selfEnrollment": "التسجيل الذاتي بالرموز",
+        "manualEnrollment": "التسجيل اليدوي",
+        "fullTransparency": "شفافية كاملة",
+        "limitedSharing": "مشاركة محدودة",
+        "noActiveDiscounts": "لا توجد خصومات نشطة",
+        "activeDiscounts": "خصومات نشطة",
+        "activeDiscount": "خصم نشط",
+        "allModulesEnabled": "جميع الوحدات مفعلة",
+        "modulesEnabled": "وحدة مفعلة",
+        "fullName": "الاسم الكامل (حقل واحد)",
+        "splitName": "مقسم (الأول + الأخير)",
+        "noCustomDomain": "لا يوجد نطاق مخصص",
+        "pending": "قيد الانتظار",
+        "active": "نشط",
+        "year": "سنة",
+        "years": "سنوات",
+        "term": "فصل",
+        "terms": "فصول",
+        "students": "طالب",
+        "teachers": "معلم",
         "backToConfiguration": "الإعدادات",
         "schoolProfile": "ملف المدرسة",
         "academicYears": "السنوات الأكاديمية",

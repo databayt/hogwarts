@@ -457,6 +457,14 @@
           "title": "School Identity",
           "description": "Name, contact, type, and system details"
         },
+        "title": {
+          "title": "School Name",
+          "description": "The official name of your school"
+        },
+        "description": {
+          "title": "Description",
+          "description": "School type and level"
+        },
         "location": {
           "title": "Location Details",
           "description": "City, state, and country"
@@ -477,9 +485,37 @@
           "title": "Fees & Pricing",
           "description": "Tuition, registration fees, and payment schedule"
         },
+        "price": {
+          "title": "Tuition Fee",
+          "description": "Tuition amount and payment schedule"
+        },
         "academic": {
           "title": "Academic Structure",
           "description": "Years, terms, grading, and schedule"
+        },
+        "schedule": {
+          "title": "Schedule",
+          "description": "Academic years and terms"
+        },
+        "name-format": {
+          "title": "Name Format",
+          "description": "How student and staff names are displayed"
+        },
+        "join": {
+          "title": "Enrollment",
+          "description": "How students join your school"
+        },
+        "visibility": {
+          "title": "Visibility",
+          "description": "Information sharing settings"
+        },
+        "discount": {
+          "title": "Discounts",
+          "description": "Active discount programs"
+        },
+        "legal": {
+          "title": "Legal",
+          "description": "Legal and compliance settings"
         },
         "domain": {
           "title": "Custom Domain",
@@ -492,6 +528,26 @@
         "configured": "Configured",
         "incomplete": "Incomplete",
         "notSet": "Not Set",
+        "selfEnrollment": "Self-enrollment with codes",
+        "manualEnrollment": "Manual enrollment",
+        "fullTransparency": "Full transparency",
+        "limitedSharing": "Limited sharing",
+        "noActiveDiscounts": "No active discounts",
+        "activeDiscounts": "active discounts",
+        "activeDiscount": "active discount",
+        "allModulesEnabled": "All modules enabled",
+        "modulesEnabled": "modules enabled",
+        "fullName": "Full Name (single field)",
+        "splitName": "Split (First + Last)",
+        "noCustomDomain": "No custom domain",
+        "pending": "Pending",
+        "active": "Active",
+        "year": "year",
+        "years": "years",
+        "term": "term",
+        "terms": "terms",
+        "students": "students",
+        "teachers": "teachers",
         "backToConfiguration": "Configuration",
         "schoolProfile": "School Profile",
         "academicYears": "Academic Years",
