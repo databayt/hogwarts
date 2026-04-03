@@ -119,6 +119,7 @@ model User {
   typingIndicators            TypingIndicator[]         @relation("TypingIndicators")
   messageDrafts               MessageDraft[]            @relation("MessageDrafts")
   pinnedMessages              PinnedMessage[]           @relation("PinnedMessages")
+  starredMessages             StarredMessage[]          @relation("StarredMessages")
   conversationInvitesSent     ConversationInvite[]      @relation("ConversationInvitesSent")
   conversationInvitesReceived ConversationInvite[]      @relation("ConversationInvitesReceived")
 
