@@ -21,6 +21,7 @@ export const enrollmentSchema = z.object({
     .optional(),
   category: z.string().optional(),
   academicGradeId: z.string().optional(),
+  academicStreamId: z.string().optional(),
   sectionId: z.string().optional(),
 })
 

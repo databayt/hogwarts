@@ -76,7 +76,10 @@ export function ReportIssue({ variant = "text" }: ReportIssueProps) {
     >
       <DialogTrigger asChild>
         {variant === "icon" ? (
-          <button className="cursor-pointer" aria-label={t?.link || "Report an issue"}>
+          <button
+            className="cursor-pointer"
+            aria-label={t?.link || "Report an issue"}
+          >
             <Bug className="h-6 w-6" strokeWidth={1} />
           </button>
         ) : (

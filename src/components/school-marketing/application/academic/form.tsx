@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import React, {
   forwardRef,
+  useCallback,
   useEffect,
   useImperativeHandle,
   useMemo,
@@ -12,6 +13,7 @@ import { useParams } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
+import { isStreamApplicable } from "@/lib/grade-utils"
 import {
   Form,
   FormControl,
@@ -111,6 +113,22 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
 
       onSuccess?.()
     }
+
+    // Stream only applies to grades 10-12 (high school)
+    const selectedGrade = form.watch("applyingForClass")
+    const streamEnabled = useMemo(
+      () => isStreamApplicable(selectedGrade),
+      [selectedGrade]
+    )
+
+    // Clear stream when switching to a non-stream grade
+    const prevStreamEnabled = React.useRef(streamEnabled)
+    useEffect(() => {
+      if (prevStreamEnabled.current && !streamEnabled) {
+        form.setValue("preferredStream", "")
+      }
+      prevStreamEnabled.current = streamEnabled
+    }, [streamEnabled, form])
 
     useImperativeHandle(ref, () => ({ saveAndNext }))
 
@@ -223,7 +241,11 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{dict.preferredStream}</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      disabled={!streamEnabled}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder={dict.selectStream} />

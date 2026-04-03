@@ -7,7 +7,7 @@ const AuthLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="relative mx-auto flex h-screen max-w-md items-center justify-center px-6">
       {children}
-      <div className="text-muted-foreground absolute bottom-4 start-6 text-sm">
+      <div className="text-muted-foreground absolute start-6 bottom-4 text-sm">
         <ReportIssue />
       </div>
     </div>

@@ -44,17 +44,17 @@ export async function NotificationCenterContent({
   locale = "en",
   searchParams = {},
 }: NotificationCenterContentProps) {
-  const session = await auth()
+  const [session, { schoolId }, dict] = await Promise.all([
+    auth(),
+    getTenantContext(),
+    getNotificationDictionary(locale as Locale),
+  ])
   if (!session?.user?.id) {
     redirect(`/${locale}/login`)
   }
-
-  const { schoolId } = await getTenantContext()
   if (!schoolId) {
     redirect(`/${locale}/dashboard`)
   }
-
-  const dict = await getNotificationDictionary(locale as Locale)
 
   const page = parseInt(searchParams.page || "1", 10)
   const perPage = parseInt(searchParams.perPage || "20", 10)
@@ -65,6 +65,7 @@ export async function NotificationCenterContent({
     search: searchParams.search,
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let notifications: any[] = []
   let totalCount = 0
 

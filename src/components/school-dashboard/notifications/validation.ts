@@ -65,9 +65,6 @@ export const notificationTypeSchema = z.enum([
   "absence_intention",
   "absence_intention_decision",
   "setup_guide",
-  "report_ready",
-  "absence_intention",
-  "absence_intention_decision",
 ])
 
 export const notificationPrioritySchema = z.enum([
@@ -95,7 +92,7 @@ export const createNotificationSchema = z
       .string()
       .min(1, "Title is required")
       .max(255, "Title must be less than 255 characters"),
-    body: z.string().min(1, "Body is required"),
+    body: z.string().min(1, "Body is required").max(5000),
     metadata: z.record(z.string(), z.unknown()).optional(),
     actorId: z.string().optional(),
     channels: z.array(notificationChannelSchema).optional().default(["in_app"]),
@@ -146,7 +143,7 @@ export const createNotificationBatchSchema = z
       .string()
       .min(1, "Title is required")
       .max(255, "Title must be less than 255 characters"),
-    body: z.string().min(1, "Body is required"),
+    body: z.string().min(1, "Body is required").max(5000),
     targetRole: z.nativeEnum(UserRole).optional(),
     targetClassId: z.string().optional(),
     targetUserIds: z.array(z.string()).optional(),

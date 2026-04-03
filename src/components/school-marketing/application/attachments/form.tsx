@@ -148,7 +148,7 @@ function DocumentCard({
           <button
             type="button"
             onClick={handleClear}
-            className="absolute top-1.5 end-1.5 z-20 flex h-5 w-5 items-center justify-center rounded-full bg-black/50 text-white transition-colors hover:bg-black/70"
+            className="absolute end-1.5 top-1.5 z-20 flex h-5 w-5 items-center justify-center rounded-full bg-black/50 text-white transition-colors hover:bg-black/70"
             aria-label="Remove attachment"
           >
             <X className="h-3 w-3" />

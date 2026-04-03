@@ -173,7 +173,14 @@ const ANNOUNCEMENTS: AnnouncementSeed[] = [
 interface EventSeed {
   title: string
   description: string
-  eventType: "ACADEMIC" | "SPORTS" | "CULTURAL" | "PARENT_MEETING" | "CELEBRATION" | "WORKSHOP" | "OTHER"
+  eventType:
+    | "ACADEMIC"
+    | "SPORTS"
+    | "CULTURAL"
+    | "PARENT_MEETING"
+    | "CELEBRATION"
+    | "WORKSHOP"
+    | "OTHER"
   eventDate: Date
   startTime: string
   endTime: string
@@ -227,7 +234,8 @@ const EVENTS: EventSeed[] = [
   },
   {
     title: "مسابقة القرآن الكريم الرمضانية",
-    description: "مسابقة سنوية في حفظ وتلاوة القرآن الكريم. فئات: جزء عم، 5 أجزاء، 10 أجزاء",
+    description:
+      "مسابقة سنوية في حفظ وتلاوة القرآن الكريم. فئات: جزء عم، 5 أجزاء، 10 أجزاء",
     eventType: "CULTURAL",
     eventDate: new Date("2026-03-10"),
     startTime: "09:00",
@@ -321,7 +329,8 @@ const EVENTS: EventSeed[] = [
   },
   {
     title: "بطولة كرة القدم بين الفصول",
-    description: "بطولة كرة القدم السنوية بين فصول المرحلتين المتوسطة والثانوية",
+    description:
+      "بطولة كرة القدم السنوية بين فصول المرحلتين المتوسطة والثانوية",
     eventType: "SPORTS",
     eventDate: new Date("2026-05-17"),
     startTime: "14:00",
@@ -354,7 +363,8 @@ const EVENTS: EventSeed[] = [
   },
   {
     title: "حفل نهاية العام وتكريم المتفوقين",
-    description: "حفل نهاية العام الدراسي 2025-2026 مع تكريم الطلاب المتفوقين في جميع المراحل",
+    description:
+      "حفل نهاية العام الدراسي 2025-2026 مع تكريم الطلاب المتفوقين في جميع المراحل",
     eventType: "CELEBRATION",
     eventDate: new Date("2026-06-22"),
     startTime: "09:00",
@@ -401,7 +411,9 @@ async function main() {
     where: { domain: "kingfahad" },
   })
   if (!school) {
-    console.error("❌ King Fahad school not found. Run seed-kingfahad.ts first.")
+    console.error(
+      "❌ King Fahad school not found. Run seed-kingfahad.ts first."
+    )
     process.exit(1)
   }
   console.log(`✅ School: ${school.name} (${school.id})`)
@@ -440,7 +452,12 @@ async function main() {
         pinned: ann.pinned || false,
         featured: ann.featured || false,
         createdBy: admin.id,
-        role: ann.scope === "role" ? (ann.title.includes("معلم") ? "TEACHER" : "GUARDIAN") : null,
+        role:
+          ann.scope === "role"
+            ? ann.title.includes("معلم")
+              ? "TEACHER"
+              : "GUARDIAN"
+            : null,
       },
     })
     annCount++
@@ -514,8 +531,12 @@ async function main() {
   console.log(`   📅 ${eventCount} events`)
   console.log(`   ⚙️  Announcement config`)
   console.log("")
-  console.log("  Dashboard: https://kingfahad.databayt.org/ar/s/kingfahad/dashboard")
-  console.log("  Announcements: https://kingfahad.databayt.org/ar/s/kingfahad/announcements")
+  console.log(
+    "  Dashboard: https://kingfahad.databayt.org/ar/s/kingfahad/dashboard"
+  )
+  console.log(
+    "  Announcements: https://kingfahad.databayt.org/ar/s/kingfahad/announcements"
+  )
   console.log("  Events: https://kingfahad.databayt.org/ar/s/kingfahad/events")
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 }

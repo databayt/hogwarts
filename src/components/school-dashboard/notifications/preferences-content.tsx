@@ -29,20 +29,18 @@ interface NotificationPreferencesContentProps {
 export async function NotificationPreferencesContent({
   locale = "en",
 }: NotificationPreferencesContentProps) {
-  const session = await auth()
+  const [session, { schoolId }, dict] = await Promise.all([
+    auth(),
+    getTenantContext(),
+    getNotificationDictionary(locale as Locale),
+  ])
   if (!session?.user?.id) {
     redirect(`/${locale}/login`)
   }
-
-  const { schoolId } = await getTenantContext()
   if (!schoolId) {
     redirect(`/${locale}/dashboard`)
   }
 
-  // Load dictionary
-  const dict = await getNotificationDictionary(locale as Locale)
-
-  // Fetch user's current preferences
   const rawPreferences = await getUserNotificationPreferences(
     schoolId,
     session.user.id

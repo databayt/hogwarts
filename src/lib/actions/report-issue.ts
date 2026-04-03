@@ -16,14 +16,12 @@ export async function reportIssue(data: {
   if (!token) throw new Error("GITHUB_PERSONAL_ACCESS_TOKEN not configured")
 
   // Category prefix in title: [visual] page layout
-  const prefix = data.category && data.category !== "other"
-    ? `[${data.category}] `
-    : ""
+  const prefix =
+    data.category && data.category !== "other" ? `[${data.category}] ` : ""
   const desc = data.description
   const maxLen = 80 - prefix.length
-  const truncated = desc.length > maxLen
-    ? desc.slice(0, maxLen - 3) + "..."
-    : desc
+  const truncated =
+    desc.length > maxLen ? desc.slice(0, maxLen - 3) + "..." : desc
   const title = prefix + truncated
 
   // Reporter from auth session

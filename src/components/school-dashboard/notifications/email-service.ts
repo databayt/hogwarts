@@ -32,6 +32,19 @@ export interface EmailDeliveryResult {
 }
 
 // ============================================================================
+// Helpers
+// ============================================================================
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;")
+}
+
+// ============================================================================
 // Email Templates
 // ============================================================================
 
@@ -61,11 +74,12 @@ function generateNotificationEmailHtml(
     .replace(/_/g, " ")
     .replace(/\b\w/g, (c) => c.toUpperCase())
 
-  // Action URL from metadata
-  const actionUrl =
+  // Action URL from metadata (only allow http/https)
+  const rawUrl =
     metadata && typeof metadata === "object" && "url" in metadata
       ? (metadata.url as string)
       : null
+  const actionUrl = rawUrl && /^https?:\/\//i.test(rawUrl) ? rawUrl : null
 
   return `
     <!DOCTYPE html>
@@ -73,7 +87,7 @@ function generateNotificationEmailHtml(
       <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>${title}</title>
+        <title>${escapeHtml(title)}</title>
         <style>
           body {
             font-family: ${isRtl ? "'Rubik', 'Segoe UI', Roboto, Arial, sans-serif" : "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"};
@@ -145,13 +159,13 @@ function generateNotificationEmailHtml(
       <body>
         <div class="card">
           <div class="header">
-            <span style="font-size: 14px; opacity: 0.8;">${typeLabel}</span>
+            <span style="font-size: 14px; opacity: 0.8;">${escapeHtml(typeLabel)}</span>
           </div>
           <div class="content">
-            <span class="priority-badge">${priority}</span>
-            <h1 class="title">${title}</h1>
-            ${actorName ? `<p class="actor">${isRtl ? "من:" : "From:"} ${actorName}</p>` : ""}
-            <p class="body-text">${body}</p>
+            <span class="priority-badge">${escapeHtml(priority)}</span>
+            <h1 class="title">${escapeHtml(title)}</h1>
+            ${actorName ? `<p class="actor">${isRtl ? "من:" : "From:"} ${escapeHtml(actorName)}</p>` : ""}
+            <p class="body-text">${escapeHtml(body)}</p>
             ${
               actionUrl
                 ? `

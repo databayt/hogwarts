@@ -6,6 +6,7 @@ import React, {
   forwardRef,
   useEffect,
   useImperativeHandle,
+  useMemo,
   useState,
   useTransition,
 } from "react"
@@ -13,6 +14,7 @@ import { useParams } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
+import { isStreamGrade } from "@/lib/grade-utils"
 import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { DateField, InputField, SelectField } from "@/components/form"
@@ -22,6 +24,7 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 import {
   getGradeOptions,
   getSectionOptions,
+  getStreamOptions,
   updateStudentEnrollment,
 } from "./actions"
 import { enrollmentSchema, type EnrollmentFormData } from "./validation"
@@ -66,6 +69,9 @@ export const EnrollmentForm = forwardRef<WizardFormRef, EnrollmentFormProps>(
     ]
 
     const [gradeOptions, setGradeOptions] = useState<
+      { value: string; label: string; gradeNumber: number }[]
+    >([])
+    const [streamOptions, setStreamOptions] = useState<
       { value: string; label: string }[]
     >([])
     const [sectionOptions, setSectionOptions] = useState<
@@ -82,6 +88,7 @@ export const EnrollmentForm = forwardRef<WizardFormRef, EnrollmentFormProps>(
         studentType: initialData?.studentType,
         category: initialData?.category || "",
         academicGradeId: initialData?.academicGradeId || "",
+        academicStreamId: initialData?.academicStreamId || "",
         sectionId: initialData?.sectionId || "",
       },
     })
@@ -108,11 +115,29 @@ export const EnrollmentForm = forwardRef<WizardFormRef, EnrollmentFormProps>(
       })
     }, [selectedGradeId, locale])
 
-    // Reset sectionId when grade changes (skip on initial mount)
+    // Determine if selected grade supports streams (grades 10-12)
+    const streamEnabled = useMemo(() => {
+      const grade = gradeOptions.find((g) => g.value === selectedGradeId)
+      return grade ? isStreamGrade(grade.gradeNumber) : false
+    }, [selectedGradeId, gradeOptions])
+
+    // Fetch streams when grade changes and is high school
+    useEffect(() => {
+      if (!selectedGradeId || !streamEnabled) {
+        setStreamOptions([])
+        return
+      }
+      getStreamOptions(selectedGradeId, locale).then((res) => {
+        if (res.success && res.data) setStreamOptions(res.data)
+      })
+    }, [selectedGradeId, streamEnabled, locale])
+
+    // Reset sectionId and streamId when grade changes (skip on initial mount)
     const gradeRef = React.useRef(initialData?.academicGradeId)
     useEffect(() => {
       if (gradeRef.current !== selectedGradeId) {
         form.setValue("sectionId", "")
+        form.setValue("academicStreamId", "")
       }
       gradeRef.current = selectedGradeId
     }, [selectedGradeId, form])
@@ -202,6 +227,14 @@ export const EnrollmentForm = forwardRef<WizardFormRef, EnrollmentFormProps>(
               options={gradeOptions}
               disabled={isPending}
             />
+            <SelectField
+              name="academicStreamId"
+              label={t?.academicStreamId || "Stream"}
+              options={streamOptions}
+              disabled={isPending || !streamEnabled}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-7">
             <SelectField
               name="sectionId"
               label={t?.sectionId || "Section"}

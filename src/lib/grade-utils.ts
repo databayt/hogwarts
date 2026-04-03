@@ -84,3 +84,17 @@ export function extractGradeNumber(text: string): number | null {
 
   return null
 }
+
+/** Minimum grade number where academic streams (Science/Arts) apply */
+export const STREAM_MIN_GRADE = 10
+
+/** Check if a grade (free-text) maps to a high-school grade where streams apply (10-12) */
+export function isStreamApplicable(gradeText: string): boolean {
+  const gradeNum = extractGradeNumber(gradeText)
+  return gradeNum !== null && gradeNum >= STREAM_MIN_GRADE
+}
+
+/** Check if a numeric grade number has streams */
+export function isStreamGrade(gradeNumber: number): boolean {
+  return gradeNumber >= STREAM_MIN_GRADE
+}

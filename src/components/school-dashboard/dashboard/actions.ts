@@ -4350,13 +4350,18 @@ async function getNotificationsQuickLook(
         userId,
         read: false,
       },
-      select: { title: true },
+      select: { title: true, lang: true },
       orderBy: { createdAt: "desc" },
     }),
   ])
 
   const recentTitle = mostRecent?.title
-    ? await getDisplayText(mostRecent.title, "en", locale, schoolId)
+    ? await getDisplayText(
+        mostRecent.title,
+        (mostRecent.lang || "ar") as SupportedLanguage,
+        locale,
+        schoolId
+      )
     : ""
 
   return {

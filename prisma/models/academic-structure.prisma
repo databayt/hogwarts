@@ -83,6 +83,7 @@ model AcademicStream {
   school            School                   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   grade             AcademicGrade            @relation(fields: [gradeId], references: [id], onDelete: Cascade)
   subjectSelections SubjectSelection[]
+  students          Student[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -78,7 +78,12 @@ const ALLOWED_TYPES = [
   "application/pdf",
 ]
 
-export default function StepDocuments({ dictionary, lang, campaign, schoolId }: Props) {
+export default function StepDocuments({
+  dictionary,
+  lang,
+  campaign,
+  schoolId,
+}: Props) {
   const { control, setValue, watch } = useFormContext<ApplicationFormData>()
   const isRTL = lang === "ar"
 
@@ -126,7 +131,9 @@ export default function StepDocuments({ dictionary, lang, campaign, schoolId }: 
         })
 
         if (!result.success) {
-          ErrorToast(result.error || dict.failedToUpload || "Failed to upload file")
+          ErrorToast(
+            result.error || dict.failedToUpload || "Failed to upload file"
+          )
           return
         }
 

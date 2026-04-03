@@ -122,16 +122,17 @@ export default function ApplicationDetailActions({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-52">
-          {ALL_STATUS_OPTIONS.filter(
-            (opt) => opt.value !== currentStatus
-          ).map((opt) => (
-            <DropdownMenuItem
-              key={opt.value}
-              onClick={() => onUpdateStatus(opt.value)}
-            >
-              {t?.status?.[opt.value as keyof typeof t.status] || opt.fallback}
-            </DropdownMenuItem>
-          ))}
+          {ALL_STATUS_OPTIONS.filter((opt) => opt.value !== currentStatus).map(
+            (opt) => (
+              <DropdownMenuItem
+                key={opt.value}
+                onClick={() => onUpdateStatus(opt.value)}
+              >
+                {t?.status?.[opt.value as keyof typeof t.status] ||
+                  opt.fallback}
+              </DropdownMenuItem>
+            )
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 

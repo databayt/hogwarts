@@ -538,38 +538,39 @@ export async function updateNotificationPreferences(
       }
     }
 
-    // Upsert each preference
-    let count = 0
-    for (const pref of parsed) {
-      await db.notificationPreference.upsert({
-        where: {
-          userId_type_channel: {
+    // Batch upsert preferences in a transaction
+    await db.$transaction(
+      parsed.map((pref) =>
+        db.notificationPreference.upsert({
+          where: {
+            userId_type_channel: {
+              userId: authContext.userId,
+              type: pref.type,
+              channel: pref.channel,
+            },
+          },
+          create: {
+            schoolId,
             userId: authContext.userId,
             type: pref.type,
             channel: pref.channel,
+            enabled: pref.enabled,
+            quietHoursStart: pref.quietHoursStart ?? null,
+            quietHoursEnd: pref.quietHoursEnd ?? null,
+            digestEnabled: pref.digestEnabled ?? false,
+            digestFrequency: pref.digestFrequency ?? null,
           },
-        },
-        create: {
-          schoolId,
-          userId: authContext.userId,
-          type: pref.type,
-          channel: pref.channel,
-          enabled: pref.enabled,
-          quietHoursStart: pref.quietHoursStart ?? null,
-          quietHoursEnd: pref.quietHoursEnd ?? null,
-          digestEnabled: pref.digestEnabled ?? false,
-          digestFrequency: pref.digestFrequency ?? null,
-        },
-        update: {
-          enabled: pref.enabled,
-          quietHoursStart: pref.quietHoursStart ?? null,
-          quietHoursEnd: pref.quietHoursEnd ?? null,
-          digestEnabled: pref.digestEnabled ?? false,
-          digestFrequency: pref.digestFrequency ?? null,
-        },
-      })
-      count++
-    }
+          update: {
+            enabled: pref.enabled,
+            quietHoursStart: pref.quietHoursStart ?? null,
+            quietHoursEnd: pref.quietHoursEnd ?? null,
+            digestEnabled: pref.digestEnabled ?? false,
+            digestFrequency: pref.digestFrequency ?? null,
+          },
+        })
+      )
+    )
+    const count = parsed.length
 
     revalidatePath(NOTIFICATIONS_PATH)
     revalidateTag(`notification-preferences-${authContext.userId}`, "max")

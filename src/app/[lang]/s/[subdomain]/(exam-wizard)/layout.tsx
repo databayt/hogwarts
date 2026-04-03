@@ -3,6 +3,7 @@
 
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
+
 import { ReportIssue } from "@/components/report-issue"
 
 interface ExamWizardLayoutProps {
@@ -26,7 +27,7 @@ export default async function ExamWizardLayout({
   return (
     <main className="relative h-dvh">
       {children}
-      <div className="text-muted-foreground absolute bottom-4 start-6 text-sm">
+      <div className="text-muted-foreground absolute start-6 bottom-4 text-sm">
         <ReportIssue />
       </div>
     </main>

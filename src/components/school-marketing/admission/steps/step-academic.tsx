@@ -2,9 +2,10 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useEffect } from "react"
+import { useEffect, useMemo, useRef } from "react"
 import { useFormContext } from "react-hook-form"
 
+import { isStreamApplicable } from "@/lib/grade-utils"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   FormControl,
@@ -59,6 +60,22 @@ export default function StepAcademic({ dictionary, lang, campaign }: Props) {
         school?: { admission?: { formSteps?: Record<string, string> } }
       }
     )?.school?.admission?.formSteps ?? {}
+
+  // Stream only applies to grades 10-12 (high school)
+  const selectedGrade = watch("applyingForClass")
+  const streamEnabled = useMemo(
+    () => isStreamApplicable(selectedGrade),
+    [selectedGrade]
+  )
+
+  // Clear stream when switching to a non-stream grade
+  const prevStreamEnabled = useRef(streamEnabled)
+  useEffect(() => {
+    if (prevStreamEnabled.current && !streamEnabled) {
+      setValue("preferredStream", "")
+    }
+    prevStreamEnabled.current = streamEnabled
+  }, [streamEnabled, setValue])
 
   // Auto-suggest grade based on DOB
   useEffect(() => {
@@ -236,6 +253,7 @@ export default function StepAcademic({ dictionary, lang, campaign }: Props) {
                   <Select
                     onValueChange={field.onChange}
                     value={field.value || ""}
+                    disabled={!streamEnabled}
                   >
                     <FormControl>
                       <SelectTrigger>

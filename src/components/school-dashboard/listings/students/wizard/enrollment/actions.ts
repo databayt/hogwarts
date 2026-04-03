@@ -33,14 +33,16 @@ async function getDisplayLocale(schoolId: string, locale?: string) {
 
 export async function getGradeOptions(
   locale?: string
-): Promise<ActionResponse<{ value: string; label: string }[]>> {
+): Promise<
+  ActionResponse<{ value: string; label: string; gradeNumber: number }[]>
+> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const grades = await db.academicGrade.findMany({
       where: { schoolId },
-      select: { id: true, name: true },
+      select: { id: true, name: true, gradeNumber: true },
       orderBy: { gradeNumber: "asc" },
     })
 
@@ -53,6 +55,42 @@ export async function getGradeOptions(
       grades.map(async (g) => ({
         value: g.id,
         label: await getDisplayText(g.name, contentLang, displayLang, schoolId),
+        gradeNumber: g.gradeNumber,
+      }))
+    )
+
+    return { success: true, data }
+  } catch (error) {
+    return actionError(
+      ACTION_ERRORS.LOAD_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
+  }
+}
+
+export async function getStreamOptions(
+  gradeId: string,
+  locale?: string
+): Promise<ActionResponse<{ value: string; label: string }[]>> {
+  try {
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+
+    const streams = await db.academicStream.findMany({
+      where: { schoolId, gradeId },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    })
+
+    const { displayLang, contentLang } = await getDisplayLocale(
+      schoolId,
+      locale
+    )
+
+    const data = await Promise.all(
+      streams.map(async (s) => ({
+        value: s.id,
+        label: await getDisplayText(s.name, contentLang, displayLang, schoolId),
       }))
     )
 
@@ -116,6 +154,7 @@ export async function getStudentEnrollment(
         studentType: true,
         category: true,
         academicGradeId: true,
+        academicStreamId: true,
         sectionId: true,
       },
     })
@@ -131,6 +170,7 @@ export async function getStudentEnrollment(
         studentType: student.studentType ?? undefined,
         category: student.category ?? undefined,
         academicGradeId: student.academicGradeId ?? undefined,
+        academicStreamId: student.academicStreamId ?? undefined,
         sectionId: student.sectionId ?? undefined,
       },
     }
@@ -161,6 +201,7 @@ export async function updateStudentEnrollment(
         studentType: parsed.studentType ?? undefined,
         category: parsed.category || null,
         academicGradeId: parsed.academicGradeId || null,
+        academicStreamId: parsed.academicStreamId || null,
         sectionId: parsed.sectionId || null,
       },
     })

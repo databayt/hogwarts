@@ -5,7 +5,14 @@
 import { useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import type { NotificationChannel, NotificationType } from "@prisma/client"
-import { Bell, Mail, MessageSquare, Smartphone } from "lucide-react"
+import {
+  Bell,
+  Clock,
+  Loader2,
+  Mail,
+  MessageSquare,
+  Smartphone,
+} from "lucide-react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
@@ -36,9 +43,8 @@ import {
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "@/components/ui/use-toast"
-import { Icons } from "@/components/icons"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { updateNotificationPreferences } from "./actions"
@@ -202,7 +208,7 @@ export function NotificationPreferencesForm({
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Icons.clock className="h-5 w-5" />
+              <Clock className="h-5 w-5" />
               <CardTitle>{dictionary.preferences.quietHours.title}</CardTitle>
             </div>
             <CardDescription>
@@ -307,7 +313,7 @@ export function NotificationPreferencesForm({
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Icons.mail className="h-5 w-5" />
+              <Mail className="h-5 w-5" />
               <CardTitle>{dictionary.preferences.digest.title}</CardTitle>
             </div>
             <CardDescription>
@@ -466,9 +472,7 @@ export function NotificationPreferencesForm({
             {dictionary.common.reset}
           </Button>
           <Button type="submit" disabled={isLoading}>
-            {isLoading && (
-              <Icons.loaderCircle className="me-2 h-4 w-4 animate-spin" />
-            )}
+            {isLoading && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
             {dictionary.common.save}
           </Button>
         </div>

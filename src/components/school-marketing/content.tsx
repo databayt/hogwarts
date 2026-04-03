@@ -3,7 +3,6 @@
 
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-
 import { ReportIssue } from "@/components/report-issue"
 
 import { CTA } from "./admission-process"
