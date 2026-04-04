@@ -126,6 +126,7 @@ import {
   createMessageSchema,
   deleteDraftSchema,
   deleteMessageSchema,
+  forwardMessageSchema,
   markConversationAsReadSchema,
   markMessageAsReadSchema,
   muteConversationSchema,
@@ -134,11 +135,10 @@ import {
   removeReactionSchema,
   respondToInviteSchema,
   saveDraftSchema,
-  unmuteConversationSchema,
-  forwardMessageSchema,
   starMessageSchema,
-  unstarMessageSchema,
+  unmuteConversationSchema,
   unpinMessageSchema,
+  unstarMessageSchema,
   updateConversationSchema,
   updateMessageSchema,
   updateParticipantSchema,
@@ -578,13 +578,13 @@ export async function sendMessage(
         await db.message.update({
           where: { id: message.id },
           data: {
-            metadata: { linkPreview: preview } as unknown as Prisma.InputJsonValue,
+            metadata: {
+              linkPreview: preview,
+            } as unknown as Prisma.InputJsonValue,
           },
         })
       })
-      .catch((err) =>
-        console.error("[sendMessage] Link preview error:", err)
-      )
+      .catch((err) => console.error("[sendMessage] Link preview error:", err))
 
     // 5. Audit log (non-blocking)
     logMessageCreated(
@@ -1991,7 +1991,10 @@ export async function forwardMessage(
       },
     })
 
-    if (!originalMessage || originalMessage.conversation.schoolId !== schoolId) {
+    if (
+      !originalMessage ||
+      originalMessage.conversation.schoolId !== schoolId
+    ) {
       return { success: false, error: "Message not found" }
     }
 
@@ -2025,20 +2028,21 @@ export async function forwardMessage(
           contentType: originalMessage.contentType,
           forwardedFromId: originalMessage.id,
           status: "sent",
-          attachments: originalMessage.attachments.length > 0
-            ? {
-                create: originalMessage.attachments.map((a) => ({
-                  fileName: a.fileName,
-                  fileUrl: a.fileUrl,
-                  fileSize: a.fileSize,
-                  fileType: a.fileType,
-                  width: a.width,
-                  height: a.height,
-                  thumbnail: a.thumbnail,
-                  uploaded: true,
-                })),
-              }
-            : undefined,
+          attachments:
+            originalMessage.attachments.length > 0
+              ? {
+                  create: originalMessage.attachments.map((a) => ({
+                    fileName: a.fileName,
+                    fileUrl: a.fileUrl,
+                    fileSize: a.fileSize,
+                    fileType: a.fileType,
+                    width: a.width,
+                    height: a.height,
+                    thumbnail: a.thumbnail,
+                    uploaded: true,
+                  })),
+                }
+              : undefined,
         },
       })
 
@@ -2058,7 +2062,8 @@ export async function forwardMessage(
     console.error("[forwardMessage] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to forward message",
+      error:
+        error instanceof Error ? error.message : "Failed to forward message",
     }
   }
 }
@@ -2143,7 +2148,8 @@ export async function unstarMessage(
     console.error("[unstarMessage] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to unstar message",
+      error:
+        error instanceof Error ? error.message : "Failed to unstar message",
     }
   }
 }

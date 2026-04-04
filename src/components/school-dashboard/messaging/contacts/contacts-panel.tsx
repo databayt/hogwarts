@@ -189,32 +189,6 @@ export function ContactsPanel({
 
   return (
     <div className={cn("flex min-h-0 flex-1 flex-col", className)}>
-      {/* Header */}
-      <div className="bg-msg-header-bg flex h-[60px] flex-shrink-0 items-center justify-between px-4">
-        <h2 className="text-foreground text-xl font-bold">
-          {m?.ui?.title ?? "Messages"}
-        </h2>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-10 w-10 rounded-full"
-            >
-              <EllipsisVertical className="h-5 w-5" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem>
-              {(m?.ui as Record<string, string>)?.archived || "Archived"}
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              {(m?.ui as Record<string, string>)?.starred || "Starred messages"}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
       {/* Search + filters */}
       <div className="shrink-0">
         <ContactSearch
@@ -229,7 +203,7 @@ export function ContactsPanel({
       </div>
 
       {/* Contact list */}
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="min-h-0 flex-1 overflow-y-auto px-6">
         {isLoading ? (
           <div>
             {Array.from({ length: 8 }).map((_, i) => (

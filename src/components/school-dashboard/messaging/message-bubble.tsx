@@ -88,13 +88,13 @@ function getSenderColor(senderId: string): string {
 function ReadReceiptIcon({ status }: { status: string }) {
   switch (status) {
     case "sending":
-      return <Clock className="h-3.5 w-3.5 animate-pulse text-current" />
+      return <Clock className="h-3 w-3 animate-pulse text-current" />
     case "sent":
-      return <Check className="h-3.5 w-3.5 text-current" />
+      return <Check className="h-3 w-3 text-current" />
     case "delivered":
-      return <CheckCheck className="h-3.5 w-3.5 text-current" />
+      return <CheckCheck className="h-3 w-3 text-current" />
     case "read":
-      return <CheckCheck className="text-msg-read-check h-3.5 w-3.5" />
+      return <CheckCheck className="text-msg-read-check h-3 w-3" />
     case "failed":
       return <span className="text-destructive text-[10px]">!</span>
     default:
@@ -296,21 +296,17 @@ export const MessageBubble = memo(function MessageBubble({
             </div>
           )}
 
-          {/* Message bubble — WhatsApp style */}
+          {/* Message bubble */}
           <div className="group/bubble relative">
             <div
               className={cn(
-                "relative rounded-lg break-words shadow-sm",
-                isMediaOnly ? "overflow-hidden p-0" : "px-2 py-1.5",
-                isOwnMessage
-                  ? "bg-msg-outgoing text-foreground rounded-se-sm"
-                  : "bg-msg-incoming text-foreground rounded-ss-sm",
-                showTail &&
-                  isFirstInGroup &&
-                  (isOwnMessage ? "wa-tail-out" : "wa-tail-in"),
+                "relative rounded-md break-words",
+                isMediaOnly ? "overflow-hidden p-0" : "px-2.5 py-1.5",
+                isOwnMessage ? "text-foreground" : "text-foreground bg-white",
                 isDeleted && "italic opacity-60",
                 isPending && "opacity-70"
               )}
+              style={isOwnMessage ? { backgroundColor: "#D9FDD4" } : undefined}
             >
               {/* Forwarded label */}
               {message.forwardedFromId && !isDeleted && (
@@ -322,7 +318,7 @@ export const MessageBubble = memo(function MessageBubble({
 
               {/* Star indicator */}
               {isStarred && !isDeleted && (
-                <Star className="text-msg-timestamp absolute top-1 end-1 h-3 w-3" />
+                <Star className="text-msg-timestamp absolute end-1 top-1 h-3 w-3" />
               )}
 
               {/* Message content */}
@@ -406,7 +402,7 @@ export const MessageBubble = memo(function MessageBubble({
                                   <Play className="h-6 w-6 text-white" />
                                 </div>
                               </div>
-                              <div className="absolute bottom-2 start-2 rounded bg-black/50 px-1.5 py-0.5 text-[11px] text-white">
+                              <div className="absolute start-2 bottom-2 rounded bg-black/50 px-1.5 py-0.5 text-[11px] text-white">
                                 {formatFileSize(attachment.fileSize)}
                               </div>
                             </a>
@@ -479,10 +475,10 @@ export const MessageBubble = memo(function MessageBubble({
                         "flex items-center gap-0.5 text-[11px]",
                         isMediaOnly
                           ? "absolute end-2 bottom-2 rounded bg-black/50 px-1.5 py-0.5 text-white"
-                          : "float-end ms-2 mt-0.5",
+                          : "mt-1 justify-end",
                         !isMediaOnly &&
                           (isOwnMessage
-                            ? "text-foreground/50"
+                            ? "text-foreground/40"
                             : "text-muted-foreground")
                       )}
                     >

@@ -1,9 +1,9 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { describe, expect, it } from "vitest"
 import { readdirSync, readFileSync, statSync } from "fs"
 import { join } from "path"
+import { describe, expect, it } from "vitest"
 
 /**
  * RTL Verification Tests
@@ -147,12 +147,8 @@ describe("RTL Verification — Messaging Components", () => {
 
       // Verify they use inset-inline (logical) not left/right (physical)
       // The clip-path approach means positioning uses inset-inline-end/start
-      const tailOutSection = content
-        .split(".wa-tail-out")[1]
-        ?.split("}")[0]
-      const tailInSection = content
-        .split(".wa-tail-in")[1]
-        ?.split("}")[0]
+      const tailOutSection = content.split(".wa-tail-out")[1]?.split("}")[0]
+      const tailInSection = content.split(".wa-tail-in")[1]?.split("}")[0]
 
       // Tails should not use physical `left:` or `right:` in their positioning
       // They use inset-inline-end / inset-inline-start or logical properties

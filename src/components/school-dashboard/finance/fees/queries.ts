@@ -604,6 +604,153 @@ export async function getFineList(
   return { rows, count }
 }
 
+// ============================================================================
+// Family Billing — Sibling Detection
+// ============================================================================
+
+/**
+ * Find sibling student IDs for a given student within the same school.
+ * Siblings are students who share at least one guardian via StudentGuardian.
+ * Returns IDs excluding the input student.
+ */
+export async function getSiblingStudentIds(
+  studentId: string,
+  schoolId: string
+): Promise<string[]> {
+  // Step 1: find all guardians for this student
+  const guardianLinks = await db.studentGuardian.findMany({
+    where: { studentId, schoolId },
+    select: { guardianId: true },
+  })
+
+  if (guardianLinks.length === 0) return []
+
+  const guardianIds = guardianLinks.map((l) => l.guardianId)
+
+  // Step 2: find all students linked to these guardians (same school)
+  const siblingLinks = await db.studentGuardian.findMany({
+    where: {
+      guardianId: { in: guardianIds },
+      schoolId,
+      studentId: { not: studentId },
+    },
+    select: { studentId: true },
+  })
+
+  // Deduplicate (a student may share multiple guardians)
+  return [...new Set(siblingLinks.map((l) => l.studentId))]
+}
+
+/**
+ * Count how many siblings already have an active fee assignment for the same
+ * fee structure + academic year. Used to determine sibling discount tier.
+ */
+export async function countSiblingAssignments(
+  studentId: string,
+  schoolId: string,
+  feeStructureId: string,
+  academicYear: string
+): Promise<number> {
+  const siblingIds = await getSiblingStudentIds(studentId, schoolId)
+  if (siblingIds.length === 0) return 0
+
+  return db.feeAssignment.count({
+    where: {
+      schoolId,
+      studentId: { in: siblingIds },
+      feeStructureId,
+      academicYear,
+      status: { not: "CANCELLED" },
+    },
+  })
+}
+
+export type DiscountPolicy = {
+  siblingDiscount?: {
+    type: "PERCENTAGE" | "FIXED"
+    tiers: Array<{
+      siblingNumber: number // 2 = 2nd child, 3 = 3rd child, etc.
+      value: number // percentage or fixed amount
+    }>
+  }
+  earlyPaymentDiscount?: {
+    type: "PERCENTAGE" | "FIXED"
+    value: number
+    deadlineDays: number // days before due date
+  }
+}
+
+/**
+ * Calculate sibling discount for a student based on fee structure's discountPolicy.
+ * Returns { discountAmount, discountEntries } ready to apply.
+ */
+export async function calculateSiblingDiscount(
+  studentId: string,
+  schoolId: string,
+  feeStructureId: string,
+  academicYear: string,
+  totalAmount: number
+): Promise<{
+  discountAmount: number
+  discountEntries: Array<{ type: string; amount: number; reason: string }>
+}> {
+  // Load the fee structure's discount policy
+  const feeStructure = await db.feeStructure.findFirst({
+    where: { id: feeStructureId, schoolId },
+    select: { discountPolicy: true },
+  })
+
+  const policy = feeStructure?.discountPolicy as DiscountPolicy | null
+  if (!policy?.siblingDiscount) {
+    return { discountAmount: 0, discountEntries: [] }
+  }
+
+  // Count existing sibling assignments (excludes current student)
+  const siblingCount = await countSiblingAssignments(
+    studentId,
+    schoolId,
+    feeStructureId,
+    academicYear
+  )
+
+  if (siblingCount === 0) {
+    return { discountAmount: 0, discountEntries: [] }
+  }
+
+  // This student is the (siblingCount + 1)th child
+  const childNumber = siblingCount + 1
+
+  // Find the applicable tier (highest siblingNumber <= childNumber)
+  const { siblingDiscount } = policy
+  const applicableTier = siblingDiscount.tiers
+    .filter((t) => t.siblingNumber <= childNumber)
+    .sort((a, b) => b.siblingNumber - a.siblingNumber)[0]
+
+  if (!applicableTier) {
+    return { discountAmount: 0, discountEntries: [] }
+  }
+
+  const discountAmount =
+    siblingDiscount.type === "PERCENTAGE"
+      ? Math.round((totalAmount * applicableTier.value) / 100)
+      : Math.min(applicableTier.value, totalAmount)
+
+  return {
+    discountAmount,
+    discountEntries: [
+      {
+        type: "SIBLING_DISCOUNT",
+        amount: discountAmount,
+        reason: `Sibling discount (child #${childNumber}): ${
+          siblingDiscount.type === "PERCENTAGE"
+            ? `${applicableTier.value}%`
+            : applicableTier.value
+        }`,
+      },
+    ],
+  }
+}
+
 /**
  * Get fee statistics for a school
  * @param schoolId - School ID

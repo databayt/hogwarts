@@ -1,7 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { describe, expect, it, vi, beforeEach } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { extractFirstUrl } from "../link-preview"
 import { unfurlUrl } from "../og-unfurl"
@@ -21,9 +21,7 @@ describe("extractFirstUrl", () => {
 
   it("returns the first URL when multiple exist", () => {
     expect(
-      extractFirstUrl(
-        "Visit https://first.com and https://second.com for more"
-      )
+      extractFirstUrl("Visit https://first.com and https://second.com for more")
     ).toBe("https://first.com")
   })
 

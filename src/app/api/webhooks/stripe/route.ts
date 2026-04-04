@@ -84,6 +84,8 @@ export async function POST(req: Request) {
             catalogSubjectId?: string
             applicationId?: string
             referenceNumber?: string
+            feeAssignmentId?: string
+            studentId?: string
           }
           subscription?: string
           payment_status?: string
@@ -166,6 +168,113 @@ export async function POST(req: Request) {
           }
         } catch (error) {
           console.error("[Webhook] Failed to record application fee:", error)
+        }
+      }
+
+      return new Response(null, { status: 200 })
+    }
+
+    // Handle FEE PAYMENT (one-time, no subscription)
+    if (
+      session.metadata?.type === "fee_payment" &&
+      session.metadata?.feeAssignmentId &&
+      !session.subscription
+    ) {
+      if (session.payment_status === "paid") {
+        try {
+          const feeAssignmentId = session.metadata.feeAssignmentId
+          const schoolId = session.metadata.schoolId
+
+          // Get the assignment with existing payments to calculate remaining
+          const assignment = await db.feeAssignment.findFirst({
+            where: {
+              id: feeAssignmentId,
+              ...(schoolId ? { schoolId } : {}),
+            },
+            include: {
+              payments: {
+                where: { status: "SUCCESS" },
+                select: { amount: true },
+              },
+              student: {
+                select: { userId: true, firstName: true, lastName: true },
+              },
+            },
+          })
+
+          if (assignment) {
+            const totalPaid = assignment.payments.reduce(
+              (sum, p) => sum + Number(p.amount),
+              0
+            )
+            const finalAmount = Number(assignment.finalAmount)
+
+            // Remaining is what Stripe charged
+            const paymentAmount = finalAmount - totalPaid
+
+            if (paymentAmount > 0) {
+              // Create payment record
+              const payment = await db.payment.create({
+                data: {
+                  schoolId: assignment.schoolId,
+                  feeAssignmentId,
+                  studentId: assignment.studentId,
+                  paymentNumber:
+                    `PAY-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`.toUpperCase(),
+                  amount: paymentAmount,
+                  paymentMethod: "CREDIT_CARD",
+                  paymentDate: new Date(),
+                  status: "SUCCESS",
+                  receiptNumber:
+                    `REC-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`.toUpperCase(),
+                  transactionId: (session.payment_intent as string) ?? null,
+                },
+              })
+
+              // Update assignment status
+              const newTotalPaid = totalPaid + paymentAmount
+              const newStatus = newTotalPaid >= finalAmount ? "PAID" : "PARTIAL"
+              await db.feeAssignment.update({
+                where: { id: feeAssignmentId },
+                data: { status: newStatus },
+              })
+
+              console.log(
+                `[Webhook] Fee payment recorded: ${feeAssignmentId}, amount: ${paymentAmount}, status: ${newStatus}`
+              )
+
+              // Notify student (non-fatal)
+              try {
+                if (assignment.student?.userId) {
+                  const { dispatchNotification } =
+                    await import("@/lib/dispatch-notification")
+                  await dispatchNotification({
+                    schoolId: assignment.schoolId,
+                    userId: assignment.student.userId,
+                    type: "fee_paid",
+                    title: "تم استلام الدفعة",
+                    body: `تم تأكيد الدفع الإلكتروني بنجاح. ${newStatus === "PAID" ? "تم سداد الرسوم بالكامل." : ""}`,
+                    lang: "ar",
+                    priority: "normal",
+                    channels: ["in_app", "email"],
+                    metadata: {
+                      paymentId: payment.id,
+                      feeAssignmentId,
+                      amount: paymentAmount,
+                      status: newStatus,
+                    },
+                  })
+                }
+              } catch (notifError) {
+                console.error(
+                  "[Webhook] Fee payment notification failed:",
+                  notifError
+                )
+              }
+            }
+          }
+        } catch (error) {
+          console.error("[Webhook] Failed to record fee payment:", error)
         }
       }
 

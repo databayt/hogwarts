@@ -7,9 +7,7 @@ import type { LinkPreviewData } from "./link-preview"
  * Fetch Open Graph metadata from a URL.
  * Runs server-side only. Timeout: 3 seconds to avoid blocking message send.
  */
-export async function unfurlUrl(
-  url: string
-): Promise<LinkPreviewData | null> {
+export async function unfurlUrl(url: string): Promise<LinkPreviewData | null> {
   try {
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), 3000)
@@ -17,7 +15,8 @@ export async function unfurlUrl(
     const response = await fetch(url, {
       signal: controller.signal,
       headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; Databayt/1.0; +https://databayt.org)",
+        "User-Agent":
+          "Mozilla/5.0 (compatible; Databayt/1.0; +https://databayt.org)",
         Accept: "text/html",
       },
       redirect: "follow",
@@ -71,7 +70,8 @@ function parseOgTags(html: string, url: string): LinkPreviewData | null {
     return titleMatch?.[1]?.trim()
   }
 
-  const title = getMetaContent("og:title") || getMetaContent("twitter:title") || getTitle()
+  const title =
+    getMetaContent("og:title") || getMetaContent("twitter:title") || getTitle()
   const description =
     getMetaContent("og:description") ||
     getMetaContent("twitter:description") ||

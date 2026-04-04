@@ -83,9 +83,12 @@ test.describe("Messaging Visual Regression @messaging @visual", () => {
     await page.goto(messagesUrl("en"), { timeout: NAV_TIMEOUT })
     await waitForMessagingReady(page)
 
-    await expect(page).toHaveScreenshot("messaging-desktop-ltr-light-list.png", {
-      maxDiffPixelRatio: 0.05,
-    })
+    await expect(page).toHaveScreenshot(
+      "messaging-desktop-ltr-light-list.png",
+      {
+        maxDiffPixelRatio: 0.05,
+      }
+    )
   })
 
   test("VIS-002: desktop RTL light - conversation list", async ({ page }) => {
@@ -99,9 +102,12 @@ test.describe("Messaging Visual Regression @messaging @visual", () => {
     const htmlDir = await page.locator("html").getAttribute("dir")
     expect(htmlDir === "rtl" || htmlDir === null).toBeTruthy()
 
-    await expect(page).toHaveScreenshot("messaging-desktop-rtl-light-list.png", {
-      maxDiffPixelRatio: 0.05,
-    })
+    await expect(page).toHaveScreenshot(
+      "messaging-desktop-rtl-light-list.png",
+      {
+        maxDiffPixelRatio: 0.05,
+      }
+    )
   })
 
   test("VIS-003: desktop LTR dark - conversation list", async ({ page }) => {
@@ -144,9 +150,12 @@ test.describe("Messaging Visual Regression @messaging @visual", () => {
     })
     await page.waitForTimeout(1_000)
 
-    await expect(page).toHaveScreenshot("messaging-desktop-ltr-active-chat.png", {
-      maxDiffPixelRatio: 0.05,
-    })
+    await expect(page).toHaveScreenshot(
+      "messaging-desktop-ltr-active-chat.png",
+      {
+        maxDiffPixelRatio: 0.05,
+      }
+    )
   })
 
   // ===========================================================================
@@ -202,8 +211,11 @@ test.describe("Messaging Visual Regression @messaging @visual", () => {
     })
     await page.waitForTimeout(1_000)
 
-    await expect(page).toHaveScreenshot("messaging-mobile-ltr-active-chat.png", {
-      maxDiffPixelRatio: 0.05,
-    })
+    await expect(page).toHaveScreenshot(
+      "messaging-mobile-ltr-active-chat.png",
+      {
+        maxDiffPixelRatio: 0.05,
+      }
+    )
   })
 })

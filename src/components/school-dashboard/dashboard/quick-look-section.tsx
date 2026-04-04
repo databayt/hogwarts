@@ -147,29 +147,36 @@ export function QuickLookSection({
                     </div>
                   </div>
                 </div>
-                {item.data.recent && (() => {
-                  // Check if recent text matches the display locale. When translation
-                  // fails (e.g. API key missing), the raw source-language text leaks
-                  // through. In that case, hide the untranslated preview rather than
-                  // show Arabic text in English mode (or vice versa).
-                  const isArabicText = containsArabic(item.data.recent) && !containsLatin(item.data.recent)
-                  const isLatinText = containsLatin(item.data.recent) && !containsArabic(item.data.recent)
-                  const isMismatch =
-                    (locale === "en" && isArabicText) ||
-                    (locale === "ar" && isLatinText)
+                {item.data.recent &&
+                  (() => {
+                    // Check if recent text matches the display locale. When translation
+                    // fails (e.g. API key missing), the raw source-language text leaks
+                    // through. In that case, hide the untranslated preview rather than
+                    // show Arabic text in English mode (or vice versa).
+                    const isArabicText =
+                      containsArabic(item.data.recent) &&
+                      !containsLatin(item.data.recent)
+                    const isLatinText =
+                      containsLatin(item.data.recent) &&
+                      !containsArabic(item.data.recent)
+                    const isMismatch =
+                      (locale === "en" && isArabicText) ||
+                      (locale === "ar" && isLatinText)
 
-                  if (isMismatch) return null
+                    if (isMismatch) return null
 
-                  return (
-                    <p
-                      className="text-muted-foreground truncate text-xs"
-                      title={item.data.recent}
-                      dir={isArabicText ? "rtl" : isLatinText ? "ltr" : undefined}
-                    >
-                      {item.data.recent}
-                    </p>
-                  )
-                })()}
+                    return (
+                      <p
+                        className="text-muted-foreground truncate text-xs"
+                        title={item.data.recent}
+                        dir={
+                          isArabicText ? "rtl" : isLatinText ? "ltr" : undefined
+                        }
+                      >
+                        {item.data.recent}
+                      </p>
+                    )
+                  })()}
                 {!item.data.recent && item.data.count === 0 && (
                   <p className="text-muted-foreground text-xs italic">
                     {dict?.noRecent || "No recent"} {item.label.toLowerCase()}

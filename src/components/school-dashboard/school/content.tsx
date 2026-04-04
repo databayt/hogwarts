@@ -22,9 +22,9 @@ import {
   Users,
 } from "lucide-react"
 
-import { cn } from "@/lib/utils"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import {
   Card,
@@ -141,28 +141,32 @@ export default async function AdminContent({ dictionary, lang }: Props) {
     {
       title: d?.quickActions?.addUser || "Membership",
       description:
-        d?.quickActions?.addUserDesc || "Users, roles, invitations, and accounts",
+        d?.quickActions?.addUserDesc ||
+        "Users, roles, invitations, and accounts",
       href: `/${lang}/school/membership`,
       icon: UserCog,
     },
     {
       title: d?.quickActions?.announce || "Communication",
       description:
-        d?.quickActions?.announceDesc || "Announcements, notifications, and messaging",
+        d?.quickActions?.announceDesc ||
+        "Announcements, notifications, and messaging",
       href: `/${lang}/school/communication`,
       icon: Bell,
     },
     {
       title: d?.quickActions?.viewLogs || "Security",
       description:
-        d?.quickActions?.viewLogsDesc || "Audit logs, sessions, and access control",
+        d?.quickActions?.viewLogsDesc ||
+        "Audit logs, sessions, and access control",
       href: `/${lang}/school/security`,
       icon: Shield,
     },
     {
       title: d?.quickActions?.exportData || "Reports",
       description:
-        d?.quickActions?.exportDataDesc || "Analytics, exports, and data insights",
+        d?.quickActions?.exportDataDesc ||
+        "Analytics, exports, and data insights",
       href: `/${lang}/school/reports`,
       icon: FileText,
     },
@@ -206,7 +210,10 @@ export default async function AdminContent({ dictionary, lang }: Props) {
           {stats.map((stat) => {
             const Icon = stat.icon
             return (
-              <Card key={stat.label} className="border-none shadow-none bg-muted/50">
+              <Card
+                key={stat.label}
+                className="bg-muted/50 border-none shadow-none"
+              >
                 <CardContent className="p-5">
                   <div className="flex items-center gap-3">
                     <div
@@ -218,13 +225,17 @@ export default async function AdminContent({ dictionary, lang }: Props) {
                       <Icon className={cn("h-5 w-5", stat.color)} />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-muted-foreground text-xs">{stat.label}</p>
+                      <p className="text-muted-foreground text-xs">
+                        {stat.label}
+                      </p>
                       <p className="text-2xl font-semibold tracking-tight">
                         {stat.value.toLocaleString()}
                       </p>
                     </div>
                   </div>
-                  <p className="text-muted-foreground mt-2 text-xs">{stat.sub}</p>
+                  <p className="text-muted-foreground mt-2 text-xs">
+                    {stat.sub}
+                  </p>
                 </CardContent>
               </Card>
             )
@@ -238,7 +249,7 @@ export default async function AdminContent({ dictionary, lang }: Props) {
       {/* ------------------------------------------------------------------ */}
       <section>
         <div className="grid gap-4 md:grid-cols-3">
-          <Card className="border-none shadow-none bg-muted/50">
+          <Card className="bg-muted/50 border-none shadow-none">
             <CardContent className="flex items-center gap-4 p-5">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-500/10">
                 <BookOpen className="h-5 w-5 text-amber-600" />
@@ -254,7 +265,7 @@ export default async function AdminContent({ dictionary, lang }: Props) {
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-none bg-muted/50">
+          <Card className="bg-muted/50 border-none shadow-none">
             <CardContent className="flex items-center gap-4 p-5">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-rose-500/10">
                 <Users className="h-5 w-5 text-rose-500" />
@@ -271,7 +282,7 @@ export default async function AdminContent({ dictionary, lang }: Props) {
           </Card>
 
           {pendingApprovals > 0 ? (
-            <Card className="border-none shadow-none bg-amber-500/5">
+            <Card className="border-none bg-amber-500/5 shadow-none">
               <CardContent className="flex items-center gap-4 p-5">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-500/10">
                   <UserCog className="h-5 w-5 text-amber-600" />
@@ -281,7 +292,10 @@ export default async function AdminContent({ dictionary, lang }: Props) {
                     <p className="text-2xl font-semibold tracking-tight">
                       {pendingApprovals}
                     </p>
-                    <Badge variant="secondary" className="bg-amber-500/10 text-amber-600 text-[10px]">
+                    <Badge
+                      variant="secondary"
+                      className="bg-amber-500/10 text-[10px] text-amber-600"
+                    >
                       {d?.stats?.requiresAttention || "Needs attention"}
                     </Badge>
                   </div>
@@ -292,7 +306,7 @@ export default async function AdminContent({ dictionary, lang }: Props) {
               </CardContent>
             </Card>
           ) : (
-            <Card className="border-none shadow-none bg-muted/50">
+            <Card className="bg-muted/50 border-none shadow-none">
               <CardContent className="flex items-center gap-4 p-5">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10">
                   <CheckCircle2 className="h-5 w-5 text-emerald-500" />
@@ -323,7 +337,7 @@ export default async function AdminContent({ dictionary, lang }: Props) {
             const Icon = mod.icon
             return (
               <Link key={mod.href} href={mod.href} className="group">
-                <Card className="h-full border-none shadow-none bg-muted/50 transition-colors group-hover:bg-muted">
+                <Card className="bg-muted/50 group-hover:bg-muted h-full border-none shadow-none transition-colors">
                   <CardContent className="flex items-start gap-4 p-5">
                     <div className="bg-background flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-sm">
                       <Icon className="text-foreground h-5 w-5" />
@@ -350,9 +364,9 @@ export default async function AdminContent({ dictionary, lang }: Props) {
       {/* Compact horizontal status bar — all green = minimal footprint.     */}
       {/* ------------------------------------------------------------------ */}
       <section>
-        <Card className="border-none shadow-none bg-muted/50">
+        <Card className="bg-muted/50 border-none shadow-none">
           <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-4">
+            <div className="mb-4 flex items-center justify-between">
               <h3 className="text-sm font-medium">
                 {d?.systemStatus?.title || "System Status"}
               </h3>
@@ -373,7 +387,7 @@ export default async function AdminContent({ dictionary, lang }: Props) {
                     className="bg-background flex items-center gap-2.5 rounded-xl px-3 py-2.5"
                   >
                     <Icon className="text-muted-foreground h-4 w-4 shrink-0" />
-                    <span className="text-sm truncate">{service.name}</span>
+                    <span className="truncate text-sm">{service.name}</span>
                     <CheckCircle2 className="ms-auto h-3.5 w-3.5 shrink-0 text-emerald-500" />
                   </div>
                 )

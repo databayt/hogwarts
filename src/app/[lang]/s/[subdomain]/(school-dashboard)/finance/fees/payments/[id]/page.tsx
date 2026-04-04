@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { PaymentDetailActions } from "@/components/school-dashboard/finance/fees/payment-detail-actions"
 
 export const metadata = { title: "Payment Details" }
 
@@ -79,9 +80,28 @@ export default async function PaymentDetailPage({ params }: Props) {
           <h1 className="text-2xl font-semibold">Payment Details</h1>
           <p className="text-muted-foreground">{payment.paymentNumber}</p>
         </div>
-        <Button variant="outline" asChild>
-          <Link href={`/${lang}/finance/fees/payments`}>Back</Link>
-        </Button>
+        <div className="flex gap-2">
+          <PaymentDetailActions
+            receiptData={{
+              paymentNumber: payment.paymentNumber,
+              receiptNumber: payment.receiptNumber,
+              amount: formatCurrency(Number(payment.amount), lang),
+              paymentDate: payment.paymentDate
+                ? formatDate(payment.paymentDate, lang)
+                : "-",
+              paymentMethod: payment.paymentMethod,
+              status: payment.status,
+              transactionId: payment.transactionId || undefined,
+              studentName,
+              feeStructureName:
+                payment.feeAssignment?.feeStructure?.name || "-",
+              academicYear: payment.feeAssignment?.academicYear || "-",
+            }}
+          />
+          <Button variant="outline" asChild>
+            <Link href={`/${lang}/finance/fees/payments`}>Back</Link>
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">

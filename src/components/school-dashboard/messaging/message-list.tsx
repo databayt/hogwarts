@@ -190,10 +190,18 @@ export function MessageList({
   // Render virtualized list
   if (enableVirtualization) {
     return (
-      <div className={cn("wa-doodle-bg relative flex-1", className)}>
+      <div className={cn("relative flex-1 bg-[#EEEAE4]", className)}>
+        <div
+          className="pointer-events-none absolute inset-0 opacity-60"
+          style={{
+            backgroundImage: "url('/whatsapp-bg.png')",
+            backgroundSize: "60%",
+            backgroundRepeat: "repeat",
+          }}
+        />
         <div
           ref={scrollContainerRef}
-          className="h-full flex-1 overflow-x-hidden overflow-y-auto"
+          className="relative h-full flex-1 overflow-x-hidden overflow-y-auto"
           onScroll={handleScrollToTop}
         >
           <div
@@ -227,7 +235,7 @@ export function MessageList({
 
                   {item.type === "date-separator" && (
                     <div className="my-3 flex items-center justify-center">
-                      <span className="bg-msg-date-pill text-foreground/80 rounded-lg px-3 py-1 text-[12.5px] font-medium shadow-sm">
+                      <span className="bg-background border-muted text-foreground/80 rounded-md border px-3 py-1 text-[12.5px] font-medium">
                         {item.label}
                       </span>
                     </div>
@@ -273,10 +281,18 @@ export function MessageList({
 
   // Non-virtualized fallback
   return (
-    <div className={cn("wa-doodle-bg relative flex-1", className)}>
+    <div className={cn("relative flex-1 bg-[#EEEAE4]", className)}>
+      <div
+        className="pointer-events-none absolute inset-0 opacity-60"
+        style={{
+          backgroundImage: "url('/whatsapp-bg.png')",
+          backgroundSize: "60%",
+          backgroundRepeat: "repeat",
+        }}
+      />
       <AutoScroller
         ref={scrollContainerRef}
-        className="h-full flex-1 overflow-x-hidden overflow-y-auto"
+        className="relative h-full flex-1 overflow-x-hidden overflow-y-auto"
         enabled={isAtBottom || !hasScrolledUp}
         onScrollToTop={handleScrollToTop}
       >
@@ -294,7 +310,7 @@ export function MessageList({
               <div key={dateKey}>
                 {/* Date separator — WhatsApp pill */}
                 <div className="my-3 flex items-center justify-center">
-                  <span className="bg-msg-date-pill text-foreground/80 rounded-lg px-3 py-1 text-[12.5px] font-medium shadow-sm">
+                  <span className="bg-background border-muted text-foreground/80 rounded-md border px-3 py-1 text-[12.5px] font-medium">
                     {getDateLabel(dateKey)}
                   </span>
                 </div>

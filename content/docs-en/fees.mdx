@@ -1,0 +1,261 @@
+---
+title: Fee Management
+description: Complete walkthrough of the fee collection system — structures, assignments, payments, installments, and reminders.
+---
+
+# Fee Management
+
+A complete system for defining fees, assigning them to students, collecting payments (online and offline), tracking installments, and sending automated reminders.
+
+---
+
+## How It Works (Overview)
+
+```
+1. Admin creates a Fee Structure (tuition, transport, uniform...)
+2. Admin assigns fees to students (individual or bulk)
+3. Student + guardians get notified (in-app + email)
+4. Student pays online (Stripe) or admin records manual payment
+5. System tracks installments and marks PAID / PARTIAL / OVERDUE
+6. Daily cron at 9 AM detects overdue fees and sends urgent reminders
+7. PDF receipt generated for every payment
+```
+
+---
+
+## Step 1: Create Fee Structure
+
+The admin defines what the school charges.
+
+| Field                | Description                                                               |
+| -------------------- | ------------------------------------------------------------------------- |
+| **Name**             | e.g., "Tuition Fee", "Transport Fee"                                      |
+| **Amount**           | Total fee amount                                                          |
+| **Category**         | TUITION, TRANSPORT, UNIFORM, EXAM, ACTIVITY, LIBRARY, LAB, HOSTEL, OTHERS |
+| **Academic Year**    | e.g., "2025-2026"                                                         |
+| **Installments**     | Number of installments (default: 1 = full payment)                        |
+| **Payment Schedule** | Optional: exact dates and amounts per installment                         |
+| **Late Fee**         | Optional: FIXED, PERCENTAGE, DAILY, or MONTHLY penalty                    |
+| **Discount Policy**  | Optional: sibling discounts, early payment discounts                      |
+
+**Where:** School Dashboard → Finance → Fees → Fee Structures
+
+---
+
+## Step 2: Assign Fees to Students
+
+Two modes:
+
+### Individual Assignment
+
+Select a student → pick a fee structure → optional custom amount → assign.
+
+### Bulk Assignment
+
+Select a class or grade → pick a fee structure → assign to all students at once.
+
+**What happens on assignment:**
+
+- `FeeAssignment` record created with status `PENDING`
+- **Student** gets `fee_due` notification (in-app + email)
+- **All guardians** of the student get the same notification
+- Sibling discount auto-calculated if applicable (e.g., 2nd child: 10%, 3rd child: 20%)
+
+---
+
+## Step 3: How Students Pay
+
+### Option A: Online Payment (Student Self-Service)
+
+1. Student logs in → navigates to **My Fees**
+2. Sees all assigned fees with status and installment timeline
+3. Clicks **"Pay Online"**
+4. Redirected to **Stripe Checkout** (Visa, Mastercard, Apple Pay)
+5. On success → Stripe webhook records the `Payment` automatically
+6. Student + guardians get `fee_paid` notification
+
+### Option B: Admin Records Payment (Cash / Bank / Cheque)
+
+1. Admin goes to Finance → Fees → Payments → New Payment
+2. Selects the fee assignment
+3. Enters amount, payment method, and optional transaction reference
+4. System creates `Payment` record and updates assignment status
+5. Student + guardians get `fee_paid` notification
+
+### Supported Payment Methods
+
+| Method        | Status      | Markets                                  |
+| ------------- | ----------- | ---------------------------------------- |
+| Stripe        | Live        | Global (Visa, MC, Apple Pay, Google Pay) |
+| Tap           | Coming Soon | Gulf (mada, KNET, STC Pay)               |
+| Cash          | Live        | All                                      |
+| Bank Transfer | Live        | All                                      |
+| Mobile Money  | Live        | Sudan (Bankak, mBOK)                     |
+
+Payment gateway is selected automatically based on the **school's country**.
+
+---
+
+## Step 4: Installments
+
+### How They Work
+
+When a fee structure has multiple installments, the system splits the total amount:
+
+**Mode 1: Explicit Schedule**
+Admin defines exact dates and amounts:
+
+```
+Installment 1: 5,000 SAR — Due Sep 1
+Installment 2: 5,000 SAR — Due Dec 1
+Installment 3: 5,000 SAR — Due Mar 1
+```
+
+**Mode 2: Equal Split**
+Admin sets installment count (e.g., 3). System divides equally with monthly due dates.
+
+### Installment Status
+
+| Status  | Meaning                                  |
+| ------- | ---------------------------------------- |
+| PAID    | Fully covered by payments                |
+| PARTIAL | Some payment received, balance remaining |
+| PENDING | Not yet due                              |
+| OVERDUE | Past due date, not fully paid            |
+
+Students see a visual **installment timeline** with colored indicators (green/yellow/red/gray) and a progress bar.
+
+---
+
+## Step 5: Reminders and Notifications
+
+### Automated Notifications
+
+| Event            | Recipients          | Priority | Channels       |
+| ---------------- | ------------------- | -------- | -------------- |
+| Fee assigned     | Student + Guardians | High     | In-app + Email |
+| Payment received | Student + Guardians | Normal   | In-app + Email |
+| Fee overdue      | Student + Guardians | Urgent   | In-app + Email |
+
+### Overdue Detection (Automated)
+
+A **daily cron job runs at 9:00 AM**:
+
+1. Scans all `PENDING` and `PARTIAL` fee assignments
+2. Checks if any installment due date has passed
+3. Updates status to `OVERDUE`
+4. Sends **urgent** notification to student and all guardians
+5. Notification includes the amount and fee name
+
+> **Note:** The overdue notification fires once — when the status first changes to OVERDUE. For repeated reminders to already-overdue accounts, see the enhancement section below.
+
+### Notification Preferences
+
+Users can configure:
+
+- Which notification types they receive
+- Which channels (in-app, email)
+- Quiet hours
+- Digest mode (daily/weekly summary)
+
+---
+
+## Step 6: Payment Tracking
+
+### Where to See Payments
+
+| Who            | Where                     | What They See                                              |
+| -------------- | ------------------------- | ---------------------------------------------------------- |
+| **Student**    | My Fees page              | Their assigned fees, payment history, installment timeline |
+| **Guardian**   | Notifications             | Payment due/overdue/paid alerts via in-app + email         |
+| **Admin**      | Finance → Fees → Payments | All payments, filterable by student/status/method          |
+| **Accountant** | Finance → Fees            | Full payment ledger with journal entries                   |
+
+### Payment Record Fields
+
+Each payment stores:
+
+- Payment number (unique, auto-generated)
+- Receipt number (unique, auto-generated)
+- Amount, date, method
+- External transaction ID (for online payments)
+- Status: PENDING → SUCCESS → (REFUNDED if applicable)
+- Link to accounting journal entry
+
+### PDF Receipts
+
+Every successful payment generates a downloadable **PDF receipt** with school branding, payment details, and remaining balance.
+
+---
+
+## Refunds
+
+Refund requests are tracked with:
+
+- Request date and reason
+- Approval workflow (processedBy, approvalNotes)
+- Supporting documents
+- Status tracking through the refund lifecycle
+
+---
+
+## Discounts
+
+### Sibling Discounts
+
+Automatically detected through shared guardians:
+
+- 2nd child: configurable % (e.g., 10%)
+- 3rd child: higher % (e.g., 20%)
+- Applied at fee assignment time
+
+### Scholarships
+
+Dedicated scholarship management with:
+
+- Custom amount or percentage
+- Linked to specific fee assignments
+- Full audit trail
+
+---
+
+## Late Fees
+
+Configured per fee structure:
+
+| Type       | Example                   |
+| ---------- | ------------------------- |
+| FIXED      | 100 SAR flat penalty      |
+| PERCENTAGE | 5% of outstanding amount  |
+| DAILY      | 10 SAR per day overdue    |
+| MONTHLY    | 200 SAR per month overdue |
+
+---
+
+## Enhancement: Recurring Overdue Reminders
+
+The current system notifies once when a fee becomes overdue. For schools that want **repeated reminders** (e.g., weekly nudges for unpaid fees), the cron job can be extended to also re-notify assignments already in `OVERDUE` status at a configurable interval.
+
+**Current behavior:** PENDING/PARTIAL → detects overdue → marks OVERDUE → notifies once
+**Enhanced behavior:** Also scans OVERDUE assignments → if last notification was 7+ days ago → re-notify
+
+This enhancement is ready to implement when needed.
+
+---
+
+## Technical Reference
+
+| Component            | Location                                                                |
+| -------------------- | ----------------------------------------------------------------------- |
+| Fee server actions   | `src/components/school-dashboard/finance/fees/actions.ts`               |
+| Fee queries          | `src/components/school-dashboard/finance/fees/queries.ts`               |
+| Payment form         | `src/components/school-dashboard/finance/fees/payment-form.tsx`         |
+| My Fees (student)    | `src/components/school-dashboard/finance/fees/my-fees.tsx`              |
+| Pay Online button    | `src/components/school-dashboard/finance/fees/pay-online-button.tsx`    |
+| Installment timeline | `src/components/school-dashboard/finance/fees/installment-timeline.tsx` |
+| Receipt PDF          | `src/components/school-dashboard/finance/fees/receipt-pdf.tsx`          |
+| Overdue cron         | `src/app/api/cron/fee-overdue/route.ts`                                 |
+| Payment providers    | `src/lib/payment/providers/`                                            |
+| Gateway config       | `src/lib/payment/gateway-config.ts`                                     |
+| Stripe webhook       | `src/app/api/webhooks/stripe/route.ts`                                  |
+| Prisma models        | `prisma/models/finance-fees.prisma`                                     |

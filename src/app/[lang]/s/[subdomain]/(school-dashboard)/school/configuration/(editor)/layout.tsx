@@ -149,9 +149,7 @@ export default async function EditorLayout({ children, params }: Props) {
           : null
         const planParts = [
           translatedPlan,
-          school.maxStudents
-            ? `${school.maxStudents} ${studentsLabel}`
-            : null,
+          school.maxStudents ? `${school.maxStudents} ${studentsLabel}` : null,
         ].filter(Boolean)
         return planParts.join(" · ")
       }
@@ -159,12 +157,8 @@ export default async function EditorLayout({ children, params }: Props) {
         const studentsLabel = (cs?.students as string) ?? "students"
         const teachersLabel = (cs?.teachers as string) ?? "teachers"
         const capParts = [
-          school.maxStudents
-            ? `${school.maxStudents} ${studentsLabel}`
-            : null,
-          school.maxTeachers
-            ? `${school.maxTeachers} ${teachersLabel}`
-            : null,
+          school.maxStudents ? `${school.maxStudents} ${studentsLabel}` : null,
+          school.maxTeachers ? `${school.maxTeachers} ${teachersLabel}` : null,
         ].filter(Boolean)
         return capParts.length > 0 ? capParts.join(", ") : null
       }
@@ -215,8 +209,7 @@ export default async function EditorLayout({ children, params }: Props) {
         const em = school.enabledModules as string[] | null
         if (!em)
           return (cs?.allModulesEnabled as string) ?? "All modules enabled"
-        const modulesLabel =
-          (cs?.modulesEnabled as string) ?? "modules enabled"
+        const modulesLabel = (cs?.modulesEnabled as string) ?? "modules enabled"
         return `${em.length} ${modulesLabel}`
       }
       case "name-format":
@@ -258,9 +251,7 @@ export default async function EditorLayout({ children, params }: Props) {
           <ConfigSidebar lang={lang} sectionLinks={sectionLinks} />
           <div className="lg:overflow-y-auto">
             <div className="flex min-h-full items-start justify-center py-8">
-              <div className="w-full max-w-[400px]">
-                {children}
-              </div>
+              <div className="w-full max-w-[400px]">{children}</div>
             </div>
           </div>
         </div>

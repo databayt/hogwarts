@@ -280,12 +280,12 @@ export function MessagingClient({
   }
 
   return (
-    <div className="bg-msg-chat-bg relative flex h-[calc(100vh-4rem)]">
+    <div className="bg-msg-chat-bg relative flex h-full">
       {/* Sidebar — unified contact list */}
       <div
         className={cn(
           "bg-msg-sidebar-bg border-border flex min-h-0 flex-shrink-0 flex-col overflow-hidden border-e",
-          "w-full md:w-[320px] md:max-w-[28vw]",
+          "w-full md:w-[350px] md:max-w-[30vw]",
           activeConversation ? "hidden md:flex" : "flex"
         )}
       >

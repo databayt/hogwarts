@@ -48,7 +48,7 @@ export function DocumentsSection({
             rel="noopener noreferrer"
             className="group flex h-36 flex-col items-center justify-center gap-2"
           >
-            <div className="h-24 w-24 overflow-hidden rounded-full border-2 transition-colors group-hover:border-foreground/30">
+            <div className="group-hover:border-foreground/30 h-24 w-24 overflow-hidden rounded-full border-2 transition-colors">
               <img
                 src={photoUrl}
                 alt={t?.photo || "Photo"}
@@ -64,13 +64,15 @@ export function DocumentsSection({
             href={signatureUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="group flex h-36 flex-col items-center overflow-hidden rounded-lg border transition-colors hover:border-foreground/20"
+            className="group hover:border-foreground/20 flex h-36 flex-col items-center overflow-hidden rounded-lg border transition-colors"
           >
             <div className="bg-muted/30 flex flex-1 items-center justify-center p-4">
               <Signature className="text-muted-foreground h-10 w-10" />
             </div>
             <div className="w-full border-t px-2 py-2 text-center">
-              <p className="text-xs font-medium">{t?.signature || "Signature"}</p>
+              <p className="text-xs font-medium">
+                {t?.signature || "Signature"}
+              </p>
             </div>
           </a>
         )}
@@ -98,7 +100,7 @@ export function DocumentsSection({
                   }
                 }}
               >
-                <div className="h-24 w-24 overflow-hidden rounded-full border-2 transition-colors group-hover:border-foreground/30">
+                <div className="group-hover:border-foreground/30 h-24 w-24 overflow-hidden rounded-full border-2 transition-colors">
                   <img
                     src={doc.url}
                     alt={displayName}
@@ -118,7 +120,7 @@ export function DocumentsSection({
               href={doc.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex h-36 flex-col items-center overflow-hidden rounded-lg border transition-colors hover:border-foreground/20"
+              className="group hover:border-foreground/20 flex h-36 flex-col items-center overflow-hidden rounded-lg border transition-colors"
               onClick={(e) => {
                 if (doc.status === "completed" && doc.extractedData) {
                   e.preventDefault()

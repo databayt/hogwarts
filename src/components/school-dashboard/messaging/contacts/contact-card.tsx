@@ -10,12 +10,28 @@ import {
   isYesterday,
 } from "date-fns"
 import { ar, enUS } from "date-fns/locale"
-import { Pin } from "lucide-react"
+import {
+  Archive,
+  BellOff,
+  ChevronDown,
+  CircleX,
+  Info,
+  Pin,
+  SquareCheckBig,
+} from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Skeleton } from "@/components/ui/skeleton"
+import { UserFilledIcon } from "@/components/atom/icons"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import type { ContactDTO } from "./types"
@@ -26,6 +42,21 @@ export interface ContactCardProps {
   isActive?: boolean
   onClick?: (userId: string) => void
   className?: string
+}
+
+const AVATAR_COLORS = [
+  { bg: "#CBF2EE", icon: "#028377" },
+  { bg: "#E9E0FF", icon: "#5D47DE" },
+  { bg: "#FEF1D4", icon: "#9D6C2C" },
+  { bg: "#FBD8DC", icon: "#D10335" },
+]
+
+function getAvatarColor(id: string) {
+  let hash = 0
+  for (let i = 0; i < id.length; i++) {
+    hash = id.charCodeAt(i) + ((hash << 5) - hash)
+  }
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]
 }
 
 const ROLE_COLORS: Record<string, string> = {
@@ -67,11 +98,9 @@ export const ContactCard = memo(function ContactCard({
     ?.roleSwitcher?.roleLabels
   const m = dictionary?.messaging
 
-  const initials =
-    `${contact.firstName?.[0] ?? ""}${contact.lastName?.[0] ?? ""}`.toUpperCase() ||
-    "?"
   const hasConversation = !!contact.conversationId
   const hasUnread = (contact.unreadCount ?? 0) > 0
+  const avatarColor = getAvatarColor(contact.id)
   const roleLabel = roleLabels?.[contact.role?.toLowerCase()] ?? contact.role
   const roleColor = ROLE_COLORS[contact.role] ?? ""
 
@@ -79,9 +108,9 @@ export const ContactCard = memo(function ContactCard({
     <div
       onClick={() => onClick?.(contact.id)}
       className={cn(
-        "group flex h-[72px] cursor-pointer items-center gap-3 px-3 transition-colors",
-        "hover:bg-msg-hover",
-        isActive && "bg-msg-hover",
+        "group flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 transition-colors",
+        "hover:bg-[#F9F9F8]",
+        isActive && "bg-[#F9F9F8]",
         className
       )}
     >
@@ -91,23 +120,29 @@ export const ContactCard = memo(function ContactCard({
           src={contact.image ?? undefined}
           alt={contact.displayName}
         />
-        <AvatarFallback className="bg-muted text-muted-foreground">
-          {initials}
+        <AvatarFallback
+          className="flex items-center justify-center"
+          style={{ backgroundColor: avatarColor.bg }}
+        >
+          <UserFilledIcon
+            className="h-5 w-5"
+            style={{ color: avatarColor.icon }}
+          />
         </AvatarFallback>
       </Avatar>
 
       {/* Content — with inset bottom border like WhatsApp */}
-      <div className="border-border flex min-w-0 flex-1 flex-col justify-center border-b py-3">
+      <div className="flex min-w-0 flex-1 flex-col justify-center gap-px py-3">
         {/* Row 1: Name + time or role badge */}
         <div className="flex items-center justify-between gap-2">
           <span
             className={cn(
-              "flex items-center gap-1 truncate",
+              "flex items-center gap-1 truncate text-sm",
               hasUnread ? "font-bold" : "font-medium"
             )}
           >
             {contact.displayName}
-            {contact.hasWhatsApp && (
+            {false && contact.hasWhatsApp && (
               <span
                 className="inline-block h-2 w-2 flex-shrink-0 rounded-full bg-green-500"
                 title="WhatsApp"
@@ -115,20 +150,76 @@ export const ContactCard = memo(function ContactCard({
             )}
           </span>
           {hasConversation && contact.lastMessageAt ? (
-            <span
-              className={cn(
-                "flex-shrink-0 text-xs",
-                hasUnread
-                  ? "text-msg-unread-badge font-medium"
-                  : "text-muted-foreground"
-              )}
-            >
-              {formatTime(
-                contact.lastMessageAt,
-                locale,
-                m?.ui?.yesterday || "Yesterday"
-              )}
-            </span>
+            <div className="flex flex-shrink-0 items-center">
+              <span
+                className={cn(
+                  "text-xs transition-transform duration-150 group-hover:-translate-x-1",
+                  hasUnread
+                    ? "text-msg-unread-badge font-medium"
+                    : "text-muted-foreground"
+                )}
+              >
+                {formatTime(
+                  contact.lastMessageAt,
+                  locale,
+                  m?.ui?.yesterday || "Yesterday"
+                )}
+              </span>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className="flex h-4 w-0 items-center justify-center overflow-hidden rounded-sm bg-white opacity-0 shadow-sm transition-all duration-150 group-hover:w-4 group-hover:opacity-100"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <ChevronDown className="h-3 w-3 text-[#6A6C6C]" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="w-48 rounded-xl border-none p-1 shadow-lg"
+                  style={{ backgroundColor: "#F5F6F6" }}
+                >
+                  <DropdownMenuItem
+                    className="gap-2 rounded-lg text-sm"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Archive className="h-4 w-4" /> Archive
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="gap-2 rounded-lg text-sm"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <BellOff className="h-4 w-4" /> Mute
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="gap-2 rounded-lg text-sm"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Pin className="h-4 w-4" />{" "}
+                    {contact.isPinned ? "Unpin" : "Pin"}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="gap-2 rounded-lg text-sm"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <SquareCheckBig className="h-4 w-4" /> Mark as read
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="gap-2 rounded-lg text-sm"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Info className="h-4 w-4" /> Contact info
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="gap-2 rounded-lg text-sm text-red-600 focus:text-red-600"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <CircleX className="h-4 w-4" /> Delete chat
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           ) : (
             <Badge
               variant="secondary"
@@ -141,7 +232,7 @@ export const ContactCard = memo(function ContactCard({
 
         {/* Row 2: Last message or context label */}
         <div className="flex items-center justify-between gap-2">
-          <p className="text-muted-foreground truncate text-sm">
+          <p className="text-muted-foreground truncate text-xs">
             {hasConversation
               ? contact.lastMessage || m?.ui?.no_messages || "No messages"
               : contact.contextLabel || roleLabel}

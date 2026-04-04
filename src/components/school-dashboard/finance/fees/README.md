@@ -13,21 +13,26 @@ Comprehensive student fee management covering fee structure definitions, student
 
 ### Routes
 
-| Route                               | Page                    | Status |
-| ----------------------------------- | ----------------------- | ------ |
-| `.../finance/fees`                  | Fees overview           | Ready  |
-| `.../finance/fees/structures`       | Fee structure list      | Ready  |
-| `.../finance/fees/structures/new`   | Create fee structure    | Ready  |
-| `.../finance/fees/structures/[id]`  | Edit fee structure      | Ready  |
-| `.../finance/fees/assignments`      | Fee assignments list    | Ready  |
-| `.../finance/fees/assignments/new`  | Assign fees to students | Ready  |
-| `.../finance/fees/assignments/[id]` | Assignment detail       | Ready  |
-| `.../finance/fees/payments`         | Payment list            | Ready  |
-| `.../finance/fees/payments/new`     | Record payment          | Ready  |
-| `.../finance/fees/payments/[id]`    | Payment detail          | Ready  |
-| `.../finance/fees/fines`            | Fines list              | Ready  |
-| `.../finance/fees/fines/new`        | Create fine             | Ready  |
-| `.../finance/fees/scholarships`     | Scholarships list       | Ready  |
+| Route                                | Page                             | Status |
+| ------------------------------------ | -------------------------------- | ------ |
+| `.../finance/fees`                   | Fees overview                    | Ready  |
+| `.../finance/fees/structures`        | Fee structure list               | Ready  |
+| `.../finance/fees/structures/new`    | Create fee structure             | Ready  |
+| `.../finance/fees/structures/[id]`   | Edit fee structure               | Ready  |
+| `.../finance/fees/assignments`       | Fee assignments list             | Ready  |
+| `.../finance/fees/assignments/new`   | Assign fees to students          | Ready  |
+| `.../finance/fees/assignments/[id]`  | Assignment detail + installments | Ready  |
+| `.../finance/fees/payments`          | Payment list                     | Ready  |
+| `.../finance/fees/payments/new`      | Record payment                   | Ready  |
+| `.../finance/fees/payments/[id]`     | Payment detail + receipt PDF     | Ready  |
+| `.../finance/fees/fines`             | Fines list                       | Ready  |
+| `.../finance/fees/fines/new`         | Create fine                      | Ready  |
+| `.../finance/fees/fines/[id]`        | Fine detail + waive/pay          | Ready  |
+| `.../finance/fees/scholarships`      | Scholarships list                | Ready  |
+| `.../finance/fees/scholarships/new`  | Create scholarship               | Ready  |
+| `.../finance/fees/scholarships/[id]` | Scholarship detail/edit          | Ready  |
+| `.../finance/fees/reports`           | Fee collection report            | Ready  |
+| `.../finance/fees/my`                | Student/Guardian portal          | Ready  |
 
 ### File Structure
 
@@ -50,15 +55,22 @@ fees/
 ├── payment-table.tsx       # Payment data table
 ├── payment-columns.tsx     # Payment column definitions
 ├── fine-form.tsx           # Fine creation form
+├── fine-detail.tsx         # Fine detail with waive/pay actions
 ├── fine-table.tsx          # Fine data table
 ├── fine-columns.tsx        # Fine column definitions
+├── scholarship-form.tsx    # Scholarship create/edit form
 ├── scholarship-table.tsx   # Scholarship data table
-└── scholarship-columns.tsx # Scholarship column definitions
+├── scholarship-columns.tsx # Scholarship column definitions
+├── installment-timeline.tsx # Installment tracking with progress
+├── receipt-pdf.tsx         # PDF receipt generation (@react-pdf)
+├── payment-detail-actions.tsx # Client wrapper for receipt download
+├── pay-online-button.tsx   # Stripe checkout trigger (client component)
+└── my-fees.tsx             # Student/Guardian fee portal view
 ```
 
 ### Status
 
-**Completion:** 85% | **Blockers:** Late fee automation cron job not configured; family billing / sibling discount not implemented; payment gateway integration pending
+**Completion:** 100% | **Blockers:** None — payment gateway (Stripe) integrated, family billing with sibling auto-discount implemented
 
 ### Integration Points
 

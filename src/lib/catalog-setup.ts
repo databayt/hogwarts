@@ -1626,9 +1626,7 @@ export async function ensureSubjectSelections(
 
       const subjectStreamType =
         gradeNumber >= 10 ? getSubjectStreamType(subject.name) : null
-      const gradeStreams = streams.filter(
-        (s) => s.gradeId === gradeRecord.id
-      )
+      const gradeStreams = streams.filter((s) => s.gradeId === gradeRecord.id)
 
       if (subjectStreamType && gradeStreams.length > 0) {
         const matchingStreams = gradeStreams.filter(
@@ -1650,7 +1648,10 @@ export async function ensureSubjectSelections(
     })
   }
 
-  return { provisioned: selectionData.length > 0, selections: selectionData.length }
+  return {
+    provisioned: selectionData.length > 0,
+    selections: selectionData.length,
+  }
 }
 
 /** @internal Exported for testing only */

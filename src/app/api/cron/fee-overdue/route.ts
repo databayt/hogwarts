@@ -49,6 +49,97 @@ function hasOverdueScheduleEntry(paymentSchedule: unknown, now: Date): boolean {
   })
 }
 
+/** How many days between recurring overdue reminders */
+const REMINDER_INTERVAL_DAYS = 7
+
+/**
+ * Resolve student + guardian userIds for a given studentId
+ */
+async function getRecipientIds(studentId: string): Promise<string[]> {
+  const student = await db.student.findUnique({
+    where: { id: studentId },
+    select: {
+      userId: true,
+      studentGuardians: {
+        select: {
+          guardian: {
+            select: { userId: true },
+          },
+        },
+      },
+    },
+  })
+
+  if (!student) return []
+
+  const ids: string[] = []
+  if (student.userId) ids.push(student.userId)
+  for (const sg of student.studentGuardians) {
+    if (sg.guardian.userId) ids.push(sg.guardian.userId)
+  }
+  return ids
+}
+
+/**
+ * Get school preferred language (cached per request via Map)
+ */
+async function getSchoolLang(
+  schoolId: string,
+  cache: Map<string, string>
+): Promise<string> {
+  if (cache.has(schoolId)) return cache.get(schoolId)!
+  const school = await db.school.findFirst({
+    where: { id: schoolId },
+    select: { preferredLanguage: true },
+  })
+  const lang = school?.preferredLanguage ?? "ar"
+  cache.set(schoolId, lang)
+  return lang
+}
+
+/**
+ * Send overdue notifications to all recipients for an assignment
+ */
+async function notifyOverdue(
+  assignment: {
+    id: string
+    schoolId: string
+    studentId: string
+    finalAmount: { toString(): string }
+    feeStructure: { name: string }
+  },
+  lang: string
+): Promise<number> {
+  const recipientIds = await getRecipientIds(assignment.studentId)
+  if (recipientIds.length === 0) return 0
+
+  const amount = assignment.finalAmount.toString()
+  const feeName = assignment.feeStructure.name
+  const isAr = lang === "ar"
+
+  let count = 0
+  for (const userId of recipientIds) {
+    const result = await dispatchNotification({
+      schoolId: assignment.schoolId,
+      userId,
+      type: "fee_overdue",
+      title: isAr ? "إشعار دفعة متأخرة" : "Overdue Payment Notice",
+      body: isAr
+        ? `دفعة ${amount} لـ "${feeName}" متأخرة. يرجى الدفع فوراً.`
+        : `Fee payment of ${amount} for "${feeName}" is overdue. Please make payment immediately.`,
+      priority: "urgent",
+      channels: ["in_app", "email"],
+      lang,
+      metadata: {
+        feeAssignmentId: assignment.id,
+        url: "/finance/fees",
+      },
+    })
+    if (result) count++
+  }
+  return count
+}
+
 export async function GET(request: NextRequest) {
   try {
     if (!verifyCronSecret(request)) {
@@ -57,8 +148,14 @@ export async function GET(request: NextRequest) {
 
     const startTime = Date.now()
     const now = new Date()
+    const schoolLangCache = new Map<string, string>()
 
-    // Find all fee assignments that are PENDING or PARTIAL (not yet marked OVERDUE)
+    let newlyOverdue = 0
+    let remindersResent = 0
+    let notificationsCreated = 0
+
+    // ── Phase 1: Detect newly overdue (PENDING/PARTIAL → OVERDUE) ──
+
     const pendingAssignments = await db.feeAssignment.findMany({
       where: {
         status: { in: ["PENDING", "PARTIAL"] },
@@ -78,91 +175,74 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    let overdueCount = 0
-    let notificationsCreated = 0
-
     for (const assignment of pendingAssignments) {
-      // Check if any payment schedule entry has a past due date
-      const isOverdue = hasOverdueScheduleEntry(
-        assignment.feeStructure.paymentSchedule,
-        now
+      if (
+        !hasOverdueScheduleEntry(assignment.feeStructure.paymentSchedule, now)
       )
+        continue
 
-      if (!isOverdue) continue
+      newlyOverdue++
 
-      overdueCount++
-
-      // Update status to OVERDUE
       await db.feeAssignment.update({
         where: { id: assignment.id },
         data: { status: "OVERDUE" },
       })
 
-      // Resolve student userId and guardians
-      const student = await db.student.findUnique({
-        where: { id: assignment.studentId },
-        select: {
-          userId: true,
-          studentGuardians: {
-            select: {
-              guardian: {
-                select: { userId: true },
-              },
-            },
+      const lang = await getSchoolLang(assignment.schoolId, schoolLangCache)
+      notificationsCreated += await notifyOverdue(assignment, lang)
+    }
+
+    // ── Phase 2: Re-notify already OVERDUE (every 7 days) ──
+
+    const overdueAssignments = await db.feeAssignment.findMany({
+      where: {
+        status: "OVERDUE",
+      },
+      select: {
+        id: true,
+        schoolId: true,
+        studentId: true,
+        finalAmount: true,
+        feeStructure: {
+          select: {
+            name: true,
           },
         },
-      })
+      },
+    })
 
-      if (!student) continue
+    const reminderCutoff = new Date(
+      now.getTime() - REMINDER_INTERVAL_DAYS * 24 * 60 * 60 * 1000
+    )
 
-      // Look up school's preferred language
-      const school = await db.school.findFirst({
-        where: { id: assignment.schoolId },
-        select: { preferredLanguage: true },
-      })
-
-      const amount = assignment.finalAmount.toString()
-      const feeName = assignment.feeStructure.name
-      const lang = school?.preferredLanguage ?? "ar"
-      const isAr = lang === "ar"
-
-      // Collect all recipient userIds (student + guardians)
-      const recipientIds: string[] = []
-      if (student.userId) {
-        recipientIds.push(student.userId)
-      }
-      for (const sg of student.studentGuardians) {
-        if (sg.guardian.userId) {
-          recipientIds.push(sg.guardian.userId)
-        }
-      }
-
-      // Dispatch notification to each recipient
-      for (const userId of recipientIds) {
-        const result = await dispatchNotification({
+    for (const assignment of overdueAssignments) {
+      // Check if we already sent a fee_overdue notification for this assignment
+      // within the reminder interval
+      const recentNotification = await db.notification.findFirst({
+        where: {
           schoolId: assignment.schoolId,
-          userId,
           type: "fee_overdue",
-          title: isAr ? "إشعار دفعة متأخرة" : "Overdue Payment Notice",
-          body: isAr
-            ? `دفعة ${amount} لـ "${feeName}" متأخرة. يرجى الدفع فوراً.`
-            : `Fee payment of ${amount} for "${feeName}" is overdue. Please make payment immediately.`,
-          priority: "urgent",
-          channels: ["in_app", "email"],
-          lang,
+          createdAt: { gte: reminderCutoff },
           metadata: {
-            feeAssignmentId: assignment.id,
-            url: "/finance/fees",
+            path: ["feeAssignmentId"],
+            equals: assignment.id,
           },
-        })
-        if (result) notificationsCreated++
-      }
+        },
+        select: { id: true },
+      })
+
+      if (recentNotification) continue
+
+      remindersResent++
+      const lang = await getSchoolLang(assignment.schoolId, schoolLangCache)
+      notificationsCreated += await notifyOverdue(assignment, lang)
     }
 
     return NextResponse.json({
       success: true,
-      checked: pendingAssignments.length,
-      overdueDetected: overdueCount,
+      checked: pendingAssignments.length + overdueAssignments.length,
+      newlyOverdue,
+      remindersResent,
       notificationsCreated,
       duration: Date.now() - startTime,
     })

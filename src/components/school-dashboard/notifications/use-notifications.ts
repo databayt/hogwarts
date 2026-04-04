@@ -225,7 +225,13 @@ export function useNotifications(
       active = false
       clearInterval(timer)
     }
-  }, [isConnected, session, options.pollInterval, options.showToast, options.locale])
+  }, [
+    isConnected,
+    session,
+    options.pollInterval,
+    options.showToast,
+    options.locale,
+  ])
 
   // Set up notification event listeners
   useEffect(() => {

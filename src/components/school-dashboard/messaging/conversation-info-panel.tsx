@@ -5,17 +5,17 @@
 
 import { useState } from "react"
 import {
-  X,
-  Users,
   Bell,
   BellOff,
-  Star,
-  Image,
-  FileText,
-  Link2,
   ChevronRight,
-  Shield,
+  FileText,
+  Image,
+  Link2,
   LogOut,
+  Shield,
+  Star,
+  Users,
+  X,
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -25,8 +25,8 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
-import type { ConversationDTO, ConversationParticipantDTO } from "./types"
 import { CONVERSATION_TYPE_CONFIG } from "./config"
+import type { ConversationDTO, ConversationParticipantDTO } from "./types"
 
 // ---------------------------------------------------------------------------
 // Props
@@ -99,7 +99,7 @@ function RoleBadge({
   return (
     <span
       className={cn(
-        "rounded-full px-2 py-0.5 text-[11px] font-medium leading-none",
+        "rounded-full px-2 py-0.5 text-[11px] leading-none font-medium",
         colorMap[role] ?? "bg-muted text-muted-foreground"
       )}
     >
@@ -164,23 +164,20 @@ export function ConversationInfoPanel({
   const labels = {
     close: mx?.info?.close ?? "Close",
     about: mx?.info?.about ?? "About",
-    mediaLinksAndDocs:
-      mx?.info?.media_links_docs ?? "Media, links, and docs",
+    mediaLinksAndDocs: mx?.info?.media_links_docs ?? "Media, links, and docs",
     media: mx?.info?.media ?? "Media",
     links: mx?.info?.links ?? "Links",
     docs: mx?.info?.docs ?? "Docs",
-    muteNotifications:
-      mx?.info?.mute_notifications ?? "Mute notifications",
+    muteNotifications: mx?.info?.mute_notifications ?? "Mute notifications",
     starredMessages: mx?.info?.starred_messages ?? "Starred messages",
     participants: mx?.info?.participants ?? "Participants",
     exitGroup: mx?.info?.exit_group ?? "Exit group",
-    deleteConversation:
-      mx?.info?.delete_conversation ?? "Delete conversation",
+    deleteConversation: mx?.info?.delete_conversation ?? "Delete conversation",
     you: mx?.info?.you ?? "You",
   }
 
   return (
-    <div className="border-s bg-msg-sidebar-bg flex h-full w-full flex-col md:w-[340px]">
+    <div className="bg-msg-sidebar-bg flex h-full w-full flex-col border-s md:w-[340px]">
       {/* ----------------------------------------------------------------- */}
       {/* Header                                                            */}
       {/* ----------------------------------------------------------------- */}
@@ -206,7 +203,7 @@ export function ConversationInfoPanel({
       {/* ----------------------------------------------------------------- */}
       <ScrollArea className="flex-1">
         {/* --- Profile hero --- */}
-        <div className="flex flex-col items-center px-6 pb-4 pt-7">
+        <div className="flex flex-col items-center px-6 pt-7 pb-4">
           <Avatar className="h-24 w-24">
             <AvatarImage src={avatarUrl} alt={displayName} />
             <AvatarFallback className="bg-muted text-muted-foreground text-2xl">
@@ -241,9 +238,7 @@ export function ConversationInfoPanel({
               <p className="text-muted-foreground mb-1 text-xs">
                 {labels.about}
               </p>
-              <p className="text-foreground text-sm">
-                {config.description}
-              </p>
+              <p className="text-foreground text-sm">{config.description}</p>
             </div>
             <Separator />
           </>
@@ -309,9 +304,7 @@ export function ConversationInfoPanel({
             <div
               className={cn(
                 "h-5 w-5 rounded-full bg-white shadow transition-transform",
-                isMuted
-                  ? "translate-x-4 rtl:-translate-x-4"
-                  : "translate-x-0"
+                isMuted ? "translate-x-4 rtl:-translate-x-4" : "translate-x-0"
               )}
             />
           </div>

@@ -2,7 +2,6 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-
 import { useCallback, useEffect, useRef, useState } from "react"
 
 import socketService from "@/lib/websocket/socket-service"
@@ -17,9 +16,9 @@ export type PresenceStatus =
  * Listens to Socket.IO presence:online / presence:offline events.
  */
 export function usePresence(userIds: string[]) {
-  const [presenceMap, setPresenceMap] = useState<
-    Map<string, PresenceStatus>
-  >(new Map())
+  const [presenceMap, setPresenceMap] = useState<Map<string, PresenceStatus>>(
+    new Map()
+  )
 
   useEffect(() => {
     if (userIds.length === 0) return

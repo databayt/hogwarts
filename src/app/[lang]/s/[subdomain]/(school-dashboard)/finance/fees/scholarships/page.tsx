@@ -1,7 +1,11 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import Link from "next/link"
+import { Plus } from "lucide-react"
+
 import { getTenantContext } from "@/lib/tenant-context"
+import { Button } from "@/components/ui/button"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { getScholarshipList } from "@/components/school-dashboard/finance/fees/queries"
@@ -50,5 +54,17 @@ export default async function ScholarshipsPage({ params }: Props) {
         : String(s.createdAt),
   }))
 
-  return <ScholarshipsTable initialData={data} total={count} lang={lang} />
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <Button asChild>
+          <Link href={`/${lang}/finance/fees/scholarships/new`}>
+            <Plus className="me-2 h-4 w-4" />
+            New Scholarship
+          </Link>
+        </Button>
+      </div>
+      <ScholarshipsTable initialData={data} total={count} lang={lang} />
+    </div>
+  )
 }

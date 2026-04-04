@@ -11,13 +11,19 @@
  */
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
+import { Prisma } from "@prisma/client"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
 import { getTenantContext } from "@/lib/tenant-context"
 
-import { getFeeAssignmentList, getFineList, getPaymentList } from "./queries"
+import {
+  calculateSiblingDiscount,
+  getFeeAssignmentList,
+  getFineList,
+  getPaymentList,
+} from "./queries"
 import {
   bulkFeeAssignmentSchema,
   feeAssignmentSchema,
@@ -124,6 +130,9 @@ export async function createFeeStructure(
           : null,
         totalAmount: parseFloat(formData.totalAmount as string),
         installments: parseInt(formData.installments as string, 10) || 1,
+        discountPolicy: formData.discountPolicy
+          ? JSON.parse(formData.discountPolicy as string)
+          : undefined,
         isActive: true,
       },
     })
@@ -168,19 +177,48 @@ export async function assignFee(data: FormData): Promise<ActionResult<string>> {
       return actionError(ACTION_ERRORS.PAYMENT_FAILED)
     }
 
+    const studentId = formData.studentId as string
+    const feeStructureId = formData.feeStructureId as string
+    const academicYear = formData.academicYear as string
+    const baseAmount = parseFloat(formData.finalAmount as string)
+    let manualDiscount = formData.totalDiscount
+      ? parseFloat(formData.totalDiscount as string)
+      : 0
+
+    // Auto-calculate sibling discount
+    const { discountAmount: siblingDiscount, discountEntries } =
+      await calculateSiblingDiscount(
+        studentId,
+        schoolId,
+        feeStructureId,
+        academicYear,
+        baseAmount
+      )
+
+    // Merge existing manual discounts with sibling discount
+    const existingDiscounts = formData.discounts
+      ? (JSON.parse(formData.discounts as string) as Array<{
+          type: string
+          amount: number
+          reason: string
+        }>)
+      : []
+    const allDiscounts = [...existingDiscounts, ...discountEntries]
+    const totalDiscount = manualDiscount + siblingDiscount
+    const finalAmount = Math.max(baseAmount - totalDiscount, 0)
+
     const feeAssignment = await db.feeAssignment.create({
       data: {
         schoolId,
-        studentId: formData.studentId as string,
-        feeStructureId: formData.feeStructureId as string,
-        academicYear: formData.academicYear as string,
-        finalAmount: parseFloat(formData.finalAmount as string),
+        studentId,
+        feeStructureId,
+        academicYear,
+        finalAmount,
         customAmount: formData.customAmount
           ? parseFloat(formData.customAmount as string)
           : null,
-        totalDiscount: formData.totalDiscount
-          ? parseFloat(formData.totalDiscount as string)
-          : 0,
+        totalDiscount,
+        discounts: allDiscounts.length > 0 ? allDiscounts : undefined,
         scholarshipId: formData.scholarshipId as string | undefined,
         status: "PENDING",
       },
@@ -285,18 +323,36 @@ export async function bulkAssignFees(
       return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
-    // Create assignments for all students
+    // Calculate per-student sibling discounts and create assignments
+    const assignmentData = await Promise.all(
+      studentIds.map(async (studentId) => {
+        const { discountAmount, discountEntries } =
+          await calculateSiblingDiscount(
+            studentId,
+            schoolId,
+            feeStructureId,
+            academicYear,
+            finalAmount
+          )
+        return {
+          schoolId,
+          studentId,
+          feeStructureId,
+          academicYear,
+          finalAmount: Math.max(finalAmount - discountAmount, 0),
+          totalDiscount: discountAmount,
+          discounts:
+            discountEntries.length > 0
+              ? (discountEntries as any)
+              : Prisma.JsonNull,
+          status: "PENDING" as const,
+        }
+      })
+    )
+
     const assignments = await db.feeAssignment.createMany({
-      data: studentIds.map((studentId) => ({
-        schoolId,
-        studentId,
-        feeStructureId,
-        academicYear,
-        finalAmount,
-        totalDiscount: 0,
-        status: "PENDING",
-      })),
-      skipDuplicates: true, // Skip if already assigned
+      data: assignmentData,
+      skipDuplicates: true,
     })
 
     revalidatePath("/finance/fees")
@@ -534,6 +590,177 @@ export async function applyScholarship(
   }
 }
 
+/**
+ * Create a new scholarship
+ */
+export async function createScholarship(
+  data: FormData
+): Promise<ActionResult<string>> {
+  try {
+    const session = await auth()
+    const { schoolId } = await getTenantContext()
+
+    if (!session?.user?.id || !schoolId) {
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
+
+    const formData = Object.fromEntries(data)
+
+    const scholarship = await db.scholarship.create({
+      data: {
+        schoolId,
+        name: formData.name as string,
+        description: (formData.description as string) || undefined,
+        coverageType: formData.coverageType as any,
+        coverageAmount: parseFloat(formData.coverageAmount as string),
+        academicYear: formData.academicYear as string,
+        startDate: new Date(formData.startDate as string),
+        endDate: new Date(formData.endDate as string),
+        maxBeneficiaries: formData.maxBeneficiaries
+          ? parseInt(formData.maxBeneficiaries as string, 10)
+          : null,
+        minPercentage: formData.minPercentage
+          ? parseFloat(formData.minPercentage as string)
+          : null,
+        maxFamilyIncome: formData.maxFamilyIncome
+          ? parseFloat(formData.maxFamilyIncome as string)
+          : null,
+        isActive: true,
+      },
+    })
+
+    revalidatePath("/finance/fees")
+    return { success: true, data: scholarship.id }
+  } catch (error) {
+    console.error("Error creating scholarship:", error)
+    return actionError(ACTION_ERRORS.CREATE_FAILED)
+  }
+}
+
+/**
+ * Update an existing scholarship
+ */
+export async function updateScholarship(
+  id: string,
+  data: FormData
+): Promise<ActionResult> {
+  try {
+    const session = await auth()
+    const { schoolId } = await getTenantContext()
+
+    if (!session?.user?.id || !schoolId) {
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
+
+    const formData = Object.fromEntries(data)
+
+    await db.scholarship.update({
+      where: { id, schoolId },
+      data: {
+        name: formData.name as string,
+        description: (formData.description as string) || undefined,
+        coverageType: formData.coverageType as any,
+        coverageAmount: parseFloat(formData.coverageAmount as string),
+        academicYear: formData.academicYear as string,
+        startDate: new Date(formData.startDate as string),
+        endDate: new Date(formData.endDate as string),
+        maxBeneficiaries: formData.maxBeneficiaries
+          ? parseInt(formData.maxBeneficiaries as string, 10)
+          : null,
+        minPercentage: formData.minPercentage
+          ? parseFloat(formData.minPercentage as string)
+          : null,
+        maxFamilyIncome: formData.maxFamilyIncome
+          ? parseFloat(formData.maxFamilyIncome as string)
+          : null,
+        isActive: formData.isActive === "true",
+      },
+    })
+
+    revalidatePath("/finance/fees")
+    return { success: true }
+  } catch (error) {
+    console.error("Error updating scholarship:", error)
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
+  }
+}
+
+/**
+ * Update a fine
+ */
+export async function updateFine(
+  id: string,
+  data: FormData
+): Promise<ActionResult> {
+  try {
+    const session = await auth()
+    const { schoolId } = await getTenantContext()
+
+    if (!session?.user?.id || !schoolId) {
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
+
+    const formData = Object.fromEntries(data)
+
+    await db.fine.update({
+      where: { id, schoolId },
+      data: {
+        fineType: formData.fineType as any,
+        amount: parseFloat(formData.amount as string),
+        reason: formData.reason as string,
+        dueDate: new Date(formData.dueDate as string),
+      },
+    })
+
+    revalidatePath("/finance/fees")
+    return { success: true }
+  } catch (error) {
+    console.error("Error updating fine:", error)
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
+  }
+}
+
+/**
+ * Record payment for a fine
+ */
+export async function payFine(
+  fineId: string,
+  amount: number,
+  paymentMethod: string
+): Promise<ActionResult> {
+  try {
+    const session = await auth()
+    const { schoolId } = await getTenantContext()
+
+    if (!session?.user?.id || !schoolId) {
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
+
+    const fine = await db.fine.findFirst({
+      where: { id: fineId, schoolId },
+    })
+
+    if (!fine) {
+      return actionError(ACTION_ERRORS.NOT_FOUND)
+    }
+
+    await db.fine.update({
+      where: { id: fineId, schoolId },
+      data: {
+        isPaid: true,
+        paidAmount: amount,
+        paidDate: new Date(),
+      },
+    })
+
+    revalidatePath("/finance/fees")
+    return { success: true }
+  } catch (error) {
+    console.error("Error paying fine:", error)
+    return actionError(ACTION_ERRORS.PAYMENT_FAILED)
+  }
+}
+
 // ============================================
 // FINE ACTIONS
 // ============================================
@@ -606,8 +833,95 @@ export async function waiveFine(
 }
 
 // ============================================
-// REPORTING ACTIONS
+// ONLINE PAYMENT ACTIONS
 // ============================================
+
+/**
+ * Create a Stripe checkout session for fee payment
+ */
+export async function createFeePaymentCheckout(
+  feeAssignmentId: string,
+  lang: string
+): Promise<ActionResult<{ checkoutUrl: string }>> {
+  try {
+    const session = await auth()
+    const { schoolId } = await getTenantContext()
+
+    if (!session?.user?.id || !schoolId) {
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
+
+    // Load fee assignment with student and structure
+    const assignment = await db.feeAssignment.findFirst({
+      where: { id: feeAssignmentId, schoolId },
+      include: {
+        student: { select: { id: true, firstName: true, lastName: true } },
+        feeStructure: { select: { name: true } },
+        payments: { where: { status: "SUCCESS" }, select: { amount: true } },
+      },
+    })
+
+    if (!assignment) {
+      return actionError(ACTION_ERRORS.NOT_FOUND)
+    }
+
+    // Calculate remaining amount
+    const totalPaid = assignment.payments.reduce(
+      (sum, p) => sum + Number(p.amount),
+      0
+    )
+    const remaining = Number(assignment.finalAmount) - totalPaid
+    if (remaining <= 0) {
+      return { success: false, error: "Fee is already fully paid" }
+    }
+
+    // Load school for currency
+    const school = await db.school.findFirst({
+      where: { id: schoolId },
+      select: { currency: true, name: true },
+    })
+    const currency = school?.currency || "SAR"
+
+    const { createPaymentCheckout } = await import("@/lib/payment/provider")
+    const result = await createPaymentCheckout("stripe", {
+      amount: remaining,
+      currency,
+      context: "school_fee",
+      schoolId,
+      referenceId: feeAssignmentId,
+      referenceNumber: `FEE-${feeAssignmentId.slice(-8).toUpperCase()}`,
+      successUrl: `${process.env.NEXT_PUBLIC_APP_URL || ""}/${lang}/finance/fees/assignments/${feeAssignmentId}?payment=success`,
+      cancelUrl: `${process.env.NEXT_PUBLIC_APP_URL || ""}/${lang}/finance/fees/assignments/${feeAssignmentId}?payment=cancelled`,
+      lineItems: [
+        {
+          name: assignment.feeStructure?.name || "School Fee",
+          description: `${[assignment.student?.firstName, assignment.student?.lastName].filter(Boolean).join(" ")} — ${assignment.academicYear}`,
+          quantity: 1,
+          unitAmount: 0, // Will be overridden by amount
+        },
+      ],
+      metadata: {
+        type: "fee_payment",
+        feeAssignmentId,
+        studentId: assignment.studentId,
+        schoolId,
+      },
+      customerEmail: session.user.email || undefined,
+    })
+
+    if (!result.success || !result.checkoutUrl) {
+      return {
+        success: false,
+        error: result.error || "Failed to create checkout session",
+      }
+    }
+
+    return { success: true, data: { checkoutUrl: result.checkoutUrl } }
+  } catch (error) {
+    console.error("Error creating fee payment checkout:", error)
+    return actionError(ACTION_ERRORS.PAYMENT_FAILED)
+  }
+}
 
 // ============================================
 // TABLE FETCHER ACTIONS

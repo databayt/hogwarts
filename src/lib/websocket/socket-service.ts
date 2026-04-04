@@ -146,10 +146,7 @@ export interface SocketEvents {
 
   // Presence events
   "presence:online": (data: { userId: string; timestamp: string }) => void
-  "presence:offline": (data: {
-    userId: string
-    lastSeenAt: string
-  }) => void
+  "presence:offline": (data: { userId: string; lastSeenAt: string }) => void
 
   // System events
   notification: (data: { type: string; message: string }) => void

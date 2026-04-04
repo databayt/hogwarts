@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { Search } from "lucide-react"
+import { Search, Settings } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
@@ -50,7 +50,15 @@ export function ContactSearch({
   }
 
   return (
-    <div className="space-y-2 px-3 pt-2">
+    <div className="space-y-4 px-6 pt-4">
+      {/* Title + settings */}
+      <div className="flex items-center justify-between px-0.5">
+        <h2 className="text-foreground text-xl font-bold">Chats</h2>
+        <button className="text-muted-foreground hover:text-foreground transition-colors">
+          <Settings className="h-5 w-5" />
+        </button>
+      </div>
+
       {/* Search input */}
       <div className="relative">
         <Search className="text-muted-foreground absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2" />
@@ -58,16 +66,16 @@ export function ContactSearch({
           type="text"
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
-          placeholder={m?.contacts?.search_placeholder ?? "Search contacts..."}
+          placeholder="Search"
           className={cn(
-            "bg-msg-search-bg text-msg-search-text placeholder:text-msg-search-placeholder w-full rounded-[21px] py-1.5 ps-9 pe-3 text-sm",
-            "focus:ring-msg-search-focus focus:ring-1 focus:outline-none"
+            "border-border text-msg-search-text placeholder:text-msg-search-placeholder w-full rounded-lg border bg-transparent py-1.5 ps-9 pe-3 text-sm",
+            "focus:ring-ring focus:ring-1 focus:outline-none"
           )}
         />
       </div>
 
       {/* Filter chips */}
-      <div className="no-scrollbar flex gap-1.5 overflow-x-auto pb-1">
+      <div className="no-scrollbar flex gap-2 overflow-x-auto pb-2">
         {filterChips.map((chip) => {
           const isActive = activeFilter === chip.key
           return (
@@ -75,10 +83,10 @@ export function ContactSearch({
               key={chip.key}
               onClick={() => onFilterChange(chip.key)}
               className={cn(
-                "flex-shrink-0 rounded-full px-3 py-1 text-sm font-medium whitespace-nowrap transition-colors",
+                "flex-shrink-0 rounded-full border px-2 py-1 text-xs font-medium whitespace-nowrap transition-colors",
                 isActive
-                  ? "bg-msg-unread-badge text-white"
-                  : "bg-msg-hover text-foreground hover:bg-msg-hover/80"
+                  ? "border-[#C8E6C3] bg-[#D9FDD4] text-[#15603E]"
+                  : "hover:bg-muted/50 border-[#d1d5db] bg-transparent text-[#6A6C6C]"
               )}
             >
               {getLabel(chip)}

@@ -4,6 +4,7 @@
 import { notFound, redirect } from "next/navigation"
 import { auth } from "@/auth"
 
+import { db } from "@/lib/db"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 import { ModalProvider } from "@/components/atom/modal/context"
 import {
@@ -12,7 +13,6 @@ import {
 } from "@/components/internationalization/config"
 import { SchoolProvider } from "@/components/school-dashboard/context/school-context"
 import { ForceChangePasswordModal } from "@/components/school-dashboard/force-change-password-modal"
-import { db } from "@/lib/db"
 
 // All school-messaging pages are dynamic - they require auth, subdomain lookup, and query the database
 export const dynamic = "force-dynamic"
@@ -102,15 +102,18 @@ export default async function MessagingLayout({
     <SchoolProvider school={school}>
       <ModalProvider>
         <div
-          className="h-screen w-full overflow-hidden"
+          className="h-screen overflow-hidden"
+          style={{
+            marginInlineStart: "calc(-1 * var(--container-px))",
+            marginInlineEnd: "calc(-1 * var(--container-px))",
+            width: "calc(100% + 2 * var(--container-px))",
+          }}
           dir={isRTL ? "rtl" : "ltr"}
         >
           {children}
         </div>
         {mustChangePassword && (
-          <ForceChangePasswordModal
-            hasPassword={!!currentUser?.password}
-          />
+          <ForceChangePasswordModal hasPassword={!!currentUser?.password} />
         )}
       </ModalProvider>
     </SchoolProvider>

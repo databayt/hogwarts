@@ -26,6 +26,11 @@ import {
 } from "@/components/ui/table"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import {
+  buildInstallments,
+  InstallmentTimeline,
+} from "@/components/school-dashboard/finance/fees/installment-timeline"
+import { PayOnlineButton } from "@/components/school-dashboard/finance/fees/pay-online-button"
 
 export const metadata = { title: "Assignment Details" }
 
@@ -75,7 +80,14 @@ export default async function AssignmentDetailPage({ params }: Props) {
     where: { id, schoolId },
     include: {
       student: { select: { firstName: true, lastName: true } },
-      feeStructure: { select: { name: true, totalAmount: true } },
+      feeStructure: {
+        select: {
+          name: true,
+          totalAmount: true,
+          installments: true,
+          paymentSchedule: true,
+        },
+      },
       payments: {
         orderBy: { paymentDate: "desc" },
         select: {
@@ -118,6 +130,11 @@ export default async function AssignmentDetailPage({ params }: Props) {
           <Button variant="outline" asChild>
             <Link href={`/${lang}/finance/fees/assignments`}>Back</Link>
           </Button>
+          <PayOnlineButton
+            feeAssignmentId={id}
+            lang={lang}
+            remaining={remaining}
+          />
           <Button asChild>
             <Link
               href={`/${lang}/finance/fees/payments/new?assignmentId=${id}`}
@@ -183,6 +200,34 @@ export default async function AssignmentDetailPage({ params }: Props) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Installment Timeline */}
+      {(() => {
+        const schedule = assignment.feeStructure?.paymentSchedule as Array<{
+          dueDate: string
+          amount: number
+          description?: string
+        }> | null
+        const instCount = assignment.feeStructure?.installments ?? 1
+        const installments = buildInstallments(
+          schedule,
+          instCount,
+          finalAmount,
+          assignment.payments.map((p) => ({
+            amount: Number(p.amount),
+            status: p.status,
+            paymentDate: p.paymentDate,
+          }))
+        )
+        return (
+          <InstallmentTimeline
+            installments={installments}
+            totalAmount={finalAmount}
+            totalPaid={totalPaid}
+            lang={lang}
+          />
+        )
+      })()}
 
       <Card>
         <CardHeader>

@@ -621,7 +621,10 @@ describe("Messaging Actions", () => {
       }))
       vi.mocked(db.starredMessage.findMany).mockResolvedValue(items as any)
 
-      const result = await getStarredMessages({ limit: 50, cursor: "starred-0" })
+      const result = await getStarredMessages({
+        limit: 50,
+        cursor: "starred-0",
+      })
 
       expect(result.success).toBe(true)
       if (result.success) {

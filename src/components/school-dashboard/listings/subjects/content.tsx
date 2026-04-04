@@ -1,8 +1,8 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { ensureSubjectSelections } from "@/lib/catalog-setup"
 import { getCatalogImageUrl } from "@/lib/catalog-image-url"
+import { ensureSubjectSelections } from "@/lib/catalog-setup"
 import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"

@@ -52,13 +52,11 @@ export function LinkPreview({
       )}
       <div className="px-3 py-2">
         {siteName && (
-          <p className="text-msg-link text-[11px] font-medium uppercase tracking-wide">
+          <p className="text-msg-link text-[11px] font-medium tracking-wide uppercase">
             {siteName}
           </p>
         )}
-        {title && (
-          <p className="text-sm font-medium leading-tight">{title}</p>
-        )}
+        {title && <p className="text-sm leading-tight font-medium">{title}</p>}
         {description && (
           <p className="text-muted-foreground mt-0.5 line-clamp-2 text-xs leading-relaxed">
             {description}

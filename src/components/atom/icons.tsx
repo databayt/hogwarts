@@ -956,3 +956,43 @@ export const PictogramGrid = ({ className }: { className?: string }) => (
     />
   </svg>
 )
+
+export const MicFilledIcon = ({
+  className,
+  style,
+}: {
+  className?: string
+  style?: React.CSSProperties
+}) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="48"
+    height="48"
+    viewBox="0 0 48 48"
+    className={className}
+    style={style}
+    fill="currentColor"
+  >
+    <path d="M16 12a8 8 0 1 1 16 0v12a8 8 0 1 1-16 0zm8-5.5a5.5 5.5 0 0 0-5.5 5.5v12a5.5 5.5 0 1 0 11 0V12A5.5 5.5 0 0 0 24 6.5m1 31.215c7.265-.513 13-6.57 13-13.965a1.25 1.25 0 1 0-2.5 0c0 6.351-5.149 11.5-11.5 11.5s-11.5-5.149-11.5-11.5a1.25 1.25 0 1 0-2.5 0c0 7.225 5.473 13.172 12.5 13.92v5.08a1.25 1.25 0 1 0 2.5 0z" />
+  </svg>
+)
+
+export const UserFilledIcon = ({
+  className,
+  style,
+}: {
+  className?: string
+  style?: React.CSSProperties
+}) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="16"
+    height="16"
+    viewBox="0 0 16 16"
+    className={className}
+    style={style}
+    fill="currentColor"
+  >
+    <path d="M8 8a3 3 0 1 0 0-6a3 3 0 0 0 0 6m4.735 6c.618 0 1.093-.561.872-1.139a6.002 6.002 0 0 0-11.215 0c-.22.578.254 1.139.872 1.139z" />
+  </svg>
+)

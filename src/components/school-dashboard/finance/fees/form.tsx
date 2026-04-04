@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
+import { Plus, Trash2 } from "lucide-react"
 
 import { formatCurrency } from "@/lib/i18n-format"
 import { Button } from "@/components/ui/button"
@@ -60,6 +61,29 @@ export default function FeeStructureForm({ lang, initialData }: Props) {
     hostelFee: initialData?.hostelFee ? Number(initialData.hostelFee) : 0,
   })
 
+  // Sibling discount tiers
+  const initPolicy = initialData?.discountPolicy as {
+    siblingDiscount?: {
+      type: string
+      tiers: Array<{ siblingNumber: number; value: number }>
+    }
+  } | null
+  const [siblingEnabled, setSiblingEnabled] = useState(
+    !!initPolicy?.siblingDiscount
+  )
+  const [siblingType, setSiblingType] = useState<"PERCENTAGE" | "FIXED">(
+    (initPolicy?.siblingDiscount?.type as "PERCENTAGE" | "FIXED") ||
+      "PERCENTAGE"
+  )
+  const [siblingTiers, setSiblingTiers] = useState<
+    Array<{ siblingNumber: number; value: number }>
+  >(
+    initPolicy?.siblingDiscount?.tiers || [
+      { siblingNumber: 2, value: 10 },
+      { siblingNumber: 3, value: 15 },
+    ]
+  )
+
   const totalAmount = useMemo(() => {
     return Object.values(fees).reduce((sum, val) => sum + (val || 0), 0)
   }, [fees])
@@ -71,6 +95,16 @@ export default function FeeStructureForm({ lang, initialData }: Props) {
   const handleSubmit = useCallback(
     async (formData: FormData) => {
       formData.set("totalAmount", String(totalAmount))
+
+      // Serialize discount policy
+      if (siblingEnabled && siblingTiers.length > 0) {
+        formData.set(
+          "discountPolicy",
+          JSON.stringify({
+            siblingDiscount: { type: siblingType, tiers: siblingTiers },
+          })
+        )
+      }
 
       startTransition(async () => {
         const result = await createFeeStructure(formData)
@@ -86,7 +120,7 @@ export default function FeeStructureForm({ lang, initialData }: Props) {
         }
       })
     },
-    [totalAmount, lang, router]
+    [totalAmount, siblingEnabled, siblingType, siblingTiers, lang, router]
   )
 
   const currentYear = new Date().getFullYear()
@@ -214,6 +248,111 @@ export default function FeeStructureForm({ lang, initialData }: Props) {
             </div>
           ))}
         </CardContent>
+      </Card>
+
+      {/* Sibling Discount */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>{ff?.siblingDiscount || "Sibling Discount"}</CardTitle>
+            <label className="flex cursor-pointer items-center gap-2">
+              <input
+                type="checkbox"
+                checked={siblingEnabled}
+                onChange={(e) => setSiblingEnabled(e.target.checked)}
+                className="h-4 w-4 rounded border"
+              />
+              <span className="text-sm">
+                {ff?.enableSiblingDiscount || "Enable"}
+              </span>
+            </label>
+          </div>
+        </CardHeader>
+        {siblingEnabled && (
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label>{ff?.discountType || "Discount Type"}</Label>
+              <Select
+                value={siblingType}
+                onValueChange={(v) =>
+                  setSiblingType(v as "PERCENTAGE" | "FIXED")
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="PERCENTAGE">
+                    {ff?.percentage || "Percentage (%)"}
+                  </SelectItem>
+                  <SelectItem value="FIXED">
+                    {ff?.fixedAmount || "Fixed Amount"}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-3">
+              <Label>{ff?.discountTiers || "Discount Tiers"}</Label>
+              {siblingTiers.map((tier, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground text-sm whitespace-nowrap">
+                      {ff?.childNumber || "Child"} #{tier.siblingNumber}
+                    </span>
+                  </div>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={siblingType === "PERCENTAGE" ? 100 : undefined}
+                    step={siblingType === "PERCENTAGE" ? 1 : 0.01}
+                    value={tier.value}
+                    onChange={(e) => {
+                      const updated = [...siblingTiers]
+                      updated[i] = {
+                        ...tier,
+                        value: parseFloat(e.target.value) || 0,
+                      }
+                      setSiblingTiers(updated)
+                    }}
+                    className="w-28"
+                    placeholder="0"
+                  />
+                  <span className="text-muted-foreground text-sm">
+                    {siblingType === "PERCENTAGE" ? "%" : ""}
+                  </span>
+                  {siblingTiers.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() =>
+                        setSiblingTiers(siblingTiers.filter((_, j) => j !== i))
+                      }
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const nextNum =
+                    Math.max(...siblingTiers.map((t) => t.siblingNumber), 1) + 1
+                  setSiblingTiers([
+                    ...siblingTiers,
+                    { siblingNumber: nextNum, value: 0 },
+                  ])
+                }}
+              >
+                <Plus className="me-1 h-4 w-4" />
+                {ff?.addTier || "Add Tier"}
+              </Button>
+            </div>
+          </CardContent>
+        )}
       </Card>
 
       {/* Total + Submit */}

@@ -181,6 +181,221 @@ async function createYearLevels(schoolId: string) {
   console.log(`✅ ${levels.length} year levels ready`)
 }
 
+async function createAcademicStructure(schoolId: string) {
+  console.log("🔍 Setting up academic structure...")
+
+  // --- AcademicLevels ---
+  const LEVELS = [
+    {
+      name: "المرحلة الابتدائية",
+      slug: "elementary",
+      level: "ELEMENTARY" as const,
+      levelOrder: 1,
+      startGrade: 1,
+      endGrade: 6,
+    },
+    {
+      name: "المرحلة المتوسطة",
+      slug: "middle",
+      level: "MIDDLE" as const,
+      levelOrder: 2,
+      startGrade: 7,
+      endGrade: 9,
+    },
+    {
+      name: "المرحلة الثانوية",
+      slug: "high",
+      level: "HIGH" as const,
+      levelOrder: 3,
+      startGrade: 10,
+      endGrade: 12,
+    },
+  ]
+
+  const levelIds = new Map<string, string>()
+  for (const lvl of LEVELS) {
+    const record = await prisma.academicLevel.upsert({
+      where: { schoolId_slug: { schoolId, slug: lvl.slug } },
+      update: {
+        name: lvl.name,
+        level: lvl.level,
+        levelOrder: lvl.levelOrder,
+        startGrade: lvl.startGrade,
+        endGrade: lvl.endGrade,
+      },
+      create: {
+        schoolId,
+        name: lvl.name,
+        slug: lvl.slug,
+        lang: "ar",
+        level: lvl.level,
+        levelOrder: lvl.levelOrder,
+        startGrade: lvl.startGrade,
+        endGrade: lvl.endGrade,
+      },
+    })
+    levelIds.set(lvl.slug, record.id)
+  }
+  console.log(`  ✅ ${LEVELS.length} academic levels`)
+
+  // --- AcademicGrades ---
+  // KG grades map to yearLevel orders 0,1; grades 1-12 map to orders 2-13
+  const GRADES = [
+    { name: "الروضة الأولى", slug: "kg1", gradeNumber: -1, yearLevelOrder: 0 },
+    { name: "الروضة الثانية", slug: "kg2", gradeNumber: 0, yearLevelOrder: 1 },
+    { name: "الصف الأول", slug: "grade-1", gradeNumber: 1, yearLevelOrder: 2 },
+    {
+      name: "الصف الثاني",
+      slug: "grade-2",
+      gradeNumber: 2,
+      yearLevelOrder: 3,
+    },
+    {
+      name: "الصف الثالث",
+      slug: "grade-3",
+      gradeNumber: 3,
+      yearLevelOrder: 4,
+    },
+    {
+      name: "الصف الرابع",
+      slug: "grade-4",
+      gradeNumber: 4,
+      yearLevelOrder: 5,
+    },
+    {
+      name: "الصف الخامس",
+      slug: "grade-5",
+      gradeNumber: 5,
+      yearLevelOrder: 6,
+    },
+    {
+      name: "الصف السادس",
+      slug: "grade-6",
+      gradeNumber: 6,
+      yearLevelOrder: 7,
+    },
+    {
+      name: "الصف السابع",
+      slug: "grade-7",
+      gradeNumber: 7,
+      yearLevelOrder: 8,
+    },
+    {
+      name: "الصف الثامن",
+      slug: "grade-8",
+      gradeNumber: 8,
+      yearLevelOrder: 9,
+    },
+    {
+      name: "الصف التاسع",
+      slug: "grade-9",
+      gradeNumber: 9,
+      yearLevelOrder: 10,
+    },
+    {
+      name: "الصف العاشر",
+      slug: "grade-10",
+      gradeNumber: 10,
+      yearLevelOrder: 11,
+    },
+    {
+      name: "الصف الحادي عشر",
+      slug: "grade-11",
+      gradeNumber: 11,
+      yearLevelOrder: 12,
+    },
+    {
+      name: "الصف الثاني عشر",
+      slug: "grade-12",
+      gradeNumber: 12,
+      yearLevelOrder: 13,
+    },
+  ]
+
+  // Fetch existing yearLevels for linking
+  const yearLevels = await prisma.yearLevel.findMany({
+    where: { schoolId },
+    orderBy: { levelOrder: "asc" },
+  })
+  const yearLevelByOrder = new Map(yearLevels.map((yl) => [yl.levelOrder, yl]))
+
+  const gradeIds: { id: string; gradeNumber: number; name: string }[] = []
+
+  for (const g of GRADES) {
+    const levelSlug =
+      g.gradeNumber >= 1 && g.gradeNumber <= 6
+        ? "elementary"
+        : g.gradeNumber >= 7 && g.gradeNumber <= 9
+          ? "middle"
+          : g.gradeNumber >= 10 && g.gradeNumber <= 12
+            ? "high"
+            : "elementary" // KG → elementary
+    const levelId = levelIds.get(levelSlug)!
+    const yearLevel = yearLevelByOrder.get(g.yearLevelOrder)
+
+    const record = await prisma.academicGrade.upsert({
+      where: {
+        schoolId_gradeNumber: { schoolId, gradeNumber: g.gradeNumber },
+      },
+      update: {
+        name: g.name,
+        slug: g.slug,
+        levelId,
+        yearLevelId: yearLevel?.id ?? null,
+      },
+      create: {
+        schoolId,
+        levelId,
+        yearLevelId: yearLevel?.id ?? null,
+        name: g.name,
+        slug: g.slug,
+        lang: "ar",
+        gradeNumber: g.gradeNumber,
+        maxStudents: 30,
+      },
+    })
+    gradeIds.push({ id: record.id, gradeNumber: g.gradeNumber, name: g.name })
+  }
+  console.log(`  ✅ ${GRADES.length} academic grades`)
+
+  return gradeIds
+}
+
+async function createSections(
+  schoolId: string,
+  grades: { id: string; gradeNumber: number; name: string }[]
+) {
+  console.log("🔍 Setting up sections (2 per grade, 30 capacity)...")
+
+  let created = 0
+  for (const grade of grades) {
+    for (let i = 0; i < 2; i++) {
+      const letter = String.fromCharCode(65 + i) // A, B
+      const name = `${grade.name} - ${letter}`
+
+      try {
+        await prisma.section.upsert({
+          where: { schoolId_name: { schoolId, name } },
+          update: { maxCapacity: 30 },
+          create: {
+            schoolId,
+            gradeId: grade.id,
+            name,
+            letter,
+            lang: "ar",
+            maxCapacity: 30,
+          },
+        })
+        created++
+      } catch {
+        // Skip if already exists with different constraints
+      }
+    }
+  }
+
+  console.log(`  ✅ ${created} sections created`)
+}
+
 async function main() {
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
   console.log("🏫 KING FAHAD SCHOOLS — Tenant Setup")
@@ -192,6 +407,8 @@ async function main() {
     await createAdmissionCampaign(school.id)
     await createAdmissionSettings(school.id)
     await createYearLevels(school.id)
+    const grades = await createAcademicStructure(school.id)
+    await createSections(school.id, grades)
 
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
     console.log("✅ King Fahad Schools tenant ready!")

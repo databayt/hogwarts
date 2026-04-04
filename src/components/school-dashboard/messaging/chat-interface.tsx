@@ -3,6 +3,8 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useEffect, useOptimistic, useState } from "react"
+import { formatDistanceToNow } from "date-fns"
+import { ar, enUS } from "date-fns/locale"
 import {
   ArrowLeft,
   EllipsisVertical,
@@ -26,11 +28,9 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "@/components/ui/use-toast"
+import { UserFilledIcon } from "@/components/atom/icons"
 import type { UploadedFileResult } from "@/components/file"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
-
-import { formatDistanceToNow } from "date-fns"
-import { ar, enUS } from "date-fns/locale"
 
 import {
   markConversationAsRead,
@@ -38,11 +38,32 @@ import {
   toggleConversationWhatsApp,
 } from "./actions"
 import { CONVERSATION_TYPE_CONFIG } from "./config"
+import { useUserPresence } from "./hooks/use-presence"
 import { MessageInput } from "./message-input"
 import { MessageList, MessageListSkeleton } from "./message-list"
-import { useUserPresence } from "./hooks/use-presence"
 import { MessageSearch } from "./message-search"
 import type { ConversationDTO, MessageDTO, TypingIndicatorDTO } from "./types"
+
+export interface ChatInterfaceProps {
+  conversation: ConversationDTO
+  initialMessages: MessageDTO[]
+  currentUserId: string
+}
+
+const AVATAR_COLORS = [
+  { bg: "#CBF2EE", icon: "#028377" },
+  { bg: "#E9E0FF", icon: "#5D47DE" },
+  { bg: "#FEF1D4", icon: "#9D6C2C" },
+  { bg: "#FBD8DC", icon: "#D10335" },
+]
+
+function getAvatarColor(id: string) {
+  let hash = 0
+  for (let i = 0; i < id.length; i++) {
+    hash = id.charCodeAt(i) + ((hash << 5) - hash)
+  }
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]
+}
 
 export interface ChatInterfaceProps {
   conversation: ConversationDTO
@@ -490,66 +511,46 @@ export function ChatInterface({
 
   return (
     <div className={cn("flex h-full flex-col", className)}>
-      {/* Header — WhatsApp style: 60px, avatar, name, status, actions */}
-      <div className="bg-msg-header-bg border-border flex h-[60px] flex-shrink-0 items-center gap-3 border-b px-3">
+      {/* Header */}
+      <div
+        className="flex h-12 flex-shrink-0 items-center gap-3 px-3"
+        style={{ backgroundColor: "#F4F4F4" }}
+      >
         {/* Back arrow — mobile only */}
         <Button
           variant="ghost"
           size="icon"
           onClick={onBack}
-          className="h-10 w-10 flex-shrink-0 rounded-full md:hidden"
+          className="h-8 w-8 flex-shrink-0 rounded-full md:hidden"
           aria-label={m?.ui?.back || "Back"}
         >
-          <ArrowLeft className="h-5 w-5 rtl:rotate-180" />
+          <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
         </Button>
 
         {/* Avatar */}
-        <Avatar className="h-10 w-10 flex-shrink-0">
+        <Avatar className="h-8 w-8 flex-shrink-0">
           <AvatarImage src={avatarUrl} alt={displayName} />
-          <AvatarFallback className="bg-muted text-muted-foreground">
-            {avatarFallback}
+          <AvatarFallback
+            className="flex items-center justify-center"
+            style={{
+              backgroundColor: getAvatarColor(otherUserId || conversation.id)
+                .bg,
+            }}
+          >
+            <UserFilledIcon
+              className="h-4 w-4"
+              style={{
+                color: getAvatarColor(otherUserId || conversation.id).icon,
+              }}
+            />
           </AvatarFallback>
         </Avatar>
 
-        {/* Name + status */}
+        {/* Name only */}
         <div className="min-w-0 flex-1">
-          <h2 className="text-foreground flex items-center gap-1.5 truncate font-medium">
+          <h2 className="text-foreground truncate text-sm font-medium">
             {displayName}
-            {whatsappEnabled && (
-              <span
-                className="inline-block h-2.5 w-2.5 flex-shrink-0 rounded-full bg-green-500"
-                title="WhatsApp"
-              />
-            )}
           </h2>
-          {typingUsers.length > 0 ? (
-            <p className="text-msg-unread-badge text-xs">
-              {typingUsers.length === 1
-                ? `${typingUsers[0].user.username || m?.ui?.someone || "Someone"} ${m?.ui?.is_typing || "is typing..."}`
-                : `${typingUsers.length} ${m?.ui?.are_typing || "are typing..."}`}
-            </p>
-          ) : conversation.type !== "direct" && participantNames ? (
-            <p className="text-muted-foreground truncate text-xs">
-              {participantNames}
-              {(conversation.participantCount ?? 0) > 3 &&
-                ` +${(conversation.participantCount ?? 0) - 3}`}
-            </p>
-          ) : conversation.type === "direct" ? (
-            <p
-              className={cn(
-                "text-xs",
-                otherPresence.state === "online"
-                  ? "text-msg-unread-badge"
-                  : "text-muted-foreground"
-              )}
-            >
-              {otherPresence.state === "online"
-                ? m?.ui?.online || "online"
-                : otherPresence.state === "offline"
-                  ? `${m?.ui?.last_seen || "last seen"} ${formatDistanceToNow(otherPresence.lastSeenAt, { addSuffix: true, locale: dateLocale })}`
-                  : m?.ui?.online || "online"}
-            </p>
-          ) : null}
         </div>
 
         {/* Action icons */}
@@ -610,7 +611,15 @@ export function ChatInterface({
       </div>
 
       {/* Messages */}
-      <div className="relative flex-1 overflow-hidden">
+      <div className="relative flex-1 overflow-hidden bg-[#EEEAE4]">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-60"
+          style={{
+            backgroundImage: "url('/whatsapp-bg.png')",
+            backgroundSize: "60%",
+            backgroundRepeat: "repeat",
+          }}
+        />
         <MessageList
           messages={optimisticMessages}
           currentUserId={currentUserId}
@@ -630,18 +639,21 @@ export function ChatInterface({
         {/* Typing indicator — WhatsApp bouncing dots bubble */}
         {typingUsers.length > 0 && (
           <div className="absolute start-4 bottom-2 z-10">
-            <div className="bg-msg-incoming flex items-center gap-1 rounded-lg rounded-ss-sm px-3 py-2 shadow-sm">
+            <div
+              className="flex items-center gap-2 rounded-lg rounded-ss-sm bg-white px-5 py-2.5 shadow-sm"
+              style={{ border: "1px solid #CCCCCC" }}
+            >
               <span
-                className="bg-msg-typing-dot h-2 w-2 animate-bounce rounded-full"
-                style={{ animationDelay: "0ms" }}
+                className="h-2.5 w-2.5 animate-bounce rounded-full"
+                style={{ backgroundColor: "#1FA961", animationDelay: "0ms" }}
               />
               <span
-                className="bg-msg-typing-dot h-2 w-2 animate-bounce rounded-full"
-                style={{ animationDelay: "150ms" }}
+                className="h-2.5 w-2.5 animate-bounce rounded-full"
+                style={{ backgroundColor: "#1FA961", animationDelay: "150ms" }}
               />
               <span
-                className="bg-msg-typing-dot h-2 w-2 animate-bounce rounded-full"
-                style={{ animationDelay: "300ms" }}
+                className="h-2.5 w-2.5 animate-bounce rounded-full"
+                style={{ backgroundColor: "#1FA961", animationDelay: "300ms" }}
               />
             </div>
           </div>

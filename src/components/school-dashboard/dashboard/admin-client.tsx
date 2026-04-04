@@ -288,7 +288,7 @@ function HeroSection({
         current={weatherData?.current}
         forecast={weatherData?.forecast}
         location={weatherData?.location}
-        className="lg:min-w-[280px] lg:w-auto lg:max-w-sm lg:self-end"
+        className="lg:w-auto lg:max-w-sm lg:min-w-[280px] lg:self-end"
       />
     </div>
   )

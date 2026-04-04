@@ -152,9 +152,8 @@ export async function POST(request: NextRequest) {
                 // Download and attach media if present
                 if (hasMedia) {
                   try {
-                    const evolution = await import(
-                      "@/lib/whatsapp/evolution-client"
-                    )
+                    const evolution =
+                      await import("@/lib/whatsapp/evolution-client")
                     const mediaResult = await evolution.downloadMedia(
                       instanceName,
                       {

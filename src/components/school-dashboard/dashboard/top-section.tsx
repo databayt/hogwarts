@@ -268,7 +268,7 @@ export function TopSection({
         />
 
         {/* Weather */}
-        <div className="flex h-[280px] w-full min-w-[280px] max-w-sm flex-col justify-between">
+        <div className="flex h-[280px] w-full max-w-sm min-w-[280px] flex-col justify-between">
           <div>
             <div className="flex items-start justify-between">
               <div className="space-y-1">

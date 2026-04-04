@@ -27,9 +27,8 @@ export async function GET(request: Request) {
     // Retry failed messaging-triggered WhatsApp dispatches
     let retryResult = { processed: 0, sent: 0, failed: 0, skipped: 0 }
     try {
-      const { retryFailedMessageDispatches } = await import(
-        "@/components/school-dashboard/messaging/whatsapp-bridge"
-      )
+      const { retryFailedMessageDispatches } =
+        await import("@/components/school-dashboard/messaging/whatsapp-bridge")
       retryResult = await retryFailedMessageDispatches()
       console.log(
         `[Cron] WhatsApp retries: ${retryResult.processed} processed, ${retryResult.sent} sent, ${retryResult.failed} failed, ${retryResult.skipped} skipped`

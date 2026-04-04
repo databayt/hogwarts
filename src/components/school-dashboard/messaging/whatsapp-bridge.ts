@@ -166,11 +166,7 @@ export async function dispatchMessageToWhatsApp(
         }
       } else {
         // Text-only message
-        result = await evolution.sendText(
-          session.instanceName,
-          phone,
-          content
-        )
+        result = await evolution.sendText(session.instanceName, phone, content)
       }
 
       if (!result) continue
@@ -193,9 +189,10 @@ export async function dispatchMessageToWhatsApp(
           waMessageId: result.key.id,
           recipientPhone: phone,
           content: content || attachments[0]?.fileName || "",
-          contentType: attachments.length > 0
-            ? mimeToMediaType(attachments[0].fileType)
-            : "text",
+          contentType:
+            attachments.length > 0
+              ? mimeToMediaType(attachments[0].fileType)
+              : "text",
           direction: "outgoing",
           status: "sent",
           triggerType: "messaging",
@@ -253,11 +250,9 @@ export async function syncReadReceiptsToWhatsApp(
   for (const msg of messages) {
     if (!msg.whatsappMessageId || !msg.whatsappPhone) continue
     try {
-      await evolution.readMessages(
-        session.instanceName,
-        msg.whatsappPhone,
-        [msg.whatsappMessageId]
-      )
+      await evolution.readMessages(session.instanceName, msg.whatsappPhone, [
+        msg.whatsappMessageId,
+      ])
     } catch (error) {
       console.error(
         `[syncReadReceiptsToWhatsApp] Failed for ${msg.whatsappMessageId}:`,
