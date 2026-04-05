@@ -17,7 +17,7 @@ export async function generateMetadata({
   const apply = d?.school?.admission?.apply
   return {
     title:
-      apply?.title ??
+      apply?.overview?.title ??
       (lang === "ar" ? "نظرة عامة على الطلب" : "Application Overview"),
   }
 }

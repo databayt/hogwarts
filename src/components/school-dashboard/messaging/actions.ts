@@ -172,6 +172,15 @@ export async function createConversation(
     // Validate user can create this conversation type
     validateConversationType(authContext, parsed.type)
 
+    // Check if school has active WhatsApp session (auto-enable dual-delivery)
+    const waSession = await db.whatsAppSession
+      .findUnique({
+        where: { schoolId },
+        select: { status: true },
+      })
+      .catch(() => null)
+    const autoWhatsApp = waSession?.status === "connected"
+
     // For direct conversations, check if one already exists
     if (parsed.type === "direct" && parsed.participantIds.length === 1) {
       const otherUserId = parsed.participantIds[0]
@@ -193,6 +202,20 @@ export async function createConversation(
       })
 
       if (existing) {
+        // Auto-enable WhatsApp on existing conversation if school is connected
+        if (!existing.whatsappEnabled && autoWhatsApp) {
+          db.conversation
+            .update({
+              where: { id: existing.id },
+              data: { whatsappEnabled: true },
+            })
+            .catch(() => {})
+          import("./whatsapp-bridge")
+            .then(({ populateParticipantPhones }) =>
+              populateParticipantPhones(schoolId, existing.id)
+            )
+            .catch(() => {})
+        }
         return { success: true, data: { id: existing.id } }
       }
     }
@@ -204,6 +227,7 @@ export async function createConversation(
         type: parsed.type,
         title: parsed.title,
         avatar: parsed.avatar,
+        whatsappEnabled: autoWhatsApp,
         directParticipant1Id:
           parsed.type === "direct" ? authContext.userId : undefined,
         directParticipant2Id:
@@ -222,6 +246,17 @@ export async function createConversation(
         },
       },
     })
+
+    // Populate WhatsApp phone numbers for participants (non-blocking)
+    if (autoWhatsApp) {
+      import("./whatsapp-bridge")
+        .then(({ populateParticipantPhones }) =>
+          populateParticipantPhones(schoolId, conversation.id)
+        )
+        .catch((err) =>
+          console.error("[createConversation] WA phone populate:", err)
+        )
+    }
 
     // Audit log (non-blocking)
     logConversationCreated(

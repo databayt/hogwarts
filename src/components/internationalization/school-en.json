@@ -8616,6 +8616,14 @@
           "review": {
             "title": "Review & Submit",
             "description": "Review and submit your application"
+          },
+          "payment": {
+            "title": "Payment",
+            "description": "Pay your application fee."
+          },
+          "success": {
+            "title": "Application Submitted",
+            "description": "Your application has been submitted successfully."
           }
         },
         "success": {

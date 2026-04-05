@@ -93,50 +93,36 @@ export default async function SubjectsContent({ lang, level }: Props) {
           return true
         })
 
-      // Group by clickviewId → ~62 groups (one per original inventory entry)
-      const groupMap = new Map<string, typeof catalogRows>()
-      for (const s of catalogRows) {
-        const key = s.clickviewId ?? s.id
-        if (!groupMap.has(key)) groupMap.set(key, [])
-        groupMap.get(key)!.push(s)
-      }
-
-      // For each group, pick the first (lowest grade) as the representative
+      // Each catalog subject becomes its own card (individual grade)
       subjects = await Promise.all(
-        Array.from(groupMap.values()).map(async (group) => {
-          const sorted = group.sort(
-            (a, b) => (a.grades[0] ?? 0) - (b.grades[0] ?? 0)
-          )
-          const rep = sorted[0]
-          return {
-            id: rep.id,
-            slug: rep.slug,
-            name: await getDisplayText(
-              customNames.get(rep.id) ?? rep.name,
-              (rep.lang || "ar") as SupportedLanguage,
-              lang,
-              schoolId!
-            ),
-            department: rep.department
-              ? await getDisplayText(
-                  rep.department,
-                  (rep.lang || "ar") as SupportedLanguage,
-                  lang,
-                  schoolId!
-                )
-              : "",
-            level: rep.levels[0] ?? "ELEMENTARY",
-            levels: rep.levels,
-            grades: sorted.flatMap((s) => s.grades).sort((a, b) => a - b),
-            color: rep.color,
-            imageUrl: getCatalogImageUrl(rep.thumbnail, "sm"),
-            totalChapters: rep.totalChapters,
-            totalLessons: rep.totalLessons,
-            averageRating: rep.averageRating,
-            usageCount: rep.usageCount,
-            ratingCount: rep.ratingCount,
-          }
-        })
+        catalogRows.map(async (s) => ({
+          id: s.id,
+          slug: s.slug,
+          name: await getDisplayText(
+            customNames.get(s.id) ?? s.name,
+            (s.lang || "ar") as SupportedLanguage,
+            lang,
+            schoolId!
+          ),
+          department: s.department
+            ? await getDisplayText(
+                s.department,
+                (s.lang || "ar") as SupportedLanguage,
+                lang,
+                schoolId!
+              )
+            : "",
+          level: s.levels[0] ?? "ELEMENTARY",
+          levels: s.levels,
+          grades: s.grades,
+          color: s.color,
+          imageUrl: getCatalogImageUrl(s.thumbnail, "sm"),
+          totalChapters: s.totalChapters,
+          totalLessons: s.totalLessons,
+          averageRating: s.averageRating,
+          usageCount: s.usageCount,
+          ratingCount: s.ratingCount,
+        }))
       )
 
       if (level) {

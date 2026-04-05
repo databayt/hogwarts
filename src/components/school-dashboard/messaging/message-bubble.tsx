@@ -530,7 +530,8 @@ export const MessageBubble = memo(function MessageBubble({
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
-                    align={isOwnMessage ? "start" : "end"}
+                    side="left"
+                    align="start"
                     className="w-40"
                   >
                     <DropdownMenuItem

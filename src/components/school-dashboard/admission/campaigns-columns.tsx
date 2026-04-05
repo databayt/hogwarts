@@ -110,6 +110,21 @@ export const getCampaignColumns = (
       filterFn: (row, id, value) => value.includes(row.getValue(id)),
     },
     {
+      accessorKey: "applicationFee",
+      header: ({ column }) => (
+        <DataTableColumnHeader
+          column={column}
+          title={t?.columns?.applicationFee || "App Fee"}
+        />
+      ),
+      cell: ({ getValue }) => {
+        const fee = getValue<string | null>()
+        if (!fee || parseFloat(fee) === 0)
+          return <span className="text-muted-foreground">-</span>
+        return <span className="text-sm font-medium tabular-nums">{fee}</span>
+      },
+    },
+    {
       accessorKey: "applicationsCount",
       header: ({ column }) => (
         <DataTableColumnHeader

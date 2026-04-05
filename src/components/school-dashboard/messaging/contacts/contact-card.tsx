@@ -175,7 +175,8 @@ export const ContactCard = memo(function ContactCard({
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
-                  align="end"
+                  align="start"
+                  side="bottom"
                   className="w-48 rounded-xl border-none p-1 shadow-lg"
                   style={{ backgroundColor: "#F5F6F6" }}
                 >

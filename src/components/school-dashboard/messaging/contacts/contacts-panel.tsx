@@ -69,37 +69,41 @@ export function ContactsPanel({
   const cachedGroupsRef = useRef<ContactGroup[] | null>(null)
 
   // Fetch contacts with caching for the no-search case
-  const fetchContacts = useCallback(async (searchQuery?: string) => {
-    const isSearch = searchQuery && searchQuery.length >= 2
+  const fetchContacts = useCallback(
+    async (searchQuery?: string) => {
+      const isSearch = searchQuery && searchQuery.length >= 2
 
-    // Return cached data immediately for no-search case
-    if (!isSearch && cachedGroupsRef.current) {
-      setGroups(cachedGroupsRef.current)
-      setIsLoading(false)
-      return
-    }
-
-    try {
-      setIsLoading(true)
-      const params = new URLSearchParams()
-      if (isSearch) {
-        params.set("search", searchQuery)
+      // Return cached data immediately for no-search case
+      if (!isSearch && cachedGroupsRef.current) {
+        setGroups(cachedGroupsRef.current)
+        setIsLoading(false)
+        return
       }
-      const res = await fetch(`/api/contacts?${params.toString()}`)
-      if (res.ok) {
-        const data = await res.json()
-        const newGroups = data.groups ?? []
-        setGroups(newGroups)
-        if (!isSearch) {
-          cachedGroupsRef.current = newGroups
+
+      try {
+        setIsLoading(true)
+        const params = new URLSearchParams()
+        params.set("locale", locale)
+        if (isSearch) {
+          params.set("search", searchQuery)
         }
+        const res = await fetch(`/api/contacts?${params.toString()}`)
+        if (res.ok) {
+          const data = await res.json()
+          const newGroups = data.groups ?? []
+          setGroups(newGroups)
+          if (!isSearch) {
+            cachedGroupsRef.current = newGroups
+          }
+        }
+      } catch (error) {
+        console.error("[ContactsPanel] Error fetching contacts:", error)
+      } finally {
+        setIsLoading(false)
       }
-    } catch (error) {
-      console.error("[ContactsPanel] Error fetching contacts:", error)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
+    },
+    [locale]
+  )
 
   // Initial load
   useEffect(() => {

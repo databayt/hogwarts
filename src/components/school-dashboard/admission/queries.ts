@@ -86,6 +86,7 @@ export const applicationListSelect = {
   status: true,
   meritScore: true,
   meritRank: true,
+  applicationFeePaid: true,
   submittedAt: true,
   createdAt: true,
   campaign: {

@@ -547,7 +547,7 @@ export async function updateApplicationStatus(params: {
           status: params.status,
           url:
             params.status === "SELECTED"
-              ? `/application/${params.id}/payment`
+              ? `/application/${params.id}/offer`
               : "/admission",
         },
         actorId: session.user?.id,
@@ -754,8 +754,14 @@ export async function confirmEnrollment(params: {
       return actionError(ACTION_ERRORS.OFFER_EXPIRED)
     }
 
+    // Require application fee to be paid before enrollment
+    if (!application.applicationFeePaid) {
+      return actionError(ACTION_ERRORS.APPLICATION_FEE_REQUIRED)
+    }
+
     const enrollmentNumber = `ENR-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
     let enrolledStudentId: string | null = null
+    const warnings: string[] = []
 
     const txUserId = await db.$transaction(
       async (tx) => {
@@ -1066,6 +1072,9 @@ export async function confirmEnrollment(params: {
               "[confirmEnrollment] Fee auto-assignment failed:",
               feeError
             )
+            warnings.push(
+              "Fee auto-assignment failed — assign fees manually from Finance > Fees"
+            )
           }
 
           // 7. Create Guardian records from application parent/guardian data
@@ -1201,6 +1210,9 @@ export async function confirmEnrollment(params: {
             console.warn(
               "[confirmEnrollment] Invoice auto-generation failed:",
               invoiceError
+            )
+            warnings.push(
+              "Invoice auto-generation failed — create invoice manually from Finance > Invoices"
             )
           }
 

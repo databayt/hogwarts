@@ -84,7 +84,13 @@
     "uploaded": "Uploaded",
     "unable_to_load": "Unable to load messages",
     "unexpected_error": "An unexpected error occurred while loading your messages.",
-    "error_reference": "Error reference"
+    "error_reference": "Error reference",
+    "contact_info": "Contact info",
+    "file": "File",
+    "photos_videos": "Photos and videos",
+    "contact": "Contact",
+    "poll": "Poll",
+    "event": "Event"
   },
   "actions": {
     "send": "Send",

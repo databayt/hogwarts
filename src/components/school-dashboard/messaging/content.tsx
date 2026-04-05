@@ -8,6 +8,8 @@ import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getMessagingDictionary } from "@/components/internationalization/dictionaries"
+import { getDisplayText } from "@/components/translation/display"
+import type { SupportedLanguage } from "@/components/translation/types"
 
 import { MessagingClient } from "./messaging-client"
 import {
@@ -95,6 +97,67 @@ export async function MessagingContent({
     console.error("[MessagingContent] Error fetching conversations:", error)
   }
 
+  // Translate participant usernames when locale differs from school's stored language
+  const school = await db.school
+    .findUnique({
+      where: { id: schoolId },
+      select: { preferredLanguage: true },
+    })
+    .catch(() => null)
+  const contentLang = (school?.preferredLanguage ?? "ar") as SupportedLanguage
+
+  if (contentLang !== locale) {
+    const translateName = async (name: string | null) => {
+      if (!name) return name
+      return getDisplayText(name, contentLang, locale, schoolId)
+    }
+
+    // Translate participant names in all conversations
+    await Promise.all(
+      conversationsData.map(async (conv: any) => {
+        if (conv.participants) {
+          await Promise.all(
+            conv.participants.map(async (p: any) => {
+              if (p.user?.username) {
+                p.user.username = await translateName(p.user.username)
+              }
+            })
+          )
+        }
+        if (conv.createdBy?.username) {
+          conv.createdBy.username = await translateName(conv.createdBy.username)
+        }
+        if (conv.lastMessage?.sender?.username) {
+          conv.lastMessage.sender.username = await translateName(
+            conv.lastMessage.sender.username
+          )
+        }
+      })
+    )
+
+    // Translate active conversation participant names
+    if (activeConversationData) {
+      if (activeConversationData.participants) {
+        await Promise.all(
+          activeConversationData.participants.map(async (p: any) => {
+            if (p.user?.username) {
+              p.user.username = await translateName(p.user.username)
+            }
+          })
+        )
+      }
+    }
+
+    // Translate message sender names
+    await Promise.all(
+      messagesData.map(async (msg: any) => {
+        if (msg.sender?.username) {
+          msg.sender.username = await translateName(msg.sender.username)
+        }
+      })
+    )
+  }
+
   return (
     <MessagingClient
       initialConversations={conversationsData}
@@ -119,26 +182,50 @@ export async function MessagingContentSkeleton({
 
   return (
     <div className="bg-background flex h-full">
-      {/* Sidebar skeleton - responsive */}
-      <div className="border-border w-full flex-shrink-0 space-y-4 border-e p-4 sm:w-96 md:w-[430px]">
-        <Skeleton className="h-10 w-full rounded" />
-        <Skeleton className="h-10 w-full rounded" />
-        {Array.from({ length: 8 }).map((_, i) => (
-          <div key={i} className="flex gap-3">
-            <Skeleton className="h-12 w-12 rounded-full" />
-            <div className="flex-1 space-y-2">
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-3 w-48" />
-            </div>
+      {/* Sidebar skeleton - matches ContactsPanel layout */}
+      <div className="border-border flex w-full flex-shrink-0 flex-col border-e md:w-[350px] md:max-w-[30vw]">
+        <div className="space-y-4 px-6 pt-4">
+          {/* Title + settings */}
+          <div className="flex items-center justify-between px-0.5">
+            <Skeleton className="h-6 w-16 rounded" />
+            <Skeleton className="h-5 w-5 rounded" />
           </div>
-        ))}
+          {/* Search */}
+          <Skeleton className="h-9 w-full rounded-lg" />
+          {/* Filter chips */}
+          <div className="flex gap-2 pb-2">
+            {["w-10", "w-16", "w-18", "w-16", "w-16"].map((w, i) => (
+              <Skeleton
+                key={i}
+                className={`h-7 ${w} flex-shrink-0 rounded-full`}
+              />
+            ))}
+          </div>
+        </div>
+        {/* Contact cards */}
+        <div className="px-6">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="flex h-[72px] items-center gap-3 px-3">
+              <Skeleton className="h-[49px] w-[49px] rounded-full" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-32 rounded" />
+                <Skeleton className="h-3 w-24 rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Chat skeleton - hidden on mobile, visible on desktop */}
-      <div className="bg-muted/20 hidden flex-1 items-center justify-center md:flex">
-        <p className="text-muted-foreground">
-          {m?.ui?.select_conversation_start || "Select a conversation to start"}
-        </p>
+      {/* Right panel skeleton - matches NoActiveConversation */}
+      <div
+        className="hidden flex-1 flex-col items-center md:flex"
+        style={{ backgroundColor: "#ECECEC" }}
+      >
+        <div className="flex-1" />
+        <Skeleton className="mb-6 h-16 w-16 rounded-full" />
+        <Skeleton className="mb-2 h-6 w-44 rounded" />
+        <div className="flex-1" />
+        <Skeleton className="mb-14 h-4 w-40 rounded" />
       </div>
     </div>
   )

@@ -36,6 +36,7 @@ export type ApplicationRow = {
   status: string
   meritScore: string | null
   meritRank: number | null
+  applicationFeePaid: boolean
   campaignName: string
   campaignId: string
   submittedAt: string | null
@@ -236,6 +237,35 @@ export const getApplicationColumns = (
         />
       ),
       meta: { label: t?.columns?.class || "Class", variant: "text" },
+    },
+    {
+      accessorKey: "applicationFeePaid",
+      header: ({ column }) => (
+        <DataTableColumnHeader
+          column={column}
+          title={t?.columns?.fees || "Fees"}
+        />
+      ),
+      cell: ({ getValue }) => {
+        const paid = getValue<boolean>()
+        return (
+          <Badge variant={paid ? "default" : "outline"}>
+            {paid
+              ? t?.enrollment?.paid || "Paid"
+              : t?.enrollment?.unpaid || "Unpaid"}
+          </Badge>
+        )
+      },
+      meta: {
+        label: t?.columns?.fees || "Fees",
+        variant: "select",
+        options: [
+          { label: t?.enrollment?.paid || "Paid", value: "true" },
+          { label: t?.enrollment?.unpaid || "Unpaid", value: "false" },
+        ],
+      },
+      enableColumnFilter: true,
+      filterFn: (row, id, value) => value.includes(String(row.getValue(id))),
     },
     {
       accessorKey: "status",

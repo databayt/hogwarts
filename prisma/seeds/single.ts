@@ -56,6 +56,7 @@ import { seedWellness } from "./health"
 import { seedInvoices } from "./invoices"
 import { seedLibrary } from "./library"
 import { seedMessaging } from "./messages"
+import { seedMessagingPhones } from "./messaging-phones"
 import { seedNotifications } from "./notifications"
 import { seedPayroll } from "./payroll"
 import { seedAllPeople, seedStudentDocuments } from "./people"
@@ -663,6 +664,12 @@ const SEEDS: Record<string, SeedEntry> = {
       const students = await resolveStudents(prisma, schoolId)
       const { adminUsers } = await resolveUsers(prisma, schoolId)
       await seedMessaging(prisma, schoolId, teachers, students, adminUsers)
+    },
+  },
+  "messaging-phones": {
+    description: "WhatsApp phone numbers for admin + accountant test accounts",
+    run: async (prisma, schoolId) => {
+      await seedMessagingPhones(prisma, schoolId)
     },
   },
   notifications: {

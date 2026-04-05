@@ -84,7 +84,13 @@
     "uploaded": "تم الرفع",
     "unable_to_load": "تعذر تحميل الرسائل",
     "unexpected_error": "حدث خطأ غير متوقع أثناء تحميل رسائلك.",
-    "error_reference": "مرجع الخطأ"
+    "error_reference": "مرجع الخطأ",
+    "contact_info": "معلومات الاتصال",
+    "file": "ملف",
+    "photos_videos": "صور وفيديو",
+    "contact": "جهة اتصال",
+    "poll": "استطلاع",
+    "event": "حدث"
   },
   "actions": {
     "send": "إرسال",

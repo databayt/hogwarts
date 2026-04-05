@@ -199,6 +199,9 @@ export const ConversationCard = memo(function ConversationCard({
 
           {/* Right badges */}
           <div className="flex flex-shrink-0 items-center gap-1.5">
+            {conversation.whatsappEnabled && (
+              <span className="text-[10px] font-bold text-green-600">W</span>
+            )}
             {isPinned && <Pin className="text-muted-foreground h-3.5 w-3.5" />}
             {isMuted && (
               <VolumeX className="text-muted-foreground h-3.5 w-3.5" />

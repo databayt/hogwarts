@@ -112,7 +112,18 @@ model Application {
   confirmationDate   DateTime?
   enrollmentNumber   String?
 
-  // Payment
+  // Offer Acceptance (parent/guardian action)
+  offerAccepted   Boolean   @default(false)
+  offerAcceptedAt DateTime?
+
+  // Registration Fee (paid to secure seat before enrollment)
+  registrationFeePaid      Boolean   @default(false)
+  registrationFeeAmount    Decimal?  @db.Decimal(10, 2)
+  registrationFeeMethod    String?   // "stripe", "cash", "bank_transfer"
+  registrationFeeReference String?
+  registrationFeeDate      DateTime?
+
+  // Application Fee Payment
   applicationFeePaid Boolean   @default(false)
   paymentId          String?
   paymentDate        DateTime?

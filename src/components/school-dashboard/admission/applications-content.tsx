@@ -61,6 +61,7 @@ export default async function ApplicationsContent({
           status: a.status,
           meritScore: a.meritScore?.toString() ?? null,
           meritRank: a.meritRank,
+          applicationFeePaid: a.applicationFeePaid,
           campaignName: await getDisplayText(
             a.campaign.name,
             detectLanguage(a.campaign.name),

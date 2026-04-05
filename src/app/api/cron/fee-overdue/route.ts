@@ -32,6 +32,51 @@ interface PaymentScheduleEntry {
   description?: string
 }
 
+type LateFeeType = "FIXED" | "PERCENTAGE" | "DAILY" | "MONTHLY"
+
+/**
+ * Calculate late fee charge based on the fee structure's late fee policy.
+ */
+function calculateLateFee(
+  lateFeeType: LateFeeType,
+  lateFeeAmount: number,
+  finalAmount: number,
+  daysOverdue: number
+): number {
+  switch (lateFeeType) {
+    case "FIXED":
+      return lateFeeAmount
+    case "PERCENTAGE":
+      return (finalAmount * lateFeeAmount) / 100
+    case "DAILY":
+      return lateFeeAmount * daysOverdue
+    case "MONTHLY":
+      return lateFeeAmount * Math.floor(daysOverdue / 30)
+    default:
+      return 0
+  }
+}
+
+/**
+ * Get the earliest overdue date from a payment schedule.
+ */
+function getEarliestOverdueDate(
+  paymentSchedule: unknown,
+  now: Date
+): Date | null {
+  if (!Array.isArray(paymentSchedule)) return null
+
+  let earliest: Date | null = null
+  for (const entry of paymentSchedule as PaymentScheduleEntry[]) {
+    if (!entry.dueDate) continue
+    const dueDate = new Date(entry.dueDate)
+    if (dueDate < now && (!earliest || dueDate < earliest)) {
+      earliest = dueDate
+    }
+  }
+  return earliest
+}
+
 function verifyCronSecret(request: NextRequest): boolean {
   const authHeader = request.headers.get("authorization")
   const cronSecret = process.env.CRON_SECRET
@@ -153,6 +198,7 @@ export async function GET(request: NextRequest) {
     let newlyOverdue = 0
     let remindersResent = 0
     let notificationsCreated = 0
+    let lateFeesCharged = 0
 
     // ── Phase 1: Detect newly overdue (PENDING/PARTIAL → OVERDUE) ──
 
@@ -170,6 +216,8 @@ export async function GET(request: NextRequest) {
           select: {
             name: true,
             paymentSchedule: true,
+            lateFeeAmount: true,
+            lateFeeType: true,
           },
         },
       },
@@ -188,11 +236,55 @@ export async function GET(request: NextRequest) {
         data: { status: "OVERDUE" },
       })
 
+      // Apply late fee if configured on the fee structure
+      const lateFeeAmount = assignment.feeStructure.lateFeeAmount
+        ? Number(assignment.feeStructure.lateFeeAmount)
+        : 0
+      const lateFeeType = assignment.feeStructure
+        .lateFeeType as LateFeeType | null
+
+      if (lateFeeAmount > 0 && lateFeeType) {
+        const earliestOverdue = getEarliestOverdueDate(
+          assignment.feeStructure.paymentSchedule,
+          now
+        )
+        const daysOverdue = earliestOverdue
+          ? Math.max(
+              1,
+              Math.floor(
+                (now.getTime() - earliestOverdue.getTime()) /
+                  (1000 * 60 * 60 * 24)
+              )
+            )
+          : 1
+
+        const charge = calculateLateFee(
+          lateFeeType,
+          lateFeeAmount,
+          Number(assignment.finalAmount),
+          daysOverdue
+        )
+
+        if (charge > 0) {
+          await db.fine.create({
+            data: {
+              schoolId: assignment.schoolId,
+              studentId: assignment.studentId,
+              fineType: "LATE_FEE",
+              amount: charge,
+              reason: `Late fee for ${assignment.feeStructure.name}`,
+              dueDate: now,
+            },
+          })
+          lateFeesCharged++
+        }
+      }
+
       const lang = await getSchoolLang(assignment.schoolId, schoolLangCache)
       notificationsCreated += await notifyOverdue(assignment, lang)
     }
 
-    // ── Phase 2: Re-notify already OVERDUE (every 7 days) ──
+    // ── Phase 2: Re-notify already OVERDUE (every 7 days) + recurring late fees ──
 
     const overdueAssignments = await db.feeAssignment.findMany({
       where: {
@@ -206,6 +298,9 @@ export async function GET(request: NextRequest) {
         feeStructure: {
           select: {
             name: true,
+            paymentSchedule: true,
+            lateFeeAmount: true,
+            lateFeeType: true,
           },
         },
       },
@@ -216,6 +311,86 @@ export async function GET(request: NextRequest) {
     )
 
     for (const assignment of overdueAssignments) {
+      // ── Recurring late fees for DAILY/MONTHLY types ──
+      const lateFeeAmount = assignment.feeStructure.lateFeeAmount
+        ? Number(assignment.feeStructure.lateFeeAmount)
+        : 0
+      const lateFeeType = assignment.feeStructure
+        .lateFeeType as LateFeeType | null
+
+      if (lateFeeAmount > 0 && lateFeeType) {
+        const feeReasonMatch = `Late fee for ${assignment.feeStructure.name}`
+
+        const existingFine = await db.fine.findFirst({
+          where: {
+            schoolId: assignment.schoolId,
+            studentId: assignment.studentId,
+            fineType: "LATE_FEE",
+            reason: { contains: assignment.feeStructure.name },
+          },
+          orderBy: { createdAt: "desc" },
+        })
+
+        if (lateFeeType === "DAILY") {
+          // Update existing fine's amount based on total days overdue
+          const earliestOverdue = getEarliestOverdueDate(
+            assignment.feeStructure.paymentSchedule,
+            now
+          )
+          const daysOverdue = earliestOverdue
+            ? Math.max(
+                1,
+                Math.floor(
+                  (now.getTime() - earliestOverdue.getTime()) /
+                    (1000 * 60 * 60 * 24)
+                )
+              )
+            : 1
+          const totalCharge = lateFeeAmount * daysOverdue
+
+          if (existingFine && !existingFine.isPaid && !existingFine.isWaived) {
+            await db.fine.update({
+              where: { id: existingFine.id },
+              data: { amount: totalCharge },
+            })
+          } else if (!existingFine) {
+            await db.fine.create({
+              data: {
+                schoolId: assignment.schoolId,
+                studentId: assignment.studentId,
+                fineType: "LATE_FEE",
+                amount: totalCharge,
+                reason: feeReasonMatch,
+                dueDate: now,
+              },
+            })
+          }
+          lateFeesCharged++
+        } else if (lateFeeType === "MONTHLY") {
+          // Create new fine if last one was 30+ days ago
+          const shouldCharge =
+            !existingFine ||
+            now.getTime() - existingFine.createdAt.getTime() >=
+              30 * 24 * 60 * 60 * 1000
+
+          if (shouldCharge) {
+            await db.fine.create({
+              data: {
+                schoolId: assignment.schoolId,
+                studentId: assignment.studentId,
+                fineType: "LATE_FEE",
+                amount: lateFeeAmount,
+                reason: feeReasonMatch,
+                dueDate: now,
+              },
+            })
+            lateFeesCharged++
+          }
+        }
+        // FIXED and PERCENTAGE: already charged once in Phase 1, skip
+      }
+
+      // ── Recurring overdue reminders ──
       // Check if we already sent a fee_overdue notification for this assignment
       // within the reminder interval
       const recentNotification = await db.notification.findFirst({
@@ -242,6 +417,7 @@ export async function GET(request: NextRequest) {
       success: true,
       checked: pendingAssignments.length + overdueAssignments.length,
       newlyOverdue,
+      lateFeesCharged,
       remindersResent,
       notificationsCreated,
       duration: Date.now() - startTime,

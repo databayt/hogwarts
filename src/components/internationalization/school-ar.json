@@ -8624,6 +8624,14 @@
           "review": {
             "title": "المراجعة والإرسال",
             "description": "راجع طلبك وقدمه"
+          },
+          "payment": {
+            "title": "الدفع",
+            "description": "ادفع رسوم التقديم."
+          },
+          "success": {
+            "title": "تم تقديم الطلب",
+            "description": "تم تقديم طلبك بنجاح."
           }
         },
         "success": {

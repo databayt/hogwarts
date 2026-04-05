@@ -45,26 +45,65 @@ src/components/school-dashboard/messaging/
 ├── empty-state.tsx               # Empty state placeholder
 ├── notification-helpers.ts       # Notification utility functions
 ├── upload-actions.ts             # File upload server actions
+├── whatsapp-bridge.ts            # WhatsApp dual-delivery bridge (Evolution API)
+├── og-unfurl.ts                  # Link preview / OG metadata extraction
+├── link-preview.tsx              # Link preview component
+├── mail-icon.tsx                 # Header mail icon with unread badge
 ├── audit.ts                      # Audit logging for messaging actions
 ├── index.ts                      # Public exports
 ├── hooks/
 │   ├── index.ts
-│   └── use-realtime-messages.ts  # Real-time message subscription hook
+│   ├── use-realtime-messages.ts  # Real-time message subscription hook
+│   └── use-presence.ts           # User online presence hook
+├── contacts/
+│   ├── config.ts                 # Contact categories per role
+│   ├── types.ts                  # ContactDTO, ContactGroup types
+│   ├── queries.ts                # Contact queries with domain model enrichment
+│   ├── contacts-panel.tsx        # WhatsApp-style contacts sidebar
+│   ├── contact-card.tsx          # Individual contact card
+│   └── contact-search.tsx        # Contact search input
 ├── QUERY_OPTIMIZATION.md         # Performance optimization notes
 └── __tests__/
     ├── actions.test.ts           # Action unit tests
     ├── authorization.test.ts     # Authorization tests
     ├── multi-tenant.test.ts      # Multi-tenant isolation tests
-    └── validation.test.ts        # Validation tests
+    ├── validation.test.ts        # Validation tests
+    ├── whatsapp-bridge.test.ts   # WhatsApp bridge tests (32 tests)
+    ├── link-preview.test.ts      # Link preview tests
+    └── rtl-verification.test.ts  # RTL layout verification tests
 ```
 
 ### Status
 
-**Completion:** 80% | **Blockers:** Real-time WebSocket/SSE infrastructure TBD
+**Completion:** 90% | **Blockers:** Real-time WebSocket/SSE infrastructure TBD (polling fallback active)
+
+### WhatsApp Integration
+
+Messages sent in-app are automatically dual-delivered to WhatsApp when the school has an active WhatsApp session. The integration is bidirectional -- incoming WhatsApp replies are bridged back into conversations.
+
+**Key files:**
+
+- `whatsapp-bridge.ts` -- Dispatch, phone resolution (Guardian > Teacher > StaffMember), retry with exponential backoff
+- `src/lib/whatsapp/evolution-client.ts` -- REST client for self-hosted Evolution API
+- `src/app/api/webhooks/whatsapp/route.ts` -- Webhook handler for incoming messages and status updates
+- `src/app/api/cron/process-whatsapp-notifications/route.ts` -- Retry failed dispatches every 5 minutes
+
+**How it works:**
+
+1. `createConversation()` checks for active WhatsApp session -- auto-enables if connected
+2. `sendMessage()` calls `dispatchMessageToWhatsApp()` non-blocking when `conversation.whatsappEnabled`
+3. Phone numbers resolved from domain models: Guardian > Teacher > StaffMember
+4. Rate limited: 1 msg/sec, 500 DMs/day per school
+5. Failed dispatches retried with exponential backoff (max 5 attempts)
+6. Chat header has a **W** toggle to enable/disable per conversation
+7. Message bubbles show WhatsApp delivery status (sent/delivered/read/failed)
 
 ### Integration Points
 
 - `src/components/school-dashboard/communication/` -- Broadcast and announcement system
 - `src/lib/dispatch-notification.ts` -- Push notification on new messages
-- Route: `src/app/[lang]/s/[subdomain]/(school-dashboard)/messages/page.tsx`
-- Prisma models: Conversation, ConversationParticipant, Message, MessageReaction
+- `src/lib/whatsapp/` -- WhatsApp Evolution API client, rate limiter, templates
+- `src/components/school-dashboard/whatsapp/` -- WhatsApp admin dashboard (QR connection, groups, templates)
+- Route: `src/app/[lang]/s/[subdomain]/(school-messaging)/messages/page.tsx`
+- Header icon: `mail-icon.tsx` with unread badge (polls `/api/messages/unread-count` every 30s)
+- Prisma models: Conversation, ConversationParticipant, Message, MessageReaction, WhatsAppSession, WhatsAppMessage

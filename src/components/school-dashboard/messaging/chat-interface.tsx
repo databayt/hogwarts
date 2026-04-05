@@ -3,29 +3,20 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useEffect, useOptimistic, useState } from "react"
-import { formatDistanceToNow } from "date-fns"
 import { ar, enUS } from "date-fns/locale"
-import {
-  ArrowLeft,
-  EllipsisVertical,
-  Info,
-  Phone,
-  Search,
-  Users,
-  Video,
-} from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import socketService from "@/lib/websocket/socket-service"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "@/components/ui/use-toast"
 import { UserFilledIcon } from "@/components/atom/icons"
@@ -41,7 +32,6 @@ import { CONVERSATION_TYPE_CONFIG } from "./config"
 import { useUserPresence } from "./hooks/use-presence"
 import { MessageInput } from "./message-input"
 import { MessageList, MessageListSkeleton } from "./message-list"
-import { MessageSearch } from "./message-search"
 import type { ConversationDTO, MessageDTO, TypingIndicatorDTO } from "./types"
 
 export interface ChatInterfaceProps {
@@ -114,8 +104,6 @@ export function ChatInterface({
   const [whatsappEnabled, setWhatsappEnabled] = useState(
     conversation.whatsappEnabled ?? false
   )
-  const [isTogglingWhatsApp, setIsTogglingWhatsApp] = useState(false)
-
   // Presence tracking for direct conversations
   const otherUserId =
     conversation.type === "direct"
@@ -124,6 +112,23 @@ export function ChatInterface({
       : undefined
   const otherPresence = useUserPresence(otherUserId)
   const dateLocale = locale === "ar" ? ar : enUS
+
+  // WhatsApp toggle handler
+  const handleToggleWhatsApp = useCallback(async () => {
+    const newValue = !whatsappEnabled
+    setWhatsappEnabled(newValue)
+    const result = await toggleConversationWhatsApp({
+      conversationId: conversation.id,
+      enabled: newValue,
+    })
+    if (!result.success) {
+      setWhatsappEnabled(!newValue)
+      toast({
+        title: m?.notifications?.error || "Error",
+        description: result.error,
+      })
+    }
+  }, [whatsappEnabled, conversation.id, m])
 
   // Optimistic updates (React 19)
   const [optimisticMessages, addOptimisticMessage] = useOptimistic(
@@ -479,31 +484,6 @@ export function ChatInterface({
     socketService.sendTypingStop(conversation.id)
   }
 
-  const handleToggleWhatsApp = async () => {
-    setIsTogglingWhatsApp(true)
-    try {
-      const result = await toggleConversationWhatsApp({
-        conversationId: conversation.id,
-        enabled: !whatsappEnabled,
-      })
-      if (result.success) {
-        setWhatsappEnabled(result.data.enabled)
-      } else {
-        toast({
-          title: m?.notifications?.error || "Error",
-          description: result.error,
-        })
-      }
-    } catch {
-      toast({
-        title: m?.notifications?.error || "Error",
-        description: "Failed to toggle WhatsApp",
-      })
-    } finally {
-      setIsTogglingWhatsApp(false)
-    }
-  }
-
   const currentParticipant = conversation.participants?.find(
     (p) => p.userId === currentUserId
   )
@@ -527,24 +507,73 @@ export function ChatInterface({
           <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
         </Button>
 
-        {/* Avatar */}
-        <Avatar className="h-8 w-8 flex-shrink-0">
-          <AvatarImage src={avatarUrl} alt={displayName} />
-          <AvatarFallback
-            className="flex items-center justify-center"
-            style={{
-              backgroundColor: getAvatarColor(otherUserId || conversation.id)
-                .bg,
-            }}
-          >
-            <UserFilledIcon
-              className="h-4 w-4"
-              style={{
-                color: getAvatarColor(otherUserId || conversation.id).icon,
-              }}
-            />
-          </AvatarFallback>
-        </Avatar>
+        {/* Avatar — clickable, opens contact dialog */}
+        <Dialog>
+          <DialogTrigger asChild>
+            <button className="flex-shrink-0 rounded-full focus:outline-none">
+              <Avatar className="h-8 w-8 cursor-pointer">
+                <AvatarImage src={avatarUrl} alt={displayName} />
+                <AvatarFallback
+                  className="flex items-center justify-center"
+                  style={{
+                    backgroundColor: getAvatarColor(
+                      otherUserId || conversation.id
+                    ).bg,
+                  }}
+                >
+                  <UserFilledIcon
+                    className="h-4 w-4"
+                    style={{
+                      color: getAvatarColor(otherUserId || conversation.id)
+                        .icon,
+                    }}
+                  />
+                </AvatarFallback>
+              </Avatar>
+            </button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[360px]">
+            <DialogHeader>
+              <DialogTitle className="sr-only">
+                {m?.ui?.contact_info || "Contact info"}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="flex flex-col items-center gap-4 py-4">
+              <Avatar className="h-24 w-24">
+                <AvatarImage src={avatarUrl} alt={displayName} />
+                <AvatarFallback
+                  className="flex items-center justify-center"
+                  style={{
+                    backgroundColor: getAvatarColor(
+                      otherUserId || conversation.id
+                    ).bg,
+                  }}
+                >
+                  <UserFilledIcon
+                    className="h-10 w-10"
+                    style={{
+                      color: getAvatarColor(otherUserId || conversation.id)
+                        .icon,
+                    }}
+                  />
+                </AvatarFallback>
+              </Avatar>
+              <div className="text-center">
+                <h3 className="text-lg font-semibold">{displayName}</h3>
+                {otherUser?.email && (
+                  <p className="text-muted-foreground text-sm">
+                    {otherUser.email}
+                  </p>
+                )}
+                {participantNames && (
+                  <p className="text-muted-foreground mt-1 text-sm">
+                    {participantNames}
+                  </p>
+                )}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Name only */}
         <div className="min-w-0 flex-1">
@@ -553,60 +582,55 @@ export function ChatInterface({
           </h2>
         </div>
 
-        {/* Action icons */}
+        {/* Action icons — video + call */}
         <div className="flex items-center gap-0.5">
-          <MessageSearch conversationId={conversation.id} locale={locale} />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-10 w-10 rounded-full"
-              >
-                <EllipsisVertical className="h-5 w-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={onViewDetails}>
-                <Info className="me-2 h-4 w-4" />
-                {m?.ui?.details || "Details"}
-              </DropdownMenuItem>
-              {conversation.type !== "direct" && (
-                <DropdownMenuItem onClick={onViewParticipants}>
-                  <Users className="me-2 h-4 w-4" />
-                  {m?.ui?.members_label || "Members"}
-                </DropdownMenuItem>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 rounded-full"
+            aria-label={m?.ui?.video_call || "Video call"}
+          >
+            <img
+              src="/cam-recorder.png"
+              alt=""
+              className="h-5 w-5 object-contain"
+            />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 rounded-full"
+            aria-label={m?.ui?.voice_call || "Voice call"}
+          >
+            <img
+              src="/telephone.png"
+              alt=""
+              className="h-3.5 w-3.5 object-contain"
+            />
+          </Button>
+          {whatsappConnected && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                "h-10 w-10 rounded-full",
+                whatsappEnabled && "bg-green-50"
               )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={handleToggleWhatsApp}
-                disabled={
-                  isTogglingWhatsApp || (!whatsappEnabled && !whatsappConnected)
-                }
+              aria-label={
+                whatsappEnabled ? "WhatsApp enabled" : "Enable WhatsApp"
+              }
+              onClick={handleToggleWhatsApp}
+            >
+              <span
+                className={cn(
+                  "text-sm font-bold",
+                  whatsappEnabled ? "text-green-600" : "text-muted-foreground"
+                )}
               >
-                <span
-                  className={cn(
-                    "me-2 inline-block h-3 w-3 rounded-full",
-                    whatsappEnabled ? "bg-green-500" : "bg-muted-foreground"
-                  )}
-                />
-                {whatsappEnabled
-                  ? m?.whatsapp?.enabled || "WhatsApp On"
-                  : whatsappConnected
-                    ? m?.whatsapp?.enable || "Enable WhatsApp"
-                    : m?.whatsapp?.disconnected || "WhatsApp Disconnected"}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem disabled>
-                <Phone className="me-2 h-4 w-4" />
-                {m?.ui?.voice_call || "Voice call"}
-              </DropdownMenuItem>
-              <DropdownMenuItem disabled>
-                <Video className="me-2 h-4 w-4" />
-                {m?.ui?.video_call || "Video call"}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                W
+              </span>
+            </Button>
+          )}
         </div>
       </div>
 

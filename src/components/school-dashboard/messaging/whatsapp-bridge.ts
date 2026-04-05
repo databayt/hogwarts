@@ -38,6 +38,17 @@ export async function resolveWhatsAppPhone(
     return teacher.phoneNumbers[0].phoneNumber
   }
 
+  // StaffMember (covers Accountant, Staff roles)
+  const staffMember = await db.staffMember.findFirst({
+    where: { userId },
+    include: {
+      staffPhoneNumbers: { where: { isPrimary: true }, take: 1 },
+    },
+  })
+  if (staffMember?.staffPhoneNumbers[0]?.phoneNumber) {
+    return staffMember.staffPhoneNumbers[0].phoneNumber
+  }
+
   return null
 }
 

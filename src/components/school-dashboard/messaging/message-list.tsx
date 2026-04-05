@@ -235,7 +235,10 @@ export function MessageList({
 
                   {item.type === "date-separator" && (
                     <div className="my-3 flex items-center justify-center">
-                      <span className="bg-background border-muted text-foreground/80 rounded-md border px-3 py-1 text-[12.5px] font-medium">
+                      <span
+                        className="border-muted text-foreground/80 rounded-md border px-2.5 py-0.5 text-[11px] font-medium"
+                        style={{ backgroundColor: "#FEFDFC" }}
+                      >
                         {item.label}
                       </span>
                     </div>
@@ -310,7 +313,10 @@ export function MessageList({
               <div key={dateKey}>
                 {/* Date separator — WhatsApp pill */}
                 <div className="my-3 flex items-center justify-center">
-                  <span className="bg-background border-muted text-foreground/80 rounded-md border px-3 py-1 text-[12.5px] font-medium">
+                  <span
+                    className="border-muted text-foreground/80 rounded-md border px-2.5 py-0.5 text-[11px] font-medium"
+                    style={{ backgroundColor: "#FEFDFC" }}
+                  >
                     {getDateLabel(dateKey)}
                   </span>
                 </div>
