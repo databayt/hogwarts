@@ -262,6 +262,11 @@ const SCHOOL_SELECT = {
   currency: true,
   createdAt: true,
   updatedAt: true,
+  branding: {
+    select: {
+      heroImageUrl: true,
+    },
+  },
 } as const
 
 /**

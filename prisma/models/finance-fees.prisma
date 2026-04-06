@@ -137,6 +137,7 @@ model FeeAssignment {
   feeStructure FeeStructure @relation(fields: [feeStructureId], references: [id], onDelete: Restrict)
   scholarship  Scholarship? @relation(fields: [scholarshipId], references: [id], onDelete: SetNull)
   payments     Payment[]
+  invoices     UserInvoice[]
 
   @@unique([studentId, feeStructureId, academicYear])
   @@index([schoolId])

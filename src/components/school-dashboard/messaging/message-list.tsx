@@ -72,21 +72,31 @@ export function MessageList({
   const [hasScrolledUp, setHasScrolledUp] = useState(false)
   const dateLocale = locale === "ar" ? ar : enUS
 
-  // Group messages by date
+  // Group messages by date, sorted ascending (oldest first — WhatsApp order)
   const messagesByDate = useMemo(() => {
-    return messages.reduce(
-      (groups, message) => {
+    const groups = messages.reduce(
+      (acc, message) => {
         const date = new Date(message.createdAt)
         const dateKey = format(date, "yyyy-MM-dd")
 
-        if (!groups[dateKey]) {
-          groups[dateKey] = []
+        if (!acc[dateKey]) {
+          acc[dateKey] = []
         }
-        groups[dateKey].push(message)
-        return groups
+        acc[dateKey].push(message)
+        return acc
       },
       {} as Record<string, MessageDTO[]>
     )
+
+    // Sort messages within each date group ascending by createdAt
+    for (const msgs of Object.values(groups)) {
+      msgs.sort(
+        (a, b) =>
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      )
+    }
+
+    return groups
   }, [messages])
 
   const getDateLabel = (dateString: string): string => {
@@ -108,23 +118,25 @@ export function MessageList({
       items.push({ type: "loader", position: "top" })
     }
 
-    Object.entries(messagesByDate).forEach(([dateKey, dayMessages]) => {
-      items.push({
-        type: "date-separator",
-        dateKey,
-        label: getDateLabel(dateKey),
-      })
-
-      const messageGroups = groupMessages(dayMessages)
-      messageGroups.forEach((group, groupIndex) => {
+    Object.entries(messagesByDate)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .forEach(([dateKey, dayMessages]) => {
         items.push({
-          type: "message-group",
+          type: "date-separator",
           dateKey,
-          groupIndex,
-          messages: group,
+          label: getDateLabel(dateKey),
+        })
+
+        const messageGroups = groupMessages(dayMessages)
+        messageGroups.forEach((group, groupIndex) => {
+          items.push({
+            type: "message-group",
+            dateKey,
+            groupIndex,
+            messages: group,
+          })
         })
       })
-    })
 
     if (isLoading && !hasMore) {
       items.push({ type: "loader", position: "bottom" })
@@ -306,41 +318,43 @@ export function MessageList({
             </div>
           )}
 
-          {Object.entries(messagesByDate).map(([dateKey, dayMessages]) => {
-            const messageGroups = groupMessages(dayMessages)
+          {Object.entries(messagesByDate)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([dateKey, dayMessages]) => {
+              const messageGroups = groupMessages(dayMessages)
 
-            return (
-              <div key={dateKey}>
-                {/* Date separator — WhatsApp pill */}
-                <div className="my-3 flex items-center justify-center">
-                  <span
-                    className="border-muted text-foreground/80 rounded-md border px-2.5 py-0.5 text-[11px] font-medium"
-                    style={{ backgroundColor: "#FEFDFC" }}
-                  >
-                    {getDateLabel(dateKey)}
-                  </span>
-                </div>
+              return (
+                <div key={dateKey}>
+                  {/* Date separator — WhatsApp pill */}
+                  <div className="my-3 flex items-center justify-center">
+                    <span
+                      className="border-muted text-foreground/80 rounded-md border px-2.5 py-0.5 text-[11px] font-medium"
+                      style={{ backgroundColor: "#FEFDFC" }}
+                    >
+                      {getDateLabel(dateKey)}
+                    </span>
+                  </div>
 
-                {/* Message groups */}
-                <div className="space-y-1">
-                  {messageGroups.map((group, groupIndex) => (
-                    <MessageGroup
-                      key={`group-${dateKey}-${groupIndex}`}
-                      messages={group}
-                      currentUserId={currentUserId}
-                      locale={locale}
-                      conversationType={conversationType}
-                      onReply={onReply}
-                      onEdit={onEdit}
-                      onDelete={onDelete}
-                      onReact={onReact}
-                      onRemoveReaction={onRemoveReaction}
-                    />
-                  ))}
+                  {/* Message groups */}
+                  <div className="space-y-1">
+                    {messageGroups.map((group, groupIndex) => (
+                      <MessageGroup
+                        key={`group-${dateKey}-${groupIndex}`}
+                        messages={group}
+                        currentUserId={currentUserId}
+                        locale={locale}
+                        conversationType={conversationType}
+                        onReply={onReply}
+                        onEdit={onEdit}
+                        onDelete={onDelete}
+                        onReact={onReact}
+                        onRemoveReaction={onRemoveReaction}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )
-          })}
+              )
+            })}
 
           {isLoading && !hasMore && (
             <div className="flex justify-center py-2">

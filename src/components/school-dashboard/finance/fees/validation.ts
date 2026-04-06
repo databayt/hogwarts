@@ -4,21 +4,37 @@
 /**
  * Fees Sub-Block Validation Schemas
  *
- * Zod schemas for form validation
+ * Zod schemas matching the actual Prisma models in finance-fees.prisma
  */
 
 import { z } from "zod"
 
-// Fee Structure Schema
+// Fee Structure Schema — matches FeeStructure Prisma model
 export const feeStructureSchema = z.object({
   name: z.string().min(1, "Fee name is required").max(100),
-  description: z.string().optional(),
-  amount: z.number().min(0, "Amount must be positive"),
-  yearLevelId: z.string().optional(),
-  dueDate: z.date().optional(),
-  status: z.enum(["ACTIVE", "INACTIVE", "ARCHIVED"]).default("ACTIVE"),
-  isRecurring: z.boolean().default(false),
-  recurringFrequency: z.enum(["MONTHLY", "QUARTERLY", "YEARLY"]).optional(),
+  academicYear: z.string().min(1, "Academic year is required"),
+  classId: z.string().optional().nullable(),
+  stream: z.string().optional().nullable(),
+  description: z.string().optional().nullable(),
+  tuitionFee: z.number().min(0, "Tuition fee must be non-negative"),
+  admissionFee: z.number().min(0).optional().nullable(),
+  registrationFee: z.number().min(0).optional().nullable(),
+  examFee: z.number().min(0).optional().nullable(),
+  libraryFee: z.number().min(0).optional().nullable(),
+  laboratoryFee: z.number().min(0).optional().nullable(),
+  sportsFee: z.number().min(0).optional().nullable(),
+  transportFee: z.number().min(0).optional().nullable(),
+  hostelFee: z.number().min(0).optional().nullable(),
+  totalAmount: z.number().min(0, "Total amount must be non-negative"),
+  installments: z.number().int().min(1).default(1),
+  lateFeeAmount: z.number().min(0).optional().nullable(),
+  lateFeeType: z
+    .enum(["FIXED", "PERCENTAGE", "DAILY", "MONTHLY"])
+    .optional()
+    .nullable(),
+  discountPolicy: z.any().optional(),
+  paymentSchedule: z.any().optional(),
+  isActive: z.boolean().default(true),
 })
 
 export type FeeStructureInput = z.infer<typeof feeStructureSchema>
@@ -28,10 +44,11 @@ export const feeAssignmentSchema = z.object({
   studentId: z.string().min(1, "Student is required"),
   feeStructureId: z.string().min(1, "Fee structure is required"),
   academicYear: z.string().min(1, "Academic year is required"),
-  finalAmount: z.number().min(0, "Amount must be positive"),
-  customAmount: z.number().min(0).optional(),
+  finalAmount: z.number().min(0, "Amount must be non-negative"),
+  customAmount: z.number().min(0).optional().nullable(),
   totalDiscount: z.number().min(0).optional(),
-  scholarshipId: z.string().optional(),
+  scholarshipId: z.string().optional().nullable(),
+  discounts: z.any().optional(),
   status: z
     .enum(["PENDING", "PARTIAL", "PAID", "OVERDUE", "CANCELLED"])
     .default("PENDING"),
@@ -54,56 +71,68 @@ export const paymentSchema = z.object({
     "WALLET",
     "OTHER",
   ]),
-  transactionId: z.string().optional(),
-  paymentDate: z.date(),
+  transactionId: z.string().optional().nullable(),
+  bankName: z.string().optional().nullable(),
+  chequeNumber: z.string().optional().nullable(),
+  cardLastFour: z.string().optional().nullable(),
+  paymentDate: z.coerce.date(),
   status: z
     .enum(["PENDING", "SUCCESS", "FAILED", "CANCELLED", "REFUNDED"])
     .default("SUCCESS"),
-  remarks: z.string().optional(),
+  remarks: z.string().optional().nullable(),
 })
 
 export type PaymentInput = z.infer<typeof paymentSchema>
 
-// Refund Schema
+// Refund Schema — matches Refund Prisma model
 export const refundSchema = z.object({
   paymentId: z.string().min(1, "Payment is required"),
   amount: z.number().min(0.01, "Amount must be greater than 0"),
   reason: z.string().min(1, "Reason is required"),
-  refundMethod: z.enum([
-    "ORIGINAL_PAYMENT_METHOD",
-    "BANK_TRANSFER",
-    "CASH",
-    "CHECK",
-    "OTHER",
-  ]),
-  refundDate: z.date(),
+  refundMethod: z
+    .enum([
+      "CASH",
+      "CHEQUE",
+      "BANK_TRANSFER",
+      "CREDIT_CARD",
+      "DEBIT_CARD",
+      "UPI",
+      "NET_BANKING",
+      "WALLET",
+      "OTHER",
+    ])
+    .optional()
+    .nullable(),
   status: z
-    .enum(["PENDING", "APPROVED", "PROCESSING", "COMPLETED", "REJECTED"])
-    .default("PENDING"),
-  notes: z.string().optional(),
+    .enum([
+      "REQUESTED",
+      "APPROVED",
+      "PROCESSING",
+      "COMPLETED",
+      "REJECTED",
+      "CANCELLED",
+    ])
+    .default("REQUESTED"),
+  approvalNotes: z.string().optional().nullable(),
+  supportingDocs: z.any().optional(),
 })
 
 export type RefundInput = z.infer<typeof refundSchema>
 
-// Scholarship Schema
+// Scholarship Schema — matches Scholarship Prisma model
 export const scholarshipSchema = z.object({
   name: z.string().min(1, "Scholarship name is required").max(100),
-  description: z.string().optional(),
-  type: z.enum([
-    "FULL",
-    "PARTIAL",
-    "MERIT_BASED",
-    "NEED_BASED",
-    "SPORTS",
-    "ACADEMIC",
-  ]),
-  amount: z.number().min(0, "Amount must be positive"),
-  percentage: z.number().min(0).max(100).optional(),
-  startDate: z.date(),
-  endDate: z.date().optional(),
-  eligibilityCriteria: z.string().optional(),
-  status: z.enum(["ACTIVE", "INACTIVE", "CLOSED"]).default("ACTIVE"),
-  maxRecipients: z.number().min(1).optional(),
+  description: z.string().optional().nullable(),
+  coverageType: z.enum(["PERCENTAGE", "FIXED_AMOUNT", "FULL"]),
+  coverageAmount: z.number().min(0, "Coverage amount must be non-negative"),
+  academicYear: z.string().min(1, "Academic year is required"),
+  startDate: z.coerce.date(),
+  endDate: z.coerce.date(),
+  maxBeneficiaries: z.number().int().min(1).optional().nullable(),
+  minPercentage: z.number().min(0).max(100).optional().nullable(),
+  maxFamilyIncome: z.number().min(0).optional().nullable(),
+  eligibilityCriteria: z.any().optional(),
+  isActive: z.boolean().default(true),
 })
 
 export type ScholarshipInput = z.infer<typeof scholarshipSchema>
@@ -112,15 +141,15 @@ export type ScholarshipInput = z.infer<typeof scholarshipSchema>
 export const scholarshipApplicationSchema = z.object({
   studentId: z.string().min(1, "Student is required"),
   scholarshipId: z.string().min(1, "Scholarship is required"),
-  applicationDate: z.date(),
-  reason: z.string().min(1, "Application reason is required"),
+  academicYear: z.string().min(1, "Academic year is required"),
+  familyIncome: z.number().min(0).optional().nullable(),
+  documents: z.any().optional(),
+  statement: z.string().optional().nullable(),
   status: z
-    .enum(["PENDING", "UNDER_REVIEW", "APPROVED", "REJECTED"])
+    .enum(["PENDING", "UNDER_REVIEW", "APPROVED", "REJECTED", "WITHDRAWN"])
     .default("PENDING"),
-  reviewedBy: z.string().optional(),
-  reviewedAt: z.date().optional(),
-  reviewNotes: z.string().optional(),
-  approvedAmount: z.number().min(0).optional(),
+  reviewNotes: z.string().optional().nullable(),
+  awardedAmount: z.number().min(0).optional().nullable(),
 })
 
 export type ScholarshipApplicationInput = z.infer<
@@ -139,7 +168,7 @@ export const fineSchema = z.object({
   ]),
   reason: z.string().min(1, "Fine reason is required"),
   amount: z.number().min(0.01, "Amount must be greater than 0"),
-  dueDate: z.date(),
+  dueDate: z.coerce.date(),
 })
 
 export type FineInput = z.infer<typeof fineSchema>
@@ -149,7 +178,7 @@ export const bulkFeeAssignmentSchema = z.object({
   feeStructureId: z.string().min(1, "Fee structure is required"),
   studentIds: z.array(z.string()).min(1, "At least one student is required"),
   academicYear: z.string().min(1, "Academic year is required"),
-  finalAmount: z.number().min(0, "Amount must be positive"),
+  finalAmount: z.number().min(0, "Amount must be non-negative"),
 })
 
 export type BulkFeeAssignmentInput = z.infer<typeof bulkFeeAssignmentSchema>

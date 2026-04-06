@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { Lock, MessageSquare, MessageSquarePlus } from "lucide-react"
+import { MessageSquare, MessageSquarePlus } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -39,7 +39,7 @@ export function NoActiveConversation({
         className="mb-2 text-[1.35rem] font-medium"
         style={{ color: "#8B8C8C" }}
       >
-        WhatsApp for Mac
+        {m?.ui?.app_title || "School Messaging"}
       </h2>
 
       {/* Spacer to push encryption text toward bottom */}
@@ -49,8 +49,8 @@ export function NoActiveConversation({
         className="mb-14 flex items-center gap-1 text-xs font-medium"
         style={{ color: "#8B8C8C" }}
       >
-        <img src="/lock.svg" alt="" className="h-3 w-3" />
-        End-to-end encrypted
+        <img src="/lock.svg" alt="" className="h-3 w-3" aria-hidden="true" />
+        {m?.ui?.end_to_end_encrypted || "End-to-end encrypted"}
       </p>
     </div>
   )
@@ -100,15 +100,23 @@ export function ConversationListEmpty({
 /* ------------------------------------------------------------------ */
 
 export function ChatEmpty({ locale = "en" }: { locale?: "ar" | "en" }) {
+  const { dictionary } = useDictionary()
+  const m = dictionary?.messaging
+
   return (
     <div className="flex h-full flex-col items-start justify-start pt-8 text-center">
       <div
         className="mx-auto max-w-[360px] rounded-lg px-3 py-1.5 text-[12px] leading-relaxed shadow-sm"
         style={{ backgroundColor: "#D9FDD3", color: "#0A2618" }}
       >
-        <img src="/lock.svg" alt="" className="mb-0.5 inline h-3 w-3" />{" "}
-        Messages and calls are end-to-end encrypted. No one outside of this
-        chat, not even WhatsApp, can read or listen to them. Tap to learn more.
+        <img
+          src="/lock.svg"
+          alt=""
+          className="mb-0.5 inline h-3 w-3"
+          aria-hidden="true"
+        />{" "}
+        {m?.ui?.encryption_notice ||
+          "Messages and calls are end-to-end encrypted. No one outside of this chat, not even WhatsApp, can read or listen to them."}
       </div>
     </div>
   )

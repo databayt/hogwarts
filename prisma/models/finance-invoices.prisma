@@ -31,6 +31,10 @@ model UserInvoice {
   schoolId       String
   school         School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 
+  // Fee assignment link (auto-generated invoices from enrollment)
+  feeAssignmentId String?
+  feeAssignment   FeeAssignment? @relation(fields: [feeAssignmentId], references: [id])
+
   // Accounting integration
   journalEntryId String?
   journalEntry   JournalEntry? @relation(fields: [journalEntryId], references: [id])
@@ -45,6 +49,7 @@ model UserInvoice {
   @@index([userId])
   @@index([schoolId])
   @@index([status])
+  @@index([feeAssignmentId])
 }
 
 model UserInvoiceItem {

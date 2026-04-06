@@ -106,7 +106,15 @@ export const ContactCard = memo(function ContactCard({
 
   return (
     <div
+      role="button"
+      tabIndex={0}
       onClick={() => onClick?.(contact.id)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault()
+          onClick?.(contact.id)
+        }
+      }}
       className={cn(
         "group flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 transition-colors",
         "hover:bg-[#F9F9F8]",
@@ -142,12 +150,6 @@ export const ContactCard = memo(function ContactCard({
             )}
           >
             {contact.displayName}
-            {false && contact.hasWhatsApp && (
-              <span
-                className="inline-block h-2 w-2 flex-shrink-0 rounded-full bg-green-500"
-                title="WhatsApp"
-              />
-            )}
           </span>
           {hasConversation && contact.lastMessageAt ? (
             <div className="flex flex-shrink-0 items-center">
@@ -184,39 +186,45 @@ export const ContactCard = memo(function ContactCard({
                     className="gap-2 rounded-lg text-sm"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <Archive className="h-4 w-4" /> Archive
+                    <Archive className="h-4 w-4" />{" "}
+                    {m?.actions?.archive || "Archive"}
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="gap-2 rounded-lg text-sm"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <BellOff className="h-4 w-4" /> Mute
+                    <BellOff className="h-4 w-4" /> {m?.actions?.mute || "Mute"}
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="gap-2 rounded-lg text-sm"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <Pin className="h-4 w-4" />{" "}
-                    {contact.isPinned ? "Unpin" : "Pin"}
+                    {contact.isPinned
+                      ? m?.actions?.unpin || "Unpin"
+                      : m?.actions?.pin || "Pin"}
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="gap-2 rounded-lg text-sm"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <SquareCheckBig className="h-4 w-4" /> Mark as read
+                    <SquareCheckBig className="h-4 w-4" />{" "}
+                    {m?.actions?.mark_read || "Mark as read"}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     className="gap-2 rounded-lg text-sm"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <Info className="h-4 w-4" /> Contact info
+                    <Info className="h-4 w-4" />{" "}
+                    {m?.ui?.contact_info || "Contact info"}
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="gap-2 rounded-lg text-sm text-red-600 focus:text-red-600"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <CircleX className="h-4 w-4" /> Delete chat
+                    <CircleX className="h-4 w-4" />{" "}
+                    {m?.actions?.delete_chat || "Delete chat"}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

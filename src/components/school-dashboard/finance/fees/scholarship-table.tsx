@@ -19,6 +19,7 @@ import { DataTable } from "@/components/table/data-table"
 import { getSelectColumn } from "@/components/table/select-column"
 import { useDataTable } from "@/components/table/use-data-table"
 
+import { fetchScholarshipRows } from "./actions"
 import {
   getScholarshipColumns,
   type ScholarshipRow,
@@ -49,7 +50,7 @@ function ScholarshipsTableInner({
     initialData,
     total,
     perPage,
-    fetcher: async () => ({ rows: [], total: 0 }),
+    fetcher: fetchScholarshipRows,
   })
 
   const columns = useMemo(

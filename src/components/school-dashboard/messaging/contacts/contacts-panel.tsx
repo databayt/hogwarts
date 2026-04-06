@@ -3,17 +3,9 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { EllipsisVertical } from "lucide-react"
 import { useDebouncedCallback } from "use-debounce"
 
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import type { ConversationDTO } from "@/components/school-dashboard/messaging/types"
 import type { WhatsAppSessionDTO } from "@/components/school-dashboard/whatsapp/types"

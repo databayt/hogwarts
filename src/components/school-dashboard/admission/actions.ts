@@ -1195,20 +1195,26 @@ export async function confirmEnrollment(params: {
                 select: { name: true, address: true, currency: true },
               })
 
-              await createInvoiceFromEnrollment({
-                schoolId,
-                userId,
-                studentName: `${application.firstName} ${application.lastName}`,
-                studentEmail: application.email,
-                schoolName: school?.name ?? "School",
-                schoolAddress: school?.address ?? "",
-                currency: school?.currency ?? "USD",
-                items: feeAssignments.map((fa) => ({
-                  name: fa.feeStructure.name,
-                  amount: Number(fa.finalAmount),
-                })),
-                tx,
-              })
+              // Create one invoice per fee assignment for proper linking
+              for (const fa of feeAssignments) {
+                await createInvoiceFromEnrollment({
+                  schoolId,
+                  userId,
+                  studentName: `${application.firstName} ${application.lastName}`,
+                  studentEmail: application.email,
+                  schoolName: school?.name ?? "School",
+                  schoolAddress: school?.address ?? "",
+                  currency: school?.currency ?? "USD",
+                  items: [
+                    {
+                      name: fa.feeStructure.name,
+                      amount: Number(fa.finalAmount),
+                    },
+                  ],
+                  feeAssignmentId: fa.id,
+                  tx,
+                })
+              }
             }
           } catch (invoiceError) {
             console.warn(

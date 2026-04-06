@@ -209,6 +209,16 @@ async function provisionSchoolDefaults(
     )
   }
 
+  // Step 5: Auto-create FeeStructure from onboarding pricing data
+  // School.tuitionFee/registrationFee/applicationFee are set during onboarding
+  // but the enrollment pipeline needs FeeStructure records for auto-assignment
+  await autoCreateFeeStructuresFromOnboarding(schoolId).catch((err) =>
+    console.error(
+      `[provisionSchoolDefaults] Fee structure creation failed for ${schoolId}:`,
+      err
+    )
+  )
+
   // Dispatch setup guide notifications to the admin
   await dispatchSetupGuideNotifications(
     schoolId,
@@ -256,4 +266,80 @@ export async function getSchoolOnboardingStatus(
   } catch (error) {
     return createActionResponse(undefined, error)
   }
+}
+
+/**
+ * Auto-create FeeStructure records from School.tuitionFee/registrationFee/applicationFee.
+ * Creates a single school-wide fee structure (classId=null) for the current academic year.
+ * This bridges onboarding pricing → enrollment fee auto-assignment.
+ */
+async function autoCreateFeeStructuresFromOnboarding(
+  schoolId: string
+): Promise<void> {
+  const school = await db.school.findUnique({
+    where: { id: schoolId },
+    select: {
+      tuitionFee: true,
+      registrationFee: true,
+      applicationFee: true,
+      currency: true,
+      paymentSchedule: true,
+    },
+  })
+
+  if (!school?.tuitionFee || Number(school.tuitionFee) === 0) {
+    // No tuition fee set during onboarding — skip
+    return
+  }
+
+  // Determine current academic year
+  const currentYear = await db.schoolYear.findFirst({
+    where: { schoolId },
+    orderBy: { startDate: "desc" },
+    select: { yearName: true },
+  })
+  const academicYear =
+    currentYear?.yearName ||
+    `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`
+
+  // Check if a fee structure already exists (idempotent)
+  const existingStructure = await db.feeStructure.findFirst({
+    where: { schoolId, academicYear },
+  })
+  if (existingStructure) return
+
+  const tuition = Number(school.tuitionFee)
+  const registration = school.registrationFee
+    ? Number(school.registrationFee)
+    : 0
+  const admission = school.applicationFee ? Number(school.applicationFee) : 0
+  const totalAmount = tuition + registration + admission
+
+  // Determine installment count from payment schedule
+  const installmentMap: Record<string, number> = {
+    monthly: 12,
+    quarterly: 4,
+    semester: 2,
+    annual: 1,
+  }
+  const installments = installmentMap[school.paymentSchedule || "annual"] || 1
+
+  await db.feeStructure.create({
+    data: {
+      schoolId,
+      name: `${academicYear} School Fees`,
+      academicYear,
+      classId: null, // School-wide — applies to all grades
+      tuitionFee: tuition,
+      registrationFee: registration || null,
+      admissionFee: admission || null,
+      totalAmount,
+      installments,
+      isActive: true,
+    },
+  })
+
+  console.log(
+    `[autoCreateFeeStructures] Created fee structure for school ${schoolId}: ${totalAmount} (${installments} installments)`
+  )
 }

@@ -7,6 +7,7 @@ model SchoolBranding {
   secondaryColor String? // Hex color code
   borderRadius   String? // none, sm, md, lg, xl, full
   shadow         String? // none, sm, md, lg, xl
+  heroImageUrl   String?
   customFontUrl  String?
   customCssUrl   String?
 

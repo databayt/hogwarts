@@ -203,7 +203,7 @@ export function validateConversationType(
  */
 export function canSendMessage(participantRole?: ParticipantRole): boolean {
   if (!participantRole) return false
-  return participantRole !== "read_only"
+  return participantRole !== "read_only" && participantRole !== "guest"
 }
 
 /**
@@ -240,114 +240,6 @@ export function canDeleteMessages(participantRole?: ParticipantRole): boolean {
 export function canPinMessages(participantRole?: ParticipantRole): boolean {
   if (!participantRole) return false
   return participantRole === "owner" || participantRole === "admin"
-}
-
-/**
- * Role-based messaging permissions matrix
- */
-export const MESSAGING_PERMISSIONS_MATRIX = {
-  DEVELOPER: {
-    createDirect: true,
-    createGroup: true,
-    createClass: true,
-    createDepartment: true,
-    createAnnouncement: true,
-    deleteAnyConversation: true,
-    deleteAnyMessage: true,
-    viewAllConversations: true,
-  },
-  ADMIN: {
-    createDirect: true,
-    createGroup: true,
-    createClass: true,
-    createDepartment: true,
-    createAnnouncement: true,
-    deleteAnyConversation: true,
-    deleteAnyMessage: true,
-    viewAllConversations: true,
-  },
-  TEACHER: {
-    createDirect: true,
-    createGroup: true,
-    createClass: true,
-    createDepartment: false,
-    createAnnouncement: false,
-    deleteAnyConversation: false,
-    deleteAnyMessage: false,
-    viewAllConversations: false,
-  },
-  STUDENT: {
-    createDirect: true,
-    createGroup: true,
-    createClass: false,
-    createDepartment: false,
-    createAnnouncement: false,
-    deleteAnyConversation: false,
-    deleteAnyMessage: false,
-    viewAllConversations: false,
-  },
-  GUARDIAN: {
-    createDirect: true,
-    createGroup: false,
-    createClass: false,
-    createDepartment: false,
-    createAnnouncement: false,
-    deleteAnyConversation: false,
-    deleteAnyMessage: false,
-    viewAllConversations: false,
-  },
-  ACCOUNTANT: {
-    createDirect: true,
-    createGroup: true,
-    createClass: false,
-    createDepartment: true,
-    createAnnouncement: false,
-    deleteAnyConversation: false,
-    deleteAnyMessage: false,
-    viewAllConversations: false,
-  },
-  STAFF: {
-    createDirect: true,
-    createGroup: true,
-    createClass: false,
-    createDepartment: false,
-    createAnnouncement: false,
-    deleteAnyConversation: false,
-    deleteAnyMessage: false,
-    viewAllConversations: false,
-  },
-  USER: {
-    createDirect: false,
-    createGroup: false,
-    createClass: false,
-    createDepartment: false,
-    createAnnouncement: false,
-    deleteAnyConversation: false,
-    deleteAnyMessage: false,
-    viewAllConversations: false,
-  },
-} as const
-
-/**
- * Get permissions for a role
- */
-export function getRolePermissions(role: string) {
-  return (
-    MESSAGING_PERMISSIONS_MATRIX[
-      role as keyof typeof MESSAGING_PERMISSIONS_MATRIX
-    ] || MESSAGING_PERMISSIONS_MATRIX.USER
-  )
-}
-
-/**
- * Check specific permission for role
- */
-export function hasRolePermission(
-  role: string,
-  permission: keyof typeof MESSAGING_PERMISSIONS_MATRIX.DEVELOPER
-): boolean {
-  const permissions = getRolePermissions(role)
-  return permissions[permission] ?? false
 }
 
 /**

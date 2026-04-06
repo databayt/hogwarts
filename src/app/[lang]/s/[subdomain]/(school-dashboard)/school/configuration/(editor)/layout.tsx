@@ -62,6 +62,7 @@ export default async function EditorLayout({ children, params }: Props) {
             where: { schoolId },
             select: {
               primaryColor: true,
+              heroImageUrl: true,
               isPubliclyListed: true,
               allowSelfEnrollment: true,
               informationSharing: true,
@@ -94,6 +95,7 @@ export default async function EditorLayout({ children, params }: Props) {
     "capacity",
     "schedule",
     "branding",
+    "hero",
     "name-format",
     "join",
     "visibility",
@@ -141,6 +143,11 @@ export default async function EditorLayout({ children, params }: Props) {
         ].filter(Boolean)
         return parts.length > 0 ? parts.join(" · ") : null
       }
+      case "hero":
+        return branding?.heroImageUrl
+          ? ((cs?.heroConfigured as string) ?? "Custom image set")
+          : ((cs?.heroDefault as string) ?? "Default image")
+
       case "plan": {
         if (!school.planType && !school.maxStudents) return null
         const studentsLabel = (cs?.students as string) ?? "students"

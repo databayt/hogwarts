@@ -137,7 +137,15 @@ export const ConversationCard = memo(function ConversationCard({
 
   return (
     <div
+      role="button"
+      tabIndex={0}
       onClick={() => onClick?.(conversation.id)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault()
+          onClick?.(conversation.id)
+        }
+      }}
       className={cn(
         "group relative flex h-[72px] cursor-pointer items-center gap-3 px-3 transition-colors",
         "hover:bg-msg-hover",

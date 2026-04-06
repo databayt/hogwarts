@@ -90,7 +90,13 @@
     "photos_videos": "Photos and videos",
     "contact": "Contact",
     "poll": "Poll",
-    "event": "Event"
+    "event": "Event",
+    "chats": "Chats",
+    "search": "Search",
+    "app_title": "School Messaging",
+    "end_to_end_encrypted": "End-to-end encrypted",
+    "encryption_notice": "Messages and calls are end-to-end encrypted. No one outside of this chat, not even WhatsApp, can read or listen to them.",
+    "forwarded": "Forwarded"
   },
   "actions": {
     "send": "Send",
@@ -129,7 +135,10 @@
     "confirm": "Confirm",
     "copy": "Copy",
     "start_chat": "Start Chat",
-    "try_again": "Try again"
+    "try_again": "Try again",
+    "star": "Star",
+    "unstar": "Unstar",
+    "delete_chat": "Delete chat"
   },
   "errors": {
     "send_failed": "Failed to send message",
@@ -161,7 +170,8 @@
     "enter_group_name": "Please enter a group name",
     "react_failed": "Failed to add reaction",
     "no_school_context": "No school context found",
-    "conversation_start_failed": "Failed to start conversation"
+    "conversation_start_failed": "Failed to start conversation",
+    "microphone_access": "Could not access microphone"
   },
   "types": {
     "direct": "Direct Message",

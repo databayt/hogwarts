@@ -38,6 +38,9 @@ interface School {
   isActive?: boolean
   createdAt?: Date
   updatedAt?: Date
+  branding?: {
+    heroImageUrl?: string | null
+  } | null
 }
 
 interface SiteProps {
@@ -57,7 +60,12 @@ export default function SiteContent({
 
   return (
     <div>
-      <Hero lang={lang} subdomain={subdomainValue} dictionary={dictionary} />
+      <Hero
+        lang={lang}
+        subdomain={subdomainValue}
+        dictionary={dictionary}
+        heroImageUrl={school.branding?.heroImageUrl}
+      />
       <Houses />
       <Features />
       <Core />

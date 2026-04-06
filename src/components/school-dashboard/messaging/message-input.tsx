@@ -246,7 +246,8 @@ export function MessageInput({
     } catch {
       toast({
         title: m?.notifications?.error || "Error",
-        description: "Could not access microphone",
+        description:
+          m?.errors?.microphone_access || "Could not access microphone",
       })
     }
   }, [onFileUpload, m])

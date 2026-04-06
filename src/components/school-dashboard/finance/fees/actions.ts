@@ -18,32 +18,51 @@ import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
 import { getTenantContext } from "@/lib/tenant-context"
 
+import { checkCurrentUserPermission } from "../lib/permissions"
 import {
   calculateSiblingDiscount,
   getFeeAssignmentList,
   getFineList,
   getPaymentList,
+  getScholarshipList,
   type DiscountPolicy,
 } from "./queries"
-import {
-  bulkFeeAssignmentSchema,
-  feeAssignmentSchema,
-  feeStructureSchema,
-  fineSchema,
-  paymentSchema,
-  scholarshipSchema,
-  type BulkFeeAssignmentInput,
-  type FeeAssignmentInput,
-  type FeeStructureInput,
-  type FineInput,
-  type PaymentInput,
-  type ScholarshipInput,
-} from "./validation"
 
 type ActionResult<T = void> = {
   success: boolean
   data?: T
   error?: string
+}
+
+// ============================================
+// AUTH + RBAC HELPER
+// ============================================
+
+async function requireFeePermission(
+  action: "view" | "create" | "edit" | "delete" | "approve"
+): Promise<{ userId: string; schoolId: string } | ActionResult<never>> {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+  }
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) {
+    return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+  }
+
+  const allowed = await checkCurrentUserPermission(schoolId, "fees", action)
+  if (!allowed) {
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
+  }
+
+  return { userId: session.user.id, schoolId }
+}
+
+function isAuthError(
+  result: { userId: string; schoolId: string } | ActionResult<never>
+): result is ActionResult<never> {
+  return "success" in result && result.success === false
 }
 
 // ============================================
@@ -55,15 +74,11 @@ type ActionResult<T = void> = {
  */
 export async function getFeeStructures(): Promise<ActionResult<any[]>> {
   try {
-    const session = await auth()
-    const { schoolId } = await getTenantContext()
-
-    if (!session?.user?.id || !schoolId) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
+    const ctx = await requireFeePermission("view")
+    if (isAuthError(ctx)) return ctx
 
     const feeStructures = await db.feeStructure.findMany({
-      where: { schoolId, isActive: true },
+      where: { schoolId: ctx.schoolId, isActive: true },
       include: {
         class: { select: { id: true, name: true } },
         _count: { select: { feeAssignments: true } },
@@ -85,20 +100,14 @@ export async function createFeeStructure(
   data: FormData
 ): Promise<ActionResult<string>> {
   try {
-    const session = await auth()
-    const { schoolId } = await getTenantContext()
+    const ctx = await requireFeePermission("create")
+    if (isAuthError(ctx)) return ctx
 
-    if (!session?.user?.id || !schoolId) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
-
-    // Extract and validate data
     const formData = Object.fromEntries(data)
 
-    // Create fee structure with actual Prisma schema
     const feeStructure = await db.feeStructure.create({
       data: {
-        schoolId,
+        schoolId: ctx.schoolId,
         name: formData.name as string,
         academicYear: formData.academicYear as string,
         classId: formData.classId as string | undefined,
@@ -131,6 +140,13 @@ export async function createFeeStructure(
           : null,
         totalAmount: parseFloat(formData.totalAmount as string),
         installments: parseInt(formData.installments as string, 10) || 1,
+        lateFeeAmount: formData.lateFeeAmount
+          ? parseFloat(formData.lateFeeAmount as string)
+          : null,
+        lateFeeType: (formData.lateFeeType as any) || null,
+        paymentSchedule: formData.paymentSchedule
+          ? JSON.parse(formData.paymentSchedule as string)
+          : undefined,
         discountPolicy: formData.discountPolicy
           ? JSON.parse(formData.discountPolicy as string)
           : undefined,
@@ -146,6 +162,120 @@ export async function createFeeStructure(
   }
 }
 
+/**
+ * Update an existing fee structure
+ */
+export async function updateFeeStructure(
+  id: string,
+  data: FormData
+): Promise<ActionResult> {
+  try {
+    const ctx = await requireFeePermission("edit")
+    if (isAuthError(ctx)) return ctx
+
+    const existing = await db.feeStructure.findFirst({
+      where: { id, schoolId: ctx.schoolId },
+    })
+    if (!existing) {
+      return actionError(ACTION_ERRORS.NOT_FOUND)
+    }
+
+    const formData = Object.fromEntries(data)
+
+    await db.feeStructure.update({
+      where: { id },
+      data: {
+        name: formData.name as string,
+        academicYear: formData.academicYear as string,
+        classId: (formData.classId as string) || null,
+        stream: (formData.stream as string) || null,
+        description: (formData.description as string) || null,
+        tuitionFee: parseFloat(formData.tuitionFee as string),
+        admissionFee: formData.admissionFee
+          ? parseFloat(formData.admissionFee as string)
+          : null,
+        registrationFee: formData.registrationFee
+          ? parseFloat(formData.registrationFee as string)
+          : null,
+        examFee: formData.examFee
+          ? parseFloat(formData.examFee as string)
+          : null,
+        libraryFee: formData.libraryFee
+          ? parseFloat(formData.libraryFee as string)
+          : null,
+        laboratoryFee: formData.laboratoryFee
+          ? parseFloat(formData.laboratoryFee as string)
+          : null,
+        sportsFee: formData.sportsFee
+          ? parseFloat(formData.sportsFee as string)
+          : null,
+        transportFee: formData.transportFee
+          ? parseFloat(formData.transportFee as string)
+          : null,
+        hostelFee: formData.hostelFee
+          ? parseFloat(formData.hostelFee as string)
+          : null,
+        totalAmount: parseFloat(formData.totalAmount as string),
+        installments: parseInt(formData.installments as string, 10) || 1,
+        lateFeeAmount: formData.lateFeeAmount
+          ? parseFloat(formData.lateFeeAmount as string)
+          : null,
+        lateFeeType: (formData.lateFeeType as any) || null,
+        paymentSchedule: formData.paymentSchedule
+          ? JSON.parse(formData.paymentSchedule as string)
+          : undefined,
+        discountPolicy: formData.discountPolicy
+          ? JSON.parse(formData.discountPolicy as string)
+          : undefined,
+        isActive:
+          formData.isActive !== undefined
+            ? formData.isActive === "true"
+            : undefined,
+      },
+    })
+
+    revalidatePath("/finance/fees")
+    return { success: true }
+  } catch (error) {
+    console.error("Error updating fee structure:", error)
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
+  }
+}
+
+/**
+ * Delete a fee structure (blocked if it has assignments)
+ */
+export async function deleteFeeStructure(id: string): Promise<ActionResult> {
+  try {
+    const ctx = await requireFeePermission("delete")
+    if (isAuthError(ctx)) return ctx
+
+    const structure = await db.feeStructure.findFirst({
+      where: { id, schoolId: ctx.schoolId },
+      include: { _count: { select: { feeAssignments: true } } },
+    })
+
+    if (!structure) {
+      return actionError(ACTION_ERRORS.NOT_FOUND)
+    }
+
+    if (structure._count.feeAssignments > 0) {
+      return {
+        success: false,
+        error: `Cannot delete: ${structure._count.feeAssignments} assignment(s) exist. Deactivate instead.`,
+      }
+    }
+
+    await db.feeStructure.delete({ where: { id } })
+
+    revalidatePath("/finance/fees")
+    return { success: true }
+  } catch (error) {
+    console.error("Error deleting fee structure:", error)
+    return actionError(ACTION_ERRORS.DELETE_FAILED)
+  }
+}
+
 // ============================================
 // FEE ASSIGNMENT ACTIONS
 // ============================================
@@ -155,19 +285,15 @@ export async function createFeeStructure(
  */
 export async function assignFee(data: FormData): Promise<ActionResult<string>> {
   try {
-    const session = await auth()
-    const { schoolId } = await getTenantContext()
-
-    if (!session?.user?.id || !schoolId) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
+    const ctx = await requireFeePermission("create")
+    if (isAuthError(ctx)) return ctx
 
     const formData = Object.fromEntries(data)
 
     // Check if student already has this fee assigned
     const existing = await db.feeAssignment.findFirst({
       where: {
-        schoolId,
+        schoolId: ctx.schoolId,
         studentId: formData.studentId as string,
         feeStructureId: formData.feeStructureId as string,
         academicYear: formData.academicYear as string,
@@ -175,7 +301,10 @@ export async function assignFee(data: FormData): Promise<ActionResult<string>> {
     })
 
     if (existing) {
-      return actionError(ACTION_ERRORS.PAYMENT_FAILED)
+      return {
+        success: false,
+        error: "Student already has this fee assigned for this academic year.",
+      }
     }
 
     const studentId = formData.studentId as string
@@ -190,7 +319,7 @@ export async function assignFee(data: FormData): Promise<ActionResult<string>> {
     const { discountAmount: siblingDiscount, discountEntries } =
       await calculateSiblingDiscount(
         studentId,
-        schoolId,
+        ctx.schoolId,
         feeStructureId,
         academicYear,
         baseAmount
@@ -210,7 +339,7 @@ export async function assignFee(data: FormData): Promise<ActionResult<string>> {
 
     const feeAssignment = await db.feeAssignment.create({
       data: {
-        schoolId,
+        schoolId: ctx.schoolId,
         studentId,
         feeStructureId,
         academicYear,
@@ -227,19 +356,19 @@ export async function assignFee(data: FormData): Promise<ActionResult<string>> {
 
     // Look up school's preferred language for notifications
     const schoolPref = await db.school.findFirst({
-      where: { id: schoolId },
+      where: { id: ctx.schoolId },
       select: { preferredLanguage: true },
     })
     const schoolLang = schoolPref?.preferredLanguage ?? "ar"
 
     // Notify student about new fee due (non-blocking)
     const student = await db.student.findFirst({
-      where: { id: formData.studentId as string, schoolId },
+      where: { id: formData.studentId as string, schoolId: ctx.schoolId },
       select: { userId: true, firstName: true, lastName: true },
     })
     if (student?.userId) {
       dispatchNotification({
-        schoolId,
+        schoolId: ctx.schoolId,
         userId: student.userId,
         type: "fee_due",
         title: "رسوم دراسية جديدة",
@@ -252,20 +381,23 @@ export async function assignFee(data: FormData): Promise<ActionResult<string>> {
           amount: parseFloat(formData.finalAmount as string),
           url: "/finance/fees",
         },
-        actorId: session.user.id,
+        actorId: ctx.userId,
       }).catch((err) => console.error("[assignFee] Notification error:", err))
     }
 
     // Notify guardians about new fee (non-blocking)
     if (student) {
       const guardianLinks = await db.studentGuardian.findMany({
-        where: { studentId: formData.studentId as string, schoolId },
+        where: {
+          studentId: formData.studentId as string,
+          schoolId: ctx.schoolId,
+        },
         select: { guardian: { select: { userId: true } } },
       })
       for (const link of guardianLinks) {
         if (link.guardian?.userId) {
           dispatchNotification({
-            schoolId,
+            schoolId: ctx.schoolId,
             userId: link.guardian.userId,
             type: "fee_due",
             title: "رسوم دراسية جديدة",
@@ -279,7 +411,7 @@ export async function assignFee(data: FormData): Promise<ActionResult<string>> {
               studentName: `${student.firstName} ${student.lastName}`,
               url: "/finance/fees",
             },
-            actorId: session.user.id,
+            actorId: ctx.userId,
           }).catch((err) =>
             console.error("[assignFee] Guardian notification error:", err)
           )
@@ -302,12 +434,8 @@ export async function bulkAssignFees(
   data: FormData
 ): Promise<ActionResult<number>> {
   try {
-    const session = await auth()
-    const { schoolId } = await getTenantContext()
-
-    if (!session?.user?.id || !schoolId) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
+    const ctx = await requireFeePermission("create")
+    if (isAuthError(ctx)) return ctx
 
     const formData = Object.fromEntries(data)
     const studentIds = JSON.parse(formData.studentIds as string) as string[]
@@ -317,7 +445,7 @@ export async function bulkAssignFees(
 
     // Get fee structure to ensure it exists
     const feeStructure = await db.feeStructure.findFirst({
-      where: { id: feeStructureId, schoolId },
+      where: { id: feeStructureId, schoolId: ctx.schoolId },
     })
 
     if (!feeStructure) {
@@ -330,13 +458,13 @@ export async function bulkAssignFees(
         const { discountAmount, discountEntries } =
           await calculateSiblingDiscount(
             studentId,
-            schoolId,
+            ctx.schoolId,
             feeStructureId,
             academicYear,
             finalAmount
           )
         return {
-          schoolId,
+          schoolId: ctx.schoolId,
           studentId,
           feeStructureId,
           academicYear,
@@ -359,7 +487,7 @@ export async function bulkAssignFees(
     // Dispatch fee_due notifications for all assigned students (non-blocking)
     try {
       const schoolPref = await db.school.findFirst({
-        where: { id: schoolId },
+        where: { id: ctx.schoolId },
         select: { preferredLanguage: true },
       })
       const schoolLang = schoolPref?.preferredLanguage ?? "ar"
@@ -396,7 +524,7 @@ export async function bulkAssignFees(
 
         // Notify student
         dispatchNotification({
-          schoolId,
+          schoolId: ctx.schoolId,
           userId: student.userId,
           type: "fee_due",
           title: "رسوم دراسية جديدة",
@@ -408,7 +536,7 @@ export async function bulkAssignFees(
             amount,
             url: "/finance/fees",
           },
-          actorId: session.user.id,
+          actorId: ctx.userId,
         }).catch((err) =>
           console.error("[bulkAssignFees] Student notification error:", err)
         )
@@ -417,7 +545,7 @@ export async function bulkAssignFees(
         for (const sg of student.studentGuardians) {
           if (sg.guardian?.userId) {
             dispatchNotification({
-              schoolId,
+              schoolId: ctx.schoolId,
               userId: sg.guardian.userId,
               type: "fee_due",
               title: "رسوم دراسية جديدة",
@@ -430,7 +558,7 @@ export async function bulkAssignFees(
                 studentName,
                 url: "/finance/fees",
               },
-              actorId: session.user.id,
+              actorId: ctx.userId,
             }).catch((err) =>
               console.error(
                 "[bulkAssignFees] Guardian notification error:",
@@ -449,6 +577,46 @@ export async function bulkAssignFees(
   } catch (error) {
     console.error("Error bulk assigning fees:", error)
     return actionError(ACTION_ERRORS.PAYMENT_FAILED)
+  }
+}
+
+/**
+ * Delete a fee assignment (blocked if it has payments)
+ */
+export async function deleteFeeAssignment(id: string): Promise<ActionResult> {
+  try {
+    const ctx = await requireFeePermission("delete")
+    if (isAuthError(ctx)) return ctx
+
+    const assignment = await db.feeAssignment.findFirst({
+      where: { id, schoolId: ctx.schoolId },
+      include: { _count: { select: { payments: true } } },
+    })
+
+    if (!assignment) {
+      return actionError(ACTION_ERRORS.NOT_FOUND)
+    }
+
+    if (assignment._count.payments > 0) {
+      return {
+        success: false,
+        error: `Cannot delete: ${assignment._count.payments} payment(s) recorded. Cancel the assignment instead.`,
+      }
+    }
+
+    // Unlink invoices (preserve for audit trail) then delete assignment
+    await db.userInvoice.updateMany({
+      where: { feeAssignmentId: id, schoolId: ctx.schoolId },
+      data: { feeAssignmentId: null },
+    })
+
+    await db.feeAssignment.delete({ where: { id } })
+
+    revalidatePath("/finance/fees")
+    return { success: true }
+  } catch (error) {
+    console.error("Error deleting fee assignment:", error)
+    return actionError(ACTION_ERRORS.DELETE_FAILED)
   }
 }
 
@@ -482,15 +650,11 @@ export async function getStudentFees(
   studentId: string
 ): Promise<ActionResult<StudentFeeAssignment[]>> {
   try {
-    const session = await auth()
-    const { schoolId } = await getTenantContext()
-
-    if (!session?.user?.id || !schoolId) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
+    const ctx = await requireFeePermission("view")
+    if (isAuthError(ctx)) return ctx
 
     const feeAssignments = await db.feeAssignment.findMany({
-      where: { schoolId, studentId },
+      where: { schoolId: ctx.schoolId, studentId },
       include: {
         feeStructure: { select: { name: true } },
         payments: {
@@ -547,12 +711,8 @@ export async function recordPayment(
   data: FormData
 ): Promise<ActionResult<string>> {
   try {
-    const session = await auth()
-    const { schoolId } = await getTenantContext()
-
-    if (!session?.user?.id || !schoolId) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
+    const ctx = await requireFeePermission("create")
+    if (isAuthError(ctx)) return ctx
 
     const formData = Object.fromEntries(data)
     const feeAssignmentId = formData.feeAssignmentId as string
@@ -560,7 +720,7 @@ export async function recordPayment(
 
     // Get fee assignment with fee structure for discount policy
     const feeAssignment = await db.feeAssignment.findFirst({
-      where: { id: feeAssignmentId, schoolId },
+      where: { id: feeAssignmentId, schoolId: ctx.schoolId },
       include: {
         payments: true,
         feeStructure: {
@@ -641,7 +801,7 @@ export async function recordPayment(
     // Create payment record
     const payment = await db.payment.create({
       data: {
-        schoolId,
+        schoolId: ctx.schoolId,
         feeAssignmentId,
         studentId: feeAssignment.studentId,
         paymentNumber:
@@ -663,21 +823,44 @@ export async function recordPayment(
       data: { status: newStatus },
     })
 
+    // Sync linked invoice status — reflect partial payments properly
+    try {
+      const linkedInvoice = await db.userInvoice.findFirst({
+        where: { feeAssignmentId, schoolId: ctx.schoolId },
+      })
+      if (linkedInvoice) {
+        const invoiceStatus = newStatus === "PAID" ? "PAID" : "UNPAID"
+        await db.userInvoice.update({
+          where: { id: linkedInvoice.id },
+          data: {
+            status: invoiceStatus as any,
+            total: finalAmount,
+            // Store paid amount in notes for tracking until schema supports amountPaid
+            notes: linkedInvoice.notes
+              ? `${linkedInvoice.notes}\nPayment: ${amount} on ${new Date().toISOString().split("T")[0]} (Total paid: ${newTotalPaid})`
+              : `Payment: ${amount} on ${new Date().toISOString().split("T")[0]} (Total paid: ${newTotalPaid})`,
+          },
+        })
+      }
+    } catch (invoiceSyncErr) {
+      console.warn("[recordPayment] Invoice sync failed:", invoiceSyncErr)
+    }
+
     // Look up school's preferred language for notifications
     const schoolPref2 = await db.school.findFirst({
-      where: { id: schoolId },
+      where: { id: ctx.schoolId },
       select: { preferredLanguage: true },
     })
     const schoolLang2 = schoolPref2?.preferredLanguage ?? "ar"
 
     // Notify student about payment received (non-blocking)
     const student = await db.student.findFirst({
-      where: { id: feeAssignment.studentId, schoolId },
+      where: { id: feeAssignment.studentId, schoolId: ctx.schoolId },
       select: { userId: true },
     })
     if (student?.userId) {
       dispatchNotification({
-        schoolId,
+        schoolId: ctx.schoolId,
         userId: student.userId,
         type: "fee_paid",
         title: "تم استلام الدفعة",
@@ -692,7 +875,7 @@ export async function recordPayment(
           status: newStatus,
           url: "/finance/fees",
         },
-        actorId: session.user.id,
+        actorId: ctx.userId,
       }).catch((err) =>
         console.error("[recordPayment] Notification error:", err)
       )
@@ -700,13 +883,13 @@ export async function recordPayment(
 
     // Notify guardians about payment (non-blocking)
     const guardianLinks = await db.studentGuardian.findMany({
-      where: { studentId: feeAssignment.studentId, schoolId },
+      where: { studentId: feeAssignment.studentId, schoolId: ctx.schoolId },
       select: { guardian: { select: { userId: true } } },
     })
     for (const link of guardianLinks) {
       if (link.guardian?.userId) {
         dispatchNotification({
-          schoolId,
+          schoolId: ctx.schoolId,
           userId: link.guardian.userId,
           type: "fee_paid",
           title: "تم استلام الدفعة",
@@ -721,7 +904,7 @@ export async function recordPayment(
             status: newStatus,
             url: "/finance/fees",
           },
-          actorId: session.user.id,
+          actorId: ctx.userId,
         }).catch((err) =>
           console.error("[recordPayment] Guardian notification error:", err)
         )
@@ -733,6 +916,87 @@ export async function recordPayment(
   } catch (error) {
     console.error("Error recording payment:", error)
     return actionError(ACTION_ERRORS.PAYMENT_FAILED)
+  }
+}
+
+/**
+ * Delete a payment (only if it's the latest and not verified)
+ */
+export async function deletePayment(id: string): Promise<ActionResult> {
+  try {
+    const ctx = await requireFeePermission("delete")
+    if (isAuthError(ctx)) return ctx
+
+    const payment = await db.payment.findFirst({
+      where: { id, schoolId: ctx.schoolId },
+      select: {
+        id: true,
+        feeAssignmentId: true,
+        amount: true,
+        status: true,
+        verifiedBy: true,
+        refund: { select: { id: true } },
+      },
+    })
+
+    if (!payment) {
+      return actionError(ACTION_ERRORS.NOT_FOUND)
+    }
+
+    if (payment.verifiedBy) {
+      return {
+        success: false,
+        error: "Cannot delete a verified payment.",
+      }
+    }
+
+    if (payment.refund) {
+      return {
+        success: false,
+        error: "Cannot delete a payment that has a refund record.",
+      }
+    }
+
+    // Delete the payment
+    await db.payment.delete({ where: { id } })
+
+    // Recalculate fee assignment status (preserve OVERDUE if it was overdue)
+    const remainingPayments = await db.payment.aggregate({
+      where: {
+        feeAssignmentId: payment.feeAssignmentId,
+        schoolId: ctx.schoolId,
+        status: "SUCCESS",
+      },
+      _sum: { amount: true },
+    })
+
+    const assignment = await db.feeAssignment.findFirst({
+      where: { id: payment.feeAssignmentId },
+      select: { finalAmount: true, status: true },
+    })
+
+    if (assignment) {
+      const totalPaid = Number(remainingPayments._sum.amount ?? 0)
+      const finalAmount = Number(assignment.finalAmount)
+      const wasOverdue = assignment.status === "OVERDUE"
+
+      let newStatus: "PENDING" | "PARTIAL" | "PAID" | "OVERDUE" = wasOverdue
+        ? "OVERDUE"
+        : "PENDING"
+      if (totalPaid >= finalAmount) newStatus = "PAID"
+      else if (totalPaid > 0) newStatus = "PARTIAL"
+
+      await db.feeAssignment.update({
+        where: { id: payment.feeAssignmentId },
+        data: { status: newStatus },
+      })
+    }
+
+    revalidatePath("/finance/fees")
+    return { success: true }
+  } catch (error) {
+    console.error("Error deleting payment:", error)
+    return actionError(ACTION_ERRORS.DELETE_FAILED)
   }
 }
 
@@ -749,16 +1013,12 @@ export async function applyScholarship(
   scholarshipAmount: number
 ): Promise<ActionResult> {
   try {
-    const session = await auth()
-    const { schoolId } = await getTenantContext()
-
-    if (!session?.user?.id || !schoolId) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
+    const ctx = await requireFeePermission("approve")
+    if (isAuthError(ctx)) return ctx
 
     // Verify scholarship exists
     const scholarship = await db.scholarship.findFirst({
-      where: { id: scholarshipId, schoolId, isActive: true },
+      where: { id: scholarshipId, schoolId: ctx.schoolId, isActive: true },
     })
 
     if (!scholarship) {
@@ -766,8 +1026,8 @@ export async function applyScholarship(
     }
 
     // Update fee assignment
-    await db.feeAssignment.update({
-      where: { id: feeAssignmentId, schoolId },
+    const updatedAssignment = await db.feeAssignment.update({
+      where: { id: feeAssignmentId, schoolId: ctx.schoolId },
       data: {
         scholarshipId,
         totalDiscount: scholarshipAmount,
@@ -776,6 +1036,34 @@ export async function applyScholarship(
         },
       },
     })
+
+    // Sync linked invoice total (non-blocking)
+    try {
+      const linkedInvoice = await db.userInvoice.findFirst({
+        where: { feeAssignmentId, schoolId: ctx.schoolId },
+        include: { items: true },
+      })
+      if (linkedInvoice) {
+        const newTotal = Number(updatedAssignment.finalAmount)
+        await db.userInvoice.update({
+          where: { id: linkedInvoice.id },
+          data: {
+            sub_total: newTotal,
+            total: newTotal,
+            discount: scholarshipAmount,
+          },
+        })
+        // Update the invoice item amount to match
+        if (linkedInvoice.items.length === 1) {
+          await db.userInvoiceItem.update({
+            where: { id: linkedInvoice.items[0].id },
+            data: { price: newTotal, total: newTotal },
+          })
+        }
+      }
+    } catch (invoiceSyncErr) {
+      console.warn("[applyScholarship] Invoice sync failed:", invoiceSyncErr)
+    }
 
     revalidatePath("/finance/fees")
     return { success: true }
@@ -792,18 +1080,14 @@ export async function createScholarship(
   data: FormData
 ): Promise<ActionResult<string>> {
   try {
-    const session = await auth()
-    const { schoolId } = await getTenantContext()
-
-    if (!session?.user?.id || !schoolId) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
+    const ctx = await requireFeePermission("create")
+    if (isAuthError(ctx)) return ctx
 
     const formData = Object.fromEntries(data)
 
     const scholarship = await db.scholarship.create({
       data: {
-        schoolId,
+        schoolId: ctx.schoolId,
         name: formData.name as string,
         description: (formData.description as string) || undefined,
         coverageType: formData.coverageType as any,
@@ -840,17 +1124,13 @@ export async function updateScholarship(
   data: FormData
 ): Promise<ActionResult> {
   try {
-    const session = await auth()
-    const { schoolId } = await getTenantContext()
-
-    if (!session?.user?.id || !schoolId) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
+    const ctx = await requireFeePermission("edit")
+    if (isAuthError(ctx)) return ctx
 
     const formData = Object.fromEntries(data)
 
     await db.scholarship.update({
-      where: { id, schoolId },
+      where: { id, schoolId: ctx.schoolId },
       data: {
         name: formData.name as string,
         description: (formData.description as string) || undefined,
@@ -881,6 +1161,44 @@ export async function updateScholarship(
 }
 
 /**
+ * Delete a scholarship (blocked if it has active assignments)
+ */
+export async function deleteScholarship(id: string): Promise<ActionResult> {
+  try {
+    const ctx = await requireFeePermission("delete")
+    if (isAuthError(ctx)) return ctx
+
+    const scholarship = await db.scholarship.findFirst({
+      where: { id, schoolId: ctx.schoolId },
+      select: {
+        id: true,
+        currentBeneficiaries: true,
+        _count: { select: { feeAssignments: true } },
+      },
+    })
+
+    if (!scholarship) {
+      return actionError(ACTION_ERRORS.NOT_FOUND)
+    }
+
+    if (scholarship._count.feeAssignments > 0) {
+      return {
+        success: false,
+        error: `Cannot delete: ${scholarship._count.feeAssignments} fee assignment(s) use this scholarship. Deactivate instead.`,
+      }
+    }
+
+    await db.scholarship.delete({ where: { id } })
+
+    revalidatePath("/finance/fees")
+    return { success: true }
+  } catch (error) {
+    console.error("Error deleting scholarship:", error)
+    return actionError(ACTION_ERRORS.DELETE_FAILED)
+  }
+}
+
+/**
  * Update a fine
  */
 export async function updateFine(
@@ -888,17 +1206,13 @@ export async function updateFine(
   data: FormData
 ): Promise<ActionResult> {
   try {
-    const session = await auth()
-    const { schoolId } = await getTenantContext()
-
-    if (!session?.user?.id || !schoolId) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
+    const ctx = await requireFeePermission("edit")
+    if (isAuthError(ctx)) return ctx
 
     const formData = Object.fromEntries(data)
 
     await db.fine.update({
-      where: { id, schoolId },
+      where: { id, schoolId: ctx.schoolId },
       data: {
         fineType: formData.fineType as any,
         amount: parseFloat(formData.amount as string),
@@ -924,15 +1238,11 @@ export async function payFine(
   paymentMethod: string
 ): Promise<ActionResult> {
   try {
-    const session = await auth()
-    const { schoolId } = await getTenantContext()
-
-    if (!session?.user?.id || !schoolId) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
+    const ctx = await requireFeePermission("create")
+    if (isAuthError(ctx)) return ctx
 
     const fine = await db.fine.findFirst({
-      where: { id: fineId, schoolId },
+      where: { id: fineId, schoolId: ctx.schoolId },
     })
 
     if (!fine) {
@@ -940,7 +1250,7 @@ export async function payFine(
     }
 
     await db.fine.update({
-      where: { id: fineId, schoolId },
+      where: { id: fineId, schoolId: ctx.schoolId },
       data: {
         isPaid: true,
         paidAmount: amount,
@@ -965,18 +1275,14 @@ export async function payFine(
  */
 export async function issueFine(data: FormData): Promise<ActionResult<string>> {
   try {
-    const session = await auth()
-    const { schoolId } = await getTenantContext()
-
-    if (!session?.user?.id || !schoolId) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
+    const ctx = await requireFeePermission("create")
+    if (isAuthError(ctx)) return ctx
 
     const formData = Object.fromEntries(data)
 
     const fine = await db.fine.create({
       data: {
-        schoolId,
+        schoolId: ctx.schoolId,
         studentId: formData.studentId as string,
         fineType: formData.fineType as any,
         amount: parseFloat(formData.amount as string),
@@ -1002,18 +1308,14 @@ export async function waiveFine(
   reason: string
 ): Promise<ActionResult> {
   try {
-    const session = await auth()
-    const { schoolId } = await getTenantContext()
-
-    if (!session?.user?.id || !schoolId) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
+    const ctx = await requireFeePermission("approve")
+    if (isAuthError(ctx)) return ctx
 
     await db.fine.update({
-      where: { id: fineId, schoolId },
+      where: { id: fineId, schoolId: ctx.schoolId },
       data: {
         isWaived: true,
-        waivedBy: session.user.id,
+        waivedBy: ctx.userId,
         waivedDate: new Date(),
         waiverReason: reason,
       },
@@ -1024,6 +1326,48 @@ export async function waiveFine(
   } catch (error) {
     console.error("Error waiving fine:", error)
     return actionError(ACTION_ERRORS.PAYMENT_FAILED)
+  }
+}
+
+/**
+ * Delete a fine (blocked if paid or waived — preserves audit trail)
+ */
+export async function deleteFine(id: string): Promise<ActionResult> {
+  try {
+    const ctx = await requireFeePermission("delete")
+    if (isAuthError(ctx)) return ctx
+
+    const fine = await db.fine.findFirst({
+      where: { id, schoolId: ctx.schoolId },
+      select: { id: true, isPaid: true, isWaived: true },
+    })
+
+    if (!fine) {
+      return actionError(ACTION_ERRORS.NOT_FOUND)
+    }
+
+    if (fine.isPaid) {
+      return {
+        success: false,
+        error: "Cannot delete a paid fine.",
+      }
+    }
+
+    if (fine.isWaived) {
+      return {
+        success: false,
+        error:
+          "Cannot delete a waived fine. The waiver decision is part of the audit trail.",
+      }
+    }
+
+    await db.fine.delete({ where: { id } })
+
+    revalidatePath("/finance/fees")
+    return { success: true }
+  } catch (error) {
+    console.error("Error deleting fine:", error)
+    return actionError(ACTION_ERRORS.DELETE_FAILED)
   }
 }
 
@@ -1039,16 +1383,14 @@ export async function createFeePaymentCheckout(
   lang: string
 ): Promise<ActionResult<{ checkoutUrl: string }>> {
   try {
-    const session = await auth()
-    const { schoolId } = await getTenantContext()
+    const ctx = await requireFeePermission("view")
+    if (isAuthError(ctx)) return ctx
 
-    if (!session?.user?.id || !schoolId) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
+    const session = await auth()
 
     // Load fee assignment with student and structure
     const assignment = await db.feeAssignment.findFirst({
-      where: { id: feeAssignmentId, schoolId },
+      where: { id: feeAssignmentId, schoolId: ctx.schoolId },
       include: {
         student: { select: { id: true, firstName: true, lastName: true } },
         feeStructure: { select: { name: true } },
@@ -1072,7 +1414,7 @@ export async function createFeePaymentCheckout(
 
     // Load school for currency
     const school = await db.school.findFirst({
-      where: { id: schoolId },
+      where: { id: ctx.schoolId },
       select: { currency: true, name: true },
     })
     const currency = school?.currency || "SAR"
@@ -1082,7 +1424,7 @@ export async function createFeePaymentCheckout(
       amount: remaining,
       currency,
       context: "school_fee",
-      schoolId,
+      schoolId: ctx.schoolId,
       referenceId: feeAssignmentId,
       referenceNumber: `FEE-${feeAssignmentId.slice(-8).toUpperCase()}`,
       successUrl: `${process.env.NEXT_PUBLIC_APP_URL || ""}/${lang}/finance/fees/assignments/${feeAssignmentId}?payment=success`,
@@ -1099,9 +1441,9 @@ export async function createFeePaymentCheckout(
         type: "fee_payment",
         feeAssignmentId,
         studentId: assignment.studentId,
-        schoolId,
+        schoolId: ctx.schoolId,
       },
-      customerEmail: session.user.email || undefined,
+      customerEmail: session?.user?.email || undefined,
     })
 
     if (!result.success || !result.checkoutUrl) {
@@ -1236,6 +1578,45 @@ export async function fetchFineRows(
   }
 }
 
+/** Fetch scholarship rows for table pagination */
+export async function fetchScholarshipRows(
+  params: Record<string, unknown> & { page: number; perPage: number }
+): Promise<{ rows: any[]; total: number }> {
+  const session = await auth()
+  if (!session?.user) return { rows: [], total: 0 }
+  const { page, perPage } = params
+  try {
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) return { rows: [], total: 0 }
+
+    const result = await getScholarshipList(schoolId, { page, perPage })
+    const rows = result.rows.map((s: any) => ({
+      id: s.id,
+      name: s.name,
+      coverageType: s.coverageType,
+      coverageAmount: Number(s.coverageAmount),
+      academicYear: s.academicYear,
+      startDate:
+        s.startDate instanceof Date
+          ? s.startDate.toISOString()
+          : String(s.startDate),
+      endDate:
+        s.endDate instanceof Date ? s.endDate.toISOString() : String(s.endDate),
+      maxBeneficiaries: s.maxBeneficiaries,
+      currentBeneficiaries: s.currentBeneficiaries,
+      applicationCount: s._count?.applications || 0,
+      isActive: s.isActive,
+      createdAt:
+        s.createdAt instanceof Date
+          ? s.createdAt.toISOString()
+          : String(s.createdAt),
+    }))
+    return { rows, total: result.count }
+  } catch {
+    return { rows: [], total: 0 }
+  }
+}
+
 // ============================================
 // REPORTING ACTIONS
 // ============================================
@@ -1245,12 +1626,8 @@ export async function fetchFineRows(
  */
 export async function getFeeCollectionSummary(): Promise<ActionResult<any>> {
   try {
-    const session = await auth()
-    const { schoolId } = await getTenantContext()
-
-    if (!session?.user?.id || !schoolId) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
+    const ctx = await requireFeePermission("view")
+    if (isAuthError(ctx)) return ctx
 
     const [
       totalAssignments,
@@ -1259,12 +1636,18 @@ export async function getFeeCollectionSummary(): Promise<ActionResult<any>> {
       pendingAssignments,
       totalPayments,
     ] = await Promise.all([
-      db.feeAssignment.count({ where: { schoolId } }),
-      db.feeAssignment.count({ where: { schoolId, status: "PAID" } }),
-      db.feeAssignment.count({ where: { schoolId, status: "PARTIAL" } }),
-      db.feeAssignment.count({ where: { schoolId, status: "PENDING" } }),
+      db.feeAssignment.count({ where: { schoolId: ctx.schoolId } }),
+      db.feeAssignment.count({
+        where: { schoolId: ctx.schoolId, status: "PAID" },
+      }),
+      db.feeAssignment.count({
+        where: { schoolId: ctx.schoolId, status: "PARTIAL" },
+      }),
+      db.feeAssignment.count({
+        where: { schoolId: ctx.schoolId, status: "PENDING" },
+      }),
       db.payment.aggregate({
-        where: { schoolId, status: "SUCCESS" },
+        where: { schoolId: ctx.schoolId, status: "SUCCESS" },
         _sum: { amount: true },
         _count: true,
       }),

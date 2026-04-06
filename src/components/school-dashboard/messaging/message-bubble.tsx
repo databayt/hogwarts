@@ -312,7 +312,7 @@ export const MessageBubble = memo(function MessageBubble({
               {message.forwardedFromId && !isDeleted && (
                 <div className="text-msg-timestamp flex items-center gap-1 px-2 pt-1.5 text-[11px] italic">
                   <Forward className="h-3 w-3" />
-                  <span>{"Forwarded"}</span>
+                  <span>{m?.ui?.forwarded || "Forwarded"}</span>
                 </div>
               )}
 
@@ -566,7 +566,9 @@ export const MessageBubble = memo(function MessageBubble({
                           isStarred && "fill-current"
                         )}
                       />
-                      {isStarred ? "Unstar" : "Star"}
+                      {isStarred
+                        ? m?.actions?.unstar || "Unstar"
+                        : m?.actions?.star || "Star"}
                     </DropdownMenuItem>
                     {isOwnMessage && (
                       <>

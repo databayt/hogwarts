@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { NotificationChannel, NotificationType } from "@prisma/client"
+import { NotificationChannel } from "@prisma/client"
 
 import { db } from "@/lib/db"
 import { createNotification } from "@/components/school-dashboard/notifications/actions"
@@ -199,84 +199,5 @@ export async function notifyParticipantAdded(
     })
   } catch (error) {
     console.error("[notifyParticipantAdded] Error:", error)
-  }
-}
-
-/**
- * Notify all participants when a new announcement is made
- * (for announcement-type conversations)
- */
-export async function notifyAnnouncement(
-  schoolId: string,
-  conversationId: string,
-  senderId: string,
-  senderName: string,
-  announcementTitle: string,
-  announcementContent: string
-): Promise<void> {
-  try {
-    // Get all participants except the sender
-    const participants = await db.conversationParticipant.findMany({
-      where: {
-        conversationId,
-        userId: { not: senderId },
-      },
-      select: {
-        userId: true,
-      },
-    })
-
-    if (participants.length === 0) return
-
-    // Create notifications for each participant
-    const notificationPromises = participants.map((participant) =>
-      createNotification({
-        userId: participant.userId,
-        type: "announcement",
-        title: announcementTitle,
-        body: truncateContent(announcementContent),
-        priority: "high", // Announcements are high priority
-        actorId: senderId,
-        channels: ["in_app", "email"] as NotificationChannel[],
-        metadata: {
-          conversationId,
-          senderId,
-          senderName,
-          isAnnouncement: true,
-        },
-      })
-    )
-
-    await Promise.allSettled(notificationPromises)
-  } catch (error) {
-    console.error("[notifyAnnouncement] Error:", error)
-  }
-}
-
-/**
- * Check if a user has notifications enabled for a specific type
- */
-export async function shouldNotifyUser(
-  userId: string,
-  notificationType: NotificationType,
-  channel: NotificationChannel
-): Promise<boolean> {
-  try {
-    const preference = await db.notificationPreference.findFirst({
-      where: {
-        userId,
-        type: notificationType,
-        channel,
-      },
-      select: {
-        enabled: true,
-      },
-    })
-
-    // Default to enabled if no preference is set
-    return preference?.enabled ?? true
-  } catch (error) {
-    console.error("[shouldNotifyUser] Error:", error)
-    return true // Default to notify on error
   }
 }

@@ -34,12 +34,6 @@ import { MessageInput } from "./message-input"
 import { MessageList, MessageListSkeleton } from "./message-list"
 import type { ConversationDTO, MessageDTO, TypingIndicatorDTO } from "./types"
 
-export interface ChatInterfaceProps {
-  conversation: ConversationDTO
-  initialMessages: MessageDTO[]
-  currentUserId: string
-}
-
 const AVATAR_COLORS = [
   { bg: "#CBF2EE", icon: "#028377" },
   { bg: "#E9E0FF", icon: "#5D47DE" },
@@ -61,7 +55,10 @@ export interface ChatInterfaceProps {
   currentUserId: string
   locale?: "ar" | "en"
   whatsappConnected?: boolean
-  onSendMessage: (content: string, replyToId?: string) => Promise<void>
+  onSendMessage: (
+    content: string,
+    replyToId?: string
+  ) => Promise<MessageDTO | void>
   onEditMessage: (messageId: string, content: string) => Promise<void>
   onDeleteMessage: (messageId: string) => Promise<void>
   onReactToMessage: (messageId: string, emoji: string) => Promise<void>
@@ -413,7 +410,13 @@ export function ChatInterface({
         afterMessageId: lastMessage.id,
       })
       if (result.success && result.data.items.length > 0) {
-        setMessages((prev) => [...prev, ...result.data.items])
+        setMessages((prev) => {
+          const existingIds = new Set(prev.map((m) => m.id))
+          const newItems = result.data.items.filter(
+            (item: MessageDTO) => !existingIds.has(item.id)
+          )
+          return newItems.length > 0 ? [...prev, ...newItems] : prev
+        })
         markConversationAsRead({ conversationId: conversation.id }).catch(
           () => {}
         )
@@ -429,7 +432,16 @@ export function ChatInterface({
 
   const handleSendMessage = async (content: string, replyToId?: string) => {
     try {
-      await onSendMessage(content, replyToId)
+      const sentMessage = await onSendMessage(content, replyToId)
+      if (sentMessage) {
+        // Immediately add real message, replacing any optimistic temp
+        setMessages((prev) => {
+          const withoutOptimistic = prev.filter(
+            (msg) => !msg.id.startsWith("temp-")
+          )
+          return [...withoutOptimistic, sentMessage]
+        })
+      }
       setReplyTo(null)
       setEditingMessage(null)
     } catch {
@@ -634,16 +646,8 @@ export function ChatInterface({
         </div>
       </div>
 
-      {/* Messages */}
-      <div className="relative flex-1 overflow-hidden bg-[#EEEAE4]">
-        <div
-          className="pointer-events-none absolute inset-0 opacity-60"
-          style={{
-            backgroundImage: "url('/whatsapp-bg.png')",
-            backgroundSize: "60%",
-            backgroundRepeat: "repeat",
-          }}
-        />
+      {/* Messages — background rendered by MessageList */}
+      <div className="relative flex-1 overflow-hidden">
         <MessageList
           messages={optimisticMessages}
           currentUserId={currentUserId}

@@ -800,6 +800,7 @@ export async function createInvoiceFromEnrollment(params: {
   currency: string
   items: EnrollmentFeeItem[]
   dueDate?: Date
+  feeAssignmentId?: string
   tx?: Parameters<Parameters<typeof db.$transaction>[0]>[0]
 }): Promise<{ success: boolean; invoiceId?: string; error?: string }> {
   try {
@@ -859,6 +860,7 @@ export async function createInvoiceFromEnrollment(params: {
           status: "UNPAID",
           userId,
           schoolId,
+          feeAssignmentId: params.feeAssignmentId || null,
           notes: "Auto-generated from enrollment",
           items: {
             create: items.map((item) => ({

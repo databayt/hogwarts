@@ -1,7 +1,6 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { Suspense } from "react"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
@@ -106,7 +105,7 @@ export async function MessagingContent({
 
     if (activeConversation) {
       activeConversationData = serializeConversation(activeConversation)
-      messagesData = serializeMessages(messagesResult.rows)
+      messagesData = serializeMessages(messagesResult.rows).reverse()
     }
   } catch (error) {
     console.error("[MessagingContent] Error fetching conversations:", error)

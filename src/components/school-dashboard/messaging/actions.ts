@@ -463,7 +463,7 @@ export async function archiveConversation(
  */
 export async function sendMessage(
   input: z.infer<typeof createMessageSchema>
-): Promise<ActionResponse<{ id: string }>> {
+): Promise<ActionResponse<{ id: string; message?: any }>> {
   try {
     const session = await auth()
     const authContext = getAuthContext(session)
@@ -633,11 +633,14 @@ export async function sendMessage(
       }
     ).catch((err) => console.error("[sendMessage] Audit log error:", err))
 
-    revalidatePath(MESSAGES_PATH)
-    revalidateTag(`messages-${parsed.conversationId}`, "max")
-    revalidateTag(`conversation-${parsed.conversationId}`, "max")
+    // Re-fetch the full message with relations for instant client-side update
+    const fullMessage = await getMessage(schoolId, message.id)
+    const { serializeMessage } = await import("./serialization")
 
-    return { success: true, data: { id: message.id } }
+    return {
+      success: true,
+      data: { id: message.id, message: serializeMessage(fullMessage) },
+    }
   } catch (error) {
     console.error("[sendMessage] Error:", error)
     if (error instanceof z.ZodError) {
@@ -1255,13 +1258,30 @@ export async function removeReaction(
       return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    }
+
     const parsed = removeReactionSchema.parse(input)
+
+    // Verify reaction belongs to a conversation in this school
+    const reaction = await db.messageReaction.findFirst({
+      where: {
+        id: parsed.reactionId,
+        userId: authContext.userId,
+        message: { conversation: { schoolId } },
+      },
+    })
+    if (!reaction) {
+      return actionError(ACTION_ERRORS.MESSAGE_SEND_FAILED)
+    }
 
     // Delete reaction
     await db.messageReaction.delete({
       where: {
         id: parsed.reactionId,
-        userId: authContext.userId, // Can only remove own reactions
+        userId: authContext.userId,
       },
     })
 
@@ -1363,6 +1383,21 @@ export async function pinConversation(input: {
       return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    }
+
+    // Verify conversation belongs to this school
+    const isParticipant = await isConversationParticipant(
+      schoolId,
+      input.conversationId,
+      authContext.userId
+    )
+    if (!isParticipant) {
+      return actionError(ACTION_ERRORS.MESSAGE_SEND_FAILED)
+    }
+
     // Update user's participant record
     await db.conversationParticipant.updateMany({
       where: {
@@ -1401,6 +1436,20 @@ export async function muteConversation(input: {
       return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    }
+
+    const isParticipant = await isConversationParticipant(
+      schoolId,
+      input.conversationId,
+      authContext.userId
+    )
+    if (!isParticipant) {
+      return actionError(ACTION_ERRORS.MESSAGE_SEND_FAILED)
+    }
+
     // Update user's participant record
     await db.conversationParticipant.updateMany({
       where: {
@@ -1437,6 +1486,20 @@ export async function unmuteConversation(input: {
     const authContext = getAuthContext(session)
     if (!authContext) {
       return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    }
+
+    const isParticipant = await isConversationParticipant(
+      schoolId,
+      input.conversationId,
+      authContext.userId
+    )
+    if (!isParticipant) {
+      return actionError(ACTION_ERRORS.MESSAGE_SEND_FAILED)
     }
 
     // Update user's participant record
@@ -1802,7 +1865,7 @@ export async function fetchConversationData(input: {
       success: true,
       data: {
         conversation: serializeConversation(conversation),
-        messages: serializeMessages(messagesResult.rows),
+        messages: serializeMessages(messagesResult.rows).reverse(),
         hasMore: messagesResult.count > take,
       },
     }

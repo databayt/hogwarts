@@ -14,9 +14,15 @@ interface HeroProps {
   lang?: Locale
   subdomain?: string
   dictionary?: Dictionary
+  heroImageUrl?: string | null
 }
 
-export function Hero({ lang = "en", subdomain, dictionary }: HeroProps) {
+export function Hero({
+  lang = "en",
+  subdomain,
+  dictionary,
+  heroImageUrl,
+}: HeroProps) {
   // Get translations with fallbacks
   const t = dictionary?.marketing?.site?.hero
 
@@ -33,7 +39,7 @@ export function Hero({ lang = "en", subdomain, dictionary }: HeroProps) {
         <div
           className="absolute inset-0 overflow-hidden rounded-none lg:inset-y-8 lg:rounded-sm"
           style={{
-            backgroundImage: `url('${asset("/photos/harry-potter.png")}')`,
+            backgroundImage: `url('${heroImageUrl || asset("/photos/harry-potter.png")}')`,
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}

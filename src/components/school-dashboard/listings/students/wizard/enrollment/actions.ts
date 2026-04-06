@@ -9,6 +9,7 @@ import type { ActionResponse } from "@/lib/action-response"
 import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { enrollStudentInGradeClasses } from "@/lib/enrollment-sync"
+import { autoAssignFeesForStudent } from "@/lib/fee-auto-assign"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { SupportedLanguage } from "@/components/translation/types"
 
@@ -225,6 +226,17 @@ export async function updateStudentEnrollment(
           return { success: true, warning: result.warning } as ActionResponse
         }
       }
+    }
+
+    // Auto-assign fees when a grade is set (parity with admission enrollment)
+    if (parsed.academicGradeId) {
+      autoAssignFeesForStudent(
+        schoolId,
+        studentId,
+        parsed.academicGradeId
+      ).catch((err) =>
+        console.error("[updateStudentEnrollment] Fee auto-assign failed:", err)
+      )
     }
 
     return { success: true }

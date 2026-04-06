@@ -183,7 +183,10 @@ export function MessagingClient({
     window.history.replaceState(null, "", `/${locale}/messages`)
   }
 
-  const handleSendMessage = async (content: string, replyToId?: string) => {
+  const handleSendMessage = async (
+    content: string,
+    replyToId?: string
+  ): Promise<MessageDTO | void> => {
     if (!activeConversation) return
 
     const result = await sendMessage({
@@ -196,6 +199,8 @@ export function MessagingClient({
     if (!result.success) {
       throw new Error(result.error)
     }
+
+    return result.data.message as MessageDTO
   }
 
   const handleEditMessage = async (messageId: string, content: string) => {

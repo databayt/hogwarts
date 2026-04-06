@@ -127,12 +127,12 @@ export async function updateSchoolBranding(
     // Validate input
     const validatedData = brandingSchema.parse(data)
 
-    // Update school logoUrl if provided
-    if (validatedData.logoUrl) {
+    // Update school logoUrl (including clearing it)
+    if (validatedData.logoUrl !== undefined) {
       await db.school.update({
         where: { id: schoolId },
         data: {
-          logoUrl: validatedData.logoUrl,
+          logoUrl: validatedData.logoUrl || null,
         },
       })
     }
@@ -161,6 +161,54 @@ export async function updateSchoolBranding(
     return { success: true }
   } catch (error) {
     console.error("Error updating school branding:", error)
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: error.issues.map((e) => e.message).join(", "),
+      }
+    }
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
+  }
+}
+
+// Schema for hero image update
+const heroImageSchema = z.object({
+  heroImageUrl: z.string().url().optional().or(z.literal("")),
+})
+
+export async function updateHeroImage(
+  schoolId: string,
+  data: z.infer<typeof heroImageSchema>
+): Promise<ActionResult> {
+  try {
+    const session = await auth()
+    const userSchoolId = session?.user?.schoolId
+
+    if (!userSchoolId || userSchoolId !== schoolId) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
+    const validatedData = heroImageSchema.parse(data)
+
+    await db.schoolBranding.upsert({
+      where: { schoolId },
+      create: {
+        schoolId,
+        heroImageUrl: validatedData.heroImageUrl || null,
+      },
+      update: {
+        heroImageUrl: validatedData.heroImageUrl || null,
+      },
+    })
+
+    revalidatePath("/school/configuration")
+    revalidatePath("/school/configuration/hero")
+    // Also revalidate the marketing page since it shows the hero
+    revalidatePath("/")
+
+    return { success: true }
+  } catch (error) {
+    console.error("Error updating hero image:", error)
     if (error instanceof z.ZodError) {
       return {
         success: false,

@@ -57,7 +57,9 @@ export function ContactSearch({
     <div className="space-y-4 px-6 pt-4">
       {/* Title + settings */}
       <div className="flex items-center justify-between px-0.5">
-        <h2 className="text-foreground text-xl font-bold">Chats</h2>
+        <h2 className="text-foreground text-xl font-bold">
+          {m?.ui?.chats || "Chats"}
+        </h2>
         <WhatsAppSettingsDialog session={whatsappSession}>
           <button className="text-muted-foreground hover:text-foreground transition-colors">
             <Settings className="h-5 w-5" />
@@ -72,7 +74,7 @@ export function ContactSearch({
           type="text"
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="Search"
+          placeholder={m?.ui?.search || "Search"}
           className={cn(
             "border-border text-msg-search-text placeholder:text-msg-search-placeholder w-full rounded-lg border bg-transparent py-1.5 ps-9 pe-3 text-sm",
             "focus:ring-ring focus:ring-1 focus:outline-none"

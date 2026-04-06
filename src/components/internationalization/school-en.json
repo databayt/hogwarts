@@ -473,6 +473,10 @@
           "title": "Branding",
           "description": "Logo, colors, and appearance"
         },
+        "hero": {
+          "title": "Hero Image",
+          "description": "Homepage hero background image"
+        },
         "plan": {
           "title": "Plan & Limits",
           "description": "Subscription plan and capacity limits"

@@ -1,0 +1,96 @@
+import { db } from "@/lib/db"
+
+/**
+ * Auto-assign matching FeeStructure records to a student.
+ *
+ * Mirrors the logic in admission/actions.ts confirmEnrollment() but works
+ * for manually enrolled students (wizard or /students/enroll).
+ *
+ * Matches fee structures by:
+ * 1. School-wide structures (classId = null) for the current academic year
+ * 2. Grade-specific structures where classId belongs to the student's grade
+ *
+ * Skips duplicates via upsert. Non-blocking — callers should .catch() this.
+ */
+export async function autoAssignFeesForStudent(
+  schoolId: string,
+  studentId: string,
+  academicGradeId: string
+): Promise<{ assignedCount: number }> {
+  // Get current academic year
+  const currentYear = await db.schoolYear.findFirst({
+    where: { schoolId },
+    orderBy: { startDate: "desc" },
+    select: { yearName: true },
+  })
+  const academicYear =
+    currentYear?.yearName ||
+    `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`
+
+  // Find classes for this grade (to match grade-specific fee structures)
+  const gradeClasses = await db.class.findMany({
+    where: { schoolId, gradeId: academicGradeId },
+    select: { id: true },
+  })
+  const gradeClassIds = gradeClasses.map((c) => c.id)
+
+  // Find matching active fee structures
+  const feeStructures = await db.feeStructure.findMany({
+    where: {
+      schoolId,
+      academicYear,
+      isActive: true,
+      OR: [
+        { classId: null }, // School-wide
+        ...(gradeClassIds.length > 0
+          ? [{ classId: { in: gradeClassIds } }]
+          : []),
+      ],
+    },
+    select: { id: true, totalAmount: true },
+  })
+
+  if (feeStructures.length === 0) return { assignedCount: 0 }
+
+  let assignedCount = 0
+
+  for (const structure of feeStructures) {
+    // Upsert to avoid duplicates (idempotent)
+    try {
+      await db.feeAssignment.upsert({
+        where: {
+          studentId_feeStructureId_academicYear: {
+            studentId,
+            feeStructureId: structure.id,
+            academicYear,
+          },
+        },
+        create: {
+          schoolId,
+          studentId,
+          feeStructureId: structure.id,
+          academicYear,
+          finalAmount: Number(structure.totalAmount),
+          totalDiscount: 0,
+          status: "PENDING",
+        },
+        update: {}, // No-op if already exists
+      })
+      assignedCount++
+    } catch (err) {
+      // Skip on unique constraint violation (race condition safety)
+      console.warn(
+        `[autoAssignFeesForStudent] Skipped duplicate for student=${studentId} structure=${structure.id}:`,
+        err
+      )
+    }
+  }
+
+  if (assignedCount > 0) {
+    console.log(
+      `[autoAssignFeesForStudent] Assigned ${assignedCount} fee structure(s) to student ${studentId}`
+    )
+  }
+
+  return { assignedCount }
+}

@@ -90,7 +90,13 @@
     "photos_videos": "صور وفيديو",
     "contact": "جهة اتصال",
     "poll": "استطلاع",
-    "event": "حدث"
+    "event": "حدث",
+    "chats": "المحادثات",
+    "search": "بحث",
+    "app_title": "رسائل المدرسة",
+    "end_to_end_encrypted": "مشفرة تشفيرًا تامًا",
+    "encryption_notice": "الرسائل والمكالمات مشفرة تشفيرًا تامًا. لا يمكن لأي شخص خارج هذه المحادثة قراءتها أو الاستماع إليها.",
+    "forwarded": "تم إعادة التوجيه"
   },
   "actions": {
     "send": "إرسال",
@@ -129,7 +135,10 @@
     "confirm": "تأكيد",
     "copy": "نسخ",
     "start_chat": "بدء المحادثة",
-    "try_again": "حاول مرة أخرى"
+    "try_again": "حاول مرة أخرى",
+    "star": "تمييز بنجمة",
+    "unstar": "إلغاء التمييز",
+    "delete_chat": "حذف المحادثة"
   },
   "errors": {
     "send_failed": "فشل إرسال الرسالة",
@@ -161,7 +170,8 @@
     "enter_group_name": "الرجاء إدخال اسم المجموعة",
     "react_failed": "فشل إضافة التفاعل",
     "no_school_context": "لم يتم العثور على سياق المدرسة",
-    "conversation_start_failed": "فشل بدء المحادثة"
+    "conversation_start_failed": "فشل بدء المحادثة",
+    "microphone_access": "تعذر الوصول إلى الميكروفون"
   },
   "types": {
     "direct": "رسالة مباشرة",

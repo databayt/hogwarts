@@ -109,6 +109,7 @@ export function ConfigBrandingForm({ schoolId, initialData, lang }: Props) {
               multiple={false}
               maxSize={5 * 1024 * 1024}
               optimizeImages={true}
+              autoUpload={true}
               onUploadComplete={handleUploadComplete}
               onUploadError={(err) => setError(err)}
               className="h-full [&>div]:h-full"

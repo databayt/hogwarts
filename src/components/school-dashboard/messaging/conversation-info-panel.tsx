@@ -25,6 +25,12 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
+import {
+  archiveConversation,
+  leaveConversation,
+  muteConversation,
+  unmuteConversation,
+} from "./actions"
 import { CONVERSATION_TYPE_CONFIG } from "./config"
 import type { ConversationDTO, ConversationParticipantDTO } from "./types"
 
@@ -281,7 +287,15 @@ export function ConversationInfoPanel({
         {/* --- Mute notifications --- */}
         <button
           type="button"
-          onClick={() => setIsMuted((prev) => !prev)}
+          onClick={async () => {
+            const newMuted = !isMuted
+            setIsMuted(newMuted)
+            const action = newMuted ? muteConversation : unmuteConversation
+            const result = await action({
+              conversationId: conversation.id,
+            })
+            if (!result.success) setIsMuted(!newMuted)
+          }}
           className="hover:bg-msg-hover flex w-full items-center justify-between px-6 py-4 transition-colors"
         >
           <div className="flex items-center gap-4">
@@ -399,6 +413,12 @@ export function ConversationInfoPanel({
             <button
               type="button"
               className="hover:bg-msg-hover flex items-center gap-4 px-6 py-3 transition-colors"
+              onClick={async () => {
+                await leaveConversation({
+                  conversationId: conversation.id,
+                })
+                onClose()
+              }}
             >
               <LogOut className="h-5 w-5 text-red-500" />
               <span className="text-sm text-red-500">{labels.exitGroup}</span>
@@ -407,6 +427,12 @@ export function ConversationInfoPanel({
           <button
             type="button"
             className="hover:bg-msg-hover flex items-center gap-4 px-6 py-3 transition-colors"
+            onClick={async () => {
+              await archiveConversation({
+                conversationId: conversation.id,
+              })
+              onClose()
+            }}
           >
             <LogOut className="h-5 w-5 text-red-500" />
             <span className="text-sm text-red-500">

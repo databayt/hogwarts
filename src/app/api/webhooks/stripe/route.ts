@@ -332,6 +332,23 @@ export async function POST(req: Request) {
                 `[Webhook] Fee payment recorded: ${feeAssignmentId}, amount: ${paymentAmount}, status: ${newStatus}`
               )
 
+              // Sync linked invoice status (non-fatal)
+              try {
+                const linkedInvoice = await db.userInvoice.findFirst({
+                  where: { feeAssignmentId, schoolId: assignment.schoolId },
+                })
+                if (linkedInvoice) {
+                  await db.userInvoice.update({
+                    where: { id: linkedInvoice.id },
+                    data: {
+                      status: newStatus === "PAID" ? "PAID" : "UNPAID",
+                    },
+                  })
+                }
+              } catch (invoiceSyncErr) {
+                console.error("[Webhook] Invoice sync failed:", invoiceSyncErr)
+              }
+
               // Notify student (non-fatal)
               try {
                 if (assignment.student?.userId) {

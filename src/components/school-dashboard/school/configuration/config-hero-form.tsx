@@ -1,0 +1,114 @@
+"use client"
+
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+import { useState, useTransition } from "react"
+import Image from "next/image"
+import { X } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
+import {
+  ACCEPT_IMAGES,
+  FileUploader,
+  type UploadedFileResult,
+} from "@/components/file/upload/file-uploader"
+import type { Locale } from "@/components/internationalization/config"
+
+import { updateHeroImage } from "./actions"
+import { useAutoSave } from "./use-auto-save"
+
+interface Props {
+  schoolId: string
+  initialData: {
+    heroImageUrl: string
+  }
+  lang: Locale
+}
+
+export function ConfigHeroForm({ schoolId, initialData, lang }: Props) {
+  const [, startTransition] = useTransition()
+  const [error, setError] = useState("")
+  const [isDirty, setIsDirty] = useState(false)
+  const [heroImage, setHeroImage] = useState(initialData.heroImageUrl)
+
+  const handleUploadComplete = (files: UploadedFileResult[]) => {
+    if (files.length > 0) {
+      const uploadedFile = files[0]
+      setHeroImage(uploadedFile.cdnUrl || uploadedFile.url)
+      setIsDirty(true)
+    }
+  }
+
+  const handleRemove = () => {
+    setHeroImage("")
+    setIsDirty(true)
+  }
+
+  const handleSave = () => {
+    startTransition(async () => {
+      setError("")
+      const result = await updateHeroImage(schoolId, {
+        heroImageUrl: heroImage || "",
+      })
+      if (result.success) {
+        setIsDirty(false)
+      } else {
+        setError(result.error || "Failed to update hero image")
+      }
+    })
+  }
+
+  useAutoSave(handleSave, isDirty)
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label>Hero Background Image</Label>
+        <p className="text-muted-foreground text-xs">
+          This image appears as the background of your school&apos;s homepage
+          hero section.
+        </p>
+        <div className="h-[240px]">
+          {!heroImage ? (
+            <FileUploader
+              category="IMAGE"
+              folder="school-hero"
+              accept={ACCEPT_IMAGES}
+              maxFiles={1}
+              multiple={false}
+              maxSize={10 * 1024 * 1024}
+              optimizeImages={true}
+              onUploadComplete={handleUploadComplete}
+              onUploadError={(err) => setError(err)}
+              className="h-full [&>div]:h-full"
+            />
+          ) : (
+            <div className="relative h-full overflow-hidden rounded-lg border">
+              <Image
+                src={heroImage}
+                alt="Hero background"
+                fill
+                className="object-cover"
+              />
+              <Button
+                size="icon"
+                variant="destructive"
+                className="absolute end-2 top-2"
+                onClick={handleRemove}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {error && (
+        <div className="text-destructive bg-destructive/10 rounded-md p-3 text-sm">
+          {error}
+        </div>
+      )}
+    </div>
+  )
+}

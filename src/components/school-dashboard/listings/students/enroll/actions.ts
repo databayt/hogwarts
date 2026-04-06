@@ -9,6 +9,7 @@ import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { syncStudentClassToEnrollment } from "@/lib/enrollment-sync"
+import { autoAssignFeesForStudent } from "@/lib/fee-auto-assign"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
   assertStudentPermission,
@@ -158,6 +159,13 @@ export async function enrollStudent(input: {
           },
         })
       }
+    }
+
+    // Auto-assign fees when grade is set (parity with admission enrollment)
+    if (academicGradeId) {
+      autoAssignFeesForStudent(schoolId, studentId, academicGradeId).catch(
+        (err) => console.error("[enrollStudent] Fee auto-assign failed:", err)
+      )
     }
 
     revalidatePath("/students")
