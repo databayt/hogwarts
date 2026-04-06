@@ -353,10 +353,12 @@
     "navigation": {
       "overview": "نظرة عامة",
       "feeStructure": "هيكل الرسوم",
-      "collection": "تحصيل الرسوم",
-      "pending": "الرسوم المعلقة",
+      "assignments": "التعيينات",
+      "payments": "المدفوعات",
       "scholarships": "المنح الدراسية",
-      "reports": "التقارير"
+      "fines": "الغرامات",
+      "reports": "التقارير",
+      "myFees": "رسومي"
     },
     "fees": "الرسوم",
     "feeStructure": "هيكل الرسوم",
@@ -386,7 +388,42 @@
     "refunds": "الاستردادات",
     "processRefund": "معالجة الاسترداد",
     "feeReceipt": "إيصال الرسوم",
-    "printReceipt": "طباعة الإيصال"
+    "printReceipt": "طباعة الإيصال",
+    "myFees": {
+      "totalFees": "إجمالي الرسوم",
+      "paid": "مدفوع",
+      "pending": "قيد الانتظار",
+      "overdue": "متأخر",
+      "paymentProgress": "تقدم الدفع",
+      "complete": "مكتمل",
+      "paidLabel": "مدفوع",
+      "remainingLabel": "متبقي",
+      "paymentOverdue": "دفعة متأخرة",
+      "overdueMessage": "لديك رسوم متأخرة بإجمالي {amount}. يرجى التواصل مع الإدارة.",
+      "feeAssignments": "تعيينات الرسوم",
+      "noFeeAssignments": "لا توجد تعيينات رسوم",
+      "feeStructure": "هيكل الرسوم",
+      "year": "السنة",
+      "amount": "المبلغ",
+      "remaining": "المتبقي",
+      "status": "الحالة",
+      "actions": "الإجراءات",
+      "view": "عرض",
+      "paymentHistory": "سجل المدفوعات",
+      "paymentNumber": "رقم الدفعة",
+      "date": "التاريخ",
+      "method": "طريقة الدفع",
+      "receipt": "الإيصال",
+      "payOnline": "الدفع الإلكتروني",
+      "redirecting": "جاري التحويل...",
+      "statusLabels": {
+        "PAID": "مدفوع",
+        "PARTIAL": "جزئي",
+        "PENDING": "قيد الانتظار",
+        "OVERDUE": "متأخر",
+        "CANCELLED": "ملغي"
+      }
+    }
   },
 
   "invoice": {

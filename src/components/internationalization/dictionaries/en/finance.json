@@ -353,10 +353,12 @@
     "navigation": {
       "overview": "Overview",
       "feeStructure": "Fee Structure",
-      "collection": "Fee Collection",
-      "pending": "Pending Fees",
+      "assignments": "Assignments",
+      "payments": "Payments",
       "scholarships": "Scholarships",
-      "reports": "Reports"
+      "fines": "Fines",
+      "reports": "Reports",
+      "myFees": "My Fees"
     },
     "fees": "Fees",
     "feeStructure": "Fee Structure",
@@ -386,7 +388,42 @@
     "refunds": "Refunds",
     "processRefund": "Process Refund",
     "feeReceipt": "Fee Receipt",
-    "printReceipt": "Print Receipt"
+    "printReceipt": "Print Receipt",
+    "myFees": {
+      "totalFees": "Total Fees",
+      "paid": "Paid",
+      "pending": "Pending",
+      "overdue": "Overdue",
+      "paymentProgress": "Payment Progress",
+      "complete": "Complete",
+      "paidLabel": "paid",
+      "remainingLabel": "remaining",
+      "paymentOverdue": "Payment Overdue",
+      "overdueMessage": "You have overdue fees totaling {amount}. Please contact the administration.",
+      "feeAssignments": "Fee Assignments",
+      "noFeeAssignments": "No fee assignments found",
+      "feeStructure": "Fee Structure",
+      "year": "Year",
+      "amount": "Amount",
+      "remaining": "Remaining",
+      "status": "Status",
+      "actions": "Actions",
+      "view": "View",
+      "paymentHistory": "Payment History",
+      "paymentNumber": "Payment #",
+      "date": "Date",
+      "method": "Method",
+      "receipt": "Receipt",
+      "payOnline": "Pay Online",
+      "redirecting": "Redirecting...",
+      "statusLabels": {
+        "PAID": "Paid",
+        "PARTIAL": "Partial",
+        "PENDING": "Pending",
+        "OVERDUE": "Overdue",
+        "CANCELLED": "Cancelled"
+      }
+    }
   },
 
   "invoice": {

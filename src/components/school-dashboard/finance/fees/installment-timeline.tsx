@@ -164,7 +164,8 @@ export function buildInstallments(
     amount: number
     status: string
     paymentDate: Date | string
-  }>
+  }>,
+  assignmentCreatedAt?: Date | string
 ): Installment[] {
   // If there's an explicit schedule, use it
   if (paymentSchedule?.length) {
@@ -203,9 +204,11 @@ export function buildInstallments(
     .filter((p) => p.status === "SUCCESS")
     .reduce((sum, p) => sum + Number(p.amount), 0)
 
+  // Use assignment creation date as anchor for deterministic schedules
   const now = new Date()
-  const startMonth = now.getMonth()
-  const startYear = now.getFullYear()
+  const anchorDate = assignmentCreatedAt ? new Date(assignmentCreatedAt) : now
+  const startMonth = anchorDate.getMonth()
+  const startYear = anchorDate.getFullYear()
 
   return Array.from({ length: installmentCount }, (_, idx) => {
     const dueDate = new Date(startYear, startMonth + idx, 1)

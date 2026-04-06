@@ -217,7 +217,8 @@ export default async function AssignmentDetailPage({ params }: Props) {
             amount: Number(p.amount),
             status: p.status,
             paymentDate: p.paymentDate,
-          }))
+          })),
+          assignment.createdAt
         )
         return (
           <InstallmentTimeline

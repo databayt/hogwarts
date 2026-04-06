@@ -10,6 +10,7 @@ import socketService from "@/lib/websocket/socket-service"
 import { toast } from "@/components/ui/use-toast"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
+import type { WhatsAppSessionDTO } from "../whatsapp/types"
 import {
   addReaction,
   createConversation,
@@ -35,6 +36,7 @@ export interface MessagingClientProps {
   currentUserRole: string
   locale?: "ar" | "en"
   whatsappConnected?: boolean
+  whatsappSession?: WhatsAppSessionDTO | null
 }
 
 export function MessagingClient({
@@ -45,6 +47,7 @@ export function MessagingClient({
   currentUserRole,
   locale = "en",
   whatsappConnected = false,
+  whatsappSession = null,
 }: MessagingClientProps) {
   const router = useRouter()
   const { dictionary } = useDictionary()
@@ -296,6 +299,7 @@ export function MessagingClient({
           locale={locale}
           onContactClick={handleContactClick}
           activeContactUserId={activeContactUserId}
+          whatsappSession={whatsappSession}
         />
       </div>
 

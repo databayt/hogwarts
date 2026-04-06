@@ -461,6 +461,8 @@ export async function getEnrollmentList(
         applicationFeePaid: true,
         paymentDate: true,
         documents: true,
+        offerAccepted: true,
+        registrationFeePaid: true,
       },
     }),
     db.application.count({ where }),

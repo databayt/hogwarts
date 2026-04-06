@@ -41,10 +41,41 @@ type AssignmentData = {
   }>
 }
 
+type MyFeesDictionary = {
+  totalFees?: string
+  paid?: string
+  pending?: string
+  overdue?: string
+  paymentProgress?: string
+  complete?: string
+  paidLabel?: string
+  remainingLabel?: string
+  paymentOverdue?: string
+  overdueMessage?: string
+  feeAssignments?: string
+  noFeeAssignments?: string
+  feeStructure?: string
+  year?: string
+  amount?: string
+  remaining?: string
+  status?: string
+  actions?: string
+  view?: string
+  paymentHistory?: string
+  paymentNumber?: string
+  date?: string
+  method?: string
+  receipt?: string
+  payOnline?: string
+  redirecting?: string
+  statusLabels?: Record<string, string>
+}
+
 interface MyFeesProps {
   studentName: string
   assignments: AssignmentData[]
   lang: Locale
+  dictionary?: MyFeesDictionary
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -55,7 +86,13 @@ const STATUS_COLORS: Record<string, string> = {
   CANCELLED: "bg-gray-500/10 text-gray-500",
 }
 
-export function MyFees({ studentName, assignments, lang }: MyFeesProps) {
+export function MyFees({
+  studentName,
+  assignments,
+  lang,
+  dictionary,
+}: MyFeesProps) {
+  const d = dictionary
   const totalFees = assignments.reduce((sum, a) => sum + a.finalAmount, 0)
   const totalPaid = assignments.reduce((sum, a) => sum + a.paidAmount, 0)
   const totalPending = assignments
@@ -68,6 +105,8 @@ export function MyFees({ studentName, assignments, lang }: MyFeesProps) {
   const progressPercent =
     totalFees > 0 ? Math.round((totalPaid / totalFees) * 100) : 0
 
+  const getStatusLabel = (status: string) => d?.statusLabels?.[status] || status
+
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
@@ -76,7 +115,9 @@ export function MyFees({ studentName, assignments, lang }: MyFeesProps) {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-sm">Total Fees</p>
+                <p className="text-muted-foreground text-sm">
+                  {d?.totalFees || "Total Fees"}
+                </p>
                 <p className="text-2xl font-bold tabular-nums">
                   {formatCurrency(totalFees, lang)}
                 </p>
@@ -89,7 +130,9 @@ export function MyFees({ studentName, assignments, lang }: MyFeesProps) {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-sm">Paid</p>
+                <p className="text-muted-foreground text-sm">
+                  {d?.paid || "Paid"}
+                </p>
                 <p className="text-2xl font-bold text-green-600 tabular-nums">
                   {formatCurrency(totalPaid, lang)}
                 </p>
@@ -102,7 +145,9 @@ export function MyFees({ studentName, assignments, lang }: MyFeesProps) {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-sm">Pending</p>
+                <p className="text-muted-foreground text-sm">
+                  {d?.pending || "Pending"}
+                </p>
                 <p className="text-2xl font-bold text-yellow-600 tabular-nums">
                   {formatCurrency(totalPending, lang)}
                 </p>
@@ -115,7 +160,9 @@ export function MyFees({ studentName, assignments, lang }: MyFeesProps) {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-sm">Overdue</p>
+                <p className="text-muted-foreground text-sm">
+                  {d?.overdue || "Overdue"}
+                </p>
                 <p className="text-2xl font-bold text-red-600 tabular-nums">
                   {formatCurrency(totalOverdue, lang)}
                 </p>
@@ -129,22 +176,24 @@ export function MyFees({ studentName, assignments, lang }: MyFeesProps) {
       {/* Payment Progress */}
       <Card>
         <CardHeader>
-          <CardTitle>Payment Progress</CardTitle>
+          <CardTitle>{d?.paymentProgress || "Payment Progress"}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span>{studentName}</span>
               <span className="font-medium tabular-nums">
-                {progressPercent}% Complete
+                {progressPercent}% {d?.complete || "Complete"}
               </span>
             </div>
             <Progress value={progressPercent} className="h-3" />
             <div className="text-muted-foreground flex justify-between text-xs tabular-nums">
-              <span>{formatCurrency(totalPaid, lang)} paid</span>
+              <span>
+                {formatCurrency(totalPaid, lang)} {d?.paidLabel || "paid"}
+              </span>
               <span>
                 {formatCurrency(Math.max(totalFees - totalPaid, 0), lang)}{" "}
-                remaining
+                {d?.remainingLabel || "remaining"}
               </span>
             </div>
           </div>
@@ -158,12 +207,13 @@ export function MyFees({ studentName, assignments, lang }: MyFeesProps) {
             <TriangleAlert className="h-6 w-6 shrink-0 text-red-600" />
             <div>
               <p className="font-medium text-red-900 dark:text-red-100">
-                Payment Overdue
+                {d?.paymentOverdue || "Payment Overdue"}
               </p>
               <p className="text-sm text-red-700 dark:text-red-300">
-                You have overdue fees totaling{" "}
-                {formatCurrency(totalOverdue, lang)}. Please contact the
-                administration.
+                {(
+                  d?.overdueMessage ||
+                  "You have overdue fees totaling {amount}. Please contact the administration."
+                ).replace("{amount}", formatCurrency(totalOverdue, lang))}
               </p>
             </div>
           </CardContent>
@@ -173,25 +223,25 @@ export function MyFees({ studentName, assignments, lang }: MyFeesProps) {
       {/* Fee Assignments */}
       <Card>
         <CardHeader>
-          <CardTitle>Fee Assignments</CardTitle>
+          <CardTitle>{d?.feeAssignments || "Fee Assignments"}</CardTitle>
         </CardHeader>
         <CardContent>
           {assignments.length === 0 ? (
             <div className="text-muted-foreground flex flex-col items-center py-8">
               <CreditCard className="mb-4 h-12 w-12" />
-              <p>No fee assignments found</p>
+              <p>{d?.noFeeAssignments || "No fee assignments found"}</p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Fee Structure</TableHead>
-                  <TableHead>Year</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Paid</TableHead>
-                  <TableHead>Remaining</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead>{d?.feeStructure || "Fee Structure"}</TableHead>
+                  <TableHead>{d?.year || "Year"}</TableHead>
+                  <TableHead>{d?.amount || "Amount"}</TableHead>
+                  <TableHead>{d?.paid || "Paid"}</TableHead>
+                  <TableHead>{d?.remaining || "Remaining"}</TableHead>
+                  <TableHead>{d?.status || "Status"}</TableHead>
+                  <TableHead>{d?.actions || "Actions"}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -218,7 +268,7 @@ export function MyFees({ studentName, assignments, lang }: MyFeesProps) {
                         variant="outline"
                         className={STATUS_COLORS[a.status] || ""}
                       >
-                        {a.status}
+                        {getStatusLabel(a.status)}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -227,12 +277,16 @@ export function MyFees({ studentName, assignments, lang }: MyFeesProps) {
                           feeAssignmentId={a.id}
                           lang={lang}
                           remaining={Math.max(a.finalAmount - a.paidAmount, 0)}
+                          dictionary={{
+                            payOnline: d?.payOnline,
+                            redirecting: d?.redirecting,
+                          }}
                         />
                         <Button variant="outline" size="sm" asChild>
                           <Link
                             href={`/${lang}/finance/fees/assignments/${a.id}`}
                           >
-                            View
+                            {d?.view || "View"}
                           </Link>
                         </Button>
                       </div>
@@ -249,17 +303,17 @@ export function MyFees({ studentName, assignments, lang }: MyFeesProps) {
       {assignments.some((a) => a.payments.length > 0) && (
         <Card>
           <CardHeader>
-            <CardTitle>Payment History</CardTitle>
+            <CardTitle>{d?.paymentHistory || "Payment History"}</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Payment #</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Method</TableHead>
-                  <TableHead>Receipt</TableHead>
+                  <TableHead>{d?.paymentNumber || "Payment #"}</TableHead>
+                  <TableHead>{d?.date || "Date"}</TableHead>
+                  <TableHead>{d?.amount || "Amount"}</TableHead>
+                  <TableHead>{d?.method || "Method"}</TableHead>
+                  <TableHead>{d?.receipt || "Receipt"}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

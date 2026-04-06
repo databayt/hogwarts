@@ -221,6 +221,7 @@
       "APPLICATION_CREATE_FAILED": "فشل في إنشاء الطلب",
       "APPLICATION_UPDATE_FAILED": "فشل في تحديث الطلب",
       "ENROLLMENT_FAILED": "فشل في التسجيل",
+      "APPLICATION_FEE_REQUIRED": "يجب دفع رسوم الطلب قبل تأكيد التسجيل",
       "CAMPAIGN_NOT_FOUND": "الحملة غير موجودة",
       "CAMPAIGN_CREATE_FAILED": "فشل في إنشاء الحملة",
       "MESSAGE_SEND_FAILED": "فشل في إرسال الرسالة",

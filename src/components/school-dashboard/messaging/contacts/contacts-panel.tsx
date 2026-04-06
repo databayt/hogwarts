@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import type { ConversationDTO } from "@/components/school-dashboard/messaging/types"
+import type { WhatsAppSessionDTO } from "@/components/school-dashboard/whatsapp/types"
 
 import { getSidebarFilters } from "./config"
 import { ContactCard, ContactCardSkeleton } from "./contact-card"
@@ -29,6 +30,7 @@ export interface ContactsPanelProps {
   locale?: "ar" | "en"
   onContactClick?: (userId: string) => void
   activeContactUserId?: string | null
+  whatsappSession?: WhatsAppSessionDTO | null
   className?: string
 }
 
@@ -39,6 +41,7 @@ export function ContactsPanel({
   locale = "en",
   onContactClick,
   activeContactUserId,
+  whatsappSession = null,
   className,
 }: ContactsPanelProps) {
   const { dictionary } = useDictionary()
@@ -203,6 +206,7 @@ export function ContactsPanel({
           filterChips={filterChips}
           unreadCount={unreadCount}
           locale={locale}
+          whatsappSession={whatsappSession}
         />
       </div>
 

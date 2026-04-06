@@ -66,6 +66,9 @@ export async function MessagingContent({
   let messagesData: any[] = []
 
   let whatsappConnected = false
+  let whatsappSessionData:
+    | import("../whatsapp/types").WhatsAppSessionDTO
+    | null = null
 
   try {
     const [conversationsResult, activeConversation, messagesResult, waSession] =
@@ -82,12 +85,24 @@ export async function MessagingContent({
             }).catch(() => ({ rows: [], count: 0 }))
           : Promise.resolve({ rows: [], count: 0 }),
         db.whatsAppSession
-          .findUnique({ where: { schoolId }, select: { status: true } })
+          .findUnique({ where: { schoolId } })
           .catch(() => null),
       ])
 
     conversationsData = serializeConversations(conversationsResult.rows)
     whatsappConnected = waSession?.status === "connected"
+    if (waSession) {
+      whatsappSessionData = {
+        id: waSession.id,
+        schoolId: waSession.schoolId,
+        instanceName: waSession.instanceName,
+        phoneNumber: waSession.phoneNumber,
+        status: waSession.status,
+        qrCode: waSession.qrCode,
+        connectedAt: waSession.connectedAt?.toISOString() ?? null,
+        createdAt: waSession.createdAt.toISOString(),
+      }
+    }
 
     if (activeConversation) {
       activeConversationData = serializeConversation(activeConversation)
@@ -167,6 +182,7 @@ export async function MessagingContent({
       currentUserRole={session.user.role}
       locale={locale}
       whatsappConnected={whatsappConnected}
+      whatsappSession={whatsappSessionData}
     />
   )
 }

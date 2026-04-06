@@ -1,23 +1,21 @@
+"use client"
+
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-
-import { format } from "date-fns"
+import { useCallback, useEffect, useState } from "react"
 import {
   CircleCheck,
   Clock,
   CreditCard,
-  DollarSign,
-  Download,
-  Printer,
   Receipt,
   TriangleAlert,
 } from "lucide-react"
 
-import { Alert } from "@/components/ui/alert"
+import { formatCurrency } from "@/lib/i18n-format"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
   TableBody,
@@ -26,69 +24,116 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-
-import type { Student } from "../../registration/types"
+import type { Locale } from "@/components/internationalization/config"
+import {
+  getStudentFees,
+  type StudentFeeAssignment,
+} from "@/components/school-dashboard/finance/fees/actions"
 
 interface FeesTabProps {
-  student: Student
-  dictionary?: any
+  studentId: string
+  lang: Locale
+  dictionary?: Record<string, string>
 }
 
-export function FeesTab({ student, dictionary }: FeesTabProps) {
+const STATUS_COLORS: Record<string, string> = {
+  PAID: "bg-green-500/10 text-green-500",
+  PARTIAL: "bg-yellow-500/10 text-yellow-500",
+  PENDING: "bg-blue-500/10 text-blue-500",
+  OVERDUE: "bg-red-500/10 text-red-500",
+  CANCELLED: "bg-gray-500/10 text-gray-500",
+}
+
+export function FeesTab({ studentId, lang, dictionary }: FeesTabProps) {
   const d = dictionary
-  // Use real fee records from the database
-  const feeRecords = student.feeRecords || []
+  const [assignments, setAssignments] = useState<StudentFeeAssignment[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  // Calculate totals from real data
-  const totalFees = feeRecords.reduce(
-    (sum: number, fee: any) => sum + (Number(fee.amount) || 0),
-    0
-  )
-  const totalPaid = feeRecords.reduce(
-    (sum: number, fee: any) => sum + (Number(fee.paidAmount) || 0),
-    0
-  )
-  const totalPending = feeRecords
-    .filter((f: any) => f.status === "PENDING" || f.status === "OVERDUE")
-    .reduce((sum: number, fee: any) => sum + (Number(fee.amount) || 0), 0)
-  const totalOverdue = feeRecords
-    .filter((f: any) => f.status === "OVERDUE")
-    .reduce(
-      (sum: number, fee: any) =>
-        sum + (Number(fee.amount) || 0) + (Number(fee.lateFee) || 0),
-      0
-    )
-
-  const paymentProgress = totalFees > 0 ? (totalPaid / totalFees) * 100 : 0
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "PAID":
-        return "bg-green-100 text-green-800"
-      case "PENDING":
-        return "bg-yellow-100 text-yellow-800"
-      case "PARTIAL":
-        return "bg-blue-100 text-blue-800"
-      case "OVERDUE":
-        return "bg-red-100 text-red-800"
-      case "WAIVED":
-        return "bg-gray-100 text-gray-800"
-      default:
-        return "bg-gray-100 text-gray-800"
+  const loadFees = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    const result = await getStudentFees(studentId)
+    if (result.success && result.data) {
+      setAssignments(result.data)
+    } else {
+      setError(result.error || d?.loadError || "Failed to load fee data")
     }
+    setLoading(false)
+  }, [studentId, d?.loadError])
+
+  useEffect(() => {
+    loadFees()
+  }, [loadFees])
+
+  // Compute totals from real FeeAssignment data
+  const totalFees = assignments.reduce((sum, a) => sum + a.finalAmount, 0)
+  const totalPaid = assignments.reduce((sum, a) => sum + a.paidAmount, 0)
+  const totalPending = assignments
+    .filter((a) => a.status === "PENDING" || a.status === "PARTIAL")
+    .reduce((sum, a) => sum + (a.finalAmount - a.paidAmount), 0)
+  const totalOverdue = assignments
+    .filter((a) => a.status === "OVERDUE")
+    .reduce((sum, a) => sum + (a.finalAmount - a.paidAmount), 0)
+
+  const progressPercent =
+    totalFees > 0 ? Math.round((totalPaid / totalFees) * 100) : 0
+
+  // Flatten all payments for the payment history section
+  const allPayments = assignments
+    .flatMap((a) =>
+      a.payments.map((p) => ({
+        ...p,
+        feeStructureName: a.feeStructureName,
+        academicYear: a.academicYear,
+      }))
+    )
+    .sort(
+      (a, b) =>
+        new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime()
+    )
+    .slice(0, 20)
+
+  const dateLocale = lang === "ar" ? "ar-SA" : "en-US"
+
+  // Loading skeleton
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-4">
+                <Skeleton className="mb-2 h-4 w-20" />
+                <Skeleton className="h-8 w-28" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <Card>
+          <CardContent className="p-6">
+            <Skeleton className="mb-2 h-4 w-40" />
+            <Skeleton className="h-3 w-full" />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6">
+            <Skeleton className="mb-4 h-6 w-32" />
+            <Skeleton className="h-40 w-full" />
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "PAID":
-        return <CircleCheck className="h-4 w-4 text-green-600" />
-      case "PENDING":
-        return <Clock className="h-4 w-4 text-yellow-600" />
-      case "OVERDUE":
-        return <TriangleAlert className="h-4 w-4 text-red-600" />
-      default:
-        return null
-    }
+  // Error state
+  if (error) {
+    return (
+      <div className="text-muted-foreground flex flex-col items-center justify-center py-12">
+        <TriangleAlert className="mb-4 h-12 w-12 text-red-400" />
+        <p>{error}</p>
+      </div>
+    )
   }
 
   return (
@@ -102,11 +147,11 @@ export function FeesTab({ student, dictionary }: FeesTabProps) {
                 <p className="text-muted-foreground text-sm">
                   {d?.totalFees || "Total Fees"}
                 </p>
-                <p className="text-2xl font-bold">
-                  {d?.currency || "SAR"} {totalFees.toLocaleString()}
+                <p className="text-2xl font-bold tabular-nums">
+                  {formatCurrency(totalFees, lang)}
                 </p>
               </div>
-              <DollarSign className="text-muted-foreground h-8 w-8" />
+              <CreditCard className="text-muted-foreground h-8 w-8" />
             </div>
           </CardContent>
         </Card>
@@ -118,8 +163,8 @@ export function FeesTab({ student, dictionary }: FeesTabProps) {
                 <p className="text-muted-foreground text-sm">
                   {d?.paid || "Paid"}
                 </p>
-                <p className="text-2xl font-bold text-green-600">
-                  {d?.currency || "SAR"} {totalPaid.toLocaleString()}
+                <p className="text-2xl font-bold text-green-600 tabular-nums">
+                  {formatCurrency(totalPaid, lang)}
                 </p>
               </div>
               <CircleCheck className="h-8 w-8 text-green-600" />
@@ -134,8 +179,8 @@ export function FeesTab({ student, dictionary }: FeesTabProps) {
                 <p className="text-muted-foreground text-sm">
                   {d?.pending || "Pending"}
                 </p>
-                <p className="text-2xl font-bold text-yellow-600">
-                  {d?.currency || "SAR"} {totalPending.toLocaleString()}
+                <p className="text-2xl font-bold text-yellow-600 tabular-nums">
+                  {formatCurrency(totalPending, lang)}
                 </p>
               </div>
               <Clock className="h-8 w-8 text-yellow-600" />
@@ -150,8 +195,8 @@ export function FeesTab({ student, dictionary }: FeesTabProps) {
                 <p className="text-muted-foreground text-sm">
                   {d?.overdue || "Overdue"}
                 </p>
-                <p className="text-2xl font-bold text-red-600">
-                  {d?.currency || "SAR"} {totalOverdue.toLocaleString()}
+                <p className="text-2xl font-bold text-red-600 tabular-nums">
+                  {formatCurrency(totalOverdue, lang)}
                 </p>
               </div>
               <TriangleAlert className="h-8 w-8 text-red-600" />
@@ -168,20 +213,17 @@ export function FeesTab({ student, dictionary }: FeesTabProps) {
         <CardContent>
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span>{d?.academicYear || "Academic Year"}</span>
-              <span className="font-medium">
-                {paymentProgress.toFixed(1)}% {d?.complete || "Complete"}
+              <span>
+                {progressPercent}% {d?.complete || "Complete"}
               </span>
             </div>
-            <Progress value={paymentProgress} className="h-3" />
-            <div className="text-muted-foreground flex justify-between text-xs">
+            <Progress value={progressPercent} className="h-3" />
+            <div className="text-muted-foreground flex justify-between text-xs tabular-nums">
               <span>
-                {d?.currency || "SAR"} {totalPaid.toLocaleString()}{" "}
-                {d?.paidLabel || "paid"}
+                {formatCurrency(totalPaid, lang)} {d?.paid || "paid"}
               </span>
               <span>
-                {d?.currency || "SAR"}{" "}
-                {(totalFees - totalPaid).toLocaleString()}{" "}
+                {formatCurrency(Math.max(totalFees - totalPaid, 0), lang)}{" "}
                 {d?.remaining || "remaining"}
               </span>
             </div>
@@ -191,195 +233,149 @@ export function FeesTab({ student, dictionary }: FeesTabProps) {
 
       {/* Overdue Alert */}
       {totalOverdue > 0 && (
-        <Alert className="border-red-200 bg-red-50">
-          <TriangleAlert className="h-4 w-4 text-red-600" />
-          <div className="flex items-center justify-between">
+        <Card className="border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950">
+          <CardContent className="flex items-center gap-4 pt-6">
+            <TriangleAlert className="h-6 w-6 shrink-0 text-red-600" />
             <div>
-              <h4 className="font-medium text-red-900">
+              <p className="font-medium text-red-900 dark:text-red-100">
                 {d?.paymentOverdue || "Payment Overdue"}
-              </h4>
-              <p className="mt-1 text-sm text-red-700">
+              </p>
+              <p className="text-sm text-red-700 dark:text-red-300">
                 {d?.overdueMessage
                   ? d.overdueMessage.replace(
                       "{amount}",
-                      `${d?.currency || "SAR"} ${totalOverdue.toLocaleString()}`
+                      formatCurrency(totalOverdue, lang)
                     )
-                  : `You have overdue fees totaling ${d?.currency || "SAR"} ${totalOverdue.toLocaleString()}. Please make payment immediately to avoid late fees.`}
+                  : `You have overdue fees totaling ${formatCurrency(totalOverdue, lang)}. Please make payment immediately to avoid late fees.`}
               </p>
             </div>
-            <Button variant="destructive" size="sm">
-              {d?.payNow || "Pay Now"}
-            </Button>
-          </div>
-        </Alert>
+          </CardContent>
+        </Card>
       )}
 
-      {/* Fee Records Table */}
+      {/* Fee Assignments Table */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>{d?.feeRecords || "Fee Records"}</CardTitle>
-            {feeRecords.length > 0 && (
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm">
-                  <Download className="me-2 h-4 w-4" />
-                  {d?.downloadStatement || "Download Statement"}
-                </Button>
-              </div>
-            )}
-          </div>
+          <CardTitle>
+            {d?.feeAssignments || d?.feeRecords || "Fee Assignments"}
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          {feeRecords.length > 0 ? (
+          {assignments.length === 0 ? (
+            <div className="text-muted-foreground flex flex-col items-center justify-center py-8">
+              <CreditCard className="mb-4 h-12 w-12" />
+              <p>{d?.noFeeRecords || "No fee assignments found"}</p>
+            </div>
+          ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{d?.feeType || "Fee Type"}</TableHead>
+                  <TableHead>
+                    {d?.feeStructure || d?.feeType || "Fee Structure"}
+                  </TableHead>
+                  <TableHead>{d?.year || "Year"}</TableHead>
                   <TableHead>{d?.amount || "Amount"}</TableHead>
-                  <TableHead>{d?.dueDate || "Due Date"}</TableHead>
+                  <TableHead>{d?.paid || "Paid"}</TableHead>
+                  <TableHead>{d?.remaining || "Remaining"}</TableHead>
                   <TableHead>{d?.status || "Status"}</TableHead>
-                  <TableHead>{d?.paymentDate || "Payment Date"}</TableHead>
-                  <TableHead>{d?.receipt || "Receipt"}</TableHead>
-                  <TableHead>{d?.action || "Action"}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {feeRecords.map((fee: any) => (
-                  <TableRow key={fee.id}>
+                {assignments.map((a) => (
+                  <TableRow key={a.id}>
                     <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        {getStatusIcon(fee.status)}
-                        {fee.feeType}
-                      </div>
+                      {a.feeStructureName}
                     </TableCell>
-                    <TableCell>
-                      <div>
-                        {d?.currency || "SAR"}{" "}
-                        {Number(fee.amount).toLocaleString()}
-                        {fee.lateFee && (
-                          <p className="text-xs text-red-600">
-                            +{Number(fee.lateFee).toLocaleString()} (
-                            {d?.lateFee || "late fee"})
-                          </p>
-                        )}
-                      </div>
+                    <TableCell>{a.academicYear}</TableCell>
+                    <TableCell className="tabular-nums">
+                      {formatCurrency(a.finalAmount, lang)}
                     </TableCell>
-                    <TableCell>
-                      {fee.dueDate
-                        ? format(new Date(fee.dueDate), "dd MMM yyyy")
-                        : "-"}
+                    <TableCell className="tabular-nums">
+                      {formatCurrency(a.paidAmount, lang)}
+                    </TableCell>
+                    <TableCell className="tabular-nums">
+                      {formatCurrency(
+                        Math.max(a.finalAmount - a.paidAmount, 0),
+                        lang
+                      )}
                     </TableCell>
                     <TableCell>
                       <Badge
-                        variant="secondary"
-                        className={getStatusColor(fee.status)}
+                        variant="outline"
+                        className={STATUS_COLORS[a.status] || ""}
                       >
-                        {fee.status}
+                        {a.status}
                       </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {fee.paymentDate ? (
-                        <div>
-                          <p>
-                            {format(new Date(fee.paymentDate), "dd MMM yyyy")}
-                          </p>
-                          <p className="text-muted-foreground text-xs">
-                            {fee.paymentMethod}
-                          </p>
-                        </div>
-                      ) : (
-                        "-"
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {fee.receiptNumber ? (
-                        <Button variant="link" size="sm" className="h-auto p-0">
-                          {fee.receiptNumber}
-                        </Button>
-                      ) : (
-                        "-"
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {fee.status === "PAID" ? (
-                        <Button variant="outline" size="sm">
-                          <Printer className="h-4 w-4" />
-                        </Button>
-                      ) : (
-                        <Button variant="default" size="sm">
-                          {d?.pay || "Pay"}
-                        </Button>
-                      )}
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
-          ) : (
-            <div className="text-muted-foreground flex flex-col items-center justify-center py-8">
-              <CreditCard className="mb-4 h-12 w-12" />
-              <p>{d?.noFeeRecords || "No fee records yet"}</p>
-            </div>
           )}
         </CardContent>
       </Card>
 
       {/* Payment History */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{d?.recentPayments || "Recent Payments"}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {feeRecords.filter((f: any) => f.status === "PAID").length > 0 ? (
-            <div className="space-y-3">
-              {feeRecords
-                .filter((f: any) => f.status === "PAID")
-                .sort((a: any, b: any) => {
-                  const dateA = a.paymentDate
-                    ? new Date(a.paymentDate).getTime()
-                    : 0
-                  const dateB = b.paymentDate
-                    ? new Date(b.paymentDate).getTime()
-                    : 0
-                  return dateB - dateA
-                })
-                .slice(0, 5)
-                .map((fee: any) => (
-                  <div
-                    key={fee.id}
-                    className="flex items-center justify-between rounded-lg border p-3"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Receipt className="text-muted-foreground h-4 w-4" />
-                      <div>
-                        <p className="font-medium">{fee.feeType}</p>
-                        <p className="text-muted-foreground text-sm">
-                          {fee.paymentMethod}
-                          {fee.transactionId ? ` • ${fee.transactionId}` : ""}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-end">
-                      <p className="font-medium">
-                        {d?.currency || "SAR"}{" "}
-                        {Number(fee.paidAmount || 0).toLocaleString()}
-                      </p>
-                      <p className="text-muted-foreground text-xs">
-                        {fee.paymentDate &&
-                          format(new Date(fee.paymentDate), "dd MMM yyyy")}
-                      </p>
-                    </div>
-                  </div>
+      {allPayments.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              {d?.paymentHistory || d?.recentPayments || "Payment History"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{d?.paymentNumber || "Payment #"}</TableHead>
+                  <TableHead>{d?.paymentDate || "Date"}</TableHead>
+                  <TableHead>{d?.amount || "Amount"}</TableHead>
+                  <TableHead>{d?.method || "Method"}</TableHead>
+                  <TableHead>{d?.receipt || "Receipt"}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {allPayments.map((p) => (
+                  <TableRow key={p.id}>
+                    <TableCell>{p.paymentNumber}</TableCell>
+                    <TableCell className="text-muted-foreground tabular-nums">
+                      {new Date(p.paymentDate).toLocaleDateString(dateLocale)}
+                    </TableCell>
+                    <TableCell className="font-medium tabular-nums">
+                      {formatCurrency(p.amount, lang)}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">
+                        {p.paymentMethod.replace(/_/g, " ")}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {p.receiptNumber}
+                    </TableCell>
+                  </TableRow>
                 ))}
-            </div>
-          ) : (
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Empty payment history (assignments exist but no payments yet) */}
+      {assignments.length > 0 && allPayments.length === 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              {d?.paymentHistory || d?.recentPayments || "Payment History"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
             <div className="text-muted-foreground flex flex-col items-center justify-center py-8">
               <Receipt className="mb-4 h-12 w-12" />
               <p>{d?.noPayments || "No payments recorded yet"}</p>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

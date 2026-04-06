@@ -67,6 +67,7 @@ export type GradeBoundaryData = {
 interface StudentProfileProps {
   student: Student
   dictionary?: any
+  lang?: "ar" | "en"
   onEdit?: () => void
   isOwner?: boolean
   userId?: string
@@ -94,6 +95,7 @@ const defaultStatusLabels = {
 export function StudentProfile({
   student,
   dictionary,
+  lang = "ar",
   onEdit,
   isOwner = false,
   userId,
@@ -433,7 +435,11 @@ export function StudentProfile({
               </TabsContent>
 
               <TabsContent value="fees" className="mt-0">
-                <FeesTab student={student} dictionary={p?.fees} />
+                <FeesTab
+                  studentId={student.id}
+                  lang={lang}
+                  dictionary={p?.fees}
+                />
               </TabsContent>
             </div>
           </Tabs>

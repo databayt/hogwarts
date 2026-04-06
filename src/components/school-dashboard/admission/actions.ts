@@ -736,7 +736,9 @@ export async function confirmEnrollment(params: {
     // 1. Fetch the application with fields needed for Student creation
     const application = await db.application.findUnique({
       where: { id: params.id, schoolId },
-      include: { campaign: { select: { academicYear: true } } },
+      include: {
+        campaign: { select: { academicYear: true, applicationFee: true } },
+      },
     })
 
     if (!application) {
@@ -754,8 +756,10 @@ export async function confirmEnrollment(params: {
       return actionError(ACTION_ERRORS.OFFER_EXPIRED)
     }
 
-    // Require application fee to be paid before enrollment
-    if (!application.applicationFeePaid) {
+    // Require application fee to be paid before enrollment (skip if no fee configured)
+    const campaignFee = application.campaign?.applicationFee
+    const hasFeeRequirement = campaignFee && Number(campaignFee) > 0
+    if (hasFeeRequirement && !application.applicationFeePaid) {
       return actionError(ACTION_ERRORS.APPLICATION_FEE_REQUIRED)
     }
 
@@ -1402,6 +1406,7 @@ export async function confirmEnrollment(params: {
         suggestedSectionId,
         suggestedSectionName,
         studentId: enrolledStudentId,
+        warnings: warnings.length > 0 ? warnings : undefined,
       },
     }
   } catch (error) {

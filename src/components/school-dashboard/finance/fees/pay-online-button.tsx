@@ -15,6 +15,10 @@ interface PayOnlineButtonProps {
   lang: string
   remaining: number
   disabled?: boolean
+  dictionary?: {
+    payOnline?: string
+    redirecting?: string
+  }
 }
 
 export function PayOnlineButton({
@@ -22,6 +26,7 @@ export function PayOnlineButton({
   lang,
   remaining,
   disabled,
+  dictionary,
 }: PayOnlineButtonProps) {
   const [isPending, startTransition] = useTransition()
 
@@ -43,7 +48,9 @@ export function PayOnlineButton({
       ) : (
         <CreditCard className="me-2 h-4 w-4" />
       )}
-      {isPending ? "Redirecting..." : "Pay Online"}
+      {isPending
+        ? dictionary?.redirecting || "Redirecting..."
+        : dictionary?.payOnline || "Pay Online"}
     </Button>
   )
 }

@@ -170,13 +170,30 @@ function isOfferExpired(offerExpiryDate: Date | null): boolean {
  * Calculate the registration fee amount from FeeStructure records.
  * Falls back to campaign applicationFee if no structure-level fees exist.
  */
+async function getGradeClassIds(
+  schoolId: string,
+  applyingForClass: string
+): Promise<string[]> {
+  const gradeNumber = extractGradeNumber(applyingForClass)
+  if (!gradeNumber) return []
+
+  const matchingClasses = await db.class.findMany({
+    where: {
+      schoolId,
+      grade: { gradeNumber },
+    },
+    select: { id: true },
+  })
+  return matchingClasses.map((c) => c.id)
+}
+
 async function calculateRegistrationFee(
   schoolId: string,
   academicYear: string,
   applyingForClass: string,
   campaignApplicationFee: number | null
 ): Promise<number> {
-  const gradeNumber = extractGradeNumber(applyingForClass)
+  const gradeClassIds = await getGradeClassIds(schoolId, applyingForClass)
 
   // Find matching FeeStructure records
   const feeStructures = await db.feeStructure.findMany({
@@ -184,18 +201,12 @@ async function calculateRegistrationFee(
       schoolId,
       academicYear,
       isActive: true,
-      ...(gradeNumber
-        ? {
-            OR: [
-              { classId: null }, // School-wide fee structures
-              {
-                class: {
-                  grade: gradeNumber,
-                },
-              },
-            ],
-          }
-        : { classId: null }),
+      OR: [
+        { classId: null },
+        ...(gradeClassIds.length > 0
+          ? [{ classId: { in: gradeClassIds } }]
+          : []),
+      ],
     },
     select: {
       registrationFee: true,
@@ -276,17 +287,21 @@ export async function getOfferDetails(
     }
 
     // Fetch fee schedule preview
-    const gradeNumber = extractGradeNumber(application.applyingForClass)
+    const gradeClassIds = await getGradeClassIds(
+      schoolId,
+      application.applyingForClass
+    )
     const feeStructures = await db.feeStructure.findMany({
       where: {
         schoolId,
         academicYear: application.campaign.academicYear,
         isActive: true,
-        ...(gradeNumber
-          ? {
-              OR: [{ classId: null }, { class: { grade: gradeNumber } }],
-            }
-          : { classId: null }),
+        OR: [
+          { classId: null },
+          ...(gradeClassIds.length > 0
+            ? [{ classId: { in: gradeClassIds } }]
+            : []),
+        ],
       },
       select: {
         id: true,
@@ -415,7 +430,7 @@ export async function acceptOffer(
     const applicantName = `${application.firstName} ${application.lastName}`
     await dispatchNotificationsToAudience({
       schoolId: application.schoolId,
-      type: "admission",
+      type: "system_alert",
       title: t(NOTIF.offerAccepted.title, "ar"),
       body: t(NOTIF.offerAccepted.body(applicantName), "ar"),
       lang: "ar",
@@ -432,7 +447,7 @@ export async function acceptOffer(
     // Also notify in English for bilingual schools
     await dispatchNotificationsToAudience({
       schoolId: application.schoolId,
-      type: "admission",
+      type: "system_alert",
       title: t(NOTIF.offerAccepted.title, "en"),
       body: t(NOTIF.offerAccepted.body(applicantName), "en"),
       lang: "en",
@@ -451,7 +466,7 @@ export async function acceptOffer(
       await dispatchNotification({
         schoolId: application.schoolId,
         userId: application.userId,
-        type: "admission",
+        type: "system_alert",
         title: t(NOTIF.offerAccepted.title, "ar"),
         body: t(NOTIF.offerAccepted.body(applicantName), "ar"),
         lang: "ar",
@@ -506,7 +521,7 @@ export async function declineOffer(
     const applicantName = `${application.firstName} ${application.lastName}`
     await dispatchNotificationsToAudience({
       schoolId: application.schoolId,
-      type: "admission",
+      type: "system_alert",
       title: t(NOTIF.offerDeclined.title, "ar"),
       body: t(NOTIF.offerDeclined.body(applicantName), "ar"),
       lang: "ar",
@@ -522,7 +537,7 @@ export async function declineOffer(
 
     await dispatchNotificationsToAudience({
       schoolId: application.schoolId,
-      type: "admission",
+      type: "system_alert",
       title: t(NOTIF.offerDeclined.title, "en"),
       body: t(NOTIF.offerDeclined.body(applicantName), "en"),
       lang: "en",
@@ -541,7 +556,7 @@ export async function declineOffer(
       await dispatchNotification({
         schoolId: application.schoolId,
         userId: application.userId,
-        type: "admission",
+        type: "system_alert",
         title: t(NOTIF.offerDeclined.title, "ar"),
         body: t(NOTIF.offerDeclined.body(applicantName), "ar"),
         lang: "ar",
@@ -603,7 +618,7 @@ export async function createRegistrationFeeCheckout(
       where: { id: schoolId },
       select: {
         currency: true,
-        subdomain: true,
+        domain: true,
       },
     })
 
@@ -627,7 +642,7 @@ export async function createRegistrationFeeCheckout(
 
     const currency = school.currency ?? "USD"
     const referenceNumber = `REG-${nanoid(10).toUpperCase()}`
-    const baseUrl = getBaseUrl(school.subdomain ?? "")
+    const baseUrl = getBaseUrl(school.domain ?? "")
 
     const checkoutResult = await createPaymentCheckout("stripe", {
       amount: feeAmount,
@@ -773,7 +788,7 @@ export async function recordRegistrationCashIntent(
     const applicantName = `${application.firstName} ${application.lastName}`
     await dispatchNotificationsToAudience({
       schoolId,
-      type: "admission",
+      type: "system_alert",
       title: t(NOTIF.registrationFeePaid.title, "ar"),
       body: t(NOTIF.registrationFeePaid.body(applicantName, "cash"), "ar"),
       lang: "ar",
@@ -898,7 +913,7 @@ export async function recordRegistrationBankTransferIntent(
     const applicantName = `${application.firstName} ${application.lastName}`
     await dispatchNotificationsToAudience({
       schoolId,
-      type: "admission",
+      type: "system_alert",
       title: t(NOTIF.registrationFeePaid.title, "ar"),
       body: t(
         NOTIF.registrationFeePaid.body(applicantName, "bank_transfer"),

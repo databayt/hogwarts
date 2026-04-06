@@ -120,6 +120,7 @@ export default async function MyFeesPage({ params }: Props) {
         studentName={childNames}
         assignments={allAssignments}
         lang={lang}
+        dictionary={dictionary?.finance?.fees?.myFees}
       />
     )
   }
@@ -145,5 +146,12 @@ export default async function MyFeesPage({ params }: Props) {
     })),
   }))
 
-  return <MyFees studentName={studentName} assignments={data} lang={lang} />
+  return (
+    <MyFees
+      studentName={studentName}
+      assignments={data}
+      lang={lang}
+      dictionary={dictionary?.finance?.fees?.myFees}
+    />
+  )
 }

@@ -23,6 +23,7 @@ import {
   getFeeAssignmentList,
   getFineList,
   getPaymentList,
+  type DiscountPolicy,
 } from "./queries"
 import {
   bulkFeeAssignmentSchema,
@@ -355,6 +356,94 @@ export async function bulkAssignFees(
       skipDuplicates: true,
     })
 
+    // Dispatch fee_due notifications for all assigned students (non-blocking)
+    try {
+      const schoolPref = await db.school.findFirst({
+        where: { id: schoolId },
+        select: { preferredLanguage: true },
+      })
+      const schoolLang = schoolPref?.preferredLanguage ?? "ar"
+
+      for (const studentId of studentIds) {
+        const student = await db.student.findUnique({
+          where: { id: studentId },
+          select: {
+            userId: true,
+            firstName: true,
+            lastName: true,
+            studentGuardians: {
+              select: {
+                guardian: {
+                  select: { userId: true },
+                },
+              },
+            },
+          },
+        })
+        if (!student?.userId) continue
+
+        const studentName = [student.firstName, student.lastName]
+          .filter(Boolean)
+          .join(" ")
+
+        // Find this student's actual final amount from assignmentData
+        const studentData = assignmentData.find(
+          (a) => a.studentId === studentId
+        )
+        const amount = studentData
+          ? Number(studentData.finalAmount)
+          : finalAmount
+
+        // Notify student
+        dispatchNotification({
+          schoolId,
+          userId: student.userId,
+          type: "fee_due",
+          title: "رسوم دراسية جديدة",
+          body: `تم تعيين رسوم بقيمة ${amount.toLocaleString()} لحسابك`,
+          lang: schoolLang,
+          priority: "high",
+          channels: ["in_app", "email"],
+          metadata: {
+            amount,
+            url: "/finance/fees",
+          },
+          actorId: session.user.id,
+        }).catch((err) =>
+          console.error("[bulkAssignFees] Student notification error:", err)
+        )
+
+        // Notify guardians
+        for (const sg of student.studentGuardians) {
+          if (sg.guardian?.userId) {
+            dispatchNotification({
+              schoolId,
+              userId: sg.guardian.userId,
+              type: "fee_due",
+              title: "رسوم دراسية جديدة",
+              body: `تم تعيين رسوم بقيمة ${amount.toLocaleString()} لحساب ${studentName}`,
+              lang: schoolLang,
+              priority: "high",
+              channels: ["in_app", "email"],
+              metadata: {
+                amount,
+                studentName,
+                url: "/finance/fees",
+              },
+              actorId: session.user.id,
+            }).catch((err) =>
+              console.error(
+                "[bulkAssignFees] Guardian notification error:",
+                err
+              )
+            )
+          }
+        }
+      }
+    } catch (notifError) {
+      console.warn("[bulkAssignFees] Notification dispatch failed:", notifError)
+    }
+
     revalidatePath("/finance/fees")
     return { success: true, data: assignments.count }
   } catch (error) {
@@ -364,11 +453,34 @@ export async function bulkAssignFees(
 }
 
 /**
- * Get fee assignments for a student
+ * Student fee assignment with computed paid amount and payment details
+ */
+export type StudentFeeAssignment = {
+  id: string
+  feeStructureName: string
+  academicYear: string
+  finalAmount: number
+  totalDiscount: number
+  paidAmount: number
+  status: string
+  payments: Array<{
+    id: string
+    paymentNumber: string
+    receiptNumber: string
+    amount: number
+    paymentDate: string
+    paymentMethod: string
+    status: string
+  }>
+}
+
+/**
+ * Get fee assignments for a student with full payment details.
+ * Used by both the My Fees page and the student profile fees tab.
  */
 export async function getStudentFees(
   studentId: string
-): Promise<ActionResult<any[]>> {
+): Promise<ActionResult<StudentFeeAssignment[]>> {
   try {
     const session = await auth()
     const { schoolId } = await getTenantContext()
@@ -380,13 +492,44 @@ export async function getStudentFees(
     const feeAssignments = await db.feeAssignment.findMany({
       where: { schoolId, studentId },
       include: {
-        feeStructure: { select: { name: true, description: true } },
-        payments: { select: { amount: true, paymentDate: true, status: true } },
+        feeStructure: { select: { name: true } },
+        payments: {
+          where: { status: "SUCCESS" },
+          select: {
+            id: true,
+            paymentNumber: true,
+            receiptNumber: true,
+            amount: true,
+            paymentDate: true,
+            paymentMethod: true,
+            status: true,
+          },
+          orderBy: { paymentDate: "desc" },
+        },
       },
       orderBy: { createdAt: "desc" },
     })
 
-    return { success: true, data: feeAssignments }
+    const data: StudentFeeAssignment[] = feeAssignments.map((a) => ({
+      id: a.id,
+      feeStructureName: a.feeStructure?.name || "-",
+      academicYear: a.academicYear,
+      finalAmount: Number(a.finalAmount),
+      totalDiscount: Number(a.totalDiscount),
+      paidAmount: a.payments.reduce((sum, p) => sum + Number(p.amount), 0),
+      status: a.status,
+      payments: a.payments.map((p) => ({
+        id: p.id,
+        paymentNumber: p.paymentNumber,
+        receiptNumber: p.receiptNumber,
+        amount: Number(p.amount),
+        paymentDate: p.paymentDate.toISOString(),
+        paymentMethod: p.paymentMethod,
+        status: p.status,
+      })),
+    }))
+
+    return { success: true, data }
   } catch (error) {
     console.error("Error fetching student fees:", error)
     return actionError(ACTION_ERRORS.PAYMENT_FAILED)
@@ -415,10 +558,18 @@ export async function recordPayment(
     const feeAssignmentId = formData.feeAssignmentId as string
     const amount = parseFloat(formData.amount as string)
 
-    // Get fee assignment
+    // Get fee assignment with fee structure for discount policy
     const feeAssignment = await db.feeAssignment.findFirst({
       where: { id: feeAssignmentId, schoolId },
-      include: { payments: true },
+      include: {
+        payments: true,
+        feeStructure: {
+          select: {
+            discountPolicy: true,
+            paymentSchedule: true,
+          },
+        },
+      },
     })
 
     if (!feeAssignment) {
@@ -431,8 +582,52 @@ export async function recordPayment(
       0
     )
 
+    // Apply early payment discount on first payment if eligible
+    let finalAmount = Number(feeAssignment.finalAmount)
+    let earlyDiscountApplied = 0
+    if (totalPaid === 0) {
+      const policy = feeAssignment.feeStructure
+        ?.discountPolicy as DiscountPolicy | null
+      if (policy?.earlyPaymentDiscount) {
+        const { type, value, deadlineDays } = policy.earlyPaymentDiscount
+        // Find earliest due date from payment schedule
+        const schedule = feeAssignment.feeStructure?.paymentSchedule as Array<{
+          dueDate: string
+        }> | null
+        const earliestDue = schedule?.length
+          ? new Date(
+              schedule.reduce((earliest, entry) =>
+                new Date(entry.dueDate) < new Date(earliest.dueDate)
+                  ? entry
+                  : earliest
+              ).dueDate
+            )
+          : null
+        if (earliestDue) {
+          const deadlineDate = new Date(earliestDue)
+          deadlineDate.setDate(deadlineDate.getDate() - deadlineDays)
+          if (new Date() <= deadlineDate) {
+            earlyDiscountApplied =
+              type === "PERCENTAGE"
+                ? finalAmount * (value / 100)
+                : Math.min(value, finalAmount)
+            finalAmount = Math.max(finalAmount - earlyDiscountApplied, 0)
+            // Persist the reduced final amount
+            await db.feeAssignment.update({
+              where: { id: feeAssignmentId },
+              data: {
+                finalAmount,
+                totalDiscount:
+                  Number(feeAssignment.totalDiscount ?? 0) +
+                  earlyDiscountApplied,
+              },
+            })
+          }
+        }
+      }
+    }
+
     const newTotalPaid = totalPaid + amount
-    const finalAmount = Number(feeAssignment.finalAmount)
 
     // Determine new status
     let newStatus: "PENDING" | "PARTIAL" | "PAID" | "OVERDUE" | "CANCELLED" =
@@ -931,6 +1126,8 @@ export async function createFeePaymentCheckout(
 export async function fetchAssignmentRows(
   params: Record<string, unknown> & { page: number; perPage: number }
 ): Promise<{ rows: any[]; total: number }> {
+  const session = await auth()
+  if (!session?.user) return { rows: [], total: 0 }
   const { page, perPage } = params
   try {
     const { schoolId } = await getTenantContext()
@@ -966,6 +1163,8 @@ export async function fetchAssignmentRows(
 export async function fetchPaymentRows(
   params: Record<string, unknown> & { page: number; perPage: number }
 ): Promise<{ rows: any[]; total: number }> {
+  const session = await auth()
+  if (!session?.user) return { rows: [], total: 0 }
   const { page, perPage } = params
   try {
     const { schoolId } = await getTenantContext()
@@ -1003,6 +1202,8 @@ export async function fetchPaymentRows(
 export async function fetchFineRows(
   params: Record<string, unknown> & { page: number; perPage: number }
 ): Promise<{ rows: any[]; total: number }> {
+  const session = await auth()
+  if (!session?.user) return { rows: [], total: 0 }
   const { page, perPage } = params
   try {
     const { schoolId } = await getTenantContext()

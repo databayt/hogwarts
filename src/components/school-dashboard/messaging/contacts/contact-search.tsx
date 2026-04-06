@@ -6,7 +6,9 @@ import { Search, Settings } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+import type { WhatsAppSessionDTO } from "@/components/school-dashboard/whatsapp/types"
 
+import { WhatsAppSettingsDialog } from "../whatsapp-settings-dialog"
 import type { SidebarFilter } from "./types"
 
 export interface ContactSearchProps {
@@ -17,6 +19,7 @@ export interface ContactSearchProps {
   filterChips: { key: SidebarFilter; label: string }[]
   unreadCount?: number
   locale?: "ar" | "en"
+  whatsappSession?: WhatsAppSessionDTO | null
 }
 
 export function ContactSearch({
@@ -27,6 +30,7 @@ export function ContactSearch({
   filterChips,
   unreadCount = 0,
   locale = "en",
+  whatsappSession = null,
 }: ContactSearchProps) {
   const { dictionary } = useDictionary()
   const m = dictionary?.messaging
@@ -54,9 +58,11 @@ export function ContactSearch({
       {/* Title + settings */}
       <div className="flex items-center justify-between px-0.5">
         <h2 className="text-foreground text-xl font-bold">Chats</h2>
-        <button className="text-muted-foreground hover:text-foreground transition-colors">
-          <Settings className="h-5 w-5" />
-        </button>
+        <WhatsAppSettingsDialog session={whatsappSession}>
+          <button className="text-muted-foreground hover:text-foreground transition-colors">
+            <Settings className="h-5 w-5" />
+          </button>
+        </WhatsAppSettingsDialog>
       </div>
 
       {/* Search input */}

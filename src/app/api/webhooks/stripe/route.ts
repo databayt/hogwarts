@@ -174,6 +174,95 @@ export async function POST(req: Request) {
       return new Response(null, { status: 200 })
     }
 
+    // Handle REGISTRATION FEE payments (one-time, no subscription)
+    if (
+      session.metadata?.type === "registration_fee" &&
+      session.metadata?.applicationId &&
+      !session.subscription
+    ) {
+      if (session.payment_status === "paid") {
+        try {
+          // Idempotency: skip if already processed
+          const existing = await db.application.findFirst({
+            where: {
+              id: session.metadata.applicationId,
+              ...(session.metadata.schoolId && {
+                schoolId: session.metadata.schoolId,
+              }),
+            },
+            select: { registrationFeePaid: true },
+          })
+          if (existing?.registrationFeePaid) {
+            return new Response(null, { status: 200 })
+          }
+
+          const amountTotal = (session as unknown as { amount_total?: number })
+            .amount_total
+
+          await db.application.update({
+            where: {
+              id: session.metadata.applicationId,
+              ...(session.metadata.schoolId && {
+                schoolId: session.metadata.schoolId,
+              }),
+            },
+            data: {
+              registrationFeePaid: true,
+              registrationFeeAmount:
+                amountTotal != null ? amountTotal / 100 : null,
+              registrationFeeMethod: "stripe",
+              registrationFeeReference:
+                (session as unknown as { id?: string }).id ?? null,
+              registrationFeeDate: new Date(),
+            },
+          })
+
+          console.log(
+            `[Webhook] Registration fee paid: ${session.metadata.applicationId}`
+          )
+
+          // Send payment confirmation notification (non-fatal)
+          try {
+            const app = await db.application.findFirst({
+              where: { id: session.metadata.applicationId },
+              select: {
+                userId: true,
+                applicationNumber: true,
+                schoolId: true,
+              },
+            })
+            if (app?.userId && app.schoolId) {
+              const { dispatchNotification } =
+                await import("@/lib/dispatch-notification")
+              await dispatchNotification({
+                schoolId: app.schoolId,
+                userId: app.userId,
+                type: "fee_paid",
+                title: "تم استلام رسوم التسجيل",
+                body: `تم تأكيد دفع رسوم التسجيل للطلب ${app.applicationNumber} بنجاح`,
+                lang: "ar",
+                priority: "normal",
+                channels: ["in_app", "email"],
+                metadata: {
+                  applicationId: session.metadata.applicationId,
+                  paymentType: "registration_fee",
+                },
+              })
+            }
+          } catch (notifError) {
+            console.error(
+              "[Webhook] Registration fee notification failed:",
+              notifError
+            )
+          }
+        } catch (error) {
+          console.error("[Webhook] Failed to record registration fee:", error)
+        }
+      }
+
+      return new Response(null, { status: 200 })
+    }
+
     // Handle FEE PAYMENT (one-time, no subscription)
     if (
       session.metadata?.type === "fee_payment" &&

@@ -221,6 +221,7 @@
       "APPLICATION_CREATE_FAILED": "Failed to create application",
       "APPLICATION_UPDATE_FAILED": "Failed to update application",
       "ENROLLMENT_FAILED": "Enrollment failed",
+      "APPLICATION_FEE_REQUIRED": "Application fee must be paid before enrollment can be confirmed",
       "CAMPAIGN_NOT_FOUND": "Campaign not found",
       "CAMPAIGN_CREATE_FAILED": "Failed to create campaign",
       "MESSAGE_SEND_FAILED": "Failed to send message",

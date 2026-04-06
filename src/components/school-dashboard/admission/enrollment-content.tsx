@@ -81,6 +81,8 @@ export default async function EnrollmentContent({
             ? new Date(a.confirmationDate).toISOString()
             : null,
           applicationFeePaid: a.applicationFeePaid,
+          offerAccepted: a.offerAccepted ?? false,
+          registrationFeePaid: a.registrationFeePaid ?? false,
           paymentDate: a.paymentDate
             ? new Date(a.paymentDate).toISOString()
             : null,

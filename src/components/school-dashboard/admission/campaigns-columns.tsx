@@ -114,7 +114,9 @@ export const getCampaignColumns = (
       header: ({ column }) => (
         <DataTableColumnHeader
           column={column}
-          title={t?.columns?.applicationFee || "App Fee"}
+          title={
+            (t?.columns as Record<string, string>)?.applicationFee || "App Fee"
+          }
         />
       ),
       cell: ({ getValue }) => {

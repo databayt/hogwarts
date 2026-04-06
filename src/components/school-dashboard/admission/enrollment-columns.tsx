@@ -43,6 +43,8 @@ export type EnrollmentRow = {
   hasDocuments: boolean
   campaignName: string
   campaignId: string
+  offerAccepted: boolean
+  registrationFeePaid: boolean
 }
 
 const getOfferBadge = (
@@ -64,6 +66,13 @@ const getOfferBadge = (
         label: t?.enrollment?.expired || "Expired",
         variant: "destructive" as const,
         icon: X,
+      }
+    }
+    if (row.offerAccepted) {
+      return {
+        label: t?.enrollment?.offerAccepted || "Accepted",
+        variant: "default" as const,
+        icon: Check,
       }
     }
     return {
@@ -283,13 +292,25 @@ export const getEnrollmentColumns = (
           title={t?.columns?.fees || "Fees"}
         />
       ),
-      cell: ({ getValue }) => {
-        const paid = getValue<boolean>()
+      cell: ({ row }) => {
+        const { registrationFeePaid, applicationFeePaid } = row.original
+        if (registrationFeePaid) {
+          return (
+            <Badge variant="default">
+              {t?.enrollment?.regPaid || "Reg Paid"}
+            </Badge>
+          )
+        }
+        if (applicationFeePaid) {
+          return (
+            <Badge variant="secondary">
+              {t?.enrollment?.appPaid || "App Paid"}
+            </Badge>
+          )
+        }
         return (
-          <Badge variant={paid ? "default" : "outline"}>
-            {paid
-              ? t?.enrollment?.paid || "Paid"
-              : t?.enrollment?.unpaid || "Unpaid"}
+          <Badge variant="destructive">
+            {t?.enrollment?.unpaid || "Unpaid"}
           </Badge>
         )
       },
