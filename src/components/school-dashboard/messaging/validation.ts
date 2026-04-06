@@ -275,6 +275,7 @@ export const starMessageSchema = z.object({
 // Unstar message schema
 export const unstarMessageSchema = z.object({
   messageId: z.string().min(1, "Message ID is required"),
+  conversationId: z.string().min(1, "Conversation ID is required"),
 })
 
 // Typing indicator schema

@@ -114,15 +114,23 @@ export function ChatInterface({
   const handleToggleWhatsApp = useCallback(async () => {
     const newValue = !whatsappEnabled
     setWhatsappEnabled(newValue)
-    const result = await toggleConversationWhatsApp({
-      conversationId: conversation.id,
-      enabled: newValue,
-    })
-    if (!result.success) {
+    try {
+      const result = await toggleConversationWhatsApp({
+        conversationId: conversation.id,
+        enabled: newValue,
+      })
+      if (!result.success) {
+        setWhatsappEnabled(!newValue)
+        toast({
+          title: m?.notifications?.error || "Error",
+          description: result.error,
+        })
+      }
+    } catch {
       setWhatsappEnabled(!newValue)
       toast({
         title: m?.notifications?.error || "Error",
-        description: result.error,
+        description: m?.errors?.network_error || "Network error",
       })
     }
   }, [whatsappEnabled, conversation.id, m])
@@ -184,7 +192,7 @@ export function ChatInterface({
   const displayName =
     conversation.type === "direct" && otherUser
       ? otherUser.username || otherUser.email || m?.ui?.user_fallback || "User"
-      : conversation.title || config.label
+      : conversation.title || m?.types?.[conversation.type] || config.label
 
   const avatarUrl =
     conversation.type === "direct" && otherUser
@@ -628,9 +636,7 @@ export function ChatInterface({
                 "h-10 w-10 rounded-full",
                 whatsappEnabled && "bg-green-50"
               )}
-              aria-label={
-                whatsappEnabled ? "WhatsApp enabled" : "Enable WhatsApp"
-              }
+              aria-label="WhatsApp"
               onClick={handleToggleWhatsApp}
             >
               <span

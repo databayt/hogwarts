@@ -140,8 +140,8 @@ export function ConversationInfoPanel({
     : null
 
   const displayName = isGroup
-    ? conversation.title || config.label
-    : otherUser?.username || otherUser?.email || m?.ui?.user_fallback || "User"
+    ? conversation.title || mx?.types?.[conversation.type] || config.label
+    : otherUser?.username || otherUser?.email || mx?.ui?.user_fallback || "User"
 
   const avatarUrl = isGroup
     ? conversation.avatar || undefined

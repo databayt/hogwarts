@@ -107,7 +107,9 @@ export const ConversationCard = memo(function ConversationCard({
   const displayName =
     conversation.type === "direct" && otherUser
       ? otherUser.username || otherUser.email || m?.ui?.user_fallback || "User"
-      : conversation.title || CONVERSATION_TYPE_CONFIG[conversation.type].label
+      : conversation.title ||
+        m?.types?.[conversation.type] ||
+        CONVERSATION_TYPE_CONFIG[conversation.type].label
 
   const avatarUrl =
     conversation.type === "direct" && otherUser
@@ -129,7 +131,10 @@ export const ConversationCard = memo(function ConversationCard({
   const lastMessagePreview = conversation.lastMessage
     ? conversation.lastMessage.isDeleted
       ? m?.ui?.message_deleted || "Message deleted"
-      : conversation.lastMessage.content
+      : conversation.lastMessage.content ||
+        (conversation.lastMessage.attachments?.length
+          ? m?.ui?.attachment || "Attachment"
+          : m?.ui?.no_messages || "No messages")
     : m?.ui?.no_messages || "No messages"
 
   const hasUnread = (conversation.unreadCount ?? 0) > 0

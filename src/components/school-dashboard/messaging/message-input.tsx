@@ -392,7 +392,7 @@ export function MessageInput({
                   className="fixed inset-0 z-10"
                   onClick={() => setShowAttachMenu(false)}
                 />
-                <div className="absolute start-0 bottom-full z-20 mb-2 w-56 overflow-hidden rounded-xl bg-white shadow-lg">
+                <div className="absolute end-0 bottom-full z-20 mb-2 w-56 overflow-hidden rounded-xl bg-white shadow-lg">
                   {[
                     {
                       label: m?.ui?.file || "File",
@@ -621,7 +621,7 @@ export function MessageInput({
               className={cn(
                 "max-h-[120px] min-h-[38px] resize-none rounded-[21px] border border-[#DDD] bg-white py-2 ps-4 pe-12 text-sm",
                 "hover:border-[#DDD] focus-visible:border-[#DDD] focus-visible:ring-0 focus-visible:ring-offset-0",
-                locale === "ar" && "text-end"
+                "text-start"
               )}
               style={{ caretColor: "#1FA961" }}
             />
@@ -744,7 +744,7 @@ function EmojiPickerButton({
             className="fixed inset-0 z-10"
             onClick={() => setShowPicker(false)}
           />
-          <div className="absolute start-0 bottom-full z-20 mb-2">
+          <div className="absolute end-0 bottom-full z-20 mb-2">
             <Picker
               data={data}
               onEmojiSelect={(emoji: { native: string }) => {

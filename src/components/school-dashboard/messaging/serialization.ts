@@ -59,6 +59,10 @@ export function serializeAttachment(attachment: any) {
 
   return {
     ...attachment,
+    // Alias DB field names to DTO-expected names
+    url: attachment.fileUrl ?? attachment.url,
+    name: attachment.fileName ?? attachment.name,
+    size: attachment.fileSize ?? attachment.size,
     uploadedAt: safeSerializeDate(attachment.uploadedAt),
   }
 }

@@ -160,7 +160,10 @@ export function MessageList({
   })
 
   const handleScrollToTop = () => {
-    if (hasMore && !isLoading && onLoadMore) {
+    const el = scrollContainerRef.current
+    if (!el) return
+    // Only trigger load more when scrolled near the top (within 100px)
+    if (el.scrollTop < 100 && hasMore && !isLoading && onLoadMore) {
       setHasScrolledUp(true)
       onLoadMore()
     }

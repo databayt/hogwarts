@@ -956,6 +956,19 @@ export async function markConversationAsRead(
     const parsed = markConversationAsReadSchema.parse(input)
 
     const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    }
+
+    // Verify participant belongs to this tenant's conversation
+    const isParticipant = await isConversationParticipant(
+      schoolId,
+      parsed.conversationId,
+      authContext.userId
+    )
+    if (!isParticipant) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
 
     // Update participant's last read timestamp
     await db.conversationParticipant.updateMany({
@@ -1913,13 +1926,17 @@ export async function pollNewMessages(input: {
     if (input.afterMessageId) {
       const cursorMessage = await db.message.findUnique({
         where: { id: input.afterMessageId },
-        select: { createdAt: true },
+        select: {
+          createdAt: true,
+          conversation: { select: { schoolId: true } },
+        },
       })
 
-      if (cursorMessage) {
+      if (cursorMessage && cursorMessage.conversation?.schoolId === schoolId) {
         const newMessages = await db.message.findMany({
           where: {
             conversationId: input.conversationId,
+            conversation: { schoolId },
             createdAt: { gt: cursorMessage.createdAt },
             isDeleted: false,
           },
@@ -2234,6 +2251,21 @@ export async function unstarMessage(
       return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    }
+
+    // Verify the message belongs to this tenant
+    const isParticipant = await isConversationParticipant(
+      schoolId,
+      input.conversationId,
+      authContext.userId
+    )
+    if (!isParticipant) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
     await db.starredMessage.deleteMany({
       where: {
         userId: authContext.userId,
@@ -2272,6 +2304,11 @@ export async function getStarredMessages(input: {
       return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    }
+
     const limit = input.limit || 50
 
     const starred = await db.starredMessage.findMany({
@@ -2280,6 +2317,7 @@ export async function getStarredMessages(input: {
         ...(input.conversationId && {
           conversationId: input.conversationId,
         }),
+        message: { conversation: { schoolId } },
       },
       orderBy: { createdAt: "desc" },
       take: limit + 1,

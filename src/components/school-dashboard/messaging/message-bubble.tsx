@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { memo, useState } from "react"
+import { memo, useCallback, useRef, useState } from "react"
 import { format } from "date-fns"
 import { ar, enUS } from "date-fns/locale"
 import {
@@ -14,6 +14,7 @@ import {
   Download,
   FileText,
   Forward,
+  Pause,
   Pencil,
   Play,
   Reply,
@@ -168,6 +169,34 @@ export const MessageBubble = memo(function MessageBubble({
   const { dictionary } = useDictionary()
   const m = dictionary?.messaging
   const [showReactions, setShowReactions] = useState(false)
+  const [playingAudioId, setPlayingAudioId] = useState<string | null>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  const toggleAudio = useCallback(
+    (attachmentId: string, url: string) => {
+      if (playingAudioId === attachmentId && audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current = null
+        setPlayingAudioId(null)
+        return
+      }
+      // Stop any existing playback
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current = null
+      }
+      const audio = new Audio(url)
+      audio.onended = () => {
+        audioRef.current = null
+        setPlayingAudioId(null)
+      }
+      audio.play()
+      audioRef.current = audio
+      setPlayingAudioId(attachmentId)
+    },
+    [playingAudioId]
+  )
+
   const isOwnMessage = message.senderId === currentUserId
   const isDeleted = message.isDeleted
   const isEdited = message.isEdited && !isDeleted
@@ -411,19 +440,23 @@ export const MessageBubble = memo(function MessageBubble({
 
                         // Audio messages — waveform placeholder
                         if (isAudioType(attachment.fileType)) {
+                          const isPlaying = playingAudioId === attachment.id
                           return (
                             <div
                               key={attachment.id}
                               className="flex items-center gap-3 px-2 py-2"
                             >
                               <button
-                                onClick={() => {
-                                  const audio = new Audio(attachment.url)
-                                  audio.play()
-                                }}
+                                onClick={() =>
+                                  toggleAudio(attachment.id, attachment.url)
+                                }
                                 className="bg-msg-unread-badge flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-white"
                               >
-                                <Play className="h-5 w-5" />
+                                {isPlaying ? (
+                                  <Pause className="h-5 w-5" />
+                                ) : (
+                                  <Play className="h-5 w-5" />
+                                )}
                               </button>
                               <div className="flex flex-1 flex-col gap-1">
                                 <div className="bg-foreground/20 h-1 w-full rounded-full">

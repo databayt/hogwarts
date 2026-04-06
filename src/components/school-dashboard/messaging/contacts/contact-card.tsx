@@ -155,7 +155,7 @@ export const ContactCard = memo(function ContactCard({
             <div className="flex flex-shrink-0 items-center">
               <span
                 className={cn(
-                  "text-xs transition-transform duration-150 group-hover:-translate-x-1",
+                  "text-xs transition-transform duration-150 ltr:group-hover:-translate-x-1 rtl:group-hover:translate-x-1",
                   hasUnread
                     ? "text-msg-unread-badge font-medium"
                     : "text-muted-foreground"

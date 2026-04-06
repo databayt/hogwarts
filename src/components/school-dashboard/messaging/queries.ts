@@ -111,6 +111,7 @@ export const messageListSelect = {
     select: {
       id: true,
       content: true,
+      isDeleted: true,
       senderId: true,
       sender: {
         select: {
