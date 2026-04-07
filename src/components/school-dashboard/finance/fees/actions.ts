@@ -78,7 +78,7 @@ export async function getFeeStructures(): Promise<ActionResult<any[]>> {
     if (isAuthError(ctx)) return ctx
 
     const feeStructures = await db.feeStructure.findMany({
-      where: { schoolId: ctx.schoolId, isActive: true },
+      where: { schoolId: ctx.schoolId },
       include: {
         class: { select: { id: true, name: true } },
         _count: { select: { feeAssignments: true } },
@@ -260,10 +260,7 @@ export async function deleteFeeStructure(id: string): Promise<ActionResult> {
     }
 
     if (structure._count.feeAssignments > 0) {
-      return {
-        success: false,
-        error: `Cannot delete: ${structure._count.feeAssignments} assignment(s) exist. Deactivate instead.`,
-      }
+      return actionError(ACTION_ERRORS.FEE_STRUCTURE_HAS_ASSIGNMENTS)
     }
 
     await db.feeStructure.delete({ where: { id } })
@@ -273,6 +270,38 @@ export async function deleteFeeStructure(id: string): Promise<ActionResult> {
   } catch (error) {
     console.error("Error deleting fee structure:", error)
     return actionError(ACTION_ERRORS.DELETE_FAILED)
+  }
+}
+
+/**
+ * Toggle fee structure active/inactive
+ */
+export async function toggleFeeStructureActive(
+  id: string
+): Promise<ActionResult> {
+  try {
+    const ctx = await requireFeePermission("edit")
+    if (isAuthError(ctx)) return ctx
+
+    const structure = await db.feeStructure.findFirst({
+      where: { id, schoolId: ctx.schoolId },
+      select: { isActive: true },
+    })
+
+    if (!structure) {
+      return actionError(ACTION_ERRORS.NOT_FOUND)
+    }
+
+    await db.feeStructure.update({
+      where: { id },
+      data: { isActive: !structure.isActive },
+    })
+
+    revalidatePath("/finance/fees")
+    return { success: true }
+  } catch (error) {
+    console.error("Error toggling fee structure:", error)
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
   }
 }
 
@@ -301,10 +330,7 @@ export async function assignFee(data: FormData): Promise<ActionResult<string>> {
     })
 
     if (existing) {
-      return {
-        success: false,
-        error: "Student already has this fee assigned for this academic year.",
-      }
+      return actionError(ACTION_ERRORS.FEE_ALREADY_ASSIGNED)
     }
 
     const studentId = formData.studentId as string
@@ -598,10 +624,7 @@ export async function deleteFeeAssignment(id: string): Promise<ActionResult> {
     }
 
     if (assignment._count.payments > 0) {
-      return {
-        success: false,
-        error: `Cannot delete: ${assignment._count.payments} payment(s) recorded. Cancel the assignment instead.`,
-      }
+      return actionError(ACTION_ERRORS.FEE_ASSIGNMENT_HAS_PAYMENTS)
     }
 
     // Unlink invoices (preserve for audit trail) then delete assignment
@@ -944,17 +967,11 @@ export async function deletePayment(id: string): Promise<ActionResult> {
     }
 
     if (payment.verifiedBy) {
-      return {
-        success: false,
-        error: "Cannot delete a verified payment.",
-      }
+      return actionError(ACTION_ERRORS.PAYMENT_CANNOT_DELETE)
     }
 
     if (payment.refund) {
-      return {
-        success: false,
-        error: "Cannot delete a payment that has a refund record.",
-      }
+      return actionError(ACTION_ERRORS.PAYMENT_HAS_REFUND)
     }
 
     // Delete the payment
@@ -1030,7 +1047,7 @@ export async function applyScholarship(
       where: { id: feeAssignmentId, schoolId: ctx.schoolId },
       data: {
         scholarshipId,
-        totalDiscount: scholarshipAmount,
+        totalDiscount: { increment: scholarshipAmount },
         finalAmount: {
           decrement: scholarshipAmount,
         },
@@ -1182,10 +1199,7 @@ export async function deleteScholarship(id: string): Promise<ActionResult> {
     }
 
     if (scholarship._count.feeAssignments > 0) {
-      return {
-        success: false,
-        error: `Cannot delete: ${scholarship._count.feeAssignments} fee assignment(s) use this scholarship. Deactivate instead.`,
-      }
+      return actionError(ACTION_ERRORS.SCHOLARSHIP_HAS_ASSIGNMENTS)
     }
 
     await db.scholarship.delete({ where: { id } })
@@ -1347,18 +1361,11 @@ export async function deleteFine(id: string): Promise<ActionResult> {
     }
 
     if (fine.isPaid) {
-      return {
-        success: false,
-        error: "Cannot delete a paid fine.",
-      }
+      return actionError(ACTION_ERRORS.FINE_CANNOT_DELETE)
     }
 
     if (fine.isWaived) {
-      return {
-        success: false,
-        error:
-          "Cannot delete a waived fine. The waiver decision is part of the audit trail.",
-      }
+      return actionError(ACTION_ERRORS.FINE_WAIVED_CANNOT_DELETE)
     }
 
     await db.fine.delete({ where: { id } })
@@ -1409,7 +1416,7 @@ export async function createFeePaymentCheckout(
     )
     const remaining = Number(assignment.finalAmount) - totalPaid
     if (remaining <= 0) {
-      return { success: false, error: "Fee is already fully paid" }
+      return actionError(ACTION_ERRORS.FEE_FULLY_PAID)
     }
 
     // Load school for currency
@@ -1447,10 +1454,7 @@ export async function createFeePaymentCheckout(
     })
 
     if (!result.success || !result.checkoutUrl) {
-      return {
-        success: false,
-        error: result.error || "Failed to create checkout session",
-      }
+      return actionError(ACTION_ERRORS.PAYMENT_FAILED)
     }
 
     return { success: true, data: { checkoutUrl: result.checkoutUrl } }

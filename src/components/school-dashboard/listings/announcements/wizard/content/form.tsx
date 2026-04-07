@@ -32,11 +32,6 @@ export const ContentForm = forwardRef<WizardFormRef, ContentFormProps>(
       | Record<string, any>
       | undefined
 
-    const LANG_OPTIONS = [
-      { label: "\u0627\u0644\u0639\u0631\u0628\u064A\u0629", value: "ar" },
-      { label: "English", value: "en" },
-    ]
-
     const PRIORITY_OPTIONS = [
       { label: w?.priorityLow || "Low", value: "low" },
       { label: w?.priorityNormal || "Normal", value: "normal" },
@@ -111,12 +106,6 @@ export const ContentForm = forwardRef<WizardFormRef, ContentFormProps>(
             label={wc?.bodyLabel || "Body"}
             placeholder={wc?.bodyPlaceholder || "Enter announcement body"}
             required
-            disabled={isPending}
-          />
-          <SelectField
-            name="lang"
-            label={wc?.languageLabel || "Language"}
-            options={[...LANG_OPTIONS]}
             disabled={isPending}
           />
           <SelectField

@@ -31,25 +31,33 @@ export type FeeStructureRow = {
 }
 
 export const getFeeStructureColumns = (
-  lang?: string
+  lang?: string,
+  col?: Record<string, string>,
+  actions?: {
+    onToggleActive?: (id: string) => void
+    onDelete?: (id: string) => void
+  }
 ): ColumnDef<FeeStructureRow>[] => {
   const isAr = lang === "ar"
 
   const t = {
-    name: isAr ? "الاسم" : "Name",
-    academicYear: isAr ? "العام الدراسي" : "Academic Year",
-    class: isAr ? "الفصل" : "Class",
-    allClasses: isAr ? "جميع الفصول" : "All Classes",
-    totalAmount: isAr ? "المبلغ الإجمالي" : "Total Amount",
-    installments: isAr ? "الأقساط" : "Installments",
-    assignments: isAr ? "التعيينات" : "Assignments",
-    status: isAr ? "الحالة" : "Status",
-    active: isAr ? "نشط" : "Active",
-    inactive: isAr ? "غير نشط" : "Inactive",
-    created: isAr ? "تاريخ الإنشاء" : "Created",
-    actions: isAr ? "إجراءات" : "Actions",
-    view: isAr ? "عرض" : "View",
-    edit: isAr ? "تعديل" : "Edit",
+    name: col?.name || "Name",
+    academicYear: col?.academicYear || "Academic Year",
+    class: col?.class || "Class",
+    allClasses: col?.allClasses || "All Classes",
+    totalAmount: col?.totalAmount || "Total Amount",
+    installments: col?.installments || "Installments",
+    assignments: col?.assignments || "Assignments",
+    status: col?.status || "Status",
+    active: col?.active || "Active",
+    inactive: col?.inactive || "Inactive",
+    created: col?.created || "Created",
+    actions: col?.actions || "Actions",
+    view: col?.view || "View",
+    edit: col?.edit || "Edit",
+    deactivate: col?.deactivate || "Deactivate",
+    activate: col?.activate || "Activate",
+    delete: col?.delete || "Delete",
   }
 
   return [
@@ -190,8 +198,21 @@ export const getFeeStructureColumns = (
             />
             <ActionMenuItem
               label={t.edit}
-              href={`/${lang}/finance/fees/structures/${fee.id}/edit`}
+              href={`/${lang}/finance/fees/structures/${fee.id}`}
             />
+            {actions?.onToggleActive && (
+              <ActionMenuItem
+                label={fee.isActive ? t.deactivate : t.activate}
+                onClick={() => actions.onToggleActive!(fee.id)}
+              />
+            )}
+            {actions?.onDelete && (
+              <ActionMenuItem
+                label={t.delete}
+                variant="destructive"
+                onClick={() => actions.onDelete!(fee.id)}
+              />
+            )}
           </ActionMenu>
         )
       },

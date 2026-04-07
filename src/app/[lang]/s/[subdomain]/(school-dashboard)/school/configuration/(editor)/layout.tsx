@@ -5,7 +5,10 @@ import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { ReportIssue } from "@/components/report-issue"
 import { ConfigSidebar } from "@/components/school-dashboard/school/configuration/config-sidebar"
+import { getDisplayText } from "@/components/translation/display"
+import { detectLanguage } from "@/components/translation/util"
 
 interface Props {
   children: React.ReactNode
@@ -36,6 +39,7 @@ export default async function EditorLayout({ children, params }: Props) {
             where: { id: schoolId },
             select: {
               name: true,
+              nameEn: true,
               preferredLanguage: true,
               nameFormat: true,
               schoolType: true,
@@ -108,7 +112,9 @@ export default async function EditorLayout({ children, params }: Props) {
   ] as const
 
   // Build dynamic descriptions from live data using dictionary strings
-  function getDynamicDescription(key: string): string | null {
+  // Async to support on-demand translation for user-facing content
+
+  async function getDynamicDescription(key: string): Promise<string | null> {
     if (!school) return null
 
     const cs = d as Record<string, unknown> | undefined
@@ -117,8 +123,18 @@ export default async function EditorLayout({ children, params }: Props) {
     const plans = (cs?.plans as Record<string, string>) ?? {}
 
     switch (key) {
-      case "title":
+      case "title": {
+        if (lang === "en" && school.nameEn) return school.nameEn
+        if (school.name && schoolId && detectLanguage(school.name) !== lang) {
+          return getDisplayText(
+            school.name,
+            detectLanguage(school.name),
+            lang,
+            schoolId
+          )
+        }
         return school.name || null
+      }
       case "description": {
         const translatedType = school.schoolType
           ? (types[school.schoolType] ?? school.schoolType)
@@ -130,9 +146,20 @@ export default async function EditorLayout({ children, params }: Props) {
         return parts.length > 0 ? parts.join(" · ") : null
       }
       case "location": {
-        const parts = [school.city, school.state, school.country].filter(
-          Boolean
-        )
+        let parts = [school.city, school.state, school.country].filter(Boolean)
+        const locationText = parts.join(" ")
+        if (
+          schoolId &&
+          parts.length > 0 &&
+          detectLanguage(locationText) !== lang
+        ) {
+          const detected = detectLanguage(locationText)
+          parts = await Promise.all(
+            parts.map((p) =>
+              getDisplayText(p as string, detected, lang, schoolId)
+            )
+          )
+        }
         return parts.length > 0 ? parts.join(", ") : null
       }
       case "branding": {
@@ -238,18 +265,20 @@ export default async function EditorLayout({ children, params }: Props) {
     }
   }
 
-  const sectionLinks = SECTION_KEYS.map((key) => {
-    const section = d?.[key] as
-      | { title: string; description: string }
-      | undefined
-    const dynamicDesc = getDynamicDescription(key)
+  const sectionLinks = await Promise.all(
+    SECTION_KEYS.map(async (key) => {
+      const section = d?.[key] as
+        | { title: string; description: string }
+        | undefined
+      const dynamicDesc = await getDynamicDescription(key)
 
-    return {
-      key,
-      title: section?.title ?? key,
-      description: dynamicDesc ?? section?.description ?? "",
-    }
-  })
+      return {
+        key,
+        title: section?.title ?? key,
+        description: dynamicDesc ?? section?.description ?? "",
+      }
+    })
+  )
 
   return (
     <div className="h-[calc(100vh-15rem)] overflow-hidden">
@@ -258,7 +287,12 @@ export default async function EditorLayout({ children, params }: Props) {
           <ConfigSidebar lang={lang} sectionLinks={sectionLinks} />
           <div className="lg:overflow-y-auto">
             <div className="flex min-h-full items-start justify-center py-8">
-              <div className="w-full max-w-[400px]">{children}</div>
+              <div className="w-full max-w-[400px]">
+                {children}
+                <div className="text-muted-foreground pt-8 pb-4 text-start text-sm">
+                  <ReportIssue />
+                </div>
+              </div>
             </div>
           </div>
         </div>

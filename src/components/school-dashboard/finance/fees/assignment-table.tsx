@@ -8,18 +8,24 @@ import { useRouter } from "next/navigation"
 
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
+import {
+  confirmDeleteDialog,
+  DeleteToast,
+  ErrorToast,
+} from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { PlatformToolbar } from "@/components/school-dashboard/shared"
 import {
   BulkActionsToolbar,
+  createDeleteAction,
   createExportAction,
 } from "@/components/table/bulk-actions-toolbar"
 import { DataTable } from "@/components/table/data-table"
 import { getSelectColumn } from "@/components/table/select-column"
 import { useDataTable } from "@/components/table/use-data-table"
 
-import { fetchAssignmentRows } from "./actions"
+import { deleteFeeAssignment, fetchAssignmentRows } from "./actions"
 import {
   getFeeAssignmentColumns,
   type FeeAssignmentRow,
@@ -94,6 +100,31 @@ function FeeAssignmentsTableInner({
     router.push(`/${lang}/finance/fees/assignments/new`)
   }, [router, lang])
 
+  const handleBulkDelete = useCallback(
+    async (rows: FeeAssignmentRow[]) => {
+      const ok = await confirmDeleteDialog(
+        `Delete ${rows.length} assignment(s)?`
+      )
+      if (!ok) return
+
+      const errors: string[] = []
+      for (const row of rows) {
+        const result = await deleteFeeAssignment(row.id)
+        if (!result.success) {
+          errors.push(`${row.studentName}: ${result.error}`)
+        }
+      }
+
+      if (errors.length > 0) {
+        ErrorToast(errors.join("\n"))
+      } else {
+        DeleteToast()
+      }
+      table.toggleAllPageRowsSelected(false)
+    },
+    [table]
+  )
+
   const handleBulkExport = useCallback(
     async (rows: FeeAssignmentRow[]) => {
       const header = "Student,Fee Structure,Amount,Status"
@@ -118,8 +149,11 @@ function FeeAssignmentsTableInner({
   )
 
   const bulkActions = useMemo(
-    () => [createExportAction<FeeAssignmentRow>(handleBulkExport, lang)],
-    [handleBulkExport, lang]
+    () => [
+      createDeleteAction<FeeAssignmentRow>(handleBulkDelete, lang),
+      createExportAction<FeeAssignmentRow>(handleBulkExport, lang),
+    ],
+    [handleBulkDelete, handleBulkExport, lang]
   )
 
   return (
@@ -130,7 +164,10 @@ function FeeAssignmentsTableInner({
         onToggleView={toggleView}
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
-        searchPlaceholder="Search assignments..."
+        searchPlaceholder={
+          (dictionary as any)?.finance?.fees?.search?.assignments ||
+          "Search assignments..."
+        }
         onCreate={handleCreate}
         entityName="fee-assignments"
       />

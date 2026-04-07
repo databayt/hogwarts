@@ -23,7 +23,7 @@ import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
-import { createFeeStructure } from "./actions"
+import { createFeeStructure, updateFeeStructure } from "./actions"
 
 interface Props {
   lang: Locale
@@ -107,15 +107,22 @@ export default function FeeStructureForm({ lang, initialData }: Props) {
       }
 
       startTransition(async () => {
-        const result = await createFeeStructure(formData)
+        const id = initialData?.id as string | undefined
+        const result = id
+          ? await updateFeeStructure(id, formData)
+          : await createFeeStructure(formData)
         if (result.success) {
-          SuccessToast(ff?.feeStructureCreated || "Fee structure created")
+          SuccessToast(
+            id
+              ? ff?.feeStructureUpdated || "Fee structure updated"
+              : ff?.feeStructureCreated || "Fee structure created"
+          )
           router.push(`/${lang}/finance/fees/structures`)
         } else {
           ErrorToast(
             result.error ||
               ff?.failedCreateFeeStructure ||
-              "Failed to create fee structure"
+              "Failed to save fee structure"
           )
         }
       })

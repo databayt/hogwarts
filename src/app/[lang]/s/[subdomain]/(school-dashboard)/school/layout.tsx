@@ -27,6 +27,7 @@ export default async function SchoolLayout({ children, params }: Props) {
       matchPrefix: `/${lang}/school/configuration`,
     },
     { name: n?.membership || "Membership", href: `/${lang}/school/membership` },
+    { name: n?.bulk || "Bulk", href: `/${lang}/school/bulk` },
     {
       name: n?.communication || "Communication",
       href: `/${lang}/school/communication`,
@@ -34,7 +35,6 @@ export default async function SchoolLayout({ children, params }: Props) {
     { name: n?.billing || "Billing", href: `/${lang}/school/billing` },
     { name: n?.security || "Security", href: `/${lang}/school/security` },
     { name: n?.reports || "Reports", href: `/${lang}/school/reports` },
-    { name: n?.bulk || "Bulk", href: `/${lang}/school/bulk` },
     { name: n?.analysis || "Analysis", href: `/${lang}/school/analysis` },
   ]
 

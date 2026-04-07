@@ -209,9 +209,7 @@ export const getFeeAssignmentColumns = (
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link
-                  href={`/${lang}/finance/fees/assignments/${assignment.id}/payment`}
-                >
+                <Link href={`/${lang}/finance/fees/payments/new`}>
                   {col?.recordPayment || "Record Payment"}
                 </Link>
               </DropdownMenuItem>

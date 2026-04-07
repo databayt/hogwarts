@@ -15,6 +15,7 @@ import {
   ErrorToast,
 } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { PlatformToolbar } from "@/components/school-dashboard/shared"
 import {
   BulkActionsToolbar,
@@ -25,7 +26,11 @@ import { DataTable } from "@/components/table/data-table"
 import { getSelectColumn } from "@/components/table/select-column"
 import { useDataTable } from "@/components/table/use-data-table"
 
-import { getFeeStructures } from "./actions"
+import {
+  deleteFeeStructure,
+  getFeeStructures,
+  toggleFeeStructureActive,
+} from "./actions"
 import { getFeeStructureColumns, type FeeStructureRow } from "./columns"
 
 interface FeeStructuresTableProps {
@@ -42,6 +47,13 @@ function FeeStructuresTableInner({
   perPage = 20,
 }: FeeStructuresTableProps) {
   const router = useRouter()
+  const { dictionary } = useDictionary()
+  const searchT = (dictionary as any)?.finance?.fees?.search as
+    | Record<string, string>
+    | undefined
+  const structureCol = (dictionary as any)?.finance?.fees?.structureColumns as
+    | Record<string, string>
+    | undefined
   const [searchValue, debouncedSearch, setSearchValue] = useDebouncedSearch(300)
 
   // View mode (table/grid)
@@ -83,10 +95,44 @@ function FeeStructuresTableInner({
     },
   })
 
+  // Single-row actions
+  const handleToggleActive = useCallback(
+    async (id: string) => {
+      const result = await toggleFeeStructureActive(id)
+      if (result.success) {
+        refresh()
+      } else {
+        ErrorToast(result.error || "Failed to toggle status")
+      }
+    },
+    [refresh]
+  )
+
+  const handleSingleDelete = useCallback(
+    async (id: string) => {
+      const ok = await confirmDeleteDialog("Delete this fee structure?")
+      if (!ok) return
+      const result = await deleteFeeStructure(id)
+      if (result.success) {
+        optimisticRemove(id)
+        DeleteToast()
+      } else {
+        ErrorToast(result.error || "Failed to delete")
+      }
+    },
+    [optimisticRemove]
+  )
+
   // Generate columns on the client side with lang
   const columns = useMemo(
-    () => [getSelectColumn<FeeStructureRow>(), ...getFeeStructureColumns(lang)],
-    [lang]
+    () => [
+      getSelectColumn<FeeStructureRow>(),
+      ...getFeeStructureColumns(lang, structureCol, {
+        onToggleActive: handleToggleActive,
+        onDelete: handleSingleDelete,
+      }),
+    ],
+    [lang, structureCol, handleToggleActive, handleSingleDelete]
   )
 
   // Table instance
@@ -126,11 +172,21 @@ function FeeStructuresTableInner({
       const ok = await confirmDeleteDialog(deleteMsg)
       if (!ok) return
 
-      // Optimistically remove all selected rows
-      rows.forEach((row) => optimisticRemove(row.id))
+      const errors: string[] = []
+      for (const row of rows) {
+        const result = await deleteFeeStructure(row.id)
+        if (result.success) {
+          optimisticRemove(row.id)
+        } else {
+          errors.push(`${row.name}: ${result.error}`)
+        }
+      }
 
-      // TODO: Implement bulk delete action
-      DeleteToast()
+      if (errors.length > 0) {
+        ErrorToast(errors.join("\n"))
+      } else {
+        DeleteToast()
+      }
       table.toggleAllPageRowsSelected(false)
     },
     [optimisticRemove, table]
@@ -178,7 +234,7 @@ function FeeStructuresTableInner({
         onToggleView={toggleView}
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
-        searchPlaceholder="Search fee structures..."
+        searchPlaceholder={searchT?.feeStructures || "Search fee structures..."}
         onCreate={handleCreate}
         entityName="fee-structures"
       />
