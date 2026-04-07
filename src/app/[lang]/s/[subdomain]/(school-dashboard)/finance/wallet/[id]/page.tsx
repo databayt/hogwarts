@@ -22,10 +22,17 @@ interface Props {
 export default async function WalletDetailPage({ params }: Props) {
   const { lang, id } = await params
   const dictionary = await getDictionary(lang)
+  const d = dictionary?.finance?.walletPage
+  const c = dictionary?.finance?.common
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
-    return <p className="text-muted-foreground">School context not found</p>
+    return (
+      <p className="text-muted-foreground">
+        {dictionary?.finance?.common?.schoolNotFound ||
+          "School context not found"}
+      </p>
+    )
   }
 
   const wallet = await db.wallet.findFirst({
@@ -46,19 +53,23 @@ export default async function WalletDetailPage({ params }: Props) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-medium">Wallet Details</h3>
+          <h3 className="text-lg font-medium">
+            {d?.walletDetails || "Wallet Details"}
+          </h3>
           <p className="text-muted-foreground text-sm">{wallet.ownerId}</p>
         </div>
         <div className="flex items-center gap-3">
           <Badge>{wallet.walletType}</Badge>
           <Badge variant={wallet.isActive ? "default" : "secondary"}>
-            {wallet.isActive ? "Active" : "Inactive"}
+            {wallet.isActive
+              ? c?.active || "Active"
+              : c?.inactive || "Inactive"}
           </Badge>
           <Link
             href={`/${lang}/finance/wallet/all`}
             className={buttonVariants({ variant: "outline" })}
           >
-            Back to Wallets
+            {d?.backToWallets || "Back to Wallets"}
           </Link>
         </div>
       </div>
@@ -67,7 +78,9 @@ export default async function WalletDetailPage({ params }: Props) {
       <div className="grid gap-4 sm:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Balance</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {c?.balance || "Balance"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
@@ -77,7 +90,9 @@ export default async function WalletDetailPage({ params }: Props) {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Type</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {c?.type || "Type"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">{wallet.walletType}</p>
@@ -85,17 +100,23 @@ export default async function WalletDetailPage({ params }: Props) {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Status</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {c?.status || "Status"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              {wallet.isActive ? "Active" : "Inactive"}
+              {wallet.isActive
+                ? c?.active || "Active"
+                : c?.inactive || "Inactive"}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Transactions</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {d?.transactions || "Transactions"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">{wallet.transactions.length}</p>
@@ -106,11 +127,13 @@ export default async function WalletDetailPage({ params }: Props) {
       {/* Recent transactions */}
       <div className="space-y-3">
         <h4 className="font-medium">
-          Recent Transactions ({wallet.transactions.length})
+          {d?.recentTransactions || "Recent Transactions"} (
+          {wallet.transactions.length})
         </h4>
         {wallet.transactions.length === 0 ? (
           <p className="text-muted-foreground text-sm">
-            No transactions for this wallet yet.
+            {d?.noWalletTransactionsYet ||
+              "No transactions for this wallet yet."}
           </p>
         ) : (
           <div className="space-y-2">
@@ -119,7 +142,10 @@ export default async function WalletDetailPage({ params }: Props) {
                 <CardContent className="flex items-center justify-between py-3">
                   <div>
                     <p className="font-medium">
-                      {tx.description || tx.reference || "Transaction"}
+                      {tx.description ||
+                        tx.reference ||
+                        c?.transaction ||
+                        "Transaction"}
                     </p>
                     <p className="text-muted-foreground text-sm">
                       {formatDate(tx.createdAt, lang)}
@@ -128,10 +154,12 @@ export default async function WalletDetailPage({ params }: Props) {
                   </div>
                   <div className="flex items-center gap-4 text-sm">
                     <span>
-                      Amount: {formatCurrency(Number(tx.amount), lang)}
+                      {c?.amount || "Amount"}:{" "}
+                      {formatCurrency(Number(tx.amount), lang)}
                     </span>
                     <span>
-                      Balance: {formatCurrency(Number(tx.balanceAfter), lang)}
+                      {c?.balance || "Balance"}:{" "}
+                      {formatCurrency(Number(tx.balanceAfter), lang)}
                     </span>
                     <Badge
                       variant={tx.type === "CREDIT" ? "default" : "destructive"}

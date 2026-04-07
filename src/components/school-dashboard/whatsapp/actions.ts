@@ -151,7 +151,11 @@ export async function disconnectWhatsApp(): Promise<ActionResponse> {
 }
 
 export async function refreshConnectionStatus(): Promise<
-  ActionResponse<{ status: string }>
+  ActionResponse<{
+    status: string
+    phoneNumber?: string | null
+    qrCode?: string | null
+  }>
 > {
   const ctx = await getAuthorizedContext("view")
   if ("error" in ctx) return { success: false, code: ctx.error }
@@ -182,7 +186,14 @@ export async function refreshConnectionStatus(): Promise<
     }
 
     revalidateWhatsApp(schoolId)
-    return { success: true, data: { status: newStatus } }
+    return {
+      success: true,
+      data: {
+        status: newStatus,
+        phoneNumber: session.phoneNumber,
+        qrCode: session.qrCode,
+      },
+    }
   } catch (error) {
     console.error("[refreshConnectionStatus]", error)
     return { success: false, code: "STATUS_CHECK_FAILED" }

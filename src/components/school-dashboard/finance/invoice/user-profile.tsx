@@ -1,6 +1,8 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { headers } from "next/headers"
+
 import {
   Dialog,
   DialogContent,
@@ -11,6 +13,8 @@ import {
 } from "@/components/ui/dialog"
 import { currentUser } from "@/components/auth/auth"
 import { getUserById } from "@/components/auth/user"
+import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 
 import UserEditProfile from "./user-edit-profile"
 
@@ -21,15 +25,24 @@ export default async function UserProfile() {
   const lastName =
     extendedUser?.username?.split(" ").slice(1).join(" ") || undefined
 
+  const headersList = await headers()
+  const lang = (headersList.get("x-locale") || "ar") as Locale
+  const dictionary = await getDictionary(lang)
+  const ip = (dictionary as any)?.finance?.invoiceProfile as
+    | Record<string, string>
+    | undefined
+
   return (
     <Dialog>
       <DialogTrigger className="hover:bg-muted-foreground/5 w-full cursor-pointer px-2 py-1 text-start">
-        Profile
+        {ip?.profile || "Profile"}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Profile</DialogTitle>
-          <DialogDescription>Edit your profile details here.</DialogDescription>
+          <DialogTitle>{ip?.profile || "Profile"}</DialogTitle>
+          <DialogDescription>
+            {ip?.editProfileDetails || "Edit your profile details here."}
+          </DialogDescription>
         </DialogHeader>
 
         <UserEditProfile

@@ -120,8 +120,9 @@ export function DashboardSidebar({
                 <BankCard
                   key={bank.id}
                   account={bank}
-                  userName={user?.name || "User"}
+                  userName={user?.name || dictionary?.user || "User"}
                   showBalance={false}
+                  dictionary={dictionary}
                 />
               ))}
             </div>

@@ -19,10 +19,17 @@ interface Props {
 export default async function SalaryStructureDetailPage({ params }: Props) {
   const { lang, id } = await params
   const dictionary = await getDictionary(lang)
+  const d = dictionary?.finance?.salaryPage
+  const c = dictionary?.finance?.common
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
-    return <p className="text-muted-foreground">School context not found</p>
+    return (
+      <p className="text-muted-foreground">
+        {dictionary?.finance?.common?.schoolNotFound ||
+          "School context not found"}
+      </p>
+    )
   }
 
   const structure = await db.salaryStructure.findFirst({
@@ -52,19 +59,23 @@ export default async function SalaryStructureDetailPage({ params }: Props) {
         <div>
           <h3 className="text-lg font-medium">{teacherName}</h3>
           <p className="text-muted-foreground text-sm">
-            {structure.teacher?.employeeId || "No ID"} —{" "}
+            {structure.teacher?.employeeId || c?.noId || "No ID"} —{" "}
             {structure.payFrequency}
           </p>
         </div>
         <Badge variant={structure.isActive ? "default" : "secondary"}>
-          {structure.isActive ? "Active" : "Inactive"}
+          {structure.isActive
+            ? c?.active || "Active"
+            : c?.inactive || "Inactive"}
         </Badge>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Base Salary</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {d?.baseSalary || "Base Salary"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
@@ -77,12 +88,14 @@ export default async function SalaryStructureDetailPage({ params }: Props) {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Allowances</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {d?.allowances || "Allowances"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">{structure.allowances.length}</p>
             <p className="text-muted-foreground text-xs">
-              Total: {structure.currency}{" "}
+              {c?.total || "Total"}: {structure.currency}{" "}
               {structure.allowances
                 .reduce((sum, a) => sum + Number(a.amount), 0)
                 .toLocaleString(undefined, { minimumFractionDigits: 2 })}
@@ -91,12 +104,14 @@ export default async function SalaryStructureDetailPage({ params }: Props) {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Deductions</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {d?.deductions || "Deductions"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">{structure.deductions.length}</p>
             <p className="text-muted-foreground text-xs">
-              Total: {structure.currency}{" "}
+              {c?.total || "Total"}: {structure.currency}{" "}
               {structure.deductions
                 .reduce((sum, d) => sum + Number(d.amount), 0)
                 .toLocaleString(undefined, { minimumFractionDigits: 2 })}

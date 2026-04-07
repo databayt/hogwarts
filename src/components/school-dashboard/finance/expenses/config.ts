@@ -3,17 +3,37 @@
 
 /**
  * Expenses Module - Configuration
+ * Labels are dictionary-backed via getter functions.
  */
 
 import { ExpenseStatus } from "@prisma/client"
 
-export const ExpenseStatusLabels: Record<ExpenseStatus, string> = {
+type Dict = Record<string, any> | undefined
+
+const DEFAULT_EXPENSE_STATUS_LABELS: Record<ExpenseStatus, string> = {
   PENDING: "Pending Approval",
   APPROVED: "Approved",
   REJECTED: "Rejected",
   PAID: "Paid",
   CANCELLED: "Cancelled",
 }
+
+/** Get localized expense status labels from dictionary (finance.expensesConfig.statusLabels) */
+export const getExpenseStatusLabels = (
+  d?: Dict
+): Record<ExpenseStatus, string> => {
+  const s = d?.statusLabels as Record<string, string> | undefined
+  return {
+    PENDING: s?.PENDING || DEFAULT_EXPENSE_STATUS_LABELS.PENDING,
+    APPROVED: s?.APPROVED || DEFAULT_EXPENSE_STATUS_LABELS.APPROVED,
+    REJECTED: s?.REJECTED || DEFAULT_EXPENSE_STATUS_LABELS.REJECTED,
+    PAID: s?.PAID || DEFAULT_EXPENSE_STATUS_LABELS.PAID,
+    CANCELLED: s?.CANCELLED || DEFAULT_EXPENSE_STATUS_LABELS.CANCELLED,
+  }
+}
+
+/** For backward compat -- static fallback */
+export const ExpenseStatusLabels = DEFAULT_EXPENSE_STATUS_LABELS
 
 export const ExpenseStatusColors: Record<ExpenseStatus, string> = {
   PENDING: "warning",
@@ -38,21 +58,36 @@ export const DefaultExpenseCategories = [
 
 export type DefaultExpenseCategory = (typeof DefaultExpenseCategories)[number]
 
-export const DefaultExpenseCategoryLabels: Record<
-  DefaultExpenseCategory,
-  string
-> = {
-  OFFICE_SUPPLIES: "Office Supplies",
-  TRAVEL: "Travel & Transportation",
-  MEALS: "Meals & Entertainment",
-  UTILITIES: "Utilities",
-  MAINTENANCE: "Maintenance & Repairs",
-  EQUIPMENT: "Equipment",
-  SOFTWARE: "Software & Subscriptions",
-  PROFESSIONAL_SERVICES: "Professional Services",
-  MARKETING: "Marketing & Advertising",
-  OTHER: "Other",
+const DEFAULT_EXPENSE_CATEGORY_LABELS: Record<DefaultExpenseCategory, string> =
+  {
+    OFFICE_SUPPLIES: "Office Supplies",
+    TRAVEL: "Travel & Transportation",
+    MEALS: "Meals & Entertainment",
+    UTILITIES: "Utilities",
+    MAINTENANCE: "Maintenance & Repairs",
+    EQUIPMENT: "Equipment",
+    SOFTWARE: "Software & Subscriptions",
+    PROFESSIONAL_SERVICES: "Professional Services",
+    MARKETING: "Marketing & Advertising",
+    OTHER: "Other",
+  }
+
+/** Get localized expense category labels from dictionary (finance.expensesConfig.categoryLabels) */
+export const getExpenseCategoryLabels = (
+  d?: Dict
+): Record<DefaultExpenseCategory, string> => {
+  const result = { ...DEFAULT_EXPENSE_CATEGORY_LABELS }
+  const c = d?.categoryLabels as Record<string, string> | undefined
+  if (c) {
+    for (const key of DefaultExpenseCategories) {
+      if (c[key]) result[key] = c[key]
+    }
+  }
+  return result
 }
+
+/** For backward compat -- static fallback */
+export const DefaultExpenseCategoryLabels = DEFAULT_EXPENSE_CATEGORY_LABELS
 
 export const EXPENSE_LIMITS = {
   MAX_AMOUNT_WITHOUT_RECEIPT: 5000, // $50.00 in cents

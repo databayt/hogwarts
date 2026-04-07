@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import type { NotificationChannel, NotificationType } from "@prisma/client"
 import {
@@ -13,7 +13,7 @@ import {
   MessageSquare,
   Smartphone,
 } from "lucide-react"
-import { useForm } from "react-hook-form"
+import { useForm, useWatch } from "react-hook-form"
 import { z } from "zod"
 
 import { Badge } from "@/components/ui/badge"
@@ -83,6 +83,13 @@ interface NotificationPreferencesFormProps {
   dictionary: Dictionary["notifications"]
 }
 
+const CHANNEL_ICONS = {
+  inApp: Bell,
+  email: Mail,
+  push: Smartphone,
+  sms: MessageSquare,
+} as const
+
 export function NotificationPreferencesForm({
   initialPreferences = [],
   locale = "en",
@@ -90,52 +97,58 @@ export function NotificationPreferencesForm({
 }: NotificationPreferencesFormProps) {
   const [isLoading, setIsLoading] = useState(false)
 
-  // Transform initial preferences into form format
+  // Pre-index preferences by type+channel for O(1) lookups
   const notificationTypes = Object.keys(
     NOTIFICATION_TYPE_CONFIG
   ) as NotificationType[]
 
-  const initialFormData: PreferencesFormValues = {
-    preferences: notificationTypes.map((type) => {
-      const inAppPref = initialPreferences.find(
-        (p) => p.type === type && p.channel === "in_app"
-      )
-      const emailPref = initialPreferences.find(
-        (p) => p.type === type && p.channel === "email"
-      )
-      const pushPref = initialPreferences.find(
-        (p) => p.type === type && p.channel === "push"
-      )
-      const smsPref = initialPreferences.find(
-        (p) => p.type === type && p.channel === "sms"
-      )
+  const initialFormData = useMemo<PreferencesFormValues>(() => {
+    const prefMap = new Map<string, (typeof initialPreferences)[number]>()
+    for (const p of initialPreferences) {
+      prefMap.set(`${p.type}:${p.channel}`, p)
+    }
 
-      return {
+    return {
+      preferences: notificationTypes.map((type) => ({
         type,
-        inApp: inAppPref?.enabled ?? true,
-        email: emailPref?.enabled ?? false,
-        push: pushPref?.enabled ?? false,
-        sms: smsPref?.enabled ?? false,
-      }
-    }),
-    quietHoursEnabled: initialPreferences.some(
-      (p) => p.quietHoursStart !== null
-    ),
-    quietHoursStart:
-      initialPreferences.find((p) => p.quietHoursStart !== null)
-        ?.quietHoursStart ?? 22,
-    quietHoursEnd:
-      initialPreferences.find((p) => p.quietHoursEnd !== null)?.quietHoursEnd ??
-      8,
-    digestEnabled: initialPreferences.some((p) => p.digestEnabled === true),
-    digestFrequency:
-      initialPreferences.find((p) => p.digestFrequency)?.digestFrequency ??
-      "daily",
-  }
+        inApp: prefMap.get(`${type}:in_app`)?.enabled ?? true,
+        email: prefMap.get(`${type}:email`)?.enabled ?? false,
+        push: prefMap.get(`${type}:push`)?.enabled ?? false,
+        sms: prefMap.get(`${type}:sms`)?.enabled ?? false,
+      })),
+      quietHoursEnabled: initialPreferences.some(
+        (p) => p.quietHoursStart !== null
+      ),
+      quietHoursStart:
+        initialPreferences.find((p) => p.quietHoursStart !== null)
+          ?.quietHoursStart ?? 22,
+      quietHoursEnd:
+        initialPreferences.find((p) => p.quietHoursEnd !== null)
+          ?.quietHoursEnd ?? 8,
+      digestEnabled: initialPreferences.some((p) => p.digestEnabled === true),
+      digestFrequency:
+        initialPreferences.find((p) => p.digestFrequency)?.digestFrequency ??
+        "daily",
+    }
+  }, [initialPreferences, notificationTypes])
 
   const form = useForm<PreferencesFormValues>({
     resolver: zodResolver(preferencesFormSchema),
     defaultValues: initialFormData,
+  })
+
+  // useWatch isolates re-renders to only when these specific fields change
+  const quietHoursEnabled = useWatch({
+    control: form.control,
+    name: "quietHoursEnabled",
+  })
+  const digestEnabled = useWatch({
+    control: form.control,
+    name: "digestEnabled",
+  })
+  const preferences = useWatch({
+    control: form.control,
+    name: "preferences",
   })
 
   const onSubmit = async (data: PreferencesFormValues) => {
@@ -194,13 +207,6 @@ export function NotificationPreferencesForm({
     }
   }
 
-  const channelIcons = {
-    inApp: Bell,
-    email: Mail,
-    push: Smartphone,
-    sms: MessageSquare,
-  }
-
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -239,7 +245,7 @@ export function NotificationPreferencesForm({
               )}
             />
 
-            {form.watch("quietHoursEnabled") && (
+            {quietHoursEnabled && (
               <div className="grid gap-4 sm:grid-cols-2">
                 <FormField
                   control={form.control}
@@ -253,7 +259,7 @@ export function NotificationPreferencesForm({
                         onValueChange={(value) =>
                           field.onChange(parseInt(value))
                         }
-                        defaultValue={String(field.value)}
+                        value={String(field.value)}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -285,7 +291,7 @@ export function NotificationPreferencesForm({
                         onValueChange={(value) =>
                           field.onChange(parseInt(value))
                         }
-                        defaultValue={String(field.value)}
+                        value={String(field.value)}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -344,7 +350,7 @@ export function NotificationPreferencesForm({
               )}
             />
 
-            {form.watch("digestEnabled") && (
+            {digestEnabled && (
               <FormField
                 control={form.control}
                 name="digestFrequency"
@@ -353,10 +359,7 @@ export function NotificationPreferencesForm({
                     <FormLabel>
                       {dictionary.preferences.digest.frequency}
                     </FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue />
@@ -394,7 +397,7 @@ export function NotificationPreferencesForm({
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {form.watch("preferences").map((pref, index) => {
+              {preferences.map((pref, index) => {
                 const config =
                   NOTIFICATION_TYPE_CONFIG[pref.type as NotificationType]
                 const Icon = config.icon
@@ -423,7 +426,7 @@ export function NotificationPreferencesForm({
                         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                           {(["inApp", "email", "push", "sms"] as const).map(
                             (channel) => {
-                              const ChannelIcon = channelIcons[channel]
+                              const ChannelIcon = CHANNEL_ICONS[channel]
                               return (
                                 <FormField
                                   key={channel}

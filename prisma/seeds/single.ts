@@ -68,6 +68,7 @@ import { seedComboniTeachers } from "./seed-comboni-teachers"
 import { seedStaffMembers } from "./staff-members"
 import { seedStreamCourses, seedStreamEnrollments } from "./stream"
 import { seedSubjects } from "./subjects"
+import { syncSdCurriculum } from "./sync-sd-curriculum"
 import { seedTimetable } from "./timetable"
 import type {
   ClassRef,
@@ -418,6 +419,14 @@ const SEEDS: Record<string, SeedEntry> = {
     global: true,
     run: async (prisma) => {
       await seedConceptImages(prisma)
+    },
+  },
+  "sync-sd-curriculum": {
+    description:
+      "Sync Sudan curriculum chapters/lessons from curriculum/sd/ directory + concept images",
+    global: true,
+    run: async (prisma) => {
+      await syncSdCurriculum(prisma)
     },
   },
   "catalog-content": {

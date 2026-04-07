@@ -8,23 +8,37 @@ import { useParams } from "next/navigation"
 import { FormHeading, FormLayout } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { useInvoiceWizard } from "../use-invoice-wizard"
 import { DetailsForm } from "./form"
 
-const TAB_HEADINGS: Record<string, { title: string; description: string }> = {
-  invoice: {
-    title: "Invoice Details",
-    description: "Enter the invoice number, dates, and currency.",
-  },
-  from: {
-    title: "From Address",
-    description: "Enter the sender's name and address.",
-  },
-  to: {
-    title: "To Address",
-    description: "Enter the recipient's name and address.",
-  },
+function useTabHeadings(): Record<
+  string,
+  { title: string; description: string }
+> {
+  const { dictionary } = useDictionary()
+  const fd = (dictionary as any)?.finance
+  return {
+    invoice: {
+      title: fd?.invoiceForm?.invoiceDetails || "Invoice Details",
+      description:
+        fd?.invoiceForm?.invoiceDetailsDescription ||
+        "Enter the invoice number, dates, and currency.",
+    },
+    from: {
+      title: fd?.invoiceForm?.fromAddress || "From Address",
+      description:
+        fd?.invoiceForm?.fromAddressDescription ||
+        "Enter the sender's name and address.",
+    },
+    to: {
+      title: fd?.invoiceForm?.toAddress || "To Address",
+      description:
+        fd?.invoiceForm?.toAddressDescription ||
+        "Enter the recipient's name and address.",
+    },
+  }
 }
 
 export default function DetailsContent() {
@@ -33,10 +47,11 @@ export default function DetailsContent() {
   const formRef = useRef<WizardFormRef>(null)
   const { data, isLoading } = useInvoiceWizard()
   const [isValid, setIsValid] = useState(false)
-  const [heading, setHeading] = useState(TAB_HEADINGS.invoice)
+  const tabHeadings = useTabHeadings()
+  const [heading, setHeading] = useState(tabHeadings.invoice)
 
   const handleTabChange = (tabId: string) => {
-    setHeading(TAB_HEADINGS[tabId] || TAB_HEADINGS.invoice)
+    setHeading(tabHeadings[tabId] || tabHeadings.invoice)
   }
 
   // Set initial validity from loaded data

@@ -14,14 +14,17 @@ const DEFAULT_WALLET_TYPE_LABELS: Record<WalletType, string> = {
   STUDENT: "Student Wallet",
 }
 
-/** Get localized wallet type labels from dictionary */
+/** Get localized wallet type labels from dictionary (finance.walletConfig.walletTypes) */
 export const getWalletTypeLabels = (
-  d?: Record<string, string>
-): Record<WalletType, string> => ({
-  SCHOOL: d?.SCHOOL || DEFAULT_WALLET_TYPE_LABELS.SCHOOL,
-  PARENT: d?.PARENT || DEFAULT_WALLET_TYPE_LABELS.PARENT,
-  STUDENT: d?.STUDENT || DEFAULT_WALLET_TYPE_LABELS.STUDENT,
-})
+  d?: Record<string, any>
+): Record<WalletType, string> => {
+  const w = d?.walletTypes as Record<string, string> | undefined
+  return {
+    SCHOOL: w?.SCHOOL || DEFAULT_WALLET_TYPE_LABELS.SCHOOL,
+    PARENT: w?.PARENT || DEFAULT_WALLET_TYPE_LABELS.PARENT,
+    STUDENT: w?.STUDENT || DEFAULT_WALLET_TYPE_LABELS.STUDENT,
+  }
+}
 
 /** For backward compat -- static fallback */
 export const WalletTypeLabels = DEFAULT_WALLET_TYPE_LABELS
@@ -32,14 +35,17 @@ const DEFAULT_TRANSACTION_TYPE_LABELS: Record<TransactionType, string> = {
   TRANSFER: "Transfer",
 }
 
-/** Get localized transaction type labels from dictionary */
+/** Get localized transaction type labels from dictionary (finance.walletConfig.transactionTypes) */
 export const getTransactionTypeLabels = (
-  d?: Record<string, string>
-): Record<TransactionType, string> => ({
-  CREDIT: d?.CREDIT || DEFAULT_TRANSACTION_TYPE_LABELS.CREDIT,
-  DEBIT: d?.DEBIT || DEFAULT_TRANSACTION_TYPE_LABELS.DEBIT,
-  TRANSFER: d?.TRANSFER || DEFAULT_TRANSACTION_TYPE_LABELS.TRANSFER,
-})
+  d?: Record<string, any>
+): Record<TransactionType, string> => {
+  const t = d?.transactionTypes as Record<string, string> | undefined
+  return {
+    CREDIT: t?.CREDIT || DEFAULT_TRANSACTION_TYPE_LABELS.CREDIT,
+    DEBIT: t?.DEBIT || DEFAULT_TRANSACTION_TYPE_LABELS.DEBIT,
+    TRANSFER: t?.TRANSFER || DEFAULT_TRANSACTION_TYPE_LABELS.TRANSFER,
+  }
+}
 
 /** For backward compat -- static fallback */
 export const WalletTransactionTypeLabels = DEFAULT_TRANSACTION_TYPE_LABELS
@@ -62,14 +68,15 @@ const DEFAULT_PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   OTHER: "Other",
 }
 
-/** Get localized payment method labels from dictionary */
+/** Get localized payment method labels from dictionary (finance.walletConfig.paymentMethods) */
 export const getPaymentMethodLabels = (
-  d?: Record<string, string>
+  d?: Record<string, any>
 ): Record<PaymentMethod, string> => {
   const result = { ...DEFAULT_PAYMENT_METHOD_LABELS }
-  if (d) {
+  const p = d?.paymentMethods as Record<string, string> | undefined
+  if (p) {
     for (const key of PaymentMethods) {
-      if (d[key]) result[key] = d[key]
+      if (p[key]) result[key] = p[key]
     }
   }
   return result

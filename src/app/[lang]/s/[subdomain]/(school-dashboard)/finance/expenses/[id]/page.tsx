@@ -38,10 +38,17 @@ const statusVariant = (status: string) => {
 export default async function ExpenseDetailPage({ params }: Props) {
   const { lang, id } = await params
   const dictionary = await getDictionary(lang)
+  const d = dictionary?.finance?.expensesPage
+  const c = dictionary?.finance?.common
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
-    return <p className="text-muted-foreground">School context not found</p>
+    return (
+      <p className="text-muted-foreground">
+        {dictionary?.finance?.common?.schoolNotFound ||
+          "School context not found"}
+      </p>
+    )
   }
 
   const expense = await db.expense.findFirst({
@@ -74,7 +81,7 @@ export default async function ExpenseDetailPage({ params }: Props) {
             href={`/${lang}/finance/expenses/all`}
             className={buttonVariants({ variant: "outline" })}
           >
-            Back to Expenses
+            {d?.backToExpenses || "Back to Expenses"}
           </Link>
         </div>
       </div>
@@ -82,7 +89,9 @@ export default async function ExpenseDetailPage({ params }: Props) {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Amount</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {c?.amount || "Amount"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
@@ -92,27 +101,33 @@ export default async function ExpenseDetailPage({ params }: Props) {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Vendor</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{expense.vendor || "N/A"}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">
-              Payment Method
+              {c?.vendor || "Vendor"}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              {expense.paymentMethod || "N/A"}
+              {expense.vendor || c?.na || "N/A"}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Submitted</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {c?.paymentMethod || "Payment Method"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold">
+              {expense.paymentMethod || c?.na || "N/A"}
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">
+              {c?.submitted || "Submitted"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
@@ -125,7 +140,9 @@ export default async function ExpenseDetailPage({ params }: Props) {
       {/* Description */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-medium">Description</CardTitle>
+          <CardTitle className="text-sm font-medium">
+            {c?.description || "Description"}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm">{expense.description}</p>
@@ -137,25 +154,36 @@ export default async function ExpenseDetailPage({ params }: Props) {
         <Card>
           <CardHeader>
             <CardTitle className="text-sm font-medium">
-              {expense.approvedAt ? "Approval" : "Rejection"} Details
+              {expense.approvedAt
+                ? c?.approval || "Approval"
+                : c?.rejection || "Rejection"}{" "}
+              {c?.details || "Details"}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-1 text-sm">
             {expense.approvedAt && (
-              <p>Approved on {formatDate(expense.approvedAt, lang)}</p>
+              <p>
+                {c?.approvedOn || "Approved on"}{" "}
+                {formatDate(expense.approvedAt, lang)}
+              </p>
             )}
             {expense.rejectedAt && (
               <>
-                <p>Rejected on {formatDate(expense.rejectedAt, lang)}</p>
+                <p>
+                  {c?.rejectedOn || "Rejected on"}{" "}
+                  {formatDate(expense.rejectedAt, lang)}
+                </p>
                 {expense.rejectionReason && (
                   <p className="text-muted-foreground">
-                    Reason: {expense.rejectionReason}
+                    {c?.reason || "Reason"}: {expense.rejectionReason}
                   </p>
                 )}
               </>
             )}
             {expense.paidAt && (
-              <p>Paid on {formatDate(expense.paidAt, lang)}</p>
+              <p>
+                {c?.paidOn || "Paid on"} {formatDate(expense.paidAt, lang)}
+              </p>
             )}
           </CardContent>
         </Card>
@@ -166,7 +194,7 @@ export default async function ExpenseDetailPage({ params }: Props) {
         <Card>
           <CardHeader>
             <CardTitle className="text-sm font-medium">
-              Receipts ({expense.receipts.length})
+              {c?.receipts || "Receipts"} ({expense.receipts.length})
             </CardTitle>
           </CardHeader>
           <CardContent>

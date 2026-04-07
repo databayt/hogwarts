@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { ErrorToast, SuccessToast } from "@/components/atom/toast"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { onboardingSchema } from "@/components/school-dashboard/finance/invoice/validation"
 
 interface UserEditProfileProps {
@@ -35,6 +36,10 @@ export default function UserEditProfile({
   email,
 }: UserEditProfileProps) {
   const [isLoading, setIsLoading] = useState<boolean>(false)
+  const { dictionary } = useDictionary()
+  const ip = (dictionary as any)?.finance?.invoiceProfile as
+    | Record<string, string>
+    | undefined
 
   const {
     register,
@@ -56,12 +61,14 @@ export default function UserEditProfile({
         await import("@/components/school-dashboard/finance/invoice/actions")
       const res = await mod.updateUser(data)
       if (res.success) {
-        SuccessToast("Profile updated successfully")
+        SuccessToast(ip?.profileUpdated || "Profile updated successfully")
       } else {
-        ErrorToast(res.error || "Failed to update profile")
+        ErrorToast(
+          res.error || ip?.failedUpdateProfile || "Failed to update profile"
+        )
       }
     } catch (error) {
-      ErrorToast("Something went wrong")
+      ErrorToast(ip?.somethingWentWrong || "Something went wrong")
     } finally {
       setIsLoading(false)
     }
@@ -70,36 +77,38 @@ export default function UserEditProfile({
   return (
     <form className="grid gap-4" onSubmit={handleSubmit(onSubmit)}>
       <div className="grid gap-2">
-        <Label>Email</Label>
+        <Label>{ip?.email || "Email"}</Label>
         <Input value={email ?? ""} disabled readOnly />
       </div>
       <div className="grid gap-2">
-        <Label>First Name</Label>
+        <Label>{ip?.firstName || "First Name"}</Label>
         <Input
-          placeholder="Joe"
+          placeholder={ip?.firstName || "Joe"}
           type="text"
           disabled={isLoading}
           {...register("firstName", { required: true })}
         />
       </div>
       <div className="grid gap-2">
-        <Label>Last Name</Label>
+        <Label>{ip?.lastName || "Last Name"}</Label>
         <Input
-          placeholder="Doe"
+          placeholder={ip?.lastName || "Doe"}
           type="text"
           disabled={isLoading}
           {...register("lastName", { required: true })}
         />
       </div>
       <div className="grid gap-2">
-        <Label>Currency</Label>
+        <Label>{ip?.currency || "Currency"}</Label>
         <Select
           defaultValue={currency ?? "USD"}
           {...register("currency")}
           disabled={isLoading}
         >
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select currency" />
+            <SelectValue
+              placeholder={ip?.selectCurrency || "Select currency"}
+            />
           </SelectTrigger>
           <SelectContent>
             {Object.keys(currencyOption).map((code) => (
@@ -111,7 +120,9 @@ export default function UserEditProfile({
         </Select>
       </div>
       <Button type="submit" disabled={isLoading}>
-        {isLoading ? "Saving..." : "Save changes"}
+        {isLoading
+          ? ip?.saving || "Saving..."
+          : ip?.saveChanges || "Save changes"}
       </Button>
     </form>
   )

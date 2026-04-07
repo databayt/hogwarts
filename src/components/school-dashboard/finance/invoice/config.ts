@@ -34,7 +34,7 @@ export const CURRENCY_OPTIONS = [
 
 type Dict = Record<string, any> | undefined
 
-/** Get localized wizard step labels from dictionary */
+/** Get localized wizard step labels from dictionary (finance.invoiceConfig.steps) */
 export const getStepLabels = (d?: Dict) => {
   const s = d?.steps as Record<string, string> | undefined
   return {

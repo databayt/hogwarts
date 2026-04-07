@@ -15,7 +15,7 @@ import { type Dictionary } from "@/components/internationalization/dictionaries"
 
 import { RecentInvoicesCard, StatsCards } from "./card"
 import { ChartInvoice } from "./chart-invoice"
-import { chartConfig } from "./config"
+import { getChartConfig } from "./config"
 
 interface Props {
   dictionary: Dictionary
@@ -107,7 +107,10 @@ export function DashboardContent({ dictionary, lang }: Props) {
         />
 
         {/***chart */}
-        <ChartInvoice chartConfig={chartConfig} chartData={data.chartData} />
+        <ChartInvoice
+          chartConfig={getChartConfig(fd?.invoiceConfig?.dashboard)}
+          chartData={data.chartData}
+        />
 
         {/***latest 10 Invoice last 30days */}
         <RecentInvoicesCard

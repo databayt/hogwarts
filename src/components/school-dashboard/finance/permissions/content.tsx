@@ -111,20 +111,22 @@ const FINANCE_ACTIONS: FinanceAction[] = [
   "export",
 ]
 
-const MODULE_LABELS: Record<FinanceModule, string> = {
-  invoice: "Invoices",
-  receipt: "Receipts",
-  banking: "Banking",
-  fees: "Fees",
-  salary: "Salary",
-  payroll: "Payroll",
-  timesheet: "Timesheet",
-  wallet: "Wallet",
-  budget: "Budget",
-  expenses: "Expenses",
-  accounts: "Accounts",
-  reports: "Reports",
-}
+const getModuleLabels = (
+  nav?: Record<string, string>
+): Record<FinanceModule, string> => ({
+  invoice: nav?.invoice || "Invoices",
+  receipt: nav?.receipt || "Receipts",
+  banking: nav?.banking || "Banking",
+  fees: nav?.fees || "Fees",
+  salary: nav?.salary || "Salary",
+  payroll: nav?.payroll || "Payroll",
+  timesheet: nav?.timesheet || "Timesheet",
+  wallet: nav?.wallet || "Wallet",
+  budget: nav?.budget || "Budget",
+  expenses: nav?.expenses || "Expenses",
+  accounts: nav?.accounts || "Accounts",
+  reports: nav?.reports || "Reports",
+})
 
 const ACTION_COLORS: Record<FinanceAction, string> = {
   view: "bg-blue-100 text-blue-800",
@@ -150,6 +152,8 @@ const ROLE_COLORS: Record<string, string> = {
 export function PermissionManagementContent() {
   const { dictionary } = useDictionary()
   const t = dictionary?.messages?.toast
+  const p = dictionary?.finance?.permissions
+  const MODULE_LABELS = getModuleLabels(dictionary?.finance?.navigation)
   const [users, setUsers] = useState<UserPermissionSummary[]>([])
   const [modules, setModules] = useState<ModulePermissionSummary[]>([])
   const [loading, setLoading] = useState(true)
@@ -173,7 +177,9 @@ export function PermissionManagementContent() {
       if (usersResult.success && usersResult.data) {
         setUsers(usersResult.data)
       } else {
-        toast.error(usersResult.error || "Failed to load users")
+        toast.error(
+          usersResult.error || p?.failedToLoadUsers || "Failed to load users"
+        )
       }
 
       if (modulesResult.success && modulesResult.data) {
@@ -181,14 +187,12 @@ export function PermissionManagementContent() {
       } else {
         toast.error(
           modulesResult.error ||
-            dictionary?.common?.failedToLoad ||
+            p?.failedToLoadModules ||
             "Failed to load modules"
         )
       }
     } catch (error) {
-      toast.error(
-        dictionary?.common?.failedToLoad || "Failed to load permissions"
-      )
+      toast.error(p?.failedToLoadUsers || "Failed to load permissions")
     } finally {
       setLoading(false)
     }
@@ -219,30 +223,30 @@ export function PermissionManagementContent() {
         <div>
           <h2 className="flex items-center gap-2">
             <Shield className="h-6 w-6" />
-            Permission Management
+            {p?.title || "Permission Management"}
           </h2>
           <p className="text-muted-foreground">
-            Manage finance module permissions for users
+            {p?.description || "Manage finance module permissions for users"}
           </p>
         </div>
         <Button onClick={loadData} disabled={loading}>
-          Refresh
+          {p?.refresh || "Refresh"}
         </Button>
       </div>
 
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Filters</CardTitle>
+          <CardTitle>{p?.filters || "Filters"}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
             <div>
-              <Label>Search Users</Label>
+              <Label>{p?.searchUsers || "Search Users"}</Label>
               <div className="relative">
                 <Search className="text-muted-foreground absolute start-2 top-2.5 h-4 w-4" />
                 <Input
-                  placeholder="Name or email..."
+                  placeholder={p?.searchPlaceholder || "Name or email..."}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="ps-8"
@@ -251,13 +255,15 @@ export function PermissionManagementContent() {
             </div>
 
             <div>
-              <Label>Role</Label>
+              <Label>{p?.role || "Role"}</Label>
               <Select value={roleFilter} onValueChange={setRoleFilter}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Roles</SelectItem>
+                  <SelectItem value="all">
+                    {p?.allRoles || "All Roles"}
+                  </SelectItem>
                   {uniqueRoles.map((role) => (
                     <SelectItem key={role} value={role}>
                       {role}
@@ -268,7 +274,7 @@ export function PermissionManagementContent() {
             </div>
 
             <div>
-              <Label>Module</Label>
+              <Label>{p?.module || "Module"}</Label>
               <Select
                 value={moduleFilter}
                 onValueChange={(value) =>
@@ -279,7 +285,9 @@ export function PermissionManagementContent() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Modules</SelectItem>
+                  <SelectItem value="all">
+                    {p?.allModules || "All Modules"}
+                  </SelectItem>
                   {FINANCE_MODULES.map((module) => (
                     <SelectItem key={module} value={module}>
                       {MODULE_LABELS[module]}
@@ -296,10 +304,10 @@ export function PermissionManagementContent() {
       <Tabs defaultValue="users" className="w-full">
         <TabsList>
           <TabsTrigger value="users">
-            By User ({filteredUsers.length})
+            {p?.byUser || "By User"} ({filteredUsers.length})
           </TabsTrigger>
           <TabsTrigger value="modules">
-            By Module ({modules.length})
+            {p?.byModule || "By Module"} ({modules.length})
           </TabsTrigger>
         </TabsList>
 
@@ -308,14 +316,18 @@ export function PermissionManagementContent() {
           {loading ? (
             <Card>
               <CardContent className="flex items-center justify-center py-12">
-                <p className="text-muted-foreground">Loading users...</p>
+                <p className="text-muted-foreground">
+                  {p?.loadingUsers || "Loading users..."}
+                </p>
               </CardContent>
             </Card>
           ) : filteredUsers.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <CircleAlert className="text-muted-foreground mb-4 h-12 w-12" />
-                <p className="text-muted-foreground">No users found</p>
+                <p className="text-muted-foreground">
+                  {p?.noUsersFound || "No users found"}
+                </p>
               </CardContent>
             </Card>
           ) : (
@@ -336,7 +348,9 @@ export function PermissionManagementContent() {
           {loading ? (
             <Card>
               <CardContent className="flex items-center justify-center py-12">
-                <p className="text-muted-foreground">Loading modules...</p>
+                <p className="text-muted-foreground">
+                  {p?.loadingModules || "Loading modules..."}
+                </p>
               </CardContent>
             </Card>
           ) : (
@@ -368,6 +382,9 @@ function UserPermissionCard({
   user: UserPermissionSummary
   onRefresh: () => void
 }) {
+  const { dictionary } = useDictionary()
+  const p = dictionary?.finance?.permissions
+  const MODULE_LABELS = getModuleLabels(dictionary?.finance?.navigation)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [copyDialogOpen, setCopyDialogOpen] = useState(false)
 
@@ -387,7 +404,7 @@ function UserPermissionCard({
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm">
                   <UserPlus className="me-2 h-4 w-4" />
-                  Edit Permissions
+                  {p?.editPermissions || "Edit Permissions"}
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto">
@@ -402,7 +419,7 @@ function UserPermissionCard({
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm">
                   <Copy className="me-2 h-4 w-4" />
-                  Copy
+                  {p?.copy || "Copy"}
                 </Button>
               </DialogTrigger>
               <DialogContent>
@@ -419,7 +436,8 @@ function UserPermissionCard({
       <CardContent>
         {user.permissions.length === 0 ? (
           <p className="text-muted-foreground text-sm">
-            No custom permissions. Using role-based defaults.
+            {p?.noCustomPermissions ||
+              "No custom permissions. Using role-based defaults."}
           </p>
         ) : (
           <div className="space-y-3">
@@ -458,26 +476,31 @@ function ModulePermissionCard({
   data?: ModulePermissionSummary
   onRefresh: () => void
 }) {
+  const { dictionary } = useDictionary()
+  const p = dictionary?.finance?.permissions
+  const MODULE_LABELS = getModuleLabels(dictionary?.finance?.navigation)
   return (
     <Card>
       <CardHeader>
         <CardTitle>{MODULE_LABELS[module]}</CardTitle>
         <CardDescription>
-          {data?.users.length || 0} users with custom permissions
+          {data?.users.length || 0}{" "}
+          {p?.usersWithCustomPermissions || "users with custom permissions"}
         </CardDescription>
       </CardHeader>
       <CardContent>
         {!data || data.users.length === 0 ? (
           <p className="text-muted-foreground text-sm">
-            No custom permissions for this module.
+            {p?.noCustomPermissionsForModule ||
+              "No custom permissions for this module."}
           </p>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>User</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Permissions</TableHead>
+                <TableHead>{p?.tableUser || "User"}</TableHead>
+                <TableHead>{p?.tableRole || "Role"}</TableHead>
+                <TableHead>{p?.tablePermissions || "Permissions"}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -531,6 +554,8 @@ function EditPermissionsDialog({
 }) {
   const { dictionary } = useDictionary()
   const t = dictionary?.messages?.toast
+  const p = dictionary?.finance?.permissions
+  const MODULE_LABELS = getModuleLabels(dictionary?.finance?.navigation)
   const [selectedPermissions, setSelectedPermissions] = useState<
     Map<FinanceModule, Set<FinanceAction>>
   >(() => {
@@ -654,9 +679,12 @@ function EditPermissionsDialog({
   return (
     <>
       <DialogHeader>
-        <DialogTitle>Edit Permissions for {user.userName}</DialogTitle>
+        <DialogTitle>
+          {p?.editPermissionsFor || "Edit Permissions for"} {user.userName}
+        </DialogTitle>
         <DialogDescription>
-          Select which actions this user can perform on each module
+          {p?.editPermissionsDescription ||
+            "Select which actions this user can perform on each module"}
         </DialogDescription>
       </DialogHeader>
 
@@ -691,10 +719,10 @@ function EditPermissionsDialog({
 
       <DialogFooter>
         <Button variant="outline" onClick={onClose} disabled={saving}>
-          Cancel
+          {p?.cancel || "Cancel"}
         </Button>
         <Button onClick={handleSave} disabled={saving}>
-          {saving ? "Saving..." : "Save Changes"}
+          {saving ? p?.saving || "Saving..." : p?.saveChanges || "Save Changes"}
         </Button>
       </DialogFooter>
     </>
@@ -713,6 +741,8 @@ function CopyPermissionsDialog({
 }) {
   const { dictionary } = useDictionary()
   const t = dictionary?.messages?.toast
+  const p = dictionary?.finance?.permissions
+  const MODULE_LABELS = getModuleLabels(dictionary?.finance?.navigation)
   const [users, setUsers] = useState<UserPermissionSummary[]>([])
   const [selectedUserId, setSelectedUserId] = useState<string>("")
   const [copying, setCopying] = useState(false)
@@ -730,7 +760,7 @@ function CopyPermissionsDialog({
 
   const handleCopy = async () => {
     if (!selectedUserId) {
-      toast.error(dictionary?.common?.error || "Please select a target user")
+      toast.error(p?.selectTargetUser || "Please select a target user")
       return
     }
 
@@ -758,18 +788,19 @@ function CopyPermissionsDialog({
   return (
     <>
       <DialogHeader>
-        <DialogTitle>Copy Permissions</DialogTitle>
+        <DialogTitle>{p?.copyPermissions || "Copy Permissions"}</DialogTitle>
         <DialogDescription>
-          Copy permissions from {fromUser.userName} to another user
+          {p?.copyPermissionsFrom || "Copy permissions from"}{" "}
+          {fromUser.userName} {p?.toAnotherUser || "to another user"}
         </DialogDescription>
       </DialogHeader>
 
       <div className="space-y-4 py-4">
         <div>
-          <Label>Target User</Label>
+          <Label>{p?.targetUser || "Target User"}</Label>
           <Select value={selectedUserId} onValueChange={setSelectedUserId}>
             <SelectTrigger>
-              <SelectValue placeholder="Select user..." />
+              <SelectValue placeholder={p?.selectUser || "Select user..."} />
             </SelectTrigger>
             <SelectContent>
               {users.map((user) => (
@@ -782,10 +813,12 @@ function CopyPermissionsDialog({
         </div>
 
         <div>
-          <h4 className="mb-2 text-sm font-semibold">Permissions to copy:</h4>
+          <h4 className="mb-2 text-sm font-semibold">
+            {p?.permissionsToCopy || "Permissions to copy:"}
+          </h4>
           {fromUser.permissions.length === 0 ? (
             <p className="text-muted-foreground text-sm">
-              No custom permissions to copy
+              {p?.noPermissionsToCopy || "No custom permissions to copy"}
             </p>
           ) : (
             <div className="space-y-2">
@@ -802,7 +835,7 @@ function CopyPermissionsDialog({
 
       <DialogFooter>
         <Button variant="outline" onClick={onClose} disabled={copying}>
-          Cancel
+          {p?.cancel || "Cancel"}
         </Button>
         <Button
           onClick={handleCopy}
@@ -810,7 +843,9 @@ function CopyPermissionsDialog({
             copying || !selectedUserId || fromUser.permissions.length === 0
           }
         >
-          {copying ? "Copying..." : "Copy Permissions"}
+          {copying
+            ? p?.copying || "Copying..."
+            : p?.copyPermissions || "Copy Permissions"}
         </Button>
       </DialogFooter>
     </>

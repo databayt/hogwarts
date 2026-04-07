@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { ErrorToast, SuccessToast } from "@/components/atom/toast"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { onboardingSchema } from "@/components/school-dashboard/finance/invoice/validation"
 
 export function OnboardingContent() {
@@ -40,6 +41,10 @@ export function OnboardingContent() {
   })
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const router = useRouter()
+  const { dictionary } = useDictionary()
+  const io = (dictionary as any)?.finance?.invoiceOnboarding as
+    | Record<string, string>
+    | undefined
 
   const onSubmit = async (data: z.infer<typeof onboardingSchema>) => {
     try {
@@ -48,13 +53,19 @@ export function OnboardingContent() {
         await import("@/components/school-dashboard/finance/invoice/actions")
       const response = await res.updateUser(data)
       if (response.success) {
-        SuccessToast("Onboarding completed successfully")
+        SuccessToast(
+          io?.onboardingCompleted || "Onboarding completed successfully"
+        )
         router.push("/dashboard")
       } else {
-        ErrorToast(response.error || "Failed to update profile")
+        ErrorToast(
+          response.error ||
+            io?.failedUpdateProfile ||
+            "Failed to update profile"
+        )
       }
     } catch (error) {
-      ErrorToast("Something went wrong")
+      ErrorToast(io?.somethingWentWrong || "Something went wrong")
     } finally {
       setIsLoading(false)
     }
@@ -63,40 +74,44 @@ export function OnboardingContent() {
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>You are almost finished</CardTitle>
+        <CardTitle>{io?.almostFinished || "You are almost finished"}</CardTitle>
         <CardDescription>
-          Enter your information to create an account.
+          {io?.enterInfo || "Enter your information to create an account."}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form className="grid gap-4" onSubmit={handleSubmit(onSubmit)}>
           <div className="grid gap-2">
-            <Label>First Name</Label>
+            <Label>{io?.firstName || "First Name"}</Label>
             <Input
-              placeholder="Joe"
+              placeholder={io?.firstName || "Joe"}
               type="text"
               {...register("firstName", { required: true })}
               disabled={isLoading}
             />
           </div>
           <div className="grid gap-2">
-            <Label>Last Name</Label>
+            <Label>{io?.lastName || "Last Name"}</Label>
             <Input
-              placeholder="Due"
+              placeholder={io?.lastName || "Due"}
               type="text"
               {...register("lastName", { required: true })}
               disabled={isLoading}
             />
           </div>
           <div className="grid gap-2">
-            <Label>Select Currency</Label>
+            <Label>{io?.selectCurrency || "Select Currency"}</Label>
             <Select
               defaultValue="USD"
               {...register("currency")}
               disabled={isLoading}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select currency" />
+                <SelectValue
+                  placeholder={
+                    io?.selectCurrencyPlaceholder || "Select currency"
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
                 {Object.keys(currencyOption).map((item: string) => (
@@ -108,7 +123,9 @@ export function OnboardingContent() {
             </Select>
           </div>
           <Button disabled={isLoading}>
-            {isLoading ? "Please wait..." : "Finish onboarding"}
+            {isLoading
+              ? io?.pleaseWait || "Please wait..."
+              : io?.finishOnboarding || "Finish onboarding"}
           </Button>
         </form>
       </CardContent>

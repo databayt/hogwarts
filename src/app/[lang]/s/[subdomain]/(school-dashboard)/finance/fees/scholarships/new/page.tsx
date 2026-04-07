@@ -19,6 +19,7 @@ interface Props {
 export default async function NewScholarshipPage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
+  const d = dictionary?.finance?.fees?.scholarship
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) notFound()
@@ -27,13 +28,17 @@ export default async function NewScholarshipPage({ params }: Props) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Create Scholarship</h1>
+          <h1 className="text-2xl font-semibold">
+            {d?.createScholarship ?? "Create Scholarship"}
+          </h1>
           <p className="text-muted-foreground">
-            Define a new scholarship program
+            {d?.defineNewScholarship ?? "Define a new scholarship program"}
           </p>
         </div>
         <Button variant="outline" asChild>
-          <Link href={`/${lang}/finance/fees/scholarships`}>Back</Link>
+          <Link href={`/${lang}/finance/fees/scholarships`}>
+            {d?.back ?? "Back"}
+          </Link>
         </Button>
       </div>
 

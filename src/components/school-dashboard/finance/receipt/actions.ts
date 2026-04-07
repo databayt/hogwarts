@@ -43,10 +43,7 @@ export async function uploadReceipt(
     // 1. Authenticate user
     const session = await auth()
     if (!session?.user) {
-      return {
-        success: false,
-        error: "Unauthorized. Please sign in.",
-      }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     // 2. Get tenant context (CRITICAL for multi-tenant safety)
@@ -58,10 +55,7 @@ export async function uploadReceipt(
     // 3. Extract and validate file
     const file = formData.get("file") as File
     if (!file) {
-      return {
-        success: false,
-        error: "No file provided",
-      }
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
 
     // Validate file type and size
@@ -72,10 +66,7 @@ export async function uploadReceipt(
     })
 
     if (!validation.success) {
-      return {
-        success: false,
-        error: validation.error.issues[0]?.message || "Invalid file",
-      }
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
 
     // 4. Upload to storage using centralized provider
@@ -133,10 +124,7 @@ export async function uploadReceipt(
       }
     )
 
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Upload failed",
-    }
+    return actionError(ACTION_ERRORS.UPLOAD_FAILED)
   }
 }
 
@@ -221,11 +209,7 @@ export async function getReceipts(input?: {
       }
     )
 
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to fetch receipts",
-    }
+    return actionError(ACTION_ERRORS.LOAD_FAILED)
   }
 }
 
@@ -278,10 +262,7 @@ export async function getReceiptById(
       }
     )
 
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch receipt",
-    }
+    return actionError(ACTION_ERRORS.LOAD_FAILED)
   }
 }
 
@@ -355,10 +336,7 @@ export async function deleteReceipt(id: string): Promise<ServerActionResponse> {
       }
     )
 
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Delete failed",
-    }
+    return actionError(ACTION_ERRORS.DELETE_FAILED)
   }
 }
 
@@ -413,9 +391,6 @@ export async function retryReceiptExtraction(
       }
     )
 
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Retry failed",
-    }
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
   }
 }

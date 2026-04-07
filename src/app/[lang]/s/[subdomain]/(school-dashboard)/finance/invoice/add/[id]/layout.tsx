@@ -6,7 +6,7 @@ import React from "react"
 
 import { WizardLayout } from "@/components/form/wizard"
 import { updateInvoiceWizardStep } from "@/components/school-dashboard/finance/invoice/wizard/actions"
-import { INVOICE_WIZARD_CONFIG } from "@/components/school-dashboard/finance/invoice/wizard/config"
+import { getInvoiceWizardConfig } from "@/components/school-dashboard/finance/invoice/wizard/config"
 import {
   InvoiceWizardProvider,
   useInvoiceWizard,
@@ -19,7 +19,7 @@ export default function InvoiceWizardLayout({
 }) {
   return (
     <WizardLayout
-      config={INVOICE_WIZARD_CONFIG}
+      config={getInvoiceWizardConfig()}
       dataProvider={InvoiceWizardProvider}
       loadHook={useInvoiceWizard}
       basePath="/finance/invoice/add"

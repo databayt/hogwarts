@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useMemo, useState, useTransition } from "react"
+import { memo, useCallback, useMemo, useState, useTransition } from "react"
 import type { NotificationType } from "@prisma/client"
 import {
   differenceInDays,
@@ -69,6 +69,232 @@ function formatNotificationDate(dateStr: string, locale: "ar" | "en") {
   }
   return format(date, "MMM d, yyyy", { locale: dateLocale })
 }
+
+// ============================================================================
+// NotificationItem — top-level memoized to avoid re-creation on every render
+// ============================================================================
+
+interface NotificationItemProps {
+  notification: NotificationDTO
+  locale: "ar" | "en"
+  dictionary: Dictionary["notifications"]
+  bulkActionMode: boolean
+  selected: boolean
+  onToggleSelect: (id: string, checked: boolean) => void
+  onMarkAsRead: (ids: string[]) => void
+  onDelete: (ids: string[]) => void
+  onArchive?: (ids: string[]) => void
+  onStar?: (id: string) => void
+  onActionClick?: (notification: NotificationDTO) => void
+}
+
+const NotificationItem = memo(function NotificationItem({
+  notification,
+  locale,
+  dictionary,
+  bulkActionMode,
+  selected,
+  onToggleSelect,
+  onMarkAsRead,
+  onDelete,
+  onArchive,
+  onStar,
+  onActionClick,
+}: NotificationItemProps) {
+  const config = NOTIFICATION_TYPE_CONFIG[notification.type]
+  const Icon = config?.icon ?? Bell
+  const priorityConfig = PRIORITY_CONFIG[notification.priority]
+  const actorName =
+    notification.actor?.username || notification.actor?.email || ""
+  const formattedDate = formatNotificationDate(notification.createdAt, locale)
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 4 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, x: locale === "ar" ? 20 : -20 }}
+      transition={{ duration: 0.15 }}
+    >
+      <div
+        className={cn(
+          "group relative flex gap-3 border-b px-4 py-3 transition-colors",
+          !notification.read ? "bg-accent/30" : "hover:bg-accent/50",
+          notification.priority === "urgent" &&
+            !notification.read &&
+            "border-s-destructive border-s-4"
+        )}
+        role="article"
+        aria-label={`${
+          notification.read
+            ? dictionary.accessibility.readNotification
+            : dictionary.accessibility.unreadNotification
+        }: ${notification.title}`}
+      >
+        {/* Bulk select checkbox */}
+        {bulkActionMode && (
+          <Checkbox
+            checked={selected}
+            onCheckedChange={(checked) => {
+              onToggleSelect(notification.id, !!checked)
+            }}
+            className="mt-2 flex-shrink-0"
+          />
+        )}
+
+        {/* Avatar / Type icon */}
+        <div className="relative flex-shrink-0">
+          {notification.actor?.image ? (
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={notification.actor.image} alt={actorName} />
+              <AvatarFallback className="bg-muted">
+                <Icon className="text-muted-foreground h-4 w-4" />
+              </AvatarFallback>
+            </Avatar>
+          ) : (
+            <div
+              className={cn(
+                "flex h-10 w-10 items-center justify-center rounded-full",
+                notification.priority === "urgent"
+                  ? "bg-destructive/10"
+                  : "bg-muted"
+              )}
+            >
+              <Icon
+                className={cn(
+                  "h-4 w-4",
+                  notification.priority === "urgent"
+                    ? "text-destructive"
+                    : "text-muted-foreground"
+                )}
+              />
+            </div>
+          )}
+
+          {/* Unread dot */}
+          {!notification.read && (
+            <span className="bg-primary absolute -top-0.5 block h-2.5 w-2.5 rounded-full ring-2 ring-white ltr:-right-0.5 rtl:-left-0.5 dark:ring-gray-950" />
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="min-w-0 flex-1">
+          <p
+            className={cn(
+              "line-clamp-3 text-sm",
+              notification.read ? "text-muted-foreground" : "text-foreground"
+            )}
+          >
+            {actorName && (
+              <strong className="font-semibold">{actorName} </strong>
+            )}
+            {notification.title}
+            {notification.body && notification.title !== notification.body && (
+              <>
+                {". "}
+                <span className="text-muted-foreground">
+                  {notification.body}
+                </span>
+              </>
+            )}
+          </p>
+
+          <div className="mt-1 flex items-center gap-2">
+            <time
+              dateTime={notification.createdAt}
+              className="text-muted-foreground text-xs"
+            >
+              {formattedDate}
+            </time>
+
+            {notification.priority !== "normal" && (
+              <Badge variant={priorityConfig.badgeVariant} className="text-xs">
+                {dictionary.priorities.badge[notification.priority]}
+              </Badge>
+            )}
+          </div>
+
+          {notification.metadata &&
+            typeof notification.metadata === "object" &&
+            "url" in notification.metadata && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onActionClick?.(notification)}
+                className="mt-2"
+              >
+                {dictionary.actions.viewDetails}
+              </Button>
+            )}
+        </div>
+
+        {/* Actions: X dismiss always visible, dropdown on hover */}
+        {!bulkActionMode && (
+          <div className="flex flex-shrink-0 items-start gap-1 pt-0.5">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-muted-foreground hover:text-foreground h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100"
+                >
+                  <MoreHorizontal className="h-3.5 w-3.5" />
+                  <span className="sr-only">{dictionary.actions.settings}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {!notification.read && (
+                  <DropdownMenuItem
+                    onClick={() => onMarkAsRead([notification.id])}
+                  >
+                    <Check className="me-2 h-4 w-4" />
+                    {dictionary.actions.markAsRead}
+                  </DropdownMenuItem>
+                )}
+                {onStar && (
+                  <DropdownMenuItem onClick={() => onStar(notification.id)}>
+                    <Star className="me-2 h-4 w-4" />
+                    {dictionary.actions.star}
+                  </DropdownMenuItem>
+                )}
+                {onArchive && (
+                  <DropdownMenuItem
+                    onClick={() => onArchive([notification.id])}
+                  >
+                    <Archive className="me-2 h-4 w-4" />
+                    {dictionary.actions.archive}
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive"
+                  onClick={() => onDelete([notification.id])}
+                >
+                  <X className="me-2 h-4 w-4" />
+                  {dictionary.actions.delete}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-muted-foreground hover:text-foreground h-7 w-7"
+              onClick={() => onDelete([notification.id])}
+              aria-label={dictionary.accessibility.deleteButton}
+            >
+              <X className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        )}
+      </div>
+    </motion.div>
+  )
+})
+
+// ============================================================================
+// NotificationCenter
+// ============================================================================
 
 export function NotificationCenter({
   notifications,
@@ -177,6 +403,14 @@ export function NotificationCenter({
     })
   }
 
+  const handleToggleSelect = useCallback((id: string, checked: boolean) => {
+    if (checked) {
+      setSelectedNotifications((prev) => [...prev, id])
+    } else {
+      setSelectedNotifications((prev) => prev.filter((i) => i !== id))
+    }
+  }, [])
+
   const handleSelectAll = () => {
     if (selectedNotifications.length === filteredNotifications.length) {
       setSelectedNotifications([])
@@ -190,214 +424,6 @@ export function NotificationCenter({
     () => Object.entries(NOTIFICATION_TYPE_CONFIG).slice(0, 8),
     []
   )
-
-  const NotificationItem = ({
-    notification,
-  }: {
-    notification: NotificationDTO
-  }) => {
-    const config = NOTIFICATION_TYPE_CONFIG[notification.type]
-    const Icon = config?.icon ?? Bell
-    const priorityConfig = PRIORITY_CONFIG[notification.priority]
-    const actorName =
-      notification.actor?.username || notification.actor?.email || ""
-    const formattedDate = formatNotificationDate(notification.createdAt, locale)
-
-    return (
-      <motion.div
-        layout
-        initial={{ opacity: 0, y: 4 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, x: locale === "ar" ? 20 : -20 }}
-        transition={{ duration: 0.15 }}
-      >
-        <div
-          className={cn(
-            "group relative flex gap-3 border-b px-4 py-3 transition-colors",
-            !notification.read ? "bg-accent/30" : "hover:bg-accent/50",
-            notification.priority === "urgent" &&
-              !notification.read &&
-              "border-s-destructive border-s-4"
-          )}
-          role="article"
-          aria-label={`${
-            notification.read
-              ? dictionary.accessibility.readNotification
-              : dictionary.accessibility.unreadNotification
-          }: ${notification.title}`}
-        >
-          {/* Bulk select checkbox */}
-          {bulkActionMode && (
-            <Checkbox
-              checked={selectedNotifications.includes(notification.id)}
-              onCheckedChange={(checked) => {
-                if (checked) {
-                  setSelectedNotifications((prev) => [...prev, notification.id])
-                } else {
-                  setSelectedNotifications((prev) =>
-                    prev.filter((id) => id !== notification.id)
-                  )
-                }
-              }}
-              className="mt-2 flex-shrink-0"
-            />
-          )}
-
-          {/* Avatar / Type icon */}
-          <div className="relative flex-shrink-0">
-            {notification.actor?.image ? (
-              <Avatar className="h-10 w-10">
-                <AvatarImage src={notification.actor.image} alt={actorName} />
-                <AvatarFallback className="bg-muted">
-                  <Icon className="text-muted-foreground h-4 w-4" />
-                </AvatarFallback>
-              </Avatar>
-            ) : (
-              <div
-                className={cn(
-                  "flex h-10 w-10 items-center justify-center rounded-full",
-                  notification.priority === "urgent"
-                    ? "bg-destructive/10"
-                    : "bg-muted"
-                )}
-              >
-                <Icon
-                  className={cn(
-                    "h-4 w-4",
-                    notification.priority === "urgent"
-                      ? "text-destructive"
-                      : "text-muted-foreground"
-                  )}
-                />
-              </div>
-            )}
-
-            {/* Unread dot */}
-            {!notification.read && (
-              <span className="bg-primary absolute -top-0.5 block h-2.5 w-2.5 rounded-full ring-2 ring-white ltr:-right-0.5 rtl:-left-0.5 dark:ring-gray-950" />
-            )}
-          </div>
-
-          {/* Content */}
-          <div className="min-w-0 flex-1">
-            <p
-              className={cn(
-                "line-clamp-3 text-sm",
-                notification.read ? "text-muted-foreground" : "text-foreground"
-              )}
-            >
-              {actorName && (
-                <strong className="font-semibold">{actorName} </strong>
-              )}
-              {notification.title}
-              {notification.body &&
-                notification.title !== notification.body && (
-                  <>
-                    {". "}
-                    <span className="text-muted-foreground">
-                      {notification.body}
-                    </span>
-                  </>
-                )}
-            </p>
-
-            <div className="mt-1 flex items-center gap-2">
-              <time
-                dateTime={notification.createdAt}
-                className="text-muted-foreground text-xs"
-              >
-                {formattedDate}
-              </time>
-
-              {notification.priority !== "normal" && (
-                <Badge
-                  variant={priorityConfig.badgeVariant}
-                  className="text-xs"
-                >
-                  {dictionary.priorities.badge[notification.priority]}
-                </Badge>
-              )}
-            </div>
-
-            {notification.metadata &&
-              typeof notification.metadata === "object" &&
-              "url" in notification.metadata && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onActionClick?.(notification)}
-                  className="mt-2"
-                >
-                  {dictionary.actions.viewDetails}
-                </Button>
-              )}
-          </div>
-
-          {/* Actions: X dismiss always visible, dropdown on hover */}
-          {!bulkActionMode && (
-            <div className="flex flex-shrink-0 items-start gap-1 pt-0.5">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-muted-foreground hover:text-foreground h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100"
-                  >
-                    <MoreHorizontal className="h-3.5 w-3.5" />
-                    <span className="sr-only">
-                      {dictionary.actions.settings}
-                    </span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {!notification.read && (
-                    <DropdownMenuItem
-                      onClick={() => onMarkAsRead([notification.id])}
-                    >
-                      <Check className="me-2 h-4 w-4" />
-                      {dictionary.actions.markAsRead}
-                    </DropdownMenuItem>
-                  )}
-                  {onStar && (
-                    <DropdownMenuItem onClick={() => onStar(notification.id)}>
-                      <Star className="me-2 h-4 w-4" />
-                      {dictionary.actions.star}
-                    </DropdownMenuItem>
-                  )}
-                  {onArchive && (
-                    <DropdownMenuItem
-                      onClick={() => onArchive([notification.id])}
-                    >
-                      <Archive className="me-2 h-4 w-4" />
-                      {dictionary.actions.archive}
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="text-destructive focus:text-destructive"
-                    onClick={() => onDelete([notification.id])}
-                  >
-                    <X className="me-2 h-4 w-4" />
-                    {dictionary.actions.delete}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-muted-foreground hover:text-foreground h-7 w-7"
-                onClick={() => onDelete([notification.id])}
-                aria-label={dictionary.accessibility.deleteButton}
-              >
-                <X className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-          )}
-        </div>
-      </motion.div>
-    )
-  }
 
   return (
     <div className="space-y-4">
@@ -598,6 +624,18 @@ export function NotificationCenter({
                           <NotificationItem
                             key={notification.id}
                             notification={notification}
+                            locale={locale}
+                            dictionary={dictionary}
+                            bulkActionMode={bulkActionMode}
+                            selected={selectedNotifications.includes(
+                              notification.id
+                            )}
+                            onToggleSelect={handleToggleSelect}
+                            onMarkAsRead={onMarkAsRead}
+                            onDelete={onDelete}
+                            onArchive={onArchive}
+                            onStar={onStar}
+                            onActionClick={onActionClick}
                           />
                         ))}
                       </div>

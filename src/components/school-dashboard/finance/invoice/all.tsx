@@ -55,6 +55,7 @@ export function AllInvoices({
   const d = dictionary?.finance
   const fd = (dictionary as any)?.finance
   const il = fd?.invoiceList as Record<string, string> | undefined
+  const iu = fd?.invoiceUtil as Record<string, string> | undefined
 
   const filteredInvoices = invoices.filter((invoice) => {
     if (filters.search) {
@@ -117,7 +118,7 @@ export function AllInvoices({
         <div className="relative">
           <Search className="text-muted-foreground absolute start-3 top-1/2 size-4 -translate-y-1/2" />
           <Input
-            placeholder="Search invoices..."
+            placeholder={il?.searchInvoices || "Search invoices..."}
             value={filters.search}
             onChange={(e) => setFilters({ ...filters, search: e.target.value })}
             className="ps-9"
@@ -129,26 +130,28 @@ export function AllInvoices({
           onValueChange={(value) => setFilters({ ...filters, status: value })}
         >
           <SelectTrigger>
-            <SelectValue placeholder="All statuses" />
+            <SelectValue placeholder={il?.allStatuses || "All statuses"} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All statuses</SelectItem>
-            <SelectItem value="draft">Draft</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="sent">Sent</SelectItem>
-            <SelectItem value="paid">Paid</SelectItem>
-            <SelectItem value="overdue">Overdue</SelectItem>
+            <SelectItem value="">
+              {il?.allStatuses || "All statuses"}
+            </SelectItem>
+            <SelectItem value="draft">{il?.draft || "Draft"}</SelectItem>
+            <SelectItem value="pending">{il?.pending || "Pending"}</SelectItem>
+            <SelectItem value="sent">{il?.sent || "Sent"}</SelectItem>
+            <SelectItem value="paid">{il?.paid || "Paid"}</SelectItem>
+            <SelectItem value="overdue">{il?.overdue || "Overdue"}</SelectItem>
           </SelectContent>
         </Select>
 
         <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
           <SelectTrigger>
-            <SelectValue placeholder="Sort by" />
+            <SelectValue placeholder={il?.sortBy || "Sort by"} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="date">Date</SelectItem>
-            <SelectItem value="amount">Amount</SelectItem>
-            <SelectItem value="client">Client</SelectItem>
+            <SelectItem value="date">{il?.date || "Date"}</SelectItem>
+            <SelectItem value="amount">{il?.amount || "Amount"}</SelectItem>
+            <SelectItem value="client">{il?.client || "Client"}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -173,7 +176,7 @@ export function AllInvoices({
                   {formatCurrency(invoice.amount)}
                 </div>
                 <small className="muted">
-                  {formatDueStatus(invoice.dueDate, invoice.status)}
+                  {formatDueStatus(invoice.dueDate, invoice.status, iu)}
                 </small>
               </div>
               <Badge
@@ -195,11 +198,12 @@ export function AllInvoices({
       {/* Empty state */}
       {sortedInvoices.length === 0 && (
         <div className="flex min-h-[400px] flex-col items-center justify-center rounded-lg border border-dashed p-8">
-          <h4 className="mt-4">No invoices found</h4>
+          <h4 className="mt-4">{il?.noInvoicesFound || "No invoices found"}</h4>
           <p className="muted mt-2">
             {filters.search || filters.status
-              ? "Try adjusting your filters"
-              : "Create your first invoice to get started"}
+              ? il?.adjustFilters || "Try adjusting your filters"
+              : il?.createFirstInvoice ||
+                "Create your first invoice to get started"}
           </p>
         </div>
       )}

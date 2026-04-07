@@ -35,6 +35,8 @@ interface ClientItemsStepProps {
 }
 
 export function ClientItemsStep({ isView, currentId }: ClientItemsStepProps) {
+  const { dictionary } = useDictionary()
+  const fd = (dictionary as any)?.finance
   const form = useFormContext<z.infer<typeof InvoiceSchemaZod>>()
   const {
     register,
@@ -73,18 +75,20 @@ export function ClientItemsStep({ isView, currentId }: ClientItemsStepProps) {
     <div className="space-y-6">
       {/* Basic Invoice Information */}
       <div className="space-y-4">
-        <h3 className="text-lg font-medium">Invoice Details</h3>
+        <h3 className="text-lg font-medium">
+          {fd?.invoiceForm?.invoiceDetails || "Invoice Details"}
+        </h3>
         <div className="flex gap-2">
           <div className="flex-1">
             <Input
               {...register("invoice_no")}
-              placeholder="Invoice Number"
+              placeholder={fd?.invoiceForm?.invoiceNumber || "Invoice Number"}
               className={`h-10 w-full ${errors.invoice_no ? "border-red-500" : ""}`}
               readOnly={!currentId} // Read-only when creating new invoice
             />
             {!currentId && (
               <p className="text-muted-foreground mt-1 text-xs">
-                Invoice no. auto-gen.
+                {fd?.invoiceForm?.invoiceNoAutoGen || "Invoice no. auto-gen."}
               </p>
             )}
           </div>
@@ -95,7 +99,11 @@ export function ClientItemsStep({ isView, currentId }: ClientItemsStepProps) {
               defaultValue={getValues("currency") || "USD"}
             >
               <SelectTrigger className="h-10 w-full">
-                <SelectValue placeholder="Select Currency" />
+                <SelectValue
+                  placeholder={
+                    fd?.invoiceForm?.selectCurrency || "Select Currency"
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
                 {CURRENCY_OPTIONS.map((currency) => (
@@ -121,7 +129,9 @@ export function ClientItemsStep({ isView, currentId }: ClientItemsStepProps) {
                   {watch("invoice_date") ? (
                     format(watch("invoice_date"), "MMM do, yyyy")
                   ) : (
-                    <span>Invoice Date</span>
+                    <span>
+                      {fd?.invoiceForm?.invoiceDate || "Invoice Date"}
+                    </span>
                   )}
                 </Button>
               </PopoverTrigger>
@@ -152,7 +162,7 @@ export function ClientItemsStep({ isView, currentId }: ClientItemsStepProps) {
                   {watch("due_date") ? (
                     format(watch("due_date"), "MMM do, yyyy")
                   ) : (
-                    <span>Due Date</span>
+                    <span>{fd?.invoiceForm?.dueDate || "Due Date"}</span>
                   )}
                 </Button>
               </PopoverTrigger>
@@ -172,7 +182,9 @@ export function ClientItemsStep({ isView, currentId }: ClientItemsStepProps) {
       {/* Invoice Items */}
       <div className="space-y-4">
         <div className="flex items-center gap-3">
-          <h3 className="text-lg font-medium">Invoice Items</h3>
+          <h3 className="text-lg font-medium">
+            {fd?.invoiceForm?.invoiceItems || "Invoice Items"}
+          </h3>
           <button type="button" onClick={handleAddNewItemRow} className="">
             <Plus className="h-6 w-6" />
           </button>
@@ -184,7 +196,7 @@ export function ClientItemsStep({ isView, currentId }: ClientItemsStepProps) {
               <div className="col-span-5">
                 <Input
                   {...register(`items.${index}.item_name`)}
-                  placeholder="Item Name"
+                  placeholder={fd?.invoiceForm?.itemName || "Item Name"}
                   className={
                     errors.items?.[index]?.item_name ? "border-red-500" : ""
                   }
@@ -196,7 +208,7 @@ export function ClientItemsStep({ isView, currentId }: ClientItemsStepProps) {
                     valueAsNumber: true,
                   })}
                   type="number"
-                  placeholder="Qty"
+                  placeholder={fd?.invoiceForm?.qty || "Qty"}
                   min="0"
                   step="1"
                   className={
@@ -214,7 +226,7 @@ export function ClientItemsStep({ isView, currentId }: ClientItemsStepProps) {
                 <Input
                   {...register(`items.${index}.price`, { valueAsNumber: true })}
                   type="number"
-                  placeholder="Price"
+                  placeholder={fd?.invoiceForm?.price || "Price"}
                   min="0"
                   step="0.01"
                   className={
@@ -232,7 +244,7 @@ export function ClientItemsStep({ isView, currentId }: ClientItemsStepProps) {
                 <Input
                   {...register(`items.${index}.total`, { valueAsNumber: true })}
                   type="number"
-                  placeholder="Total"
+                  placeholder={fd?.invoiceForm?.total || "Total"}
                   min="0"
                   step="0.01"
                   className={

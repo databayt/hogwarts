@@ -180,6 +180,13 @@ export const DEFAULT_NOTIFICATION_PREFERENCES: Record<
   string,
   Record<NotificationChannel, boolean>
 > = {
+  DEVELOPER: {
+    in_app: true,
+    email: true,
+    push: false,
+    sms: false,
+    whatsapp: false,
+  },
   ADMIN: {
     in_app: true,
     email: true,
@@ -216,6 +223,13 @@ export const DEFAULT_NOTIFICATION_PREFERENCES: Record<
     whatsapp: false,
   },
   STAFF: {
+    in_app: true,
+    email: false,
+    push: false,
+    sms: false,
+    whatsapp: false,
+  },
+  USER: {
     in_app: true,
     email: false,
     push: false,
@@ -279,17 +293,3 @@ export const DEFAULT_QUIET_HOURS = {
 // Digest frequency options
 // Note: Labels should come from dictionary (dictionary.preferences.digest.daily/weekly)
 export const DIGEST_FREQUENCY_OPTIONS = ["daily", "weekly"] as const
-
-// Filter options for notification center
-// Note: Labels should come from dictionary (dictionary.filters.*)
-export const NOTIFICATION_FILTER_TYPES = [
-  "all",
-  "unread",
-  "messages",
-  "assignments",
-  "grades",
-  "attendance",
-  "fees",
-  "announcements",
-  "system",
-] as const

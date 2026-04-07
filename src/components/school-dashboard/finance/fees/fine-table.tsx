@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
 import type { Locale } from "@/components/internationalization/config"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { PlatformToolbar } from "@/components/school-dashboard/shared"
 import {
   BulkActionsToolbar,
@@ -35,6 +36,7 @@ function FinesTableInner({
   perPage = 20,
 }: FinesTableProps) {
   const router = useRouter()
+  const { dictionary } = useDictionary()
   const [searchValue, setSearchValue] = useState("")
   const [isPending, startTransition] = useTransition()
   const { view, toggleView } = usePlatformView({ defaultView: "table" })
@@ -119,7 +121,9 @@ function FinesTableInner({
         onToggleView={toggleView}
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
-        searchPlaceholder="Search fines..."
+        searchPlaceholder={
+          (dictionary as any)?.finance?.fees?.search?.fines || "Search fines..."
+        }
         onCreate={handleCreate}
         entityName="fines"
       />

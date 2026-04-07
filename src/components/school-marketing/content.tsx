@@ -65,6 +65,7 @@ export default function SiteContent({
         subdomain={subdomainValue}
         dictionary={dictionary}
         heroImageUrl={school.branding?.heroImageUrl}
+        logoUrl={school.logoUrl}
       />
       <Houses />
       <Features />

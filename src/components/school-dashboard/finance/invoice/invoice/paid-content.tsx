@@ -62,9 +62,16 @@ export default function PaidInvoiceContent({
       } as any)
       if (response.success) {
         fetchData()
-        toast.success("Invoice status updated")
+        toast.success(
+          dictionary?.finance?.invoiceStatus?.invoiceStatusUpdated ||
+            "Invoice status updated"
+        )
       } else {
-        toast.error(response.error || "Something went wrong")
+        toast.error(
+          response.error ||
+            dictionary?.finance?.invoiceStatus?.somethingWentWrong ||
+            "Something went wrong"
+        )
       }
     } catch (error) {
       console.log(error)
@@ -82,7 +89,10 @@ export default function PaidInvoiceContent({
         >
           <ArrowLeft className="rtl:rotate-180" />
         </Link>
-        <h1 className="font-semibold"> Invoice Status</h1>
+        <h1 className="font-semibold">
+          {dictionary?.finance?.invoiceStatus?.invoiceStatus ||
+            "Invoice Status"}
+        </h1>
       </div>
 
       <div className="relative flex min-h-[calc(100dvh-200px)] flex-col items-center justify-center">
@@ -90,15 +100,22 @@ export default function PaidInvoiceContent({
 
         <Card className="relative z-10 min-w-sm">
           <CardHeader>
-            <CardTitle>Invoice Status</CardTitle>
-            <CardDescription>Make your invoice paid</CardDescription>
+            <CardTitle>
+              {dictionary?.finance?.invoiceStatus?.invoiceStatus ||
+                "Invoice Status"}
+            </CardTitle>
+            <CardDescription>
+              {dictionary?.finance?.invoiceStatus?.makeInvoicePaid ||
+                "Make your invoice paid"}
+            </CardDescription>
           </CardHeader>
           <CardContent className="py-4">
             {isLoading ? (
               <Loading />
             ) : data?.status === "UNPAID" ? (
               <Button className="w-full" onClick={handleUpdate}>
-                Make Invoice Paid
+                {dictionary?.finance?.invoiceStatus?.makeInvoicePaidButton ||
+                  "Make Invoice Paid"}
               </Button>
             ) : (
               <div
@@ -107,7 +124,10 @@ export default function PaidInvoiceContent({
                 )}
               >
                 <Check />
-                <p>Your invoice payment done</p>
+                <p>
+                  {dictionary?.finance?.invoiceStatus?.paymentDone ||
+                    "Your invoice payment done"}
+                </p>
               </div>
             )}
           </CardContent>

@@ -8,6 +8,93 @@
 
 import { z } from "zod"
 
+import type { ValidationHelper } from "@/components/internationalization/helpers"
+
+// ============================================================================
+// Schema Factory Functions (i18n-enabled)
+// ============================================================================
+
+const createReceiptItemSchemaFactory = (v: ValidationHelper) =>
+  z.object({
+    name: z.string().min(1, v.required()),
+    quantity: z.number().positive(v.positive()),
+    unitPrice: z.number().nonnegative(v.min(0)),
+    totalPrice: z.number().nonnegative(v.min(0)),
+  })
+
+export const createExtractedReceiptDataSchema = (v: ValidationHelper) =>
+  z.object({
+    merchantName: z.string().min(1, v.required()),
+    merchantAddress: z.string().min(1, v.required()),
+    merchantContact: z.string().optional().default(""),
+    transactionDate: z.string().min(1, v.required()),
+    transactionAmount: z.string().min(1, v.required()),
+    currency: z.string().min(1, v.required()).default("USD"),
+    receiptSummary: z.string().optional().default(""),
+    items: z.array(createReceiptItemSchemaFactory(v)).min(1, v.required()),
+  })
+
+export const createUploadReceiptSchema = (v: ValidationHelper) =>
+  z.object({
+    file: z
+      .instanceof(File)
+      .refine((file) => file.size > 0, v.required())
+      .refine(
+        (file) => file.size <= 10 * 1024 * 1024,
+        "File size must be less than 10MB" // TODO: add custom validation key
+      )
+      .refine(
+        (file) =>
+          ["image/jpeg", "image/png", "image/webp", "application/pdf"].includes(
+            file.type
+          ),
+        "File must be an image (JPEG, PNG, WEBP) or PDF" // TODO: add custom validation key
+      ),
+    schoolId: z.string().min(1, v.required()),
+    userId: z.string().min(1, v.required()),
+  })
+
+export const createUpdateReceiptSchema = (v: ValidationHelper) =>
+  z.object({
+    id: z.string().min(1, v.required()),
+    fileDisplayName: z.string().optional(),
+    merchantName: z.string().optional(),
+    merchantAddress: z.string().optional(),
+    merchantContact: z.string().optional(),
+    transactionDate: z.date().optional(),
+    transactionAmount: z.number().optional(),
+    currency: z.string().optional(),
+    receiptSummary: z.string().optional(),
+    items: z.array(createReceiptItemSchemaFactory(v)).optional(),
+  })
+
+export const createDeleteReceiptSchema = (v: ValidationHelper) =>
+  z.object({
+    id: z.string().min(1, v.required()),
+    schoolId: z.string().min(1, v.required()),
+  })
+
+export const createGetReceiptsSchema = (v: ValidationHelper) =>
+  z.object({
+    schoolId: z.string().min(1, v.required()),
+    userId: z.string().optional(),
+    status: z.enum(["pending", "processing", "processed", "error"]).optional(),
+    limit: z.number().int().positive().max(100).default(50).optional(),
+    offset: z.number().int().nonnegative().default(0).optional(),
+    startDate: z.date().optional(),
+    endDate: z.date().optional(),
+  })
+
+export const createGetReceiptByIdSchema = (v: ValidationHelper) =>
+  z.object({
+    id: z.string().min(1, v.required()),
+    schoolId: z.string().min(1, v.required()),
+  })
+
+// ============================================================================
+// Static Schemas (server-side fallback)
+// ============================================================================
+
 // Receipt item schema
 export const receiptItemSchema = z.object({
   name: z.string().min(1, "Item name is required"),

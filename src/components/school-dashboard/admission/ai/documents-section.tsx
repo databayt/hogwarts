@@ -16,7 +16,7 @@ interface DocumentsSectionProps {
   applicationId: string
 }
 
-const docTypeLabels: Record<string, string> = {
+const defaultDocTypeLabels: Record<string, string> = {
   degree: "Degree",
   transcript: "Transcript",
   national_id: "National ID",
@@ -81,7 +81,7 @@ export function DocumentsSection({
           const isImage = /\.(jpe?g|png|gif|webp|bmp|svg)$/i.test(doc.url || "")
           const typeLabel =
             dictionary?.admission?.documentTypes?.[doc.type] ??
-            docTypeLabels[doc.type] ??
+            defaultDocTypeLabels[doc.type] ??
             doc.type
           const displayName = doc.fileName || `Document ${i + 1}`
 

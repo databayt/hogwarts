@@ -21,6 +21,8 @@ import { ForceChangePasswordModal } from "@/components/school-dashboard/force-ch
 import { WelcomeDialog } from "@/components/school-dashboard/welcome/welcome-dialog"
 import PlatformHeader from "@/components/template/platform-header/content"
 import PlatformSidebar from "@/components/template/platform-sidebar/content"
+import { getDisplayText } from "@/components/translation/display"
+import { detectLanguage } from "@/components/translation/util"
 
 // All school-dashboard pages are dynamic - they require auth, subdomain lookup, and query the database
 export const dynamic = "force-dynamic"
@@ -59,6 +61,18 @@ export default async function PlatformLayout({
   }
 
   const school = result.data
+
+  // Translate school name for display when viewing in a different language
+  if (lang === "en" && school.nameEn) {
+    school.name = school.nameEn
+  } else if (detectLanguage(school.name) !== lang && school.id) {
+    school.name = await getDisplayText(
+      school.name,
+      detectLanguage(school.name) as "ar" | "en",
+      lang as "ar" | "en",
+      school.id
+    )
+  }
 
   // MEMBERSHIP GUARD — only school members and DEVELOPERs can access dashboard
   // Unauthenticated: redirect to login (middleware should catch this first,

@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/table"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { interpolate } from "@/components/internationalization/helpers"
 import {
   buildInstallments,
   InstallmentTimeline,
@@ -72,6 +73,7 @@ function paymentStatusVariant(
 export default async function AssignmentDetailPage({ params }: Props) {
   const { lang, id } = await params
   const dictionary = await getDictionary(lang)
+  const d = dictionary?.finance
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) notFound()
@@ -123,12 +125,16 @@ export default async function AssignmentDetailPage({ params }: Props) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Fee Assignment</h1>
+          <h1 className="text-2xl font-semibold">
+            {d?.fees?.assignment?.title || "Fee Assignment"}
+          </h1>
           <p className="text-muted-foreground">{studentName}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" asChild>
-            <Link href={`/${lang}/finance/fees/assignments`}>Back</Link>
+            <Link href={`/${lang}/finance/fees/assignments`}>
+              {d?.fees?.assignment?.back || "Back"}
+            </Link>
           </Button>
           <PayOnlineButton
             feeAssignmentId={id}
@@ -139,7 +145,7 @@ export default async function AssignmentDetailPage({ params }: Props) {
             <Link
               href={`/${lang}/finance/fees/payments/new?assignmentId=${id}`}
             >
-              Record Payment
+              {d?.fees?.overview?.recordPayment || "Record Payment"}
             </Link>
           </Button>
         </div>
@@ -148,7 +154,9 @@ export default async function AssignmentDetailPage({ params }: Props) {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Fee Structure</CardDescription>
+            <CardDescription>
+              {d?.fees?.feeStructure || "Fee Structure"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="font-medium">
@@ -158,7 +166,9 @@ export default async function AssignmentDetailPage({ params }: Props) {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Final Amount</CardDescription>
+            <CardDescription>
+              {d?.fees?.assignment?.finalAmount || "Final Amount"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
@@ -166,19 +176,21 @@ export default async function AssignmentDetailPage({ params }: Props) {
             </p>
             {totalDiscount > 0 && (
               <p className="text-muted-foreground text-sm">
-                Discount: {formatCurrency(totalDiscount, lang)}
+                {d?.fees?.discount || "Discount"}:{" "}
+                {formatCurrency(totalDiscount, lang)}
               </p>
             )}
             {assignment.scholarship && (
               <p className="text-muted-foreground text-sm">
-                Scholarship: {assignment.scholarship.name}
+                {d?.fees?.scholarshipLabel || "Scholarship"}:{" "}
+                {assignment.scholarship.name}
               </p>
             )}
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Paid</CardDescription>
+            <CardDescription>{d?.fees?.myFees?.paid || "Paid"}</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
@@ -188,14 +200,18 @@ export default async function AssignmentDetailPage({ params }: Props) {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Remaining</CardDescription>
+            <CardDescription>
+              {d?.fees?.myFees?.remaining || "Remaining"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
               {formatCurrency(remaining, lang)}
             </p>
             <Badge variant={statusVariant(assignment.status)} className="mt-1">
-              {assignment.status}
+              {(d?.fees?.myFees?.statusLabels as Record<string, string>)?.[
+                assignment.status
+              ] || assignment.status}
             </Badge>
           </CardContent>
         </Card>
@@ -232,27 +248,33 @@ export default async function AssignmentDetailPage({ params }: Props) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Payments</CardTitle>
+          <CardTitle>{d?.fees?.assignment?.payments || "Payments"}</CardTitle>
           <CardDescription>
-            {assignment.payments.length} payment
-            {assignment.payments.length !== 1 ? "s" : ""} recorded
+            {interpolate(
+              d?.fees?.assignment?.paymentsRecorded ||
+                "{count} payment(s) recorded",
+              { count: assignment.payments.length }
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {assignment.payments.length === 0 ? (
             <p className="text-muted-foreground py-4 text-center">
-              No payments recorded yet.
+              {d?.fees?.assignment?.noPaymentsRecorded ||
+                "No payments recorded yet."}
             </p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Payment #</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Method</TableHead>
-                  <TableHead>Receipt</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>
+                    {d?.fees?.myFees?.paymentNumber || "Payment #"}
+                  </TableHead>
+                  <TableHead>{d?.fees?.myFees?.date || "Date"}</TableHead>
+                  <TableHead>{d?.fees?.myFees?.amount || "Amount"}</TableHead>
+                  <TableHead>{d?.fees?.myFees?.method || "Method"}</TableHead>
+                  <TableHead>{d?.fees?.myFees?.receipt || "Receipt"}</TableHead>
+                  <TableHead>{d?.fees?.myFees?.status || "Status"}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -278,7 +300,12 @@ export default async function AssignmentDetailPage({ params }: Props) {
                     <TableCell>{payment.receiptNumber || "-"}</TableCell>
                     <TableCell>
                       <Badge variant={paymentStatusVariant(payment.status)}>
-                        {payment.status}
+                        {(
+                          d?.fees?.assignment?.paymentStatus as Record<
+                            string,
+                            string
+                          >
+                        )?.[payment.status] || payment.status}
                       </Badge>
                     </TableCell>
                   </TableRow>

@@ -6,8 +6,10 @@ import { useCallback, useEffect, useState } from "react"
 import Link from "next/link"
 import { AnimatePresence, motion } from "framer-motion"
 import { Mail } from "lucide-react"
+import { useSession } from "next-auth/react"
 
 import { cn } from "@/lib/utils"
+import socketService from "@/lib/websocket/socket-service"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 
@@ -22,6 +24,8 @@ export function MessageMailIcon({
   label = "Messages",
   className,
 }: MessageMailIconProps) {
+  const { data: session } = useSession()
+  const userId = session?.user?.id
   const [unreadCount, setUnreadCount] = useState(0)
 
   const fetchUnreadCount = useCallback(async () => {
@@ -36,11 +40,29 @@ export function MessageMailIcon({
     }
   }, [])
 
-  // Fetch on mount and poll every 30 seconds
+  // Fetch on mount
   useEffect(() => {
     fetchUnreadCount()
-    const interval = setInterval(fetchUnreadCount, 30_000)
-    return () => clearInterval(interval)
+  }, [fetchUnreadCount])
+
+  // Socket-based instant update — increment on new message from others
+  useEffect(() => {
+    if (!userId) return
+    const unsub = socketService.on("message:new", (data) => {
+      if (data.senderId !== userId) {
+        setUnreadCount((prev) => prev + 1)
+      }
+    })
+    return unsub
+  }, [userId])
+
+  // Re-sync on tab focus to correct any drift
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") fetchUnreadCount()
+    }
+    document.addEventListener("visibilitychange", onVisible)
+    return () => document.removeEventListener("visibilitychange", onVisible)
   }, [fetchUnreadCount])
 
   return (

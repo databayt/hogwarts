@@ -18,12 +18,12 @@ import { getNotificationsList } from "./queries"
 import type { NotificationListFilters } from "./queries"
 import type { NotificationDTO } from "./types"
 
-function safeSerializeDate(date: Date | null | undefined): string {
-  if (!date) return new Date().toISOString()
+function safeSerializeDate(date: Date | null | undefined): string | null {
+  if (!date) return null
   try {
     return new Date(date).toISOString()
   } catch {
-    return new Date().toISOString()
+    return null
   }
 }
 
@@ -65,8 +65,7 @@ export async function NotificationCenterContent({
     search: searchParams.search,
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let notifications: any[] = []
+  let rows: Awaited<ReturnType<typeof getNotificationsList>>["rows"] = []
   let totalCount = 0
 
   try {
@@ -76,7 +75,7 @@ export async function NotificationCenterContent({
       ...filters,
     })
 
-    notifications = result.rows
+    rows = result.rows
     totalCount = result.count
   } catch (error) {
     console.error(
@@ -87,37 +86,32 @@ export async function NotificationCenterContent({
 
   const totalPages = Math.ceil(totalCount / perPage)
 
+  // Translate title+body in parallel per notification, all notifications in parallel
+  const translatedNotifications = (await Promise.all(
+    rows.map(async (n) => {
+      const contentLang = (n.lang as "ar" | "en") || "ar"
+      const [title, body] = await Promise.all([
+        getDisplayText(n.title, contentLang, locale, schoolId),
+        getDisplayText(n.body, contentLang, locale, schoolId),
+      ])
+      return {
+        ...n,
+        title,
+        body,
+        createdAt: safeSerializeDate(n.createdAt) ?? new Date().toISOString(),
+        updatedAt: safeSerializeDate(n.updatedAt) ?? new Date().toISOString(),
+        readAt: safeSerializeDate(n.readAt),
+        emailSentAt: safeSerializeDate(n.emailSentAt),
+        metadata: (n.metadata as Record<string, unknown> | null) ?? null,
+      }
+    })
+  )) as NotificationDTO[]
+
   return (
     <div className="space-y-6">
       <div>
         <NotificationCenterClient
-          initialNotifications={
-            (await Promise.all(
-              (notifications ?? []).map(async (n) => ({
-                ...n,
-                title: await getDisplayText(
-                  n?.title,
-                  (n?.lang as "ar" | "en") || "ar",
-                  locale,
-                  schoolId!
-                ),
-                body: await getDisplayText(
-                  n?.body,
-                  (n?.lang as "ar" | "en") || "ar",
-                  locale,
-                  schoolId!
-                ),
-                createdAt: safeSerializeDate(n?.createdAt),
-                updatedAt: safeSerializeDate(n?.updatedAt),
-                readAt: n?.readAt ? safeSerializeDate(n.readAt) : null,
-                emailSentAt: n?.emailSentAt
-                  ? safeSerializeDate(n.emailSentAt)
-                  : null,
-                metadata:
-                  (n?.metadata as Record<string, unknown> | null) ?? null,
-              }))
-            )) as NotificationDTO[]
-          }
+          initialNotifications={translatedNotifications}
           locale={locale}
           dictionary={dict.notifications}
           showFilters={false}

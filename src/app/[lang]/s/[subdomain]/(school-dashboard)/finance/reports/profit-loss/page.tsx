@@ -23,10 +23,16 @@ interface Props {
 export default async function ProfitLossPage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
+  const d = dictionary?.finance?.reportsPage
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
-    return <p className="text-muted-foreground">School context not found</p>
+    return (
+      <p className="text-muted-foreground">
+        {dictionary?.finance?.common?.schoolNotFound ||
+          "School context not found"}
+      </p>
+    )
   }
 
   const fiscalYear = await db.fiscalYear.findFirst({
@@ -37,16 +43,19 @@ export default async function ProfitLossPage({ params }: Props) {
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-medium">Profit &amp; Loss</h3>
+          <h3 className="text-lg font-medium">
+            {d?.profitLoss || "Profit & Loss"}
+          </h3>
           <Link
             href={`/${lang}/finance/reports`}
             className={buttonVariants({ variant: "outline" })}
           >
-            Back to Reports
+            {d?.backToReports || "Back to Reports"}
           </Link>
         </div>
         <p className="text-muted-foreground py-8 text-center">
-          No active fiscal year found. Please set up a fiscal year first.
+          {d?.noActiveFiscalYear ||
+            "No active fiscal year found. Please set up a fiscal year first."}
         </p>
       </div>
     )
@@ -61,16 +70,20 @@ export default async function ProfitLossPage({ params }: Props) {
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-medium">Profit &amp; Loss</h3>
+          <h3 className="text-lg font-medium">
+            {d?.profitLoss || "Profit & Loss"}
+          </h3>
           <Link
             href={`/${lang}/finance/reports`}
             className={buttonVariants({ variant: "outline" })}
           >
-            Back to Reports
+            {d?.backToReports || "Back to Reports"}
           </Link>
         </div>
         <p className="text-destructive py-8 text-center">
-          {result.error ?? "Failed to generate income statement."}
+          {result.error ??
+            d?.failedGenerateIncomeStatement ??
+            "Failed to generate income statement."}
         </p>
       </div>
     )
@@ -83,37 +96,41 @@ export default async function ProfitLossPage({ params }: Props) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-medium">Profit &amp; Loss</h3>
+          <h3 className="text-lg font-medium">
+            {d?.profitLoss || "Profit & Loss"}
+          </h3>
           <p className="text-muted-foreground text-sm">
-            {fiscalYear.name} &mdash; {formatDate(data.startDate, lang)} to{" "}
-            {formatDate(data.endDate, lang)}
+            {fiscalYear.name} &mdash; {formatDate(data.startDate, lang)}{" "}
+            {d?.to || "to"} {formatDate(data.endDate, lang)}
           </p>
         </div>
         <Link
           href={`/${lang}/finance/reports`}
           className={buttonVariants({ variant: "outline" })}
         >
-          Back to Reports
+          {d?.backToReports || "Back to Reports"}
         </Link>
       </div>
 
       {/* Revenue */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-medium">Revenue</CardTitle>
+          <CardTitle className="text-sm font-medium">
+            {d?.revenue || "Revenue"}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {data.revenue.length === 0 ? (
             <p className="text-muted-foreground text-sm">
-              No revenue accounts.
+              {d?.noRevenueAccounts || "No revenue accounts."}
             </p>
           ) : (
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-muted-foreground border-b text-start">
-                  <th className="pb-2">Code</th>
-                  <th className="pb-2">Account</th>
-                  <th className="pb-2 text-end">Amount</th>
+                  <th className="pb-2">{d?.code || "Code"}</th>
+                  <th className="pb-2">{d?.account || "Account"}</th>
+                  <th className="pb-2 text-end">{d?.amount || "Amount"}</th>
                 </tr>
               </thead>
               <tbody>
@@ -128,7 +145,7 @@ export default async function ProfitLossPage({ params }: Props) {
                 ))}
                 <tr className="font-medium">
                   <td className="pt-2" colSpan={2}>
-                    Total Revenue
+                    {d?.totalRevenue || "Total Revenue"}
                   </td>
                   <td className="pt-2 text-end">
                     {formatCurrency(data.totalRevenue, lang)}
@@ -143,20 +160,22 @@ export default async function ProfitLossPage({ params }: Props) {
       {/* Expenses */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-medium">Expenses</CardTitle>
+          <CardTitle className="text-sm font-medium">
+            {d?.expenses || "Expenses"}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {data.expenses.length === 0 ? (
             <p className="text-muted-foreground text-sm">
-              No expense accounts.
+              {d?.noExpenseAccounts || "No expense accounts."}
             </p>
           ) : (
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-muted-foreground border-b text-start">
-                  <th className="pb-2">Code</th>
-                  <th className="pb-2">Account</th>
-                  <th className="pb-2 text-end">Amount</th>
+                  <th className="pb-2">{d?.code || "Code"}</th>
+                  <th className="pb-2">{d?.account || "Account"}</th>
+                  <th className="pb-2 text-end">{d?.amount || "Amount"}</th>
                 </tr>
               </thead>
               <tbody>
@@ -171,7 +190,7 @@ export default async function ProfitLossPage({ params }: Props) {
                 ))}
                 <tr className="font-medium">
                   <td className="pt-2" colSpan={2}>
-                    Total Expenses
+                    {d?.totalExpenses || "Total Expenses"}
                   </td>
                   <td className="pt-2 text-end">
                     {formatCurrency(data.totalExpenses, lang)}
@@ -186,7 +205,9 @@ export default async function ProfitLossPage({ params }: Props) {
       {/* Net Income Summary */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-medium">Net Income</CardTitle>
+          <CardTitle className="text-sm font-medium">
+            {d?.netIncome || "Net Income"}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between">
@@ -195,12 +216,14 @@ export default async function ProfitLossPage({ params }: Props) {
                 {formatCurrency(data.netIncome, lang)}
               </p>
               <p className="text-muted-foreground text-sm">
-                Revenue {formatCurrency(data.totalRevenue, lang)} &minus;
-                Expenses {formatCurrency(data.totalExpenses, lang)}
+                {d?.revenue || "Revenue"}{" "}
+                {formatCurrency(data.totalRevenue, lang)} &minus;{" "}
+                {d?.expenses || "Expenses"}{" "}
+                {formatCurrency(data.totalExpenses, lang)}
               </p>
             </div>
             <Badge variant={isProfit ? "default" : "destructive"}>
-              {isProfit ? "Profit" : "Loss"}
+              {isProfit ? d?.profitLabel || "Profit" : d?.lossLabel || "Loss"}
             </Badge>
           </div>
         </CardContent>

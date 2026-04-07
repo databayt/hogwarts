@@ -2,8 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useEffect, useRef, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 import { cn } from "@/lib/utils"
 import socketService from "@/lib/websocket/socket-service"
@@ -18,7 +17,9 @@ import {
   editMessage,
   fetchConversationData,
   loadMoreMessages,
+  markConversationAsRead,
   pollConversationUpdates,
+  pollNewMessages,
   removeReaction,
   sendMessage,
 } from "./actions"
@@ -26,7 +27,100 @@ import { ChatInterface } from "./chat-interface"
 import { ContactsPanel } from "./contacts/contacts-panel"
 import { ConversationInfoPanel } from "./conversation-info-panel"
 import { NoActiveConversation } from "./empty-state"
-import type { ConversationDTO, MessageDTO } from "./types"
+import type { ConversationDTO, MessageAttachmentDTO, MessageDTO } from "./types"
+
+// Build a MessageDTO from Socket.IO event data
+export function buildMessageFromSocket(data: {
+  id: string
+  conversationId: string
+  senderId: string
+  content: string
+  contentType: string
+  createdAt: string
+  metadata?: Record<string, unknown> | null
+  sender?: {
+    id: string
+    username: string | null
+    email: string | null
+    image: string | null
+  }
+  replyToId?: string | null
+  attachments?: Array<{
+    id: string
+    url: string
+    fileName: string
+    fileSize: number
+    fileType: string
+    thumbnail?: string | null
+  }>
+}): MessageDTO {
+  return {
+    id: data.id,
+    conversationId: data.conversationId,
+    senderId: data.senderId,
+    sender: data.sender ?? {
+      id: data.senderId,
+      username: null,
+      email: null,
+      image: null,
+    },
+    content: data.content,
+    contentType: (data.contentType || "text") as MessageDTO["contentType"],
+    status: "sent",
+    replyToId: data.replyToId ?? null,
+    replyTo: null,
+    forwardedFromId: null,
+    isEdited: false,
+    editedAt: null,
+    isDeleted: false,
+    deletedAt: null,
+    isSystem: false,
+    metadata: data.metadata ?? null,
+    whatsappStatus: null,
+    whatsappPhone: null,
+    createdAt: new Date(data.createdAt),
+    updatedAt: new Date(data.createdAt),
+    attachments: (data.attachments ?? []).map(
+      (a) =>
+        ({
+          id: a.id,
+          messageId: data.id,
+          url: a.url,
+          fileUrl: a.url,
+          name: a.fileName,
+          fileName: a.fileName,
+          size: a.fileSize,
+          fileSize: a.fileSize,
+          fileType: a.fileType,
+          thumbnail: a.thumbnail ?? null,
+          uploadedAt: new Date(data.createdAt),
+        }) as MessageAttachmentDTO
+    ),
+    reactions: [],
+    readReceipts: [],
+    readCount: 0,
+  }
+}
+
+// --- Conversation cache types ---
+
+type ConversationState = {
+  messages: MessageDTO[]
+  hasMore: boolean
+  scrollPosition: number
+  lastFetchedAt: number
+  lastMessageId: string | null // last non-temp message ID for gap-fill
+}
+
+const CACHE_TTL = 60_000 // 1 minute
+
+// Get last non-temp message ID from a message array (for gap-fill cursors)
+function getLastRealMessageId(messages: MessageDTO[]): string | null {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (!messages[i].id.startsWith("temp-")) return messages[i].id
+  }
+  return null
+}
 
 export interface MessagingClientProps {
   initialConversations: ConversationDTO[]
@@ -49,54 +143,150 @@ export function MessagingClient({
   whatsappConnected = false,
   whatsappSession = null,
 }: MessagingClientProps) {
-  const router = useRouter()
   const { dictionary } = useDictionary()
   const m = dictionary?.messaging
   const [conversations, setConversations] =
     useState<ConversationDTO[]>(initialConversations)
   const [activeConversation, setActiveConversation] =
     useState<ConversationDTO | null>(initialActiveConversation)
-  const [messages, setMessages] = useState<MessageDTO[]>(initialMessages)
   const [isConnected, setIsConnected] = useState(false)
   const [showInfoPanel, setShowInfoPanel] = useState(false)
+  // Re-render trigger for cache-derived state
+  const [, setRenderTick] = useState(0)
 
-  // Sync state with server props on navigation (router.refresh)
+  // --- Conversation message cache ---
+  const cacheRef = useRef<Map<string, ConversationState>>(new Map())
+
+  // Seed cache with initial data on mount
+  const seededRef = useRef(false)
+  if (!seededRef.current && initialActiveConversation) {
+    cacheRef.current.set(initialActiveConversation.id, {
+      messages: initialMessages,
+      hasMore: initialMessages.length >= 50,
+      scrollPosition: -1,
+      lastFetchedAt: Date.now(),
+      lastMessageId: getLastRealMessageId(initialMessages),
+    })
+    seededRef.current = true
+  }
+
+  // Derive messages and hasMore from cache
+  const activeState = activeConversation
+    ? cacheRef.current.get(activeConversation.id)
+    : null
+  const messages = activeState?.messages ?? []
+  const hasMoreMessages = activeState?.hasMore ?? false
+
+  // Helper to update cached messages — only triggers render for active conversation
+  const updateCachedMessages = useCallback(
+    (convId: string, updater: (prev: MessageDTO[]) => MessageDTO[]) => {
+      const state = cacheRef.current.get(convId)
+      if (state) {
+        state.messages = updater(state.messages)
+        state.lastMessageId = getLastRealMessageId(state.messages)
+        if (convId === activeConversation?.id) {
+          setRenderTick((t) => t + 1)
+        }
+      }
+    },
+    [activeConversation?.id]
+  )
+
+  // Helper to update cache hasMore
+  const updateCachedHasMore = useCallback(
+    (convId: string, hasMore: boolean) => {
+      const state = cacheRef.current.get(convId)
+      if (state) {
+        state.hasMore = hasMore
+        if (convId === activeConversation?.id) {
+          setRenderTick((t) => t + 1)
+        }
+      }
+    },
+    [activeConversation?.id]
+  )
+
+  // Sync conversations list with server props on navigation
+  useEffect(() => {
+    setConversations(initialConversations)
+  }, [initialConversations])
+
+  // Sync active conversation from server props (e.g. router.refresh)
   const prevActiveId = useRef(initialActiveConversation?.id)
   useEffect(() => {
     if (initialActiveConversation?.id !== prevActiveId.current) {
       prevActiveId.current = initialActiveConversation?.id
       setActiveConversation(initialActiveConversation)
-      setMessages(initialMessages)
+      if (initialActiveConversation) {
+        cacheRef.current.set(initialActiveConversation.id, {
+          messages: initialMessages,
+          hasMore: initialMessages.length >= 50,
+          scrollPosition: -1,
+          lastFetchedAt: Date.now(),
+          lastMessageId: getLastRealMessageId(initialMessages),
+        })
+        setRenderTick((t) => t + 1)
+      }
     }
   }, [initialActiveConversation, initialMessages])
 
-  useEffect(() => {
-    setConversations(initialConversations)
-  }, [initialConversations])
-
-  // Derive the active contact's userId for sidebar highlight
+  // Derive active contact userId for sidebar highlight
   const activeContactUserId = activeConversation?.participants?.find(
     (p) => p.userId !== currentUserId
   )?.userId
 
-  // Connect to Socket.IO
+  // --- Socket.IO connection (reactive) ---
   useEffect(() => {
-    const connect = async () => {
-      try {
-        const connected = socketService.isConnected()
-        setIsConnected(connected)
-        if (connected) {
-          socketService.subscribeToConversations(currentUserId)
+    setIsConnected(socketService.isConnected())
+
+    const unsubscribe = socketService.onConnectionChange(async (connected) => {
+      setIsConnected(connected)
+      if (connected) {
+        socketService.subscribeToConversations(currentUserId)
+
+        // Gap-fill: fetch messages missed during disconnect
+        // Active conversation: fetch new messages after the last known ID
+        const activeId = activeConversation?.id
+        if (activeId) {
+          const cached = cacheRef.current.get(activeId)
+          if (cached?.lastMessageId) {
+            try {
+              const result = await pollNewMessages({
+                conversationId: activeId,
+                afterMessageId: cached.lastMessageId,
+              })
+              if (result.success && result.data.items.length > 0) {
+                const existingIds = new Set(cached.messages.map((m) => m.id))
+                const newMsgs = result.data.items.filter(
+                  (m: MessageDTO) => !existingIds.has(m.id)
+                )
+                if (newMsgs.length > 0) {
+                  cached.messages = [...cached.messages, ...newMsgs]
+                  cached.lastMessageId = getLastRealMessageId(cached.messages)
+                  setRenderTick((t) => t + 1)
+                }
+              }
+            } catch {
+              // Gap-fill is best-effort
+            }
+          }
         }
-      } catch (error) {
-        console.error("Failed to connect to Socket.IO:", error)
-        setIsConnected(false)
+
+        // Background conversations: mark stale so they refetch on next switch
+        for (const [convId, state] of cacheRef.current.entries()) {
+          if (convId !== activeId) {
+            state.lastFetchedAt = 0
+          }
+        }
       }
+    })
+
+    if (socketService.isConnected()) {
+      socketService.subscribeToConversations(currentUserId)
     }
 
-    connect()
-
     return () => {
+      unsubscribe()
       socketService.unsubscribeFromConversations(currentUserId)
     }
   }, [currentUserId])
@@ -121,7 +311,7 @@ export function MessagingClient({
     }
   }, [isConnected])
 
-  // Listen for conversation updates
+  // Listen for conversation + message updates via Socket.IO
   useEffect(() => {
     if (!isConnected) return
 
@@ -132,7 +322,7 @@ export function MessagingClient({
           {
             id: data.id,
             schoolId: "",
-            type: data.type as any,
+            type: data.type as ConversationDTO["type"],
             title: data.title,
             avatar: null,
             directParticipant1Id: null,
@@ -165,20 +355,59 @@ export function MessagingClient({
       }
     )
 
+    // Sidebar instant update: when any message arrives, update conversation list
+    const unsubscribeMessageNew = socketService.on("message:new", (data) => {
+      const newMsg = buildMessageFromSocket(data)
+
+      setConversations((prev) => {
+        const updated = prev.map((conv) => {
+          if (conv.id !== data.conversationId) return conv
+          return {
+            ...conv,
+            lastMessageAt: new Date(data.createdAt),
+            lastMessage: newMsg,
+            unreadCount:
+              conv.id === activeConversation?.id
+                ? conv.unreadCount
+                : conv.unreadCount + (data.senderId !== currentUserId ? 1 : 0),
+          }
+        })
+        return updated.sort(
+          (a, b) =>
+            new Date(b.lastMessageAt).getTime() -
+            new Date(a.lastMessageAt).getTime()
+        )
+      })
+
+      // Also update message cache for background conversations
+      if (data.conversationId !== activeConversation?.id) {
+        const cached = cacheRef.current.get(data.conversationId)
+        if (cached) {
+          const exists = cached.messages.some((msg) => msg.id === data.id)
+          if (!exists) {
+            cached.messages = [...cached.messages, newMsg]
+            cached.lastMessageId = data.id
+          }
+        }
+      }
+    })
+
     return () => {
       unsubscribeConversationNew()
       unsubscribeConversationUpdated()
+      unsubscribeMessageNew()
     }
-  }, [isConnected])
-
-  const [hasMoreMessages, setHasMoreMessages] = useState(
-    initialMessages.length >= 50
-  )
+  }, [isConnected, activeConversation?.id, currentUserId])
 
   const handleBack = () => {
+    // Save scroll position before leaving
+    if (activeConversation) {
+      const cached = cacheRef.current.get(activeConversation.id)
+      if (cached) {
+        cached.scrollPosition = -1
+      }
+    }
     setActiveConversation(null)
-    setMessages([])
-    setHasMoreMessages(false)
     setShowInfoPanel(false)
     window.history.replaceState(null, "", `/${locale}/messages`)
   }
@@ -232,11 +461,43 @@ export function MessagingClient({
   }
 
   const switchToConversation = async (conversationId: string) => {
+    // Save current conversation scroll position
+    if (activeConversation) {
+      const cached = cacheRef.current.get(activeConversation.id)
+      if (cached) {
+        // Scroll position will be saved by ChatInterface via onSaveScrollPosition
+      }
+    }
+
+    // Check cache first
+    const cached = cacheRef.current.get(conversationId)
+    if (cached && Date.now() - cached.lastFetchedAt < CACHE_TTL) {
+      // Cache hit — instant switch
+      const conv = conversations.find((c) => c.id === conversationId)
+      if (conv) {
+        setActiveConversation(conv)
+        setRenderTick((t) => t + 1)
+        window.history.replaceState(
+          null,
+          "",
+          `/${locale}/messages?conversation=${conversationId}`
+        )
+        return
+      }
+    }
+
+    // Cache miss or stale — fetch from server
     const result = await fetchConversationData({ conversationId })
     if (result.success) {
       setActiveConversation(result.data.conversation)
-      setMessages(result.data.messages)
-      setHasMoreMessages(result.data.hasMore)
+      cacheRef.current.set(conversationId, {
+        messages: result.data.messages,
+        hasMore: result.data.hasMore,
+        scrollPosition: -1,
+        lastFetchedAt: Date.now(),
+        lastMessageId: getLastRealMessageId(result.data.messages),
+      })
+      setRenderTick((t) => t + 1)
       window.history.replaceState(
         null,
         "",
@@ -282,10 +543,26 @@ export function MessagingClient({
       direction: "before",
     })
     if (result.success) {
-      setMessages((prev) => [...result.data.items, ...prev])
-      setHasMoreMessages(result.data.hasMore)
+      updateCachedMessages(activeConversation.id, (prev) => [
+        ...result.data.items,
+        ...prev,
+      ])
+      updateCachedHasMore(activeConversation.id, result.data.hasMore)
     }
   }
+
+  // Save scroll position from ChatInterface
+  const handleSaveScrollPosition = useCallback(
+    (position: number) => {
+      if (activeConversation) {
+        const cached = cacheRef.current.get(activeConversation.id)
+        if (cached) {
+          cached.scrollPosition = position
+        }
+      }
+    },
+    [activeConversation?.id]
+  )
 
   return (
     <div className="bg-msg-chat-bg relative flex h-full">
@@ -317,11 +594,12 @@ export function MessagingClient({
       >
         {activeConversation ? (
           <ChatInterface
-            key={activeConversation.id}
             conversation={activeConversation}
-            initialMessages={messages}
+            messages={messages}
+            hasMoreMessages={hasMoreMessages}
             currentUserId={currentUserId}
             locale={locale}
+            isConnected={isConnected}
             whatsappConnected={whatsappConnected}
             onSendMessage={handleSendMessage}
             onEditMessage={handleEditMessage}
@@ -329,10 +607,12 @@ export function MessagingClient({
             onReactToMessage={handleReactToMessage}
             onRemoveReaction={handleRemoveReaction}
             onLoadMoreMessages={handleLoadMoreMessages}
-            hasMoreMessages={hasMoreMessages}
+            onMessagesUpdate={updateCachedMessages}
             onBack={handleBack}
             onViewDetails={() => setShowInfoPanel(!showInfoPanel)}
             onViewParticipants={() => setShowInfoPanel(true)}
+            onSaveScrollPosition={handleSaveScrollPosition}
+            savedScrollPosition={activeState?.scrollPosition ?? -1}
           />
         ) : (
           <NoActiveConversation locale={locale} />

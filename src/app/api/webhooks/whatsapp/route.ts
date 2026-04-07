@@ -30,12 +30,22 @@ export async function POST(request: NextRequest) {
               ? "disconnected"
               : "connecting"
 
+        // Extract phone number from connection data when connected
+        const connectedPhone =
+          body.data?.wid?.replace("@s.whatsapp.net", "") ||
+          body.data?.instance?.wuid?.replace("@s.whatsapp.net", "") ||
+          null
+
         await db.whatsAppSession.update({
           where: { id: session.id },
           data: {
             status: newStatus,
             ...(newStatus === "connected"
-              ? { connectedAt: new Date(), qrCode: null }
+              ? {
+                  connectedAt: new Date(),
+                  qrCode: null,
+                  ...(connectedPhone ? { phoneNumber: connectedPhone } : {}),
+                }
               : {}),
             ...(newStatus === "disconnected" ? { phoneNumber: null } : {}),
           },
@@ -213,8 +223,32 @@ export async function POST(request: NextRequest) {
                   data: { lastMessageAt: new Date() },
                 })
 
-                // Emit Socket.IO event for real-time push
+                // Emit Socket.IO event for real-time push with full data
                 try {
+                  // Fetch sender info and attachments for rich emit
+                  const [senderUser, msgAttachments] = await Promise.all([
+                    db.user.findUnique({
+                      where: { id: participant.userId },
+                      select: {
+                        id: true,
+                        username: true,
+                        email: true,
+                        image: true,
+                      },
+                    }),
+                    db.messageAttachment.findMany({
+                      where: { messageId: bridgedMessage.id },
+                      select: {
+                        id: true,
+                        fileUrl: true,
+                        fileName: true,
+                        fileSize: true,
+                        fileType: true,
+                        thumbnail: true,
+                      },
+                    }),
+                  ])
+
                   const socketUrl =
                     process.env.NEXT_PUBLIC_SOCKET_URL ||
                     "http://localhost:3001"
@@ -231,6 +265,15 @@ export async function POST(request: NextRequest) {
                         content,
                         contentType,
                         createdAt: bridgedMessage.createdAt.toISOString(),
+                        sender: senderUser,
+                        attachments: msgAttachments.map((a) => ({
+                          id: a.id,
+                          url: a.fileUrl,
+                          fileName: a.fileName,
+                          fileSize: a.fileSize,
+                          fileType: a.fileType,
+                          thumbnail: a.thumbnail,
+                        })),
                       },
                     }),
                   })

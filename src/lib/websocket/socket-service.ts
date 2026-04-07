@@ -84,7 +84,7 @@ export interface SocketEvents {
   "notification:deleted": (data: { notificationId: string }) => void
   "notification:count": (data: { unread: number }) => void
 
-  // Messaging events (NEW)
+  // Messaging events
   "message:new": (data: {
     id: string
     conversationId: string
@@ -92,6 +92,22 @@ export interface SocketEvents {
     content: string
     contentType: string
     createdAt: string
+    metadata?: Record<string, unknown> | null
+    sender?: {
+      id: string
+      username: string | null
+      email: string | null
+      image: string | null
+    }
+    replyToId?: string | null
+    attachments?: Array<{
+      id: string
+      url: string
+      fileName: string
+      fileSize: number
+      fileType: string
+      thumbnail?: string | null
+    }>
   }) => void
   "message:updated": (data: {
     messageId: string
@@ -100,7 +116,8 @@ export interface SocketEvents {
   }) => void
   "message:deleted": (data: { messageId: string; deletedAt: string }) => void
   "message:read": (data: {
-    messageId: string
+    messageId?: string
+    conversationId?: string
     userId: string
     readAt: string
   }) => void
@@ -161,10 +178,25 @@ class SocketService {
   private reconnectDelay = 1000
   private listeners: Map<keyof SocketEvents, Set<Function>> = new Map()
   private isConnecting = false
+  private connectionListeners: Set<(connected: boolean) => void> = new Set()
 
   constructor() {
     // Use environment variable or default to local development URL
     this.url = process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3001"
+  }
+
+  /**
+   * Subscribe to connection state changes (connect/disconnect)
+   */
+  onConnectionChange(callback: (connected: boolean) => void): () => void {
+    this.connectionListeners.add(callback)
+    return () => {
+      this.connectionListeners.delete(callback)
+    }
+  }
+
+  private notifyConnectionChange(connected: boolean): void {
+    this.connectionListeners.forEach((cb) => cb(connected))
   }
 
   /**
@@ -212,6 +244,7 @@ class SocketService {
           console.log("✅ WebSocket connected")
           this.reconnectAttempts = 0
           this.isConnecting = false
+          this.notifyConnectionChange(true)
           this.emit("notification", {
             type: "success",
             message: "Real-time updates connected",
@@ -222,6 +255,7 @@ class SocketService {
         this.socket.on("disconnect", (reason) => {
           console.log("❌ WebSocket disconnected:", reason)
           this.isConnecting = false
+          this.notifyConnectionChange(false)
           this.emit("notification", {
             type: "warning",
             message: "Real-time updates disconnected",

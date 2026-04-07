@@ -2,7 +2,8 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useState } from "react"
+import { useRef, useState } from "react"
+import { useVirtualizer } from "@tanstack/react-virtual"
 import {
   EllipsisVertical,
   LoaderCircle,
@@ -18,7 +19,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { ConversationCard, ConversationCardSkeleton } from "./conversation-card"
@@ -199,16 +199,16 @@ export function ConversationList({
         ))}
       </div>
 
-      {/* Conversation list — flat, no gaps */}
-      <ScrollArea className="flex-1">
-        {isLoading ? (
-          <div>
-            {Array.from({ length: 8 }).map((_, i) => (
-              <ConversationCardSkeleton key={i} />
-            ))}
-          </div>
-        ) : sortedConversations.length === 0 ? (
-          searchQuery || filter !== "all" ? (
+      {/* Conversation list — virtualized for performance */}
+      {isLoading ? (
+        <div className="flex-1 overflow-y-auto">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <ConversationCardSkeleton key={i} />
+          ))}
+        </div>
+      ) : sortedConversations.length === 0 ? (
+        <div className="flex-1 overflow-y-auto">
+          {searchQuery || filter !== "all" ? (
             <div className="flex h-64 flex-col items-center justify-center p-4 text-center">
               <Search className="text-muted-foreground/50 mb-3 h-8 w-8" />
               <p className="text-muted-foreground">
@@ -224,12 +224,80 @@ export function ConversationList({
               locale={locale}
               onNewConversation={onNewConversation}
             />
-          )
-        ) : (
-          <div className="relative">
-            {sortedConversations.map((conversation) => (
+          )}
+        </div>
+      ) : (
+        <VirtualizedConversationList
+          conversations={sortedConversations}
+          currentUserId={currentUserId}
+          locale={locale}
+          activeConversationId={activeConversationId}
+          onConversationClick={onConversationClick}
+          onArchive={onArchive}
+          onDelete={onDelete}
+          onPin={onPin}
+          onMute={onMute}
+        />
+      )}
+    </div>
+  )
+}
+
+// Virtualized conversation list for performance at scale
+function VirtualizedConversationList({
+  conversations,
+  currentUserId,
+  locale,
+  activeConversationId,
+  onConversationClick,
+  onArchive,
+  onDelete,
+  onPin,
+  onMute,
+}: {
+  conversations: ConversationDTO[]
+  currentUserId: string
+  locale: "ar" | "en"
+  activeConversationId?: string | null
+  onConversationClick?: (conversationId: string) => void
+  onArchive?: (conversationId: string) => void
+  onDelete?: (conversationId: string) => void
+  onPin?: (conversationId: string) => void
+  onMute?: (conversationId: string) => void
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  const virtualizer = useVirtualizer({
+    count: conversations.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => 72,
+    overscan: 5,
+  })
+
+  return (
+    <div ref={scrollRef} className="flex-1 overflow-y-auto">
+      <div
+        style={{
+          height: `${virtualizer.getTotalSize()}px`,
+          width: "100%",
+          position: "relative",
+        }}
+      >
+        {virtualizer.getVirtualItems().map((virtualRow) => {
+          const conversation = conversations[virtualRow.index]
+          return (
+            <div
+              key={conversation.id}
+              style={{
+                position: "absolute",
+                top: 0,
+                insetInlineStart: 0,
+                width: "100%",
+                height: `${virtualRow.size}px`,
+                transform: `translateY(${virtualRow.start}px)`,
+              }}
+            >
               <ConversationCard
-                key={conversation.id}
                 conversation={conversation}
                 currentUserId={currentUserId}
                 locale={locale}
@@ -240,10 +308,10 @@ export function ConversationList({
                 onPin={onPin}
                 onMute={onMute}
               />
-            ))}
-          </div>
-        )}
-      </ScrollArea>
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }

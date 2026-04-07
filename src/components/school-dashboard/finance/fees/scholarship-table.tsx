@@ -39,6 +39,7 @@ function ScholarshipsTableInner({
   perPage = 20,
 }: ScholarshipsTableProps) {
   const router = useRouter()
+  const { dictionary } = useDictionary()
   const [searchValue, setSearchValue] = useState("")
   const [isPending, startTransition] = useTransition()
   const { view, toggleView } = usePlatformView({ defaultView: "table" })
@@ -120,7 +121,10 @@ function ScholarshipsTableInner({
         onToggleView={toggleView}
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
-        searchPlaceholder="Search scholarships..."
+        searchPlaceholder={
+          (dictionary as any)?.finance?.fees?.search?.scholarships ||
+          "Search scholarships..."
+        }
         entityName="scholarships"
       />
       <DataTable

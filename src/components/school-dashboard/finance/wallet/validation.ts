@@ -8,6 +8,40 @@
 import { TransactionType, WalletType } from "@prisma/client"
 import { z } from "zod"
 
+import type { ValidationHelper } from "@/components/internationalization/helpers"
+
+// ============================================================================
+// Schema Factory Functions (i18n-enabled)
+// ============================================================================
+
+export const createWalletTransactionSchema = (v: ValidationHelper) =>
+  z.object({
+    walletId: z.string().min(1, v.required()),
+    amount: z.number().min(0.01, v.positive()),
+    type: z.nativeEnum(TransactionType),
+    description: z.string().max(500).optional(),
+    referenceId: z.string().optional(),
+  })
+
+export const createWalletTopupSchema = (v: ValidationHelper) =>
+  z.object({
+    walletId: z.string().min(1, v.required()),
+    amount: z.number().min(0.01, v.positive()),
+    paymentMethod: z.enum(["CASH", "CARD", "BANK_TRANSFER", "OTHER"]),
+    description: z.string().max(500).optional(),
+  })
+
+export const createWalletRefundSchema = (v: ValidationHelper) =>
+  z.object({
+    walletId: z.string().min(1, v.required()),
+    amount: z.number().min(0.01, v.positive()),
+    reason: z.string().min(1, v.required()).max(500),
+  })
+
+// ============================================================================
+// Static Schemas (server-side fallback)
+// ============================================================================
+
 export const walletSchema = z.object({
   type: z.nativeEnum(WalletType),
   userId: z.string().optional().nullable(),

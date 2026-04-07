@@ -4,6 +4,7 @@
 export interface School {
   id: string
   name: string
+  nameEn?: string | null
   domain: string
   logoUrl?: string | null
   address?: string | null

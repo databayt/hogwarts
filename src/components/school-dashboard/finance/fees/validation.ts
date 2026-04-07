@@ -9,6 +9,172 @@
 
 import { z } from "zod"
 
+import type { ValidationHelper } from "@/components/internationalization/helpers"
+
+// ============================================================================
+// Schema Factory Functions (i18n-enabled)
+// ============================================================================
+
+export const createFeeStructureSchema = (v: ValidationHelper) =>
+  z.object({
+    name: z.string().min(1, v.required()).max(100),
+    academicYear: z.string().min(1, v.required()),
+    classId: z.string().optional().nullable(),
+    stream: z.string().optional().nullable(),
+    description: z.string().optional().nullable(),
+    tuitionFee: z.number().min(0, v.min(0)),
+    admissionFee: z.number().min(0).optional().nullable(),
+    registrationFee: z.number().min(0).optional().nullable(),
+    examFee: z.number().min(0).optional().nullable(),
+    libraryFee: z.number().min(0).optional().nullable(),
+    laboratoryFee: z.number().min(0).optional().nullable(),
+    sportsFee: z.number().min(0).optional().nullable(),
+    transportFee: z.number().min(0).optional().nullable(),
+    hostelFee: z.number().min(0).optional().nullable(),
+    totalAmount: z.number().min(0, v.min(0)),
+    installments: z.number().int().min(1).default(1),
+    lateFeeAmount: z.number().min(0).optional().nullable(),
+    lateFeeType: z
+      .enum(["FIXED", "PERCENTAGE", "DAILY", "MONTHLY"])
+      .optional()
+      .nullable(),
+    discountPolicy: z.any().optional(),
+    paymentSchedule: z.any().optional(),
+    isActive: z.boolean().default(true),
+  })
+
+export const createFeeAssignmentSchema = (v: ValidationHelper) =>
+  z.object({
+    studentId: z.string().min(1, v.required()),
+    feeStructureId: z.string().min(1, v.required()),
+    academicYear: z.string().min(1, v.required()),
+    finalAmount: z.number().min(0, v.min(0)),
+    customAmount: z.number().min(0).optional().nullable(),
+    totalDiscount: z.number().min(0).optional(),
+    scholarshipId: z.string().optional().nullable(),
+    discounts: z.any().optional(),
+    status: z
+      .enum(["PENDING", "PARTIAL", "PAID", "OVERDUE", "CANCELLED"])
+      .default("PENDING"),
+  })
+
+export const createPaymentSchema = (v: ValidationHelper) =>
+  z.object({
+    feeAssignmentId: z.string().min(1, v.required()),
+    amount: z.number().min(0.01, v.positive()),
+    paymentMethod: z.enum([
+      "CASH",
+      "CHEQUE",
+      "BANK_TRANSFER",
+      "CREDIT_CARD",
+      "DEBIT_CARD",
+      "UPI",
+      "NET_BANKING",
+      "WALLET",
+      "OTHER",
+    ]),
+    transactionId: z.string().optional().nullable(),
+    bankName: z.string().optional().nullable(),
+    chequeNumber: z.string().optional().nullable(),
+    cardLastFour: z.string().optional().nullable(),
+    paymentDate: z.coerce.date(),
+    status: z
+      .enum(["PENDING", "SUCCESS", "FAILED", "CANCELLED", "REFUNDED"])
+      .default("SUCCESS"),
+    remarks: z.string().optional().nullable(),
+  })
+
+export const createRefundSchema = (v: ValidationHelper) =>
+  z.object({
+    paymentId: z.string().min(1, v.required()),
+    amount: z.number().min(0.01, v.positive()),
+    reason: z.string().min(1, v.required()),
+    refundMethod: z
+      .enum([
+        "CASH",
+        "CHEQUE",
+        "BANK_TRANSFER",
+        "CREDIT_CARD",
+        "DEBIT_CARD",
+        "UPI",
+        "NET_BANKING",
+        "WALLET",
+        "OTHER",
+      ])
+      .optional()
+      .nullable(),
+    status: z
+      .enum([
+        "REQUESTED",
+        "APPROVED",
+        "PROCESSING",
+        "COMPLETED",
+        "REJECTED",
+        "CANCELLED",
+      ])
+      .default("REQUESTED"),
+    approvalNotes: z.string().optional().nullable(),
+    supportingDocs: z.any().optional(),
+  })
+
+export const createScholarshipSchema = (v: ValidationHelper) =>
+  z.object({
+    name: z.string().min(1, v.required()).max(100),
+    description: z.string().optional().nullable(),
+    coverageType: z.enum(["PERCENTAGE", "FIXED_AMOUNT", "FULL"]),
+    coverageAmount: z.number().min(0, v.min(0)),
+    academicYear: z.string().min(1, v.required()),
+    startDate: z.coerce.date(),
+    endDate: z.coerce.date(),
+    maxBeneficiaries: z.number().int().min(1).optional().nullable(),
+    minPercentage: z.number().min(0).max(100).optional().nullable(),
+    maxFamilyIncome: z.number().min(0).optional().nullable(),
+    eligibilityCriteria: z.any().optional(),
+    isActive: z.boolean().default(true),
+  })
+
+export const createScholarshipApplicationSchema = (v: ValidationHelper) =>
+  z.object({
+    studentId: z.string().min(1, v.required()),
+    scholarshipId: z.string().min(1, v.required()),
+    academicYear: z.string().min(1, v.required()),
+    familyIncome: z.number().min(0).optional().nullable(),
+    documents: z.any().optional(),
+    statement: z.string().optional().nullable(),
+    status: z
+      .enum(["PENDING", "UNDER_REVIEW", "APPROVED", "REJECTED", "WITHDRAWN"])
+      .default("PENDING"),
+    reviewNotes: z.string().optional().nullable(),
+    awardedAmount: z.number().min(0).optional().nullable(),
+  })
+
+export const createFineSchema = (v: ValidationHelper) =>
+  z.object({
+    studentId: z.string().min(1, v.required()),
+    fineType: z.enum([
+      "LATE_FEE",
+      "LIBRARY_FINE",
+      "DISCIPLINE_FINE",
+      "DAMAGE_FINE",
+      "OTHER",
+    ]),
+    reason: z.string().min(1, v.required()),
+    amount: z.number().min(0.01, v.positive()),
+    dueDate: z.coerce.date(),
+  })
+
+export const createBulkFeeAssignmentSchema = (v: ValidationHelper) =>
+  z.object({
+    feeStructureId: z.string().min(1, v.required()),
+    studentIds: z.array(z.string()).min(1, v.required()),
+    academicYear: z.string().min(1, v.required()),
+    finalAmount: z.number().min(0, v.min(0)),
+  })
+
+// ============================================================================
+// Static Schemas (server-side fallback)
+// ============================================================================
+
 // Fee Structure Schema — matches FeeStructure Prisma model
 export const feeStructureSchema = z.object({
   name: z.string().min(1, "Fee name is required").max(100),

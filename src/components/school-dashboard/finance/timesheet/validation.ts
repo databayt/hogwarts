@@ -8,6 +8,46 @@
 import { PeriodStatus } from "@prisma/client"
 import { z } from "zod"
 
+import type { ValidationHelper } from "@/components/internationalization/helpers"
+
+// ============================================================================
+// Schema Factory Functions (i18n-enabled)
+// ============================================================================
+
+export const createTimesheetSchema = (v: ValidationHelper) =>
+  z
+    .object({
+      name: z.string().min(1, v.required()),
+      startDate: z.coerce.date(),
+      endDate: z.coerce.date(),
+    })
+    .refine((data) => data.endDate >= data.startDate, {
+      message: "End date must be on or after start date", // TODO: add custom validation key
+    })
+
+export const createTimesheetEntrySchema = (v: ValidationHelper) =>
+  z.object({
+    periodId: z.string().min(1, v.required()),
+    teacherId: z.string().min(1, v.required()),
+    entryDate: z.coerce.date(),
+    hoursWorked: z.number().min(0.25, v.min(0.25)).max(24, v.max(24)),
+    overtimeHours: z.number().min(0).max(24).optional(),
+    leaveHours: z.number().min(0).max(24).optional(),
+    leaveType: z.string().max(100).optional(),
+    notes: z.string().optional(),
+  })
+
+export const createTimesheetApprovalSchema = (v: ValidationHelper) =>
+  z.object({
+    timesheetId: z.string().min(1, v.required()),
+    status: z.enum(["OPEN", "CLOSED", "LOCKED"]),
+    notes: z.string().max(500).optional(),
+  })
+
+// ============================================================================
+// Static Schemas (server-side fallback)
+// ============================================================================
+
 export const timesheetSchema = z
   .object({
     name: z.string().min(1, "Period name is required"),

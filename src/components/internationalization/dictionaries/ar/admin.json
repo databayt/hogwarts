@@ -49,7 +49,8 @@
     "viewLogs": "عرض السجلات",
     "viewLogsDesc": "نشاط التدقيق",
     "exportData": "تصدير البيانات",
-    "exportDataDesc": "تحميل التقارير"
+    "exportDataDesc": "تحميل التقارير",
+    "bulkDesc": "استيراد وتصدير ومعالجة بيانات المدرسة بشكل جماعي"
   },
   "systemStatus": {
     "title": "حالة النظام",

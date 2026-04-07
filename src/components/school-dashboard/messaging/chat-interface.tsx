@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useCallback, useEffect, useOptimistic, useState } from "react"
+import { useCallback, useEffect, useOptimistic, useRef, useState } from "react"
 import { ar, enUS } from "date-fns/locale"
 import { ArrowLeft } from "lucide-react"
 
@@ -32,6 +32,7 @@ import { CONVERSATION_TYPE_CONFIG } from "./config"
 import { useUserPresence } from "./hooks/use-presence"
 import { MessageInput } from "./message-input"
 import { MessageList, MessageListSkeleton } from "./message-list"
+import { buildMessageFromSocket } from "./messaging-client"
 import type { ConversationDTO, MessageDTO, TypingIndicatorDTO } from "./types"
 
 const AVATAR_COLORS = [
@@ -51,9 +52,11 @@ function getAvatarColor(id: string) {
 
 export interface ChatInterfaceProps {
   conversation: ConversationDTO
-  initialMessages: MessageDTO[]
+  messages: MessageDTO[]
+  hasMoreMessages: boolean
   currentUserId: string
   locale?: "ar" | "en"
+  isConnected: boolean
   whatsappConnected?: boolean
   onSendMessage: (
     content: string,
@@ -65,18 +68,25 @@ export interface ChatInterfaceProps {
   onRemoveReaction: (reactionId: string) => Promise<void>
   onFileUpload?: (files: UploadedFileResult[]) => void
   onLoadMoreMessages?: () => Promise<void>
+  onMessagesUpdate: (
+    convId: string,
+    updater: (prev: MessageDTO[]) => MessageDTO[]
+  ) => void
   onViewParticipants?: () => void
   onViewDetails?: () => void
   onBack?: () => void
-  hasMoreMessages?: boolean
+  onSaveScrollPosition?: (position: number) => void
+  savedScrollPosition?: number
   className?: string
 }
 
 export function ChatInterface({
   conversation,
-  initialMessages,
+  messages,
+  hasMoreMessages,
   currentUserId,
   locale = "en",
+  isConnected,
   whatsappConnected = false,
   onSendMessage,
   onEditMessage,
@@ -85,15 +95,16 @@ export function ChatInterface({
   onRemoveReaction,
   onFileUpload,
   onLoadMoreMessages,
+  onMessagesUpdate,
   onViewParticipants,
   onViewDetails,
   onBack,
-  hasMoreMessages = false,
+  onSaveScrollPosition,
+  savedScrollPosition = -1,
   className,
 }: ChatInterfaceProps) {
   const { dictionary } = useDictionary()
   const m = dictionary?.messaging
-  const [messages, setMessages] = useState<MessageDTO[]>(initialMessages)
   const [replyTo, setReplyTo] = useState<MessageDTO | null>(null)
   const [editingMessage, setEditingMessage] = useState<MessageDTO | null>(null)
   const [typingUsers, setTypingUsers] = useState<TypingIndicatorDTO[]>([])
@@ -101,6 +112,30 @@ export function ChatInterface({
   const [whatsappEnabled, setWhatsappEnabled] = useState(
     conversation.whatsappEnabled ?? false
   )
+
+  // Offline message queue — retry on reconnect
+  type PendingMessage = {
+    nonce: string
+    content: string
+    replyToId?: string
+    conversationId: string
+    retryCount: number
+  }
+  const pendingQueueRef = useRef<PendingMessage[]>([])
+
+  // Track conversation changes without full remount
+  const prevConvIdRef = useRef(conversation.id)
+  useEffect(() => {
+    if (prevConvIdRef.current !== conversation.id) {
+      // Conversation changed — reset local UI state
+      setReplyTo(null)
+      setEditingMessage(null)
+      setTypingUsers([])
+      setWhatsappEnabled(conversation.whatsappEnabled ?? false)
+      prevConvIdRef.current = conversation.id
+    }
+  }, [conversation.id, conversation.whatsappEnabled])
+
   // Presence tracking for direct conversations
   const otherUserId =
     conversation.type === "direct"
@@ -135,16 +170,17 @@ export function ChatInterface({
     }
   }, [whatsappEnabled, conversation.id, m])
 
-  // Optimistic updates (React 19)
+  // Optimistic updates (React 19) — driven by messages prop
   const [optimisticMessages, addOptimisticMessage] = useOptimistic(
     messages,
     (state, newMessage: MessageDTO) => [...state, newMessage]
   )
 
   const handleOptimisticSend = useCallback(
-    (content: string, replyToId?: string) => {
+    (content: string, replyToId?: string): string => {
+      const nonce = crypto.randomUUID()
       const optimisticMessage: MessageDTO = {
-        id: `temp-${Date.now()}`,
+        id: `temp-${nonce}`,
         conversationId: conversation.id,
         senderId: currentUserId,
         sender: {
@@ -158,7 +194,7 @@ export function ChatInterface({
         status: "sending",
         replyToId: replyToId || null,
         replyTo: replyToId
-          ? messages.find((m) => m.id === replyToId) || null
+          ? messages.find((msg) => msg.id === replyToId) || null
           : null,
         forwardedFromId: null,
         isEdited: false,
@@ -166,7 +202,7 @@ export function ChatInterface({
         isDeleted: false,
         deletedAt: null,
         isSystem: false,
-        metadata: null,
+        metadata: { clientNonce: nonce },
         whatsappStatus: null,
         whatsappPhone: null,
         createdAt: new Date(),
@@ -177,6 +213,7 @@ export function ChatInterface({
         readCount: 0,
       }
       addOptimisticMessage(optimisticMessage)
+      return nonce
     },
     [conversation.id, currentUserId, messages, addOptimisticMessage]
   )
@@ -211,75 +248,117 @@ export function ChatInterface({
           .join(", ")
       : null
 
-  // Mark conversation as read when opened
-  useEffect(() => {
-    markConversationAsRead({ conversationId: conversation.id }).catch(() => {})
+  // Debounced markConversationAsRead
+  const markAsReadTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const debouncedMarkAsRead = useCallback(() => {
+    if (markAsReadTimerRef.current) return
+    markAsReadTimerRef.current = setTimeout(() => {
+      markConversationAsRead({ conversationId: conversation.id }).catch(
+        () => {}
+      )
+      markAsReadTimerRef.current = null
+    }, 2000)
   }, [conversation.id])
 
-  // Real-time updates via Socket.IO
+  // Mark as read when opened or conversation changes
   useEffect(() => {
-    if (!socketService.isConnected()) return
+    debouncedMarkAsRead()
+    return () => {
+      if (markAsReadTimerRef.current) {
+        clearTimeout(markAsReadTimerRef.current)
+        markAsReadTimerRef.current = null
+      }
+    }
+  }, [conversation.id, debouncedMarkAsRead])
+
+  // --- Real-time updates via Socket.IO (reactive to connection state) ---
+  useEffect(() => {
+    if (!isConnected) return
 
     socketService.subscribeToConversation(conversation.id)
 
-    const unsubscribeNewMessage = socketService.on("message:new", (data) => {
-      if (data.conversationId === conversation.id) {
-        const newMessage: MessageDTO = {
-          id: data.id,
-          conversationId: data.conversationId,
-          senderId: data.senderId,
-          sender: {
-            id: data.senderId,
-            username: null,
-            email: null,
-            image: null,
-          },
-          content: data.content,
-          contentType: data.contentType || "text",
-          status: "sent",
-          replyToId: null,
-          replyTo: null,
-          forwardedFromId: null,
-          isEdited: false,
-          editedAt: null,
-          isDeleted: false,
-          deletedAt: null,
-          isSystem: false,
-          metadata: null,
-          whatsappStatus: null,
-          whatsappPhone: null,
-          createdAt: new Date(data.createdAt),
-          updatedAt: new Date(data.createdAt),
-          attachments: [],
-          reactions: [],
-          readReceipts: [],
-          readCount: 0,
+    // Flush pending message queue on reconnect
+    if (pendingQueueRef.current.length > 0) {
+      const queue = [...pendingQueueRef.current]
+      pendingQueueRef.current = []
+      for (const pending of queue) {
+        if (pending.conversationId !== conversation.id) {
+          pendingQueueRef.current.push(pending)
+          continue
         }
-
-        setMessages((prev) => {
-          if (data.senderId === currentUserId) {
-            const withoutOptimistic = prev.filter(
-              (msg) =>
-                !msg.id.startsWith("temp-") ||
-                msg.content !== newMessage.content
+        // Update status to "sending"
+        onMessagesUpdate(conversation.id, (prev) =>
+          prev.map((msg) =>
+            msg.id === `temp-${pending.nonce}`
+              ? { ...msg, status: "sending" as MessageDTO["status"] }
+              : msg
+          )
+        )
+        onSendMessage(pending.content, pending.replyToId)
+          .then((sentMessage) => {
+            if (sentMessage) {
+              onMessagesUpdate(conversation.id, (prev) => {
+                const withoutTemp = prev.filter(
+                  (msg) => msg.id !== `temp-${pending.nonce}`
+                )
+                if (withoutTemp.some((msg) => msg.id === sentMessage.id))
+                  return withoutTemp
+                return [...withoutTemp, sentMessage]
+              })
+            }
+          })
+          .catch(() => {
+            pending.retryCount++
+            if (pending.retryCount < 3) {
+              pendingQueueRef.current.push(pending)
+            }
+            onMessagesUpdate(conversation.id, (prev) =>
+              prev.map((msg) =>
+                msg.id === `temp-${pending.nonce}`
+                  ? { ...msg, status: "failed" as MessageDTO["status"] }
+                  : msg
+              )
             )
+          })
+      }
+    }
+
+    const unsubscribeNewMessage = socketService.on("message:new", (data) => {
+      if (data.conversationId !== conversation.id) return
+
+      const newMessage = buildMessageFromSocket(data)
+
+      onMessagesUpdate(conversation.id, (prev) => {
+        if (data.senderId === currentUserId) {
+          // Nonce-based reconciliation
+          const serverNonce = (data.metadata as Record<string, unknown>)
+            ?.clientNonce as string | undefined
+          if (serverNonce) {
+            const withoutOptimistic = prev.filter((msg) => {
+              const msgNonce = (msg.metadata as Record<string, unknown>)
+                ?.clientNonce as string | undefined
+              return !msgNonce || msgNonce !== serverNonce
+            })
             return [...withoutOptimistic, newMessage]
           }
-          return [...prev, newMessage]
-        })
-
-        if (data.senderId !== currentUserId) {
-          markConversationAsRead({ conversationId: conversation.id }).catch(
-            () => {}
-          )
+          // Fallback: remove all temp messages
+          const withoutTemp = prev.filter((msg) => !msg.id.startsWith("temp-"))
+          return [...withoutTemp, newMessage]
         }
+        // Dedup check for messages from others
+        if (prev.some((msg) => msg.id === data.id)) return prev
+        return [...prev, newMessage]
+      })
+
+      if (data.senderId !== currentUserId) {
+        debouncedMarkAsRead()
       }
     })
 
     const unsubscribeMessageUpdated = socketService.on(
       "message:updated",
       (data) => {
-        setMessages((prev) =>
+        onMessagesUpdate(conversation.id, (prev) =>
           prev.map((msg) =>
             msg.id === data.messageId
               ? {
@@ -297,7 +376,7 @@ export function ChatInterface({
     const unsubscribeMessageDeleted = socketService.on(
       "message:deleted",
       (data) => {
-        setMessages((prev) =>
+        onMessagesUpdate(conversation.id, (prev) =>
           prev.map((msg) =>
             msg.id === data.messageId
               ? { ...msg, isDeleted: true, deletedAt: new Date(data.deletedAt) }
@@ -308,43 +387,40 @@ export function ChatInterface({
     )
 
     const unsubscribeReaction = socketService.on("message:reaction", (data) => {
-      setMessages((prev) =>
+      onMessagesUpdate(conversation.id, (prev) =>
         prev.map((msg) => {
-          if (msg.id === data.messageId) {
-            const existingReaction = msg.reactions.find(
-              (r) => r.userId === data.userId && r.emoji === data.emoji
-            )
-            if (existingReaction) {
-              return {
-                ...msg,
-                reactions: msg.reactions.filter(
-                  (r) => r.id !== existingReaction.id
-                ),
-              }
-            } else {
-              return {
-                ...msg,
-                reactions: [
-                  ...msg.reactions,
-                  {
-                    id: `${data.userId}-${data.emoji}`,
-                    messageId: data.messageId,
-                    userId: data.userId,
-                    user: {
-                      id: data.userId,
-                      username: null,
-                      email: null,
-                      image: null,
-                      role: "",
-                    },
-                    emoji: data.emoji,
-                    createdAt: new Date(),
-                  },
-                ],
-              }
+          if (msg.id !== data.messageId) return msg
+          const existingReaction = msg.reactions.find(
+            (r) => r.userId === data.userId && r.emoji === data.emoji
+          )
+          if (existingReaction) {
+            return {
+              ...msg,
+              reactions: msg.reactions.filter(
+                (r) => r.id !== existingReaction.id
+              ),
             }
           }
-          return msg
+          return {
+            ...msg,
+            reactions: [
+              ...msg.reactions,
+              {
+                id: `${data.userId}-${data.emoji}`,
+                messageId: data.messageId,
+                userId: data.userId,
+                user: {
+                  id: data.userId,
+                  username: null,
+                  email: null,
+                  image: null,
+                  role: "",
+                },
+                emoji: data.emoji,
+                createdAt: new Date(),
+              },
+            ],
+          }
         })
       )
     })
@@ -381,6 +457,22 @@ export function ChatInterface({
       }
     })
 
+    // Real-time read receipts — update sent message ticks to "read"
+    const unsubscribeMessageRead = socketService.on("message:read", (data) => {
+      if (
+        data.userId !== currentUserId &&
+        data.conversationId === conversation.id
+      ) {
+        onMessagesUpdate(conversation.id, (prev) =>
+          prev.map((msg) =>
+            msg.senderId === currentUserId && msg.status !== "read"
+              ? { ...msg, status: "read" as MessageDTO["status"] }
+              : msg
+          )
+        )
+      }
+    })
+
     return () => {
       unsubscribeNewMessage()
       unsubscribeMessageUpdated()
@@ -388,9 +480,16 @@ export function ChatInterface({
       unsubscribeReaction()
       unsubscribeTypingStart()
       unsubscribeTypingStop()
+      unsubscribeMessageRead()
       socketService.unsubscribeFromConversation(conversation.id)
     }
-  }, [conversation.id, currentUserId])
+  }, [
+    conversation.id,
+    currentUserId,
+    isConnected,
+    onMessagesUpdate,
+    debouncedMarkAsRead,
+  ])
 
   // Auto-remove typing indicators after 5s (only when someone is typing)
   useEffect(() => {
@@ -404,30 +503,33 @@ export function ChatInterface({
     return () => clearInterval(interval)
   }, [typingUsers.length])
 
-  // Polling fallback when Socket.IO is not connected
+  // Polling fallback — stable, ref-based cursor
+  const lastMessageIdRef = useRef<string | null>(null)
   useEffect(() => {
-    if (socketService.isConnected()) return
+    if (messages.length > 0) {
+      lastMessageIdRef.current = messages[messages.length - 1].id
+    }
+  }, [messages])
+
+  useEffect(() => {
+    if (isConnected) return
 
     let active = true
     const poll = async () => {
-      if (!active) return
-      const lastMessage = messages[messages.length - 1]
-      if (!lastMessage) return
+      if (!active || !lastMessageIdRef.current) return
       const result = await pollNewMessages({
         conversationId: conversation.id,
-        afterMessageId: lastMessage.id,
+        afterMessageId: lastMessageIdRef.current,
       })
       if (result.success && result.data.items.length > 0) {
-        setMessages((prev) => {
-          const existingIds = new Set(prev.map((m) => m.id))
+        onMessagesUpdate(conversation.id, (prev) => {
+          const existingIds = new Set(prev.map((msg) => msg.id))
           const newItems = result.data.items.filter(
             (item: MessageDTO) => !existingIds.has(item.id)
           )
           return newItems.length > 0 ? [...prev, ...newItems] : prev
         })
-        markConversationAsRead({ conversationId: conversation.id }).catch(
-          () => {}
-        )
+        debouncedMarkAsRead()
       }
     }
 
@@ -436,29 +538,117 @@ export function ChatInterface({
       active = false
       clearInterval(timer)
     }
-  }, [conversation.id, messages.length])
+  }, [conversation.id, isConnected, onMessagesUpdate, debouncedMarkAsRead])
 
   const handleSendMessage = async (content: string, replyToId?: string) => {
+    // Find the nonce from the optimistic message (latest temp message)
+    const tempMsg = messages.find(
+      (msg) => msg.id.startsWith("temp-") && msg.content === content
+    )
+    const nonce = tempMsg
+      ? ((tempMsg.metadata as Record<string, unknown>)?.clientNonce as string)
+      : undefined
+
     try {
       const sentMessage = await onSendMessage(content, replyToId)
       if (sentMessage) {
-        // Immediately add real message, replacing any optimistic temp
-        setMessages((prev) => {
+        // Replace any optimistic temp messages with the real one
+        onMessagesUpdate(conversation.id, (prev) => {
           const withoutOptimistic = prev.filter(
             (msg) => !msg.id.startsWith("temp-")
           )
+          // Only add if not already present (socket may have delivered it)
+          if (withoutOptimistic.some((msg) => msg.id === sentMessage.id)) {
+            return withoutOptimistic
+          }
           return [...withoutOptimistic, sentMessage]
         })
       }
       setReplyTo(null)
       setEditingMessage(null)
     } catch {
-      toast({
-        title: m?.notifications?.error || "Error",
-        description: m?.errors?.send_failed || "Failed to send message",
-      })
+      // Queue for retry instead of losing the message
+      if (nonce) {
+        pendingQueueRef.current.push({
+          nonce,
+          content,
+          replyToId,
+          conversationId: conversation.id,
+          retryCount: 0,
+        })
+        // Update optimistic message status to "failed"
+        onMessagesUpdate(conversation.id, (prev) =>
+          prev.map((msg) =>
+            msg.id === `temp-${nonce}`
+              ? { ...msg, status: "failed" as MessageDTO["status"] }
+              : msg
+          )
+        )
+      } else {
+        toast({
+          title: m?.notifications?.error || "Error",
+          description: m?.errors?.send_failed || "Failed to send message",
+        })
+      }
     }
   }
+
+  // Retry a failed message
+  const handleRetryMessage = useCallback(
+    async (messageId: string) => {
+      // Extract nonce from temp message ID
+      const nonce = messageId.startsWith("temp-")
+        ? messageId.slice(5)
+        : undefined
+      if (!nonce) return
+
+      const pending = pendingQueueRef.current.find((p) => p.nonce === nonce)
+      if (!pending) return
+
+      // Update status to "sending"
+      onMessagesUpdate(conversation.id, (prev) =>
+        prev.map((msg) =>
+          msg.id === messageId
+            ? { ...msg, status: "sending" as MessageDTO["status"] }
+            : msg
+        )
+      )
+
+      try {
+        const sentMessage = await onSendMessage(
+          pending.content,
+          pending.replyToId
+        )
+        pendingQueueRef.current = pendingQueueRef.current.filter(
+          (p) => p.nonce !== nonce
+        )
+        if (sentMessage) {
+          onMessagesUpdate(conversation.id, (prev) => {
+            const withoutTemp = prev.filter((msg) => msg.id !== messageId)
+            if (withoutTemp.some((msg) => msg.id === sentMessage.id)) {
+              return withoutTemp
+            }
+            return [...withoutTemp, sentMessage]
+          })
+        }
+      } catch {
+        pending.retryCount++
+        if (pending.retryCount >= 3) {
+          pendingQueueRef.current = pendingQueueRef.current.filter(
+            (p) => p.nonce !== nonce
+          )
+        }
+        onMessagesUpdate(conversation.id, (prev) =>
+          prev.map((msg) =>
+            msg.id === messageId
+              ? { ...msg, status: "failed" as MessageDTO["status"] }
+              : msg
+          )
+        )
+      }
+    },
+    [conversation.id, onSendMessage, onMessagesUpdate]
+  )
 
   const handleEditMessage = async (message: MessageDTO) => {
     setEditingMessage(message)
@@ -667,6 +857,9 @@ export function ChatInterface({
           onDelete={handleDeleteMessage}
           onReact={handleReactToMessage}
           onRemoveReaction={onRemoveReaction}
+          onRetry={handleRetryMessage}
+          savedScrollPosition={savedScrollPosition}
+          onSaveScrollPosition={onSaveScrollPosition}
           className="h-full"
         />
 

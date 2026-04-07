@@ -8,6 +8,26 @@
 
 import { NotificationType, UserRole } from "@prisma/client"
 
+/** Allowed notification send types per role (DEVELOPER/ADMIN handled separately) */
+const ROLE_SEND_TYPES: Record<UserRole, NotificationType[]> = {
+  DEVELOPER: [],
+  ADMIN: [],
+  TEACHER: [
+    "assignment_created",
+    "assignment_due",
+    "assignment_graded",
+    "grade_posted",
+    "attendance_marked",
+    "class_cancelled",
+    "class_rescheduled",
+  ],
+  ACCOUNTANT: ["fee_due", "fee_overdue", "fee_paid"],
+  STAFF: ["document_shared", "event_reminder"],
+  STUDENT: [],
+  GUARDIAN: [],
+  USER: [],
+}
+
 export type NotificationAction =
   | "create"
   | "read"
@@ -95,58 +115,20 @@ export function checkNotificationPermission(
     }
   }
 
-  // TEACHER can send certain types of notifications
-  if (role === "TEACHER") {
+  // Role-specific create/send_batch permissions using shared type map
+  if (role === "TEACHER" || role === "ACCOUNTANT" || role === "STAFF") {
     if (action === "create") {
-      // Teachers can send assignment, grade, and class-related notifications
-      const allowedTypes: NotificationType[] = [
-        "assignment_created",
-        "assignment_due",
-        "assignment_graded",
-        "grade_posted",
-        "class_cancelled",
-        "class_rescheduled",
-      ]
-
       if (!notification?.type) return false
-      return allowedTypes.includes(notification.type)
+      return ROLE_SEND_TYPES[role].includes(notification.type)
     }
 
     if (action === "send_batch") {
-      // Teachers can send batch notifications to their classes only
-      return notification?.targetRole === undefined // No role targeting
-    }
-  }
-
-  // ACCOUNTANT can send fee-related notifications
-  if (role === "ACCOUNTANT") {
-    if (action === "create") {
-      const allowedTypes: NotificationType[] = [
-        "fee_due",
-        "fee_overdue",
-        "fee_paid",
-      ]
-
-      if (!notification?.type) return false
-      return allowedTypes.includes(notification.type)
-    }
-
-    if (action === "send_batch") {
-      // Accountants can send batch fee notifications
-      return true
-    }
-  }
-
-  // STAFF can send limited notification types
-  if (role === "STAFF") {
-    if (action === "create") {
-      const allowedTypes: NotificationType[] = [
-        "document_shared",
-        "event_reminder",
-      ]
-
-      if (!notification?.type) return false
-      return allowedTypes.includes(notification.type)
+      if (role === "TEACHER") {
+        return notification?.targetRole === undefined // No role targeting
+      }
+      if (role === "ACCOUNTANT") {
+        return true
+      }
     }
   }
 
@@ -207,26 +189,7 @@ export function canSendNotificationType(
     return true // Full access
   }
 
-  const roleNotificationMap: Record<UserRole, NotificationType[]> = {
-    DEVELOPER: [], // Handled above
-    ADMIN: [], // Handled above
-    TEACHER: [
-      "assignment_created",
-      "assignment_due",
-      "assignment_graded",
-      "grade_posted",
-      "attendance_marked",
-      "class_cancelled",
-      "class_rescheduled",
-    ],
-    ACCOUNTANT: ["fee_due", "fee_overdue", "fee_paid"],
-    STAFF: ["document_shared", "event_reminder"],
-    STUDENT: [],
-    GUARDIAN: [],
-    USER: [],
-  }
-
-  return roleNotificationMap[role]?.includes(type) ?? false
+  return ROLE_SEND_TYPES[role]?.includes(type) ?? false
 }
 
 /**
@@ -287,26 +250,7 @@ export function getAllowedNotificationTypes(
     ]
   }
 
-  const roleNotificationMap: Record<UserRole, NotificationType[]> = {
-    DEVELOPER: [],
-    ADMIN: [],
-    TEACHER: [
-      "assignment_created",
-      "assignment_due",
-      "assignment_graded",
-      "grade_posted",
-      "attendance_marked",
-      "class_cancelled",
-      "class_rescheduled",
-    ],
-    ACCOUNTANT: ["fee_due", "fee_overdue", "fee_paid"],
-    STAFF: ["document_shared", "event_reminder"],
-    STUDENT: [],
-    GUARDIAN: [],
-    USER: [],
-  }
-
-  return roleNotificationMap[role] ?? []
+  return ROLE_SEND_TYPES[role] ?? []
 }
 
 /**

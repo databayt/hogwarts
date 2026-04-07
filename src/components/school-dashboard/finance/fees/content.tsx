@@ -13,6 +13,7 @@ import {
 } from "lucide-react"
 
 import { db } from "@/lib/db"
+import { formatCurrency } from "@/lib/i18n-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { buttonVariants } from "@/components/ui/button"
 import {
@@ -36,13 +37,13 @@ export default async function FeesContent({ dictionary, lang }: Props) {
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
-    const c0 = (dictionary as any)?.finance?.common as
+    const ov = (dictionary as any)?.finance?.fees?.overview as
       | Record<string, string>
       | undefined
     return (
       <div>
         <p className="text-muted-foreground">
-          {c0?.schoolNotFound || "School context not found"}
+          {ov?.schoolNotFound || "School context not found"}
         </p>
       </div>
     )
@@ -61,13 +62,13 @@ export default async function FeesContent({ dictionary, lang }: Props) {
 
   // If user can't view fees, show empty state
   if (!canView) {
-    const c0 = (dictionary as any)?.finance?.common as
+    const ov = (dictionary as any)?.finance?.fees?.overview as
       | Record<string, string>
       | undefined
     return (
       <div>
         <p className="text-muted-foreground">
-          {c0?.noPermissionFees || "You don't have permission to view fees"}
+          {ov?.noPermissionFees || "You don't have permission to view fees"}
         </p>
       </div>
     )
@@ -139,7 +140,9 @@ export default async function FeesContent({ dictionary, lang }: Props) {
   }
 
   const d = (dictionary as any)?.finance
-  const fp = d?.feesPage as Record<string, string> | undefined
+  const fp = (d?.fees?.overview || d?.feesPage) as
+    | Record<string, string>
+    | undefined
   const c = d?.common as Record<string, string> | undefined
 
   return (
@@ -155,7 +158,7 @@ export default async function FeesContent({ dictionary, lang }: Props) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ${totalFeesCollected.toLocaleString()}
+              {formatCurrency(totalFeesCollected, lang)}
             </div>
             <p className="text-muted-foreground text-xs">
               {fp?.completedPayments || "Completed payments"}
@@ -172,7 +175,7 @@ export default async function FeesContent({ dictionary, lang }: Props) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ${pendingPayments.toLocaleString()}
+              {formatCurrency(pendingPayments, lang)}
             </div>
             <p className="text-muted-foreground text-xs">
               {activeAssignmentsCount} {fp?.assignments || "assignments"}
@@ -189,7 +192,7 @@ export default async function FeesContent({ dictionary, lang }: Props) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ${overduePayments.toLocaleString()}
+              {formatCurrency(overduePayments, lang)}
             </div>
             <p className="text-muted-foreground text-xs">
               {c?.requiresAction || "Requires action"}

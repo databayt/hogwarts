@@ -30,7 +30,7 @@ export function NotificationCenterClient({
     notifications: realtimeNotifications,
     markAsRead,
     markAllAsRead,
-  } = useNotificationCenter()
+  } = useNotificationCenter(locale)
 
   // Merge initial notifications with real-time updates
   const [allNotifications, setAllNotifications] =

@@ -8,7 +8,7 @@ import { ColumnDef } from "@tanstack/react-table"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
-import { STATS_CARD_DEFS } from "./config"
+import { getStatsCardDefs } from "./config"
 import { DataTable } from "./data-table"
 
 interface StatCardProps {
@@ -61,9 +61,10 @@ export function StatsCards({
     paidInvoice: dict?.paidInvoice || "Paid Invoice",
     UnpaidInvoice: dict?.unpaidInvoice || "Unpaid Invoice",
   }
+  const defs = getStatsCardDefs(dict)
   return (
     <>
-      {STATS_CARD_DEFS.map((def) => (
+      {defs.map((def) => (
         <StatCard
           key={def.key}
           title={titleMap[def.key] || def.title}

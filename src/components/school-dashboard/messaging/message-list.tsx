@@ -31,6 +31,9 @@ export interface MessageListProps {
   onDelete?: (messageId: string) => void
   onReact?: (messageId: string, emoji: string) => void
   onRemoveReaction?: (reactionId: string) => void
+  onRetry?: (messageId: string) => void
+  savedScrollPosition?: number
+  onSaveScrollPosition?: (position: number) => void
   className?: string
   enableVirtualization?: boolean
 }
@@ -59,6 +62,9 @@ export function MessageList({
   onDelete,
   onReact,
   onRemoveReaction,
+  onRetry,
+  savedScrollPosition = -1,
+  onSaveScrollPosition,
   className,
   enableVirtualization = true,
 }: MessageListProps) {
@@ -71,6 +77,11 @@ export function MessageList({
   )
   const [hasScrolledUp, setHasScrolledUp] = useState(false)
   const dateLocale = locale === "ar" ? ar : enUS
+
+  // Scroll anchoring for history load (prepend)
+  const isPrependingRef = useRef(false)
+  const prevItemCountRef = useRef(0)
+  const anchorIndexRef = useRef<number | null>(null)
 
   // Group messages by date, sorted ascending (oldest first — WhatsApp order)
   const messagesByDate = useMemo(() => {
@@ -165,8 +176,28 @@ export function MessageList({
     // Only trigger load more when scrolled near the top (within 100px)
     if (el.scrollTop < 100 && hasMore && !isLoading && onLoadMore) {
       setHasScrolledUp(true)
+
+      // Save anchor before loading older messages
+      if (enableVirtualization) {
+        const visibleItems = virtualizer.getVirtualItems()
+        if (visibleItems.length > 0) {
+          anchorIndexRef.current = visibleItems[0].index
+        }
+        isPrependingRef.current = true
+        prevItemCountRef.current = virtualListItems.length
+      }
+
       onLoadMore()
     }
+  }
+
+  // Save scroll position for conversation cache
+  const handleScroll = () => {
+    const el = scrollContainerRef.current
+    if (el && onSaveScrollPosition) {
+      onSaveScrollPosition(el.scrollTop)
+    }
+    handleScrollToTop()
   }
 
   const scrollToBottom = () => {
@@ -183,20 +214,41 @@ export function MessageList({
     }
   }
 
-  // Auto-scroll to bottom on new messages
+  // Auto-scroll to bottom on new messages, with scroll anchoring on prepend
   useEffect(() => {
-    if (
-      enableVirtualization &&
-      virtualListItems.length > 0 &&
-      (isAtBottom || !hasScrolledUp)
-    ) {
+    if (!enableVirtualization || virtualListItems.length === 0) return
+
+    if (isPrependingRef.current && prevItemCountRef.current > 0) {
+      // History was prepended — restore anchor position
+      const addedCount = virtualListItems.length - prevItemCountRef.current
+      if (addedCount > 0 && anchorIndexRef.current !== null) {
+        const newIndex = anchorIndexRef.current + addedCount
+        requestAnimationFrame(() => {
+          virtualizer.scrollToIndex(newIndex, { align: "start" })
+        })
+      }
+      isPrependingRef.current = false
+      anchorIndexRef.current = null
+      return
+    }
+
+    // Normal case: auto-scroll to bottom for new messages
+    if (isAtBottom || !hasScrolledUp) {
       virtualizer.scrollToIndex(virtualListItems.length - 1, { align: "end" })
     }
   }, [virtualListItems.length, enableVirtualization, isAtBottom, hasScrolledUp])
 
   if (messages.length === 0 && !isLoading) {
     return (
-      <div className={cn("flex-1", className)}>
+      <div className={cn("relative flex-1 bg-[#EEEAE4]", className)}>
+        <div
+          className="pointer-events-none absolute inset-0 opacity-60"
+          style={{
+            backgroundImage: "url('/whatsapp-bg.png')",
+            backgroundSize: "60%",
+            backgroundRepeat: "repeat",
+          }}
+        />
         <ChatEmpty locale={locale} />
       </div>
     )
@@ -217,7 +269,7 @@ export function MessageList({
         <div
           ref={scrollContainerRef}
           className="relative h-full flex-1 overflow-x-hidden overflow-y-auto"
-          onScroll={handleScrollToTop}
+          onScroll={handleScroll}
         >
           <div
             style={{
@@ -271,6 +323,7 @@ export function MessageList({
                         onDelete={onDelete}
                         onReact={onReact}
                         onRemoveReaction={onRemoveReaction}
+                        onRetry={onRetry}
                       />
                     </div>
                   )}
@@ -352,6 +405,7 @@ export function MessageList({
                         onDelete={onDelete}
                         onReact={onReact}
                         onRemoveReaction={onRemoveReaction}
+                        onRetry={onRetry}
                       />
                     ))}
                   </div>

@@ -9,6 +9,93 @@
 import { AccountType } from "@prisma/client"
 import { z } from "zod"
 
+import type { ValidationHelper } from "@/components/internationalization/helpers"
+
+// ============================================================================
+// Schema Factory Functions (i18n-enabled)
+// ============================================================================
+
+export const createAccountSchema = (v: ValidationHelper) =>
+  z.object({
+    code: z.string().min(1, v.required()).max(20),
+    name: z.string().min(1, v.required()).max(200),
+    type: z.nativeEnum(AccountType),
+    description: z.string().optional(),
+    parentAccountId: z.string().optional().nullable(),
+    isActive: z.boolean().default(true),
+  })
+
+export const createJournalEntrySchema = (v: ValidationHelper) =>
+  z
+    .object({
+      entryDate: z.coerce.date(),
+      description: z.string().min(1, v.required()).max(500),
+      fiscalYearId: z.string().min(1, v.required()),
+      entries: z
+        .array(
+          z.object({
+            accountId: z.string().min(1, v.required()),
+            debit: z.number().min(0).default(0),
+            credit: z.number().min(0).default(0),
+            description: z.string().optional(),
+          })
+        )
+        .min(2, v.min(2)),
+    })
+    .refine(
+      (data) => {
+        const totalDebits = data.entries.reduce(
+          (sum, entry) => sum + entry.debit,
+          0
+        )
+        const totalCredits = data.entries.reduce(
+          (sum, entry) => sum + entry.credit,
+          0
+        )
+        return Math.abs(totalDebits - totalCredits) < 0.01
+      },
+      {
+        message:
+          "Total debits must equal total credits (double-entry bookkeeping)", // TODO: add custom validation key
+      }
+    )
+
+export const createLedgerEntrySchema = (v: ValidationHelper) =>
+  z
+    .object({
+      accountId: z.string().min(1, v.required()),
+      debit: z.number().min(0, v.min(0)).default(0),
+      credit: z.number().min(0, v.min(0)).default(0),
+      description: z.string().max(500).optional(),
+    })
+    .refine(
+      (data) => {
+        return (
+          (data.debit > 0 && data.credit === 0) ||
+          (data.credit > 0 && data.debit === 0)
+        )
+      },
+      {
+        message: "Either debit or credit must be greater than 0, but not both", // TODO: add custom validation key
+      }
+    )
+
+export const createFiscalYearSchema = (v: ValidationHelper) =>
+  z
+    .object({
+      name: z.string().min(1, v.required()).max(100),
+      startDate: z.coerce.date(),
+      endDate: z.coerce.date(),
+      isActive: z.boolean().default(true),
+    })
+    .refine((data) => data.endDate > data.startDate, {
+      message: "End date must be after start date", // TODO: add custom validation key
+    })
+
+// ============================================================================
+// Static Schemas (server-side fallback)
+// ============================================================================
+
 /**
  * Account Schema
  * For creating/updating chart of accounts

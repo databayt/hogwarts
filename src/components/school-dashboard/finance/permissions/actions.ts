@@ -346,10 +346,9 @@ export async function bulkGrantPermissions(
   } catch (error) {
     console.error("Error bulk granting permissions:", error)
     return {
-      success: false,
+      ...actionError(ACTION_ERRORS.PERMISSION_GRANT_FAILED),
       granted: 0,
       failed: permissions.length,
-      error: "Failed to bulk grant permissions",
     }
   }
 }
@@ -401,10 +400,9 @@ export async function bulkRevokePermissions(
   } catch (error) {
     console.error("Error bulk revoking permissions:", error)
     return {
-      success: false,
+      ...actionError(ACTION_ERRORS.PERMISSION_REVOKE_FAILED),
       revoked: 0,
       failed: permissions.length,
-      error: "Failed to bulk revoke permissions",
     }
   }
 }
@@ -453,6 +451,6 @@ export async function copyPermissions(
     return { success: true, copied }
   } catch (error) {
     console.error("Error copying permissions:", error)
-    return { success: false, copied: 0, error: "Failed to copy permissions" }
+    return { ...actionError(ACTION_ERRORS.PERMISSION_COPY_FAILED), copied: 0 }
   }
 }

@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { headers } from "next/headers"
 import { auth } from "@/auth"
 import { ChevronDown } from "lucide-react"
 import { signOut } from "next-auth/react"
@@ -15,6 +16,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { getUserById } from "@/components/auth/user"
+import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import getAvatarName from "@/components/school-dashboard/finance/invoice/get-avatar-name"
 
 import UserProfile from "./user-profile"
@@ -31,6 +34,13 @@ export default async function UserProfileDropDown({
   const session = await auth()
   const user = session?.user
   const extendedUser = user ? await getUserById(user.id) : null
+
+  const headersList = await headers()
+  const lang = (headersList.get("x-locale") || "ar") as Locale
+  const dictionary = await getDictionary(lang)
+  const ip = (dictionary as any)?.finance?.invoiceProfile as
+    | Record<string, string>
+    | undefined
 
   return (
     <DropdownMenu>
@@ -58,7 +68,7 @@ export default async function UserProfileDropDown({
         </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-full min-w-[250px]">
-        <DropdownMenuLabel>My Account</DropdownMenuLabel>
+        <DropdownMenuLabel>{ip?.myAccount || "My Account"}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <UserProfile />
         <DropdownMenuItem
@@ -68,7 +78,7 @@ export default async function UserProfileDropDown({
           }}
           className="cursor-pointer bg-red-50 font-medium text-red-500 hover:bg-red-100"
         >
-          Logout
+          {ip?.logout || "Logout"}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

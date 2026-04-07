@@ -36,6 +36,7 @@ interface Props {
 export default async function FeeReportsPage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
+  const d = dictionary?.finance?.fees?.reports
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) notFound()
@@ -84,9 +85,11 @@ export default async function FeeReportsPage({ params }: Props) {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Fee Collection Report</h1>
+        <h1 className="text-2xl font-semibold">
+          {d?.feeCollectionReport || "Fee Collection Report"}
+        </h1>
         <p className="text-muted-foreground">
-          Overview of fee collection performance
+          {d?.reportDescription || "Overview of fee collection performance"}
         </p>
       </div>
 
@@ -94,7 +97,9 @@ export default async function FeeReportsPage({ params }: Props) {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Total Collected</CardDescription>
+            <CardDescription>
+              {d?.totalCollected || "Total Collected"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold tabular-nums">
@@ -104,7 +109,9 @@ export default async function FeeReportsPage({ params }: Props) {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Total Pending</CardDescription>
+            <CardDescription>
+              {d?.totalPending || "Total Pending"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold tabular-nums">
@@ -114,7 +121,9 @@ export default async function FeeReportsPage({ params }: Props) {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Collection Rate</CardDescription>
+            <CardDescription>
+              {d?.collectionRate || "Collection Rate"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold tabular-nums">{collectionRate}%</p>
@@ -123,14 +132,16 @@ export default async function FeeReportsPage({ params }: Props) {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Active Scholarships</CardDescription>
+            <CardDescription>
+              {d?.activeScholarships || "Active Scholarships"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold tabular-nums">
               {stats.totalScholarships}
             </p>
             <p className="text-muted-foreground text-sm">
-              {stats.unpaidFines} unpaid fines
+              {stats.unpaidFines} {d?.unpaidFines || "unpaid fines"}
             </p>
           </CardContent>
         </Card>
@@ -139,15 +150,19 @@ export default async function FeeReportsPage({ params }: Props) {
       {/* Assignment Status Breakdown */}
       <Card>
         <CardHeader>
-          <CardTitle>Assignment Status Breakdown</CardTitle>
+          <CardTitle>
+            {d?.assignmentStatusBreakdown || "Assignment Status Breakdown"}
+          </CardTitle>
           <CardDescription>
-            {stats.totalStructures} structures, {stats.activeStructures} active
+            {stats.totalStructures} {d?.feeStructures || "structures"},{" "}
+            {stats.activeStructures}{" "}
+            {dictionary?.finance?.common?.active || "active"}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {statusEntries.length === 0 ? (
             <p className="text-muted-foreground py-4 text-center">
-              No fee assignments found.
+              {d?.noFeeAssignments || "No fee assignments found."}
             </p>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
@@ -185,17 +200,19 @@ export default async function FeeReportsPage({ params }: Props) {
         {/* Top Fee Structures */}
         <Card>
           <CardHeader>
-            <CardTitle>Fee Structures</CardTitle>
-            <CardDescription>Active fee structures</CardDescription>
+            <CardTitle>{d?.feeStructures || "Fee Structures"}</CardTitle>
+            <CardDescription>
+              {d?.activeFeeStructures || "Active fee structures"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Year</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Students</TableHead>
+                  <TableHead>{d?.name || "Name"}</TableHead>
+                  <TableHead>{d?.year || "Year"}</TableHead>
+                  <TableHead>{d?.amount || "Amount"}</TableHead>
+                  <TableHead>{d?.students || "Students"}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -219,17 +236,19 @@ export default async function FeeReportsPage({ params }: Props) {
         {/* Recent Payments */}
         <Card>
           <CardHeader>
-            <CardTitle>Recent Payments</CardTitle>
-            <CardDescription>Last 10 successful payments</CardDescription>
+            <CardTitle>{d?.recentPayments || "Recent Payments"}</CardTitle>
+            <CardDescription>
+              {d?.lastPayments || "Last 10 successful payments"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Student</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Method</TableHead>
-                  <TableHead>Date</TableHead>
+                  <TableHead>{d?.student || "Student"}</TableHead>
+                  <TableHead>{d?.amount || "Amount"}</TableHead>
+                  <TableHead>{d?.method || "Method"}</TableHead>
+                  <TableHead>{d?.date || "Date"}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

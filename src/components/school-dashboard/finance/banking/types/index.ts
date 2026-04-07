@@ -92,14 +92,19 @@ export interface BankingDictionary {
   transactions?: string
   searchTransactions?: string
   noTransactionsFound?: string
+  noMatchingTransactions?: string
   date?: string
   description?: string
   account?: string
   category?: string
   status?: string
   amount?: string
+  type?: string
   pending?: string
   completed?: string
+  credit?: string
+  debit?: string
+  merchant?: string
   viewDetails?: string
 
   // Transfer related
@@ -110,6 +115,15 @@ export interface BankingDictionary {
   processing?: string
   transferSuccess?: string
   transferFailed?: string
+
+  // UI
+  columns?: string
+  toggleColumns?: string
+  allTypes?: string
+  allStatus?: string
+  transactionDetails?: string
+  completeInformation?: string
+  location?: string
 
   // Chart related
   chartTitle?: string

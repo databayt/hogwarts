@@ -254,11 +254,13 @@ function TransactionsTableImprovedInner({
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm">
                   <Eye className="me-2 h-4 w-4" />
-                  Columns
+                  {dictionary?.columns || "Columns"}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
+                <DropdownMenuLabel>
+                  {dictionary?.toggleColumns || "Toggle columns"}
+                </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {Object.entries(visibleColumns).map(([key, value]) => (
                   <DropdownMenuCheckboxItem
@@ -323,12 +325,18 @@ function TransactionsTableImprovedInner({
               }
             >
               <SelectTrigger className="w-[120px]">
-                <SelectValue placeholder="Type" />
+                <SelectValue placeholder={dictionary?.type || "Type"} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="credit">Credit</SelectItem>
-                <SelectItem value="debit">Debit</SelectItem>
+                <SelectItem value="all">
+                  {dictionary?.allTypes || "All Types"}
+                </SelectItem>
+                <SelectItem value="credit">
+                  {dictionary?.credit || "Credit"}
+                </SelectItem>
+                <SelectItem value="debit">
+                  {dictionary?.debit || "Debit"}
+                </SelectItem>
               </SelectContent>
             </Select>
 
@@ -339,12 +347,18 @@ function TransactionsTableImprovedInner({
               }
             >
               <SelectTrigger className="w-[120px]">
-                <SelectValue placeholder="Status" />
+                <SelectValue placeholder={dictionary?.status || "Status"} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="all">
+                  {dictionary?.allStatus || "All Status"}
+                </SelectItem>
+                <SelectItem value="pending">
+                  {dictionary?.pending || "Pending"}
+                </SelectItem>
+                <SelectItem value="completed">
+                  {dictionary?.completed || "Completed"}
+                </SelectItem>
               </SelectContent>
             </Select>
 
@@ -356,7 +370,7 @@ function TransactionsTableImprovedInner({
                 }
               >
                 <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder="Account" />
+                  <SelectValue placeholder={dictionary?.account || "Account"} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">All Accounts</SelectItem>
@@ -568,7 +582,8 @@ function TransactionsTableImprovedInner({
               {dictionary?.noTransactionsFound || "No transactions found"}
             </p>
             <p className="text-muted-foreground text-sm">
-              Try adjusting your filters or search criteria
+              {dictionary?.noMatchingTransactions ||
+                "Try adjusting your filters or search criteria"}
             </p>
           </div>
         )}
@@ -581,25 +596,34 @@ function TransactionsTableImprovedInner({
       >
         <SheetContent>
           <SheetHeader>
-            <SheetTitle>Transaction Details</SheetTitle>
+            <SheetTitle>
+              {dictionary?.transactionDetails || "Transaction Details"}
+            </SheetTitle>
             <SheetDescription>
-              Complete information about this transaction
+              {dictionary?.completeInformation ||
+                "Complete information about this transaction"}
             </SheetDescription>
           </SheetHeader>
           {detailsSheet && (
             <div className="mt-6 space-y-4">
               <div className="space-y-2">
-                <p className="text-muted-foreground text-sm">Description</p>
+                <p className="text-muted-foreground text-sm">
+                  {dictionary?.description || "Description"}
+                </p>
                 <p className="font-medium">{detailsSheet.name}</p>
               </div>
               {detailsSheet.merchantName && (
                 <div className="space-y-2">
-                  <p className="text-muted-foreground text-sm">Merchant</p>
+                  <p className="text-muted-foreground text-sm">
+                    {dictionary?.merchant || "Merchant"}
+                  </p>
                   <p className="font-medium">{detailsSheet.merchantName}</p>
                 </div>
               )}
               <div className="space-y-2">
-                <p className="text-muted-foreground text-sm">Amount</p>
+                <p className="text-muted-foreground text-sm">
+                  {dictionary?.amount || "Amount"}
+                </p>
                 <p
                   className={cn(
                     "text-2xl font-bold",
@@ -613,26 +637,36 @@ function TransactionsTableImprovedInner({
                 </p>
               </div>
               <div className="space-y-2">
-                <p className="text-muted-foreground text-sm">Date</p>
+                <p className="text-muted-foreground text-sm">
+                  {dictionary?.date || "Date"}
+                </p>
                 <p className="font-medium">
                   {formatDateTime(new Date(detailsSheet.date)).dateTime}
                 </p>
               </div>
               <div className="space-y-2">
-                <p className="text-muted-foreground text-sm">Category</p>
+                <p className="text-muted-foreground text-sm">
+                  {dictionary?.category || "Category"}
+                </p>
                 <Badge variant="outline" className="capitalize">
                   {detailsSheet.category}
                 </Badge>
               </div>
               <div className="space-y-2">
-                <p className="text-muted-foreground text-sm">Status</p>
+                <p className="text-muted-foreground text-sm">
+                  {dictionary?.status || "Status"}
+                </p>
                 <Badge variant={detailsSheet.pending ? "secondary" : "default"}>
-                  {detailsSheet.pending ? "Pending" : "Completed"}
+                  {detailsSheet.pending
+                    ? dictionary?.pending || "Pending"
+                    : dictionary?.completed || "Completed"}
                 </Badge>
               </div>
               {detailsSheet.location && (
                 <div className="space-y-2">
-                  <p className="text-muted-foreground text-sm">Location</p>
+                  <p className="text-muted-foreground text-sm">
+                    {dictionary?.location || "Location"}
+                  </p>
                   <p className="font-medium">
                     {[
                       detailsSheet.location.address,

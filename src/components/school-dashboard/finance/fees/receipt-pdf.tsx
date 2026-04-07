@@ -15,6 +15,7 @@ import {
 import { Download, Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 const styles = StyleSheet.create({
   page: {
@@ -117,72 +118,97 @@ interface ReceiptData {
   schoolName?: string
 }
 
-function ReceiptDocument({ data }: { data: ReceiptData }) {
+function ReceiptDocument({
+  data,
+  t,
+}: {
+  data: ReceiptData
+  t: Record<string, string>
+}) {
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
-          <Text style={styles.title}>Payment Receipt</Text>
+          <Text style={styles.title}>
+            {t.paymentReceipt || "Payment Receipt"}
+          </Text>
           <Text style={styles.subtitle}>
             {data.schoolName || "School"} — {data.receiptNumber}
           </Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Payment Details</Text>
+          <Text style={styles.sectionTitle}>
+            {t.paymentDetails || "Payment Details"}
+          </Text>
           <View style={styles.row}>
-            <Text style={styles.label}>Payment Number</Text>
+            <Text style={styles.label}>
+              {t.paymentNumber || "Payment Number"}
+            </Text>
             <Text style={styles.value}>{data.paymentNumber}</Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.label}>Receipt Number</Text>
+            <Text style={styles.label}>
+              {t.receiptNumber || "Receipt Number"}
+            </Text>
             <Text style={styles.value}>{data.receiptNumber}</Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.label}>Date</Text>
+            <Text style={styles.label}>{t.date || "Date"}</Text>
             <Text style={styles.value}>{data.paymentDate}</Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.label}>Method</Text>
+            <Text style={styles.label}>{t.method || "Method"}</Text>
             <Text style={styles.value}>
               {data.paymentMethod.replace(/_/g, " ")}
             </Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.label}>Status</Text>
+            <Text style={styles.label}>{t.status || "Status"}</Text>
             <Text style={styles.statusBadge}>{data.status}</Text>
           </View>
           {data.transactionId && (
             <View style={styles.row}>
-              <Text style={styles.label}>Transaction ID</Text>
+              <Text style={styles.label}>
+                {t.transactionId || "Transaction ID"}
+              </Text>
               <Text style={styles.value}>{data.transactionId}</Text>
             </View>
           )}
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Student Information</Text>
+          <Text style={styles.sectionTitle}>
+            {t.studentInformation || "Student Information"}
+          </Text>
           <View style={styles.row}>
-            <Text style={styles.label}>Student</Text>
+            <Text style={styles.label}>{t.student || "Student"}</Text>
             <Text style={styles.value}>{data.studentName}</Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.label}>Fee Structure</Text>
+            <Text style={styles.label}>
+              {t.feeStructure || "Fee Structure"}
+            </Text>
             <Text style={styles.value}>{data.feeStructureName}</Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.label}>Academic Year</Text>
+            <Text style={styles.label}>
+              {t.academicYear || "Academic Year"}
+            </Text>
             <Text style={styles.value}>{data.academicYear}</Text>
           </View>
         </View>
 
         <View style={styles.amountRow}>
-          <Text style={styles.amountLabel}>Amount Paid</Text>
+          <Text style={styles.amountLabel}>
+            {t.amountPaid || "Amount Paid"}
+          </Text>
           <Text style={styles.amountValue}>{data.amount}</Text>
         </View>
 
         <Text style={styles.footer}>
-          This is a computer-generated receipt. No signature required.
+          {t.footerNote ||
+            "This is a computer-generated receipt. No signature required."}
         </Text>
       </Page>
     </Document>
@@ -191,21 +217,28 @@ function ReceiptDocument({ data }: { data: ReceiptData }) {
 
 interface DownloadReceiptProps {
   data: ReceiptData
+  dictionary?: Dictionary
   variant?: "default" | "outline" | "ghost"
   size?: "default" | "sm" | "lg" | "icon"
 }
 
 export function DownloadReceipt({
   data,
+  dictionary,
   variant = "outline",
   size = "sm",
 }: DownloadReceiptProps) {
   const [isGenerating, setIsGenerating] = useState(false)
+  const t = (dictionary as any)?.finance?.fees?.receipt as
+    | Record<string, string>
+    | undefined
 
   const handleDownload = useCallback(async () => {
     setIsGenerating(true)
     try {
-      const blob = await pdf(<ReceiptDocument data={data} />).toBlob()
+      const blob = await pdf(
+        <ReceiptDocument data={data} t={t || {}} />
+      ).toBlob()
       const url = URL.createObjectURL(blob)
       const link = document.createElement("a")
       link.href = url
@@ -217,7 +250,7 @@ export function DownloadReceipt({
     } finally {
       setIsGenerating(false)
     }
-  }, [data])
+  }, [data, t])
 
   return (
     <Button
@@ -231,7 +264,9 @@ export function DownloadReceipt({
       ) : (
         <Download className="me-2 h-4 w-4" />
       )}
-      {isGenerating ? "Generating..." : "Download Receipt"}
+      {isGenerating
+        ? t?.generating || "Generating..."
+        : t?.downloadReceipt || "Download Receipt"}
     </Button>
   )
 }

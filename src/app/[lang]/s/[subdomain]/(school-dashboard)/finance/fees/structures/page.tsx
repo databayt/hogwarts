@@ -19,10 +19,16 @@ interface Props {
 
 export default async function FeeStructuresPage({ params }: Props) {
   const { lang } = await params
+  const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
-    return <p className="text-muted-foreground">School context not found</p>
+    return (
+      <p className="text-muted-foreground">
+        {dictionary?.finance?.common?.schoolNotFound ||
+          "School context not found"}
+      </p>
+    )
   }
 
   const { rows, count } = await getFeeStructureList(schoolId, {

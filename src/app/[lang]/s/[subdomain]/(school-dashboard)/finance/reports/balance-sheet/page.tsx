@@ -23,10 +23,16 @@ interface Props {
 export default async function BalanceSheetPage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
+  const d = dictionary?.finance?.reportsPage
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
-    return <p className="text-muted-foreground">School context not found</p>
+    return (
+      <p className="text-muted-foreground">
+        {dictionary?.finance?.common?.schoolNotFound ||
+          "School context not found"}
+      </p>
+    )
   }
 
   const fiscalYear = await db.fiscalYear.findFirst({
@@ -37,16 +43,19 @@ export default async function BalanceSheetPage({ params }: Props) {
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-medium">Balance Sheet</h3>
+          <h3 className="text-lg font-medium">
+            {d?.balanceSheet || "Balance Sheet"}
+          </h3>
           <Link
             href={`/${lang}/finance/reports`}
             className={buttonVariants({ variant: "outline" })}
           >
-            Back to Reports
+            {d?.backToReports || "Back to Reports"}
           </Link>
         </div>
         <p className="text-muted-foreground py-8 text-center">
-          No active fiscal year found. Please set up a fiscal year first.
+          {d?.noActiveFiscalYear ||
+            "No active fiscal year found. Please set up a fiscal year first."}
         </p>
       </div>
     )
@@ -61,16 +70,20 @@ export default async function BalanceSheetPage({ params }: Props) {
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-medium">Balance Sheet</h3>
+          <h3 className="text-lg font-medium">
+            {d?.balanceSheet || "Balance Sheet"}
+          </h3>
           <Link
             href={`/${lang}/finance/reports`}
             className={buttonVariants({ variant: "outline" })}
           >
-            Back to Reports
+            {d?.backToReports || "Back to Reports"}
           </Link>
         </div>
         <p className="text-destructive py-8 text-center">
-          {result.error ?? "Failed to generate balance sheet."}
+          {result.error ??
+            d?.failedGenerateBalanceSheet ??
+            "Failed to generate balance sheet."}
         </p>
       </div>
     )
@@ -82,20 +95,25 @@ export default async function BalanceSheetPage({ params }: Props) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-medium">Balance Sheet</h3>
+          <h3 className="text-lg font-medium">
+            {d?.balanceSheet || "Balance Sheet"}
+          </h3>
           <p className="text-muted-foreground text-sm">
-            {fiscalYear.name} &mdash; As of {formatDate(data.asOfDate, lang)}
+            {fiscalYear.name} &mdash; {d?.asOf || "As of"}{" "}
+            {formatDate(data.asOfDate, lang)}
           </p>
         </div>
         <div className="flex items-center gap-3">
           <Badge variant={data.isBalanced ? "default" : "destructive"}>
-            {data.isBalanced ? "Balanced" : "Unbalanced"}
+            {data.isBalanced
+              ? d?.balanced || "Balanced"
+              : d?.unbalanced || "Unbalanced"}
           </Badge>
           <Link
             href={`/${lang}/finance/reports`}
             className={buttonVariants({ variant: "outline" })}
           >
-            Back to Reports
+            {d?.backToReports || "Back to Reports"}
           </Link>
         </div>
       </div>
@@ -103,18 +121,22 @@ export default async function BalanceSheetPage({ params }: Props) {
       {/* Assets */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-medium">Assets</CardTitle>
+          <CardTitle className="text-sm font-medium">
+            {d?.assets || "Assets"}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {data.assets.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No asset accounts.</p>
+            <p className="text-muted-foreground text-sm">
+              {d?.noAssetAccounts || "No asset accounts."}
+            </p>
           ) : (
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-muted-foreground border-b text-start">
-                  <th className="pb-2">Code</th>
-                  <th className="pb-2">Account</th>
-                  <th className="pb-2 text-end">Balance</th>
+                  <th className="pb-2">{d?.code || "Code"}</th>
+                  <th className="pb-2">{d?.account || "Account"}</th>
+                  <th className="pb-2 text-end">{d?.balance || "Balance"}</th>
                 </tr>
               </thead>
               <tbody>
@@ -129,7 +151,7 @@ export default async function BalanceSheetPage({ params }: Props) {
                 ))}
                 <tr className="font-medium">
                   <td className="pt-2" colSpan={2}>
-                    Total Assets
+                    {d?.totalAssets || "Total Assets"}
                   </td>
                   <td className="pt-2 text-end">
                     {formatCurrency(data.totalAssets, lang)}
@@ -144,20 +166,22 @@ export default async function BalanceSheetPage({ params }: Props) {
       {/* Liabilities */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-medium">Liabilities</CardTitle>
+          <CardTitle className="text-sm font-medium">
+            {d?.liabilities || "Liabilities"}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {data.liabilities.length === 0 ? (
             <p className="text-muted-foreground text-sm">
-              No liability accounts.
+              {d?.noLiabilityAccounts || "No liability accounts."}
             </p>
           ) : (
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-muted-foreground border-b text-start">
-                  <th className="pb-2">Code</th>
-                  <th className="pb-2">Account</th>
-                  <th className="pb-2 text-end">Balance</th>
+                  <th className="pb-2">{d?.code || "Code"}</th>
+                  <th className="pb-2">{d?.account || "Account"}</th>
+                  <th className="pb-2 text-end">{d?.balance || "Balance"}</th>
                 </tr>
               </thead>
               <tbody>
@@ -172,7 +196,7 @@ export default async function BalanceSheetPage({ params }: Props) {
                 ))}
                 <tr className="font-medium">
                   <td className="pt-2" colSpan={2}>
-                    Total Liabilities
+                    {d?.totalLiabilities || "Total Liabilities"}
                   </td>
                   <td className="pt-2 text-end">
                     {formatCurrency(data.totalLiabilities, lang)}
@@ -187,18 +211,22 @@ export default async function BalanceSheetPage({ params }: Props) {
       {/* Equity */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-medium">Equity</CardTitle>
+          <CardTitle className="text-sm font-medium">
+            {d?.equity || "Equity"}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {data.equity.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No equity accounts.</p>
+            <p className="text-muted-foreground text-sm">
+              {d?.noEquityAccounts || "No equity accounts."}
+            </p>
           ) : (
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-muted-foreground border-b text-start">
-                  <th className="pb-2">Code</th>
-                  <th className="pb-2">Account</th>
-                  <th className="pb-2 text-end">Balance</th>
+                  <th className="pb-2">{d?.code || "Code"}</th>
+                  <th className="pb-2">{d?.account || "Account"}</th>
+                  <th className="pb-2 text-end">{d?.balance || "Balance"}</th>
                 </tr>
               </thead>
               <tbody>
@@ -213,7 +241,7 @@ export default async function BalanceSheetPage({ params }: Props) {
                 ))}
                 <tr className="font-medium">
                   <td className="pt-2" colSpan={2}>
-                    Total Equity
+                    {d?.totalEquity || "Total Equity"}
                   </td>
                   <td className="pt-2 text-end">
                     {formatCurrency(data.totalEquity, lang)}
@@ -229,7 +257,9 @@ export default async function BalanceSheetPage({ params }: Props) {
       <div className="grid gap-4 sm:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Assets</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {d?.totalAssets || "Total Assets"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
@@ -240,7 +270,7 @@ export default async function BalanceSheetPage({ params }: Props) {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">
-              Total Liabilities
+              {d?.totalLiabilities || "Total Liabilities"}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -251,7 +281,9 @@ export default async function BalanceSheetPage({ params }: Props) {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Equity</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {d?.totalEquity || "Total Equity"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">

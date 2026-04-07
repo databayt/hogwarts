@@ -13,6 +13,8 @@ import {
 } from "@/components/internationalization/config"
 import { SchoolProvider } from "@/components/school-dashboard/context/school-context"
 import { ForceChangePasswordModal } from "@/components/school-dashboard/force-change-password-modal"
+import { getDisplayText } from "@/components/translation/display"
+import { detectLanguage } from "@/components/translation/util"
 
 // All school-messaging pages are dynamic - they require auth, subdomain lookup, and query the database
 export const dynamic = "force-dynamic"
@@ -45,6 +47,18 @@ export default async function MessagingLayout({
   }
 
   const school = result.data
+
+  // Translate school name for display when viewing in a different language
+  if (lang === "en" && school.nameEn) {
+    school.name = school.nameEn
+  } else if (detectLanguage(school.name) !== lang && school.id) {
+    school.name = await getDisplayText(
+      school.name,
+      detectLanguage(school.name) as "ar" | "en",
+      lang as "ar" | "en",
+      school.id
+    )
+  }
 
   if (!session?.user) {
     redirect(`/${lang}/login`)

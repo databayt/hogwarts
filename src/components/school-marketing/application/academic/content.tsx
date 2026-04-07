@@ -134,7 +134,9 @@ export default function AcademicContent({ dictionary }: Props) {
 
       // Clean up localStorage draft after successful submission
       try {
-        localStorage.removeItem(`hogwarts_apply_session_${id}`)
+        localStorage.removeItem(
+          `hogwarts_apply_session_${sessionRef.current.campaignId}`
+        )
       } catch {
         // localStorage may not be available
       }

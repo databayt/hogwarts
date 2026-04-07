@@ -150,6 +150,28 @@ export type ActionResponse<T = void> =
   | { success: false; error: string }
 
 /**
+ * Emit a Socket.IO event via the external socket server (best-effort, non-blocking).
+ * Posts to the /api/emit endpoint on the Socket.IO server.
+ */
+async function emitSocketEvent(
+  conversationId: string,
+  event: string,
+  data: Record<string, unknown>
+): Promise<void> {
+  const socketUrl =
+    process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3001"
+  await fetch(`${socketUrl}/api/emit`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      room: `conversation:${conversationId}`,
+      event,
+      data,
+    }),
+  })
+}
+
+/**
  * Create a new conversation
  */
 export async function createConversation(
@@ -531,6 +553,11 @@ export async function sendMessage(
       }
     }
 
+    // Merge clientNonce into metadata for optimistic reconciliation
+    const mergedMetadata = parsed.clientNonce
+      ? { ...(parsed.metadata || {}), clientNonce: parsed.clientNonce }
+      : parsed.metadata
+
     // Create message
     const message = await db.message.create({
       data: {
@@ -539,8 +566,8 @@ export async function sendMessage(
         content: parsed.content,
         contentType: parsed.contentType || "text",
         replyToId: parsed.replyToId,
-        metadata: parsed.metadata
-          ? (parsed.metadata as Prisma.InputJsonValue)
+        metadata: mergedMetadata
+          ? (mergedMetadata as Prisma.InputJsonValue)
           : Prisma.DbNull,
         status: "sent",
       },
@@ -636,10 +663,25 @@ export async function sendMessage(
     // Re-fetch the full message with relations for instant client-side update
     const fullMessage = await getMessage(schoolId, message.id)
     const { serializeMessage } = await import("./serialization")
+    const serialized = serializeMessage(fullMessage)
+
+    // 6. Broadcast via Socket.IO for real-time delivery to other clients (non-blocking)
+    emitSocketEvent(parsed.conversationId, "message:new", {
+      id: message.id,
+      conversationId: parsed.conversationId,
+      senderId: authContext.userId,
+      content: parsed.content,
+      contentType: parsed.contentType || "text",
+      createdAt: message.createdAt.toISOString(),
+      metadata: mergedMetadata ?? null,
+      sender: serialized?.sender ?? null,
+      replyToId: parsed.replyToId ?? null,
+      attachments: serialized?.attachments ?? [],
+    }).catch((err) => console.error("[sendMessage] Socket.IO emit error:", err))
 
     return {
       success: true,
-      data: { id: message.id, message: serializeMessage(fullMessage) },
+      data: { id: message.id, message: serialized },
     }
   } catch (error) {
     console.error("[sendMessage] Error:", error)
@@ -692,6 +734,7 @@ export async function sendMessageFromForm(
     const conversationId = formData.get("conversationId") as string
     const content = formData.get("content") as string
     const replyToId = formData.get("replyToId") as string | null
+    const clientNonce = formData.get("clientNonce") as string | null
 
     // Validate required fields
     if (!conversationId) {
@@ -708,6 +751,7 @@ export async function sendMessageFromForm(
       content: content.trim(),
       contentType: "text",
       replyToId: replyToId || undefined,
+      clientNonce: clientNonce || undefined,
     })
 
     if (!result.success) {
@@ -980,6 +1024,13 @@ export async function markConversationAsRead(
         lastReadAt: new Date(),
       },
     })
+
+    // Emit read receipt to other participants via Socket.IO
+    emitSocketEvent(parsed.conversationId, "message:read", {
+      conversationId: parsed.conversationId,
+      userId: authContext.userId,
+      readAt: new Date().toISOString(),
+    }).catch(() => {})
 
     // Sync read receipts to WhatsApp (non-blocking)
     if (schoolId) {

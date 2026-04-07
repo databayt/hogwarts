@@ -114,6 +114,7 @@ export const createMessageSchema = z.object({
   contentType: z.string().default("text"),
   replyToId: z.string().optional(),
   metadata: z.record(z.string(), z.unknown()).optional(),
+  clientNonce: z.string().optional(),
 })
 
 // Update message schema

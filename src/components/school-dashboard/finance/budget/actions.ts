@@ -52,10 +52,7 @@ export async function createBudget(
     return { success: true, data: budget as any }
   } catch (error) {
     console.error("Error creating budget:", error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to create budget",
-    }
+    return actionError(ACTION_ERRORS.CREATE_FAILED)
   }
 }
 

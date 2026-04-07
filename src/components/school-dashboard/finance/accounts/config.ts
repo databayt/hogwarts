@@ -71,17 +71,30 @@ export const AccountTypeRanges: Record<
   EXPENSE: { min: 5000, max: 9999 },
 }
 
-/**
- * Account Type Labels
- * Human-readable labels for account types
- */
-export const AccountTypeLabels: Record<AccountType, string> = {
+type Dict = Record<string, any> | undefined
+
+const DEFAULT_ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
   ASSET: "Asset",
   LIABILITY: "Liability",
   EQUITY: "Equity",
   REVENUE: "Revenue",
   EXPENSE: "Expense",
 }
+
+/** Get localized account type labels from dictionary (finance.accountsConfig.accountTypeLabels) */
+export const getAccountTypeLabels = (d?: Dict): Record<AccountType, string> => {
+  const a = d?.accountTypeLabels as Record<string, string> | undefined
+  return {
+    ASSET: a?.ASSET || DEFAULT_ACCOUNT_TYPE_LABELS.ASSET,
+    LIABILITY: a?.LIABILITY || DEFAULT_ACCOUNT_TYPE_LABELS.LIABILITY,
+    EQUITY: a?.EQUITY || DEFAULT_ACCOUNT_TYPE_LABELS.EQUITY,
+    REVENUE: a?.REVENUE || DEFAULT_ACCOUNT_TYPE_LABELS.REVENUE,
+    EXPENSE: a?.EXPENSE || DEFAULT_ACCOUNT_TYPE_LABELS.EXPENSE,
+  }
+}
+
+/** For backward compat -- static fallback */
+export const AccountTypeLabels = DEFAULT_ACCOUNT_TYPE_LABELS
 
 /**
  * Normal Balance for Each Account Type
@@ -111,10 +124,7 @@ export const SourceModules = [
 
 export type SourceModule = (typeof SourceModules)[number]
 
-/**
- * Source Module Labels
- */
-export const SourceModuleLabels: Record<SourceModule, string> = {
+const DEFAULT_SOURCE_MODULE_LABELS: Record<SourceModule, string> = {
   FEES: "Student Fees",
   PAYROLL: "Payroll",
   EXPENSES: "Expenses",
@@ -123,6 +133,23 @@ export const SourceModuleLabels: Record<SourceModule, string> = {
   BANKING: "Banking",
   MANUAL: "Manual Entry",
 }
+
+/** Get localized source module labels from dictionary (finance.accountsConfig.sourceModuleLabels) */
+export const getSourceModuleLabels = (
+  d?: Dict
+): Record<SourceModule, string> => {
+  const result = { ...DEFAULT_SOURCE_MODULE_LABELS }
+  const m = d?.sourceModuleLabels as Record<string, string> | undefined
+  if (m) {
+    for (const key of SourceModules) {
+      if (m[key]) result[key] = m[key]
+    }
+  }
+  return result
+}
+
+/** For backward compat -- static fallback */
+export const SourceModuleLabels = DEFAULT_SOURCE_MODULE_LABELS
 
 /**
  * Financial Statement Types
@@ -137,17 +164,33 @@ export const FinancialStatementTypes = [
 
 export type FinancialStatementType = (typeof FinancialStatementTypes)[number]
 
-/**
- * Financial Statement Labels
- */
-export const FinancialStatementLabels: Record<FinancialStatementType, string> =
-  {
-    BALANCE_SHEET: "Balance Sheet",
-    INCOME_STATEMENT: "Income Statement",
-    CASH_FLOW: "Cash Flow Statement",
-    TRIAL_BALANCE: "Trial Balance",
-    GENERAL_LEDGER: "General Ledger",
+const DEFAULT_FINANCIAL_STATEMENT_LABELS: Record<
+  FinancialStatementType,
+  string
+> = {
+  BALANCE_SHEET: "Balance Sheet",
+  INCOME_STATEMENT: "Income Statement",
+  CASH_FLOW: "Cash Flow Statement",
+  TRIAL_BALANCE: "Trial Balance",
+  GENERAL_LEDGER: "General Ledger",
+}
+
+/** Get localized financial statement labels from dictionary (finance.accountsConfig.financialStatementLabels) */
+export const getFinancialStatementLabels = (
+  d?: Dict
+): Record<FinancialStatementType, string> => {
+  const result = { ...DEFAULT_FINANCIAL_STATEMENT_LABELS }
+  const f = d?.financialStatementLabels as Record<string, string> | undefined
+  if (f) {
+    for (const key of FinancialStatementTypes) {
+      if (f[key]) result[key] = f[key]
+    }
   }
+  return result
+}
+
+/** For backward compat -- static fallback */
+export const FinancialStatementLabels = DEFAULT_FINANCIAL_STATEMENT_LABELS
 
 /**
  * Default Fiscal Year Configuration

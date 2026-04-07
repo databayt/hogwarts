@@ -2,6 +2,8 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { memo } from "react"
+
 import { MessageBubble, type MessageBubbleProps } from "./message-bubble"
 import type { ConversationType, MessageDTO } from "./types"
 
@@ -26,7 +28,7 @@ export interface MessageGroupProps extends Omit<
  * - Sender name on FIRST, timestamp on LAST
  * - Tight vertical spacing within group
  */
-export function MessageGroup({
+export const MessageGroup = memo(function MessageGroup({
   messages,
   currentUserId,
   locale,
@@ -36,6 +38,7 @@ export function MessageGroup({
   onDelete,
   onReact,
   onRemoveReaction,
+  onRetry,
 }: MessageGroupProps) {
   if (messages.length === 0) return null
 
@@ -64,12 +67,13 @@ export function MessageGroup({
             onDelete={onDelete}
             onReact={onReact}
             onRemoveReaction={onRemoveReaction}
+            onRetry={onRetry}
           />
         )
       })}
     </div>
   )
-}
+})
 
 /**
  * Groups messages by sender and time proximity (5 minutes)

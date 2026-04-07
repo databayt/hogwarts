@@ -155,19 +155,20 @@ export function getDaysUntilDue(dueDate: Date | string): number {
  */
 export function formatDueStatus(
   dueDate: Date | string,
-  status: InvoiceStatus | string
+  status: InvoiceStatus | string,
+  d?: Record<string, string>
 ): string {
-  if (status === InvoiceStatus.PAID) return "Paid"
-  if (status === InvoiceStatus.CANCELLED) return "Cancelled"
+  if (status === InvoiceStatus.PAID) return d?.paid ?? "Paid"
+  if (status === InvoiceStatus.CANCELLED) return d?.void ?? "Cancelled"
 
   const daysUntil = getDaysUntilDue(dueDate)
 
   if (daysUntil < 0) {
-    return `Overdue by ${Math.abs(daysUntil)} days`
+    return `${d?.overdueBy ?? "Overdue by"} ${Math.abs(daysUntil)} ${d?.days ?? "days"}`
   }
-  if (daysUntil === 0) return "Due today"
-  if (daysUntil === 1) return "Due tomorrow"
-  return `Due in ${daysUntil} days`
+  if (daysUntil === 0) return d?.dueToday ?? "Due today"
+  if (daysUntil === 1) return d?.dueTomorrow ?? "Due tomorrow"
+  return `${d?.dueIn ?? "Due in"} ${daysUntil} ${d?.days ?? "days"}`
 }
 
 /**
@@ -186,35 +187,44 @@ export function getInvoiceStatusColor(status: InvoiceStatus | string): string {
 /**
  * Validate invoice data
  */
-export function validateInvoiceData(data: Partial<InvoiceData>): string[] {
+export function validateInvoiceData(
+  data: Partial<InvoiceData>,
+  d?: Record<string, string>
+): string[] {
   const errors: string[] = []
 
   if (!data.to?.name || data.to.name.trim() === "") {
-    errors.push("Client name is required")
+    errors.push(d?.clientNameRequired ?? "Client name is required")
   }
 
   if (!data.to?.email || !isValidEmail(data.to.email)) {
-    errors.push("Valid client email is required")
+    errors.push(d?.validClientEmail ?? "Valid client email is required")
   }
 
   if (!data.items || data.items.length === 0) {
-    errors.push("At least one item is required")
+    errors.push(d?.atLeastOneItem ?? "At least one item is required")
   }
 
   data.items?.forEach((item, index) => {
     if (!item.item_name || item.item_name.trim() === "") {
-      errors.push(`Item ${index + 1}: Name is required`)
+      errors.push(
+        `${item.item_name || `Item ${index + 1}`}: ${d?.itemNameRequired ?? "Name is required"}`
+      )
     }
     if (item.quantity <= 0) {
-      errors.push(`Item ${index + 1}: Quantity must be greater than 0`)
+      errors.push(
+        `${item.item_name || `Item ${index + 1}`}: ${d?.quantityGreaterThanZero ?? "Quantity must be greater than 0"}`
+      )
     }
     if (item.price < 0) {
-      errors.push(`Item ${index + 1}: Price cannot be negative`)
+      errors.push(
+        `${item.item_name || `Item ${index + 1}`}: ${d?.priceCannotBeNegative ?? "Price cannot be negative"}`
+      )
     }
   })
 
   if (data.due_date && new Date(data.due_date) < new Date()) {
-    errors.push("Due date cannot be in the past")
+    errors.push(d?.dueDatePast ?? "Due date cannot be in the past")
   }
 
   return errors
@@ -231,8 +241,16 @@ function isValidEmail(email: string): boolean {
 /**
  * Export invoice data to CSV
  */
-export function exportInvoiceToCSV(invoice: InvoiceData): string {
-  const headers = ["Item", "Quantity", "Price", "Amount"]
+export function exportInvoiceToCSV(
+  invoice: InvoiceData,
+  d?: Record<string, string>
+): string {
+  const headers = [
+    d?.description ?? "Item",
+    d?.quantity ?? "Quantity",
+    d?.price ?? "Price",
+    d?.amount ?? "Amount",
+  ]
   const rows = invoice.items.map((item) => [
     item.item_name,
     item.quantity.toString(),
@@ -244,10 +262,10 @@ export function exportInvoiceToCSV(invoice: InvoiceData): string {
     headers.join(","),
     ...rows.map((row) => row.map((cell) => `"${cell}"`).join(",")),
     "",
-    `Subtotal,,, ${formatCurrency(invoice.sub_total || 0)}`,
-    `Discount,,, ${formatCurrency(invoice.discount || 0)}`,
-    `Tax,,, ${formatCurrency(invoice.tax_percentage || 0)}`,
-    `Total,,, ${formatCurrency(invoice.total || 0)}`,
+    `${d?.subtotal ?? "Subtotal"},,, ${formatCurrency(invoice.sub_total || 0)}`,
+    `${d?.discount ?? "Discount"},,, ${formatCurrency(invoice.discount || 0)}`,
+    `${d?.tax ?? "Tax"},,, ${formatCurrency(invoice.tax_percentage || 0)}`,
+    `${d?.total ?? "Total"},,, ${formatCurrency(invoice.total || 0)}`,
   ].join("\n")
 
   return csvContent

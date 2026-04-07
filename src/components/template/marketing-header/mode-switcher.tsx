@@ -7,6 +7,7 @@ import { useTheme } from "next-themes"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface ModeSwitcherProps {
   className?: string
@@ -15,6 +16,8 @@ interface ModeSwitcherProps {
 
 export function ModeSwitcher({ className, iconClassName }: ModeSwitcherProps) {
   const { setTheme, resolvedTheme } = useTheme()
+  const { dictionary } = useDictionary()
+  const themeLabel = dictionary?.platform?.toggleTheme || "Toggle theme"
 
   const toggleTheme = React.useCallback(() => {
     setTheme(resolvedTheme === "dark" ? "light" : "dark")
@@ -26,7 +29,7 @@ export function ModeSwitcher({ className, iconClassName }: ModeSwitcherProps) {
       size="icon"
       className="group/toggle size-8"
       onClick={toggleTheme}
-      title="Toggle theme"
+      title={themeLabel}
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -47,7 +50,7 @@ export function ModeSwitcher({ className, iconClassName }: ModeSwitcherProps) {
         <path d="M12 14.3l7.37 -7.37" />
         <path d="M12 19.6l8.85 -8.85" />
       </svg>
-      <span className="sr-only">Toggle theme</span>
+      <span className="sr-only">{themeLabel}</span>
     </Button>
   )
 }

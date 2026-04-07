@@ -22,7 +22,7 @@ interface DocumentCardProps {
   onReview?: (document: ProcessedDocument) => void
 }
 
-const docTypeLabels: Record<string, string> = {
+const defaultDocTypeLabels: Record<string, string> = {
   degree: "Degree",
   transcript: "Transcript",
   national_id: "National ID",
@@ -54,7 +54,7 @@ export function DocumentCard({
 
   const typeLabel =
     dictionary?.admission?.documentTypes?.[doc.type] ??
-    docTypeLabels[doc.type] ??
+    defaultDocTypeLabels[doc.type] ??
     doc.type
 
   return (
@@ -129,7 +129,7 @@ export function DocumentCard({
               className="h-6 px-1.5 text-[10px]"
               onClick={() => onReview(doc)}
             >
-              <Eye className="mr-0.5 h-3 w-3" />
+              <Eye className="me-0.5 h-3 w-3" />
               {dictionary?.admission?.ai?.review ?? "Review"}
             </Button>
           )}
@@ -143,7 +143,7 @@ export function DocumentCard({
                 onClick={() => startTransition(() => onReprocess(doc.url))}
               >
                 <RotateCw
-                  className={cn("mr-0.5 h-3 w-3", isPending && "animate-spin")}
+                  className={cn("me-0.5 h-3 w-3", isPending && "animate-spin")}
                 />
                 {dictionary?.admission?.ai?.reprocess ?? "Retry"}
               </Button>
@@ -156,7 +156,7 @@ export function DocumentCard({
               disabled={isPending}
               onClick={() => startTransition(() => onReprocess(doc.url))}
             >
-              <Sparkles className="mr-0.5 h-3 w-3" />
+              <Sparkles className="me-0.5 h-3 w-3" />
               {dictionary?.admission?.ai?.process ?? "Process"}
             </Button>
           )}

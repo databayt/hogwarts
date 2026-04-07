@@ -54,8 +54,7 @@ export function NotificationCard({
   const config = NOTIFICATION_TYPE_CONFIG[notification.type]
   const Icon = config.icon
 
-  const handleMarkAsRead = async (e: React.MouseEvent) => {
-    e.stopPropagation()
+  const doMarkAsRead = () => {
     if (notification.read) return
 
     startTransition(async () => {
@@ -72,6 +71,11 @@ export function NotificationCard({
         })
       }
     })
+  }
+
+  const handleMarkAsRead = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    doMarkAsRead()
   }
 
   const handleDelete = async (e: React.MouseEvent) => {
@@ -95,7 +99,7 @@ export function NotificationCard({
 
   const handleClick = () => {
     if (!notification.read) {
-      handleMarkAsRead({} as React.MouseEvent)
+      doMarkAsRead()
     }
 
     if (notification.metadata && typeof notification.metadata === "object") {

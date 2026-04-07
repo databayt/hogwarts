@@ -3,41 +3,11 @@
 
 import type { WizardConfig } from "@/components/form/wizard"
 
-export const INVOICE_WIZARD_CONFIG: WizardConfig = {
-  id: "invoice",
-  steps: ["details", "items"],
-  groups: {
-    1: ["details"],
-    2: ["items"],
-  },
-  groupLabels: ["Invoice Details", "Line Items"],
-  requiredSteps: ["details", "items"],
-  finalLabel: "Create Invoice",
-}
-
-export const INVOICE_STATUS_OPTIONS = [
-  { label: "Unpaid", value: "UNPAID" },
-  { label: "Paid", value: "PAID" },
-  { label: "Overdue", value: "OVERDUE" },
-  { label: "Cancelled", value: "CANCELLED" },
-] as const
-
-export const CURRENCY_OPTIONS = [
-  { label: "USD", value: "USD" },
-  { label: "EUR", value: "EUR" },
-  { label: "GBP", value: "GBP" },
-  { label: "SDG", value: "SDG" },
-  { label: "SAR", value: "SAR" },
-  { label: "AED", value: "AED" },
-] as const
-
-// --- Dictionary-based factory functions ---
-
 type Dict = Record<string, any> | undefined
 
-/** Get localized invoice wizard config from dictionary */
+/** Get localized invoice wizard config from dictionary (finance.invoiceConfig.wizard) */
 export const getInvoiceWizardConfig = (d?: Dict): WizardConfig => {
-  const w = d?.wizard as Record<string, any> | undefined
+  const w = d as Record<string, any> | undefined
   const gl = w?.groupLabels as Record<string, string> | undefined
   return {
     id: "invoice",
@@ -55,7 +25,7 @@ export const getInvoiceWizardConfig = (d?: Dict): WizardConfig => {
   }
 }
 
-/** Get localized invoice status options from dictionary */
+/** Get localized invoice status options from dictionary (finance.invoiceConfig.wizard) */
 export const getInvoiceStatusOptions = (d?: Dict) => {
   const s = d?.invoiceStatus as Record<string, string> | undefined
   return [

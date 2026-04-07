@@ -5,7 +5,6 @@ import Link from "next/link"
 import {
   ArrowRight,
   Bell,
-  BookOpen,
   Building,
   CheckCircle2,
   Cloud,
@@ -26,13 +25,7 @@ import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -40,6 +33,10 @@ interface Props {
   dictionary: Dictionary
   lang: Locale
 }
+
+// Glassmorphism card base
+const glass =
+  "rounded-2xl border-white/10 bg-card/60 shadow-sm backdrop-blur-xl dark:border-white/[0.06] dark:bg-card/40"
 
 export default async function AdminContent({ dictionary, lang }: Props) {
   const { schoolId } = await getTenantContext()
@@ -92,7 +89,6 @@ export default async function AdminContent({ dictionary, lang }: Props) {
 
   const d = dictionary?.admin
 
-  // Stat card config with colors matching the dashboard Quick Look palette
   const stats = [
     {
       label: d?.stats?.users || "Users",
@@ -128,7 +124,6 @@ export default async function AdminContent({ dictionary, lang }: Props) {
     },
   ]
 
-  // Navigation modules — the main entry points into school management
   const modules = [
     {
       title: d?.cards?.configuration?.viewSettings || "Configuration",
@@ -172,63 +167,190 @@ export default async function AdminContent({ dictionary, lang }: Props) {
     },
     {
       title: d?.cards?.configuration?.schoolProfile || "Bulk Operations",
-      description: "Import, export, and batch process school data",
+      description:
+        d?.quickActions?.bulkDesc ||
+        "Import, export, and batch process school data",
       href: `/${lang}/school/bulk`,
       icon: Upload,
     },
   ]
 
-  // System services status
   const services = [
+    { name: d?.systemStatus?.api || "API Services", icon: Server },
+    { name: d?.systemStatus?.database || "Database", icon: Database },
+    { name: d?.systemStatus?.storage || "Storage", icon: Cloud },
+    { name: d?.systemStatus?.email || "Email Service", icon: Mail },
+  ]
+
+  // Proportional bar segments for organization composition
+  const orgTotal =
+    totalTeachers +
+    totalStudents +
+    totalDepartments +
+    totalClassrooms +
+    activeUsers
+  const barSegments = [
     {
-      name: d?.systemStatus?.api || "API Services",
-      icon: Server,
+      value: totalTeachers,
+      color: "bg-[#6A9BCC]",
+      dot: "bg-[#6A9BCC]",
+      label: d?.stats?.teachers || "Teachers",
     },
     {
-      name: d?.systemStatus?.database || "Database",
-      icon: Database,
+      value: totalStudents,
+      color: "bg-[#CBCADB]",
+      dot: "bg-[#CBCADB]",
+      label: d?.stats?.students || "Students",
     },
     {
-      name: d?.systemStatus?.storage || "Storage",
-      icon: Cloud,
+      value: totalDepartments,
+      color: "bg-[#BCD1CA]",
+      dot: "bg-[#BCD1CA]",
+      label: d?.stats?.departments || "Departments",
     },
     {
-      name: d?.systemStatus?.email || "Email Service",
-      icon: Mail,
+      value: totalClassrooms,
+      color: "bg-amber-500",
+      dot: "bg-amber-500",
+      label: d?.stats?.totalClassrooms || "Classrooms",
+    },
+    {
+      value: activeUsers,
+      color: "bg-rose-400",
+      dot: "bg-rose-400",
+      label: d?.stats?.currentlyLoggedIn || "Verified",
     },
   ]
 
   return (
-    <div className="space-y-10">
-      {/* ------------------------------------------------------------------ */}
-      {/* Section 1: At-a-glance stats                                       */}
-      {/* Horizontal cards with colored icon badges — same palette as        */}
-      {/* the dashboard Quick Look section for visual consistency.            */}
-      {/* ------------------------------------------------------------------ */}
-      <section>
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+    <div className="via-background min-h-full rounded-3xl bg-gradient-to-br from-[#6A9BCC]/[0.04] to-[#BCD1CA]/[0.04] p-2 sm:p-4 dark:from-[#6A9BCC]/[0.02] dark:to-[#BCD1CA]/[0.02]">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
+        {/* ============================================================ */}
+        {/* LEFT COLUMN                                                   */}
+        {/* ============================================================ */}
+        <div className="space-y-5 lg:col-span-8">
+          {/* --- Organization Snapshot -------------------------------- */}
+          <Card className={glass}>
+            <CardHeader className="px-6 pt-5 pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base">
+                  {d?.stats?.organization || "Organization"}
+                </CardTitle>
+                {pendingApprovals > 0 && (
+                  <Badge
+                    variant="secondary"
+                    className="bg-amber-500/10 text-xs text-amber-600"
+                  >
+                    {pendingApprovals}{" "}
+                    {d?.stats?.requiresAttention || "pending"}
+                  </Badge>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4 px-6 pb-5">
+              {/* Proportional bar */}
+              <div className="bg-muted/50 flex h-3 w-full overflow-hidden rounded-full">
+                {barSegments.map((seg) => (
+                  <div
+                    key={seg.label}
+                    className={cn(
+                      "h-full transition-all first:rounded-s-full last:rounded-e-full",
+                      seg.color
+                    )}
+                    style={{
+                      width: `${orgTotal > 0 ? (seg.value / orgTotal) * 100 : 0}%`,
+                    }}
+                  />
+                ))}
+              </div>
+
+              {/* Legend chips */}
+              <div className="grid grid-cols-2 gap-x-6 gap-y-2 sm:grid-cols-3 md:grid-cols-5">
+                {barSegments.map((seg) => (
+                  <div key={seg.label} className="flex items-center gap-2">
+                    <span
+                      className={cn(
+                        "h-2.5 w-2.5 shrink-0 rounded-full",
+                        seg.dot
+                      )}
+                    />
+                    <span className="text-muted-foreground truncate text-xs">
+                      {seg.label}
+                    </span>
+                    <span className="ms-auto text-sm font-semibold">
+                      {seg.value}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* --- Module Navigation ------------------------------------ */}
+          <Card className={cn(glass, "overflow-hidden")}>
+            <CardHeader className="px-6 pt-5 pb-3">
+              <CardTitle className="text-base">
+                {d?.workflow?.title || "Manage"}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="divide-border/50 divide-y">
+                {modules.map((mod) => {
+                  const Icon = mod.icon
+                  return (
+                    <Link
+                      key={mod.href}
+                      href={mod.href}
+                      className="group block"
+                    >
+                      <div className="hover:bg-accent/30 flex items-center gap-4 px-6 py-4 transition-colors">
+                        <div
+                          className={cn(
+                            "bg-muted/60 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+                          )}
+                        >
+                          <Icon className="text-foreground h-[18px] w-[18px]" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium">{mod.title}</p>
+                          <p className="text-muted-foreground mt-0.5 line-clamp-1 text-xs leading-relaxed">
+                            {mod.description}
+                          </p>
+                        </div>
+                        <ArrowRight className="text-muted-foreground h-4 w-4 shrink-0 opacity-0 transition-opacity group-hover:opacity-100 rtl:rotate-180" />
+                      </div>
+                    </Link>
+                  )
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* ============================================================ */}
+        {/* RIGHT COLUMN                                                  */}
+        {/* ============================================================ */}
+        <div className="space-y-5 lg:col-span-4">
+          {/* --- Stat Cards ------------------------------------------- */}
           {stats.map((stat) => {
             const Icon = stat.icon
             return (
-              <Card
-                key={stat.label}
-                className="bg-muted/50 border-none shadow-none"
-              >
+              <Card key={stat.label} className={glass}>
                 <CardContent className="p-5">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-4">
                     <div
                       className={cn(
-                        "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
+                        "flex h-12 w-12 shrink-0 items-center justify-center rounded-full",
                         stat.bg
                       )}
                     >
                       <Icon className={cn("h-5 w-5", stat.color)} />
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-muted-foreground text-xs">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-muted-foreground text-xs tracking-wide uppercase">
                         {stat.label}
                       </p>
-                      <p className="text-2xl font-semibold tracking-tight">
+                      <p className="text-3xl font-bold tracking-tight">
                         {stat.value.toLocaleString()}
                       </p>
                     </div>
@@ -240,162 +362,65 @@ export default async function AdminContent({ dictionary, lang }: Props) {
               </Card>
             )
           })}
-        </div>
-      </section>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* Section 2: Organization snapshot                                    */}
-      {/* Two side-by-side cards with key operational numbers.                */}
-      {/* ------------------------------------------------------------------ */}
-      <section>
-        <div className="grid gap-4 md:grid-cols-3">
-          <Card className="bg-muted/50 border-none shadow-none">
-            <CardContent className="flex items-center gap-4 p-5">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-500/10">
-                <BookOpen className="h-5 w-5 text-amber-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-semibold tracking-tight">
-                  {totalClassrooms}
-                </p>
-                <p className="text-muted-foreground text-xs">
-                  {d?.stats?.totalClassrooms || "Classrooms"}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-muted/50 border-none shadow-none">
-            <CardContent className="flex items-center gap-4 p-5">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-rose-500/10">
-                <Users className="h-5 w-5 text-rose-500" />
-              </div>
-              <div>
-                <p className="text-2xl font-semibold tracking-tight">
-                  {activeUsers}
-                </p>
-                <p className="text-muted-foreground text-xs">
-                  {d?.stats?.currentlyLoggedIn || "Verified accounts"}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {pendingApprovals > 0 ? (
-            <Card className="border-none bg-amber-500/5 shadow-none">
-              <CardContent className="flex items-center gap-4 p-5">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-500/10">
-                  <UserCog className="h-5 w-5 text-amber-600" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <p className="text-2xl font-semibold tracking-tight">
-                      {pendingApprovals}
-                    </p>
-                    <Badge
-                      variant="secondary"
-                      className="bg-amber-500/10 text-[10px] text-amber-600"
-                    >
-                      {d?.stats?.requiresAttention || "Needs attention"}
-                    </Badge>
-                  </div>
-                  <p className="text-muted-foreground text-xs">
-                    {d?.stats?.pendingActions || "Pending approvals"}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card className="bg-muted/50 border-none shadow-none">
-              <CardContent className="flex items-center gap-4 p-5">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10">
-                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                </div>
-                <div>
-                  <p className="text-2xl font-semibold tracking-tight">0</p>
-                  <p className="text-muted-foreground text-xs">
-                    {d?.stats?.pendingActions || "Pending approvals"}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </section>
-
-      {/* ------------------------------------------------------------------ */}
-      {/* Section 3: Module navigation                                       */}
-      {/* Cards with hover effect linking to each school management area.     */}
-      {/* Inspired by Apple Settings / Airbnb category cards.                */}
-      {/* ------------------------------------------------------------------ */}
-      <section>
-        <h2 className="mb-4 text-lg font-semibold">
-          {d?.workflow?.title || "Manage"}
-        </h2>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {modules.map((mod) => {
-            const Icon = mod.icon
-            return (
-              <Link key={mod.href} href={mod.href} className="group">
-                <Card className="bg-muted/50 group-hover:bg-muted h-full border-none shadow-none transition-colors">
-                  <CardContent className="flex items-start gap-4 p-5">
-                    <div className="bg-background flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-sm">
-                      <Icon className="text-foreground h-5 w-5" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between">
-                        <p className="font-medium">{mod.title}</p>
-                        <ArrowRight className="text-muted-foreground h-4 w-4 opacity-0 transition-opacity group-hover:opacity-100 rtl:rotate-180" />
-                      </div>
-                      <p className="text-muted-foreground mt-0.5 text-sm leading-relaxed">
-                        {mod.description}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
+          {/* --- CTA Banner ------------------------------------------- */}
+          <Card className="overflow-hidden rounded-2xl border-none bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg dark:from-emerald-600 dark:to-teal-700">
+            <CardContent className="p-6">
+              <p className="text-xs font-medium tracking-wider text-white/70 uppercase">
+                {d?.stats?.operation || "Quick Action"}
+              </p>
+              <p className="mt-2 text-lg leading-tight font-bold">
+                {d?.cards?.configuration?.viewSettings || "View Settings"}
+              </p>
+              <p className="mt-1.5 text-sm leading-relaxed text-white/80">
+                {d?.cards?.configuration?.details ||
+                  "Manage school profile, academic years, and settings."}
+              </p>
+              <Link
+                href={`/${lang}/school/configuration/title`}
+                className="mt-4 inline-flex items-center gap-2 rounded-lg bg-white/20 px-4 py-2 text-sm font-medium backdrop-blur-sm transition-colors hover:bg-white/30"
+              >
+                {d?.actions?.configure || "Configure"}
+                <ArrowRight className="h-4 w-4 rtl:rotate-180" />
               </Link>
-            )
-          })}
+            </CardContent>
+          </Card>
         </div>
-      </section>
+      </div>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* Section 4: System status                                           */}
-      {/* Compact horizontal status bar — all green = minimal footprint.     */}
-      {/* ------------------------------------------------------------------ */}
-      <section>
-        <Card className="bg-muted/50 border-none shadow-none">
-          <CardContent className="p-5">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-sm font-medium">
-                {d?.systemStatus?.title || "System Status"}
-              </h3>
-              <span className="flex items-center gap-1.5 text-xs text-emerald-600">
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-                </span>
-                {d?.systemStatus?.operational || "All systems operational"}
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      {/* ============================================================== */}
+      {/* SYSTEM STATUS — full width, compact                            */}
+      {/* ============================================================== */}
+      <Card className={cn(glass, "mt-5")}>
+        <CardContent className="px-6 py-4">
+          <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+            <h3 className="text-sm font-medium">
+              {d?.systemStatus?.title || "System Status"}
+            </h3>
+            <div className="flex flex-wrap items-center gap-4 sm:gap-6">
               {services.map((service) => {
                 const Icon = service.icon
                 return (
-                  <div
-                    key={service.name}
-                    className="bg-background flex items-center gap-2.5 rounded-xl px-3 py-2.5"
-                  >
-                    <Icon className="text-muted-foreground h-4 w-4 shrink-0" />
-                    <span className="truncate text-sm">{service.name}</span>
-                    <CheckCircle2 className="ms-auto h-3.5 w-3.5 shrink-0 text-emerald-500" />
+                  <div key={service.name} className="flex items-center gap-2">
+                    <Icon className="text-muted-foreground h-3.5 w-3.5" />
+                    <span className="text-muted-foreground text-xs">
+                      {service.name}
+                    </span>
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
                   </div>
                 )
               })}
             </div>
-          </CardContent>
-        </Card>
-      </section>
+            <span className="ms-auto flex items-center gap-1.5 text-xs text-emerald-600">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+              </span>
+              {d?.systemStatus?.operational || "Operational"}
+            </span>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

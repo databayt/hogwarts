@@ -18,10 +18,17 @@ interface Props {
 export default async function GeneralLedgerPage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
+  const d = dictionary?.finance?.accountsPage
+  const c = dictionary?.finance?.common
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
-    return <p className="text-muted-foreground">School context not found</p>
+    return (
+      <p className="text-muted-foreground">
+        {dictionary?.finance?.common?.schoolNotFound ||
+          "School context not found"}
+      </p>
+    )
   }
 
   const ledgerEntries = await db.ledgerEntry.findMany({
@@ -39,16 +46,18 @@ export default async function GeneralLedgerPage({ params }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium">General Ledger</h3>
+        <h3 className="text-lg font-medium">
+          {d?.generalLedger || "General Ledger"}
+        </h3>
       </div>
       {ledgerEntries.length === 0 ? (
         <p className="text-muted-foreground py-8 text-center">
-          No ledger entries yet.
+          {d?.noLedgerEntriesYet || "No ledger entries yet."}
         </p>
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle>Ledger Entries</CardTitle>
+            <CardTitle>{d?.ledgerEntries || "Ledger Entries"}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
@@ -56,16 +65,26 @@ export default async function GeneralLedgerPage({ params }: Props) {
                 <thead>
                   <tr className="border-b">
                     <th className="py-2 pe-4 text-start font-medium">
-                      Journal #
+                      {d?.journalNumber || "Journal #"}
                     </th>
-                    <th className="py-2 pe-4 text-start font-medium">Date</th>
                     <th className="py-2 pe-4 text-start font-medium">
-                      Account
+                      {c?.date || "Date"}
                     </th>
-                    <th className="py-2 pe-4 text-start font-medium">Type</th>
-                    <th className="py-2 pe-4 text-end font-medium">Debit</th>
-                    <th className="py-2 pe-4 text-end font-medium">Credit</th>
-                    <th className="py-2 text-start font-medium">Status</th>
+                    <th className="py-2 pe-4 text-start font-medium">
+                      {c?.account || "Account"}
+                    </th>
+                    <th className="py-2 pe-4 text-start font-medium">
+                      {c?.type || "Type"}
+                    </th>
+                    <th className="py-2 pe-4 text-end font-medium">
+                      {c?.debit || "Debit"}
+                    </th>
+                    <th className="py-2 pe-4 text-end font-medium">
+                      {c?.credit || "Credit"}
+                    </th>
+                    <th className="py-2 text-start font-medium">
+                      {c?.status || "Status"}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -104,7 +123,9 @@ export default async function GeneralLedgerPage({ params }: Props) {
                               : "secondary"
                           }
                         >
-                          {entry.journalEntry.isPosted ? "Posted" : "Draft"}
+                          {entry.journalEntry.isPosted
+                            ? c?.posted || "Posted"
+                            : c?.draft || "Draft"}
                         </Badge>
                       </td>
                     </tr>

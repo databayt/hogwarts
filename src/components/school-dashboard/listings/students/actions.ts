@@ -565,25 +565,25 @@ export async function deleteStudent(input: {
     if (attendanceCount > 0) {
       return {
         success: false,
-        error: `Cannot delete: ${attendanceCount} attendance record(s) exist. Archive or remove attendance first.`,
+        code: "STUDENT_HAS_ATTENDANCE",
       }
     }
     if (examResultCount > 0) {
       return {
         success: false,
-        error: `Cannot delete: ${examResultCount} exam result(s) exist. Archive results first.`,
+        code: "STUDENT_HAS_RESULTS",
       }
     }
     if (feeAssignmentCount > 0) {
       return {
         success: false,
-        error: `Cannot delete: ${feeAssignmentCount} fee assignment(s) exist. Clear fees first.`,
+        code: "STUDENT_HAS_FEES",
       }
     }
     if (submissionCount > 0) {
       return {
         success: false,
-        error: `Cannot delete: ${submissionCount} assignment submission(s) exist. Archive submissions first.`,
+        code: "STUDENT_HAS_SUBMISSIONS",
       }
     }
 

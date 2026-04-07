@@ -80,7 +80,7 @@ export function BankingMobileNav({
       </SheetTrigger>
       <SheetContent side="left" className="w-64 p-0">
         <SheetHeader className="p-6">
-          <SheetTitle>Banking</SheetTitle>
+          <SheetTitle>{dictionary?.title || "Banking"}</SheetTitle>
         </SheetHeader>
 
         <nav className="flex-1 space-y-1 px-3">

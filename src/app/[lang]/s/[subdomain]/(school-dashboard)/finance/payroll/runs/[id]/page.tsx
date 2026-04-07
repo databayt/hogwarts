@@ -21,10 +21,17 @@ interface Props {
 export default async function PayrollRunDetailPage({ params }: Props) {
   const { lang, id } = await params
   const dictionary = await getDictionary(lang)
+  const d = dictionary?.finance?.payrollPage
+  const c = dictionary?.finance?.common
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
-    return <p className="text-muted-foreground">School context not found</p>
+    return (
+      <p className="text-muted-foreground">
+        {dictionary?.finance?.common?.schoolNotFound ||
+          "School context not found"}
+      </p>
+    )
   }
 
   const run = await db.payrollRun.findFirst({
@@ -59,7 +66,9 @@ export default async function PayrollRunDetailPage({ params }: Props) {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Gross Total</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {d?.grossTotal || "Gross Total"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
@@ -69,7 +78,9 @@ export default async function PayrollRunDetailPage({ params }: Props) {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Deductions</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {d?.deductions || "Deductions"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
@@ -79,7 +90,9 @@ export default async function PayrollRunDetailPage({ params }: Props) {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Net Total</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {d?.netTotal || "Net Total"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
@@ -91,7 +104,7 @@ export default async function PayrollRunDetailPage({ params }: Props) {
 
       <div>
         <h4 className="mb-3 font-medium">
-          Salary Slips ({run.salarySlips.length})
+          {d?.salarySlips || "Salary Slips"} ({run.salarySlips.length})
         </h4>
         <div className="space-y-2">
           {run.salarySlips.map((slip) => (
@@ -117,7 +130,8 @@ export default async function PayrollRunDetailPage({ params }: Props) {
                         {formatCurrency(Number(slip.netSalary), lang)}
                       </p>
                       <p className="text-muted-foreground text-xs">
-                        Gross: {formatCurrency(Number(slip.grossSalary), lang)}
+                        {c?.gross || "Gross"}:{" "}
+                        {formatCurrency(Number(slip.grossSalary), lang)}
                       </p>
                     </div>
                     <Badge

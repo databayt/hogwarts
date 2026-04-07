@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 type Installment = {
   number: number
@@ -24,6 +25,7 @@ interface InstallmentTimelineProps {
   totalAmount: number
   totalPaid: number
   lang: Locale
+  dictionary?: Dictionary
 }
 
 const STATUS_ICON = {
@@ -52,8 +54,15 @@ export function InstallmentTimeline({
   totalAmount,
   totalPaid,
   lang,
+  dictionary,
 }: InstallmentTimelineProps) {
   if (installments.length <= 1) return null
+
+  const t = (dictionary as any)?.finance?.fees?.installment as
+    | Record<string, string>
+    | undefined
+  const statusLabels = (dictionary as any)?.finance?.fees?.myFees
+    ?.statusLabels as Record<string, string> | undefined
 
   const progressPercent =
     totalAmount > 0 ? Math.min((totalPaid / totalAmount) * 100, 100) : 0
@@ -62,10 +71,10 @@ export function InstallmentTimeline({
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          <span>Installment Plan</span>
+          <span>{t?.installmentPlan || "Installment Plan"}</span>
           <Badge variant="outline" className="tabular-nums">
             {installments.filter((i) => i.status === "PAID").length}/
-            {installments.length} paid
+            {installments.length} {t?.paid || "paid"}
           </Badge>
         </CardTitle>
       </CardHeader>
@@ -73,8 +82,12 @@ export function InstallmentTimeline({
         {/* Progress Bar */}
         <div className="space-y-2">
           <div className="text-muted-foreground flex justify-between text-sm">
-            <span>{formatCurrency(totalPaid, lang)} paid</span>
-            <span>{formatCurrency(totalAmount, lang)} total</span>
+            <span>
+              {formatCurrency(totalPaid, lang)} {t?.paid || "paid"}
+            </span>
+            <span>
+              {formatCurrency(totalAmount, lang)} {t?.total || "total"}
+            </span>
           </div>
           <Progress value={progressPercent} className="h-2" />
         </div>
@@ -111,7 +124,10 @@ export function InstallmentTimeline({
                 <div className="flex-1 space-y-1">
                   <div className="flex items-center justify-between">
                     <p className="font-medium">
-                      Installment {inst.number}
+                      {(t?.installmentNumber || "Installment {number}").replace(
+                        "{number}",
+                        String(inst.number)
+                      )}
                       {inst.description && (
                         <span className="text-muted-foreground ms-2 text-sm font-normal">
                           {inst.description}
@@ -124,18 +140,20 @@ export function InstallmentTimeline({
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground text-sm tabular-nums">
-                      Due: {formatDate(new Date(inst.dueDate), lang)}
+                      {t?.due || "Due:"}{" "}
+                      {formatDate(new Date(inst.dueDate), lang)}
                     </span>
                     {inst.status === "PARTIAL" && inst.paidAmount > 0 && (
                       <span className="text-muted-foreground text-sm tabular-nums">
-                        Paid: {formatCurrency(inst.paidAmount, lang)}
+                        {t?.paidAmount || "Paid:"}{" "}
+                        {formatCurrency(inst.paidAmount, lang)}
                       </span>
                     )}
                     <Badge
                       variant="outline"
                       className={cn("text-xs", STATUS_COLOR[inst.status])}
                     >
-                      {inst.status}
+                      {statusLabels?.[inst.status] || inst.status}
                     </Badge>
                   </div>
                 </div>

@@ -114,10 +114,6 @@
     "report_ready": "التقرير جاهز",
     "absence_intention": "تم تقديم نية الغياب",
     "absence_intention_decision": "تمت مراجعة نية الغياب",
-    "exam_scheduled": "تم جدولة امتحان",
-    "exam_result": "نتيجة الامتحان متاحة",
-    "library_due": "موعد إرجاع كتاب المكتبة",
-    "general": "إشعار عام",
     "setup_guide": "دليل الإعداد"
   },
   "priorities": {

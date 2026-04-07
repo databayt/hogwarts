@@ -4,7 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath, revalidateTag } from "next/cache"
 import { auth } from "@/auth"
-import { NotificationChannel, NotificationType, Prisma } from "@prisma/client"
+import { Prisma } from "@prisma/client"
 import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
@@ -41,7 +41,8 @@ export type ActionResponse<T = void> =
 // Constants
 // ============================================================================
 
-const NOTIFICATIONS_PATH = "/notifications"
+const NOTIFICATIONS_PATH =
+  "/[lang]/s/[subdomain]/(school-dashboard)/notifications"
 
 // ============================================================================
 // Notification CRUD Operations
@@ -75,12 +76,8 @@ export async function createNotification(
     // Validate notification type permissions
     try {
       validateNotificationType(authContext, parsed.type)
-    } catch (error) {
-      return {
-        success: false,
-        error:
-          error instanceof Error ? error.message : "Invalid notification type",
-      }
+    } catch {
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
 
     // Check create permission
@@ -89,14 +86,8 @@ export async function createNotification(
         type: parsed.type,
         userId: parsed.userId,
       })
-    } catch (error) {
-      return {
-        success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unauthorized to create notifications",
-      }
+    } catch {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Calculate expiration if not provided
@@ -128,7 +119,7 @@ export async function createNotification(
     })
 
     // Revalidate cache
-    revalidatePath(NOTIFICATIONS_PATH)
+    revalidatePath(NOTIFICATIONS_PATH, "page")
     revalidateTag(`notifications-${schoolId}`, "max")
     revalidateTag(`notifications-${parsed.userId}`, "max")
 
@@ -140,19 +131,10 @@ export async function createNotification(
     })
 
     if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      }
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
 
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to create notification",
-    }
+    return actionError(ACTION_ERRORS.NOTIFICATION_SEND_FAILED)
   }
 }
 
@@ -188,7 +170,7 @@ export async function markNotificationAsRead(
     })
 
     if (!existing) {
-      return actionError(ACTION_ERRORS.NOTIFICATION_SEND_FAILED)
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Check permission
@@ -197,14 +179,8 @@ export async function markNotificationAsRead(
         id: existing.id,
         userId: existing.userId,
       })
-    } catch (error) {
-      return {
-        success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unauthorized to mark notification as read",
-      }
+    } catch {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Skip if already read
@@ -225,7 +201,7 @@ export async function markNotificationAsRead(
       },
     })
 
-    revalidatePath(NOTIFICATIONS_PATH)
+    revalidatePath(NOTIFICATIONS_PATH, "page")
     revalidateTag(`notifications-${schoolId}`, "max")
     revalidateTag(`notifications-${authContext.userId}`, "max")
 
@@ -236,13 +212,7 @@ export async function markNotificationAsRead(
       timestamp: new Date().toISOString(),
     })
 
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to mark notification as read",
-    }
+    return actionError(ACTION_ERRORS.NOTIFICATION_UPDATE_FAILED)
   }
 }
 
@@ -270,10 +240,7 @@ export async function markAllNotificationsAsRead(
 
     // Verify user can only mark their own notifications
     if (parsed.userId !== authContext.userId) {
-      return {
-        success: false,
-        error: "Cannot mark other users' notifications as read",
-      }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Build where clause
@@ -293,7 +260,7 @@ export async function markAllNotificationsAsRead(
       },
     })
 
-    revalidatePath(NOTIFICATIONS_PATH)
+    revalidatePath(NOTIFICATIONS_PATH, "page")
     revalidateTag(`notifications-${schoolId}`, "max")
     revalidateTag(`notifications-${authContext.userId}`, "max")
 
@@ -304,13 +271,7 @@ export async function markAllNotificationsAsRead(
       timestamp: new Date().toISOString(),
     })
 
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to mark all notifications as read",
-    }
+    return actionError(ACTION_ERRORS.NOTIFICATION_UPDATE_FAILED)
   }
 }
 
@@ -346,7 +307,7 @@ export async function deleteNotification(
     })
 
     if (!existing) {
-      return actionError(ACTION_ERRORS.NOTIFICATION_SEND_FAILED)
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     // Check permission
@@ -355,14 +316,8 @@ export async function deleteNotification(
         id: existing.id,
         userId: existing.userId,
       })
-    } catch (error) {
-      return {
-        success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unauthorized to delete notification",
-      }
+    } catch {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Delete notification
@@ -374,7 +329,7 @@ export async function deleteNotification(
       },
     })
 
-    revalidatePath(NOTIFICATIONS_PATH)
+    revalidatePath(NOTIFICATIONS_PATH, "page")
     revalidateTag(`notifications-${schoolId}`, "max")
     revalidateTag(`notifications-${authContext.userId}`, "max")
 
@@ -385,13 +340,7 @@ export async function deleteNotification(
       timestamp: new Date().toISOString(),
     })
 
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to delete notification",
-    }
+    return actionError(ACTION_ERRORS.DELETE_FAILED)
   }
 }
 
@@ -424,12 +373,8 @@ export async function createNotificationBatch(
     // Validate notification type permissions
     try {
       validateNotificationType(authContext, parsed.type)
-    } catch (error) {
-      return {
-        success: false,
-        error:
-          error instanceof Error ? error.message : "Invalid notification type",
-      }
+    } catch {
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
 
     // Check batch send permission
@@ -439,14 +384,8 @@ export async function createNotificationBatch(
         targetRole: parsed.targetRole,
         targetUserIds: parsed.targetUserIds,
       })
-    } catch (error) {
-      return {
-        success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unauthorized to send batch notifications",
-      }
+    } catch {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Create batch record
@@ -467,7 +406,7 @@ export async function createNotificationBatch(
       },
     })
 
-    revalidatePath(NOTIFICATIONS_PATH)
+    revalidatePath(NOTIFICATIONS_PATH, "page")
     revalidateTag(`notifications-${schoolId}`, "max")
 
     // Note: Actual notification creation would be handled by a background job
@@ -483,19 +422,10 @@ export async function createNotificationBatch(
     })
 
     if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      }
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
 
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to create notification batch",
-    }
+    return actionError(ACTION_ERRORS.NOTIFICATION_SEND_FAILED)
   }
 }
 
@@ -528,14 +458,8 @@ export async function updateNotificationPreferences(
     // Check permission
     try {
       assertNotificationPermission(authContext, "manage_preferences")
-    } catch (error) {
-      return {
-        success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unauthorized to manage preferences",
-      }
+    } catch {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Batch upsert preferences in a transaction
@@ -572,7 +496,7 @@ export async function updateNotificationPreferences(
     )
     const count = parsed.length
 
-    revalidatePath(NOTIFICATIONS_PATH)
+    revalidatePath(NOTIFICATIONS_PATH, "page")
     revalidateTag(`notification-preferences-${authContext.userId}`, "max")
 
     return { success: true, data: { count } }
@@ -583,19 +507,10 @@ export async function updateNotificationPreferences(
     })
 
     if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      }
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
 
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to update notification preferences",
-    }
+    return actionError(ACTION_ERRORS.NOTIFICATION_UPDATE_FAILED)
   }
 }
 
@@ -628,12 +543,8 @@ export async function subscribeToEntityNotifications(
     // Check permission
     try {
       assertNotificationPermission(authContext, "subscribe")
-    } catch (error) {
-      return {
-        success: false,
-        error:
-          error instanceof Error ? error.message : "Unauthorized to subscribe",
-      }
+    } catch {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Upsert subscription
@@ -657,7 +568,7 @@ export async function subscribeToEntityNotifications(
       },
     })
 
-    revalidatePath(NOTIFICATIONS_PATH)
+    revalidatePath(NOTIFICATIONS_PATH, "page")
     revalidateTag(`notification-subscriptions-${authContext.userId}`, "max")
 
     return { success: true, data: { id: subscription.id } }
@@ -668,16 +579,10 @@ export async function subscribeToEntityNotifications(
     })
 
     if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      }
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
 
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to subscribe",
-    }
+    return actionError(ACTION_ERRORS.NOTIFICATION_UPDATE_FAILED)
   }
 }
 
@@ -715,7 +620,7 @@ export async function unsubscribeFromEntityNotifications(
       },
     })
 
-    revalidatePath(NOTIFICATIONS_PATH)
+    revalidatePath(NOTIFICATIONS_PATH, "page")
     revalidateTag(`notification-subscriptions-${authContext.userId}`, "max")
 
     return { success: true, data: undefined }
@@ -725,9 +630,6 @@ export async function unsubscribeFromEntityNotifications(
       timestamp: new Date().toISOString(),
     })
 
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to unsubscribe",
-    }
+    return actionError(ACTION_ERRORS.NOTIFICATION_UPDATE_FAILED)
   }
 }

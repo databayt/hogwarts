@@ -9,6 +9,7 @@ import { FormHeading, FormLayout } from "@/components/form"
 import { useWizardValidation } from "@/components/form/template/wizard-validation-context"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { completeInvoiceWizard } from "../actions"
 import { useInvoiceWizard } from "../use-invoice-wizard"
@@ -22,6 +23,10 @@ export default function ItemsContent() {
   const { data, isLoading } = useInvoiceWizard()
   const [isValid, setIsValid] = useState(false)
   const { setCustomNavigation } = useWizardValidation()
+  const { dictionary } = useDictionary()
+  const wi = (dictionary as any)?.finance?.invoiceWizardItems as
+    | Record<string, string>
+    | undefined
   const isSavingRef = useRef(false)
 
   // Set initial validity from loaded data
@@ -66,8 +71,10 @@ export default function ItemsContent() {
     >
       <FormLayout>
         <FormHeading
-          title="Line Items"
-          description="Add the items or services for this invoice."
+          title={wi?.title || "Line Items"}
+          description={
+            wi?.description || "Add the items or services for this invoice."
+          }
         />
         <ItemsForm
           ref={formRef}

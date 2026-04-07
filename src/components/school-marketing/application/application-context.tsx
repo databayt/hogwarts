@@ -192,45 +192,48 @@ export const ApplySessionProvider: React.FC<ApplySessionProviderProps> = ({
   )
 
   // Load existing session from token
-  const loadSession = useCallback(async (token: string): Promise<boolean> => {
-    setSession((prev) => ({ ...prev, isLoading: true, error: null }))
+  const loadSession = useCallback(
+    async (token: string): Promise<boolean> => {
+      setSession((prev) => ({ ...prev, isLoading: true, error: null }))
 
-    try {
-      const result = await resumeApplicationSession(
-        token,
-        subdomain ?? undefined
-      )
+      try {
+        const result = await resumeApplicationSession(
+          token,
+          subdomain ?? undefined
+        )
 
-      if (result.success && result.data) {
-        const data = result.data
+        if (result.success && result.data) {
+          const data = result.data
+          setSession((prev) => ({
+            ...prev,
+            sessionToken: token,
+            campaignId: data.campaignId || null,
+            formData: data.formData as ApplySessionState["formData"],
+            currentStep:
+              (data.formData as { currentStep?: ApplyStep })?.currentStep ||
+              "personal",
+            isLoading: false,
+          }))
+          return true
+        } else {
+          setSession((prev) => ({
+            ...prev,
+            isLoading: false,
+            error: result.error || "FAILED_TO_LOAD_SESSION",
+          }))
+          return false
+        }
+      } catch (error) {
         setSession((prev) => ({
           ...prev,
-          sessionToken: token,
-          campaignId: data.campaignId || null,
-          formData: data.formData as ApplySessionState["formData"],
-          currentStep:
-            (data.formData as { currentStep?: ApplyStep })?.currentStep ||
-            "personal",
           isLoading: false,
-        }))
-        return true
-      } else {
-        setSession((prev) => ({
-          ...prev,
-          isLoading: false,
-          error: result.error || "FAILED_TO_LOAD_SESSION",
+          error: "FAILED_TO_LOAD_SESSION",
         }))
         return false
       }
-    } catch (error) {
-      setSession((prev) => ({
-        ...prev,
-        isLoading: false,
-        error: "FAILED_TO_LOAD_SESSION",
-      }))
-      return false
-    }
-  }, [])
+    },
+    [subdomain]
+  )
 
   // Update step data
   const updateStepData = useCallback(

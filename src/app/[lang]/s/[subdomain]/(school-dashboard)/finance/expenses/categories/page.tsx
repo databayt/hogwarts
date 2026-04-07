@@ -20,10 +20,17 @@ interface Props {
 export default async function ExpenseCategoriesPage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
+  const d = dictionary?.finance?.expensesPage
+  const c = dictionary?.finance?.common
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
-    return <p className="text-muted-foreground">School context not found</p>
+    return (
+      <p className="text-muted-foreground">
+        {dictionary?.finance?.common?.schoolNotFound ||
+          "School context not found"}
+      </p>
+    )
   }
 
   const categories = await db.expenseCategory.findMany({
@@ -43,17 +50,19 @@ export default async function ExpenseCategoriesPage({ params }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium">Expense Categories</h3>
+        <h3 className="text-lg font-medium">
+          {d?.expenseCategories || "Expense Categories"}
+        </h3>
         <Link
           href={`/${lang}/finance/expenses/categories/new`}
           className={buttonVariants()}
         >
-          Create Category
+          {d?.createCategory || "Create Category"}
         </Link>
       </div>
       {categories.length === 0 ? (
         <p className="text-muted-foreground py-8 text-center">
-          No expense categories yet.
+          {d?.noCategoriesYet || "No expense categories yet."}
         </p>
       ) : (
         <div className="space-y-3">
@@ -71,15 +80,19 @@ export default async function ExpenseCategoriesPage({ params }: Props) {
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-muted-foreground text-sm">
-                      {category._count.expenses} expenses
+                      {category._count.expenses} {c?.expenses || "expenses"}
                     </span>
                     <Badge
                       variant={category.isActive ? "default" : "secondary"}
                     >
-                      {category.isActive ? "Active" : "Inactive"}
+                      {category.isActive
+                        ? c?.active || "Active"
+                        : c?.inactive || "Inactive"}
                     </Badge>
                     {category.requiresApproval && (
-                      <Badge variant="outline">Requires Approval</Badge>
+                      <Badge variant="outline">
+                        {c?.requiresApproval || "Requires Approval"}
+                      </Badge>
                     )}
                   </div>
                 </div>
@@ -93,7 +106,7 @@ export default async function ExpenseCategoriesPage({ params }: Props) {
                       >
                         <p>{child.name}</p>
                         <span className="text-muted-foreground">
-                          {child._count.expenses} expenses
+                          {child._count.expenses} {c?.expenses || "expenses"}
                         </span>
                       </div>
                     ))}

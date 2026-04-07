@@ -36,13 +36,17 @@ export default function ViewInvoiceModalContent({
     run()
   }, [invoiceId])
 
-  if (!invoice) return <div>Loading...</div>
+  const iv = (dictionary as any)?.finance?.invoiceView as
+    | Record<string, string>
+    | undefined
+
+  if (!invoice) return <div>{iv?.loading || "Loading..."}</div>
 
   return (
     <div className="w-full max-w-3xl">
       <div className="mb-6 flex items-start justify-between">
         <div>
-          <h1 className="mb-1 text-xl font-bold">Invoice</h1>
+          <h1 className="mb-1 text-xl font-bold">{iv?.invoice || "Invoice"}</h1>
           <p className="text-muted-foreground text-xs">#{invoice.invoice_no}</p>
         </div>
         <Badge>{invoice.status}</Badge>
@@ -50,12 +54,12 @@ export default function ViewInvoiceModalContent({
 
       <div className="mb-6 grid grid-cols-2 gap-6">
         <div>
-          <h2 className="mb-2 font-semibold">From</h2>
+          <h2 className="mb-2 font-semibold">{iv?.from || "From"}</h2>
           <p>{invoice.from.name}</p>
           <p className="text-muted-foreground text-sm">{invoice.from.email}</p>
         </div>
         <div>
-          <h2 className="mb-2 font-semibold">To</h2>
+          <h2 className="mb-2 font-semibold">{iv?.to || "To"}</h2>
           <p>{invoice.to.name}</p>
           <p className="text-muted-foreground text-sm">{invoice.to.email}</p>
         </div>
@@ -63,11 +67,13 @@ export default function ViewInvoiceModalContent({
 
       <div className="mb-6 grid grid-cols-2 gap-6 text-sm">
         <div>
-          <span className="font-medium">Invoice Date</span>
+          <span className="font-medium">
+            {iv?.invoiceDate || "Invoice Date"}
+          </span>
           <p>{formatDate(invoice.invoice_date, lang)}</p>
         </div>
         <div>
-          <span className="font-medium">Due Date</span>
+          <span className="font-medium">{iv?.dueDate || "Due Date"}</span>
           <p>{formatDate(invoice.due_date, lang)}</p>
         </div>
       </div>
@@ -77,10 +83,10 @@ export default function ViewInvoiceModalContent({
       <table className="mb-6 w-full text-sm">
         <thead>
           <tr className="border-b">
-            <th className="py-2 text-start">Item</th>
-            <th className="py-2 text-end">Qty</th>
-            <th className="py-2 text-end">Price</th>
-            <th className="py-2 text-end">Total</th>
+            <th className="py-2 text-start">{iv?.item || "Item"}</th>
+            <th className="py-2 text-end">{iv?.qty || "Qty"}</th>
+            <th className="py-2 text-end">{iv?.price || "Price"}</th>
+            <th className="py-2 text-end">{iv?.total || "Total"}</th>
           </tr>
         </thead>
         <tbody>
@@ -105,7 +111,7 @@ export default function ViewInvoiceModalContent({
       <div className="flex justify-end">
         <div className="w-56">
           <div className="flex justify-between py-2">
-            <span className="font-medium">Total</span>
+            <span className="font-medium">{iv?.total || "Total"}</span>
             <span className="font-bold">
               {formatCurrency(invoice.total, lang)}
             </span>

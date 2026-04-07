@@ -20,6 +20,7 @@ interface Props {
 export default async function NewFinePage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
+  const d = dictionary?.finance?.fees?.fine
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) notFound()
@@ -34,11 +35,15 @@ export default async function NewFinePage({ params }: Props) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Issue Fine</h1>
-          <p className="text-muted-foreground">Issue a fine to a student</p>
+          <h1 className="text-2xl font-semibold">
+            {d?.issueFine ?? "Issue Fine"}
+          </h1>
+          <p className="text-muted-foreground">
+            {d?.issueFineDescription ?? "Issue a fine to a student"}
+          </p>
         </div>
         <Button variant="outline" asChild>
-          <Link href={`/${lang}/finance/fees/fines`}>Back</Link>
+          <Link href={`/${lang}/finance/fees/fines`}>{d?.back ?? "Back"}</Link>
         </Button>
       </div>
 

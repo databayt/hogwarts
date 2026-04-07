@@ -3,7 +3,6 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
-import { format } from "date-fns"
 import {
   Award,
   BookOpen,
@@ -24,6 +23,7 @@ import {
   User,
 } from "lucide-react"
 
+import { formatDate } from "@/lib/i18n-format"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -83,14 +83,7 @@ const statusColors = {
   DROPPED_OUT: "bg-destructive",
 }
 
-const defaultStatusLabels = {
-  ACTIVE: "Active",
-  INACTIVE: "Inactive",
-  SUSPENDED: "Suspended",
-  GRADUATED: "Graduated",
-  TRANSFERRED: "Transferred",
-  DROPPED_OUT: "Dropped Out",
-}
+const defaultStatusLabels: Record<string, string> = {}
 
 export function StudentProfile({
   student,
@@ -248,7 +241,11 @@ export function StudentProfile({
                   </p>
                   <p className="font-medium">
                     {student.dateOfBirth
-                      ? format(new Date(student.dateOfBirth), "dd MMM yyyy")
+                      ? formatDate(student.dateOfBirth, lang as "ar" | "en", {
+                          year: "numeric",
+                          month: "short",
+                          day: "2-digit",
+                        })
                       : "-"}
                   </p>
                   {getAge() && (

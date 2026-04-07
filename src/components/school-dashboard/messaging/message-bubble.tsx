@@ -54,6 +54,7 @@ export interface MessageBubbleProps {
   onForward?: (message: MessageDTO) => void
   onStar?: (messageId: string) => void
   onUnstar?: (messageId: string) => void
+  onRetry?: (messageId: string) => void
 }
 
 export interface MessageBubbleOptimizedProps extends MessageBubbleProps {
@@ -97,7 +98,11 @@ function ReadReceiptIcon({ status }: { status: string }) {
     case "read":
       return <CheckCheck className="text-msg-read-check h-3 w-3" />
     case "failed":
-      return <span className="text-destructive text-[10px]">!</span>
+      return (
+        <span className="text-destructive text-[10px] font-bold" title="Failed">
+          !
+        </span>
+      )
     default:
       return null
   }
@@ -159,6 +164,7 @@ export const MessageBubble = memo(function MessageBubble({
   onForward,
   onStar,
   onUnstar,
+  onRetry,
   showAvatar = false,
   showSenderName = true,
   showTimestamp = true,
@@ -528,6 +534,18 @@ export const MessageBubble = memo(function MessageBubble({
                       {isOwnMessage && (
                         <span className="ms-0.5 flex items-center gap-0.5">
                           <ReadReceiptIcon status={message.status} />
+                          {message.status === "failed" && onRetry && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                onRetry(message.id)
+                              }}
+                              className="text-destructive hover:text-destructive/80 ms-0.5 text-[10px] underline"
+                            >
+                              {m?.ui?.retry || "Retry"}
+                            </button>
+                          )}
                           {message.whatsappStatus && (
                             <WhatsAppStatusIcon
                               status={message.whatsappStatus}

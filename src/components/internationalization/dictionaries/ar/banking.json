@@ -27,6 +27,7 @@
   "category": "الفئة",
   "merchant": "التاجر",
   "description": "الوصف",
+  "bankAccount": "حساب بنكي",
   "addBank": "إضافة بنك",
   "connectBank": "ربط حساب بنكي",
   "removeBank": "إزالة البنك",
@@ -75,5 +76,14 @@
   "recipientEmail": "البريد الإلكتروني للمستلم",
   "maxAmount": "الحد الأقصى للمبلغ",
   "descriptionPlaceholder": "أدخل وصفاً لهذا التحويل",
-  "sendTransfer": "إرسال التحويل"
+  "sendTransfer": "إرسال التحويل",
+  "columns": "الأعمدة",
+  "toggleColumns": "تبديل الأعمدة",
+  "allTypes": "جميع الأنواع",
+  "allStatus": "جميع الحالات",
+  "searchTransactions": "البحث في المعاملات...",
+  "transactionDetails": "تفاصيل المعاملة",
+  "completeInformation": "معلومات كاملة حول هذه المعاملة",
+  "location": "الموقع",
+  "noTransactionsFound": "لا توجد معاملات"
 }

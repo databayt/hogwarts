@@ -36,6 +36,7 @@ interface UseNotificationsReturn {
   disconnect: () => void
   markAsRead: (notificationId: string) => Promise<void>
   markAllAsRead: () => Promise<void>
+  removeNotification: (notificationId: string) => void
   clearRecent: () => void
 }
 
@@ -160,6 +161,12 @@ export function useNotifications(
       console.error("Error marking all notifications as read:", error)
     }
   }, [session, unreadCount])
+
+  const removeNotification = useCallback((notificationId: string) => {
+    setRecentNotifications((prev) =>
+      prev.filter((n) => n.id !== notificationId)
+    )
+  }, [])
 
   const clearRecent = useCallback(() => {
     setRecentNotifications([])
@@ -340,6 +347,7 @@ export function useNotifications(
     disconnect,
     markAsRead,
     markAllAsRead,
+    removeNotification,
     clearRecent,
   }
 }
@@ -359,6 +367,7 @@ export function useNotificationBell(locale?: "ar" | "en") {
     recentNotifications,
     markAsRead,
     markAllAsRead,
+    removeNotification,
   } = useNotifications({
     autoConnect: true,
     autoSubscribe: true,
@@ -372,6 +381,7 @@ export function useNotificationBell(locale?: "ar" | "en") {
     recentNotifications: recentNotifications.slice(0, 5), // Show only 5 in bell
     markAsRead,
     markAllAsRead,
+    removeNotification,
   }
 }
 

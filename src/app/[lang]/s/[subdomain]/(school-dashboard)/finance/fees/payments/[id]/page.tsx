@@ -47,6 +47,7 @@ function statusVariant(
 export default async function PaymentDetailPage({ params }: Props) {
   const { lang, id } = await params
   const dictionary = await getDictionary(lang)
+  const d = dictionary?.finance?.fees?.payment
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) notFound()
@@ -77,7 +78,9 @@ export default async function PaymentDetailPage({ params }: Props) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Payment Details</h1>
+          <h1 className="text-2xl font-semibold">
+            {d?.paymentDetails ?? "Payment Details"}
+          </h1>
           <p className="text-muted-foreground">{payment.paymentNumber}</p>
         </div>
         <div className="flex gap-2">
@@ -99,7 +102,9 @@ export default async function PaymentDetailPage({ params }: Props) {
             }}
           />
           <Button variant="outline" asChild>
-            <Link href={`/${lang}/finance/fees/payments`}>Back</Link>
+            <Link href={`/${lang}/finance/fees/payments`}>
+              {d?.back ?? "Back"}
+            </Link>
           </Button>
         </div>
       </div>
@@ -107,27 +112,35 @@ export default async function PaymentDetailPage({ params }: Props) {
       <div className="grid gap-4 sm:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Payment Information</CardTitle>
+            <CardTitle>
+              {d?.paymentInformation ?? "Payment Information"}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Payment Number</span>
+              <span className="text-muted-foreground">
+                {d?.paymentNumber ?? "Payment Number"}
+              </span>
               <span className="font-medium">{payment.paymentNumber}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Receipt Number</span>
+              <span className="text-muted-foreground">
+                {d?.receiptNumber ?? "Receipt Number"}
+              </span>
               <span className="font-medium">
                 {payment.receiptNumber || "-"}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Amount</span>
+              <span className="text-muted-foreground">
+                {d?.amount ?? "Amount"}
+              </span>
               <span className="text-xl font-bold">
                 {formatCurrency(Number(payment.amount), lang)}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Date</span>
+              <span className="text-muted-foreground">{d?.date ?? "Date"}</span>
               <span className="font-medium">
                 {payment.paymentDate
                   ? formatDate(payment.paymentDate, lang)
@@ -135,18 +148,24 @@ export default async function PaymentDetailPage({ params }: Props) {
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Method</span>
+              <span className="text-muted-foreground">
+                {d?.method ?? "Method"}
+              </span>
               <span className="font-medium">{payment.paymentMethod}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Status</span>
+              <span className="text-muted-foreground">
+                {d?.status ?? "Status"}
+              </span>
               <Badge variant={statusVariant(payment.status)}>
                 {payment.status}
               </Badge>
             </div>
             {payment.transactionId && (
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Transaction ID</span>
+                <span className="text-muted-foreground">
+                  {d?.transactionId ?? "Transaction ID"}
+                </span>
                 <span className="font-mono text-sm">
                   {payment.transactionId}
                 </span>
@@ -154,25 +173,33 @@ export default async function PaymentDetailPage({ params }: Props) {
             )}
             {payment.bankName && (
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Bank</span>
+                <span className="text-muted-foreground">
+                  {d?.bank ?? "Bank"}
+                </span>
                 <span className="font-medium">{payment.bankName}</span>
               </div>
             )}
             {payment.chequeNumber && (
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Cheque Number</span>
+                <span className="text-muted-foreground">
+                  {d?.chequeNumber ?? "Cheque Number"}
+                </span>
                 <span className="font-medium">{payment.chequeNumber}</span>
               </div>
             )}
             {payment.cardLastFour && (
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Card</span>
+                <span className="text-muted-foreground">
+                  {d?.card ?? "Card"}
+                </span>
                 <span className="font-medium">**** {payment.cardLastFour}</span>
               </div>
             )}
             {payment.remarks && (
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Remarks</span>
+                <span className="text-muted-foreground">
+                  {d?.remarks ?? "Remarks"}
+                </span>
                 <span>{payment.remarks}</span>
               </div>
             )}
@@ -181,29 +208,39 @@ export default async function PaymentDetailPage({ params }: Props) {
 
         <Card>
           <CardHeader>
-            <CardTitle>Related Information</CardTitle>
+            <CardTitle>
+              {d?.relatedInformation ?? "Related Information"}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Student</span>
+              <span className="text-muted-foreground">
+                {d?.student ?? "Student"}
+              </span>
               <span className="font-medium">{studentName}</span>
             </div>
             {payment.feeAssignment && (
               <>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Fee Structure</span>
+                  <span className="text-muted-foreground">
+                    {d?.feeStructure ?? "Fee Structure"}
+                  </span>
                   <span className="font-medium">
                     {payment.feeAssignment.feeStructure?.name || "-"}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Academic Year</span>
+                  <span className="text-muted-foreground">
+                    {d?.academicYear ?? "Academic Year"}
+                  </span>
                   <span className="font-medium">
                     {payment.feeAssignment.academicYear}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Total Fee</span>
+                  <span className="text-muted-foreground">
+                    {d?.totalFee ?? "Total Fee"}
+                  </span>
                   <span className="font-medium">
                     {formatCurrency(
                       Number(payment.feeAssignment.finalAmount),
@@ -213,7 +250,7 @@ export default async function PaymentDetailPage({ params }: Props) {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">
-                    Assignment Status
+                    {d?.assignmentStatus ?? "Assignment Status"}
                   </span>
                   <Badge variant="outline">
                     {payment.feeAssignment.status}
@@ -224,7 +261,7 @@ export default async function PaymentDetailPage({ params }: Props) {
                     <Link
                       href={`/${lang}/finance/fees/assignments/${payment.feeAssignment.id}`}
                     >
-                      View Assignment
+                      {d?.viewAssignment ?? "View Assignment"}
                     </Link>
                   </Button>
                 </div>

@@ -51,8 +51,8 @@ export async function FinanceDashboardContent({
   const [stats, transactions, alerts, quickActions] = await Promise.all([
     getDashboardStats("month"),
     getRecentTransactions(5),
-    getFinancialAlerts(),
-    getQuickActionsForRole(userRole),
+    getFinancialAlerts(lang as Locale),
+    getQuickActionsForRole(userRole, lang as Locale),
   ])
 
   // Prepare KPIs based on role

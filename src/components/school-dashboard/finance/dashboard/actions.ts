@@ -14,6 +14,8 @@ import {
 } from "date-fns"
 
 import { db } from "@/lib/db"
+import type { Locale } from "@/components/internationalization/config"
+import { getFinanceDictionary } from "@/components/internationalization/dictionaries"
 
 import type { DashboardStats, FinancialAlert, RecentTransaction } from "./types"
 
@@ -428,7 +430,9 @@ export async function getRecentTransactions(
     .slice(0, limit)
 }
 
-export async function getFinancialAlerts(): Promise<FinancialAlert[]> {
+export async function getFinancialAlerts(
+  lang: Locale = "ar"
+): Promise<FinancialAlert[]> {
   const session = await auth()
   if (!session?.user?.schoolId) {
     throw new Error("Unauthorized")
@@ -437,6 +441,12 @@ export async function getFinancialAlerts(): Promise<FinancialAlert[]> {
   const schoolId = session.user.schoolId
   const now = new Date()
   const alerts: FinancialAlert[] = []
+
+  // Load dictionary for i18n
+  const dictionary = await getFinanceDictionary(lang)
+  const da = (dictionary as any)?.finance?.dashboardAlerts as
+    | Record<string, string>
+    | undefined
 
   // Check for overdue invoices
   const overdueInvoices = await db.userInvoice.count({
@@ -451,10 +461,12 @@ export async function getFinancialAlerts(): Promise<FinancialAlert[]> {
     alerts.push({
       id: "overdue-invoices",
       type: "warning",
-      title: "Overdue Invoices",
-      description: `${overdueInvoices} invoice(s) are overdue and require attention`,
+      title: da?.overdueInvoices || "Overdue Invoices",
+      description:
+        da?.overdueInvoicesDesc?.replace("{count}", String(overdueInvoices)) ||
+        `${overdueInvoices} invoice(s) are overdue and require attention`,
       action: {
-        label: "View Invoices",
+        label: da?.viewInvoices || "View Invoices",
         href: "/finance/invoice/overdue",
       },
       timestamp: now,
@@ -492,10 +504,12 @@ export async function getFinancialAlerts(): Promise<FinancialAlert[]> {
     alerts.push({
       id: "low-cash",
       type: "error",
-      title: "Low Cash Balance",
-      description: `Cash balance is below 2 months of operating expenses`,
+      title: da?.lowCashBalance || "Low Cash Balance",
+      description:
+        da?.lowCashBalanceDesc ||
+        "Cash balance is below 2 months of operating expenses",
       action: {
-        label: "View Banking",
+        label: da?.viewBanking || "View Banking",
         href: "/finance/banking",
       },
       timestamp: now,
@@ -515,10 +529,12 @@ export async function getFinancialAlerts(): Promise<FinancialAlert[]> {
     alerts.push({
       id: "pending-payroll",
       type: "info",
-      title: "Pending Payroll",
-      description: `${pendingPayroll} payroll run(s) ready for processing`,
+      title: da?.pendingPayroll || "Pending Payroll",
+      description:
+        da?.pendingPayrollDesc?.replace("{count}", String(pendingPayroll)) ||
+        `${pendingPayroll} payroll run(s) ready for processing`,
       action: {
-        label: "Process Payroll",
+        label: da?.processPayroll || "Process Payroll",
         href: "/finance/payroll",
       },
       timestamp: now,
@@ -545,10 +561,15 @@ export async function getFinancialAlerts(): Promise<FinancialAlert[]> {
     alerts.push({
       id: "budget-overrun",
       type: "warning",
-      title: "Budget Overrun",
-      description: `${overrunAllocations.length} budget categories have exceeded allocation`,
+      title: da?.budgetOverrun || "Budget Overrun",
+      description:
+        da?.budgetOverrunDesc?.replace(
+          "{count}",
+          String(overrunAllocations.length)
+        ) ||
+        `${overrunAllocations.length} budget categories have exceeded allocation`,
       action: {
-        label: "Review Budget",
+        label: da?.reviewBudget || "Review Budget",
         href: "/finance/budget",
       },
       timestamp: now,
@@ -570,8 +591,12 @@ export async function getFinancialAlerts(): Promise<FinancialAlert[]> {
     alerts.push({
       id: "good-collection",
       type: "success",
-      title: "Strong Collection Rate",
-      description: `${recentPayments} successful payments received this month`,
+      title: da?.strongCollectionRate || "Strong Collection Rate",
+      description:
+        da?.strongCollectionRateDesc?.replace(
+          "{count}",
+          String(recentPayments)
+        ) || `${recentPayments} successful payments received this month`,
       timestamp: now,
     })
   }
@@ -579,61 +604,70 @@ export async function getFinancialAlerts(): Promise<FinancialAlert[]> {
   return alerts
 }
 
-export async function getQuickActionsForRole(role: string) {
+export async function getQuickActionsForRole(
+  role: string,
+  lang: Locale = "ar"
+) {
+  // Load dictionary for i18n
+  const dictionary = await getFinanceDictionary(lang)
+  const qa = (dictionary as any)?.finance?.dashboardQuickActions as
+    | Record<string, string>
+    | undefined
+
   // Define quick actions based on user role
   const allActions = [
     {
       id: "create-invoice",
-      label: "Create Invoice",
+      label: qa?.createInvoice || "Create Invoice",
       icon: "FileText",
       href: "/finance/invoice/create",
       color: "blue",
-      description: "Generate a new invoice",
+      description: qa?.createInvoiceDesc || "Generate a new invoice",
       permission: "invoice.create",
     },
     {
       id: "record-payment",
-      label: "Record Payment",
+      label: qa?.recordPayment || "Record Payment",
       icon: "DollarSign",
       href: "/finance/fees/payment",
       color: "green",
-      description: "Record a fee payment",
+      description: qa?.recordPaymentDesc || "Record a fee payment",
       permission: "payment.create",
     },
     {
       id: "submit-expense",
-      label: "Submit Expense",
+      label: qa?.submitExpense || "Submit Expense",
       icon: "Receipt",
       href: "/finance/expenses/create",
       color: "orange",
-      description: "Submit an expense claim",
+      description: qa?.submitExpenseDesc || "Submit an expense claim",
       permission: "expense.create",
     },
     {
       id: "run-payroll",
-      label: "Run Payroll",
+      label: qa?.runPayroll || "Run Payroll",
       icon: "Users",
       href: "/finance/payroll/run",
       color: "purple",
-      description: "Process monthly payroll",
+      description: qa?.runPayrollDesc || "Process monthly payroll",
       permission: "payroll.process",
     },
     {
       id: "view-reports",
-      label: "Financial Reports",
+      label: qa?.financialReports || "Financial Reports",
       icon: "BarChart",
       href: "/finance/reports",
       color: "indigo",
-      description: "View financial statements",
+      description: qa?.financialReportsDesc || "View financial statements",
       permission: "reports.view",
     },
     {
       id: "bank-reconciliation",
-      label: "Bank Reconciliation",
+      label: qa?.bankReconciliation || "Bank Reconciliation",
       icon: "Building",
       href: "/finance/banking/reconciliation",
       color: "teal",
-      description: "Reconcile bank accounts",
+      description: qa?.bankReconciliationDesc || "Reconcile bank accounts",
       permission: "banking.reconcile",
     },
   ]

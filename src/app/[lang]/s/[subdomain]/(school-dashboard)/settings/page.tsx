@@ -8,13 +8,19 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 import { EnhancedSettingsContent } from "@/components/school-dashboard/settings/content-enhanced"
 import { SettingsErrorBoundary } from "@/components/school-dashboard/settings/error-boundary"
 
-export const metadata: Metadata = {
-  title: "Settings - School Management",
-  description: "Manage school settings, users, roles, and permissions",
-}
-
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  return {
+    title: dictionary.school.settings?.title || "Settings",
+    description:
+      dictionary.school.settings?.description ||
+      "Manage school settings, users, roles, and permissions",
+  }
 }
 
 export default async function Page({ params }: Props) {

@@ -27,6 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 
 export const description = "An interactive area chart"
@@ -38,6 +39,8 @@ interface IChartInvoice {
 
 export function ChartInvoice({ chartData, chartConfig }: IChartInvoice) {
   const { locale } = useLocale()
+  const { dictionary } = useDictionary()
+  const fd = (dictionary as any)?.finance
   const [timeRange, setTimeRange] = React.useState("90d")
 
   const filteredData = chartData?.filter((item: any) => {
@@ -123,7 +126,7 @@ export function ChartInvoice({ chartData, chartConfig }: IChartInvoice) {
               fill="url(#fillPaidRevenue)"
               stroke="var(--color-paidRevenue)"
               stackId="a"
-              name="Paid Revenue"
+              name={fd?.invoiceChart?.paidRevenue || "Paid Revenue"}
             />
             <Area
               dataKey="totalRevenue"
@@ -131,7 +134,7 @@ export function ChartInvoice({ chartData, chartConfig }: IChartInvoice) {
               fill="url(#fillTotalRevenue)"
               stroke="var(--color-totalRevenue)"
               stackId="a"
-              name="Total Revenue"
+              name={fd?.invoiceChart?.totalRevenue || "Total Revenue"}
             />
             <ChartLegend content={<ChartLegendContent />} />
           </AreaChart>

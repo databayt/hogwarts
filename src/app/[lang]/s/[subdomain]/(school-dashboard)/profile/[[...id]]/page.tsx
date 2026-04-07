@@ -1,3 +1,4 @@
+import { Metadata } from "next"
 import { auth } from "@/auth"
 
 import type { Locale } from "@/components/internationalization/config"
@@ -5,8 +6,6 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 import { getProfileBasicData } from "@/components/school-dashboard/profile/actions"
 import { ProfileDetailContent } from "@/components/school-dashboard/profile/detail/content"
 import type { ProfileRole } from "@/components/school-dashboard/profile/types"
-
-export const metadata = { title: "Dashboard: Profile" }
 
 function toProfileRole(role?: string): ProfileRole {
   switch (role) {
@@ -23,6 +22,14 @@ function toProfileRole(role?: string): ProfileRole {
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string; id?: string[] }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  return {
+    title: dictionary.school.profile?.title || "Profile",
+  }
 }
 
 export default async function Page({ params }: Props) {

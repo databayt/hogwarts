@@ -1095,7 +1095,11 @@
     "create": "Create",
     "update": "Update",
     "saving": "Saving...",
-    "save": "Save"
+    "save": "Save",
+    "errorTitle": "Unable to load finance data",
+    "errorDescription": "An unexpected error occurred while loading finance information.",
+    "errorReference": "Error reference",
+    "tryAgain": "Try again"
   },
 
   "feesPage": {

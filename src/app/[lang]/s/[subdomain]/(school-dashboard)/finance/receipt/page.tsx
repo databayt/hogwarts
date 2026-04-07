@@ -6,6 +6,7 @@
  * Follows Hogwarts page pattern - server component that fetches data and passes to content component
  */
 
+import type { Locale } from "@/components/internationalization/config"
 import { getReceipts } from "@/components/school-dashboard/finance/receipt/actions"
 import { ReceiptsContent } from "@/components/school-dashboard/finance/receipt/content"
 
@@ -15,7 +16,13 @@ export const metadata = {
     "Manage and track your expense receipts with AI-powered extraction",
 }
 
-export default async function ReceiptsPage() {
+interface Props {
+  params: Promise<{ lang: Locale; subdomain: string }>
+}
+
+export default async function ReceiptsPage({ params }: Props) {
+  const { lang } = await params
+
   // Fetch receipts on the server
   const result = await getReceipts({ limit: 50 })
   const initialReceipts =
@@ -23,7 +30,7 @@ export default async function ReceiptsPage() {
 
   return (
     <div className="py-8">
-      <ReceiptsContent initialReceipts={initialReceipts} locale="en" />
+      <ReceiptsContent initialReceipts={initialReceipts} locale={lang} />
     </div>
   )
 }

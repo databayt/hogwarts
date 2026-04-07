@@ -16,7 +16,13 @@ export default async function ViewInvoice({ params }: Props) {
   return (
     <RouteModal
       returnTo={`/${lang}/invoice`}
-      content={<ViewInvoiceModalContent invoiceId={id} lang={lang} />}
+      content={
+        <ViewInvoiceModalContent
+          invoiceId={id}
+          lang={lang}
+          dictionary={dictionary}
+        />
+      }
     />
   )
 }

@@ -21,10 +21,16 @@ interface Props {
 export default async function AllReportsPage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
+  const d = dictionary?.finance?.reportsPage
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
-    return <p className="text-muted-foreground">School context not found</p>
+    return (
+      <p className="text-muted-foreground">
+        {dictionary?.finance?.common?.schoolNotFound ||
+          "School context not found"}
+      </p>
+    )
   }
 
   const reports = await db.financialReport.findMany({
@@ -39,17 +45,19 @@ export default async function AllReportsPage({ params }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium">Financial Reports</h3>
+        <h3 className="text-lg font-medium">
+          {d?.financialReports || "Financial Reports"}
+        </h3>
         <Link
           href={`/${lang}/finance/reports`}
           className={buttonVariants({ variant: "outline" })}
         >
-          Back to Reports Dashboard
+          {d?.backToReportsDashboard || "Back to Reports Dashboard"}
         </Link>
       </div>
       {reports.length === 0 ? (
         <p className="text-muted-foreground py-8 text-center">
-          No reports generated yet.
+          {d?.noReportsGenerated || "No reports generated yet."}
         </p>
       ) : (
         <div className="space-y-3">
@@ -62,10 +70,13 @@ export default async function AllReportsPage({ params }: Props) {
                 <div>
                   <p className="font-medium">{report.reportName}</p>
                   <p className="text-muted-foreground text-sm">
-                    {report.fiscalYear?.name ?? "No fiscal year"} &mdash;{" "}
+                    {report.fiscalYear?.name ??
+                      d?.noFiscalYear ??
+                      "No fiscal year"}{" "}
+                    &mdash;{" "}
                     {report.generatedAt
                       ? formatDate(report.generatedAt, lang)
-                      : "Pending"}
+                      : (d?.pending ?? "Pending")}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">

@@ -46,7 +46,11 @@ export default function BankList(props: Props) {
     (groups, account) => {
       const bankKey = account.institutionId || "unknown"
       // Use the first account's name as the group name, or a default
-      const bankName = account.officialName || account.name || "Bank Account"
+      const bankName =
+        account.officialName ||
+        account.name ||
+        props.dictionary?.bankAccount ||
+        "Bank Account"
       if (!groups[bankKey]) {
         groups[bankKey] = { name: bankName, accounts: [] }
       }

@@ -19,6 +19,7 @@ import { Separator } from "@/components/ui/separator"
 import { ErrorToast } from "@/components/atom/toast"
 import { InputField, NumberField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { updateInvoiceItems } from "./actions"
 import { itemsSchema, type ItemsFormData } from "./validation"
@@ -31,6 +32,8 @@ interface ItemsFormProps {
 
 export const ItemsForm = forwardRef<WizardFormRef, ItemsFormProps>(
   ({ invoiceId, initialData, onValidChange }, ref) => {
+    const { dictionary } = useDictionary()
+    const fd = (dictionary as any)?.finance
     const [isPending, startTransition] = useTransition()
 
     const form = useForm<ItemsFormData>({
@@ -137,7 +140,9 @@ export const ItemsForm = forwardRef<WizardFormRef, ItemsFormProps>(
               className="relative space-y-4 rounded-lg border p-4"
             >
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium">Item {index + 1}</p>
+                <p className="text-sm font-medium">
+                  {fd?.invoiceForm?.item || "Item"} {index + 1}
+                </p>
                 {fields.length > 1 && (
                   <Button
                     type="button"
@@ -152,27 +157,32 @@ export const ItemsForm = forwardRef<WizardFormRef, ItemsFormProps>(
               </div>
               <InputField
                 name={`items.${index}.item_name`}
-                label="Item Name"
-                placeholder="e.g., Consulting Services"
+                label={fd?.invoiceForm?.itemName || "Item Name"}
+                placeholder={
+                  fd?.invoiceForm?.consultingServicesPlaceholder ||
+                  "e.g., Consulting Services"
+                }
                 required
                 disabled={isPending}
               />
               <div className="grid grid-cols-3 gap-4">
                 <NumberField
                   name={`items.${index}.quantity`}
-                  label="Quantity"
+                  label={fd?.invoiceForm?.quantity || "Quantity"}
                   min={1}
                   disabled={isPending}
                 />
                 <NumberField
                   name={`items.${index}.price`}
-                  label="Price"
+                  label={fd?.invoiceForm?.price || "Price"}
                   min={0}
                   step={0.01}
                   disabled={isPending}
                 />
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Total</label>
+                  <label className="text-sm font-medium">
+                    {fd?.invoiceForm?.total || "Total"}
+                  </label>
                   <p className="flex h-10 items-center rounded-md border px-3 text-sm">
                     {(
                       (Number(watchedItems[index]?.quantity) || 0) *
@@ -194,7 +204,7 @@ export const ItemsForm = forwardRef<WizardFormRef, ItemsFormProps>(
             className="w-full"
           >
             <Plus className="me-2 h-4 w-4" />
-            Add Item
+            {fd?.invoiceForm?.addItem || "Add Item"}
           </Button>
 
           <Separator />
@@ -202,21 +212,21 @@ export const ItemsForm = forwardRef<WizardFormRef, ItemsFormProps>(
           {/* Totals */}
           <div className="space-y-4 rounded-lg border p-4">
             <div className="flex items-center justify-between text-sm">
-              <span>Subtotal</span>
+              <span>{fd?.invoiceForm?.subtotal || "Subtotal"}</span>
               <span className="font-medium">{subTotal.toFixed(2)}</span>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <NumberField
                 name="discount"
-                label="Discount"
+                label={fd?.invoiceForm?.discount || "Discount"}
                 min={0}
                 step={0.01}
                 disabled={isPending}
               />
               <NumberField
                 name="tax_percentage"
-                label="Tax %"
+                label={fd?.invoiceForm?.taxPercent || "Tax %"}
                 min={0}
                 max={100}
                 step={0.01}
@@ -227,7 +237,7 @@ export const ItemsForm = forwardRef<WizardFormRef, ItemsFormProps>(
             <Separator />
 
             <div className="flex items-center justify-between text-lg font-bold">
-              <span>Total</span>
+              <span>{fd?.invoiceForm?.total || "Total"}</span>
               <span>{total.toFixed(2)}</span>
             </div>
           </div>

@@ -159,25 +159,10 @@ export const messageListSelect = {
       createdAt: true,
     },
   },
-  readReceipts: {
-    select: {
-      id: true,
-      userId: true,
-      user: {
-        select: {
-          id: true,
-          username: true,
-          image: true,
-        },
-      },
-      readAt: true,
-    },
-  },
   _count: {
     select: {
       attachments: true,
       reactions: true,
-      readReceipts: true,
     },
   },
 } as const

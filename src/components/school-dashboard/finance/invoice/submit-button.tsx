@@ -5,8 +5,12 @@
 import { useFormStatus } from "react-dom"
 
 import { Button } from "@/components/ui/button"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 export default function SubmitButton({ title }: { title: string }) {
   const { pending } = useFormStatus()
-  return <Button>{pending ? "Please wait..." : title}</Button>
+  const { dictionary } = useDictionary()
+  const t = (dictionary as any)?.finance?.invoiceMisc
+
+  return <Button>{pending ? t?.pleaseWait || "Please wait..." : title}</Button>
 }

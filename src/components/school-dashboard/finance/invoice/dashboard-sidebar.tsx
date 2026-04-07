@@ -16,6 +16,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import Logo from "./logo"
 
@@ -25,6 +26,9 @@ export default function DashboardSidebar({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
+  const { dictionary } = useDictionary()
+  const t = (dictionary as any)?.finance?.invoiceSidebar
+
   return (
     <Sidebar>
       <SidebarHeader className="p-4">
@@ -39,7 +43,7 @@ export default function DashboardSidebar({
                 className={cn(pathname === "/dashboard" && "bg-white")}
               >
                 <LayoutDashboard />
-                <span>Dashboard</span>
+                <span>{t?.dashboard || "Dashboard"}</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -51,7 +55,7 @@ export default function DashboardSidebar({
                 className={cn(pathname === "/invoice" && "bg-white")}
               >
                 <BookOpen />
-                <span>Invoice</span>
+                <span>{t?.invoice || "Invoice"}</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -67,7 +71,7 @@ export default function DashboardSidebar({
                 className={cn(pathname === "/settings" && "bg-white")}
               >
                 <BookOpen />
-                <span>Settings</span>
+                <span>{t?.settings || "Settings"}</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

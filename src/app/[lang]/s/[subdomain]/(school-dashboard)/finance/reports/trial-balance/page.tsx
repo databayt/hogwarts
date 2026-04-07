@@ -23,10 +23,16 @@ interface Props {
 export default async function TrialBalancePage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
+  const d = dictionary?.finance?.reportsPage
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
-    return <p className="text-muted-foreground">School context not found</p>
+    return (
+      <p className="text-muted-foreground">
+        {dictionary?.finance?.common?.schoolNotFound ||
+          "School context not found"}
+      </p>
+    )
   }
 
   const fiscalYear = await db.fiscalYear.findFirst({
@@ -39,16 +45,20 @@ export default async function TrialBalancePage({ params }: Props) {
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-medium">Trial Balance</h3>
+          <h3 className="text-lg font-medium">
+            {d?.trialBalance || "Trial Balance"}
+          </h3>
           <Link
             href={`/${lang}/finance/reports`}
             className={buttonVariants({ variant: "outline" })}
           >
-            Back to Reports
+            {d?.backToReports || "Back to Reports"}
           </Link>
         </div>
         <p className="text-destructive py-8 text-center">
-          {result.error ?? "Failed to generate trial balance."}
+          {result.error ??
+            d?.failedGenerateTrialBalance ??
+            "Failed to generate trial balance."}
         </p>
       </div>
     )
@@ -60,21 +70,25 @@ export default async function TrialBalancePage({ params }: Props) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-medium">Trial Balance</h3>
+          <h3 className="text-lg font-medium">
+            {d?.trialBalance || "Trial Balance"}
+          </h3>
           <p className="text-muted-foreground text-sm">
-            {fiscalYear?.name ?? "All periods"} &mdash; As of{" "}
-            {formatDate(data.asOfDate, lang)}
+            {fiscalYear?.name ?? d?.allPeriods ?? "All periods"} &mdash;{" "}
+            {d?.asOf || "As of"} {formatDate(data.asOfDate, lang)}
           </p>
         </div>
         <div className="flex items-center gap-3">
           <Badge variant={data.isBalanced ? "default" : "destructive"}>
-            {data.isBalanced ? "Balanced" : "Unbalanced"}
+            {data.isBalanced
+              ? d?.balanced || "Balanced"
+              : d?.unbalanced || "Unbalanced"}
           </Badge>
           <Link
             href={`/${lang}/finance/reports`}
             className={buttonVariants({ variant: "outline" })}
           >
-            Back to Reports
+            {d?.backToReports || "Back to Reports"}
           </Link>
         </div>
       </div>
@@ -82,23 +96,23 @@ export default async function TrialBalancePage({ params }: Props) {
       <Card>
         <CardHeader>
           <CardTitle className="text-sm font-medium">
-            Account Balances
+            {d?.accountBalances || "Account Balances"}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {data.accounts.length === 0 ? (
             <p className="text-muted-foreground py-4 text-center text-sm">
-              No account balances found.
+              {d?.noAccountBalances || "No account balances found."}
             </p>
           ) : (
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-muted-foreground border-b text-start">
-                  <th className="pb-2">Code</th>
-                  <th className="pb-2">Account</th>
-                  <th className="pb-2">Type</th>
-                  <th className="pb-2 text-end">Debit</th>
-                  <th className="pb-2 text-end">Credit</th>
+                  <th className="pb-2">{d?.code || "Code"}</th>
+                  <th className="pb-2">{d?.account || "Account"}</th>
+                  <th className="pb-2">{d?.type || "Type"}</th>
+                  <th className="pb-2 text-end">{d?.debit || "Debit"}</th>
+                  <th className="pb-2 text-end">{d?.credit || "Credit"}</th>
                 </tr>
               </thead>
               <tbody>
@@ -125,7 +139,7 @@ export default async function TrialBalancePage({ params }: Props) {
                 ))}
                 <tr className="font-medium">
                   <td className="pt-2" colSpan={3}>
-                    Totals
+                    {d?.totals || "Totals"}
                   </td>
                   <td className="pt-2 text-end">
                     {formatCurrency(data.totalDebits, lang)}
@@ -144,7 +158,9 @@ export default async function TrialBalancePage({ params }: Props) {
       <div className="grid gap-4 sm:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Debits</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {d?.totalDebits || "Total Debits"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
@@ -154,7 +170,9 @@ export default async function TrialBalancePage({ params }: Props) {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Credits</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {d?.totalCredits || "Total Credits"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
@@ -164,7 +182,9 @@ export default async function TrialBalancePage({ params }: Props) {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Difference</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {d?.difference || "Difference"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">

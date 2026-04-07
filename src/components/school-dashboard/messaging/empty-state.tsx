@@ -104,7 +104,7 @@ export function ChatEmpty({ locale = "en" }: { locale?: "ar" | "en" }) {
   const m = dictionary?.messaging
 
   return (
-    <div className="flex h-full flex-col items-start justify-start pt-8 text-center">
+    <div className="relative z-10 flex h-full flex-col items-start justify-start pt-8 text-center">
       <div
         className="mx-auto max-w-[360px] rounded-lg px-3 py-1.5 text-[12px] leading-relaxed shadow-sm"
         style={{ backgroundColor: "#D9FDD3", color: "#0A2618" }}

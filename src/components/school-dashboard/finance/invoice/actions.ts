@@ -312,39 +312,41 @@ export async function updateInvoice(
     })
     if (!invoice) return actionError(ACTION_ERRORS.INVOICE_NOT_FOUND)
 
-    await Promise.all([
-      db.userInvoiceAddress.update({
-        where: { id: invoice.fromAddressId },
-        data: { ...data.from, schoolId: ctx.schoolId },
-      }),
-      db.userInvoiceAddress.update({
-        where: { id: invoice.toAddressId },
-        data: { ...data.to, schoolId: ctx.schoolId },
-      }),
-    ])
+    const updatedInvoice = await db.$transaction(async (tx) => {
+      await Promise.all([
+        tx.userInvoiceAddress.update({
+          where: { id: invoice.fromAddressId },
+          data: { ...data.from, schoolId: ctx.schoolId },
+        }),
+        tx.userInvoiceAddress.update({
+          where: { id: invoice.toAddressId },
+          data: { ...data.to, schoolId: ctx.schoolId },
+        }),
+      ])
 
-    await db.userInvoiceItem.deleteMany({
-      where: { invoiceId: id, schoolId: ctx.schoolId },
-    })
+      await tx.userInvoiceItem.deleteMany({
+        where: { invoiceId: id, schoolId: ctx.schoolId },
+      })
 
-    const updatedInvoice = await db.userInvoice.update({
-      where: { id },
-      data: {
-        invoice_no: data.invoice_no,
-        invoice_date: data.invoice_date,
-        due_date: data.due_date,
-        currency: data.currency,
-        sub_total: data.sub_total,
-        discount: data.discount,
-        tax_percentage: data.tax_percentage,
-        total: data.total,
-        notes: data.notes,
-        status: data.status,
-        items: {
-          create: data.items.map((it) => ({ ...it, schoolId: ctx.schoolId })),
+      return tx.userInvoice.update({
+        where: { id },
+        data: {
+          invoice_no: data.invoice_no,
+          invoice_date: data.invoice_date,
+          due_date: data.due_date,
+          currency: data.currency,
+          sub_total: data.sub_total,
+          discount: data.discount,
+          tax_percentage: data.tax_percentage,
+          total: data.total,
+          notes: data.notes,
+          status: data.status,
+          items: {
+            create: data.items.map((it) => ({ ...it, schoolId: ctx.schoolId })),
+          },
         },
-      },
-      include: { items: true, from: true, to: true },
+        include: { items: true, from: true, to: true },
+      })
     })
 
     revalidatePath("/finance/invoice")
@@ -584,7 +586,7 @@ export async function sendInvoiceEmail(
     })
 
     const { error } = await resend.emails.send({
-      from: "Invoice App <onboarding@resend.dev>",
+      from: "Invoice <onboarding@resend.dev>",
       to: invoice.to.email,
       subject,
       react: emailContent,

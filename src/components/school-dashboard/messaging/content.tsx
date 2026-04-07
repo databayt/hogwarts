@@ -9,13 +9,10 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { getMessagingDictionary } from "@/components/internationalization/dictionaries"
 import { getDisplayText } from "@/components/translation/display"
 import type { SupportedLanguage } from "@/components/translation/types"
+import { detectLanguage } from "@/components/translation/util"
 
 import { MessagingClient } from "./messaging-client"
-import {
-  getConversation,
-  getConversationsList,
-  getMessagesList,
-} from "./queries"
+import { getConversation, getConversationsList } from "./queries"
 import {
   serializeConversation,
   serializeConversations,
@@ -70,19 +67,12 @@ export async function MessagingContent({
     | null = null
 
   try {
-    const [conversationsResult, activeConversation, messagesResult, waSession] =
+    const [conversationsResult, activeConversation, waSession] =
       await Promise.all([
         getConversationsList(schoolId, userId, { page: 1, perPage: 50 }),
         conversationId
           ? getConversation(schoolId, userId, conversationId).catch(() => null)
           : Promise.resolve(null),
-        conversationId
-          ? getMessagesList(schoolId, {
-              conversationId,
-              page: 1,
-              perPage: 50,
-            }).catch(() => ({ rows: [], count: 0 }))
-          : Promise.resolve({ rows: [], count: 0 }),
         db.whatsAppSession
           .findUnique({ where: { schoolId } })
           .catch(() => null),
@@ -105,72 +95,66 @@ export async function MessagingContent({
 
     if (activeConversation) {
       activeConversationData = serializeConversation(activeConversation)
-      messagesData = serializeMessages(messagesResult.rows).reverse()
+      // Messages already included via conversationDetailSelect (take: 50)
+      const rawMessages = (activeConversation as any).messages ?? []
+      messagesData = serializeMessages(rawMessages).reverse()
     }
   } catch (error) {
     console.error("[MessagingContent] Error fetching conversations:", error)
   }
 
-  // Translate participant usernames when locale differs from school's stored language
-  const school = await db.school
-    .findUnique({
-      where: { id: schoolId },
-      select: { preferredLanguage: true },
-    })
-    .catch(() => null)
-  const contentLang = (school?.preferredLanguage ?? "ar") as SupportedLanguage
+  // Translate participant names when their actual language differs from the UI locale
+  const translateIfNeeded = async (name: string | null) => {
+    if (!name) return name
+    const detected = detectLanguage(name) as SupportedLanguage
+    if (detected === locale) return name
+    return getDisplayText(name, detected, locale, schoolId)
+  }
 
-  if (contentLang !== locale) {
-    const translateName = async (name: string | null) => {
-      if (!name) return name
-      return getDisplayText(name, contentLang, locale, schoolId)
-    }
-
-    // Translate participant names in all conversations
-    await Promise.all(
-      conversationsData.map(async (conv: any) => {
-        if (conv.participants) {
-          await Promise.all(
-            conv.participants.map(async (p: any) => {
-              if (p.user?.username) {
-                p.user.username = await translateName(p.user.username)
-              }
-            })
-          )
-        }
-        if (conv.createdBy?.username) {
-          conv.createdBy.username = await translateName(conv.createdBy.username)
-        }
-        if (conv.lastMessage?.sender?.username) {
-          conv.lastMessage.sender.username = await translateName(
-            conv.lastMessage.sender.username
-          )
-        }
-      })
-    )
-
-    // Translate active conversation participant names
-    if (activeConversationData) {
-      if (activeConversationData.participants) {
+  // Translate participant names in all conversations
+  await Promise.all(
+    conversationsData.map(async (conv: any) => {
+      if (conv.participants) {
         await Promise.all(
-          activeConversationData.participants.map(async (p: any) => {
+          conv.participants.map(async (p: any) => {
             if (p.user?.username) {
-              p.user.username = await translateName(p.user.username)
+              p.user.username = await translateIfNeeded(p.user.username)
             }
           })
         )
       }
-    }
+      if (conv.createdBy?.username) {
+        conv.createdBy.username = await translateIfNeeded(
+          conv.createdBy.username
+        )
+      }
+      if (conv.lastMessage?.sender?.username) {
+        conv.lastMessage.sender.username = await translateIfNeeded(
+          conv.lastMessage.sender.username
+        )
+      }
+    })
+  )
 
-    // Translate message sender names
+  // Translate active conversation participant names
+  if (activeConversationData?.participants) {
     await Promise.all(
-      messagesData.map(async (msg: any) => {
-        if (msg.sender?.username) {
-          msg.sender.username = await translateName(msg.sender.username)
+      activeConversationData.participants.map(async (p: any) => {
+        if (p.user?.username) {
+          p.user.username = await translateIfNeeded(p.user.username)
         }
       })
     )
   }
+
+  // Translate message sender names
+  await Promise.all(
+    messagesData.map(async (msg: any) => {
+      if (msg.sender?.username) {
+        msg.sender.username = await translateIfNeeded(msg.sender.username)
+      }
+    })
+  )
 
   return (
     <MessagingClient

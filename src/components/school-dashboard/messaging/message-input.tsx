@@ -3,8 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useActionState, useCallback, useEffect, useRef, useState } from "react"
-import data from "@emoji-mart/data"
-import Picker from "@emoji-mart/react"
+import dynamic from "next/dynamic"
 import { Plus, Send, Smile, Square, X } from "lucide-react"
 import { useFormStatus } from "react-dom"
 
@@ -41,7 +40,7 @@ export interface MessageInputProps {
   onFileUpload?: (files: UploadedFileResult[]) => void
   onTypingStart?: () => void
   onTypingStop?: () => void
-  onOptimisticSend?: (content: string, replyToId?: string) => void
+  onOptimisticSend?: (content: string, replyToId?: string) => string | void
   className?: string
 }
 
@@ -79,7 +78,10 @@ export function MessageInput({
     const replyToId = formData.get("replyToId") as string | null
 
     if (content?.trim()) {
-      onOptimisticSend?.(content.trim(), replyToId || undefined)
+      const nonce = onOptimisticSend?.(content.trim(), replyToId || undefined)
+      if (nonce) {
+        formData.set("clientNonce", nonce)
+      }
     }
 
     return formAction(formData)
@@ -392,7 +394,7 @@ export function MessageInput({
                   className="fixed inset-0 z-10"
                   onClick={() => setShowAttachMenu(false)}
                 />
-                <div className="absolute end-0 bottom-full z-20 mb-2 w-56 overflow-hidden rounded-xl bg-white shadow-lg">
+                <div className="absolute start-0 bottom-full z-20 mb-2 w-56 overflow-hidden rounded-xl bg-white shadow-lg">
                   {[
                     {
                       label: m?.ui?.file || "File",
@@ -705,7 +707,42 @@ function SubmitButton({
   )
 }
 
-// Emoji picker button — powered by emoji-mart
+// Lazy-loaded emoji picker — ~300KB loaded only when opened
+const LazyEmojiPicker = dynamic(
+  () =>
+    Promise.all([import("@emoji-mart/data"), import("@emoji-mart/react")]).then(
+      ([dataModule, pickerModule]) => {
+        const data = dataModule.default
+        const Picker = pickerModule.default
+        return {
+          default: function EmojiPickerInner({
+            onEmojiSelect,
+            locale,
+          }: {
+            onEmojiSelect: (emoji: { native: string }) => void
+            locale: string
+          }) {
+            return (
+              <Picker
+                data={data}
+                onEmojiSelect={onEmojiSelect}
+                locale={locale}
+                theme="auto"
+                set="native"
+                previewPosition="none"
+                skinTonePosition="search"
+                maxFrequentRows={2}
+                perLine={8}
+              />
+            )
+          },
+        }
+      }
+    ),
+  { ssr: false }
+)
+
+// Emoji picker button — powered by emoji-mart (lazy-loaded)
 function EmojiPickerButton({
   onEmojiClick,
   disabled,
@@ -745,19 +782,12 @@ function EmojiPickerButton({
             onClick={() => setShowPicker(false)}
           />
           <div className="absolute end-0 bottom-full z-20 mb-2">
-            <Picker
-              data={data}
+            <LazyEmojiPicker
               onEmojiSelect={(emoji: { native: string }) => {
                 onEmojiClick(emoji.native)
                 setShowPicker(false)
               }}
               locale={locale === "ar" ? "ar" : "en"}
-              theme="auto"
-              set="native"
-              previewPosition="none"
-              skinTonePosition="search"
-              maxFrequentRows={2}
-              perLine={8}
             />
           </div>
         </>

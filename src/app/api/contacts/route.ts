@@ -10,6 +10,7 @@ import { getTenantContext } from "@/lib/tenant-context"
 import { getContactsByRole } from "@/components/school-dashboard/messaging/contacts/queries"
 import { getDisplayText } from "@/components/translation/display"
 import type { SupportedLanguage } from "@/components/translation/types"
+import { detectLanguage } from "@/components/translation/util"
 
 export const dynamic = "force-dynamic"
 
@@ -46,47 +47,57 @@ export async function GET(request: NextRequest) {
         ? groups.filter((g) => g.category === category)
         : groups
 
-    // Translate contact names when locale differs from school's stored language
-    const school = await db.school.findUnique({
-      where: { id: schoolId },
-      select: { preferredLanguage: true },
-    })
-    const contentLang = (school?.preferredLanguage ?? "ar") as SupportedLanguage
-
-    if (contentLang !== locale) {
-      await Promise.all(
-        filtered.map(async (group) => {
-          await Promise.all(
-            group.contacts.map(async (contact) => {
-              if (contact.displayName) {
-                contact.displayName = await getDisplayText(
-                  contact.displayName,
-                  contentLang,
-                  locale,
-                  schoolId
-                )
-              }
-              if (contact.firstName) {
-                contact.firstName = await getDisplayText(
-                  contact.firstName,
-                  contentLang,
-                  locale,
-                  schoolId
-                )
-              }
-              if (contact.lastName) {
-                contact.lastName = await getDisplayText(
-                  contact.lastName,
-                  contentLang,
-                  locale,
-                  schoolId
-                )
-              }
-            })
-          )
-        })
-      )
-    }
+    // Translate contact names when their actual language differs from the UI locale
+    await Promise.all(
+      filtered.map(async (group) => {
+        await Promise.all(
+          group.contacts.map(async (contact) => {
+            if (
+              contact.displayName &&
+              detectLanguage(contact.displayName) !== locale
+            ) {
+              const detected = detectLanguage(
+                contact.displayName
+              ) as SupportedLanguage
+              contact.displayName = await getDisplayText(
+                contact.displayName,
+                detected,
+                locale,
+                schoolId
+              )
+            }
+            if (
+              contact.firstName &&
+              detectLanguage(contact.firstName) !== locale
+            ) {
+              const detected = detectLanguage(
+                contact.firstName
+              ) as SupportedLanguage
+              contact.firstName = await getDisplayText(
+                contact.firstName,
+                detected,
+                locale,
+                schoolId
+              )
+            }
+            if (
+              contact.lastName &&
+              detectLanguage(contact.lastName) !== locale
+            ) {
+              const detected = detectLanguage(
+                contact.lastName
+              ) as SupportedLanguage
+              contact.lastName = await getDisplayText(
+                contact.lastName,
+                detected,
+                locale,
+                schoolId
+              )
+            }
+          })
+        )
+      })
+    )
 
     return NextResponse.json({ groups: filtered })
   } catch (error) {

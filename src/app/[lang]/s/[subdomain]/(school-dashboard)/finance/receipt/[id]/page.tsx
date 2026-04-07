@@ -34,7 +34,7 @@ export default async function ReceiptDetailPage({ params }: Props) {
 
   return (
     <div className="py-8">
-      <ReceiptDetail receipt={result.data} locale="en" />
+      <ReceiptDetail receipt={result.data} locale={lang} />
     </div>
   )
 }

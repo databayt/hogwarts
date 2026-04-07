@@ -60,7 +60,9 @@ export default function OfferContent({
   cancelled,
 }: OfferContentProps) {
   const router = useRouter()
-  const isAr = locale === "ar"
+  const t = (dictionary as any)?.school?.admission?.offer as
+    | Record<string, string>
+    | undefined
   const {
     application,
     school,
@@ -109,9 +111,7 @@ export default function OfferContent({
     if (result.success) {
       setAccepted(true)
     } else {
-      setError(
-        result.error || (isAr ? "فشل قبول العرض" : "Failed to accept offer")
-      )
+      setError(result.error || t?.failedToAccept || "Failed to accept offer")
     }
   }
 
@@ -123,9 +123,7 @@ export default function OfferContent({
     if (result.success) {
       setDeclined(true)
     } else {
-      setError(
-        result.error || (isAr ? "فشل رفض العرض" : "Failed to decline offer")
-      )
+      setError(result.error || t?.failedToDecline || "Failed to decline offer")
     }
   }
 
@@ -145,8 +143,7 @@ export default function OfferContent({
           return
         }
         setError(
-          result.error ||
-            (isAr ? "فشل إنشاء جلسة الدفع" : "Failed to create checkout")
+          result.error || t?.failedCheckout || "Failed to create checkout"
         )
       } else if (method === "cash") {
         const result = await recordRegistrationCashIntent(application.id, "")
@@ -159,8 +156,7 @@ export default function OfferContent({
           setRegPaid(true)
         } else {
           setError(
-            result.error ||
-              (isAr ? "فشل تسجيل الدفع" : "Failed to record payment")
+            result.error || t?.failedPayment || "Failed to record payment"
           )
         }
       } else if (method === "bank_transfer") {
@@ -177,13 +173,12 @@ export default function OfferContent({
           setRegPaid(true)
         } else {
           setError(
-            result.error ||
-              (isAr ? "فشل تسجيل الدفع" : "Failed to record payment")
+            result.error || t?.failedPayment || "Failed to record payment"
           )
         }
       }
     } catch {
-      setError(isAr ? "حدث خطأ غير متوقع" : "An unexpected error occurred")
+      setError(t?.unexpectedError || "An unexpected error occurred")
     } finally {
       setLoading(null)
     }
@@ -195,12 +190,11 @@ export default function OfferContent({
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-4">
         <XCircle className="text-muted-foreground h-16 w-16" />
         <h2 className="text-xl font-semibold">
-          {isAr ? "تم رفض العرض" : "Offer Declined"}
+          {t?.declined || "Offer Declined"}
         </h2>
         <p className="text-muted-foreground text-center">
-          {isAr
-            ? "تم رفض عرض القبول. يمكنك التواصل مع المدرسة لمزيد من المعلومات."
-            : "The admission offer has been declined. Contact the school for more information."}
+          {t?.declinedMessage ||
+            "The admission offer has been declined. Contact the school for more information."}
         </p>
       </div>
     )
@@ -212,12 +206,11 @@ export default function OfferContent({
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-4">
         <CalendarClock className="text-destructive h-16 w-16" />
         <h2 className="text-xl font-semibold">
-          {isAr ? "انتهت صلاحية العرض" : "Offer Expired"}
+          {t?.expired || "Offer Expired"}
         </h2>
         <p className="text-muted-foreground text-center">
-          {isAr
-            ? "انتهت صلاحية عرض القبول. يرجى التواصل مع المدرسة."
-            : "This admission offer has expired. Please contact the school."}
+          {t?.expiredMessage ||
+            "This admission offer has expired. Please contact the school."}
         </p>
       </div>
     )
@@ -233,7 +226,7 @@ export default function OfferContent({
               <CheckCircle2 className="h-8 w-8 text-green-600" />
             </div>
             <h1 className="text-2xl font-bold">
-              {isAr ? "تم تسجيل طريقة الدفع" : "Payment Method Recorded"}
+              {t?.paymentMethodRecorded || "Payment Method Recorded"}
             </h1>
           </div>
 
@@ -241,7 +234,7 @@ export default function OfferContent({
             <CardContent className="space-y-4 pt-6">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">
-                  {isAr ? "الطلب" : "Application"}
+                  {t?.application || "Application"}
                 </span>
                 <span className="font-mono font-medium">
                   {application.applicationNumber}
@@ -250,7 +243,7 @@ export default function OfferContent({
               {paymentResult.referenceNumber && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">
-                    {isAr ? "المرجع" : "Reference"}
+                    {t?.reference || "Reference"}
                   </span>
                   <span className="font-mono font-medium">
                     {paymentResult.referenceNumber}
@@ -259,7 +252,7 @@ export default function OfferContent({
               )}
               <div className="flex justify-between">
                 <span className="text-muted-foreground">
-                  {isAr ? "المبلغ" : "Amount"}
+                  {t?.amount || "Amount"}
                 </span>
                 <span className="font-medium">
                   {registrationFeeTotal} {school.currency}
@@ -271,9 +264,7 @@ export default function OfferContent({
                   <Separator />
                   <div>
                     <p className="font-medium">
-                      {isAr
-                        ? "يرجى الدفع في مكتب المدرسة"
-                        : "Please pay at the school office"}
+                      {t?.payAtSchool || "Please pay at the school office"}
                     </p>
                     {paymentResult.cashInstructions && (
                       <p className="text-muted-foreground mt-2 text-sm">
@@ -290,13 +281,13 @@ export default function OfferContent({
                     <Separator />
                     <div className="space-y-2">
                       <p className="font-medium">
-                        {isAr ? "تفاصيل الحساب البنكي" : "Bank Account Details"}
+                        {t?.bankAccountDetails || "Bank Account Details"}
                       </p>
                       <div className="bg-muted space-y-2 rounded-lg p-4 text-sm">
                         {paymentResult.bankDetails.bankName && (
                           <div className="flex justify-between gap-2">
                             <span className="text-muted-foreground">
-                              {isAr ? "البنك" : "Bank"}
+                              {t?.bank || "Bank"}
                             </span>
                             <span>{paymentResult.bankDetails.bankName}</span>
                           </div>
@@ -304,7 +295,7 @@ export default function OfferContent({
                         {paymentResult.bankDetails.accountName && (
                           <div className="flex justify-between gap-2">
                             <span className="text-muted-foreground">
-                              {isAr ? "اسم الحساب" : "Account Name"}
+                              {t?.accountName || "Account Name"}
                             </span>
                             <span>{paymentResult.bankDetails.accountName}</span>
                           </div>
@@ -312,7 +303,7 @@ export default function OfferContent({
                         {paymentResult.bankDetails.accountNumber && (
                           <div className="flex justify-between gap-2">
                             <span className="text-muted-foreground">
-                              {isAr ? "رقم الحساب" : "Account Number"}
+                              {t?.accountNumber || "Account Number"}
                             </span>
                             <span className="font-mono">
                               {paymentResult.bankDetails.accountNumber}
@@ -335,9 +326,8 @@ export default function OfferContent({
           </Card>
 
           <p className="text-muted-foreground text-center text-sm">
-            {isAr
-              ? "ستتلقى إشعاراً عند تأكيد الدفع والتسجيل."
-              : "You will be notified once payment is confirmed and enrollment is finalized."}
+            {t?.notificationMessage ||
+              "You will be notified once payment is confirmed and enrollment is finalized."}
           </p>
         </div>
       </div>
@@ -353,26 +343,21 @@ export default function OfferContent({
             <GraduationCap className="h-8 w-8 text-green-600" />
           </div>
           <h1 className="text-2xl font-bold sm:text-3xl">
-            {isAr
-              ? "تهانينا! تم قبولك"
-              : "Congratulations! You've Been Accepted"}
+            {t?.congratulations || "Congratulations! You've Been Accepted"}
           </h1>
           <p className="text-muted-foreground mt-2">
-            {isAr
-              ? `${application.firstName} ${application.lastName} — ${school.name}`
-              : `${application.firstName} ${application.lastName} — ${school.name}`}
+            {application.firstName} {application.lastName} — {school.name}
           </p>
         </div>
 
         {cancelled && (
           <Alert variant="destructive">
             <AlertTitle>
-              {isAr ? "تم إلغاء الدفع" : "Payment Cancelled"}
+              {t?.paymentCancelled || "Payment Cancelled"}
             </AlertTitle>
             <AlertDescription>
-              {isAr
-                ? "تم إلغاء عملية الدفع. يمكنك المحاولة مرة أخرى."
-                : "Payment was cancelled. You can try again."}
+              {t?.paymentCancelledMessage ||
+                "Payment was cancelled. You can try again."}
             </AlertDescription>
           </Alert>
         )}
@@ -386,12 +371,12 @@ export default function OfferContent({
         {/* Offer Details Card */}
         <Card>
           <CardHeader>
-            <CardTitle>{isAr ? "تفاصيل العرض" : "Offer Details"}</CardTitle>
+            <CardTitle>{t?.offerDetails || "Offer Details"}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between">
               <span className="text-muted-foreground">
-                {isAr ? "رقم الطلب" : "Application #"}
+                {t?.applicationNumber || "Application #"}
               </span>
               <span className="font-mono font-medium">
                 {application.applicationNumber}
@@ -399,7 +384,7 @@ export default function OfferContent({
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">
-                {isAr ? "الصف" : "Class"}
+                {t?.class || "Class"}
               </span>
               <span className="font-medium">
                 {application.applyingForClass}
@@ -407,37 +392,29 @@ export default function OfferContent({
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">
-                {isAr ? "العام الأكاديمي" : "Academic Year"}
+                {t?.academicYear || "Academic Year"}
               </span>
               <span className="font-medium">{campaign.academicYear}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">
-                {isAr ? "الحالة" : "Status"}
+                {t?.status || "Status"}
               </span>
               <Badge variant={accepted ? "default" : "secondary"}>
                 {accepted
-                  ? isAr
-                    ? "تم القبول"
-                    : "Accepted"
-                  : isAr
-                    ? "في انتظار القبول"
-                    : "Awaiting Acceptance"}
+                  ? t?.accepted || "Accepted"
+                  : t?.awaitingAcceptance || "Awaiting Acceptance"}
               </Badge>
             </div>
             {daysRemaining !== null && !accepted && (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">
-                  {isAr ? "ينتهي خلال" : "Expires in"}
+                  {t?.expiresIn || "Expires in"}
                 </span>
                 <Badge variant={daysRemaining <= 3 ? "destructive" : "outline"}>
                   {daysRemaining === 0
-                    ? isAr
-                      ? "اليوم"
-                      : "Today"
-                    : isAr
-                      ? `${daysRemaining} يوم`
-                      : `${daysRemaining} day${daysRemaining !== 1 ? "s" : ""}`}
+                    ? t?.today || "Today"
+                    : `${daysRemaining} ${daysRemaining !== 1 ? t?.days || "days" : t?.day || "day"}`}
                 </Badge>
               </div>
             )}
@@ -448,23 +425,24 @@ export default function OfferContent({
         {feeSchedulePreview.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle>{isAr ? "جدول الرسوم" : "Fee Schedule"}</CardTitle>
+              <CardTitle>{t?.feeSchedule || "Fee Schedule"}</CardTitle>
               <CardDescription>
-                {isAr
-                  ? `الرسوم الدراسية للعام ${campaign.academicYear}`
-                  : `Fees for academic year ${campaign.academicYear}`}
+                {(t?.feesForYear || "Fees for academic year {year}").replace(
+                  "{year}",
+                  campaign.academicYear
+                )}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{isAr ? "البند" : "Item"}</TableHead>
+                    <TableHead>{t?.item || "Item"}</TableHead>
                     <TableHead className="text-end">
-                      {isAr ? "المبلغ" : "Amount"}
+                      {t?.amount || "Amount"}
                     </TableHead>
                     <TableHead className="text-end">
-                      {isAr ? "الأقساط" : "Installments"}
+                      {t?.installments || "Installments"}
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -481,9 +459,7 @@ export default function OfferContent({
                     </TableRow>
                   ))}
                   <TableRow className="font-bold">
-                    <TableCell>
-                      {isAr ? "المجموع السنوي" : "Annual Total"}
-                    </TableCell>
+                    <TableCell>{t?.annualTotal || "Annual Total"}</TableCell>
                     <TableCell className="text-end tabular-nums">
                       {totalAnnualFees} {school.currency}
                     </TableCell>
@@ -500,12 +476,11 @@ export default function OfferContent({
           <Card>
             <CardHeader>
               <CardTitle>
-                {isAr ? "الخطوة 1: قبول العرض" : "Step 1: Accept the Offer"}
+                {t?.step1Title || "Step 1: Accept the Offer"}
               </CardTitle>
               <CardDescription>
-                {isAr
-                  ? "يرجى قبول أو رفض عرض القبول"
-                  : "Please accept or decline the admission offer"}
+                {t?.step1Description ||
+                  "Please accept or decline the admission offer"}
               </CardDescription>
             </CardHeader>
             <CardContent className="flex gap-3">
@@ -515,9 +490,9 @@ export default function OfferContent({
                 className="flex-1"
               >
                 {loading === "accept" && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="me-2 h-4 w-4 animate-spin" />
                 )}
-                {isAr ? "قبول العرض" : "Accept Offer"}
+                {t?.acceptOffer || "Accept Offer"}
               </Button>
               <Button
                 variant="outline"
@@ -525,9 +500,9 @@ export default function OfferContent({
                 disabled={loading !== null}
               >
                 {loading === "decline" && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="me-2 h-4 w-4 animate-spin" />
                 )}
-                {isAr ? "رفض" : "Decline"}
+                {t?.decline || "Decline"}
               </Button>
             </CardContent>
           </Card>
@@ -538,20 +513,17 @@ export default function OfferContent({
           <Card>
             <CardHeader>
               <CardTitle>
-                {isAr
-                  ? "الخطوة 2: دفع رسوم التسجيل"
-                  : "Step 2: Pay Registration Fee"}
+                {t?.step2Title || "Step 2: Pay Registration Fee"}
               </CardTitle>
               <CardDescription>
-                {isAr
-                  ? "ادفع رسوم التسجيل لتأكيد مقعدك"
-                  : "Pay the registration fee to secure your seat"}
+                {t?.step2Description ||
+                  "Pay the registration fee to secure your seat"}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="bg-muted mb-4 rounded-lg p-4 text-center">
                 <p className="text-muted-foreground text-sm">
-                  {isAr ? "المبلغ المطلوب" : "Amount Due"}
+                  {t?.amountDue || "Amount Due"}
                 </p>
                 <p className="text-2xl font-bold">
                   {registrationFeeTotal} {school.currency}
@@ -563,26 +535,23 @@ export default function OfferContent({
                   {
                     method: "stripe",
                     icon: CreditCard,
-                    label: isAr ? "الدفع بالبطاقة" : "Pay with Card",
-                    desc: isAr
-                      ? "ادفع ببطاقة الائتمان أو الخصم"
-                      : "Pay with credit or debit card",
+                    label: t?.payWithCard || "Pay with Card",
+                    desc: t?.payWithCardDesc || "Pay with credit or debit card",
                   },
                   {
                     method: "cash",
                     icon: Banknote,
-                    label: isAr ? "الدفع في المدرسة" : "Pay at School",
-                    desc: isAr
-                      ? "ادفع نقداً في مكتب المدرسة"
-                      : "Pay in cash at the school office",
+                    label: t?.payAtSchoolLabel || "Pay at School",
+                    desc:
+                      t?.payAtSchoolDesc || "Pay in cash at the school office",
                   },
                   {
                     method: "bank_transfer",
                     icon: Building2,
-                    label: isAr ? "تحويل بنكي" : "Bank Transfer",
-                    desc: isAr
-                      ? "حوّل إلى حساب المدرسة البنكي"
-                      : "Transfer to the school bank account",
+                    label: t?.bankTransfer || "Bank Transfer",
+                    desc:
+                      t?.bankTransferDesc ||
+                      "Transfer to the school bank account",
                   },
                 ].map(({ method, icon: Icon, label, desc }) => (
                   <Card
@@ -616,12 +585,11 @@ export default function OfferContent({
               <CheckCircle2 className="h-8 w-8 flex-shrink-0 text-green-600" />
               <div>
                 <h3 className="font-semibold">
-                  {isAr ? "تم قبول العرض بنجاح" : "Offer Accepted Successfully"}
+                  {t?.acceptedSuccessfully || "Offer Accepted Successfully"}
                 </h3>
                 <p className="text-muted-foreground text-sm">
-                  {isAr
-                    ? "ستتلقى إشعاراً عند تأكيد التسجيل من قبل المدرسة."
-                    : "You will be notified once the school confirms your enrollment."}
+                  {t?.enrollmentNotification ||
+                    "You will be notified once the school confirms your enrollment."}
                 </p>
               </div>
             </CardContent>

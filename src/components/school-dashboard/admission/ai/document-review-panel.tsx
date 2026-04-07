@@ -27,7 +27,7 @@ export function DocumentReviewPanel({
   const d = dictionary?.admission?.ai ?? {}
 
   return (
-    <div className="bg-background fixed inset-y-0 right-0 z-50 w-full max-w-md overflow-y-auto border-l shadow-lg sm:w-96">
+    <div className="bg-background fixed inset-y-0 end-0 z-50 w-full max-w-md overflow-y-auto border-l shadow-lg sm:w-96">
       {/* Header */}
       <div className="bg-background sticky top-0 z-10 flex items-center justify-between border-b p-4">
         <div>

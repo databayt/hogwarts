@@ -239,6 +239,14 @@ function EventsTableInner({
     export: t.export,
     exportCSV: dictionary?.exportCSV || "Export CSV",
     exporting: dictionary?.exporting || "Exporting...",
+    view: t.view,
+    tableView: dictionary?.tableView || "Table",
+    gridView: dictionary?.gridView || "Grid",
+    switchToTable: dictionary?.switchToTable || "Switch to table view",
+    switchToGrid: dictionary?.switchToGrid || "Switch to grid view",
+    searchColumns: dictionary?.searchColumns || "Search columns...",
+    noColumns: dictionary?.noColumns || "No columns found.",
+    all: dictionary?.all || "All",
   }
 
   return (

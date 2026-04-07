@@ -69,10 +69,64 @@ function generateNotificationEmailHtml(
   }
   const priorityColor = priorityColors[priority]
 
-  // Type label - format from type enum (config only has icon, not label)
-  const typeLabel = type
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase())
+  // Type labels for email display
+  const typeLabels: Record<string, Record<string, string>> = {
+    ar: {
+      message: "رسالة جديدة",
+      message_mention: "تمت الإشارة إليك",
+      assignment_created: "واجب جديد",
+      assignment_due: "موعد تسليم الواجب",
+      assignment_graded: "تم تقييم الواجب",
+      grade_posted: "درجة جديدة",
+      attendance_marked: "تسجيل الحضور",
+      attendance_alert: "تنبيه غياب",
+      fee_due: "رسوم مستحقة",
+      fee_overdue: "رسوم متأخرة",
+      fee_paid: "تم استلام الدفعة",
+      announcement: "إعلان جديد",
+      event_reminder: "تذكير بحدث",
+      class_cancelled: "إلغاء الحصة",
+      class_rescheduled: "إعادة جدولة",
+      system_alert: "تنبيه النظام",
+      account_created: "حساب جديد",
+      password_reset: "إعادة تعيين كلمة المرور",
+      login_alert: "تنبيه تسجيل الدخول",
+      document_shared: "مستند مشترك",
+      report_ready: "التقرير جاهز",
+      absence_intention: "نية الغياب",
+      absence_intention_decision: "مراجعة نية الغياب",
+      setup_guide: "دليل الإعداد",
+    },
+    en: {
+      message: "New Message",
+      message_mention: "Mentioned You",
+      assignment_created: "New Assignment",
+      assignment_due: "Assignment Due",
+      assignment_graded: "Assignment Graded",
+      grade_posted: "Grade Posted",
+      attendance_marked: "Attendance Marked",
+      attendance_alert: "Absence Alert",
+      fee_due: "Fee Due",
+      fee_overdue: "Fee Overdue",
+      fee_paid: "Fee Paid",
+      announcement: "Announcement",
+      event_reminder: "Event Reminder",
+      class_cancelled: "Class Cancelled",
+      class_rescheduled: "Class Rescheduled",
+      system_alert: "System Alert",
+      account_created: "Account Created",
+      password_reset: "Password Reset",
+      login_alert: "Login Alert",
+      document_shared: "Document Shared",
+      report_ready: "Report Ready",
+      absence_intention: "Absence Intention",
+      absence_intention_decision: "Absence Decision",
+      setup_guide: "Setup Guide",
+    },
+  }
+  const typeLabel =
+    typeLabels[locale]?.[type] ??
+    type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
 
   // Action URL from metadata (only allow http/https)
   const rawUrl =
@@ -479,7 +533,7 @@ async function checkEmailPreference(
     const currentHour = now.getHours()
 
     if (preference.quietHoursStart < preference.quietHoursEnd) {
-      // Normal range (e.g., 22-8)
+      // Daytime range (e.g., 9-17)
       if (
         currentHour >= preference.quietHoursStart &&
         currentHour < preference.quietHoursEnd

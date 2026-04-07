@@ -40,6 +40,7 @@ export function NotificationBellIcon({
     recentNotifications,
     markAsRead,
     markAllAsRead,
+    removeNotification,
   } = useNotificationBell(locale)
 
   const handleNotificationRead = useCallback(
@@ -49,9 +50,12 @@ export function NotificationBellIcon({
     [markAsRead]
   )
 
-  const handleNotificationDelete = useCallback(() => {
-    // Optimistic update handled by the hook
-  }, [])
+  const handleNotificationDelete = useCallback(
+    (notificationId: string) => {
+      removeNotification(notificationId)
+    },
+    [removeNotification]
+  )
 
   const handleMarkAllAsRead = useCallback(async () => {
     await markAllAsRead()

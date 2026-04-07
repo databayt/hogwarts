@@ -19,14 +19,15 @@ const DEFAULT_REPORT_TYPE_LABELS: Record<ReportType, string> = {
   BUDGET_VARIANCE: "Budget Variance Report",
 }
 
-/** Get localized report type labels from dictionary */
+/** Get localized report type labels from dictionary (finance.reportsConfig.reportTypes) */
 export const getReportTypeLabels = (
-  d?: Record<string, string>
+  d?: Record<string, any>
 ): Record<ReportType, string> => {
   const result = { ...DEFAULT_REPORT_TYPE_LABELS }
-  if (d) {
+  const r = d?.reportTypes as Record<string, string> | undefined
+  if (r) {
     for (const key of Object.keys(result) as ReportType[]) {
-      if (d[key]) result[key] = d[key]
+      if (r[key]) result[key] = r[key]
     }
   }
   return result
@@ -47,14 +48,15 @@ const DEFAULT_REPORT_DESCRIPTIONS: Record<ReportType, string> = {
   BUDGET_VARIANCE: "Comparison of actual spending vs budgeted amounts",
 }
 
-/** Get localized report descriptions from dictionary */
+/** Get localized report descriptions from dictionary (finance.reportsConfig.reportDescriptions) */
 export const getReportDescriptions = (
-  d?: Record<string, string>
+  d?: Record<string, any>
 ): Record<ReportType, string> => {
   const result = { ...DEFAULT_REPORT_DESCRIPTIONS }
-  if (d) {
+  const r = d?.reportDescriptions as Record<string, string> | undefined
+  if (r) {
     for (const key of Object.keys(result) as ReportType[]) {
-      if (d[key]) result[key] = d[key]
+      if (r[key]) result[key] = r[key]
     }
   }
   return result
@@ -78,14 +80,17 @@ const DEFAULT_EXPORT_FORMAT_LABELS: Record<ExportFormat, string> = {
   CSV: "CSV File",
 }
 
-/** Get localized export format labels from dictionary */
+/** Get localized export format labels from dictionary (finance.reportsConfig.exportFormats) */
 export const getExportFormatLabels = (
-  d?: Record<string, string>
-): Record<ExportFormat, string> => ({
-  PDF: d?.PDF || DEFAULT_EXPORT_FORMAT_LABELS.PDF,
-  EXCEL: d?.EXCEL || DEFAULT_EXPORT_FORMAT_LABELS.EXCEL,
-  CSV: d?.CSV || DEFAULT_EXPORT_FORMAT_LABELS.CSV,
-})
+  d?: Record<string, any>
+): Record<ExportFormat, string> => {
+  const e = d?.exportFormats as Record<string, string> | undefined
+  return {
+    PDF: e?.PDF || DEFAULT_EXPORT_FORMAT_LABELS.PDF,
+    EXCEL: e?.EXCEL || DEFAULT_EXPORT_FORMAT_LABELS.EXCEL,
+    CSV: e?.CSV || DEFAULT_EXPORT_FORMAT_LABELS.CSV,
+  }
+}
 
 /** For backward compat -- static fallback */
 export const ExportFormatLabels = DEFAULT_EXPORT_FORMAT_LABELS
@@ -117,12 +122,14 @@ const DEFAULT_DATE_RANGE_LABELS: Record<string, string> = {
   CUSTOM: "Custom Range",
 }
 
-/** Get localized date range options from dictionary */
-export const getReportDateRanges = (d?: Record<string, string>) =>
-  DATE_RANGE_KEYS.map((key) => ({
-    label: d?.[key] || DEFAULT_DATE_RANGE_LABELS[key] || key,
+/** Get localized date range options from dictionary (finance.reportsConfig.dateRanges) */
+export const getReportDateRanges = (d?: Record<string, any>) => {
+  const r = d?.dateRanges as Record<string, string> | undefined
+  return DATE_RANGE_KEYS.map((key) => ({
+    label: r?.[key] || DEFAULT_DATE_RANGE_LABELS[key] || key,
     key,
   }))
+}
 
 /** For backward compat -- static fallback */
 export const REPORT_DATE_RANGES = DATE_RANGE_KEYS.map((key) => ({

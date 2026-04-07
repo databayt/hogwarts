@@ -3,6 +3,33 @@
 
 import { z } from "zod"
 
+import type { ValidationHelper } from "@/components/internationalization/helpers"
+
+// ============================================================================
+// Schema Factory Functions (i18n-enabled)
+// ============================================================================
+
+const createInvoiceItemSchema = (v: ValidationHelper) =>
+  z.object({
+    item_name: z.string().min(1, v.required()),
+    quantity: z.coerce.number().int().min(1, v.min(1)),
+    price: z.coerce.number().min(0, v.min(0)),
+    total: z.coerce.number().min(0, v.min(0)),
+  })
+
+export const createItemsSchema = (v: ValidationHelper) =>
+  z.object({
+    items: z.array(createInvoiceItemSchema(v)).min(1, v.required()),
+    sub_total: z.coerce.number().min(0),
+    discount: z.coerce.number().min(0).optional(),
+    tax_percentage: z.coerce.number().min(0).max(100).optional(),
+    total: z.coerce.number().min(0),
+  })
+
+// ============================================================================
+// Static Schemas (server-side fallback)
+// ============================================================================
+
 const invoiceItemSchema = z.object({
   item_name: z.string().min(1, "Item name is required"),
   quantity: z.coerce.number().int().min(1, "Quantity must be at least 1"),

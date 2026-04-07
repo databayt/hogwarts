@@ -8,6 +8,7 @@ import { z } from "zod"
 
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 
 import { InvoiceSchemaZod } from "../validation"
@@ -18,6 +19,8 @@ interface ReviewSubmitStepProps {
 
 export function ReviewSubmitStep({ isView }: ReviewSubmitStepProps) {
   const { locale } = useLocale()
+  const { dictionary } = useDictionary()
+  const fd = (dictionary as any)?.finance
   const form = useFormContext<z.infer<typeof InvoiceSchemaZod>>()
   const {
     register,
@@ -46,13 +49,15 @@ export function ReviewSubmitStep({ isView }: ReviewSubmitStepProps) {
     <div className="space-y-6">
       {/* Invoice Summary */}
       <div className="space-y-4">
-        <h3 className="text-lg font-medium">Invoice Summary</h3>
+        <h3 className="text-lg font-medium">
+          {fd?.invoiceForm?.invoiceSummary || "Invoice Summary"}
+        </h3>
         <div className="flex gap-2">
           <div className="flex-1">
             <Input
               {...register("sub_total", { valueAsNumber: true })}
               type="number"
-              placeholder="Sub Total"
+              placeholder={fd?.invoiceForm?.subTotal || "Sub Total"}
               min="0"
               step="0.01"
               className={`h-10 w-full ${errors.sub_total ? "border-red-500" : ""}`}
@@ -63,7 +68,7 @@ export function ReviewSubmitStep({ isView }: ReviewSubmitStepProps) {
             <Input
               {...register("discount", { valueAsNumber: true })}
               type="number"
-              placeholder="Discount Amount"
+              placeholder={fd?.invoiceForm?.discountAmount || "Discount Amount"}
               min="0"
               step="0.01"
               className={`h-10 w-full ${errors.discount ? "border-red-500" : ""}`}
@@ -77,7 +82,9 @@ export function ReviewSubmitStep({ isView }: ReviewSubmitStepProps) {
             <Input
               {...register("tax_percentage", { valueAsNumber: true })}
               type="number"
-              placeholder="Tax Percentage (%)"
+              placeholder={
+                fd?.invoiceForm?.taxPercentage || "Tax Percentage (%)"
+              }
               min="0"
               step="0.01"
               className={`h-10 w-full ${errors.tax_percentage ? "border-red-500" : ""}`}
@@ -91,7 +98,7 @@ export function ReviewSubmitStep({ isView }: ReviewSubmitStepProps) {
             <Input
               {...register("total", { valueAsNumber: true })}
               type="number"
-              placeholder="Total Amount"
+              placeholder={fd?.invoiceForm?.totalAmount || "Total Amount"}
               min="0"
               step="0.01"
               className={`h-10 w-full ${errors.total ? "border-red-500" : ""}`}
@@ -103,7 +110,7 @@ export function ReviewSubmitStep({ isView }: ReviewSubmitStepProps) {
         {/* Calculated Values Display */}
         <div className="bg-muted space-y-2 rounded-lg p-4">
           <div className="flex justify-between text-sm">
-            <span>Sub Total:</span>
+            <span>{fd?.invoiceForm?.subTotalLabel || "Sub Total:"}</span>
             <span>
               {new Intl.NumberFormat(locale, {
                 style: "currency",
@@ -112,7 +119,7 @@ export function ReviewSubmitStep({ isView }: ReviewSubmitStepProps) {
             </span>
           </div>
           <div className="flex justify-between text-sm">
-            <span>Discount:</span>
+            <span>{fd?.invoiceForm?.discountLabel || "Discount:"}</span>
             <span>
               {new Intl.NumberFormat(locale, {
                 style: "currency",
@@ -121,7 +128,9 @@ export function ReviewSubmitStep({ isView }: ReviewSubmitStepProps) {
             </span>
           </div>
           <div className="flex justify-between text-sm">
-            <span>Tax ({tax_percentage}%):</span>
+            <span>
+              {fd?.invoiceForm?.taxLabel || "Tax"} ({tax_percentage}%):
+            </span>
             <span>
               {new Intl.NumberFormat(locale, {
                 style: "currency",
@@ -130,7 +139,7 @@ export function ReviewSubmitStep({ isView }: ReviewSubmitStepProps) {
             </span>
           </div>
           <div className="flex justify-between border-t pt-2 font-medium">
-            <span>Total:</span>
+            <span>{fd?.invoiceForm?.totalLabel || "Total:"}</span>
             <span>{totalAmountInCurrencyFormat}</span>
           </div>
         </div>
@@ -140,7 +149,10 @@ export function ReviewSubmitStep({ isView }: ReviewSubmitStepProps) {
       <div className="space-y-2">
         <Textarea
           {...register("notes")}
-          placeholder="Additional notes or terms (Optional)"
+          placeholder={
+            fd?.invoiceForm?.additionalNotes ||
+            "Additional notes or terms (Optional)"
+          }
           className="min-h-[60px]"
         />
       </div>

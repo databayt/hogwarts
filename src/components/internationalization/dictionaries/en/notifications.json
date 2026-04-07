@@ -114,10 +114,6 @@
     "report_ready": "Report ready",
     "absence_intention": "Absence intention submitted",
     "absence_intention_decision": "Absence intention reviewed",
-    "exam_scheduled": "Exam scheduled",
-    "exam_result": "Exam result available",
-    "library_due": "Library book due",
-    "general": "General notification",
     "setup_guide": "Setup guide"
   },
   "priorities": {

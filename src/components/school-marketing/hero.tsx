@@ -15,6 +15,7 @@ interface HeroProps {
   subdomain?: string
   dictionary?: Dictionary
   heroImageUrl?: string | null
+  logoUrl?: string | null
 }
 
 export function Hero({
@@ -22,6 +23,7 @@ export function Hero({
   subdomain,
   dictionary,
   heroImageUrl,
+  logoUrl,
 }: HeroProps) {
   // Get translations with fallbacks
   const t = dictionary?.marketing?.site?.hero
@@ -52,11 +54,11 @@ export function Hero({
           <div className="max-w-xl">
             <div className="mb-6 flex items-center gap-2">
               <Image
-                src={asset("/illustrations/site-ball.png")}
-                alt={t?.logoAlt || "Hogwarts Logo"}
+                src={logoUrl || asset("/illustrations/site-ball.png")}
+                alt={t?.logoAlt || "School Logo"}
                 width={100}
                 height={100}
-                className="h-14 w-14 dark:invert"
+                className={`h-14 w-14${logoUrl ? "" : "dark:invert"}`}
               />
             </div>
             <h1 className="font-heading py-4 text-4xl font-black tracking-tighter text-white sm:text-5xl">
@@ -96,11 +98,11 @@ export function Hero({
         <div className="max-w-xl">
           <div className="flex items-center gap-2">
             <Image
-              src={asset("/illustrations/site-ball.png")}
-              alt={t?.logoAlt || "Hogwarts Logo"}
+              src={logoUrl || asset("/illustrations/site-ball.png")}
+              alt={t?.logoAlt || "School Logo"}
               width={100}
               height={100}
-              className="h-14 w-14 dark:invert"
+              className={`h-14 w-14${logoUrl ? "" : "dark:invert"}`}
             />
           </div>
           <h1 className="font-heading py-4 text-5xl font-black tracking-tighter lg:text-6xl xl:text-7xl">

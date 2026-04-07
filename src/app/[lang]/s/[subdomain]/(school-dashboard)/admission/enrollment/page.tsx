@@ -19,7 +19,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: dictionary.school.admission?.enrollment?.title || "Enrollment",
-    description: "Manage student enrollment process",
+    description:
+      dictionary.school.admission?.enrollment?.description ||
+      "Manage student enrollment process",
   }
 }
 

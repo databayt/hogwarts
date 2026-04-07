@@ -16,19 +16,24 @@ import {
 } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardTabs, type WizardTab } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import {
-  CURRENCY_OPTIONS,
-  INVOICE_STATUS_OPTIONS,
+  getCurrencyOptions,
+  getInvoiceStatusOptions,
 } from "@/components/school-dashboard/finance/invoice/wizard/config"
 
 import { updateInvoiceDetails } from "./actions"
 import { detailsSchema, type DetailsFormData } from "./validation"
 
-const TABS: WizardTab[] = [
-  { id: "invoice", label: "Invoice" },
-  { id: "from", label: "From" },
-  { id: "to", label: "To" },
-]
+function useTabs(): WizardTab[] {
+  const { dictionary } = useDictionary()
+  const fd = (dictionary as any)?.finance
+  return [
+    { id: "invoice", label: fd?.invoice?.invoice || "Invoice" },
+    { id: "from", label: fd?.invoiceForm?.from || "From" },
+    { id: "to", label: fd?.invoiceForm?.to || "To" },
+  ]
+}
 
 interface DetailsFormProps {
   invoiceId: string
@@ -39,6 +44,9 @@ interface DetailsFormProps {
 
 export const DetailsForm = forwardRef<WizardFormRef, DetailsFormProps>(
   ({ invoiceId, initialData, onValidChange, onTabChange }, ref) => {
+    const tabs = useTabs()
+    const { dictionary } = useDictionary()
+    const fd = (dictionary as any)?.finance
     const [isPending, startTransition] = useTransition()
 
     const form = useForm<DetailsFormData>({
@@ -114,7 +122,7 @@ export const DetailsForm = forwardRef<WizardFormRef, DetailsFormProps>(
     return (
       <Form {...form}>
         <form className="space-y-6">
-          <WizardTabs tabs={TABS} onTabChange={onTabChange}>
+          <WizardTabs tabs={tabs} onTabChange={onTabChange}>
             {(activeTab) => {
               if (activeTab === "invoice") {
                 return (
@@ -122,15 +130,19 @@ export const DetailsForm = forwardRef<WizardFormRef, DetailsFormProps>(
                     <div className="grid grid-cols-2 gap-4">
                       <InputField
                         name="invoice_no"
-                        label="Invoice Number"
-                        placeholder="INV-001"
+                        label={
+                          fd?.invoiceForm?.invoiceNumber || "Invoice Number"
+                        }
+                        placeholder={
+                          fd?.invoiceForm?.invoiceNumberPlaceholder || "INV-001"
+                        }
                         required
                         disabled={isPending}
                       />
                       <SelectField
                         name="currency"
-                        label="Currency"
-                        options={[...CURRENCY_OPTIONS]}
+                        label={fd?.invoiceForm?.currency || "Currency"}
+                        options={getCurrencyOptions(fd?.invoiceConfig)}
                         required
                         disabled={isPending}
                       />
@@ -138,27 +150,32 @@ export const DetailsForm = forwardRef<WizardFormRef, DetailsFormProps>(
                     <div className="grid grid-cols-2 gap-4">
                       <DateField
                         name="invoice_date"
-                        label="Invoice Date"
+                        label={fd?.invoiceForm?.invoiceDate || "Invoice Date"}
                         required
                         disabled={isPending}
                       />
                       <DateField
                         name="due_date"
-                        label="Due Date"
+                        label={fd?.invoiceForm?.dueDate || "Due Date"}
                         required
                         disabled={isPending}
                       />
                     </div>
                     <SelectField
                       name="status"
-                      label="Status"
-                      options={[...INVOICE_STATUS_OPTIONS]}
+                      label={fd?.invoiceForm?.status || "Status"}
+                      options={getInvoiceStatusOptions(
+                        fd?.invoiceConfig?.wizard
+                      )}
                       disabled={isPending}
                     />
                     <TextareaField
                       name="notes"
-                      label="Notes"
-                      placeholder="Additional notes or terms..."
+                      label={fd?.invoiceForm?.notes || "Notes"}
+                      placeholder={
+                        fd?.invoiceForm?.notesPlaceholder ||
+                        "Additional notes or terms..."
+                      }
                       disabled={isPending}
                     />
                   </div>
@@ -171,35 +188,50 @@ export const DetailsForm = forwardRef<WizardFormRef, DetailsFormProps>(
                     <div className="grid grid-cols-2 gap-4">
                       <InputField
                         name="from.name"
-                        label="Name"
-                        placeholder="Your company name"
+                        label={fd?.invoiceForm?.name || "Name"}
+                        placeholder={
+                          fd?.invoiceForm?.yourCompanyNamePlaceholder ||
+                          "Your company name"
+                        }
                         required
                         disabled={isPending}
                       />
                       <InputField
                         name="from.email"
-                        label="Email"
-                        placeholder="billing@company.com"
+                        label={fd?.invoiceForm?.email || "Email"}
+                        placeholder={
+                          fd?.invoiceForm?.billingEmailPlaceholder ||
+                          "billing@company.com"
+                        }
                         disabled={isPending}
                       />
                     </div>
                     <InputField
                       name="from.address1"
-                      label="Address Line 1"
-                      placeholder="Street address"
+                      label={fd?.invoiceForm?.addressLine1 || "Address Line 1"}
+                      placeholder={
+                        fd?.invoiceForm?.streetAddressPlaceholder ||
+                        "Street address"
+                      }
                       required
                       disabled={isPending}
                     />
                     <InputField
                       name="from.address2"
-                      label="Address Line 2"
-                      placeholder="Suite, unit, etc."
+                      label={fd?.invoiceForm?.addressLine2 || "Address Line 2"}
+                      placeholder={
+                        fd?.invoiceForm?.suiteUnitPlaceholder ||
+                        "Suite, unit, etc."
+                      }
                       disabled={isPending}
                     />
                     <InputField
                       name="from.address3"
-                      label="Address Line 3"
-                      placeholder="City, state, zip"
+                      label={fd?.invoiceForm?.addressLine3 || "Address Line 3"}
+                      placeholder={
+                        fd?.invoiceForm?.cityStateZipPlaceholder ||
+                        "City, state, zip"
+                      }
                       disabled={isPending}
                     />
                   </div>
@@ -212,35 +244,49 @@ export const DetailsForm = forwardRef<WizardFormRef, DetailsFormProps>(
                   <div className="grid grid-cols-2 gap-4">
                     <InputField
                       name="to.name"
-                      label="Name"
-                      placeholder="Client name"
+                      label={fd?.invoiceForm?.name || "Name"}
+                      placeholder={
+                        fd?.invoiceForm?.clientNamePlaceholder || "Client name"
+                      }
                       required
                       disabled={isPending}
                     />
                     <InputField
                       name="to.email"
-                      label="Email"
-                      placeholder="client@email.com"
+                      label={fd?.invoiceForm?.email || "Email"}
+                      placeholder={
+                        fd?.invoiceForm?.clientEmailPlaceholder ||
+                        "client@email.com"
+                      }
                       disabled={isPending}
                     />
                   </div>
                   <InputField
                     name="to.address1"
-                    label="Address Line 1"
-                    placeholder="Street address"
+                    label={fd?.invoiceForm?.addressLine1 || "Address Line 1"}
+                    placeholder={
+                      fd?.invoiceForm?.streetAddressPlaceholder ||
+                      "Street address"
+                    }
                     required
                     disabled={isPending}
                   />
                   <InputField
                     name="to.address2"
-                    label="Address Line 2"
-                    placeholder="Suite, unit, etc."
+                    label={fd?.invoiceForm?.addressLine2 || "Address Line 2"}
+                    placeholder={
+                      fd?.invoiceForm?.suiteUnitPlaceholder ||
+                      "Suite, unit, etc."
+                    }
                     disabled={isPending}
                   />
                   <InputField
                     name="to.address3"
-                    label="Address Line 3"
-                    placeholder="City, state, zip"
+                    label={fd?.invoiceForm?.addressLine3 || "Address Line 3"}
+                    placeholder={
+                      fd?.invoiceForm?.cityStateZipPlaceholder ||
+                      "City, state, zip"
+                    }
                     disabled={isPending}
                   />
                 </div>

@@ -19,7 +19,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: dictionary.school.admission?.meritList?.title || "Merit List",
-    description: "View and manage admission merit rankings",
+    description:
+      dictionary.school.admission?.meritList?.description ||
+      "View and manage admission merit rankings",
   }
 }
 

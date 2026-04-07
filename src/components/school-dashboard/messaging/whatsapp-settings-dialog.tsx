@@ -64,9 +64,15 @@ export function WhatsAppSettingsDialog({
             if (result.data.status === "connected") {
               setQrCode(null)
               setConnectedAt(new Date().toISOString())
+              if (result.data.phoneNumber) {
+                setPhoneNumber(result.data.phoneNumber)
+              }
               toast({
                 title: d?.toast?.connected || "WhatsApp connected successfully",
               })
+            } else if (result.data.qrCode && result.data.qrCode !== qrCode) {
+              // Refresh QR code if Evolution API regenerated it
+              setQrCode(result.data.qrCode)
             }
           }
         })

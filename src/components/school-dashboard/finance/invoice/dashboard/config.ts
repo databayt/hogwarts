@@ -98,33 +98,9 @@ export const chartData = [
   { date: "2024-06-30", desktop: 446, mobile: 400 },
 ]
 
-export const chartConfig = {
-  visitors: {
-    label: "Visitors",
-  },
-  totalRevenue: {
-    label: "Total Revenue",
-    color: "var(--chart-1)",
-  },
-  paidRevenue: {
-    label: "Paid Revenue",
-    color: "var(--chart-2)",
-  },
-} satisfies ChartConfig
-
-// Dashboard stat cards definition
-export const STATS_CARD_DEFS = [
-  { title: "Total Revenue", key: "totalRevenue" },
-  { title: "Total Invoice", key: "totalInvoice" },
-  { title: "Paid Invoice", key: "paidInvoice" },
-  { title: "Unpaid Invoice", key: "UnpaidInvoice" },
-] as const
-
-// --- Dictionary-based factory functions ---
-
 type Dict = Record<string, any> | undefined
 
-/** Get localized chart config from dictionary */
+/** Get localized chart config from dictionary (finance.invoiceConfig.dashboard) */
 export const getChartConfig = (d?: Dict) => {
   const c = d?.chart as Record<string, string> | undefined
   return {
@@ -142,7 +118,7 @@ export const getChartConfig = (d?: Dict) => {
   } satisfies ChartConfig
 }
 
-/** Get localized stats card definitions from dictionary */
+/** Get localized stats card definitions from dictionary (finance.invoiceConfig.dashboard) */
 export const getStatsCardDefs = (d?: Dict) => {
   const s = d?.stats as Record<string, string> | undefined
   return [

@@ -142,17 +142,11 @@ export async function completeInvoiceWizard(
     }
 
     if (invoice.items.length === 0) {
-      return {
-        success: false,
-        error: "At least one line item is required before completing",
-      }
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
 
     if (!invoice.invoice_no) {
-      return {
-        success: false,
-        error: "Invoice number is required before completing",
-      }
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
 
     await db.userInvoice.updateMany({

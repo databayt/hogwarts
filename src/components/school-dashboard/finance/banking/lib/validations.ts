@@ -3,6 +3,36 @@
 
 import { z } from "zod"
 
+import type { ValidationHelper } from "@/components/internationalization/helpers"
+
+// ============================================================================
+// Schema Factory Functions (i18n-enabled)
+// ============================================================================
+
+export const createConnectBankSchema = (v: ValidationHelper) =>
+  z.object({
+    publicToken: z.string().min(1, v.required()),
+    institutionId: z.string().min(1, v.required()),
+    accountId: z.string().min(1, v.required()),
+    userId: z.string().min(1, v.required()),
+  })
+
+export const createBankTransferSchema = (v: ValidationHelper) =>
+  z.object({
+    senderBankId: z.string().min(1, v.required()),
+    recipientEmail: z.string().email(v.email()),
+    amount: z
+      .string()
+      .regex(/^\d+(\.\d{1,2})?$/, v.required())
+      .refine((val) => parseFloat(val) > 0, v.positive())
+      .refine((val) => parseFloat(val) <= 10000, v.max(10000)),
+    note: z.string().max(200, v.maxLength(200)).optional(),
+  })
+
+// ============================================================================
+// Static Schemas (server-side fallback)
+// ============================================================================
+
 // Bank Account Schemas
 export const BankAccountSchema = z.object({
   id: z.string(),

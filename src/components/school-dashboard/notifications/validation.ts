@@ -260,9 +260,19 @@ export const notificationFiltersSchema = z
     }
   })
 
-// Sort item schema for table sorting
+// Sort item schema for table sorting — whitelist valid Notification fields
+const SORTABLE_FIELDS = [
+  "createdAt",
+  "updatedAt",
+  "read",
+  "readAt",
+  "priority",
+  "type",
+  "title",
+] as const
+
 export const sortItemSchema = z.object({
-  id: z.string(),
+  id: z.enum(SORTABLE_FIELDS),
   desc: z.boolean().optional(),
 })
 
@@ -277,22 +287,20 @@ export const getNotificationsSchema = z.object({
   sort: z.array(sortItemSchema).optional().default([]),
 })
 
-// Get notification statistics schema
-export const getNotificationStatsSchema = z.object({
-  userId: z.string().min(1, "User ID is required"),
-  startDate: z.string().datetime().optional(),
-  endDate: z.string().datetime().optional(),
-})
-
-// Get notification count schema
-export const getNotificationCountSchema = z.object({
-  userId: z.string().min(1, "User ID is required"),
-  unreadOnly: z.boolean().optional().default(true),
-})
+// Entity types that support notification subscriptions
+const SUBSCRIBABLE_ENTITIES = [
+  "class",
+  "section",
+  "subject",
+  "student",
+  "assignment",
+  "event",
+  "announcement",
+] as const
 
 // Notification subscription schema
 export const notificationSubscriptionSchema = z.object({
-  entityType: z.string().min(1, "Entity type is required"),
+  entityType: z.enum(SUBSCRIBABLE_ENTITIES),
   entityId: z.string().min(1, "Entity ID is required"),
   active: z.boolean().optional().default(true),
 })

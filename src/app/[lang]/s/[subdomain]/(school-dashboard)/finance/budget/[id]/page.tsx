@@ -22,10 +22,17 @@ interface Props {
 export default async function BudgetDetailPage({ params }: Props) {
   const { lang, id } = await params
   const dictionary = await getDictionary(lang)
+  const d = dictionary?.finance?.budgetPage
+  const c = dictionary?.finance?.common
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
-    return <p className="text-muted-foreground">School context not found</p>
+    return (
+      <p className="text-muted-foreground">
+        {dictionary?.finance?.common?.schoolNotFound ||
+          "School context not found"}
+      </p>
+    )
   }
 
   const budget = await db.budget.findFirst({
@@ -72,7 +79,7 @@ export default async function BudgetDetailPage({ params }: Props) {
             href={`/${lang}/finance/budget/all`}
             className={buttonVariants({ variant: "outline" })}
           >
-            Back to Budgets
+            {d?.backToBudgets || "Back to Budgets"}
           </Link>
         </div>
       </div>
@@ -81,7 +88,9 @@ export default async function BudgetDetailPage({ params }: Props) {
       <div className="grid gap-4 sm:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Budget</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {d?.totalBudget || "Total Budget"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
@@ -92,7 +101,7 @@ export default async function BudgetDetailPage({ params }: Props) {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">
-              Total Allocated
+              {d?.totalAllocated || "Total Allocated"}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -103,7 +112,9 @@ export default async function BudgetDetailPage({ params }: Props) {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Spent</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {d?.totalSpent || "Total Spent"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
@@ -116,11 +127,11 @@ export default async function BudgetDetailPage({ params }: Props) {
       {/* Allocations */}
       <div className="space-y-3">
         <h4 className="font-medium">
-          Allocations ({budget.allocations.length})
+          {d?.allocations || "Allocations"} ({budget.allocations.length})
         </h4>
         {budget.allocations.length === 0 ? (
           <p className="text-muted-foreground text-sm">
-            No allocations for this budget yet.
+            {d?.noAllocationsYet || "No allocations for this budget yet."}
           </p>
         ) : (
           <div className="space-y-2">
@@ -142,9 +153,17 @@ export default async function BudgetDetailPage({ params }: Props) {
                       )}
                     </div>
                     <div className="flex items-center gap-4 text-sm">
-                      <span>Allocated: {formatCurrency(allocated, lang)}</span>
-                      <span>Spent: {formatCurrency(spent, lang)}</span>
-                      <span>Remaining: {formatCurrency(remaining, lang)}</span>
+                      <span>
+                        {c?.allocated || "Allocated"}:{" "}
+                        {formatCurrency(allocated, lang)}
+                      </span>
+                      <span>
+                        {c?.spent || "Spent"}: {formatCurrency(spent, lang)}
+                      </span>
+                      <span>
+                        {c?.remaining || "Remaining"}:{" "}
+                        {formatCurrency(remaining, lang)}
+                      </span>
                       <Badge variant={pct > 90 ? "destructive" : "secondary"}>
                         {pct.toFixed(0)}%
                       </Badge>
