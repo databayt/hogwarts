@@ -92,15 +92,66 @@ export function ExportButton({
   const handleExport = async (format: ExportFormat = "csv") => {
     setIsExporting(true)
     try {
-      if (format === "csv") {
-        const csv = await getCSV(filters)
+      const csv = await getCSV(filters)
+      if (!csv) return
 
-        // Create blob and download using File module utilities
+      if (format === "csv") {
         const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
         const filename = generateExportFilename(entityName, "csv")
         downloadBlob(blob, filename)
+      } else if (format === "excel") {
+        const XLSX = await import("xlsx")
+        const lines = csv.split("\n").filter(Boolean)
+        const data = lines.map((line) => {
+          const values: string[] = []
+          let current = ""
+          let inQuotes = false
+          for (const char of line) {
+            if (char === '"') {
+              inQuotes = !inQuotes
+            } else if (char === "," && !inQuotes) {
+              values.push(current)
+              current = ""
+            } else {
+              current += char
+            }
+          }
+          values.push(current)
+          return values
+        })
+        const ws = XLSX.utils.aoa_to_sheet(data)
+        const wb = XLSX.utils.book_new()
+        XLSX.utils.book_append_sheet(wb, ws, "Data")
+        const buffer = XLSX.write(wb, { bookType: "xlsx", type: "array" })
+        const blob = new Blob([buffer], {
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        })
+        const filename = generateExportFilename(entityName, "xlsx")
+        downloadBlob(blob, filename)
+      } else if (format === "pdf") {
+        // Build a simple HTML table for PDF printing
+        const lines = csv.split("\n").filter(Boolean)
+        const rows = lines.map((line) =>
+          line.split(",").map((c) => c.replace(/^"|"$/g, ""))
+        )
+        const html = `
+          <html><head><meta charset="utf-8"><style>
+            body { font-family: sans-serif; padding: 20px; }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: start; font-size: 12px; }
+            th { background: #f5f5f5; font-weight: bold; }
+            h2 { margin-bottom: 16px; }
+          </style></head><body>
+          <h2>${entityName}</h2>
+          <table>${rows.map((row, i) => `<tr>${row.map((cell) => `<${i === 0 ? "th" : "td"}>${cell}</${i === 0 ? "th" : "td"}>`).join("")}</tr>`).join("")}</table>
+          </body></html>`
+        const printWindow = window.open("", "_blank")
+        if (printWindow) {
+          printWindow.document.write(html)
+          printWindow.document.close()
+          printWindow.print()
+        }
       }
-      // TODO: Add Excel and PDF export support via File module
     } catch (error) {
       console.error("Export failed:", error)
     } finally {

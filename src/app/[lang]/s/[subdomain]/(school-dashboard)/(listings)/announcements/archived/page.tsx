@@ -4,13 +4,6 @@
 import { Metadata } from "next"
 import { Archive } from "lucide-react"
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 
@@ -34,25 +27,14 @@ export default async function AnnouncementsArchivedPage({ params }: Props) {
   const d = dictionary?.school?.announcements
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Archive className="h-5 w-5" />
-          {d?.navArchived || "Archived"}
-        </CardTitle>
-        <CardDescription>
-          {lang === "ar"
-            ? "الإعلانات المؤرشفة والمنتهية الصلاحية"
-            : "Archived and expired announcements"}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <p className="text-muted-foreground">
-          {lang === "ar"
-            ? "سيتم عرض الإعلانات المؤرشفة هنا قريباً - الإعلانات القديمة والمنتهية الصلاحية."
-            : "Archived announcements coming soon - old and expired announcements will be displayed here."}
-        </p>
-      </CardContent>
-    </Card>
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+      <div className="bg-muted mb-4 rounded-full p-4">
+        <Archive className="text-muted-foreground h-8 w-8" />
+      </div>
+      <h3 className="font-medium">{d?.navArchived || "Archived"}</h3>
+      <p className="text-muted-foreground mt-1 max-w-sm text-sm">
+        {d?.noContent || "No content"}
+      </p>
+    </div>
   )
 }

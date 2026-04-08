@@ -12,7 +12,6 @@ import {
 } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { Megaphone, Pin, Star } from "lucide-react"
 
 import { asset } from "@/lib/asset-url"
 import { usePlatformData } from "@/hooks/use-platform-data"
@@ -26,7 +25,6 @@ import {
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import {
-  GridCard,
   GridContainer,
   GridEmptyState,
   PlatformToolbar,
@@ -319,6 +317,7 @@ function AnnouncementsTableInner({
         onCreate={handleCreate}
         getCSV={getAnnouncementsCSV}
         entityName="announcements"
+        exportFormats={["csv", "excel", "pdf"]}
         translations={toolbarTranslations}
       />
 
@@ -351,14 +350,53 @@ function AnnouncementsTableInner({
                 const displayTitle = getTitle(announcement)
                 const scopeBadge = getScopeBadge(announcement.scope)
                 return (
-                  <GridCard
+                  <div
                     key={announcement.id}
-                    icon={asset("/icons/news.svg")}
-                    title={displayTitle}
-                    description={announcement.published ? t.published : t.draft}
-                    subtitle={scopeBadge.label}
+                    className="bg-background hover:border-primary cursor-pointer rounded-lg border p-4 transition-[border-color] duration-200"
                     onClick={() => handleView(announcement.id)}
-                  />
+                  >
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <h4 className="text-foreground line-clamp-2 font-medium">
+                          {displayTitle}
+                        </h4>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        <Badge
+                          variant={
+                            announcement.published ? "default" : "outline"
+                          }
+                        >
+                          {announcement.published ? t.published : t.draft}
+                        </Badge>
+                        <Badge variant={scopeBadge.variant}>
+                          {scopeBadge.label}
+                        </Badge>
+                        {announcement.priority !== "normal" && (
+                          <Badge
+                            variant={
+                              announcement.priority === "urgent"
+                                ? "destructive"
+                                : "secondary"
+                            }
+                          >
+                            {announcement.priority === "high"
+                              ? t.high
+                              : announcement.priority === "urgent"
+                                ? t.priority?.urgent?.label || "Urgent"
+                                : announcement.priority === "low"
+                                  ? t.low
+                                  : announcement.priority}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-muted-foreground text-xs">
+                        {new Date(announcement.createdAt).toLocaleDateString(
+                          lang === "ar" ? "ar-SA" : "en-US"
+                        )}
+                      </p>
+                    </div>
+                  </div>
                 )
               })}
             </GridContainer>

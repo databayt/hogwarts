@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -23,6 +23,7 @@ import {
   announcementCreateSchema,
   type AnnouncementFormValues,
 } from "@/components/school-dashboard/listings/announcements/validation"
+import { detectLanguage } from "@/components/translation/util"
 
 import { InformationStep } from "./information"
 import { ScopeStep } from "./scope"
@@ -42,8 +43,6 @@ export function AnnouncementCreateForm({
   const { modal, closeModal } = useModal()
   const router = useRouter()
   const t = dictionary
-  // Two steps only: 1 = Content, 2 = Scope
-  const [currentStep, setCurrentStep] = useState(1)
 
   const form = useForm<AnnouncementFormValues>({
     resolver: zodResolver(announcementCreateSchema) as any,
@@ -89,10 +88,9 @@ export function AnnouncementCreateForm({
   }, [currentId])
 
   async function onSubmit(values: AnnouncementFormValues) {
-    // For new announcements, use app locale. For edits, preserve original lang.
-    if (!currentId) {
-      values.lang = lang === "ar" ? "ar" : "en"
-    }
+    // Detect actual content language from title text
+    const detectedLang = detectLanguage(values.title || "")
+    values.lang = detectedLang
 
     const res = currentId
       ? await updateAnnouncement({ id: currentId, ...values })
@@ -111,85 +109,9 @@ export function AnnouncementCreateForm({
     }
   }
 
-  const handleNext = async () => {
-    if (currentStep === 1) {
-      // Content step - validate title and body
-      const contentFields = ["title", "body"] as const
-      const contentValid = await form.trigger(contentFields)
-      if (contentValid) {
-        setCurrentStep(2)
-      }
-    } else if (currentStep === 2) {
-      // Scope step - submit
-      await form.handleSubmit(onSubmit)()
-    }
+  const handleSubmit = async () => {
+    await form.handleSubmit(onSubmit)()
   }
-
-  const handleSaveCurrentStep = async () => {
-    if (currentId) {
-      // For editing, save current step data
-      const contentFields: (keyof AnnouncementFormValues)[] = ["title", "body"]
-      const scopeFields: (keyof AnnouncementFormValues)[] = [
-        "scope",
-        "classId",
-        "role",
-        "published",
-        "priority",
-      ]
-      const currentStepFields = currentStep === 1 ? contentFields : scopeFields
-
-      const stepValid = await form.trigger(
-        currentStepFields as readonly (keyof AnnouncementFormValues)[]
-      )
-      if (stepValid) {
-        await form.handleSubmit(onSubmit)()
-      }
-    } else {
-      // For creating, just go to next step
-      await handleNext()
-    }
-  }
-
-  const handleBack = () => {
-    if (currentStep === 2) {
-      setCurrentStep(1)
-    } else {
-      closeModal()
-    }
-  }
-
-  const renderCurrentStep = () => {
-    switch (currentStep) {
-      case 1:
-        return (
-          <InformationStep
-            form={form}
-            isView={isView}
-            dictionary={dictionary}
-            lang={lang}
-          />
-        )
-      case 2:
-        return (
-          <ScopeStep
-            form={form}
-            isView={isView}
-            dictionary={dictionary}
-            lang={lang}
-          />
-        )
-      default:
-        return null
-    }
-  }
-
-  const stepLabels: Record<number, string> = {
-    1: t.basicInformation,
-    2: t.scopeAndPublishing,
-  }
-
-  // Always 2 steps: Content → Scope
-  const totalSteps = 2
 
   return (
     <Form {...form}>
@@ -210,24 +132,32 @@ export function AnnouncementCreateForm({
                 : t.createNewAnnouncement
           }
         >
-          {renderCurrentStep()}
+          <InformationStep
+            form={form}
+            isView={isView}
+            dictionary={dictionary}
+            lang={lang}
+          />
+          <ScopeStep
+            form={form}
+            isView={isView}
+            dictionary={dictionary}
+            lang={lang}
+          />
         </ModalFormLayout>
 
         <ModalFooter
-          currentStep={currentStep}
-          totalSteps={totalSteps}
-          stepLabel={stepLabels[currentStep]}
+          currentStep={1}
+          totalSteps={1}
+          stepLabel={t.createAnnouncement}
           isView={isView}
           isEdit={!!currentId}
           isDirty={form.formState.isDirty}
           isSubmitting={false}
-          onBack={handleBack}
-          onNext={handleNext}
-          onSaveStep={handleSaveCurrentStep}
+          onBack={closeModal}
+          onNext={handleSubmit}
           labels={{
             cancel: t.cancel,
-            back: t.back,
-            next: t.next,
             save: t.save,
             create: t.create,
           }}
