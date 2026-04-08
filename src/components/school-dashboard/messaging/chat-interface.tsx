@@ -3,6 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useEffect, useOptimistic, useRef, useState } from "react"
+import { formatDistanceToNow } from "date-fns"
 import { ar, enUS } from "date-fns/locale"
 import { ArrowLeft } from "lucide-react"
 
@@ -701,6 +702,14 @@ export function ChatInterface({
 
   return (
     <div className={cn("flex h-full flex-col", className)}>
+      {/* Connection status banner */}
+      {!isConnected && (
+        <div className="flex items-center justify-center gap-2 bg-amber-50 px-3 py-1 text-xs text-amber-700 dark:bg-amber-950/30 dark:text-amber-400">
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" />
+          {locale === "ar" ? "جاري الاتصال..." : "Connecting..."}
+        </div>
+      )}
+
       {/* Header */}
       <div
         className="flex h-12 flex-shrink-0 items-center gap-3 px-3"
@@ -785,11 +794,28 @@ export function ChatInterface({
           </DialogContent>
         </Dialog>
 
-        {/* Name only */}
+        {/* Name + presence */}
         <div className="min-w-0 flex-1">
           <h2 className="text-foreground truncate text-sm font-medium">
             {displayName}
           </h2>
+          {conversation.type === "direct" &&
+            otherPresence.state === "online" && (
+              <p className="text-xs text-emerald-500">
+                {m?.ui?.online || "online"}
+              </p>
+            )}
+          {conversation.type === "direct" &&
+            otherPresence.state === "offline" &&
+            otherPresence.lastSeenAt && (
+              <p className="text-muted-foreground text-xs">
+                {m?.ui?.last_seen || "last seen"}{" "}
+                {formatDistanceToNow(new Date(otherPresence.lastSeenAt), {
+                  addSuffix: true,
+                  locale: dateLocale,
+                })}
+              </p>
+            )}
         </div>
 
         {/* Action icons — video + call */}

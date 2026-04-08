@@ -1661,6 +1661,8 @@
       "completion": "الاكتمال",
       "complete": "مكتمل",
       "generateAccessCode": "إنشاء رمز الدخول",
+      "linkParent": "ربط ولي أمر",
+      "generateCredentials": "إنشاء بيانات الدخول",
       "syncGrades": "مزامنة الدرجات",
       "syncGradesFailed": "فشل مزامنة الدرجات",
       "exportFailed": "فشل التصدير",
@@ -1836,16 +1838,27 @@
         "insuranceNumberPlaceholder": "أدخل رقم التأمين"
       },
       "accessCode": {
-        "generateTitle": "إنشاء رمز الدخول",
-        "generateTitlePlural": "إنشاء رموز الدخول ({count} طالب)",
+        "generateTitle": "ربط ولي أمر",
+        "generateTitlePlural": "ربط أولياء أمور ({count} طالب)",
         "description": "شارك هذه الرموز مع أولياء الأمور لربط حساباتهم بالطلاب. كل رمز يُستخدم مرة واحدة فقط وينتهي بعد 90 يوماً.",
         "generatingCodes": "جاري إنشاء الرموز...",
         "failedToGenerate": "فشل إنشاء الرموز",
         "expires": "ينتهي:",
         "print": "طباعة",
         "regenerate": "إعادة إنشاء",
-        "printTitle": "رموز دخول الطلاب",
+        "printTitle": "رموز ربط أولياء الأمور",
         "printInstructions": "شارك هذا الرمز مع ولي أمر الطالب. يمكنهم استخدامه لربط حسابهم بملف الطالب. كل رمز يُستخدم مرة واحدة فقط."
+      },
+      "credentials": {
+        "title": "بيانات دخول الطالب",
+        "descriptionNew": "تم إنشاء حساب دخول جديد. شارك بيانات الدخول مع الطالب.",
+        "descriptionReset": "تمت إعادة تعيين كلمة المرور. شارك كلمة المرور الجديدة مع الطالب.",
+        "descriptionGenerating": "جاري إنشاء بيانات الدخول...",
+        "email": "البريد الإلكتروني",
+        "password": "كلمة المرور",
+        "resetPassword": "إعادة تعيين كلمة المرور",
+        "mustChangePassword": "سيُطلب من الطالب تغيير كلمة المرور عند أول تسجيل دخول.",
+        "failedToGenerate": "فشل إنشاء بيانات الدخول"
       },
       "previousEducation": {
         "title": "التعليم السابق",
@@ -8799,7 +8812,12 @@
             "postalCodePlaceholder": "أدخل الرمز البريدي",
             "country": "الدولة",
             "selectCountry": "اختر الدولة",
-            "searchAddress": "ابحث عن عنوان..."
+            "searchAddress": "ابحث عن عنوان...",
+            "tapToPin": "اضغط على الخريطة لتحديد الموقع",
+            "detectingAddress": "جاري تحديد العنوان...",
+            "locationBlocked": "تم حظر الوصول للموقع. يرجى تفعيله من إعدادات المتصفح.",
+            "locationDenied": "تم رفض الوصول للموقع. يرجى السماح بالموقع من إعدادات المتصفح.",
+            "locationTimeout": "تعذر الحصول على موقعك. يرجى المحاولة مرة أخرى."
           },
           "guardian": {
             "fatherInfo": "معلومات الأب",

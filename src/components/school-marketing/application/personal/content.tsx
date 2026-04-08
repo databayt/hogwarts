@@ -54,7 +54,11 @@ export default function PersonalContent({ dictionary }: Props) {
         ? personalData?.firstName || personalData?.lastName
         : personalData?.firstName && personalData?.lastName
 
-    const isValid = hasName && personalData?.dateOfBirth && personalData?.gender
+    const isValid =
+      hasName &&
+      personalData?.dateOfBirth &&
+      personalData?.gender &&
+      personalData?.nationality
 
     if (isValid) {
       enableNext()

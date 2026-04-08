@@ -173,8 +173,8 @@ export function AccessCodeDialog({
         <DialogHeader>
           <DialogTitle>
             {studentIds.length === 1
-              ? t?.generateTitle || "Generate Access Code"
-              : `${t?.generateTitlePlural?.replace("{count}", String(studentIds.length)) || `Generate Access Codes (${studentIds.length})`}`}
+              ? t?.generateTitle || "Link Parent"
+              : `${t?.generateTitlePlural?.replace("{count}", String(studentIds.length)) || `Link Parents (${studentIds.length})`}`}
           </DialogTitle>
           <DialogDescription>
             {t?.description ||

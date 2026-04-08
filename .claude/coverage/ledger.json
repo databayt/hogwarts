@@ -1,0 +1,12 @@
+{
+  "$schema": "coverage-ledger-v1",
+  "product": "hogwarts",
+  "lastUpdated": null,
+  "manifest": {
+    "generatedAt": null,
+    "gitHash": null,
+    "totalRoutes": 0,
+    "modules": {}
+  },
+  "sweeps": {}
+}

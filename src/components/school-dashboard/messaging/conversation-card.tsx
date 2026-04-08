@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { memo } from "react"
+import { memo, useMemo } from "react"
 import {
   differenceInCalendarDays,
   format,
@@ -34,6 +34,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { CONVERSATION_TYPE_CONFIG } from "./config"
+import { useUserPresence } from "./hooks/use-presence"
 import type { ConversationDTO } from "./types"
 
 export interface ConversationCardProps {
@@ -104,6 +105,15 @@ export const ConversationCard = memo(function ConversationCard({
       ? conversation.participants?.find((p) => p.userId !== currentUserId)?.user
       : null
 
+  // Online presence for direct conversations
+  const otherUserId =
+    conversation.type === "direct"
+      ? conversation.participants?.find((p) => p.userId !== currentUserId)
+          ?.userId
+      : undefined
+  const otherPresence = useUserPresence(otherUserId)
+  const isOnline = otherPresence.state === "online"
+
   const displayName =
     conversation.type === "direct" && otherUser
       ? otherUser.username || otherUser.email || m?.ui?.user_fallback || "User"
@@ -158,13 +168,18 @@ export const ConversationCard = memo(function ConversationCard({
         className
       )}
     >
-      {/* Avatar — 49px circle */}
-      <Avatar className="h-[49px] w-[49px] flex-shrink-0">
-        <AvatarImage src={avatarUrl} alt={displayName} />
-        <AvatarFallback className="bg-muted text-muted-foreground">
-          {avatarFallback}
-        </AvatarFallback>
-      </Avatar>
+      {/* Avatar — 49px circle with online dot */}
+      <div className="relative flex-shrink-0">
+        <Avatar className="h-[49px] w-[49px]">
+          <AvatarImage src={avatarUrl} alt={displayName} />
+          <AvatarFallback className="bg-muted text-muted-foreground">
+            {avatarFallback}
+          </AvatarFallback>
+        </Avatar>
+        {isOnline && (
+          <span className="absolute right-0 bottom-0 h-3 w-3 rounded-full border-2 border-white bg-emerald-500 dark:border-zinc-900" />
+        )}
+      </div>
 
       {/* Content — inset bottom border (starts at text, not avatar) */}
       <div className="border-border flex min-w-0 flex-1 flex-col justify-center border-b py-3">

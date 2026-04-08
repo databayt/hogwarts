@@ -30,12 +30,12 @@ The applicant navigates to the school's public site at `school.databayt.org` and
 
 ### Step 2: Campaign Selection
 
-The applicant is taken to the application landing page where they see active admission campaigns (e.g., "Admission 2026-2027"). They can also see any saved draft applications if they're logged in.
-
-Two options are presented:
+The applicant is taken to the application landing page. Two options are presented:
 
 - **Start from scratch** — begin a new application
-- **Import from profile** — auto-fill from documents or LinkedIn (same flow, pre-populated)
+- **Import from profile** — auto-fill from documents or LinkedIn (same flow, pre-populated via AI extraction)
+
+Both link to the overview page. If the applicant is logged in, they can also see saved draft applications.
 
 **Route:** `/{lang}/application`
 
@@ -49,6 +49,12 @@ After selecting a campaign, the applicant sees an overview of the 3 phases:
 | 2     | Details            | Contact, Location     |
 | 3     | Family & Education | Guardian, Academic    |
 
+Phase descriptions:
+
+- Phase 1: "Provide your personal and contact details"
+- Phase 2: "Add guardian info and academic background"
+- Phase 3: "Upload documents and review your application"
+
 Clicking **Get Started** initializes a session and enters the wizard.
 
 **Route:** `/{lang}/application/overview?id={campaignId}`
@@ -61,45 +67,44 @@ The wizard uses a shared `FormFooter` with 3 progress bars (one per phase). Each
 
 Upload documents via drag-and-drop cards. All fields are optional — the applicant can skip this step entirely.
 
-| Slot                 | Type                     |
-| -------------------- | ------------------------ |
-| Photo                | Avatar (profile picture) |
-| Degree               | Document                 |
-| Transcript           | Document                 |
-| ID                   | Document                 |
-| Resume               | Document                 |
-| Birth Certificate    | Document                 |
-| Passport Photo       | Document                 |
-| Signature            | Document                 |
-| Medical Certificate  | Document                 |
-| Transfer Certificate | Document                 |
-| Other                | Document                 |
+| Slot       | Type                     |
+| ---------- | ------------------------ |
+| Photo      | Avatar (profile picture) |
+| Degree     | Document                 |
+| Transcript | Document                 |
+| ID         | Document                 |
+| Resume     | Document                 |
+| Other      | Document                 |
+
+Documents uploaded here trigger AI extraction — extracted data auto-fills subsequent steps (name, contact, academic info).
 
 **Route:** `/{lang}/application/{campaignId}/attachments`
 
 #### Step 2: Personal Information (Required)
 
-| Field         | Required | Validation            |
-| ------------- | -------- | --------------------- |
-| First Name    | Yes      | 2-50 chars            |
-| Last Name     | Yes      | 2-50 chars            |
-| Date of Birth | Yes      | Date picker           |
-| Gender        | Yes      | MALE / FEMALE / OTHER |
-| Nationality   | Yes      | Country selector      |
-| Religion      | No       | Free text             |
-| Category      | No       | Dropdown              |
+The name field format depends on the school's `nameFormat` setting — either a single "Full Name" field or separate first/last name fields.
 
-**Next enabled when:** firstName, lastName, dateOfBirth, gender, nationality are all filled.
+| Field         | Required | Validation                            |
+| ------------- | -------- | ------------------------------------- |
+| Full Name     | Yes      | 2-200 chars (when nameFormat=full)    |
+| First Name    | Yes      | 2-50 chars (when nameFormat=parts)    |
+| Last Name     | Yes      | 2-50 chars (when nameFormat=parts)    |
+| Date of Birth | Yes      | Date picker (year range 1990-now)     |
+| Gender        | Yes      | MALE / FEMALE                         |
+| Nationality   | Yes      | Country selector with flags           |
+| Category      | No       | General / Special Needs / Scholarship |
+
+**Next enabled when:** name, dateOfBirth, gender, and nationality are all filled.
 
 **Route:** `/{lang}/application/{campaignId}/personal`
 
 #### Step 3: Contact Information (Required)
 
-| Field           | Required | Validation                    |
-| --------------- | -------- | ----------------------------- |
-| Email           | Yes      | Valid email, max 100          |
-| Phone           | Yes      | 10-20 chars with country code |
-| Alternate Phone | No       | 10-20 chars                   |
+| Field           | Required | Validation                                    |
+| --------------- | -------- | --------------------------------------------- |
+| Email           | Yes      | Valid email, max 100                          |
+| Phone           | Yes      | International format with country code picker |
+| Alternate Phone | No       | Same format                                   |
 
 **Next enabled when:** email and phone are filled.
 
@@ -107,7 +112,9 @@ Upload documents via drag-and-drop cards. All fields are optional — the applic
 
 #### Step 4: Location (Required)
 
-If `NEXT_PUBLIC_MAPBOX_TOKEN` is configured, shows an interactive map with geocoding search. Otherwise falls back to manual input fields.
+If `NEXT_PUBLIC_MAPBOX_TOKEN` is configured, shows an interactive map with geocoding search. The applicant searches for an address or taps the map to place a pin. The system reverse-geocodes to fill address fields automatically.
+
+If Mapbox is not configured, falls back to manual input fields.
 
 | Field       | Required | Validation       |
 | ----------- | -------- | ---------------- |
@@ -123,9 +130,9 @@ If `NEXT_PUBLIC_MAPBOX_TOKEN` is configured, shows an interactive map with geoco
 
 #### Step 5: Guardian Information (Required)
 
-Uses a tabbed interface with **Father**, **Mother**, and **Guardian** tabs.
+Uses a tabbed interface with **Father** and **Mother** tabs.
 
-**Father (required):**
+**Father tab:**
 
 | Field         | Required         |
 | ------------- | ---------------- |
@@ -134,7 +141,7 @@ Uses a tabbed interface with **Father**, **Mother**, and **Guardian** tabs.
 | Phone         | No               |
 | Email         | No               |
 
-**Mother (required):**
+**Mother tab:**
 
 | Field         | Required         |
 | ------------- | ---------------- |
@@ -143,36 +150,27 @@ Uses a tabbed interface with **Father**, **Mother**, and **Guardian** tabs.
 | Phone         | No               |
 | Email         | No               |
 
-**Guardian (all optional):**
-
-| Field         | Required |
-| ------------- | -------- |
-| Guardian Name | No       |
-| Relation      | No       |
-| Phone         | No       |
-| Email         | No       |
-
 **Next enabled when:** fatherName and motherName are both filled.
 
 **Route:** `/{lang}/application/{campaignId}/guardian`
 
 #### Step 6: Academic Information (Final Step — Triggers Submit)
 
-Organized in 3 sections: Previous Education, Applying For, Languages.
+Organized in sections: Previous Education, Applying For, Languages.
 
-| Field              | Required | Notes                              |
-| ------------------ | -------- | ---------------------------------- |
-| Previous School    | No       | Free text                          |
-| Previous Class     | No       | Free text                          |
-| Previous Marks     | No       | e.g., "450/500"                    |
-| Percentage         | No       | e.g., "90%"                        |
-| Applying for Class | **Yes**  | Select from 14 Arabic grade levels |
-| Preferred Stream   | No       | Science / Arts / Commerce          |
-| Second Language    | No       | Arabic / English / French / etc.   |
-| Third Language     | No       | Same options                       |
-| Achievements       | No       | Textarea                           |
+| Field              | Required | Notes                               |
+| ------------------ | -------- | ----------------------------------- |
+| Previous School    | No       | Free text                           |
+| Previous Class     | No       | Free text                           |
+| Previous Marks     | No       | e.g., "450/500"                     |
+| Percentage         | No       | e.g., "90%"                         |
+| Applying for Class | **Yes**  | Select from 14 Arabic grade levels  |
+| Preferred Stream   | No       | Science / Arts / Commerce / General |
+| Second Language    | No       | Arabic / English / French / Quran   |
+| Third Language     | No       | Same options                        |
+| Achievements       | No       | Textarea (max 500 chars)            |
 
-**Available Grades:** KG1 through Grade 12 (14 levels, Arabic labels).
+**Available Grades:** KG1, KG2, Grade 1 through Grade 12 (14 levels, Arabic labels stored as values).
 
 The final button says **"Submit Application"** instead of "Next".
 
@@ -183,7 +181,7 @@ The final button says **"Submit Application"** instead of "Next".
 When the applicant clicks "Submit Application", the system:
 
 1. Saves the academic step data
-2. Checks completeness across all steps (firstName, lastName, email, phone, fatherName, motherName, applyingForClass)
+2. Checks completeness across all steps (name, email, phone, fatherName, motherName, applyingForClass)
 3. Flattens all step data into a single object
 4. Calls `submitApplicationAction()` which delegates to `submitApplication()`
 
@@ -205,8 +203,6 @@ When the applicant clicks "Submit Application", the system:
 
 - **Payment required** → redirects to `/{lang}/application/{applicationId}/payment?number={applicationNumber}`
 - **No payment** → redirects to `/{lang}/application/{applicationId}/success?number={applicationNumber}`
-
-The layout's `FormFooter` no longer has a `finalDestination` — the academic step's `onNext` callback handles all post-submit navigation.
 
 ### Step 6: Payment (If Required)
 
@@ -230,6 +226,7 @@ Displays:
 
 - Confetti celebration modal on first visit (animated via `success-modal.tsx`)
 - Application number in a card
+- Account credentials (email + default password) for the applicant to log in
 - **"Complete Payment" CTA** if payment is required but not yet received — links to the payment page
 - Payment status (paid/pending) with method-specific details
 - Next steps timeline (email confirmation → review → interview → decision)
@@ -372,7 +369,7 @@ Lead capture for families not ready to apply, at `/{lang}/inquiry`:
 ## Wizard Configuration
 
 ```typescript
-// ADMISSION_CONFIG in form/footer.tsx
+// config.client.ts
 {
   steps: ["attachments", "personal", "contact", "location", "guardian", "academic"],
   groups: {
@@ -380,7 +377,11 @@ Lead capture for families not ready to apply, at `/{lang}/inquiry`:
     2: ["contact", "location"],         // Details
     3: ["guardian", "academic"],         // Family & Education
   },
-  groupLabels: ["Basic Information", "Details", "Family & Education"]
+  groupLabels: {
+    1: "Basic Information",
+    2: "Details",
+    3: "Family & Education"
+  }
 }
 ```
 
@@ -409,15 +410,17 @@ src/
 │
 ├── components/school-marketing/application/
 │   ├── application-context.tsx     # Session state management
-│   ├── validation-context.tsx      # Per-step validation (alias for WizardValidationProvider)
+│   ├── validation-context.tsx      # Per-step validation
 │   ├── submit-action.ts            # Server action wrapper for submit
 │   ├── config.client.ts            # Steps, groups, limits, grades
 │   ├── types.ts                    # TypeScript types for all steps
+│   ├── utils.ts                    # Dictionary accessors
+│   ├── use-auto-fill-merge.ts      # AI extraction → auto-fill
 │   ├── error-boundary.tsx          # Error boundary wrapper
 │   │
 │   ├── overview/                   # Overview page client component
 │   ├── attachments/                # content.tsx, form.tsx, validation.ts, types.ts, config.ts, actions.ts
-│   ├── personal/                   # content.tsx, form.tsx, validation.ts, types.ts, actions.ts
+│   ├── personal/                   # content.tsx, form.tsx, validation.ts, types.ts, config.ts, actions.ts
 │   ├── contact/                    # content.tsx, form.tsx, validation.ts, types.ts, actions.ts
 │   ├── location/                   # content.tsx, form.tsx, validation.ts, types.ts, actions.ts
 │   ├── guardian/                   # content.tsx, form.tsx, validation.ts, types.ts, actions.ts
@@ -467,7 +470,7 @@ src/
 
 - The error message includes field names (e.g., "Validation failed: postalCode: ...")
 - Check that all required fields are filled across all steps
-- The completeness check requires: firstName, lastName, email, phone, fatherName, motherName, applyingForClass
+- The completeness check requires: name, email, phone, fatherName, motherName, applyingForClass
 
 **OTP Not Received**
 

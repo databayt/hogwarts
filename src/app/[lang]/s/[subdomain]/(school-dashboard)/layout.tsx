@@ -12,7 +12,8 @@ import {
   isRTL as checkIsRTL,
   type Locale,
 } from "@/components/internationalization/config"
-import { getPlatformCoreDictionary } from "@/components/internationalization/dictionaries"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import { DictionaryProvider } from "@/components/internationalization/dictionary-context"
 import { ReportIssue } from "@/components/report-issue"
 import { PageHeadingProvider } from "@/components/school-dashboard/context/page-heading-context"
 import { PageHeadingDisplay } from "@/components/school-dashboard/context/page-heading-display"
@@ -50,7 +51,7 @@ export default async function PlatformLayout({
   const [result, session, dictionary] = await Promise.all([
     getSchoolBySubdomain(subdomain),
     auth(),
-    getPlatformCoreDictionary(lang as Locale),
+    getDictionary(lang as Locale),
   ])
 
   if (!result.success) {
@@ -135,49 +136,51 @@ export default async function PlatformLayout({
   const mustChangePassword = currentUser?.mustChangePassword ?? false
 
   return (
-    <SchoolProvider school={school}>
-      <SidebarProvider>
-        <ModalProvider>
-          <PageHeadingProvider>
-            {/* Ensure the provider's flex wrapper has a single column child to preserve layout */}
-            <div
-              className="flex min-h-svh w-full flex-col"
-              dir={isRTL ? "rtl" : "ltr"}
-            >
-              <PlatformHeader
-                school={school}
-                lang={lang}
-                serverRole={serverRole}
-              />
-              <div className="flex pt-6">
-                <PlatformSidebar
+    <DictionaryProvider dictionary={dictionary}>
+      <SchoolProvider school={school}>
+        <SidebarProvider>
+          <ModalProvider>
+            <PageHeadingProvider>
+              {/* Ensure the provider's flex wrapper has a single column child to preserve layout */}
+              <div
+                className="flex min-h-svh w-full flex-col"
+                dir={isRTL ? "rtl" : "ltr"}
+              >
+                <PlatformHeader
                   school={school}
                   lang={lang}
                   serverRole={serverRole}
                 />
-                <div className="dashboard-container overflow-x-clip pb-10 transition-[margin] duration-200 ease-in-out">
-                  <PageHeadingDisplay />
-                  {children}
-                  <div className="text-muted-foreground pt-8 pb-4 text-start text-sm">
-                    <ReportIssue />
+                <div className="flex pt-6">
+                  <PlatformSidebar
+                    school={school}
+                    lang={lang}
+                    serverRole={serverRole}
+                  />
+                  <div className="dashboard-container overflow-x-clip pb-10 transition-[margin] duration-200 ease-in-out">
+                    <PageHeadingDisplay />
+                    {children}
+                    <div className="text-muted-foreground pt-8 pb-4 text-start text-sm">
+                      <ReportIssue />
+                    </div>
                   </div>
                 </div>
+                {mustChangePassword && (
+                  <ForceChangePasswordModal
+                    hasPassword={!!currentUser?.password}
+                  />
+                )}
+                {!mustChangePassword && (
+                  <WelcomeDialog
+                    userId={session.user.id}
+                    dictionary={dictionary?.school?.dashboard?.welcomeDialog}
+                  />
+                )}
               </div>
-              {mustChangePassword && (
-                <ForceChangePasswordModal
-                  hasPassword={!!currentUser?.password}
-                />
-              )}
-              {!mustChangePassword && (
-                <WelcomeDialog
-                  userId={session.user.id}
-                  dictionary={dictionary?.school?.dashboard?.welcomeDialog}
-                />
-              )}
-            </div>
-          </PageHeadingProvider>
-        </ModalProvider>
-      </SidebarProvider>
-    </SchoolProvider>
+            </PageHeadingProvider>
+          </ModalProvider>
+        </SidebarProvider>
+      </SchoolProvider>
+    </DictionaryProvider>
   )
 }

@@ -252,29 +252,51 @@ export async function POST(request: NextRequest) {
                   const socketUrl =
                     process.env.NEXT_PUBLIC_SOCKET_URL ||
                     "http://localhost:3001"
+                  const messageData = {
+                    id: bridgedMessage.id,
+                    conversationId: participant.conversation.id,
+                    senderId: participant.userId,
+                    content,
+                    contentType,
+                    createdAt: bridgedMessage.createdAt.toISOString(),
+                    sender: senderUser,
+                    attachments: msgAttachments.map((a) => ({
+                      id: a.id,
+                      url: a.fileUrl,
+                      fileName: a.fileName,
+                      fileSize: a.fileSize,
+                      fileType: a.fileType,
+                      thumbnail: a.thumbnail,
+                    })),
+                  }
+
+                  // Emit to conversation room (active chat)
                   await fetch(`${socketUrl}/api/emit`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                       room: `conversation:${participant.conversation.id}`,
                       event: "message:new",
-                      data: {
-                        id: bridgedMessage.id,
+                      data: messageData,
+                    }),
+                  })
+
+                  // Emit to all participants' user rooms (sidebar update)
+                  const allParticipants =
+                    await db.conversationParticipant.findMany({
+                      where: {
                         conversationId: participant.conversation.id,
-                        senderId: participant.userId,
-                        content,
-                        contentType,
-                        createdAt: bridgedMessage.createdAt.toISOString(),
-                        sender: senderUser,
-                        attachments: msgAttachments.map((a) => ({
-                          id: a.id,
-                          url: a.fileUrl,
-                          fileName: a.fileName,
-                          fileSize: a.fileSize,
-                          fileType: a.fileType,
-                          thumbnail: a.thumbnail,
-                        })),
+                        isActive: true,
                       },
+                      select: { userId: true },
+                    })
+                  await fetch(`${socketUrl}/api/emit-to-users`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      userIds: allParticipants.map((p) => p.userId),
+                      event: "message:new",
+                      data: messageData,
                     }),
                   })
                 } catch {
@@ -325,6 +347,35 @@ export async function POST(request: NextRequest) {
             },
             data: { whatsappStatus: mappedStatus },
           })
+
+          // Emit WhatsApp status update via Socket.IO (best-effort)
+          try {
+            const updatedMsg = await db.message.findFirst({
+              where: {
+                whatsappMessageId: waMessageId,
+                conversation: { schoolId: session.schoolId },
+              },
+              select: { id: true, conversationId: true },
+            })
+            if (updatedMsg) {
+              const socketUrl =
+                process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3001"
+              await fetch(`${socketUrl}/api/emit`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  room: `conversation:${updatedMsg.conversationId}`,
+                  event: "message:updated",
+                  data: {
+                    messageId: updatedMsg.id,
+                    whatsappStatus: mappedStatus,
+                  },
+                }),
+              })
+            }
+          } catch {
+            // Best-effort
+          }
         }
         break
       }

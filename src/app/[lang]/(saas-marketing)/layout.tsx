@@ -6,6 +6,7 @@ import { Suspense } from "react"
 import { Chatbot } from "@/components/chatbot"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { DictionaryProvider } from "@/components/internationalization/dictionary-context"
 import { LoadingWrapper } from "@/components/marketing/loading"
 import { AccessCheck } from "@/components/saas-marketing/access-check"
 import { SiteFooter } from "@/components/template/marketing-header/site-footer"
@@ -24,16 +25,18 @@ export default async function MarketingLayout({
   const dictionary = await getDictionary(lang as Locale)
 
   return (
-    <LoadingWrapper>
-      <div className="marketing-container flex min-h-screen flex-col">
-        <Suspense fallback={null}>
-          <AccessCheck />
-        </Suspense>
-        <SiteHeader dictionary={dictionary} locale={lang} />
-        <main className="flex-1">{children}</main>
-        <SiteFooter dictionary={dictionary} locale={lang} />
-        <Chatbot lang={lang as Locale} promptType="saasMarketing" />
-      </div>
-    </LoadingWrapper>
+    <DictionaryProvider dictionary={dictionary}>
+      <LoadingWrapper>
+        <div className="marketing-container flex min-h-screen flex-col">
+          <Suspense fallback={null}>
+            <AccessCheck />
+          </Suspense>
+          <SiteHeader dictionary={dictionary} locale={lang} />
+          <main className="flex-1">{children}</main>
+          <SiteFooter dictionary={dictionary} locale={lang} />
+          <Chatbot lang={lang as Locale} promptType="saasMarketing" />
+        </div>
+      </LoadingWrapper>
+    </DictionaryProvider>
   )
 }

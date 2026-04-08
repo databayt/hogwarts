@@ -11,6 +11,8 @@ import {
   isRTL as checkIsRTL,
   type Locale,
 } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import { DictionaryProvider } from "@/components/internationalization/dictionary-context"
 import { SchoolProvider } from "@/components/school-dashboard/context/school-context"
 import { ForceChangePasswordModal } from "@/components/school-dashboard/force-change-password-modal"
 import { getDisplayText } from "@/components/translation/display"
@@ -34,9 +36,10 @@ export default async function MessagingLayout({
   params,
 }: Readonly<MessagingLayoutProps>) {
   const { subdomain, lang } = await params
-  const [result, session] = await Promise.all([
+  const [result, session, dictionary] = await Promise.all([
     getSchoolBySubdomain(subdomain),
     auth(),
+    getDictionary(lang as Locale),
   ])
 
   if (!result.success) {
@@ -113,23 +116,25 @@ export default async function MessagingLayout({
   const mustChangePassword = currentUser?.mustChangePassword ?? false
 
   return (
-    <SchoolProvider school={school}>
-      <ModalProvider>
-        <div
-          className="h-screen overflow-hidden"
-          style={{
-            marginInlineStart: "calc(-1 * var(--container-px))",
-            marginInlineEnd: "calc(-1 * var(--container-px))",
-            width: "calc(100% + 2 * var(--container-px))",
-          }}
-          dir={isRTL ? "rtl" : "ltr"}
-        >
-          {children}
-        </div>
-        {mustChangePassword && (
-          <ForceChangePasswordModal hasPassword={!!currentUser?.password} />
-        )}
-      </ModalProvider>
-    </SchoolProvider>
+    <DictionaryProvider dictionary={dictionary}>
+      <SchoolProvider school={school}>
+        <ModalProvider>
+          <div
+            className="h-screen overflow-hidden"
+            style={{
+              marginInlineStart: "calc(-1 * var(--container-px))",
+              marginInlineEnd: "calc(-1 * var(--container-px))",
+              width: "calc(100% + 2 * var(--container-px))",
+            }}
+            dir={isRTL ? "rtl" : "ltr"}
+          >
+            {children}
+          </div>
+          {mustChangePassword && (
+            <ForceChangePasswordModal hasPassword={!!currentUser?.password} />
+          )}
+        </ModalProvider>
+      </SchoolProvider>
+    </DictionaryProvider>
   )
 }

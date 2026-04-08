@@ -21,6 +21,7 @@ export const env = createEnv({
     SENTRY_PROJECT: z.string().optional(),
     UPSTASH_REDIS_REST_URL: z.string().url().optional(),
     UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
+    SOCKET_SECRET: z.string().min(1).optional(),
 
     // File Upload & Storage (AWS S3 + CloudFront)
     AWS_ACCESS_KEY_ID: z
@@ -103,6 +104,7 @@ export const env = createEnv({
     SENTRY_PROJECT: process.env.SENTRY_PROJECT,
     UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
     UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
+    SOCKET_SECRET: process.env.SOCKET_SECRET,
 
     // File Upload & Storage (AWS S3 + CloudFront)
     AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,

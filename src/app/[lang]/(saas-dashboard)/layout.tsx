@@ -10,6 +10,8 @@ import {
   isRTL as checkIsRTL,
   type Locale,
 } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import { DictionaryProvider } from "@/components/internationalization/dictionary-context"
 import { ReportIssue } from "@/components/report-issue"
 import { PageHeadingProvider } from "@/components/school-dashboard/context/page-heading-context"
 import { PageHeadingDisplay } from "@/components/school-dashboard/context/page-heading-display"
@@ -47,31 +49,36 @@ export default async function OperatorLayout({
   }
 
   // Only DEVELOPER role reaches this point
-  const isRTL = checkIsRTL(lang as Locale)
+  const [dictionary, isRTL] = await Promise.all([
+    getDictionary(lang as Locale),
+    Promise.resolve(checkIsRTL(lang as Locale)),
+  ])
 
   // DEVELOPER role - allow access
   return (
-    <SidebarProvider>
-      <ModalProvider>
-        <PageHeadingProvider>
-          <div
-            className="flex min-h-svh w-full flex-col"
-            dir={isRTL ? "rtl" : "ltr"}
-          >
-            <SaasHeader />
-            <div className="flex pt-6">
-              <SaasSidebar />
-              <div className="dashboard-container overflow-x-clip pb-10 transition-[margin] duration-200 ease-in-out">
-                <PageHeadingDisplay />
-                {children}
-                <div className="text-muted-foreground pt-8 pb-4 text-start text-sm">
-                  <ReportIssue />
+    <DictionaryProvider dictionary={dictionary}>
+      <SidebarProvider>
+        <ModalProvider>
+          <PageHeadingProvider>
+            <div
+              className="flex min-h-svh w-full flex-col"
+              dir={isRTL ? "rtl" : "ltr"}
+            >
+              <SaasHeader />
+              <div className="flex pt-6">
+                <SaasSidebar />
+                <div className="dashboard-container overflow-x-clip pb-10 transition-[margin] duration-200 ease-in-out">
+                  <PageHeadingDisplay />
+                  {children}
+                  <div className="text-muted-foreground pt-8 pb-4 text-start text-sm">
+                    <ReportIssue />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </PageHeadingProvider>
-      </ModalProvider>
-    </SidebarProvider>
+          </PageHeadingProvider>
+        </ModalProvider>
+      </SidebarProvider>
+    </DictionaryProvider>
   )
 }

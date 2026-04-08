@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { generateStudentCredentials } from "./actions"
 
@@ -21,6 +22,7 @@ interface CredentialsDialogProps {
   onOpenChange: (open: boolean) => void
   studentId: string | null
   studentName: string
+  dictionary?: Dictionary["school"]["students"]
 }
 
 export function CredentialsDialog({
@@ -28,6 +30,7 @@ export function CredentialsDialog({
   onOpenChange,
   studentId,
   studentName,
+  dictionary,
 }: CredentialsDialogProps) {
   const [credentials, setCredentials] = useState<{
     email: string
@@ -37,6 +40,10 @@ export function CredentialsDialog({
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const [copiedField, setCopiedField] = useState<string | null>(null)
+
+  const t = (dictionary as any)?.credentials as
+    | Record<string, string>
+    | undefined
 
   const handleGenerate = useCallback(() => {
     if (!studentId) return
@@ -49,12 +56,13 @@ export function CredentialsDialog({
       } else {
         setError(
           "error" in result
-            ? (result.error ?? "Failed to generate credentials")
-            : "Failed to generate credentials"
+            ? (result.error ??
+                (t?.failedToGenerate || "Failed to generate credentials"))
+            : t?.failedToGenerate || "Failed to generate credentials"
         )
       }
     })
-  }, [studentId])
+  }, [studentId, t])
 
   const handleCopy = useCallback(async (text: string, field: string) => {
     try {
@@ -91,10 +99,12 @@ export function CredentialsDialog({
           <DialogTitle>{studentName}</DialogTitle>
           <DialogDescription>
             {credentials?.isNew
-              ? "New login account created. Share these credentials with the student."
+              ? t?.descriptionNew ||
+                "New login account created. Share these credentials with the student."
               : credentials
-                ? "Password has been reset. Share the new password with the student."
-                : "Generating login credentials..."}
+                ? t?.descriptionReset ||
+                  "Password has been reset. Share the new password with the student."
+                : t?.descriptionGenerating || "Generating login credentials..."}
           </DialogDescription>
         </DialogHeader>
 
@@ -115,7 +125,7 @@ export function CredentialsDialog({
             <>
               <div className="space-y-3">
                 <div className="space-y-1.5">
-                  <Label>Email</Label>
+                  <Label>{t?.email || "Email"}</Label>
                   <div className="flex gap-2">
                     <Input value={credentials.email} readOnly />
                     <Button
@@ -134,7 +144,7 @@ export function CredentialsDialog({
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label>Password</Label>
+                  <Label>{t?.password || "Password"}</Label>
                   <div className="flex gap-2">
                     <Input value={credentials.password} readOnly />
                     <Button
@@ -156,8 +166,8 @@ export function CredentialsDialog({
               </div>
 
               <p className="text-muted-foreground text-xs">
-                The student will be asked to change their password on first
-                login.
+                {t?.mustChangePassword ||
+                  "The student will be asked to change their password on first login."}
               </p>
 
               <div className="flex justify-end gap-2">
@@ -167,7 +177,7 @@ export function CredentialsDialog({
                   onClick={handleGenerate}
                   disabled={isPending}
                 >
-                  Reset Password
+                  {t?.resetPassword || "Reset Password"}
                 </Button>
               </div>
             </>

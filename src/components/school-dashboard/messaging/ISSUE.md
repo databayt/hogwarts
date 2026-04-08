@@ -1,8 +1,8 @@
 # Messaging — Production Readiness Tracker
 
-**Status:** 🟡 IN PROGRESS
-**Completion:** 90%
-**Last Updated:** 2026-04-05
+**Status:** 🟢 READY
+**Completion:** 98%
+**Last Updated:** 2026-04-08
 **QA Issue:** [#163](https://github.com/databayt/hogwarts/issues/163)
 
 ---
@@ -32,9 +32,9 @@
 - [x] Contacts sidebar with role-based grouping (WhatsApp-style click-to-chat)
 - [x] 1:1 conversation deduplication (reuses existing direct conversation)
 - [x] Polling fallback for message updates (pollNewMessages + pollConversationUpdates)
-- [ ] Real-time message delivery (WebSocket/SSE -- hook exists, backend TBD)
-- [ ] Typing indicators
-- [ ] Online/offline presence indicators
+- [x] Real-time message delivery (Socket.IO server in `socket-server/`, all 15 events wired)
+- [x] Typing indicators (relay via Socket.IO server, bouncing dots UI already built)
+- [x] Online/offline presence indicators (Redis-backed, green dots on cards, last-seen in header)
 
 ## Known Issues
 
@@ -44,8 +44,8 @@
 
 ### P1 — High
 
-- Real-time message delivery depends on WebSocket/SSE infrastructure not yet deployed (polling fallback active -- 5s interval)
-- `use-realtime-messages.ts` hook exists but backend subscription mechanism TBD
+- Socket.IO server (`socket-server/`) needs deployment to Fly.io — until then, polling fallback is active
+- `SOCKET_SECRET` env var needed on both Vercel and Fly.io for JWT auth
 
 ### P2 — Medium
 

@@ -19,6 +19,7 @@ Confirm enrollment ──────────────── ADMITTED
                                     → StudentYearLevel
                                     → AcademicGrade
                                     → FeeAssignments
+                                    → UserInvoice(s)
                                     → StudentDocuments
 Place in section ────────────────── Classroom roster
 Edit in wizard ──────────────────── Update details
@@ -35,7 +36,7 @@ The applications table shows all submissions with columns: Application #, Applic
 
 **Actions per application:**
 
-- **View Details** — full application view
+- **View Details** — full application view (opens detail page at `/{lang}/admission/applications/{id}`)
 - **Update Status** — UNDER_REVIEW → SHORTLISTED → SELECTED → WAITLISTED → REJECTED
 - **Send Email** — opens mailto link
 
@@ -45,25 +46,28 @@ When status is updated to SELECTED, the system auto-sets `admissionOffered = tru
 
 ### Step 2: Enrollment Confirmation
 
-The admin confirms enrollment for selected students. This triggers a single transaction that creates a fully integrated student record:
+The admin confirms enrollment for selected students. This triggers a single transaction (30-second timeout) that creates a fully integrated student record:
 
 1. Updates application status to `ADMITTED` with enrollment number (`ENR-{timestamp}-{random}`)
 2. Creates a `User` record if the applicant was a guest (with `role: STUDENT`, `schoolId`)
 3. Creates a `Student` record with **all** application data pre-populated (see Data Transfer below)
-4. Matches `applyingForClass` to the correct `YearLevel` (cascading: exact → case-insensitive → AcademicGrade.gradeNumber → levelOrder fallback)
+4. Matches `applyingForClass` to the correct `YearLevel` (cascading: exact name → case-insensitive → grade number extraction → levelOrder fallback)
 5. Creates `StudentYearLevel` linking student to grade + school year
 6. Sets `academicGradeId` on the student from the matched `YearLevel` → `AcademicGrade` link
 7. Updates user role from `USER` to `STUDENT` and assigns `schoolId`
-8. Auto-assigns active `FeeStructures` for the campaign's academic year → creates `FeeAssignment` records
-9. **Auto-generates `UserInvoice`** from fee assignments (non-fatal — enrollment succeeds even if invoice generation fails):
-   - Queries the fee assignments created in step 8
-   - Creates a `UserInvoice` with one `UserInvoiceItem` per fee structure
-   - Invoice number format: `ENR{YY}{NNN}` (e.g., `ENR26001`)
-   - Status: `UNPAID`, due date: 30 days from enrollment
-   - School name/address as "from", student name/email as "to"
-   - Visible in Finance → Invoices immediately after enrollment
-10. Creates `Guardian` + `StudentGuardian` + `GuardianPhoneNumber` records from father/mother/guardian data
-11. Copies application documents to `StudentDocument` records
+8. Auto-assigns active `FeeStructures` for the campaign's academic year → creates `FeeAssignment` records (status: `PENDING`)
+9. Creates `Guardian` + `StudentGuardian` + `GuardianPhoneNumber` records from father/mother data
+10. Copies application documents to `StudentDocument` records
+11. **Auto-generates `UserInvoice`(s)** from fee assignments (non-fatal — enrollment succeeds even if invoice generation fails):
+    - Creates one `UserInvoice` per `FeeAssignment` (not one combined invoice)
+    - Invoice number format: `ENR-{unique}` via `generateUniqueInvoiceNumber()`
+    - Status: `UNPAID`, due date: 30 days from enrollment
+    - School name/address as "from", student name/email as "to"
+    - Each invoice has one `UserInvoiceItem` per fee structure
+    - Visible in Finance → Invoices immediately after enrollment
+
+**After transaction (non-blocking, best-effort):**
+
 12. Sends enrollment confirmation notification to student (in-app + email)
 13. Dispatches `fee_due` notification to student for auto-assigned fees
 14. Notifies guardians about enrollment (in-app + email)
@@ -99,6 +103,7 @@ Once the student is enrolled and placed in a section:
 
 - **Classroom**: Student appears in classroom roster, timetable, attendance
 - **Finance**: `FeeAssignment` records show in Finance → Fees. The admin can record payments, apply discounts, or scholarships
+- **Invoices**: Auto-generated `UserInvoice` records show in Finance → Invoices
 - **Profile**: Student has a profile page at `/profile/{userId}` accessible from the students table
 - **Attendance**: Student is available for attendance marking in their assigned classes
 
@@ -116,13 +121,17 @@ Once the student is enrolled and placed in a section:
 | Enrollment   | `/{lang}/admission/enrollment`   | Confirm enrollment for selected students |
 | Settings     | `/{lang}/admission/settings`     | Configure admission portal settings      |
 
+There is also a detail route at `/{lang}/admission/applications/{id}` for viewing a single application.
+
 ### Merit List
 
-The admin can generate a merit list that ranks shortlisted/selected/waitlisted applications by:
+The admin can generate a merit list that ranks shortlisted/selected/waitlisted applications by configurable weights:
 
-- Merit score
-- Entrance exam score
-- Interview score
+- Academic score (default weight: 40%)
+- Entrance exam score (default weight: 35%)
+- Interview score (default weight: 25%)
+
+Weights are configurable in Admission Settings and must sum to 100.
 
 ### Payment Recording
 
@@ -132,56 +141,58 @@ Admins can manually record payments for cash/bank transfer methods, marking the 
 
 ### Invoice Auto-Generation
 
-When enrollment is confirmed, the system auto-generates a `UserInvoice` from the student's fee assignments:
+When enrollment is confirmed, the system auto-generates `UserInvoice` records from the student's fee assignments:
 
-1. Queries all `PENDING` fee assignments for the student's academic year
+1. Finds all `PENDING` fee assignments for the student's academic year
 2. Creates `UserInvoiceAddress` records for school (from) and student (to)
-3. Creates `UserInvoice` with one `UserInvoiceItem` per fee structure
-4. Invoice appears in **Finance → Invoices** immediately
+3. Creates one `UserInvoice` per fee assignment with a `UserInvoiceItem`
+4. Invoices appear in **Finance → Invoices** immediately
+5. Invoice notes: `"Auto-generated from enrollment"`
 
-This is **non-fatal** — enrollment succeeds even if invoice generation fails. The invoice uses the `createInvoiceFromEnrollment()` utility from `finance/invoice/actions.ts`.
+This is **non-fatal** — enrollment succeeds even if invoice generation fails. If it fails, the admin sees a warning message suggesting manual invoice creation from Finance → Invoices.
+
+The invoice uses the `createInvoiceFromEnrollment()` utility from `finance/invoice/actions.ts`.
 
 ---
 
 ## Application → Student Data Transfer
 
-| Application Field         | Student Field            | Notes                                   |
-| ------------------------- | ------------------------ | --------------------------------------- |
-| firstName                 | firstName                | Direct copy                             |
-| middleName                | middleName               | Direct copy                             |
-| lastName                  | lastName                 | Direct copy                             |
-| dateOfBirth               | dateOfBirth              | Direct copy                             |
-| gender                    | gender                   | Direct copy                             |
-| nationality               | nationality              | Direct copy                             |
-| email                     | email                    | Direct copy                             |
-| phone                     | mobileNumber             | Direct copy                             |
-| alternatePhone            | alternatePhone           | Direct copy                             |
-| address                   | currentAddress           | Direct copy                             |
-| city                      | city                     | Direct copy                             |
-| state                     | state                    | Direct copy                             |
-| postalCode                | postalCode               | Direct copy                             |
-| country                   | country                  | Direct copy                             |
-| category                  | category                 | Direct copy                             |
-| photoUrl                  | profilePhotoUrl          | Profile picture from application        |
-| previousSchool            | previousSchoolName       | Direct copy                             |
-| previousClass             | previousGrade            | Direct copy                             |
-| previousMarks             | previousAcademicRecord   | Combined: "Marks: X; Percentage: Y%"    |
-| previousPercentage        | previousAcademicRecord   | Combined with marks and achievements    |
-| achievements              | previousAcademicRecord   | Appended to academic record string      |
-| fatherName/motherName     | emergencyContactName     | First available used as emergency       |
-| fatherPhone/guardianPhone | emergencyContactPhone    | First available used as emergency       |
-| guardianRelation          | emergencyContactRelation | Falls back to "Parent"                  |
-| fatherName                | Guardian record          | Creates Guardian + StudentGuardian      |
-| motherName                | Guardian record          | Creates Guardian + StudentGuardian      |
-| guardianName              | Guardian record          | Creates if different from father/mother |
-| documents (JSON)          | StudentDocument records  | Each document creates a record          |
-| applyingForClass          | academicGradeId          | Via YearLevel → AcademicGrade lookup    |
+| Application Field         | Student Field            | Notes                                |
+| ------------------------- | ------------------------ | ------------------------------------ |
+| firstName                 | firstName                | Direct copy                          |
+| middleName                | middleName               | Direct copy                          |
+| lastName                  | lastName                 | Direct copy                          |
+| dateOfBirth               | dateOfBirth              | Direct copy                          |
+| gender                    | gender                   | Direct copy                          |
+| nationality               | nationality              | Direct copy                          |
+| email                     | email                    | Direct copy                          |
+| phone                     | mobileNumber             | Direct copy                          |
+| alternatePhone            | alternatePhone           | Direct copy                          |
+| address                   | currentAddress           | Direct copy                          |
+| city                      | city                     | Direct copy                          |
+| state                     | state                    | Direct copy                          |
+| postalCode                | postalCode               | Direct copy                          |
+| country                   | country                  | Direct copy                          |
+| category                  | category                 | Direct copy                          |
+| photoUrl                  | profilePhotoUrl          | Profile picture from application     |
+| previousSchool            | previousSchoolName       | Direct copy                          |
+| previousClass             | previousGrade            | Direct copy                          |
+| previousMarks             | previousAcademicRecord   | Combined: "Marks: X; Percentage: Y%" |
+| previousPercentage        | previousAcademicRecord   | Combined with marks and achievements |
+| achievements              | previousAcademicRecord   | Appended to academic record string   |
+| fatherName/motherName     | emergencyContactName     | First available used as emergency    |
+| fatherPhone/guardianPhone | emergencyContactPhone    | First available used as emergency    |
+| guardianRelation          | emergencyContactRelation | Falls back to "Parent"               |
+| fatherName                | Guardian record          | Creates Guardian + StudentGuardian   |
+| motherName                | Guardian record          | Creates Guardian + StudentGuardian   |
+| documents (JSON)          | StudentDocument records  | Each document creates a record       |
+| applyingForClass          | academicGradeId          | Via YearLevel → AcademicGrade lookup |
 
 ---
 
 ## Guardian Auto-Creation
 
-For each parent/guardian in the application (father, mother, optional guardian):
+For each parent in the application (father, mother):
 
 1. Name is split into `firstName` + `lastName` (split on last space)
 2. `GuardianType` is upserted (e.g., "father", "mother")
@@ -216,19 +227,31 @@ The session is also verified to belong to the correct school before accepting su
 
 ```typescript
 {
-  enablePublicPortal: true,       // Show public application form
-  enableInquiryForm: true,        // Show inquiry form
-  enableTourBooking: true,        // Show tour booking
-  enableStatusTracker: true,      // Allow status checking
-  applicationFee: 500,            // In campaign currency
-  paymentMethods: ["stripe", "cash", "bank_transfer"],
-  tourDuration: 60,               // Minutes per tour
-  maxToursPerDay: 5,
-  documentRequirements: [
-    "birth_certificate",
-    "previous_transcripts",
-    "medical_records"
-  ]
+  // General
+  allowMultipleApplications: false,   // Allow same email to apply multiple times
+  requireDocuments: true,             // Require document uploads
+  applicationFee: 0,                  // In campaign currency (0 = free)
+  offerExpiryDays: 14,               // Days before offer expires (1-90)
+
+  // Notifications
+  autoEmailNotifications: true,       // Send emails on status changes
+
+  // Payments
+  enableOnlinePayment: false,         // Enable Stripe payments
+  paymentMethods: ["stripe", "cash"], // Available methods
+  bankDetails: {                      // For bank transfer method
+    bankName: "",
+    accountName: "",
+    accountNumber: "",
+    iban: "",
+    swiftCode: ""
+  },
+  cashPaymentInstructions: "",        // Instructions for cash payments
+
+  // Merit Criteria (must sum to 100)
+  academicWeight: 40,                 // Academic score weight
+  entranceWeight: 35,                 // Entrance exam weight
+  interviewWeight: 25                 // Interview score weight
 }
 ```
 
@@ -247,20 +270,29 @@ The session is also verified to belong to the correct school before accepting su
 | `SELECTED`            | Admin selects                | Offer created (configurable expiry via settings), payment link sent |
 | `WAITLISTED`          | Admin waitlists              | Applicant notified                                                  |
 | `REJECTED`            | Admin rejects                | Applicant notified                                                  |
-| `ADMITTED`            | Admin confirms enrollment    | Student + Guardian + Fees + Invoice created                         |
+| `ADMITTED`            | Admin confirms enrollment    | Student + Guardian + Fees + Invoice(s) created                      |
 | `WITHDRAWN`           | Applicant or admin withdraws | Application closed                                                  |
 
 ---
 
 ## Server Actions Reference (Admin, Auth + Permission Required)
 
-| Action                      | Purpose                | Permission        |
-| --------------------------- | ---------------------- | ----------------- |
-| `updateApplicationStatus()` | Change status          | updateStatus      |
-| `confirmEnrollment()`       | Admit + create student | confirmEnrollment |
-| `placeStudentInSection()`   | Assign to section      | confirmEnrollment |
-| `generateMeritList()`       | Rank applications      | manageMerit       |
-| `recordPayment()`           | Mark fee as paid       | managePayments    |
+| Action                               | Purpose                     | Permission        |
+| ------------------------------------ | --------------------------- | ----------------- |
+| `getApplications()`                  | List applications           | viewApplications  |
+| `updateApplicationStatus()`          | Change status               | updateStatus      |
+| `confirmEnrollment()`                | Admit + create student      | confirmEnrollment |
+| `placeStudentInSection()`            | Assign to section           | confirmEnrollment |
+| `getAvailableSectionsForPlacement()` | List sections with capacity | confirmEnrollment |
+| `generateMeritList()`                | Rank applications           | manageMerit       |
+| `recordPayment()`                    | Mark fee as paid            | managePayments    |
+| `getCampaigns()`                     | List campaigns              | viewCampaigns     |
+| `createCampaign()`                   | Create campaign             | manageCampaigns   |
+| `updateCampaign()`                   | Update campaign             | manageCampaigns   |
+| `deleteCampaign()`                   | Delete campaign             | manageCampaigns   |
+| `getAdmissionSettings()`             | Get settings                | manageSettings    |
+| `saveAdmissionSettings()`            | Update settings             | manageSettings    |
+| `fetchCampaignOptions()`             | Campaign dropdown options   | viewCampaigns     |
 
 ---
 
@@ -271,9 +303,13 @@ The session is also verified to belong to the correct school before accepting su
 | Dashboard actions    | `src/components/school-dashboard/admission/actions.ts`                                     |
 | Applications table   | `src/components/school-dashboard/admission/applications-table.tsx`                         |
 | Applications columns | `src/components/school-dashboard/admission/applications-columns.tsx`                       |
+| Application detail   | `src/components/school-dashboard/admission/application-detail-content.tsx`                 |
 | Campaigns table      | `src/components/school-dashboard/admission/campaigns-table.tsx`                            |
 | Enrollment table     | `src/components/school-dashboard/admission/enrollment-table.tsx`                           |
 | Merit table          | `src/components/school-dashboard/admission/merit-table.tsx`                                |
+| Settings actions     | `src/components/school-dashboard/admission/settings/actions.ts`                            |
+| Settings validation  | `src/components/school-dashboard/admission/settings/validation.ts`                         |
+| Invoice utility      | `src/components/school-dashboard/finance/invoice/actions.ts`                               |
 | Prisma schema        | `prisma/models/admission.prisma`                                                           |
 | Admission types      | `src/components/school-marketing/admission/types.ts`                                       |
 | Actions tests        | `src/components/school-dashboard/admission/__tests__/actions.test.ts`                      |

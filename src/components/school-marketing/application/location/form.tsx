@@ -111,11 +111,12 @@ export const LocationForm = forwardRef<LocationFormRef, LocationFormProps>(
     useImperativeHandle(ref, () => ({ saveAndNext }))
 
     const handleLocationChange = (result: LocationResult) => {
-      form.setValue("address", result.address)
-      form.setValue("city", result.city)
-      form.setValue("state", result.state)
-      form.setValue("postalCode", result.postalCode)
-      form.setValue("country", result.country)
+      const opts = { shouldDirty: true, shouldValidate: true }
+      form.setValue("address", result.address, opts)
+      form.setValue("city", result.city, opts)
+      form.setValue("state", result.state, opts)
+      form.setValue("postalCode", result.postalCode, opts)
+      form.setValue("country", result.country, opts)
       setCoords({ latitude: result.latitude, longitude: result.longitude })
     }
 
@@ -139,6 +140,13 @@ export const LocationForm = forwardRef<LocationFormRef, LocationFormProps>(
               value={pickerValue}
               onChange={handleLocationChange}
               placeholder={dict.searchAddress}
+              labels={{
+                tapToPin: dict.tapToPin,
+                detectingAddress: dict.detectingAddress,
+                locationBlocked: dict.locationBlocked,
+                locationDenied: dict.locationDenied,
+                locationTimeout: dict.locationTimeout,
+              }}
             />
           </form>
         </Form>

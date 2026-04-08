@@ -1661,6 +1661,8 @@
       "completion": "Completion",
       "complete": "Complete",
       "generateAccessCode": "Generate Access Code",
+      "linkParent": "Link Parent",
+      "generateCredentials": "Generate Credentials",
       "syncGrades": "Sync Grades",
       "syncGradesFailed": "Failed to sync grades",
       "exportFailed": "Export failed",
@@ -1836,16 +1838,27 @@
         "insuranceNumberPlaceholder": "Enter insurance number"
       },
       "accessCode": {
-        "generateTitle": "Generate Access Code",
-        "generateTitlePlural": "Generate Access Codes ({count} students)",
+        "generateTitle": "Link Parent",
+        "generateTitlePlural": "Link Parents ({count} students)",
         "description": "Share these codes with parents to let them link their accounts to students. Each code can only be used once and expires after 90 days.",
         "generatingCodes": "Generating codes...",
         "failedToGenerate": "Failed to generate codes",
         "expires": "Expires:",
         "print": "Print",
         "regenerate": "Regenerate",
-        "printTitle": "Student Access Codes",
+        "printTitle": "Parent Linking Codes",
         "printInstructions": "Share this code with the student's parent or guardian. They can use it to link their account to the student's profile. Each code can only be used once."
+      },
+      "credentials": {
+        "title": "Student Credentials",
+        "descriptionNew": "New login account created. Share these credentials with the student.",
+        "descriptionReset": "Password has been reset. Share the new password with the student.",
+        "descriptionGenerating": "Generating login credentials...",
+        "email": "Email",
+        "password": "Password",
+        "resetPassword": "Reset Password",
+        "mustChangePassword": "The student will be asked to change their password on first login.",
+        "failedToGenerate": "Failed to generate credentials"
       },
       "previousEducation": {
         "title": "Previous Education",
@@ -8791,7 +8804,12 @@
             "postalCodePlaceholder": "Enter postal code",
             "country": "Country",
             "selectCountry": "Select country",
-            "searchAddress": "Search for an address..."
+            "searchAddress": "Search for an address...",
+            "tapToPin": "Tap on the map to place a pin",
+            "detectingAddress": "Detecting address...",
+            "locationBlocked": "Location access is blocked. Please enable it in your browser settings.",
+            "locationDenied": "Location access denied. Please allow location in your browser settings.",
+            "locationTimeout": "Could not get your location. Please try again."
           },
           "guardian": {
             "fatherInfo": "Father's Information",

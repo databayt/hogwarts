@@ -172,6 +172,24 @@ async function emitSocketEvent(
 }
 
 /**
+ * Emit a Socket.IO event to multiple user rooms (for events where
+ * the conversation room has no subscribers yet, e.g. new conversations).
+ */
+async function emitToUsers(
+  userIds: string[],
+  event: string,
+  data: Record<string, unknown>
+): Promise<void> {
+  const socketUrl =
+    process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3001"
+  await fetch(`${socketUrl}/api/emit-to-users`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userIds, event, data }),
+  })
+}
+
+/**
  * Create a new conversation
  */
 export async function createConversation(
@@ -268,6 +286,17 @@ export async function createConversation(
         },
       },
     })
+
+    // Notify all participants of new conversation via Socket.IO (non-blocking)
+    const allParticipantIds = [authContext.userId, ...parsed.participantIds]
+    emitToUsers(allParticipantIds, "conversation:new", {
+      id: conversation.id,
+      type: parsed.type,
+      title: parsed.title ?? null,
+      participantIds: allParticipantIds,
+    }).catch((err) =>
+      console.error("[createConversation] Socket.IO emit error:", err)
+    )
 
     // Populate WhatsApp phone numbers for participants (non-blocking)
     if (autoWhatsApp) {
@@ -384,6 +413,14 @@ export async function updateConversation(
       },
     })
 
+    // Broadcast update via Socket.IO (non-blocking)
+    emitSocketEvent(parsed.conversationId, "conversation:updated", {
+      conversationId: parsed.conversationId,
+      updates: { title: parsed.title, avatar: parsed.avatar },
+    }).catch((err) =>
+      console.error("[updateConversation] Socket.IO emit error:", err)
+    )
+
     revalidatePath(MESSAGES_PATH)
     revalidateTag(`conversations-${schoolId}`, "max")
     revalidateTag(`conversation-${parsed.conversationId}`, "max")
@@ -451,6 +488,14 @@ export async function archiveConversation(
         isArchived: true,
       },
     })
+
+    // Broadcast archive via Socket.IO (non-blocking)
+    emitSocketEvent(parsed.conversationId, "conversation:archived", {
+      conversationId: parsed.conversationId,
+      userId: authContext.userId,
+    }).catch((err) =>
+      console.error("[archiveConversation] Socket.IO emit error:", err)
+    )
 
     // Audit log (non-blocking)
     logConversationArchived(
@@ -822,6 +867,13 @@ export async function editMessage(
       },
     })
 
+    // Broadcast edit via Socket.IO (non-blocking)
+    emitSocketEvent(message.conversationId, "message:updated", {
+      messageId: parsed.messageId,
+      content: parsed.content,
+      editedAt: new Date().toISOString(),
+    }).catch((err) => console.error("[editMessage] Socket.IO emit error:", err))
+
     // Audit log (non-blocking)
     logMessageEdited(
       { schoolId, userId: authContext.userId },
@@ -900,6 +952,14 @@ export async function deleteMessage(
         content: "[Message deleted]",
       },
     })
+
+    // Broadcast delete via Socket.IO (non-blocking)
+    emitSocketEvent(message.conversationId, "message:deleted", {
+      messageId: parsed.messageId,
+      deletedAt: new Date().toISOString(),
+    }).catch((err) =>
+      console.error("[deleteMessage] Socket.IO emit error:", err)
+    )
 
     // Audit log (non-blocking)
     logMessageDeleted(
@@ -1132,6 +1192,15 @@ export async function addParticipant(
       },
     })
 
+    // Broadcast participant added via Socket.IO (non-blocking)
+    emitSocketEvent(parsed.conversationId, "conversation:participant_added", {
+      conversationId: parsed.conversationId,
+      userId: parsed.userId,
+      role: parsed.role || "member",
+    }).catch((err) =>
+      console.error("[addParticipant] Socket.IO emit error:", err)
+    )
+
     // Get the adder's name for notification
     const adder = await db.user.findUnique({
       where: { id: authContext.userId },
@@ -1217,6 +1286,14 @@ export async function removeParticipant(
       },
     })
 
+    // Broadcast participant removed via Socket.IO (non-blocking)
+    emitSocketEvent(parsed.conversationId, "conversation:participant_removed", {
+      conversationId: parsed.conversationId,
+      userId: parsed.userId,
+    }).catch((err) =>
+      console.error("[removeParticipant] Socket.IO emit error:", err)
+    )
+
     // Audit log (non-blocking)
     if (schoolId) {
       logParticipantRemoved(
@@ -1297,6 +1374,13 @@ export async function addReaction(
       update: {},
     })
 
+    // Broadcast reaction via Socket.IO (non-blocking)
+    emitSocketEvent(message.conversationId, "message:reaction", {
+      messageId: parsed.messageId,
+      userId: authContext.userId,
+      emoji: parsed.emoji,
+    }).catch((err) => console.error("[addReaction] Socket.IO emit error:", err))
+
     revalidateTag(`message-${parsed.messageId}`, "max")
 
     return { success: true, data: undefined }
@@ -1336,6 +1420,7 @@ export async function removeReaction(
         userId: authContext.userId,
         message: { conversation: { schoolId } },
       },
+      include: { message: { select: { conversationId: true } } },
     })
     if (!reaction) {
       return actionError(ACTION_ERRORS.MESSAGE_SEND_FAILED)
@@ -1348,6 +1433,16 @@ export async function removeReaction(
         userId: authContext.userId,
       },
     })
+
+    // Broadcast reaction removal via Socket.IO (non-blocking)
+    emitSocketEvent(reaction.message.conversationId, "message:reaction", {
+      messageId: reaction.messageId,
+      userId: authContext.userId,
+      emoji: reaction.emoji,
+      removed: true,
+    }).catch((err) =>
+      console.error("[removeReaction] Socket.IO emit error:", err)
+    )
 
     return { success: true, data: undefined }
   } catch (error) {

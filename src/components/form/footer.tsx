@@ -364,7 +364,18 @@ export function FormFooter({
           )}
           {showSave && (
             <button
-              onClick={onSave}
+              onClick={async () => {
+                if (canSkipToComplete && contextOnSave && onSkipToComplete) {
+                  try {
+                    await contextOnSave()
+                  } catch {
+                    return
+                  }
+                  onSkipToComplete()
+                } else {
+                  onSave?.()
+                }
+              }}
               disabled={isSaving}
               className="flex h-8 w-8 items-center justify-center"
               aria-label={dict.save || "Save"}
@@ -409,24 +420,6 @@ export function FormFooter({
           >
             {actualBackLabel}
           </Button>
-
-          {canSkipToComplete && (
-            <Button
-              variant="secondary"
-              onClick={async () => {
-                try {
-                  await contextOnSave?.()
-                } catch {
-                  return // Save failed, don't complete
-                }
-                onSkipToComplete?.()
-              }}
-              size="sm"
-              className="animate-in fade-in duration-300"
-            >
-              {skipLabel || "Skip & Create"}
-            </Button>
-          )}
 
           <Button onClick={handleNext} disabled={!canGoNextActual} size="sm">
             {actualNextLabel}

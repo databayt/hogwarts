@@ -161,9 +161,17 @@ export interface SocketEvents {
     inviteeId: string
   }) => void
 
+  // Delivery events
+  "message:delivered": (data: {
+    messageId: string
+    conversationId: string
+    deliveredAt: string
+  }) => void
+
   // Presence events
   "presence:online": (data: { userId: string; timestamp: string }) => void
   "presence:offline": (data: { userId: string; lastSeenAt: string }) => void
+  "presence:list": (data: { users: string[] }) => void
 
   // System events
   notification: (data: { type: string; message: string }) => void
@@ -179,6 +187,7 @@ class SocketService {
   private listeners: Map<keyof SocketEvents, Set<Function>> = new Map()
   private isConnecting = false
   private connectionListeners: Set<(connected: boolean) => void> = new Set()
+  private heartbeatInterval: ReturnType<typeof setInterval> | null = null
 
   constructor() {
     // Use environment variable or default to local development URL
@@ -200,10 +209,25 @@ class SocketService {
   }
 
   /**
+   * Fetch a short-lived JWT for socket auth (production).
+   * Falls back to null if the endpoint is unavailable (development).
+   */
+  private async fetchSocketToken(): Promise<string | null> {
+    try {
+      const res = await fetch("/api/socket-token")
+      if (!res.ok) return null
+      const { token } = await res.json()
+      return token || null
+    } catch {
+      return null
+    }
+  }
+
+  /**
    * Connect to WebSocket server
    */
   connect(schoolId: string, userId: string, role: string): Promise<void> {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       if (this.socket?.connected) {
         resolve()
         return
@@ -223,15 +247,16 @@ class SocketService {
       this.isConnecting = true
 
       try {
-        // WHY: Pass authentication context to server via query parameters
-        // Server uses these to validate permissions and route events to correct users
-        // Cannot use auth headers (WebSocket handshake limitation)
+        // Fetch signed JWT for production auth; falls back to query params in dev
+        const token = await this.fetchSocketToken()
+
         this.socket = io(this.url, {
           transports: ["websocket", "polling"],
           query: {
             schoolId,
             userId,
             role,
+            ...(token ? { token } : {}),
           },
           reconnection: true,
           reconnectionAttempts: this.maxReconnectAttempts,
@@ -249,6 +274,13 @@ class SocketService {
             type: "success",
             message: "Real-time updates connected",
           })
+
+          // Presence heartbeat every 60s to keep Redis TTL alive
+          if (this.heartbeatInterval) clearInterval(this.heartbeatInterval)
+          this.heartbeatInterval = setInterval(() => {
+            this.send("presence:heartbeat", {})
+          }, 60000)
+
           resolve()
         })
 
@@ -256,6 +288,10 @@ class SocketService {
           console.log("❌ WebSocket disconnected:", reason)
           this.isConnecting = false
           this.notifyConnectionChange(false)
+          if (this.heartbeatInterval) {
+            clearInterval(this.heartbeatInterval)
+            this.heartbeatInterval = null
+          }
           this.emit("notification", {
             type: "warning",
             message: "Real-time updates disconnected",
@@ -288,6 +324,10 @@ class SocketService {
    * Disconnect from WebSocket server
    */
   disconnect(): void {
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval)
+      this.heartbeatInterval = null
+    }
     if (this.socket) {
       this.socket.disconnect()
       this.socket = null
@@ -485,6 +525,14 @@ class SocketService {
 
     this.socket.on("presence:offline", (data) => {
       this.emit("presence:offline", data)
+    })
+
+    this.socket.on("presence:list", (data) => {
+      this.emit("presence:list", data)
+    })
+
+    this.socket.on("message:delivered", (data) => {
+      this.emit("message:delivered", data)
     })
 
     // Re-attach custom listeners

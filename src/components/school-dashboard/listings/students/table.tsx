@@ -133,8 +133,8 @@ function StudentsTableInner({
     (studentId: string, studentName: string) => {
       setAccessCodeStudentIds([studentId])
       setAccessCodeStudentNames({ [studentId]: studentName })
-      // Defer to avoid Radix DropdownMenu close event cascading to Dialog
-      setTimeout(() => setAccessCodeOpen(true), 0)
+      // Delay lets Radix DropdownMenu dismiss events fully settle before Dialog opens
+      setTimeout(() => setAccessCodeOpen(true), 150)
     },
     []
   )
@@ -150,8 +150,8 @@ function StudentsTableInner({
     (studentId: string, studentName: string) => {
       setCredentialsStudentId(studentId)
       setCredentialsStudentName(studentName)
-      // Defer to avoid Radix DropdownMenu close event cascading to Dialog
-      setTimeout(() => setCredentialsOpen(true), 0)
+      // Delay lets Radix DropdownMenu dismiss events fully settle before Dialog opens
+      setTimeout(() => setCredentialsOpen(true), 150)
     },
     []
   )
@@ -457,6 +457,7 @@ function StudentsTableInner({
         onOpenChange={setCredentialsOpen}
         studentId={credentialsStudentId}
         studentName={credentialsStudentName}
+        dictionary={dictionary}
       />
     </>
   )
