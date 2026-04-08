@@ -89,8 +89,8 @@ export const RATE_LIMITS = {
   STREAM_API: { windowMs: 60 * 1000, maxRequests: 60 }, // 60 requests per minute
 
   // Messaging endpoints - prevent spam
-  MESSAGE_SEND: { windowMs: 60 * 1000, maxRequests: 10 }, // 10 messages per minute per user
-  MESSAGE_BURST: { windowMs: 10 * 1000, maxRequests: 5 }, // 5 messages per 10 seconds (burst protection)
+  MESSAGE_SEND: { windowMs: 60 * 1000, maxRequests: 30 }, // 30 messages per minute per user
+  MESSAGE_BURST: { windowMs: 10 * 1000, maxRequests: 20 }, // 20 messages per 10 seconds (burst protection)
   MESSAGE_FILE_UPLOAD: { windowMs: 10 * 60 * 1000, maxRequests: 10 }, // 10 files per 10 minutes
   MESSAGE_REACTION: { windowMs: 60 * 1000, maxRequests: 30 }, // 30 reactions per minute
   MESSAGE_TYPING: { windowMs: 10 * 1000, maxRequests: 3 }, // 3 typing indicators per 10 seconds

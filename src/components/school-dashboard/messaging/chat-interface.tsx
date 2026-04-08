@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useCallback, useEffect, useOptimistic, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { formatDistanceToNow } from "date-fns"
 import { ar, enUS } from "date-fns/locale"
 import { ArrowLeft } from "lucide-react"
@@ -171,12 +171,7 @@ export function ChatInterface({
     }
   }, [whatsappEnabled, conversation.id, m])
 
-  // Optimistic updates (React 19) — driven by messages prop
-  const [optimisticMessages, addOptimisticMessage] = useOptimistic(
-    messages,
-    (state, newMessage: MessageDTO) => [...state, newMessage]
-  )
-
+  // Direct cache optimistic send — no useOptimistic, no double render
   const handleOptimisticSend = useCallback(
     (content: string, replyToId?: string): string => {
       const nonce = crypto.randomUUID()
@@ -213,10 +208,43 @@ export function ChatInterface({
         readReceipts: [],
         readCount: 0,
       }
-      addOptimisticMessage(optimisticMessage)
+      // Add directly to cache — instant, single render
+      onMessagesUpdate(conversation.id, (prev) => [...prev, optimisticMessage])
       return nonce
     },
-    [conversation.id, currentUserId, messages, addOptimisticMessage]
+    [conversation.id, currentUserId, messages, onMessagesUpdate]
+  )
+
+  // Confirm: swap temp-{nonce} → real message in-place (only icon transitions)
+  const handleMessageConfirmed = useCallback(
+    (nonce: string, messageId: string) => {
+      onMessagesUpdate(conversation.id, (prev) =>
+        prev.map((msg) =>
+          msg.id === `temp-${nonce}`
+            ? {
+                ...msg,
+                id: messageId,
+                status: "sent" as MessageDTO["status"],
+              }
+            : msg
+        )
+      )
+    },
+    [conversation.id, onMessagesUpdate]
+  )
+
+  // Fail: mark temp message as failed
+  const handleMessageFailed = useCallback(
+    (nonce: string) => {
+      onMessagesUpdate(conversation.id, (prev) =>
+        prev.map((msg) =>
+          msg.id === `temp-${nonce}`
+            ? { ...msg, status: "failed" as MessageDTO["status"] }
+            : msg
+        )
+      )
+    },
+    [conversation.id, onMessagesUpdate]
   )
 
   const config = CONVERSATION_TYPE_CONFIG[conversation.type]
@@ -330,24 +358,28 @@ export function ChatInterface({
       const newMessage = buildMessageFromSocket(data)
 
       onMessagesUpdate(conversation.id, (prev) => {
+        // Already exists by real ID (confirmed via form response or prior socket)
+        if (prev.some((msg) => msg.id === data.id)) return prev
+
         if (data.senderId === currentUserId) {
-          // Nonce-based reconciliation
+          // Own message — check if already confirmed (temp replaced with real ID)
           const serverNonce = (data.metadata as Record<string, unknown>)
             ?.clientNonce as string | undefined
           if (serverNonce) {
-            const withoutOptimistic = prev.filter((msg) => {
-              const msgNonce = (msg.metadata as Record<string, unknown>)
-                ?.clientNonce as string | undefined
-              return !msgNonce || msgNonce !== serverNonce
-            })
-            return [...withoutOptimistic, newMessage]
+            // Temp still pending? Replace it. Already confirmed? Skip.
+            const tempIdx = prev.findIndex(
+              (msg) => msg.id === `temp-${serverNonce}`
+            )
+            if (tempIdx >= 0) {
+              return prev.map((msg) =>
+                msg.id === `temp-${serverNonce}` ? newMessage : msg
+              )
+            }
+            // No temp found = already confirmed via form response → skip
+            return prev
           }
-          // Fallback: remove all temp messages
-          const withoutTemp = prev.filter((msg) => !msg.id.startsWith("temp-"))
-          return [...withoutTemp, newMessage]
         }
-        // Dedup check for messages from others
-        if (prev.some((msg) => msg.id === data.id)) return prev
+        // Message from others or no nonce
         return [...prev, newMessage]
       })
 
@@ -541,59 +573,6 @@ export function ChatInterface({
     }
   }, [conversation.id, isConnected, onMessagesUpdate, debouncedMarkAsRead])
 
-  const handleSendMessage = async (content: string, replyToId?: string) => {
-    // Find the nonce from the optimistic message (latest temp message)
-    const tempMsg = messages.find(
-      (msg) => msg.id.startsWith("temp-") && msg.content === content
-    )
-    const nonce = tempMsg
-      ? ((tempMsg.metadata as Record<string, unknown>)?.clientNonce as string)
-      : undefined
-
-    try {
-      const sentMessage = await onSendMessage(content, replyToId)
-      if (sentMessage) {
-        // Replace any optimistic temp messages with the real one
-        onMessagesUpdate(conversation.id, (prev) => {
-          const withoutOptimistic = prev.filter(
-            (msg) => !msg.id.startsWith("temp-")
-          )
-          // Only add if not already present (socket may have delivered it)
-          if (withoutOptimistic.some((msg) => msg.id === sentMessage.id)) {
-            return withoutOptimistic
-          }
-          return [...withoutOptimistic, sentMessage]
-        })
-      }
-      setReplyTo(null)
-      setEditingMessage(null)
-    } catch {
-      // Queue for retry instead of losing the message
-      if (nonce) {
-        pendingQueueRef.current.push({
-          nonce,
-          content,
-          replyToId,
-          conversationId: conversation.id,
-          retryCount: 0,
-        })
-        // Update optimistic message status to "failed"
-        onMessagesUpdate(conversation.id, (prev) =>
-          prev.map((msg) =>
-            msg.id === `temp-${nonce}`
-              ? { ...msg, status: "failed" as MessageDTO["status"] }
-              : msg
-          )
-        )
-      } else {
-        toast({
-          title: m?.notifications?.error || "Error",
-          description: m?.errors?.send_failed || "Failed to send message",
-        })
-      }
-    }
-  }
-
   // Retry a failed message
   const handleRetryMessage = useCallback(
     async (messageId: string) => {
@@ -702,14 +681,6 @@ export function ChatInterface({
 
   return (
     <div className={cn("flex h-full flex-col", className)}>
-      {/* Connection status banner */}
-      {!isConnected && (
-        <div className="flex items-center justify-center gap-2 bg-amber-50 px-3 py-1 text-xs text-amber-700 dark:bg-amber-950/30 dark:text-amber-400">
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" />
-          {locale === "ar" ? "جاري الاتصال..." : "Connecting..."}
-        </div>
-      )}
-
       {/* Header */}
       <div
         className="flex h-12 flex-shrink-0 items-center gap-3 px-3"
@@ -871,7 +842,7 @@ export function ChatInterface({
       {/* Messages — background rendered by MessageList */}
       <div className="relative flex-1 overflow-hidden">
         <MessageList
-          messages={optimisticMessages}
+          messages={messages}
           currentUserId={currentUserId}
           locale={locale}
           conversationType={conversation.type}
@@ -926,6 +897,8 @@ export function ChatInterface({
           onTypingStart={handleTypingStart}
           onTypingStop={handleTypingStop}
           onOptimisticSend={handleOptimisticSend}
+          onMessageConfirmed={handleMessageConfirmed}
+          onMessageFailed={handleMessageFailed}
         />
       ) : (
         <div className="bg-msg-header-bg text-muted-foreground border-border border-t p-4 text-center text-sm">

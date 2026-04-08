@@ -2,10 +2,9 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useActionState, useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import dynamic from "next/dynamic"
 import { Plus, Send, Smile, Square, X } from "lucide-react"
-import { useFormStatus } from "react-dom"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -25,7 +24,7 @@ import {
 } from "@/components/file"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
-import { sendMessageFromForm, type MessageFormState } from "./actions"
+import { sendMessage } from "./actions"
 import type { MessageDTO } from "./types"
 
 export interface MessageInputProps {
@@ -41,6 +40,8 @@ export interface MessageInputProps {
   onTypingStart?: () => void
   onTypingStop?: () => void
   onOptimisticSend?: (content: string, replyToId?: string) => string | void
+  onMessageConfirmed?: (nonce: string, messageId: string) => void
+  onMessageFailed?: (nonce: string) => void
   className?: string
 }
 
@@ -57,6 +58,8 @@ export function MessageInput({
   onTypingStart,
   onTypingStop,
   onOptimisticSend,
+  onMessageConfirmed,
+  onMessageFailed,
   className,
 }: MessageInputProps) {
   const { dictionary } = useDictionary()
@@ -67,57 +70,74 @@ export function MessageInput({
   const [showAttachMenu, setShowAttachMenu] = useState(false)
   const [showFileUpload, setShowFileUpload] = useState(false)
   const [hasContent, setHasContent] = useState(false)
-
-  const [state, formAction] = useActionState<MessageFormState, FormData>(
-    sendMessageFromForm,
-    { success: false }
-  )
-
-  const handleFormAction = async (formData: FormData) => {
-    const content = formData.get("content") as string
-    const replyToId = formData.get("replyToId") as string | null
-
-    if (content?.trim()) {
-      const nonce = onOptimisticSend?.(content.trim(), replyToId || undefined)
-      if (nonce) {
-        formData.set("clientNonce", nonce)
-      }
-    }
-
-    return formAction(formData)
-  }
+  const [isSending, setIsSending] = useState(false)
 
   const defaultPlaceholder = m?.form?.message_placeholder || "Type a message..."
 
-  // Auto-reset form on successful send
-  useEffect(() => {
-    if (state.success && state.messageId) {
-      // Explicitly clear the textarea value before form reset
-      if (textareaRef.current) {
-        textareaRef.current.value = ""
-        textareaRef.current.style.height = "auto"
-      }
-      formRef.current?.reset()
-      setHasContent(false)
-      onCancelReply?.()
-      textareaRef.current?.focus()
+  // Direct send — no useActionState, instant optimistic + inline confirm
+  const handleSend = useCallback(async () => {
+    const content = textareaRef.current?.value.trim()
+    if (!content || isSending) return
 
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current)
-      }
-      onTypingStop?.()
+    const replyToId = replyTo?.id
+
+    // 1. Optimistic: add to cache instantly
+    const nonce = onOptimisticSend?.(content, replyToId)
+
+    // 2. Clear form immediately (don't wait for server)
+    if (textareaRef.current) {
+      textareaRef.current.value = ""
+      textareaRef.current.style.height = "auto"
     }
-  }, [state.success, state.messageId, onCancelReply, onTypingStop])
+    setHasContent(false)
+    onCancelReply?.()
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
+    onTypingStop?.()
+    textareaRef.current?.focus()
 
-  // Show error toast
-  useEffect(() => {
-    if (!state.success && state.error) {
+    // 3. Send to server
+    setIsSending(true)
+    try {
+      const result = await sendMessage({
+        conversationId,
+        content,
+        contentType: "text",
+        replyToId: replyToId || undefined,
+        clientNonce: nonce || undefined,
+      })
+
+      if (result.success && nonce) {
+        // 4a. Confirm: swap temp → real in-place (only status icon changes)
+        onMessageConfirmed?.(nonce, result.data.id)
+      } else if (!result.success && nonce) {
+        // 4b. Failed: mark as failed
+        onMessageFailed?.(nonce)
+        toast({
+          title: m?.notifications?.error || "Error",
+          description:
+            result.error || m?.errors?.send_failed || "Failed to send",
+        })
+      }
+    } catch {
+      if (nonce) onMessageFailed?.(nonce)
       toast({
         title: m?.notifications?.error || "Error",
-        description: state.error,
+        description: m?.errors?.send_failed || "Failed to send message",
       })
+    } finally {
+      setIsSending(false)
     }
-  }, [state.success, state.error, locale])
+  }, [
+    conversationId,
+    isSending,
+    replyTo?.id,
+    onOptimisticSend,
+    onMessageConfirmed,
+    onMessageFailed,
+    onCancelReply,
+    onTypingStop,
+    m,
+  ])
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     // Auto-resize
@@ -146,9 +166,7 @@ export function MessageInput({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
-      const content = textareaRef.current?.value.trim()
-      if (!content) return
-      formRef.current?.requestSubmit()
+      handleSend()
     }
   }
 
@@ -286,14 +304,13 @@ export function MessageInput({
   return (
     <form
       ref={formRef}
-      action={handleFormAction}
+      onSubmit={(e) => {
+        e.preventDefault()
+        handleSend()
+      }}
       className={cn("border-border border-t", className)}
       style={{ backgroundColor: "#F5F0EA" }}
     >
-      {/* Hidden inputs */}
-      <input type="hidden" name="conversationId" value={conversationId} />
-      {replyTo && <input type="hidden" name="replyToId" value={replyTo.id} />}
-
       {/* Reply context — WhatsApp style with colored left border */}
       {replyTo && (
         <div className="mx-3 mt-2">
@@ -638,7 +655,11 @@ export function MessageInput({
 
           {/* Mic / Send */}
           {hasContent ? (
-            <SubmitButton locale={locale} disabled={disabled} />
+            <SubmitButton
+              locale={locale}
+              disabled={disabled}
+              isSending={isSending}
+            />
           ) : (
             <button
               type="button"
@@ -679,21 +700,21 @@ export function MessageInput({
 function SubmitButton({
   locale,
   disabled,
+  isSending,
 }: {
   locale?: "ar" | "en"
   disabled?: boolean
+  isSending?: boolean
 }) {
-  const { pending } = useFormStatus()
-
   return (
     <Button
       type="submit"
-      disabled={disabled || pending}
+      disabled={disabled || isSending}
       size="icon"
       className="mb-1 flex-shrink-0 rounded-full text-white"
       style={{ backgroundColor: "#1FA961", height: "32px", width: "32px" }}
     >
-      {pending ? (
+      {isSending ? (
         <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
       ) : (
         <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none">
