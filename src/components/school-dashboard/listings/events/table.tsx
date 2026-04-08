@@ -115,7 +115,13 @@ function EventsTableInner({
     async (event: EventRow) => {
       try {
         const deleteMsg = `${dictionary?.delete || "Delete"} "${event.title}"?`
-        const ok = await confirmDeleteDialog(deleteMsg)
+        const d = dictionary as Record<string, any> | undefined
+        const ok = await confirmDeleteDialog(deleteMsg, {
+          title: `${d?.delete || "Delete"} "${event.title}"?`,
+          description: d?.deleteConfirm || "This action cannot be undone.",
+          confirmText: d?.delete || "Delete",
+          cancelText: d?.cancel || "Cancel",
+        })
         if (!ok) return
 
         // Optimistic remove

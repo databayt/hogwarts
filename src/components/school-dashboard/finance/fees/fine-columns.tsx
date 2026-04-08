@@ -37,7 +37,8 @@ export type FineRow = {
 
 export const getFineColumns = (
   lang?: string,
-  col?: Record<string, string>
+  col?: Record<string, string>,
+  callbacks?: { onDelete?: (row: FineRow) => void }
 ): ColumnDef<FineRow>[] => {
   return [
     {
@@ -228,6 +229,17 @@ export const getFineColumns = (
                   {col?.edit || "Edit"}
                 </Link>
               </DropdownMenuItem>
+              {callbacks?.onDelete && !fine.isPaid && !fine.isWaived && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => callbacks.onDelete!(fine)}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    {col?.delete || "Delete"}
+                  </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         )

@@ -5,8 +5,9 @@
 import React from "react"
 
 import { WizardLayout } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { updateEventWizardStep } from "@/components/school-dashboard/listings/events/wizard/actions"
-import { EVENT_WIZARD_CONFIG } from "@/components/school-dashboard/listings/events/wizard/config"
+import { getEventWizardConfig } from "@/components/school-dashboard/listings/events/wizard/config"
 import {
   EventWizardProvider,
   useEventWizard,
@@ -17,16 +18,19 @@ export default function EventWizardLayoutPage({
 }: {
   children: React.ReactNode
 }) {
+  const { dictionary } = useDictionary()
+  const config = getEventWizardConfig(dictionary?.school?.events)
+
   return (
     <WizardLayout
-      config={EVENT_WIZARD_CONFIG}
+      config={config}
       dataProvider={EventWizardProvider}
       loadHook={useEventWizard}
       basePath="/events/add"
       onStepChange={(entityId, step) => {
         updateEventWizardStep(entityId, step)
       }}
-      finalLabel="Complete"
+      finalLabel={config.finalLabel}
     >
       {children}
     </WizardLayout>

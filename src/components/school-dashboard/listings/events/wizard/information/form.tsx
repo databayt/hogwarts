@@ -98,24 +98,26 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
             }
             disabled={isPending}
           />
-          <SelectField
-            name="eventType"
-            label={wi?.eventTypeLabel || "Event Type"}
-            options={[...typeOptions]}
-            disabled={isPending}
-          />
+          <div className="grid grid-cols-2 gap-4">
+            <SelectField
+              name="eventType"
+              label={wi?.eventTypeLabel || "Event Type"}
+              options={[...typeOptions]}
+              disabled={isPending}
+            />
+            <InputField
+              name="targetAudience"
+              label={wi?.targetAudienceLabel || "Target Audience"}
+              placeholder={
+                wi?.targetAudiencePlaceholder || "e.g. Students, Parents, Staff"
+              }
+              disabled={isPending}
+            />
+          </div>
           <InputField
             name="organizer"
             label={wi?.organizerLabel || "Organizer"}
             placeholder={wi?.organizerPlaceholder || "Enter organizer name"}
-            disabled={isPending}
-          />
-          <InputField
-            name="targetAudience"
-            label={wi?.targetAudienceLabel || "Target Audience"}
-            placeholder={
-              wi?.targetAudiencePlaceholder || "e.g. Students, Parents, Staff"
-            }
             disabled={isPending}
           />
         </form>

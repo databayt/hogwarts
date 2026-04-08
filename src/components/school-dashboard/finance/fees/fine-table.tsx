@@ -8,18 +8,24 @@ import { useRouter } from "next/navigation"
 
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
+import {
+  confirmDeleteDialog,
+  DeleteToast,
+  ErrorToast,
+} from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { PlatformToolbar } from "@/components/school-dashboard/shared"
 import {
   BulkActionsToolbar,
+  createDeleteAction,
   createExportAction,
 } from "@/components/table/bulk-actions-toolbar"
 import { DataTable } from "@/components/table/data-table"
 import { getSelectColumn } from "@/components/table/select-column"
 import { useDataTable } from "@/components/table/use-data-table"
 
-import { fetchFineRows } from "./actions"
+import { deleteFine, fetchFineRows } from "./actions"
 import { getFineColumns, type FineRow } from "./fine-columns"
 
 interface FinesTableProps {
@@ -41,19 +47,48 @@ function FinesTableInner({
   const [isPending, startTransition] = useTransition()
   const { view, toggleView } = usePlatformView({ defaultView: "table" })
 
-  const { data, isLoading, hasMore, loadMore } = usePlatformData<
-    FineRow,
-    Record<string, unknown>
-  >({
-    initialData,
-    total,
-    perPage,
-    fetcher: fetchFineRows,
-  })
+  const col = (dictionary as any)?.finance?.columns as
+    | Record<string, string>
+    | undefined
+  const fc = (dictionary as any)?.finance?.common as
+    | Record<string, string>
+    | undefined
+
+  const { data, isLoading, hasMore, loadMore, refresh, optimisticRemove } =
+    usePlatformData<FineRow, Record<string, unknown>>({
+      initialData,
+      total,
+      perPage,
+      fetcher: fetchFineRows,
+    })
+
+  const handleSingleDelete = useCallback(
+    async (fine: FineRow) => {
+      const ok = await confirmDeleteDialog(undefined, {
+        title: col?.delete || fc?.delete || "Delete",
+        description: fc?.deleteConfirm || "This action cannot be undone.",
+        confirmText: col?.delete || fc?.delete || "Delete",
+        cancelText: fc?.cancel || "Cancel",
+      })
+      if (!ok) return
+      optimisticRemove(fine.id)
+      const result = await deleteFine(fine.id)
+      if (result.success) {
+        DeleteToast()
+      } else {
+        refresh()
+        ErrorToast(result.error || "Failed to delete")
+      }
+    },
+    [col, fc, optimisticRemove, refresh]
+  )
 
   const columns = useMemo(
-    () => [getSelectColumn<FineRow>(), ...getFineColumns(lang)],
-    [lang]
+    () => [
+      getSelectColumn<FineRow>(),
+      ...getFineColumns(lang, col, { onDelete: handleSingleDelete }),
+    ],
+    [lang, col, handleSingleDelete]
   )
 
   const { table } = useDataTable<FineRow>({

@@ -48,7 +48,8 @@ const COVERAGE_TYPE_COLORS: Record<string, string> = {
 
 export const getScholarshipColumns = (
   lang?: string,
-  col?: Record<string, string>
+  col?: Record<string, string>,
+  callbacks?: { onDelete?: (row: ScholarshipRow) => void }
 ): ColumnDef<ScholarshipRow>[] => {
   return [
     {
@@ -282,6 +283,17 @@ export const getScholarshipColumns = (
                   {col?.edit || "Edit"}
                 </Link>
               </DropdownMenuItem>
+              {callbacks?.onDelete && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => callbacks.onDelete!(scholarship)}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    {col?.delete || "Delete"}
+                  </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         )

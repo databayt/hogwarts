@@ -3,7 +3,6 @@
 
 import { SearchParams } from "nuqs/server"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
 
 interface Props {
@@ -19,17 +18,15 @@ export default async function RecurringEventsContent({
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>{d?.recurring?.title || "Recurring Events"}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="muted">
-            {d?.recurring?.description ||
-              "Manage recurring event patterns and schedules."}
-          </p>
-        </CardContent>
-      </Card>
+      <div className="space-y-2 p-1">
+        <h3 className="text-lg font-semibold">
+          {d?.recurring?.title || "Recurring Events"}
+        </h3>
+        <p className="text-muted-foreground text-sm">
+          {d?.recurring?.description ||
+            "Manage recurring event patterns and schedules."}
+        </p>
+      </div>
     </div>
   )
 }

@@ -4,7 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useTransition } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { format } from "date-fns"
+import { ar, enUS } from "date-fns/locale"
 import { CalendarIcon } from "lucide-react"
 import { type DateRange } from "react-day-picker"
 import { useForm } from "react-hook-form"
@@ -216,11 +216,21 @@ export function CampaignForm({
                     {watched.startDate ? (
                       watched.endDate ? (
                         <>
-                          {format(watched.startDate, "LLL dd, y")} -{" "}
-                          {format(watched.endDate, "LLL dd, y")}
+                          {watched.startDate.toLocaleDateString(
+                            lang === "ar" ? "ar-SA" : "en-US",
+                            { day: "numeric", month: "short", year: "2-digit" }
+                          )}{" "}
+                          -{" "}
+                          {watched.endDate.toLocaleDateString(
+                            lang === "ar" ? "ar-SA" : "en-US",
+                            { day: "numeric", month: "short", year: "2-digit" }
+                          )}
                         </>
                       ) : (
-                        format(watched.startDate, "LLL dd, y")
+                        watched.startDate.toLocaleDateString(
+                          lang === "ar" ? "ar-SA" : "en-US",
+                          { day: "numeric", month: "short", year: "2-digit" }
+                        )
                       )
                     ) : (
                       <span>{labels.pickDateRange}</span>
@@ -231,6 +241,7 @@ export function CampaignForm({
                   <Calendar
                     mode="range"
                     defaultMonth={watched.startDate}
+                    locale={lang === "ar" ? ar : enUS}
                     selected={{
                       from: watched.startDate,
                       to: watched.endDate,

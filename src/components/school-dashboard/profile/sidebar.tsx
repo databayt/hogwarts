@@ -49,7 +49,11 @@ function getAchievementBadgeSrc(badgeName: string): string {
   return asset(`/illustrations/${badgeName}.png`)
 }
 
-function getRoleConfig(role: ProfileRole, data: Record<string, unknown>) {
+function getRoleConfig(
+  role: ProfileRole,
+  data: Record<string, unknown>,
+  p?: Record<string, any>
+) {
   const fullName = `${data.firstName || ""} ${data.lastName || ""}`.trim()
   const initials =
     `${(data.firstName as string)?.[0] || ""}${(data.lastName as string)?.[0] || ""}`.toUpperCase()
@@ -69,12 +73,12 @@ function getRoleConfig(role: ProfileRole, data: Record<string, unknown>) {
         initials,
         stats: [
           {
-            label: "subjects",
+            label: p?.sidebar?.subjects ?? "subjects",
             value: 8,
             icon: <OcticonRepo className="size-4" />,
           },
           {
-            label: "projects",
+            label: p?.sidebar?.projects ?? "projects",
             value: 12,
             icon: <OcticonTable className="size-4" />,
           },
@@ -90,7 +94,7 @@ function getRoleConfig(role: ProfileRole, data: Record<string, unknown>) {
           },
           {
             icon: <OcticonClock className="size-4" />,
-            value: `Enrolled ${formatDate(data.enrollmentDate as string)}`,
+            value: `${p?.sidebar?.enrolled ?? "Enrolled"} ${formatDate(data.enrollmentDate as string)}`,
           },
         ],
         achievements: [
@@ -194,12 +198,12 @@ function getRoleConfig(role: ProfileRole, data: Record<string, unknown>) {
         initials,
         stats: [
           {
-            label: "classes",
+            label: p?.sidebar?.classes ?? "classes",
             value: 6,
             icon: <OcticonRepo className="size-4" />,
           },
           {
-            label: "students",
+            label: p?.sidebar?.students ?? "students",
             value: 127,
             icon: <OcticonPeople className="size-4" />,
           },
@@ -215,7 +219,7 @@ function getRoleConfig(role: ProfileRole, data: Record<string, unknown>) {
           },
           {
             icon: <OcticonClock className="size-4" />,
-            value: `Joined ${formatDate((data.joiningDate as string) || (data.createdAt as string))}`,
+            value: `${p?.sidebar?.joined ?? "Joined"} ${formatDate((data.joiningDate as string) || (data.createdAt as string))}`,
           },
         ],
         achievements: [
@@ -301,12 +305,12 @@ function getRoleConfig(role: ProfileRole, data: Record<string, unknown>) {
         initials,
         stats: [
           {
-            label: "children",
+            label: p?.sidebar?.children ?? "children",
             value: 3,
             icon: <OcticonPeople className="size-4" />,
           },
           {
-            label: "events",
+            label: p?.sidebar?.events ?? "events",
             value: 5,
             icon: <OcticonTable className="size-4" />,
           },
@@ -322,7 +326,7 @@ function getRoleConfig(role: ProfileRole, data: Record<string, unknown>) {
           },
           {
             icon: <OcticonClock className="size-4" />,
-            value: `Member since ${formatDate(data.createdAt as string)}`,
+            value: `${p?.sidebar?.memberSince ?? "Member since"} ${formatDate(data.createdAt as string)}`,
           },
         ],
         achievements: [
@@ -375,12 +379,12 @@ function getRoleConfig(role: ProfileRole, data: Record<string, unknown>) {
         initials,
         stats: [
           {
-            label: "tasks",
+            label: p?.sidebar?.tasks ?? "tasks",
             value: 24,
             icon: <OcticonRepo className="size-4" />,
           },
           {
-            label: "projects",
+            label: p?.sidebar?.projects ?? "projects",
             value: 8,
             icon: <OcticonTable className="size-4" />,
           },
@@ -396,7 +400,7 @@ function getRoleConfig(role: ProfileRole, data: Record<string, unknown>) {
           },
           {
             icon: <OcticonClock className="size-4" />,
-            value: `Joined ${formatDate(data.createdAt as string)}`,
+            value: `${p?.sidebar?.joined ?? "Joined"} ${formatDate(data.createdAt as string)}`,
           },
         ],
         achievements: [
@@ -591,9 +595,9 @@ export default function ProfileSidebar({
 }: ProfileSidebarProps) {
   const { isMobile } = useSidebar()
   const useMobileLayout = isMobile
-  const config = getRoleConfig(role, data)
-  const [isEditing, setIsEditing] = useState(false)
   const p = dictionary
+  const config = getRoleConfig(role, data, p)
+  const [isEditing, setIsEditing] = useState(false)
 
   return (
     <TooltipProvider>
@@ -602,7 +606,7 @@ export default function ProfileSidebar({
       >
         {/* Profile Avatar */}
         <div className="group relative">
-          <Avatar className="border-border size-52 border shadow-lg transition-transform group-hover:scale-[1.02] lg:size-56 xl:size-64">
+          <Avatar className="border-border size-52 border shadow-lg lg:size-56 xl:size-64">
             <AvatarImage
               src={config.imageSrc}
               alt={config.title}

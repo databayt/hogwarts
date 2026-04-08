@@ -6,6 +6,7 @@ import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { detectLanguage } from "@/components/translation/util"
 
 import { informationSchema, type InformationFormData } from "./validation"
 
@@ -57,6 +58,8 @@ export async function updateEventInformation(
 
     const parsed = informationSchema.parse(input)
 
+    const lang = detectLanguage(parsed.title)
+
     await db.event.updateMany({
       where: { id: eventId, schoolId },
       data: {
@@ -65,6 +68,7 @@ export async function updateEventInformation(
         eventType: parsed.eventType ?? "OTHER",
         organizer: parsed.organizer ?? null,
         targetAudience: parsed.targetAudience ?? null,
+        lang,
       },
     })
 

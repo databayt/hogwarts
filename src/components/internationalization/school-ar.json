@@ -475,6 +475,7 @@
       "navigation": {
         "overview": "نظرة عامة",
         "configuration": "الإعدادات",
+        "academic": "الأكاديمي",
         "membership": "الأعضاء",
         "communication": "التواصل",
         "billing": "الفوترة",
@@ -6700,6 +6701,11 @@
       "permissions": "الصلاحيات",
       "notifications": "الإشعارات",
       "appearance": "المظهر",
+      "password": "كلمة المرور",
+      "language": "اللغة",
+      "languagePreference": "تفضيل اللغة",
+      "languageDescription": "اختر لغة العرض المفضلة لديك. يؤثر هذا على لغة الواجهة لحسابك.",
+      "active": "نشط",
       "advanced": "متقدم",
       "appearanceTitle": "إعدادات المظهر",
       "appearanceDescription": "قم بتخصيص مظهر المنصة باستخدام مجموعتنا المختارة من السمات الجميلة أو قم بإنشاء سمة خاصة بك.",
@@ -7150,6 +7156,29 @@
         "teachers": "المعلمين",
         "parents": "أولياء الأمور",
         "staff": "الموظفون"
+      },
+      "sidebar": {
+        "editProfile": "تعديل الملف الشخصي",
+        "achievements": "الإنجازات",
+        "organizations": "المنظمات",
+        "history": "السجل",
+        "unlockedOn": "حصل عليه في {date}",
+        "subjects": "المواد",
+        "projects": "المشاريع",
+        "classes": "الفصول",
+        "students": "الطلاب",
+        "children": "الأبناء",
+        "events": "الأحداث",
+        "tasks": "المهام",
+        "enrolled": "التحق في",
+        "joined": "انضم في",
+        "memberSince": "عضو منذ"
+      },
+      "overview": {
+        "pinned": "المثبتة",
+        "customizePins": "تخصيص المثبتات",
+        "public": "عام",
+        "private": "خاص"
       }
     },
     "onboarding": {
@@ -9569,7 +9598,8 @@
         "description": "الوصف",
         "student": "الطالب",
         "selectAll": "تحديد الكل",
-        "unauthorized": "غير مصرح"
+        "unauthorized": "غير مصرح",
+        "deleteConfirm": "لا يمكن التراجع عن هذا الإجراء."
       },
       "approved": "تمت الموافقة",
       "export": "تصدير",
@@ -9781,6 +9811,33 @@
         "issuing": "جاري الإصدار...",
         "issueFine": "إصدار غرامة"
       },
+      "scholarshipForm": {
+        "basicInformation": "المعلومات الأساسية",
+        "name": "اسم المنحة",
+        "namePlaceholder": "مثال: منحة التفوق",
+        "academicYear": "العام الدراسي",
+        "selectYear": "اختر السنة",
+        "description": "الوصف",
+        "descriptionPlaceholder": "صف معايير المنحة والمزايا...",
+        "coverageDetails": "تفاصيل التغطية",
+        "coverageType": "نوع التغطية",
+        "percentage": "نسبة مئوية",
+        "fixedAmount": "مبلغ ثابت",
+        "full": "تغطية كاملة",
+        "coverageAmount": "مبلغ التغطية",
+        "maxBeneficiaries": "أقصى عدد مستفيدين",
+        "unlimited": "غير محدود",
+        "eligibilityCriteria": "معايير الأهلية",
+        "minPercentage": "الحد الأدنى للنسبة الأكاديمية",
+        "maxFamilyIncome": "أقصى دخل عائلي",
+        "validityPeriod": "فترة الصلاحية",
+        "startDate": "تاريخ البداية",
+        "endDate": "تاريخ الانتهاء",
+        "active": "نشط",
+        "scholarshipCreated": "تم إنشاء المنحة بنجاح",
+        "scholarshipUpdated": "تم تحديث المنحة بنجاح",
+        "failedSave": "فشل في حفظ المنحة"
+      },
       "columns": {
         "student": "الطالب",
         "feeStructure": "هيكل الرسوم",
@@ -9807,6 +9864,7 @@
         "beneficiaries": "المستفيدون",
         "applications": "الطلبات",
         "edit": "تعديل",
+        "delete": "حذف",
         "fineType": "نوع الغرامة",
         "reason": "السبب",
         "dueDate": "تاريخ الاستحقاق",

@@ -475,6 +475,7 @@
       "navigation": {
         "overview": "Overview",
         "configuration": "Configuration",
+        "academic": "Academic",
         "membership": "Membership",
         "communication": "Communication",
         "billing": "Billing",
@@ -6692,6 +6693,11 @@
       "permissions": "Permissions",
       "notifications": "Notifications",
       "appearance": "Appearance",
+      "password": "Password",
+      "language": "Language",
+      "languagePreference": "Language Preference",
+      "languageDescription": "Choose your preferred display language. This affects the interface language for your account.",
+      "active": "Active",
       "advanced": "Advanced",
       "appearanceTitle": "Appearance Settings",
       "appearanceDescription": "Customize your platform appearance with beautiful preset themes or create your own.",
@@ -7142,6 +7148,29 @@
         "teachers": "Teachers",
         "parents": "Parents",
         "staff": "Staff"
+      },
+      "sidebar": {
+        "editProfile": "Edit profile",
+        "achievements": "Achievements",
+        "organizations": "Organizations",
+        "history": "History",
+        "unlockedOn": "Unlocked on {date}",
+        "subjects": "subjects",
+        "projects": "projects",
+        "classes": "classes",
+        "students": "students",
+        "children": "children",
+        "events": "events",
+        "tasks": "tasks",
+        "enrolled": "Enrolled",
+        "joined": "Joined",
+        "memberSince": "Member since"
+      },
+      "overview": {
+        "pinned": "Pinned",
+        "customizePins": "Customize your pins",
+        "public": "Public",
+        "private": "Private"
       }
     },
     "onboarding": {
@@ -9561,7 +9590,8 @@
         "description": "Description",
         "student": "Student",
         "selectAll": "Select All",
-        "unauthorized": "Unauthorized"
+        "unauthorized": "Unauthorized",
+        "deleteConfirm": "This action cannot be undone."
       },
       "approved": "Approved",
       "export": "Export",
@@ -9773,6 +9803,33 @@
         "issuing": "Issuing...",
         "issueFine": "Issue Fine"
       },
+      "scholarshipForm": {
+        "basicInformation": "Basic Information",
+        "name": "Scholarship Name",
+        "namePlaceholder": "e.g. Merit Scholarship",
+        "academicYear": "Academic Year",
+        "selectYear": "Select year",
+        "description": "Description",
+        "descriptionPlaceholder": "Describe the scholarship criteria and benefits...",
+        "coverageDetails": "Coverage Details",
+        "coverageType": "Coverage Type",
+        "percentage": "Percentage",
+        "fixedAmount": "Fixed Amount",
+        "full": "Full Coverage",
+        "coverageAmount": "Coverage Amount",
+        "maxBeneficiaries": "Max Beneficiaries",
+        "unlimited": "Unlimited",
+        "eligibilityCriteria": "Eligibility Criteria",
+        "minPercentage": "Minimum Academic Percentage",
+        "maxFamilyIncome": "Max Family Income",
+        "validityPeriod": "Validity Period",
+        "startDate": "Start Date",
+        "endDate": "End Date",
+        "active": "Active",
+        "scholarshipCreated": "Scholarship created",
+        "scholarshipUpdated": "Scholarship updated",
+        "failedSave": "Failed to save scholarship"
+      },
       "columns": {
         "student": "Student",
         "feeStructure": "Fee Structure",
@@ -9799,6 +9856,7 @@
         "beneficiaries": "Beneficiaries",
         "applications": "Applications",
         "edit": "Edit",
+        "delete": "Delete",
         "fineType": "Fine Type",
         "reason": "Reason",
         "dueDate": "Due Date",

@@ -135,7 +135,9 @@ export const getCampaignColumns = (
         />
       ),
       cell: ({ getValue }) => (
-        <span className="text-sm tabular-nums">{getValue<number>()}</span>
+        <span className="block text-center text-sm tabular-nums">
+          {getValue<number>()}
+        </span>
       ),
     },
     {
@@ -147,7 +149,9 @@ export const getCampaignColumns = (
         />
       ),
       cell: ({ getValue }) => (
-        <span className="text-sm tabular-nums">{getValue<number>()}</span>
+        <span className="block text-center text-sm tabular-nums">
+          {getValue<number>()}
+        </span>
       ),
     },
     {
@@ -160,7 +164,11 @@ export const getCampaignColumns = (
       ),
       cell: ({ getValue }) => (
         <span className="text-muted-foreground text-xs tabular-nums">
-          {new Date(getValue<string>()).toLocaleDateString(locale)}
+          {new Date(getValue<string>()).toLocaleDateString(locale, {
+            day: "numeric",
+            month: "short",
+            year: "2-digit",
+          })}
         </span>
       ),
     },
@@ -174,7 +182,11 @@ export const getCampaignColumns = (
       ),
       cell: ({ getValue }) => (
         <span className="text-muted-foreground text-xs tabular-nums">
-          {new Date(getValue<string>()).toLocaleDateString(locale)}
+          {new Date(getValue<string>()).toLocaleDateString(locale, {
+            day: "numeric",
+            month: "short",
+            year: "2-digit",
+          })}
         </span>
       ),
     },
@@ -197,8 +209,10 @@ export const getCampaignColumns = (
             description:
               t?.campaigns?.deleteConfirm ||
               "Are you sure? This action cannot be undone.",
-            confirmText: undefined,
-            cancelText: undefined,
+            confirmText:
+              (t?.toolbar as Record<string, string>)?.delete || "Delete",
+            cancelText:
+              (t?.toolbar as Record<string, string>)?.cancel || "Cancel",
           })
           if (confirmed) onDelete?.(campaign.id)
         }
