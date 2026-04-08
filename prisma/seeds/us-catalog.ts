@@ -961,6 +961,68 @@ const NAME_TO_CONCEPT: Record<string, string> = {
 }
 
 // ============================================================================
+// Chapter/lesson concept differentiation (shared with sync-sd-curriculum.ts)
+// ============================================================================
+
+// Subject concept → rotation pool for chapter visual differentiation
+const SUBJECT_CONCEPT_POOL: Record<string, string[]> = {
+  arabic: ["arabic", "english", "languages", "arts", "history"],
+  math: ["math", "science", "computer-science", "physics", "economics"],
+  english: ["english", "languages", "arts", "history", "sociology"],
+  religion: ["religion", "history", "arabic", "life-skills", "psychology"],
+  science: ["science", "biology", "chemistry", "physics", "earth-science"],
+  history: ["history", "geography", "civics", "sociology", "economics"],
+  geography: ["geography", "earth-science", "science", "history", "biology"],
+  arts: ["arts", "life-skills", "celebrations", "languages", "psychology"],
+  "computer-science": [
+    "computer-science",
+    "math",
+    "science",
+    "career-tech",
+    "economics",
+  ],
+  physics: ["physics", "math", "science", "computer-science", "earth-science"],
+  chemistry: ["chemistry", "science", "biology", "physics", "health"],
+  biology: ["biology", "science", "health", "chemistry", "earth-science"],
+  languages: ["languages", "english", "arts", "geography", "celebrations"],
+  health: ["health", "life-skills", "biology", "science", "economics"],
+  civics: ["civics", "history", "pe", "life-skills", "geography"],
+  economics: [
+    "economics",
+    "math",
+    "computer-science",
+    "career-tech",
+    "sociology",
+  ],
+  "career-tech": [
+    "career-tech",
+    "computer-science",
+    "science",
+    "math",
+    "economics",
+  ],
+  "earth-science": [
+    "earth-science",
+    "science",
+    "biology",
+    "geography",
+    "chemistry",
+  ],
+  "life-skills": ["life-skills", "health", "arts", "economics", "sociology"],
+  celebrations: ["celebrations", "arts", "history", "sociology", "languages"],
+  pe: ["pe", "health", "life-skills", "science", "psychology"],
+  psychology: ["psychology", "sociology", "health", "life-skills", "science"],
+  sociology: ["sociology", "psychology", "history", "economics", "civics"],
+  "teacher-pd": [
+    "teacher-pd",
+    "life-skills",
+    "psychology",
+    "sociology",
+    "career-tech",
+  ],
+}
+
+// ============================================================================
 // Main seed function
 // ============================================================================
 
@@ -1161,15 +1223,24 @@ export async function seedUsCatalog(prisma: PrismaClient): Promise<void> {
       }
 
       // Duplicate chapters and lessons under each grade-specific subject
+      // Chapter thumbnails rotate through a pool of related concepts
+      const pool =
+        SUBJECT_CONCEPT_POOL[concept ?? ""] ?? (concept ? [concept] : [])
+
       for (let g = 0; g < entry.groups.length; g++) {
         const group = entry.groups[g]
         const chapterSlug = toChapterSlug(group.parent)
-        const firstTopicImgSrc = group.topics[0]?.imgSrc ?? null
         const chapterDesc = getChapterDescription(
           group.parent,
           entry.subjectName,
           grade
         )
+
+        // Rotate chapter concept through the pool by sequenceOrder
+        const chapterConcept = pool.length > 0 ? pool[g % pool.length] : concept
+        const chapterThumbnail = chapterConcept
+          ? `catalog/concepts/g${grade}-${chapterConcept}/thumbnail`
+          : null
 
         const chapter = await prisma.chapter.upsert({
           where: {
@@ -1182,6 +1253,8 @@ export async function seedUsCatalog(prisma: PrismaClient): Promise<void> {
             name: group.parent,
             description: chapterDesc,
             sequenceOrder: g + 1,
+            concept: chapterConcept,
+            thumbnail: chapterThumbnail,
             color,
             grades: [grade],
           },
@@ -1192,6 +1265,8 @@ export async function seedUsCatalog(prisma: PrismaClient): Promise<void> {
             description: chapterDesc,
             lang: "en",
             sequenceOrder: g + 1,
+            concept: chapterConcept,
+            thumbnail: chapterThumbnail,
             color,
             grades: [grade],
             levels: [schoolLevel],
@@ -1200,13 +1275,18 @@ export async function seedUsCatalog(prisma: PrismaClient): Promise<void> {
         })
         chapterCount++
 
-        // Create Lessons (topics)
+        // Create Lessons (topics) — inherit chapter's rotated concept
         for (let t = 0; t < group.topics.length; t++) {
           const topic = group.topics[t]
           const { videoCount, resourceCount } = parseStats(topic.stats)
           const coverId = extractCoverId(topic.imgSrc)
-          const lessonImageKey = topic.imgSrc || null
           const lessonDesc = getLessonDescription(topic.name)
+
+          // Lessons inherit chapter concept (US curriculum has unique names, no repeating types)
+          const lessonConcept = chapterConcept ?? concept
+          const lessonThumbnail = lessonConcept
+            ? `catalog/concepts/g${grade}-${lessonConcept}/thumbnail`
+            : null
 
           await prisma.lesson.upsert({
             where: {
@@ -1220,6 +1300,8 @@ export async function seedUsCatalog(prisma: PrismaClient): Promise<void> {
               description: lessonDesc,
               sequenceOrder: t + 1,
               clickviewCoverId: coverId,
+              concept: lessonConcept,
+              thumbnail: lessonThumbnail,
               videoCount,
               resourceCount,
               color,
@@ -1233,6 +1315,8 @@ export async function seedUsCatalog(prisma: PrismaClient): Promise<void> {
               lang: "en",
               sequenceOrder: t + 1,
               clickviewCoverId: coverId,
+              concept: lessonConcept,
+              thumbnail: lessonThumbnail,
               videoCount,
               resourceCount,
               color,

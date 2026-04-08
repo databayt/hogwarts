@@ -739,7 +739,7 @@ export async function syncSdCurriculum(prisma: PrismaClient): Promise<void> {
           },
         })
       },
-      { timeout: 30000 }
+      { timeout: 60000, maxWait: 30000 }
     )
 
     subjectsProcessed++
