@@ -34,6 +34,7 @@ export interface MessageListProps {
   onRetry?: (messageId: string) => void
   savedScrollPosition?: number
   onSaveScrollPosition?: (position: number) => void
+  unreadCount?: number
   className?: string
   enableVirtualization?: boolean
 }
@@ -48,6 +49,7 @@ type VirtualListItem =
       messages: MessageDTO[]
     }
   | { type: "loader"; position: "top" | "bottom" }
+  | { type: "unread-divider"; count: number }
 
 export function MessageList({
   messages,
@@ -65,6 +67,7 @@ export function MessageList({
   onRetry,
   savedScrollPosition = -1,
   onSaveScrollPosition,
+  unreadCount = 0,
   className,
   enableVirtualization = true,
 }: MessageListProps) {
@@ -76,7 +79,21 @@ export function MessageList({
     150
   )
   const [hasScrolledUp, setHasScrolledUp] = useState(false)
+  const [newMsgCount, setNewMsgCount] = useState(0)
+  const prevMsgCountRef = useRef(messages.length)
   const dateLocale = locale === "ar" ? ar : enUS
+
+  // Track new messages arriving while scrolled up (for FAB badge)
+  useEffect(() => {
+    const added = messages.length - prevMsgCountRef.current
+    prevMsgCountRef.current = messages.length
+    if (added > 0 && !isAtBottom) {
+      setNewMsgCount((c) => c + added)
+    }
+    if (isAtBottom) {
+      setNewMsgCount(0)
+    }
+  }, [messages.length, isAtBottom])
 
   // Scroll anchoring for history load (prepend)
   const isPrependingRef = useRef(false)
@@ -153,8 +170,23 @@ export function MessageList({
       items.push({ type: "loader", position: "bottom" })
     }
 
+    // Insert unread divider — count messages from end to find split point
+    if (unreadCount > 0) {
+      let msgCount = 0
+      for (let i = items.length - 1; i >= 0; i--) {
+        const item = items[i]
+        if (item.type === "message-group") {
+          msgCount += item.messages.length
+          if (msgCount >= unreadCount) {
+            items.splice(i, 0, { type: "unread-divider", count: unreadCount })
+            break
+          }
+        }
+      }
+    }
+
     return items
-  }, [messagesByDate, isLoading, hasMore, locale])
+  }, [messagesByDate, isLoading, hasMore, locale, unreadCount])
 
   // Virtual scrolling
   const virtualizer = useVirtualizer({
@@ -164,6 +196,7 @@ export function MessageList({
       const item = virtualListItems[index]
       if (item.type === "date-separator") return 40
       if (item.type === "loader") return 36
+      if (item.type === "unread-divider") return 36
       return item.messages.length * 50
     },
     overscan: 5,
@@ -311,6 +344,18 @@ export function MessageList({
                     </div>
                   )}
 
+                  {item.type === "unread-divider" && (
+                    <div className="my-2 flex items-center justify-center px-8">
+                      <div className="flex-1 border-t border-[#06CF9C]" />
+                      <span className="mx-3 rounded-full bg-[#06CF9C] px-3 py-0.5 text-[11px] font-medium text-white uppercase">
+                        {item.count}{" "}
+                        {(m?.ui as Record<string, string>)?.unread_messages ||
+                          "unread messages"}
+                      </span>
+                      <div className="flex-1 border-t border-[#06CF9C]" />
+                    </div>
+                  )}
+
                   {item.type === "message-group" && (
                     <div className="mb-1">
                       <MessageGroup
@@ -333,16 +378,24 @@ export function MessageList({
           </div>
         </div>
 
-        {/* Scroll to bottom — WhatsApp circular button */}
+        {/* Scroll to bottom — WhatsApp circular button with unread badge */}
         {!isAtBottom && messages.length > 0 && (
           <div className="absolute end-4 bottom-4 z-10">
             <Button
               variant="secondary"
               size="icon"
-              className="bg-card border-border h-10 w-10 rounded-full border shadow-md"
-              onClick={scrollToBottom}
+              className="bg-card border-border relative h-10 w-10 rounded-full border shadow-md"
+              onClick={() => {
+                scrollToBottom()
+                setNewMsgCount(0)
+              }}
             >
               <ArrowDown className="text-muted-foreground h-5 w-5" />
+              {newMsgCount > 0 && (
+                <span className="absolute -end-1.5 -top-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#06CF9C] px-1 text-[10px] font-bold text-white">
+                  {newMsgCount > 99 ? "99+" : newMsgCount}
+                </span>
+              )}
             </Button>
           </div>
         )}
@@ -426,10 +479,18 @@ export function MessageList({
           <Button
             variant="secondary"
             size="icon"
-            className="bg-card border-border h-10 w-10 rounded-full border shadow-md"
-            onClick={scrollToBottom}
+            className="bg-card border-border relative h-10 w-10 rounded-full border shadow-md"
+            onClick={() => {
+              scrollToBottom()
+              setNewMsgCount(0)
+            }}
           >
             <ArrowDown className="text-muted-foreground h-5 w-5" />
+            {newMsgCount > 0 && (
+              <span className="absolute -end-1.5 -top-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#06CF9C] px-1 text-[10px] font-bold text-white">
+                {newMsgCount > 99 ? "99+" : newMsgCount}
+              </span>
+            )}
           </Button>
         </div>
       )}

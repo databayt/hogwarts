@@ -58,7 +58,7 @@ export const MessageGroup = memo(function MessageGroup({
             locale={locale}
             showAvatar={isGroupChat}
             showSenderName={isGroupChat && isFirst}
-            showTimestamp={isLast}
+            showTimestamp={true}
             showTail={isFirst}
             isFirstInGroup={isFirst}
             isLastInGroup={isLast}
@@ -76,7 +76,8 @@ export const MessageGroup = memo(function MessageGroup({
 })
 
 /**
- * Groups messages by sender and time proximity (5 minutes)
+ * Groups consecutive messages by same sender (WhatsApp style — no time threshold).
+ * A new group starts when the sender changes.
  */
 export function groupMessages(messages: MessageDTO[]): MessageDTO[][] {
   if (messages.length === 0) return []
@@ -84,17 +85,11 @@ export function groupMessages(messages: MessageDTO[]): MessageDTO[][] {
   const groups: MessageDTO[][] = []
   let currentGroup: MessageDTO[] = []
 
-  const TIME_THRESHOLD = 5 * 60 * 1000
-
   messages.forEach((message, index) => {
     const prevMessage = messages[index - 1]
 
     const shouldStartNewGroup =
-      !prevMessage ||
-      prevMessage.senderId !== message.senderId ||
-      new Date(message.createdAt).getTime() -
-        new Date(prevMessage.createdAt).getTime() >
-        TIME_THRESHOLD
+      !prevMessage || prevMessage.senderId !== message.senderId
 
     if (shouldStartNewGroup) {
       if (currentGroup.length > 0) {

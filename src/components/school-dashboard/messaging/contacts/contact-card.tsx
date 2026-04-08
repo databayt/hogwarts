@@ -13,11 +13,15 @@ import { ar, enUS } from "date-fns/locale"
 import {
   Archive,
   BellOff,
+  Camera,
   ChevronDown,
   CircleX,
+  FileText,
   Info,
+  Mic,
   Pin,
   SquareCheckBig,
+  Video,
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -241,17 +245,59 @@ export const ContactCard = memo(function ContactCard({
 
         {/* Row 2: Last message or context label */}
         <div className="flex items-center justify-between gap-2">
-          <p className="text-muted-foreground truncate text-xs">
-            {hasConversation
-              ? contact.lastMessage || m?.ui?.no_messages || "No messages"
-              : contact.contextLabel || roleLabel}
-          </p>
+          {contact.isTyping ? (
+            <p className="truncate text-xs font-medium text-[#06CF9C]">
+              {(m?.ui as Record<string, string>)?.typing || "typing..."}
+            </p>
+          ) : (
+            <p className="text-muted-foreground flex items-center gap-1 truncate text-xs">
+              {/* Media type icon for attachment-only messages */}
+              {hasConversation &&
+                contact.lastMessageHasAttachments &&
+                !contact.lastMessage && (
+                  <>
+                    {contact.lastMessageContentType === "image" ? (
+                      <Camera className="h-3.5 w-3.5 flex-shrink-0" />
+                    ) : contact.lastMessageContentType === "video" ? (
+                      <Video className="h-3.5 w-3.5 flex-shrink-0" />
+                    ) : contact.lastMessageContentType === "audio" ? (
+                      <Mic className="h-3.5 w-3.5 flex-shrink-0" />
+                    ) : (
+                      <FileText className="h-3.5 w-3.5 flex-shrink-0" />
+                    )}
+                  </>
+                )}
+              <span className="truncate">
+                {hasConversation
+                  ? contact.lastMessage ||
+                    (contact.lastMessageHasAttachments
+                      ? contact.lastMessageContentType === "image"
+                        ? (m?.ui as Record<string, string>)?.photo || "Photo"
+                        : contact.lastMessageContentType === "video"
+                          ? (m?.ui as Record<string, string>)?.video || "Video"
+                          : contact.lastMessageContentType === "audio"
+                            ? (m?.ui as Record<string, string>)
+                                ?.voice_message || "Voice message"
+                            : (m?.ui as Record<string, string>)?.document ||
+                              "Document"
+                      : m?.ui?.no_messages || "No messages")
+                  : contact.contextLabel || roleLabel}
+              </span>
+            </p>
+          )}
           <div className="flex flex-shrink-0 items-center gap-1">
             {contact.isPinned && (
               <Pin className="text-muted-foreground h-3.5 w-3.5" />
             )}
             {hasUnread && (
-              <span className="bg-msg-unread-badge flex min-w-[20px] items-center justify-center rounded-full px-1.5 py-0.5 text-[11px] font-medium text-white">
+              <span
+                className={cn(
+                  "flex min-w-[20px] items-center justify-center rounded-full px-1.5 py-0.5 text-[11px] font-medium text-white",
+                  contact.isMuted
+                    ? "bg-muted-foreground"
+                    : "bg-msg-unread-badge"
+                )}
+              >
                 {(contact.unreadCount ?? 0) > 99 ? "99+" : contact.unreadCount}
               </span>
             )}

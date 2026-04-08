@@ -151,6 +151,10 @@ export function MessagingClient({
     useState<ConversationDTO | null>(initialActiveConversation)
   const [isConnected, setIsConnected] = useState(false)
   const [showInfoPanel, setShowInfoPanel] = useState(false)
+  // Typing indicators across all conversations (for sidebar)
+  const [typingConversations, setTypingConversations] = useState<
+    Map<string, boolean>
+  >(new Map())
   // Re-render trigger for cache-derived state
   const [, setRenderTick] = useState(0)
 
@@ -392,10 +396,32 @@ export function MessagingClient({
       }
     })
 
+    // Typing indicators for sidebar — listen globally
+    const unsubscribeTypingStart = socketService.on("typing:start", (data) => {
+      if (data.userId !== currentUserId) {
+        setTypingConversations((prev) => {
+          const next = new Map(prev)
+          next.set(data.conversationId, true)
+          return next
+        })
+      }
+    })
+
+    const unsubscribeTypingStop = socketService.on("typing:stop", (data) => {
+      setTypingConversations((prev) => {
+        if (!prev.has(data.conversationId)) return prev
+        const next = new Map(prev)
+        next.delete(data.conversationId)
+        return next
+      })
+    })
+
     return () => {
       unsubscribeConversationNew()
       unsubscribeConversationUpdated()
       unsubscribeMessageNew()
+      unsubscribeTypingStart()
+      unsubscribeTypingStop()
     }
   }, [isConnected, activeConversation?.id, currentUserId])
 
@@ -582,6 +608,7 @@ export function MessagingClient({
           onContactClick={handleContactClick}
           activeContactUserId={activeContactUserId}
           whatsappSession={whatsappSession}
+          typingConversations={typingConversations}
         />
       </div>
 

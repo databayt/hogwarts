@@ -55,6 +55,11 @@ const OLD_SLUG_TO_CONCEPT: Record<string, string> = {
   sociology: "sociology",
 }
 
+// Concepts without their own legacy ClickView banner — borrow from a related concept
+const BANNER_FALLBACK: Record<string, string> = {
+  arabic: "english", // Arabic has no ClickView banner, use English's wide banner
+}
+
 // ============================================================================
 // S3 Client (lazy singleton)
 // ============================================================================
@@ -152,9 +157,45 @@ export async function seedBannerCopy(): Promise<void> {
     console.log(`  Skipped ${skipped} variants (fetch failures)`)
   }
 
+  // Copy banners for concepts that lack their own legacy banner
+  // by borrowing from a related concept's already-uploaded banner
+  for (const [concept, sourceConcept] of Object.entries(BANNER_FALLBACK)) {
+    for (const variant of VARIANTS) {
+      // Read from the source concept's grade-1 banner (same image for all grades)
+      const sourceUrl = `https://${cloudfrontDomain}/catalog/concepts/g1-${sourceConcept}/banner-${variant}.webp`
+      const response = await fetchWithRetry(sourceUrl)
+      if (!response) {
+        console.log(
+          `  Skipping fallback ${concept} (from ${sourceConcept})/banner-${variant}: fetch failed`
+        )
+        continue
+      }
+
+      const buffer = Buffer.from(await response.arrayBuffer())
+
+      for (let grade = 1; grade <= MAX_GRADE; grade++) {
+        const newKey = `catalog/concepts/g${grade}-${concept}/banner-${variant}.webp`
+        await client.send(
+          new PutObjectCommand({
+            Bucket: bucket,
+            Key: newKey,
+            Body: buffer,
+            ContentType: "image/webp",
+            CacheControl: "public, max-age=31536000, immutable",
+          })
+        )
+        uploadCount++
+      }
+    }
+
+    console.log(
+      `  Fallback: ${concept} ← ${sourceConcept} banner (g1–g${MAX_GRADE})`
+    )
+  }
+
   logSuccess(
     "Banner Copy",
     uploadCount,
-    `S3 objects (${entries.length} concepts × ${VARIANTS.length} variants × ${MAX_GRADE} grades)`
+    `S3 objects (${entries.length + Object.keys(BANNER_FALLBACK).length} concepts × ${VARIANTS.length} variants × ${MAX_GRADE} grades)`
   )
 }

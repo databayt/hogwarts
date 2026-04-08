@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { memo, useCallback, useRef, useState } from "react"
+import { memo, useCallback, useEffect, useRef, useState } from "react"
 import { format } from "date-fns"
 import { ar, enUS } from "date-fns/locale"
 import {
@@ -26,6 +26,7 @@ import {
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -151,6 +152,13 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
+function formatDuration(seconds: number): string {
+  if (!seconds || !isFinite(seconds)) return "0:00"
+  const m = Math.floor(seconds / 60)
+  const s = Math.floor(seconds % 60)
+  return `${m}:${s.toString().padStart(2, "0")}`
+}
+
 export const MessageBubble = memo(function MessageBubble({
   message,
   currentUserId,
@@ -176,7 +184,21 @@ export const MessageBubble = memo(function MessageBubble({
   const m = dictionary?.messaging
   const [showReactions, setShowReactions] = useState(false)
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null)
+  const [audioProgress, setAudioProgress] = useState(0)
+  const [audioDuration, setAudioDuration] = useState(0)
+  const [audioSpeed, setAudioSpeed] = useState(1)
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current = null
+      }
+    }
+  }, [])
 
   const toggleAudio = useCallback(
     (attachmentId: string, url: string) => {
@@ -184,6 +206,8 @@ export const MessageBubble = memo(function MessageBubble({
         audioRef.current.pause()
         audioRef.current = null
         setPlayingAudioId(null)
+        setAudioProgress(0)
+        setAudioDuration(0)
         return
       }
       // Stop any existing playback
@@ -192,16 +216,29 @@ export const MessageBubble = memo(function MessageBubble({
         audioRef.current = null
       }
       const audio = new Audio(url)
+      audio.playbackRate = audioSpeed
+      audio.onloadedmetadata = () => setAudioDuration(audio.duration)
+      audio.ontimeupdate = () => {
+        if (audio.duration) setAudioProgress(audio.currentTime / audio.duration)
+      }
       audio.onended = () => {
         audioRef.current = null
         setPlayingAudioId(null)
+        setAudioProgress(0)
       }
       audio.play()
       audioRef.current = audio
       setPlayingAudioId(attachmentId)
     },
-    [playingAudioId]
+    [playingAudioId, audioSpeed]
   )
+
+  const cycleAudioSpeed = useCallback(() => {
+    const speeds = [1, 1.5, 2]
+    const next = speeds[(speeds.indexOf(audioSpeed) + 1) % speeds.length]
+    setAudioSpeed(next)
+    if (audioRef.current) audioRef.current.playbackRate = next
+  }, [audioSpeed])
 
   const isOwnMessage = message.senderId === currentUserId
   const isDeleted = message.isDeleted
@@ -390,15 +427,14 @@ export const MessageBubble = memo(function MessageBubble({
                   {message.attachments && message.attachments.length > 0 && (
                     <div className="-mx-2 -mt-1.5 mb-1 space-y-0.5">
                       {message.attachments.map((attachment) => {
-                        // Inline images
+                        // Inline images — click opens lightbox
                         if (isImageType(attachment.fileType)) {
                           return (
-                            <a
+                            <button
                               key={attachment.id}
-                              href={attachment.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="relative block overflow-hidden rounded-lg"
+                              type="button"
+                              onClick={() => setLightboxUrl(attachment.url)}
+                              className="relative block w-full cursor-pointer overflow-hidden rounded-lg text-start"
                             >
                               <img
                                 src={attachment.thumbnail || attachment.url}
@@ -406,7 +442,7 @@ export const MessageBubble = memo(function MessageBubble({
                                 className="max-h-[330px] min-h-[100px] w-full object-cover"
                                 loading="lazy"
                               />
-                            </a>
+                            </button>
                           )
                         }
 
@@ -444,9 +480,11 @@ export const MessageBubble = memo(function MessageBubble({
                           )
                         }
 
-                        // Audio messages — waveform placeholder
+                        // Audio messages — WhatsApp-style with progress, speed, duration
                         if (isAudioType(attachment.fileType)) {
                           const isPlaying = playingAudioId === attachment.id
+                          const progress = isPlaying ? audioProgress : 0
+                          const duration = isPlaying ? audioDuration : 0
                           return (
                             <div
                               key={attachment.id}
@@ -461,17 +499,50 @@ export const MessageBubble = memo(function MessageBubble({
                                 {isPlaying ? (
                                   <Pause className="h-5 w-5" />
                                 ) : (
-                                  <Play className="h-5 w-5" />
+                                  <Play className="h-5 w-5 ps-0.5" />
                                 )}
                               </button>
                               <div className="flex flex-1 flex-col gap-1">
-                                <div className="bg-foreground/20 h-1 w-full rounded-full">
-                                  <div className="bg-msg-unread-badge h-1 w-0 rounded-full" />
+                                {/* Progress bar */}
+                                <div className="bg-foreground/20 relative h-1.5 w-full cursor-pointer rounded-full">
+                                  <div
+                                    className="bg-msg-unread-badge h-1.5 rounded-full transition-all duration-100"
+                                    style={{
+                                      width: `${Math.max(progress * 100, 0)}%`,
+                                    }}
+                                  />
+                                  {/* Thumb indicator */}
+                                  {isPlaying && (
+                                    <div
+                                      className="bg-msg-unread-badge absolute top-1/2 h-3 w-3 -translate-y-1/2 rounded-full shadow-sm"
+                                      style={{
+                                        left: `calc(${progress * 100}% - 6px)`,
+                                      }}
+                                    />
+                                  )}
                                 </div>
-                                <span className="text-msg-timestamp text-[11px]">
-                                  {formatFileSize(attachment.fileSize)}
-                                </span>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-msg-timestamp text-[11px]">
+                                    {isPlaying && duration > 0
+                                      ? formatDuration(progress * duration)
+                                      : formatFileSize(attachment.fileSize)}
+                                  </span>
+                                  {isPlaying && duration > 0 && (
+                                    <span className="text-msg-timestamp text-[11px]">
+                                      {formatDuration(duration)}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
+                              {/* Speed toggle */}
+                              {isPlaying && (
+                                <button
+                                  onClick={cycleAudioSpeed}
+                                  className="bg-foreground/10 hover:bg-foreground/20 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-[10px] font-bold transition-colors"
+                                >
+                                  {audioSpeed}x
+                                </button>
+                              )}
                             </div>
                           )
                         }
@@ -506,9 +577,8 @@ export const MessageBubble = memo(function MessageBubble({
                     </div>
                   )}
 
-                  {/* Timestamp + read receipts — inside bubble, bottom-end */}
-                  {/* For media-only: overlay on image. For text: inline float. */}
-                  {showTimestamp && isLastInGroup && (
+                  {/* Timestamp + read receipts — inside every bubble (WhatsApp style) */}
+                  {showTimestamp && (
                     <span
                       className={cn(
                         "flex items-center gap-0.5 text-[11px]",
@@ -689,6 +759,19 @@ export const MessageBubble = memo(function MessageBubble({
           )}
         </div>
       </div>
+      {/* Image lightbox */}
+      {lightboxUrl && (
+        <Dialog open onOpenChange={() => setLightboxUrl(null)}>
+          <DialogContent className="border-none bg-transparent p-0 shadow-none sm:max-w-[90vw]">
+            <DialogTitle className="sr-only">Image preview</DialogTitle>
+            <img
+              src={lightboxUrl}
+              alt=""
+              className="max-h-[85vh] w-full rounded-lg object-contain"
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   )
 })

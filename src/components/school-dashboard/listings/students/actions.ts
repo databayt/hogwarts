@@ -2063,3 +2063,133 @@ export async function bulkSyncStudentGrades(): Promise<
     )
   }
 }
+
+// ============================================================================
+// Student Credentials
+// ============================================================================
+
+/**
+ * Generate login credentials for a student.
+ * Creates a User record if one doesn't exist, or resets the password if it does.
+ * Returns plaintext email + password for the admin to share.
+ */
+export async function generateStudentCredentials(input: {
+  studentId: string
+}): Promise<
+  ActionResponse<{
+    email: string
+    password: string
+    isNew: boolean
+  }>
+> {
+  try {
+    const session = await auth()
+    if (!session?.user) {
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    }
+
+    const { studentId } = z
+      .object({ studentId: z.string().min(1) })
+      .parse(input)
+
+    const student = await db.student.findFirst({
+      where: { id: studentId, schoolId },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        userId: true,
+        studentId: true,
+      },
+    })
+
+    if (!student) {
+      return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
+    }
+
+    const { hash } = await import("bcryptjs")
+
+    // Generate a readable password: first 3 chars of name + 4 random digits
+    const namePrefix = (student.firstName || "std").slice(0, 3).toLowerCase()
+    const randomDigits = Math.floor(1000 + Math.random() * 9000).toString()
+    const plainPassword = `${namePrefix}${randomDigits}`
+    const hashedPassword = await hash(plainPassword, 10)
+
+    // Determine email
+    const email =
+      student.email ||
+      `${(student.firstName || "student").toLowerCase()}.${(student.lastName || student.id.slice(0, 4)).toLowerCase()}@school.local`
+
+    let isNew = true
+
+    if (student.userId) {
+      // Student already has a User — reset their password
+      await db.user.update({
+        where: { id: student.userId },
+        data: {
+          password: hashedPassword,
+          mustChangePassword: true,
+        },
+      })
+      isNew = false
+
+      // Get the existing user's email
+      const existingUser = await db.user.findUnique({
+        where: { id: student.userId },
+        select: { email: true },
+      })
+
+      return {
+        success: true,
+        data: {
+          email: existingUser?.email || email,
+          password: plainPassword,
+          isNew: false,
+        },
+      }
+    }
+
+    // Create a new User for the student
+    const newUser = await db.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        role: "STUDENT",
+        schoolId,
+        username: `${student.firstName} ${student.lastName}`.trim(),
+        mustChangePassword: true,
+      },
+    })
+
+    // Link student to the new user
+    await db.student.update({
+      where: { id: studentId },
+      data: { userId: newUser.id },
+    })
+
+    const cookieStore = await cookies()
+    const subdomain = cookieStore.get("x-subdomain")?.value || ""
+    revalidatePath(`/[lang]/s/${subdomain}/students`, "page")
+
+    return {
+      success: true,
+      data: {
+        email,
+        password: plainPassword,
+        isNew: true,
+      },
+    }
+  } catch (error) {
+    console.error("[generateStudentCredentials] Error:", error)
+    return actionError(
+      ACTION_ERRORS.CREATE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
+  }
+}

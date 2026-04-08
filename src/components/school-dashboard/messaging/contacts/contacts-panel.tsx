@@ -23,6 +23,8 @@ export interface ContactsPanelProps {
   onContactClick?: (userId: string) => void
   activeContactUserId?: string | null
   whatsappSession?: WhatsAppSessionDTO | null
+  /** Map of conversationId → true when someone is typing */
+  typingConversations?: Map<string, boolean>
   className?: string
 }
 
@@ -34,6 +36,7 @@ export function ContactsPanel({
   onContactClick,
   activeContactUserId,
   whatsappSession = null,
+  typingConversations,
   className,
 }: ContactsPanelProps) {
   const { dictionary } = useDictionary()
@@ -132,8 +135,15 @@ export function ContactsPanel({
           conversationId: conv?.id,
           lastMessage: conv?.lastMessage?.content ?? null,
           lastMessageAt: conv?.lastMessageAt ?? null,
+          lastMessageContentType: conv?.lastMessage?.contentType ?? null,
+          lastMessageHasAttachments:
+            (conv?.lastMessage?.attachments?.length ?? 0) > 0,
           unreadCount: conv?.unreadCount ?? 0,
           isPinned: participant?.isPinned ?? false,
+          isMuted: participant?.isMuted ?? false,
+          isTyping: conv?.id
+            ? (typingConversations?.get(conv.id) ?? false)
+            : false,
         })
       }
     }
@@ -145,7 +155,7 @@ export function ContactsPanel({
       seen.add(c.id)
       return true
     })
-  }, [groups, convByUser, currentUserId])
+  }, [groups, convByUser, currentUserId, typingConversations])
 
   // Filter contacts
   const filteredContacts = useMemo(() => {

@@ -184,6 +184,92 @@ const SUBJECT_CONCEPT_MAP: Record<string, string> = {
 }
 
 // ============================================================================
+// Lesson-type → concept mapping (for subjects with repeating lesson types)
+// ============================================================================
+
+const LESSON_TYPE_CONCEPT: Record<string, string> = {
+  // Arabic lesson types (g1-g8)
+  reading: "english",
+  literature: "languages",
+  dictation: "arabic",
+  expression: "arts",
+  grammar: "psychology",
+  // Arabic lesson types (g9+)
+  spelling: "english",
+  writing: "arts",
+  // French lesson types
+  decouverte: "geography",
+  "ecouter-et-comprendre": "languages",
+  ecrire: "arts",
+  lire: "english",
+  ouverture: "celebrations",
+  parler: "sociology",
+  bilan: "economics",
+}
+
+// ============================================================================
+// Subject concept → rotation pool (for chapter visual differentiation)
+// Each chapter rotates through the pool by sequenceOrder
+// ============================================================================
+
+const SUBJECT_CONCEPT_POOL: Record<string, string[]> = {
+  arabic: ["arabic", "english", "languages", "arts", "history"],
+  math: ["math", "science", "computer-science", "physics", "economics"],
+  english: ["english", "languages", "arts", "history", "sociology"],
+  religion: ["religion", "history", "arabic", "life-skills", "psychology"],
+  science: ["science", "biology", "chemistry", "physics", "earth-science"],
+  history: ["history", "geography", "civics", "sociology", "economics"],
+  geography: ["geography", "earth-science", "science", "history", "biology"],
+  arts: ["arts", "life-skills", "celebrations", "languages", "psychology"],
+  "computer-science": [
+    "computer-science",
+    "math",
+    "science",
+    "career-tech",
+    "economics",
+  ],
+  physics: ["physics", "math", "science", "computer-science", "earth-science"],
+  chemistry: ["chemistry", "science", "biology", "physics", "health"],
+  biology: ["biology", "science", "health", "chemistry", "earth-science"],
+  languages: ["languages", "english", "arts", "geography", "celebrations"],
+  health: ["health", "life-skills", "biology", "science", "economics"],
+  civics: ["civics", "history", "pe", "life-skills", "geography"],
+  economics: [
+    "economics",
+    "math",
+    "computer-science",
+    "career-tech",
+    "sociology",
+  ],
+  "career-tech": [
+    "career-tech",
+    "computer-science",
+    "science",
+    "math",
+    "economics",
+  ],
+  "earth-science": [
+    "earth-science",
+    "science",
+    "biology",
+    "geography",
+    "chemistry",
+  ],
+  "life-skills": ["life-skills", "health", "arts", "economics", "sociology"],
+  celebrations: ["celebrations", "arts", "history", "sociology", "languages"],
+  pe: ["pe", "health", "life-skills", "science", "psychology"],
+  psychology: ["psychology", "sociology", "health", "life-skills", "science"],
+  sociology: ["sociology", "psychology", "history", "economics", "civics"],
+  "teacher-pd": [
+    "teacher-pd",
+    "life-skills",
+    "psychology",
+    "sociology",
+    "career-tech",
+  ],
+}
+
+// ============================================================================
 // Helpers
 // ============================================================================
 
@@ -572,11 +658,22 @@ export async function syncSdCurriculum(prisma: PrismaClient): Promise<void> {
         chaptersDeleted += deletedChapters.count
 
         // Create new chapters with lessons
+        // Chapter thumbnails rotate through a pool of related concepts
+        const pool =
+          SUBJECT_CONCEPT_POOL[subjectConcept ?? ""] ??
+          (subjectConcept ? [subjectConcept] : [])
+
         for (const ch of entry.chapters) {
           const structChapter = structChapterMap.get(ch.slug)
           const chapterName = structChapter?.title ?? ch.name
-          const chapterThumbnail = subjectConcept
-            ? `catalog/concepts/g${gradeNum}-${subjectConcept}/thumbnail`
+
+          // Rotate chapter concept through the pool by sequenceOrder
+          const chapterConcept =
+            pool.length > 0
+              ? pool[(ch.sequenceOrder - 1) % pool.length]
+              : subjectConcept
+          const chapterThumbnail = chapterConcept
+            ? `catalog/concepts/g${gradeNum}-${chapterConcept}/thumbnail`
             : null
 
           const structLessonMap = new Map(
@@ -590,7 +687,7 @@ export async function syncSdCurriculum(prisma: PrismaClient): Promise<void> {
               slug: ch.slug,
               lang: "ar",
               sequenceOrder: ch.sequenceOrder,
-              concept: subjectConcept,
+              concept: chapterConcept,
               thumbnail: chapterThumbnail,
               color: null,
               totalLessons: ch.lessons.length,
@@ -601,16 +698,28 @@ export async function syncSdCurriculum(prisma: PrismaClient): Promise<void> {
 
           if (ch.lessons.length > 0) {
             await tx.lesson.createMany({
-              data: ch.lessons.map((l) => ({
-                chapterId: chapter.id,
-                name: structLessonMap.get(l.slug) ?? l.name,
-                slug: l.slug,
-                lang: "ar",
-                sequenceOrder: l.sequenceOrder,
-                concept: subjectConcept,
-                thumbnail: chapterThumbnail,
-                status: "PUBLISHED",
-              })),
+              data: ch.lessons.map((l) => {
+                // Strip leading number prefix: "01-reading" → "reading"
+                const lessonType = l.slug.replace(/^\d+-/, "")
+                const lessonConcept =
+                  LESSON_TYPE_CONCEPT[lessonType] ??
+                  chapterConcept ??
+                  subjectConcept
+                const lessonThumbnail = lessonConcept
+                  ? `catalog/concepts/g${gradeNum}-${lessonConcept}/thumbnail`
+                  : null
+
+                return {
+                  chapterId: chapter.id,
+                  name: structLessonMap.get(l.slug) ?? l.name,
+                  slug: l.slug,
+                  lang: "ar",
+                  sequenceOrder: l.sequenceOrder,
+                  concept: lessonConcept,
+                  thumbnail: lessonThumbnail,
+                  status: "PUBLISHED",
+                }
+              }),
             })
             lessonsCreated += ch.lessons.length
           }

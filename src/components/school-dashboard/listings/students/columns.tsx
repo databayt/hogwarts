@@ -41,6 +41,7 @@ export type StudentRow = {
 interface ColumnOptions {
   onDeleteSuccess?: (id: string) => void
   onGenerateAccessCode?: (studentId: string, studentName: string) => void
+  onGenerateCredentials?: (studentId: string, studentName: string) => void
   gradeOptions?: Array<{ label: string; value: string }>
 }
 
@@ -74,7 +75,8 @@ export const getStudentColumns = (
     transferred: d?.transferred || "Transferred",
     droppedOut: d?.droppedOut || "Dropped Out",
     draft: d?.draft || "Draft",
-    generateAccessCode: d?.generateAccessCode || "Generate Access Code",
+    linkParent: d?.linkParent || "Link Parent",
+    generateCredentials: d?.generateCredentials || "Generate Credentials",
     viewGrades: d?.viewGrades || "View Grades",
     viewAttendance: d?.viewAttendance || "View Attendance",
     viewClasses: d?.viewClasses || "View Classes",
@@ -353,7 +355,13 @@ export const getStudentColumns = (
             />
             <DropdownMenuSeparator />
             <ActionMenuItem
-              label={t.generateAccessCode}
+              label={t.generateCredentials}
+              onClick={() =>
+                options?.onGenerateCredentials?.(student.id, student.name)
+              }
+            />
+            <ActionMenuItem
+              label={t.linkParent}
               onClick={() =>
                 options?.onGenerateAccessCode?.(student.id, student.name)
               }

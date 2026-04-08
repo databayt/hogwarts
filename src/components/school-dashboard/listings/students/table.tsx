@@ -39,6 +39,7 @@ import {
   getStudentsCSV,
 } from "./actions"
 import { getStudentColumns, type StudentRow } from "./columns"
+import { CredentialsDialog } from "./credentials-dialog"
 import { createDraftStudent } from "./wizard/actions"
 
 interface StudentsTableProps {
@@ -132,7 +133,25 @@ function StudentsTableInner({
     (studentId: string, studentName: string) => {
       setAccessCodeStudentIds([studentId])
       setAccessCodeStudentNames({ [studentId]: studentName })
-      setAccessCodeOpen(true)
+      // Defer to avoid Radix DropdownMenu close event cascading to Dialog
+      setTimeout(() => setAccessCodeOpen(true), 0)
+    },
+    []
+  )
+
+  // Credentials dialog state
+  const [credentialsOpen, setCredentialsOpen] = useState(false)
+  const [credentialsStudentId, setCredentialsStudentId] = useState<
+    string | null
+  >(null)
+  const [credentialsStudentName, setCredentialsStudentName] = useState("")
+
+  const handleGenerateCredentials = useCallback(
+    (studentId: string, studentName: string) => {
+      setCredentialsStudentId(studentId)
+      setCredentialsStudentName(studentName)
+      // Defer to avoid Radix DropdownMenu close event cascading to Dialog
+      setTimeout(() => setCredentialsOpen(true), 0)
     },
     []
   )
@@ -151,6 +170,7 @@ function StudentsTableInner({
       getStudentColumns(dictionary, lang, {
         onDeleteSuccess: handleColumnDeleteSuccess,
         onGenerateAccessCode: handleGenerateAccessCode,
+        onGenerateCredentials: handleGenerateCredentials,
         gradeOptions,
       }),
     [
@@ -158,6 +178,7 @@ function StudentsTableInner({
       lang,
       handleColumnDeleteSuccess,
       handleGenerateAccessCode,
+      handleGenerateCredentials,
       gradeOptions,
     ]
   )
@@ -429,6 +450,13 @@ function StudentsTableInner({
         onOpenChange={setAccessCodeOpen}
         studentIds={accessCodeStudentIds}
         studentNames={accessCodeStudentNames}
+      />
+
+      <CredentialsDialog
+        open={credentialsOpen}
+        onOpenChange={setCredentialsOpen}
+        studentId={credentialsStudentId}
+        studentName={credentialsStudentName}
       />
     </>
   )

@@ -22,8 +22,12 @@ export type ContactDTO = {
   conversationId?: string
   lastMessage?: string | null
   lastMessageAt?: Date | string | null
+  lastMessageContentType?: string | null
+  lastMessageHasAttachments?: boolean
   unreadCount?: number
   isPinned?: boolean
+  isMuted?: boolean
+  isTyping?: boolean
 }
 
 /** Contact categories — some are role-specific (prefixed with my_) */

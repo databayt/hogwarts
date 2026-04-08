@@ -130,23 +130,21 @@ export async function seedConceptImages(prisma: PrismaClient): Promise<void> {
     const filePath = path.join(CONCEPTS_DIR, file)
     const fileBuffer = fs.readFileSync(filePath)
 
-    // Upload same image to all 12 grade paths (thumbnail + banner)
+    // Upload same image to all 12 grade paths (thumbnail only — banners
+    // require proper wide landscape images and are handled by banner-copy.ts)
     for (let grade = 1; grade <= MAX_GRADE; grade++) {
       const prefix = `catalog/concepts/g${grade}-${concept}`
 
       try {
         await processAndUploadCatalogImage(fileBuffer, `${prefix}/thumbnail`)
-        await processAndUploadCatalogImage(fileBuffer, `${prefix}/banner`)
-        uploadCount += 2
+        uploadCount++
       } catch (err) {
         console.error(`  Failed to upload g${grade}-${concept}:`, err)
       }
     }
 
     uploadedConcepts.add(concept)
-    console.log(
-      `  Uploaded concept: ${concept} (g1–g${MAX_GRADE}, thumbnail+banner)`
-    )
+    console.log(`  Uploaded concept: ${concept} (g1–g${MAX_GRADE}, thumbnail)`)
   }
 
   logSuccess(
@@ -202,7 +200,6 @@ export async function seedConceptImages(prisma: PrismaClient): Promise<void> {
       where: { id: subject.id },
       data: {
         thumbnail: `${prefix}/thumbnail`,
-        banner: `${prefix}/banner`,
       },
     })
     thumbnailCount++

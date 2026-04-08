@@ -860,6 +860,7 @@ export function ChatInterface({
           onRetry={handleRetryMessage}
           savedScrollPosition={savedScrollPosition}
           onSaveScrollPosition={onSaveScrollPosition}
+          unreadCount={conversation.unreadCount ?? 0}
           className="h-full"
         />
 
