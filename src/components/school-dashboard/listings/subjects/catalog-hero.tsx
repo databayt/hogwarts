@@ -63,7 +63,7 @@ export function CatalogHero({ subject, gradeSiblings = [], lang }: Props) {
             alt={subject.name}
             width={2048}
             height={378}
-            className="block h-auto w-full"
+            className="block h-auto w-full rtl:[transform:scaleX(-1)]"
             priority
             quality={100}
             sizes="100vw"

@@ -12,7 +12,6 @@ import { UserRoleForm } from "@/components/saas-marketing/pricing/forms/user-rol
 import { DeleteAccountSection } from "@/components/school-dashboard/dashboard/delete-account"
 import { DashboardHeader } from "@/components/school-dashboard/dashboard/header"
 import { UserNameForm } from "@/components/school-dashboard/dashboard/settings/user-name-form"
-import { RoleSwitcher } from "@/components/school-dashboard/settings/role-switcher"
 
 // Extended user type that includes the properties added by our auth callbacks
 type ExtendedUser = {
@@ -54,14 +53,6 @@ export default async function SettingsContent({
           <Separator />
           <UserRoleForm user={{ id: user.id, role: user.role as UserRole }} />
         </div>
-
-        {/* Role Switcher for testing different lab views */}
-        <RoleSwitcher
-          currentRole={user.role as UserRole}
-          currentUserId={user.id}
-          schoolId={user.schoolId || undefined}
-          dictionary={(dictionary as any).school}
-        />
 
         <DeleteAccountSection />
       </div>

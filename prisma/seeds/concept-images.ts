@@ -73,7 +73,7 @@ const NAME_TO_CONCEPT: Record<string, string> = {
   "World Languages": "languages",
 
   // Sudan national curriculum
-  "اللغة العربية": "arabic",
+  "اللغة العربية": "languages",
   الرياضيات: "math",
   "التربية الإسلامية": "religion",
   "اللغة الإنجليزية": "english",
@@ -88,10 +88,10 @@ const NAME_TO_CONCEPT: Record<string, string> = {
   "الدراسات الإسلامية": "religion",
   "القرآن وعلومه": "religion",
   "اللغة الفرنسية": "languages",
-  "البلاغة والتعبير": "arabic",
-  "قواعد النحو": "arabic",
-  "الأدب والمطالعة": "arabic",
-  "اللغة العربية الخاصة": "arabic",
+  "البلاغة والتعبير": "languages",
+  "قواعد النحو": "languages",
+  "الأدب والمطالعة": "languages",
+  "اللغة العربية الخاصة": "languages",
   "العلوم العسكرية": "civics",
   "العلوم الهندسية": "science",
   "العلوم التجارية": "economics",

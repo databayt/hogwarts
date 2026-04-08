@@ -81,7 +81,16 @@ export function MessageList({
   const [hasScrolledUp, setHasScrolledUp] = useState(false)
   const [newMsgCount, setNewMsgCount] = useState(0)
   const prevMsgCountRef = useRef(messages.length)
+  const shouldScrollRef = useRef(false)
   const dateLocale = locale === "ar" ? ar : enUS
+
+  // Reset hasScrolledUp when user returns to bottom
+  useEffect(() => {
+    if (isAtBottom) {
+      setHasScrolledUp(false)
+      setNewMsgCount(0)
+    }
+  }, [isAtBottom])
 
   // Track new messages arriving while scrolled up (for FAB badge)
   useEffect(() => {
@@ -90,8 +99,9 @@ export function MessageList({
     if (added > 0 && !isAtBottom) {
       setNewMsgCount((c) => c + added)
     }
-    if (isAtBottom) {
-      setNewMsgCount(0)
+    // Flag that we need to scroll (new messages arrived)
+    if (added > 0) {
+      shouldScrollRef.current = true
     }
   }, [messages.length, isAtBottom])
 
@@ -234,17 +244,11 @@ export function MessageList({
   }
 
   const scrollToBottom = () => {
-    if (enableVirtualization) {
-      virtualizer.scrollToIndex(virtualListItems.length - 1, {
-        align: "end",
-        behavior: "smooth",
-      })
-    } else {
-      scrollContainerRef.current?.scroll({
-        top: scrollContainerRef.current.scrollHeight,
-        behavior: "smooth",
-      })
+    const el = scrollContainerRef.current
+    if (el) {
+      el.scrollTo({ top: el.scrollHeight, behavior: "smooth" })
     }
+    setHasScrolledUp(false)
   }
 
   // Auto-scroll to bottom on new messages, with scroll anchoring on prepend
@@ -265,9 +269,18 @@ export function MessageList({
       return
     }
 
-    // Normal case: auto-scroll to bottom for new messages
+    // Only scroll if new messages actually arrived
+    if (!shouldScrollRef.current) return
+    shouldScrollRef.current = false
+
+    // Auto-scroll when user hasn't intentionally scrolled up
     if (isAtBottom || !hasScrolledUp) {
-      virtualizer.scrollToIndex(virtualListItems.length - 1, { align: "end" })
+      requestAnimationFrame(() => {
+        const el = scrollContainerRef.current
+        if (el) {
+          el.scrollTo({ top: el.scrollHeight, behavior: "instant" })
+        }
+      })
     }
   }, [virtualListItems.length, enableVirtualization, isAtBottom, hasScrolledUp])
 

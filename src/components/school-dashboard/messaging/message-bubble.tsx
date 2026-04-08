@@ -376,7 +376,7 @@ export const MessageBubble = memo(function MessageBubble({
                 isMediaOnly ? "overflow-hidden p-0" : "px-2.5 py-1.5",
                 isOwnMessage ? "text-foreground" : "text-foreground bg-white",
                 isDeleted && "italic opacity-60",
-                isPending && "opacity-70"
+                isPending && ""
               )}
               style={isOwnMessage ? { backgroundColor: "#D9FDD4" } : undefined}
             >

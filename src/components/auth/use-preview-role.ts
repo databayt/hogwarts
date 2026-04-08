@@ -3,9 +3,8 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState } from "react"
+import type { UserRole } from "@prisma/client"
 import { useSession } from "next-auth/react"
-
-import type { UserRole } from "@/components/school-dashboard/settings/role-management"
 
 /**
  * Hook to get the current effective role (considering preview mode)

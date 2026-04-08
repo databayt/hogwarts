@@ -224,7 +224,7 @@
       "name": "اللغة العربية",
       "slug": "arabic",
       "department": "Languages",
-      "concept": "arabic",
+      "concept": "languages",
       "color": "#3b82f6",
       "gradeChapters": {
         "1": {
@@ -1210,7 +1210,7 @@
       "name": "اللغة العربية الخاصة",
       "slug": "arabic-advanced",
       "department": "Languages",
-      "concept": "arabic",
+      "concept": "languages",
       "color": "#4338ca",
       "gradeChapters": {
         "11": {
@@ -5846,7 +5846,7 @@
       "name": "قواعد النحو",
       "slug": "grammar",
       "department": "Languages",
-      "concept": "arabic",
+      "concept": "languages",
       "color": "#7c3aed",
       "gradeChapters": {
         "11": {
@@ -7586,7 +7586,7 @@
       "name": "الأدب والمطالعة",
       "slug": "literature",
       "department": "Languages",
-      "concept": "arabic",
+      "concept": "languages",
       "color": "#6d28d9",
       "gradeChapters": {
         "10": {
@@ -9177,7 +9177,7 @@
       "name": "البلاغة والتعبير",
       "slug": "rhetoric",
       "department": "Languages",
-      "concept": "arabic",
+      "concept": "languages",
       "color": "#4f46e5",
       "gradeChapters": {
         "11": {

@@ -56,9 +56,7 @@ const OLD_SLUG_TO_CONCEPT: Record<string, string> = {
 }
 
 // Concepts without their own legacy ClickView banner — borrow from a related concept
-const BANNER_FALLBACK: Record<string, string> = {
-  arabic: "english", // Arabic has no ClickView banner, use English's wide banner
-}
+const BANNER_FALLBACK: Record<string, string> = {}
 
 // ============================================================================
 // S3 Client (lazy singleton)

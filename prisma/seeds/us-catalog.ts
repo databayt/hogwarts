@@ -966,10 +966,10 @@ const NAME_TO_CONCEPT: Record<string, string> = {
 
 // Subject concept → rotation pool for chapter visual differentiation
 const SUBJECT_CONCEPT_POOL: Record<string, string[]> = {
-  arabic: ["arabic", "english", "languages", "arts", "history"],
+  languages: ["languages", "english", "arts", "history", "geography"],
   math: ["math", "science", "computer-science", "physics", "economics"],
   english: ["english", "languages", "arts", "history", "sociology"],
-  religion: ["religion", "history", "arabic", "life-skills", "psychology"],
+  religion: ["religion", "history", "languages", "life-skills", "psychology"],
   science: ["science", "biology", "chemistry", "physics", "earth-science"],
   history: ["history", "geography", "civics", "sociology", "economics"],
   geography: ["geography", "earth-science", "science", "history", "biology"],
@@ -984,7 +984,6 @@ const SUBJECT_CONCEPT_POOL: Record<string, string[]> = {
   physics: ["physics", "math", "science", "computer-science", "earth-science"],
   chemistry: ["chemistry", "science", "biology", "physics", "health"],
   biology: ["biology", "science", "health", "chemistry", "earth-science"],
-  languages: ["languages", "english", "arts", "geography", "celebrations"],
   health: ["health", "life-skills", "biology", "science", "economics"],
   civics: ["civics", "history", "pe", "life-skills", "geography"],
   economics: [

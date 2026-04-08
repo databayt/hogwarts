@@ -150,7 +150,7 @@ const GRADE_SLUG_OVERRIDES: Record<string, Record<string, string>> = {
 // ============================================================================
 
 const SUBJECT_CONCEPT_MAP: Record<string, string> = {
-  arabic: "arabic",
+  arabic: "languages",
   math: "math",
   english: "english",
   islamic: "religion",
@@ -167,10 +167,10 @@ const SUBJECT_CONCEPT_MAP: Record<string, string> = {
   chemistry: "chemistry",
   biology: "biology",
   french: "languages",
-  "arabic-literature": "arabic",
-  "arabic-rhetoric": "arabic",
-  "arabic-grammar": "arabic",
-  "arabic-specialized": "arabic",
+  "arabic-literature": "languages",
+  "arabic-rhetoric": "languages",
+  "arabic-grammar": "languages",
+  "arabic-specialized": "languages",
   "home-economics": "health",
   "commercial-studies": "economics",
   "military-science": "civics",
@@ -191,7 +191,7 @@ const LESSON_TYPE_CONCEPT: Record<string, string> = {
   // Arabic lesson types (g1-g8)
   reading: "english",
   literature: "languages",
-  dictation: "arabic",
+  dictation: "languages",
   expression: "arts",
   grammar: "psychology",
   // Arabic lesson types (g9+)
@@ -213,10 +213,10 @@ const LESSON_TYPE_CONCEPT: Record<string, string> = {
 // ============================================================================
 
 const SUBJECT_CONCEPT_POOL: Record<string, string[]> = {
-  arabic: ["arabic", "english", "languages", "arts", "history"],
+  languages: ["languages", "english", "arts", "history", "geography"],
   math: ["math", "science", "computer-science", "physics", "economics"],
   english: ["english", "languages", "arts", "history", "sociology"],
-  religion: ["religion", "history", "arabic", "life-skills", "psychology"],
+  religion: ["religion", "history", "languages", "life-skills", "psychology"],
   science: ["science", "biology", "chemistry", "physics", "earth-science"],
   history: ["history", "geography", "civics", "sociology", "economics"],
   geography: ["geography", "earth-science", "science", "history", "biology"],
@@ -231,7 +231,6 @@ const SUBJECT_CONCEPT_POOL: Record<string, string[]> = {
   physics: ["physics", "math", "science", "computer-science", "earth-science"],
   chemistry: ["chemistry", "science", "biology", "physics", "health"],
   biology: ["biology", "science", "health", "chemistry", "earth-science"],
-  languages: ["languages", "english", "arts", "geography", "celebrations"],
   health: ["health", "life-skills", "biology", "science", "economics"],
   civics: ["civics", "history", "pe", "life-skills", "geography"],
   economics: [
