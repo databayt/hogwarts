@@ -66,6 +66,7 @@ function createGetAnnouncementsCSV(lang: Locale) {
       page: 1,
       perPage: 1000,
       ...filters,
+      displayLang: lang,
     })
     if (!result.success || !result.data.rows) return ""
 
@@ -139,6 +140,7 @@ function AnnouncementsTableInner({
       const result = await getAnnouncements({
         ...params,
         title: deferredSearch || undefined,
+        displayLang: lang,
       })
       if (result.success) {
         return {

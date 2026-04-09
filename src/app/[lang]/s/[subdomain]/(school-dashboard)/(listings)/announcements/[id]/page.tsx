@@ -13,7 +13,7 @@ interface Props {
 export default async function AnnouncementDetailPage({ params }: Props) {
   const { lang, id } = await params
   const dictionary = await getDictionary(lang)
-  const result = await getAnnouncement({ id })
+  const result = await getAnnouncement({ id, displayLang: lang })
 
   return (
     <AnnouncementDetailContent

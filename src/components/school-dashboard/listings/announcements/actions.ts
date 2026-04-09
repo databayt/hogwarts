@@ -88,7 +88,7 @@ import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { withAutoTranslation } from "@/lib/auto-translate"
-import { getDisplayFields } from "@/lib/content-display"
+import { getDisplayFields, getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { dispatchNotificationsToAudience } from "@/lib/dispatch-notification"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -896,18 +896,29 @@ export async function getAnnouncements(
     ])
 
     // Map results with proper types - single-language fields
-    const mapped: AnnouncementListResult[] = rows.map((a) => ({
-      id: a.id,
-      title: a.title,
-      lang: a.lang,
-      scope: a.scope,
-      published: a.published,
-      priority: a.priority,
-      pinned: a.pinned,
-      featured: a.featured,
-      createdAt: a.createdAt.toISOString(),
-      createdBy: a.createdBy,
-    }))
+    // Translate titles when displayLang differs from stored lang
+    const mapped: AnnouncementListResult[] = await Promise.all(
+      rows.map(async (a) => ({
+        id: a.id,
+        title:
+          sp.displayLang && a.lang !== sp.displayLang
+            ? await getDisplayText(
+                a.title,
+                (a.lang as "ar" | "en") || "ar",
+                sp.displayLang,
+                schoolId
+              )
+            : a.title,
+        lang: a.lang,
+        scope: a.scope,
+        published: a.published,
+        priority: a.priority,
+        pinned: a.pinned,
+        featured: a.featured,
+        createdAt: a.createdAt.toISOString(),
+        createdBy: a.createdBy,
+      }))
+    )
 
     return { success: true, data: { rows: mapped, total: count } }
   } catch (error) {

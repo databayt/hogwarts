@@ -108,6 +108,7 @@ export const getAnnouncementsSchema = z.object({
   scope: z.string().optional().default(""),
   published: z.string().optional().default(""),
   sort: z.array(sortItemSchema).optional().default([]),
+  displayLang: z.enum(["ar", "en"]).optional(),
 })
 
 // ============================================================================

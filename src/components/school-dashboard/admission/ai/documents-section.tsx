@@ -83,7 +83,9 @@ export function DocumentsSection({
             dictionary?.admission?.documentTypes?.[doc.type] ??
             defaultDocTypeLabels[doc.type] ??
             doc.type
-          const displayName = doc.fileName || `Document ${i + 1}`
+          const displayName =
+            doc.fileName ||
+            `${dictionary?.admission?.ai?.document ?? "Document"} ${i + 1}`
 
           if (isImage) {
             return (

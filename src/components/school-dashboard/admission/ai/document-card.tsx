@@ -69,13 +69,19 @@ export function DocumentCard({
         {isImage ? (
           <img
             src={doc.url}
-            alt={doc.fileName || `Document ${index + 1}`}
+            alt={
+              doc.fileName ||
+              `${dictionary?.admission?.ai?.document ?? "Document"} ${index + 1}`
+            }
             className="h-full w-full object-cover"
           />
         ) : isPdf ? (
           <iframe
             src={`${doc.url}#page=1&view=FitH`}
-            title={doc.fileName || `Document ${index + 1}`}
+            title={
+              doc.fileName ||
+              `${dictionary?.admission?.ai?.document ?? "Document"} ${index + 1}`
+            }
             className="pointer-events-none h-full w-full scale-100"
             tabIndex={-1}
           />
@@ -87,7 +93,8 @@ export function DocumentCard({
       {/* Info */}
       <div className="flex flex-1 flex-col gap-1.5 p-2.5">
         <p className="line-clamp-1 text-xs font-medium">
-          {doc.fileName || `Document ${index + 1}`}
+          {doc.fileName ||
+            `${dictionary?.admission?.ai?.document ?? "Document"} ${index + 1}`}
         </p>
 
         {/* Type badge */}
