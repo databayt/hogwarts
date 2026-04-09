@@ -26,6 +26,7 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { sendMessage } from "./actions"
 import type { MessageDTO } from "./types"
+import { uploadMessageAttachment } from "./upload-actions"
 
 export interface MessageInputProps {
   conversationId: string
@@ -71,6 +72,7 @@ export function MessageInput({
   const [showFileUpload, setShowFileUpload] = useState(false)
   const [hasContent, setHasContent] = useState(false)
   const [isSending, setIsSending] = useState(false)
+  const [isUploadingVoice, setIsUploadingVoice] = useState(false)
 
   const defaultPlaceholder = m?.form?.message_placeholder || "Type a message..."
 
@@ -232,29 +234,68 @@ export function MessageInput({
         if (e.data.size > 0) audioChunksRef.current.push(e.data)
       }
 
-      mediaRecorder.onstop = () => {
+      mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, {
           type: "audio/webm",
         })
         stream.getTracks().forEach((t) => t.stop())
 
-        // Create a File from the blob and trigger upload
-        const file = new File([audioBlob], `voice-${Date.now()}.webm`, {
-          type: "audio/webm",
-        })
-        // Upload via the same file upload pipeline
-        const blobUrl = URL.createObjectURL(audioBlob)
-        onFileUpload?.([
-          {
-            fileId: `voice-${Date.now()}`,
-            url: blobUrl,
-            fileName: file.name,
-            fileUrl: blobUrl,
-            fileSize: audioBlob.size,
-            fileType: "audio/webm",
-            category: "OTHER" as const,
-          } as UploadedFileResult,
-        ])
+        // Upload to server, then send as message with attachment
+        setIsUploadingVoice(true)
+        try {
+          const file = new File([audioBlob], `voice-${Date.now()}.webm`, {
+            type: "audio/webm",
+          })
+          const formData = new FormData()
+          formData.append("file", file)
+          formData.append("conversationId", conversationId)
+
+          const uploadResult = await uploadMessageAttachment(formData)
+
+          if (!uploadResult.success) {
+            toast({
+              title: m?.notifications?.error || "Error",
+              description:
+                uploadResult.error ||
+                m?.errors?.send_failed ||
+                "Failed to upload voice message",
+            })
+            return
+          }
+
+          const { fileUrl, fileName, fileSize, fileType } = uploadResult.data
+
+          // Send message with audio attachment
+          const nonce = onOptimisticSend?.(fileUrl)
+          const msgResult = await sendMessage({
+            conversationId,
+            content: fileUrl,
+            contentType: "audio",
+            clientNonce: nonce || undefined,
+            attachments: [{ fileUrl, fileName, fileSize, fileType }],
+          })
+
+          if (msgResult.success && nonce) {
+            onMessageConfirmed?.(nonce, msgResult.data.id)
+          } else if (!msgResult.success && nonce) {
+            onMessageFailed?.(nonce)
+            toast({
+              title: m?.notifications?.error || "Error",
+              description:
+                msgResult.error ||
+                m?.errors?.send_failed ||
+                "Failed to send voice message",
+            })
+          }
+        } catch {
+          toast({
+            title: m?.notifications?.error || "Error",
+            description:
+              m?.errors?.send_failed || "Failed to send voice message",
+          })
+        } finally {
+          setIsUploadingVoice(false)
+        }
       }
 
       mediaRecorder.start(100) // Collect data every 100ms
@@ -270,7 +311,7 @@ export function MessageInput({
           m?.errors?.microphone_access || "Could not access microphone",
       })
     }
-  }, [onFileUpload, m])
+  }, [conversationId, onOptimisticSend, onMessageConfirmed, onMessageFailed, m])
 
   const stopRecording = useCallback(() => {
     mediaRecorderRef.current?.stop()
@@ -339,7 +380,16 @@ export function MessageInput({
       )}
 
       {/* Input area — WhatsApp layout: [Emoji] [Paperclip] [Input] [Send/Mic] */}
-      {isRecording ? (
+      {isUploadingVoice ? (
+        /* Voice uploading indicator */
+        <div className="flex items-center justify-center gap-2 px-3 py-3">
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#1FA961]/30 border-t-[#1FA961]" />
+          <span className="text-muted-foreground text-sm">
+            {(m?.ui as Record<string, string>)?.uploading ||
+              "Sending voice message..."}
+          </span>
+        </div>
+      ) : isRecording ? (
         /* Voice recording UI */
         <div className="flex items-center gap-3 px-3 py-2">
           <Button

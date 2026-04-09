@@ -19,6 +19,7 @@ import { formatDate } from "@/lib/i18n-format"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 
 interface School {
@@ -49,6 +50,8 @@ export default function TenantWelcome({
   subdomain,
 }: TenantWelcomeProps) {
   const { locale } = useLocale()
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.tenant?.welcome
 
   const getPlanBadge = (planType?: string) => {
     if (!planType) return null
@@ -66,16 +69,21 @@ export default function TenantWelcome({
           "bg-gray-100 text-gray-800"
         }
       >
-        {planType.charAt(0).toUpperCase() + planType.slice(1)} Plan
+        {planType.charAt(0).toUpperCase() + planType.slice(1)}{" "}
+        {t?.plan?.suffix || "Plan"}
       </Badge>
     )
   }
 
   const getStatusBadge = (isActive?: boolean) => {
     return isActive ? (
-      <Badge className="bg-green-100 text-green-800">Active</Badge>
+      <Badge className="bg-green-100 text-green-800">
+        {t?.status?.active || "Active"}
+      </Badge>
     ) : (
-      <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>
+      <Badge className="bg-yellow-100 text-yellow-800">
+        {t?.status?.pending || "Pending"}
+      </Badge>
     )
   }
 
@@ -109,11 +117,12 @@ export default function TenantWelcome({
           <div className="bg-primary/10 mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full">
             <GraduationCap className="text-primary h-12 w-12" />
           </div>
-          <h1 className="mb-4 text-gray-900">Welcome to {school.name}</h1>
+          <h1 className="mb-4 text-gray-900">
+            {t?.title || "Welcome to"} {school.name}
+          </h1>
           <p className="lead mx-auto max-w-3xl text-gray-600">
-            Your comprehensive school management portal is ready. Access student
-            records, manage classes, track attendance, and more all in one
-            place.
+            {t?.portalDescription ||
+              "Your comprehensive school management portal is ready. Access student records, manage classes, track attendance, and more all in one place."}
           </p>
         </div>
 
@@ -121,34 +130,44 @@ export default function TenantWelcome({
         <div className="mb-12 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle>Students</CardTitle>
+              <CardTitle>{t?.stats?.students || "Students"}</CardTitle>
               <Users className="text-muted-foreground h-4 w-4" />
             </CardHeader>
             <CardContent>
-              <h3>{school.maxStudents || "Unlimited"}</h3>
-              <p className="muted">Maximum student capacity</p>
+              <h3>
+                {school.maxStudents || t?.stats?.unlimited || "Unlimited"}
+              </h3>
+              <p className="muted">
+                {t?.stats?.maxStudentCapacity || "Maximum student capacity"}
+              </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle>Teachers</CardTitle>
+              <CardTitle>{t?.stats?.teachers || "Teachers"}</CardTitle>
               <BookOpen className="text-muted-foreground h-4 w-4" />
             </CardHeader>
             <CardContent>
-              <h3>{school.maxTeachers || "Unlimited"}</h3>
-              <p className="muted">Maximum teacher capacity</p>
+              <h3>
+                {school.maxTeachers || t?.stats?.unlimited || "Unlimited"}
+              </h3>
+              <p className="muted">
+                {t?.stats?.maxTeacherCapacity || "Maximum teacher capacity"}
+              </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle>Timezone</CardTitle>
+              <CardTitle>{t?.stats?.timezone || "Timezone"}</CardTitle>
               <Clock className="text-muted-foreground h-4 w-4" />
             </CardHeader>
             <CardContent>
               <h3>{school.timezone || "UTC"}</h3>
-              <p className="muted">School timezone</p>
+              <p className="muted">
+                {t?.stats?.schoolTimezone || "School timezone"}
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -159,17 +178,17 @@ export default function TenantWelcome({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Globe className="h-5 w-5" />
-                <span>Access Your Portal</span>
+                <span>{t?.accessPortal?.title || "Access Your Portal"}</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="mb-4 text-gray-600">
-                Log in to access your school's dashboard, manage students,
-                create classes, and view reports.
+                {t?.accessPortal?.description ||
+                  "Log in to access your school's dashboard, manage students, create classes, and view reports."}
               </p>
               <Button className="w-full" asChild>
                 <Link href={`/${locale}/login`}>
-                  Login to Portal
+                  {t?.accessPortal?.loginButton || "Login to Portal"}
                   <ArrowRight className="ms-2 h-4 w-4 rtl:rotate-180" />
                 </Link>
               </Button>
@@ -180,17 +199,17 @@ export default function TenantWelcome({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="h-5 w-5" />
-                <span>Get Started</span>
+                <span>{t?.getStarted?.title || "Get Started"}</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="mb-4 text-gray-600">
-                New to the platform? Complete your school setup, add your first
-                students, and configure your classes.
+                {t?.getStarted?.description ||
+                  "New to the platform? Complete your school setup, add your first students, and configure your classes."}
               </p>
               <Button variant="outline" className="w-full" asChild>
                 <Link href={`/${locale}/onboarding`}>
-                  Complete Setup
+                  {t?.getStarted?.setupButton || "Complete Setup"}
                   <ArrowRight className="ms-2 h-4 w-4 rtl:rotate-180" />
                 </Link>
               </Button>
@@ -202,25 +221,33 @@ export default function TenantWelcome({
         {school.address || school.phoneNumber || school.email ? (
           <Card>
             <CardHeader>
-              <CardTitle>School Information</CardTitle>
+              <CardTitle>
+                {t?.schoolInfo?.title || "School Information"}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
                 {school.address && (
                   <div>
-                    <h5 className="mb-1 text-gray-900">Address</h5>
+                    <h5 className="mb-1 text-gray-900">
+                      {t?.schoolInfo?.address || "Address"}
+                    </h5>
                     <p className="text-gray-600">{school.address}</p>
                   </div>
                 )}
                 {school.phoneNumber && (
                   <div>
-                    <h5 className="mb-1 text-gray-900">Phone</h5>
+                    <h5 className="mb-1 text-gray-900">
+                      {t?.schoolInfo?.phone || "Phone"}
+                    </h5>
                     <p className="text-gray-600">{school.phoneNumber}</p>
                   </div>
                 )}
                 {school.email && (
                   <div>
-                    <h5 className="mb-1 text-gray-900">Email</h5>
+                    <h5 className="mb-1 text-gray-900">
+                      {t?.schoolInfo?.email || "Email"}
+                    </h5>
                     <p className="text-gray-600">{school.email}</p>
                   </div>
                 )}
@@ -231,12 +258,15 @@ export default function TenantWelcome({
 
         {/* Footer */}
         <div className="mt-12 text-center text-gray-500">
-          <p>Powered by Databayt - School Management Platform</p>
+          <p>
+            {t?.footer?.poweredBy ||
+              "Powered by Databayt - School Management Platform"}
+          </p>
           <p className="muted mt-1">
-            Created on{" "}
+            {t?.footer?.createdOn || "Created on"}{" "}
             {school.createdAt
               ? formatDate(school.createdAt, locale)
-              : "Recently"}
+              : t?.footer?.recently || "Recently"}
           </p>
         </div>
       </div>

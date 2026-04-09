@@ -88,6 +88,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface AnalyticsData {
   enrollment: {
@@ -186,6 +187,9 @@ export function AnalyticsDashboard({
   >("month")
   const [comparisonEnabled, setComparisonEnabled] = useState(false)
 
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.analytics as Record<string, any> | undefined
+
   // Calculate key metrics
   const keyMetrics = useMemo(() => {
     const enrollmentChange = data.enrollment.trend
@@ -224,56 +228,75 @@ export function AnalyticsDashboard({
   }, [data])
 
   // Insights and recommendations
+  const ins = t?.insights
   const insights = useMemo(() => {
     const insights = []
 
-    // Attendance insights
     if (data.attendance.overall < 90) {
       insights.push({
         type: "warning",
-        category: "Attendance",
-        message: `Overall attendance at ${data.attendance.overall}% is below target of 90%`,
-        action: "Review attendance policies and engage with parents",
+        category: ins?.attendance || "Attendance",
+        message:
+          ins?.attendanceBelowTarget?.replace(
+            "{rate}",
+            String(data.attendance.overall)
+          ) ||
+          `Overall attendance at ${data.attendance.overall}% is below target of 90%`,
+        action:
+          ins?.attendanceAction ||
+          "Review attendance policies and engage with parents",
       })
     }
 
-    // Academic insights
     const strugglingSubjects = data.academic.bySubject.filter(
       (s) => s.passing < 70
     )
     if (strugglingSubjects.length > 0) {
       insights.push({
         type: "alert",
-        category: "Academic",
-        message: `${strugglingSubjects.length} subjects have passing rates below 70%`,
-        action: "Consider additional support classes or tutoring",
+        category: ins?.academicLabel || "Academic",
+        message:
+          ins?.subjectsBelowPassing?.replace(
+            "{count}",
+            String(strugglingSubjects.length)
+          ) ||
+          `${strugglingSubjects.length} subjects have passing rates below 70%`,
+        action:
+          ins?.subjectsAction ||
+          "Consider additional support classes or tutoring",
       })
     }
 
-    // Financial insights
     if (data.financial.totalOutstanding > data.financial.totalRevenue * 0.2) {
       insights.push({
         type: "warning",
-        category: "Financial",
-        message: "Outstanding fees exceed 20% of total revenue",
-        action: "Implement payment reminder system and payment plans",
+        category: ins?.financial || "Financial",
+        message:
+          ins?.outstandingFeesHigh ||
+          "Outstanding fees exceed 20% of total revenue",
+        action:
+          ins?.outstandingFeesAction ||
+          "Implement payment reminder system and payment plans",
       })
     }
 
-    // Behavioral insights
     if (
       data.behavioral.disciplinaryActions > data.behavioral.positiveRecognitions
     ) {
       insights.push({
         type: "info",
-        category: "Behavioral",
-        message: "More disciplinary actions than positive recognitions",
-        action: "Focus on positive reinforcement strategies",
+        category: ins?.behavioral || "Behavioral",
+        message:
+          ins?.moreDisciplinary ||
+          "More disciplinary actions than positive recognitions",
+        action:
+          ins?.moreDisciplinaryAction ||
+          "Focus on positive reinforcement strategies",
       })
     }
 
     return insights
-  }, [data])
+  }, [data, ins])
 
   const getChangeIcon = (change: number) => {
     if (change > 0) return <ChevronUp className="h-4 w-4" />
@@ -296,7 +319,7 @@ export function AnalyticsDashboard({
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-2xl">
-                {schoolName} Analytics Dashboard
+                {schoolName} {t?.title || "Analytics Dashboard"}
               </CardTitle>
               <CardDescription>
                 {format(dateRange.start, "MMM dd, yyyy")} -{" "}
@@ -312,14 +335,20 @@ export function AnalyticsDashboard({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="month">Monthly</SelectItem>
-                  <SelectItem value="quarter">Quarterly</SelectItem>
-                  <SelectItem value="year">Yearly</SelectItem>
+                  <SelectItem value="month">
+                    {t?.period?.monthly || "Monthly"}
+                  </SelectItem>
+                  <SelectItem value="quarter">
+                    {t?.period?.quarterly || "Quarterly"}
+                  </SelectItem>
+                  <SelectItem value="year">
+                    {t?.period?.yearly || "Yearly"}
+                  </SelectItem>
                 </SelectContent>
               </Select>
               <Button variant="outline" onClick={onExportReport}>
                 <Download className="me-2 h-4 w-4" />
-                Export Report
+                {t?.exportReport || "Export Report"}
               </Button>
             </div>
           </div>
@@ -331,7 +360,9 @@ export function AnalyticsDashboard({
         <Card>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardDescription>Total Enrollment</CardDescription>
+              <CardDescription>
+                {t?.metrics?.totalEnrollment || "Total Enrollment"}
+              </CardDescription>
               <Users className="text-muted-foreground h-4 w-4" />
             </div>
           </CardHeader>
@@ -353,7 +384,8 @@ export function AnalyticsDashboard({
               </div>
             </div>
             <p className="text-muted-foreground mt-1 text-xs">
-              Students and teachers combined
+              {t?.metrics?.studentsAndTeachers ||
+                "Students and teachers combined"}
             </p>
           </CardContent>
         </Card>
@@ -361,7 +393,9 @@ export function AnalyticsDashboard({
         <Card>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardDescription>Attendance Rate</CardDescription>
+              <CardDescription>
+                {t?.metrics?.attendanceRate || "Attendance Rate"}
+              </CardDescription>
               <Activity className="text-muted-foreground h-4 w-4" />
             </div>
           </CardHeader>
@@ -392,7 +426,9 @@ export function AnalyticsDashboard({
         <Card>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardDescription>Average Grade</CardDescription>
+              <CardDescription>
+                {t?.metrics?.averageGrade || "Average Grade"}
+              </CardDescription>
               <Award className="text-muted-foreground h-4 w-4" />
             </div>
           </CardHeader>
@@ -412,7 +448,10 @@ export function AnalyticsDashboard({
               </div>
             </div>
             <p className="text-muted-foreground mt-1 text-xs">
-              Passing rate: {data.academic.passingRate}%
+              {(t?.metrics?.passingRate || "Passing rate: {rate}%").replace(
+                "{rate}",
+                String(data.academic.passingRate)
+              )}
             </p>
           </CardContent>
         </Card>
@@ -420,7 +459,9 @@ export function AnalyticsDashboard({
         <Card>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardDescription>Fee Collection</CardDescription>
+              <CardDescription>
+                {t?.metrics?.feeCollection || "Fee Collection"}
+              </CardDescription>
               <DollarSign className="text-muted-foreground h-4 w-4" />
             </div>
           </CardHeader>
@@ -440,7 +481,10 @@ export function AnalyticsDashboard({
               </div>
             </div>
             <p className="text-muted-foreground mt-1 text-xs">
-              Outstanding: ${data.financial.totalOutstanding.toLocaleString()}
+              {(t?.metrics?.outstanding || "Outstanding: {amount}").replace(
+                "{amount}",
+                `$${data.financial.totalOutstanding.toLocaleString()}`
+              )}
             </p>
           </CardContent>
         </Card>
@@ -452,10 +496,18 @@ export function AnalyticsDashboard({
         onValueChange={(v) => setSelectedView(v as any)}
       >
         <TabsList className="grid w-full max-w-lg grid-cols-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="academic">Academic</TabsTrigger>
-          <TabsTrigger value="financial">Financial</TabsTrigger>
-          <TabsTrigger value="operational">Operational</TabsTrigger>
+          <TabsTrigger value="overview">
+            {t?.tabs?.overview || "Overview"}
+          </TabsTrigger>
+          <TabsTrigger value="academic">
+            {t?.tabs?.academic || "Academic"}
+          </TabsTrigger>
+          <TabsTrigger value="financial">
+            {t?.tabs?.financial || "Financial"}
+          </TabsTrigger>
+          <TabsTrigger value="operational">
+            {t?.tabs?.operational || "Operational"}
+          </TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -464,9 +516,12 @@ export function AnalyticsDashboard({
             {/* Enrollment Trends */}
             <Card>
               <CardHeader>
-                <CardTitle>Enrollment Trends</CardTitle>
+                <CardTitle>
+                  {t?.overview?.enrollmentTrends || "Enrollment Trends"}
+                </CardTitle>
                 <CardDescription>
-                  Students and teachers over time
+                  {t?.overview?.enrollmentTrendsDesc ||
+                    "Students and teachers over time"}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -525,9 +580,12 @@ export function AnalyticsDashboard({
             {/* Attendance Patterns */}
             <Card>
               <CardHeader>
-                <CardTitle>Weekly Attendance</CardTitle>
+                <CardTitle>
+                  {t?.overview?.weeklyAttendance || "Weekly Attendance"}
+                </CardTitle>
                 <CardDescription>
-                  Attendance rate by day of week
+                  {t?.overview?.weeklyAttendanceDesc ||
+                    "Attendance rate by day of week"}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -555,7 +613,7 @@ export function AnalyticsDashboard({
                       y={90}
                       stroke="#10b981"
                       strokeDasharray="3 3"
-                      label="Target"
+                      label={t?.overview?.target || "Target"}
                     />
                   </BarChart>
                 </ResponsiveContainer>
@@ -565,8 +623,13 @@ export function AnalyticsDashboard({
             {/* Grade Distribution */}
             <Card>
               <CardHeader>
-                <CardTitle>Grade Distribution</CardTitle>
-                <CardDescription>Student performance breakdown</CardDescription>
+                <CardTitle>
+                  {t?.overview?.gradeDistribution || "Grade Distribution"}
+                </CardTitle>
+                <CardDescription>
+                  {t?.overview?.gradeDistributionDesc ||
+                    "Student performance breakdown"}
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={250}>
@@ -599,8 +662,13 @@ export function AnalyticsDashboard({
             {/* Financial Overview */}
             <Card>
               <CardHeader>
-                <CardTitle>Revenue & Collections</CardTitle>
-                <CardDescription>Monthly financial performance</CardDescription>
+                <CardTitle>
+                  {t?.overview?.revenueCollections || "Revenue & Collections"}
+                </CardTitle>
+                <CardDescription>
+                  {t?.overview?.revenueCollectionsDesc ||
+                    "Monthly financial performance"}
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={250}>
@@ -610,14 +678,22 @@ export function AnalyticsDashboard({
                     <YAxis />
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey="collected" fill="#10b981" name="Collected" />
-                    <Bar dataKey="pending" fill="#ef4444" name="Pending" />
+                    <Bar
+                      dataKey="collected"
+                      fill="#10b981"
+                      name={t?.overview?.collected || "Collected"}
+                    />
+                    <Bar
+                      dataKey="pending"
+                      fill="#ef4444"
+                      name={t?.overview?.pending || "Pending"}
+                    />
                     <Line
                       type="monotone"
                       dataKey="collected"
                       stroke="#3b82f6"
                       strokeWidth={2}
-                      name="Trend"
+                      name={t?.overview?.trend || "Trend"}
                     />
                   </ComposedChart>
                 </ResponsiveContainer>
@@ -628,9 +704,12 @@ export function AnalyticsDashboard({
           {/* Insights and Alerts */}
           <Card>
             <CardHeader>
-              <CardTitle>Insights & Recommendations</CardTitle>
+              <CardTitle>
+                {t?.overview?.insightsTitle || "Insights & Recommendations"}
+              </CardTitle>
               <CardDescription>
-                AI-powered analytics and actionable insights
+                {t?.overview?.insightsDesc ||
+                  "AI-powered analytics and actionable insights"}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -670,9 +749,12 @@ export function AnalyticsDashboard({
             {/* Subject Performance */}
             <Card>
               <CardHeader>
-                <CardTitle>Subject Performance</CardTitle>
+                <CardTitle>
+                  {t?.academic?.subjectPerformance || "Subject Performance"}
+                </CardTitle>
                 <CardDescription>
-                  Average scores and passing rates by subject
+                  {t?.academic?.subjectPerformanceDesc ||
+                    "Average scores and passing rates by subject"}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -682,14 +764,14 @@ export function AnalyticsDashboard({
                     <PolarAngleAxis dataKey="subject" />
                     <PolarRadiusAxis domain={[0, 100]} />
                     <Radar
-                      name="Average Score"
+                      name={t?.academic?.averageScore || "Average Score"}
                       dataKey="average"
                       stroke="#3b82f6"
                       fill="#3b82f6"
                       fillOpacity={0.6}
                     />
                     <Radar
-                      name="Passing Rate"
+                      name={t?.academic?.passingRateLabel || "Passing Rate"}
                       dataKey="passing"
                       stroke="#10b981"
                       fill="#10b981"
@@ -707,9 +789,12 @@ export function AnalyticsDashboard({
               {/* Top Performers */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Top Performers</CardTitle>
+                  <CardTitle>
+                    {t?.academic?.topPerformers || "Top Performers"}
+                  </CardTitle>
                   <CardDescription>
-                    Students with highest averages
+                    {t?.academic?.topPerformersDesc ||
+                      "Students with highest averages"}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -734,7 +819,9 @@ export function AnalyticsDashboard({
                           <div>
                             <p className="font-medium">{student.name}</p>
                             <p className="text-muted-foreground text-sm">
-                              Average: {student.average}%
+                              {(
+                                t?.academic?.average || "Average: {value}%"
+                              ).replace("{value}", String(student.average))}
                             </p>
                           </div>
                         </div>
@@ -753,9 +840,13 @@ export function AnalyticsDashboard({
               {/* Students Needing Support */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Students Needing Support</CardTitle>
+                  <CardTitle>
+                    {t?.academic?.studentsNeedingSupport ||
+                      "Students Needing Support"}
+                  </CardTitle>
                   <CardDescription>
-                    Students below passing threshold
+                    {t?.academic?.studentsNeedingSupportDesc ||
+                      "Students below passing threshold"}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -771,7 +862,9 @@ export function AnalyticsDashboard({
                             {student.subject} - {student.average}%
                           </p>
                         </div>
-                        <Badge variant="destructive">Needs Help</Badge>
+                        <Badge variant="destructive">
+                          {t?.academic?.needsHelp || "Needs Help"}
+                        </Badge>
                       </div>
                     ))}
                   </div>
@@ -787,12 +880,16 @@ export function AnalyticsDashboard({
             {/* Revenue Summary */}
             <Card>
               <CardHeader>
-                <CardTitle>Revenue Summary</CardTitle>
+                <CardTitle>
+                  {t?.financial?.revenueSummary || "Revenue Summary"}
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
                   <div className="mb-1 flex justify-between">
-                    <span className="text-sm">Total Revenue</span>
+                    <span className="text-sm">
+                      {t?.financial?.totalRevenue || "Total Revenue"}
+                    </span>
                     <span className="font-bold">
                       ${data.financial.totalRevenue.toLocaleString()}
                     </span>
@@ -801,7 +898,9 @@ export function AnalyticsDashboard({
                 </div>
                 <div>
                   <div className="mb-1 flex justify-between">
-                    <span className="text-sm">Collected</span>
+                    <span className="text-sm">
+                      {t?.financial?.collected || "Collected"}
+                    </span>
                     <span className="font-medium text-green-600">
                       $
                       {(
@@ -818,7 +917,9 @@ export function AnalyticsDashboard({
                 </div>
                 <div>
                   <div className="mb-1 flex justify-between">
-                    <span className="text-sm">Outstanding</span>
+                    <span className="text-sm">
+                      {t?.financial?.outstanding || "Outstanding"}
+                    </span>
                     <span className="font-medium text-red-600">
                       ${data.financial.totalOutstanding.toLocaleString()}
                     </span>
@@ -838,7 +939,9 @@ export function AnalyticsDashboard({
             {/* Fee Categories */}
             <Card>
               <CardHeader>
-                <CardTitle>Fee Breakdown</CardTitle>
+                <CardTitle>
+                  {t?.financial?.feeBreakdown || "Fee Breakdown"}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={200}>
@@ -892,7 +995,10 @@ export function AnalyticsDashboard({
             {/* Collection Trends */}
             <Card>
               <CardHeader>
-                <CardTitle>Collection Efficiency</CardTitle>
+                <CardTitle>
+                  {t?.financial?.collectionEfficiency ||
+                    "Collection Efficiency"}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-center">
@@ -900,20 +1006,25 @@ export function AnalyticsDashboard({
                     {data.financial.collectionRate}%
                   </div>
                   <p className="text-muted-foreground text-sm">
-                    Current collection rate
+                    {t?.financial?.currentCollectionRate ||
+                      "Current collection rate"}
                   </p>
                   <Separator className="my-4" />
                   <div className="space-y-3 text-start">
                     <div className="flex justify-between text-sm">
-                      <span>On-time payments</span>
+                      <span>
+                        {t?.financial?.onTimePayments || "On-time payments"}
+                      </span>
                       <span className="font-medium">78%</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span>Late payments</span>
+                      <span>
+                        {t?.financial?.latePayments || "Late payments"}
+                      </span>
                       <span className="font-medium text-yellow-600">15%</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span>Defaulted</span>
+                      <span>{t?.financial?.defaulted || "Defaulted"}</span>
                       <span className="font-medium text-red-600">7%</span>
                     </div>
                   </div>
@@ -929,17 +1040,30 @@ export function AnalyticsDashboard({
             {/* Teacher Metrics */}
             <Card>
               <CardHeader>
-                <CardTitle>Teacher Performance</CardTitle>
-                <CardDescription>Ratings and class averages</CardDescription>
+                <CardTitle>
+                  {t?.operational?.teacherPerformance || "Teacher Performance"}
+                </CardTitle>
+                <CardDescription>
+                  {t?.operational?.teacherPerformanceDesc ||
+                    "Ratings and class averages"}
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Teacher</TableHead>
-                      <TableHead>Rating</TableHead>
-                      <TableHead>Class Avg</TableHead>
-                      <TableHead>Students</TableHead>
+                      <TableHead>
+                        {t?.operational?.teacher || "Teacher"}
+                      </TableHead>
+                      <TableHead>
+                        {t?.operational?.rating || "Rating"}
+                      </TableHead>
+                      <TableHead>
+                        {t?.operational?.classAvg || "Class Avg"}
+                      </TableHead>
+                      <TableHead>
+                        {t?.operational?.students || "Students"}
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -987,14 +1111,22 @@ export function AnalyticsDashboard({
             {/* Resource Utilization */}
             <Card>
               <CardHeader>
-                <CardTitle>Resource Utilization</CardTitle>
-                <CardDescription>Facility and equipment usage</CardDescription>
+                <CardTitle>
+                  {t?.operational?.resourceUtilization ||
+                    "Resource Utilization"}
+                </CardTitle>
+                <CardDescription>
+                  {t?.operational?.resourceUtilizationDesc ||
+                    "Facility and equipment usage"}
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div>
                     <div className="mb-2 flex justify-between">
-                      <span className="text-sm">Library Usage</span>
+                      <span className="text-sm">
+                        {t?.operational?.libraryUsage || "Library Usage"}
+                      </span>
                       <span className="text-sm font-medium">
                         {data.resources.libraryUsage}%
                       </span>
@@ -1006,7 +1138,9 @@ export function AnalyticsDashboard({
                   </div>
                   <div>
                     <div className="mb-2 flex justify-between">
-                      <span className="text-sm">Lab Utilization</span>
+                      <span className="text-sm">
+                        {t?.operational?.labUtilization || "Lab Utilization"}
+                      </span>
                       <span className="text-sm font-medium">
                         {data.resources.labUtilization}%
                       </span>
@@ -1018,7 +1152,10 @@ export function AnalyticsDashboard({
                   </div>
                   <div>
                     <div className="mb-2 flex justify-between">
-                      <span className="text-sm">Sports Facilities</span>
+                      <span className="text-sm">
+                        {t?.operational?.sportsFacilities ||
+                          "Sports Facilities"}
+                      </span>
                       <span className="text-sm font-medium">
                         {data.resources.sportsFacilities}%
                       </span>
@@ -1038,17 +1175,19 @@ export function AnalyticsDashboard({
                         <span>{item.category}</span>
                         <div className="flex gap-2">
                           <Badge variant="outline" className="text-green-600">
-                            {item.available} available
+                            {item.available}{" "}
+                            {t?.operational?.available || "available"}
                           </Badge>
                           <Badge variant="outline" className="text-blue-600">
-                            {item.inUse} in use
+                            {item.inUse} {t?.operational?.inUse || "in use"}
                           </Badge>
                           {item.maintenance > 0 && (
                             <Badge
                               variant="outline"
                               className="text-yellow-600"
                             >
-                              {item.maintenance} maintenance
+                              {item.maintenance}{" "}
+                              {t?.operational?.maintenance || "maintenance"}
                             </Badge>
                           )}
                         </div>
@@ -1062,9 +1201,12 @@ export function AnalyticsDashboard({
             {/* Behavioral Metrics */}
             <Card className="lg:col-span-2">
               <CardHeader>
-                <CardTitle>Behavioral Trends</CardTitle>
+                <CardTitle>
+                  {t?.operational?.behavioralTrends || "Behavioral Trends"}
+                </CardTitle>
                 <CardDescription>
-                  Disciplinary actions vs positive recognitions
+                  {t?.operational?.behavioralTrendsDesc ||
+                    "Disciplinary actions vs positive recognitions"}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -1079,14 +1221,14 @@ export function AnalyticsDashboard({
                       type="monotone"
                       dataKey="incidents"
                       stroke="#ef4444"
-                      name="Incidents"
+                      name={t?.operational?.incidents || "Incidents"}
                       strokeWidth={2}
                     />
                     <Line
                       type="monotone"
                       dataKey="recognitions"
                       stroke="#10b981"
-                      name="Recognitions"
+                      name={t?.operational?.recognitions || "Recognitions"}
                       strokeWidth={2}
                     />
                   </LineChart>

@@ -1,0 +1,242 @@
+---
+title: "Concepts"
+description: "How 23 shared concepts unify images, banners, and colors across all curricula."
+---
+
+## What is a Concept?
+
+A **concept** is a curriculum-agnostic identifier that maps every subject to shared visual assets (thumbnail, banner, color). Instead of storing images per-subject, the system stores them per-concept. This means Arabic in Sudan and World Languages in the US share the same `languages` concept and the same S3 images.
+
+```
+Subject (any curriculum)
+  └── concept: "math"
+        ├── thumbnail: catalog/concepts/g{grade}-math/thumbnail-{size}.webp
+        ├── banner:    catalog/concepts/g{grade}-math/banner-{size}.webp
+        └── cover:     catalog/concepts/math/cover
+```
+
+## The 23 Concepts
+
+| #   | Concept            | S3 Path                  | Source Image           | Banner Source                   |
+| --- | ------------------ | ------------------------ | ---------------------- | ------------------------------- |
+| 1   | `arts`             | `g{n}-arts/`             | `arts.jpg`             | ClickView: the-arts             |
+| 2   | `biology`          | `g{n}-biology/`          | `biology.jpg`          | ClickView: biology              |
+| 3   | `career-tech`      | `g{n}-career-tech/`      | `career-tech.jpg`      | ClickView: career-education     |
+| 4   | `celebrations`     | `g{n}-celebrations/`     | `celebrations.jpg`     | ClickView: celebrations         |
+| 5   | `chemistry`        | `g{n}-chemistry/`        | `chemistry.jpg`        | ClickView: chemistry            |
+| 6   | `civics`           | `g{n}-civics/`           | `civics.jpg`           | ClickView: social-studies       |
+| 7   | `computer-science` | `g{n}-computer-science/` | `computer-science.jpg` | ClickView: computer-science     |
+| 8   | `earth-science`    | `g{n}-earth-science/`    | `earth-science.jpg`    | ClickView: earth-space-sciences |
+| 9   | `economics`        | `g{n}-economics/`        | `economics.jpg`        | ClickView: business-economics   |
+| 10  | `english`          | `g{n}-english/`          | `english.jpg`          | ClickView: english              |
+| 11  | `geography`        | `g{n}-geography/`        | `geography.jpg`        | ClickView: geography            |
+| 12  | `health`           | `g{n}-health/`           | `health.jpg`           | ClickView: health               |
+| 13  | `history`          | `g{n}-history/`          | `history.jpg`          | ClickView: history              |
+| 14  | `languages`        | `g{n}-languages/`        | `languages.jpg`        | ClickView: french               |
+| 15  | `life-skills`      | `g{n}-life-skills/`      | `life-skills.jpg`      | ClickView: life-skills          |
+| 16  | `math`             | `g{n}-math/`             | `math.jpg`             | ClickView: mathematics          |
+| 17  | `pe`               | `g{n}-pe/`               | `pe.jpg`               | ClickView: physical-education   |
+| 18  | `physics`          | `g{n}-physics/`          | `physics.jpg`          | ClickView: physics              |
+| 19  | `psychology`       | `g{n}-psychology/`       | `psychology.jpg`       | ClickView: psychology           |
+| 20  | `religion`         | `g{n}-religion/`         | `religion.jpg`         | ClickView: islamic-education    |
+| 21  | `science`          | `g{n}-science/`          | `science.jpg`          | ClickView: science              |
+| 22  | `sociology`        | `g{n}-sociology/`        | `sociology.jpg`        | ClickView: sociology            |
+| 23  | `teacher-pd`       | `g{n}-teacher-pd/`       | `teacher-pd.jpg`       | ClickView: teacher-development  |
+
+Source images live in `public/subjects/concepts/`. Seed `concept-images` processes them into 4 WebP variants (sm/md/lg/original) and uploads to S3 for all 12 grades.
+
+## Cross-Curriculum Map
+
+How each concept maps to actual subject names across curricula.
+
+| Concept            | US (K-12)                               | SD (Sudan)                                    | GB (British)             | SA (Saudi)         |
+| ------------------ | --------------------------------------- | --------------------------------------------- | ------------------------ | ------------------ |
+| `languages`        | World Languages                         | Arabic, Grammar, Literature, Rhetoric, French | Modern Foreign Languages | French             |
+| `english`          | English Language Arts                   | English                                       | English                  | English            |
+| `math`             | Math                                    | Math, Basic Math                              | Mathematics              | Mathematics        |
+| `science`          | Physical Science, Science & Engineering | Science, Engineering                          | Science                  | Science            |
+| `biology`          | Life Science                            | Biology, Agriculture                          | Biology                  | Biology            |
+| `chemistry`        | Chemical Science, Chemistry             | Chemistry                                     | Chemistry                | Chemistry          |
+| `physics`          | Physics                                 | Physics                                       | Physics                  | Physics            |
+| `history`          | History, U.S. History, World History    | History                                       | History                  | Social Studies     |
+| `geography`        | Geography                               | Geography                                     | Geography                | Geography          |
+| `religion`         | Religion                                | Islamic Studies, Quran                        | Religious Education      | Islamic Studies    |
+| `computer-science` | CS & Technology                         | Computer Science, ICT                         | Computing                | Computer Science   |
+| `arts`             | Arts                                    | Arts & Design                                 | Art and Design           | Art Education      |
+| `economics`        | Economics, Business & Econ              | Commercial Studies                            | Business Studies         | Business Studies   |
+| `civics`           | Civics & Government                     | Military Sciences                             | Citizenship              | Social Studies     |
+| `health`           | Health                                  | Family Sciences, Home Econ                    | PSHE                     | Health Education   |
+| `earth-science`    | Earth & Space Science                   | Earth & Environment                           | -                        | -                  |
+| `life-skills`      | Life Skills                             | Clothing, Resources                           | -                        | Life Skills        |
+| `career-tech`      | Career & Tech Ed                        | Technical Education                           | Design & Technology      | -                  |
+| `pe`               | Physical Education                      | -                                             | Physical Education       | Physical Education |
+| `psychology`       | Psychology                              | -                                             | Psychology               | -                  |
+| `sociology`        | Sociology                               | -                                             | Sociology                | -                  |
+| `celebrations`     | Celebrations & Festivals                | -                                             | -                        | -                  |
+| `teacher-pd`       | Teacher Professional Dev                | -                                             | -                        | -                  |
+
+## Content Volume by Concept
+
+| Concept            | US Subjects | US Chapters | US Lessons | SD Subjects | SD Chapters | SD Lessons | Total Subjects |
+| ------------------ | ----------- | ----------- | ---------- | ----------- | ----------- | ---------- | -------------- |
+| `languages`        | 12          | 12          | 84         | 23          | 198         | 663        | 147            |
+| `math`             | 12          | 60          | 318        | 12          | 95          | 294        | 125            |
+| `english`          | 12          | 48          | 300        | 11          | 113         | 459        | 124            |
+| `arts`             | 12          | 51          | 210        | 6           | 26          | 58         | 114            |
+| `religion`         | 12          | 21          | 102        | 14          | 113         | 318        | 112            |
+| `history`          | 18          | 87          | 417        | 8           | 40          | 215        | 111            |
+| `pe`               | 12          | 18          | 123        | 0           | 0           | 0          | 104            |
+| `science`          | 15          | 33          | 141        | 8           | 52          | 190        | 102            |
+| `computer-science` | 12          | 45          | 153        | 10          | 58          | 199        | 92             |
+| `geography`        | 12          | 45          | 267        | 9           | 40          | 145        | 54             |
+| `civics`           | 12          | 36          | 198        | 3           | 24          | 39         | 54             |
+| `biology`          | 12          | 51          | 297        | 4           | 23          | 92         | 42             |
+| `life-skills`      | 12          | 48          | 291        | 2           | 8           | 0          | 40             |
+| `career-tech`      | 6           | 24          | 93         | 1           | 6           | 0          | 34             |
+| `chemistry`        | 6           | 27          | 78         | 3           | 23          | 49         | 34             |
+| `economics`        | 12          | 15          | 87         | 2           | 9           | 68         | 30             |
+| `physics`          | 3           | 9           | 45         | 2           | 16          | 40         | 29             |
+| `health`           | 12          | 36          | 102        | 4           | 23          | 75         | 19             |
+| `earth-science`    | 12          | 42          | 315        | 1           | 5           | 0          | 18             |
+| `teacher-pd`       | 12          | 12          | 129        | 0           | 0           | 0          | 15             |
+| `psychology`       | 3           | 3           | 33         | 0           | 0           | 0          | 10             |
+| `sociology`        | 3           | 3           | 12         | 0           | 0           | 0          | 9              |
+| `celebrations`     | 6           | 24          | 198        | 0           | 0           | 0          | 7              |
+
+Total includes subjects from all 10 curricula (US, SD, GB, IB, SA, EG, AE, QA, KW, JO).
+
+## S3 Storage Pattern
+
+Each concept has grade-specific S3 paths with 4 size variants:
+
+```
+catalog/concepts/g1-math/thumbnail-sm.webp     (200px)
+catalog/concepts/g1-math/thumbnail-md.webp     (600px)
+catalog/concepts/g1-math/thumbnail-lg.webp     (1200px)
+catalog/concepts/g1-math/thumbnail-original.webp
+catalog/concepts/g1-math/banner-sm.webp
+catalog/concepts/g1-math/banner-md.webp
+catalog/concepts/g1-math/banner-lg.webp
+catalog/concepts/g1-math/banner-original.webp
+catalog/concepts/math/cover
+```
+
+All 12 grades share the same source image per concept. Grade-specific paths (`g1-math`, `g7-math`) support future grade-specific imagery.
+
+## Chapter Concept Rotation
+
+Chapters rotate through a pool of 5 related concepts for visual variety:
+
+| Subject Concept | Chapter Rotation Pool                                   |
+| --------------- | ------------------------------------------------------- |
+| `languages`     | languages, english, arts, history, geography            |
+| `math`          | math, science, computer-science, physics, economics     |
+| `english`       | english, languages, arts, history, sociology            |
+| `science`       | science, biology, chemistry, physics, earth-science     |
+| `religion`      | religion, history, languages, life-skills, psychology   |
+| `history`       | history, geography, civics, sociology, economics        |
+| `biology`       | biology, science, health, chemistry, earth-science      |
+| `chemistry`     | chemistry, science, biology, physics, health            |
+| `physics`       | physics, math, science, computer-science, earth-science |
+| `geography`     | geography, earth-science, science, history, biology     |
+
+A math subject with 5 chapters gets thumbnails from math, science, computer-science, physics, economics (cycling by `sequenceOrder % poolSize`).
+
+## Image Resolution Flow
+
+```
+Database                          S3 / CloudFront
+────────                          ────────────────
+Subject.thumbnailKey              catalog/concepts/g1-math/thumbnail
+  │                                 │
+  ├── getCatalogImageUrl(key, "sm") ├── thumbnail-sm.webp   → 200px
+  ├── getCatalogImageUrl(key, "md") ├── thumbnail-md.webp   → 600px
+  ├── getCatalogImageUrl(key, "lg") ├── thumbnail-lg.webp   → 1200px
+  └── getCatalogImageUrl(key, "original") └── thumbnail-original.webp
+                                    │
+                                    └── https://{CLOUDFRONT}/catalog/concepts/g1-math/thumbnail-md.webp
+```
+
+Key files:
+
+- `src/lib/catalog-image-url.ts` -- client-safe URL construction
+- `src/lib/catalog-image.ts` -- Sharp processing + S3 upload
+- `src/components/ui/catalog-image.tsx` -- responsive srcSet component
+
+## Seed Pipeline
+
+Run in this order to populate images:
+
+```bash
+pnpm db:seed:single concept-images   # 1. Process JPGs → S3 thumbnails (all 12 grades)
+pnpm db:seed:single banner-copy      # 2. Copy ClickView banners → concept paths
+pnpm db:seed:single us-catalog       # 3. US subjects (sets concept + S3 keys)
+pnpm db:seed:single sd-catalog       # 4. SD subjects (sets concept + S3 keys)
+pnpm db:seed:single world-curricula  # 5. GB/IB/SA/EG/AE/QA/KW/JO subjects
+```
+
+## Adding a New Curriculum
+
+To add a new curriculum that reuses concept images:
+
+1. Define subjects with `concept` field pointing to one of the 23 concepts
+2. Set `thumbnail`, `banner`, `cover` using the pattern:
+   ```typescript
+   thumbnail: `catalog/concepts/g${grade}-${concept}/thumbnail`
+   banner: `catalog/concepts/g${grade}-${concept}/banner`
+   cover: `catalog/concepts/${concept}/cover`
+   ```
+3. Assign `color` from `CONCEPT_COLORS` or a custom hex
+4. The images are already on S3 -- no upload needed
+
+## Local Curriculum Directory
+
+Source files live in `curriculum/` organized by country:
+
+```
+curriculum/
+├── us/           # US K-12 (thumbnails + banners, no textbooks)
+│   ├── g1/       # 18 subjects
+│   │   ├── math/
+│   │   │   ├── banner/elementary-math.jpg
+│   │   │   ├── thumbnail/          # ~20 concept images
+│   │   │   ├── cover/              # empty
+│   │   │   └── textbook/           # empty
+│   │   └── ...
+│   └── g12/
+├── sd/           # Sudan National (textbooks + exams + question banks)
+│   ├── curriculum.json
+│   ├── g1/       # 4 subjects
+│   │   ├── arabic/
+│   │   │   ├── banner.jpg
+│   │   │   ├── thumbnail.jpg
+│   │   │   ├── textbook.pdf
+│   │   │   ├── structure.json
+│   │   │   ├── exams.json
+│   │   │   ├── qbank.json
+│   │   │   └── chapters/
+│   │   │       └── unit-01/
+│   │   │           ├── exams.json
+│   │   │           ├── qbank.json
+│   │   │           └── lessons/
+│   │   └── ...
+│   └── g12/
+├── fr/           # France (scaffolded, banners only)
+└── in/           # India (scaffolded, banners only)
+```
+
+## Key Files
+
+| File                                       | Purpose                                |
+| ------------------------------------------ | -------------------------------------- |
+| `public/subjects/concepts/*.jpg`           | 23 source concept images               |
+| `prisma/seeds/concept-images.ts`           | NAME_TO_CONCEPT map + S3 upload        |
+| `prisma/seeds/banner-copy.ts`              | ClickView banner migration             |
+| `prisma/seeds/us-catalog.ts`               | US subjects + chapter rotation pools   |
+| `prisma/seeds/sd-catalog.ts`               | SD subjects from sudan-curriculum.json |
+| `prisma/seeds/sync-sd-curriculum.ts`       | SD sync with concept + rotation        |
+| `prisma/seeds/world-curricula.ts`          | 8 curricula + CONCEPT_COLORS           |
+| `scripts/sudan-data/sudan-curriculum.json` | SD data with concept per subject       |
+| `src/lib/catalog-image-url.ts`             | CloudFront URL resolution              |
+| `src/lib/catalog-image.ts`                 | Sharp + S3 processing                  |
+| `src/components/ui/catalog-image.tsx`      | Responsive image component             |

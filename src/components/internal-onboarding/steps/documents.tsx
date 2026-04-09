@@ -2,15 +2,16 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React, { useEffect } from "react"
+import React, { useEffect, useMemo } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { FileText } from "lucide-react"
 
 import { FormHeading } from "@/components/form"
 import { useWizardValidation } from "@/components/form/template/wizard-validation-context"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 
-import { STEP_META } from "../config"
+import { getStepMeta } from "../config"
 import { useOnboarding } from "../use-onboarding"
 
 export function DocumentsStep() {
@@ -18,6 +19,11 @@ export function DocumentsStep() {
   const params = useParams()
   const { locale } = useLocale()
   const subdomain = params.subdomain as string
+  const { dictionary } = useDictionary()
+
+  const d = dictionary?.school?.onboarding?.internalJoin
+  const doc = d?.documents
+  const meta = useMemo(() => getStepMeta(d).documents, [d])
 
   const { state } = useOnboarding()
   const { enableNext, setCustomNavigation } = useWizardValidation()
@@ -34,27 +40,28 @@ export function DocumentsStep() {
     })
   }, [enableNext, setCustomNavigation, router, locale, subdomain])
 
-  const meta = STEP_META.documents
-
   const getDocumentRequirements = () => {
     switch (role) {
       case "teacher":
         return [
-          "Teaching certificate",
-          "Degree certificate",
-          "ID/Passport copy",
+          doc?.teachingCertificate ?? "Teaching certificate",
+          doc?.degreeCertificate ?? "Degree certificate",
+          doc?.idPassportCopy ?? "ID/Passport copy",
         ]
       case "staff":
       case "admin":
-        return ["Relevant certifications", "ID/Passport copy"]
+        return [
+          doc?.relevantCertifications ?? "Relevant certifications",
+          doc?.idPassportCopy ?? "ID/Passport copy",
+        ]
       case "student":
         return [
-          "Transfer certificate",
-          "Previous school report",
-          "ID/Passport copy",
+          doc?.transferCertificate ?? "Transfer certificate",
+          doc?.previousSchoolReport ?? "Previous school report",
+          doc?.idPassportCopy ?? "ID/Passport copy",
         ]
       default:
-        return ["ID/Passport copy"]
+        return [doc?.idPassportCopy ?? "ID/Passport copy"]
     }
   }
 
@@ -64,18 +71,18 @@ export function DocumentsStep() {
 
       <div className="space-y-4">
         <p className="text-muted-foreground text-sm">
-          Documents can be uploaded after your account is approved. The
-          following documents may be required:
+          {doc?.documentsNote ??
+            "Documents can be uploaded after your account is approved. The following documents may be required:"}
         </p>
 
         <div className="space-y-2">
-          {getDocumentRequirements().map((doc) => (
+          {getDocumentRequirements().map((docName) => (
             <div
-              key={doc}
+              key={docName}
               className="flex items-center gap-3 rounded-lg border p-3"
             >
               <FileText className="text-muted-foreground h-5 w-5" />
-              <span className="text-sm">{doc}</span>
+              <span className="text-sm">{docName}</span>
             </div>
           ))}
         </div>
@@ -83,18 +90,21 @@ export function DocumentsStep() {
         {autoFillDocs && autoFillDocs.length > 0 && (
           <div className="mt-6">
             <h3 className="mb-3 font-medium">
-              Documents from your admission application
+              {doc?.fromAdmission ??
+                "Documents from your admission application"}
             </h3>
             <div className="space-y-2">
-              {autoFillDocs.map((doc, index) => (
+              {autoFillDocs.map((autoDoc, index) => (
                 <div
                   key={index}
                   className="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-900/20"
                 >
                   <FileText className="h-5 w-5 text-green-600" />
                   <div className="flex-1">
-                    <p className="text-sm font-medium">{doc.name}</p>
-                    <p className="text-muted-foreground text-xs">{doc.type}</p>
+                    <p className="text-sm font-medium">{autoDoc.name}</p>
+                    <p className="text-muted-foreground text-xs">
+                      {autoDoc.type}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -104,8 +114,8 @@ export function DocumentsStep() {
 
         <div className="bg-muted mt-4 rounded-lg p-4">
           <p className="text-muted-foreground text-sm">
-            You can skip this step for now. Document upload will be available in
-            your profile after account approval.
+            {doc?.skipNote ??
+              "You can skip this step for now. Document upload will be available in your profile after account approval."}
           </p>
         </div>
       </div>

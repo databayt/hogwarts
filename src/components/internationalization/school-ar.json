@@ -7306,6 +7306,206 @@
           "applicationLabel": "رسوم التقديم",
           "applicationPlaceholder": "100"
         }
+      },
+      "internalJoin": {
+        "groupLabels": {
+          "personalInfo": "المعلومات الشخصية",
+          "roleAndDocuments": "الدور والمستندات",
+          "reviewAndSubmit": "المراجعة والإرسال"
+        },
+        "roles": {
+          "teacher": {
+            "label": "معلم",
+            "description": "أقوم بالتدريس في هذه المدرسة"
+          },
+          "staff": {
+            "label": "موظف",
+            "description": "أعمل في الإدارة أو الدعم"
+          },
+          "admin": {
+            "label": "مدير",
+            "description": "أدير شؤون المدرسة الإدارية"
+          },
+          "student": {
+            "label": "طالب",
+            "description": "أنضم كطالب"
+          }
+        },
+        "gender": {
+          "male": "ذكر",
+          "female": "أنثى"
+        },
+        "employmentType": {
+          "fullTime": "دوام كامل",
+          "partTime": "دوام جزئي",
+          "contract": "عقد"
+        },
+        "studentType": {
+          "regular": "منتظم",
+          "transfer": "محوّل",
+          "international": "دولي"
+        },
+        "adminArea": {
+          "finance": "المالية",
+          "hr": "الموارد البشرية",
+          "operations": "العمليات",
+          "academics": "الشؤون الأكاديمية",
+          "it": "تقنية المعلومات",
+          "other": "أخرى"
+        },
+        "steps": {
+          "personal": {
+            "title": "المعلومات الشخصية",
+            "description": "أخبرنا عن نفسك"
+          },
+          "contact": {
+            "title": "معلومات الاتصال",
+            "description": "كيف يمكننا التواصل معك؟"
+          },
+          "roleDetails": {
+            "title": "تفاصيل الدور",
+            "description": "معلومات خاصة بدورك"
+          },
+          "documents": {
+            "title": "المستندات",
+            "description": "ارفع المستندات المطلوبة"
+          },
+          "review": {
+            "title": "المراجعة والإرسال",
+            "description": "راجع معلوماتك وأرسلها"
+          }
+        },
+        "personal": {
+          "firstName": "الاسم الأول",
+          "middleName": "الاسم الأوسط",
+          "lastName": "اسم العائلة",
+          "dateOfBirth": "تاريخ الميلاد",
+          "gender": "الجنس",
+          "nationality": "الجنسية",
+          "enterFirstName": "أدخل الاسم الأول",
+          "enterMiddleName": "أدخل الاسم الأوسط",
+          "enterLastName": "أدخل اسم العائلة",
+          "selectGender": "اختر الجنس",
+          "selectNationality": "اختر الجنسية"
+        },
+        "contact": {
+          "email": "البريد الإلكتروني",
+          "phone": "رقم الهاتف",
+          "address": "العنوان",
+          "city": "المدينة",
+          "state": "المنطقة",
+          "country": "الدولة",
+          "streetAddress": "عنوان الشارع",
+          "selectCountry": "اختر الدولة",
+          "emergencyContact": "جهة اتصال الطوارئ",
+          "emergencyName": "الاسم",
+          "emergencyPhone": "الهاتف",
+          "emergencyRelation": "صلة القرابة",
+          "contactName": "اسم جهة الاتصال",
+          "relationPlaceholder": "مثال: زوج/ة، والد/ة",
+          "verify": "تحقق",
+          "resend": "إعادة إرسال",
+          "verified": "تم التحقق",
+          "confirm": "تأكيد",
+          "otpInstruction": "أدخل الرمز المكون من 6 أرقام المرسل إلى بريدك الإلكتروني",
+          "failedToSendCode": "فشل إرسال الرمز",
+          "invalidCode": "رمز غير صالح"
+        },
+        "roleDetails": {
+          "selectRoleFirst": "يرجى اختيار الدور أولاً.",
+          "subjects": "المواد الدراسية",
+          "loadingSubjects": "جارٍ تحميل المواد...",
+          "yearsOfExperience": "سنوات الخبرة",
+          "employmentType": "نوع التوظيف",
+          "selectType": "اختر النوع",
+          "qualification": "المؤهل العلمي",
+          "degreeCertificate": "الشهادة/المؤهل",
+          "degreePlaceholder": "مثال: بكالوريوس تربية",
+          "institution": "المؤسسة التعليمية",
+          "institutionPlaceholder": "اسم الجامعة",
+          "year": "السنة",
+          "yearPlaceholder": "مثال: 2020",
+          "position": "المنصب",
+          "positionTeacherPlaceholder": "مثال: محاسب، أمين مكتبة",
+          "positionAdminPlaceholder": "مثال: نائب المدير",
+          "department": "القسم",
+          "selectDepartment": "اختر القسم",
+          "administrativeArea": "المجال الإداري",
+          "selectArea": "اختر المجال",
+          "gradeLevel": "المرحلة الدراسية",
+          "loadingGrades": "جارٍ تحميل المراحل...",
+          "selectGrade": "اختر المرحلة",
+          "gradePlaceholder": "مثال: الصف العاشر",
+          "studentType": "نوع الطالب",
+          "previousSchool": "المدرسة السابقة",
+          "schoolName": "اسم المدرسة",
+          "previousGrade": "الصف السابق",
+          "previousGradePlaceholder": "مثال: الصف التاسع",
+          "sciencePlaceholder": "مثال: بكالوريوس علوم"
+        },
+        "review": {
+          "role": "الدور",
+          "personalInfo": "المعلومات الشخصية",
+          "contactInfo": "معلومات الاتصال",
+          "roleDetailsTitle": "تفاصيل الدور",
+          "firstName": "الاسم الأول",
+          "middleName": "الاسم الأوسط",
+          "lastName": "اسم العائلة",
+          "dateOfBirth": "تاريخ الميلاد",
+          "gender": "الجنس",
+          "nationality": "الجنسية",
+          "email": "البريد الإلكتروني",
+          "phone": "الهاتف",
+          "address": "العنوان",
+          "city": "المدينة",
+          "state": "المنطقة",
+          "country": "الدولة",
+          "subjects": "المواد الدراسية",
+          "yearsOfExperience": "سنوات الخبرة",
+          "employmentType": "نوع التوظيف",
+          "qualification": "المؤهل العلمي",
+          "institution": "المؤسسة التعليمية",
+          "position": "المنصب",
+          "administrativeArea": "المجال الإداري",
+          "gradeLevel": "المرحلة الدراسية",
+          "studentType": "نوع الطالب",
+          "previousSchool": "المدرسة السابقة",
+          "previousGrade": "الصف السابق",
+          "termsLabel": "أؤكد أن جميع المعلومات المقدمة صحيحة ودقيقة. أفهم أن حسابي سيحتاج إلى موافقة المدير قبل أن أتمكن من الوصول إلى منصة المدرسة.",
+          "submitting": "جارٍ إرسال طلبك...",
+          "submitFailed": "فشل الإرسال. يرجى المحاولة مرة أخرى."
+        },
+        "documents": {
+          "teachingCertificate": "شهادة التدريس",
+          "degreeCertificate": "الشهادة الجامعية",
+          "idPassportCopy": "نسخة من الهوية/جواز السفر",
+          "relevantCertifications": "الشهادات ذات الصلة",
+          "transferCertificate": "شهادة النقل",
+          "previousSchoolReport": "تقرير المدرسة السابقة",
+          "documentsNote": "يمكن رفع المستندات بعد الموافقة على حسابك. المستندات التالية قد تكون مطلوبة:",
+          "fromAdmission": "مستندات من طلب القبول الخاص بك",
+          "skipNote": "يمكنك تخطي هذه الخطوة الآن. سيكون رفع المستندات متاحًا في ملفك الشخصي بعد الموافقة على الحساب."
+        },
+        "welcome": {
+          "title": "!مرحبًا بك على متن الفريق",
+          "successMessage": "تم تقديم طلبك للانضمام إلى {schoolName} بنجاح. سيقوم أحد المسؤولين بمراجعة طلبك قريبًا.",
+          "applicationReference": "مرجع الطلب",
+          "saveReference": "احفظ هذا الرقم للمتابعة",
+          "copy": "نسخ",
+          "copied": "تم النسخ",
+          "share": "مشاركة",
+          "checkPhone": "تحقق من هاتفك",
+          "smsConfirmation": "تم إرسال رسالة تأكيد إلى {phone}",
+          "pendingApproval": "بانتظار موافقة المدير",
+          "pendingDescription": "سيقوم أحد مسؤولي المدرسة بمراجعة طلبك",
+          "contactSchool": "تواصل مع المدرسة",
+          "visitOffice": "قم بزيارة مكتب المدرسة",
+          "whatsappMessage": "{schoolName} - تم تقديم الطلب. المرجع: {ref}. الدور: {role}. الحالة: بانتظار الموافقة.",
+          "whatsappMessageNoRef": "{schoolName} - تم تقديم الطلب. الحالة: بانتظار الموافقة."
+        },
+        "footer": {
+          "submit": "إرسال"
+        }
       }
     },
     "library": {
@@ -7539,7 +7739,51 @@
         "noClasses": "لا توجد فصول مجدولة لهذا اليوم",
         "noDeadlines": "لا توجد مواعيد نهائية قادمة",
         "average": "المتوسط",
-        "noPerformanceData": "لا توجد بيانات أداء متاحة"
+        "noPerformanceData": "لا توجد بيانات أداء متاحة",
+        "next": "التالي",
+        "overdue": "متأخر",
+        "dueToday": "مستحق اليوم",
+        "tomorrow": "غداً",
+        "today": "اليوم",
+        "oneDay": "يوم واحد",
+        "days": "أيام",
+        "viewAll": "عرض الكل",
+        "excellent": "ممتاز",
+        "good": "جيد",
+        "needsAttention": "يحتاج اهتمام",
+        "enjoyDayOff": "استمتع بيوم إجازتك!",
+        "allGraded": "تم تصحيح جميع الواجبات",
+        "performanceAfterAssessments": "ستظهر بيانات الأداء بعد التقييمات",
+        "noDeadlinesWorry": "لا توجد مواعيد نهائية قريبة",
+        "classesLabel": "الفصول",
+        "gradingLabel": "التصحيح",
+        "studentsLabel": "الطلاب",
+        "todayUnit": "اليوم",
+        "pendingUnit": "معلق",
+        "totalUnit": "الإجمالي",
+        "na": "غ/م",
+        "assignments": "الواجبات"
+      },
+      "teachingOverview": "نظرة عامة على التدريس",
+      "classesToday": "فصول اليوم",
+      "totalStudentsLabel": "إجمالي الطلاب",
+      "assignmentsLabel": "الواجبات",
+      "avgPerformance": "متوسط الأداء",
+      "teachingProgress": "تقدم التدريس",
+      "classesThisWeek": "فصول هذا الأسبوع",
+      "progressCards": {
+        "gradingProgress": "تقدم التصحيح",
+        "graded": "مصحح",
+        "attendanceTaken": "الحضور المسجل",
+        "classes": "فصول",
+        "termProgress": "تقدم الفصل الدراسي",
+        "weeks": "أسابيع"
+      },
+      "errors": {
+        "unableToLoad": "تعذر تحميل لوحة التحكم",
+        "loadError": "حدث خطأ أثناء تحميل بيانات لوحة التحكم. يرجى تحديث الصفحة.",
+        "renderError": "خطأ في عرض لوحة التحكم",
+        "renderErrorMessage": "حدث خطأ أثناء عرض لوحة التحكم."
       }
     },
     "studentDashboard": {
@@ -7624,7 +7868,12 @@
         "new": "جديد",
         "days": "أيام",
         "tasks": "مهام",
-        "weeks": "أسابيع"
+        "weeks": "أسابيع",
+        "submitted": "تم التسليم",
+        "graded": "تم التقييم",
+        "grades": "الدرجات",
+        "done": "مكتمل",
+        "percent": "%"
       },
       "metrics": {
         "children": "الأبناء",
@@ -10068,6 +10317,104 @@
         "high": "عالية",
         "medium": "متوسطة",
         "low": "منخفضة"
+      }
+    },
+    "tenant": {
+      "dashboard": {
+        "title": "لوحة التحكم",
+        "welcomeBack": "مرحباً بعودتك إلى",
+        "manageDescription": "أدر عمليات مدرستك والطلاب والفصول من لوحة التحكم.",
+        "settings": "الإعدادات",
+        "stats": {
+          "totalStudents": "إجمالي الطلاب",
+          "totalTeachers": "إجمالي المعلمين",
+          "activeClasses": "الفصول النشطة",
+          "timezone": "المنطقة الزمنية",
+          "ofMax": "من {max} كحد أقصى",
+          "classesRunning": "فصول قيد التشغيل",
+          "currentTime": "الوقت الحالي:"
+        },
+        "quickActions": {
+          "title": "إجراءات سريعة",
+          "addStudent": "إضافة طالب",
+          "addStudentDesc": "تسجيل طالب جديد",
+          "createClass": "إنشاء فصل",
+          "createClassDesc": "إعداد فصل جديد",
+          "viewTimetable": "عرض الجدول",
+          "viewTimetableDesc": "التحقق من جدول الحصص",
+          "viewAttendance": "عرض الحضور",
+          "viewAttendanceDesc": "التحقق من حضور الطلاب"
+        },
+        "recentActivity": {
+          "title": "النشاط الأخير",
+          "noActivity": "لا يوجد نشاط حديث",
+          "startPrompt": "ابدأ بإضافة الطلاب وإنشاء الفصول"
+        },
+        "schoolInfo": {
+          "title": "معلومات المدرسة",
+          "basicDetails": "التفاصيل الأساسية",
+          "contactInfo": "معلومات الاتصال",
+          "schoolName": "اسم المدرسة",
+          "subdomain": "النطاق الفرعي",
+          "plan": "الخطة",
+          "email": "البريد الإلكتروني",
+          "phone": "الهاتف",
+          "address": "العنوان",
+          "noContactInfo": "لم تتم إضافة معلومات اتصال بعد"
+        },
+        "quickNav": {
+          "title": "التنقل السريع",
+          "students": "الطلاب",
+          "studentsDesc": "إدارة سجلات الطلاب",
+          "teachers": "المعلمون",
+          "teachersDesc": "إدارة حسابات المعلمين",
+          "classrooms": "الفصول الدراسية",
+          "classroomsDesc": "إدارة جداول الفصول"
+        },
+        "plan": {
+          "suffix": "خطة"
+        }
+      },
+      "welcome": {
+        "title": "مرحباً بك في",
+        "portalDescription": "بوابة إدارة مدرستك الشاملة جاهزة. يمكنك الوصول إلى سجلات الطلاب وإدارة الفصول وتتبع الحضور والمزيد في مكان واحد.",
+        "stats": {
+          "students": "الطلاب",
+          "teachers": "المعلمون",
+          "timezone": "المنطقة الزمنية",
+          "unlimited": "غير محدود",
+          "maxStudentCapacity": "الحد الأقصى لعدد الطلاب",
+          "maxTeacherCapacity": "الحد الأقصى لعدد المعلمين",
+          "schoolTimezone": "المنطقة الزمنية للمدرسة"
+        },
+        "accessPortal": {
+          "title": "الوصول إلى البوابة",
+          "description": "سجّل الدخول للوصول إلى لوحة تحكم مدرستك وإدارة الطلاب وإنشاء الفصول وعرض التقارير.",
+          "loginButton": "تسجيل الدخول إلى البوابة"
+        },
+        "getStarted": {
+          "title": "ابدأ الآن",
+          "description": "جديد على المنصة؟ أكمل إعداد مدرستك وأضف أول طلابك وقم بتهيئة فصولك.",
+          "setupButton": "إكمال الإعداد"
+        },
+        "schoolInfo": {
+          "title": "معلومات المدرسة",
+          "address": "العنوان",
+          "phone": "الهاتف",
+          "email": "البريد الإلكتروني"
+        },
+        "status": {
+          "active": "نشط",
+          "pending": "قيد الانتظار"
+        },
+        "plan": {
+          "suffix": "خطة"
+        },
+        "footer": {
+          "poweredBy": "مدعوم من Databayt - منصة إدارة المدارس",
+          "createdOn": "تم الإنشاء في",
+          "recently": "مؤخراً"
+        }
       }
     }
   }

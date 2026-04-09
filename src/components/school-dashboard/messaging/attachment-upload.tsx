@@ -47,6 +47,7 @@ const ALLOWED_MIME_TYPES = {
   "audio/mpeg": [".mp3"],
   "audio/wav": [".wav"],
   "audio/ogg": [".ogg"],
+  "audio/webm": [".weba"],
   "application/pdf": [".pdf"],
   "application/msword": [".doc"],
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [

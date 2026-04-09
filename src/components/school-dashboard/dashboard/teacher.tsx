@@ -69,14 +69,18 @@ export async function TeacherDashboard({
       weatherData = weather
     } catch (error) {
       console.error("[TeacherDashboard] Error fetching data:", error)
+      const errDict =
+        (dictionary?.teacherDashboard as Record<string, any>)?.errors || {}
       return (
         <div className="space-y-6">
           <Card>
             <CardContent className="p-6">
-              <h3 className="mb-4">Unable to Load Dashboard</h3>
+              <h3 className="mb-4">
+                {errDict.unableToLoad || "Unable to Load Dashboard"}
+              </h3>
               <p className="text-muted-foreground">
-                There was an error loading the dashboard data. Please try
-                refreshing the page.
+                {errDict.loadError ||
+                  "There was an error loading the dashboard data. Please try refreshing the page."}
               </p>
             </CardContent>
           </Card>
@@ -109,68 +113,37 @@ export async function TeacherDashboard({
     }
 
     // Get dictionary with fallback
-    const dashDict = dictionary?.teacherDashboard || {
-      stats: {
-        todaysClasses: "Today's Classes",
-        pendingGrading: "Pending Grading",
-        attendanceDue: "Attendance Due",
-        totalStudents: "Total Students",
-      },
-      quickActions: {
-        title: "Quick Actions",
-        takeAttendance: "Take Attendance",
-        enterGrades: "Enter Grades",
-        createAssignment: "Create Assignment",
-        messageParents: "Message Parents",
-      },
-      sections: {
-        todaysClasses: "Today's Classes",
-        pendingAssignments: "Pending Assignments",
-        classPerformance: "Class Performance Summary",
-        upcomingDeadlines: "Upcoming Deadlines",
-      },
-      labels: {
-        classesScheduled: "Classes scheduled",
-        assignmentsToGrade: "Assignments to grade",
-        needAttendance: "Classes need attendance",
-        acrossAllClasses: "Across all classes",
-        room: "Room",
-        students: "students",
-        submissions: "submissions",
-        due: "Due",
-        noPending: "No pending assignments",
-        noClasses: "No classes scheduled for today",
-        noDeadlines: "No upcoming deadlines",
-        average: "Average",
-        noPerformanceData: "No performance data available",
-      },
-    }
+    const dashDict = (dictionary?.teacherDashboard || {}) as Record<string, any>
+    const stats = dashDict.stats || {}
+    const sections = dashDict.sections || {}
+    const labels = dashDict.labels || {}
+    const progressCards = dashDict.progressCards || {}
 
     // Activity rings for teaching metrics
     const activityData = [
       {
-        label: "Classes",
+        label: labels.classesLabel || "Classes",
         value: Math.min(100, (data.todaysClasses.length / 8) * 100),
         color: "#3b82f6",
         current: data.todaysClasses.length,
         target: 8,
-        unit: "today",
+        unit: labels.todayUnit || "today",
       },
       {
-        label: "Grading",
+        label: labels.gradingLabel || "Grading",
         value: Math.max(0, 100 - data.pendingGrading * 10),
         color: data.pendingGrading > 5 ? "#ef4444" : "#22c55e",
         current: data.pendingGrading,
         target: 0,
-        unit: "pending",
+        unit: labels.pendingUnit || "pending",
       },
       {
-        label: "Students",
+        label: labels.studentsLabel || "Students",
         value: 100,
         color: "#8b5cf6",
         current: data.totalStudents,
         target: data.totalStudents,
-        unit: "total",
+        unit: labels.totalUnit || "total",
       },
     ]
 
@@ -209,7 +182,9 @@ export async function TeacherDashboard({
 
         {/* Section 3: Quick Actions (4 focused actions) */}
         <section>
-          <SectionHeading title="Quick Actions" />
+          <SectionHeading
+            title={dashDict.quickActions?.title || "Quick Actions"}
+          />
           <QuickActions
             actions={getQuickActionsByRole(
               "TEACHER",
@@ -232,21 +207,21 @@ export async function TeacherDashboard({
         {/* Key Metrics Row */}
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <MetricCard
-            title="Today's Classes"
+            title={stats.todaysClasses || "Today's Classes"}
             value={data.todaysClasses.length}
             iconName="BookOpen"
             iconColor="text-blue-500"
             href={`/${locale}/subjects`}
           />
           <MetricCard
-            title="Total Students"
+            title={stats.totalStudents || "Total Students"}
             value={data.totalStudents}
             iconName="Users"
             iconColor="text-purple-500"
             href={`/${locale}/students`}
           />
           <MetricCard
-            title="Pending Grading"
+            title={stats.pendingGrading || "Pending Grading"}
             value={data.pendingGrading}
             iconName="FileText"
             iconColor={
@@ -255,7 +230,7 @@ export async function TeacherDashboard({
             href={`/${locale}/assignments`}
           />
           <MetricCard
-            title="Attendance Due"
+            title={stats.attendanceDue || "Attendance Due"}
             value={data.attendanceDue}
             iconName="CheckCircle"
             iconColor={
@@ -272,7 +247,7 @@ export async function TeacherDashboard({
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-base">
                 <Calendar className="h-4 w-4" />
-                {dashDict.sections.todaysClasses}
+                {sections.todaysClasses || "Today's Classes"}
               </CardTitle>
               <Badge variant="outline">
                 {format(new Date(), "EEEE, MMM d")}
@@ -285,8 +260,8 @@ export async function TeacherDashboard({
                     key={cls.id}
                     time={cls.time}
                     title={cls.name}
-                    subtitle={`${dashDict.labels.room} ${cls.room} • ${cls.students} ${dashDict.labels.students}`}
-                    badge={index === 0 ? "Next" : undefined}
+                    subtitle={`${labels.room || "Room"} ${cls.room} • ${cls.students} ${labels.students || "students"}`}
+                    badge={index === 0 ? labels.next || "Next" : undefined}
                     badgeVariant={index === 0 ? "default" : "secondary"}
                     isActive={index === 0}
                   />
@@ -294,15 +269,18 @@ export async function TeacherDashboard({
               ) : (
                 <EmptyState
                   iconName="Calendar"
-                  title={dashDict.labels.noClasses}
-                  description="Enjoy your day off!"
+                  title={labels.noClasses || "No classes scheduled for today"}
+                  description={labels.enjoyDayOff || "Enjoy your day off!"}
                 />
               )}
             </CardContent>
           </Card>
 
           {/* Activity Rings */}
-          <ActivityRings activities={activityData} title="Teaching Progress" />
+          <ActivityRings
+            activities={activityData}
+            title={dashDict.teachingProgress || "Teaching Progress"}
+          />
         </div>
 
         {/* Secondary Content Grid */}
@@ -310,8 +288,8 @@ export async function TeacherDashboard({
           {/* Weekly Classes Chart */}
           <WeeklyActivityChart
             data={weeklyClasses}
-            title="Classes This Week"
-            label="Classes"
+            title={dashDict.classesThisWeek || "Classes This Week"}
+            label={labels.classesLabel || "Classes"}
             color="hsl(var(--chart-1))"
           />
 
@@ -320,13 +298,14 @@ export async function TeacherDashboard({
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-base">
                 <FileText className="h-4 w-4" />
-                {dashDict.sections.pendingAssignments}
+                {sections.pendingAssignments || "Pending Assignments"}
               </CardTitle>
               <Link
                 href={`/${locale}/assignments`}
                 className="text-primary flex items-center gap-1 text-sm hover:underline"
               >
-                View all <ChevronRight className="h-4 w-4 rtl:rotate-180" />
+                {labels.viewAll || "View all"}{" "}
+                <ChevronRight className="h-4 w-4 rtl:rotate-180" />
               </Link>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -348,7 +327,7 @@ export async function TeacherDashboard({
                         </p>
                         <p className="text-muted-foreground text-sm">
                           {assignment.className} • {assignment.submissionsCount}{" "}
-                          {dashDict.labels.submissions}
+                          {labels.submissions || "submissions"}
                         </p>
                       </div>
                       <Badge
@@ -363,11 +342,11 @@ export async function TeacherDashboard({
                         }
                       >
                         {isOverdue
-                          ? "Overdue"
+                          ? labels.overdue || "Overdue"
                           : isDueToday
-                            ? "Due Today"
+                            ? labels.dueToday || "Due Today"
                             : isDueTomorrow
-                              ? "Tomorrow"
+                              ? labels.tomorrow || "Tomorrow"
                               : format(dueDate, "MMM d")}
                       </Badge>
                     </div>
@@ -376,8 +355,10 @@ export async function TeacherDashboard({
               ) : (
                 <EmptyState
                   iconName="FileText"
-                  title={dashDict.labels.noPending}
-                  description="All assignments have been graded"
+                  title={labels.noPending || "No pending assignments"}
+                  description={
+                    labels.allGraded || "All assignments have been graded"
+                  }
                 />
               )}
             </CardContent>
@@ -388,7 +369,7 @@ export async function TeacherDashboard({
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <GraduationCap className="h-4 w-4" />
-                {dashDict.sections.classPerformance}
+                {sections.classPerformance || "Class Performance Summary"}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -401,7 +382,7 @@ export async function TeacherDashboard({
                     <div>
                       <p className="font-medium">{cls.className}</p>
                       <p className="text-muted-foreground text-sm">
-                        {dashDict.labels.average}: {cls.average.toFixed(1)}%
+                        {labels.average || "Average"}: {cls.average.toFixed(1)}%
                       </p>
                     </div>
                     <Badge
@@ -419,18 +400,23 @@ export async function TeacherDashboard({
                       }
                     >
                       {cls.average >= 80
-                        ? "Excellent"
+                        ? labels.excellent || "Excellent"
                         : cls.average >= 60
-                          ? "Good"
-                          : "Needs Attention"}
+                          ? labels.good || "Good"
+                          : labels.needsAttention || "Needs Attention"}
                     </Badge>
                   </div>
                 ))
               ) : (
                 <EmptyState
                   iconName="GraduationCap"
-                  title={dashDict.labels.noPerformanceData}
-                  description="Performance data will appear after assessments"
+                  title={
+                    labels.noPerformanceData || "No performance data available"
+                  }
+                  description={
+                    labels.performanceAfterAssessments ||
+                    "Performance data will appear after assessments"
+                  }
                 />
               )}
             </CardContent>
@@ -441,7 +427,7 @@ export async function TeacherDashboard({
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <Clock className="h-4 w-4" />
-                {dashDict.sections.upcomingDeadlines}
+                {sections.upcomingDeadlines || "Upcoming Deadlines"}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -460,7 +446,7 @@ export async function TeacherDashboard({
                       <div className="min-w-0 flex-1">
                         <p className="truncate font-medium">{deadline.task}</p>
                         <p className="text-muted-foreground text-sm">
-                          {dashDict.labels.due}:{" "}
+                          {labels.due || "Due"}:{" "}
                           {format(dueDate, "MMM d, yyyy")}
                         </p>
                       </div>
@@ -474,10 +460,10 @@ export async function TeacherDashboard({
                         }
                       >
                         {daysLeft <= 0
-                          ? "Today"
+                          ? labels.today || "Today"
                           : daysLeft === 1
-                            ? "1 day"
-                            : `${daysLeft} days`}
+                            ? labels.oneDay || "1 day"
+                            : `${daysLeft} ${labels.days || "days"}`}
                       </Badge>
                     </div>
                   )
@@ -485,8 +471,11 @@ export async function TeacherDashboard({
               ) : (
                 <EmptyState
                   iconName="Clock"
-                  title={dashDict.labels.noDeadlines}
-                  description="No upcoming deadlines to worry about"
+                  title={labels.noDeadlines || "No upcoming deadlines"}
+                  description={
+                    labels.noDeadlinesWorry ||
+                    "No upcoming deadlines to worry about"
+                  }
                 />
               )}
             </CardContent>
@@ -496,7 +485,9 @@ export async function TeacherDashboard({
         {/* Teaching Stats */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Teaching Overview</CardTitle>
+            <CardTitle className="text-base">
+              {dashDict.teachingOverview || "Teaching Overview"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid gap-6 md:grid-cols-4">
@@ -505,7 +496,7 @@ export async function TeacherDashboard({
                   {data.todaysClasses.length}
                 </p>
                 <p className="text-muted-foreground mt-1 text-sm">
-                  Classes Today
+                  {dashDict.classesToday || "Classes Today"}
                 </p>
               </div>
               <div className="bg-muted/30 rounded-lg p-4 text-center">
@@ -513,7 +504,7 @@ export async function TeacherDashboard({
                   {data.totalStudents}
                 </p>
                 <p className="text-muted-foreground mt-1 text-sm">
-                  Total Students
+                  {dashDict.totalStudentsLabel || "Total Students"}
                 </p>
               </div>
               <div className="bg-muted/30 rounded-lg p-4 text-center">
@@ -521,17 +512,17 @@ export async function TeacherDashboard({
                   {data.pendingAssignments.length}
                 </p>
                 <p className="text-muted-foreground mt-1 text-sm">
-                  Assignments
+                  {dashDict.assignmentsLabel || "Assignments"}
                 </p>
               </div>
               <div className="bg-muted/30 rounded-lg p-4 text-center">
                 <p className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">
                   {data.classPerformance.length > 0
                     ? `${(data.classPerformance.reduce((sum, c) => sum + c.average, 0) / data.classPerformance.length).toFixed(0)}%`
-                    : "N/A"}
+                    : labels.na || "N/A"}
                 </p>
                 <p className="text-muted-foreground mt-1 text-sm">
-                  Avg Performance
+                  {dashDict.avgPerformance || "Avg Performance"}
                 </p>
               </div>
             </div>
@@ -541,30 +532,30 @@ export async function TeacherDashboard({
         {/* Progress Cards */}
         <div className="grid gap-6 md:grid-cols-3">
           <ProgressCard
-            title="Grading Progress"
+            title={progressCards.gradingProgress || "Grading Progress"}
             current={Math.max(
               0,
               data.pendingAssignments.length - data.pendingGrading
             )}
             total={Math.max(data.pendingAssignments.length, 1)}
-            unit="graded"
+            unit={progressCards.graded || "graded"}
             iconName="CheckCircle"
             showPercentage
           />
           <ProgressCard
-            title="Attendance Taken"
+            title={progressCards.attendanceTaken || "Attendance Taken"}
             current={data.todaysClasses.length - data.attendanceDue}
             total={Math.max(data.todaysClasses.length, 1)}
-            unit="classes"
+            unit={progressCards.classes || "classes"}
             iconName="Calendar"
             showPercentage
           />
           {/* TODO: Calculate from actual term dates */}
           <ProgressCard
-            title="Term Progress"
+            title={progressCards.termProgress || "Term Progress"}
             current={12}
             total={16}
-            unit="weeks"
+            unit={progressCards.weeks || "weeks"}
             iconName="Clock"
             showPercentage
           />
@@ -580,13 +571,18 @@ export async function TeacherDashboard({
       renderError instanceof Error ? renderError.stack : undefined
     console.error("[TeacherDashboard] Error message:", errorMessage)
     console.error("[TeacherDashboard] Error stack:", errorStack)
+    const renderErrDict =
+      (dictionary?.teacherDashboard as Record<string, any>)?.errors || {}
     return (
       <div className="space-y-6">
         <Card>
           <CardContent className="p-6">
-            <h3 className="mb-4">Dashboard Rendering Error</h3>
+            <h3 className="mb-4">
+              {renderErrDict.renderError || "Dashboard Rendering Error"}
+            </h3>
             <p className="text-muted-foreground mb-2">
-              An error occurred while rendering the dashboard.
+              {renderErrDict.renderErrorMessage ||
+                "An error occurred while rendering the dashboard."}
             </p>
             <pre className="bg-muted max-h-40 overflow-auto rounded p-2 text-xs">
               {errorMessage}

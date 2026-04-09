@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2 } from "lucide-react"
@@ -27,14 +27,15 @@ import {
 } from "@/components/ui/select"
 import { FormHeading } from "@/components/form"
 import { useWizardValidation } from "@/components/form/template/wizard-validation-context"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 import { TEACHER_SUBJECTS } from "@/components/onboarding/newcomers/config"
 
 import {
-  ADMIN_AREAS,
-  EMPLOYMENT_TYPES,
-  STEP_META,
-  STUDENT_TYPES,
+  getAdminAreas,
+  getEmploymentTypes,
+  getStepMeta,
+  getStudentTypes,
 } from "../config"
 import {
   getSchoolDepartments,
@@ -57,12 +58,16 @@ import {
 
 export function RoleDetailsStep() {
   const { state } = useOnboarding()
+  const { dictionary } = useDictionary()
+  const d = dictionary?.school?.onboarding?.internalJoin
   const role = state.role
 
   if (!role) {
     return (
       <div className="py-12 text-center">
-        <p className="text-muted-foreground">Please select a role first.</p>
+        <p className="text-muted-foreground">
+          {d?.roleDetails?.selectRoleFirst ?? "Please select a role first."}
+        </p>
       </div>
     )
   }
@@ -70,8 +75,8 @@ export function RoleDetailsStep() {
   return (
     <div className="space-y-8">
       <FormHeading
-        title={STEP_META["role-details"].title}
-        description={STEP_META["role-details"].description}
+        title={getStepMeta(d)["role-details"].title}
+        description={getStepMeta(d)["role-details"].description}
       />
       {role === "teacher" && <TeacherFields />}
       {role === "staff" && <StaffFields />}
@@ -92,6 +97,11 @@ function TeacherFields() {
   const subdomain = params.subdomain as string
   const { state, updateStepData, schoolId } = useOnboarding()
   const { enableNext, disableNext, setCustomNavigation } = useWizardValidation()
+  const { dictionary } = useDictionary()
+
+  const d = dictionary?.school?.onboarding?.internalJoin
+  const r = d?.roleDetails
+  const employmentTypes = useMemo(() => getEmploymentTypes(d), [d])
 
   const existing = state.formData.roleDetails as TeacherDetailsData | undefined
 
@@ -178,12 +188,12 @@ function TeacherFields() {
           name="subjects"
           render={() => (
             <FormItem>
-              <FormLabel>Subjects *</FormLabel>
+              <FormLabel>{r?.subjects ?? "Subjects"} *</FormLabel>
               {loadingSubjects ? (
                 <div className="flex items-center gap-2 py-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   <span className="text-muted-foreground text-sm">
-                    Loading subjects...
+                    {r?.loadingSubjects ?? "Loading subjects..."}
                   </span>
                 </div>
               ) : (
@@ -230,7 +240,9 @@ function TeacherFields() {
             name="yearsOfExperience"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Years of Experience</FormLabel>
+                <FormLabel>
+                  {r?.yearsOfExperience ?? "Years of Experience"}
+                </FormLabel>
                 <FormControl>
                   <Input
                     name={field.name}
@@ -251,15 +263,19 @@ function TeacherFields() {
             name="employmentType"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Employment Type *</FormLabel>
+                <FormLabel>
+                  {r?.employmentType ?? "Employment Type"} *
+                </FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
+                      <SelectValue
+                        placeholder={r?.selectType ?? "Select type"}
+                      />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {EMPLOYMENT_TYPES.map((t) => (
+                    {employmentTypes.map((t) => (
                       <SelectItem key={t.value} value={t.value}>
                         {t.label}
                       </SelectItem>
@@ -274,18 +290,24 @@ function TeacherFields() {
 
         {/* Qualification */}
         <div>
-          <h3 className="mb-4 font-medium">Qualification</h3>
+          <h3 className="mb-4 font-medium">
+            {r?.qualification ?? "Qualification"}
+          </h3>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <FormField
               control={form.control}
               name="qualificationName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Degree/Certificate</FormLabel>
+                  <FormLabel>
+                    {r?.degreeCertificate ?? "Degree/Certificate"}
+                  </FormLabel>
                   <FormControl>
                     <Input
                       {...field}
-                      placeholder="e.g. Bachelor of Education"
+                      placeholder={
+                        r?.degreePlaceholder ?? "e.g. Bachelor of Education"
+                      }
                     />
                   </FormControl>
                 </FormItem>
@@ -296,9 +318,14 @@ function TeacherFields() {
               name="qualificationInstitution"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Institution</FormLabel>
+                  <FormLabel>{r?.institution ?? "Institution"}</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="University name" />
+                    <Input
+                      {...field}
+                      placeholder={
+                        r?.institutionPlaceholder ?? "University name"
+                      }
+                    />
                   </FormControl>
                 </FormItem>
               )}
@@ -308,9 +335,12 @@ function TeacherFields() {
               name="qualificationYear"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Year</FormLabel>
+                  <FormLabel>{r?.year ?? "Year"}</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="e.g. 2020" />
+                    <Input
+                      {...field}
+                      placeholder={r?.yearPlaceholder ?? "e.g. 2020"}
+                    />
                   </FormControl>
                 </FormItem>
               )}
@@ -333,6 +363,11 @@ function StaffFields() {
   const subdomain = params.subdomain as string
   const { state, updateStepData, schoolId } = useOnboarding()
   const { enableNext, disableNext, setCustomNavigation } = useWizardValidation()
+  const { dictionary } = useDictionary()
+
+  const d = dictionary?.school?.onboarding?.internalJoin
+  const r = d?.roleDetails
+  const employmentTypes = useMemo(() => getEmploymentTypes(d), [d])
 
   const existing = state.formData.roleDetails as StaffDetailsData | undefined
 
@@ -412,9 +447,15 @@ function StaffFields() {
             name="position"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Position *</FormLabel>
+                <FormLabel>{r?.position ?? "Position"} *</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="e.g. Accountant, Librarian" />
+                  <Input
+                    {...field}
+                    placeholder={
+                      r?.positionTeacherPlaceholder ??
+                      "e.g. Accountant, Librarian"
+                    }
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -425,15 +466,19 @@ function StaffFields() {
             name="employmentType"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Employment Type *</FormLabel>
+                <FormLabel>
+                  {r?.employmentType ?? "Employment Type"} *
+                </FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
+                      <SelectValue
+                        placeholder={r?.selectType ?? "Select type"}
+                      />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {EMPLOYMENT_TYPES.map((t) => (
+                    {employmentTypes.map((t) => (
                       <SelectItem key={t.value} value={t.value}>
                         {t.label}
                       </SelectItem>
@@ -453,20 +498,22 @@ function StaffFields() {
             name="departmentId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Department</FormLabel>
+                <FormLabel>{r?.department ?? "Department"}</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   value={field.value || ""}
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select department" />
+                      <SelectValue
+                        placeholder={r?.selectDepartment ?? "Select department"}
+                      />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {departments.map((d) => (
-                      <SelectItem key={d.id} value={d.id}>
-                        {d.departmentName}
+                    {departments.map((dept) => (
+                      <SelectItem key={dept.id} value={dept.id}>
+                        {dept.departmentName}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -479,16 +526,25 @@ function StaffFields() {
 
         {/* Qualification */}
         <div>
-          <h3 className="mb-4 font-medium">Qualification</h3>
+          <h3 className="mb-4 font-medium">
+            {r?.qualification ?? "Qualification"}
+          </h3>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <FormField
               control={form.control}
               name="qualificationName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Degree/Certificate</FormLabel>
+                  <FormLabel>
+                    {r?.degreeCertificate ?? "Degree/Certificate"}
+                  </FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="e.g. Bachelor of Science" />
+                    <Input
+                      {...field}
+                      placeholder={
+                        r?.sciencePlaceholder ?? "e.g. Bachelor of Science"
+                      }
+                    />
                   </FormControl>
                 </FormItem>
               )}
@@ -498,9 +554,14 @@ function StaffFields() {
               name="qualificationInstitution"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Institution</FormLabel>
+                  <FormLabel>{r?.institution ?? "Institution"}</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="University name" />
+                    <Input
+                      {...field}
+                      placeholder={
+                        r?.institutionPlaceholder ?? "University name"
+                      }
+                    />
                   </FormControl>
                 </FormItem>
               )}
@@ -510,9 +571,12 @@ function StaffFields() {
               name="qualificationYear"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Year</FormLabel>
+                  <FormLabel>{r?.year ?? "Year"}</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="e.g. 2020" />
+                    <Input
+                      {...field}
+                      placeholder={r?.yearPlaceholder ?? "e.g. 2020"}
+                    />
                   </FormControl>
                 </FormItem>
               )}
@@ -535,6 +599,11 @@ function AdminFields() {
   const subdomain = params.subdomain as string
   const { state, updateStepData, schoolId } = useOnboarding()
   const { enableNext, disableNext, setCustomNavigation } = useWizardValidation()
+  const { dictionary } = useDictionary()
+
+  const d = dictionary?.school?.onboarding?.internalJoin
+  const r = d?.roleDetails
+  const adminAreas = useMemo(() => getAdminAreas(d), [d])
 
   const existing = state.formData.roleDetails as AdminDetailsData | undefined
 
@@ -611,9 +680,14 @@ function AdminFields() {
             name="position"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Position *</FormLabel>
+                <FormLabel>{r?.position ?? "Position"} *</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="e.g. Vice Principal" />
+                  <Input
+                    {...field}
+                    placeholder={
+                      r?.positionAdminPlaceholder ?? "e.g. Vice Principal"
+                    }
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -624,15 +698,19 @@ function AdminFields() {
             name="administrativeArea"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Administrative Area *</FormLabel>
+                <FormLabel>
+                  {r?.administrativeArea ?? "Administrative Area"} *
+                </FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select area" />
+                      <SelectValue
+                        placeholder={r?.selectArea ?? "Select area"}
+                      />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {ADMIN_AREAS.map((a) => (
+                    {adminAreas.map((a) => (
                       <SelectItem key={a.value} value={a.value}>
                         {a.label}
                       </SelectItem>
@@ -652,20 +730,22 @@ function AdminFields() {
             name="departmentId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Department</FormLabel>
+                <FormLabel>{r?.department ?? "Department"}</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   value={field.value || ""}
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select department" />
+                      <SelectValue
+                        placeholder={r?.selectDepartment ?? "Select department"}
+                      />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {departments.map((d) => (
-                      <SelectItem key={d.id} value={d.id}>
-                        {d.departmentName}
+                    {departments.map((dept) => (
+                      <SelectItem key={dept.id} value={dept.id}>
+                        {dept.departmentName}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -691,6 +771,11 @@ function StudentFields() {
   const subdomain = params.subdomain as string
   const { state, updateStepData, schoolId } = useOnboarding()
   const { enableNext, disableNext, setCustomNavigation } = useWizardValidation()
+  const { dictionary } = useDictionary()
+
+  const d = dictionary?.school?.onboarding?.internalJoin
+  const r = d?.roleDetails
+  const studentTypes = useMemo(() => getStudentTypes(d), [d])
 
   const existing = state.formData.roleDetails as StudentDetailsData | undefined
   const autoFill = state.applicationData
@@ -770,19 +855,21 @@ function StudentFields() {
             name="gradeLevel"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Grade Level *</FormLabel>
+                <FormLabel>{r?.gradeLevel ?? "Grade Level"} *</FormLabel>
                 {loadingGrades ? (
                   <div className="flex items-center gap-2 py-2">
                     <Loader2 className="h-4 w-4 animate-spin" />
                     <span className="text-muted-foreground text-sm">
-                      Loading grades...
+                      {r?.loadingGrades ?? "Loading grades..."}
                     </span>
                   </div>
                 ) : grades.length > 0 ? (
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select grade" />
+                        <SelectValue
+                          placeholder={r?.selectGrade ?? "Select grade"}
+                        />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -795,7 +882,10 @@ function StudentFields() {
                   </Select>
                 ) : (
                   <FormControl>
-                    <Input {...field} placeholder="e.g. Grade 10" />
+                    <Input
+                      {...field}
+                      placeholder={r?.gradePlaceholder ?? "e.g. Grade 10"}
+                    />
                   </FormControl>
                 )}
                 <FormMessage />
@@ -807,15 +897,17 @@ function StudentFields() {
             name="studentType"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Student Type *</FormLabel>
+                <FormLabel>{r?.studentType ?? "Student Type"} *</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
+                      <SelectValue
+                        placeholder={r?.selectType ?? "Select type"}
+                      />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {STUDENT_TYPES.map((t) => (
+                    {studentTypes.map((t) => (
                       <SelectItem key={t.value} value={t.value}>
                         {t.label}
                       </SelectItem>
@@ -834,9 +926,12 @@ function StudentFields() {
             name="previousSchool"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Previous School</FormLabel>
+                <FormLabel>{r?.previousSchool ?? "Previous School"}</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="School name" />
+                  <Input
+                    {...field}
+                    placeholder={r?.schoolName ?? "School name"}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -847,9 +942,12 @@ function StudentFields() {
             name="previousGrade"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Previous Grade</FormLabel>
+                <FormLabel>{r?.previousGrade ?? "Previous Grade"}</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="e.g. Grade 9" />
+                  <Input
+                    {...field}
+                    placeholder={r?.previousGradePlaceholder ?? "e.g. Grade 9"}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

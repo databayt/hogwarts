@@ -7298,6 +7298,206 @@
           "applicationLabel": "Application Fee",
           "applicationPlaceholder": "100"
         }
+      },
+      "internalJoin": {
+        "groupLabels": {
+          "personalInfo": "Personal Information",
+          "roleAndDocuments": "Role & Documents",
+          "reviewAndSubmit": "Review & Submit"
+        },
+        "roles": {
+          "teacher": {
+            "label": "Teacher",
+            "description": "I teach classes at this school"
+          },
+          "staff": {
+            "label": "Staff",
+            "description": "I work in administration or support"
+          },
+          "admin": {
+            "label": "Admin",
+            "description": "I manage school administration"
+          },
+          "student": {
+            "label": "Student",
+            "description": "I am joining as a student"
+          }
+        },
+        "gender": {
+          "male": "Male",
+          "female": "Female"
+        },
+        "employmentType": {
+          "fullTime": "Full-time",
+          "partTime": "Part-time",
+          "contract": "Contract"
+        },
+        "studentType": {
+          "regular": "Regular",
+          "transfer": "Transfer",
+          "international": "International"
+        },
+        "adminArea": {
+          "finance": "Finance",
+          "hr": "Human Resources",
+          "operations": "Operations",
+          "academics": "Academics",
+          "it": "IT",
+          "other": "Other"
+        },
+        "steps": {
+          "personal": {
+            "title": "Personal Information",
+            "description": "Tell us about yourself"
+          },
+          "contact": {
+            "title": "Contact Information",
+            "description": "How can we reach you?"
+          },
+          "roleDetails": {
+            "title": "Role Details",
+            "description": "Information specific to your role"
+          },
+          "documents": {
+            "title": "Documents",
+            "description": "Upload required documents"
+          },
+          "review": {
+            "title": "Review & Submit",
+            "description": "Review your information and submit"
+          }
+        },
+        "personal": {
+          "firstName": "First Name",
+          "middleName": "Middle Name",
+          "lastName": "Last Name",
+          "dateOfBirth": "Date of Birth",
+          "gender": "Gender",
+          "nationality": "Nationality",
+          "enterFirstName": "Enter first name",
+          "enterMiddleName": "Enter middle name",
+          "enterLastName": "Enter last name",
+          "selectGender": "Select gender",
+          "selectNationality": "Select nationality"
+        },
+        "contact": {
+          "email": "Email",
+          "phone": "Phone Number",
+          "address": "Address",
+          "city": "City",
+          "state": "State",
+          "country": "Country",
+          "streetAddress": "Street address",
+          "selectCountry": "Select country",
+          "emergencyContact": "Emergency Contact",
+          "emergencyName": "Name",
+          "emergencyPhone": "Phone",
+          "emergencyRelation": "Relation",
+          "contactName": "Contact name",
+          "relationPlaceholder": "e.g. Spouse, Parent",
+          "verify": "Verify",
+          "resend": "Resend",
+          "verified": "Verified",
+          "confirm": "Confirm",
+          "otpInstruction": "Enter the 6-digit code sent to your email",
+          "failedToSendCode": "Failed to send code",
+          "invalidCode": "Invalid code"
+        },
+        "roleDetails": {
+          "selectRoleFirst": "Please select a role first.",
+          "subjects": "Subjects",
+          "loadingSubjects": "Loading subjects...",
+          "yearsOfExperience": "Years of Experience",
+          "employmentType": "Employment Type",
+          "selectType": "Select type",
+          "qualification": "Qualification",
+          "degreeCertificate": "Degree/Certificate",
+          "degreePlaceholder": "e.g. Bachelor of Education",
+          "institution": "Institution",
+          "institutionPlaceholder": "University name",
+          "year": "Year",
+          "yearPlaceholder": "e.g. 2020",
+          "position": "Position",
+          "positionTeacherPlaceholder": "e.g. Accountant, Librarian",
+          "positionAdminPlaceholder": "e.g. Vice Principal",
+          "department": "Department",
+          "selectDepartment": "Select department",
+          "administrativeArea": "Administrative Area",
+          "selectArea": "Select area",
+          "gradeLevel": "Grade Level",
+          "loadingGrades": "Loading grades...",
+          "selectGrade": "Select grade",
+          "gradePlaceholder": "e.g. Grade 10",
+          "studentType": "Student Type",
+          "previousSchool": "Previous School",
+          "schoolName": "School name",
+          "previousGrade": "Previous Grade",
+          "previousGradePlaceholder": "e.g. Grade 9",
+          "sciencePlaceholder": "e.g. Bachelor of Science"
+        },
+        "review": {
+          "role": "Role",
+          "personalInfo": "Personal Information",
+          "contactInfo": "Contact Information",
+          "roleDetailsTitle": "Role Details",
+          "firstName": "First Name",
+          "middleName": "Middle Name",
+          "lastName": "Last Name",
+          "dateOfBirth": "Date of Birth",
+          "gender": "Gender",
+          "nationality": "Nationality",
+          "email": "Email",
+          "phone": "Phone",
+          "address": "Address",
+          "city": "City",
+          "state": "State",
+          "country": "Country",
+          "subjects": "Subjects",
+          "yearsOfExperience": "Years of Experience",
+          "employmentType": "Employment Type",
+          "qualification": "Qualification",
+          "institution": "Institution",
+          "position": "Position",
+          "administrativeArea": "Administrative Area",
+          "gradeLevel": "Grade Level",
+          "studentType": "Student Type",
+          "previousSchool": "Previous School",
+          "previousGrade": "Previous Grade",
+          "termsLabel": "I confirm that all information provided is true and accurate. I understand that my account will require admin approval before I can access the school platform.",
+          "submitting": "Submitting your application...",
+          "submitFailed": "Failed to submit. Please try again."
+        },
+        "documents": {
+          "teachingCertificate": "Teaching certificate",
+          "degreeCertificate": "Degree certificate",
+          "idPassportCopy": "ID/Passport copy",
+          "relevantCertifications": "Relevant certifications",
+          "transferCertificate": "Transfer certificate",
+          "previousSchoolReport": "Previous school report",
+          "documentsNote": "Documents can be uploaded after your account is approved. The following documents may be required:",
+          "fromAdmission": "Documents from your admission application",
+          "skipNote": "You can skip this step for now. Document upload will be available in your profile after account approval."
+        },
+        "welcome": {
+          "title": "Welcome Aboard!",
+          "successMessage": "Your application to join {schoolName} has been submitted successfully. An administrator will review your application shortly.",
+          "applicationReference": "Application Reference",
+          "saveReference": "Save this number for follow-up",
+          "copy": "Copy",
+          "copied": "Copied",
+          "share": "Share",
+          "checkPhone": "Check your phone",
+          "smsConfirmation": "SMS confirmation sent to {phone}",
+          "pendingApproval": "Pending admin approval",
+          "pendingDescription": "A school administrator will review your application",
+          "contactSchool": "Contact the school",
+          "visitOffice": "Visit the school office",
+          "whatsappMessage": "{schoolName} - Application submitted. Reference: {ref}. Role: {role}. Status: Pending approval.",
+          "whatsappMessageNoRef": "{schoolName} - Application submitted. Status: Pending approval."
+        },
+        "footer": {
+          "submit": "Submit"
+        }
       }
     },
     "library": {
@@ -7531,7 +7731,51 @@
         "noClasses": "No classes scheduled for today",
         "noDeadlines": "No upcoming deadlines",
         "average": "Average",
-        "noPerformanceData": "No performance data available"
+        "noPerformanceData": "No performance data available",
+        "next": "Next",
+        "overdue": "Overdue",
+        "dueToday": "Due Today",
+        "tomorrow": "Tomorrow",
+        "today": "Today",
+        "oneDay": "1 day",
+        "days": "days",
+        "viewAll": "View all",
+        "excellent": "Excellent",
+        "good": "Good",
+        "needsAttention": "Needs Attention",
+        "enjoyDayOff": "Enjoy your day off!",
+        "allGraded": "All assignments have been graded",
+        "performanceAfterAssessments": "Performance data will appear after assessments",
+        "noDeadlinesWorry": "No upcoming deadlines to worry about",
+        "classesLabel": "Classes",
+        "gradingLabel": "Grading",
+        "studentsLabel": "Students",
+        "todayUnit": "today",
+        "pendingUnit": "pending",
+        "totalUnit": "total",
+        "na": "N/A",
+        "assignments": "Assignments"
+      },
+      "teachingOverview": "Teaching Overview",
+      "classesToday": "Classes Today",
+      "totalStudentsLabel": "Total Students",
+      "assignmentsLabel": "Assignments",
+      "avgPerformance": "Avg Performance",
+      "teachingProgress": "Teaching Progress",
+      "classesThisWeek": "Classes This Week",
+      "progressCards": {
+        "gradingProgress": "Grading Progress",
+        "graded": "graded",
+        "attendanceTaken": "Attendance Taken",
+        "classes": "classes",
+        "termProgress": "Term Progress",
+        "weeks": "weeks"
+      },
+      "errors": {
+        "unableToLoad": "Unable to Load Dashboard",
+        "loadError": "There was an error loading the dashboard data. Please try refreshing the page.",
+        "renderError": "Dashboard Rendering Error",
+        "renderErrorMessage": "An error occurred while rendering the dashboard."
       }
     },
     "studentDashboard": {
@@ -7616,7 +7860,12 @@
         "new": "new",
         "days": "days",
         "tasks": "tasks",
-        "weeks": "weeks"
+        "weeks": "weeks",
+        "submitted": "Submitted",
+        "graded": "Graded",
+        "grades": "Grades",
+        "done": "done",
+        "percent": "%"
       },
       "metrics": {
         "children": "Children",
@@ -10060,6 +10309,104 @@
         "high": "High",
         "medium": "Medium",
         "low": "Low"
+      }
+    },
+    "tenant": {
+      "dashboard": {
+        "title": "Dashboard",
+        "welcomeBack": "Welcome back to",
+        "manageDescription": "Manage your school operations, students, and classes from your dashboard.",
+        "settings": "Settings",
+        "stats": {
+          "totalStudents": "Total Students",
+          "totalTeachers": "Total Teachers",
+          "activeClasses": "Active Classes",
+          "timezone": "Timezone",
+          "ofMax": "of {max} max",
+          "classesRunning": "Classes running",
+          "currentTime": "Current time:"
+        },
+        "quickActions": {
+          "title": "Quick Actions",
+          "addStudent": "Add Student",
+          "addStudentDesc": "Register a new student",
+          "createClass": "Create Class",
+          "createClassDesc": "Set up a new class",
+          "viewTimetable": "View Timetable",
+          "viewTimetableDesc": "Check class schedule",
+          "viewAttendance": "View Attendance",
+          "viewAttendanceDesc": "Check student attendance"
+        },
+        "recentActivity": {
+          "title": "Recent Activity",
+          "noActivity": "No recent activity",
+          "startPrompt": "Start by adding students and creating classes"
+        },
+        "schoolInfo": {
+          "title": "School Information",
+          "basicDetails": "Basic Details",
+          "contactInfo": "Contact Information",
+          "schoolName": "School Name",
+          "subdomain": "Subdomain",
+          "plan": "Plan",
+          "email": "Email",
+          "phone": "Phone",
+          "address": "Address",
+          "noContactInfo": "No contact information added yet"
+        },
+        "quickNav": {
+          "title": "Quick Navigation",
+          "students": "Students",
+          "studentsDesc": "Manage student records",
+          "teachers": "Teachers",
+          "teachersDesc": "Manage teacher accounts",
+          "classrooms": "Classrooms",
+          "classroomsDesc": "Manage class schedules"
+        },
+        "plan": {
+          "suffix": "Plan"
+        }
+      },
+      "welcome": {
+        "title": "Welcome to",
+        "portalDescription": "Your comprehensive school management portal is ready. Access student records, manage classes, track attendance, and more all in one place.",
+        "stats": {
+          "students": "Students",
+          "teachers": "Teachers",
+          "timezone": "Timezone",
+          "unlimited": "Unlimited",
+          "maxStudentCapacity": "Maximum student capacity",
+          "maxTeacherCapacity": "Maximum teacher capacity",
+          "schoolTimezone": "School timezone"
+        },
+        "accessPortal": {
+          "title": "Access Your Portal",
+          "description": "Log in to access your school's dashboard, manage students, create classes, and view reports.",
+          "loginButton": "Login to Portal"
+        },
+        "getStarted": {
+          "title": "Get Started",
+          "description": "New to the platform? Complete your school setup, add your first students, and configure your classes.",
+          "setupButton": "Complete Setup"
+        },
+        "schoolInfo": {
+          "title": "School Information",
+          "address": "Address",
+          "phone": "Phone",
+          "email": "Email"
+        },
+        "status": {
+          "active": "Active",
+          "pending": "Pending"
+        },
+        "plan": {
+          "suffix": "Plan"
+        },
+        "footer": {
+          "poweredBy": "Powered by Databayt - School Management Platform",
+          "createdOn": "Created on",
+          "recently": "Recently"
+        }
       }
     }
   }

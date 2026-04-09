@@ -80,7 +80,7 @@ export function MessageList({
   )
   const [hasScrolledUp, setHasScrolledUp] = useState(false)
   const [newMsgCount, setNewMsgCount] = useState(0)
-  const prevMsgCountRef = useRef(messages.length)
+  const prevMsgCountRef = useRef(0)
   const shouldScrollRef = useRef(false)
   const dateLocale = locale === "ar" ? ar : enUS
 
@@ -275,12 +275,10 @@ export function MessageList({
 
     // Auto-scroll when user hasn't intentionally scrolled up
     if (isAtBottom || !hasScrolledUp) {
-      requestAnimationFrame(() => {
-        const el = scrollContainerRef.current
-        if (el) {
-          el.scrollTo({ top: el.scrollHeight, behavior: "instant" })
-        }
-      })
+      const lastIndex = virtualListItems.length - 1
+      if (lastIndex >= 0) {
+        virtualizer.scrollToIndex(lastIndex, { align: "end", behavior: "auto" })
+      }
     }
   }, [virtualListItems.length, enableVirtualization, isAtBottom, hasScrolledUp])
 
@@ -399,7 +397,14 @@ export function MessageList({
               size="icon"
               className="bg-card border-border relative h-10 w-10 rounded-full border shadow-md"
               onClick={() => {
-                scrollToBottom()
+                const lastIndex = virtualListItems.length - 1
+                if (lastIndex >= 0) {
+                  virtualizer.scrollToIndex(lastIndex, {
+                    align: "end",
+                    behavior: "smooth",
+                  })
+                }
+                setHasScrolledUp(false)
                 setNewMsgCount(0)
               }}
             >

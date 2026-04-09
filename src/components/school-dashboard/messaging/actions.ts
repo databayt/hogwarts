@@ -618,6 +618,21 @@ export async function sendMessage(
       },
     })
 
+    // Create attachments if provided (e.g. voice messages, file uploads)
+    if (parsed.attachments?.length) {
+      await db.messageAttachment.createMany({
+        data: parsed.attachments.map((a) => ({
+          messageId: message.id,
+          fileUrl: a.fileUrl,
+          fileName: a.fileName,
+          fileSize: a.fileSize,
+          fileType: a.fileType,
+          thumbnail: a.thumbnail ?? null,
+          uploaded: true,
+        })),
+      })
+    }
+
     // Update conversation's lastMessageAt
     await db.conversation.update({
       where: { id: parsed.conversationId },

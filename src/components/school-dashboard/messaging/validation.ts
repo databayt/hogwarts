@@ -115,6 +115,17 @@ export const createMessageSchema = z.object({
   replyToId: z.string().optional(),
   metadata: z.record(z.string(), z.unknown()).optional(),
   clientNonce: z.string().optional(),
+  attachments: z
+    .array(
+      z.object({
+        fileUrl: z.string(),
+        fileName: z.string(),
+        fileSize: z.number(),
+        fileType: z.string(),
+        thumbnail: z.string().optional(),
+      })
+    )
+    .optional(),
 })
 
 // Update message schema

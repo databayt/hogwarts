@@ -20,6 +20,7 @@ import { getCurrentTimeInTimezone } from "@/lib/timezone"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 import { getTimezoneDisplayName } from "@/components/school-dashboard/settings/validation"
 
@@ -51,6 +52,8 @@ export default function TenantDashboard({
   subdomain,
 }: TenantDashboardProps) {
   const { locale } = useLocale()
+  const { dictionary } = useDictionary()
+  const t = dictionary?.school?.tenant?.dashboard
   const [currentTime, setCurrentTime] = React.useState("")
 
   // Update current time in school timezone
@@ -82,36 +85,38 @@ export default function TenantDashboard({
           "bg-gray-100 text-gray-800"
         }
       >
-        {planType.charAt(0).toUpperCase() + planType.slice(1)} Plan
+        {planType.charAt(0).toUpperCase() + planType.slice(1)}{" "}
+        {t?.plan?.suffix || "Plan"}
       </Badge>
     )
   }
 
   const quickActions = [
     {
-      title: "Add Student",
-      description: "Register a new student",
+      title: t?.quickActions?.addStudent || "Add Student",
+      description: t?.quickActions?.addStudentDesc || "Register a new student",
       icon: Users,
       href: "/students/new",
       color: "bg-blue-500",
     },
     {
-      title: "Create Class",
-      description: "Set up a new class",
+      title: t?.quickActions?.createClass || "Create Class",
+      description: t?.quickActions?.createClassDesc || "Set up a new class",
       icon: BookOpen,
       href: "/classrooms/create",
       color: "bg-green-500",
     },
     {
-      title: "View Timetable",
-      description: "Check class schedule",
+      title: t?.quickActions?.viewTimetable || "View Timetable",
+      description: t?.quickActions?.viewTimetableDesc || "Check class schedule",
       icon: Calendar,
       href: "/timetable",
       color: "bg-purple-500",
     },
     {
-      title: "View Attendance",
-      description: "Check student attendance",
+      title: t?.quickActions?.viewAttendance || "View Attendance",
+      description:
+        t?.quickActions?.viewAttendanceDesc || "Check student attendance",
       icon: GraduationCap,
       href: "/attendance",
       color: "bg-orange-500",
@@ -130,7 +135,7 @@ export default function TenantDashboard({
               </div>
               <div>
                 <h4>{school.name}</h4>
-                <p className="muted">Dashboard</p>
+                <p className="muted">{t?.title || "Dashboard"}</p>
               </div>
             </div>
 
@@ -138,7 +143,7 @@ export default function TenantDashboard({
               <Button variant="outline" size="sm" asChild>
                 <Link href={`/${locale}/settings`}>
                   <Settings className="me-2 h-4 w-4" />
-                  Settings
+                  {t?.settings || "Settings"}
                 </Link>
               </Button>
             </div>
@@ -150,10 +155,12 @@ export default function TenantDashboard({
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Welcome Section */}
         <div className="mb-8">
-          <h2 className="mb-2">Welcome back to {school.name}</h2>
+          <h2 className="mb-2">
+            {t?.welcomeBack || "Welcome back to"} {school.name}
+          </h2>
           <p className="text-muted-foreground">
-            Manage your school operations, students, and classes from your
-            dashboard.
+            {t?.manageDescription ||
+              "Manage your school operations, students, and classes from your dashboard."}
           </p>
         </div>
 
@@ -161,40 +168,58 @@ export default function TenantDashboard({
         <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle>Total Students</CardTitle>
+              <CardTitle>
+                {t?.stats?.totalStudents || "Total Students"}
+              </CardTitle>
               <Users className="text-muted-foreground h-4 w-4" />
             </CardHeader>
             <CardContent>
               <h3>0</h3>
-              <p className="muted">of {school.maxStudents || "∞"} max</p>
+              <p className="muted">
+                {(t?.stats?.ofMax || "of {max} max").replace(
+                  "{max}",
+                  String(school.maxStudents || "\u221E")
+                )}
+              </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle>Total Teachers</CardTitle>
+              <CardTitle>
+                {t?.stats?.totalTeachers || "Total Teachers"}
+              </CardTitle>
               <BookOpen className="text-muted-foreground h-4 w-4" />
             </CardHeader>
             <CardContent>
               <h3>0</h3>
-              <p className="muted">of {school.maxTeachers || "∞"} max</p>
+              <p className="muted">
+                {(t?.stats?.ofMax || "of {max} max").replace(
+                  "{max}",
+                  String(school.maxTeachers || "\u221E")
+                )}
+              </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle>Active Classes</CardTitle>
+              <CardTitle>
+                {t?.stats?.activeClasses || "Active Classes"}
+              </CardTitle>
               <GraduationCap className="text-muted-foreground h-4 w-4" />
             </CardHeader>
             <CardContent>
               <h3>0</h3>
-              <p className="muted">Classes running</p>
+              <p className="muted">
+                {t?.stats?.classesRunning || "Classes running"}
+              </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle>Timezone</CardTitle>
+              <CardTitle>{t?.stats?.timezone || "Timezone"}</CardTitle>
               <Clock className="text-muted-foreground h-4 w-4" />
             </CardHeader>
             <CardContent>
@@ -203,7 +228,8 @@ export default function TenantDashboard({
                   {getTimezoneDisplayName(school.timezone || "Africa/Khartoum")}
                 </h3>
                 <p className="text-muted-foreground text-sm">
-                  Current time: <span className="font-mono">{currentTime}</span>
+                  {t?.stats?.currentTime || "Current time:"}{" "}
+                  <span className="font-mono">{currentTime}</span>
                 </p>
               </div>
             </CardContent>
@@ -212,7 +238,7 @@ export default function TenantDashboard({
 
         {/* Quick Actions */}
         <div className="mb-8">
-          <h3 className="mb-4">Quick Actions</h3>
+          <h3 className="mb-4">{t?.quickActions?.title || "Quick Actions"}</h3>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {quickActions.map((action, index) => (
               <Card
@@ -245,14 +271,17 @@ export default function TenantDashboard({
 
         {/* Recent Activity */}
         <div className="mb-8">
-          <h3 className="mb-4">Recent Activity</h3>
+          <h3 className="mb-4">
+            {t?.recentActivity?.title || "Recent Activity"}
+          </h3>
           <Card>
             <CardContent className="pt-6">
               <div className="text-muted-foreground py-8 text-center">
                 <BookOpen className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
-                <h5>No recent activity</h5>
+                <h5>{t?.recentActivity?.noActivity || "No recent activity"}</h5>
                 <p className="muted">
-                  Start by adding students and creating classes
+                  {t?.recentActivity?.startPrompt ||
+                    "Start by adding students and creating classes"}
                 </p>
               </div>
             </CardContent>
@@ -261,23 +290,33 @@ export default function TenantDashboard({
 
         {/* School Info */}
         <div className="mb-8">
-          <h3 className="mb-4">School Information</h3>
+          <h3 className="mb-4">
+            {t?.schoolInfo?.title || "School Information"}
+          </h3>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle>Basic Details</CardTitle>
+                <CardTitle>
+                  {t?.schoolInfo?.basicDetails || "Basic Details"}
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div>
-                  <label className="muted">School Name</label>
+                  <label className="muted">
+                    {t?.schoolInfo?.schoolName || "School Name"}
+                  </label>
                   <p>{school.name}</p>
                 </div>
                 <div>
-                  <label className="muted">Subdomain</label>
+                  <label className="muted">
+                    {t?.schoolInfo?.subdomain || "Subdomain"}
+                  </label>
                   <p>{subdomain}.databayt.org</p>
                 </div>
                 <div>
-                  <label className="muted">Plan</label>
+                  <label className="muted">
+                    {t?.schoolInfo?.plan || "Plan"}
+                  </label>
                   <div className="mt-1">{getPlanBadge(school.planType)}</div>
                 </div>
               </CardContent>
@@ -285,29 +324,40 @@ export default function TenantDashboard({
 
             <Card>
               <CardHeader>
-                <CardTitle>Contact Information</CardTitle>
+                <CardTitle>
+                  {t?.schoolInfo?.contactInfo || "Contact Information"}
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {school.email && (
                   <div>
-                    <label className="muted">Email</label>
+                    <label className="muted">
+                      {t?.schoolInfo?.email || "Email"}
+                    </label>
                     <p>{school.email}</p>
                   </div>
                 )}
                 {school.phoneNumber && (
                   <div>
-                    <label className="muted">Phone</label>
+                    <label className="muted">
+                      {t?.schoolInfo?.phone || "Phone"}
+                    </label>
                     <p>{school.phoneNumber}</p>
                   </div>
                 )}
                 {school.address && (
                   <div>
-                    <label className="muted">Address</label>
+                    <label className="muted">
+                      {t?.schoolInfo?.address || "Address"}
+                    </label>
                     <p>{school.address}</p>
                   </div>
                 )}
                 {!school.email && !school.phoneNumber && !school.address && (
-                  <p className="muted">No contact information added yet</p>
+                  <p className="muted">
+                    {t?.schoolInfo?.noContactInfo ||
+                      "No contact information added yet"}
+                  </p>
                 )}
               </CardContent>
             </Card>
@@ -316,7 +366,7 @@ export default function TenantDashboard({
 
         {/* Navigation Links */}
         <div className="mb-8">
-          <h3 className="mb-4">Quick Navigation</h3>
+          <h3 className="mb-4">{t?.quickNav?.title || "Quick Navigation"}</h3>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
             <Button
               variant="outline"
@@ -326,8 +376,10 @@ export default function TenantDashboard({
               <Link href={`/${locale}/students`}>
                 <Users className="me-3 h-5 w-5" />
                 <div className="text-start">
-                  <h5>Students</h5>
-                  <p className="muted text-gray-500">Manage student records</p>
+                  <h5>{t?.quickNav?.students || "Students"}</h5>
+                  <p className="muted text-gray-500">
+                    {t?.quickNav?.studentsDesc || "Manage student records"}
+                  </p>
                 </div>
                 <ArrowRight className="ms-auto h-4 w-4 rtl:rotate-180" />
               </Link>
@@ -341,8 +393,10 @@ export default function TenantDashboard({
               <Link href={`/${locale}/teachers`}>
                 <BookOpen className="me-3 h-5 w-5" />
                 <div className="text-start">
-                  <h5>Teachers</h5>
-                  <p className="muted text-gray-500">Manage teacher accounts</p>
+                  <h5>{t?.quickNav?.teachers || "Teachers"}</h5>
+                  <p className="muted text-gray-500">
+                    {t?.quickNav?.teachersDesc || "Manage teacher accounts"}
+                  </p>
                 </div>
                 <ArrowRight className="ms-auto h-4 w-4 rtl:rotate-180" />
               </Link>
@@ -356,8 +410,10 @@ export default function TenantDashboard({
               <Link href={`/${locale}/classrooms`}>
                 <GraduationCap className="me-3 h-5 w-5" />
                 <div className="text-start">
-                  <h5>Classrooms</h5>
-                  <p className="muted text-gray-500">Manage class schedules</p>
+                  <h5>{t?.quickNav?.classrooms || "Classrooms"}</h5>
+                  <p className="muted text-gray-500">
+                    {t?.quickNav?.classroomsDesc || "Manage class schedules"}
+                  </p>
                 </div>
                 <ArrowRight className="ms-auto h-4 w-4 rtl:rotate-180" />
               </Link>

@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React, { useCallback, useEffect, useRef, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
 
@@ -12,10 +12,11 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { FormHeading } from "@/components/form"
 import { useWizardValidation } from "@/components/form/template/wizard-validation-context"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 
 import { submitInternalOnboarding } from "../actions"
-import { STEP_META } from "../config"
+import { getStepMeta } from "../config"
 import type {
   AdminDetailsData,
   ContactStepData,
@@ -31,6 +32,11 @@ export function ReviewStep() {
   const params = useParams()
   const { locale } = useLocale()
   const subdomain = params.subdomain as string
+  const { dictionary } = useDictionary()
+
+  const d = dictionary?.school?.onboarding?.internalJoin
+  const rv = d?.review
+  const meta = useMemo(() => getStepMeta(d).review, [d])
 
   const { state, schoolId } = useOnboarding()
   const { enableNext, disableNext, setCustomNavigation } = useWizardValidation()
@@ -77,7 +83,10 @@ export function ReviewStep() {
     } else {
       submittingRef.current = false
       setIsSubmitting(false)
-      setError(result.error || "Failed to submit. Please try again.")
+      setError(
+        result.error ||
+          (rv?.submitFailed ?? "Failed to submit. Please try again.")
+      )
     }
   }, [
     personal,
@@ -89,6 +98,7 @@ export function ReviewStep() {
     locale,
     subdomain,
     router,
+    rv,
   ])
 
   useEffect(() => {
@@ -114,8 +124,6 @@ export function ReviewStep() {
     handleSubmit,
   ])
 
-  const meta = STEP_META.review
-
   return (
     <div className="space-y-8">
       <FormHeading title={meta.title} description={meta.description} />
@@ -129,14 +137,14 @@ export function ReviewStep() {
       {isSubmitting && (
         <div className="flex items-center justify-center gap-2 py-4">
           <Loader2 className="h-5 w-5 animate-spin" />
-          <span>Submitting your application...</span>
+          <span>{rv?.submitting ?? "Submitting your application..."}</span>
         </div>
       )}
 
       {/* Role */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Role</CardTitle>
+          <CardTitle className="text-lg">{rv?.role ?? "Role"}</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="capitalize">{state.role}</p>
@@ -147,15 +155,35 @@ export function ReviewStep() {
       {personal && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Personal Information</CardTitle>
+            <CardTitle className="text-lg">
+              {rv?.personalInfo ?? "Personal Information"}
+            </CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-4">
-            <ReviewField label="First Name" value={personal.firstName} />
-            <ReviewField label="Middle Name" value={personal.middleName} />
-            <ReviewField label="Last Name" value={personal.lastName} />
-            <ReviewField label="Date of Birth" value={personal.dateOfBirth} />
-            <ReviewField label="Gender" value={personal.gender} />
-            <ReviewField label="Nationality" value={personal.nationality} />
+            <ReviewField
+              label={rv?.firstName ?? "First Name"}
+              value={personal.firstName}
+            />
+            <ReviewField
+              label={rv?.middleName ?? "Middle Name"}
+              value={personal.middleName}
+            />
+            <ReviewField
+              label={rv?.lastName ?? "Last Name"}
+              value={personal.lastName}
+            />
+            <ReviewField
+              label={rv?.dateOfBirth ?? "Date of Birth"}
+              value={personal.dateOfBirth}
+            />
+            <ReviewField
+              label={rv?.gender ?? "Gender"}
+              value={personal.gender}
+            />
+            <ReviewField
+              label={rv?.nationality ?? "Nationality"}
+              value={personal.nationality}
+            />
           </CardContent>
         </Card>
       )}
@@ -164,15 +192,23 @@ export function ReviewStep() {
       {contact && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Contact Information</CardTitle>
+            <CardTitle className="text-lg">
+              {rv?.contactInfo ?? "Contact Information"}
+            </CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-4">
-            <ReviewField label="Email" value={contact.email} />
-            <ReviewField label="Phone" value={contact.phone} />
-            <ReviewField label="Address" value={contact.address} />
-            <ReviewField label="City" value={contact.city} />
-            <ReviewField label="State" value={contact.state} />
-            <ReviewField label="Country" value={contact.country} />
+            <ReviewField label={rv?.email ?? "Email"} value={contact.email} />
+            <ReviewField label={rv?.phone ?? "Phone"} value={contact.phone} />
+            <ReviewField
+              label={rv?.address ?? "Address"}
+              value={contact.address}
+            />
+            <ReviewField label={rv?.city ?? "City"} value={contact.city} />
+            <ReviewField label={rv?.state ?? "State"} value={contact.state} />
+            <ReviewField
+              label={rv?.country ?? "Country"}
+              value={contact.country}
+            />
           </CardContent>
         </Card>
       )}
@@ -181,20 +217,22 @@ export function ReviewStep() {
       {roleDetails && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Role Details</CardTitle>
+            <CardTitle className="text-lg">
+              {rv?.roleDetailsTitle ?? "Role Details"}
+            </CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-4">
             {state.role === "teacher" && (
-              <TeacherReview data={roleDetails as TeacherDetailsData} />
+              <TeacherReview data={roleDetails as TeacherDetailsData} rv={rv} />
             )}
             {state.role === "staff" && (
-              <StaffReview data={roleDetails as StaffDetailsData} />
+              <StaffReview data={roleDetails as StaffDetailsData} rv={rv} />
             )}
             {state.role === "admin" && (
-              <AdminReview data={roleDetails as AdminDetailsData} />
+              <AdminReview data={roleDetails as AdminDetailsData} rv={rv} />
             )}
             {state.role === "student" && (
-              <StudentReview data={roleDetails as StudentDetailsData} />
+              <StudentReview data={roleDetails as StudentDetailsData} rv={rv} />
             )}
           </CardContent>
         </Card>
@@ -208,9 +246,8 @@ export function ReviewStep() {
           onCheckedChange={(checked) => setAgreed(checked === true)}
         />
         <Label htmlFor="agree" className="text-sm leading-relaxed">
-          I confirm that all information provided is true and accurate. I
-          understand that my account will require admin approval before I can
-          access the school platform.
+          {rv?.termsLabel ??
+            "I confirm that all information provided is true and accurate. I understand that my account will require admin approval before I can access the school platform."}
         </Label>
       </div>
     </div>
@@ -220,6 +257,9 @@ export function ReviewStep() {
 // =============================================================================
 // REVIEW SUB-COMPONENTS
 // =============================================================================
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ReviewDict = any
 
 function ReviewField({
   label,
@@ -237,48 +277,108 @@ function ReviewField({
   )
 }
 
-function TeacherReview({ data }: { data: TeacherDetailsData }) {
+function TeacherReview({
+  data,
+  rv,
+}: {
+  data: TeacherDetailsData
+  rv?: ReviewDict
+}) {
   return (
     <>
-      <ReviewField label="Subjects" value={data.subjects?.join(", ")} />
-      <ReviewField label="Years of Experience" value={data.yearsOfExperience} />
-      <ReviewField label="Employment Type" value={data.employmentType} />
-      <ReviewField label="Qualification" value={data.qualificationName} />
-      <ReviewField label="Institution" value={data.qualificationInstitution} />
-    </>
-  )
-}
-
-function StaffReview({ data }: { data: StaffDetailsData }) {
-  return (
-    <>
-      <ReviewField label="Position" value={data.position} />
-      <ReviewField label="Employment Type" value={data.employmentType} />
-      <ReviewField label="Qualification" value={data.qualificationName} />
-      <ReviewField label="Institution" value={data.qualificationInstitution} />
-    </>
-  )
-}
-
-function AdminReview({ data }: { data: AdminDetailsData }) {
-  return (
-    <>
-      <ReviewField label="Position" value={data.position} />
       <ReviewField
-        label="Administrative Area"
+        label={rv?.subjects ?? "Subjects"}
+        value={data.subjects?.join(", ")}
+      />
+      <ReviewField
+        label={rv?.yearsOfExperience ?? "Years of Experience"}
+        value={data.yearsOfExperience}
+      />
+      <ReviewField
+        label={rv?.employmentType ?? "Employment Type"}
+        value={data.employmentType}
+      />
+      <ReviewField
+        label={rv?.qualification ?? "Qualification"}
+        value={data.qualificationName}
+      />
+      <ReviewField
+        label={rv?.institution ?? "Institution"}
+        value={data.qualificationInstitution}
+      />
+    </>
+  )
+}
+
+function StaffReview({
+  data,
+  rv,
+}: {
+  data: StaffDetailsData
+  rv?: ReviewDict
+}) {
+  return (
+    <>
+      <ReviewField label={rv?.position ?? "Position"} value={data.position} />
+      <ReviewField
+        label={rv?.employmentType ?? "Employment Type"}
+        value={data.employmentType}
+      />
+      <ReviewField
+        label={rv?.qualification ?? "Qualification"}
+        value={data.qualificationName}
+      />
+      <ReviewField
+        label={rv?.institution ?? "Institution"}
+        value={data.qualificationInstitution}
+      />
+    </>
+  )
+}
+
+function AdminReview({
+  data,
+  rv,
+}: {
+  data: AdminDetailsData
+  rv?: ReviewDict
+}) {
+  return (
+    <>
+      <ReviewField label={rv?.position ?? "Position"} value={data.position} />
+      <ReviewField
+        label={rv?.administrativeArea ?? "Administrative Area"}
         value={data.administrativeArea}
       />
     </>
   )
 }
 
-function StudentReview({ data }: { data: StudentDetailsData }) {
+function StudentReview({
+  data,
+  rv,
+}: {
+  data: StudentDetailsData
+  rv?: ReviewDict
+}) {
   return (
     <>
-      <ReviewField label="Grade Level" value={data.gradeLevel} />
-      <ReviewField label="Student Type" value={data.studentType} />
-      <ReviewField label="Previous School" value={data.previousSchool} />
-      <ReviewField label="Previous Grade" value={data.previousGrade} />
+      <ReviewField
+        label={rv?.gradeLevel ?? "Grade Level"}
+        value={data.gradeLevel}
+      />
+      <ReviewField
+        label={rv?.studentType ?? "Student Type"}
+        value={data.studentType}
+      />
+      <ReviewField
+        label={rv?.previousSchool ?? "Previous School"}
+        value={data.previousSchool}
+      />
+      <ReviewField
+        label={rv?.previousGrade ?? "Previous Grade"}
+        value={data.previousGrade}
+      />
     </>
   )
 }

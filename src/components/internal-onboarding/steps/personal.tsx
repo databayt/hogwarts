@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React, { useEffect } from "react"
+import React, { useEffect, useMemo } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -26,9 +26,10 @@ import {
 import { CountryDropdown } from "@/components/atom/country-dropdown"
 import { FormHeading } from "@/components/form"
 import { useWizardValidation } from "@/components/form/template/wizard-validation-context"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 
-import { GENDER_OPTIONS, STEP_META } from "../config"
+import { getGenderOptions, getStepMeta } from "../config"
 import { useOnboarding } from "../use-onboarding"
 import { personalSchema, type PersonalSchemaType } from "../validation"
 
@@ -37,6 +38,11 @@ export function PersonalStep() {
   const params = useParams()
   const { locale } = useLocale()
   const subdomain = params.subdomain as string
+  const { dictionary } = useDictionary()
+
+  const d = dictionary?.school?.onboarding?.internalJoin
+  const meta = useMemo(() => getStepMeta(d).personal, [d])
+  const genderOptions = useMemo(() => getGenderOptions(d), [d])
 
   const { state, updateStepData } = useOnboarding()
   const { enableNext, disableNext, setCustomNavigation } = useWizardValidation()
@@ -99,7 +105,7 @@ export function PersonalStep() {
     subdomain,
   ])
 
-  const meta = STEP_META.personal
+  const p = d?.personal
 
   return (
     <div className="space-y-8">
@@ -114,9 +120,12 @@ export function PersonalStep() {
               name="firstName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>First Name *</FormLabel>
+                  <FormLabel>{p?.firstName ?? "First Name"} *</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Enter first name" />
+                    <Input
+                      {...field}
+                      placeholder={p?.enterFirstName ?? "Enter first name"}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -127,9 +136,12 @@ export function PersonalStep() {
               name="middleName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Middle Name</FormLabel>
+                  <FormLabel>{p?.middleName ?? "Middle Name"}</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Enter middle name" />
+                    <Input
+                      {...field}
+                      placeholder={p?.enterMiddleName ?? "Enter middle name"}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -140,9 +152,12 @@ export function PersonalStep() {
               name="lastName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Last Name *</FormLabel>
+                  <FormLabel>{p?.lastName ?? "Last Name"} *</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Enter last name" />
+                    <Input
+                      {...field}
+                      placeholder={p?.enterLastName ?? "Enter last name"}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -157,7 +172,7 @@ export function PersonalStep() {
               name="dateOfBirth"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Date of Birth *</FormLabel>
+                  <FormLabel>{p?.dateOfBirth ?? "Date of Birth"} *</FormLabel>
                   <FormControl>
                     <Input {...field} type="date" />
                   </FormControl>
@@ -170,15 +185,17 @@ export function PersonalStep() {
               name="gender"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Gender *</FormLabel>
+                  <FormLabel>{p?.gender ?? "Gender"} *</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select gender" />
+                        <SelectValue
+                          placeholder={p?.selectGender ?? "Select gender"}
+                        />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {GENDER_OPTIONS.map((option) => (
+                      {genderOptions.map((option) => (
                         <SelectItem key={option.value} value={option.value}>
                           {option.label}
                         </SelectItem>
@@ -197,12 +214,12 @@ export function PersonalStep() {
             name="nationality"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Nationality</FormLabel>
+                <FormLabel>{p?.nationality ?? "Nationality"}</FormLabel>
                 <FormControl>
                   <CountryDropdown
                     value={field.value}
                     onChange={(isoCode) => field.onChange(isoCode)}
-                    placeholder="Select nationality"
+                    placeholder={p?.selectNationality ?? "Select nationality"}
                   />
                 </FormControl>
                 <FormMessage />

@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React, { useCallback, useEffect, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2 } from "lucide-react"
@@ -27,13 +27,14 @@ import { CountryDropdown } from "@/components/atom/country-dropdown"
 import { PhoneInput } from "@/components/atom/phone-input"
 import { FormHeading } from "@/components/form"
 import { useWizardValidation } from "@/components/form/template/wizard-validation-context"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 import {
   sendVerificationCode,
   verifyEmailCode,
 } from "@/components/onboarding/newcomers/actions"
 
-import { STEP_META } from "../config"
+import { getStepMeta } from "../config"
 import { useOnboarding } from "../use-onboarding"
 import { contactSchema, type ContactSchemaType } from "../validation"
 
@@ -42,6 +43,11 @@ export function ContactStep() {
   const params = useParams()
   const { locale } = useLocale()
   const subdomain = params.subdomain as string
+  const { dictionary } = useDictionary()
+
+  const d = dictionary?.school?.onboarding?.internalJoin
+  const c = d?.contact
+  const meta = useMemo(() => getStepMeta(d).contact, [d])
 
   const { state, schoolId, updateStepData } = useOnboarding()
   const { enableNext, disableNext, setCustomNavigation } = useWizardValidation()
@@ -84,9 +90,11 @@ export function ContactStep() {
     if (result.success) {
       setOtpSent(true)
     } else {
-      setOtpError(result.error || "Failed to send code")
+      setOtpError(
+        result.error || (c?.failedToSendCode ?? "Failed to send code")
+      )
     }
-  }, [form, schoolId])
+  }, [form, schoolId, c])
 
   const handleVerifyOtp = useCallback(async () => {
     const email = form.getValues("email")
@@ -100,9 +108,9 @@ export function ContactStep() {
       form.setValue("emailVerified", true)
       updateStepData("contact", { ...form.getValues(), emailVerified: true })
     } else {
-      setOtpError(result.error || "Invalid code")
+      setOtpError(result.error || (c?.invalidCode ?? "Invalid code"))
     }
-  }, [form, otpCode, updateStepData])
+  }, [form, otpCode, updateStepData, c])
 
   // Sync form data + validation + navigation via single watch subscription
   useEffect(() => {
@@ -149,8 +157,6 @@ export function ContactStep() {
     otpVerified,
   ])
 
-  const meta = STEP_META.contact
-
   return (
     <div className="space-y-8">
       <FormHeading title={meta.title} description={meta.description} />
@@ -164,7 +170,7 @@ export function ContactStep() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email *</FormLabel>
+                  <FormLabel>{c?.email ?? "Email"} *</FormLabel>
                   <div className="flex gap-2">
                     <FormControl>
                       <Input
@@ -184,15 +190,15 @@ export function ContactStep() {
                         {sending ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
                         ) : otpSent ? (
-                          "Resend"
+                          (c?.resend ?? "Resend")
                         ) : (
-                          "Verify"
+                          (c?.verify ?? "Verify")
                         )}
                       </Button>
                     )}
                     {otpVerified && (
                       <span className="flex items-center text-sm text-green-600">
-                        Verified
+                        {c?.verified ?? "Verified"}
                       </span>
                     )}
                   </div>
@@ -204,7 +210,8 @@ export function ContactStep() {
             {otpSent && !otpVerified && (
               <div className="space-y-2">
                 <p className="text-muted-foreground text-sm">
-                  Enter the 6-digit code sent to your email
+                  {c?.otpInstruction ??
+                    "Enter the 6-digit code sent to your email"}
                 </p>
                 <div className="flex items-center gap-3">
                   <InputOTP maxLength={6} value={otpCode} onChange={setOtpCode}>
@@ -225,7 +232,7 @@ export function ContactStep() {
                     {verifying ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
-                      "Confirm"
+                      (c?.confirm ?? "Confirm")
                     )}
                   </Button>
                 </div>
@@ -240,7 +247,7 @@ export function ContactStep() {
             name="phone"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Phone Number</FormLabel>
+                <FormLabel>{c?.phone ?? "Phone Number"}</FormLabel>
                 <FormControl>
                   <PhoneInput
                     value={field.value}
@@ -260,9 +267,12 @@ export function ContactStep() {
               name="address"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Address</FormLabel>
+                  <FormLabel>{c?.address ?? "Address"}</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Street address" />
+                    <Input
+                      {...field}
+                      placeholder={c?.streetAddress ?? "Street address"}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -273,9 +283,9 @@ export function ContactStep() {
               name="city"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>City</FormLabel>
+                  <FormLabel>{c?.city ?? "City"}</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="City" />
+                    <Input {...field} placeholder={c?.city ?? "City"} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -286,9 +296,9 @@ export function ContactStep() {
               name="state"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>State</FormLabel>
+                  <FormLabel>{c?.state ?? "State"}</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="State" />
+                    <Input {...field} placeholder={c?.state ?? "State"} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -299,12 +309,12 @@ export function ContactStep() {
               name="country"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Country</FormLabel>
+                  <FormLabel>{c?.country ?? "Country"}</FormLabel>
                   <FormControl>
                     <CountryDropdown
                       value={field.value}
                       onChange={(isoCode) => field.onChange(isoCode)}
-                      placeholder="Select country"
+                      placeholder={c?.selectCountry ?? "Select country"}
                     />
                   </FormControl>
                   <FormMessage />
@@ -315,16 +325,21 @@ export function ContactStep() {
 
           {/* Emergency Contact */}
           <div>
-            <h3 className="mb-4 font-medium">Emergency Contact</h3>
+            <h3 className="mb-4 font-medium">
+              {c?.emergencyContact ?? "Emergency Contact"}
+            </h3>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <FormField
                 control={form.control}
                 name="emergencyContactName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Name</FormLabel>
+                    <FormLabel>{c?.emergencyName ?? "Name"}</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Contact name" />
+                      <Input
+                        {...field}
+                        placeholder={c?.contactName ?? "Contact name"}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -335,7 +350,7 @@ export function ContactStep() {
                 name="emergencyContactPhone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Phone</FormLabel>
+                    <FormLabel>{c?.emergencyPhone ?? "Phone"}</FormLabel>
                     <FormControl>
                       <PhoneInput
                         value={field.value}
@@ -352,9 +367,14 @@ export function ContactStep() {
                 name="emergencyContactRelation"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Relation</FormLabel>
+                    <FormLabel>{c?.emergencyRelation ?? "Relation"}</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="e.g. Spouse, Parent" />
+                      <Input
+                        {...field}
+                        placeholder={
+                          c?.relationPlaceholder ?? "e.g. Spouse, Parent"
+                        }
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

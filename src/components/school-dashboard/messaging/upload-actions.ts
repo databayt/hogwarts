@@ -48,6 +48,7 @@ const ALLOWED_MIME_TYPES = new Set([
   "audio/mpeg",
   "audio/wav",
   "audio/ogg",
+  "audio/webm",
   // Documents
   "application/pdf",
   "application/msword",
