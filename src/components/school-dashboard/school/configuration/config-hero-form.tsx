@@ -79,6 +79,7 @@ export function ConfigHeroForm({ schoolId, initialData, lang }: Props) {
               multiple={false}
               maxSize={10 * 1024 * 1024}
               optimizeImages={true}
+              autoUpload={true}
               onUploadComplete={handleUploadComplete}
               onUploadError={(err) => setError(err)}
               className="h-full [&>div]:h-full"

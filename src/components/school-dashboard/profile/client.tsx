@@ -283,6 +283,8 @@ export default function ProfileContent({
                     role={role}
                     userId={userId}
                     isOwner={isOwner}
+                    dictionary={p}
+                    lang={lang}
                   />
                 </div>
               </div>

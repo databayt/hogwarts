@@ -30,41 +30,52 @@ export function PageNav({
 }: PageNavProps) {
   const pathname = usePathname()
 
-  // Helper to check if a page is active
-  const isPageActive = (page: PageNavItem) => {
-    // Remove trailing slash for comparison
-    const normalizedPath = pathname.replace(/\/$/, "")
+  const normalizedPath = pathname.replace(/\/$/, "")
+
+  // Find the best matching page to avoid highlighting multiple links
+  const allVisible = [
+    ...(defaultPage ? [defaultPage] : []),
+    ...pages.filter((p) => !p.hidden),
+  ]
+
+  // Score each page: exact match = 2, prefix match = 1, no match = 0
+  // Only the highest-scoring page (with longest href on tie) gets highlighted
+  const scored = allVisible.map((page) => {
     const normalizedHref = page.href.replace(/\/$/, "")
+    if (normalizedPath === normalizedHref)
+      return { page, score: 2, len: normalizedHref.length }
 
-    // Exact match
-    if (normalizedPath === normalizedHref) return true
+    if (page.exact) return { page, score: 0, len: 0 }
 
-    // If exact is set, only use exact match (no sub-path matching)
-    if (page.exact) return false
-
-    // matchPrefix: match any path starting with this prefix (e.g. /en/school/configuration)
     if (page.matchPrefix) {
       const normalizedPrefix = page.matchPrefix.replace(/\/$/, "")
       if (
         normalizedPath === normalizedPrefix ||
         normalizedPath.startsWith(normalizedPrefix + "/")
       ) {
-        return true
+        return { page, score: 1, len: normalizedPrefix.length }
       }
     }
 
-    // Sub-path match only for deep links (e.g. /school/configuration matches /school/configuration/identity)
-    // Skip for shallow hrefs like /school (would falsely match /school/configuration)
     const segments = normalizedHref.split("/").filter(Boolean)
     if (
       segments.length >= 3 &&
       normalizedPath.startsWith(normalizedHref + "/")
     ) {
-      return true
+      return { page, score: 1, len: normalizedHref.length }
     }
 
-    return false
-  }
+    return { page, score: 0, len: 0 }
+  })
+
+  const best = scored.reduce(
+    (a, b) =>
+      b.score > a.score || (b.score === a.score && b.len > a.len) ? b : a,
+    { page: null as PageNavItem | null, score: 0, len: 0 }
+  )
+
+  const isPageActive = (page: PageNavItem) =>
+    best.page !== null && page.href === best.page.href
 
   return (
     <div className={cn("border-b", className)} {...props}>

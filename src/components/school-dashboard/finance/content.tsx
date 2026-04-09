@@ -233,10 +233,30 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
 
       {/* Charts Section */}
       <div className="space-y-4">
-        <InteractiveBarChart />
+        <InteractiveBarChart
+          title={fd?.dashboardPage?.revenueExpenses ?? "Revenue & Expenses"}
+          description={
+            fd?.dashboardPage?.monthlyPerformance ??
+            "Monthly financial performance"
+          }
+          primaryLabel={fd?.dashboardPage?.revenue ?? "Revenue"}
+          secondaryLabel={fd?.dashboardPage?.expenses ?? "Expenses"}
+        />
         <div className="grid gap-4 md:grid-cols-2">
-          <RadialTextChart />
-          <AreaChartStacked />
+          <RadialTextChart
+            label={fd?.dashboardPage?.profit ?? "Profit"}
+            trendLabel={
+              fd?.dashboardPage?.avgMonthlyProfit ?? "Avg Monthly Profit"
+            }
+          />
+          <AreaChartStacked
+            primaryLabel={fd?.dashboardPage?.revenue ?? "Revenue"}
+            secondaryLabel={fd?.dashboardPage?.expenses ?? "Expenses"}
+            trendLabel={
+              fd?.dashboardPage?.cashMovement ??
+              "Cash movement for the current period"
+            }
+          />
         </div>
       </div>
 

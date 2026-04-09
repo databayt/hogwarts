@@ -32,13 +32,15 @@ interface EditProfileFormProps {
   dictionary?: Record<string, any>
 }
 
-const PRONOUNS_OPTIONS = [
-  { value: "", label: "Don't specify" },
-  { value: "they/them", label: "they/them" },
-  { value: "she/her", label: "she/her" },
-  { value: "he/him", label: "he/him" },
-  { value: "custom", label: "Custom" },
-]
+function getPronounsOptions(f?: Record<string, any>) {
+  return [
+    { value: "", label: f?.dontSpecify ?? "Don't specify" },
+    { value: "they/them", label: "they/them" },
+    { value: "she/her", label: "she/her" },
+    { value: "he/him", label: "he/him" },
+    { value: "custom", label: f?.custom ?? "Custom" },
+  ]
+}
 
 const TIMEZONE_OPTIONS = [
   { value: "", label: "Select timezone" },
@@ -164,7 +166,7 @@ export default function EditProfileForm({
             <SelectValue placeholder={f?.dontSpecify ?? "Don't specify"} />
           </SelectTrigger>
           <SelectContent>
-            {PRONOUNS_OPTIONS.map((opt) => (
+            {getPronounsOptions(f).map((opt) => (
               <SelectItem
                 key={opt.value || "empty"}
                 value={opt.value || "none"}

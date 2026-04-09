@@ -170,7 +170,11 @@ export default function StudentDashboard({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ProfileEditSection entityType="student" steps={["contact"]} />
+            <ProfileEditSection
+              entityType="student"
+              steps={["contact"]}
+              dictionary={dictionary}
+            />
           </CardContent>
         </Card>
       )}

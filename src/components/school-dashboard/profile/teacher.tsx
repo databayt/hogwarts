@@ -121,6 +121,7 @@ export default function TeacherDashboard({
             <ProfileEditSection
               entityType="teacher"
               steps={["contact", "qualifications", "experience"]}
+              dictionary={dictionary}
             />
           </CardContent>
         </Card>

@@ -678,6 +678,8 @@
     "invoice": "فاتورة",
     "invoices": "الفواتير",
     "navigation": {
+      "all": "الكل",
+      "analysis": "التحليلات",
       "dashboard": "لوحة التحكم",
       "allInvoices": "جميع الفواتير",
       "list": "القائمة",
@@ -1886,7 +1888,8 @@
     "noSignature": "لا يوجد توقيع",
     "changeSignature": "تغيير التوقيع",
     "uploadSignature": "تحميل توقيع",
-    "uploadInvoiceLogo": "تحميل شعار الفاتورة"
+    "uploadInvoiceLogo": "تحميل شعار الفاتورة",
+    "profileSetup": "إعداد الملف الشخصي"
   },
 
   "invoiceStatus": {

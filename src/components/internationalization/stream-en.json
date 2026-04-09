@@ -282,6 +282,65 @@
       "manageChapters": "Manage Chapters",
       "delete": "Delete"
     },
+    "teachingHero": {
+      "title": "Come teach with us",
+      "description": "Become an instructor and change lives — including your own",
+      "cta": "Get started",
+      "learnMore": "Learn more"
+    },
+    "aiFluency": {
+      "badge": "New",
+      "title": "Scale AI fluency across your organization",
+      "description": "Our new AI Packages help employees at all levels understand, communicate about, and implement AI solutions with confidence and ethical awareness.",
+      "cta": "Contact us"
+    },
+    "skills": {
+      "title": "Learn essential career and life skills",
+      "description": "Hogwarts helps you build in-demand skills fast and advance your career in a changing job market."
+    },
+    "hotReleases": {
+      "title": "Hot new releases"
+    },
+    "curriculum": {
+      "title": "Expand curriculum",
+      "description": "Arts of learning with enchanting courses crafted by the finest wizards in education.",
+      "feature1Title": "World-Class Content",
+      "feature1Desc": "Curated courses from industry leaders and top universities.",
+      "feature2Title": "Guided Projects",
+      "feature2Desc": "Hands-on projects to practice skills and stand out to employers.",
+      "feature3Title": "Professional Certificates",
+      "feature3Desc": "Build job confidence and hone skills in high-growth fields.",
+      "feature4Title": "LMS Integration",
+      "feature4Desc": "Seamlessly connect courses to your learning management system."
+    },
+    "howToBegin": {
+      "title": "How to begin",
+      "tab1": "Plan your curriculum",
+      "tab2": "Record your video",
+      "tab3": "Launch your course",
+      "description1": "You start with your passion and knowledge. Then choose a promising topic with the help of our Marketplace Insights tool.",
+      "description2": "Use basic tools like a smartphone or a DSLR camera. Add a good microphone and you're ready to start.",
+      "description3": "Gather your first ratings and reviews by promoting your course through social media and your professional networks.",
+      "tip1": "The way that you teach — what you bring to it — is up to you.",
+      "tip2": "If you don't like being on camera, just capture your screen. Either way, we can help you produce your first course.",
+      "tip3": "Your course will be discoverable in our marketplace where you earn revenue from each paid enrollment.",
+      "helpTitle": "How we help you",
+      "helpText1": "We offer plenty of resources on how to create your first course. And, our instructor dashboard and curriculum pages help keep you organized.",
+      "helpText2": "We provide production guidelines, course management features, and support from our Trust & Safety team.",
+      "helpText3": "Our custom coupon tool lets you offer enrollment incentives while our global promotions drive traffic to courses."
+    },
+    "reasons": {
+      "title": "So many reasons to start",
+      "title1": "Teach your way",
+      "title2": "Inspire learners",
+      "title3": "Get rewarded",
+      "description1": "Publish the course you want, in the way you want, and always have control of your own content.",
+      "description2": "Teach what you know and help learners explore their interests, gain new skills, and advance their careers.",
+      "description3": "Expand your professional network, build your expertise, and earn money on each paid enrollment."
+    },
+    "continueWatching": {
+      "title": "Continue Watching"
+    },
     "courseTypes": {
       "professionalCertificate": "Professional Certificate",
       "specialization": "Specialization",

@@ -161,7 +161,11 @@ export function SearchBar({ lang, dictionary, className }: SearchBarProps) {
           stiffness: 300,
           damping: 30,
         }}
-        className={cn("relative z-50 mx-auto w-full max-w-2xl", className)}
+        className={cn(
+          "relative mx-auto w-full max-w-2xl",
+          isDropdownOpen ? "z-50" : "z-0",
+          className
+        )}
       >
         <form onSubmit={handleSubmit}>
           <motion.div

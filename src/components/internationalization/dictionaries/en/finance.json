@@ -678,6 +678,8 @@
     "invoice": "Invoice",
     "invoices": "Invoices",
     "navigation": {
+      "all": "All",
+      "analysis": "Analysis",
       "dashboard": "Dashboard",
       "allInvoices": "All Invoices",
       "list": "List",
@@ -1890,7 +1892,8 @@
     "noSignature": "No Signature",
     "changeSignature": "Change Signature",
     "uploadSignature": "Upload Signature",
-    "uploadInvoiceLogo": "Upload Invoice Logo"
+    "uploadInvoiceLogo": "Upload Invoice Logo",
+    "profileSetup": "Profile Setup"
   },
 
   "invoiceStatus": {

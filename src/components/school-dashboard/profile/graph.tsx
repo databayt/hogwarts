@@ -27,6 +27,8 @@ interface ActivityGraphProps {
   userId?: string
   isOwner?: boolean
   initialData?: ContributionGraphData
+  dictionary?: Record<string, any>
+  lang?: string
 }
 
 // ============================================================================
@@ -51,24 +53,7 @@ const LEVEL_STYLES: Record<number, React.CSSProperties> = {
   4: { backgroundColor: "var(--contribution-level-4)" },
 }
 
-const MONTHS = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-]
-
-const WEEKDAYS = ["Sun", "", "Mon", "", "Wed", "", "Fri", ""]
-
-const ROLE_LABELS: Record<ProfileRole, string> = {
+const ROLE_LABEL_KEYS: Record<ProfileRole, string> = {
   student: "activities",
   teacher: "activities",
   parent: "interactions",
@@ -150,9 +135,9 @@ function generateMockData(
 // Helpers
 // ============================================================================
 
-function formatDate(dateStr: string): string {
+function formatDate(dateStr: string, locale: string = "en"): string {
   const date = new Date(dateStr)
-  return date.toLocaleDateString("en-US", {
+  return date.toLocaleDateString(locale === "ar" ? "ar-SA" : "en-US", {
     weekday: "long",
     month: "short",
     day: "numeric",
@@ -173,9 +158,28 @@ export default function ActivityGraph({
   userId,
   isOwner = false,
   initialData,
+  dictionary,
+  lang,
 }: ActivityGraphProps) {
   const currentYear = new Date().getFullYear()
   const [selectedYear, setSelectedYear] = useState(currentYear.toString())
+  const locale = lang === "ar" ? "ar" : "en"
+  const p = dictionary
+
+  const months = useMemo(() => {
+    const formatter = new Intl.DateTimeFormat(locale, { month: "short" })
+    return Array.from({ length: 12 }, (_, i) =>
+      formatter.format(new Date(2024, i, 1))
+    )
+  }, [locale])
+
+  const weekdays = useMemo(() => {
+    const formatter = new Intl.DateTimeFormat(locale, { weekday: "short" })
+    const getDay = (d: number) => formatter.format(new Date(2024, 0, 7 + d))
+    return [getDay(0), "", getDay(1), "", getDay(3), "", getDay(5), ""]
+  }, [locale])
+
+  const roleLabel = p?.graph?.[ROLE_LABEL_KEYS[role]] ?? ROLE_LABEL_KEYS[role]
 
   // Fetch real data with SWR
   const {
@@ -245,7 +249,7 @@ export default function ActivityGraph({
         const month = getDateMonth(firstDayWithData.date)
         if (month !== lastMonth) {
           positions.push({
-            month: MONTHS[month],
+            month: months[month],
             position: weekIdx,
           })
           lastMonth = month
@@ -254,13 +258,11 @@ export default function ActivityGraph({
     })
 
     return positions
-  }, [weeks])
+  }, [weeks, months])
 
   const years = Array.from({ length: 5 }, (_, i) =>
     (currentYear - i).toString()
   )
-
-  const roleLabel = ROLE_LABELS[role]
 
   // Loading state
   if (isLoading && !graphData) {
@@ -335,7 +337,7 @@ export default function ActivityGraph({
                                 : `No ${roleLabel}`}
                             </p>
                             <p className="text-muted-foreground">
-                              {formatDate(day.date)}
+                              {formatDate(day.date, locale)}
                             </p>
                             {day.activities && day.activities.length > 0 && (
                               <div className="border-border mt-1 border-t pt-1">
@@ -363,11 +365,11 @@ export default function ActivityGraph({
         {/* Legend */}
         <div className="text-muted-foreground ms-8 flex items-center justify-between text-xs">
           <a href="#" className="hover:text-primary transition-colors">
-            {/* Static dev label - not user-facing */}
-            Learn how we count contributions
+            {p?.overview?.learnContributions ??
+              "Learn how we count contributions"}
           </a>
           <div className="flex items-center gap-1">
-            <span>Less</span>
+            <span>{p?.overview?.less ?? "Less"}</span>
             <div className="flex gap-[2px]">
               {[0, 1, 2, 3, 4].map((level) => (
                 <div
@@ -377,7 +379,7 @@ export default function ActivityGraph({
                 />
               ))}
             </div>
-            <span>More</span>
+            <span>{p?.overview?.more ?? "More"}</span>
           </div>
         </div>
       </div>

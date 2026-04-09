@@ -137,9 +137,9 @@ function InvoiceTableInner({
   const handleCreate = useCallback(async () => {
     const result = await createDraftInvoice()
     if (result.success && result.data) {
-      router.push(`/finance/invoice/add/${result.data.id}/details`)
+      router.push(`/${lang}/finance/invoice/add/${result.data.id}/details`)
     }
-  }, [router])
+  }, [router, lang])
 
   return (
     <DataTable

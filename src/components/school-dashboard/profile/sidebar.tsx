@@ -65,7 +65,7 @@ function getRoleConfig(
         subtitle:
           (data.grNumber as string) ||
           `@student_${(data.id as string)?.slice(-6)}`,
-        role: "Student",
+        role: p?.roles?.student ?? "Student",
         icon: <OcticonBook className="size-4" />,
         imageSrc:
           (data.profilePhotoUrl as string) ||
@@ -190,7 +190,7 @@ function getRoleConfig(
         subtitle:
           (data.employeeId as string) ||
           `@teacher_${(data.id as string)?.slice(-6)}`,
-        role: "Teacher",
+        role: p?.roles?.teacher ?? "Teacher",
         icon: <OcticonRepo className="size-4" />,
         imageSrc:
           (data.profilePhotoUrl as string) ||
@@ -297,7 +297,7 @@ function getRoleConfig(
       return {
         title: fullName,
         subtitle: `@parent_${(data.id as string)?.slice(-6)}`,
-        role: "Parent / Guardian",
+        role: p?.roles?.parent ?? "Parent / Guardian",
         icon: <OcticonPeople className="size-4" />,
         imageSrc:
           (data.profilePhotoUrl as string) ||
@@ -371,7 +371,7 @@ function getRoleConfig(
       return {
         title: fullName,
         subtitle: `@staff_${(data.id as string)?.slice(-6)}`,
-        role: "Staff Member",
+        role: p?.roles?.staff ?? "Staff Member",
         icon: <OcticonOrganization className="size-4" />,
         imageSrc:
           (data.profilePhotoUrl as string) ||
@@ -466,7 +466,7 @@ function getRoleConfig(
       return {
         title: "Unknown",
         subtitle: "@unknown",
-        role: "Unknown Role",
+        role: p?.roles?.unknown ?? "Unknown Role",
         icon: null,
         imageSrc: asset("/photos/contributors-d.jpeg"),
         initials: "??",

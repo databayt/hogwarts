@@ -23,6 +23,7 @@ const TEACHER_STEP_FORMS: Record<
   string,
   {
     label: string
+    dictKey: string
     load: () => Promise<{
       default?: React.ComponentType<any>
       ContactForm?: React.ForwardRefExoticComponent<any>
@@ -33,16 +34,19 @@ const TEACHER_STEP_FORMS: Record<
 > = {
   contact: {
     label: "Contact Information",
+    dictKey: "contactInformation",
     load: () =>
       import("@/components/school-dashboard/listings/teachers/wizard/contact/form"),
   },
   qualifications: {
     label: "Qualifications",
+    dictKey: "qualifications",
     load: () =>
       import("@/components/school-dashboard/listings/teachers/wizard/qualifications/form"),
   },
   experience: {
     label: "Experience",
+    dictKey: "experience",
     load: () =>
       import("@/components/school-dashboard/listings/teachers/wizard/experience/form"),
   },
@@ -52,6 +56,7 @@ const STUDENT_STEP_FORMS: Record<
   string,
   {
     label: string
+    dictKey: string
     load: () => Promise<{
       default?: React.ComponentType<any>
       ContactForm?: React.ForwardRefExoticComponent<any>
@@ -60,6 +65,7 @@ const STUDENT_STEP_FORMS: Record<
 > = {
   contact: {
     label: "Contact & Emergency",
+    dictKey: "contactAndEmergency",
     load: () =>
       import("@/components/school-dashboard/listings/students/wizard/contact/form"),
   },
@@ -73,12 +79,15 @@ const STEP_FORMS = {
 interface ProfileEditSectionProps {
   entityType: EntityType
   steps: string[]
+  dictionary?: Record<string, any>
 }
 
 export function ProfileEditSection({
   entityType,
   steps,
+  dictionary,
 }: ProfileEditSectionProps) {
+  const er = dictionary?.editRole
   const [activeStep, setActiveStep] = useState<string | null>(null)
   const [entityId, setEntityId] = useState<string | null>(null)
   const [entityData, setEntityData] = useState<Record<string, unknown> | null>(
@@ -154,7 +163,7 @@ export function ProfileEditSection({
               disabled={isPending}
             >
               <Pencil className="me-2 h-3 w-3" />
-              {config.label}
+              {er?.[config.dictKey] ?? config.label}
             </Button>
           )
         })}
@@ -163,7 +172,10 @@ export function ProfileEditSection({
       <Dialog open={!!activeStep} onOpenChange={() => setActiveStep(null)}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{activeStep && forms[activeStep]?.label}</DialogTitle>
+            <DialogTitle>
+              {activeStep &&
+                (er?.[forms[activeStep]?.dictKey] ?? forms[activeStep]?.label)}
+            </DialogTitle>
           </DialogHeader>
           <div className="py-4">
             {FormComponent && entityId && (
@@ -178,9 +190,9 @@ export function ProfileEditSection({
           </div>
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setActiveStep(null)}>
-              Cancel
+              {er?.cancel ?? "Cancel"}
             </Button>
-            <Button onClick={handleSave}>Save</Button>
+            <Button onClick={handleSave}>{er?.save ?? "Save"}</Button>
           </div>
         </DialogContent>
       </Dialog>

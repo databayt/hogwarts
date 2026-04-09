@@ -30,6 +30,7 @@ import {
 } from "@/components/file"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
+import { OnboardingContent } from "@/components/school-dashboard/finance/invoice/onboarding/content"
 
 type TSignatureData = {
   name: string
@@ -275,6 +276,15 @@ export function SettingsContent({ dictionary, lang }: Props) {
                   : is?.save || "Save"}
               </Button>
             </form>
+          </AccordionContent>
+        </AccordionItem>
+        {/* Onboarding / Profile Setup */}
+        <AccordionItem value="Onboarding-Setup">
+          <AccordionTrigger className="cursor-pointer text-base font-semibold">
+            {is?.profileSetup || "Profile Setup"}
+          </AccordionTrigger>
+          <AccordionContent>
+            <OnboardingContent />
           </AccordionContent>
         </AccordionItem>
       </Accordion>
