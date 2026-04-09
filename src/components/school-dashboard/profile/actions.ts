@@ -605,6 +605,7 @@ export async function getProfileBasicData(userId: string, lang?: string) {
       socialLinks: user.socialLinks,
       statusEmoji: user.statusEmoji,
       statusMessage: user.statusMessage,
+      role: user.role,
     }
 
     // Translate name and bio if viewing in a different language

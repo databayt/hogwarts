@@ -3,7 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
-import { FileText, Signature } from "lucide-react"
+import { FileText } from "lucide-react"
 
 import { DocumentReviewPanel } from "./document-review-panel"
 import type { ProcessedDocument } from "./types"
@@ -58,25 +58,37 @@ export function DocumentsSection({
             <p className="text-xs font-medium">{t?.photo || "Photo"}</p>
           </a>
         )}
-        {/* Signature — box with title at bottom */}
+        {/* Signature — thumbnail card with glass label */}
         {signatureUrl && (
           <a
             href={signatureUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="group hover:border-foreground/20 flex h-36 flex-col items-center overflow-hidden rounded-lg border transition-colors"
+            className="group relative flex h-32 items-center overflow-hidden rounded-lg border transition-colors"
           >
-            <div className="bg-muted/30 flex flex-1 items-center justify-center p-4">
-              <Signature className="text-muted-foreground h-10 w-10" />
-            </div>
-            <div className="w-full border-t px-2 py-2 text-center">
-              <p className="text-xs font-medium">
-                {t?.signature || "Signature"}
-              </p>
-            </div>
+            <img
+              src={signatureUrl}
+              alt={t?.signature || "Signature"}
+              className="h-full w-full object-cover"
+            />
+            <p
+              className="absolute inset-x-0 bottom-0 z-10 truncate px-2 pt-4 pb-1.5 text-center text-sm font-medium text-black dark:text-white"
+              style={{
+                background:
+                  "linear-gradient(to top, rgba(0,0,0,0.06) 0%, rgba(0,0,0,0.03) 40%, transparent 100%)",
+                backdropFilter: "blur(8px) saturate(110%)",
+                WebkitBackdropFilter: "blur(8px) saturate(110%)",
+                maskImage:
+                  "linear-gradient(to top, black 0%, black 50%, transparent 100%)",
+                WebkitMaskImage:
+                  "linear-gradient(to top, black 0%, black 50%, transparent 100%)",
+              }}
+            >
+              {t?.signature || "Signature"}
+            </p>
           </a>
         )}
-        {/* Documents — image in circle, others in box with title at bottom */}
+        {/* Documents — thumbnail card with glass label */}
         {documents.map((doc, i) => {
           const isImage = /\.(jpe?g|png|gif|webp|bmp|svg)$/i.test(doc.url || "")
           const typeLabel =
@@ -87,34 +99,7 @@ export function DocumentsSection({
             doc.fileName ||
             `${dictionary?.admission?.ai?.document ?? "Document"} ${i + 1}`
 
-          if (isImage) {
-            return (
-              <a
-                key={doc.url || i}
-                href={doc.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex h-36 flex-col items-center justify-center gap-2"
-                onClick={(e) => {
-                  if (doc.status === "completed" && doc.extractedData) {
-                    e.preventDefault()
-                    setReviewDoc(doc)
-                  }
-                }}
-              >
-                <div className="group-hover:border-foreground/30 h-24 w-24 overflow-hidden rounded-full border-2 transition-colors">
-                  <img
-                    src={doc.url}
-                    alt={displayName}
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-                <p className="line-clamp-1 max-w-full text-xs font-medium">
-                  {typeLabel}
-                </p>
-              </a>
-            )
-          }
+          const isPdf = /\.pdf$/i.test(doc.url || "")
 
           return (
             <a
@@ -122,7 +107,7 @@ export function DocumentsSection({
               href={doc.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="group hover:border-foreground/20 flex h-36 flex-col items-center overflow-hidden rounded-lg border transition-colors"
+              className="group relative flex h-32 items-center overflow-hidden rounded-lg border transition-colors"
               onClick={(e) => {
                 if (doc.status === "completed" && doc.extractedData) {
                   e.preventDefault()
@@ -130,12 +115,43 @@ export function DocumentsSection({
                 }
               }}
             >
-              <div className="bg-muted/30 flex flex-1 items-center justify-center">
-                <FileText className="text-muted-foreground h-10 w-10" />
-              </div>
-              <div className="w-full border-t px-2 py-2 text-center">
-                <p className="line-clamp-1 text-xs font-medium">{typeLabel}</p>
-              </div>
+              {isImage ? (
+                <img
+                  src={doc.url}
+                  alt={displayName}
+                  className="h-full w-full object-cover"
+                />
+              ) : isPdf ? (
+                <object
+                  data={`${doc.url}#page=1&view=FitH`}
+                  type="application/pdf"
+                  className="pointer-events-none h-full w-full"
+                  aria-label={displayName}
+                >
+                  <div className="flex h-full w-full items-center justify-center">
+                    <FileText className="text-muted-foreground h-10 w-10" />
+                  </div>
+                </object>
+              ) : (
+                <div className="flex h-full w-full items-center justify-center">
+                  <FileText className="text-muted-foreground h-10 w-10" />
+                </div>
+              )}
+              <p
+                className="absolute inset-x-0 bottom-0 z-10 truncate px-2 pt-4 pb-1.5 text-center text-sm font-medium text-black dark:text-white"
+                style={{
+                  background:
+                    "linear-gradient(to top, rgba(0,0,0,0.06) 0%, rgba(0,0,0,0.03) 40%, transparent 100%)",
+                  backdropFilter: "blur(8px) saturate(110%)",
+                  WebkitBackdropFilter: "blur(8px) saturate(110%)",
+                  maskImage:
+                    "linear-gradient(to top, black 0%, black 50%, transparent 100%)",
+                  WebkitMaskImage:
+                    "linear-gradient(to top, black 0%, black 50%, transparent 100%)",
+                }}
+              >
+                {typeLabel}
+              </p>
             </a>
           )
         })}

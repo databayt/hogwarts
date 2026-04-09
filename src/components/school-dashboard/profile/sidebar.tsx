@@ -375,7 +375,9 @@ function getRoleConfig(
         icon: <OcticonOrganization className="size-4" />,
         imageSrc:
           (data.profilePhotoUrl as string) ||
-          asset("/photos/contributors-d.jpeg"),
+          (data.role === "ADMIN"
+            ? asset("/photos/dumbledore.jpeg")
+            : asset("/photos/contributors-d.jpeg")),
         initials,
         stats: [
           {

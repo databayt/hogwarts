@@ -8,7 +8,6 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -131,128 +130,158 @@ export function EventCalendarClient({
 
   return (
     <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>{d?.calendar?.title || "Event Calendar"}</CardTitle>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => navigateMonth(-1)}
-              >
-                <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
-              </Button>
-              <span className="min-w-[140px] text-center font-medium">
-                {MONTH_NAMES[month - 1]} {year}
-              </span>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => navigateMonth(1)}
-              >
-                <ChevronRight className="h-4 w-4 rtl:rotate-180" />
-              </Button>
+      {/* Calendar */}
+      <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-lg dark:border-neutral-700 dark:bg-neutral-900 print:rounded-none print:shadow-none">
+        {/* Month navigation header */}
+        <div className="flex items-center justify-between border-b border-neutral-200 bg-neutral-50 px-4 py-3 sm:px-6 sm:py-4 dark:border-neutral-700 dark:bg-neutral-800">
+          <h2 className="text-sm font-medium text-neutral-700 sm:text-base dark:text-neutral-300">
+            {d?.calendar?.title || "Event Calendar"}
+          </h2>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => navigateMonth(-1)}
+            >
+              <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
+            </Button>
+            <span className="min-w-[140px] text-center text-sm font-medium text-neutral-700 sm:text-base dark:text-neutral-300">
+              {MONTH_NAMES[month - 1]} {year}
+            </span>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => navigateMonth(1)}
+            >
+              <ChevronRight className="h-4 w-4 rtl:rotate-180" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Day headers */}
+        <div className="grid grid-cols-7 border-b border-neutral-200 bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800">
+          {DAY_NAMES.map((day, idx) => (
+            <div
+              key={day}
+              className={cn(
+                "px-2 py-2 text-center text-sm font-medium text-neutral-700 sm:px-4 sm:py-3 sm:text-base dark:text-neutral-300",
+                idx < DAY_NAMES.length - 1 &&
+                  "border-e border-neutral-200 dark:border-neutral-700"
+              )}
+            >
+              {day}
             </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {/* Day headers */}
-          <div className="grid grid-cols-7 gap-px">
-            {DAY_NAMES.map((day) => (
-              <div
-                key={day}
-                className="text-muted-foreground p-2 text-center text-sm font-medium"
-              >
-                {day}
-              </div>
-            ))}
-          </div>
+          ))}
+        </div>
 
-          {/* Calendar grid */}
-          <div className="grid grid-cols-7 gap-px">
-            {cells.map((day, i) => {
-              if (day === null) {
-                return <div key={`empty-${i}`} className="min-h-[60px] p-1" />
-              }
+        {/* Calendar grid */}
+        <div className="divide-y divide-neutral-200 dark:divide-neutral-700">
+          {/* Group cells into weeks (rows of 7) */}
+          {Array.from({ length: Math.ceil(cells.length / 7) }, (_, weekIdx) => {
+            const weekCells = cells.slice(weekIdx * 7, weekIdx * 7 + 7)
+            return (
+              <div key={weekIdx} className="grid grid-cols-7">
+                {weekCells.map((day, cellIdx) => {
+                  if (day === null) {
+                    return (
+                      <div
+                        key={`empty-${weekIdx}-${cellIdx}`}
+                        className={cn(
+                          "min-h-14 bg-neutral-50 px-2 py-2 sm:min-h-20 sm:px-4 sm:py-3 dark:bg-neutral-800/30",
+                          cellIdx < weekCells.length - 1 &&
+                            "border-e border-neutral-200 dark:border-neutral-700"
+                        )}
+                      />
+                    )
+                  }
 
-              const dateKey = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`
-              const dayEvents = grouped[dateKey] || []
-              const isToday = isCurrentMonth && today.getDate() === day
-              const isSelected = selectedDay === String(day)
+                  const dateKey = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`
+                  const dayEvents = grouped[dateKey] || []
+                  const isToday = isCurrentMonth && today.getDate() === day
+                  const isSelected = selectedDay === String(day)
 
-              return (
-                <button
-                  key={day}
-                  onClick={() => selectDay(day)}
-                  className={cn(
-                    "hover:bg-muted/50 min-h-[60px] rounded-md p-1 text-start transition-colors",
-                    isToday && "bg-primary/5 ring-primary ring-1",
-                    isSelected && "bg-primary/10 ring-primary ring-2"
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "text-sm",
-                      isToday && "text-primary font-bold"
-                    )}
-                  >
-                    {day}
-                  </span>
-                  {dayEvents.length > 0 && (
-                    <div className="mt-1 flex flex-wrap gap-0.5">
-                      {dayEvents.slice(0, 3).map((evt) => (
-                        <div
-                          key={evt.id}
-                          className="bg-primary h-1.5 w-1.5 rounded-full"
-                          title={evt.title}
-                        />
-                      ))}
-                      {dayEvents.length > 3 && (
-                        <span className="text-muted-foreground text-[10px]">
-                          +{dayEvents.length - 3}
-                        </span>
+                  return (
+                    <button
+                      key={day}
+                      onClick={() => selectDay(day)}
+                      className={cn(
+                        "min-h-14 px-2 py-2 text-start transition-all duration-200 hover:shadow-inner sm:min-h-20 sm:px-4 sm:py-3",
+                        isToday && "bg-primary/5",
+                        isSelected &&
+                          "bg-primary/10 ring-primary ring-2 ring-inset",
+                        !isToday &&
+                          !isSelected &&
+                          "bg-white dark:bg-neutral-900",
+                        cellIdx < weekCells.length - 1 &&
+                          "border-e border-neutral-200 dark:border-neutral-700"
                       )}
-                    </div>
-                  )}
-                </button>
-              )
-            })}
-          </div>
-        </CardContent>
-      </Card>
+                    >
+                      <span
+                        className={cn(
+                          "text-sm text-neutral-800 dark:text-neutral-100",
+                          isToday && "text-primary font-bold"
+                        )}
+                      >
+                        {day}
+                      </span>
+                      {dayEvents.length > 0 && (
+                        <div className="mt-1 flex flex-wrap gap-0.5">
+                          {dayEvents.slice(0, 3).map((evt) => (
+                            <div
+                              key={evt.id}
+                              className="bg-primary h-1.5 w-1.5 rounded-full"
+                              title={evt.title}
+                            />
+                          ))}
+                          {dayEvents.length > 3 && (
+                            <span className="text-[10px] text-neutral-500 dark:text-neutral-400">
+                              +{dayEvents.length - 3}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            )
+          })}
+        </div>
+      </div>
 
       {/* Selected day events */}
       {selectedDateKey && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">
+        <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-lg dark:border-neutral-700 dark:bg-neutral-900">
+          <div className="border-b border-neutral-200 bg-neutral-50 px-4 py-3 sm:px-6 sm:py-4 dark:border-neutral-700 dark:bg-neutral-800">
+            <h3 className="text-sm font-medium text-neutral-700 sm:text-base dark:text-neutral-300">
               {new Date(
                 year,
                 month - 1,
                 Number(selectedDay)
-              ).toLocaleDateString(undefined, {
+              ).toLocaleDateString(isAr ? "ar-SA" : "en-US", {
                 weekday: "long",
                 month: "long",
                 day: "numeric",
               })}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+            </h3>
+          </div>
+          <div className="p-4 sm:p-6">
             {selectedDayEvents.length === 0 ? (
-              <p className="text-muted-foreground text-sm">
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">
                 {d?.calendar?.noEvents || "No events on this day."}
               </p>
             ) : (
-              <div className="space-y-3">
+              <div className="divide-y divide-neutral-200 dark:divide-neutral-700">
                 {selectedDayEvents.map((evt) => (
                   <div
                     key={evt.id}
-                    className="flex items-start gap-3 rounded-md border p-3"
+                    className="flex items-start gap-3 py-3 first:pt-0 last:pb-0"
                   >
                     <div className="flex-1">
-                      <p className="font-medium">{evt.title}</p>
-                      <p className="text-muted-foreground text-sm">
+                      <p className="font-medium text-neutral-800 dark:text-neutral-100">
+                        {evt.title}
+                      </p>
+                      <p className="text-sm text-neutral-500 dark:text-neutral-400">
                         {evt.startTime} - {evt.endTime}
                         {evt.location && ` \u00b7 ${evt.location}`}
                       </p>
@@ -262,8 +291,8 @@ export function EventCalendarClient({
                 ))}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
     </div>
   )
