@@ -6,6 +6,7 @@ import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { ConfigTitleForm } from "@/components/school-dashboard/school/configuration/config-title-form"
+import { getDisplayText } from "@/components/translation/display"
 
 export const metadata = { title: "Configuration: Title" }
 
@@ -22,18 +23,33 @@ export default async function TitlePage({ params }: Props) {
     ? await db.school
         .findUnique({
           where: { id: schoolId },
-          select: { name: true, domain: true },
+          select: { name: true, domain: true, preferredLanguage: true },
         })
         .catch(() => null)
     : null
+
+  const schoolName = school?.name || ""
+  const storedLang = (school?.preferredLanguage || "ar") as "ar" | "en"
+
+  // Translate school name when viewing in a different language
+  let translatedTitle: string | undefined
+  if (schoolId && schoolName && lang !== storedLang) {
+    translatedTitle = await getDisplayText(
+      schoolName,
+      storedLang,
+      lang,
+      schoolId
+    )
+  }
 
   return (
     <ConfigTitleForm
       schoolId={schoolId || ""}
       initialTitle={{
-        title: school?.name || "",
+        title: schoolName,
         subdomain: school?.domain || "",
       }}
+      translatedTitle={translatedTitle}
       dictionary={dictionary}
     />
   )

@@ -467,6 +467,50 @@ export async function updateEnabledModules(
   }
 }
 
+// Schema for school name update (title config page - name only, no domain change)
+const schoolNameSchema = z.object({
+  name: z
+    .string()
+    .min(3, "School name must be at least 3 characters")
+    .max(100)
+    .trim(),
+})
+
+export async function updateSchoolName(
+  schoolId: string,
+  data: z.infer<typeof schoolNameSchema>
+): Promise<ActionResult> {
+  try {
+    const session = await auth()
+    const userSchoolId = session?.user?.schoolId
+
+    if (!userSchoolId || userSchoolId !== schoolId) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
+    const validatedData = schoolNameSchema.parse(data)
+
+    await db.school.update({
+      where: { id: schoolId },
+      data: { name: validatedData.name },
+    })
+
+    revalidatePath("/school/configuration")
+    revalidatePath("/school/configuration/title")
+
+    return { success: true }
+  } catch (error) {
+    console.error("Error updating school name:", error)
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: error.issues.map((e) => e.message).join(", "),
+      }
+    }
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
+  }
+}
+
 // Schema for name format update
 const nameFormatSchema = z.object({
   nameFormat: z.enum(["split", "full"]),

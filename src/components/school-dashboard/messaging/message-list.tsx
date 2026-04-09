@@ -275,12 +275,23 @@ export function MessageList({
 
     // Auto-scroll when user hasn't intentionally scrolled up
     if (isAtBottom || !hasScrolledUp) {
-      const lastIndex = virtualListItems.length - 1
-      if (lastIndex >= 0) {
-        virtualizer.scrollToIndex(lastIndex, { align: "end", behavior: "auto" })
-      }
+      requestAnimationFrame(() => {
+        const el = scrollContainerRef.current
+        if (el) {
+          el.scrollTo({ top: el.scrollHeight, behavior: "instant" })
+        }
+      })
     }
-  }, [virtualListItems.length, enableVirtualization, isAtBottom, hasScrolledUp])
+    // messages.length is critical — virtualListItems.length may not change when a
+    // new message joins an existing sender group, but we still need to scroll.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    virtualListItems.length,
+    messages.length,
+    enableVirtualization,
+    isAtBottom,
+    hasScrolledUp,
+  ])
 
   if (messages.length === 0 && !isLoading) {
     return (

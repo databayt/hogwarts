@@ -221,6 +221,16 @@ export function MessageInput({
 
   const startRecording = useCallback(async () => {
     try {
+      // Check for secure context and mediaDevices API availability
+      if (!navigator.mediaDevices?.getUserMedia) {
+        toast({
+          title: m?.notifications?.error || "Error",
+          description:
+            m?.errors?.microphone_access ||
+            "Microphone requires HTTPS. Please use a secure connection.",
+        })
+        return
+      }
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
@@ -466,29 +476,11 @@ export function MessageInput({
                     {
                       label: m?.ui?.file || "File",
                       icon: (
-                        <svg
-                          className="h-6 w-6"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                        >
-                          <rect
-                            x="3"
-                            y="3"
-                            width="18"
-                            height="18"
-                            rx="3"
-                            fill="#E8B931"
-                            opacity="0.15"
-                          />
-                          <path
-                            d="M6 4.5C6 3.67 6.67 3 7.5 3h5.586a1.5 1.5 0 011.06.44l3.415 3.414A1.5 1.5 0 0118 7.914V19.5c0 .83-.67 1.5-1.5 1.5h-9A1.5 1.5 0 016 19.5V4.5z"
-                            fill="#E8B931"
-                          />
-                          <path
-                            d="M13 3v4.5a1.5 1.5 0 001.5 1.5H18"
-                            fill="#F5D76E"
-                          />
-                        </svg>
+                        <img
+                          src="/folder.png"
+                          alt=""
+                          className="h-6 w-6 object-contain"
+                        />
                       ),
                       action: () => {
                         setShowAttachMenu(false)
@@ -498,25 +490,11 @@ export function MessageInput({
                     {
                       label: m?.ui?.photos_videos || "Photos and videos",
                       icon: (
-                        <svg
-                          className="h-6 w-6"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                        >
-                          <rect
-                            x="2"
-                            y="4"
-                            width="20"
-                            height="16"
-                            rx="3"
-                            fill="#1FA961"
-                          />
-                          <circle cx="8.5" cy="10" r="2" fill="#fff" />
-                          <path
-                            d="M2 17l5-4 3 2.5 4-5 8 6.5v2a3 3 0 01-3 3H5a3 3 0 01-3-3v-1z"
-                            fill="#15824B"
-                          />
-                        </svg>
+                        <img
+                          src="/photo.png"
+                          alt=""
+                          className="h-6 w-6 object-contain"
+                        />
                       ),
                       action: () => {
                         setShowAttachMenu(false)
@@ -526,135 +504,33 @@ export function MessageInput({
                     {
                       label: m?.ui?.contact || "Contact",
                       icon: (
-                        <svg
-                          className="h-6 w-6"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                        >
-                          <circle cx="12" cy="12" r="10" fill="#FF9500" />
-                          <circle cx="12" cy="9.5" r="3" fill="#fff" />
-                          <path
-                            d="M6.5 18.5c0-3 2.5-5 5.5-5s5.5 2 5.5 5"
-                            stroke="#fff"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                          />
-                        </svg>
+                        <img
+                          src="/account.png"
+                          alt=""
+                          className="h-6 w-6 object-contain"
+                        />
                       ),
                       action: () => setShowAttachMenu(false),
                     },
                     {
                       label: m?.ui?.poll || "Poll",
                       icon: (
-                        <svg
-                          className="h-6 w-6"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                        >
-                          <rect
-                            x="2"
-                            y="4"
-                            width="20"
-                            height="16"
-                            rx="3"
-                            fill="#FF9500"
-                          />
-                          <rect
-                            x="5"
-                            y="8"
-                            width="10"
-                            height="2"
-                            rx="1"
-                            fill="#fff"
-                          />
-                          <rect
-                            x="5"
-                            y="11"
-                            width="14"
-                            height="2"
-                            rx="1"
-                            fill="#fff"
-                          />
-                          <rect
-                            x="5"
-                            y="14"
-                            width="7"
-                            height="2"
-                            rx="1"
-                            fill="#fff"
-                          />
-                        </svg>
+                        <img
+                          src="/poll.png"
+                          alt=""
+                          className="h-6 w-6 object-contain"
+                        />
                       ),
                       action: () => setShowAttachMenu(false),
                     },
                     {
                       label: m?.ui?.event || "Event",
                       icon: (
-                        <svg
-                          className="h-6 w-6"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                        >
-                          <rect
-                            x="3"
-                            y="4"
-                            width="18"
-                            height="17"
-                            rx="3"
-                            fill="#FF3B30"
-                          />
-                          <rect
-                            x="3"
-                            y="4"
-                            width="18"
-                            height="5"
-                            rx="3"
-                            fill="#FF3B30"
-                          />
-                          <rect
-                            x="3"
-                            y="8"
-                            width="18"
-                            height="13"
-                            rx="0"
-                            fill="#fff"
-                          />
-                          <rect
-                            x="3"
-                            y="17"
-                            width="18"
-                            height="4"
-                            rx="3"
-                            fill="#fff"
-                          />
-                          <rect
-                            x="6"
-                            y="11"
-                            width="3"
-                            height="3"
-                            rx="0.5"
-                            fill="#FF3B30"
-                            opacity="0.3"
-                          />
-                          <rect
-                            x="10.5"
-                            y="11"
-                            width="3"
-                            height="3"
-                            rx="0.5"
-                            fill="#FF3B30"
-                            opacity="0.3"
-                          />
-                          <rect
-                            x="15"
-                            y="11"
-                            width="3"
-                            height="3"
-                            rx="0.5"
-                            fill="#FF3B30"
-                            opacity="0.3"
-                          />
-                        </svg>
+                        <img
+                          src="/calendar.png"
+                          alt=""
+                          className="h-6 w-6 object-contain"
+                        />
                       ),
                       action: () => setShowAttachMenu(false),
                     },
