@@ -93,7 +93,7 @@ export function StreamCoursesContent({
     <div className="space-y-10 py-6">
       {/* Hero Section */}
       <section className="py-8">
-        <div className="mx-auto flex max-w-2xl flex-col items-center justify-center gap-6 md:flex-row rtl:md:flex-row-reverse">
+        <div className="mx-auto flex max-w-2xl flex-col items-center justify-center gap-6 md:flex-row">
           <div className="relative flex size-28 shrink-0 items-center justify-center rounded-xl bg-[#D97757] p-4 md:size-32">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -184,7 +184,11 @@ export function StreamCoursesContent({
                   )}
                 </AnimatePresence>
                 <div className="relative z-10">
-                  <CourseCard course={course} lang={lang} />
+                  <CourseCard
+                    course={course}
+                    lang={lang}
+                    dictionary={dictionary}
+                  />
                 </div>
               </div>
             ))}

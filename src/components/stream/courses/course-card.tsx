@@ -10,27 +10,37 @@ import { Star } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { CatalogCourseType } from "@/components/stream/data/catalog/get-all-courses"
 
-// Course types based on chapter count
-const getCourseType = (chaptersCount: number): string => {
-  if (chaptersCount >= 10) return "Professional Certificate"
-  if (chaptersCount >= 5) return "Specialization"
-  if (chaptersCount >= 3) return "Course"
-  return "Short Course"
+// Course type key based on chapter count
+const getCourseTypeKey = (chaptersCount: number): string => {
+  if (chaptersCount >= 10) return "professionalCertificate"
+  if (chaptersCount >= 5) return "specialization"
+  if (chaptersCount >= 3) return "course"
+  return "shortCourse"
+}
+
+const COURSE_TYPE_FALLBACKS: Record<string, string> = {
+  professionalCertificate: "Professional Certificate",
+  specialization: "Specialization",
+  course: "Course",
+  shortCourse: "Short Course",
 }
 
 interface CourseCardProps {
   course: CatalogCourseType
   lang: string
+  dictionary?: Record<string, any>
 }
 
-export function CourseCard({ course, lang }: CourseCardProps) {
+export function CourseCard({ course, lang, dictionary }: CourseCardProps) {
   const [imageError, setImageError] = useState(false)
   const chaptersCount = course._count.chapters
   const levelLabel = course._catalog?.levels?.[0]
     ? course._catalog.levels[0].charAt(0) +
       course._catalog.levels[0].slice(1).toLowerCase()
     : course.category?.name || "Course"
-  const courseType = getCourseType(chaptersCount)
+  const courseTypeKey = getCourseTypeKey(chaptersCount)
+  const ct = dictionary?.courseTypes as Record<string, string> | undefined
+  const courseType = ct?.[courseTypeKey] ?? COURSE_TYPE_FALLBACKS[courseTypeKey]
   const catalogColor = course._catalog?.color
 
   return (
@@ -63,7 +73,7 @@ export function CourseCard({ course, lang }: CourseCardProps) {
       {/* Content */}
       <div className="space-y-1.5 px-2 pt-3 text-start">
         {/* Provider / Department */}
-        <div className="flex items-center gap-1.5 rtl:flex-row-reverse">
+        <div className="flex items-center gap-1.5">
           <span className="text-muted-foreground text-xs">{levelLabel}</span>
         </div>
 

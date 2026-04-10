@@ -92,24 +92,8 @@ export default async function EditorLayout({ children, params }: Props) {
       : null,
   ])
 
-  const SECTION_KEYS = [
-    "title",
-    "description",
-    "location",
-    "capacity",
-    "schedule",
-    "branding",
-    "hero",
-    "name-format",
-    "join",
-    "visibility",
-    "modules",
-    "price",
-    "discount",
-    "legal",
-    "plan",
-    "domain",
-  ] as const
+  // Sidebar shows primary sections; other pages remain accessible via direct URL
+  const SECTION_KEYS = ["title", "name-format", "capacity", "location"] as const
 
   // Build dynamic descriptions from live data using dictionary strings
   // Async to support on-demand translation for user-facing content

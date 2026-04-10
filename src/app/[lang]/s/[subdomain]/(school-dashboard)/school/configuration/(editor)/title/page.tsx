@@ -23,7 +23,12 @@ export default async function TitlePage({ params }: Props) {
     ? await db.school
         .findUnique({
           where: { id: schoolId },
-          select: { name: true, domain: true, preferredLanguage: true },
+          select: {
+            name: true,
+            nameEn: true,
+            domain: true,
+            preferredLanguage: true,
+          },
         })
         .catch(() => null)
     : null
@@ -34,12 +39,17 @@ export default async function TitlePage({ params }: Props) {
   // Translate school name when viewing in a different language
   let translatedTitle: string | undefined
   if (schoolId && schoolName && lang !== storedLang) {
-    translatedTitle = await getDisplayText(
-      schoolName,
-      storedLang,
-      lang,
-      schoolId
-    )
+    // Prefer stored English name if available, fall back to on-demand translation
+    if (lang === "en" && school?.nameEn) {
+      translatedTitle = school.nameEn
+    } else {
+      translatedTitle = await getDisplayText(
+        schoolName,
+        storedLang,
+        lang,
+        schoolId
+      )
+    }
   }
 
   return (

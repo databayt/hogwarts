@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import {
@@ -269,7 +269,8 @@ export function CatalogContentSections({
     [cat]
   )
 
-  const hasTextbook = !!textbookPdfUrl
+  const hasTextbook = !!textbookPdfUrl || !!textbookCoverUrl
+  const [coverError, setCoverError] = useState(false)
   const hasVideos = data.videos.length > 0
   const hasMaterials = data.materials.length > 0
   const hasExams = data.exams.length > 0
@@ -293,50 +294,61 @@ export function CatalogContentSections({
     <div className="mt-8 space-y-8">
       {hasTextbook && (
         <ContentSection title={t.textbook} accentColor={accentColor}>
-          <a
-            href={textbookPdfUrl!}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group relative shrink-0 overflow-hidden rounded-xl shadow-md transition-transform hover:scale-[1.02]"
-            style={{ width: 180, height: 260 }}
-          >
-            {/* Spine highlight */}
-            <div className="absolute inset-y-0 start-0 z-20 w-[3px] bg-white/15" />
-
-            {/* Cover image or color fallback */}
-            {textbookCoverUrl ? (
-              <Image
-                src={textbookCoverUrl}
-                alt={t.textbook}
-                fill
-                className="object-cover"
-                sizes="180px"
-                unoptimized
-              />
-            ) : (
-              <div
-                className="absolute inset-0 flex items-center justify-center"
-                style={{ backgroundColor: accentColor }}
+          {(() => {
+            const Wrapper = textbookPdfUrl ? "a" : "div"
+            const wrapperProps = textbookPdfUrl
+              ? {
+                  href: textbookPdfUrl,
+                  target: "_blank" as const,
+                  rel: "noopener noreferrer",
+                }
+              : {}
+            return (
+              <Wrapper
+                {...wrapperProps}
+                className="group relative shrink-0 overflow-hidden rounded-xl shadow-md transition-transform hover:scale-[1.02]"
+                style={{ width: 180, height: 260 }}
               >
-                <BookOpen className="size-20 text-white/10" />
-              </div>
-            )}
+                {/* Spine highlight */}
+                <div className="absolute inset-y-0 start-0 z-20 w-[3px] bg-white/15" />
 
-            {/* Subject name — upper portion */}
-            <div className="absolute inset-x-0 top-0 z-10 flex h-[55%] items-center justify-center px-4">
-              <p className="line-clamp-3 text-center text-sm leading-tight font-bold text-white drop-shadow-md">
-                {name}
-              </p>
-            </div>
+                {/* Cover image or color fallback */}
+                {textbookCoverUrl && !coverError ? (
+                  <Image
+                    src={textbookCoverUrl}
+                    alt={t.textbook}
+                    fill
+                    className="object-cover"
+                    sizes="180px"
+                    unoptimized
+                    onError={() => setCoverError(true)}
+                  />
+                ) : (
+                  <div
+                    className="absolute inset-0 flex items-center justify-center"
+                    style={{ backgroundColor: accentColor }}
+                  >
+                    <BookOpen className="size-20 text-white/10" />
+                  </div>
+                )}
 
-            {/* Gradient scrim + label — lower portion */}
-            <div className="absolute inset-x-0 bottom-0 z-10 flex h-[50%] flex-col items-center justify-end gap-2 bg-gradient-to-t from-black/60 to-transparent pb-5">
-              <div className="h-[1.5px] w-8 bg-white/30" />
-              <p className="font-mono text-[10px] tracking-widest text-white/70 uppercase">
-                {t.textbook}
-              </p>
-            </div>
-          </a>
+                {/* Subject name — upper portion */}
+                <div className="absolute inset-x-0 top-0 z-10 flex h-[55%] items-center justify-center px-4">
+                  <p className="line-clamp-3 text-center text-sm leading-tight font-bold text-white drop-shadow-md">
+                    {name}
+                  </p>
+                </div>
+
+                {/* Gradient scrim + label — lower portion */}
+                <div className="absolute inset-x-0 bottom-0 z-10 flex h-[50%] flex-col items-center justify-end gap-2 bg-gradient-to-t from-black/60 to-transparent pb-5">
+                  <div className="h-[1.5px] w-8 bg-white/30" />
+                  <p className="font-mono text-[10px] tracking-widest text-white/70 uppercase">
+                    {t.textbook}
+                  </p>
+                </div>
+              </Wrapper>
+            )
+          })()}
         </ContentSection>
       )}
 

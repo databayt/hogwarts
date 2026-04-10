@@ -150,9 +150,9 @@ export function StreamCourseDetailContent({
     <div className="min-h-screen">
       {/* Hero Section */}
       <section className="mx-auto max-w-6xl px-4 py-12 lg:py-16">
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12 rtl:lg:grid-flow-dense">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12">
           {/* Left Column: Content */}
-          <div className="space-y-6 rtl:lg:col-start-2">
+          <div className="space-y-6">
             {/* Breadcrumb */}
             <nav
               className="flex items-center gap-1.5 text-sm"
@@ -163,7 +163,7 @@ export function StreamCourseDetailContent({
                 className="hover:underline"
                 style={{ color: colors.muted }}
               >
-                {schoolName || "Hogwarts"}
+                {schoolName || (dict?.stream?.title ?? "Stream LMS")}
               </Link>
               <span>/</span>
               <Link
@@ -250,12 +250,12 @@ export function StreamCourseDetailContent({
             )}
 
             {/* Share Buttons */}
-            <div className="flex items-center gap-4 pt-2 rtl:flex-row-reverse">
+            <div className="flex items-center gap-4 pt-2">
               <a
                 href={`https://twitter.com/intent/tweet?url=${shareUrl}&text=${shareText}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 text-sm hover:underline rtl:flex-row-reverse"
+                className="flex items-center gap-2 text-sm hover:underline"
                 style={{ color: colors.text }}
               >
                 <XIcon className="size-4" />
@@ -267,7 +267,7 @@ export function StreamCourseDetailContent({
                 href={`https://www.linkedin.com/sharing/share-offsite/?url=${shareUrl}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 text-sm hover:underline rtl:flex-row-reverse"
+                className="flex items-center gap-2 text-sm hover:underline"
                 style={{ color: colors.text }}
               >
                 <LinkedInIcon className="size-4" />
@@ -280,7 +280,7 @@ export function StreamCourseDetailContent({
           </div>
 
           {/* Right Column: Image + Stats */}
-          <div className="space-y-0 rtl:lg:col-start-1">
+          <div className="space-y-0">
             {/* Course Image / Hero */}
             <div
               className="group relative aspect-video cursor-pointer overflow-hidden rounded-t-lg"
@@ -432,6 +432,7 @@ export function StreamCourseDetailContent({
             <ul className="mt-3 list-disc space-y-1.5 ps-5">
               <li className="text-sm" style={{ color: colors.muted }}>
                 {course.prerequisites ??
+                  dict?.stream?.courseDetail?.noPrerequisites ??
                   "No specific prerequisites. This course is designed for all skill levels."}
               </li>
             </ul>
@@ -448,6 +449,7 @@ export function StreamCourseDetailContent({
             </h3>
             <p className="mt-2 text-sm" style={{ color: colors.muted }}>
               {course.targetAudience ??
+                dict?.stream?.courseDetail?.defaultTargetAudience ??
                 "Students and learners of all levels interested in this subject."}
             </p>
           </div>

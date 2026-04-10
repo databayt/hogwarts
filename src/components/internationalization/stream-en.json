@@ -143,7 +143,9 @@
       "trainingProfessionals": "Training Professionals of Tomorrow",
       "topics": "Topics",
       "quiz": "quiz",
-      "edit": "Edit"
+      "edit": "Edit",
+      "noPrerequisites": "No specific prerequisites. This course is designed for all skill levels.",
+      "defaultTargetAudience": "Students and learners of all levels interested in this subject."
     },
     "header": {
       "home": "Home",

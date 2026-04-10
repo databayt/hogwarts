@@ -1,7 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { type Prisma } from "@prisma/client"
+import type { Prisma } from "@prisma/client"
 import { SearchParams } from "nuqs/server"
 
 import { getDisplayText } from "@/lib/content-display"
@@ -10,6 +10,7 @@ import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
 import { type EventRow } from "@/components/school-dashboard/listings/events/columns"
+import { getTargetAudiences } from "@/components/school-dashboard/listings/events/config"
 import { eventsSearchParams } from "@/components/school-dashboard/listings/events/list-params"
 import { EventsTable } from "@/components/school-dashboard/listings/events/table"
 
@@ -55,6 +56,10 @@ export default async function EventsContent({
           )
         : [{ eventDate: "desc" }, { startTime: "asc" }]
 
+    const audienceMap = Object.fromEntries(
+      getTargetAudiences(dictionary?.events).map((o) => [o.value, o.label])
+    )
+
     const [rows, count] = await Promise.all([
       db.event.findMany({
         where,
@@ -79,8 +84,9 @@ export default async function EventsContent({
         organizer: e.organizer
           ? await getDisplayText(e.organizer, e.lang || "ar", lang, schoolId!)
           : dictionary?.events?.organizerTBD || "TBD",
-        targetAudience:
-          e.targetAudience || dictionary?.events?.audienceTBD || "All",
+        targetAudience: e.targetAudience
+          ? (audienceMap[e.targetAudience] ?? e.targetAudience)
+          : (dictionary?.events?.audienceTBD ?? "All"),
         maxAttendees: e.maxAttendees,
         currentAttendees: e.currentAttendees,
         status: e.status,
