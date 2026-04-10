@@ -47,7 +47,11 @@
     "schoolContact": "التواصل",
     "schoolContactQuestion": "كيف أتواصل مع المدرسة؟",
     "schoolPrograms": "البرامج",
-    "schoolProgramsQuestion": "ما هي البرامج التي تقدمها المدرسة؟"
+    "schoolProgramsQuestion": "ما هي البرامج التي تقدمها المدرسة؟",
+    "schoolScholarships": "المنح الدراسية",
+    "schoolScholarshipsQuestion": "ما هي المنح الدراسية المتاحة؟",
+    "schoolEvents": "الفعاليات",
+    "schoolEventsQuestion": "ما هي الفعاليات القادمة في المدرسة؟"
   },
   "common": {
     "loading": "جاري التحميل...",

@@ -73,6 +73,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Block suspended accounts
+    if ((user as any).isSuspended) {
+      return NextResponse.json(
+        { error: "Account is suspended" },
+        { status: 403 }
+      )
+    }
+
     // Generate tokens
     const accessToken = await generateAccessToken({
       id: user.id,

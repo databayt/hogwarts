@@ -12,7 +12,7 @@ import { db } from "@/lib/db"
  * can display during registration / school selection. No auth required.
  *
  * GET /api/mobile/schools
- * Returns: { schools: [{ id, name, name_en, logo_url, subdomain }] }
+ * Returns: [{ id, name, name_en, logo_url, domain }]
  */
 
 export async function GET() {
@@ -38,10 +38,10 @@ export async function GET() {
       name: school.name,
       name_en: school.nameEn,
       logo_url: school.logoUrl,
-      subdomain: school.domain,
+      domain: school.domain,
     }))
 
-    return NextResponse.json({ schools: response })
+    return NextResponse.json(response)
   } catch (error) {
     console.error("Mobile schools list error:", error)
     return NextResponse.json(

@@ -67,6 +67,7 @@ export function MessageInput({
   const m = dictionary?.messaging
   const formRef = useRef<HTMLFormElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const photoInputRef = useRef<HTMLInputElement>(null)
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const [showAttachMenu, setShowAttachMenu] = useState(false)
   const [showFileUpload, setShowFileUpload] = useState(false)
@@ -212,6 +213,62 @@ export function MessageInput({
     }, 0)
   }
 
+  // Native photo/video picker — uploads and sends directly like WhatsApp
+  const handlePhotoSelect = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = e.target.files
+      if (!files?.length) return
+
+      for (const file of Array.from(files)) {
+        setIsUploadingVoice(true) // reuse uploading state for visual feedback
+        try {
+          const formData = new FormData()
+          formData.append("file", file)
+          formData.append("conversationId", conversationId)
+
+          const uploadResult = await uploadMessageAttachment(formData)
+
+          if (!uploadResult.success) {
+            toast({
+              title: m?.notifications?.error || "Error",
+              description: uploadResult.error || "Failed to upload",
+            })
+            continue
+          }
+
+          const { fileUrl, fileName, fileSize, fileType } = uploadResult.data
+          const contentType = fileType.startsWith("video/") ? "video" : "image"
+
+          const nonce = onOptimisticSend?.(fileUrl)
+          const msgResult = await sendMessage({
+            conversationId,
+            content: fileUrl,
+            contentType,
+            clientNonce: nonce || undefined,
+            attachments: [{ fileUrl, fileName, fileSize, fileType }],
+          })
+
+          if (msgResult.success && nonce) {
+            onMessageConfirmed?.(nonce, msgResult.data.id)
+          } else if (!msgResult.success && nonce) {
+            onMessageFailed?.(nonce)
+          }
+        } catch {
+          toast({
+            title: m?.notifications?.error || "Error",
+            description: m?.errors?.send_failed || "Failed to send",
+          })
+        } finally {
+          setIsUploadingVoice(false)
+        }
+      }
+
+      // Reset input so same file can be selected again
+      if (photoInputRef.current) photoInputRef.current.value = ""
+    },
+    [conversationId, onOptimisticSend, onMessageConfirmed, onMessageFailed, m]
+  )
+
   // Voice recording state
   const [isRecording, setIsRecording] = useState(false)
   const [recordingDuration, setRecordingDuration] = useState(0)
@@ -314,11 +371,18 @@ export function MessageInput({
       recordingIntervalRef.current = setInterval(() => {
         setRecordingDuration((d) => d + 1)
       }, 1000)
-    } catch {
+    } catch (err) {
+      const errorName = err instanceof DOMException ? err.name : ""
+      const description =
+        errorName === "NotAllowedError"
+          ? "Microphone permission denied. Allow microphone access in your browser settings."
+          : errorName === "NotFoundError"
+            ? "No microphone found. Please connect a microphone."
+            : m?.errors?.microphone_access ||
+              `Could not access microphone${errorName ? `: ${errorName}` : ""}`
       toast({
         title: m?.notifications?.error || "Error",
-        description:
-          m?.errors?.microphone_access || "Could not access microphone",
+        description,
       })
     }
   }, [conversationId, onOptimisticSend, onMessageConfirmed, onMessageFailed, m])
@@ -479,7 +543,7 @@ export function MessageInput({
                         <img
                           src="/folder.png"
                           alt=""
-                          className="h-6 w-6 object-contain"
+                          className="h-5 w-5 object-contain"
                         />
                       ),
                       action: () => {
@@ -498,7 +562,7 @@ export function MessageInput({
                       ),
                       action: () => {
                         setShowAttachMenu(false)
-                        setShowFileUpload(true)
+                        photoInputRef.current?.click()
                       },
                     },
                     {
@@ -518,7 +582,7 @@ export function MessageInput({
                         <img
                           src="/poll.png"
                           alt=""
-                          className="h-6 w-6 object-contain"
+                          className="h-5 w-5 object-contain"
                         />
                       ),
                       action: () => setShowAttachMenu(false),
@@ -529,7 +593,7 @@ export function MessageInput({
                         <img
                           src="/calendar.png"
                           alt=""
-                          className="h-6 w-6 object-contain"
+                          className="h-5 w-5 object-contain"
                         />
                       ),
                       action: () => setShowAttachMenu(false),
@@ -598,6 +662,16 @@ export function MessageInput({
           )}
         </div>
       )}
+
+      {/* Hidden native file input for photos/videos */}
+      <input
+        ref={photoInputRef}
+        type="file"
+        accept="image/*,video/*"
+        multiple
+        className="hidden"
+        onChange={handlePhotoSelect}
+      />
 
       {/* File upload dialog */}
       <Dialog open={showFileUpload} onOpenChange={setShowFileUpload}>

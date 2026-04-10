@@ -9,6 +9,7 @@ import { useLocale } from "@/components/internationalization/use-locale"
 import { ChatButton } from "./chat-button"
 import { ChatWindow } from "./chat-window"
 import { DEFAULT_CONFIG, DEFAULT_DICTIONARY } from "./constant"
+import type { SchoolChatbotContext } from "./prompts"
 import type { ChatbotDictionary, ChatbotProps, PromptType } from "./type"
 import { useChatbot } from "./use-chatbot"
 
@@ -16,6 +17,7 @@ interface ChatbotContentProps extends ChatbotProps {
   dictionary?: Partial<ChatbotDictionary>
   promptType?: PromptType
   subdomain?: string
+  schoolContext?: SchoolChatbotContext | null
 }
 
 export const ChatbotContent = forwardRef<
@@ -31,6 +33,7 @@ export const ChatbotContent = forwardRef<
       dictionary = {},
       promptType = "saasMarketing",
       subdomain,
+      schoolContext,
     },
     ref
   ) => {
@@ -48,6 +51,7 @@ export const ChatbotContent = forwardRef<
     const { state, toggleChat, openChat, closeChat, sendMessage } = useChatbot({
       promptType,
       subdomain,
+      locale,
     })
 
     useImperativeHandle(
@@ -100,6 +104,7 @@ export const ChatbotContent = forwardRef<
           locale={chatbotConfig.locale}
           dictionary={fullDictionary}
           promptType={promptType}
+          schoolContext={schoolContext}
         />
       </>
     )

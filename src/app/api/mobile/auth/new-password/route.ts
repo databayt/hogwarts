@@ -27,7 +27,7 @@ import { getUserByEmail } from "@/components/auth/user"
 const NewPasswordSchema = z.object({
   email: z.string().email("Valid email is required"),
   otp: z.string().length(6, "OTP must be 6 digits"),
-  newPassword: z.string().min(6, "Password must be at least 6 characters"),
+  new_password: z.string().min(6, "Password must be at least 6 characters"),
 })
 
 // Protected developer account — cannot be modified via mobile reset
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { email, otp, newPassword } = validated.data
+    const { email, otp, new_password: newPassword } = validated.data
     const normalizedEmail = email.toLowerCase()
 
     // Protect developer account

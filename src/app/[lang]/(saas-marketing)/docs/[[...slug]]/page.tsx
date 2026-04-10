@@ -18,20 +18,19 @@ import { DocsTableOfContents } from "@/components/docs/toc"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 
-// Force rebuild: 2025-12-07
+// ISR: render on first visit, cache permanently until next deploy.
+// Full static generation (268 doc routes) exceeds Vercel Hobby 8GB build limit.
 export const runtime = "nodejs"
 export const revalidate = false
-export const dynamic = "force-static"
-export const dynamicParams = false
+export const dynamicParams = true
 
 export function generateStaticParams() {
-  const enParams = docsSource
-    .generateParams()
-    .map((p) => ({ ...p, lang: "en" }))
-  const arParams = docsArabicSource
-    .generateParams()
-    .map((p) => ({ ...p, lang: "ar" }))
-  return [...enParams, ...arParams]
+  // Only pre-render index pages at build time to stay within Vercel Hobby memory limits.
+  // All other doc pages render on-demand via ISR and cache permanently.
+  return [
+    { lang: "en", slug: [] },
+    { lang: "ar", slug: [] },
+  ]
 }
 
 export async function generateMetadata(props: {

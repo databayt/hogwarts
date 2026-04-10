@@ -12,11 +12,13 @@ import type { ChatbotState, ChatMessage } from "./type"
 interface UseChatbotOptions {
   promptType?: SystemPromptType
   subdomain?: string
+  locale?: string
 }
 
 export function useChatbot({
   promptType = "saasMarketing",
   subdomain,
+  locale = "en",
 }: UseChatbotOptions = {}) {
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -60,11 +62,11 @@ export function useChatbot({
           })
         )
 
-        // Call the server action with the prompt type and subdomain
         const result = await sendMessageAction(
           coreMessages,
           promptType,
-          subdomain
+          subdomain,
+          locale
         )
 
         if (!result.success) {
@@ -100,7 +102,7 @@ export function useChatbot({
         setIsLoading(false)
       }
     },
-    [messages, promptType, subdomain]
+    [messages, promptType, subdomain, locale]
   )
 
   const clearMessages = useCallback(() => {

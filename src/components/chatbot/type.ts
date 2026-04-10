@@ -1,6 +1,8 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { SchoolChatbotContext } from "./prompts"
+
 export interface ChatMessage {
   id: string
   role: "user" | "assistant" | "system"
@@ -121,6 +123,7 @@ export interface ChatWindowProps {
   title?: string
   subtitle?: string
   promptType?: PromptType
+  schoolContext?: SchoolChatbotContext | null
   enableTypingIndicator?: boolean
   enableTimestamps?: boolean
 }

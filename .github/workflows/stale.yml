@@ -56,7 +56,7 @@ jobs:
             Feel free to reopen it if you'd like to continue working on it, or create a new PR.
 
           # Exempt labels - issues/PRs with these labels won't be marked stale
-          exempt-issue-labels: "pinned,security,help wanted,good first issue,in progress"
+          exempt-issue-labels: "pinned,security,help wanted,good first issue,in progress,report"
           exempt-pr-labels: "pinned,security,in progress,do not close"
 
           # Only process issues/PRs that match these labels (empty = all)

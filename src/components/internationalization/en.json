@@ -47,7 +47,11 @@
     "schoolContact": "Contact",
     "schoolContactQuestion": "How can I contact the school?",
     "schoolPrograms": "Programs",
-    "schoolProgramsQuestion": "What programs does the school offer?"
+    "schoolProgramsQuestion": "What programs does the school offer?",
+    "schoolScholarships": "Scholarships",
+    "schoolScholarshipsQuestion": "What scholarships are available?",
+    "schoolEvents": "Events",
+    "schoolEventsQuestion": "What upcoming events does the school have?"
   },
   "common": {
     "loading": "Loading...",

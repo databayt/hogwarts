@@ -4,6 +4,7 @@
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 
+import { getSchoolChatbotContext } from "./actions"
 import { ChatbotContent } from "./content"
 import type { ChatbotProps, PromptType } from "./type"
 
@@ -19,7 +20,10 @@ export async function Chatbot({
   subdomain,
   ...props
 }: ChatbotWrapperProps) {
-  const dictionary = await getDictionary(lang)
+  const [dictionary, schoolContext] = await Promise.all([
+    getDictionary(lang),
+    subdomain ? getSchoolChatbotContext(subdomain) : Promise.resolve(null),
+  ])
 
   return (
     <ChatbotContent
@@ -27,6 +31,7 @@ export async function Chatbot({
       dictionary={dictionary.chatbot}
       promptType={promptType}
       subdomain={subdomain}
+      schoolContext={schoolContext}
     />
   )
 }

@@ -23,9 +23,9 @@ import { buildAuthResponse } from "@/app/api/mobile/auth/jwt"
 const RegisterSchema = z.object({
   email: z.string().email("Valid email is required"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  schoolId: z.string().min(1, "School ID is required"),
+  first_name: z.string().min(1, "First name is required"),
+  last_name: z.string().min(1, "Last name is required"),
+  school_id: z.string().min(1, "School ID is required"),
 })
 
 export async function POST(request: NextRequest) {
@@ -41,7 +41,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { email, password, firstName, lastName, schoolId } = validated.data
+    const {
+      email,
+      password,
+      first_name: firstName,
+      last_name: lastName,
+      school_id: schoolId,
+    } = validated.data
     const normalizedEmail = email.toLowerCase()
 
     // Verify school exists and is active

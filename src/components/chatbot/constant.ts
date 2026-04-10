@@ -73,6 +73,10 @@ export const DEFAULT_DICTIONARY: ChatbotDictionary = {
   schoolContactQuestion: "How can I contact the school?",
   schoolPrograms: "Programs",
   schoolProgramsQuestion: "What programs does the school offer?",
+  schoolScholarships: "Scholarships",
+  schoolScholarshipsQuestion: "What scholarships are available?",
+  schoolEvents: "Events",
+  schoolEventsQuestion: "What upcoming events does the school have?",
 }
 
 export const DEFAULT_THEME: ChatbotTheme = {

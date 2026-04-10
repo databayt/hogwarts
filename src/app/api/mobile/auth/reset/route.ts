@@ -68,11 +68,12 @@ export async function POST(request: NextRequest) {
         },
       })
 
-      // In dev: log OTP to console
-      // In prod: send email (stubbed — just logging for now)
-      console.log(
-        `[MOBILE RESET] OTP for ${normalizedEmail}: ${otp} (expires: ${expires.toISOString()})`
-      )
+      // Log OTP in development only
+      if (process.env.NODE_ENV !== "production") {
+        console.log(
+          `[MOBILE RESET] OTP for ${normalizedEmail}: ${otp} (expires: ${expires.toISOString()})`
+        )
+      }
 
       // TODO: Send email in production
       // await sendPasswordResetEmail(normalizedEmail, otp)

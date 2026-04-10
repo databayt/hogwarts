@@ -19,6 +19,7 @@ import LogoCloud from "./logo-cloud"
 import { NewComers } from "./new-comers"
 import Newsletter from "./newsletter"
 import { SpecialOffers } from "./offer"
+import { PhoneMockup } from "./phone-mockup"
 import { BackgroundGradientAnimationDemo } from "./ready"
 import { Testimonials } from "./testimonials"
 
@@ -69,6 +70,7 @@ export default function SiteContent({
       />
       <Houses />
       <Features />
+      <PhoneMockup dictionary={dictionary} lang={lang} />
       <Core />
       <Faculty />
       <Testimonials />

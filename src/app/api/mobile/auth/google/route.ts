@@ -19,7 +19,7 @@ import { buildAuthResponse } from "@/app/api/mobile/auth/jwt"
  */
 
 const GoogleAuthSchema = z.object({
-  idToken: z.string().min(1, "Google ID token is required"),
+  id_token: z.string().min(1, "Google ID token is required"),
 })
 
 interface GoogleTokenPayload {
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { idToken } = validated.data
+    const { id_token: idToken } = validated.data
 
     // Verify Google ID token server-side
     const tokenInfoResponse = await fetch(
@@ -64,8 +64,15 @@ export async function POST(request: NextRequest) {
 
     const tokenPayload: GoogleTokenPayload = await tokenInfoResponse.json()
 
-    // Validate the token is for our app (aud should match our Google client ID)
-    // In production, verify aud matches GOOGLE_CLIENT_ID env var
+    // Validate the token is for our app
+    const googleClientId = process.env.GOOGLE_CLIENT_ID
+    if (googleClientId && tokenPayload.aud !== googleClientId) {
+      return NextResponse.json(
+        { error: "Google token was not issued for this application" },
+        { status: 401 }
+      )
+    }
+
     if (!tokenPayload.email) {
       return NextResponse.json(
         { error: "Google token missing email claim" },
@@ -100,9 +107,18 @@ export async function POST(request: NextRequest) {
       role: string
       username: string | null
       image: string | null
+      isSuspended?: boolean | null
     }
 
     if (existingUser) {
+      // Block suspended accounts
+      if (existingUser.isSuspended) {
+        return NextResponse.json(
+          { error: "Account is suspended" },
+          { status: 403 }
+        )
+      }
+
       // Update avatar if changed
       if (tokenPayload.picture && tokenPayload.picture !== existingUser.image) {
         await db.user.update({

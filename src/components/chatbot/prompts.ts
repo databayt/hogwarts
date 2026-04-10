@@ -3,6 +3,7 @@
 
 export interface SchoolChatbotData {
   name: string
+  nameEn?: string | null
   domain: string
   description?: string | null
   schoolType?: string | null
@@ -22,10 +23,87 @@ export interface SchoolChatbotData {
   maxStudents: number
   maxTeachers: number
   preferredLanguage: string
+  // Rich context
+  admissionCampaigns: {
+    name: string
+    academicYear: string
+    startDate: Date
+    endDate: Date
+    status: string
+    description?: string | null
+    totalSeats: number
+    applicationFee?: number | null
+  }[]
+  events: {
+    title: string
+    description?: string | null
+    eventType: string
+    eventDate: Date
+    startTime: string
+    endTime: string
+    location?: string | null
+    isPublic: boolean
+  }[]
+  announcements: {
+    title?: string | null
+    body?: string | null
+    priority: string
+    pinned: boolean
+  }[]
+  academicLevels: {
+    name: string
+    level: string
+    startGrade: number
+    endGrade: number
+    grades: { name: string; gradeNumber: number }[]
+  }[]
+  scholarships: {
+    name: string
+    description?: string | null
+    coverageType: string
+    coverageAmount: number
+    isActive: boolean
+  }[]
+  feeStructures: {
+    name: string
+    academicYear: string
+    totalAmount: number
+    tuitionFee: number
+    installments: number
+  }[]
 }
 
-export function buildSaasMarketingPrompt(): string {
-  return `You are Databayt assistant, helping visitors learn about our school automation platform. Give VERY SHORT, practical answers (2-3 sentences max).
+/** Context about which quick-ask buttons to show, derived from school data */
+export interface SchoolChatbotContext {
+  admissionOpen: boolean
+  hasScholarships: boolean
+  hasUpcomingEvents: boolean
+  hasAnnouncements: boolean
+}
+
+export function deriveSchoolContext(
+  school: SchoolChatbotData
+): SchoolChatbotContext {
+  const now = new Date()
+  return {
+    admissionOpen: school.admissionCampaigns.some(
+      (c) => c.status === "OPEN" && new Date(c.endDate) > now
+    ),
+    hasScholarships: school.scholarships.some((s) => s.isActive),
+    hasUpcomingEvents: school.events.some(
+      (e) => e.isPublic && new Date(e.eventDate) >= now
+    ),
+    hasAnnouncements: school.announcements.length > 0,
+  }
+}
+
+export function buildSaasMarketingPrompt(locale: string = "en"): string {
+  const lang =
+    locale === "ar"
+      ? "Arabic. Always respond in Arabic."
+      : "English. Always respond in English."
+
+  return `You are Databayt assistant, helping visitors learn about our school automation platform. Respond in ${lang} Give VERY SHORT, practical answers (2-3 sentences max).
 
 ## About Databayt
 - **Platform**: Databayt - Open-source school management & automation
@@ -74,15 +152,26 @@ export function buildSaasMarketingPrompt(): string {
 1. Keep answers under 50 words
 2. Use specific numbers (pricing, student limits)
 3. Mention open-source benefits when relevant
-4. Guide to sign-up or demo
-5. Support Arabic and English`
+4. Guide to sign-up or demo`
 }
 
-export function buildSchoolSitePrompt(school: SchoolChatbotData): string {
+export function buildSchoolSitePrompt(
+  school: SchoolChatbotData,
+  locale: string = "en"
+): string {
   const sections: string[] = []
+  const now = new Date()
+
+  const lang =
+    locale === "ar"
+      ? "Arabic. Always respond in Arabic."
+      : "English. Always respond in English."
+
+  const schoolName =
+    locale === "en" && school.nameEn ? school.nameEn : school.name
 
   // Identity
-  sections.push(`## School: ${school.name}`)
+  sections.push(`## School: ${schoolName}`)
   if (school.description) {
     sections.push(`**About**: ${school.description}`)
   }
@@ -91,26 +180,131 @@ export function buildSchoolSitePrompt(school: SchoolChatbotData): string {
   if (school.schoolType) details.push(`Type: ${school.schoolType}`)
   if (school.schoolLevel) details.push(`Level: ${school.schoolLevel}`)
   if (school.timetableStructure)
-    details.push(`Timetable: ${school.timetableStructure}`)
+    details.push(`Curriculum: ${school.timetableStructure}`)
   if (details.length > 0) {
     sections.push(details.join(" | "))
   }
 
-  // Fees
-  const fees: string[] = []
-  if (school.tuitionFee) {
-    fees.push(`- Tuition: ${school.tuitionFee} ${school.currency}`)
+  // Academic Structure
+  if (school.academicLevels.length > 0) {
+    const levels = school.academicLevels
+      .map((l) => {
+        const grades = l.grades.map((g) => g.name).join(", ")
+        return `- **${l.name}** (${l.level}): Grades ${l.startGrade}-${l.endGrade}${grades ? ` — ${grades}` : ""}`
+      })
+      .join("\n")
+    sections.push(`## Academic Structure\n${levels}`)
   }
-  if (school.registrationFee) {
-    fees.push(`- Registration: ${school.registrationFee} ${school.currency}`)
-  }
-  if (school.applicationFee) {
-    fees.push(`- Application: ${school.applicationFee} ${school.currency}`)
-  }
-  if (fees.length > 0) {
+
+  // Admission — live status
+  const openCampaigns = school.admissionCampaigns.filter(
+    (c) => c.status === "OPEN" && new Date(c.endDate) > now
+  )
+  if (openCampaigns.length > 0) {
+    const campaigns = openCampaigns
+      .map((c) => {
+        const deadline = new Date(c.endDate).toLocaleDateString(
+          locale === "ar" ? "ar-SA" : "en-US",
+          { year: "numeric", month: "long", day: "numeric" }
+        )
+        const fee = c.applicationFee
+          ? ` | Application fee: ${c.applicationFee} ${school.currency}`
+          : ""
+        return `- **${c.name}** (${c.academicYear}): Open until ${deadline}, ${c.totalSeats} seats available${fee}`
+      })
+      .join("\n")
     sections.push(
-      `## Fees\n${fees.join("\n")}\nPayment: ${school.paymentSchedule}`
+      `## Admission — OPEN NOW\n${campaigns}\nVisitors can apply online at the school's Apply page.`
     )
+  } else {
+    const upcoming = school.admissionCampaigns.filter(
+      (c) => c.status === "DRAFT" && new Date(c.startDate) > now
+    )
+    if (upcoming.length > 0) {
+      const next = upcoming[0]
+      const opens = new Date(next.startDate).toLocaleDateString(
+        locale === "ar" ? "ar-SA" : "en-US",
+        { year: "numeric", month: "long", day: "numeric" }
+      )
+      sections.push(
+        `## Admission — COMING SOON\nNext admission period: **${next.name}** (${next.academicYear}) opens ${opens}.\nAdvise visitors to check back or contact the school.`
+      )
+    } else {
+      sections.push(
+        `## Admission\nNo admission campaigns are currently open. Suggest contacting the school for next intake dates.`
+      )
+    }
+  }
+
+  // Fee Structures
+  if (school.feeStructures.length > 0) {
+    const fees = school.feeStructures
+      .map(
+        (f) =>
+          `- **${f.name}** (${f.academicYear}): ${f.totalAmount} ${school.currency} total (tuition: ${f.tuitionFee} ${school.currency}, ${f.installments} installment${f.installments > 1 ? "s" : ""})`
+      )
+      .join("\n")
+    sections.push(`## Detailed Fees\n${fees}`)
+  } else {
+    // Fallback to basic school-level fees
+    const fees: string[] = []
+    if (school.tuitionFee)
+      fees.push(`- Tuition: ${school.tuitionFee} ${school.currency}`)
+    if (school.registrationFee)
+      fees.push(`- Registration: ${school.registrationFee} ${school.currency}`)
+    if (school.applicationFee)
+      fees.push(`- Application: ${school.applicationFee} ${school.currency}`)
+    if (fees.length > 0) {
+      sections.push(
+        `## Fees\n${fees.join("\n")}\nPayment: ${school.paymentSchedule}`
+      )
+    }
+  }
+
+  // Scholarships
+  const activeScholarships = school.scholarships.filter((s) => s.isActive)
+  if (activeScholarships.length > 0) {
+    const schols = activeScholarships
+      .map((s) => {
+        const coverage =
+          s.coverageType === "FULL"
+            ? "Full scholarship"
+            : s.coverageType === "PERCENTAGE"
+              ? `${s.coverageAmount}% coverage`
+              : `${s.coverageAmount} ${school.currency} off`
+        return `- **${s.name}**: ${coverage}${s.description ? ` — ${s.description}` : ""}`
+      })
+      .join("\n")
+    sections.push(`## Scholarships & Financial Aid\n${schols}`)
+  }
+
+  // Upcoming Events
+  const upcomingEvents = school.events
+    .filter((e) => e.isPublic && new Date(e.eventDate) >= now)
+    .slice(0, 5)
+  if (upcomingEvents.length > 0) {
+    const events = upcomingEvents
+      .map((e) => {
+        const date = new Date(e.eventDate).toLocaleDateString(
+          locale === "ar" ? "ar-SA" : "en-US",
+          { month: "long", day: "numeric" }
+        )
+        const loc = e.location ? ` at ${e.location}` : ""
+        return `- **${e.title}** (${e.eventType}): ${date}, ${e.startTime}-${e.endTime}${loc}`
+      })
+      .join("\n")
+    sections.push(`## Upcoming Events\n${events}`)
+  }
+
+  // Important Announcements
+  const importantAnnouncements = school.announcements
+    .filter((a) => a.pinned || a.priority === "high" || a.priority === "urgent")
+    .slice(0, 3)
+  if (importantAnnouncements.length > 0) {
+    const anns = importantAnnouncements
+      .map((a) => `- ${a.title || "Announcement"}`)
+      .join("\n")
+    sections.push(`## Important Announcements\n${anns}`)
   }
 
   // Contact
@@ -134,22 +328,18 @@ export function buildSchoolSitePrompt(school: SchoolChatbotData): string {
     )
   }
 
-  // Admission
-  sections.push(
-    `## Admission\nVisitors can apply online at the school's Apply page.`
-  )
-
-  return `You are the assistant for ${school.name}, helping visitors learn about this school. Give VERY SHORT, practical answers (2-3 sentences max).
+  return `You are the helpful assistant for ${schoolName}. Respond in ${lang} You help prospective students and parents learn about this school. Be welcoming, accurate, and concise (2-3 sentences max).
 
 ${sections.join("\n\n")}
 
 ## Response Rules
-1. Keep answers under 50 words
-2. Use the school's actual data above (fees, contact, etc.)
-3. For admission, direct visitors to the Apply page
-4. Be welcoming and professional
-5. Support Arabic and English
-6. If you don't have specific information, say so honestly and suggest contacting the school directly`
+1. Keep answers under 60 words
+2. Use the school's actual data above — never invent facts
+3. For admission, give the current status (open/closed/coming soon) and direct to the Apply page when open
+4. Mention scholarships when discussing fees if available
+5. Mention upcoming events when relevant
+6. If you don't have specific information, say so honestly and suggest contacting the school directly
+7. When asked about programs or grades, reference the academic structure above`
 }
 
 // Keep backward compatibility

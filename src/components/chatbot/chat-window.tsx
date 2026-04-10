@@ -32,6 +32,7 @@ export const ChatWindow = memo(function ChatWindow({
   locale,
   dictionary,
   promptType = "saasMarketing",
+  schoolContext,
 }: ChatWindowProps) {
   const [input, setInput] = useState("")
   const [isListening, setIsListening] = useState(false)
@@ -49,7 +50,7 @@ export const ChatWindow = memo(function ChatWindow({
 
   const quickAskButtons = useMemo(() => {
     if (promptType === "schoolSite") {
-      return [
+      const buttons = [
         {
           label: dictionary.schoolAdmission,
           question: dictionary.schoolAdmissionQuestion,
@@ -60,17 +61,46 @@ export const ChatWindow = memo(function ChatWindow({
           question: dictionary.schoolFeesQuestion,
           icon: PriceIcon,
         },
-        {
-          label: dictionary.schoolContact,
-          question: dictionary.schoolContactQuestion,
-          icon: InfoIcon,
-        },
-        {
+      ]
+
+      // Context-aware: show scholarships or events when available
+      if (schoolContext?.hasScholarships) {
+        buttons.push({
+          label: dictionary.schoolScholarships || "Scholarships",
+          question:
+            dictionary.schoolScholarshipsQuestion ||
+            "What scholarships are available?",
+          icon: PriceIcon,
+        })
+      }
+
+      if (schoolContext?.hasUpcomingEvents) {
+        buttons.push({
+          label: dictionary.schoolEvents || "Events",
+          question:
+            dictionary.schoolEventsQuestion ||
+            "What upcoming events does the school have?",
+          icon: TimeIcon,
+        })
+      }
+
+      // Fill remaining slots with defaults
+      if (buttons.length < 4) {
+        buttons.push({
           label: dictionary.schoolPrograms,
           question: dictionary.schoolProgramsQuestion,
           icon: TimeIcon,
-        },
-      ]
+        })
+      }
+      if (buttons.length < 4) {
+        buttons.push({
+          label: dictionary.schoolContact,
+          question: dictionary.schoolContactQuestion,
+          icon: InfoIcon,
+        })
+      }
+
+      return buttons.slice(0, 4)
     }
     return [
       {
@@ -94,7 +124,7 @@ export const ChatWindow = memo(function ChatWindow({
         icon: InfoIcon,
       },
     ]
-  }, [promptType, dictionary])
+  }, [promptType, dictionary, schoolContext])
 
   // Initialize SpeechRecognition once, re-init on locale change
   useEffect(() => {
