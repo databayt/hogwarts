@@ -33,8 +33,21 @@ export async function getDisplayText(
 ): Promise<string> {
   if (!text || text.trim() === "") return ""
 
-  // Same language - return directly
-  if (contentLang === displayLang) return text
+  // Same language — but detect script mismatch (e.g. Latin text stored as "ar")
+  if (contentLang === displayLang) {
+    if (contentLang === "ar") {
+      const stripped = text.replace(/[\d\s\-_.,!?:;()\[\]{}'"\/\\]/g, "")
+      if (stripped && /^[a-zA-Z]+$/.test(stripped)) {
+        // Text is Latin but claimed as Arabic — translate from English
+        try {
+          return await translateWithCache(text, "en", displayLang, schoolId)
+        } catch {
+          return text
+        }
+      }
+    }
+    return text
+  }
 
   try {
     return await translateWithCache(text, contentLang, displayLang, schoolId)

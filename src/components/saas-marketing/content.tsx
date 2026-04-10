@@ -16,6 +16,7 @@ import LetsWorkTogether from "./lets-work-together"
 import LogoCloud from "./logo-cloud"
 import MissionCards from "./mission-cards"
 import OpenSource from "./open-source"
+import { PhoneMockup } from "./phone-mockup"
 import StorySection from "./story-section"
 // import Stack from "./stack";
 import Testimonial from "./testimonial"
@@ -38,6 +39,7 @@ export default function HomeContent(props: Props) {
       <Hero dictionary={dictionary} lang={lang} />
       <StorySection dictionary={dictionary} lang={lang} />
       <MissionCards dictionary={dictionary} lang={lang} />
+      <PhoneMockup dictionary={dictionary} lang={lang} />
       {/* <Gallery />
       <Stack />
       <Automated />

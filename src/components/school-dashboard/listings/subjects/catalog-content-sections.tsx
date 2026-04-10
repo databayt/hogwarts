@@ -297,33 +297,43 @@ export function CatalogContentSections({
             href={textbookPdfUrl!}
             target="_blank"
             rel="noopener noreferrer"
-            className="group hover:bg-accent flex w-fit items-center gap-4 rounded-xl border p-3 transition-colors"
+            className="group relative shrink-0 overflow-hidden rounded-xl shadow-md transition-transform hover:scale-[1.02]"
+            style={{ width: 180, height: 260 }}
           >
+            {/* Spine highlight */}
+            <div className="absolute inset-y-0 start-0 z-20 w-[3px] bg-white/15" />
+
+            {/* Cover image or color fallback */}
             {textbookCoverUrl ? (
               <Image
                 src={textbookCoverUrl}
                 alt={t.textbook}
-                width={80}
-                height={112}
-                className="rounded-md object-cover"
+                fill
+                className="object-cover"
+                sizes="180px"
                 unoptimized
               />
             ) : (
               <div
-                className="flex size-20 items-center justify-center rounded-md"
-                style={{ backgroundColor: `${accentColor}20` }}
+                className="absolute inset-0 flex items-center justify-center"
+                style={{ backgroundColor: accentColor }}
               >
-                <BookOpen className="size-8" style={{ color: accentColor }} />
+                <BookOpen className="size-20 text-white/10" />
               </div>
             )}
-            <div className="space-y-1">
-              <p className="text-sm font-semibold">{name}</p>
-              <p
-                className="flex items-center gap-1.5 text-xs font-medium"
-                style={{ color: accentColor }}
-              >
-                <BookOpen className="size-3.5" />
-                {t.openTextbook}
+
+            {/* Subject name — upper portion */}
+            <div className="absolute inset-x-0 top-0 z-10 flex h-[55%] items-center justify-center px-4">
+              <p className="line-clamp-3 text-center text-sm leading-tight font-bold text-white drop-shadow-md">
+                {name}
+              </p>
+            </div>
+
+            {/* Gradient scrim + label — lower portion */}
+            <div className="absolute inset-x-0 bottom-0 z-10 flex h-[50%] flex-col items-center justify-end gap-2 bg-gradient-to-t from-black/60 to-transparent pb-5">
+              <div className="h-[1.5px] w-8 bg-white/30" />
+              <p className="font-mono text-[10px] tracking-widest text-white/70 uppercase">
+                {t.textbook}
               </p>
             </div>
           </a>

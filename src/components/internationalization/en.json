@@ -332,6 +332,28 @@
     "canReturnToOriginalTab": "You can return to your original tab — it will detect verification automatically."
   },
   "marketing": {
+    "phoneMockup": {
+      "heading": "Your school, in every pocket",
+      "subheading": "Manage grades, attendance, scheduling, and messaging — all from one app",
+      "phoneAlt": "School management mobile app",
+      "items": {
+        "grades": "Grades",
+        "attendance": "Attendance",
+        "timetable": "Timetable",
+        "admission": "Admission",
+        "courses": "Courses",
+        "messaging": "Messaging",
+        "parentPortal": "Parent Portal",
+        "finance": "Finance",
+        "transport": "Transport",
+        "events": "Events"
+      },
+      "innerCards": {
+        "gradebook": "Gradebook",
+        "dashboard": "Dashboard",
+        "analytics": "Analytics"
+      }
+    },
     "hero": {
       "title": "Automate\nthe boring,\nelevate the\nwonder.",
       "titleMobile": "Automate\nthe boring,\nelevate the\nwonder.",

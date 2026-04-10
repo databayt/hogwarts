@@ -3,11 +3,16 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
-import { SignJWT } from "jose"
 
 import { db } from "@/lib/db"
 import { getUserByEmail } from "@/components/auth/user"
 import { LoginSchema } from "@/components/auth/validation"
+import {
+  buildUserResponse,
+  generateAccessToken,
+  generateRefreshToken,
+  verifyToken,
+} from "@/app/api/mobile/auth/jwt"
 
 /**
  * Mobile Authentication API
@@ -20,49 +25,6 @@ import { LoginSchema } from "@/components/auth/validation"
  * Body: { email: string, password: string }
  * Returns: { access_token, refresh_token, expires_at, user }
  */
-
-if (!process.env.AUTH_SECRET) {
-  throw new Error("AUTH_SECRET environment variable is required")
-}
-const JWT_SECRET = new TextEncoder().encode(process.env.AUTH_SECRET)
-
-// Token expiry times
-const ACCESS_TOKEN_EXPIRY = "24h" // 24 hours
-const REFRESH_TOKEN_EXPIRY = "7d" // 7 days
-
-async function generateAccessToken(user: {
-  id: string
-  email: string
-  schoolId: string | null
-  role: string
-}) {
-  const token = await new SignJWT({
-    sub: user.id,
-    email: user.email,
-    schoolId: user.schoolId,
-    role: user.role,
-    type: "access",
-  })
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt()
-    .setExpirationTime(ACCESS_TOKEN_EXPIRY)
-    .sign(JWT_SECRET)
-
-  return token
-}
-
-async function generateRefreshToken(userId: string) {
-  const token = await new SignJWT({
-    sub: userId,
-    type: "refresh",
-  })
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt()
-    .setExpirationTime(REFRESH_TOKEN_EXPIRY)
-    .sign(JWT_SECRET)
-
-  return token
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -166,10 +128,8 @@ export async function PUT(request: NextRequest) {
     }
 
     // Verify refresh token
-    const { jwtVerify } = await import("jose")
-
     try {
-      const { payload } = await jwtVerify(refreshToken, JWT_SECRET)
+      const { payload } = await verifyToken(refreshToken)
 
       if (payload.type !== "refresh") {
         return NextResponse.json(
@@ -213,15 +173,7 @@ export async function PUT(request: NextRequest) {
         access_token: newAccessToken,
         refresh_token: newRefreshToken,
         expires_at: expiresAt,
-        user: {
-          id: user.id,
-          email: user.email,
-          school_id: user.schoolId,
-          role: user.role,
-          given_name: user.username?.split(" ")[0] || null,
-          family_name: user.username?.split(" ").slice(1).join(" ") || null,
-          avatar_url: user.image,
-        },
+        user: buildUserResponse(user),
       })
     } catch {
       return NextResponse.json(

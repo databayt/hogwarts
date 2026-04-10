@@ -332,6 +332,28 @@
     "canReturnToOriginalTab": "يمكنك العودة إلى علامة التبويب الأصلية — ستكتشف التحقق تلقائياً."
   },
   "marketing": {
+    "phoneMockup": {
+      "heading": "مدرستك في كل جيب",
+      "subheading": "أدر الدرجات والحضور والجداول والرسائل — كل ذلك من تطبيق واحد",
+      "phoneAlt": "تطبيق إدارة المدرسة",
+      "items": {
+        "grades": "الدرجات",
+        "attendance": "الحضور",
+        "timetable": "الجدول",
+        "admission": "القبول",
+        "courses": "المقررات",
+        "messaging": "الرسائل",
+        "parentPortal": "بوابة الوالدين",
+        "finance": "المالية",
+        "transport": "النقل",
+        "events": "الفعاليات"
+      },
+      "innerCards": {
+        "gradebook": "سجل الدرجات",
+        "dashboard": "لوحة القيادة",
+        "analytics": "التحليلات"
+      }
+    },
     "hero": {
       "title": "اتمت الممل،\nارتقي بالمذهل.",
       "titleMobile": "اتمت الممل،\nارتقي بالمذهل.",

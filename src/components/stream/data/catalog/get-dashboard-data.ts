@@ -104,29 +104,39 @@ export async function getCatalogDashboardData(
     }
   })
 
-  // Fetch available catalog subjects not yet enrolled
-  const availableSubjects = await db.subject.findMany({
-    where: {
-      status: "PUBLISHED",
-      ...(enrolledSubjectIds.length > 0
-        ? { id: { notIn: enrolledSubjectIds } }
-        : {}),
-    },
-    orderBy: { sortOrder: "asc" },
-    take: 6,
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-      description: true,
-      thumbnail: true,
-      color: true,
-      totalChapters: true,
-      totalLessons: true,
-      department: true,
-      usageCount: true,
-    },
+  // Fetch school's subject selections to scope available courses
+  const selections = await db.subjectSelection.findMany({
+    where: { schoolId, isActive: true },
+    select: { catalogSubjectId: true },
   })
+  const selectedIds = selections.map((s) => s.catalogSubjectId)
+  const enrolledSet = new Set(enrolledSubjectIds)
+  const availableIds = selectedIds.filter((id) => !enrolledSet.has(id))
+
+  // Fetch available catalog subjects not yet enrolled (scoped to school's curriculum)
+  const availableSubjects =
+    availableIds.length === 0
+      ? []
+      : await db.subject.findMany({
+          where: {
+            id: { in: availableIds },
+            status: "PUBLISHED",
+          },
+          orderBy: { sortOrder: "asc" },
+          take: 6,
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            description: true,
+            thumbnail: true,
+            color: true,
+            totalChapters: true,
+            totalLessons: true,
+            department: true,
+            usageCount: true,
+          },
+        })
 
   const availableCourses = availableSubjects.map((subject) => ({
     id: subject.id,

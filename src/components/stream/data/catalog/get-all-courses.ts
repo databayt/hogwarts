@@ -5,13 +5,14 @@
 import { Prisma } from "@prisma/client"
 
 import { getCatalogImageUrl } from "@/lib/catalog-image-url"
+import { ensureSubjectSelections } from "@/lib/catalog-setup"
 import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import type { SupportedLanguage } from "@/components/translation/types"
 
 /**
  * Fetches published catalog subjects available at a school with pagination.
- * Returns { rows, count } shaped like getCoursesList for backward compatibility.
+ * Scoped to the school's SubjectSelection (same hierarchy as the subjects page).
  *
  * Migration: Replaces getCoursesList from queries.ts which queries StreamCourse.
  */
@@ -36,7 +37,7 @@ export async function getAllCatalogCourses(
   const displayLang = (params.lang || "en") as SupportedLanguage
 
   // Get catalog subjects that this school has selected
-  const selections = await db.subjectSelection.findMany({
+  let selections = await db.subjectSelection.findMany({
     where: {
       schoolId,
       isActive: true,
@@ -47,22 +48,36 @@ export async function getAllCatalogCourses(
     },
   })
 
-  const hasSelections = selections.length > 0
-  const subjectIds = hasSelections
-    ? [...new Set(selections.map((s) => s.catalogSubjectId))]
-    : undefined
-  const customNames = hasSelections
-    ? new Map(
-        selections
-          .filter((s) => s.customName)
-          .map((s) => [s.catalogSubjectId, s.customName!])
-      )
-    : new Map<string, string>()
+  // Auto-provision if no selections exist (mirrors subjects page behavior)
+  if (selections.length === 0) {
+    try {
+      const { provisioned } = await ensureSubjectSelections(schoolId)
+      if (provisioned) {
+        selections = await db.subjectSelection.findMany({
+          where: { schoolId, isActive: true },
+          select: { catalogSubjectId: true, customName: true },
+        })
+      }
+    } catch {
+      // Fall through with empty selections
+    }
+  }
 
-  // Build where clause — show ALL published ClickView subjects (matching subjects page)
+  const subjectIds = [...new Set(selections.map((s) => s.catalogSubjectId))]
+  const customNames = new Map(
+    selections
+      .filter((s) => s.customName)
+      .map((s) => [s.catalogSubjectId, s.customName!])
+  )
+
+  if (subjectIds.length === 0) {
+    return { rows: [] as CatalogCourseType[], count: 0 }
+  }
+
+  // Build where clause — scoped to school's selected subjects
   const where: Prisma.SubjectWhereInput = {
+    id: { in: subjectIds },
     status: "PUBLISHED",
-    curriculum: "us-k12",
     ...(params.title
       ? {
           name: {
