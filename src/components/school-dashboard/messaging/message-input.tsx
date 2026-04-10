@@ -4,7 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useEffect, useRef, useState } from "react"
 import dynamic from "next/dynamic"
-import { Plus, Send, Smile, Square, X } from "lucide-react"
+import { FileText, Plus, Send, Smile, Square, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -17,16 +17,20 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/components/ui/use-toast"
 import { MicFilledIcon } from "@/components/atom/icons"
-import {
-  ACCEPT_ALL,
-  FileUploader,
-  type UploadedFileResult,
-} from "@/components/file"
+import { type UploadedFileResult } from "@/components/file"
+import { ACCEPT_ALL } from "@/components/file/mime-types"
+import { FileUploader } from "@/components/file/upload/file-uploader"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { sendMessage } from "./actions"
 import type { MessageDTO } from "./types"
 import { uploadMessageAttachment } from "./upload-actions"
+
+function formatFileSize(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
 
 export interface MessageInputProps {
   conversationId: string
@@ -68,10 +72,18 @@ export function MessageInput({
   const formRef = useRef<HTMLFormElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const photoInputRef = useRef<HTMLInputElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const captionRef = useRef<HTMLInputElement>(null)
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const [showAttachMenu, setShowAttachMenu] = useState(false)
   const [showFileUpload, setShowFileUpload] = useState(false)
   const [hasContent, setHasContent] = useState(false)
+  const [previewFile, setPreviewFile] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [previewType, setPreviewType] = useState<
+    "image" | "video" | "document"
+  >("image")
+  const [isSendingPreview, setIsSendingPreview] = useState(false)
   const [isSending, setIsSending] = useState(false)
   const [isUploadingVoice, setIsUploadingVoice] = useState(false)
 
@@ -174,21 +186,12 @@ export function MessageInput({
   }
 
   const handleUploadComplete = (files: UploadedFileResult[]) => {
-    onFileUpload?.(files)
     setShowFileUpload(false)
-    toast({
-      title: m?.notifications?.success || "Success",
-      description: (
-        m?.notifications?.upload_success || "Uploaded {count} file(s)"
-      ).replace("{count}", String(files.length)),
-    })
+    onFileUpload?.(files)
   }
 
   const handleUploadError = (error: string) => {
-    toast({
-      title: m?.notifications?.error || "Error",
-      description: error,
-    })
+    toast({ title: error, variant: "destructive" })
   }
 
   const handleEmojiClick = (emoji: string) => {
@@ -213,61 +216,102 @@ export function MessageInput({
     }, 0)
   }
 
-  // Native photo/video picker — uploads and sends directly like WhatsApp
-  const handlePhotoSelect = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const files = e.target.files
-      if (!files?.length) return
+  // File preview — opens native picker, shows WhatsApp-style preview before sending
+  const handleFilePreview = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0]
+      if (!file) return
 
-      for (const file of Array.from(files)) {
-        setIsUploadingVoice(true) // reuse uploading state for visual feedback
-        try {
-          const formData = new FormData()
-          formData.append("file", file)
-          formData.append("conversationId", conversationId)
+      setPreviewUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev)
+        return URL.createObjectURL(file)
+      })
+      setPreviewFile(file)
 
-          const uploadResult = await uploadMessageAttachment(formData)
+      if (file.type.startsWith("image/")) setPreviewType("image")
+      else if (file.type.startsWith("video/")) setPreviewType("video")
+      else setPreviewType("document")
 
-          if (!uploadResult.success) {
-            toast({
-              title: m?.notifications?.error || "Error",
-              description: uploadResult.error || "Failed to upload",
-            })
-            continue
-          }
+      e.target.value = ""
+    },
+    []
+  )
 
-          const { fileUrl, fileName, fileSize, fileType } = uploadResult.data
-          const contentType = fileType.startsWith("video/") ? "video" : "image"
+  const closePreview = useCallback(() => {
+    setPreviewFile(null)
+    setPreviewUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev)
+      return null
+    })
+    setIsSendingPreview(false)
+  }, [])
 
-          const nonce = onOptimisticSend?.(fileUrl)
-          const msgResult = await sendMessage({
-            conversationId,
-            content: fileUrl,
-            contentType,
-            clientNonce: nonce || undefined,
-            attachments: [{ fileUrl, fileName, fileSize, fileType }],
-          })
+  const handlePreviewSend = useCallback(async () => {
+    if (!previewFile || isSendingPreview) return
+    setIsSendingPreview(true)
 
-          if (msgResult.success && nonce) {
-            onMessageConfirmed?.(nonce, msgResult.data.id)
-          } else if (!msgResult.success && nonce) {
-            onMessageFailed?.(nonce)
-          }
-        } catch {
-          toast({
-            title: m?.notifications?.error || "Error",
-            description: m?.errors?.send_failed || "Failed to send",
-          })
-        } finally {
-          setIsUploadingVoice(false)
-        }
+    try {
+      const formData = new FormData()
+      formData.append("file", previewFile)
+      formData.append("conversationId", conversationId)
+
+      const uploadResult = await uploadMessageAttachment(formData)
+
+      if (!uploadResult.success) {
+        toast({
+          title: m?.notifications?.error || "Error",
+          description: uploadResult.error || "Failed to upload",
+        })
+        return
       }
 
-      // Reset input so same file can be selected again
-      if (photoInputRef.current) photoInputRef.current.value = ""
-    },
-    [conversationId, onOptimisticSend, onMessageConfirmed, onMessageFailed, m]
-  )
+      const { fileUrl, fileName, fileSize, fileType } = uploadResult.data
+      const contentType = fileType.startsWith("video/")
+        ? "video"
+        : fileType.startsWith("image/")
+          ? "image"
+          : "text"
+      const caption = captionRef.current?.value?.trim()
+
+      const nonce = onOptimisticSend?.(caption || fileUrl)
+      const msgResult = await sendMessage({
+        conversationId,
+        content: caption || fileUrl,
+        contentType,
+        clientNonce: nonce || undefined,
+        attachments: [{ fileUrl, fileName, fileSize, fileType }],
+      })
+
+      if (msgResult.success && nonce) {
+        onMessageConfirmed?.(nonce, msgResult.data.id)
+      } else if (!msgResult.success && nonce) {
+        onMessageFailed?.(nonce)
+        toast({
+          title: m?.notifications?.error || "Error",
+          description:
+            msgResult.error || m?.errors?.send_failed || "Failed to send",
+        })
+      }
+
+      closePreview()
+    } catch {
+      toast({
+        title: m?.notifications?.error || "Error",
+        description: m?.errors?.send_failed || "Failed to send",
+      })
+    } finally {
+      setIsSendingPreview(false)
+    }
+  }, [
+    previewFile,
+    isSendingPreview,
+    conversationId,
+    closePreview,
+    onOptimisticSend,
+    onMessageConfirmed,
+    onMessageFailed,
+    m,
+  ])
 
   // Voice recording state
   const [isRecording, setIsRecording] = useState(false)
@@ -548,7 +592,7 @@ export function MessageInput({
                       ),
                       action: () => {
                         setShowAttachMenu(false)
-                        setShowFileUpload(true)
+                        fileInputRef.current?.click()
                       },
                     },
                     {
@@ -663,35 +707,100 @@ export function MessageInput({
         </div>
       )}
 
-      {/* Hidden native file input for photos/videos */}
+      {/* Hidden native file inputs */}
       <input
         ref={photoInputRef}
         type="file"
         accept="image/*,video/*"
-        multiple
         className="hidden"
-        onChange={handlePhotoSelect}
+        onChange={handleFilePreview}
+      />
+      <input
+        ref={fileInputRef}
+        type="file"
+        className="hidden"
+        onChange={handleFilePreview}
       />
 
-      {/* File upload dialog */}
-      <Dialog open={showFileUpload} onOpenChange={setShowFileUpload}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{m?.ui?.upload_files || "Upload Files"}</DialogTitle>
-          </DialogHeader>
-          <FileUploader
-            category="OTHER"
-            folder={`messages/${conversationId}`}
-            accept={ACCEPT_ALL}
-            maxFiles={5}
-            multiple={true}
-            maxSize={50 * 1024 * 1024}
-            optimizeImages={true}
-            onUploadComplete={handleUploadComplete}
-            onUploadError={handleUploadError}
-          />
-        </DialogContent>
-      </Dialog>
+      {/* File preview overlay — WhatsApp style */}
+      {previewFile && previewUrl && (
+        <div
+          className="fixed inset-0 z-50 flex flex-col"
+          style={{ backgroundColor: "#1B1B1B" }}
+        >
+          <div className="flex items-center px-4 py-3">
+            <button
+              type="button"
+              onClick={closePreview}
+              className="rounded-full p-1 text-white/80 hover:text-white"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+
+          <div className="flex flex-1 items-center justify-center overflow-hidden px-4">
+            {previewType === "image" ? (
+              <img
+                src={previewUrl}
+                alt={previewFile.name}
+                className="max-h-full max-w-full rounded-lg object-contain"
+              />
+            ) : previewType === "video" ? (
+              <video
+                src={previewUrl}
+                controls
+                className="max-h-full max-w-full rounded-lg"
+              />
+            ) : (
+              <div className="flex flex-col items-center gap-4 text-white">
+                <div className="flex h-24 w-24 items-center justify-center rounded-2xl bg-white/10">
+                  <FileText className="h-12 w-12" />
+                </div>
+                <span className="max-w-xs truncate text-lg">
+                  {previewFile.name}
+                </span>
+                <span className="text-sm text-white/60">
+                  {formatFileSize(previewFile.size)}
+                </span>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3 px-4 py-4">
+            <input
+              ref={captionRef}
+              type="text"
+              autoFocus
+              placeholder={
+                (m?.ui as Record<string, string>)?.add_caption ||
+                "Add a caption..."
+              }
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault()
+                  handlePreviewSend()
+                } else if (e.key === "Escape") {
+                  closePreview()
+                }
+              }}
+              className="flex-1 rounded-full border-0 bg-[#2A2A2A] px-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-[#1FA961]/50"
+            />
+            <button
+              type="button"
+              onClick={handlePreviewSend}
+              disabled={isSendingPreview}
+              className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-white"
+              style={{ backgroundColor: "#1FA961" }}
+            >
+              {isSendingPreview ? (
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+              ) : (
+                <Send className="h-5 w-5" />
+              )}
+            </button>
+          </div>
+        </div>
+      )}
     </form>
   )
 }

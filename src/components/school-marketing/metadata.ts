@@ -40,10 +40,10 @@ export async function generateSchoolMetadata({
   }
 
   return {
-    title: `${displayName} | ${fullDomain}`,
+    title: displayName,
     description: `Welcome to ${displayName} - Your school management portal`,
     openGraph: {
-      title: `${displayName} | ${fullDomain}`,
+      title: displayName,
       description: `Welcome to ${displayName} - Your school management portal`,
       url: `https://${fullDomain}`,
       siteName: displayName,

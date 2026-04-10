@@ -310,7 +310,7 @@ export default function ActivityGraph({
             <div className="flex">
               {/* Weekday labels */}
               <div className="text-muted-foreground me-2 flex flex-col gap-[3px] text-[10px]">
-                {WEEKDAYS.map((day, idx) => (
+                {weekdays.map((day: string, idx: number) => (
                   <span key={idx} className="h-[10px] leading-[10px]">
                     {day}
                   </span>
