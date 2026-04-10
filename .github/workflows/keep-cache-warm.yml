@@ -15,7 +15,7 @@ jobs:
     # Only run on the main repo, not forks
     if: github.repository == 'databayt/hogwarts'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
