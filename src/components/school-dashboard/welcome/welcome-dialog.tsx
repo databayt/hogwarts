@@ -22,9 +22,26 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { useSchool } from "@/components/school-dashboard/context/school-context"
 
 const TOTAL_STEPS = 3
+
+const STEPS_CONFIG = [
+  {
+    bg: "#d97757",
+    illustration:
+      "https://d1dlwtcfl0db67.cloudfront.net/anthropic/illustrations/hand-node-pair.svg",
+  },
+  {
+    bg: "#6a9bcc",
+    illustration:
+      "https://d1dlwtcfl0db67.cloudfront.net/anthropic/illustrations/hand-puzzle.svg",
+  },
+  {
+    bg: "#788c5d",
+    illustration:
+      "https://d1dlwtcfl0db67.cloudfront.net/anthropic/illustrations/hand-abacus.svg",
+  },
+]
 
 const FEATURES = [
   { key: "attendance" as const, icon: ClipboardCheck },
@@ -35,13 +52,13 @@ const FEATURES = [
   { key: "finance" as const, icon: CreditCard },
 ]
 
-const QUICK_ACTIONS = [
+const FIRST_STEPS = [
   { key: "manageStudents" as const, icon: Users },
-  { key: "reviewAttendance" as const, icon: ClipboardCheck },
-  { key: "checkTimetable" as const, icon: Calendar },
+  { key: "reviewAttendance" as const, icon: Calendar },
+  { key: "checkTimetable" as const, icon: ClipboardCheck },
   { key: "sendMessage" as const, icon: MessageSquare },
-  { key: "viewGrades" as const, icon: BookOpen },
-  { key: "schoolSettings" as const, icon: Settings },
+  { key: "viewGrades" as const, icon: Settings },
+  { key: "schoolSettings" as const, icon: Users },
 ]
 
 interface WelcomeDialogDictionary {
@@ -101,8 +118,6 @@ export function WelcomeDialog({ userId, dictionary: d }: WelcomeDialogProps) {
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState(0)
   const [direction, setDirection] = useState(1)
-  const { school } = useSchool()
-
   useEffect(() => {
     const seen = localStorage.getItem(getStorageKey(userId))
     if (!seen) {
@@ -139,20 +154,18 @@ export function WelcomeDialog({ userId, dictionary: d }: WelcomeDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && dismiss()}>
-      <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-3xl">
-        <DialogTitle className="sr-only">
-          {d.step1Title.replace("{schoolName}", school.name)}
-        </DialogTitle>
+      <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-2xl">
+        <DialogTitle className="sr-only">{d.step1Title}</DialogTitle>
         <DialogDescription className="sr-only">
           {d.step1Description}
         </DialogDescription>
 
-        <div className="flex flex-col sm:flex-row">
-          {/* Left column */}
-          <div className="flex flex-1 flex-col p-6 sm:p-8">
+        <div className="flex h-[440px] flex-col sm:flex-row">
+          {/* Left column — content */}
+          <div className="flex flex-1 flex-col p-8 sm:p-10">
             <DotIndicator total={TOTAL_STEPS} current={step} />
 
-            <div className="mt-5 overflow-hidden">
+            <div className="mt-5 min-h-0 flex-1 overflow-hidden">
               <AnimatePresence mode="wait" custom={direction}>
                 <motion.div
                   key={step}
@@ -163,16 +176,14 @@ export function WelcomeDialog({ userId, dictionary: d }: WelcomeDialogProps) {
                   exit="exit"
                   transition={{ duration: 0.2, ease: "easeInOut" }}
                 >
-                  {step === 0 && (
-                    <StepWelcome dictionary={d} schoolName={school.name} />
-                  )}
+                  {step === 0 && <StepWelcome dictionary={d} />}
                   {step === 1 && <StepFeatures dictionary={d} />}
-                  {step === 2 && <StepQuickActions dictionary={d} />}
+                  {step === 2 && <StepFirstSteps dictionary={d} />}
                 </motion.div>
               </AnimatePresence>
             </div>
 
-            <div className="mt-6 flex items-center gap-3">
+            <div className="mt-auto flex items-center gap-3 pt-4">
               {step > 0 && (
                 <Button variant="outline" size="sm" onClick={back}>
                   {d.back}
@@ -190,17 +201,32 @@ export function WelcomeDialog({ userId, dictionary: d }: WelcomeDialogProps) {
             </div>
           </div>
 
-          {/* Right column: illustration */}
-          <div className="bg-muted/30 hidden items-center justify-center p-6 sm:flex sm:w-[300px]">
-            <Image
-              src="/illustrations/welcome-characters.svg"
-              alt=""
-              width={260}
-              height={260}
-              className="h-auto w-full"
-              priority
-            />
-          </div>
+          {/* Right column — illustration */}
+          <motion.div
+            className="hidden items-center justify-center rounded-e-lg sm:flex sm:w-[260px]"
+            animate={{ backgroundColor: STEPS_CONFIG[step].bg }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
+          >
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={step}
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+              >
+                <Image
+                  src={STEPS_CONFIG[step].illustration}
+                  alt=""
+                  width={180}
+                  height={180}
+                  className="h-auto w-[180px] object-contain"
+                  priority
+                  unoptimized
+                />
+              </motion.div>
+            </AnimatePresence>
+          </motion.div>
         </div>
       </DialogContent>
     </Dialog>
@@ -209,17 +235,15 @@ export function WelcomeDialog({ userId, dictionary: d }: WelcomeDialogProps) {
 
 function StepWelcome({
   dictionary: d,
-  schoolName,
 }: {
   dictionary: WelcomeDialogDictionary
-  schoolName: string
 }) {
   return (
     <div>
-      <h2 className="text-xl font-semibold">
-        {d.step1Title.replace("{schoolName}", schoolName)}
-      </h2>
-      <p className="text-muted-foreground mt-2 text-sm">{d.step1Description}</p>
+      <h2 className="text-xl font-semibold">{d.step1Title}</h2>
+      <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
+        {d.step1Description}
+      </p>
     </div>
   )
 }
@@ -232,14 +256,16 @@ function StepFeatures({
   return (
     <div>
       <h2 className="text-xl font-semibold">{d.step2Title}</h2>
-      <p className="text-muted-foreground mt-2 text-sm">{d.step2Description}</p>
-      <div className="mt-3 grid grid-cols-2 gap-2">
+      <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
+        {d.step2Description}
+      </p>
+      <div className="mt-4 grid grid-cols-3 gap-2">
         {FEATURES.map(({ key, icon: Icon }) => (
           <div
             key={key}
-            className="bg-muted/50 flex items-center gap-2 rounded-md px-2.5 py-2"
+            className="bg-muted/50 flex flex-col items-center gap-1.5 rounded-lg py-3"
           >
-            <Icon className="text-primary size-3.5 shrink-0" />
+            <Icon className="text-muted-foreground size-4" />
             <span className="text-xs">{d.features[key]}</span>
           </div>
         ))}
@@ -248,7 +274,7 @@ function StepFeatures({
   )
 }
 
-function StepQuickActions({
+function StepFirstSteps({
   dictionary: d,
 }: {
   dictionary: WelcomeDialogDictionary
@@ -256,14 +282,16 @@ function StepQuickActions({
   return (
     <div>
       <h2 className="text-xl font-semibold">{d.step3Title}</h2>
-      <p className="text-muted-foreground mt-2 text-sm">{d.step3Description}</p>
-      <div className="mt-3 space-y-1.5">
-        {QUICK_ACTIONS.map(({ key, icon: Icon }) => (
-          <div key={key} className="flex items-center gap-2.5">
-            <div className="bg-primary/10 flex size-6 items-center justify-center rounded">
-              <Icon className="text-primary size-3" />
-            </div>
-            <span className="text-xs">{d.quickActions[key]}</span>
+      <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
+        {d.step3Description}
+      </p>
+      <div className="mt-4 space-y-2.5">
+        {FIRST_STEPS.map(({ key }, i) => (
+          <div key={key} className="flex items-center gap-3">
+            <span className="text-muted-foreground flex size-5 shrink-0 items-center justify-center rounded-full border text-xs">
+              {i + 1}
+            </span>
+            <span className="text-sm">{d.quickActions[key]}</span>
           </div>
         ))}
       </div>

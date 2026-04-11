@@ -6,7 +6,6 @@ import React from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 
-import { asset } from "@/lib/asset-url"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { type Locale } from "@/components/internationalization/config"
@@ -18,6 +17,7 @@ interface Stage {
   title: string
   description: string
   illustration: string
+  bgColor: string
 }
 
 interface ApplyOverviewClientProps {
@@ -48,22 +48,25 @@ const ApplyOverviewClient: React.FC<ApplyOverviewClientProps> = ({
         overviewDict.stage1Desc ||
         "Upload documents and enter personal details",
       illustration:
-        "https://www-cdn.anthropic.com/images/4zrzovbb/website/521a945a74f2d25262db4a002073aaeec9bc1919-1000x1000.svg",
+        "https://d1dlwtcfl0db67.cloudfront.net/anthropic/illustrations/node-constitution.svg",
+      bgColor: "#d97757",
     },
     {
       number: 2,
       title: groupsDict.details || "Details",
       description:
         overviewDict.stage2Desc || "Provide your contact and location details",
-      illustration: asset("/illustrations/eng-long-running-agents.svg"),
+      illustration:
+        "https://d1dlwtcfl0db67.cloudfront.net/anthropic/illustrations/hand-abacus.svg",
+      bgColor: "#6a9bcc",
     },
     {
       number: 3,
       title: groupsDict.familyEducation || "Family & Education",
-      description:
-        overviewDict.stage3Desc || "Add guardian info and academic background",
+      description: overviewDict.stage3Desc || "Upload your documents",
       illustration:
-        "https://www-cdn.anthropic.com/images/4zrzovbb/website/0321b0ecbbf53535e93be1310ae1935157bcebdd-1000x1000.svg",
+        "https://d1dlwtcfl0db67.cloudfront.net/anthropic/illustrations/lamp-paper.svg",
+      bgColor: "#788c5d",
     },
   ]
 
@@ -103,15 +106,10 @@ const ApplyOverviewClient: React.FC<ApplyOverviewClientProps> = ({
             {/* Right Side - 3 Stages */}
             <div className="space-y-6">
               {stages.map((stage) => (
-                <div
-                  key={stage.number}
-                  className="flex items-start justify-between gap-6 rtl:flex-row-reverse"
-                >
-                  <div className="flex flex-1 gap-3 rtl:flex-row-reverse">
+                <div key={stage.number} className="flex items-start gap-6">
+                  <div className="flex flex-1 gap-3">
                     <div className="flex-shrink-0">
-                      <h4 className="text-foreground">
-                        {isRTL ? `.${stage.number}` : `${stage.number}.`}
-                      </h4>
+                      <h4 className="text-foreground">{`${stage.number}.`}</h4>
                     </div>
                     <div className="text-start">
                       <h4 className="mb-1 font-semibold">{stage.title}</h4>
@@ -120,14 +118,17 @@ const ApplyOverviewClient: React.FC<ApplyOverviewClientProps> = ({
                       </p>
                     </div>
                   </div>
-                  <div className="hidden flex-shrink-0 justify-end md:flex rtl:justify-start">
-                    <div className="relative h-14 w-14 overflow-hidden">
+                  <div className="hidden flex-shrink-0 md:flex">
+                    <div
+                      className="relative h-14 w-14 overflow-hidden rounded-lg"
+                      style={{ backgroundColor: stage.bgColor }}
+                    >
                       <Image
                         src={stage.illustration}
                         alt={stage.title}
                         fill
                         sizes="56px"
-                        className="object-contain"
+                        className="object-contain p-1"
                       />
                     </div>
                   </div>

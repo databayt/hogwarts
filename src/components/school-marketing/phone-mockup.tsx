@@ -9,182 +9,153 @@ import {
   useTransform,
   type MotionValue,
 } from "framer-motion"
-import {
-  Apple,
-  Backpack,
-  BarChart3,
-  BookOpen,
-  Bus,
-  CalendarDays,
-  ClipboardCheck,
-  Clock,
-  GraduationCap,
-  MessageCircle,
-  Paintbrush,
-  PartyPopper,
-  School,
-  Trophy,
-  Users,
-  Wallet,
-  type LucideIcon,
-} from "lucide-react"
 
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 
 type Dictionary = Awaited<ReturnType<typeof getDictionary>>
 
-// Layout config for outer floating pills
-interface ItemConfig {
-  key: string
-  fallback: string
-  icon: LucideIcon
-  type: "both" | "icon"
-  y: number
-  x: number
-  row: 1 | 2 | 3 | 4
-}
-
-const START_ITEMS: ItemConfig[] = [
+// Left side items — matching Zenda reference exactly
+const LEFT_ITEMS = [
   {
-    key: "grades",
-    fallback: "Grades",
-    icon: GraduationCap,
-    type: "both",
+    text: "Activities",
+    icon: "/icons/services/basketball.webp",
+    type: "both" as const,
     y: -280,
     x: -20,
     row: 1,
   },
   {
-    key: "attendance",
-    fallback: "Attendance",
-    icon: ClipboardCheck,
-    type: "both",
+    text: "Uniform",
+    icon: "/icons/services/uniform.webp",
+    type: "both" as const,
     y: -140,
     x: -60,
     row: 2,
   },
   {
-    key: "",
-    fallback: "",
-    icon: CalendarDays,
-    type: "icon",
+    text: "",
+    icon: "/icons/services/activities-goggles.webp",
+    type: "icon" as const,
     y: -140,
     x: 60,
     row: 2,
   },
   {
-    key: "",
-    fallback: "",
-    icon: Paintbrush,
-    type: "icon",
+    text: "",
+    icon: "/icons/services/juice.webp",
+    type: "icon" as const,
     y: 0,
     x: -80,
     row: 3,
   },
   {
-    key: "timetable",
-    fallback: "Timetable",
-    icon: Clock,
-    type: "both",
+    text: "Notebooks",
+    icon: "/icons/services/textbooks.webp",
+    type: "both" as const,
     y: 0,
     x: 40,
     row: 3,
   },
   {
-    key: "admission",
-    fallback: "Admission",
-    icon: School,
-    type: "both",
+    text: "Laboratory equipment",
+    icon: "/icons/services/frame.webp",
+    type: "both" as const,
     y: 140,
     x: -120,
     row: 4,
   },
-  { key: "", fallback: "", icon: Apple, type: "icon", y: 140, x: 15, row: 4 },
   {
-    key: "courses",
-    fallback: "Courses",
-    icon: BookOpen,
-    type: "both",
-    y: 140,
-    x: 110,
-    row: 4,
-  },
-]
-
-const END_ITEMS: ItemConfig[] = [
-  {
-    key: "messaging",
-    fallback: "Messaging",
-    icon: MessageCircle,
-    type: "both",
-    y: -280,
-    x: -20,
-    row: 1,
-  },
-  {
-    key: "parentPortal",
-    fallback: "Parent Portal",
-    icon: Users,
-    type: "both",
-    y: -140,
-    x: -90,
-    row: 2,
-  },
-  {
-    key: "",
-    fallback: "",
-    icon: BarChart3,
-    type: "icon",
-    y: -140,
-    x: 30,
-    row: 2,
-  },
-  { key: "", fallback: "", icon: Wallet, type: "icon", y: 0, x: -80, row: 3 },
-  {
-    key: "finance",
-    fallback: "Finance",
-    icon: Wallet,
-    type: "both",
-    y: 0,
-    x: 60,
-    row: 3,
-  },
-  {
-    key: "",
-    fallback: "",
-    icon: Backpack,
-    type: "icon",
-    y: 140,
-    x: -130,
-    row: 4,
-  },
-  {
-    key: "transport",
-    fallback: "Transport",
-    icon: Bus,
-    type: "both",
+    text: "",
+    icon: "/icons/services/activities-paint.png",
+    type: "icon" as const,
     y: 140,
     x: 15,
     row: 4,
   },
   {
-    key: "events",
-    fallback: "Events",
-    icon: PartyPopper,
-    type: "both",
+    text: "Supplies",
+    icon: "/icons/services/backpack.webp",
+    type: "both" as const,
     y: 140,
     x: 110,
     row: 4,
   },
 ]
 
-// Inner phone cards config
+// Right side items — matching Zenda reference exactly
+const RIGHT_ITEMS = [
+  {
+    text: "Transport",
+    icon: "/icons/services/transport.webp",
+    type: "both" as const,
+    y: -280,
+    x: -20,
+    row: 1,
+  },
+  {
+    text: "Security",
+    icon: "",
+    type: "text" as const,
+    y: -140,
+    x: -90,
+    row: 2,
+  },
+  {
+    text: "",
+    icon: "/icons/services/bread.webp",
+    type: "icon" as const,
+    y: -140,
+    x: 30,
+    row: 2,
+  },
+  {
+    text: "",
+    icon: "/icons/services/clock.webp",
+    type: "icon" as const,
+    y: 0,
+    x: -80,
+    row: 3,
+  },
+  {
+    text: "Fees",
+    icon: "/icons/services/fee.svg",
+    type: "both" as const,
+    y: 0,
+    x: 60,
+    row: 3,
+  },
+  {
+    text: "",
+    icon: "/icons/services/supplies.webp",
+    type: "icon" as const,
+    y: 140,
+    x: -130,
+    row: 4,
+  },
+  {
+    text: "Trips & Tours",
+    icon: "/icons/services/supplies.webp",
+    type: "both" as const,
+    y: 140,
+    x: 15,
+    row: 4,
+  },
+  {
+    text: "Events",
+    icon: "/icons/services/events.webp",
+    type: "both" as const,
+    y: 140,
+    x: 110,
+    row: 4,
+  },
+]
+
+// Inner phone cards
 interface InnerPhoneCard {
   id: string
-  key: string
-  fallback: string
-  icon: LucideIcon | null
+  text: string
+  icon?: string
   row: 1 | 2 | 3 | 4
   side: "start" | "end"
   bgGradient: string
@@ -199,10 +170,8 @@ interface InnerPhoneCard {
 
 const INNER_PHONE_CARDS: InnerPhoneCard[] = [
   {
-    id: "inner-gradebook",
-    key: "gradebook",
-    fallback: "Gradebook",
-    icon: GraduationCap,
+    id: "inner-uniform",
+    text: "Uniform",
     row: 1,
     side: "start",
     bgGradient:
@@ -214,9 +183,7 @@ const INNER_PHONE_CARDS: InnerPhoneCard[] = [
   },
   {
     id: "inner-blob-blue",
-    key: "",
-    fallback: "",
-    icon: null,
+    text: "",
     row: 1,
     side: "end",
     bgGradient: "bg-gradient-to-br from-pink-200 via-purple-200 to-blue-200",
@@ -227,9 +194,7 @@ const INNER_PHONE_CARDS: InnerPhoneCard[] = [
   },
   {
     id: "inner-blob-purple",
-    key: "",
-    fallback: "",
-    icon: null,
+    text: "",
     row: 2,
     side: "end",
     bgGradient:
@@ -240,10 +205,9 @@ const INNER_PHONE_CARDS: InnerPhoneCard[] = [
     isBlob: true,
   },
   {
-    id: "inner-dashboard",
-    key: "dashboard",
-    fallback: "Dashboard",
-    icon: BarChart3,
+    id: "inner-supplies",
+    text: "Supplies",
+    icon: "https://cdn.prod.website-files.com/622da43f87e21836ee21bed6/685d45179dbf65da8996ec74_bag.webp",
     row: 2,
     side: "end",
     bgGradient:
@@ -255,9 +219,7 @@ const INNER_PHONE_CARDS: InnerPhoneCard[] = [
   },
   {
     id: "inner-blob-beige",
-    key: "",
-    fallback: "",
-    icon: null,
+    text: "",
     row: 3,
     side: "start",
     bgGradient: "bg-gradient-to-br from-amber-100 via-orange-100 to-yellow-100",
@@ -267,10 +229,9 @@ const INNER_PHONE_CARDS: InnerPhoneCard[] = [
     isBlob: true,
   },
   {
-    id: "inner-analytics",
-    key: "analytics",
-    fallback: "Analytics",
-    icon: Trophy,
+    id: "inner-rewards",
+    text: "Rewards",
+    icon: "https://cdn.prod.website-files.com/622da43f87e21836ee21bed6/67e431889b4aa073c0a33447_cup-icon.webp",
     row: 4,
     side: "end",
     bgGradient: "bg-gradient-to-br from-pink-100 via-pink-200 to-rose-200",
@@ -281,17 +242,14 @@ const INNER_PHONE_CARDS: InnerPhoneCard[] = [
   },
 ]
 
-// Inner Card sub-component
 function InnerCard({
   card,
   progress,
   isRTL,
-  dict,
 }: {
   card: InnerPhoneCard
   progress: MotionValue<number>
   isRTL: boolean
-  dict: Record<string, string>
 }) {
   const physicalSide = isRTL
     ? card.side === "start"
@@ -312,21 +270,18 @@ function InnerCard({
   const opacity = useTransform(progress, [0.15, 0.22, 0.38], [0, 0.7, 1])
 
   const sizes: Record<string, { w: string; h: string }> = {
-    "inner-gradebook": { w: "w-36", h: "h-32" },
+    "inner-uniform": { w: "w-36", h: "h-32" },
     "inner-blob-blue": { w: "w-24", h: "h-20" },
     "inner-blob-purple": { w: "w-20", h: "h-16" },
-    "inner-dashboard": { w: "w-40", h: "h-44" },
+    "inner-supplies": { w: "w-40", h: "h-44" },
     "inner-blob-beige": { w: "w-20", h: "h-16" },
-    "inner-analytics": { w: "w-36", h: "h-40" },
+    "inner-rewards": { w: "w-36", h: "h-40" },
   }
 
   const size = sizes[card.id] || { w: "w-32", h: "h-28" }
 
   const borderRadius =
     physicalSide === "left" ? "0 9999px 9999px 0" : "9999px 0 0 9999px"
-
-  const text = card.key ? dict[card.key] || card.fallback : ""
-  const Icon = card.icon
 
   if (card.isBlob) {
     return (
@@ -352,12 +307,12 @@ function InnerCard({
         ? "px-8 py-6 gap-2"
         : "px-6 py-5 gap-3"
   const iconSize = card.isXLarge
-    ? 28
+    ? "w-28 h-28"
     : card.isLarge
-      ? 24
+      ? "w-24 h-24"
       : card.isMedium
-        ? 18
-        : 14
+        ? "w-18 h-18"
+        : "w-14 h-14"
   const textSize = card.isXLarge
     ? "text-2xl"
     : card.isLarge
@@ -378,18 +333,19 @@ function InnerCard({
         right: physicalSide === "right" ? 0 : "auto",
       }}
     >
-      {Icon && (
-        <Icon
-          className={`shrink-0 ${card.textColor}`}
-          size={iconSize}
-          strokeWidth={1.5}
+      {card.icon && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={card.icon}
+          alt={card.text}
+          className={`shrink-0 object-contain ${iconSize}`}
         />
       )}
-      {text && (
+      {card.text && (
         <span
           className={`font-semibold ${card.textColor} whitespace-nowrap ${textSize}`}
         >
-          {text}
+          {card.text}
         </span>
       )}
     </motion.div>
@@ -409,14 +365,9 @@ export function PhoneMockup({ dictionary, lang }: PhoneMockupProps) {
   const dict = (dictionary as any)?.marketing?.phoneMockup || {
     heading: "Your school, in every pocket",
     subheading:
-      "Manage grades, attendance, scheduling, and messaging — all from one app",
+      "Discover, enroll, organize, pay and track all transactions in one place",
     phoneAlt: "School management mobile app",
-    items: {},
-    innerCards: {},
   }
-
-  const items = dict.items || {}
-  const innerCards = dict.innerCards || {}
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -436,84 +387,83 @@ export function PhoneMockup({ dictionary, lang }: PhoneMockupProps) {
   const textY = useTransform(smoothProgress, [0, 0.25], [300, -350])
   const textOpacity = useTransform(smoothProgress, [0, 0.1, 0.2], [0, 0.7, 1])
 
-  const startRotate = useTransform(smoothProgress, [0, 0.3], [-25 * dir, 0])
-  const endRotate = useTransform(smoothProgress, [0, 0.3], [25 * dir, 0])
+  const leftRotate = useTransform(smoothProgress, [0, 0.3], [-25 * dir, 0])
+  const rightRotate = useTransform(smoothProgress, [0, 0.3], [25 * dir, 0])
 
   const PHONE_EDGE_PADDING = 160
 
-  const startXRow1 = useTransform(
+  const leftXRow1 = useTransform(
     smoothProgress,
     [0, 0.3],
     [-200 * dir, PHONE_EDGE_PADDING * dir]
   )
-  const startXRow2 = useTransform(
+  const leftXRow2 = useTransform(
     smoothProgress,
     [0, 0.3],
     [-200 * dir, PHONE_EDGE_PADDING * dir]
   )
-  const startXRow3 = useTransform(
+  const leftXRow3 = useTransform(
     smoothProgress,
     [0, 0.3],
     [-200 * dir, PHONE_EDGE_PADDING * dir]
   )
-  const startXRow4 = useTransform(
+  const leftXRow4 = useTransform(
     smoothProgress,
     [0, 0.3],
     [-200 * dir, (PHONE_EDGE_PADDING + 40) * dir]
   )
 
-  const endXRow1 = useTransform(
+  const rightXRow1 = useTransform(
     smoothProgress,
     [0, 0.3],
     [200 * dir, -PHONE_EDGE_PADDING * dir]
   )
-  const endXRow2 = useTransform(
+  const rightXRow2 = useTransform(
     smoothProgress,
     [0, 0.3],
     [200 * dir, -PHONE_EDGE_PADDING * dir]
   )
-  const endXRow3 = useTransform(
+  const rightXRow3 = useTransform(
     smoothProgress,
     [0, 0.3],
     [200 * dir, -PHONE_EDGE_PADDING * dir]
   )
-  const endXRow4 = useTransform(
+  const rightXRow4 = useTransform(
     smoothProgress,
     [0, 0.3],
     [200 * dir, -(PHONE_EDGE_PADDING + 40) * dir]
   )
 
-  const getStartX = (row: number) => {
+  const getLeftX = (row: number) => {
     switch (row) {
       case 1:
-        return startXRow1
+        return leftXRow1
       case 2:
-        return startXRow2
+        return leftXRow2
       case 3:
-        return startXRow3
+        return leftXRow3
       case 4:
-        return startXRow4
+        return leftXRow4
       default:
-        return startXRow1
+        return leftXRow1
     }
   }
 
-  const getEndX = (row: number) => {
+  const getRightX = (row: number) => {
     switch (row) {
       case 1:
-        return endXRow1
+        return rightXRow1
       case 2:
-        return endXRow2
+        return rightXRow2
       case 3:
-        return endXRow3
+        return rightXRow3
       case 4:
-        return endXRow4
+        return rightXRow4
       default:
-        return endXRow1
+        return rightXRow1
     }
   }
 
-  // Resolve physical sides based on direction
   const startSide = isRTL ? "right" : "left"
   const endSide = isRTL ? "left" : "right"
 
@@ -521,7 +471,7 @@ export function PhoneMockup({ dictionary, lang }: PhoneMockupProps) {
     <section ref={sectionRef} className="relative min-h-[200vh]">
       <div className="sticky top-0 flex h-screen items-center justify-center overflow-hidden">
         <div className="relative container mx-auto max-w-7xl px-4">
-          {/* Heading text */}
+          {/* Text */}
           <motion.div
             className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center"
             style={{ y: textY, opacity: textOpacity }}
@@ -536,47 +486,49 @@ export function PhoneMockup({ dictionary, lang }: PhoneMockupProps) {
 
           {/* Phone with floating cards */}
           <div className="relative mx-auto flex min-h-[800px] max-w-6xl items-center justify-center">
-            {/* Start-side cards (left in LTR, right in RTL) */}
+            {/* Left Cards */}
             <div
               className="absolute top-1/2 hidden -translate-y-1/2 md:block"
               style={{ [startSide]: 0 }}
             >
-              {START_ITEMS.map((item, index) => {
-                const Icon = item.icon
-                const text = item.key ? items[item.key] || item.fallback : ""
-                return (
-                  <motion.div
-                    key={`start-${index}`}
-                    className={`border-border/50 absolute flex items-center justify-center rounded-full border ${
-                      item.type === "icon"
-                        ? "bg-card p-6"
-                        : "bg-card gap-3 px-7 py-6"
-                    }`}
-                    style={{
-                      [startSide]: `${3 + item.x / 10}rem`,
-                      top: item.y,
-                      x: getStartX(item.row),
-                      rotate: startRotate,
-                      zIndex: 20 + index,
-                    }}
-                  >
-                    <Icon
-                      className={`text-foreground shrink-0 ${
-                        item.type === "icon" ? "h-8 w-8" : "h-6 w-6"
-                      }`}
-                      strokeWidth={1.5}
+              {LEFT_ITEMS.map((item, index) => (
+                <motion.div
+                  key={`left-${index}`}
+                  className={`border-border absolute flex items-center justify-center rounded-full border-2 ${
+                    item.type === "icon"
+                      ? "bg-card p-6"
+                      : "bg-card gap-3 px-7 py-6"
+                  }`}
+                  style={{
+                    [startSide]: `${3 + item.x / 10}rem`,
+                    top: item.y,
+                    x: getLeftX(item.row),
+                    rotate: leftRotate,
+                    zIndex: 20 + index,
+                  }}
+                >
+                  {item.icon && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={item.icon}
+                      alt={item.text || ""}
+                      className={
+                        item.type === "icon"
+                          ? "h-16 w-16 shrink-0 object-contain"
+                          : "h-14 w-14 shrink-0 object-contain"
+                      }
                     />
-                    {text && (
-                      <span className="text-foreground text-sm font-semibold whitespace-nowrap">
-                        {text}
-                      </span>
-                    )}
-                  </motion.div>
-                )
-              })}
+                  )}
+                  {item.text && (
+                    <span className="text-foreground text-sm font-semibold whitespace-nowrap">
+                      {item.text}
+                    </span>
+                  )}
+                </motion.div>
+              ))}
             </div>
 
-            {/* Phone frame with inner cards */}
+            {/* Phone with inner cards */}
             <motion.div
               className="relative z-30 mt-64"
               style={{ scale: phoneScale, y: phoneY }}
@@ -608,50 +560,53 @@ export function PhoneMockup({ dictionary, lang }: PhoneMockupProps) {
                     card={card}
                     progress={smoothProgress}
                     isRTL={isRTL}
-                    dict={innerCards}
                   />
                 ))}
               </div>
             </motion.div>
 
-            {/* End-side cards (right in LTR, left in RTL) */}
+            {/* Right Cards */}
             <div
               className="absolute top-1/2 hidden -translate-y-1/2 md:block"
               style={{ [endSide]: 0 }}
             >
-              {END_ITEMS.map((item, index) => {
-                const Icon = item.icon
-                const text = item.key ? items[item.key] || item.fallback : ""
-                return (
-                  <motion.div
-                    key={`end-${index}`}
-                    className={`border-border/50 absolute flex items-center justify-center rounded-full border ${
-                      item.type === "icon"
-                        ? "bg-card p-6"
+              {RIGHT_ITEMS.map((item, index) => (
+                <motion.div
+                  key={`right-${index}`}
+                  className={`border-border absolute flex items-center justify-center rounded-full border-2 ${
+                    item.type === "icon"
+                      ? "bg-card p-6"
+                      : item.type === "text"
+                        ? "bg-card/80 px-8 py-6"
                         : "bg-card gap-3 px-7 py-6"
-                    }`}
-                    style={{
-                      [endSide]: `${3 + item.x / 10}rem`,
-                      top: item.y,
-                      x: getEndX(item.row),
-                      rotate: endRotate,
-                      zIndex: 20 + index,
-                    }}
-                  >
-                    <Icon
-                      className={`text-foreground shrink-0 ${
-                        item.type === "icon" ? "h-8 w-8" : "h-6 w-6"
-                      }`}
-                      strokeWidth={1.5}
+                  }`}
+                  style={{
+                    [endSide]: `${3 + item.x / 10}rem`,
+                    top: item.y,
+                    x: getRightX(item.row),
+                    rotate: rightRotate,
+                    zIndex: 20 + index,
+                  }}
+                >
+                  {item.icon && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={item.icon}
+                      alt={item.text || ""}
+                      className={
+                        item.type === "icon"
+                          ? "h-16 w-16 shrink-0 object-contain"
+                          : "h-14 w-14 shrink-0 object-contain"
+                      }
                     />
-                    {text && (
-                      <span className="text-foreground text-sm font-semibold whitespace-nowrap">
-                        {text}
-                      </span>
-                    )}
-                  </motion.div>
-                )
-              })}
+                  )}
+                  {item.text && (
+                    <span className="text-foreground text-sm font-semibold whitespace-nowrap">
+                      {item.text}
+                    </span>
+                  )}
+                </motion.div>
+              ))}
             </div>
           </div>
         </div>

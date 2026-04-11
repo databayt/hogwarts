@@ -4,7 +4,20 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useEffect, useRef, useState } from "react"
 import dynamic from "next/dynamic"
-import { FileText, Plus, Send, Smile, Square, X } from "lucide-react"
+import {
+  Crop,
+  FileText,
+  Mic,
+  Pencil,
+  Plus,
+  RotateCw,
+  Send,
+  Smile,
+  Square,
+  Sticker,
+  Type,
+  X,
+} from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -15,7 +28,7 @@ import { type UploadedFileResult } from "@/components/file"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { sendMessage } from "./actions"
-import type { MessageDTO } from "./types"
+import type { MessageAttachmentDTO, MessageDTO } from "./types"
 import { uploadMessageAttachment } from "./upload-actions"
 
 function formatFileSize(bytes: number) {
@@ -36,7 +49,11 @@ export interface MessageInputProps {
   onFileUpload?: (files: UploadedFileResult[]) => void
   onTypingStart?: () => void
   onTypingStop?: () => void
-  onOptimisticSend?: (content: string, replyToId?: string) => string | void
+  onOptimisticSend?: (
+    content: string,
+    replyToId?: string,
+    attachments?: MessageAttachmentDTO[]
+  ) => string | void
   onMessageConfirmed?: (nonce: string, messageId: string) => void
   onMessageFailed?: (nonce: string) => void
   className?: string
@@ -240,38 +257,74 @@ export function MessageInput({
 
   const handlePreviewSend = useCallback(async () => {
     if (!previewFile || isSendingPreview) return
-    setIsSendingPreview(true)
 
+    const file = previewFile
+    const localUrl = previewUrl!
+    const caption = captionRef.current?.value?.trim() || ""
+    const fileType = file.type || "application/octet-stream"
+    const contentType = fileType.startsWith("video/")
+      ? "video"
+      : fileType.startsWith("image/")
+        ? "image"
+        : "text"
+
+    // Optimistic: show image in chat immediately using local blob URL
+    const optimisticAttachment: MessageAttachmentDTO = {
+      id: `temp-att-${Date.now()}`,
+      messageId: "",
+      url: localUrl,
+      fileUrl: localUrl,
+      name: file.name,
+      fileName: file.name,
+      size: file.size,
+      fileSize: file.size,
+      fileType,
+      thumbnail: null,
+      uploadedAt: new Date(),
+    }
+    // Use space as content for media-only messages — invisible in UI
+    // (message.content?.trim() is falsy) but passes server validation
+    const messageContent = caption || " "
+
+    const nonce = onOptimisticSend?.(caption, undefined, [optimisticAttachment])
+
+    // Close preview immediately — image is now in the chat
+    setPreviewFile(null)
+    setPreviewUrl(null) // Don't revoke — blob URL is used by optimistic message
+    setIsSendingPreview(false)
+
+    // Upload + send in background
     try {
       const formData = new FormData()
-      formData.append("file", previewFile)
+      formData.append("file", file)
       formData.append("conversationId", conversationId)
 
       const uploadResult = await uploadMessageAttachment(formData)
 
       if (!uploadResult.success) {
+        if (nonce) onMessageFailed?.(nonce)
         toast({
           title: m?.notifications?.error || "Error",
           description: uploadResult.error || "Failed to upload",
         })
+        URL.revokeObjectURL(localUrl)
         return
       }
 
-      const { fileUrl, fileName, fileSize, fileType } = uploadResult.data
-      const contentType = fileType.startsWith("video/")
-        ? "video"
-        : fileType.startsWith("image/")
-          ? "image"
-          : "text"
-      const caption = captionRef.current?.value?.trim()
-
-      const nonce = onOptimisticSend?.(caption || fileUrl)
+      const uploaded = uploadResult.data
       const msgResult = await sendMessage({
         conversationId,
-        content: caption || fileUrl,
+        content: messageContent,
         contentType,
         clientNonce: nonce || undefined,
-        attachments: [{ fileUrl, fileName, fileSize, fileType }],
+        attachments: [
+          {
+            fileUrl: uploaded.fileUrl,
+            fileName: uploaded.fileName,
+            fileSize: uploaded.fileSize,
+            fileType: uploaded.fileType,
+          },
+        ],
       })
 
       if (msgResult.success && nonce) {
@@ -285,20 +338,23 @@ export function MessageInput({
         })
       }
 
-      closePreview()
-    } catch {
+      URL.revokeObjectURL(localUrl)
+    } catch (err) {
+      if (nonce) onMessageFailed?.(nonce)
       toast({
         title: m?.notifications?.error || "Error",
-        description: m?.errors?.send_failed || "Failed to send",
+        description:
+          (err instanceof Error ? err.message : null) ||
+          m?.errors?.send_failed ||
+          "Failed to send",
       })
-    } finally {
-      setIsSendingPreview(false)
+      URL.revokeObjectURL(localUrl)
     }
   }, [
     previewFile,
+    previewUrl,
     isSendingPreview,
     conversationId,
-    closePreview,
     onOptimisticSend,
     onMessageConfirmed,
     onMessageFailed,
@@ -308,6 +364,7 @@ export function MessageInput({
   // Voice recording state
   const [isRecording, setIsRecording] = useState(false)
   const [recordingDuration, setRecordingDuration] = useState(0)
+  const [micDenied, setMicDenied] = useState(false)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null)
@@ -324,6 +381,7 @@ export function MessageInput({
         })
         return
       }
+      setMicDenied(false)
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
@@ -369,10 +427,10 @@ export function MessageInput({
           const { fileUrl, fileName, fileSize, fileType } = uploadResult.data
 
           // Send message with audio attachment
-          const nonce = onOptimisticSend?.(fileUrl)
+          const nonce = onOptimisticSend?.("")
           const msgResult = await sendMessage({
             conversationId,
-            content: fileUrl,
+            content: " ",
             contentType: "audio",
             clientNonce: nonce || undefined,
             attachments: [{ fileUrl, fileName, fileSize, fileType }],
@@ -409,17 +467,18 @@ export function MessageInput({
       }, 1000)
     } catch (err) {
       const errorName = err instanceof DOMException ? err.name : ""
-      const description =
-        errorName === "NotAllowedError"
-          ? "Microphone permission denied. Allow microphone access in your browser settings."
-          : errorName === "NotFoundError"
-            ? "No microphone found. Please connect a microphone."
-            : m?.errors?.microphone_access ||
-              `Could not access microphone${errorName ? `: ${errorName}` : ""}`
-      toast({
-        title: m?.notifications?.error || "Error",
-        description,
-      })
+      if (errorName === "NotAllowedError") {
+        setMicDenied(true)
+      } else {
+        toast({
+          title: m?.notifications?.error || "Error",
+          description:
+            errorName === "NotFoundError"
+              ? "No microphone found. Please connect a microphone."
+              : m?.errors?.microphone_access ||
+                `Could not access microphone${errorName ? `: ${errorName}` : ""}`,
+        })
+      }
     }
   }, [conversationId, onOptimisticSend, onMessageConfirmed, onMessageFailed, m])
 
@@ -485,6 +544,38 @@ export function MessageInput({
             >
               <X className="h-4 w-4" />
             </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Mic permission denied CTA */}
+      {micDenied && (
+        <div className="border-border flex items-center gap-3 border-b bg-amber-50 px-4 py-2.5 dark:bg-amber-950/30">
+          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/50">
+            <Mic className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+          </div>
+          <p className="text-muted-foreground flex-1 text-xs">
+            {(m?.ui as Record<string, string>)?.mic_denied ||
+              "Microphone access is blocked. Click the lock icon in your browser's address bar and allow microphone."}
+          </p>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => {
+                setMicDenied(false)
+                startRecording()
+              }}
+              className="rounded-full bg-amber-600 px-3 py-1 text-xs font-medium text-white hover:bg-amber-700"
+            >
+              {(m?.ui as Record<string, string>)?.try_again || "Try Again"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setMicDenied(false)}
+              className="text-muted-foreground hover:text-foreground rounded-full p-1"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
           </div>
         </div>
       )}
@@ -720,16 +811,32 @@ export function MessageInput({
           className="fixed inset-0 z-50 flex flex-col"
           style={{ backgroundColor: "#1B1B1B" }}
         >
-          <div className="flex items-center px-4 py-3">
+          {/* Top bar: close (left) + image tools (right) */}
+          <div className="flex items-center justify-between px-4 py-3">
             <button
               type="button"
               onClick={closePreview}
-              className="rounded-full p-1 text-white/80 hover:text-white"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-[#313131] text-white/80 hover:text-white"
             >
-              <X className="h-6 w-6" />
+              <X className="h-5 w-5" />
             </button>
+
+            {previewType === "image" && (
+              <div className="flex items-center gap-1">
+                {[Crop, Sticker, Type, Pencil, RotateCw].map((Icon, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    className="flex h-10 w-10 items-center justify-center rounded-full text-white/70 hover:bg-white/10 hover:text-white"
+                  >
+                    <Icon className="h-5 w-5" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
+          {/* Image / video / document preview */}
           <div className="flex flex-1 items-center justify-center overflow-hidden px-4">
             {previewType === "image" ? (
               <img
@@ -758,7 +865,8 @@ export function MessageInput({
             )}
           </div>
 
-          <div className="flex items-center gap-3 px-4 py-4">
+          {/* Caption input — centered pill */}
+          <div className="flex justify-center px-4 pb-2">
             <input
               ref={captionRef}
               type="text"
@@ -775,8 +883,22 @@ export function MessageInput({
                   closePreview()
                 }
               }}
-              className="flex-1 rounded-full border-0 bg-[#2A2A2A] px-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:ring-1 focus:ring-[#1FA961]/50 focus:outline-none"
+              className="w-full max-w-md rounded-full border-0 bg-[#2A2A2A] px-4 py-2.5 text-center text-sm text-white placeholder:text-white/40 focus:ring-1 focus:ring-[#1FA961]/50 focus:outline-none"
             />
+          </div>
+
+          {/* Footer — blur bg, "You" left + send right */}
+          <div
+            className="flex items-center justify-between px-5 py-3"
+            style={{
+              backgroundColor: "rgba(30, 30, 30, 0.85)",
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
+            }}
+          >
+            <span className="text-sm text-white/60">
+              {(m?.ui as Record<string, string>)?.you || "You"}
+            </span>
             <button
               type="button"
               onClick={handlePreviewSend}

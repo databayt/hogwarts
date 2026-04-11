@@ -297,6 +297,13 @@ export const {
   trustHost: true, // Required for OAuth in production (Vercel proxies)
   logger: {
     error(code, ...message: unknown[]) {
+      // JWTSessionError is expected when users have stale/expired cookies
+      // The layout already handles this gracefully (falls back to null session)
+      if (code instanceof Error && code.name === "JWTSessionError") {
+        console.warn("[AUTH] Stale JWT session — user will be logged out")
+        return
+      }
+
       // Extract all error details into a single object for Vercel logs
       const extractErrorDetails = (
         obj: unknown,

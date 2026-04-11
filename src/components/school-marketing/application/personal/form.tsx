@@ -162,6 +162,8 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
               name="nationality"
               label={`${dict.nationality} *`}
               placeholder={dict.selectNationality}
+              searchPlaceholder={dict.searchCountry}
+              emptyMessage={dict.noCountryFound}
               locale={lang}
             />
             <SelectField

@@ -19,7 +19,7 @@ interface Props {
 export default async function NewScholarshipPage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
-  const d = dictionary?.finance?.fees?.scholarship
+  const d = dictionary?.finance?.scholarshipForm
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) notFound()

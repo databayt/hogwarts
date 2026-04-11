@@ -34,7 +34,12 @@ import { useUserPresence } from "./hooks/use-presence"
 import { MessageInput } from "./message-input"
 import { MessageList, MessageListSkeleton } from "./message-list"
 import { buildMessageFromSocket } from "./messaging-client"
-import type { ConversationDTO, MessageDTO, TypingIndicatorDTO } from "./types"
+import type {
+  ConversationDTO,
+  MessageAttachmentDTO,
+  MessageDTO,
+  TypingIndicatorDTO,
+} from "./types"
 
 const AVATAR_COLORS = [
   { bg: "#CBF2EE", icon: "#028377" },
@@ -173,8 +178,20 @@ export function ChatInterface({
 
   // Direct cache optimistic send — no useOptimistic, no double render
   const handleOptimisticSend = useCallback(
-    (content: string, replyToId?: string): string => {
+    (
+      content: string,
+      replyToId?: string,
+      attachments?: MessageAttachmentDTO[]
+    ): string => {
       const nonce = crypto.randomUUID()
+      const hasAttachments = attachments && attachments.length > 0
+      const contentType = hasAttachments
+        ? attachments[0].fileType.startsWith("image/")
+          ? "image"
+          : attachments[0].fileType.startsWith("video/")
+            ? "video"
+            : "text"
+        : "text"
       const optimisticMessage: MessageDTO = {
         id: `temp-${nonce}`,
         conversationId: conversation.id,
@@ -186,7 +203,7 @@ export function ChatInterface({
           image: null,
         },
         content,
-        contentType: "text",
+        contentType,
         status: "sending",
         replyToId: replyToId || null,
         replyTo: replyToId
@@ -203,7 +220,7 @@ export function ChatInterface({
         whatsappPhone: null,
         createdAt: new Date(),
         updatedAt: new Date(),
-        attachments: [],
+        attachments: attachments || [],
         reactions: [],
         readReceipts: [],
         readCount: 0,

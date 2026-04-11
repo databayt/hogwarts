@@ -200,12 +200,14 @@ export function FineDetail({ fine, lang }: FineDetailProps) {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="CASH">Cash</SelectItem>
+                            <SelectItem value="CASH">
+                              {ff?.cash || "Cash"}
+                            </SelectItem>
                             <SelectItem value="BANK_TRANSFER">
-                              Bank Transfer
+                              {ff?.bankTransfer || "Bank Transfer"}
                             </SelectItem>
                             <SelectItem value="CREDIT_CARD">
-                              Credit Card
+                              {ff?.creditCard || "Credit Card"}
                             </SelectItem>
                           </SelectContent>
                         </Select>
@@ -366,7 +368,15 @@ export function FineDetail({ fine, lang }: FineDetailProps) {
                   variant="outline"
                   className={FINE_TYPE_COLORS[fine.fineType] ?? ""}
                 >
-                  {fine.fineType.replace(/_/g, " ")}
+                  {fine.fineType === "LATE_FEE"
+                    ? ff?.lateFee || "Late Fee"
+                    : fine.fineType === "LIBRARY_FINE"
+                      ? ff?.libraryFine || "Library Fine"
+                      : fine.fineType === "DISCIPLINE_FINE"
+                        ? ff?.disciplineFine || "Discipline Fine"
+                        : fine.fineType === "DAMAGE_FINE"
+                          ? ff?.damageFine || "Damage Fine"
+                          : ff?.other || "Other"}
                 </Badge>
               </div>
               <div className="flex justify-between">
@@ -382,7 +392,13 @@ export function FineDetail({ fine, lang }: FineDetailProps) {
                   {ff?.status || "Status"}
                 </span>
                 <Badge variant="outline" className={statusColor[status]}>
-                  {status}
+                  {status === "PAID"
+                    ? ff?.statusPaid || "Paid"
+                    : status === "WAIVED"
+                      ? ff?.statusWaived || "Waived"
+                      : status === "OVERDUE"
+                        ? ff?.statusOverdue || "Overdue"
+                        : ff?.statusPending || "Pending"}
                 </Badge>
               </div>
               <div className="flex justify-between">

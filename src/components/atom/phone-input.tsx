@@ -213,7 +213,7 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
                 </button>
               </PopoverTrigger>
               <PopoverContent className="w-60 p-0" align="start">
-                <Command>
+                <Command dir="ltr">
                   <CommandInput
                     placeholder={searchPlaceholder ?? "Search country..."}
                   />

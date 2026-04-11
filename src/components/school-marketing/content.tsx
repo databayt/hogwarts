@@ -68,9 +68,9 @@ export default function SiteContent({
         heroImageUrl={school.branding?.heroImageUrl}
         logoUrl={school.logoUrl}
       />
+      <PhoneMockup dictionary={dictionary} lang={lang} />
       <Houses />
       <Features />
-      <PhoneMockup dictionary={dictionary} lang={lang} />
       <Core />
       <Faculty />
       <Testimonials />

@@ -28,7 +28,7 @@ export default async function ScholarshipDetailPage({
   const { lang, id } = await params
   const { edit } = await searchParams
   const dictionary = await getDictionary(lang)
-  const d = dictionary?.finance?.fees?.scholarship
+  const d = dictionary?.finance?.scholarshipForm
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) notFound()
@@ -126,7 +126,11 @@ export default async function ScholarshipDetailPage({
               variant="outline"
               className={`mt-1 ${COVERAGE_TYPE_COLORS[scholarship.coverageType] ?? ""}`}
             >
-              {scholarship.coverageType.replace(/_/g, " ")}
+              {scholarship.coverageType === "FULL"
+                ? (d?.coverageTypeFull ?? "Full")
+                : scholarship.coverageType === "PERCENTAGE"
+                  ? (d?.coverageTypePercentage ?? "Percentage")
+                  : (d?.coverageTypeFixed ?? "Fixed Amount")}
             </Badge>
           </CardContent>
         </Card>

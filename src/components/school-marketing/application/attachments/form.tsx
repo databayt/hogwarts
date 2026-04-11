@@ -248,6 +248,20 @@ export const AttachmentsForm = forwardRef<
     },
   })
 
+  // Sync form when initialData arrives after mount (session loaded async)
+  useEffect(() => {
+    if (initialData) {
+      form.reset({
+        profilePhotoUrl: initialData.profilePhotoUrl || "",
+        degreeUrl: initialData.degreeUrl || "",
+        transcriptUrl: initialData.transcriptUrl || "",
+        idUrl: initialData.idUrl || "",
+        resumeUrl: initialData.resumeUrl || "",
+        otherUrl: initialData.otherUrl || "",
+      })
+    }
+  }, [initialData, form])
+
   const prevDataRef = React.useRef<string>("")
   useEffect(() => {
     const subscription = form.watch((value) => {

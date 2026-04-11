@@ -20,7 +20,7 @@ interface Props {
 export default async function NewFinePage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
-  const d = dictionary?.finance?.fees?.fine
+  const d = dictionary?.finance?.fineForm
   const { schoolId } = await getTenantContext()
 
   if (!schoolId) notFound()

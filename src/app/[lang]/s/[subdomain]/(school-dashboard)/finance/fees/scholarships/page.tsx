@@ -59,13 +59,15 @@ export default async function ScholarshipsPage({ params }: Props) {
         : String(s.createdAt),
   }))
 
+  const sf = dictionary?.finance?.scholarshipForm
+
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
         <Button asChild>
           <Link href={`/${lang}/finance/fees/scholarships/new`}>
             <Plus className="me-2 h-4 w-4" />
-            New Scholarship
+            {sf?.newScholarship ?? "New Scholarship"}
           </Link>
         </Button>
       </div>
