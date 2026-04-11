@@ -40,6 +40,10 @@ scripts/clickview-clone.md
 src/proxy.ts.real
 screenshots/
 
+# Documentation (MDX compilation with shiki OOMs on Vercel Hobby 8GB)
+content/docs-en/
+content/docs-ar/
+
 # Claude plans
 .claude/plans/
 .claude/error.log

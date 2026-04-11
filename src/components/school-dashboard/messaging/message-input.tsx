@@ -8,18 +8,10 @@ import { FileText, Plus, Send, Smile, Square, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/components/ui/use-toast"
 import { MicFilledIcon } from "@/components/atom/icons"
 import { type UploadedFileResult } from "@/components/file"
-import { ACCEPT_ALL } from "@/components/file/mime-types"
-import { FileUploader } from "@/components/file/upload/file-uploader"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { sendMessage } from "./actions"
@@ -783,7 +775,7 @@ export function MessageInput({
                   closePreview()
                 }
               }}
-              className="flex-1 rounded-full border-0 bg-[#2A2A2A] px-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-[#1FA961]/50"
+              className="flex-1 rounded-full border-0 bg-[#2A2A2A] px-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:ring-1 focus:ring-[#1FA961]/50 focus:outline-none"
             />
             <button
               type="button"
