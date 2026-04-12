@@ -220,7 +220,7 @@ async function buildResponse(
           select: {
             catalogLessonId: true,
             videoUrl: true,
-            user: { select: { name: true } },
+            user: { select: { username: true } },
           },
         })
       : []
@@ -231,14 +231,14 @@ async function buildResponse(
     if (!videoByLesson.has(v.catalogLessonId)) {
       videoByLesson.set(v.catalogLessonId, {
         url: toCloudFrontUrl(v.videoUrl),
-        instructor: v.user?.name || "",
+        instructor: v.user?.username || "",
       })
     }
   }
 
   // Collect unique instructor names for subject-level attribution
   const instructorNames = [
-    ...new Set(videos.map((v) => v.user?.name).filter(Boolean)),
+    ...new Set(videos.map((v) => v.user?.username).filter(Boolean)),
   ]
 
   // Translate chapters and lessons
