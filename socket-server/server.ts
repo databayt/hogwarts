@@ -269,6 +269,12 @@ io.on("connection", async (socket: Socket) => {
 // ---------------------------------------------------------------------------
 
 app.post("/api/emit", (req, res) => {
+  const secret = req.headers["x-emit-secret"]
+  if (secret !== EMIT_SECRET) {
+    res.status(401).json({ error: "Unauthorized" })
+    return
+  }
+
   const { room, event, data } = req.body
 
   if (!room || !event) {
@@ -311,6 +317,12 @@ app.post("/api/emit", (req, res) => {
 // ---------------------------------------------------------------------------
 
 app.post("/api/emit-to-users", (req, res) => {
+  const secret = req.headers["x-emit-secret"]
+  if (secret !== EMIT_SECRET) {
+    res.status(401).json({ error: "Unauthorized" })
+    return
+  }
+
   const { userIds, event, data } = req.body
 
   if (!Array.isArray(userIds) || !event) {

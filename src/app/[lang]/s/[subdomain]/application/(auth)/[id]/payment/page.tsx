@@ -19,7 +19,7 @@ export async function generateMetadata({
   const d = await getDictionary(lang)
   const steps = d?.school?.admission?.apply?.steps
   return {
-    title: `${steps?.payment?.title ?? "Payment"} | ${lang === "ar" ? "التقديم" : "Apply"}`,
+    title: `${steps?.payment?.title ?? "Payment"} | ${(d?.school?.admission as Record<string, unknown>)?.title ?? "Apply"}`,
     description: steps?.payment?.description ?? "Pay your application fee.",
   }
 }
@@ -75,10 +75,14 @@ export default async function PaymentPage({ params, searchParams }: Props) {
   }
 
   const dictionary = await getDictionary(lang)
+  const paymentDict = (
+    dictionary as unknown as {
+      school?: { admission?: { apply?: { payment?: Record<string, string> } } }
+    }
+  )?.school?.admission?.apply?.payment
 
   // Already paid guard
   if (application.applicationFeePaid) {
-    const isAr = lang === "ar"
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4">
         <div className="rounded-full bg-emerald-100 p-4 dark:bg-emerald-900/30">
@@ -97,12 +101,10 @@ export default async function PaymentPage({ params, searchParams }: Props) {
           </svg>
         </div>
         <h2 className="text-xl font-semibold">
-          {isAr ? "تم الدفع بنجاح" : "Payment Successful"}
+          {paymentDict?.paymentConfirmed}
         </h2>
         <p className="text-muted-foreground text-sm">
-          {isAr
-            ? `تم دفع رسوم الطلب بالفعل. رقم الطلب: ${application.applicationNumber}`
-            : `Application fee has already been paid. Application #: ${application.applicationNumber}`}
+          {paymentDict?.paymentAlreadyRecorded}
         </p>
       </div>
     )

@@ -4,6 +4,8 @@
 
 Administrative dashboard for managing the full admission lifecycle: campaign creation, application review, merit list generation, student placement, and enrollment confirmation. Provides tabbed views for each stage of the admission funnel with DataTable-driven UIs, bulk operations, and RBAC-protected server actions.
 
+This is a cross-block feature. The dashboard side (this block) handles admin review and enrollment. The marketing side (`school-marketing/admission/` + `school-marketing/application/`) handles the public-facing application wizard. Both share `prisma/models/admission.prisma`.
+
 ### Capabilities by Role
 
 - **DEVELOPER / ADMIN**: Full access -- create/edit campaigns, review applications, generate merit lists, confirm enrollment, manage settings
@@ -26,9 +28,9 @@ Administrative dashboard for managing the full admission lifecycle: campaign cre
 
 ```
 src/components/school-dashboard/admission/
-├── actions.ts                      # Server actions (campaigns, applications, merit, enrollment)
+├── actions.ts                      # Server actions (campaigns, applications, merit, enrollment, notifications)
 ├── authorization.ts                # RBAC permission checks
-├── queries.ts                      # Read-only DB queries with filters/pagination
+├── queries.ts                      # Read-only DB queries with filters/pagination/sorting
 ├── validation.ts                   # Zod schemas (campaign, application)
 ├── list-params.ts                  # Shared list parameter types
 ├── campaigns-content.tsx           # Campaigns tab (server component)
@@ -53,19 +55,35 @@ src/components/school-dashboard/admission/
 │   ├── actions.ts                  # Settings server actions
 │   ├── validation.ts               # Settings validation schemas
 │   └── __tests__/actions.test.ts   # Settings action tests
+├── ai/
+│   ├── types.ts                    # AI document types (classification, extraction, merit)
+│   ├── schemas.ts                  # Zod schemas for AI structured output
+│   ├── prompts.ts                  # AI system prompts
+│   ├── classify.ts                 # Claude Vision document classification
+│   ├── completeness.ts             # Document completeness checker
+│   ├── merit-engine.ts             # Weighted merit score computation
+│   ├── actions.ts                  # AI processing server actions
+│   ├── bank-receipt-schema.ts      # Bank receipt extraction schema
+│   ├── bank-receipt-actions.ts     # Bank receipt processing actions
+│   ├── document-review-panel.tsx   # Document review UI (client)
+│   ├── document-card.tsx           # Individual document card (client)
+│   └── documents-section.tsx       # Documents section wrapper (client)
 └── __tests__/
-    ├── actions.test.ts             # Main action tests
-    └── validation.test.ts          # Validation tests
+    ├── actions.test.ts                     # Main action tests
+    ├── validation.test.ts                  # Validation tests
+    ├── enrollment-notifications.test.ts    # Notification tests
+    ├── enrollment-pipeline.test.ts         # Pipeline tests
+    └── offer-expiry.test.ts               # Offer expiry tests
 ```
 
 ### Status
 
-**Completion:** 90% | **Blockers:** None
+**Completion:** 100% | **Blockers:** None
 
 ### Integration Points
 
-- `src/components/school-marketing/admission/` -- public-facing admission pages and application form
-- `src/components/school-marketing/application/` -- multi-step student application wizard
+- `src/components/school-marketing/admission/` -- public-facing admission pages, inquiry forms, tour booking
+- `src/components/school-marketing/application/` -- multi-step student application wizard (6 form steps + payment + success)
 - `src/lib/enrollment-sync.ts` -- auto-enroll placed students into grade classes
 - `src/lib/dispatch-notification.ts` -- notification dispatch on status changes
-- `prisma/models/admission.prisma` -- AdmissionCampaign, AdmissionApplication models
+- `prisma/models/admission.prisma` -- 9 models: AdmissionCampaign, Application, Communication, AdmissionInquiry, AdmissionTimeSlot, TourBooking, ApplicationSession, AdmissionSettings, AdmissionOTP

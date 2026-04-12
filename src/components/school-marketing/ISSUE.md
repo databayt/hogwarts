@@ -103,8 +103,8 @@
 
 ### P1 — High
 
-- **Hardcoded validation messages**: `admission/validation.ts` has `getValidationMessages()` that returns English strings. The `_dictionary` parameter is unused. Validation errors will not appear in Arabic.
-- **Two parallel application flows**: Both `admission/steps/` and `apply/` implement multi-step applications. The relationship and migration path between them needs clarification.
+- ~~Hardcoded validation messages~~ (RESOLVED — old application schemas removed, new flow uses ValidationHelper)
+- ~~Two parallel application flows~~ (RESOLVED — `admission/steps/` deleted, single flow via `application/`)
 
 ### P2 — Medium
 

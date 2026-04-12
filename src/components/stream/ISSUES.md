@@ -1,8 +1,9 @@
 # Stream (LMS) Module - Issues & Roadmap
 
-**Last Updated:** January 2026
-**Version:** 2.2.0
+**Last Updated:** 2026-04-11
+**Version:** 3.0.0
 **Status:** ✅ ALL ISSUES RESOLVED - 100% Production-Ready
+**Ship Issue:** [#241](https://github.com/databayt/hogwarts/issues/241)
 
 ---
 
@@ -311,6 +312,10 @@ These are future features, not production blockers.
 - [x] Type-safe dictionary
 - [x] Test coverage for utilities
 - [x] No P0/P1/P2 issues remaining
+- [x] Catalog-based architecture migration (replaces legacy stream\_ tables)
+- [x] Instructor preference system (platform/school/teacher sources)
+- [x] Teacher video proposal and admin review workflow
+- [x] Parent view of child progress
 
 ---
 

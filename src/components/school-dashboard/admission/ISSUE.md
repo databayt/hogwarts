@@ -1,8 +1,9 @@
 # Admission (Dashboard) — Production Readiness Tracker
 
-**Status:** 🟡 IN PROGRESS
-**Completion:** 95%
-**Last Updated:** 2026-04-01
+**Status:** 🟢 READY
+**Completion:** 100%
+**Last Updated:** 2026-04-11
+**Ship Issue:** [#239](https://github.com/databayt/hogwarts/issues/239)
 
 ---
 
@@ -21,7 +22,10 @@
 - [x] Zod validation schemas
 - [x] Unit tests for actions and validation
 - [x] Email notifications on status changes (immediate via dispatchAdmissionNotification)
-- [ ] Application fee payment integration verification
+- [x] AI document processing (classification, extraction, completeness, merit scoring)
+- [x] Application fee payment integration (Stripe + cash + bank transfer, webhook verified)
+- [x] Old application flow (`admission/steps/`) removed — single flow via `application/`
+- [x] Payment page i18n (dictionary keys, no hardcoded strings)
 
 ## Known Issues
 
@@ -31,8 +35,7 @@
 
 ### P1 — High
 
-- ~~Email notifications for status transitions~~ (DONE — immediate sending via dispatchAdmissionNotification)
-- Payment recording flow for application fees needs integration testing with payment block
+- None
 
 ### P2 — Medium
 
@@ -46,8 +49,7 @@
 - Automated waitlist management (auto-offer when seats free up)
 - Interview/entrance exam scheduling integration
 - Document verification workflow with checklist
-- Parent portal for application status tracking (currently in school-marketing)
 
 ---
 
-**Last Review:** 2026-03-19
+**Last Review:** 2026-04-11

@@ -2,17 +2,17 @@
 
 ## Context
 
-Public-facing school website on subdomain (e.g., `demo.databayt.org`). Includes homepage sections, admission portal, multi-step application form, visit booking, academic pages (85% complete). Blocker: hardcoded English validation messages.
+Public-facing school website on subdomain (e.g., `demo.databayt.org`). Includes homepage sections, admission portal, multi-step application form, visit booking, academic pages (90% complete). No blockers.
 
 ## Before You Start
 
 1. Read `README.md` here for full file structure and key patterns
-2. Read `ISSUE.md` here for priorities (P1: hardcoded validation messages, two parallel application flows)
+2. Read `ISSUE.md` here for priorities
 3. If working on admission/application, also read the cross-block rule at `.claude/rules/blocks/admission.md`
 
 ## Key Decisions
 
-- Two parallel application flows exist: `admission/steps/` (older) and `application/` (newer, context-based). Migration path is P1
+- Single application flow via `application/` (context-based, 6 form steps + payment + success)
 - Campaign-based admission: applications tied to `AdmissionCampaign` records with date windows
 - Session-based drafts via `saveApplicationSession` / `resumeApplicationSession` -- no login required
 - OTP status tracking: applicants check status via email OTP (no account needed)
@@ -21,8 +21,6 @@ Public-facing school website on subdomain (e.g., `demo.databayt.org`). Includes 
 
 ## Danger Zones
 
-- `admission/validation.ts` -- `getValidationMessages()` has unused `_dictionary` param; errors show English-only
-- Two application flows (`admission/steps/` vs `application/`) -- editing the wrong one wastes effort
 - `visit/actions.ts` calls `sendEmail()` -- verify template exists in `@/lib/email` before modifying
 - Session persistence in `application/` -- breaking auto-save loses applicant progress
 - ALL UI text must use dictionary keys -- no hardcoded English. Forms: `dictionary.school.*.form.*`, toasts: `ToastHelper`, validation: `ValidationHelper`, server errors: error codes.

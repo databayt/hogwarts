@@ -7,7 +7,7 @@ Public multi-step application form for prospective students (8 steps: personal, 
 ## Before You Start
 
 1. Read parent `../README.md` for full school-marketing structure
-2. Read parent `../ISSUE.md` for known issues (especially P1: two parallel application flows)
+2. Read parent `../ISSUE.md` for known issues
 3. Read `application-context.tsx` for state management pattern
 4. Read `validation-helpers.ts` for cross-step validation
 
@@ -16,7 +16,7 @@ Public multi-step application form for prospective students (8 steps: personal, 
 - `ApplicationContext` (React context) manages all form state across steps -- injected at layout level
 - Unauthenticated users can apply -- session saved server-side via `saveApplicationSession` action
 - Each step subdirectory follows: `form.tsx`, `config.ts`, `types.ts`, `validation.ts`, optional `actions.ts`
-- Two parallel flows exist: this (`application/`) is the newer one; `admission/steps/` is older. Migration path unclear (P1)
+- This is the only application flow (old `admission/steps/` was removed)
 - Payment supports card, cash, and bank transfer -- payment step is optional based on campaign config
 - Submission action in `submit-action.ts` validates all steps before creating `AdmissionApplication`
 

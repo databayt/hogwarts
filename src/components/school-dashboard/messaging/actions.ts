@@ -160,9 +160,13 @@ async function emitSocketEvent(
 ): Promise<void> {
   const socketUrl =
     process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3001"
+  const emitSecret = process.env.EMIT_SECRET || process.env.SOCKET_SECRET || ""
   await fetch(`${socketUrl}/api/emit`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "x-emit-secret": emitSecret,
+    },
     body: JSON.stringify({
       room: `conversation:${conversationId}`,
       event,
@@ -182,9 +186,13 @@ async function emitToUsers(
 ): Promise<void> {
   const socketUrl =
     process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3001"
+  const emitSecret = process.env.EMIT_SECRET || process.env.SOCKET_SECRET || ""
   await fetch(`${socketUrl}/api/emit-to-users`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "x-emit-secret": emitSecret,
+    },
     body: JSON.stringify({ userIds, event, data }),
   })
 }

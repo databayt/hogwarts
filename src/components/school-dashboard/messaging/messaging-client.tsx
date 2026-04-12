@@ -315,6 +315,45 @@ export function MessagingClient({
     }
   }, [isConnected])
 
+  // Polling fallback for active conversation messages when Socket.IO unavailable
+  useEffect(() => {
+    if (isConnected) return
+    const activeId = activeConversation?.id
+    if (!activeId) return
+
+    let active = true
+    const poll = async () => {
+      if (!active) return
+      const cached = cacheRef.current.get(activeId)
+      if (!cached?.lastMessageId) return
+      try {
+        const result = await pollNewMessages({
+          conversationId: activeId,
+          afterMessageId: cached.lastMessageId,
+        })
+        if (result.success && result.data.items.length > 0) {
+          const existingIds = new Set(cached.messages.map((m) => m.id))
+          const newMsgs = result.data.items.filter(
+            (m: MessageDTO) => !existingIds.has(m.id)
+          )
+          if (newMsgs.length > 0) {
+            cached.messages = [...cached.messages, ...newMsgs]
+            cached.lastMessageId = getLastRealMessageId(cached.messages)
+            setRenderTick((t) => t + 1)
+          }
+        }
+      } catch {
+        // Polling is best-effort
+      }
+    }
+
+    const timer = setInterval(poll, 10000)
+    return () => {
+      active = false
+      clearInterval(timer)
+    }
+  }, [isConnected, activeConversation?.id])
+
   // Listen for conversation + message updates via Socket.IO
   useEffect(() => {
     if (!isConnected) return

@@ -21,7 +21,7 @@ import type {
   PublicCampaign,
   SubmitApplicationResult,
 } from "../types"
-import { createFullApplicationSchema, sessionDataSchema } from "../validation"
+import { sessionDataSchema } from "../validation"
 
 // Initialize Resend for email
 const resend = process.env.RESEND_API_KEY
@@ -543,16 +543,8 @@ export async function submitApplication(
 
     const schoolId = schoolResult.data.id
 
-    // Validate the full application
-    const schema = createFullApplicationSchema()
-    const parseResult = schema.safeParse(data)
-    if (!parseResult.success) {
-      const fieldErrors = parseResult.error.issues
-        .map((i) => `${i.path.join(".")}: ${i.message}`)
-        .join("; ")
-      return { success: false, error: `Validation failed: ${fieldErrors}` }
-    }
-    const validated = parseResult.data
+    // Data is pre-validated by submit-action.ts before reaching here
+    const validated = data
 
     // Verify session exists and belongs to this school
     const appSession = await db.applicationSession.findUnique({

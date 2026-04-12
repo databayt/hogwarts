@@ -25,7 +25,8 @@ primary_region = "fra"
   cpu_kind = "shared"
   cpus = 1
 
-[[services.http_checks]]
-  interval = 30000
-  timeout = 5000
-  path = "/api/status"
+  [http_service.checks]
+    [http_service.checks.health]
+      interval = "30s"
+      timeout = "5s"
+      path = "/api/status"

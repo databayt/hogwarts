@@ -468,7 +468,10 @@ export function PhoneMockup({ dictionary, lang }: PhoneMockupProps) {
   const endSide = isRTL ? "left" : "right"
 
   return (
-    <section ref={sectionRef} className="relative min-h-[200vh]">
+    <section
+      ref={sectionRef}
+      className="relative min-h-[200vh] overflow-x-clip"
+    >
       <div className="sticky top-0 flex h-screen items-center justify-center overflow-hidden">
         <div className="relative container mx-auto max-w-7xl px-4">
           {/* Text */}
@@ -494,7 +497,7 @@ export function PhoneMockup({ dictionary, lang }: PhoneMockupProps) {
               {LEFT_ITEMS.map((item, index) => (
                 <motion.div
                   key={`left-${index}`}
-                  className={`border-border absolute flex items-center justify-center rounded-full border-2 ${
+                  className={`border-border/40 absolute flex items-center justify-center rounded-full border ${
                     item.type === "icon"
                       ? "bg-card p-6"
                       : "bg-card gap-3 px-7 py-6"
@@ -573,7 +576,7 @@ export function PhoneMockup({ dictionary, lang }: PhoneMockupProps) {
               {RIGHT_ITEMS.map((item, index) => (
                 <motion.div
                   key={`right-${index}`}
-                  className={`border-border absolute flex items-center justify-center rounded-full border-2 ${
+                  className={`border-border/40 absolute flex items-center justify-center rounded-full border ${
                     item.type === "icon"
                       ? "bg-card p-6"
                       : item.type === "text"
