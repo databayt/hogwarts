@@ -5,20 +5,34 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 export default function Loading() {
   return (
-    <div className="container mx-auto max-w-3xl px-4 py-12">
-      <Skeleton className="mb-4 h-2 w-full rounded-full" />
-      <Skeleton className="mb-8 h-10 w-64" />
-      <div className="space-y-6">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Skeleton className="h-12 w-full rounded-md" />
-          <Skeleton className="h-12 w-full rounded-md" />
+    <div className="flex w-full flex-col items-start gap-6 lg:flex-row lg:justify-between lg:gap-10">
+      {/* Left column - FormHeading */}
+      <div className="w-full lg:w-auto lg:shrink-0 lg:basis-[48%]">
+        <div className="space-y-3 sm:space-y-4">
+          <Skeleton className="h-9 w-48" />
+          <Skeleton className="h-5 w-72 max-w-full" />
         </div>
-        <Skeleton className="h-12 w-full rounded-md" />
-        <Skeleton className="h-12 w-full rounded-md" />
       </div>
-      <div className="mt-8 flex justify-between">
-        <Skeleton className="h-10 w-24 rounded-md" />
-        <Skeleton className="h-10 w-24 rounded-md" />
+
+      {/* Right column - Contact form (3 stacked fields) */}
+      <div className="w-full lg:w-auto lg:shrink-0 lg:basis-[48%]">
+        <div className="space-y-6">
+          {/* Email */}
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+          {/* Phone */}
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-16" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+          {/* Alternate phone */}
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        </div>
       </div>
     </div>
   )

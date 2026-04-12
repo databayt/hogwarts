@@ -5,18 +5,26 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 export default function LocationLoading() {
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
-      <div className="flex items-start gap-4">
-        <Skeleton className="h-12 w-12 rounded-full" />
-        <div className="flex-1 space-y-2">
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="h-4 w-96" />
+    <div className="flex w-full flex-col items-start gap-6 lg:flex-row lg:justify-between lg:gap-10">
+      {/* Left column - FormHeading */}
+      <div className="w-full lg:w-auto lg:shrink-0 lg:basis-[48%]">
+        <div className="space-y-3 sm:space-y-4">
+          <Skeleton className="h-9 w-48" />
+          <Skeleton className="h-5 w-72 max-w-full" />
         </div>
       </div>
-      <div className="space-y-4">
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
+
+      {/* Right column - Location form (Mapbox or manual fallback) */}
+      <div className="w-full lg:w-auto lg:shrink-0 lg:basis-[48%]">
+        <div className="space-y-6">
+          {/* Search input */}
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+          {/* Map placeholder */}
+          <Skeleton className="h-[320px] w-full rounded-lg" />
+        </div>
       </div>
     </div>
   )

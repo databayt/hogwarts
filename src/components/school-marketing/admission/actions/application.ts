@@ -588,6 +588,7 @@ export async function submitApplication(
           schoolId,
           campaignId: validated.campaignId,
           email: validated.email,
+          status: { not: "DRAFT" },
         },
       })
 
