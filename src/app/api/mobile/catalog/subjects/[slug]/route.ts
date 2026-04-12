@@ -4,7 +4,7 @@
 import { NextRequest, NextResponse } from "next/server"
 
 import { getCatalogImageUrl } from "@/lib/catalog-image-url"
-import { getVideoUrl } from "@/lib/cloudfront"
+import { toCloudFrontUrl } from "@/lib/cloudfront-url"
 import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import type { SupportedLanguage } from "@/components/translation/types"
@@ -230,7 +230,7 @@ async function buildResponse(
   for (const v of videos) {
     if (!videoByLesson.has(v.catalogLessonId)) {
       videoByLesson.set(v.catalogLessonId, {
-        url: getVideoUrl(v.videoUrl, { isFree: true }),
+        url: toCloudFrontUrl(v.videoUrl),
         instructor: v.user?.name || "",
       })
     }
