@@ -999,7 +999,26 @@
     "refunded": "مسترد",
     "receiptNumber": "رقم الإيصال",
     "viewReceipt": "عرض الإيصال",
-    "delete": "حذف"
+    "delete": "حذف",
+    "name": "الاسم",
+    "type": "النوع",
+    "coverageAmount": "مبلغ التغطية",
+    "startDate": "تاريخ البداية",
+    "endDate": "تاريخ الانتهاء",
+    "beneficiaries": "المستفيدون",
+    "applications": "الطلبات",
+    "active": "نشط",
+    "inactive": "غير نشط",
+    "edit": "تعديل",
+    "full": "كامل",
+    "meritBased": "جدارة",
+    "needBased": "حاجة",
+    "sports": "رياضي",
+    "academic": "أكاديمي",
+    "fineType": "نوع الغرامة",
+    "reason": "السبب",
+    "dueDate": "تاريخ الاستحقاق",
+    "waived": "معفى"
   },
   "common": {
     "schoolNotFound": "لم يتم العثور على سياق المدرسة",
@@ -1079,7 +1098,9 @@
     "create": "إنشاء",
     "update": "تحديث",
     "saving": "جارٍ الحفظ...",
-    "save": "حفظ"
+    "save": "حفظ",
+    "deleteConfirm": "لا يمكن التراجع عن هذا الإجراء.",
+    "delete": "حذف"
   },
   "feesPage": {
     "feesCollected": "الرسوم المحصّلة",

@@ -999,7 +999,26 @@
     "refunded": "Refunded",
     "receiptNumber": "Receipt #",
     "viewReceipt": "View Receipt",
-    "delete": "Delete"
+    "delete": "Delete",
+    "name": "Name",
+    "type": "Type",
+    "coverageAmount": "Coverage Amount",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "beneficiaries": "Beneficiaries",
+    "applications": "Applications",
+    "active": "Active",
+    "inactive": "Inactive",
+    "edit": "Edit",
+    "full": "Full",
+    "meritBased": "Merit Based",
+    "needBased": "Need Based",
+    "sports": "Sports",
+    "academic": "Academic",
+    "fineType": "Fine Type",
+    "reason": "Reason",
+    "dueDate": "Due Date",
+    "waived": "Waived"
   },
   "common": {
     "schoolNotFound": "School context not found",
@@ -1083,7 +1102,9 @@
     "errorTitle": "Unable to load finance data",
     "errorDescription": "An unexpected error occurred while loading finance information.",
     "errorReference": "Error reference",
-    "tryAgain": "Try again"
+    "tryAgain": "Try again",
+    "deleteConfirm": "This action cannot be undone.",
+    "delete": "حذف"
   },
   "feesPage": {
     "feesCollected": "Fees Collected",

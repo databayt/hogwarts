@@ -143,9 +143,38 @@ function FinesTableInner({
     [table]
   )
 
+  const handleBulkDelete = useCallback(
+    async (rows: FineRow[]) => {
+      const ok = await confirmDeleteDialog(undefined, {
+        title: col?.delete || fc?.delete || "Delete",
+        description:
+          fc?.deleteConfirm ||
+          `Delete ${rows.length} selected items? This action cannot be undone.`,
+        confirmText: col?.delete || fc?.delete || "Delete",
+        cancelText: fc?.cancel || "Cancel",
+      })
+      if (!ok) return
+      for (const row of rows) {
+        optimisticRemove(row.id)
+        const result = await deleteFine(row.id)
+        if (!result.success) {
+          refresh()
+          ErrorToast(result.error || "Failed to delete")
+          return
+        }
+      }
+      DeleteToast()
+      table.toggleAllPageRowsSelected(false)
+    },
+    [col, fc, optimisticRemove, refresh, table]
+  )
+
   const bulkActions = useMemo(
-    () => [createExportAction<FineRow>(handleBulkExport, lang)],
-    [handleBulkExport, lang]
+    () => [
+      createDeleteAction<FineRow>(handleBulkDelete, lang),
+      createExportAction<FineRow>(handleBulkExport, lang),
+    ],
+    [handleBulkDelete, handleBulkExport, lang]
   )
 
   return (
