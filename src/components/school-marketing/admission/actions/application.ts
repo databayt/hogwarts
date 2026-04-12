@@ -273,10 +273,10 @@ export async function saveApplicationSession(
         },
       })
 
-      // Send email with resume link
+      // Send email with resume link (fire-and-forget — don't block the response)
       if (resend) {
-        try {
-          await resend.emails.send({
+        resend.emails
+          .send({
             from: "noreply@databayt.org",
             to: validated.email,
             subject: "Your Application in Progress",
@@ -288,10 +288,9 @@ export async function saveApplicationSession(
               <p>Best regards,<br>${schoolResult.data.name}</p>
             `,
           })
-        } catch (emailError) {
-          console.error("Failed to send resume email:", emailError)
-          // Don't fail the action if email fails
-        }
+          .catch((err: unknown) =>
+            console.error("[saveApplicationSession] resume email error:", err)
+          )
       }
 
       return { success: true, data: { sessionToken: newToken } }
@@ -546,10 +545,26 @@ export async function submitApplication(
     // Data is pre-validated by submit-action.ts before reaching here
     const validated = data
 
-    // Verify session exists and belongs to this school
-    const appSession = await db.applicationSession.findUnique({
-      where: { sessionToken },
-    })
+    // Run independent queries in parallel
+    const [appSession, authSession, campaign, admissionSettings] =
+      await Promise.all([
+        db.applicationSession.findUnique({
+          where: { sessionToken },
+        }),
+        auth(),
+        db.admissionCampaign.findFirst({
+          where: {
+            id: validated.campaignId,
+            schoolId,
+            status: "OPEN",
+            endDate: { gte: new Date() },
+          },
+        }),
+        db.admissionSettings.findUnique({
+          where: { schoolId },
+          select: { allowMultipleApplications: true },
+        }),
+      ])
 
     if (appSession && appSession.schoolId !== schoolId) {
       return { success: false, error: "Invalid session" }
@@ -558,18 +573,7 @@ export async function submitApplication(
     // Resolve userId: prefer the session's original userId (set when applicant
     // started the application) over the current auth() session, since an admin
     // could be logged into the same browser on the school domain.
-    const authSession = await auth()
     const userId = appSession?.userId ?? authSession?.user?.id ?? undefined
-
-    // Check campaign is still open
-    const campaign = await db.admissionCampaign.findFirst({
-      where: {
-        id: validated.campaignId,
-        schoolId,
-        status: "OPEN",
-        endDate: { gte: new Date() },
-      },
-    })
 
     if (!campaign) {
       return {
@@ -578,20 +582,21 @@ export async function submitApplication(
       }
     }
 
-    // Check if email already has an application for this campaign
-    const existingApplication = await db.application.findFirst({
-      where: {
-        schoolId,
-        campaignId: validated.campaignId,
-        email: validated.email,
-      },
-    })
+    if (admissionSettings && !admissionSettings.allowMultipleApplications) {
+      const existingApplication = await db.application.findFirst({
+        where: {
+          schoolId,
+          campaignId: validated.campaignId,
+          email: validated.email,
+        },
+      })
 
-    if (existingApplication) {
-      return {
-        success: false,
-        error:
-          "An application with this email already exists for this campaign",
+      if (existingApplication) {
+        return {
+          success: false,
+          error:
+            "An application with this email already exists for this campaign",
+        }
       }
     }
 
@@ -712,10 +717,10 @@ export async function submitApplication(
       console.error("[submitApplication] notification error:", err)
     )
 
-    // Send confirmation email
+    // Send confirmation email (fire-and-forget — don't block the response)
     if (resend) {
-      try {
-        await resend.emails.send({
+      resend.emails
+        .send({
           from: "noreply@databayt.org",
           to: validated.email,
           subject: `Application Received - ${applicationNumber}`,
@@ -730,9 +735,9 @@ export async function submitApplication(
             <p>Best regards,<br>${schoolResult.data.name}</p>
           `,
         })
-      } catch (emailError) {
-        console.error("Failed to send confirmation email:", emailError)
-      }
+        .catch((err: unknown) =>
+          console.error("[submitApplication] confirmation email error:", err)
+        )
     }
 
     // Check if payment is required
