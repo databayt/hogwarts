@@ -45,8 +45,17 @@ export async function POST(request: NextRequest) {
 
     const { email, password } = validatedFields.data
 
-    // Find user by email
-    const user = await getUserByEmail(email)
+    // Find user by email — prefer school-scoped user for mobile
+    let user = await getUserByEmail(email)
+
+    if (user && !user.schoolId) {
+      // Platform user found but has no school — check for a school-scoped version
+      const schoolUser = await db.user.findFirst({
+        where: { email, schoolId: { not: null } },
+        orderBy: { updatedAt: "desc" },
+      })
+      if (schoolUser) user = schoolUser
+    }
 
     if (!user) {
       return NextResponse.json(
