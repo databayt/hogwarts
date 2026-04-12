@@ -140,8 +140,11 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
         locale={locale}
         useValidation={useApplyValidation}
         showSaveStatus={false}
-        showSave={false}
-        onSave={saveSession}
+        showSave={true}
+        onSave={async () => {
+          await saveSession()
+          window.location.href = `/${locale}/application`
+        }}
         finalLabel={(applyRoot?.submit as string) || dict.submit}
       />
     </div>

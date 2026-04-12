@@ -212,7 +212,7 @@ export interface SplitLayoutProps {
 /** Heading props - title + description with RTL support */
 export interface FormHeadingProps {
   title: string
-  description?: string
+  description?: React.ReactNode
   className?: string
   titleClassName?: string
   descriptionClassName?: string

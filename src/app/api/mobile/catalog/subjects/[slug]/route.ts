@@ -202,25 +202,28 @@ async function buildResponse(
   // Fetch best video per lesson for this school
   const allLessonIds = subject.chapters
     .filter((c) => !hiddenChapterIds.has(c.id))
-    .flatMap((c) => c.lessons.filter((l) => !hiddenLessonIds.has(l.id)).map((l) => l.id))
+    .flatMap((c) =>
+      c.lessons.filter((l) => !hiddenLessonIds.has(l.id)).map((l) => l.id)
+    )
 
-  const videos = allLessonIds.length > 0
-    ? await db.video.findMany({
-        where: {
-          catalogLessonId: { in: allLessonIds },
-          approvalStatus: "APPROVED",
-          OR: schoolId
-            ? [{ schoolId }, { visibility: "PUBLIC" }]
-            : [{ visibility: "PUBLIC" }],
-        },
-        orderBy: [{ isFeatured: "desc" }, { viewCount: "desc" }],
-        select: {
-          catalogLessonId: true,
-          videoUrl: true,
-          user: { select: { name: true } },
-        },
-      })
-    : []
+  const videos =
+    allLessonIds.length > 0
+      ? await db.video.findMany({
+          where: {
+            catalogLessonId: { in: allLessonIds },
+            approvalStatus: "APPROVED",
+            OR: schoolId
+              ? [{ schoolId }, { visibility: "PUBLIC" }]
+              : [{ visibility: "PUBLIC" }],
+          },
+          orderBy: [{ isFeatured: "desc" }, { viewCount: "desc" }],
+          select: {
+            catalogLessonId: true,
+            videoUrl: true,
+            user: { select: { name: true } },
+          },
+        })
+      : []
 
   // Map: lessonId -> best video URL + instructor name
   const videoByLesson = new Map<string, { url: string; instructor: string }>()
@@ -234,9 +237,9 @@ async function buildResponse(
   }
 
   // Collect unique instructor names for subject-level attribution
-  const instructorNames = [...new Set(
-    videos.map((v) => v.user?.name).filter(Boolean)
-  )]
+  const instructorNames = [
+    ...new Set(videos.map((v) => v.user?.name).filter(Boolean)),
+  ]
 
   // Translate chapters and lessons
   const chapters = await Promise.all(

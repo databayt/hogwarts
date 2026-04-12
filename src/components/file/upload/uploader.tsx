@@ -74,6 +74,8 @@ interface UploaderProps {
   chunkThreshold?: number
   /** Override schoolId for uploads (e.g., applicants uploading to a target school) */
   schoolId?: string
+  /** Existing file URL to display (e.g., from saved session) */
+  initialUrl?: string
   onUploadComplete?: (results: UploadResult[]) => void
   onUploadError?: (error: string) => void
   onFilesChange?: (files: UploadResult[]) => void
@@ -136,6 +138,7 @@ export function Uploader({
   imageOptimization,
   chunkThreshold,
   schoolId,
+  initialUrl,
   onUploadComplete,
   onUploadError,
   onFilesChange,
@@ -292,6 +295,12 @@ export function Uploader({
               alt="Avatar"
               className="h-full w-full rounded-full object-cover"
             />
+          ) : initialUrl ? (
+            <img
+              src={initialUrl}
+              alt="Avatar"
+              className="h-full w-full rounded-full object-cover"
+            />
           ) : placeholderImage ? (
             <img
               src={placeholderImage}
@@ -307,6 +316,21 @@ export function Uploader({
             </div>
           )}
         </div>
+        {(previews.length > 0 || uploadedFiles.length > 0 || initialUrl) &&
+          !isUploading && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                removePreview(0)
+              }}
+              className="absolute end-0 top-0 z-20 flex h-5 w-5 items-center justify-center rounded-full bg-black/50 text-white transition-colors hover:bg-black/70"
+              aria-label={dictionary?.remove || "Remove"}
+            >
+              <X className="h-3 w-3" />
+            </button>
+          )}
         {error && <p className="text-destructive mt-2 text-sm">{error}</p>}
       </div>
     )

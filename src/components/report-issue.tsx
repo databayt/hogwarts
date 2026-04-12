@@ -80,7 +80,7 @@ export function ReportIssue({ variant = "text" }: ReportIssueProps) {
             className="cursor-pointer"
             aria-label={t?.link || "Report an issue"}
           >
-            <Bug className="h-6 w-6" strokeWidth={1} />
+            <Bug className="h-6 w-6" strokeWidth={0.75} />
           </button>
         ) : (
           <button className="cursor-pointer font-medium underline underline-offset-4">

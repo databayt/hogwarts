@@ -8723,18 +8723,18 @@
         "groups": {
           "basicInfo": "Basic Information",
           "details": "Details",
-          "familyEducation": "Family & Education",
+          "familyEducation": "Documents",
           "finalize": "Finalize"
         },
         "overview": {
-          "title": "Application Steps",
+          "title": "It's easy to get started with {school}",
           "subtitle": "Follow these steps to complete your application",
           "getStarted": "Get Started",
           "back": "Back",
           "loading": "Loading...",
-          "stage1Desc": "Provide your personal and contact details",
-          "stage2Desc": "Add guardian info and academic background",
-          "stage3Desc": "Upload documents and review your application"
+          "stage1Desc": "Upload documents to auto-fill your application",
+          "stage2Desc": "Provide your personal and contact details",
+          "stage3Desc": "Add guardian info and academic background"
         },
         "steps": {
           "attachments": {
@@ -8753,9 +8753,9 @@
             "description": "Email and phone number"
           },
           "location": {
-            "label": "Address",
-            "title": "Address",
-            "description": "Residential address"
+            "label": "Current Address",
+            "title": "Current Address",
+            "description": "Click {locationIcon} to select your current location or drag the map"
           },
           "guardian": {
             "label": "Guardian Information",
@@ -8862,6 +8862,8 @@
             "selectGender": "Select gender",
             "nationality": "Nationality",
             "selectNationality": "Select nationality",
+            "searchCountry": "Search country...",
+            "noCountryFound": "No country found.",
             "category": "Category",
             "selectCategory": "Select category",
             "religion": "Religion",

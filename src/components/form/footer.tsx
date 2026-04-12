@@ -337,7 +337,7 @@ export function FormFooter({
               href={`/${locale}`}
               className="relative flex h-8 w-8 items-center justify-center"
             >
-              <div className="relative h-6 w-6">
+              <div className="relative h-[22px] w-[22px]">
                 <Image
                   src={logoSrc}
                   alt="Logo"
@@ -354,13 +354,8 @@ export function FormFooter({
               className="flex h-8 w-8 items-center justify-center"
               aria-label={dict.help || "Help"}
             >
-              <HelpCircle className="h-6 w-6" strokeWidth={1} />
+              <HelpCircle className="h-6 w-6" strokeWidth={0.75} />
             </button>
-          )}
-          {showReport && (
-            <div className="flex h-8 w-8 items-center justify-center">
-              <ReportIssue variant="icon" />
-            </div>
           )}
           {showSave && (
             <button
@@ -383,9 +378,14 @@ export function FormFooter({
               {isSaving ? (
                 <Loader2 className="h-6 w-6 animate-spin" />
               ) : (
-                <Bookmark className="h-6 w-6" strokeWidth={1} />
+                <Bookmark className="h-6 w-6" strokeWidth={0.75} />
               )}
             </button>
+          )}
+          {showReport && (
+            <div className="flex h-8 w-8 items-center justify-center">
+              <ReportIssue variant="icon" />
+            </div>
           )}
           {/* Save status indicator */}
           {showSaveStatus && (

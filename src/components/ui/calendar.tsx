@@ -28,9 +28,12 @@ function Calendar({
   buttonVariant?: React.ComponentProps<typeof Button>["variant"]
 }) {
   const defaultClassNames = getDefaultClassNames()
+  const localeCode = (props.locale as { code?: string } | undefined)?.code
+  const resolvedDir = props.dir || (localeCode === "ar" ? "rtl" : undefined)
 
   return (
     <DayPicker
+      dir={resolvedDir}
       showOutsideDays={showOutsideDays}
       className={cn(
         "bg-background group/calendar p-3 [--cell-size:--spacing(7)] [[data-slot=card-content]_&]:bg-transparent [[data-slot=popover-content]_&]:bg-transparent",
@@ -41,8 +44,18 @@ function Calendar({
       captionLayout={captionLayout}
       formatters={{
         formatMonthDropdown: (date) => {
-          const loc = props.locale as { code?: string } | undefined
-          return date.toLocaleString(loc?.code ?? "default", { month: "short" })
+          return date.toLocaleString(localeCode ?? "default", {
+            month: "short",
+          })
+        },
+        formatWeekdayName: (date) => {
+          if (localeCode === "ar") {
+            const arDays = ["ح", "ن", "ث", "ر", "خ", "ج", "س"]
+            return arDays[date.getDay()]
+          }
+          return date.toLocaleString(localeCode ?? "default", {
+            weekday: "short",
+          })
         },
         ...formatters,
       }}
@@ -95,12 +108,12 @@ function Calendar({
           defaultClassNames.caption_label
         ),
         month_grid: "table-fixed w-full border-collapse",
-        weekdays: cn("flex border-0", defaultClassNames.weekdays),
+        weekdays: cn("border-0", defaultClassNames.weekdays),
         weekday: cn(
-          "text-muted-foreground flex-1 min-w-0 select-none rounded-md p-0 h-auto text-center text-[0.8rem] rtl:text-[0.6rem] font-normal",
+          "text-muted-foreground select-none rounded-md p-0 text-center text-[0.8rem] rtl:text-[0.6rem] font-normal",
           defaultClassNames.weekday
         ),
-        week: cn("mt-2 flex w-full border-0", defaultClassNames.week),
+        week: cn("mt-2 border-0", defaultClassNames.week),
         week_number_header: cn(
           "w-(--cell-size) select-none",
           defaultClassNames.week_number_header
@@ -110,7 +123,7 @@ function Calendar({
           defaultClassNames.week_number
         ),
         day: cn(
-          "group/day relative aspect-square h-full w-full select-none p-0 text-center [&:first-child[data-selected=true]_button]:rounded-s-md [&:last-child[data-selected=true]_button]:rounded-e-md",
+          "group/day relative select-none overflow-hidden p-0 text-center [&:first-child[data-selected=true]_button]:rounded-s-md [&:last-child[data-selected=true]_button]:rounded-e-md",
           defaultClassNames.day
         ),
         range_start: cn(
@@ -200,10 +213,9 @@ function CalendarDayButton({
   const isPast = day.date < today
 
   return (
-    <Button
+    <button
       ref={ref}
-      variant="ghost"
-      size="icon"
+      type="button"
       data-day={day.date.toLocaleDateString()}
       data-past={isPast || undefined}
       data-selected-single={
@@ -211,13 +223,22 @@ function CalendarDayButton({
         !modifiers.range_start &&
         !modifiers.range_end &&
         !modifiers.range_middle
+          ? true
+          : undefined
       }
-      data-range-start={modifiers.range_start}
-      data-range-end={modifiers.range_end}
-      data-range-middle={modifiers.range_middle}
+      data-range-start={modifiers.range_start || undefined}
+      data-range-end={modifiers.range_end || undefined}
+      data-range-middle={modifiers.range_middle || undefined}
       className={cn(
-        "data-[past=true]:text-muted-foreground data-[selected-single=true]:bg-primary data-[selected-single=true]:text-primary-foreground data-[range-middle=true]:bg-accent data-[range-middle=true]:text-accent-foreground data-[range-start=true]:bg-primary data-[range-start=true]:text-primary-foreground data-[range-end=true]:bg-primary data-[range-end=true]:text-primary-foreground group-data-[focused=true]/day:border-ring group-data-[focused=true]/day:ring-ring/50 dark:hover:text-accent-foreground flex aspect-square size-auto w-full min-w-(--cell-size) flex-col gap-1 leading-none font-normal group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 group-data-[focused=true]/day:ring-[3px] data-[range-end=true]:rounded-md data-[range-middle=true]:rounded-none data-[range-start=true]:rounded-md [&>span]:text-xs [&>span]:opacity-70",
-        defaultClassNames.day,
+        "inline-flex h-(--cell-size) w-(--cell-size) items-center justify-center rounded-md text-sm font-normal transition-colors outline-none",
+        "hover:bg-accent hover:text-accent-foreground",
+        "focus-visible:ring-ring/50 focus-visible:ring-[3px]",
+        "disabled:pointer-events-none disabled:opacity-50",
+        "data-[past=true]:text-muted-foreground",
+        "data-[selected-single=true]:bg-primary data-[selected-single=true]:text-primary-foreground",
+        "data-[range-middle=true]:bg-accent data-[range-middle=true]:text-accent-foreground data-[range-middle=true]:rounded-none",
+        "data-[range-start=true]:bg-primary data-[range-start=true]:text-primary-foreground data-[range-start=true]:rounded-md",
+        "data-[range-end=true]:bg-primary data-[range-end=true]:text-primary-foreground data-[range-end=true]:rounded-md",
         className
       )}
       {...props}

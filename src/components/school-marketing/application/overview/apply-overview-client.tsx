@@ -24,6 +24,7 @@ interface ApplyOverviewClientProps {
   dictionary: Dictionary["school"]["admission"]
   lang: Locale
   subdomain: string
+  schoolName: string
   id?: string
 }
 
@@ -31,6 +32,7 @@ const ApplyOverviewClient: React.FC<ApplyOverviewClientProps> = ({
   dictionary,
   lang,
   subdomain,
+  schoolName,
   id,
 }) => {
   const router = useRouter()
@@ -43,29 +45,31 @@ const ApplyOverviewClient: React.FC<ApplyOverviewClientProps> = ({
   const stages: Stage[] = [
     {
       number: 1,
-      title: groupsDict.basicInfo || "Basic Information",
+      title: groupsDict.familyEducation || "Documents",
       description:
         overviewDict.stage1Desc ||
-        "Upload documents and enter personal details",
+        "Upload documents to auto-fill your application",
       illustration:
-        "https://d1dlwtcfl0db67.cloudfront.net/anthropic/illustrations/node-constitution.svg",
+        "https://d1dlwtcfl0db67.cloudfront.net/anthropic/illustrations/lamp-paper.svg",
       bgColor: "#d97757",
     },
     {
       number: 2,
-      title: groupsDict.details || "Details",
+      title: groupsDict.basicInfo || "Basic Information",
       description:
-        overviewDict.stage2Desc || "Provide your contact and location details",
+        overviewDict.stage2Desc ||
+        "Enter your personal details and contact information",
       illustration:
-        "https://d1dlwtcfl0db67.cloudfront.net/anthropic/illustrations/hand-abacus.svg",
+        "https://d1dlwtcfl0db67.cloudfront.net/anthropic/illustrations/node-constitution.svg",
       bgColor: "#6a9bcc",
     },
     {
       number: 3,
-      title: groupsDict.familyEducation || "Family & Education",
-      description: overviewDict.stage3Desc || "Upload your documents",
+      title: groupsDict.details || "Details",
+      description:
+        overviewDict.stage3Desc || "Add guardian info and academic background",
       illustration:
-        "https://d1dlwtcfl0db67.cloudfront.net/anthropic/illustrations/lamp-paper.svg",
+        "https://d1dlwtcfl0db67.cloudfront.net/anthropic/illustrations/hand-abacus.svg",
       bgColor: "#788c5d",
     },
   ]
@@ -83,10 +87,6 @@ const ApplyOverviewClient: React.FC<ApplyOverviewClientProps> = ({
     }
   }
 
-  const handleBack = () => {
-    router.push(`/${lang}/application`)
-  }
-
   return (
     <div className="mx-auto flex h-full w-full max-w-5xl flex-col pb-24">
       <div className="flex flex-1 items-center">
@@ -95,12 +95,21 @@ const ApplyOverviewClient: React.FC<ApplyOverviewClientProps> = ({
             {/* Left Side - Title */}
             <div>
               <h2 className="text-start text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl">
-                {overviewDict.title || "Application Steps"}
+                {(() => {
+                  const title =
+                    overviewDict.title ||
+                    "It's easy to get started with {school}"
+                  const [before, after] = title.split("{school}")
+                  return (
+                    <>
+                      {before}
+                      <br />
+                      {schoolName}
+                      {after}
+                    </>
+                  )
+                })()}
               </h2>
-              <p className="text-muted-foreground mt-4 text-start">
-                {overviewDict.subtitle ||
-                  "Follow these steps to complete your application"}
-              </p>
             </div>
 
             {/* Right Side - 3 Stages */}
@@ -142,11 +151,12 @@ const ApplyOverviewClient: React.FC<ApplyOverviewClientProps> = ({
       {/* Fixed footer - matches onboarding pattern */}
       <footer className="bg-background fixed start-0 end-0 bottom-0 px-4 py-3 sm:px-6 sm:py-4 md:px-12 lg:px-20">
         <Separator className="mx-auto mb-3 w-full max-w-5xl sm:mb-4" />
-        <div className="mx-auto flex w-full max-w-5xl items-center justify-between rtl:flex-row-reverse">
-          <Button variant="ghost" onClick={handleBack}>
-            {overviewDict.back || "Back"}
-          </Button>
-          <Button onClick={handleGetStarted} disabled={isStarting || !id}>
+        <div className="mx-auto flex w-full max-w-5xl items-center justify-end">
+          <Button
+            onClick={handleGetStarted}
+            disabled={isStarting || !id}
+            className={isRTL ? "px-8" : ""}
+          >
             {isStarting
               ? overviewDict.loading || "Loading..."
               : overviewDict.getStarted || "Get Started"}

@@ -123,28 +123,30 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
             </Button>
           </div>
 
-          <InputField
-            name={`${namePrefix}Name`}
-            label={isFather ? dict.fatherName : dict.motherName}
-            placeholder={dict.namePlaceholder}
-          />
-          <InputField
-            name={`${namePrefix}Occupation`}
-            label={dict.occupation}
-            placeholder={dict.occupationPlaceholder}
-          />
-          <PhoneField
-            name={`${namePrefix}Phone`}
-            label={dict.phone}
-            placeholder={dict.phonePlaceholder}
-            selectCountryLabel={dict.selectCountry}
-          />
-          <InputField
-            name={`${namePrefix}Email`}
-            label={dict.email}
-            placeholder={dict.emailPlaceholder}
-            type="email"
-          />
+          <div key={activeParent} className="space-y-6">
+            <InputField
+              name={`${namePrefix}Name`}
+              label={isFather ? dict.fatherName : dict.motherName}
+              placeholder={dict.namePlaceholder}
+            />
+            <InputField
+              name={`${namePrefix}Occupation`}
+              label={dict.occupation}
+              placeholder={dict.occupationPlaceholder}
+            />
+            <PhoneField
+              name={`${namePrefix}Phone`}
+              label={dict.phone}
+              placeholder={dict.phonePlaceholder}
+              selectCountryLabel={dict.selectCountry}
+            />
+            <InputField
+              name={`${namePrefix}Email`}
+              label={dict.email}
+              placeholder={dict.emailPlaceholder}
+              type="email"
+            />
+          </div>
         </form>
       </Form>
     )

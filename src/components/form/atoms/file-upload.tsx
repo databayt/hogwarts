@@ -187,6 +187,11 @@ export function FileUploadField({
               schoolId={schoolId}
               accept={accept}
               dictionary={dictionary}
+              initialUrl={
+                typeof field.value === "string"
+                  ? field.value
+                  : (field.value as { url?: string })?.url || undefined
+              }
               onFilesChange={(files) => {
                 // Store uploaded file results in form
                 if (maxFiles === 1) {

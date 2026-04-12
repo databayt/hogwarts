@@ -7387,7 +7387,7 @@
           "enterLastName": "أدخل اسم العائلة",
           "selectGender": "اختر الجنس",
           "selectNationality": "اختر الجنسية",
-          "searchCountry": "ابحث عن دولة...",
+          "searchCountry": "بحث...",
           "noCountryFound": "لم يتم العثور على دولة."
         },
         "contact": {
@@ -8731,18 +8731,18 @@
         "groups": {
           "basicInfo": "المعلومات الأساسية",
           "details": "التفاصيل",
-          "familyEducation": "العائلة والتعليم",
+          "familyEducation": "المستندات",
           "finalize": "إنهاء"
         },
         "overview": {
-          "title": "خطوات التقديم",
+          "title": "من السهل البدء في {school}",
           "subtitle": "اتبع هذه الخطوات لإكمال طلب التقديم",
           "getStarted": "ابدأ",
           "back": "رجوع",
           "loading": "جاري التحميل...",
-          "stage1Desc": "أدخل بياناتك الشخصية ومعلومات الاتصال",
-          "stage2Desc": "أضف معلومات ولي الأمر والخلفية الأكاديمية",
-          "stage3Desc": "ارفع المستندات وراجع طلبك"
+          "stage1Desc": "ارفع المستندات لتعبئة البيانات تلقائياً",
+          "stage2Desc": "أدخل بياناتك الشخصية ومعلومات الاتصال",
+          "stage3Desc": "أضف معلومات ولي الأمر والخلفية الأكاديمية"
         },
         "steps": {
           "attachments": {
@@ -8761,9 +8761,9 @@
             "description": "البريد الإلكتروني ورقم الهاتف"
           },
           "location": {
-            "label": "العنوان",
-            "title": "العنوان",
-            "description": "عنوان الإقامة"
+            "label": "العنوان الحالي",
+            "title": "العنوان الحالي",
+            "description": "اضغط {locationIcon} لتحديد موقعك الحالي أو اسحب الخريطة"
           },
           "guardian": {
             "label": "معلومات ولي الأمر",
@@ -8776,8 +8776,8 @@
             "description": "التعليم السابق والصف المتقدم إليه"
           },
           "documents": {
-            "title": "الوثائق",
-            "description": "ارفع الوثائق المطلوبة"
+            "title": "المستندات",
+            "description": "ارفع المستندات لتعبئة البيانات تلقائياً"
           },
           "review": {
             "title": "المراجعة والإرسال",
@@ -8870,6 +8870,8 @@
             "selectGender": "اختر الجنس",
             "nationality": "الجنسية",
             "selectNationality": "اختر الجنسية",
+            "searchCountry": "بحث...",
+            "noCountryFound": "لم يتم العثور على دولة.",
             "category": "الفئة",
             "selectCategory": "اختر الفئة",
             "religion": "الديانة",
@@ -8886,7 +8888,7 @@
           },
           "location": {
             "address": "العنوان الحالي",
-            "addressPlaceholder": "أدخل العنوان الحالي",
+            "addressPlaceholder": "أدخل العنوان الكامل شاملاً المبنى والشارع والمنطقة",
             "city": "المدينة",
             "cityPlaceholder": "أدخل المدينة",
             "state": "الولاية",

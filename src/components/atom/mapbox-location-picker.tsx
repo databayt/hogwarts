@@ -3,7 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useEffect, useRef, useState } from "react"
-import { Loader2, MapPin, Navigation, Search, X } from "lucide-react"
+import { Loader2, MapPin, Search, X } from "lucide-react"
 import mapboxgl from "mapbox-gl"
 
 import {
@@ -292,14 +292,31 @@ export function MapboxLocationPicker({
             type="button"
             variant="ghost"
             size="icon"
-            className="h-10 w-10 shrink-0 rounded-none rounded-s-md"
+            className="group h-10 w-10 shrink-0 rounded-none rounded-s-md"
             onClick={handleGps}
             disabled={gpsLoading}
           >
             {gpsLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <Navigation className="h-4 w-4" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                className="text-muted-foreground group-hover:text-foreground h-4 w-4 transition-colors"
+              >
+                <path
+                  fill="currentColor"
+                  d="M12 8.25a3.75 3.75 0 1 0 0 7.5a3.75 3.75 0 0 0 0-7.5"
+                />
+                <path
+                  fill="currentColor"
+                  fillRule="evenodd"
+                  d="M12 1.25a.75.75 0 0 1 .75.75v1.282a8.75 8.75 0 0 1 7.968 7.968H22a.75.75 0 0 1 0 1.5h-1.282a8.75 8.75 0 0 1-7.968 7.968V22a.75.75 0 0 1-1.5 0v-1.282a8.75 8.75 0 0 1-7.968-7.968H2a.75.75 0 0 1 0-1.5h1.282a8.75 8.75 0 0 1 7.968-7.968V2a.75.75 0 0 1 .75-.75M4.75 12a7.25 7.25 0 1 0 14.5 0a7.25 7.25 0 0 0-14.5 0"
+                  clipRule="evenodd"
+                />
+              </svg>
             )}
           </Button>
 

@@ -81,19 +81,29 @@ function DocumentCard({
 
   const handleClear = useCallback(
     (e: React.MouseEvent) => {
+      e.preventDefault()
       e.stopPropagation()
       form.setValue(name, "")
     },
     [form, name]
   )
 
-  const { isUploading, uploadedFiles, upload, getAcceptedTypes } = useUpload({
+  const [rejectionError, setRejectionError] = useState<string | null>(null)
+
+  const {
+    isUploading,
+    error: uploadError,
+    uploadedFiles,
+    upload,
+    getAcceptedTypes,
+  } = useUpload({
     category: "document",
     folder: "apply-documents",
     maxSize: 10 * 1024 * 1024,
     maxFiles: 1,
     schoolId,
     onSuccess: (result) => {
+      setRejectionError(null)
       form.setValue(name, result)
       // Trigger silent AI extraction for auto-fill
       const url =
@@ -105,7 +115,18 @@ function DocumentCard({
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: async (files) => {
       if (files.length > 0) {
+        setRejectionError(null)
         await upload(files[0])
+      }
+    },
+    onDropRejected: (rejections) => {
+      const code = rejections[0]?.errors[0]?.code
+      if (code === "file-too-large") {
+        setRejectionError("10MB max")
+      } else if (code === "file-invalid-type") {
+        setRejectionError("PDF, DOC, XLS, TXT")
+      } else {
+        setRejectionError("Invalid file")
       }
     },
     accept: getAcceptedTypes(),
@@ -114,6 +135,8 @@ function DocumentCard({
     disabled: disabled || isUploading,
     multiple: false,
   })
+
+  const errorMsg = rejectionError || uploadError
 
   const uploaded = hasFile || uploadedFiles.length > 0
   const fileUrl =
@@ -133,6 +156,7 @@ function DocumentCard({
       {...getRootProps()}
       className={cn(
         "relative flex h-32 cursor-pointer flex-col items-center overflow-hidden rounded-lg border transition-colors",
+        errorMsg && "border-destructive",
         isDragActive && "border-primary bg-primary/10",
         disabled && "cursor-not-allowed opacity-50",
         !uploaded && "justify-center gap-2 p-4"
@@ -172,7 +196,7 @@ function DocumentCard({
             <img
               src={fileUrl}
               alt={label}
-              className="h-full w-full object-cover"
+              className="relative z-0 h-full w-full object-cover"
             />
           ) : /\.pdf$/i.test(fileUrl) || mimeType === "application/pdf" ? (
             <object
@@ -198,7 +222,11 @@ function DocumentCard({
       ) : (
         <>
           <Image src={icon} alt={label} width={32} height={32} />
-          <p className="text-sm font-medium">{label}</p>
+          {errorMsg ? (
+            <p className="text-destructive text-xs">{errorMsg}</p>
+          ) : (
+            <p className="text-sm font-medium">{label}</p>
+          )}
         </>
       )}
     </div>
@@ -209,7 +237,7 @@ export const AttachmentsForm = forwardRef<
   AttachmentsFormRef,
   AttachmentsFormProps
 >(({ initialData, onSuccess, dictionary }, ref) => {
-  const { updateStepData, getStepData } = useApplySession()
+  const { updateStepData, getStepData, saveSession } = useApplySession()
   const params = useParams()
   const [schoolId, setSchoolId] = useState<string>()
   const dict = getApplyDict(dictionary, "attachments")
@@ -263,16 +291,23 @@ export const AttachmentsForm = forwardRef<
   }, [initialData, form])
 
   const prevDataRef = React.useRef<string>("")
+  const saveTimerRef = React.useRef<NodeJS.Timeout | null>(null)
   useEffect(() => {
     const subscription = form.watch((value) => {
       const json = JSON.stringify(value)
       if (json !== prevDataRef.current) {
         prevDataRef.current = json
         updateStepData("attachments", value as unknown as AttachmentsStepData)
+        // Save shortly after upload to avoid "changes may not be saved" on refresh
+        if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+        saveTimerRef.current = setTimeout(() => saveSession(), 2000)
       }
     })
-    return () => subscription.unsubscribe()
-  }, [form, updateStepData])
+    return () => {
+      subscription.unsubscribe()
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+    }
+  }, [form, updateStepData, saveSession])
 
   const saveAndNext = async () => {
     const raw = form.getValues()

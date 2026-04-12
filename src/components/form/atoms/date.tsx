@@ -118,10 +118,21 @@ export function DateField({
             <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
-                selected={field.value ? new Date(field.value) : undefined}
-                onSelect={(date) =>
-                  field.onChange(date?.toISOString().split("T")[0])
+                selected={
+                  field.value
+                    ? (() => {
+                        const [y, m, d] = field.value.split("-").map(Number)
+                        return new Date(y, m - 1, d)
+                      })()
+                    : undefined
                 }
+                onSelect={(date) => {
+                  if (!date) return field.onChange("")
+                  const y = date.getFullYear()
+                  const m = String(date.getMonth() + 1).padStart(2, "0")
+                  const d = String(date.getDate()).padStart(2, "0")
+                  field.onChange(`${y}-${m}-${d}`)
+                }}
                 disabled={isDateDisabled}
                 captionLayout={captionLayout}
                 startMonth={startMonth}

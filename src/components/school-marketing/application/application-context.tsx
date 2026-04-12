@@ -37,6 +37,97 @@ const stepToIndex = (step: ApplyStep): number => {
   return index >= 0 ? index + 1 : 1
 }
 
+// Re-nest flat server formData into step-based structure
+// The server stores flat keys; the client needs them grouped by step
+const ATTACHMENT_KEYS = [
+  "profilePhotoUrl",
+  "degreeUrl",
+  "transcriptUrl",
+  "idUrl",
+  "resumeUrl",
+  "otherUrl",
+] as const
+const PERSONAL_KEYS = [
+  "firstName",
+  "middleName",
+  "lastName",
+  "dateOfBirth",
+  "gender",
+  "nationality",
+  "religion",
+  "category",
+] as const
+const CONTACT_KEYS = ["email", "phone", "alternatePhone"] as const
+const LOCATION_KEYS = [
+  "address",
+  "city",
+  "state",
+  "postalCode",
+  "country",
+] as const
+const GUARDIAN_KEYS = [
+  "fatherName",
+  "fatherOccupation",
+  "fatherPhone",
+  "fatherEmail",
+  "motherName",
+  "motherOccupation",
+  "motherPhone",
+  "motherEmail",
+  "guardianName",
+  "guardianRelation",
+  "guardianPhone",
+  "guardianEmail",
+] as const
+const ACADEMIC_KEYS = [
+  "previousSchool",
+  "previousClass",
+  "previousMarks",
+  "previousPercentage",
+  "achievements",
+  "applyingForClass",
+  "preferredStream",
+  "secondLanguage",
+  "thirdLanguage",
+] as const
+
+function reNestFormData(
+  flat: Record<string, unknown>
+): ApplySessionState["formData"] {
+  // If already nested (has step keys), return as-is
+  if (flat.attachments || flat.personal || flat.contact) {
+    return flat as ApplySessionState["formData"]
+  }
+
+  const pick = (keys: readonly string[]) => {
+    const obj: Record<string, unknown> = {}
+    let found = false
+    for (const k of keys) {
+      if (flat[k] !== undefined && flat[k] !== null && flat[k] !== "") {
+        obj[k] = flat[k]
+        found = true
+      }
+    }
+    return found ? obj : undefined
+  }
+
+  // Also map photoUrl -> profilePhotoUrl for backward compat
+  if (flat.photoUrl && !flat.profilePhotoUrl) {
+    flat.profilePhotoUrl = flat.photoUrl
+  }
+
+  return {
+    attachments: pick(
+      ATTACHMENT_KEYS
+    ) as ApplySessionState["formData"]["attachments"],
+    personal: pick(PERSONAL_KEYS) as ApplySessionState["formData"]["personal"],
+    contact: pick(CONTACT_KEYS) as ApplySessionState["formData"]["contact"],
+    location: pick(LOCATION_KEYS) as ApplySessionState["formData"]["location"],
+    guardian: pick(GUARDIAN_KEYS) as ApplySessionState["formData"]["guardian"],
+    academic: pick(ACADEMIC_KEYS) as ApplySessionState["formData"]["academic"],
+  }
+}
+
 interface ApplySessionContextType {
   // School/Campaign info
   subdomain: string | null
@@ -208,7 +299,7 @@ export const ApplySessionProvider: React.FC<ApplySessionProviderProps> = ({
             ...prev,
             sessionToken: token,
             campaignId: data.campaignId || null,
-            formData: data.formData as ApplySessionState["formData"],
+            formData: reNestFormData(data.formData as Record<string, unknown>),
             currentStep:
               (data.formData as { currentStep?: ApplyStep })?.currentStep ||
               "personal",

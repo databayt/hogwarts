@@ -264,7 +264,7 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
           type="tel"
           autoComplete="tel"
           name="phone"
-          className="placeholder:text-muted-foreground flex h-9 w-full border-none bg-transparent p-0 py-1 text-base leading-none transition-colors outline-none [interpolate-size:allow-keywords] md:text-sm"
+          className="placeholder:text-muted-foreground flex h-9 w-full border-none bg-transparent p-0 py-1 text-base leading-none transition-colors outline-none [interpolate-size:allow-keywords] md:text-sm rtl:text-right"
           {...props}
         />
       </div>
