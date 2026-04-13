@@ -14,12 +14,12 @@ import { ar } from "date-fns/locale/ar"
 import { enUS } from "date-fns/locale/en-US"
 import { useForm } from "react-hook-form"
 
-import { composeFullName } from "@/lib/name-utils"
+import { composeFullName, detectGenderFromName } from "@/lib/name-utils"
 import { Form } from "@/components/ui/form"
 import {
-  CountryField,
   DateField,
   NameFields,
+  PhoneField,
   SelectField,
 } from "@/components/form"
 import { createI18nHelpers } from "@/components/internationalization/helpers"
@@ -29,7 +29,7 @@ import type { PersonalStepData } from "../types"
 import { useAutoFillMerge } from "../use-auto-fill-merge"
 import { getApplyDict, getApplyOptionsDict } from "../utils"
 import { savePersonalStep } from "./actions"
-import { getCategoryOptions, getGenderOptions } from "./config"
+import { getGenderOptions } from "./config"
 import type { PersonalFormProps, PersonalFormRef } from "./types"
 import { getPersonalSchema, type PersonalSchemaType } from "./validation"
 
@@ -62,6 +62,8 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
         nationality: initialData?.nationality || "",
         religion: initialData?.religion || "",
         category: initialData?.category || "",
+        phone: initialData?.phone || "",
+        whatsapp: initialData?.whatsapp || "",
         ...(nameFormat === "full"
           ? {
               _fullName: composeFullName(
@@ -74,10 +76,31 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
       },
     })
 
+    // Auto-fill whatsapp with phone number
+    const phoneValue = form.watch("phone")
+    useEffect(() => {
+      const currentWhatsapp = form.getValues("whatsapp")
+      if (!currentWhatsapp && phoneValue) {
+        form.setValue("whatsapp", phoneValue)
+      }
+    }, [phoneValue, form])
+
+    // Auto-detect gender from first name
+    const firstNameValue = form.watch("firstName")
+    useEffect(() => {
+      const currentGender = form.getValues("gender")
+      if (currentGender) return // don't override manual selection
+      const detected = detectGenderFromName(firstNameValue)
+      if (detected) {
+        form.setValue("gender", detected)
+      }
+    }, [firstNameValue, form])
+
     // Merge AI-extracted data into empty fields (late-arrival insurance)
     useAutoFillMerge(form, initialData)
 
     const dict = getApplyDict(dictionary, "personal")
+    const contactDict = getApplyDict(dictionary, "contact")
     const optionsDict = getApplyOptionsDict(dictionary)
 
     const prevDataRef = React.useRef<string>("")
@@ -158,19 +181,17 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
             />
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-7">
-            <CountryField
-              name="nationality"
-              label={`${dict.nationality} *`}
-              placeholder={dict.selectNationality}
-              searchPlaceholder={dict.searchCountry}
-              emptyMessage={dict.noCountryFound}
-              locale={lang}
+            <PhoneField
+              name="phone"
+              label={`${contactDict.phone || "Phone"} *`}
+              placeholder={contactDict.phonePlaceholder}
+              selectCountryLabel={contactDict.selectCountry}
             />
-            <SelectField
-              name="category"
-              label={dict.category}
-              placeholder={dict.selectCategory}
-              options={getCategoryOptions(optionsDict.category || {})}
+            <PhoneField
+              name="whatsapp"
+              label={contactDict.whatsapp}
+              placeholder={contactDict.phonePlaceholder}
+              selectCountryLabel={contactDict.selectCountry}
             />
           </div>
         </form>

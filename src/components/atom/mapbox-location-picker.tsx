@@ -380,15 +380,6 @@ export function MapboxLocationPicker({
 
         {/* Skeleton overlay until map loads */}
         {!mapReady && <Skeleton className="absolute inset-0 rounded-xl" />}
-
-        {/* Tap hint when no pin */}
-        {!value?.latitude && !value?.longitude && mapReady && (
-          <div className="bg-background/90 pointer-events-none absolute start-3 end-3 top-3 rounded-lg px-3 py-2 text-center">
-            <p className="text-muted-foreground text-xs">
-              {labels?.tapToPin || "Tap on the map to place a pin"}
-            </p>
-          </div>
-        )}
       </div>
 
       {/* Address Preview */}

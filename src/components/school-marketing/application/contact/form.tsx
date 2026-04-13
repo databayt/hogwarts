@@ -100,7 +100,7 @@ export const ContactForm = forwardRef<ContactFormRef, ContactFormProps>(
           />
           <PhoneField
             name="alternatePhone"
-            label={dict.alternatePhone}
+            label={dict.whatsapp}
             placeholder={dict.alternatePhonePlaceholder}
             selectCountryLabel={dict.selectCountry}
           />

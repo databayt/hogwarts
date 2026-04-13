@@ -129,11 +129,6 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
               label={isFather ? dict.fatherName : dict.motherName}
               placeholder={dict.namePlaceholder}
             />
-            <InputField
-              name={`${namePrefix}Occupation`}
-              label={dict.occupation}
-              placeholder={dict.occupationPlaceholder}
-            />
             <PhoneField
               name={`${namePrefix}Phone`}
               label={dict.phone}
