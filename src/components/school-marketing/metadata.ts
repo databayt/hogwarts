@@ -3,8 +3,6 @@
 
 import type { Metadata } from "next"
 
-import { getDisplayText } from "@/lib/content-display"
-
 import { formatFullDomain } from "./utils"
 
 export interface SchoolMetadataProps {
@@ -22,21 +20,10 @@ export async function generateSchoolMetadata({
 }: SchoolMetadataProps): Promise<Metadata> {
   const fullDomain = formatFullDomain(subdomain, rootDomain)
 
+  // school.name is always Arabic, school.nameEn is English — pick by locale
   let displayName = school.name
-  if (locale) {
-    const displayLang = locale as "ar" | "en"
-    if (displayLang === "en" && school.nameEn) {
-      displayName = school.nameEn
-    } else if (displayLang !== (school.preferredLanguage || "ar")) {
-      const contentLang = (school.preferredLanguage || "ar") as "ar" | "en"
-      displayName =
-        (await getDisplayText(
-          school.name,
-          contentLang,
-          displayLang,
-          school.id
-        )) || school.name
-    }
+  if (locale === "en" && school.nameEn) {
+    displayName = school.nameEn
   }
 
   return {
