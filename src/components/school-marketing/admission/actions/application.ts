@@ -666,12 +666,8 @@ export async function submitApplication(
         // Academic
         previousSchool: validated.previousSchool || null,
         previousClass: validated.previousClass || null,
-        previousMarks: validated.previousMarks
-          ? parseFloat(validated.previousMarks)
-          : null,
-        previousPercentage: validated.previousPercentage
-          ? parseFloat(validated.previousPercentage)
-          : null,
+        previousMarks: validated.previousMarks || null,
+        previousPercentage: validated.previousPercentage || null,
         achievements: validated.achievements || null,
         applyingForClass: validated.applyingForClass,
         preferredStream: validated.preferredStream || null,

@@ -75,8 +75,8 @@ model Application {
   // Academic Details
   previousSchool     String?
   previousClass      String?
-  previousMarks      Decimal? @db.Decimal(5, 2)
-  previousPercentage Decimal? @db.Decimal(5, 2)
+  previousMarks      String?
+  previousPercentage String?
   achievements       String?  @db.Text
 
   // Application Details
