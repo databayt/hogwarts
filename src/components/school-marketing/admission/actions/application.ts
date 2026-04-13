@@ -636,8 +636,10 @@ export async function submitApplication(
         firstName: validated.firstName,
         middleName: validated.middleName || null,
         lastName: validated.lastName,
-        dateOfBirth: new Date(validated.dateOfBirth),
-        gender: validated.gender,
+        dateOfBirth: validated.dateOfBirth
+          ? new Date(validated.dateOfBirth)
+          : null,
+        gender: validated.gender || null,
         nationality: validated.nationality,
         religion: validated.religion || null,
         category: validated.category || null,

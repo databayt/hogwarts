@@ -844,8 +844,9 @@ export async function confirmEnrollment(params: {
                   firstName: application.firstName,
                   middleName: application.middleName,
                   lastName: application.lastName,
-                  dateOfBirth: application.dateOfBirth,
-                  gender: application.gender,
+                  dateOfBirth:
+                    application.dateOfBirth ?? new Date("2000-01-01"),
+                  gender: application.gender ?? "MALE",
                   nationality: application.nationality ?? undefined,
                   email: application.email,
                   mobileNumber: application.phone,

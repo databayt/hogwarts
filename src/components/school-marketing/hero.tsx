@@ -1,7 +1,6 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import Image from "next/image"
 import Link from "next/link"
 
 import { asset } from "@/lib/asset-url"
@@ -15,7 +14,6 @@ interface HeroProps {
   subdomain?: string
   dictionary?: Dictionary
   heroImageUrl?: string | null
-  logoUrl?: string | null
 }
 
 export function Hero({
@@ -23,7 +21,6 @@ export function Hero({
   subdomain,
   dictionary,
   heroImageUrl,
-  logoUrl,
 }: HeroProps) {
   // Get translations with fallbacks
   const t = dictionary?.marketing?.site?.hero
@@ -52,15 +49,6 @@ export function Hero({
         {/* Content for mobile */}
         <div className="px-container relative flex h-full flex-col items-start justify-center lg:hidden">
           <div className="max-w-xl">
-            <div className="mb-6 flex items-center gap-2">
-              <Image
-                src={logoUrl || asset("/illustrations/site-ball.png")}
-                alt={t?.logoAlt || "School Logo"}
-                width={100}
-                height={100}
-                className={`h-14 w-14${logoUrl ? "" : "dark:invert"}`}
-              />
-            </div>
             <h1 className="font-heading py-4 text-4xl font-black tracking-tighter text-white sm:text-5xl">
               {titleParts[0]}
               <br />
@@ -96,15 +84,6 @@ export function Hero({
       {/* Desktop Content */}
       <div className="relative hidden h-full items-center lg:flex">
         <div className="max-w-xl">
-          <div className="flex items-center gap-2">
-            <Image
-              src={logoUrl || asset("/illustrations/site-ball.png")}
-              alt={t?.logoAlt || "School Logo"}
-              width={100}
-              height={100}
-              className={`h-14 w-14${logoUrl ? "" : "dark:invert"}`}
-            />
-          </div>
           <h1 className="font-heading py-4 text-5xl font-black tracking-tighter lg:text-6xl xl:text-7xl">
             {titleParts[0]}
             <br />

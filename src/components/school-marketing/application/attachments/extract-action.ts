@@ -325,11 +325,11 @@ function mapResume(e: Record<string, unknown>): AutoFillResult {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function normalizeGender(raw: string): "MALE" | "FEMALE" | "OTHER" {
+function normalizeGender(raw: string): "MALE" | "FEMALE" | undefined {
   const n = raw.toLowerCase().trim()
   if (n === "male" || n === "ذكر" || n === "m") return "MALE"
   if (n === "female" || n === "أنثى" || n === "f") return "FEMALE"
-  return "OTHER"
+  return undefined
 }
 
 /** Convert GPA to performance select value (excellent, very-good, good, average, below-average) */

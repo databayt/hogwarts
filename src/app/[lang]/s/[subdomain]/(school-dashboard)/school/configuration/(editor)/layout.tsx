@@ -5,7 +5,6 @@ import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import { ReportIssue } from "@/components/report-issue"
 import { ConfigSidebar } from "@/components/school-dashboard/school/configuration/config-sidebar"
 import { getDisplayText } from "@/components/translation/display"
 import { detectLanguage } from "@/components/translation/util"
@@ -92,8 +91,24 @@ export default async function EditorLayout({ children, params }: Props) {
       : null,
   ])
 
-  // Sidebar shows primary sections; other pages remain accessible via direct URL
-  const SECTION_KEYS = ["title", "name-format", "capacity", "location"] as const
+  const SECTION_KEYS = [
+    "title",
+    "description",
+    "location",
+    "capacity",
+    "schedule",
+    "branding",
+    "hero",
+    "name-format",
+    "join",
+    "visibility",
+    "modules",
+    "price",
+    "discount",
+    "legal",
+    "plan",
+    "domain",
+  ] as const
 
   // Build dynamic descriptions from live data using dictionary strings
   // Async to support on-demand translation for user-facing content
@@ -271,12 +286,7 @@ export default async function EditorLayout({ children, params }: Props) {
           <ConfigSidebar lang={lang} sectionLinks={sectionLinks} />
           <div className="lg:overflow-y-auto">
             <div className="flex min-h-full items-start justify-center py-8">
-              <div className="w-full max-w-[400px]">
-                {children}
-                <div className="text-muted-foreground pt-8 pb-4 text-start text-sm">
-                  <ReportIssue />
-                </div>
-              </div>
+              <div className="w-full max-w-[400px]">{children}</div>
             </div>
           </div>
         </div>

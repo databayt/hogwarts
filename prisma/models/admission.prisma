@@ -42,8 +42,8 @@ model Application {
   firstName   String
   middleName  String?
   lastName    String
-  dateOfBirth DateTime
-  gender      Gender
+  dateOfBirth DateTime?
+  gender      Gender?
   nationality String
   religion    String?
   category    String? // General/OBC/SC/ST etc
@@ -211,7 +211,6 @@ enum CommunicationStatus {
 enum Gender {
   MALE
   FEMALE
-  OTHER
 }
 
 // ============================================

@@ -13,7 +13,7 @@ import { FORM_LIMITS } from "../config.client"
 function getNonNameFields(v: ValidationHelper) {
   return {
     dateOfBirth: z.string().optional().or(z.literal("")),
-    gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
+    gender: z.enum(["MALE", "FEMALE"]).optional(),
     nationality: z.string().optional().or(z.literal("")),
     religion: z.string().optional().or(z.literal("")),
     category: z.string().optional().or(z.literal("")),

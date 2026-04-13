@@ -272,21 +272,6 @@ export function CatalogContentSections({
   const hasTextbook = !!textbookPdfUrl || !!textbookCoverUrl
   const [coverError, setCoverError] = useState(false)
   const hasVideos = data.videos.length > 0
-  const hasMaterials = data.materials.length > 0
-  const hasExams = data.exams.length > 0
-  const hasQuestions = data.questionStats.cards.length > 0
-  const hasAssignments = data.assignments.length > 0
-
-  if (
-    !hasTextbook &&
-    !hasVideos &&
-    !hasMaterials &&
-    !hasExams &&
-    !hasQuestions &&
-    !hasAssignments
-  ) {
-    return null
-  }
 
   const accentColor = subjectColor ?? "#1e40af"
 
@@ -398,93 +383,89 @@ export function CatalogContentSections({
         </ContentSection>
       )}
 
-      {hasMaterials && (
-        <ContentSection
-          title={t.materials}
+      <ContentSection
+        title={t.materials}
+        accentColor={accentColor}
+        actionHref={`/${lang}/subjects/${subjectSlug}/materials`}
+        actionLabel={t.seeAll}
+      >
+        <MaterialTypePipeline
+          materials={data.materials}
           accentColor={accentColor}
-          actionHref={`/${lang}/subjects/${subjectSlug}/materials`}
-          actionLabel={t.seeAll}
-        >
-          <MaterialTypePipeline
-            materials={data.materials}
-            accentColor={accentColor}
-            t={t}
-          />
-        </ContentSection>
-      )}
+          t={t}
+        />
+      </ContentSection>
 
-      {hasExams && (
-        <ContentSection
-          title={t.exams}
-          accentColor={accentColor}
-          actionHref={`/${lang}/exams/upcoming?catalogSubjectId=${catalogSubjectId}`}
-          actionLabel={t.seeAll}
-        >
-          <ExamTypePipeline
-            exams={data.exams}
-            accentColor={accentColor}
-            t={t}
-          />
-        </ContentSection>
-      )}
+      <ContentSection
+        title={t.exams}
+        accentColor={accentColor}
+        actionHref={`/${lang}/exams/upcoming?catalogSubjectId=${catalogSubjectId}`}
+        actionLabel={t.seeAll}
+      >
+        <ExamTypePipeline exams={data.exams} accentColor={accentColor} t={t} />
+      </ContentSection>
 
-      {hasQuestions && (
-        <ContentSection
-          title={t.qbank}
-          accentColor={accentColor}
-          actionHref={`/${lang}/exams/qbank?catalogSubjectId=${catalogSubjectId}`}
-          actionLabel={t.exploreQBank}
-        >
-          <div className="no-scrollbar -mx-1 flex gap-3 overflow-x-auto px-1 pb-2">
-            {data.questionStats.cards.map((card) => {
-              const config = QUESTION_TYPE_CONFIG[card.type]
-              const cardColor = config?.color ?? accentColor
-              const typeName = t[card.type as keyof typeof t] ?? card.type
-              return (
+      <ContentSection
+        title={t.qbank}
+        accentColor={accentColor}
+        actionHref={`/${lang}/exams/qbank?catalogSubjectId=${catalogSubjectId}`}
+        actionLabel={t.exploreQBank}
+      >
+        <div className="no-scrollbar -mx-1 flex gap-3 overflow-x-auto px-1 pb-2">
+          {Object.entries(QUESTION_TYPE_CONFIG).map(([type, config]) => {
+            const card = data.questionStats.cards.find((c) => c.type === type)
+            const cardColor = config.color ?? accentColor
+            const typeName = t[type as keyof typeof t] ?? type
+            return (
+              <div
+                key={type}
+                className="shrink-0 overflow-hidden rounded-xl"
+                style={{ width: 245 }}
+              >
+                {/* Name */}
+                <div className="bg-[#F4F1D0] px-3.5 py-2.5">
+                  <p
+                    className="font-mono text-sm font-bold tracking-tight"
+                    style={{ color: "#212222" }}
+                  >
+                    {typeName}
+                  </p>
+                </div>
+                {/* Frame with SVG filling entire area */}
                 <div
-                  key={card.type}
-                  className="shrink-0 overflow-hidden rounded-xl"
-                  style={{ width: 245 }}
+                  className="relative"
+                  style={{ backgroundColor: cardColor, height: 250 }}
                 >
-                  {/* Name */}
-                  <div className="bg-[#F4F1D0] px-3.5 py-2.5">
-                    <p
-                      className="font-mono text-sm font-bold tracking-tight"
-                      style={{ color: "#212222" }}
-                    >
-                      {typeName}
+                  {config.svg && (
+                    <Image
+                      src={config.svg}
+                      alt=""
+                      fill
+                      className="object-cover opacity-30"
+                    />
+                  )}
+                  {/* Count badge */}
+                  <div className="absolute top-3 right-3">
+                    <span className="rounded-full bg-[#F4F1D0]/80 px-2 py-0.5 font-mono text-xs font-bold text-[#212222]">
+                      {card?.count ?? 0}
+                    </span>
+                  </div>
+                  {/* Divider + description overlaid at bottom */}
+                  <div className="absolute inset-x-0 bottom-0 px-3.5 pb-6">
+                    <div className="mb-2.5 h-[1.5px] w-8 bg-[#F4F1D0]" />
+                    <p className="font-mono text-xs leading-relaxed text-[#F4F1D0]">
+                      {config.description}
                     </p>
                   </div>
-                  {/* Frame with SVG filling entire area */}
-                  <div
-                    className="relative"
-                    style={{ backgroundColor: cardColor, height: 250 }}
-                  >
-                    {config?.svg && (
-                      <Image
-                        src={config.svg}
-                        alt=""
-                        fill
-                        className="object-cover opacity-30"
-                      />
-                    )}
-                    {/* Divider + description overlaid at bottom */}
-                    <div className="absolute inset-x-0 bottom-0 px-3.5 pb-6">
-                      <div className="mb-2.5 h-[1.5px] w-8 bg-[#F4F1D0]" />
-                      <p className="font-mono text-xs leading-relaxed text-[#F4F1D0]">
-                        {config?.description}
-                      </p>
-                    </div>
-                  </div>
                 </div>
-              )
-            })}
-          </div>
-        </ContentSection>
-      )}
+              </div>
+            )
+          })}
+        </div>
+      </ContentSection>
 
-      {hasAssignments && (
-        <ContentSection title={t.assignments} accentColor={accentColor}>
+      <ContentSection title={t.assignments} accentColor={accentColor}>
+        {data.assignments.length > 0 ? (
           <div className="no-scrollbar -mx-1 flex gap-3 overflow-x-auto px-1">
             {data.assignments.map((assignment) => (
               <Card key={assignment.id} className="w-56 shrink-0">
@@ -522,8 +503,10 @@ export function CatalogContentSections({
               </Card>
             ))}
           </div>
-        </ContentSection>
-      )}
+        ) : (
+          <p className="text-muted-foreground text-sm">0 {t.assignments}</p>
+        )}
+      </ContentSection>
     </div>
   )
 }
@@ -564,20 +547,20 @@ function ExamTypePipeline({
       if (exam.totalMarks != null) grouped[key].marks.push(exam.totalMarks)
     }
 
-    // Order by pipeline constant, filter to types that exist in data
-    return EXAM_TYPE_PIPELINE.filter((p) => grouped[p.key]).map((p) => {
+    // Order by pipeline constant, show ALL types (0 count when no data)
+    const avg = (arr: number[]) =>
+      arr.length > 0
+        ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length)
+        : null
+    return EXAM_TYPE_PIPELINE.map((p) => {
       const g = grouped[p.key]
-      const avg = (arr: number[]) =>
-        arr.length > 0
-          ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length)
-          : null
       return {
         key: p.key,
         label: t[p.key as keyof typeof t] ?? p.label,
-        count: g.count,
-        avgDuration: avg(g.durations),
-        avgQuestions: avg(g.questions),
-        avgMarks: avg(g.marks),
+        count: g?.count ?? 0,
+        avgDuration: g ? avg(g.durations) : null,
+        avgQuestions: g ? avg(g.questions) : null,
+        avgMarks: g ? avg(g.marks) : null,
       }
     })
   }, [exams, t])
@@ -660,17 +643,17 @@ function MaterialTypePipeline({
       }
     }
 
-    return MATERIAL_TYPE_PIPELINE.filter((p) => grouped[p.key]).map((p) => {
+    return MATERIAL_TYPE_PIPELINE.map((p) => {
       const g = grouped[p.key]
       const avgPages =
-        g.pageCountItems > 0
+        g && g.pageCountItems > 0
           ? Math.round(g.pageCountSum / g.pageCountItems)
           : null
       return {
         key: p.key,
         icon: p.icon,
         label: t[p.key as keyof typeof t] ?? p.key,
-        count: g.count,
+        count: g?.count ?? 0,
         avgPages,
       }
     })

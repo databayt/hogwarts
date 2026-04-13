@@ -8,7 +8,7 @@ export interface PersonalFormData {
   middleName?: string
   lastName: string
   dateOfBirth: string
-  gender: "MALE" | "FEMALE" | "OTHER"
+  gender?: "MALE" | "FEMALE"
   nationality: string
   religion?: string
   category?: string

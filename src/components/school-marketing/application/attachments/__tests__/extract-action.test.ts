@@ -290,10 +290,10 @@ describe("extractForAutoFill", () => {
       expect(r2.data?.personal?.gender).toBe("FEMALE")
     })
 
-    it("defaults unknown gender to OTHER", async () => {
+    it("defaults unknown gender to undefined", async () => {
       mockExtractionResult({ fullName: "Alex Hassan", gender: "nonbinary" })
       const result = await extractForAutoFill(FILE_URL, "idUrl")
-      expect(result.data?.personal?.gender).toBe("OTHER")
+      expect(result.data?.personal?.gender).toBeUndefined()
     })
   })
 
