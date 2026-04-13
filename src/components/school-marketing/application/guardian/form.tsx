@@ -30,7 +30,7 @@ import {
 } from "./validation"
 
 export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
-  ({ initialData, onSuccess, dictionary }, ref) => {
+  ({ initialData, onSuccess, dictionary, controlledParent }, ref) => {
     const { updateStepData } = useApplySession()
 
     const schema = useMemo(() => {
@@ -45,9 +45,10 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
     // Determine initial view: show mother if mother has data but father doesn't
     const initialView =
       initialData?.motherName && !initialData?.fatherName ? "mother" : "father"
-    const [activeParent, setActiveParent] = useState<"father" | "mother">(
+    const [internalParent, setInternalParent] = useState<"father" | "mother">(
       initialView
     )
+    const activeParent = controlledParent ?? internalParent
 
     const form = useForm<GuardianSchemaType>({
       resolver: zodResolver(schema),
@@ -68,6 +69,7 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
     })
 
     const dict = getApplyDict(dictionary, "guardian")
+    const contactDict = getApplyDict(dictionary, "contact")
 
     const prevDataRef = React.useRef<string>("")
     useEffect(() => {
@@ -105,23 +107,27 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
     return (
       <Form {...form}>
         <form className="space-y-6">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h3 className="min-w-0 text-lg font-semibold">
-              {isFather ? dict.fatherInfo : dict.motherInfo}
-            </h3>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() =>
-                setActiveParent((p) => (p === "father" ? "mother" : "father"))
-              }
-              className="text-muted-foreground gap-2"
-            >
-              {isFather ? dict.switchToMother : dict.switchToFather}
-              <ArrowRight className="size-4 rtl:rotate-180" />
-            </Button>
-          </div>
+          {!controlledParent && (
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h3 className="min-w-0 text-lg font-semibold">
+                {isFather ? dict.fatherInfo : dict.motherInfo}
+              </h3>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() =>
+                  setInternalParent((p) =>
+                    p === "father" ? "mother" : "father"
+                  )
+                }
+                className="text-muted-foreground gap-2"
+              >
+                {isFather ? dict.switchToMother : dict.switchToFather}
+                <ArrowRight className="size-4 rtl:rotate-180" />
+              </Button>
+            </div>
+          )}
 
           <div key={activeParent} className="space-y-6">
             <InputField
@@ -129,18 +135,20 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
               label={isFather ? dict.fatherName : dict.motherName}
               placeholder={dict.namePlaceholder}
             />
-            <PhoneField
-              name={`${namePrefix}Phone`}
-              label={dict.phone}
-              placeholder={dict.phonePlaceholder}
-              selectCountryLabel={dict.selectCountry}
-            />
-            <InputField
-              name={`${namePrefix}Email`}
-              label={dict.email}
-              placeholder={dict.emailPlaceholder}
-              type="email"
-            />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-7">
+              <PhoneField
+                name={`${namePrefix}Phone`}
+                label={dict.phone}
+                placeholder={dict.phonePlaceholder}
+                selectCountryLabel={dict.selectCountry}
+              />
+              <PhoneField
+                name={`${namePrefix}Email`}
+                label={contactDict.whatsapp || "WhatsApp"}
+                placeholder={dict.phonePlaceholder}
+                selectCountryLabel={dict.selectCountry}
+              />
+            </div>
           </div>
         </form>
       </Form>

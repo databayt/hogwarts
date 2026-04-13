@@ -240,7 +240,13 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
                 name="preferredStream"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{dict.preferredStream}</FormLabel>
+                    <FormLabel
+                      className={
+                        !streamEnabled ? "text-muted-foreground" : undefined
+                      }
+                    >
+                      {dict.preferredStream}
+                    </FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       value={field.value}
@@ -267,25 +273,6 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
               />
             </div>
           </div>
-
-          {/* Achievements */}
-          <FormField
-            control={form.control}
-            name="achievements"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{dict.achievements}</FormLabel>
-                <FormControl>
-                  <Textarea
-                    {...field}
-                    rows={4}
-                    placeholder={dict.achievementsPlaceholder}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
         </form>
       </Form>
     )

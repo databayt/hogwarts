@@ -5,5 +5,5 @@ export const ATTACHMENTS_STEP_CONFIG = {
   id: "attachments",
   label: (isRTL: boolean) => (isRTL ? "المرفقات" : "Attachments"),
   description: (isRTL: boolean) =>
-    isRTL ? "ارفع الصورة الشخصية والمستندات" : "Upload photo and documents.",
+    isRTL ? "ارفع المستندات المطلوبة" : "Upload required documents",
 }

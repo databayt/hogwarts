@@ -98,16 +98,14 @@ const ApplyOverviewClient: React.FC<ApplyOverviewClientProps> = ({
                 {(() => {
                   const title =
                     overviewDict.title ||
-                    "It's easy to get started with {school}"
-                  const [before, after] = title.split("{school}")
-                  return (
-                    <>
-                      {before}
-                      <br />
-                      {schoolName}
-                      {after}
-                    </>
-                  )
+                    "It's easy to get started\nwith {school}"
+                  const filled = title.replace("{school}", schoolName)
+                  return filled.split("\n").map((line, i) => (
+                    <React.Fragment key={i}>
+                      {i > 0 && <br />}
+                      {line}
+                    </React.Fragment>
+                  ))
                 })()}
               </h2>
             </div>

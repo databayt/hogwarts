@@ -163,23 +163,7 @@ export const PersonalForm = forwardRef<PersonalFormRef, PersonalFormProps>(
             }}
             required
           />
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-7">
-            <DateField
-              name="dateOfBirth"
-              label={`${dict.dateOfBirth} *`}
-              placeholder={dict.pickDate}
-              captionLayout="dropdown"
-              startMonth={new Date(1990, 0)}
-              endMonth={new Date()}
-              locale={dateLocale}
-            />
-            <SelectField
-              name="gender"
-              label={`${dict.gender} *`}
-              placeholder={dict.selectGender}
-              options={getGenderOptions(optionsDict.gender || {})}
-            />
-          </div>
+          {/* DOB and gender hidden per design — fields kept in schema for backend */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-7">
             <PhoneField
               name="phone"

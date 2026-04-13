@@ -56,6 +56,8 @@ const PERSONAL_KEYS = [
   "nationality",
   "religion",
   "category",
+  "phone",
+  "whatsapp",
 ] as const
 const CONTACT_KEYS = ["email", "phone", "alternatePhone"] as const
 const LOCATION_KEYS = [

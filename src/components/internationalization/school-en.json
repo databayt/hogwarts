@@ -8727,7 +8727,7 @@
           "finalize": "Finalize"
         },
         "overview": {
-          "title": "It's easy to get started with {school}",
+          "title": "It's easy to get started\nwith {school}",
           "subtitle": "Follow these steps to complete your application",
           "getStarted": "Get Started",
           "back": "Back",
@@ -8740,12 +8740,12 @@
           "attachments": {
             "label": "Attachments",
             "title": "Attachments",
-            "description": "Upload photo and documents"
+            "description": "Upload required documents"
           },
           "personal": {
             "label": "Personal Information",
             "title": "Personal Information",
-            "description": "Student's personal details"
+            "description": "Student and guardian personal details"
           },
           "contact": {
             "label": "Contact Information",
@@ -8876,7 +8876,8 @@
             "phonePlaceholder": "+249 XXX XXX XXXX",
             "alternatePhone": "Alternate Phone",
             "alternatePhonePlaceholder": "+249 XXX XXX XXXX",
-            "selectCountry": "Select country"
+            "selectCountry": "Select country",
+            "whatsapp": "WhatsApp"
           },
           "location": {
             "address": "Current Address",

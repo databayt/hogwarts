@@ -12,13 +12,11 @@ export type ApplyStep =
   | "guardian"
   | "academic"
 
-// Step order for the application flow
+// Step order for the application flow (guardian merged into personal)
 export const APPLY_STEPS: ApplyStep[] = [
   "attachments",
   "personal",
-  "contact",
   "location",
-  "guardian",
   "academic",
 ]
 
@@ -28,25 +26,25 @@ export const STEP_NAVIGATION: Record<
   { next?: ApplyStep; previous?: ApplyStep }
 > = {
   attachments: { next: "personal" },
-  personal: { next: "contact", previous: "attachments" },
+  personal: { next: "location", previous: "attachments" },
   contact: { next: "location", previous: "personal" },
-  location: { next: "guardian", previous: "contact" },
-  guardian: { next: "academic", previous: "location" },
-  academic: { previous: "guardian" },
+  location: { next: "academic", previous: "personal" },
+  guardian: { next: "academic", previous: "location" }, // kept for type safety
+  academic: { previous: "location" },
 }
 
 // Group steps into 3 phases for progress bars
 export const STEP_GROUPS = {
   1: ["attachments", "personal"] as ApplyStep[],
-  2: ["contact", "location"] as ApplyStep[],
-  3: ["guardian", "academic"] as ApplyStep[],
+  2: ["location"] as ApplyStep[],
+  3: ["academic"] as ApplyStep[],
 }
 
 // Group labels
 export const STEP_GROUP_LABELS = {
   1: { en: "Basic Information", ar: "المعلومات الأساسية" },
-  2: { en: "Details", ar: "التفاصيل" },
-  3: { en: "Family & Education", ar: "العائلة والتعليم" },
+  2: { en: "Address", ar: "العنوان" },
+  3: { en: "Academic", ar: "الأكاديمية" },
 }
 
 // ---------------------------------------------------------------------------
@@ -123,12 +121,14 @@ export const STEP_METADATA: Record<
   personal: {
     label: (isRTL) => (isRTL ? "المعلومات الشخصية" : "Personal Information"),
     description: (isRTL) =>
-      isRTL ? "المعلومات الشخصية للطالب" : "Student's personal details",
+      isRTL
+        ? "المعلومات الشخصية للطالب ولي الامر"
+        : "Student and guardian personal details",
   },
   contact: {
-    label: (isRTL) => (isRTL ? "معلومات الاتصال" : "Contact Information"),
+    label: (isRTL) => (isRTL ? "الدفع" : "Payment"),
     description: (isRTL) =>
-      isRTL ? "البريد الإلكتروني ورقم الهاتف" : "Email and phone number",
+      isRTL ? "الرسوم الدراسية وطريقة الدفع" : "School fees and payment method",
   },
   location: {
     label: (isRTL) => (isRTL ? "العنوان" : "Address"),

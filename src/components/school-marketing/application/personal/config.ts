@@ -10,8 +10,8 @@ export const PERSONAL_STEP_CONFIG = {
     isRTL ? "المعلومات الشخصية" : "Personal Information",
   description: (isRTL: boolean) =>
     isRTL
-      ? "أدخل المعلومات الشخصية للطالب"
-      : "Enter the student's personal information",
+      ? "المعلومات الشخصية للطالب ولي الامر"
+      : "Student and guardian personal details",
 }
 
 type OptionDict = Record<string, string>

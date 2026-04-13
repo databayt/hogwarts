@@ -12,6 +12,8 @@ export interface PersonalFormData {
   nationality: string
   religion?: string
   category?: string
+  phone: string
+  whatsapp?: string
 }
 
 export interface PersonalFormRef {

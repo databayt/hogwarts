@@ -8735,7 +8735,7 @@
           "finalize": "إنهاء"
         },
         "overview": {
-          "title": "من السهل البدء في {school}",
+          "title": "من السهل البدء\nفي {school}",
           "subtitle": "اتبع هذه الخطوات لإكمال طلب التقديم",
           "getStarted": "ابدأ",
           "back": "رجوع",
@@ -8748,12 +8748,12 @@
           "attachments": {
             "label": "المرفقات",
             "title": "المرفقات",
-            "description": "الصورة الشخصية والمستندات"
+            "description": "ارفع المستندات المطلوبة"
           },
           "personal": {
             "label": "المعلومات الشخصية",
             "title": "المعلومات الشخصية",
-            "description": "المعلومات الشخصية للطالب"
+            "description": "المعلومات الشخصية للطالب ولي الامر"
           },
           "contact": {
             "label": "معلومات الاتصال",
@@ -8761,8 +8761,8 @@
             "description": "البريد الإلكتروني ورقم الهاتف"
           },
           "location": {
-            "label": "العنوان الحالي",
-            "title": "العنوان الحالي",
+            "label": "العنوان",
+            "title": "العنوان",
             "description": "اضغط {locationIcon} لتحديد موقعك الحالي أو اسحب الخريطة"
           },
           "guardian": {
@@ -8884,10 +8884,11 @@
             "phonePlaceholder": "+249 XXX XXX XXXX",
             "alternatePhone": "هاتف بديل",
             "alternatePhonePlaceholder": "+249 XXX XXX XXXX",
-            "selectCountry": "اختر الدولة"
+            "selectCountry": "اختر الدولة",
+            "whatsapp": "الواتساب"
           },
           "location": {
-            "address": "العنوان الحالي",
+            "address": "العنوان",
             "addressPlaceholder": "أدخل العنوان الكامل شاملاً المبنى والشارع والمنطقة",
             "city": "المدينة",
             "cityPlaceholder": "أدخل المدينة",

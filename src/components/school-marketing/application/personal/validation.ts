@@ -12,13 +12,29 @@ import { FORM_LIMITS } from "../config.client"
 
 function getNonNameFields(v: ValidationHelper) {
   return {
-    dateOfBirth: z.string().min(1, v.required()),
-    gender: z.enum(["MALE", "FEMALE", "OTHER"], {
-      message: v.required(),
-    }),
-    nationality: z.string().min(1, v.required()),
+    dateOfBirth: z.string().optional().or(z.literal("")),
+    gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
+    nationality: z.string().optional().or(z.literal("")),
     religion: z.string().optional().or(z.literal("")),
     category: z.string().optional().or(z.literal("")),
+    phone: z
+      .string()
+      .min(
+        FORM_LIMITS.PHONE_MIN_LENGTH,
+        v.minLength(FORM_LIMITS.PHONE_MIN_LENGTH)
+      )
+      .max(
+        FORM_LIMITS.PHONE_MAX_LENGTH,
+        v.maxLength(FORM_LIMITS.PHONE_MAX_LENGTH)
+      ),
+    whatsapp: z
+      .string()
+      .max(
+        FORM_LIMITS.PHONE_MAX_LENGTH,
+        v.maxLength(FORM_LIMITS.PHONE_MAX_LENGTH)
+      )
+      .optional()
+      .or(z.literal("")),
   }
 }
 

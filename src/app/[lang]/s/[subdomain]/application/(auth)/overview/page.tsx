@@ -40,9 +40,8 @@ const ApplyOverviewPage = async ({ params, searchParams }: Props) => {
       lang={lang}
       subdomain={subdomain}
       schoolName={
-        (lang === "ar"
-          ? school?.data?.name
-          : school?.data?.nameEn || school?.data?.name) || subdomain
+        (lang === "ar" ? school?.data?.name : school?.data?.nameEn) ||
+        subdomain.charAt(0).toUpperCase() + subdomain.slice(1)
       }
       id={id}
     />

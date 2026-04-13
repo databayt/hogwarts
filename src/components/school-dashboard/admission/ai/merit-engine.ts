@@ -319,7 +319,7 @@ export async function computeCampaignMeritRanks(
  */
 function extractAcademicScore(application: {
   documents: unknown
-  previousPercentage: import("@prisma/client").Prisma.Decimal | null
+  previousPercentage: string | null
 }): number {
   // Try to get GPA from extracted transcript data
   const docs = (Array.isArray(application.documents)

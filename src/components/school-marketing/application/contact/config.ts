@@ -3,10 +3,7 @@
 
 export const CONTACT_STEP_CONFIG = {
   id: "contact",
-  label: (isRTL: boolean) =>
-    isRTL ? "معلومات الاتصال" : "Contact Information",
+  label: (isRTL: boolean) => (isRTL ? "الدفع" : "Payment"),
   description: (isRTL: boolean) =>
-    isRTL
-      ? "أدخل بريدك الإلكتروني ورقم هاتفك"
-      : "Enter your email and phone number",
+    isRTL ? "الرسوم الدراسية وطريقة الدفع" : "School fees and payment method",
 }

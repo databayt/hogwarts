@@ -16,30 +16,23 @@ import type {
 
 /**
  * Validate personal step data
- * Required: firstName, lastName, dateOfBirth, gender, nationality
+ * Required: firstName, lastName, dateOfBirth, gender, phone
  */
 export function validatePersonalStep(
   data: PersonalStepData | undefined
 ): boolean {
   if (!data) return false
-  return !!(
-    data.firstName &&
-    data.lastName &&
-    data.dateOfBirth &&
-    data.gender &&
-    data.nationality
-  )
+  return !!(data.firstName && data.lastName && data.phone)
 }
 
 /**
  * Validate contact step data
- * Required: email, phone
+ * Contact is now merged into personal; always valid
  */
 export function validateContactStep(
-  data: ContactStepData | undefined
+  _data: ContactStepData | undefined
 ): boolean {
-  if (!data) return false
-  return !!(data.email && data.phone)
+  return true
 }
 
 /**

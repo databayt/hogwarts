@@ -78,7 +78,10 @@ export default async function SuccessPage({ params, searchParams }: Props) {
     <SuccessContent
       dictionary={dictionary}
       applicationNumber={applicationNumber}
-      schoolName={schoolResult.data.name}
+      schoolName={
+        (lang === "ar" ? schoolResult.data.name : schoolResult.data.nameEn) ||
+        subdomain.charAt(0).toUpperCase() + subdomain.slice(1)
+      }
       paymentMethod={paymentMethod}
       paymentReference={paymentReference}
       applicationFeePaid={applicationFeePaid}

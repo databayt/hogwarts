@@ -601,7 +601,7 @@ export async function seedApplications(
               previousClass:
                 Math.random() < 0.7 ? `Grade ${randomNumber(1, 11)}` : null,
               previousPercentage:
-                Math.random() < 0.7 ? randomNumber(60, 98) : null,
+                Math.random() < 0.7 ? String(randomNumber(60, 98)) : null,
               applyingForClass,
               status: config.status,
               submittedAt,

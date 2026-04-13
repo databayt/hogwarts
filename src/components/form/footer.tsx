@@ -467,20 +467,13 @@ export const ONBOARDING_CONFIG: StepConfig = {
 
 /** Admission application flow configuration */
 export const ADMISSION_CONFIG: StepConfig = {
-  steps: [
-    "attachments",
-    "personal",
-    "contact",
-    "location",
-    "guardian",
-    "academic",
-  ],
+  steps: ["attachments", "personal", "location", "guardian", "academic"],
   groups: {
     1: ["attachments", "personal"],
-    2: ["contact", "location"],
-    3: ["guardian", "academic"],
+    2: ["location", "guardian"],
+    3: ["academic"],
   },
-  groupLabels: ["Basic Information", "Details", "Family & Education"],
+  groupLabels: ["Basic Information", "Address & Guardian", "Academic"],
 }
 
 /** Generic application flow configuration */

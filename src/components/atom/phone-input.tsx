@@ -189,7 +189,7 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
     return (
       <div
         className={cn(
-          "border-input has-[input:focus]:ring-ring relative flex h-9 items-center gap-2 rounded-md border bg-transparent ps-1 text-base shadow-sm transition-colors [interpolate-size:allow-keywords] disabled:cursor-not-allowed disabled:opacity-50 has-[input:focus]:ring-1 has-[input:focus]:outline-none md:text-sm",
+          "border-input has-[input:focus]:ring-ring relative flex h-9 items-center gap-2 rounded-md border bg-transparent ps-1 text-base transition-colors [interpolate-size:allow-keywords] disabled:cursor-not-allowed disabled:opacity-50 has-[input:focus]:ring-1 has-[input:focus]:outline-none md:text-sm",
           inline && "w-full rounded-s-none",
           className
         )}

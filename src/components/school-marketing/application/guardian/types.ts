@@ -26,4 +26,6 @@ export interface GuardianFormProps {
   onSuccess?: () => void
   dictionary?: Record<string, unknown>
   onTabChange?: (tabId: string) => void
+  /** When set, overrides internal toggle and hides the switch button */
+  controlledParent?: "father" | "mother"
 }

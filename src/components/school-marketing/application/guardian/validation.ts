@@ -35,10 +35,9 @@ export function createGuardianSchema(v: ValidationHelper) {
         .or(z.literal("")),
       fatherEmail: z
         .string()
-        .email(v.email())
         .max(
-          FORM_LIMITS.EMAIL_MAX_LENGTH,
-          v.maxLength(FORM_LIMITS.EMAIL_MAX_LENGTH)
+          FORM_LIMITS.PHONE_MAX_LENGTH,
+          v.maxLength(FORM_LIMITS.PHONE_MAX_LENGTH)
         )
         .optional()
         .or(z.literal("")),
@@ -65,10 +64,9 @@ export function createGuardianSchema(v: ValidationHelper) {
         .or(z.literal("")),
       motherEmail: z
         .string()
-        .email(v.email())
         .max(
-          FORM_LIMITS.EMAIL_MAX_LENGTH,
-          v.maxLength(FORM_LIMITS.EMAIL_MAX_LENGTH)
+          FORM_LIMITS.PHONE_MAX_LENGTH,
+          v.maxLength(FORM_LIMITS.PHONE_MAX_LENGTH)
         )
         .optional()
         .or(z.literal("")),
@@ -126,8 +124,7 @@ export const guardianSchema = z
       .or(z.literal("")),
     fatherEmail: z
       .string()
-      .email()
-      .max(FORM_LIMITS.EMAIL_MAX_LENGTH)
+      .max(FORM_LIMITS.PHONE_MAX_LENGTH)
       .optional()
       .or(z.literal("")),
     motherName: z
@@ -143,8 +140,7 @@ export const guardianSchema = z
       .or(z.literal("")),
     motherEmail: z
       .string()
-      .email()
-      .max(FORM_LIMITS.EMAIL_MAX_LENGTH)
+      .max(FORM_LIMITS.PHONE_MAX_LENGTH)
       .optional()
       .or(z.literal("")),
     guardianName: z

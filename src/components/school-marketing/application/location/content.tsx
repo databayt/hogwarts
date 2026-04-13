@@ -72,7 +72,7 @@ export default function LocationContent({ dictionary }: Props) {
     if (locationFormRef.current) {
       try {
         await locationFormRef.current.saveAndNext()
-        router.push(`/${locale}/application/${id}/guardian`)
+        router.push(`/${locale}/application/${id}/academic`)
       } catch (error) {
         console.error("Error saving location step:", error)
       }

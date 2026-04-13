@@ -129,7 +129,7 @@ async function buildResponse(
     thumbnail: string | null
     banner: string | null
     color: string | null
-    objectives: string | null
+    objectives: string[] | null
     prerequisites: string | null
     targetAudience: string | null
     totalChapters: number
