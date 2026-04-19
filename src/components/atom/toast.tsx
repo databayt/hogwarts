@@ -24,6 +24,7 @@ const CONFIG = {
     success: 2000,
     error: 4000,
     info: 3000,
+    warning: 5000,
     delete: 2000,
   },
 } as const
@@ -69,6 +70,20 @@ export const InfoToast = (message: string) => {
       border: "none",
       width: "220px",
       maxWidth: "220px",
+    },
+  })
+}
+
+export const WarningToast = (message: string) => {
+  toast.warning(message, {
+    duration: CONFIG.duration.warning,
+    position: CONFIG.position,
+    style: {
+      background: "var(--chart-4)",
+      color: "var(--foreground)",
+      border: "none",
+      width: "260px",
+      maxWidth: "260px",
     },
   })
 }

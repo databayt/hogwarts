@@ -17,12 +17,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { ErrorToast, SuccessToast } from "@/components/atom/toast"
+import { ErrorToast, SuccessToast, WarningToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
 import { confirmEnrollment, recordPayment } from "./actions"
+import { translateEnrollmentWarning } from "./warning-messages"
 
 export type EnrollmentRow = {
   id: string
@@ -128,6 +129,10 @@ function EnrollmentActionsCell({
         SuccessToast(
           t?.enrollment?.enrollmentConfirmed || "Enrollment confirmed"
         )
+        for (const warning of result.data?.warnings ?? []) {
+          const message = translateEnrollmentWarning(warning, t)
+          if (message) WarningToast(message)
+        }
       } else {
         ErrorToast(
           result.error || t?.applicationDetail?.statusUpdateFailed || "Failed"

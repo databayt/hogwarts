@@ -13,10 +13,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { ErrorToast, SuccessToast } from "@/components/atom/toast"
+import { ErrorToast, SuccessToast, WarningToast } from "@/components/atom/toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { confirmEnrollment, updateApplicationStatus } from "./actions"
+import { translateEnrollmentWarning } from "./warning-messages"
 
 // ---------------------------------------------------------------------------
 // Types
@@ -84,6 +85,10 @@ export default function ApplicationDetailActions({
         SuccessToast(
           t?.enrollment?.enrollmentConfirmed || "Enrollment confirmed"
         )
+        for (const warning of result.data?.warnings ?? []) {
+          const message = translateEnrollmentWarning(warning, t)
+          if (message) WarningToast(message)
+        }
         router.refresh()
       } else {
         ErrorToast(

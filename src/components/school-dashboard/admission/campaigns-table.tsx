@@ -204,7 +204,7 @@ export function CampaignsTable({
             <GridEmptyState
               title={t?.campaigns?.title || "Campaigns"}
               description={
-                t?.campaigns?.createCampaign ||
+                t?.campaigns?.emptyDescription ??
                 "Create a campaign to get started"
               }
               icon={

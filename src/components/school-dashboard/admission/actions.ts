@@ -720,9 +720,28 @@ export async function getEnrollmentData(params: {
   }
 }
 
+export type EnrollmentWarningCode =
+  | "FEE_AUTO_ASSIGN_FAILED"
+  | "INVOICE_GENERATION_FAILED"
+  | "GUARDIAN_CREATE_FAILED"
+  | "NO_FEE_STRUCTURE_MATCH"
+  | "APPLICATION_FEE_UNPAID"
+
+export interface EnrollmentWarning {
+  code: EnrollmentWarningCode
+  meta?: Record<string, unknown>
+}
+
+export interface ConfirmEnrollmentResult {
+  suggestedSectionId: string | null
+  suggestedSectionName: string | null
+  studentId: string | null
+  warnings?: EnrollmentWarning[]
+}
+
 export async function confirmEnrollment(params: {
   id: string
-}): Promise<ActionResponse> {
+}): Promise<ActionResponse<ConfirmEnrollmentResult>> {
   try {
     const session = await auth()
     const schoolId = session?.user?.schoolId
@@ -765,7 +784,7 @@ export async function confirmEnrollment(params: {
 
     const enrollmentNumber = `ENR-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
     let enrolledStudentId: string | null = null
-    const warnings: string[] = []
+    const warnings: EnrollmentWarning[] = []
 
     const txUserId = await db.$transaction(
       async (tx) => {
@@ -1077,9 +1096,7 @@ export async function confirmEnrollment(params: {
               "[confirmEnrollment] Fee auto-assignment failed:",
               feeError
             )
-            warnings.push(
-              "Fee auto-assignment failed — assign fees manually from Finance > Fees"
-            )
+            warnings.push({ code: "FEE_AUTO_ASSIGN_FAILED" })
           }
 
           // 7. Create Guardian records from application parent/guardian data
@@ -1144,6 +1161,7 @@ export async function confirmEnrollment(params: {
               "[confirmEnrollment] Guardian creation failed:",
               guardianError
             )
+            warnings.push({ code: "GUARDIAN_CREATE_FAILED" })
           }
 
           // 8. Copy application documents to StudentDocument records
@@ -1222,9 +1240,7 @@ export async function confirmEnrollment(params: {
               "[confirmEnrollment] Invoice auto-generation failed:",
               invoiceError
             )
-            warnings.push(
-              "Invoice auto-generation failed — create invoice manually from Finance > Invoices"
-            )
+            warnings.push({ code: "INVOICE_GENERATION_FAILED" })
           }
 
           enrolledStudentId = student.id

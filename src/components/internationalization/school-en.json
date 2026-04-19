@@ -8465,7 +8465,8 @@
         "campaignDeleted": "Campaign deleted",
         "enterDetails": "Enter the details for the admission campaign",
         "deleteCampaign": "Delete Campaign",
-        "deleteConfirm": "Are you sure? This action cannot be undone."
+        "deleteConfirm": "Are you sure? This action cannot be undone.",
+        "emptyDescription": "Create a campaign to get started"
       },
       "applications": {
         "title": "Applications",
@@ -8611,6 +8612,13 @@
         "regPaid": "Reg Paid",
         "appPaid": "App Paid",
         "pendingPlacement": "admitted student(s) need section placement. Use the placement action on each row to assign them to a section."
+      },
+      "warnings": {
+        "noFeeStructureMatch": "No fee structure matched — fees skipped. Configure a fee structure in Finance > Fees.",
+        "applicationFeeUnpaid": "Application fee is unpaid. Enrollment confirmed, but consider collecting payment.",
+        "feeAutoAssignFailed": "Fee auto-assignment failed — assign fees manually from Finance > Fees.",
+        "invoiceGenerationFailed": "Invoice generation failed — create the invoice manually.",
+        "guardianCreateFailed": "Guardian creation failed — add the guardian manually."
       },
       "settings": {
         "title": "Admission Settings",
