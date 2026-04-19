@@ -3,6 +3,7 @@
 
 import Link from "next/link"
 
+import { getSchoolDisplayName } from "@/lib/school-name"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 import type { Locale } from "@/components/internationalization/config"
@@ -40,7 +41,7 @@ export function EnrollmentClosed({
         {(
           dict.enrollmentClosedDesc ||
           "{schoolName} is not accepting applications at this time. Please visit the admissions page for upcoming enrollment dates."
-        ).replace("{schoolName}", school.name)}
+        ).replace("{schoolName}", getSchoolDisplayName(school, lang))}
       </p>
       <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
         <Link

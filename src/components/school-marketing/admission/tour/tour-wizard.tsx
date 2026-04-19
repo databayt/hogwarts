@@ -11,6 +11,7 @@ import { ArrowLeft, Check, Loader2 } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
+import { getSchoolDisplayName } from "@/lib/school-name"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import {
@@ -270,7 +271,9 @@ export function TourWizard({
             <div className="w-9" />
           )}
           <div className="text-center">
-            <p className="text-sm font-medium">{school.name}</p>
+            <p className="text-sm font-medium">
+              {getSchoolDisplayName(school, lang)}
+            </p>
           </div>
           <div className="w-9" />
         </div>

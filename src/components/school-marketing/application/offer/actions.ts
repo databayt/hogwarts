@@ -42,6 +42,7 @@ export interface OfferDetails {
   school: {
     id: string
     name: string
+    nameEn: string | null
     address: string | null
     currency: string
   }
@@ -277,6 +278,7 @@ export async function getOfferDetails(
       select: {
         id: true,
         name: true,
+        nameEn: true,
         address: true,
         currency: true,
       },
@@ -350,6 +352,7 @@ export async function getOfferDetails(
         school: {
           id: school.id,
           name: school.name,
+          nameEn: school.nameEn ?? null,
           address: school.address,
           currency: school.currency ?? "USD",
         },

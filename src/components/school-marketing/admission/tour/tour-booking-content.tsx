@@ -11,6 +11,7 @@ import { Loader2 } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
+import { getSchoolDisplayName } from "@/lib/school-name"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import {
@@ -267,8 +268,11 @@ export default function TourBookingContent({
         </h1>
         <p className="text-muted-foreground mx-auto mt-3 max-w-md leading-relaxed">
           {tour?.visitAndExplore
-            ? tour.visitAndExplore.replace("{schoolName}", school.name)
-            : `Visit ${school.name} and explore our facilities`}
+            ? tour.visitAndExplore.replace(
+                "{schoolName}",
+                getSchoolDisplayName(school, lang)
+              )
+            : `Visit ${getSchoolDisplayName(school, lang)} and explore our facilities`}
         </p>
       </div>
 

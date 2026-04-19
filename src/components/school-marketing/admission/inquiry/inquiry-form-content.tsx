@@ -10,6 +10,7 @@ import { enUS } from "date-fns/locale/en-US"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
+import { getSchoolDisplayName } from "@/lib/school-name"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -193,7 +194,7 @@ export default function InquiryFormContent({
           {(
             dict.contactSubtitle ||
             "Have questions about {schoolName}? We're here to help."
-          ).replace("{schoolName}", school.name)}
+          ).replace("{schoolName}", getSchoolDisplayName(school, lang))}
         </p>
       </div>
 

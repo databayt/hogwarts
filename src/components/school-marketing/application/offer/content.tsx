@@ -16,6 +16,7 @@ import {
 } from "lucide-react"
 
 import type { BankDetails } from "@/lib/payment/types"
+import { getSchoolDisplayName } from "@/lib/school-name"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -346,7 +347,8 @@ export default function OfferContent({
             {t?.congratulations || "Congratulations! You've Been Accepted"}
           </h1>
           <p className="text-muted-foreground mt-2">
-            {application.firstName} {application.lastName} — {school.name}
+            {application.firstName} {application.lastName} —{" "}
+            {getSchoolDisplayName(school, locale)}
           </p>
         </div>
 

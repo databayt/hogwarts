@@ -10,6 +10,7 @@ import { Loader2 } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
+import { getSchoolDisplayName } from "@/lib/school-name"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -125,7 +126,9 @@ export default function ContinueApplicationContent({
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">{school.name}</CardTitle>
+          <CardTitle className="text-lg">
+            {getSchoolDisplayName(school, lang)}
+          </CardTitle>
           <CardDescription>
             {dict.emailMustMatch ||
               "Email must match the one used in your original application"}
