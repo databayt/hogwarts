@@ -10,6 +10,11 @@ import { Resend } from "resend"
 import { db } from "@/lib/db"
 import { dispatchNotificationsToAudience } from "@/lib/dispatch-notification"
 import {
+  buildApplicationReceivedEmail,
+  buildNewApplicationAdminNotification,
+  buildResumeApplicationEmail,
+} from "@/lib/email-templates/admission"
+import {
   resolveDefaultCurrency,
   resolvePaymentGateways,
 } from "@/lib/payment/gateway-config"
@@ -275,18 +280,16 @@ export async function saveApplicationSession(
 
       // Send email with resume link (fire-and-forget — don't block the response)
       if (resend) {
+        const resumeEmail = buildResumeApplicationEmail({
+          school: schoolResult.data,
+          resumeUrl: `https://${subdomain}.databayt.org/application/continue?token=${newToken}`,
+        })
         resend.emails
           .send({
             from: "noreply@databayt.org",
             to: validated.email,
-            subject: "Your Application in Progress",
-            html: `
-              <p>Hello,</p>
-              <p>Your application has been saved. You can resume it anytime using this link:</p>
-              <p><a href="https://${subdomain}.databayt.org/application/continue?token=${newToken}">Resume Application</a></p>
-              <p>This link expires in 7 days.</p>
-              <p>Best regards,<br>${schoolResult.data.name}</p>
-            `,
+            subject: resumeEmail.subject,
+            html: resumeEmail.html,
           })
           .catch((err: unknown) =>
             console.error("[saveApplicationSession] resume email error:", err)
@@ -697,12 +700,18 @@ export async function submitApplication(
       })
     }
 
-    // Notify admins about new application (fire-and-forget)
+    // Notify admins about new application (fire-and-forget). Uses the school's
+    // preferred language so admins see the alert in the language they set up.
+    const adminNotification = buildNewApplicationAdminNotification({
+      school: schoolResult.data,
+      studentName: `${validated.firstName} ${validated.lastName}`,
+      applicationNumber,
+    })
     dispatchNotificationsToAudience({
       schoolId,
       type: "system_alert",
-      title: "طلب قبول جديد",
-      body: `تم تقديم طلب قبول جديد من ${validated.firstName} ${validated.lastName} - رقم الطلب: ${applicationNumber}`,
+      title: adminNotification.title,
+      body: adminNotification.body,
       priority: "normal",
       channels: ["in_app", "email"],
       targetScope: "role",
@@ -718,21 +727,22 @@ export async function submitApplication(
 
     // Send confirmation email (fire-and-forget — don't block the response)
     if (resend) {
+      const confirmationEmail = buildApplicationReceivedEmail({
+        school: schoolResult.data,
+        parentName:
+          validated.fatherName ||
+          validated.motherName ||
+          `${validated.firstName} ${validated.lastName}`,
+        studentName: `${validated.firstName} ${validated.lastName}`,
+        applicationNumber,
+        trackUrl: `https://${subdomain}.databayt.org/application/status?token=${accessToken}`,
+      })
       resend.emails
         .send({
           from: "noreply@databayt.org",
           to: validated.email,
-          subject: `Application Received - ${applicationNumber}`,
-          html: `
-            <h2>Application Received Successfully!</h2>
-            <p>Dear ${validated.fatherName || validated.motherName},</p>
-            <p>Thank you for submitting your application for <strong>${validated.firstName} ${validated.lastName}</strong>.</p>
-            <p><strong>Application Number:</strong> ${applicationNumber}</p>
-            <p>You can track your application status at any time using this link:</p>
-            <p><a href="https://${subdomain}.databayt.org/application/status?token=${accessToken}">Track Application</a></p>
-            <p>We will review your application and get back to you soon.</p>
-            <p>Best regards,<br>${schoolResult.data.name}</p>
-          `,
+          subject: confirmationEmail.subject,
+          html: confirmationEmail.html,
         })
         .catch((err: unknown) =>
           console.error("[submitApplication] confirmation email error:", err)

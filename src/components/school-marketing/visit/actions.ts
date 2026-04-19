@@ -19,6 +19,7 @@ import {
 
 import { db } from "@/lib/db"
 import { sendEmail } from "@/lib/email"
+import { getSchoolDisplayName } from "@/lib/school-name"
 
 import { DEFAULT_VISIT_DURATION, VISIT_SLOT_DURATION } from "./config"
 import type { VisitFormData } from "./validation"
@@ -234,7 +235,13 @@ export async function bookVisit(
     // Verify the school exists
     const school = await db.school.findUnique({
       where: { id: schoolId },
-      select: { id: true, name: true, email: true },
+      select: {
+        id: true,
+        name: true,
+        nameEn: true,
+        email: true,
+        preferredLanguage: true,
+      },
     })
 
     if (!school) {
@@ -271,13 +278,17 @@ export async function bookVisit(
 
     // Send confirmation email to visitor
     try {
+      const schoolDisplayName = getSchoolDisplayName(
+        school,
+        school.preferredLanguage
+      )
       await sendEmail({
         to: data.email,
-        subject: `Visit Booking Confirmation - ${school.name}`,
+        subject: `Visit Booking Confirmation - ${schoolDisplayName}`,
         template: "visit-confirmation",
         data: {
           visitorName: data.visitorName,
-          schoolName: school.name,
+          schoolName: schoolDisplayName,
           date: format(visitDate, "EEEE, MMMM d, yyyy"),
           time: `${data.startTime} - ${
             data.endTime ||

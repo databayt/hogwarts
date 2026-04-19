@@ -7,6 +7,10 @@ import { nanoid } from "nanoid"
 import { Resend } from "resend"
 
 import { db } from "@/lib/db"
+import {
+  buildTourCancelledEmail,
+  buildTourRescheduledEmail,
+} from "@/lib/email-templates/admission"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 
 import type {
@@ -355,7 +359,12 @@ export async function getBookingDetails(
       include: {
         slot: true,
         school: {
-          select: { name: true, domain: true },
+          select: {
+            name: true,
+            nameEn: true,
+            domain: true,
+            preferredLanguage: true,
+          },
         },
       },
     })
@@ -416,7 +425,12 @@ export async function cancelTourBooking(
       include: {
         slot: true,
         school: {
-          select: { name: true, domain: true },
+          select: {
+            name: true,
+            nameEn: true,
+            domain: true,
+            preferredLanguage: true,
+          },
         },
       },
     })
@@ -454,19 +468,18 @@ export async function cancelTourBooking(
     // Send cancellation email
     if (resend) {
       try {
+        const cancelEmail = buildTourCancelledEmail({
+          school: booking.school,
+          parentName: booking.parentName,
+          bookingNumber,
+          reason,
+          rescheduleUrl: `https://${booking.school.domain}.databayt.org/tour`,
+        })
         await resend.emails.send({
           from: "noreply@databayt.org",
           to: booking.email,
-          subject: `Tour Booking Cancelled - ${bookingNumber}`,
-          html: `
-            <h2>Tour Booking Cancelled</h2>
-            <p>Dear ${booking.parentName},</p>
-            <p>Your tour booking (${bookingNumber}) has been cancelled.</p>
-            ${reason ? `<p><strong>Reason:</strong> ${reason}</p>` : ""}
-            <p>If you'd like to schedule a new tour, please visit:</p>
-            <p><a href="https://${booking.school.domain}.databayt.org/tour">Schedule Tour</a></p>
-            <p>Best regards,<br>${booking.school.name}</p>
-          `,
+          subject: cancelEmail.subject,
+          html: cancelEmail.html,
         })
       } catch (emailError) {
         console.error("Failed to send cancellation email:", emailError)
@@ -503,7 +516,12 @@ export async function rescheduleTourBooking(
       include: {
         slot: true,
         school: {
-          select: { name: true, domain: true },
+          select: {
+            name: true,
+            nameEn: true,
+            domain: true,
+            preferredLanguage: true,
+          },
         },
       },
     })
@@ -558,12 +576,17 @@ export async function rescheduleTourBooking(
     // Send reschedule email
     if (resend) {
       try {
-        const formattedDate = newSlot.date.toLocaleDateString("en-US", {
-          weekday: "long",
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        })
+        const rescheduleLocale =
+          booking.school.preferredLanguage === "en" ? "en-US" : "ar"
+        const formattedDate = newSlot.date.toLocaleDateString(
+          rescheduleLocale,
+          {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          }
+        )
         const startTime = newSlot.startTime
           .toISOString()
           .split("T")[1]
@@ -573,26 +596,18 @@ export async function rescheduleTourBooking(
           .split("T")[1]
           .substring(0, 5)
 
+        const rescheduleEmail = buildTourRescheduledEmail({
+          school: booking.school,
+          parentName: booking.parentName,
+          bookingNumber,
+          date: formattedDate,
+          time: `${startTime} - ${endTime}`,
+        })
         await resend.emails.send({
           from: "noreply@databayt.org",
           to: booking.email,
-          subject: `Tour Rescheduled - ${bookingNumber}`,
-          html: `
-            <h2>Tour Booking Rescheduled</h2>
-            <p>Dear ${booking.parentName},</p>
-            <p>Your tour has been rescheduled. Here are the new details:</p>
-            <table style="border-collapse: collapse; margin: 20px 0;">
-              <tr>
-                <td style="padding: 8px; border: 1px solid #ddd;"><strong>Date</strong></td>
-                <td style="padding: 8px; border: 1px solid #ddd;">${formattedDate}</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px; border: 1px solid #ddd;"><strong>Time</strong></td>
-                <td style="padding: 8px; border: 1px solid #ddd;">${startTime} - ${endTime}</td>
-              </tr>
-            </table>
-            <p>Best regards,<br>${booking.school.name}</p>
-          `,
+          subject: rescheduleEmail.subject,
+          html: rescheduleEmail.html,
         })
       } catch (emailError) {
         console.error("Failed to send reschedule email:", emailError)
