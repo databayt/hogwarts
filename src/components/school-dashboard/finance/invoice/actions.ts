@@ -103,14 +103,16 @@ function isAuthError(
 
 // Generate unique invoice number for a school
 // Format: prefix + 2-digit year + 3-digit sequence (e.g., I25001, I25002)
+// Accepts optional transaction client for atomicity (prevents race conditions)
 async function generateUniqueInvoiceNumber(
   schoolId: string,
-  prefix: string = "I"
+  prefix: string = "I",
+  client: Pick<typeof db, "userInvoice"> = db
 ): Promise<string> {
   const currentYear = new Date().getFullYear()
   const yearPrefix = currentYear.toString().slice(-2)
 
-  const latestInvoice = await db.userInvoice.findFirst({
+  const latestInvoice = await client.userInvoice.findFirst({
     where: {
       schoolId,
       invoice_no: { startsWith: `${prefix}${yearPrefix}` },
@@ -272,13 +274,67 @@ export async function createInvoiceWithAutoNumber(
     )
     if (!canCreate) return actionError(ACTION_ERRORS.UNAUTHORIZED)
 
-    const autoInvoiceNo = await generateUniqueInvoiceNumber(ctx.schoolId)
-    const result = await createInvoiceCore(
-      ctx.userId,
-      ctx.schoolId,
-      autoInvoiceNo,
-      data
-    )
+    // Generate number inside transaction to prevent race conditions
+    const result = await db.$transaction(async (tx) => {
+      const autoInvoiceNo = await generateUniqueInvoiceNumber(
+        ctx.schoolId,
+        "I",
+        tx
+      )
+
+      const fromAddress = await tx.userInvoiceAddress.create({
+        data: {
+          name: data.from.name,
+          email: data.from.email,
+          address1: data.from.address1,
+          address2: data.from.address2 || "",
+          address3: data.from.address3 || "",
+          schoolId: ctx.schoolId,
+        },
+      })
+
+      const toAddress = await tx.userInvoiceAddress.create({
+        data: {
+          name: data.to.name,
+          email: data.to.email,
+          address1: data.to.address1,
+          address2: data.to.address2 || "",
+          address3: data.to.address3 || "",
+          schoolId: ctx.schoolId,
+        },
+      })
+
+      const invoice = await tx.userInvoice.create({
+        data: {
+          invoice_no: autoInvoiceNo,
+          invoice_date: data.invoice_date,
+          due_date: data.due_date,
+          currency: data.currency,
+          fromAddressId: fromAddress.id,
+          toAddressId: toAddress.id,
+          sub_total: data.sub_total,
+          discount: data.discount,
+          tax_percentage: data.tax_percentage,
+          total: data.total,
+          notes: data.notes || "",
+          status: data.status,
+          userId: ctx.userId,
+          schoolId: ctx.schoolId,
+          items: {
+            create: data.items.map((item) => ({
+              item_name: item.item_name,
+              quantity: item.quantity,
+              price: item.price,
+              total: item.total,
+              schoolId: ctx.schoolId,
+            })),
+          },
+        },
+        include: { items: true, from: true, to: true },
+      })
+
+      return { success: true as const, data: invoice }
+    })
 
     if (result.success) revalidatePath("/finance/invoice")
     return result
@@ -530,10 +586,20 @@ export async function deleteInvoice({
 
     const invoice = await db.userInvoice.findFirst({
       where: { id, userId: ctx.userId, schoolId: ctx.schoolId },
+      select: { id: true, fromAddressId: true, toAddressId: true },
     })
     if (!invoice) return actionError(ACTION_ERRORS.INVOICE_NOT_FOUND)
 
-    await db.userInvoice.delete({ where: { id } })
+    // Items cascade-delete via schema, but addresses become orphans without cleanup
+    await db.$transaction(async (tx) => {
+      await tx.userInvoice.delete({ where: { id } })
+      await tx.userInvoiceAddress.deleteMany({
+        where: {
+          id: { in: [invoice.fromAddressId, invoice.toAddressId] },
+          schoolId: ctx.schoolId,
+        },
+      })
+    })
 
     revalidatePath("/finance/invoice")
     return { success: true }

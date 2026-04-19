@@ -27,6 +27,7 @@ import {
   getScholarshipList,
   type DiscountPolicy,
 } from "./queries"
+import { feeStructureSchema } from "./validation"
 
 type ActionResult<T = void> = {
   success: boolean
@@ -103,54 +104,58 @@ export async function createFeeStructure(
     const ctx = await requireFeePermission("create")
     if (isAuthError(ctx)) return ctx
 
-    const formData = Object.fromEntries(data)
+    const raw = Object.fromEntries(data)
+
+    // Parse FormData strings to numbers for Zod validation
+    const parsed = feeStructureSchema.safeParse({
+      name: raw.name,
+      academicYear: raw.academicYear,
+      classId: raw.classId || null,
+      stream: raw.stream || null,
+      description: raw.description || null,
+      tuitionFee: parseFloat(raw.tuitionFee as string),
+      admissionFee: raw.admissionFee
+        ? parseFloat(raw.admissionFee as string)
+        : null,
+      registrationFee: raw.registrationFee
+        ? parseFloat(raw.registrationFee as string)
+        : null,
+      examFee: raw.examFee ? parseFloat(raw.examFee as string) : null,
+      libraryFee: raw.libraryFee ? parseFloat(raw.libraryFee as string) : null,
+      laboratoryFee: raw.laboratoryFee
+        ? parseFloat(raw.laboratoryFee as string)
+        : null,
+      sportsFee: raw.sportsFee ? parseFloat(raw.sportsFee as string) : null,
+      transportFee: raw.transportFee
+        ? parseFloat(raw.transportFee as string)
+        : null,
+      hostelFee: raw.hostelFee ? parseFloat(raw.hostelFee as string) : null,
+      totalAmount: parseFloat(raw.totalAmount as string),
+      installments: parseInt(raw.installments as string, 10) || 1,
+      lateFeeAmount: raw.lateFeeAmount
+        ? parseFloat(raw.lateFeeAmount as string)
+        : null,
+      lateFeeType: raw.lateFeeType || null,
+      paymentSchedule: raw.paymentSchedule
+        ? JSON.parse(raw.paymentSchedule as string)
+        : undefined,
+      discountPolicy: raw.discountPolicy
+        ? JSON.parse(raw.discountPolicy as string)
+        : undefined,
+      isActive: true,
+    })
+
+    if (!parsed.success) {
+      return {
+        success: false,
+        error: parsed.error.issues.map((issue) => issue.message).join(", "),
+      }
+    }
 
     const feeStructure = await db.feeStructure.create({
       data: {
         schoolId: ctx.schoolId,
-        name: formData.name as string,
-        academicYear: formData.academicYear as string,
-        classId: formData.classId as string | undefined,
-        stream: formData.stream as string | undefined,
-        description: formData.description as string | undefined,
-        tuitionFee: parseFloat(formData.tuitionFee as string),
-        admissionFee: formData.admissionFee
-          ? parseFloat(formData.admissionFee as string)
-          : null,
-        registrationFee: formData.registrationFee
-          ? parseFloat(formData.registrationFee as string)
-          : null,
-        examFee: formData.examFee
-          ? parseFloat(formData.examFee as string)
-          : null,
-        libraryFee: formData.libraryFee
-          ? parseFloat(formData.libraryFee as string)
-          : null,
-        laboratoryFee: formData.laboratoryFee
-          ? parseFloat(formData.laboratoryFee as string)
-          : null,
-        sportsFee: formData.sportsFee
-          ? parseFloat(formData.sportsFee as string)
-          : null,
-        transportFee: formData.transportFee
-          ? parseFloat(formData.transportFee as string)
-          : null,
-        hostelFee: formData.hostelFee
-          ? parseFloat(formData.hostelFee as string)
-          : null,
-        totalAmount: parseFloat(formData.totalAmount as string),
-        installments: parseInt(formData.installments as string, 10) || 1,
-        lateFeeAmount: formData.lateFeeAmount
-          ? parseFloat(formData.lateFeeAmount as string)
-          : null,
-        lateFeeType: (formData.lateFeeType as any) || null,
-        paymentSchedule: formData.paymentSchedule
-          ? JSON.parse(formData.paymentSchedule as string)
-          : undefined,
-        discountPolicy: formData.discountPolicy
-          ? JSON.parse(formData.discountPolicy as string)
-          : undefined,
-        isActive: true,
+        ...parsed.data,
       },
     })
 
@@ -388,6 +393,10 @@ export async function assignFee(data: FormData): Promise<ActionResult<string>> {
     const schoolLang = schoolPref?.preferredLanguage ?? "ar"
 
     // Notify student about new fee due (non-blocking)
+    const isAr = schoolLang === "ar"
+    const amountStr = parseFloat(
+      formData.finalAmount as string
+    ).toLocaleString()
     const student = await db.student.findFirst({
       where: { id: formData.studentId as string, schoolId: ctx.schoolId },
       select: { userId: true, firstName: true, lastName: true },
@@ -397,8 +406,10 @@ export async function assignFee(data: FormData): Promise<ActionResult<string>> {
         schoolId: ctx.schoolId,
         userId: student.userId,
         type: "fee_due",
-        title: "رسوم دراسية جديدة",
-        body: `تم تعيين رسوم بقيمة ${parseFloat(formData.finalAmount as string).toLocaleString()} لحسابك`,
+        title: isAr ? "رسوم دراسية جديدة" : "New Fee Assignment",
+        body: isAr
+          ? `تم تعيين رسوم بقيمة ${amountStr} لحسابك`
+          : `A fee of ${amountStr} has been assigned to your account`,
         lang: schoolLang,
         priority: "high",
         channels: ["in_app", "email"],
@@ -413,6 +424,7 @@ export async function assignFee(data: FormData): Promise<ActionResult<string>> {
 
     // Notify guardians about new fee (non-blocking)
     if (student) {
+      const studentName = `${student.firstName} ${student.lastName}`
       const guardianLinks = await db.studentGuardian.findMany({
         where: {
           studentId: formData.studentId as string,
@@ -426,15 +438,17 @@ export async function assignFee(data: FormData): Promise<ActionResult<string>> {
             schoolId: ctx.schoolId,
             userId: link.guardian.userId,
             type: "fee_due",
-            title: "رسوم دراسية جديدة",
-            body: `تم تعيين رسوم بقيمة ${parseFloat(formData.finalAmount as string).toLocaleString()} لحساب ${student.firstName} ${student.lastName}`,
+            title: isAr ? "رسوم دراسية جديدة" : "New Fee Assignment",
+            body: isAr
+              ? `تم تعيين رسوم بقيمة ${amountStr} لحساب ${studentName}`
+              : `A fee of ${amountStr} has been assigned to ${studentName}`,
             lang: schoolLang,
             priority: "high",
             channels: ["in_app", "email"],
             metadata: {
               feeAssignmentId: feeAssignment.id,
               amount: parseFloat(formData.finalAmount as string),
-              studentName: `${student.firstName} ${student.lastName}`,
+              studentName,
               url: "/finance/fees",
             },
             actorId: ctx.userId,
@@ -517,6 +531,7 @@ export async function bulkAssignFees(
         select: { preferredLanguage: true },
       })
       const schoolLang = schoolPref?.preferredLanguage ?? "ar"
+      const isAr = schoolLang === "ar"
 
       for (const studentId of studentIds) {
         const student = await db.student.findUnique({
@@ -547,14 +562,17 @@ export async function bulkAssignFees(
         const amount = studentData
           ? Number(studentData.finalAmount)
           : finalAmount
+        const amountStr = amount.toLocaleString()
 
         // Notify student
         dispatchNotification({
           schoolId: ctx.schoolId,
           userId: student.userId,
           type: "fee_due",
-          title: "رسوم دراسية جديدة",
-          body: `تم تعيين رسوم بقيمة ${amount.toLocaleString()} لحسابك`,
+          title: isAr ? "رسوم دراسية جديدة" : "New Fee Assignment",
+          body: isAr
+            ? `تم تعيين رسوم بقيمة ${amountStr} لحسابك`
+            : `A fee of ${amountStr} has been assigned to your account`,
           lang: schoolLang,
           priority: "high",
           channels: ["in_app", "email"],
@@ -574,8 +592,10 @@ export async function bulkAssignFees(
               schoolId: ctx.schoolId,
               userId: sg.guardian.userId,
               type: "fee_due",
-              title: "رسوم دراسية جديدة",
-              body: `تم تعيين رسوم بقيمة ${amount.toLocaleString()} لحساب ${studentName}`,
+              title: isAr ? "رسوم دراسية جديدة" : "New Fee Assignment",
+              body: isAr
+                ? `تم تعيين رسوم بقيمة ${amountStr} لحساب ${studentName}`
+                : `A fee of ${amountStr} has been assigned to ${studentName}`,
               lang: schoolLang,
               priority: "high",
               channels: ["in_app", "email"],
@@ -875,6 +895,9 @@ export async function recordPayment(
       select: { preferredLanguage: true },
     })
     const schoolLang2 = schoolPref2?.preferredLanguage ?? "ar"
+    const isAr2 = schoolLang2 === "ar"
+    const amountStr2 = amount.toLocaleString()
+    const remainingStr = (finalAmount - newTotalPaid).toLocaleString()
 
     // Notify student about payment received (non-blocking)
     const student = await db.student.findFirst({
@@ -886,8 +909,10 @@ export async function recordPayment(
         schoolId: ctx.schoolId,
         userId: student.userId,
         type: "fee_paid",
-        title: "تم استلام الدفعة",
-        body: `تم تسجيل دفعة بقيمة ${amount.toLocaleString()}. ${newStatus === "PAID" ? "تم سداد الرسوم بالكامل." : `المتبقي: ${(finalAmount - newTotalPaid).toLocaleString()}`}`,
+        title: isAr2 ? "تم استلام الدفعة" : "Payment Received",
+        body: isAr2
+          ? `تم تسجيل دفعة بقيمة ${amountStr2}. ${newStatus === "PAID" ? "تم سداد الرسوم بالكامل." : `المتبقي: ${remainingStr}`}`
+          : `Payment of ${amountStr2} recorded. ${newStatus === "PAID" ? "Fee fully paid." : `Remaining: ${remainingStr}`}`,
         lang: schoolLang2,
         priority: "normal",
         channels: ["in_app"],
@@ -915,8 +940,10 @@ export async function recordPayment(
           schoolId: ctx.schoolId,
           userId: link.guardian.userId,
           type: "fee_paid",
-          title: "تم استلام الدفعة",
-          body: `تم تسجيل دفعة بقيمة ${amount.toLocaleString()} لحساب الطالب. ${newStatus === "PAID" ? "تم سداد الرسوم بالكامل." : `المتبقي: ${(finalAmount - newTotalPaid).toLocaleString()}`}`,
+          title: isAr2 ? "تم استلام الدفعة" : "Payment Received",
+          body: isAr2
+            ? `تم تسجيل دفعة بقيمة ${amountStr2} لحساب الطالب. ${newStatus === "PAID" ? "تم سداد الرسوم بالكامل." : `المتبقي: ${remainingStr}`}`
+            : `Payment of ${amountStr2} recorded for student. ${newStatus === "PAID" ? "Fee fully paid." : `Remaining: ${remainingStr}`}`,
           lang: schoolLang2,
           priority: "normal",
           channels: ["in_app", "email"],
@@ -1269,6 +1296,10 @@ export async function payFine(
         isPaid: true,
         paidAmount: amount,
         paidDate: new Date(),
+        // Fine model lacks paymentMethod column; append to reason for audit trail
+        reason: paymentMethod
+          ? `${fine.reason} [Paid via: ${paymentMethod}]`
+          : fine.reason,
       },
     })
 
