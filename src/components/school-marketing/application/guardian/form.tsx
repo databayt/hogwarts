@@ -21,7 +21,6 @@ import { createI18nHelpers } from "@/components/internationalization/helpers"
 import { useApplySession } from "../application-context"
 import type { GuardianStepData } from "../types"
 import { getApplyDict } from "../utils"
-import { saveGuardianStep } from "./actions"
 import type { GuardianFormProps, GuardianFormRef } from "./types"
 import {
   createGuardianSchema,
@@ -88,13 +87,7 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
       if (!isValid) throw new Error("VALIDATION_FAILED")
 
       const data = form.getValues()
-      const result = await saveGuardianStep(data)
-
-      if (!result.success) throw new Error(result.error || "SAVE_FAILED")
-
-      if (result.data) {
-        updateStepData("guardian", result.data as GuardianStepData)
-      }
+      updateStepData("guardian", data as unknown as GuardianStepData)
 
       onSuccess?.()
     }
