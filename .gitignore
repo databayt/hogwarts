@@ -25,6 +25,9 @@ package-lock.json
 /.next/
 /out/
 
+# fumadocs generated artifacts
+/.source/
+
 # production
 /build
 
