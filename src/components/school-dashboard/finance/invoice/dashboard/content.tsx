@@ -2,14 +2,11 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useEffect, useState } from "react"
 import type { UserInvoice } from "@prisma/client"
 import { ColumnDef } from "@tanstack/react-table"
 import { format } from "date-fns"
 
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { ChartConfig } from "@/components/ui/chart"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -17,48 +14,33 @@ import { RecentInvoicesCard, StatsCards } from "./card"
 import { ChartInvoice } from "./chart-invoice"
 import { getChartConfig } from "./config"
 
+interface DashboardData {
+  totalRevenue: number
+  totalInvoices: number
+  paidInvoices: number
+  unpaidInvoices: number
+  recentInvoices: any[]
+  chartData: any[]
+}
+
 interface Props {
   dictionary: Dictionary
   lang: Locale
+  initialData?: DashboardData | null
 }
 
-export function DashboardContent({ dictionary, lang }: Props) {
-  const [data, setData] = useState({
-    totalRevenue: "$0",
-    totalInvoice: 0,
-    paidInvoice: 0,
-    UnpaidInvoice: 0,
-    recentInvoice: [],
-    chartData: [],
-  })
-
-  const fetchData = async () => {
-    try {
-      const response = await fetch("/api/dashboard")
-      const responseData = await response.json()
-
-      console.log("responseData", responseData)
-      if (response.status === 200) {
-        setData({
-          totalRevenue: responseData.totalRevenue,
-          totalInvoice: responseData.totalInvoice,
-          paidInvoice: responseData.paidInvoice,
-          UnpaidInvoice: responseData.UnpaidInvoice,
-          recentInvoice: responseData.recentInvoice || [],
-          chartData: responseData.chartData || [],
-        })
-      }
-    } catch (error) {
-      console.log(error)
-    }
-  }
-
+export function DashboardContent({ dictionary, lang, initialData }: Props) {
   const fd = (dictionary as any)?.finance
   const ip = fd?.invoicePage as Record<string, string> | undefined
 
-  useEffect(() => {
-    fetchData()
-  }, [])
+  const data = {
+    totalRevenue: initialData?.totalRevenue ?? 0,
+    totalInvoice: initialData?.totalInvoices ?? 0,
+    paidInvoice: initialData?.paidInvoices ?? 0,
+    UnpaidInvoice: initialData?.unpaidInvoices ?? 0,
+    recentInvoice: initialData?.recentInvoices ?? [],
+    chartData: initialData?.chartData ?? [],
+  }
 
   const columns: ColumnDef<UserInvoice>[] = [
     {
@@ -98,24 +80,25 @@ export function DashboardContent({ dictionary, lang }: Props) {
       <div className="grid gap-6 lg:grid-cols-4">
         <StatsCards
           stats={{
-            totalRevenue: data?.totalRevenue ?? "-",
-            totalInvoice: data?.totalInvoice ?? "-",
-            paidInvoice: data?.paidInvoice ?? "-",
-            UnpaidInvoice: data?.UnpaidInvoice ?? "-",
+            totalRevenue: new Intl.NumberFormat(lang, {
+              style: "currency",
+              currency: "SAR",
+            }).format(data.totalRevenue),
+            totalInvoice: data.totalInvoice,
+            paidInvoice: data.paidInvoice,
+            UnpaidInvoice: data.UnpaidInvoice,
           }}
           dict={ip}
         />
 
-        {/***chart */}
         <ChartInvoice
           chartConfig={getChartConfig(fd?.invoiceConfig?.dashboard)}
           chartData={data.chartData}
         />
 
-        {/***latest 10 Invoice last 30days */}
         <RecentInvoicesCard
           className="lg:col-span-2"
-          data={data?.recentInvoice as unknown as UserInvoice[]}
+          data={data.recentInvoice as unknown as UserInvoice[]}
           columns={columns}
           emptyText={ip?.noInvoiceFound}
           title={ip?.recentInvoice}

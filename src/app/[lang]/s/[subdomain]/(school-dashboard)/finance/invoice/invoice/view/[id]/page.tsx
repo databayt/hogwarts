@@ -4,6 +4,7 @@
 import RouteModal from "@/components/atom/modal/route-modal"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { getInvoiceById } from "@/components/school-dashboard/finance/invoice/actions"
 import ViewInvoiceModalContent from "@/components/school-dashboard/finance/invoice/invoice/view-content"
 
 interface Props {
@@ -13,12 +14,14 @@ interface Props {
 export default async function ViewInvoice({ params }: Props) {
   const { lang, id } = await params
   const dictionary = await getDictionary(lang)
+  const result = await getInvoiceById(id)
+  const invoice = result.success ? result.data : null
   return (
     <RouteModal
       returnTo={`/${lang}/invoice`}
       content={
         <ViewInvoiceModalContent
-          invoiceId={id}
+          invoice={invoice}
           lang={lang}
           dictionary={dictionary}
         />

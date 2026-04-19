@@ -30,6 +30,10 @@ import {
 } from "@/components/file"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
+import {
+  getSettings,
+  updateSettings,
+} from "@/components/school-dashboard/finance/invoice/actions"
 import { OnboardingContent } from "@/components/school-dashboard/finance/invoice/onboarding/content"
 
 type TSignatureData = {
@@ -101,17 +105,13 @@ export function SettingsContent({ dictionary, lang }: Props) {
 
   const fetchData = async () => {
     try {
-      const response = await fetch("/api/settings")
-      const responseData = await response.json()
-
-      if (response.status === 200) {
-        setLogo(responseData?.data?.invoiceLogo)
-        setSignatureData(
-          responseData?.data?.signature || { name: "", image: "" }
-        )
+      const result = await getSettings()
+      if (result.success && result.data) {
+        setLogo(result.data.invoiceLogo || "")
+        setSignatureData(result.data.signature || { name: "", image: "" })
       }
     } catch (error) {
-      console.log(error)
+      console.error("[settings] Failed to load:", error)
     }
   }
 
@@ -126,14 +126,15 @@ export function SettingsContent({ dictionary, lang }: Props) {
     e.preventDefault()
     try {
       setIsLoading(true)
-      const response = await fetch("/api/settings", {
-        method: "post",
-        body: JSON.stringify(data),
-      })
+      const result = await updateSettings(data)
 
-      if (response.status === 200) {
+      if (result.success) {
         SuccessToast(is?.settingsSaved || "Settings saved successfully")
         fetchData()
+      } else {
+        ErrorToast(
+          result.error || is?.somethingWentWrong || "Something went wrong"
+        )
       }
     } catch (error) {
       ErrorToast(is?.somethingWentWrong || "Something went wrong")

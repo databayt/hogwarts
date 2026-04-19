@@ -2,45 +2,33 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useEffect, useState } from "react"
-import { format } from "date-fns"
-
 import { formatCurrency, formatDate } from "@/lib/i18n-format"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import type { Locale } from "@/components/internationalization/config"
 
 interface InvoiceViewProps {
-  invoiceId: string
+  invoice: any | null
   dictionary?: any
   lang?: Locale
 }
 
 export default function ViewInvoiceModalContent({
-  invoiceId,
+  invoice,
   dictionary,
   lang = "en",
 }: InvoiceViewProps) {
-  const [invoice, setInvoice] = useState<any | null>(null)
-
-  useEffect(() => {
-    const run = async () => {
-      try {
-        const res = await fetch(`/api/invoice/${invoiceId}`)
-        if (res.ok) {
-          const json = await res.json()
-          setInvoice(json)
-        }
-      } catch (_) {}
-    }
-    run()
-  }, [invoiceId])
-
   const iv = (dictionary as any)?.finance?.invoiceView as
     | Record<string, string>
     | undefined
 
-  if (!invoice) return <div>{iv?.loading || "Loading..."}</div>
+  if (!invoice) {
+    return (
+      <div className="text-muted-foreground p-8 text-center">
+        {iv?.notFound || "Invoice not found"}
+      </div>
+    )
+  }
 
   return (
     <div className="w-full max-w-3xl">
@@ -55,13 +43,13 @@ export default function ViewInvoiceModalContent({
       <div className="mb-6 grid grid-cols-2 gap-6">
         <div>
           <h2 className="mb-2 font-semibold">{iv?.from || "From"}</h2>
-          <p>{invoice.from.name}</p>
-          <p className="text-muted-foreground text-sm">{invoice.from.email}</p>
+          <p>{invoice.from?.name}</p>
+          <p className="text-muted-foreground text-sm">{invoice.from?.email}</p>
         </div>
         <div>
           <h2 className="mb-2 font-semibold">{iv?.to || "To"}</h2>
-          <p>{invoice.to.name}</p>
-          <p className="text-muted-foreground text-sm">{invoice.to.email}</p>
+          <p>{invoice.to?.name}</p>
+          <p className="text-muted-foreground text-sm">{invoice.to?.email}</p>
         </div>
       </div>
 
@@ -90,7 +78,7 @@ export default function ViewInvoiceModalContent({
           </tr>
         </thead>
         <tbody>
-          {invoice.items.map((item: any) => {
+          {invoice.items?.map((item: any) => {
             const itemTotal = item.quantity * item.price
             return (
               <tr key={item.id} className="border-b">
@@ -110,14 +98,43 @@ export default function ViewInvoiceModalContent({
 
       <div className="flex justify-end">
         <div className="w-56">
-          <div className="flex justify-between py-2">
+          {invoice.discount != null && Number(invoice.discount) > 0 && (
+            <div className="flex justify-between py-1 text-sm">
+              <span>{iv?.discount || "Discount"}</span>
+              <span>-{formatCurrency(Number(invoice.discount), lang)}</span>
+            </div>
+          )}
+          {invoice.tax_percentage != null &&
+            Number(invoice.tax_percentage) > 0 && (
+              <div className="flex justify-between py-1 text-sm">
+                <span>
+                  {iv?.tax || "Tax"} ({Number(invoice.tax_percentage)}%)
+                </span>
+                <span>
+                  {formatCurrency(
+                    (Number(invoice.sub_total) *
+                      Number(invoice.tax_percentage)) /
+                      100,
+                    lang
+                  )}
+                </span>
+              </div>
+            )}
+          <div className="flex justify-between border-t py-2">
             <span className="font-medium">{iv?.total || "Total"}</span>
             <span className="font-bold">
-              {formatCurrency(invoice.total, lang)}
+              {formatCurrency(Number(invoice.total), lang)}
             </span>
           </div>
         </div>
       </div>
+
+      {invoice.notes && (
+        <div className="mt-6">
+          <h3 className="mb-1 text-sm font-medium">{iv?.notes || "Notes"}</h3>
+          <p className="text-muted-foreground text-sm">{invoice.notes}</p>
+        </div>
+      )}
     </div>
   )
 }

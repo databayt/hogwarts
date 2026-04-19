@@ -23,7 +23,12 @@ import {
 } from "@/components/ui/select"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
-import { formatCurrency, formatDueStatus, getInvoiceStatusColor } from "./util"
+import {
+  exportInvoiceToCSV,
+  formatCurrency,
+  formatDueStatus,
+  getInvoiceStatusColor,
+} from "./util"
 
 interface Invoice {
   id: string
@@ -100,7 +105,19 @@ export function AllInvoices({
           </span>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const csvInvoices = sortedInvoices.map((inv) => ({
+                ...inv,
+                dueDate: inv.dueDate.toISOString(),
+                createdAt: inv.createdAt.toISOString(),
+              }))
+              exportInvoiceToCSV(csvInvoices as any)
+            }}
+            disabled={sortedInvoices.length === 0}
+          >
             <Download className="me-2 size-4" />
             {il?.export || "Export"}
           </Button>
