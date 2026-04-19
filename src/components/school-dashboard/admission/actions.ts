@@ -775,16 +775,41 @@ export async function confirmEnrollment(params: {
       return actionError(ACTION_ERRORS.OFFER_EXPIRED)
     }
 
-    // Require application fee to be paid before enrollment (skip if no fee configured)
-    const campaignFee = application.campaign?.applicationFee
-    const hasFeeRequirement = campaignFee && Number(campaignFee) > 0
-    if (hasFeeRequirement && !application.applicationFeePaid) {
-      return actionError(ACTION_ERRORS.APPLICATION_FEE_REQUIRED)
-    }
-
     const enrollmentNumber = `ENR-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
     let enrolledStudentId: string | null = null
     const warnings: EnrollmentWarning[] = []
+
+    // Warn (do not block) when the application fee is unpaid — admin can still enroll
+    const campaignFee = application.campaign?.applicationFee
+    const hasFeeRequirement = campaignFee && Number(campaignFee) > 0
+    if (hasFeeRequirement && !application.applicationFeePaid) {
+      const schoolCurrency = await db.school.findUnique({
+        where: { id: schoolId },
+        select: { currency: true },
+      })
+      warnings.push({
+        code: "APPLICATION_FEE_UNPAID",
+        meta: {
+          amount: Number(campaignFee),
+          currency: schoolCurrency?.currency ?? "USD",
+        },
+      })
+    }
+
+    // Warn (do not block) when no fee structure exists for the campaign's academic year —
+    // the auto-assign loop in step 6 will find nothing and skip, so no invoice is generated
+    if (application.campaign?.academicYear) {
+      const feeStructureCount = await db.feeStructure.count({
+        where: {
+          schoolId,
+          academicYear: application.campaign.academicYear,
+          isActive: true,
+        },
+      })
+      if (feeStructureCount === 0) {
+        warnings.push({ code: "NO_FEE_STRUCTURE_MATCH" })
+      }
+    }
 
     const txUserId = await db.$transaction(
       async (tx) => {
