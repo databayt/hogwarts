@@ -9,7 +9,9 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // FORMAT DATE TIME
-export const formatDateTime = (dateString: Date) => {
+export const formatDateTime = (dateString: Date, locale: string = "en") => {
+  const bcp47 = locale === "ar" ? "ar-SA" : "en-US"
+
   const dateTimeOptions: Intl.DateTimeFormatOptions = {
     weekday: "short",
     month: "short",
@@ -39,22 +41,22 @@ export const formatDateTime = (dateString: Date) => {
   }
 
   const formattedDateTime: string = new Date(dateString).toLocaleString(
-    "en-US",
+    bcp47,
     dateTimeOptions
   )
 
   const formattedDateDay: string = new Date(dateString).toLocaleString(
-    "en-US",
+    bcp47,
     dateDayOptions
   )
 
   const formattedDate: string = new Date(dateString).toLocaleString(
-    "en-US",
+    bcp47,
     dateOptions
   )
 
   const formattedTime: string = new Date(dateString).toLocaleString(
-    "en-US",
+    bcp47,
     timeOptions
   )
 

@@ -17,6 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { useLocale } from "@/components/internationalization/use-locale"
 import {
   formatAmount,
   formatDateTime,
@@ -40,15 +41,16 @@ interface TransactionRowProps {
 const TransactionRow = memo(function TransactionRow({
   transaction,
   dictionary,
-}: TransactionRowProps) {
+  locale,
+}: TransactionRowProps & { locale: string }) {
   const formattedAmount = useMemo(
-    () => formatAmount(Math.abs(transaction.amount)),
-    [transaction.amount]
+    () => formatAmount(Math.abs(transaction.amount), locale),
+    [transaction.amount, locale]
   )
 
   const formattedDate = useMemo(
-    () => formatDateTime(new Date(transaction.date)).dateOnly,
-    [transaction.date]
+    () => formatDateTime(new Date(transaction.date), locale).dateOnly,
+    [transaction.date, locale]
   )
 
   const amountColorClass =
@@ -98,6 +100,7 @@ export const RecentTransactionsList = memo(function RecentTransactionsList({
   dictionary,
 }: RecentTransactionsListProps) {
   const { dictionary: globalDict } = useDictionary()
+  const { locale } = useLocale()
   const fd = (globalDict as any)?.finance
   const bt = fd?.bankingTransactions as Record<string, string> | undefined
 
@@ -209,6 +212,7 @@ export const RecentTransactionsList = memo(function RecentTransactionsList({
                 key={transaction.id}
                 transaction={transaction}
                 dictionary={bt || dictionary}
+                locale={locale}
               />
             ))}
           </TableBody>

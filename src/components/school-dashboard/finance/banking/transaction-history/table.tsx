@@ -55,6 +55,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { useLocale } from "@/components/internationalization/use-locale"
 import {
   formatAmount,
   formatDateTime,
@@ -97,6 +98,7 @@ function TransactionsTableImprovedInner({
   onExport,
   className,
 }: TransactionsTableImprovedProps) {
+  const { locale } = useLocale()
   const [filters, setFilters] = useState<FilterState>({
     search: "",
     category: "",
@@ -468,7 +470,10 @@ function TransactionsTableImprovedInner({
                     </TableCell>
                     {visibleColumns.date && (
                       <TableCell className="font-medium">
-                        {formatDateTime(new Date(transaction.date)).dateOnly}
+                        {
+                          formatDateTime(new Date(transaction.date), locale)
+                            .dateOnly
+                        }
                       </TableCell>
                     )}
                     {visibleColumns.description && (
@@ -518,7 +523,7 @@ function TransactionsTableImprovedInner({
                           )}
                         >
                           {transaction.type === "credit" ? "+" : "-"}
-                          {formatAmount(Math.abs(transaction.amount))}
+                          {formatAmount(Math.abs(transaction.amount), locale)}
                         </span>
                       </TableCell>
                     )}
@@ -633,7 +638,7 @@ function TransactionsTableImprovedInner({
                   )}
                 >
                   {detailsSheet.type === "credit" ? "+" : "-"}
-                  {formatAmount(Math.abs(detailsSheet.amount))}
+                  {formatAmount(Math.abs(detailsSheet.amount), locale)}
                 </p>
               </div>
               <div className="space-y-2">
@@ -641,7 +646,7 @@ function TransactionsTableImprovedInner({
                   {dictionary?.date || "Date"}
                 </p>
                 <p className="font-medium">
-                  {formatDateTime(new Date(detailsSheet.date)).dateTime}
+                  {formatDateTime(new Date(detailsSheet.date), locale).dateTime}
                 </p>
               </div>
               <div className="space-y-2">
