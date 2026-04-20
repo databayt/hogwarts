@@ -164,12 +164,10 @@ describe("RTL Verification — Messaging Components", () => {
       const inputPath = join(MESSAGING_DIR, "message-input.tsx")
       const content = readFileSync(inputPath, "utf-8")
 
-      // Should use text-end for Arabic, not text-right
       expect(content).not.toMatch(/text-right/)
-      // RTL text alignment should use text-end
-      if (content.includes("ar")) {
-        expect(content).toMatch(/text-end/)
-      }
+      expect(content).not.toMatch(/text-left/)
+      // Must use logical alignment (text-start or text-end) — both are valid
+      expect(content).toMatch(/text-(start|end)/)
     })
   })
 

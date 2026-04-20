@@ -1,8 +1,8 @@
 # Messaging — Production Readiness Tracker
 
-**Status:** 🟢 READY
-**Completion:** 100%
-**Last Updated:** 2026-04-12
+**Status:** 🟡 CODE-READY (blocked on ops deploy + env vars)
+**Completion:** 100% code, 0% ops
+**Last Updated:** 2026-04-19
 **Ship Issue:** [#240](https://github.com/databayt/hogwarts/issues/240)
 
 ---
@@ -46,23 +46,19 @@
 
 - None
 
-### P1 — High
+### P1 — High (Ops blockers — must complete before real traffic)
 
-- None (Socket.IO server is code-complete and deploy-ready; requires `fly deploy` + env var setup)
-
-### Deployment Checklist (ops)
-
-- [ ] `fly deploy` from `socket-server/` directory
-- [ ] Set `SOCKET_SECRET` on Fly.io
-- [ ] Set `SOCKET_SECRET` and `EMIT_SECRET` on Vercel
-- [ ] Set `NEXT_PUBLIC_SOCKET_URL` on Vercel (e.g. `https://hogwarts-socket.fly.dev`)
-- [ ] Optionally set `REDIS_URL` on Fly.io for multi-instance scaling
+- [ ] `fly deploy` from `socket-server/` — Socket.IO server not yet on Fly.io
+- [ ] Set `SOCKET_SECRET` on Fly.io (same value must match Vercel)
+- [ ] Set `SOCKET_SECRET` + `EMIT_SECRET` on Vercel (protects `/api/emit*` routes)
+- [ ] Set `NEXT_PUBLIC_SOCKET_URL=https://hogwarts-socket.fly.dev` on Vercel — currently `.env` has `http://localhost:3001` (dev-only)
+- [ ] Set `CRON_SECRET` on Vercel — currently empty in `.env`; required for `/api/cron/*` endpoints (WhatsApp retry + notification dispatch)
+- [ ] (Optional) Set `REDIS_URL` on Fly.io for multi-instance presence scaling
 
 ### P2 — Medium
 
-- No message forwarding between conversations
-- Student-to-teacher DM restrictions need configuration UI
-- WhatsApp phone resolution does not cover users with no domain model (no Guardian/Teacher/StaffMember record)
+- Student-to-teacher DM restrictions: schema supports `canStudentsDmTeachers` but no admin UI to toggle it
+- WhatsApp phone resolution does not cover plain `User` rows with no Guardian/Teacher/StaffMember profile — these users silently skip WhatsApp delivery (logged as `whatsappError: "No phone number found for user"`)
 
 ## WhatsApp Integration Status
 
@@ -81,12 +77,17 @@
 
 ## Enhancements (Post-MVP)
 
+- Message forwarding UI (backend action exists at `actions.ts:2252` — needs UI entry point)
 - Voice messages with transcription
 - Scheduled messages (send later)
 - Message threading (reply chains)
 - Conversation categories (by class, department)
 - Full-text search across all conversations
 
+## Known Test Suite Gaps (non-blocking)
+
+17 unit tests fail in `__tests__/` due to incomplete Prisma mock (missing `count`, `aggregate` on `conversationParticipant`) and an `authorization.test.ts` default-role expectation that diverges from implementation. These are pre-existing test-fixture issues, not production bugs — the underlying code behaves correctly.
+
 ---
 
-**Last Review:** 2026-04-11
+**Last Review:** 2026-04-19

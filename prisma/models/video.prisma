@@ -47,6 +47,7 @@ model Video {
   school    School?                @relation(fields: [schoolId], references: [id], onDelete: SetNull)
   progress  LessonProgress[]
   overrides ContentOverride[]      @relation("VideoOverrides")
+  purchases VideoPurchase[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -56,6 +57,31 @@ model Video {
   @@index([schoolId])
   @@index([viewCount])
   @@map("lesson_videos")
+}
+
+// Per-video purchase (unlocks a PAID Video for one user)
+// Stripe checkout is the payment path. Webhook writes the row on completion.
+model VideoPurchase {
+  id              String        @id @default(cuid())
+  userId          String
+  videoId         String
+  schoolId        String?
+  amount          Float
+  currency        String
+  stripeSessionId String?       @unique
+  status          PaymentStatus @default(PENDING)
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video  Video   @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  school School? @relation(fields: [schoolId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, videoId])
+  @@index([videoId, status])
+  @@index([userId])
+  @@map("video_purchases")
 }
 
 model Attachment {

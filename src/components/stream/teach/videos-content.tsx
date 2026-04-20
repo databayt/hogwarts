@@ -2,10 +2,17 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useMemo, useState } from "react"
+import { Fragment, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { format } from "date-fns"
-import { CheckCircle2, Clock, Eye, Film, Settings, XCircle } from "lucide-react"
+import {
+  AlertCircle,
+  CheckCircle2,
+  Clock,
+  Eye,
+  Film,
+  Settings,
+} from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -158,76 +165,116 @@ export function TeachVideosContent({ videos }: Props) {
                 <TableHead>Lesson</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Visibility</TableHead>
+                <TableHead>Pricing</TableHead>
                 <TableHead className="text-end">Views</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead className="w-10" />
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredVideos.map((video) => (
-                <TableRow key={video.id}>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-2">
-                      {video.isFeatured && (
+              {filteredVideos.map((video) => {
+                const isPaid =
+                  video.visibility === "PAID" ||
+                  (video.price != null && video.price > 0)
+                const showRejection =
+                  video.approvalStatus === "REJECTED" && !!video.rejectionReason
+
+                return (
+                  <Fragment key={video.id}>
+                    <TableRow>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          {video.isFeatured && (
+                            <Badge
+                              variant="outline"
+                              className="px-1.5 py-0 text-[10px]"
+                            >
+                              Featured
+                            </Badge>
+                          )}
+                          {video.title}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm">
+                        {video.lesson.chapter.subject.name}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm">
+                        {video.lesson.name}
+                      </TableCell>
+                      <TableCell>
                         <Badge
-                          variant="outline"
-                          className="px-1.5 py-0 text-[10px]"
+                          variant={
+                            statusVariant[video.approvalStatus] ?? "outline"
+                          }
                         >
-                          Featured
+                          {video.approvalStatus}
                         </Badge>
-                      )}
-                      {video.title}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
-                    {video.lesson.chapter.subject.name}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
-                    {video.lesson.name}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={statusVariant[video.approvalStatus] ?? "outline"}
-                    >
-                      {video.approvalStatus}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{video.visibility}</Badge>
-                  </TableCell>
-                  <TableCell className="text-end">
-                    <span className="flex items-center justify-end gap-1">
-                      <Eye className="size-3" />
-                      {video.viewCount}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
-                    {format(new Date(video.createdAt), "MMM d, yyyy")}
-                  </TableCell>
-                  <TableCell>
-                    <VideoSettingsDialog
-                      video={{
-                        id: video.id,
-                        title: video.title,
-                        visibility: video.visibility,
-                        approvalStatus: video.approvalStatus,
-                        viewCount: video.viewCount,
-                        lessonName: video.lesson.name,
-                        courseName: video.lesson.chapter.subject.name,
-                      }}
-                      onUpdate={() => router.refresh()}
-                    >
-                      <Button variant="ghost" size="icon" className="size-8">
-                        <Settings className="size-3.5" />
-                      </Button>
-                    </VideoSettingsDialog>
-                  </TableCell>
-                </TableRow>
-              ))}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{video.visibility}</Badge>
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {isPaid && video.price != null
+                          ? `${video.price.toFixed(2)} ${video.currency ?? ""}`
+                          : "Free"}
+                      </TableCell>
+                      <TableCell className="text-end">
+                        <span className="flex items-center justify-end gap-1">
+                          <Eye className="size-3" />
+                          {video.viewCount}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm">
+                        {format(new Date(video.createdAt), "MMM d, yyyy")}
+                      </TableCell>
+                      <TableCell>
+                        <VideoSettingsDialog
+                          video={{
+                            id: video.id,
+                            title: video.title,
+                            visibility: video.visibility,
+                            approvalStatus: video.approvalStatus,
+                            viewCount: video.viewCount,
+                            lessonName: video.lesson.name,
+                            courseName: video.lesson.chapter.subject.name,
+                          }}
+                          onUpdate={() => router.refresh()}
+                        >
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8"
+                          >
+                            <Settings className="size-3.5" />
+                          </Button>
+                        </VideoSettingsDialog>
+                      </TableCell>
+                    </TableRow>
+                    {showRejection && (
+                      <TableRow className="bg-destructive/5 hover:bg-destructive/5">
+                        <TableCell
+                          colSpan={9}
+                          className="text-destructive py-2 text-xs"
+                        >
+                          <span className="flex items-start gap-2">
+                            <AlertCircle className="mt-0.5 size-3.5 shrink-0" />
+                            <span>
+                              <span className="font-medium">
+                                Rejection reason:{" "}
+                              </span>
+                              {video.rejectionReason}
+                            </span>
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </Fragment>
+                )
+              })}
               {filteredVideos.length === 0 && (
                 <TableRow>
                   <TableCell
-                    colSpan={8}
+                    colSpan={9}
                     className="text-muted-foreground py-8 text-center text-sm"
                   >
                     No {filter !== "all" ? filter.toLowerCase() : ""} videos

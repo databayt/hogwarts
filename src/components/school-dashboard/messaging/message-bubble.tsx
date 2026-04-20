@@ -763,7 +763,9 @@ export const MessageBubble = memo(function MessageBubble({
       {lightboxUrl && (
         <Dialog open onOpenChange={() => setLightboxUrl(null)}>
           <DialogContent className="border-none bg-transparent p-0 shadow-none sm:max-w-[90vw]">
-            <DialogTitle className="sr-only">Image preview</DialogTitle>
+            <DialogTitle className="sr-only">
+              {m?.ui?.image_preview || "Image preview"}
+            </DialogTitle>
             <img
               src={lightboxUrl}
               alt=""

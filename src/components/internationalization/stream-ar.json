@@ -348,6 +348,110 @@
       "specialization": "تخصص",
       "course": "دورة",
       "shortCourse": "دورة قصيرة"
+    },
+    "proposeVideo": {
+      "trigger": "اقترح فيديو",
+      "steps": {
+        "selectLesson": "اختر الدرس",
+        "addVideo": "أضف فيديوك",
+        "confirm": "المراجعة والإرسال"
+      },
+      "descriptions": {
+        "selectLesson": "اختر الدرس الذي تود المساهمة بفيديو له.",
+        "addVideo": "أدخل رابط الفيديو وتفاصيله. ستخضع المشاركة للمراجعة قبل النشر.",
+        "confirm": "راجع إرسالك. أنت تحتفظ بالملكية الكاملة والتحكم في فيديوك."
+      },
+      "fields": {
+        "title": "عنوان الفيديو",
+        "titlePlaceholder": "مثال: مقدمة في الجبر - الدرس الأول",
+        "source": "مصدر الفيديو",
+        "sourceUrl": "رابط",
+        "sourceUpload": "رفع",
+        "urlPlaceholder": "https://youtube.com/watch?v=... أو https://vimeo.com/...",
+        "urlHelper": "يدعم YouTube و Vimeo أو روابط الفيديو المباشرة.",
+        "uploadPlaceholderLine1": "الرفع المباشر قريبًا.",
+        "uploadPlaceholderLine2": "في الوقت الحالي، استخدم رابط YouTube أو Vimeo.",
+        "description": "الوصف (اختياري)",
+        "descriptionPlaceholder": "وصف موجز لما يغطيه هذا الفيديو...",
+        "price": "السعر",
+        "currency": "العملة",
+        "pricePlaceholder": "9.99"
+      },
+      "audience": {
+        "label": "الجمهور",
+        "public": "الكاتالوج العام",
+        "publicHelper": "مرئي لكل مدرسة بعد الاعتماد.",
+        "school": "مدرستي فقط",
+        "schoolHelper": "يظهر فقط لمستخدمي مدرستك.",
+        "private": "خاص",
+        "privateHelper": "أنت فقط من يراه حتى تشاركه."
+      },
+      "pricing": {
+        "label": "التسعير",
+        "free": "مجاني",
+        "paid": "مدفوع",
+        "helper": "قد يُعدّل المراجع الجمهور أو التسعير قبل الاعتماد.",
+        "paidSummary": "مدفوع · {price} {currency}"
+      },
+      "confirm": {
+        "lesson": "الدرس",
+        "course": "المقرر",
+        "title": "العنوان",
+        "source": "المصدر",
+        "audience": "الجمهور",
+        "pricing": "التسعير",
+        "rightsTitle": "حقوقك محفوظة",
+        "rightsOwnership": "تحتفظ بالملكية الكاملة لفيديوك",
+        "rightsVisibility": "يمكنك تغيير الظهور أو الحذف في أي وقت",
+        "rightsReview": "يجب اعتماد الإدارة قبل نشر الفيديو",
+        "rightsControl": "حتى بعد الاعتماد، أنت تتحكم في من يرى فيديوك"
+      },
+      "actions": {
+        "back": "السابق",
+        "next": "التالي",
+        "review": "مراجعة",
+        "submit": "إرسال للمراجعة"
+      },
+      "empty": "لا توجد دروس متاحة لاقتراح الفيديوهات.",
+      "toast": {
+        "success": "تم إرسال الفيديو للمراجعة. سيتم إشعارك عند الاعتماد."
+      }
+    },
+    "approveVideo": {
+      "dialogTitle": "مراجعة الفيديو واعتماده",
+      "dialogDescription": "حدد الظهور والتسعير وحالة التمييز قبل الاعتماد.",
+      "proposer": "اقترحه",
+      "visibility": "الظهور",
+      "visibilityOptions": {
+        "public": "عام — لكل مدرسة",
+        "school": "مدرسة المقترح فقط",
+        "private": "خاص — المقترح فقط",
+        "paid": "مدفوع — يُفتح لكل مستخدم"
+      },
+      "featured": "مميز (المعلم الافتراضي «Hogwarts»)",
+      "price": "السعر",
+      "currency": "العملة",
+      "cancel": "إلغاء",
+      "confirm": "اعتماد",
+      "errors": {
+        "paidRequiresPrice": "الفيديوهات المدفوعة تتطلب سعرًا وعملة مكونة من ٣ أحرف.",
+        "submit": "تعذّر اعتماد الفيديو"
+      },
+      "toast": {
+        "success": "تم اعتماد الفيديو"
+      }
+    },
+    "instructorSwitcher": {
+      "hogwarts": "Hogwarts",
+      "yourSchool": "مدرستك",
+      "partnerSchool": "مدرسة شريكة",
+      "unlock": "فتح",
+      "errors": {
+        "startPurchase": "تعذّر بدء عملية الشراء"
+      }
+    },
+    "teachVideos": {
+      "rejectionReasonLabel": "ملاحظات المراجع"
     }
   }
 }

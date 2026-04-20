@@ -69,6 +69,9 @@ export interface TeacherVideo {
   visibility: string
   viewCount: number
   isFeatured: boolean
+  price: number | null
+  currency: string | null
+  rejectionReason: string | null
   createdAt: Date
   lesson: {
     id: string
@@ -105,6 +108,9 @@ export async function getMyVideos(): Promise<TeacherVideo[]> {
       visibility: true,
       viewCount: true,
       isFeatured: true,
+      price: true,
+      currency: true,
+      rejectionReason: true,
       createdAt: true,
       lesson: {
         select: {

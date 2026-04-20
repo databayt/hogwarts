@@ -12,7 +12,12 @@ import { checkAndConsumeRateLimit } from "./rate-limiter"
 
 /**
  * Resolve a user's phone number from their role-specific profile.
- * Checks: Guardian phone numbers → Teacher phone numbers → null
+ * Checks: Guardian → Teacher → StaffMember (Accountant/Staff) → null
+ *
+ * Keep this aligned with `resolveWhatsAppPhone` in
+ * `src/components/school-dashboard/messaging/whatsapp-bridge.ts` so that
+ * cron-driven notifications and message-triggered WhatsApp dispatch reach
+ * the same set of users.
  */
 async function resolveUserPhone(userId: string): Promise<string | null> {
   // Check guardian phone numbers
@@ -41,6 +46,17 @@ async function resolveUserPhone(userId: string): Promise<string | null> {
   })
   if (teacher?.phoneNumbers[0]?.phoneNumber) {
     return teacher.phoneNumbers[0].phoneNumber
+  }
+
+  // Check staff member phone numbers (covers Accountant, Staff roles)
+  const staffMember = await db.staffMember.findFirst({
+    where: { userId },
+    include: {
+      staffPhoneNumbers: { where: { isPrimary: true }, take: 1 },
+    },
+  })
+  if (staffMember?.staffPhoneNumbers[0]?.phoneNumber) {
+    return staffMember.staffPhoneNumbers[0].phoneNumber
   }
 
   return null

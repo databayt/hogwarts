@@ -22,8 +22,10 @@ export async function approveContent(
   contentType: ContentType,
   id: string,
   options?: {
-    visibility?: "PRIVATE" | "SCHOOL" | "PUBLIC"
+    visibility?: "PRIVATE" | "SCHOOL" | "PUBLIC" | "PAID"
     isFeatured?: boolean
+    price?: number | null
+    currency?: string | null
   }
 ): Promise<ActionResponse> {
   try {
@@ -139,21 +141,72 @@ export async function approveContent(
         })
         break
       }
-      case "Video":
-        await db.video.update({
+      case "Video": {
+        const visibility = options?.visibility
+        const isPaid = visibility === "PAID"
+        // Reviewer chose PAID → require a valid price and 3-letter currency.
+        if (
+          isPaid &&
+          (!options?.price ||
+            options.price <= 0 ||
+            !options?.currency ||
+            options.currency.trim().length !== 3)
+        ) {
+          return {
+            success: false,
+            error: "Paid videos require a price and 3-letter currency",
+          }
+        }
+        const updated = await db.video.update({
           where: { id },
           data: {
             approvalStatus: "APPROVED",
             approvedBy: userId,
             approvedAt: new Date(),
             rejectionReason: null,
-            ...(options?.visibility ? { visibility: options.visibility } : {}),
+            ...(visibility ? { visibility } : {}),
             ...(options?.isFeatured !== undefined
               ? { isFeatured: options.isFeatured }
               : {}),
+            // Writing pricing fields only when explicitly part of approval decision,
+            // otherwise leave the proposer-supplied values as-is.
+            ...(isPaid
+              ? {
+                  price: options!.price!,
+                  currency: options!.currency!.trim().toUpperCase(),
+                }
+              : visibility
+                ? { price: null, currency: null }
+                : {}),
           },
+          select: { userId: true, schoolId: true, title: true },
         })
+        // Fire-and-forget notify the proposer. Notification requires a schoolId, so
+        // platform-level videos (no school) are silently skipped.
+        if (updated.userId && updated.schoolId) {
+          await db.notification
+            .create({
+              data: {
+                schoolId: updated.schoolId,
+                userId: updated.userId,
+                actorId: userId ?? null,
+                type: "document_shared",
+                priority: "normal",
+                title: "Video approved",
+                body: `Your video "${updated.title}" has been approved and is now live.`,
+                metadata: {
+                  entityType: "video",
+                  entityId: id,
+                  url: "/stream/settings?tab=videos",
+                },
+              },
+            })
+            .catch(() => {
+              // Notification failure must not fail the approval.
+            })
+        }
         break
+      }
       default:
         return {
           success: false,
@@ -221,8 +274,8 @@ export async function rejectContent(
           data: rejectionData,
         })
         break
-      case "Video":
-        await db.video.update({
+      case "Video": {
+        const updated = await db.video.update({
           where: { id },
           data: {
             approvalStatus: "REJECTED",
@@ -230,8 +283,33 @@ export async function rejectContent(
             approvedAt: new Date(),
             rejectionReason,
           },
+          select: { userId: true, schoolId: true, title: true },
         })
+        if (updated.userId && updated.schoolId) {
+          await db.notification
+            .create({
+              data: {
+                schoolId: updated.schoolId,
+                userId: updated.userId,
+                actorId: userId ?? null,
+                type: "system_alert",
+                priority: "high",
+                title: "Video needs changes",
+                body: `Your video "${updated.title}" was not approved. Reason: ${rejectionReason}`,
+                metadata: {
+                  entityType: "video",
+                  entityId: id,
+                  url: "/stream/settings?tab=videos",
+                  rejectionReason,
+                },
+              },
+            })
+            .catch(() => {
+              // Notification failure must not fail the rejection.
+            })
+        }
         break
+      }
       default:
         return {
           success: false,

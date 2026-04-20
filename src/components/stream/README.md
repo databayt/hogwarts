@@ -79,7 +79,6 @@ src/components/stream/
 │   ├── content.tsx                 # Settings tab layout (overview, enrollments, instructors, videos)
 │   ├── overview.tsx                # Admin dashboard overview
 │   ├── instructor-settings.tsx     # Instructor preference per subject (platform/school/teacher)
-│   ├── request-video.tsx           # Video request interface
 │   ├── video-review-actions.ts     # Approve/reject pending videos
 │   ├── video-review-content.tsx    # Video review queue UI
 │   └── enrollments/

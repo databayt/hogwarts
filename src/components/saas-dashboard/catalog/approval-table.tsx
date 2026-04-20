@@ -28,6 +28,7 @@ import { useDataTable } from "@/components/table/use-data-table"
 
 import { approveContent, rejectContent } from "./approval-actions"
 import type { PendingItem } from "./approval-content"
+import { VideoApproveDialog } from "./video-approve-dialog"
 
 function getContentTypeBadge(
   contentType: string
@@ -68,9 +69,16 @@ function getContentTypeLabel(contentType: string): string {
 function ApprovalActions({ item }: { item: PendingItem }) {
   const [isPending, startTransition] = useTransition()
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false)
+  const [videoApproveOpen, setVideoApproveOpen] = useState(false)
   const [rejectionReason, setRejectionReason] = useState("")
 
+  const isVideo = item.contentType === "Video"
+
   function handleApprove() {
+    if (isVideo) {
+      setVideoApproveOpen(true)
+      return
+    }
     startTransition(async () => {
       await approveContent(item.contentType, item.id)
     })
@@ -108,6 +116,14 @@ function ApprovalActions({ item }: { item: PendingItem }) {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {isVideo && (
+        <VideoApproveDialog
+          item={item}
+          open={videoApproveOpen}
+          onOpenChange={setVideoApproveOpen}
+        />
+      )}
 
       <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
         <DialogContent>

@@ -24,6 +24,16 @@ export interface PendingItem {
   description: string | null
   contributedBy: string | null
   createdAt: Date
+  // Video-specific fields surfaced to the DEVELOPER approval dialog so it can
+  // pre-fill the proposer's suggested visibility/pricing before confirming.
+  videoMeta?: {
+    visibility: "PRIVATE" | "SCHOOL" | "PUBLIC" | "PAID"
+    price: number | null
+    currency: string | null
+    isFeatured: boolean
+    ownerName: string | null
+    ownerRole: string | null
+  }
 }
 
 interface Props {
@@ -91,6 +101,17 @@ export async function ApprovalContent({ lang }: Props) {
         description: true,
         userId: true,
         createdAt: true,
+        visibility: true,
+        price: true,
+        currency: true,
+        isFeatured: true,
+        user: {
+          select: {
+            username: true,
+            email: true,
+            role: true,
+          },
+        },
       },
     }),
   ])
@@ -138,6 +159,14 @@ export async function ApprovalContent({ lang }: Props) {
       description: v.description,
       contributedBy: v.userId,
       createdAt: v.createdAt,
+      videoMeta: {
+        visibility: v.visibility as "PRIVATE" | "SCHOOL" | "PUBLIC" | "PAID",
+        price: v.price,
+        currency: v.currency,
+        isFeatured: v.isFeatured,
+        ownerName: v.user?.username ?? v.user?.email ?? null,
+        ownerRole: v.user?.role ?? null,
+      },
     })),
   ].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
 

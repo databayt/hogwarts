@@ -20,7 +20,19 @@
     "scanQR": "امسح رمز QR هذا بواتساب المدرسة للاتصال",
     "phoneNumber": "رقم الهاتف",
     "connectedSince": "متصل منذ",
-    "waitingForScan": "في انتظار مسح رمز QR..."
+    "waitingForScan": "في انتظار مسح رمز QR...",
+    "statusConnected": "متصل",
+    "statusDisconnected": "غير متصل",
+    "scanInstructions": "افتح واتساب على هاتفك، انتقل إلى الإعدادات > الأجهزة المرتبطة > ربط جهاز، وامسح رمز QR هذا",
+    "notConnected": "لا يوجد واتساب مرتبط",
+    "connectPrompt": "اربط واتساب لإرسال الرسائل تلقائيًا"
+  },
+  "toast": {
+    "connected": "تم ربط واتساب بنجاح",
+    "scanQr": "امسح رمز QR باستخدام واتساب",
+    "connectionFailed": "فشل الاتصال",
+    "disconnected": "تم قطع اتصال واتساب",
+    "disconnectFailed": "فشل قطع الاتصال"
   },
   "groups": {
     "title": "مجموعات واتساب",

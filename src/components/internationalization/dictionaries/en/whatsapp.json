@@ -20,7 +20,19 @@
     "scanQR": "Scan this QR code with your school's WhatsApp to connect",
     "phoneNumber": "Phone Number",
     "connectedSince": "Connected Since",
-    "waitingForScan": "Waiting for QR code scan..."
+    "waitingForScan": "Waiting for QR code scan...",
+    "statusConnected": "Connected",
+    "statusDisconnected": "Disconnected",
+    "scanInstructions": "Open WhatsApp on your phone, go to Settings > Linked Devices > Link a Device, and scan this QR code",
+    "notConnected": "No WhatsApp connected",
+    "connectPrompt": "Connect your WhatsApp to auto-deliver messages"
+  },
+  "toast": {
+    "connected": "WhatsApp connected successfully",
+    "scanQr": "Scan the QR code with WhatsApp",
+    "connectionFailed": "Failed to connect",
+    "disconnected": "WhatsApp disconnected",
+    "disconnectFailed": "Failed to disconnect"
   },
   "groups": {
     "title": "WhatsApp Groups",

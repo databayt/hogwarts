@@ -162,8 +162,9 @@ model User {
   eventRegistrations EventRegistration[] @relation("EventRegistrations")
 
   // Lesson Content relations
-  videos       Video[]
-  attachments  Attachment[]
+  videos          Video[]
+  videoPurchases  VideoPurchase[]
+  attachments     Attachment[]
 
   // Document Processing relations
   documentProcessingJobs DocumentProcessingJob[]

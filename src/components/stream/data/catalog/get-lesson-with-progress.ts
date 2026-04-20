@@ -21,11 +21,18 @@ export interface AvailableVideo {
     id: string
     name: string | null
     image: string | null
+    role: string | null
   }
   school: {
     id: string | null
     name: string | null
   }
+  // PAID unlock — null price on a PAID video should never happen in practice,
+  // but callers must handle the null to stay safe.
+  price: number | null
+  currency: string | null
+  requiresPayment: boolean
+  hasPurchased: boolean
 }
 
 export interface LessonWithProgress {
@@ -185,19 +192,24 @@ export async function getLessonWithProgress(
     })
 
     // Get ALL approved videos for this lesson (multi-instructor support)
-    // Excludes videos hidden by the school via ContentOverride
+    // Excludes videos hidden by the school via ContentOverride.
+    // PAID videos surface across all schools — payment gate happens per-user.
     const videos = await db.video.findMany({
       where: {
         catalogLessonId: lessonId,
         approvalStatus: "APPROVED",
         ...(schoolId
           ? {
-              OR: [{ schoolId }, { visibility: "PUBLIC" }],
+              OR: [
+                { schoolId },
+                { visibility: "PUBLIC" },
+                { visibility: "PAID" },
+              ],
               NOT: {
                 overrides: { some: { schoolId, isHidden: true } },
               },
             }
-          : { visibility: "PUBLIC" }),
+          : { OR: [{ visibility: "PUBLIC" }, { visibility: "PAID" }] }),
       },
       orderBy: [{ isFeatured: "desc" }, { viewCount: "desc" }],
       select: {
@@ -207,11 +219,15 @@ export async function getLessonWithProgress(
         durationSeconds: true,
         isFeatured: true,
         schoolId: true,
+        visibility: true,
+        price: true,
+        currency: true,
         user: {
           select: {
             id: true,
             username: true,
             image: true,
+            role: true,
           },
         },
         school: {
@@ -222,6 +238,23 @@ export async function getLessonWithProgress(
         },
       },
     })
+
+    // Batch-check purchases so PAID videos resolve unlock state in one query.
+    const paidVideoIds = videos
+      .filter((v) => v.visibility === "PAID")
+      .map((v) => v.id)
+    const purchasedIds = new Set<string>()
+    if (paidVideoIds.length > 0) {
+      const purchases = await db.videoPurchase.findMany({
+        where: {
+          userId: session.user.id,
+          videoId: { in: paidVideoIds },
+          status: "SUCCESS",
+        },
+        select: { videoId: true },
+      })
+      for (const p of purchases) purchasedIds.add(p.videoId)
+    }
 
     // Resolve instructor preference: re-sort videos to prioritize preferred source
     if (schoolId && videos.length > 1) {
@@ -336,6 +369,8 @@ export async function getLessonWithProgress(
       if (v.isFeatured) source = "featured"
       else if (schoolId && v.schoolId === schoolId) source = "own-school"
 
+      const requiresPayment = v.visibility === "PAID"
+
       return {
         id: v.id,
         videoUrl: getVideoUrl(v.videoUrl, { isFree: true }),
@@ -348,16 +383,21 @@ export async function getLessonWithProgress(
           name:
             v.isFeatured && !v.schoolId
               ? "Hogwarts"
-              : (v.school?.name ?? v.user.username),
+              : (v.user.username ?? v.school?.name ?? null),
           image:
             v.isFeatured && !v.schoolId
               ? asset("/icons/logo.png")
               : v.user.image,
+          role: v.user.role ?? null,
         },
         school: {
           id: v.school?.id ?? null,
           name: v.school?.name ?? null,
         },
+        price: v.price,
+        currency: v.currency,
+        requiresPayment,
+        hasPurchased: requiresPayment ? purchasedIds.has(v.id) : true,
       }
     })
 

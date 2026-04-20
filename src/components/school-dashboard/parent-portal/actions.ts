@@ -2,10 +2,23 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { auth } from "@/auth"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { getPolicyContext, PolicyContextError } from "@/lib/rbac/context"
+import { POLICY_ERROR_CODES } from "@/lib/rbac/types"
+
+// Resolve the guardian's Guardian.id (not session.user.id) and the schoolId
+// for every parent-portal action. Before this helper, each action used
+// session.user.id as guardianId, which is the userId — that confused Users
+// with Guardians and would intermittently fail the StudentGuardian lookup.
+async function getGuardianScope() {
+  const ctx = await getPolicyContext()
+  if (ctx.role !== "GUARDIAN" || !ctx.guardianId || !ctx.schoolId) {
+    throw new PolicyContextError(POLICY_ERROR_CODES.MISSING_SCHOOL_CONTEXT)
+  }
+  return { guardianId: ctx.guardianId, schoolId: ctx.schoolId }
+}
 
 // Helper to get guardian's children
 async function getGuardianChildren(guardianId: string, schoolId: string) {
@@ -33,13 +46,7 @@ async function getGuardianChildren(guardianId: string, schoolId: string) {
 
 // Get child's grades/exam results
 export async function getChildGrades(input: { studentId: string }) {
-  const session = await auth()
-  const guardianId = session?.user?.id
-  const schoolId = session?.user?.schoolId
-
-  if (!guardianId || !schoolId) {
-    throw new Error("Missing guardian context")
-  }
+  const { guardianId, schoolId } = await getGuardianScope()
 
   const { studentId } = z.object({ studentId: z.string().min(1) }).parse(input)
 
@@ -116,13 +123,7 @@ export async function getChildGrades(input: { studentId: string }) {
 
 // Get child's assignments
 export async function getChildAssignments(input: { studentId: string }) {
-  const session = await auth()
-  const guardianId = session?.user?.id
-  const schoolId = session?.user?.schoolId
-
-  if (!guardianId || !schoolId) {
-    throw new Error("Missing guardian context")
-  }
+  const { guardianId, schoolId } = await getGuardianScope()
 
   const { studentId } = z.object({ studentId: z.string().min(1) }).parse(input)
 
@@ -200,13 +201,7 @@ export async function getChildAssignments(input: { studentId: string }) {
 
 // Get child's timetable
 export async function getChildTimetable(input: { studentId: string }) {
-  const session = await auth()
-  const guardianId = session?.user?.id
-  const schoolId = session?.user?.schoolId
-
-  if (!guardianId || !schoolId) {
-    throw new Error("Missing guardian context")
-  }
+  const { guardianId, schoolId } = await getGuardianScope()
 
   const { studentId } = z.object({ studentId: z.string().min(1) }).parse(input)
 
@@ -285,13 +280,7 @@ export async function getChildTimetable(input: { studentId: string }) {
 
 // Get guardian's children
 export async function getMyChildren() {
-  const session = await auth()
-  const guardianId = session?.user?.id
-  const schoolId = session?.user?.schoolId
-
-  if (!guardianId || !schoolId) {
-    throw new Error("Missing guardian context")
-  }
+  const { guardianId, schoolId } = await getGuardianScope()
 
   const children = await getGuardianChildren(guardianId, schoolId)
 
@@ -300,13 +289,7 @@ export async function getMyChildren() {
 
 // Get child overview (grades summary + attendance)
 export async function getChildOverview(input: { studentId: string }) {
-  const session = await auth()
-  const guardianId = session?.user?.id
-  const schoolId = session?.user?.schoolId
-
-  if (!guardianId || !schoolId) {
-    throw new Error("Missing guardian context")
-  }
+  const { guardianId, schoolId } = await getGuardianScope()
 
   const { studentId } = z.object({ studentId: z.string().min(1) }).parse(input)
 

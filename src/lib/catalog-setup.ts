@@ -955,13 +955,26 @@ export async function applyTimetableStructureForNewSchool(
 /**
  * Get ranked videos for a catalog lesson.
  * Ranking: featured first, then by engagement (views + rating).
+ *
+ * Tenancy: PUBLIC and PAID videos surface to every school; SCHOOL-scoped
+ * videos surface only to their own school. PAID videos include
+ * `requiresPayment` — the client decides whether to gate playback based on
+ * whether the current user has a VideoPurchase row.
  */
 export async function getRankedVideos(
   lessonId: string,
   schoolId: string | null,
-  options?: { limit?: number; includeSchoolOnly?: boolean }
+  options?: {
+    limit?: number
+    includeSchoolOnly?: boolean
+    currentUserId?: string | null
+  }
 ) {
-  const { limit = 10, includeSchoolOnly = false } = options ?? {}
+  const {
+    limit = 10,
+    includeSchoolOnly = false,
+    currentUserId = null,
+  } = options ?? {}
 
   const whereClause: Record<string, unknown> = {
     catalogLessonId: lessonId,
@@ -971,9 +984,13 @@ export async function getRankedVideos(
   if (includeSchoolOnly && schoolId) {
     whereClause.schoolId = schoolId
   } else if (schoolId) {
-    whereClause.OR = [{ schoolId }, { visibility: "PUBLIC" }]
+    whereClause.OR = [
+      { schoolId },
+      { visibility: "PUBLIC" },
+      { visibility: "PAID" },
+    ]
   } else {
-    whereClause.visibility = "PUBLIC"
+    whereClause.OR = [{ visibility: "PUBLIC" }, { visibility: "PAID" }]
   }
 
   const videos = await db.video.findMany({
@@ -996,14 +1013,37 @@ export async function getRankedVideos(
       viewCount: true,
       averageRating: true,
       ratingCount: true,
+      price: true,
+      currency: true,
+      userId: true,
       user: {
-        select: { username: true },
+        select: { id: true, username: true, role: true },
       },
       school: {
         select: { name: true },
       },
     },
   })
+
+  // Resolve ownership for the current user so PAID videos can be unlocked
+  // without hitting Stripe on every render. One batched query for all paid
+  // videos in the list keeps this cheap regardless of list length.
+  const paidVideoIds = videos
+    .filter((v) => v.visibility === "PAID")
+    .map((v) => v.id)
+
+  const purchasedIds = new Set<string>()
+  if (currentUserId && paidVideoIds.length > 0) {
+    const purchases = await db.videoPurchase.findMany({
+      where: {
+        userId: currentUserId,
+        videoId: { in: paidVideoIds },
+        status: "SUCCESS",
+      },
+      select: { videoId: true },
+    })
+    for (const p of purchases) purchasedIds.add(p.videoId)
+  }
 
   return videos.map((v) => ({
     id: v.id,
@@ -1019,6 +1059,16 @@ export async function getRankedVideos(
     ratingCount: v.ratingCount,
     uploaderName: v.user?.username ?? null,
     schoolName: v.school?.name ?? null,
+    owner: {
+      id: v.userId,
+      name: v.user?.username ?? null,
+      role: v.user?.role ?? null,
+      schoolName: v.school?.name ?? null,
+    },
+    price: v.price,
+    currency: v.currency,
+    requiresPayment: v.visibility === "PAID",
+    hasPurchased: purchasedIds.has(v.id),
   }))
 }
 

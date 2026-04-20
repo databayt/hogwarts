@@ -175,6 +175,15 @@ function getStrings(locale: string) {
 
 // ── Send functions ───────────────────────────────────────────────────
 
+// Resend returns { data, error } on API-level failures (invalid recipient,
+// domain not verified, rate-limited, provider rejection) WITHOUT throwing.
+// Always destructure `error` and treat it as a failure — otherwise silent
+// Hotmail/Outlook rejections surface to users as fake "sent" confirmations.
+const baseHeaders = (email: string) => ({
+  "X-Entity-Ref-ID": `${Date.now()}-${email}`,
+  "List-Unsubscribe": `<mailto:unsubscribe@databayt.org>`,
+})
+
 export const sendTwoFactorTokenEmail = async (
   email: string,
   token: string,
@@ -184,15 +193,25 @@ export const sendTwoFactorTokenEmail = async (
   const t = getStrings(locale)
 
   try {
-    const response = await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from: "Hogwarts <noreply@databayt.org>",
       to: email,
       subject: t.twoFactorSubject,
       html: t.twoFactorBody(token),
       text: t.twoFactorText(token),
+      headers: baseHeaders(email),
     })
 
-    if (isDev) console.log("2FA email sent successfully, response:", response)
+    if (error) {
+      console.error("[mail] Resend 2FA error:", {
+        email,
+        name: error.name,
+        message: error.message,
+      })
+      return false
+    }
+
+    if (isDev) console.log("2FA email sent successfully, id:", data?.id)
     return true
   } catch (error) {
     console.error("Error sending 2FA email:", error)
@@ -211,16 +230,26 @@ export const sendPasswordResetEmail = async (
   if (isDev) console.log("Password reset link:", resetLink)
 
   try {
-    const response = await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from: "Hogwarts <noreply@databayt.org>",
       to: email,
       subject: t.resetSubject,
       html: t.resetBody(resetLink),
       text: t.resetText(resetLink),
+      headers: baseHeaders(email),
     })
 
+    if (error) {
+      console.error("[mail] Resend password-reset error:", {
+        email,
+        name: error.name,
+        message: error.message,
+      })
+      return false
+    }
+
     if (isDev)
-      console.log("Password reset email sent successfully, response:", response)
+      console.log("Password reset email sent successfully, id:", data?.id)
     return true
   } catch (error) {
     console.error("Error sending password reset email:", error)
@@ -243,16 +272,26 @@ export const sendVerificationEmail = async (
   if (isDev) console.log("Email confirmation link:", confirmLink, "Code:", code)
 
   try {
-    const response = await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from: "Hogwarts <noreply@databayt.org>",
       to: email,
       subject: t.verifySubject,
       html: t.verifyBody(code || "----"),
       text: t.verifyText(code || "----"),
+      headers: baseHeaders(email),
     })
 
+    if (error) {
+      console.error("[mail] Resend verification error:", {
+        email,
+        name: error.name,
+        message: error.message,
+      })
+      return false
+    }
+
     if (isDev)
-      console.log("Verification email sent successfully, response:", response)
+      console.log("Verification email sent successfully, id:", data?.id)
     return true
   } catch (error) {
     console.error("Error sending verification email:", error)

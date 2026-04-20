@@ -2,7 +2,7 @@
 
 **Status:** 🟡 IN PROGRESS
 **Completion:** 85%
-**Last Updated:** 2026-03-19
+**Last Updated:** 2026-04-20
 
 ---
 
@@ -29,6 +29,7 @@
 
 ### P0 -- Critical
 
+- [ ] **Hotmail/Outlook not receiving OTP** ([#254](https://github.com/databayt/hogwarts/issues/254)) -- Regression, Microsoft-hosted inboxes silently drop OTP from `noreply@databayt.org` while Gmail works. Most likely sender-reputation decay at Microsoft (not a code bug). `mail.ts` was also masking Resend errors — fixed to log `error.name`/`error.message` and return `false` on failure. Next: inspect Resend dashboard for the bounce reason, consider splitting auth email to a dedicated `auth.databayt.org` sending subdomain.
 - [ ] **Excessive debug logging in auth.ts** -- Over 800 lines of `console.log` in the redirect callback. Causes performance degradation and potential security info leakage in production. Fix: wrap in `process.env.NODE_ENV === 'development'` check.
 - [ ] **`getUserByEmail` not tenant-scoped** -- Returns first user matching email regardless of school. In multi-tenant edge cases (same email across schools), could return wrong user. Fix: add optional `schoolId` parameter and update all callers.
 - [ ] **New OAuth users lack school context** -- OAuth users are created without `schoolId`, relying on onboarding to link them. Gap exists where user has no school association. Fix: ensure mandatory redirect to onboarding for users without `schoolId`.

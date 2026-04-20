@@ -86,6 +86,7 @@ export async function POST(req: Request) {
             referenceNumber?: string
             feeAssignmentId?: string
             studentId?: string
+            videoId?: string
           }
           subscription?: string
           payment_status?: string
@@ -381,6 +382,57 @@ export async function POST(req: Request) {
           }
         } catch (error) {
           console.error("[Webhook] Failed to record fee payment:", error)
+        }
+      }
+
+      return new Response(null, { status: 200 })
+    }
+
+    // Handle VIDEO PURCHASE payments (one-time, no subscription).
+    // Flips the pending VideoPurchase row to SUCCESS so the lesson viewer
+    // unlocks playback on the next render.
+    if (
+      session.metadata?.type === "video_purchase" &&
+      session.metadata?.videoId &&
+      session.metadata?.userId &&
+      !session.subscription
+    ) {
+      if (session.payment_status === "paid") {
+        try {
+          await db.videoPurchase.upsert({
+            where: {
+              userId_videoId: {
+                userId: session.metadata.userId,
+                videoId: session.metadata.videoId,
+              },
+            },
+            update: {
+              status: "SUCCESS",
+              stripeSessionId:
+                (session as unknown as { id?: string }).id ?? null,
+            },
+            create: {
+              userId: session.metadata.userId,
+              videoId: session.metadata.videoId,
+              schoolId: session.metadata.schoolId ?? null,
+              amount:
+                ((session as unknown as { amount_total?: number })
+                  .amount_total ?? 0) / 100,
+              currency:
+                (
+                  session as unknown as { currency?: string }
+                ).currency?.toUpperCase() ?? "USD",
+              stripeSessionId:
+                (session as unknown as { id?: string }).id ?? null,
+              status: "SUCCESS",
+            },
+          })
+
+          console.log(
+            `[Webhook] Video purchase recorded: ${session.metadata.videoId} for user ${session.metadata.userId}`
+          )
+        } catch (error) {
+          console.error("[Webhook] Failed to record video purchase:", error)
         }
       }
 

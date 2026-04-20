@@ -352,7 +352,8 @@ model School {
   gradingSchemes GradingScheme[]
 
   // Lesson Content relations
-  videos Video[]
+  videos         Video[]
+  videoPurchases VideoPurchase[]
 
   // Sidebar module visibility (null = all visible, array = only listed modules shown)
   enabledModules        Json?                   // Array of module keys: ["students", "teachers", "exams"]

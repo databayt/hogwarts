@@ -39,6 +39,7 @@ import type {
   AvailableVideo,
   LessonWithProgress,
 } from "@/components/stream/data/catalog/get-lesson-with-progress"
+import { InstructorSwitcher } from "@/components/stream/lesson/instructor-switcher"
 import {
   VideoPlayer,
   type VideoProgress,
@@ -612,6 +613,15 @@ export function StreamLessonContent({
           />
         ) : null}
       </div>
+
+      {lesson.availableVideos.length > 1 && (
+        <InstructorSwitcher
+          videos={lesson.availableVideos}
+          activeVideoId={activeVideoId}
+          onSwitch={setActiveVideoId}
+          dictionary={dictionary as Record<string, any>}
+        />
+      )}
 
       {/* More from Course */}
       {lesson.siblingLessons.length > 0 && (

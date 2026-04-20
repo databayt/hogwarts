@@ -62,18 +62,10 @@ const lessonProposalDataSchema = z.object({
   durationMinutes: z.number().int().optional(),
 })
 
-const videoProposalDataSchema = z.object({
-  lessonName: z.string().min(1, "Lesson name is required"),
-  subjectName: z.string().optional(),
-  description: z.string().optional(),
-  preferredFormat: z.string().optional(),
-})
-
 const proposalSchemaByType: Record<string, z.ZodSchema> = {
   SUBJECT: subjectProposalDataSchema,
   CHAPTER: chapterProposalDataSchema,
   LESSON: lessonProposalDataSchema,
-  VIDEO: videoProposalDataSchema,
 }
 
 // ============================================================================
@@ -178,42 +170,6 @@ export async function submitLessonProposal(
         error instanceof Error
           ? error.message
           : "Failed to submit lesson proposal",
-    }
-  }
-}
-
-// ============================================================================
-// Submit video proposal (request video for a Lesson)
-// ============================================================================
-
-export async function submitVideoProposal(
-  catalogLessonId: string,
-  data: z.infer<typeof videoProposalDataSchema>
-): Promise<ActionResponse<{ id: string }>> {
-  try {
-    const { userId, schoolId } = await requireProposer()
-    const parsed = videoProposalDataSchema.parse(data)
-
-    const proposal = await db.proposal.create({
-      data: {
-        schoolId,
-        proposedBy: userId,
-        type: "VIDEO",
-        status: "SUBMITTED",
-        catalogLessonId,
-        data: parsed as any,
-      },
-    })
-
-    revalidatePath("/stream")
-    return { success: true, data: { id: proposal.id } }
-  } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to submit video request",
     }
   }
 }

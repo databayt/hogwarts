@@ -113,7 +113,10 @@ export function TeachOverviewContent({
           <CardTitle>{d?.quickActions || "Quick Actions"}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-3">
-          <ProposeVideoDialog lessons={proposableLessons} />
+          <ProposeVideoDialog
+            lessons={proposableLessons}
+            dictionary={dictionary}
+          />
           <Link href={`${base}?tab=videos`}>
             <Button variant="outline">
               <Film className="me-2 size-4" />

@@ -348,6 +348,110 @@
       "specialization": "Specialization",
       "course": "Course",
       "shortCourse": "Short Course"
+    },
+    "proposeVideo": {
+      "trigger": "Propose a Video",
+      "steps": {
+        "selectLesson": "Select Lesson",
+        "addVideo": "Add Your Video",
+        "confirm": "Review & Submit"
+      },
+      "descriptions": {
+        "selectLesson": "Choose which lesson you want to contribute a video for.",
+        "addVideo": "Provide the video URL and details. Your video will be reviewed before going live.",
+        "confirm": "Review your submission. You retain full ownership and control over your video."
+      },
+      "fields": {
+        "title": "Video Title",
+        "titlePlaceholder": "e.g. Introduction to Algebra - Lesson 1",
+        "source": "Video Source",
+        "sourceUrl": "URL",
+        "sourceUpload": "Upload",
+        "urlPlaceholder": "https://youtube.com/watch?v=... or https://vimeo.com/...",
+        "urlHelper": "Supports YouTube, Vimeo, or direct video URLs.",
+        "uploadPlaceholderLine1": "Direct upload coming soon.",
+        "uploadPlaceholderLine2": "For now, use a YouTube or Vimeo URL.",
+        "description": "Description (optional)",
+        "descriptionPlaceholder": "Brief description of what this video covers...",
+        "price": "Price",
+        "currency": "Currency",
+        "pricePlaceholder": "9.99"
+      },
+      "audience": {
+        "label": "Audience",
+        "public": "Public catalog",
+        "publicHelper": "Visible to every school once approved.",
+        "school": "Just my school",
+        "schoolHelper": "Only users in your school can see this video.",
+        "private": "Private",
+        "privateHelper": "Only you can see this until you share it."
+      },
+      "pricing": {
+        "label": "Pricing",
+        "free": "Free",
+        "paid": "Paid",
+        "helper": "A reviewer may adjust audience or pricing before approving.",
+        "paidSummary": "Paid · {price} {currency}"
+      },
+      "confirm": {
+        "lesson": "Lesson",
+        "course": "Course",
+        "title": "Title",
+        "source": "Source",
+        "audience": "Audience",
+        "pricing": "Pricing",
+        "rightsTitle": "Your rights are protected",
+        "rightsOwnership": "You retain full ownership of your video",
+        "rightsVisibility": "You can change visibility or delete at any time",
+        "rightsReview": "Admin review is required before the video goes live",
+        "rightsControl": "Even after approval, you control who can see your video"
+      },
+      "actions": {
+        "back": "Back",
+        "next": "Next",
+        "review": "Review",
+        "submit": "Submit for Review"
+      },
+      "empty": "No lessons available for video proposals.",
+      "toast": {
+        "success": "Video submitted for review. You'll be notified when it's approved."
+      }
+    },
+    "approveVideo": {
+      "dialogTitle": "Review & Approve Video",
+      "dialogDescription": "Finalize visibility, pricing, and featured status before approving.",
+      "proposer": "Proposed by",
+      "visibility": "Visibility",
+      "visibilityOptions": {
+        "public": "Public — any school",
+        "school": "Just the proposer's school",
+        "private": "Private — proposer only",
+        "paid": "Paid — unlock per user"
+      },
+      "featured": "Mark as featured (\"Hogwarts\" default instructor)",
+      "price": "Price",
+      "currency": "Currency",
+      "cancel": "Cancel",
+      "confirm": "Approve",
+      "errors": {
+        "paidRequiresPrice": "Paid videos require a price and 3-letter currency.",
+        "submit": "Failed to approve video"
+      },
+      "toast": {
+        "success": "Video approved"
+      }
+    },
+    "instructorSwitcher": {
+      "hogwarts": "Hogwarts",
+      "yourSchool": "Your school",
+      "partnerSchool": "Partner school",
+      "unlock": "Unlock",
+      "errors": {
+        "startPurchase": "Failed to start purchase"
+      }
+    },
+    "teachVideos": {
+      "rejectionReasonLabel": "Reviewer feedback"
     }
   }
 }
