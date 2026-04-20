@@ -2510,5 +2510,29 @@
     "coverageTypeFull": "Full",
     "coverageTypePercentage": "Percentage",
     "coverageTypeFixed": "Fixed Amount"
+  },
+  "notifications": {
+    "feeDueTitle": "New Fee Assignment",
+    "feeDueStudentBody": "A fee of {amount} has been assigned to your account",
+    "feeDueGuardianBody": "A fee of {amount} has been assigned to {studentName}",
+    "feeOverdueTitle": "Fee Overdue",
+    "feeOverdueBody": "Your fee of {amount} is overdue",
+    "paymentReceivedTitle": "Payment Received",
+    "paymentRecordedStudentFull": "Payment of {amount} recorded. Fee fully paid.",
+    "paymentRecordedStudentPartial": "Payment of {amount} recorded. Remaining: {remaining}",
+    "paymentRecordedGuardianFull": "Payment of {amount} recorded for student. Fee fully paid.",
+    "paymentRecordedGuardianPartial": "Payment of {amount} recorded for student. Remaining: {remaining}",
+    "payrollReadyTitle": "Payroll Ready",
+    "payrollReadyBody": "Your salary slip for {period} is ready",
+    "payrollProcessedTitle": "Payroll Processed",
+    "payrollProcessedBody": "Your salary of {amount} for {period} has been processed",
+    "payrollReadyForApprovalTitle": "Payroll Ready for Approval",
+    "payrollReadyForApprovalBody": "Payroll run {runNumber} is ready for review. {slips} salary slips totalling {total}.",
+    "payrollApprovedTitle": "Payroll Approved",
+    "payrollApprovedBody": "Payroll run {runNumber} has been approved. You can now disburse payments.",
+    "payrollRejectedTitle": "Payroll Rejected",
+    "payrollRejectedBody": "Payroll run {runNumber} was rejected: {reason}",
+    "salaryPaidTitle": "Salary Paid",
+    "salaryPaidBody": "Your salary of {amount} has been paid."
   }
 }

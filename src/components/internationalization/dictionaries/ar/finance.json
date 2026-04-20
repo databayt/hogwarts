@@ -1100,7 +1100,11 @@
     "saving": "جارٍ الحفظ...",
     "save": "حفظ",
     "deleteConfirm": "لا يمكن التراجع عن هذا الإجراء.",
-    "delete": "حذف"
+    "delete": "حذف",
+    "errorTitle": "خطأ",
+    "errorDescription": "حدث خطأ أثناء تحميل البيانات.",
+    "errorReference": "رقم المرجع",
+    "tryAgain": "حاول مرة أخرى"
   },
   "feesPage": {
     "feesCollected": "الرسوم المحصّلة",
@@ -2506,5 +2510,29 @@
     "coverageTypeFull": "كامل",
     "coverageTypePercentage": "نسبة مئوية",
     "coverageTypeFixed": "مبلغ ثابت"
+  },
+  "notifications": {
+    "feeDueTitle": "رسوم دراسية جديدة",
+    "feeDueStudentBody": "تم تعيين رسوم بقيمة {amount} لحسابك",
+    "feeDueGuardianBody": "تم تعيين رسوم بقيمة {amount} لحساب {studentName}",
+    "feeOverdueTitle": "رسوم متأخرة",
+    "feeOverdueBody": "الرسوم بقيمة {amount} متأخرة السداد",
+    "paymentReceivedTitle": "تم استلام الدفعة",
+    "paymentRecordedStudentFull": "تم تسجيل دفعة بقيمة {amount}. تم سداد الرسوم بالكامل.",
+    "paymentRecordedStudentPartial": "تم تسجيل دفعة بقيمة {amount}. المتبقي: {remaining}",
+    "paymentRecordedGuardianFull": "تم تسجيل دفعة بقيمة {amount} لحساب الطالب. تم سداد الرسوم بالكامل.",
+    "paymentRecordedGuardianPartial": "تم تسجيل دفعة بقيمة {amount} لحساب الطالب. المتبقي: {remaining}",
+    "payrollReadyTitle": "كشف الراتب جاهز",
+    "payrollReadyBody": "كشف راتبك لفترة {period} جاهز",
+    "payrollProcessedTitle": "تمت معالجة الراتب",
+    "payrollProcessedBody": "تمت معالجة راتبك بقيمة {amount} عن فترة {period}",
+    "payrollReadyForApprovalTitle": "كشف رواتب جاهز للموافقة",
+    "payrollReadyForApprovalBody": "كشف الرواتب {runNumber} جاهز للمراجعة. {slips} قسيمة راتب بإجمالي {total}.",
+    "payrollApprovedTitle": "تمت الموافقة على كشف الرواتب",
+    "payrollApprovedBody": "تمت الموافقة على كشف الرواتب {runNumber}. يمكنك الآن صرف المدفوعات.",
+    "payrollRejectedTitle": "تم رفض كشف الرواتب",
+    "payrollRejectedBody": "تم رفض كشف الرواتب {runNumber}: {reason}",
+    "salaryPaidTitle": "تم صرف الراتب",
+    "salaryPaidBody": "تم صرف راتبك بقيمة {amount}."
   }
 }
