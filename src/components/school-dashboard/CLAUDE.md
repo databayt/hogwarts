@@ -25,7 +25,7 @@ Admin control center for individual schools (30+ sub-features, 85% complete). Ev
 - Missing `schoolId` in any query = cross-tenant data leak (CRITICAL)
 - `config.ts` sidebar config -- adding/reordering items affects all roles
 - Column definitions in server components cause SSE crashes (move to client components)
-- Finance module has 13 sub-modules with complex interdependencies
+- Finance module has 14 sub-modules with complex interdependencies
 - Client-facing URLs must use `/${locale}/path` WITHOUT `/s/${subdomain}/` — the middleware handles mapping. Using `/s/` in Link/redirect/router.push leaks internal paths to browser.
 - ALL UI text must use dictionary keys — no hardcoded English. Forms: `dictionary.school.*.form.*`, toasts: `ToastHelper`, validation: `ValidationHelper`, server errors: error codes.
 
