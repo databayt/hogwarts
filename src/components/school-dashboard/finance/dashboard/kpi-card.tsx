@@ -19,12 +19,14 @@ import type { FinancialKPI } from "./types"
 
 interface KPICardProps {
   kpi: FinancialKPI
+  currency?: string
   className?: string
   onClick?: () => void
 }
 
 export const KPICard = React.memo(function KPICard({
   kpi,
+  currency = "USD",
   className,
   onClick,
 }: KPICardProps) {
@@ -57,11 +59,14 @@ export const KPICard = React.memo(function KPICard({
         kpi.id.includes("expense") ||
         kpi.id.includes("profit") ||
         kpi.id.includes("cash") ||
-        kpi.id.includes("amount")
+        kpi.id.includes("amount") ||
+        kpi.id.includes("payroll") ||
+        kpi.id.includes("outstanding")
       ) {
-        return new Intl.NumberFormat(locale, {
+        const bcp47 = locale === "ar" ? "ar-SA" : "en-US"
+        return new Intl.NumberFormat(bcp47, {
           style: "currency",
-          currency: "SDG",
+          currency: currency.toUpperCase(),
           minimumFractionDigits: 0,
           maximumFractionDigits: 0,
         }).format(value)

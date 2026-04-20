@@ -26,6 +26,7 @@ import {
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
+import { formatCurrency } from "../lib/format"
 import { checkCurrentUserPermission } from "../lib/permissions"
 
 interface Props {
@@ -81,9 +82,17 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
   let totalMonthlySalary = 0
   let allowancesCount = 0
   let deductionsCount = 0
+  let currency = "USD"
 
   if (schoolId) {
     try {
+      const school = await db.school
+        .findUnique({
+          where: { id: schoolId },
+          select: { currency: true },
+        })
+        .catch(() => null)
+      currency = school?.currency ?? "USD"
       ;[
         activeStructuresCount,
         totalStaffCount,
@@ -135,7 +144,7 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ${(totalMonthlySalary / 100).toLocaleString()}
+              {formatCurrency(totalMonthlySalary, currency, lang)}
             </div>
             <p className="text-muted-foreground text-xs">
               {sp?.totalBasicSalary || "Total basic salary"}
@@ -168,7 +177,7 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ${(averageSalary / 100).toLocaleString()}
+              {formatCurrency(averageSalary, currency, lang)}
             </div>
             <p className="text-muted-foreground text-xs">
               {sp?.perStaffMember || "Per staff member"}

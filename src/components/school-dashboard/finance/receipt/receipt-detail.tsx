@@ -12,6 +12,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { format } from "date-fns"
+import { ar, enUS } from "date-fns/locale"
 import {
   Calendar,
   CircleAlert,
@@ -49,6 +50,7 @@ export function ReceiptDetail({ receipt, locale = "en" }: ReceiptDetailProps) {
   const { dictionary } = useDictionary()
   const fd = (dictionary as any)?.finance
   const rd = fd?.receiptDetail as Record<string, string> | undefined
+  const dateFnsLocale = locale === "ar" ? ar : enUS
 
   const statusConfig = {
     pending: {
@@ -144,7 +146,9 @@ export function ReceiptDetail({ receipt, locale = "en" }: ReceiptDetailProps) {
           </h2>
           <p className="text-muted-foreground text-sm">
             {rd?.uploaded || "Uploaded"}{" "}
-            {format(new Date(receipt.uploadedAt), "PPP")}
+            {format(new Date(receipt.uploadedAt), "PPP", {
+              locale: dateFnsLocale,
+            })}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -248,7 +252,9 @@ export function ReceiptDetail({ receipt, locale = "en" }: ReceiptDetailProps) {
                       {rd?.date || "Date"}
                     </div>
                     <p className="ms-6 text-sm">
-                      {format(new Date(receipt.transactionDate), "PPP")}
+                      {format(new Date(receipt.transactionDate), "PPP", {
+                        locale: dateFnsLocale,
+                      })}
                     </p>
                   </div>
                 )}

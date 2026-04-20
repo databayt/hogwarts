@@ -483,17 +483,20 @@ export async function calculateTrialBalance(
 }
 
 /**
- * Format currency amount
+ * Format a cents-stored amount as a localized currency string.
+ * Maps the app's 2-letter locale to a BCP-47 tag so Arabic numerals render
+ * correctly and the currency symbol follows locale-specific placement rules.
  */
 export function formatCurrency(
-  amount: number,
+  amountInCents: number,
   currency: string = "USD",
-  locale: string = "ar"
+  locale: string = "en"
 ): string {
-  return new Intl.NumberFormat(locale, {
+  const bcp47 = locale === "ar" ? "ar-SA" : "en-US"
+  return new Intl.NumberFormat(bcp47, {
     style: "currency",
-    currency,
-  }).format(amount / 100)
+    currency: currency.toUpperCase(),
+  }).format(amountInCents / 100)
 }
 
 /**

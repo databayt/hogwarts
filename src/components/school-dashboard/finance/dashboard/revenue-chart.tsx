@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import { format } from "date-fns"
+import { ar, enUS } from "date-fns/locale"
 import {
   Area,
   AreaChart,
@@ -35,6 +36,7 @@ interface RevenueChartProps {
   expenseData: number[]
   profitData: number[]
   labels?: string[]
+  currency?: string
   className?: string
 }
 
@@ -43,6 +45,7 @@ function RevenueChartInner({
   expenseData,
   profitData,
   labels,
+  currency = "USD",
   className,
 }: RevenueChartProps) {
   const { locale } = useLocale()
@@ -50,13 +53,21 @@ function RevenueChartInner({
   const fd = (dictionary as any)?.finance
   const dp = fd?.dashboardPage as Record<string, string> | undefined
 
+  const bcp47 = locale === "ar" ? "ar-SA" : "en-US"
+  const dateFnsLocale = locale === "ar" ? ar : enUS
+  const moneyFmt = new Intl.NumberFormat(bcp47, {
+    style: "currency",
+    currency: currency.toUpperCase(),
+    maximumFractionDigits: 0,
+  })
+
   // Generate labels if not provided (last 12 months)
   const monthLabels =
     labels ||
     Array.from({ length: 12 }, (_, i) => {
       const date = new Date()
       date.setMonth(date.getMonth() - (11 - i))
-      return format(date, "MMM")
+      return format(date, "MMM", { locale: dateFnsLocale })
     })
 
   // Prepare data for charts
@@ -81,9 +92,7 @@ function RevenueChartInner({
               style={{ backgroundColor: entry.color }}
             />
             <span className="capitalize">{entry.name}:</span>
-            <span className="font-medium">
-              SDG {new Intl.NumberFormat(locale).format(entry.value)}
-            </span>
+            <span className="font-medium">{moneyFmt.format(entry.value)}</span>
           </div>
         ))}
       </div>
@@ -272,9 +281,9 @@ function RevenueChartInner({
               {dp?.avgMonthlyRevenue || "Avg Monthly Revenue"}
             </p>
             <p className="text-lg font-semibold text-green-600">
-              SDG{" "}
-              {new Intl.NumberFormat(locale).format(
-                revenueData.reduce((a, b) => a + b, 0) / revenueData.length
+              {moneyFmt.format(
+                revenueData.reduce((a, b) => a + b, 0) /
+                  Math.max(revenueData.length, 1)
               )}
             </p>
           </div>
@@ -283,9 +292,9 @@ function RevenueChartInner({
               {dp?.avgMonthlyExpenses || "Avg Monthly Expenses"}
             </p>
             <p className="text-lg font-semibold text-red-600">
-              SDG{" "}
-              {new Intl.NumberFormat(locale).format(
-                expenseData.reduce((a, b) => a + b, 0) / expenseData.length
+              {moneyFmt.format(
+                expenseData.reduce((a, b) => a + b, 0) /
+                  Math.max(expenseData.length, 1)
               )}
             </p>
           </div>
@@ -294,9 +303,9 @@ function RevenueChartInner({
               {dp?.avgMonthlyProfit || "Avg Monthly Profit"}
             </p>
             <p className="text-lg font-semibold text-blue-600">
-              SDG{" "}
-              {new Intl.NumberFormat(locale).format(
-                profitData.reduce((a, b) => a + b, 0) / profitData.length
+              {moneyFmt.format(
+                profitData.reduce((a, b) => a + b, 0) /
+                  Math.max(profitData.length, 1)
               )}
             </p>
           </div>

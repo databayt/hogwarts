@@ -33,6 +33,7 @@ interface ExpenseChartProps {
     amount: number
     percentage: number
   }[]
+  currency?: string
   className?: string
 }
 
@@ -51,12 +52,20 @@ const COLORS = [
 
 export function ExpenseChart({
   expenseCategories,
+  currency = "USD",
   className,
 }: ExpenseChartProps) {
   const { locale } = useLocale()
   const { dictionary } = useDictionary()
   const fd = (dictionary as any)?.finance
   const dp = fd?.dashboardPage as Record<string, string> | undefined
+
+  const bcp47 = locale === "ar" ? "ar-SA" : "en-US"
+  const moneyFmt = new Intl.NumberFormat(bcp47, {
+    style: "currency",
+    currency: currency.toUpperCase(),
+    maximumFractionDigits: 0,
+  })
 
   // Sort categories by amount for better visualization
   const sortedCategories = [...expenseCategories].sort(
@@ -92,8 +101,7 @@ export function ExpenseChart({
       <div className="bg-background rounded-lg border p-3 shadow-lg">
         <p className="font-semibold">{data.name || data.payload.category}</p>
         <p className="text-sm">
-          {dp?.amountLabel || "Amount:"} SDG{" "}
-          {new Intl.NumberFormat(locale).format(data.value)}
+          {dp?.amountLabel || "Amount:"} {moneyFmt.format(data.value)}
         </p>
         <p className="text-sm">
           {dp?.percentageLabel || "Percentage:"}{" "}
@@ -237,7 +245,7 @@ export function ExpenseChart({
               {dp?.totalExpenses || "Total Expenses"}
             </span>
             <span className="text-lg font-bold">
-              SDG {new Intl.NumberFormat(locale).format(totalExpenses)}
+              {moneyFmt.format(totalExpenses)}
             </span>
           </div>
 
@@ -260,7 +268,7 @@ export function ExpenseChart({
                 </div>
                 <div className="text-end">
                   <span className="text-sm font-medium">
-                    SDG {new Intl.NumberFormat(locale).format(cat.amount)}
+                    {moneyFmt.format(cat.amount)}
                   </span>
                   <span className="text-muted-foreground ms-2 text-xs">
                     ({cat.percentage.toFixed(1)}%)

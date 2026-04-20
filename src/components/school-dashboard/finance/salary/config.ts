@@ -78,15 +78,39 @@ export const STATUS_COLORS = {
 export const DEFAULT_TAX_RATE = 15 // 15%
 export const DEFAULT_SOCIAL_SECURITY_RATE = 5 // 5%
 
-// Salary ranges for analytics (labels are static monetary values)
-export const SALARY_RANGES = [
-  { min: 0, max: 1000, label: "$0 - $1,000" },
-  { min: 1000, max: 2000, label: "$1,000 - $2,000" },
-  { min: 2000, max: 3000, label: "$2,000 - $3,000" },
-  { min: 3000, max: 5000, label: "$3,000 - $5,000" },
-  { min: 5000, max: 10000, label: "$5,000 - $10,000" },
-  { min: 10000, max: Infinity, label: "$10,000+" },
+// Salary range brackets for analytics (amounts in whole currency units, not cents)
+export const SALARY_RANGE_BUCKETS = [
+  { min: 0, max: 1000 },
+  { min: 1000, max: 2000 },
+  { min: 2000, max: 3000 },
+  { min: 3000, max: 5000 },
+  { min: 5000, max: 10000 },
+  { min: 10000, max: Infinity },
 ] as const
+
+/**
+ * Get localized salary range buckets with currency-aware labels.
+ * Locale controls digit grouping, currency controls symbol/placement.
+ */
+export const getSalaryRanges = (
+  locale: string = "en",
+  currency: string = "USD"
+) => {
+  const bcp47 = locale === "ar" ? "ar-SA" : "en-US"
+  const fmt = new Intl.NumberFormat(bcp47, {
+    style: "currency",
+    currency: currency.toUpperCase(),
+    maximumFractionDigits: 0,
+  })
+  return SALARY_RANGE_BUCKETS.map(({ min, max }) => ({
+    min,
+    max,
+    label:
+      max === Infinity
+        ? `${fmt.format(min)}+`
+        : `${fmt.format(min)} - ${fmt.format(max)}`,
+  }))
+}
 
 // Default pagination
 export const DEFAULT_PAGE_SIZE = 20

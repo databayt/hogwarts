@@ -10,6 +10,7 @@
 
 import { ColumnDef } from "@tanstack/react-table"
 import { format } from "date-fns"
+import { ar, enUS } from "date-fns/locale"
 import { Eye, RefreshCw, Trash2 } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
@@ -24,8 +25,10 @@ import { ExpenseReceipt } from "./types"
 
 export function getColumns(
   fd?: Record<string, any> | null,
-  rp?: Record<string, string> | null
+  rp?: Record<string, string> | null,
+  locale: string = "en"
 ): ColumnDef<ExpenseReceipt>[] {
+  const dateFnsLocale = locale === "ar" ? ar : enUS
   return [
     {
       accessorKey: "fileName",
@@ -53,7 +56,7 @@ export function getColumns(
       cell: ({ row }) => {
         const date = row.getValue("transactionDate") as Date | null
         return date ? (
-          format(new Date(date), "PP")
+          format(new Date(date), "PP", { locale: dateFnsLocale })
         ) : (
           <span className="text-muted-foreground">--</span>
         )
@@ -111,7 +114,7 @@ export function getColumns(
       header: rp?.uploaded || "Uploaded",
       cell: ({ row }) => {
         const date = row.getValue("uploadedAt") as Date
-        return format(new Date(date), "PP")
+        return format(new Date(date), "PP", { locale: dateFnsLocale })
       },
     },
     {

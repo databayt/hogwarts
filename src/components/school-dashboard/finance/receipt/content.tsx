@@ -56,7 +56,10 @@ export function ReceiptsContent({
   const [viewMode, setViewMode] = React.useState<"grid" | "table">("grid")
   const [isUploadDialogOpen, setIsUploadDialogOpen] = React.useState(false)
 
-  const columns = React.useMemo(() => getColumns(fd, rp), [fd, rp])
+  const columns = React.useMemo(
+    () => getColumns(fd, rp, locale),
+    [fd, rp, locale]
+  )
 
   const loadReceipts = React.useCallback(async () => {
     setIsLoading(true)

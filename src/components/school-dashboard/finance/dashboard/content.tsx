@@ -13,9 +13,12 @@ import {
   Wallet,
 } from "lucide-react"
 
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 
+import { formatMoney } from "../lib/format"
 import {
   getDashboardStats,
   getFinancialAlerts,
@@ -46,6 +49,19 @@ export async function FinanceDashboardContent({
   const c = fd?.common as Record<string, string> | undefined
 
   const userRole = session.user.role || "USER"
+
+  // Look up tenant currency once so every downstream formatter renders the
+  // school's chosen ISO code instead of a hardcoded symbol.
+  const { schoolId } = await getTenantContext()
+  const school = schoolId
+    ? await db.school
+        .findUnique({
+          where: { id: schoolId },
+          select: { currency: true },
+        })
+        .catch(() => null)
+    : null
+  const currency = school?.currency ?? "USD"
 
   // Fetch all lab data in parallel
   const [stats, transactions, alerts, quickActions] = await Promise.all([
@@ -194,7 +210,7 @@ export async function FinanceDashboardContent({
       {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {kpis.map((kpi) => (
-          <KPICard key={kpi.id} kpi={kpi} />
+          <KPICard key={kpi.id} kpi={kpi} currency={currency} />
         ))}
       </div>
 
@@ -205,8 +221,12 @@ export async function FinanceDashboardContent({
             revenueData={stats.revenuesTrend}
             expenseData={stats.expensesTrend}
             profitData={stats.profitTrend}
+            currency={currency}
           />
-          <ExpenseChart expenseCategories={stats.expenseCategories} />
+          <ExpenseChart
+            expenseCategories={stats.expenseCategories}
+            currency={currency}
+          />
         </div>
       )}
 
@@ -226,7 +246,7 @@ export async function FinanceDashboardContent({
       <div className="grid gap-6 md:grid-cols-2">
         <QuickActions actions={quickActions} />
         {(hasFullAccess || hasLimitedAccess) && (
-          <TransactionList transactions={transactions} />
+          <TransactionList transactions={transactions} currency={currency} />
         )}
       </div>
 
@@ -235,6 +255,7 @@ export async function FinanceDashboardContent({
         <BudgetOverview
           categories={stats.budgetCategories}
           locale={lang}
+          currency={currency}
           dict={dp}
         />
       )}
@@ -297,6 +318,7 @@ function StatCard({
 function BudgetOverview({
   categories,
   locale = "ar",
+  currency = "USD",
   dict,
 }: {
   categories: {
@@ -307,6 +329,7 @@ function BudgetOverview({
     percentage: number
   }[]
   locale?: string
+  currency?: string
   dict?: Record<string, string>
 }) {
   return (
@@ -320,8 +343,8 @@ function BudgetOverview({
             <div className="flex items-center justify-between text-sm">
               <span>{cat.category}</span>
               <span className="text-muted-foreground">
-                SDG {new Intl.NumberFormat(locale).format(cat.spent)} /{" "}
-                {new Intl.NumberFormat(locale).format(cat.allocated)}
+                {formatMoney(cat.spent, currency, locale)} /{" "}
+                {formatMoney(cat.allocated, currency, locale)}
               </span>
             </div>
             <div className="bg-muted h-2 w-full rounded-full">

@@ -30,6 +30,8 @@ import { AreaChartStacked } from "@/components/school-dashboard/dashboard/chart-
 import { InteractiveBarChart } from "@/components/school-dashboard/dashboard/chart-interactive-bar"
 import { RadialTextChart } from "@/components/school-dashboard/dashboard/chart-radial-text"
 
+import { formatCurrency } from "./lib/format"
+
 interface Props {
   dictionary: Dictionary
   lang: Locale
@@ -37,6 +39,9 @@ interface Props {
 
 export default async function FinanceContent({ dictionary, lang }: Props) {
   const { schoolId } = await getTenantContext()
+
+  // Currency follows the school's chosen ISO code; fall back to USD for safety.
+  let currency = "USD"
 
   // Get comprehensive financial stats from all sub-blocks
   let invoicesCount = 0
@@ -59,6 +64,13 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
 
   if (schoolId) {
     try {
+      const school = await db.school
+        .findUnique({
+          where: { id: schoolId },
+          select: { currency: true },
+        })
+        .catch(() => null)
+      currency = school?.currency ?? "USD"
       ;[
         invoicesCount,
         receiptsCount,
@@ -172,7 +184,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
             </CardHeader>
             <CardContent>
               <div className="text-lg font-bold">
-                ${Math.floor(totalRevenue / 100).toLocaleString()}
+                {formatCurrency(totalRevenue, currency, lang)}
               </div>
               <p className="text-muted-foreground text-xs">
                 {d?.stats?.fromCompletedPayments || "Completed"}
@@ -189,7 +201,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
             </CardHeader>
             <CardContent>
               <div className="text-lg font-bold">
-                ${Math.floor(totalExpenses / 100).toLocaleString()}
+                {formatCurrency(totalExpenses, currency, lang)}
               </div>
               <p className="text-muted-foreground text-xs">
                 {d?.stats?.approvedExpenses || "Approved"}
@@ -206,7 +218,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
             </CardHeader>
             <CardContent>
               <div className="text-lg font-bold">
-                ${Math.floor(pendingPayments / 100).toLocaleString()}
+                {formatCurrency(pendingPayments, currency, lang)}
               </div>
               <p className="text-muted-foreground text-xs">
                 {d?.stats?.awaitingProcessing || "Awaiting"}

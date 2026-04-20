@@ -12,6 +12,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { format } from "date-fns"
+import { ar, enUS } from "date-fns/locale"
 import {
   Calendar,
   CircleAlert,
@@ -45,6 +46,7 @@ export function ReceiptCard({ receipt, locale = "en" }: ReceiptCardProps) {
   const { dictionary } = useDictionary()
   const fd = (dictionary as any)?.finance
   const rp = fd?.receiptPage as Record<string, string> | undefined
+  const dateFnsLocale = locale === "ar" ? ar : enUS
 
   const statusConfig = {
     pending: {
@@ -109,7 +111,11 @@ export function ReceiptCard({ receipt, locale = "en" }: ReceiptCardProps) {
         {receipt.transactionDate && (
           <div className="flex items-center gap-2 text-sm">
             <Calendar className="text-muted-foreground h-4 w-4" />
-            <span>{format(new Date(receipt.transactionDate), "PPP")}</span>
+            <span>
+              {format(new Date(receipt.transactionDate), "PPP", {
+                locale: dateFnsLocale,
+              })}
+            </span>
           </div>
         )}
 
@@ -146,7 +152,9 @@ export function ReceiptCard({ receipt, locale = "en" }: ReceiptCardProps) {
       <CardFooter className="text-muted-foreground flex items-center justify-between text-xs">
         <span>
           {rp?.uploaded || "Uploaded"}{" "}
-          {format(new Date(receipt.uploadedAt), "PP")}
+          {format(new Date(receipt.uploadedAt), "PP", {
+            locale: dateFnsLocale,
+          })}
         </span>
         <Button
           variant="ghost"

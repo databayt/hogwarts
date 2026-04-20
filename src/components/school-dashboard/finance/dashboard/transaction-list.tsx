@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import Link from "next/link"
 import { format } from "date-fns"
+import { ar, enUS } from "date-fns/locale"
 import { ArrowDownLeft, ArrowRight, ArrowUpRight } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
@@ -23,11 +24,13 @@ import type { RecentTransaction } from "./types"
 
 interface TransactionListProps {
   transactions: RecentTransaction[]
+  currency?: string
   className?: string
 }
 
 export function TransactionList({
   transactions,
+  currency = "USD",
   className,
 }: TransactionListProps) {
   const { locale } = useLocale()
@@ -35,6 +38,15 @@ export function TransactionList({
   const fd = (dictionary as any)?.finance
   const dp = fd?.dashboardPage as Record<string, string> | undefined
   const c = fd?.common as Record<string, string> | undefined
+
+  const bcp47 = locale === "ar" ? "ar-SA" : "en-US"
+  const dateFnsLocale = locale === "ar" ? ar : enUS
+  const moneyFmt = new Intl.NumberFormat(bcp47, {
+    style: "currency",
+    currency: currency.toUpperCase(),
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  })
 
   const getIcon = (type: RecentTransaction["type"]) => {
     switch (type) {
@@ -71,13 +83,7 @@ export function TransactionList({
   }
 
   const formatAmount = (amount: number, type: RecentTransaction["type"]) => {
-    const formatted = new Intl.NumberFormat(locale, {
-      style: "currency",
-      currency: "SDG",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount)
-
+    const formatted = moneyFmt.format(amount)
     const colorClass = type === "income" ? "text-green-600" : "text-red-600"
     const prefix = type === "income" ? "+" : "-"
 
@@ -141,7 +147,9 @@ export function TransactionList({
                     </p>
                     <div className="text-muted-foreground flex items-center gap-2 text-xs">
                       <span>
-                        {format(new Date(transaction.date), "MMM d, yyyy")}
+                        {format(new Date(transaction.date), "PP", {
+                          locale: dateFnsLocale,
+                        })}
                       </span>
                       {transaction.category && (
                         <>
@@ -176,8 +184,7 @@ export function TransactionList({
               {dp?.totalIncome || "Total Income"}
             </p>
             <p className="text-sm font-semibold text-green-600">
-              SDG{" "}
-              {new Intl.NumberFormat(locale).format(
+              {moneyFmt.format(
                 transactions
                   .filter(
                     (t) => t.type === "income" && t.status === "completed"
@@ -191,8 +198,7 @@ export function TransactionList({
               {dp?.totalExpenses || "Total Expenses"}
             </p>
             <p className="text-sm font-semibold text-red-600">
-              SDG{" "}
-              {new Intl.NumberFormat(locale).format(
+              {moneyFmt.format(
                 transactions
                   .filter(
                     (t) => t.type === "expense" && t.status === "completed"
