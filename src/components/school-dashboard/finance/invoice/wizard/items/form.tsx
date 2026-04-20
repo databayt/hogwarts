@@ -7,6 +7,7 @@ import React, {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useMemo,
   useTransition,
 } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -19,10 +20,15 @@ import { Separator } from "@/components/ui/separator"
 import { ErrorToast } from "@/components/atom/toast"
 import { InputField, NumberField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { getValidationMessages } from "@/components/internationalization/helpers"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { updateInvoiceItems } from "./actions"
-import { itemsSchema, type ItemsFormData } from "./validation"
+import {
+  createItemsSchema,
+  itemsSchema,
+  type ItemsFormData,
+} from "./validation"
 
 interface ItemsFormProps {
   invoiceId: string
@@ -35,10 +41,17 @@ export const ItemsForm = forwardRef<WizardFormRef, ItemsFormProps>(
     const { dictionary } = useDictionary()
     const fd = (dictionary as any)?.finance
     const [isPending, startTransition] = useTransition()
+    const schema = useMemo(
+      () =>
+        dictionary
+          ? createItemsSchema(getValidationMessages(dictionary))
+          : itemsSchema,
+      [dictionary]
+    )
 
     const form = useForm<ItemsFormData>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      resolver: zodResolver(itemsSchema) as any,
+      resolver: zodResolver(schema) as any,
       defaultValues: {
         items: initialData?.items?.length
           ? initialData.items

@@ -2,7 +2,12 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React, { forwardRef, useImperativeHandle, useTransition } from "react"
+import React, {
+  forwardRef,
+  useImperativeHandle,
+  useMemo,
+  useTransition,
+} from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
@@ -16,6 +21,7 @@ import {
 } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardTabs, type WizardTab } from "@/components/form/wizard"
+import { getValidationMessages } from "@/components/internationalization/helpers"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import {
   getCurrencyOptions,
@@ -23,7 +29,11 @@ import {
 } from "@/components/school-dashboard/finance/invoice/wizard/config"
 
 import { updateInvoiceDetails } from "./actions"
-import { detailsSchema, type DetailsFormData } from "./validation"
+import {
+  createDetailsSchema,
+  detailsSchema,
+  type DetailsFormData,
+} from "./validation"
 
 function useTabs(): WizardTab[] {
   const { dictionary } = useDictionary()
@@ -48,10 +58,17 @@ export const DetailsForm = forwardRef<WizardFormRef, DetailsFormProps>(
     const { dictionary } = useDictionary()
     const fd = (dictionary as any)?.finance
     const [isPending, startTransition] = useTransition()
+    const schema = useMemo(
+      () =>
+        dictionary
+          ? createDetailsSchema(getValidationMessages(dictionary))
+          : detailsSchema,
+      [dictionary]
+    )
 
     const form = useForm<DetailsFormData>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      resolver: zodResolver(detailsSchema) as any,
+      resolver: zodResolver(schema) as any,
       defaultValues: {
         invoice_no: initialData?.invoice_no || "",
         invoice_date: initialData?.invoice_date,

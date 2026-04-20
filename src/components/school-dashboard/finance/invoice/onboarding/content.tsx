@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -28,23 +28,30 @@ import {
 } from "@/components/ui/select"
 import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
-import { onboardingSchema } from "@/components/school-dashboard/finance/invoice/validation"
+import {
+  createOnboardingSchema,
+  onboardingSchema,
+} from "@/components/school-dashboard/finance/invoice/validation"
 
 export function OnboardingContent() {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<z.infer<typeof onboardingSchema>>({
-    resolver: zodResolver(onboardingSchema),
-    defaultValues: { currency: "USD" },
-  })
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const router = useRouter()
   const { dictionary } = useDictionary()
   const io = (dictionary as any)?.finance?.invoiceOnboarding as
     | Record<string, string>
     | undefined
+  const schema = useMemo(
+    () => (dictionary ? createOnboardingSchema(dictionary) : onboardingSchema),
+    [dictionary]
+  )
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<z.infer<typeof onboardingSchema>>({
+    resolver: zodResolver(schema),
+    defaultValues: { currency: "USD" },
+  })
 
   const onSubmit = async (data: z.infer<typeof onboardingSchema>) => {
     try {

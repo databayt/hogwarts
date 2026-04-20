@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -24,7 +24,7 @@ import { STEP_FIELDS } from "./config"
 import { BasicInformationStep } from "./steps/basic-information"
 import { ClientItemsStep } from "./steps/client-items"
 import { ReviewSubmitStep } from "./steps/review-submit"
-import { InvoiceSchemaZod } from "./validation"
+import { createInvoiceSchema, InvoiceSchemaZod } from "./validation"
 
 interface InvoiceFormProps {
   invoiceId?: string
@@ -51,9 +51,13 @@ export function InvoiceCreateForm({
   const { dictionary } = useDictionary()
   const fd = (dictionary as any)?.finance
   const iform = fd?.invoiceForm as Record<string, string> | undefined
+  const invoiceSchema = useMemo(
+    () => (dictionary ? createInvoiceSchema(dictionary) : InvoiceSchemaZod),
+    [dictionary]
+  )
 
   const form = useForm<z.infer<typeof InvoiceSchemaZod>>({
-    resolver: zodResolver(InvoiceSchemaZod),
+    resolver: zodResolver(invoiceSchema),
     defaultValues: {
       invoice_no: "",
       invoice_date: new Date(),
