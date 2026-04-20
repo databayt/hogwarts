@@ -5,6 +5,7 @@
 import type { UserInvoice } from "@prisma/client"
 import { ColumnDef } from "@tanstack/react-table"
 import { format } from "date-fns"
+import { ar, enUS } from "date-fns/locale"
 
 import { Badge } from "@/components/ui/badge"
 import { type Locale } from "@/components/internationalization/config"
@@ -32,6 +33,7 @@ interface Props {
 export function DashboardContent({ dictionary, lang, initialData }: Props) {
   const fd = (dictionary as any)?.finance
   const ip = fd?.invoicePage as Record<string, string> | undefined
+  const dateLocale = lang === "ar" ? ar : enUS
 
   const data = {
     totalRevenue: initialData?.totalRevenue ?? 0,
@@ -51,7 +53,7 @@ export function DashboardContent({ dictionary, lang, initialData }: Props) {
       accessorKey: "invoice_date",
       header: ip?.date || "Date",
       cell: ({ row }) => {
-        return format(row.original.invoice_date, "PP")
+        return format(row.original.invoice_date, "PP", { locale: dateLocale })
       },
     },
     {

@@ -3,6 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { format } from "date-fns"
+import { ar, enUS } from "date-fns/locale"
 import { Calendar as CalendarIcon, Plus } from "lucide-react"
 import { useFieldArray, useFormContext } from "react-hook-form"
 import { z } from "zod"
@@ -25,6 +26,7 @@ import {
 } from "@/components/ui/select"
 import { Icons } from "@/components/icons"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 import { CURRENCY_OPTIONS } from "../config"
 import { InvoiceSchemaZod } from "../validation"
@@ -36,7 +38,9 @@ interface ClientItemsStepProps {
 
 export function ClientItemsStep({ isView, currentId }: ClientItemsStepProps) {
   const { dictionary } = useDictionary()
+  const { locale } = useLocale()
   const fd = (dictionary as any)?.finance
+  const dateLocale = locale === "ar" ? ar : enUS
   const form = useFormContext<z.infer<typeof InvoiceSchemaZod>>()
   const {
     register,
@@ -127,7 +131,9 @@ export function ClientItemsStep({ isView, currentId }: ClientItemsStepProps) {
                 >
                   <Calendar className="me-2 h-4 w-4" />
                   {watch("invoice_date") ? (
-                    format(watch("invoice_date"), "MMM do, yyyy")
+                    format(watch("invoice_date"), "MMM do, yyyy", {
+                      locale: dateLocale,
+                    })
                   ) : (
                     <span>
                       {fd?.invoiceForm?.invoiceDate || "Invoice Date"}
@@ -160,7 +166,9 @@ export function ClientItemsStep({ isView, currentId }: ClientItemsStepProps) {
                 >
                   <Calendar className="me-2 h-4 w-4" />
                   {watch("due_date") ? (
-                    format(watch("due_date"), "MMM do, yyyy")
+                    format(watch("due_date"), "MMM do, yyyy", {
+                      locale: dateLocale,
+                    })
                   ) : (
                     <span>{fd?.invoiceForm?.dueDate || "Due Date"}</span>
                   )}
