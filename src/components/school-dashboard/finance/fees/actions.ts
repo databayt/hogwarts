@@ -17,6 +17,8 @@ import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
 import { getTenantContext } from "@/lib/tenant-context"
+import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 
 import { checkCurrentUserPermission } from "../lib/permissions"
 import {
@@ -28,6 +30,16 @@ import {
   type DiscountPolicy,
 } from "./queries"
 import { feeStructureSchema } from "./validation"
+
+// Interpolate {key} placeholders in dictionary strings. Mirrors the
+// internationalization helpers' interpolate() but is usable server-side
+// without loading ValidationHelper for a notification dispatch.
+function interp(template: string, params: Record<string, string | number>) {
+  return Object.entries(params).reduce(
+    (out, [k, v]) => out.replaceAll(`{${k}}`, String(v)),
+    template
+  )
+}
 
 type ActionResult<T = void> = {
   success: boolean
@@ -385,15 +397,17 @@ export async function assignFee(data: FormData): Promise<ActionResult<string>> {
       },
     })
 
-    // Look up school's preferred language for notifications
+    // Look up school's preferred language and load the dictionary once so
+    // every downstream dispatch avoids ternary-per-sentence duplication.
     const schoolPref = await db.school.findFirst({
       where: { id: ctx.schoolId },
       select: { preferredLanguage: true },
     })
-    const schoolLang = schoolPref?.preferredLanguage ?? "ar"
-
-    // Notify student about new fee due (non-blocking)
-    const isAr = schoolLang === "ar"
+    const schoolLang = (schoolPref?.preferredLanguage ?? "ar") as Locale
+    const dict = await getDictionary(schoolLang)
+    const n = (dict as any)?.finance?.notifications as
+      | Record<string, string>
+      | undefined
     const amountStr = parseFloat(
       formData.finalAmount as string
     ).toLocaleString()
@@ -406,10 +420,12 @@ export async function assignFee(data: FormData): Promise<ActionResult<string>> {
         schoolId: ctx.schoolId,
         userId: student.userId,
         type: "fee_due",
-        title: isAr ? "رسوم دراسية جديدة" : "New Fee Assignment",
-        body: isAr
-          ? `تم تعيين رسوم بقيمة ${amountStr} لحسابك`
-          : `A fee of ${amountStr} has been assigned to your account`,
+        title: n?.feeDueTitle || "New Fee Assignment",
+        body: interp(
+          n?.feeDueStudentBody ||
+            "A fee of {amount} has been assigned to your account",
+          { amount: amountStr }
+        ),
         lang: schoolLang,
         priority: "high",
         channels: ["in_app", "email"],
@@ -422,7 +438,6 @@ export async function assignFee(data: FormData): Promise<ActionResult<string>> {
       }).catch((err) => console.error("[assignFee] Notification error:", err))
     }
 
-    // Notify guardians about new fee (non-blocking)
     if (student) {
       const studentName = `${student.firstName} ${student.lastName}`
       const guardianLinks = await db.studentGuardian.findMany({
@@ -438,10 +453,12 @@ export async function assignFee(data: FormData): Promise<ActionResult<string>> {
             schoolId: ctx.schoolId,
             userId: link.guardian.userId,
             type: "fee_due",
-            title: isAr ? "رسوم دراسية جديدة" : "New Fee Assignment",
-            body: isAr
-              ? `تم تعيين رسوم بقيمة ${amountStr} لحساب ${studentName}`
-              : `A fee of ${amountStr} has been assigned to ${studentName}`,
+            title: n?.feeDueTitle || "New Fee Assignment",
+            body: interp(
+              n?.feeDueGuardianBody ||
+                "A fee of {amount} has been assigned to {studentName}",
+              { amount: amountStr, studentName }
+            ),
             lang: schoolLang,
             priority: "high",
             channels: ["in_app", "email"],
@@ -530,8 +547,11 @@ export async function bulkAssignFees(
         where: { id: ctx.schoolId },
         select: { preferredLanguage: true },
       })
-      const schoolLang = schoolPref?.preferredLanguage ?? "ar"
-      const isAr = schoolLang === "ar"
+      const schoolLang = (schoolPref?.preferredLanguage ?? "ar") as Locale
+      const dict = await getDictionary(schoolLang)
+      const n = (dict as any)?.finance?.notifications as
+        | Record<string, string>
+        | undefined
 
       for (const studentId of studentIds) {
         const student = await db.student.findUnique({
@@ -569,10 +589,12 @@ export async function bulkAssignFees(
           schoolId: ctx.schoolId,
           userId: student.userId,
           type: "fee_due",
-          title: isAr ? "رسوم دراسية جديدة" : "New Fee Assignment",
-          body: isAr
-            ? `تم تعيين رسوم بقيمة ${amountStr} لحسابك`
-            : `A fee of ${amountStr} has been assigned to your account`,
+          title: n?.feeDueTitle || "New Fee Assignment",
+          body: interp(
+            n?.feeDueStudentBody ||
+              "A fee of {amount} has been assigned to your account",
+            { amount: amountStr }
+          ),
           lang: schoolLang,
           priority: "high",
           channels: ["in_app", "email"],
@@ -585,17 +607,18 @@ export async function bulkAssignFees(
           console.error("[bulkAssignFees] Student notification error:", err)
         )
 
-        // Notify guardians
         for (const sg of student.studentGuardians) {
           if (sg.guardian?.userId) {
             dispatchNotification({
               schoolId: ctx.schoolId,
               userId: sg.guardian.userId,
               type: "fee_due",
-              title: isAr ? "رسوم دراسية جديدة" : "New Fee Assignment",
-              body: isAr
-                ? `تم تعيين رسوم بقيمة ${amountStr} لحساب ${studentName}`
-                : `A fee of ${amountStr} has been assigned to ${studentName}`,
+              title: n?.feeDueTitle || "New Fee Assignment",
+              body: interp(
+                n?.feeDueGuardianBody ||
+                  "A fee of {amount} has been assigned to {studentName}",
+                { amount: amountStr, studentName }
+              ),
               lang: schoolLang,
               priority: "high",
               channels: ["in_app", "email"],
@@ -889,17 +912,34 @@ export async function recordPayment(
       console.warn("[recordPayment] Invoice sync failed:", invoiceSyncErr)
     }
 
-    // Look up school's preferred language for notifications
     const schoolPref2 = await db.school.findFirst({
       where: { id: ctx.schoolId },
       select: { preferredLanguage: true },
     })
-    const schoolLang2 = schoolPref2?.preferredLanguage ?? "ar"
-    const isAr2 = schoolLang2 === "ar"
+    const schoolLang2 = (schoolPref2?.preferredLanguage ?? "ar") as Locale
+    const dict2 = await getDictionary(schoolLang2)
+    const n2 = (dict2 as any)?.finance?.notifications as
+      | Record<string, string>
+      | undefined
     const amountStr2 = amount.toLocaleString()
     const remainingStr = (finalAmount - newTotalPaid).toLocaleString()
+    const studentBodyKey =
+      newStatus === "PAID"
+        ? "paymentRecordedStudentFull"
+        : "paymentRecordedStudentPartial"
+    const guardianBodyKey =
+      newStatus === "PAID"
+        ? "paymentRecordedGuardianFull"
+        : "paymentRecordedGuardianPartial"
+    const studentBodyFallback =
+      newStatus === "PAID"
+        ? "Payment of {amount} recorded. Fee fully paid."
+        : "Payment of {amount} recorded. Remaining: {remaining}"
+    const guardianBodyFallback =
+      newStatus === "PAID"
+        ? "Payment of {amount} recorded for student. Fee fully paid."
+        : "Payment of {amount} recorded for student. Remaining: {remaining}"
 
-    // Notify student about payment received (non-blocking)
     const student = await db.student.findFirst({
       where: { id: feeAssignment.studentId, schoolId: ctx.schoolId },
       select: { userId: true },
@@ -909,10 +949,11 @@ export async function recordPayment(
         schoolId: ctx.schoolId,
         userId: student.userId,
         type: "fee_paid",
-        title: isAr2 ? "تم استلام الدفعة" : "Payment Received",
-        body: isAr2
-          ? `تم تسجيل دفعة بقيمة ${amountStr2}. ${newStatus === "PAID" ? "تم سداد الرسوم بالكامل." : `المتبقي: ${remainingStr}`}`
-          : `Payment of ${amountStr2} recorded. ${newStatus === "PAID" ? "Fee fully paid." : `Remaining: ${remainingStr}`}`,
+        title: n2?.paymentReceivedTitle || "Payment Received",
+        body: interp(n2?.[studentBodyKey] || studentBodyFallback, {
+          amount: amountStr2,
+          remaining: remainingStr,
+        }),
         lang: schoolLang2,
         priority: "normal",
         channels: ["in_app"],
@@ -929,7 +970,6 @@ export async function recordPayment(
       )
     }
 
-    // Notify guardians about payment (non-blocking)
     const guardianLinks = await db.studentGuardian.findMany({
       where: { studentId: feeAssignment.studentId, schoolId: ctx.schoolId },
       select: { guardian: { select: { userId: true } } },
@@ -940,10 +980,11 @@ export async function recordPayment(
           schoolId: ctx.schoolId,
           userId: link.guardian.userId,
           type: "fee_paid",
-          title: isAr2 ? "تم استلام الدفعة" : "Payment Received",
-          body: isAr2
-            ? `تم تسجيل دفعة بقيمة ${amountStr2} لحساب الطالب. ${newStatus === "PAID" ? "تم سداد الرسوم بالكامل." : `المتبقي: ${remainingStr}`}`
-            : `Payment of ${amountStr2} recorded for student. ${newStatus === "PAID" ? "Fee fully paid." : `Remaining: ${remainingStr}`}`,
+          title: n2?.paymentReceivedTitle || "Payment Received",
+          body: interp(n2?.[guardianBodyKey] || guardianBodyFallback, {
+            amount: amountStr2,
+            remaining: remainingStr,
+          }),
           lang: schoolLang2,
           priority: "normal",
           channels: ["in_app", "email"],

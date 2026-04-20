@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import { InvoiceStatus } from "@prisma/client"
 import { format } from "date-fns"
+import { ar, enUS } from "date-fns/locale"
 import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
@@ -145,10 +146,7 @@ async function createInvoiceCore(
       where: { schoolId, invoice_no: invoiceNo },
     })
     if (existing) {
-      return {
-        success: false,
-        error: `Invoice number "${invoiceNo}" already exists`,
-      }
+      return actionError(ACTION_ERRORS.INVOICE_DUPLICATE_NUMBER, invoiceNo)
     }
 
     const fromAddress = await tx.userInvoiceAddress.create({
@@ -526,8 +524,7 @@ export async function getInvoicesWithFilters(
     return { success: true, data, total }
   } catch (error) {
     return {
-      success: false,
-      error: "Failed to fetch invoices",
+      ...actionError(ACTION_ERRORS.INVOICE_FETCH_FAILED),
       data: [],
       total: 0,
     }
@@ -631,14 +628,26 @@ export async function sendInvoiceEmail(
     )
     if (!canExport) return actionError(ACTION_ERRORS.UNAUTHORIZED)
 
-    const invoice = await db.userInvoice.findFirst({
-      where: { id: invoiceId, userId: ctx.userId, schoolId: ctx.schoolId },
-      include: { items: true, from: true, to: true },
-    })
+    const [invoice, school] = await Promise.all([
+      db.userInvoice.findFirst({
+        where: { id: invoiceId, userId: ctx.userId, schoolId: ctx.schoolId },
+        include: { items: true, from: true, to: true },
+      }),
+      db.school.findUnique({
+        where: { id: ctx.schoolId },
+        select: { preferredLanguage: true },
+      }),
+    ])
     if (!invoice) return actionError(ACTION_ERRORS.INVOICE_NOT_FOUND)
     if (!invoice.to.email) return actionError(ACTION_ERRORS.NOT_FOUND)
 
-    const totalFormatted = new Intl.NumberFormat("en-US", {
+    // Respect the school's preferred admin language so the invoice email
+    // (numbers + dates) renders in the recipient's expected locale.
+    const lang = school?.preferredLanguage === "ar" ? "ar" : "en"
+    const bcp47 = lang === "ar" ? "ar-SA" : "en-US"
+    const dateFnsLocale = lang === "ar" ? ar : enUS
+
+    const totalFormatted = new Intl.NumberFormat(bcp47, {
       style: "currency",
       currency: invoice.currency || "USD",
     }).format(Number(invoice.total))
@@ -646,7 +655,7 @@ export async function sendInvoiceEmail(
     const emailContent = SendInvoiceEmail({
       firstName: invoice.to.name,
       invoiceNo: invoice.invoice_no,
-      dueDate: format(invoice.due_date, "PPP"),
+      dueDate: format(invoice.due_date, "PPP", { locale: dateFnsLocale }),
       total: totalFormatted,
       invoiceURL: `${process.env.NEXT_PUBLIC_APP_URL}/invoice/paid/${invoice.id}`,
     })
@@ -658,7 +667,7 @@ export async function sendInvoiceEmail(
       react: emailContent,
     })
     if (error)
-      return { success: false, error: error.message || "Failed to send email" }
+      return actionError(ACTION_ERRORS.EMAIL_SEND_FAILED, error.message)
 
     return { success: true }
   } catch (error) {

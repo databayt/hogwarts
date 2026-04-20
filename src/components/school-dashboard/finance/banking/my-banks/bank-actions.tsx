@@ -25,6 +25,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useI18nMessages } from "@/components/internationalization/helpers"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { removeBank, syncBankData } from "./actions"
@@ -40,8 +41,22 @@ export default function BankActions(props: Props) {
   const { dictionary: dict } = useDictionary()
   const fd = (dict as any)?.finance
   const ba = fd?.bankingActions as Record<string, string> | undefined
+  const { error: e } = useI18nMessages(dict as any)
   const [isPending, startTransition] = useTransition()
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+
+  // Translate server-returned error codes into localized strings.
+  // Never display the raw English `error.message` from the server.
+  const translateError = (code?: string, fallback?: string) => {
+    const map: Record<string, string> = {
+      UNAUTHORIZED: e.auth.notAuthenticated(),
+      NO_SCHOOL_CONTEXT: e.tenant.missingSchoolContext(),
+      NOT_FOUND: e.resource.notFound(),
+      NOT_IMPLEMENTED: e.server.serviceUnavailable(),
+      INTERNAL_ERROR: e.server.internalError(),
+    }
+    return (code && map[code]) || fallback || e.server.internalError()
+  }
 
   const handleSync = () => {
     startTransition(async () => {
@@ -50,11 +65,7 @@ export default function BankActions(props: Props) {
         toast.success(ba?.syncSuccess || "Bank data synced successfully")
         router.refresh()
       } else {
-        toast.error(
-          result.error?.message ||
-            ba?.failedSyncBank ||
-            "Failed to sync bank data"
-        )
+        toast.error(translateError(result.error?.code, ba?.failedSyncBank))
       }
     })
   }
@@ -66,11 +77,7 @@ export default function BankActions(props: Props) {
         toast.success(ba?.removeSuccess || "Bank account removed successfully")
         router.refresh()
       } else {
-        toast.error(
-          result.error?.message ||
-            ba?.failedRemoveBank ||
-            "Failed to remove bank account"
-        )
+        toast.error(translateError(result.error?.code, ba?.failedRemoveBank))
       }
       setShowDeleteDialog(false)
     })

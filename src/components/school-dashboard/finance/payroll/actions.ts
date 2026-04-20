@@ -16,6 +16,8 @@ import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
 import { getTenantContext } from "@/lib/tenant-context"
+import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 
 import {
   payrollApprovalSchema,
@@ -29,6 +31,13 @@ import {
   type PayrollRunInput,
   type SalarySlipInput,
 } from "./validation"
+
+function interp(template: string, params: Record<string, string | number>) {
+  return Object.entries(params).reduce(
+    (out, [k, v]) => out.replaceAll(`{${k}}`, String(v)),
+    template
+  )
+}
 
 // Error code constants for domain-specific payroll errors
 const PAYROLL_ERRORS = {
@@ -330,12 +339,15 @@ export async function generateSalarySlips(
       },
     })
 
-    // Notify admins that payroll is ready for approval (non-blocking)
     const schoolPref = await db.school.findFirst({
       where: { id: schoolId },
       select: { preferredLanguage: true },
     })
-    const schoolLang = schoolPref?.preferredLanguage ?? "ar"
+    const schoolLang = (schoolPref?.preferredLanguage ?? "ar") as Locale
+    const dict = await getDictionary(schoolLang)
+    const n = (dict as any)?.finance?.notifications as
+      | Record<string, string>
+      | undefined
     const admins = await db.user.findMany({
       where: { schoolId, role: "ADMIN" },
       select: { id: true },
@@ -345,8 +357,16 @@ export async function generateSalarySlips(
         schoolId,
         userId: admin.id,
         type: "system_alert",
-        title: "كشف رواتب جاهز للموافقة",
-        body: `كشف الرواتب ${payrollRun.runNumber} جاهز للمراجعة. ${slipsGenerated} قسيمة راتب بإجمالي ${totalNet.toLocaleString()}`,
+        title: n?.payrollReadyForApprovalTitle || "Payroll Ready for Approval",
+        body: interp(
+          n?.payrollReadyForApprovalBody ||
+            "Payroll run {runNumber} is ready for review. {slips} salary slips totalling {total}.",
+          {
+            runNumber: payrollRun.runNumber,
+            slips: slipsGenerated,
+            total: totalNet.toLocaleString(),
+          }
+        ),
         lang: schoolLang,
         priority: "high",
         channels: ["in_app"],
@@ -425,19 +445,27 @@ export async function approvePayroll(
       },
     })
 
-    // Notify payroll creator about approval (non-blocking)
     if (payrollRun.processedBy) {
       const schoolPref2 = await db.school.findFirst({
         where: { id: schoolId },
         select: { preferredLanguage: true },
       })
+      const lang2 = (schoolPref2?.preferredLanguage ?? "ar") as Locale
+      const dict2 = await getDictionary(lang2)
+      const n2 = (dict2 as any)?.finance?.notifications as
+        | Record<string, string>
+        | undefined
       dispatchNotification({
         schoolId,
         userId: payrollRun.processedBy,
         type: "system_alert",
-        title: "تمت الموافقة على كشف الرواتب",
-        body: `تمت الموافقة على كشف الرواتب ${payrollRun.runNumber}. يمكنك الآن صرف المدفوعات.`,
-        lang: schoolPref2?.preferredLanguage ?? "ar",
+        title: n2?.payrollApprovedTitle || "Payroll Approved",
+        body: interp(
+          n2?.payrollApprovedBody ||
+            "Payroll run {runNumber} has been approved. You can now disburse payments.",
+          { runNumber: payrollRun.runNumber }
+        ),
+        lang: lang2,
         priority: "normal",
         channels: ["in_app"],
         metadata: {
@@ -495,19 +523,27 @@ export async function rejectPayroll(
       },
     })
 
-    // Notify payroll creator about rejection (non-blocking)
     if (payrollRun.processedBy) {
       const schoolPref3 = await db.school.findFirst({
         where: { id: schoolId },
         select: { preferredLanguage: true },
       })
+      const lang3 = (schoolPref3?.preferredLanguage ?? "ar") as Locale
+      const dict3 = await getDictionary(lang3)
+      const n3 = (dict3 as any)?.finance?.notifications as
+        | Record<string, string>
+        | undefined
       dispatchNotification({
         schoolId,
         userId: payrollRun.processedBy,
         type: "system_alert",
-        title: "تم رفض كشف الرواتب",
-        body: `تم رفض كشف الرواتب ${payrollRun.runNumber}: ${reason}`,
-        lang: schoolPref3?.preferredLanguage ?? "ar",
+        title: n3?.payrollRejectedTitle || "Payroll Rejected",
+        body: interp(
+          n3?.payrollRejectedBody ||
+            "Payroll run {runNumber} was rejected: {reason}",
+          { runNumber: payrollRun.runNumber, reason }
+        ),
+        lang: lang3,
         priority: "high",
         channels: ["in_app"],
         metadata: {
@@ -584,12 +620,15 @@ export async function processPayments(
       data: { status: "PAID" },
     })
 
-    // Notify teachers about salary payment (non-blocking)
     const schoolPref4 = await db.school.findFirst({
       where: { id: schoolId },
       select: { preferredLanguage: true },
     })
-    const schoolLang4 = schoolPref4?.preferredLanguage ?? "ar"
+    const schoolLang4 = (schoolPref4?.preferredLanguage ?? "ar") as Locale
+    const dict4 = await getDictionary(schoolLang4)
+    const n4 = (dict4 as any)?.finance?.notifications as
+      | Record<string, string>
+      | undefined
     const paidSlips = await db.salarySlip.findMany({
       where: { payrollRunId, status: "PAID" },
       select: {
@@ -604,8 +643,11 @@ export async function processPayments(
           schoolId,
           userId: slip.teacher.userId,
           type: "system_alert",
-          title: "تم صرف الراتب",
-          body: `تم صرف راتبك بقيمة ${Number(slip.netSalary).toLocaleString()}`,
+          title: n4?.salaryPaidTitle || "Salary Paid",
+          body: interp(
+            n4?.salaryPaidBody || "Your salary of {amount} has been paid.",
+            { amount: Number(slip.netSalary).toLocaleString() }
+          ),
           lang: schoolLang4,
           priority: "high",
           channels: ["in_app", "email"],
