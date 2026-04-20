@@ -79,22 +79,13 @@ function DocumentCard({
     ((typeof currentValue === "object" && currentValue?.url) ||
       (typeof currentValue === "string" && currentValue.length > 0))
 
-  const handleClear = useCallback(
-    (e: React.MouseEvent) => {
-      e.preventDefault()
-      e.stopPropagation()
-      form.setValue(name, "")
-    },
-    [form, name]
-  )
-
   const [rejectionError, setRejectionError] = useState<string | null>(null)
 
   const {
     isUploading,
     error: uploadError,
-    uploadedFiles,
     upload,
+    reset: resetUpload,
     getAcceptedTypes,
   } = useUpload({
     category: "document",
@@ -136,13 +127,24 @@ function DocumentCard({
     multiple: false,
   })
 
+  const handleClear = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+      form.setValue(name, "", { shouldDirty: true, shouldTouch: true })
+      resetUpload()
+      setRejectionError(null)
+    },
+    [form, name, resetUpload]
+  )
+
   const errorMsg = rejectionError || uploadError
 
-  const uploaded = hasFile || uploadedFiles.length > 0
+  const uploaded = !!hasFile
   const fileUrl =
     typeof currentValue === "string"
       ? currentValue
-      : (currentValue as { url?: string })?.url || uploadedFiles[0]?.url || ""
+      : (currentValue as { url?: string })?.url || ""
   const mimeType =
     typeof currentValue === "object"
       ? (currentValue as { mimeType?: string })?.mimeType || ""

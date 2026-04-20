@@ -157,3 +157,10 @@ All new implementations must:
 - nuqs (URL search params)
 - resend (email delivery)
 - date-fns (date formatting)
+
+## Smoke Test Results (2026-04-20, demo.databayt.org)
+
+- [x] `/ar/finance/invoice` -- "الفواتير" title, Arabic columns (فاتورة #, العميل, الإجمالي, الحالة, تاريخ الاستحقاق, تاريخ الإنشاء), placeholders translated, empty state loads
+- [x] Dates show Arabic format (٢٠٢٦/٠٤/٢٠) via `formatDate(locale)` util
+- [ ] "View" button + "No results." empty-state copy not translated on filtered list
+- [ ] Page `<title>` metadata still English ("Fees & Penalties", "Dashboard: Salary Management") -- generateMetadata needs locale arg

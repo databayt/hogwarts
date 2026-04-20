@@ -97,6 +97,20 @@ See per-sub-module `ISSUE.md` for detail.
 - `finance/CLAUDE.md` created
 - `school-dashboard/CLAUDE.md` sub-module count corrected (13 → 14)
 
+## Smoke Test Results (2026-04-20, demo.databayt.org as `accountant@databayt.org`)
+
+| Module                                                                                | AR  | EN  | Finding                                                                                                     |
+| ------------------------------------------------------------------------------------- | --- | --- | ----------------------------------------------------------------------------------------------------------- |
+| dashboard                                                                             | ✅  | ✅  | KPI cards + charts render; AR uses `ر.س` (SAR) auto-formatted from `ar-SA` locale                           |
+| invoice                                                                               | ✅  | ✅  | Arabic columns/placeholders; `View` button + `No results.` copy not translated                              |
+| fees (overview)                                                                       | ⚠️  | ✅  | AR renders main tabs + KPI; secondary cards (`Student Assignments`, `Fine Reports`, etc.) hardcoded English |
+| fees/fines                                                                            | ⚠️  | ✅  | AR table + statuses translated; fine type enum badges + DB-stored reason text still English                 |
+| banking                                                                               | ✅  | ✅  | Empty-state localized; dashboard widget renders                                                             |
+| salary                                                                                | ✅  | ✅  | 6 tabs localized, currency formatter works with Arabic numerals                                             |
+| accounts, budget, expenses, payroll, permissions, receipt, reports, timesheet, wallet | —   | —   | Not smoke-tested this pass -- queued for next cycle                                                         |
+
+Pre-existing noise: WebSocket errors to `ws://localhost:3001/socket.io/` (messaging infra gap, not finance). Page `<title>` metadata still English across the block (generateMetadata lacks locale arg -- separate issue).
+
 ## Dependencies
 
 - Next.js 16, React 19, Prisma 6, TypeScript 5
