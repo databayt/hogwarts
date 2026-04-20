@@ -92,9 +92,19 @@ export function MapboxLocationPicker({
   const handleMapLocationChange = useCallback(
     async (lat: number, lng: number) => {
       const result = await geocode(lat, lng)
-      if (result) {
-        onChangeRef.current(result)
-      }
+      // Fallback to raw coordinates if reverse geocoding fails, so the
+      // picker still reflects the user's location instead of doing nothing.
+      onChangeRef.current(
+        result ?? {
+          latitude: lat,
+          longitude: lng,
+          address: `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
+          city: "",
+          state: "",
+          country: "",
+          postalCode: "",
+        }
+      )
     },
     [geocode]
   )
@@ -247,14 +257,17 @@ export function MapboxLocationPicker({
             labels?.locationDenied ||
               "Location access denied. Please allow location in your browser settings."
           )
-        } else if (error.code === error.TIMEOUT) {
+        } else {
+          // POSITION_UNAVAILABLE or TIMEOUT — both surface the same user-facing
+          // message ("couldn't get location, try again") so the button doesn't
+          // appear inert on devices without a GPS fix.
           alert(
             labels?.locationTimeout ||
               "Could not get your location. Please try again."
           )
         }
       },
-      { enableHighAccuracy: true, timeout: 10000 }
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
     )
   }, [handleMapLocationChange])
 
