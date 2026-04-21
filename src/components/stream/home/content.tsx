@@ -205,7 +205,7 @@ export function StreamHomeContent({
     <>
       {/* Hero Section with Animation */}
       <section className="relative">
-        <div className="flex flex-col items-center gap-8 lg:flex-row lg:gap-16 lg:rtl:flex-row-reverse">
+        <div className="flex flex-col items-center gap-8 lg:flex-row lg:gap-16">
           {/* Text Content */}
           <div className="flex flex-1 flex-col items-start space-y-6 text-start">
             <h1 className="text-4xl leading-none font-extrabold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl">
@@ -216,7 +216,7 @@ export function StreamHomeContent({
               </span>
             </h1>
 
-            <div className="flex flex-col gap-4 sm:flex-row sm:rtl:flex-row-reverse">
+            <div className="flex flex-col gap-4 sm:flex-row">
               <Link
                 className={buttonVariants({
                   size: "lg",
@@ -252,7 +252,7 @@ export function StreamHomeContent({
 
           {/* Animation */}
           <div className="flex flex-1 justify-center">
-            <EducationAnimation className="h-58 w-full max-w-md md:h-70" />
+            <EducationAnimation className="h-58 w-full max-w-md md:h-70 rtl:[transform:scaleX(-1)]" />
           </div>
         </div>
       </section>

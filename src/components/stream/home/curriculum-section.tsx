@@ -46,7 +46,7 @@ export function CurriculumSection({
   return (
     <section className="mb-16 rounded-xl bg-[#6A9BCC] py-16">
       <div className="px-6 text-white">
-        <div className="flex flex-col items-start gap-12 md:flex-row md:rtl:flex-row-reverse">
+        <div className="flex flex-col items-start gap-12 md:flex-row">
           {/* Title Section */}
           <div className="text-start md:w-1/2">
             <h2 className="mb-4 text-4xl leading-tight font-bold">

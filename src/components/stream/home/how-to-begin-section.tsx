@@ -61,7 +61,7 @@ export function HowToBeginSection({
 
       {/* Tabs with underline */}
       <div className="mb-16 flex justify-center">
-        <div className="border-border inline-flex gap-6 border-b md:gap-12 rtl:flex-row-reverse">
+        <div className="border-border inline-flex gap-6 border-b md:gap-12">
           {steps.map((step, index) => (
             <button
               key={step.id}
@@ -83,7 +83,7 @@ export function HowToBeginSection({
       </div>
 
       {/* Content - Text left (40%), Image right (60%) */}
-      <div className="flex flex-col items-center gap-8 md:flex-row md:gap-16 md:rtl:flex-row-reverse">
+      <div className="flex flex-col items-center gap-8 md:flex-row md:gap-16">
         {/* Text Content */}
         <div className="space-y-4 text-start md:w-[40%]">
           <p className="text-muted-foreground leading-relaxed">
@@ -113,7 +113,7 @@ export function HowToBeginSection({
           <img
             src={steps[activeStep].image}
             alt={steps[activeStep].title}
-            className="w-full max-w-lg"
+            className="w-full max-w-lg rtl:[transform:scaleX(-1)]"
           />
         </div>
       </div>

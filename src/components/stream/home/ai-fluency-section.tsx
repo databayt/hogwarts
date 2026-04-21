@@ -36,11 +36,20 @@ export function AIFluencySection({ dictionary, lang }: AIFluencySectionProps) {
         borderRadius: "12px",
         overflow: "hidden",
         marginBottom: "64px",
-        backgroundImage: `url('${asset("/illustrations/ai-fluency-hero.webp")}')`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
       }}
     >
+      {/* Background image (separate element so we can flip it in RTL without affecting card) */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          backgroundImage: `url('${asset("/illustrations/ai-fluency-hero.webp")}')`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          transform: isRTL ? "scaleX(-1)" : undefined,
+        }}
+      />
+
       {/* Card Overlay */}
       <div
         style={{
@@ -48,9 +57,8 @@ export function AIFluencySection({ dictionary, lang }: AIFluencySectionProps) {
           inset: 0,
           display: "flex",
           alignItems: "center",
-          paddingLeft: isRTL ? undefined : "48px",
-          paddingRight: isRTL ? "48px" : undefined,
-          justifyContent: isRTL ? "flex-end" : "flex-start",
+          paddingInlineStart: "48px",
+          justifyContent: "flex-start",
         }}
       >
         <div

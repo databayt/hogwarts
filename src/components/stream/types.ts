@@ -220,6 +220,8 @@ export interface StreamDictionary {
   skills?: Record<string, any>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   teachingHero?: Record<string, any>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  courseTypes?: Record<string, any>
 }
 
 // Base props for all Stream content components

@@ -21,18 +21,21 @@ import type { StreamContentProps } from "../types"
 
 const skills = [
   {
+    key: "generativeAI",
     title: "Generative AI",
     image: asset("/illustrations/generative-ai.png"),
     href: "/stream/courses?category=ai",
     learners: "1.7M+",
   },
   {
+    key: "itCertifications",
     title: "IT Certifications",
     image: asset("/illustrations/it-certifications.png"),
     href: "/stream/courses?category=it",
     learners: "14M+",
   },
   {
+    key: "dataScience",
     title: "Data Science",
     image: asset("/illustrations/data-science.png"),
     href: "/stream/courses?category=data-science",
@@ -75,7 +78,7 @@ export function SkillsSection({
     <section className="py-16 sm:py-20 md:py-24">
       <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-16">
         {/* Left: Heading (3 cols) with more padding */}
-        <div className="text-start lg:col-span-3 rtl:lg:order-2">
+        <div className="text-start lg:col-span-3">
           <h2 className="text-2xl leading-tight font-bold md:text-[28px]">
             {dictionary?.skills?.title ||
               "Learn essential career and life skills"}
@@ -87,7 +90,7 @@ export function SkillsSection({
         </div>
 
         {/* Right: Carousel (9 cols) */}
-        <div className="lg:col-span-9 rtl:lg:order-1">
+        <div className="lg:col-span-9">
           <Carousel
             setApi={setApi}
             opts={{
@@ -112,7 +115,7 @@ export function SkillsSection({
                         src={skill.image}
                         alt={skill.title}
                         fill
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        className="object-cover transition-transform duration-500 group-hover:scale-105 rtl:[transform:scaleX(-1)] rtl:group-hover:[transform:scaleX(-1)_scale(1.05)]"
                       />
 
                       {/* Info Section - White box at bottom with padding on sides */}
@@ -126,7 +129,7 @@ export function SkillsSection({
                         {/* Title with Arrow */}
                         <div className="flex w-full flex-col gap-2">
                           <h4 className="text-foreground text-start text-base font-medium">
-                            {skill.title}
+                            {dictionary?.skills?.[skill.key] || skill.title}
                           </h4>
                           <div className="flex justify-end rtl:justify-start">
                             <ArrowRight className="text-muted-foreground h-5 w-5 transition-transform duration-300 group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" />

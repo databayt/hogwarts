@@ -298,7 +298,10 @@
     },
     "skills": {
       "title": "Learn essential career and life skills",
-      "description": "Hogwarts helps you build in-demand skills fast and advance your career in a changing job market."
+      "description": "Hogwarts helps you build in-demand skills fast and advance your career in a changing job market.",
+      "generativeAI": "Generative AI",
+      "itCertifications": "IT Certifications",
+      "dataScience": "Data Science"
     },
     "hotReleases": {
       "title": "Hot new releases"

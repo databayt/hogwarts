@@ -16,7 +16,7 @@ export function TeachingHeroSection({
   return (
     <section className="mb-16 py-16 sm:py-20 md:py-24">
       <div>
-        <div className="flex flex-col items-start gap-8 md:flex-row rtl:md:flex-row-reverse">
+        <div className="flex flex-col items-start gap-8 md:flex-row">
           {/* Hero Image */}
           <div
             className="relative flex min-h-[140px] min-w-[140px] items-center justify-center rounded-xl bg-pink-500 p-4 sm:min-h-[180px] sm:min-w-[180px] md:min-h-[200px] md:min-w-[200px]"
@@ -28,6 +28,7 @@ export function TeachingHeroSection({
               alt="Teaching illustration"
               width={160}
               height={160}
+              className="rtl:[transform:scaleX(-1)]"
             />
           </div>
 
@@ -40,7 +41,7 @@ export function TeachingHeroSection({
               {dictionary?.teachingHero?.description ||
                 "Become an instructor and change lives — including your own"}
             </p>
-            <div className="mt-3 flex gap-4 rtl:flex-row-reverse">
+            <div className="mt-3 flex gap-4">
               <Link
                 href={`/${lang}/stream/teach`}
                 className={buttonVariants({ size: "lg" })}

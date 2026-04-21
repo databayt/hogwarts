@@ -5,8 +5,6 @@
 import Link from "next/link"
 import { ArrowRight, Star } from "lucide-react"
 
-import { cn } from "@/lib/utils"
-
 import type { StreamContentProps } from "../types"
 
 const hotReleases = [
@@ -17,6 +15,7 @@ const hotReleases = [
       "https://d3njjcbhbojbot.cloudfront.net/api/utilities/v1/imageproxy/http://coursera-university-assets.s3.amazonaws.com/4a/cb36835ae3421187080898a7ecc11d/Google-G_360x360.png",
     image:
       "https://d3njjcbhbojbot.cloudfront.net/api/utilities/v1/imageproxy/https://d15cw65ipctsrr.cloudfront.net/72/c2e795cd584b74accb5937ae2ac8c0/GwG_Career_Certs_Coursera_PME_Overall_Course_1x1.jpg?auto=format%2C%20compress%2C%20enhance&dpr=1&w=320&h=180&fit=crop&q=50",
+    typeKey: "specialization",
     type: "Specialization",
     rating: 4.8,
   },
@@ -27,6 +26,7 @@ const hotReleases = [
       "https://d3njjcbhbojbot.cloudfront.net/api/utilities/v1/imageproxy/http://coursera-university-assets.s3.amazonaws.com/cc/61dbdf2c1c475d82d3b8bf8eee1bda/MSFT-stacked-logo_FINAL.png",
     image:
       "https://d3njjcbhbojbot.cloudfront.net/api/utilities/v1/imageproxy/https://d15cw65ipctsrr.cloudfront.net/f4/6b2dde582549308d4a217c0686e215/Professional_Certificate_Image_1200x1200.jpg?auto=format%2C%20compress%2C%20enhance&dpr=1&w=320&h=180&fit=crop&q=50",
+    typeKey: "professionalCertificate",
     type: "Professional Certificate",
     rating: 4.7,
   },
@@ -37,6 +37,7 @@ const hotReleases = [
       "https://d3njjcbhbojbot.cloudfront.net/api/utilities/v1/imageproxy/http://coursera-university-assets.s3.amazonaws.com/b4/5cb90bb92f420b99bf323a0356f451/Icon.png",
     image:
       "https://d3njjcbhbojbot.cloudfront.net/api/utilities/v1/imageproxy/https://d15cw65ipctsrr.cloudfront.net/fe/a2eb6ae01140698ae0c0d1bb635f2b/DeepLearningAI_PyTorch_for_Deep-Learning_1000x1000-01.png?auto=format%2C%20compress%2C%20enhance&dpr=1&w=320&h=180&fit=crop&q=50",
+    typeKey: "professionalCertificate",
     type: "Professional Certificate",
     rating: 4.9,
   },
@@ -47,6 +48,7 @@ const hotReleases = [
       "https://d3njjcbhbojbot.cloudfront.net/api/utilities/v1/imageproxy/http://coursera-university-assets.s3.amazonaws.com/4a/cb36835ae3421187080898a7ecc11d/Google-G_360x360.png",
     image:
       "https://d3njjcbhbojbot.cloudfront.net/api/utilities/v1/imageproxy/https://d15cw65ipctsrr.cloudfront.net/18/a529bbeefc4bb79f3ae12773ad7542/176-85B-GRT-SEAN-0989.png?auto=format%2C%20compress%2C%20enhance&dpr=1&w=320&h=180&fit=crop&q=50",
+    typeKey: "specialization",
     type: "Specialization",
     rating: 4.9,
   },
@@ -60,7 +62,7 @@ export function HotReleasesSection({
     <section className="mb-16 rounded-xl bg-[#BCD1CA] py-6">
       <div className="px-6">
         {/* Title Row */}
-        <div className="mb-4 flex items-center justify-between rtl:flex-row-reverse">
+        <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold">
             {dictionary?.hotReleases?.title || "Hot new releases"}
           </h2>
@@ -93,7 +95,7 @@ export function HotReleasesSection({
               {/* Content */}
               <div className="space-y-2 p-4 text-start">
                 {/* Provider */}
-                <div className="flex items-center gap-1.5 rtl:flex-row-reverse">
+                <div className="flex items-center gap-1.5">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={course.providerLogo}
@@ -111,10 +113,12 @@ export function HotReleasesSection({
                 </h3>
 
                 {/* Type */}
-                <p className="text-muted-foreground text-xs">{course.type}</p>
+                <p className="text-muted-foreground text-xs">
+                  {dictionary?.courseTypes?.[course.typeKey] || course.type}
+                </p>
 
                 {/* Rating */}
-                <div className="flex items-center gap-1 rtl:flex-row-reverse">
+                <div className="flex items-center gap-1">
                   <Star className="text-foreground h-3 w-3 fill-current" />
                   <span className="text-xs font-medium">{course.rating}</span>
                 </div>
