@@ -588,6 +588,19 @@ export async function submitApplication(
     // could be logged into the same browser on the school domain.
     const userId = appSession?.userId ?? authSession?.user?.id ?? undefined
 
+    // Back-fill fields the flow doesn't explicitly collect but Application
+    // requires. The contact step (which captured email) was removed from
+    // APPLY_STEPS, so without this fallback Prisma rejects the insert on the
+    // required `email` column and the user sees a generic "Failed to submit".
+    // nationality is also required in the DB; fall back to the location
+    // country so legacy data entering from auto-fill doesn't break submit.
+    const resolvedEmail =
+      validated.email || appSession?.email || authSession?.user?.email || ""
+    if (!resolvedEmail) {
+      return { success: false, error: "EMAIL_REQUIRED" }
+    }
+    const resolvedNationality = validated.nationality || validated.country || ""
+
     if (!campaign) {
       return {
         success: false,
@@ -600,7 +613,7 @@ export async function submitApplication(
         where: {
           schoolId,
           campaignId: validated.campaignId,
-          email: validated.email,
+          email: resolvedEmail,
           status: { not: "DRAFT" },
         },
       })
@@ -653,11 +666,11 @@ export async function submitApplication(
           ? new Date(validated.dateOfBirth)
           : null,
         gender: validated.gender || null,
-        nationality: validated.nationality,
+        nationality: resolvedNationality,
         religion: validated.religion || null,
         category: validated.category || null,
         // Contact
-        email: validated.email,
+        email: resolvedEmail,
         phone: validated.phone,
         alternatePhone: validated.alternatePhone || null,
         address: validated.address,
@@ -750,7 +763,7 @@ export async function submitApplication(
       resend.emails
         .send({
           from: "noreply@databayt.org",
-          to: validated.email,
+          to: resolvedEmail,
           subject: confirmationEmail.subject,
           html: confirmationEmail.html,
         })
@@ -798,6 +811,20 @@ export async function submitApplication(
       return {
         success: false,
         error: "An application with this information already exists",
+      }
+    }
+    // Prisma rejects inserts when a required column is null. Extract the
+    // column name so the UI can point the user to the exact missing field
+    // instead of showing a dead-end "Failed to submit" message.
+    if (error instanceof Error) {
+      const nullMatch = error.message.match(
+        /Argument `?(\w+)`? (?:is missing|must not be null)/i
+      )
+      if (nullMatch?.[1]) {
+        return {
+          success: false,
+          error: `MISSING_FIELD:${nullMatch[1]}`,
+        }
       }
     }
     return {

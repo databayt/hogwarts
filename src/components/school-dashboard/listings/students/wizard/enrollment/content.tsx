@@ -90,7 +90,7 @@ export default function EnrollmentContent() {
   return (
     <WizardStep
       entityId={studentId}
-      nextStep={`/students/add/${studentId}/contact`}
+      nextStep={`/students/add/${studentId}/fees`}
       isValid={isValid}
       formRef={formRef}
       isLoading={isLoading}

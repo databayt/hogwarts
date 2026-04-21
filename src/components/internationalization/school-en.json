@@ -1508,6 +1508,7 @@
         "guardians": "Guardians",
         "performance": "Performance",
         "reports": "Reports",
+        "archive": "Archive",
         "settings": "Settings"
       },
       "errorBoundary": {
@@ -1569,6 +1570,32 @@
         "pleaseSelectStudent": "Please select a student",
         "enrolledSuccess": "Student enrolled successfully",
         "enrollFailed": "Failed to enroll student"
+      },
+      "fees": {
+        "title": "School Fees",
+        "description": "Fees that will be assigned to this student based on the selected grade.",
+        "noGradeSelected": "No academic grade selected in the enrollment step. Fees cannot be previewed yet."
+      },
+      "feePreview": {
+        "heading": "Fee Preview",
+        "academicYear": "Year",
+        "totalDue": "Total Due",
+        "installmentsLabel": "Installments",
+        "installment": "Installment",
+        "dueDateTBD": "TBD",
+        "paymentMethodsHeading": "Accepted Payment Methods",
+        "methodStripe": "Card / Online",
+        "methodCash": "Cash",
+        "methodBankTransfer": "Bank Transfer",
+        "bankDetails": "Bank Transfer Details",
+        "bankName": "Bank",
+        "accountName": "Account Name",
+        "accountNumber": "Account Number",
+        "iban": "IBAN",
+        "swiftCode": "SWIFT",
+        "cashInstructions": "Cash Payment Instructions",
+        "noFeesTitle": "No fees configured yet",
+        "noFeesDescription": "No fee structures configured for this grade yet."
       },
       "yearLevels": {
         "title": "Year Levels",
@@ -8797,6 +8824,11 @@
             "title": "Academic Background",
             "description": "Previous education and applying class"
           },
+          "fees": {
+            "label": "School Fees",
+            "title": "School Fees",
+            "description": "Review estimated fees and available payment methods for the selected grade"
+          },
           "documents": {
             "title": "Documents",
             "description": "Upload required documents"
@@ -8813,6 +8845,27 @@
             "title": "Application Submitted",
             "description": "Your application has been submitted successfully."
           }
+        },
+        "feePreview": {
+          "heading": "Fee Preview",
+          "academicYear": "Year",
+          "totalDue": "Total Due",
+          "installmentsLabel": "Installments",
+          "installment": "Installment",
+          "dueDateTBD": "TBD",
+          "paymentMethodsHeading": "Accepted Payment Methods",
+          "methodStripe": "Card / Online",
+          "methodCash": "Cash",
+          "methodBankTransfer": "Bank Transfer",
+          "bankDetails": "Bank Transfer Details",
+          "bankName": "Bank",
+          "accountName": "Account Name",
+          "accountNumber": "Account Number",
+          "iban": "IBAN",
+          "swiftCode": "SWIFT",
+          "cashInstructions": "Cash Payment Instructions",
+          "noFeesTitle": "No fees configured yet",
+          "noFeesDescription": "The school has not set up fee structures for this grade. You can continue — fees will be communicated separately."
         },
         "success": {
           "title": "Application Submitted!",

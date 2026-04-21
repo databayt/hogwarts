@@ -1508,6 +1508,7 @@
         "guardians": "أولياء الأمور",
         "performance": "الأداء",
         "reports": "التقارير",
+        "archive": "الأرشيف",
         "settings": "الإعدادات"
       },
       "errorBoundary": {
@@ -1569,6 +1570,32 @@
         "pleaseSelectStudent": "يرجى اختيار طالب",
         "enrolledSuccess": "تم تسجيل الطالب بنجاح",
         "enrollFailed": "فشل في تسجيل الطالب"
+      },
+      "fees": {
+        "title": "الرسوم الدراسية",
+        "description": "الرسوم التي سيتم تعيينها لهذا الطالب بناءً على الصف المختار.",
+        "noGradeSelected": "لم يتم اختيار المرحلة الدراسية في خطوة التسجيل. لا يمكن معاينة الرسوم بعد."
+      },
+      "feePreview": {
+        "heading": "معاينة الرسوم",
+        "academicYear": "السنة",
+        "totalDue": "الإجمالي المستحق",
+        "installmentsLabel": "الأقساط",
+        "installment": "قسط",
+        "dueDateTBD": "لم يحدد",
+        "paymentMethodsHeading": "طرق الدفع المقبولة",
+        "methodStripe": "بطاقة / دفع إلكتروني",
+        "methodCash": "نقداً",
+        "methodBankTransfer": "تحويل بنكي",
+        "bankDetails": "تفاصيل التحويل البنكي",
+        "bankName": "البنك",
+        "accountName": "اسم الحساب",
+        "accountNumber": "رقم الحساب",
+        "iban": "الآيبان",
+        "swiftCode": "SWIFT",
+        "cashInstructions": "تعليمات الدفع نقداً",
+        "noFeesTitle": "لم يتم تكوين رسوم بعد",
+        "noFeesDescription": "لم يتم تكوين هياكل رسوم لهذه المرحلة بعد."
       },
       "yearLevels": {
         "title": "المراحل الدراسية",
@@ -8805,6 +8832,11 @@
             "title": "الخلفية الأكاديمية",
             "description": "التعليم السابق والصف المتقدم إليه"
           },
+          "fees": {
+            "label": "الرسوم الدراسية",
+            "title": "الرسوم الدراسية",
+            "description": "مراجعة الرسوم المقدرة وطرق الدفع المتاحة حسب الصف الدراسي"
+          },
           "documents": {
             "title": "المستندات",
             "description": "ارفع المستندات لتعبئة البيانات تلقائياً"
@@ -8821,6 +8853,27 @@
             "title": "تم تقديم الطلب",
             "description": "تم تقديم طلبك بنجاح."
           }
+        },
+        "feePreview": {
+          "heading": "معاينة الرسوم",
+          "academicYear": "السنة",
+          "totalDue": "الإجمالي المستحق",
+          "installmentsLabel": "الأقساط",
+          "installment": "قسط",
+          "dueDateTBD": "لم يُحدَّد",
+          "paymentMethodsHeading": "طرق الدفع المقبولة",
+          "methodStripe": "بطاقة / عبر الإنترنت",
+          "methodCash": "نقداً",
+          "methodBankTransfer": "تحويل بنكي",
+          "bankDetails": "تفاصيل التحويل البنكي",
+          "bankName": "البنك",
+          "accountName": "اسم الحساب",
+          "accountNumber": "رقم الحساب",
+          "iban": "الآيبان",
+          "swiftCode": "سويفت",
+          "cashInstructions": "تعليمات الدفع النقدي",
+          "noFeesTitle": "لا توجد رسوم مُعدَّة بعد",
+          "noFeesDescription": "لم تقم المدرسة بإعداد هياكل رسوم لهذا الصف بعد. يمكنك المتابعة وسيتم إبلاغك بالرسوم لاحقاً."
         },
         "success": {
           "title": "تم تقديم طلبك بنجاح!",

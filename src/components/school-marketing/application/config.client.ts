@@ -11,6 +11,7 @@ export type ApplyStep =
   | "location"
   | "guardian"
   | "academic"
+  | "fees"
 
 // Step order for the application flow (guardian merged into personal)
 export const APPLY_STEPS: ApplyStep[] = [
@@ -18,6 +19,7 @@ export const APPLY_STEPS: ApplyStep[] = [
   "personal",
   "location",
   "academic",
+  "fees",
 ]
 
 // Step navigation map
@@ -30,14 +32,15 @@ export const STEP_NAVIGATION: Record<
   contact: { next: "location", previous: "personal" },
   location: { next: "academic", previous: "personal" },
   guardian: { next: "academic", previous: "location" }, // kept for type safety
-  academic: { previous: "location" },
+  academic: { next: "fees", previous: "location" },
+  fees: { previous: "academic" },
 }
 
 // Group steps into 3 phases for progress bars
 export const STEP_GROUPS = {
   1: ["attachments", "personal"] as ApplyStep[],
   2: ["location"] as ApplyStep[],
-  3: ["academic"] as ApplyStep[],
+  3: ["academic", "fees"] as ApplyStep[],
 }
 
 // Group labels
@@ -145,6 +148,13 @@ export const STEP_METADATA: Record<
       isRTL
         ? "التعليم السابق والصف المتقدم إليه"
         : "Previous education and applying class",
+  },
+  fees: {
+    label: (isRTL) => (isRTL ? "الرسوم الدراسية" : "School Fees"),
+    description: (isRTL) =>
+      isRTL
+        ? "الرسوم وطرق الدفع حسب الصف الدراسي"
+        : "Fees and payment options by grade",
   },
 }
 
