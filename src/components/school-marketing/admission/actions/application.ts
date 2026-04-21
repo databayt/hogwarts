@@ -485,6 +485,16 @@ export async function resumeApplicationSession(
       }
     }
 
+    // Identity check — if the draft is already bound to a userId AND the
+    // caller is authenticated as a different user, refuse. Anonymous callers
+    // (e.g., clicking the resume link from email in another browser) still
+    // work because they have no auth userId to mismatch against.
+    const authSession = await auth()
+    const authUserId = authSession?.user?.id
+    if (session.userId && authUserId && session.userId !== authUserId) {
+      return { success: false, error: "Session not found" }
+    }
+
     if (session.expiresAt < new Date()) {
       // Clean up expired session
       await db.applicationSession.delete({ where: { sessionToken } })

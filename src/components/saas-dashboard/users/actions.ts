@@ -113,6 +113,20 @@ export async function userDelete(input: {
         // Delete membership requests (userId is optional/SetNull but clean up)
         await tx.membershipRequest.deleteMany({ where: { userId: user.id } })
 
+        // Delete application drafts belonging to this user. ApplicationSession
+        // has no FK cascade on userId, and it also stores email independently —
+        // match both so drafts started before the account was linked are cleaned
+        // up too. Leaving them behind leaks prefilled form data into the next
+        // person who signs up with the same email.
+        await tx.applicationSession.deleteMany({
+          where: {
+            OR: [
+              { userId: user.id },
+              ...(user.email ? [{ email: user.email }] : []),
+            ],
+          },
+        })
+
         // Delete the user — Account, TwoFactorConfirmation cascade automatically
         await tx.user.delete({ where: { id: user.id } })
       },

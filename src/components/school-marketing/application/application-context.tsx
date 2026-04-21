@@ -12,6 +12,7 @@ import React, {
   useRef,
   useState,
 } from "react"
+import { useSession } from "next-auth/react"
 
 import type { NameFormat } from "@/lib/name-utils"
 import {
@@ -191,6 +192,16 @@ interface ApplySessionProviderProps {
 
 const STORAGE_KEY = "hogwarts_apply_session"
 
+// Build a localStorage key scoped to both the campaign AND the current user so
+// drafts never leak between accounts sharing a browser. An anonymous visitor
+// gets a stable bucket ("anon") — they'll see their own draft until they sign
+// in, at which point a new per-user bucket is used.
+// Why: previously the key was only keyed by campaignId, so any second user on
+// the same browser would restore the first user's cached formData (names,
+// phone numbers, uploaded attachment URLs) into a "fresh" application.
+const buildStorageKey = (campaignId: string, userId: string | null): string =>
+  `${STORAGE_KEY}_${campaignId}_${userId ?? "anon"}`
+
 export const ApplySessionProvider: React.FC<ApplySessionProviderProps> = ({
   children,
   initialSubdomain,
@@ -198,6 +209,8 @@ export const ApplySessionProvider: React.FC<ApplySessionProviderProps> = ({
   initialSessionToken,
   nameFormat: initialNameFormat = "full",
 }) => {
+  const { data: authSession } = useSession()
+  const userId = authSession?.user?.id ?? null
   const [subdomain, setSubdomain] = useState<string | null>(
     initialSubdomain || null
   )
@@ -224,10 +237,13 @@ export const ApplySessionProvider: React.FC<ApplySessionProviderProps> = ({
       setSubdomain(subdomainValue)
 
       try {
-        // Create a new session or restore from localStorage
-        const storedSession = localStorage.getItem(
-          `${STORAGE_KEY}_${campaignId}`
-        )
+        // Clear any pre-existing unnamespaced entry from the old leaky format
+        // so returning users on an affected browser start clean.
+        localStorage.removeItem(`${STORAGE_KEY}_${campaignId}`)
+
+        // Read from the per-user bucket — never from another user's.
+        const storageKey = buildStorageKey(campaignId, userId)
+        const storedSession = localStorage.getItem(storageKey)
         if (storedSession) {
           try {
             const parsed = JSON.parse(storedSession)
@@ -255,7 +271,7 @@ export const ApplySessionProvider: React.FC<ApplySessionProviderProps> = ({
             }
           } catch {
             // Corrupted localStorage — start fresh
-            localStorage.removeItem(`${STORAGE_KEY}_${campaignId}`)
+            localStorage.removeItem(storageKey)
             setSession((prev) => ({
               ...prev,
               campaignId,
@@ -281,7 +297,7 @@ export const ApplySessionProvider: React.FC<ApplySessionProviderProps> = ({
         }))
       }
     },
-    []
+    [userId]
   )
 
   // Load existing session from token
@@ -393,9 +409,9 @@ export const ApplySessionProvider: React.FC<ApplySessionProviderProps> = ({
       if (result.success && result.data) {
         const newToken = result.data.sessionToken
 
-        // Save to localStorage as backup
+        // Save to localStorage as backup (scoped per-user so drafts don't leak)
         localStorage.setItem(
-          `${STORAGE_KEY}_${session.campaignId}`,
+          buildStorageKey(session.campaignId, userId),
           JSON.stringify({
             sessionToken: newToken,
             formData: session.formData,
@@ -434,6 +450,7 @@ export const ApplySessionProvider: React.FC<ApplySessionProviderProps> = ({
     session.formData,
     session.currentStep,
     session.sessionToken,
+    userId,
   ])
 
   // Mark session as dirty (needs saving)
