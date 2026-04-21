@@ -42,5 +42,6 @@ export const getStudentsSchema = z.object({
   name: z.string().optional().default(""),
   className: z.string().optional().default(""),
   status: z.string().optional().default(""),
+  scope: z.enum(["active", "archived", "all"]).optional().default("active"),
   sort: z.array(sortItemSchema).optional().default([]),
 })

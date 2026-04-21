@@ -10,6 +10,7 @@ import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { enrollStudentInGradeClasses } from "@/lib/enrollment-sync"
 import { autoAssignFeesForStudent } from "@/lib/fee-auto-assign"
+import { ensureInvoicesForAssignment } from "@/lib/fee-invoice-sync"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { SupportedLanguage } from "@/components/translation/types"
 
@@ -228,15 +229,32 @@ export async function updateStudentEnrollment(
       }
     }
 
-    // Auto-assign fees when a grade is set (parity with admission enrollment)
+    // Auto-assign fees + generate invoices when a grade is set (parity with admission)
     if (parsed.academicGradeId) {
-      autoAssignFeesForStudent(
-        schoolId,
-        studentId,
-        parsed.academicGradeId
-      ).catch((err) =>
-        console.error("[updateStudentEnrollment] Fee auto-assign failed:", err)
-      )
+      autoAssignFeesForStudent(schoolId, studentId, parsed.academicGradeId)
+        .then(async ({ assignedCount }) => {
+          if (assignedCount === 0) return
+          const assignments = await db.feeAssignment.findMany({
+            where: { schoolId, studentId },
+            select: { id: true },
+          })
+          await Promise.all(
+            assignments.map((a) =>
+              ensureInvoicesForAssignment(schoolId, a.id).catch((err) =>
+                console.error(
+                  `[updateStudentEnrollment] Invoice gen failed for ${a.id}:`,
+                  err
+                )
+              )
+            )
+          )
+        })
+        .catch((err) =>
+          console.error(
+            "[updateStudentEnrollment] Fee auto-assign failed:",
+            err
+          )
+        )
     }
 
     return { success: true }

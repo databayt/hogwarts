@@ -13,6 +13,7 @@
 
 import { Prisma } from "@prisma/client"
 
+import { withArchiveScope, type ArchiveScope } from "@/lib/archive-scope"
 import { db } from "@/lib/db"
 
 // ============================================================================
@@ -25,6 +26,7 @@ export type StudentListFilters = {
   classId?: string
   yearLevel?: string
   academicGradeId?: string
+  scope?: ArchiveScope
 }
 
 export type PaginationParams = {
@@ -171,10 +173,13 @@ export function buildStudentWhere(
   schoolId: string,
   filters: StudentListFilters & { includeDrafts?: boolean } = {}
 ): Prisma.StudentWhereInput {
-  const where: Prisma.StudentWhereInput = {
-    schoolId,
-    ...(filters.includeDrafts ? {} : { wizardStep: null }),
-  }
+  const where: Prisma.StudentWhereInput = withArchiveScope(
+    {
+      schoolId,
+      ...(filters.includeDrafts ? {} : { wizardStep: null }),
+    },
+    filters.scope ?? "active"
+  )
 
   // Search by name, email, studentId, or grNumber
   if (filters.search) {

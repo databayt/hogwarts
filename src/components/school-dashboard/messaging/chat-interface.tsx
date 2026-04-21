@@ -232,9 +232,11 @@ export function ChatInterface({
     [conversation.id, currentUserId, messages, onMessagesUpdate]
   )
 
-  // Confirm: swap temp-{nonce} → real message in-place (only icon transitions)
+  // Confirm: swap temp-{nonce} → real message in-place (only icon transitions).
+  // If the server returned the full message (with real attachment URLs), swap
+  // attachments too — the local blob URL is revoked by the caller.
   const handleMessageConfirmed = useCallback(
-    (nonce: string, messageId: string) => {
+    (nonce: string, messageId: string, serverMessage?: MessageDTO) => {
       onMessagesUpdate(conversation.id, (prev) =>
         prev.map((msg) =>
           msg.id === `temp-${nonce}`
@@ -242,6 +244,8 @@ export function ChatInterface({
                 ...msg,
                 id: messageId,
                 status: "sent" as MessageDTO["status"],
+                attachments: serverMessage?.attachments ?? msg.attachments,
+                metadata: serverMessage?.metadata ?? msg.metadata,
               }
             : msg
         )

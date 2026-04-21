@@ -242,30 +242,40 @@ export function MapboxLocationPicker({
     }
 
     setGpsLoading(true)
+
+    const onSuccess = async (position: GeolocationPosition) => {
+      await handleMapLocationChange(
+        position.coords.latitude,
+        position.coords.longitude
+      )
+      setGpsLoading(false)
+    }
+
     navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        await handleMapLocationChange(
-          position.coords.latitude,
-          position.coords.longitude
-        )
-        setGpsLoading(false)
-      },
+      onSuccess,
       (error) => {
-        setGpsLoading(false)
         if (error.code === error.PERMISSION_DENIED) {
+          setGpsLoading(false)
           alert(
             labels?.locationDenied ||
               "Location access denied. Please allow location in your browser settings."
           )
-        } else {
-          // POSITION_UNAVAILABLE or TIMEOUT — both surface the same user-facing
-          // message ("couldn't get location, try again") so the button doesn't
-          // appear inert on devices without a GPS fix.
-          alert(
-            labels?.locationTimeout ||
-              "Could not get your location. Please try again."
-          )
+          return
         }
+        // POSITION_UNAVAILABLE or TIMEOUT — high-accuracy mode often fails on
+        // desktops without GPS. Retry once with network/IP-based location
+        // before giving up, so the button isn't dead for most users.
+        navigator.geolocation.getCurrentPosition(
+          onSuccess,
+          () => {
+            setGpsLoading(false)
+            alert(
+              labels?.locationTimeout ||
+                "Could not get your location. Please try again."
+            )
+          },
+          { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
+        )
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
     )

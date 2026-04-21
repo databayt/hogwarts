@@ -145,6 +145,16 @@ export function Uploader({
   dictionary,
 }: UploaderProps) {
   const [previews, setPreviews] = useState<FilePreview[]>([])
+  // Tracks when the user has explicitly cleared a pre-existing initialUrl so
+  // the avatar variant can hide it and notify the parent form. Without this,
+  // clicking X with only initialUrl present does nothing (previews[0] is
+  // undefined and uploadedFiles is empty).
+  const [initialUrlCleared, setInitialUrlCleared] = useState(false)
+
+  // Reset the cleared flag if a fresh initialUrl arrives (e.g. session reload).
+  React.useEffect(() => {
+    if (initialUrl) setInitialUrlCleared(false)
+  }, [initialUrl])
 
   // Stable ref for onFilesChange to avoid infinite re-render loops
   // (parent often passes inline arrow → new ref each render → useEffect retriggers)
@@ -232,15 +242,42 @@ export function Uploader({
   const removePreview = useCallback(
     async (index: number) => {
       const preview = previews[index]
-      if (preview.result) {
+      if (preview?.result) {
         await remove(preview.result.id)
       }
-      if (preview.preview) {
+      if (preview?.preview) {
         URL.revokeObjectURL(preview.preview)
       }
       setPreviews((prev) => prev.filter((_, i) => i !== index))
     },
     [previews, remove]
+  )
+
+  // Clear handler for the avatar variant: covers all three display sources
+  // (preview, uploadedFile, initialUrl) so the X button always works and
+  // always clears the parent form field.
+  const handleAvatarClear = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+      if (previews.length > 0) {
+        void removePreview(0)
+      } else if (uploadedFiles.length > 0) {
+        void remove(uploadedFiles[0].id)
+      }
+      if (initialUrl && !initialUrlCleared) {
+        setInitialUrlCleared(true)
+      }
+      onFilesChangeRef.current?.([])
+    },
+    [
+      previews.length,
+      uploadedFiles,
+      remove,
+      removePreview,
+      initialUrl,
+      initialUrlCleared,
+    ]
   )
 
   // Configure dropzone
@@ -270,6 +307,9 @@ export function Uploader({
   // ============================================================================
 
   if (variant === "avatar") {
+    const showInitial = Boolean(initialUrl) && !initialUrlCleared
+    const hasContent =
+      previews.length > 0 || uploadedFiles.length > 0 || showInitial
     return (
       <div className={cn("relative", className)}>
         <div
@@ -295,7 +335,7 @@ export function Uploader({
               alt="Avatar"
               className="h-full w-full rounded-full object-cover"
             />
-          ) : initialUrl ? (
+          ) : showInitial ? (
             <img
               src={initialUrl}
               alt="Avatar"
@@ -316,21 +356,16 @@ export function Uploader({
             </div>
           )}
         </div>
-        {(previews.length > 0 || uploadedFiles.length > 0 || initialUrl) &&
-          !isUploading && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                removePreview(0)
-              }}
-              className="absolute end-0 top-0 z-20 flex h-5 w-5 items-center justify-center rounded-full bg-black/50 text-white transition-colors hover:bg-black/70"
-              aria-label={dictionary?.remove || "Remove"}
-            >
-              <X className="h-3 w-3" />
-            </button>
-          )}
+        {hasContent && !isUploading && (
+          <button
+            type="button"
+            onClick={handleAvatarClear}
+            className="absolute end-0 top-0 z-20 flex h-5 w-5 items-center justify-center rounded-full bg-black/50 text-white transition-colors hover:bg-black/70"
+            aria-label={dictionary?.remove || "Remove"}
+          >
+            <X className="h-3 w-3" />
+          </button>
+        )}
         {error && <p className="text-destructive mt-2 text-sm">{error}</p>}
       </div>
     )

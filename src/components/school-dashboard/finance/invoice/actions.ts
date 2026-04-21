@@ -60,6 +60,7 @@ interface InvoiceSearchParams {
   invoice_no?: string
   status?: string
   client_name?: string
+  studentId?: string
   sort?: Array<{ id: string; desc: boolean }>
 }
 
@@ -100,6 +101,21 @@ function isAuthError(
   result: { userId: string; schoolId: string } | ActionResponse<never>
 ): result is ActionResponse<never> {
   return "success" in result && result.success === false
+}
+
+// Admin/accountant/staff/developer see all school invoices.
+// Students/guardians only see their own (userId-scoped).
+async function canSeeAllSchoolInvoices(userId: string): Promise<boolean> {
+  const user = await db.user.findUnique({
+    where: { id: userId },
+    select: { role: true },
+  })
+  return (
+    user?.role === "ADMIN" ||
+    user?.role === "ACCOUNTANT" ||
+    user?.role === "DEVELOPER" ||
+    user?.role === "STAFF"
+  )
 }
 
 // Generate unique invoice number for a school
@@ -418,26 +434,23 @@ export async function getInvoices(
     const ctx = await requireAuthAndTenant()
     if (isAuthError(ctx)) return ctx
 
+    const canSeeAll = await canSeeAllSchoolInvoices(ctx.userId)
+    const baseWhere = {
+      schoolId: ctx.schoolId,
+      wizardStep: null,
+      ...(canSeeAll ? {} : { userId: ctx.userId }),
+    }
+
     const skip = (page - 1) * limit
     const [invoices, total] = await Promise.all([
       db.userInvoice.findMany({
-        where: {
-          userId: ctx.userId,
-          schoolId: ctx.schoolId,
-          wizardStep: null,
-        },
+        where: baseWhere,
         include: { items: true, from: true, to: true },
         skip,
         take: limit,
         orderBy: { createdAt: "desc" },
       }),
-      db.userInvoice.count({
-        where: {
-          userId: ctx.userId,
-          schoolId: ctx.schoolId,
-          wizardStep: null,
-        },
-      }),
+      db.userInvoice.count({ where: baseWhere }),
     ])
 
     return {
@@ -465,13 +478,17 @@ export async function getInvoicesWithFilters(
       invoice_no = "",
       status = "",
       client_name = "",
+      studentId = "",
       sort = [],
     } = searchParams
 
+    const canSeeAll = await canSeeAllSchoolInvoices(ctx.userId)
+
     const where = {
-      userId: ctx.userId,
       schoolId: ctx.schoolId,
       wizardStep: null as null,
+      ...(canSeeAll ? {} : { userId: ctx.userId }),
+      ...(studentId && canSeeAll ? { userId: studentId } : {}),
       ...(invoice_no
         ? {
             invoice_no: {

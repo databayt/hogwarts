@@ -510,10 +510,10 @@ class CsvImportService {
       // Phase 3: Generate access codes for newly created students
       if (createdStudentUserIds.length > 0) {
         try {
-          // Look up student records by userId to get student IDs
+          // Look up student records by userId to get student IDs + grades
           const createdStudents = await db.student.findMany({
             where: { schoolId, userId: { in: createdStudentUserIds } },
-            select: { id: true },
+            select: { id: true, academicGradeId: true },
           })
 
           if (createdStudents.length > 0) {
@@ -528,6 +528,43 @@ class CsvImportService {
               code: c.code,
               expiresAt: c.expiresAt.toISOString(),
             }))
+
+            // Phase 4: Auto-assign fees + generate invoices for students with a grade
+            const { autoAssignFeesForStudent } =
+              await import("@/lib/fee-auto-assign")
+            const { ensureInvoicesForAssignment } =
+              await import("@/lib/fee-invoice-sync")
+            for (const s of createdStudents) {
+              if (!s.academicGradeId) continue
+              try {
+                const { assignedCount } = await autoAssignFeesForStudent(
+                  schoolId,
+                  s.id,
+                  s.academicGradeId
+                )
+                if (assignedCount === 0) continue
+                const assignments = await db.feeAssignment.findMany({
+                  where: { schoolId, studentId: s.id },
+                  select: { id: true },
+                })
+                for (const a of assignments) {
+                  await ensureInvoicesForAssignment(schoolId, a.id).catch(
+                    (err) =>
+                      logger.error(
+                        `Bulk import invoice gen failed for assignment ${a.id}`,
+                        err instanceof Error ? err : new Error("Unknown error"),
+                        { action: "bulk_invoice_gen_error", schoolId }
+                      )
+                  )
+                }
+              } catch (feeErr) {
+                logger.error(
+                  `Bulk import fee auto-assign failed for student ${s.id}`,
+                  feeErr instanceof Error ? feeErr : new Error("Unknown error"),
+                  { action: "bulk_fee_assign_error", schoolId }
+                )
+              }
+            }
           }
         } catch (codeError) {
           // Access code generation failure shouldn't fail the import

@@ -81,6 +81,7 @@ import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
+import { withArchiveScope } from "@/lib/archive-scope"
 import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getGradeLabel } from "@/lib/grade-label"
@@ -640,6 +641,362 @@ export async function deleteStudent(input: {
 }
 
 // ============================================================================
+// Archive / Restore / Purge
+// ============================================================================
+
+/**
+ * Archive a student — hides from active list without touching child records.
+ * Reversible via `restoreStudent`. Does NOT cascade to attendance/fees/etc.
+ */
+export async function archiveStudent(input: {
+  id: string
+}): Promise<ActionResponse<void>> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+
+    try {
+      assertStudentPermission(authContext, "archive", { schoolId })
+    } catch (error) {
+      return {
+        success: false,
+        error:
+          error instanceof Error ? error.message : ACTION_ERRORS.UNAUTHORIZED,
+      }
+    }
+
+    const { id } = z.object({ id: z.string().min(1) }).parse(input)
+
+    await db.student.update({
+      where: { id, schoolId },
+      data: { archivedAt: new Date(), archivedBy: authContext.userId },
+    })
+
+    revalidatePath(STUDENTS_PATH)
+    return { success: true, data: undefined }
+  } catch (error) {
+    console.error("[archiveStudent] Error:", error, { input })
+    if (error instanceof z.ZodError) {
+      return actionError(
+        ACTION_ERRORS.VALIDATION_ERROR,
+        error.issues.map((e) => e.message).join(", ")
+      )
+    }
+    return actionError(
+      ACTION_ERRORS.STUDENT_ARCHIVE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
+  }
+}
+
+/**
+ * Restore an archived student. Guards against unique-tuple collisions
+ * (another active student took the studentId/grNumber/admissionNumber
+ * while this one was archived).
+ */
+export async function restoreStudent(input: {
+  id: string
+}): Promise<ActionResponse<void>> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+
+    try {
+      assertStudentPermission(authContext, "restore", { schoolId })
+    } catch (error) {
+      return {
+        success: false,
+        error:
+          error instanceof Error ? error.message : ACTION_ERRORS.UNAUTHORIZED,
+      }
+    }
+
+    const { id } = z.object({ id: z.string().min(1) }).parse(input)
+
+    const target = await db.student.findFirst({
+      where: { id, schoolId },
+      select: {
+        studentId: true,
+        grNumber: true,
+        admissionNumber: true,
+      },
+    })
+    if (!target) return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
+
+    const conflictOr: Array<Record<string, unknown>> = []
+    if (target.studentId) conflictOr.push({ studentId: target.studentId })
+    if (target.grNumber) conflictOr.push({ grNumber: target.grNumber })
+    if (target.admissionNumber)
+      conflictOr.push({ admissionNumber: target.admissionNumber })
+
+    if (conflictOr.length > 0) {
+      const conflict = await db.student.findFirst({
+        where: {
+          schoolId,
+          archivedAt: null,
+          id: { not: id },
+          OR: conflictOr,
+        },
+        select: { studentId: true, grNumber: true, admissionNumber: true },
+      })
+      if (conflict) {
+        return { success: false, code: "STUDENT_RESTORE_CONFLICT" }
+      }
+    }
+
+    await db.student.update({
+      where: { id, schoolId },
+      data: { archivedAt: null, archivedBy: null },
+    })
+
+    revalidatePath(STUDENTS_PATH)
+    return { success: true, data: undefined }
+  } catch (error) {
+    console.error("[restoreStudent] Error:", error, { input })
+    if (error instanceof z.ZodError) {
+      return actionError(
+        ACTION_ERRORS.VALIDATION_ERROR,
+        error.issues.map((e) => e.message).join(", ")
+      )
+    }
+    return actionError(
+      ACTION_ERRORS.STUDENT_RESTORE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
+  }
+}
+
+/**
+ * Build a JSON export of a student + every cascadable child record, and issue
+ * a short-lived purge token. The caller must pass the returned token back to
+ * `purgeStudent` to prove the data was exported before irreversible deletion.
+ */
+export async function exportStudentForPurge(input: { id: string }): Promise<
+  ActionResponse<{
+    token: string
+    expiresAt: string
+    payload: Record<string, unknown>
+  }>
+> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+
+    try {
+      assertStudentPermission(authContext, "purge", { schoolId })
+    } catch (error) {
+      return {
+        success: false,
+        error:
+          error instanceof Error ? error.message : ACTION_ERRORS.UNAUTHORIZED,
+      }
+    }
+
+    const { id } = z.object({ id: z.string().min(1) }).parse(input)
+
+    const [
+      student,
+      attendances,
+      examResults,
+      feeAssignments,
+      submissions,
+      studentGuardians,
+      studentClasses,
+      studentYearLevels,
+      studentBatches,
+      studentDocuments,
+      healthRecords,
+      achievements,
+      disciplinaryRecords,
+      libraryRecords,
+      feeRecords,
+    ] = await Promise.all([
+      db.student.findFirst({ where: { id, schoolId } }),
+      db.attendance.findMany({ where: { studentId: id, schoolId } }),
+      db.examResult.findMany({ where: { studentId: id, schoolId } }),
+      db.feeAssignment.findMany({ where: { studentId: id, schoolId } }),
+      db.assignmentSubmission.findMany({ where: { studentId: id, schoolId } }),
+      db.studentGuardian.findMany({ where: { studentId: id, schoolId } }),
+      db.studentClass.findMany({ where: { studentId: id, schoolId } }),
+      db.studentYearLevel.findMany({ where: { studentId: id, schoolId } }),
+      db.studentBatch.findMany({ where: { studentId: id, schoolId } }),
+      db.studentDocument.findMany({ where: { studentId: id, schoolId } }),
+      db.healthRecord.findMany({ where: { studentId: id, schoolId } }),
+      db.achievement.findMany({ where: { studentId: id, schoolId } }),
+      db.disciplinaryRecord.findMany({ where: { studentId: id, schoolId } }),
+      db.libraryRecord.findMany({ where: { studentId: id, schoolId } }),
+      db.feeRecord.findMany({ where: { studentId: id, schoolId } }),
+    ])
+    if (!student) return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
+
+    const token = await db.purgeExportToken.create({
+      data: {
+        userId: authContext.userId,
+        schoolId,
+        modelName: "Student",
+        recordId: id,
+        expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+      },
+      select: { id: true, expiresAt: true },
+    })
+
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      schoolId,
+      model: "Student",
+      student,
+      children: {
+        attendances,
+        examResults,
+        feeAssignments,
+        submissions,
+        studentGuardians,
+        studentClasses,
+        studentYearLevels,
+        studentBatches,
+        studentDocuments,
+        healthRecords,
+        achievements,
+        disciplinaryRecords,
+        libraryRecords,
+        feeRecords,
+      },
+    }
+
+    return {
+      success: true,
+      data: {
+        token: token.id,
+        expiresAt: token.expiresAt.toISOString(),
+        payload: JSON.parse(JSON.stringify(payload)),
+      },
+    }
+  } catch (error) {
+    console.error("[exportStudentForPurge] Error:", error, { input })
+    if (error instanceof z.ZodError) {
+      return actionError(
+        ACTION_ERRORS.VALIDATION_ERROR,
+        error.issues.map((e) => e.message).join(", ")
+      )
+    }
+    return actionError(
+      ACTION_ERRORS.STUDENT_PURGE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
+  }
+}
+
+/**
+ * Permanently delete a student + all child records. Requires a valid
+ * unexpired purge token from `exportStudentForPurge` bound to the same
+ * user + student + school. Irreversible.
+ */
+export async function purgeStudent(input: {
+  id: string
+  token: string
+}): Promise<ActionResponse<void>> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+
+    try {
+      assertStudentPermission(authContext, "purge", { schoolId })
+    } catch (error) {
+      return {
+        success: false,
+        error:
+          error instanceof Error ? error.message : ACTION_ERRORS.UNAUTHORIZED,
+      }
+    }
+
+    const { id, token } = z
+      .object({ id: z.string().min(1), token: z.string().min(1) })
+      .parse(input)
+
+    const tokenRow = await db.purgeExportToken.findUnique({
+      where: { id: token },
+    })
+    if (
+      !tokenRow ||
+      tokenRow.userId !== authContext.userId ||
+      tokenRow.schoolId !== schoolId ||
+      tokenRow.modelName !== "Student" ||
+      tokenRow.recordId !== id
+    ) {
+      return { success: false, code: "PURGE_TOKEN_INVALID" }
+    }
+    if (tokenRow.expiresAt.getTime() < Date.now()) {
+      return { success: false, code: "PURGE_TOKEN_EXPIRED" }
+    }
+
+    const studentModel = getModelOrThrow("student")
+    await db.$transaction(async (tx) => {
+      // Bridge/tracking rows that don't cascade automatically
+      await tx.studentClass.deleteMany({ where: { studentId: id, schoolId } })
+      await tx.studentYearLevel.deleteMany({
+        where: { studentId: id, schoolId },
+      })
+      await tx.studentGuardian.deleteMany({
+        where: { studentId: id, schoolId },
+      })
+      await tx.studentBatch.deleteMany({ where: { studentId: id, schoolId } })
+      await tx.studentDocument.deleteMany({
+        where: { studentId: id, schoolId },
+      })
+      await tx.healthRecord.deleteMany({ where: { studentId: id, schoolId } })
+      await tx.achievement.deleteMany({ where: { studentId: id, schoolId } })
+      await tx.disciplinaryRecord.deleteMany({
+        where: { studentId: id, schoolId },
+      })
+      await tx.libraryRecord.deleteMany({ where: { studentId: id, schoolId } })
+      await tx.feeRecord.deleteMany({ where: { studentId: id, schoolId } })
+      // Hard-deletable children blocked by deleteStudent; purge includes them
+      await tx.attendance.deleteMany({ where: { studentId: id, schoolId } })
+      await tx.examResult.deleteMany({ where: { studentId: id, schoolId } })
+      await tx.feeAssignment.deleteMany({ where: { studentId: id, schoolId } })
+      await tx.assignmentSubmission.deleteMany({
+        where: { studentId: id, schoolId },
+      })
+      // Finally the student
+      await studentModel.deleteMany({ where: { id, schoolId } })
+      // Burn the token
+      await tx.purgeExportToken.delete({ where: { id: tokenRow.id } })
+    })
+
+    revalidatePath(STUDENTS_PATH)
+    return { success: true, data: undefined }
+  } catch (error) {
+    console.error("[purgeStudent] Error:", error, { input: { id: input.id } })
+    if (error instanceof z.ZodError) {
+      return actionError(
+        ACTION_ERRORS.VALIDATION_ERROR,
+        error.issues.map((e) => e.message).join(", ")
+      )
+    }
+    return actionError(
+      ACTION_ERRORS.STUDENT_PURGE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
+  }
+}
+
+// ============================================================================
 // Queries
 // ============================================================================
 
@@ -822,11 +1179,14 @@ export async function getStudents(
       }
     }
 
-    const where: any = {
-      schoolId,
-      ...nameFilter,
-      ...(sp.status ? buildStudentStatusFilter(sp.status) : {}),
-    }
+    const where: any = withArchiveScope(
+      {
+        schoolId,
+        ...nameFilter,
+        ...(sp.status ? buildStudentStatusFilter(sp.status) : {}),
+      },
+      sp.scope
+    )
 
     // Build pagination
     const skip = (sp.page - 1) * sp.perPage
@@ -1027,24 +1387,27 @@ export async function getStudentsCSV(
     const sp = getStudentsSchema.parse(input ?? {})
 
     // Build where clause with filters
-    const where: any = {
-      schoolId,
-      ...(sp.name
-        ? {
-            OR: [
-              { firstName: { contains: sp.name, mode: "insensitive" } },
-              { lastName: { contains: sp.name, mode: "insensitive" } },
-            ],
-          }
-        : {}),
-      ...(sp.status
-        ? sp.status === "active"
-          ? { NOT: { userId: null } }
-          : sp.status === "inactive"
-            ? { userId: null }
-            : {}
-        : {}),
-    }
+    const where: any = withArchiveScope(
+      {
+        schoolId,
+        ...(sp.name
+          ? {
+              OR: [
+                { firstName: { contains: sp.name, mode: "insensitive" } },
+                { lastName: { contains: sp.name, mode: "insensitive" } },
+              ],
+            }
+          : {}),
+        ...(sp.status
+          ? sp.status === "active"
+            ? { NOT: { userId: null } }
+            : sp.status === "inactive"
+              ? { userId: null }
+              : {}
+          : {}),
+      },
+      sp.scope
+    )
 
     // Determine display language for translation
     const cookieStore = await cookies()
@@ -1263,24 +1626,27 @@ export async function getStudentsExportData(
     const sp = getStudentsSchema.parse(input ?? {})
 
     // Build where clause with filters
-    const where: any = {
-      schoolId,
-      ...(sp.name
-        ? {
-            OR: [
-              { firstName: { contains: sp.name, mode: "insensitive" } },
-              { lastName: { contains: sp.name, mode: "insensitive" } },
-            ],
-          }
-        : {}),
-      ...(sp.status
-        ? sp.status === "active"
-          ? { status: "ACTIVE" }
-          : sp.status === "inactive"
-            ? { status: "INACTIVE" }
-            : {}
-        : {}),
-    }
+    const where: any = withArchiveScope(
+      {
+        schoolId,
+        ...(sp.name
+          ? {
+              OR: [
+                { firstName: { contains: sp.name, mode: "insensitive" } },
+                { lastName: { contains: sp.name, mode: "insensitive" } },
+              ],
+            }
+          : {}),
+        ...(sp.status
+          ? sp.status === "active"
+            ? { status: "ACTIVE" }
+            : sp.status === "inactive"
+              ? { status: "INACTIVE" }
+              : {}
+          : {}),
+      },
+      sp.scope
+    )
 
     // Fetch ALL students matching filters (no pagination for export)
     const studentModel = getModelOrThrow("student")

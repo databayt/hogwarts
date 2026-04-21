@@ -1,0 +1,21 @@
+// Purge Export Token
+//
+// Gates permanent-delete (purge) actions. When an admin initiates a purge,
+// the server records a token here along with the downloaded export payload.
+// The subsequent purge call verifies the token belongs to the same user +
+// record and is not expired. Tokens auto-expire after 5 minutes.
+
+model PurgeExportToken {
+  id        String   @id @default(cuid())
+  userId    String
+  schoolId  String
+  modelName String // e.g. "Student"
+  recordId  String
+  expiresAt DateTime
+
+  createdAt DateTime @default(now())
+
+  @@index([schoolId, expiresAt])
+  @@index([userId, recordId])
+  @@map("purge_export_tokens")
+}

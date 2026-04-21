@@ -15,8 +15,8 @@ import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
 import { enrollStudentInGradeClasses } from "@/lib/enrollment-sync"
+import { ensureInvoicesForAssignment } from "@/lib/fee-invoice-sync"
 import { extractGradeNumber } from "@/lib/grade-utils"
-import { createInvoiceFromEnrollment } from "@/components/school-dashboard/finance/invoice/actions"
 import { sendNotificationEmail } from "@/components/school-dashboard/notifications/email-service"
 import { detectLanguage } from "@/components/translation/util"
 
@@ -1219,7 +1219,9 @@ export async function confirmEnrollment(params: {
             console.warn("[confirmEnrollment] Document copy failed:", docError)
           }
 
-          // 6b. Auto-generate invoice from fee assignments (inside transaction for atomicity)
+          // 6b. Auto-generate invoice(s) per fee assignment.
+          // ensureInvoicesForAssignment respects FeeStructure.installments + paymentSchedule,
+          // producing one invoice per installment when applicable.
           try {
             const feeAssignments = await tx.feeAssignment.findMany({
               where: {
@@ -1228,37 +1230,11 @@ export async function confirmEnrollment(params: {
                 academicYear: application.campaign.academicYear,
                 status: "PENDING",
               },
-              include: {
-                feeStructure: { select: { name: true } },
-              },
+              select: { id: true },
             })
 
-            if (feeAssignments.length > 0) {
-              const school = await tx.school.findUnique({
-                where: { id: schoolId },
-                select: { name: true, address: true, currency: true },
-              })
-
-              // Create one invoice per fee assignment for proper linking
-              for (const fa of feeAssignments) {
-                await createInvoiceFromEnrollment({
-                  schoolId,
-                  userId,
-                  studentName: `${application.firstName} ${application.lastName}`,
-                  studentEmail: application.email,
-                  schoolName: school?.name ?? "School",
-                  schoolAddress: school?.address ?? "",
-                  currency: school?.currency ?? "USD",
-                  items: [
-                    {
-                      name: fa.feeStructure.name,
-                      amount: Number(fa.finalAmount),
-                    },
-                  ],
-                  feeAssignmentId: fa.id,
-                  tx,
-                })
-              }
+            for (const fa of feeAssignments) {
+              await ensureInvoicesForAssignment(schoolId, fa.id, tx)
             }
           } catch (invoiceError) {
             console.warn(

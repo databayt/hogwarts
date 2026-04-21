@@ -26,6 +26,9 @@ export type StudentAction =
   | "bulk_action"
   | "enroll"
   | "link_guardian"
+  | "archive"
+  | "restore"
+  | "purge"
 
 export interface AuthContext {
   userId: string
@@ -90,8 +93,14 @@ export function checkStudentPermission(
       return schoolId === student.schoolId
     }
 
-    // Teachers cannot delete or bulk action
-    if (action === "delete" || action === "bulk_action") {
+    // Teachers cannot delete, archive, restore, purge, or bulk action
+    if (
+      action === "delete" ||
+      action === "bulk_action" ||
+      action === "archive" ||
+      action === "restore" ||
+      action === "purge"
+    ) {
       return false
     }
   }
@@ -185,6 +194,27 @@ export function canDeleteStudent(role: UserRole): boolean {
 }
 
 /**
+ * Check if role can archive students (hide from active list)
+ */
+export function canArchiveStudent(role: UserRole): boolean {
+  return ["DEVELOPER", "ADMIN"].includes(role)
+}
+
+/**
+ * Check if role can restore archived students
+ */
+export function canRestoreStudent(role: UserRole): boolean {
+  return ["DEVELOPER", "ADMIN"].includes(role)
+}
+
+/**
+ * Check if role can permanently delete (purge) students + all child records
+ */
+export function canPurgeStudent(role: UserRole): boolean {
+  return ["DEVELOPER", "ADMIN"].includes(role)
+}
+
+/**
  * Get allowed actions for role
  */
 export function getAllowedActions(role: UserRole): StudentAction[] {
@@ -200,6 +230,9 @@ export function getAllowedActions(role: UserRole): StudentAction[] {
         "bulk_action",
         "enroll",
         "link_guardian",
+        "archive",
+        "restore",
+        "purge",
       ]
     case "TEACHER":
       return ["create", "read", "update", "export", "enroll", "link_guardian"]

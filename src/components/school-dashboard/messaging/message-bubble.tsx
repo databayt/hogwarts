@@ -400,32 +400,14 @@ export const MessageBubble = memo(function MessageBubble({
                 </span>
               ) : (
                 <>
-                  {message.content?.trim() && (
-                    <p
+                  {/* Attachments FIRST — WhatsApp stacks caption below the image */}
+                  {message.attachments && message.attachments.length > 0 && (
+                    <div
                       className={cn(
-                        "text-sm whitespace-pre-wrap",
-                        hasMedia && "px-2 pt-1.5"
+                        "space-y-0.5",
+                        hasMedia ? "-mx-2.5 -mt-1.5" : "-mx-2 -mt-1.5 mb-1"
                       )}
                     >
-                      {message.content}
-                    </p>
-                  )}
-
-                  {/* Link preview — from OG metadata stored in message.metadata */}
-                  {(message.metadata as Record<string, unknown>)
-                    ?.linkPreview && (
-                    <LinkPreview
-                      preview={
-                        (message.metadata as Record<string, unknown>)
-                          .linkPreview as LinkPreviewData
-                      }
-                      isOwnMessage={isOwnMessage}
-                    />
-                  )}
-
-                  {/* Attachments — WhatsApp inline rendering */}
-                  {message.attachments && message.attachments.length > 0 && (
-                    <div className="-mx-2 -mt-1.5 mb-1 space-y-0.5">
                       {message.attachments.map((attachment) => {
                         // Inline images — click opens lightbox
                         if (isImageType(attachment.fileType)) {
@@ -575,6 +557,30 @@ export const MessageBubble = memo(function MessageBubble({
                         )
                       })}
                     </div>
+                  )}
+
+                  {/* Caption — rendered below the media, WhatsApp order */}
+                  {message.content?.trim() && (
+                    <p
+                      className={cn(
+                        "text-sm whitespace-pre-wrap",
+                        hasMedia && "pt-1"
+                      )}
+                    >
+                      {message.content}
+                    </p>
+                  )}
+
+                  {/* Link preview — from OG metadata stored in message.metadata */}
+                  {(message.metadata as Record<string, unknown>)
+                    ?.linkPreview && (
+                    <LinkPreview
+                      preview={
+                        (message.metadata as Record<string, unknown>)
+                          .linkPreview as LinkPreviewData
+                      }
+                      isOwnMessage={isOwnMessage}
+                    />
                   )}
 
                   {/* Timestamp + read receipts — inside every bubble (WhatsApp style) */}

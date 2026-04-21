@@ -5,6 +5,7 @@
 import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
 
+import type { ArchiveScope } from "@/lib/archive-scope"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -16,10 +17,14 @@ import {
   confirmDeleteDialog,
   DeleteToast,
   ErrorToast,
+  SuccessToast,
 } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { deleteStudent } from "@/components/school-dashboard/listings/students/actions"
+import {
+  archiveStudent,
+  restoreStudent,
+} from "@/components/school-dashboard/listings/students/actions"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
 export type StudentRow = {
@@ -42,7 +47,9 @@ interface ColumnOptions {
   onDeleteSuccess?: (id: string) => void
   onGenerateAccessCode?: (studentId: string, studentName: string) => void
   onGenerateCredentials?: (studentId: string, studentName: string) => void
+  onPurge?: (studentId: string, studentName: string) => void
   gradeOptions?: Array<{ label: string; value: string }>
+  scope?: ArchiveScope
 }
 
 export const getStudentColumns = (
@@ -52,6 +59,7 @@ export const getStudentColumns = (
 ): ColumnDef<StudentRow>[] => {
   // Helper to safely access dictionary keys (JSON may have keys not in TS type)
   const d = dictionary as Record<string, string> | undefined
+  const scope = options?.scope ?? "active"
   const t = {
     name: d?.fullName || "Name",
     studentId: d?.studentId || "Student ID",
@@ -81,6 +89,20 @@ export const getStudentColumns = (
     viewAttendance: d?.viewAttendance || "View Attendance",
     viewClasses: d?.viewClasses || "View Classes",
     noEmail: d?.noEmail || "No email",
+    archive: d?.archive || "Archive",
+    restore: d?.restore || "Restore",
+    permanentlyDelete: d?.permanentlyDelete || "Permanently delete",
+    confirmArchive:
+      d?.confirmArchive ||
+      "Archive this student? They will be hidden from the active list but can be restored later.",
+    confirmRestore: d?.confirmRestore || "Restore this student to active list?",
+    archiveSuccess: d?.archiveSuccess || "Student archived",
+    restoreSuccess: d?.restoreSuccess || "Student restored",
+    archiveFailed: d?.archiveFailed || "Failed to archive student",
+    restoreFailed: d?.restoreFailed || "Failed to restore student",
+    restoreConflict:
+      d?.restoreConflict ||
+      "Cannot restore: another active student already uses this ID",
   }
 
   const getInitials = (name: string) => {
@@ -298,32 +320,53 @@ export const getStudentColumns = (
       header: () => <span className="sr-only">{t.actions}</span>,
       cell: ({ row }) => {
         const student = row.original
-        const onDelete = async () => {
+        const onArchive = async () => {
           try {
             const ok = await confirmDeleteDialog(undefined, {
-              title: `${t.delete} ${student.name}?`,
-              description:
-                (d as any)?.cannotBeUndone || "This action cannot be undone.",
-              confirmText: t.delete,
+              title: `${t.archive} ${student.name}?`,
+              description: t.confirmArchive,
+              confirmText: t.archive,
               cancelText: (d as any)?.cancel || "Cancel",
             })
             if (!ok) return
-            const result = await deleteStudent({ id: student.id })
+            const result = await archiveStudent({ id: student.id })
             if (result.success) {
-              DeleteToast()
-              // Call the onDeleteSuccess callback to refresh the list
+              SuccessToast(t.archiveSuccess)
               options?.onDeleteSuccess?.(student.id)
             } else {
               ErrorToast(
-                dictionary?.failedToDeleteStudent || "Failed to delete student"
+                ("error" in result ? result.error : undefined) ||
+                  t.archiveFailed
               )
             }
           } catch (e) {
-            ErrorToast(
-              e instanceof Error
-                ? e.message
-                : dictionary?.failedToDeleteStudent || "Failed to delete"
-            )
+            ErrorToast(e instanceof Error ? e.message : t.archiveFailed)
+          }
+        }
+        const onRestore = async () => {
+          try {
+            const ok = await confirmDeleteDialog(undefined, {
+              title: `${t.restore} ${student.name}?`,
+              description: t.confirmRestore,
+              confirmText: t.restore,
+              cancelText: (d as any)?.cancel || "Cancel",
+            })
+            if (!ok) return
+            const result = await restoreStudent({ id: student.id })
+            if (result.success) {
+              SuccessToast(t.restoreSuccess)
+              options?.onDeleteSuccess?.(student.id)
+            } else {
+              const code = "code" in result ? result.code : undefined
+              ErrorToast(
+                code === "STUDENT_RESTORE_CONFLICT"
+                  ? t.restoreConflict
+                  : ("error" in result ? result.error : undefined) ||
+                      t.restoreFailed
+              )
+            }
+          } catch (e) {
+            ErrorToast(e instanceof Error ? e.message : t.restoreFailed)
           }
         }
         return (
@@ -367,7 +410,17 @@ export const getStudentColumns = (
               }
             />
             <DropdownMenuSeparator />
-            <ActionMenuItem label={t.delete} onClick={onDelete} />
+            {scope === "archived" ? (
+              <>
+                <ActionMenuItem label={t.restore} onClick={onRestore} />
+                <ActionMenuItem
+                  label={t.permanentlyDelete}
+                  onClick={() => options?.onPurge?.(student.id, student.name)}
+                />
+              </>
+            ) : (
+              <ActionMenuItem label={t.archive} onClick={onArchive} />
+            )}
           </ActionMenu>
         )
       },

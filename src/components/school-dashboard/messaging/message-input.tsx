@@ -7,6 +7,7 @@ import dynamic from "next/dynamic"
 import {
   Crop,
   FileText,
+  Images,
   Mic,
   Pencil,
   Plus,
@@ -54,7 +55,11 @@ export interface MessageInputProps {
     replyToId?: string,
     attachments?: MessageAttachmentDTO[]
   ) => string | void
-  onMessageConfirmed?: (nonce: string, messageId: string) => void
+  onMessageConfirmed?: (
+    nonce: string,
+    messageId: string,
+    serverMessage?: MessageDTO
+  ) => void
   onMessageFailed?: (nonce: string) => void
   className?: string
 }
@@ -328,7 +333,15 @@ export function MessageInput({
       })
 
       if (msgResult.success && nonce) {
-        onMessageConfirmed?.(nonce, msgResult.data.id)
+        onMessageConfirmed?.(
+          nonce,
+          msgResult.data.id,
+          msgResult.data.message as MessageDTO | undefined
+        )
+        // Revoke blob URL after React commits the server URLs, not before.
+        // Revoking synchronously races with the re-render and leaves a
+        // broken-image fallback visible during the swap.
+        requestAnimationFrame(() => URL.revokeObjectURL(localUrl))
       } else if (!msgResult.success && nonce) {
         onMessageFailed?.(nonce)
         toast({
@@ -336,9 +349,8 @@ export function MessageInput({
           description:
             msgResult.error || m?.errors?.send_failed || "Failed to send",
         })
+        URL.revokeObjectURL(localUrl)
       }
-
-      URL.revokeObjectURL(localUrl)
     } catch (err) {
       if (nonce) onMessageFailed?.(nonce)
       toast({
@@ -865,51 +877,68 @@ export function MessageInput({
             )}
           </div>
 
-          {/* Caption input — centered pill */}
-          <div className="flex justify-center px-4 pb-2">
-            <input
-              ref={captionRef}
-              type="text"
-              autoFocus
-              placeholder={
-                (m?.ui as Record<string, string>)?.add_caption ||
-                "Add a caption..."
-              }
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault()
-                  handlePreviewSend()
-                } else if (e.key === "Escape") {
-                  closePreview()
+          {/* Caption input — fixed, centered pill with icons on both ends */}
+          <div className="pointer-events-none fixed inset-x-0 bottom-16 z-[60] flex justify-center px-4">
+            <div className="pointer-events-auto flex w-full max-w-md items-center gap-2 rounded-full border border-white/25 bg-[#2A2A2A]/80 px-3 py-1.5 backdrop-blur-md">
+              <button
+                type="button"
+                className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-white/70 hover:bg-white/10 hover:text-white"
+                onClick={() => photoInputRef.current?.click()}
+                aria-label={m?.ui?.photos_videos || "Add media"}
+              >
+                <Images className="h-5 w-5" />
+              </button>
+              <input
+                ref={captionRef}
+                type="text"
+                autoFocus
+                placeholder={
+                  (m?.ui as Record<string, string>)?.add_caption ||
+                  "Add a caption..."
                 }
-              }}
-              className="w-full max-w-md rounded-full border-0 bg-[#2A2A2A] px-4 py-2.5 text-center text-sm text-white placeholder:text-white/40 focus:ring-1 focus:ring-[#1FA961]/50 focus:outline-none"
-            />
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault()
+                    handlePreviewSend()
+                  } else if (e.key === "Escape") {
+                    closePreview()
+                  }
+                }}
+                className="min-w-0 flex-1 border-0 bg-transparent px-1 text-start text-sm text-white placeholder:text-white/50 focus:ring-0 focus:outline-none"
+                style={{ caretColor: "#ffffff" }}
+              />
+              <button
+                type="button"
+                className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-white/70 hover:bg-white/10 hover:text-white"
+                aria-label="Emoji"
+              >
+                <Smile className="h-5 w-5" />
+              </button>
+            </div>
           </div>
 
-          {/* Footer — blur bg, "You" left + send right */}
+          {/* Footer — compact bar, "You" pill + black send icon on light circle */}
           <div
-            className="flex items-center justify-between px-5 py-3"
+            className="flex items-center justify-between px-4 py-1.5"
             style={{
-              backgroundColor: "rgba(30, 30, 30, 0.85)",
+              backgroundColor: "rgba(20, 20, 20, 0.9)",
               backdropFilter: "blur(12px)",
               WebkitBackdropFilter: "blur(12px)",
             }}
           >
-            <span className="text-sm text-white/60">
+            <span className="rounded-full bg-[#2A2A2A] px-3 py-1 text-xs font-medium text-white">
               {(m?.ui as Record<string, string>)?.you || "You"}
             </span>
             <button
               type="button"
               onClick={handlePreviewSend}
               disabled={isSendingPreview}
-              className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-white"
-              style={{ backgroundColor: "#1FA961" }}
+              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white text-black disabled:opacity-60"
             >
               {isSendingPreview ? (
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black" />
               ) : (
-                <Send className="h-5 w-5" />
+                <HorizontalSendIcon className="h-5 w-5" />
               )}
             </button>
           </div>
@@ -1037,5 +1066,14 @@ function EmojiPickerButton({
         </>
       )}
     </div>
+  )
+}
+
+// Horizontal paper plane — matches WhatsApp's preview send button (not tilted).
+function HorizontalSendIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M2.01 21 23 12 2.01 3 2 10l15 2-15 2z" />
+    </svg>
   )
 }

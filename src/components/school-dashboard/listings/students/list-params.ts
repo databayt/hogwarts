@@ -5,6 +5,7 @@ import {
   createSearchParamsCache,
   parseAsInteger,
   parseAsString,
+  parseAsStringLiteral,
 } from "nuqs/server"
 
 import { getSortingStateParser } from "@/components/table/lib/parsers"
@@ -16,6 +17,11 @@ export const studentsSearchParams = createSearchParamsCache({
   name: parseAsString.withDefault(""),
   className: parseAsString.withDefault(""),
   status: parseAsString.withDefault(""),
+  scope: parseAsStringLiteral([
+    "active",
+    "archived",
+    "all",
+  ] as const).withDefault("active"),
   sort: getSortingStateParser().withDefault([]),
 })
 

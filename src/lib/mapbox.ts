@@ -146,10 +146,19 @@ export function featureToLocationResult(
     (feature.id?.startsWith("place") ? feature.text : "") ||
     city
 
+  // Mapbox doesn't always return place/region context (country- or region-level
+  // results, POIs in countries without structured admin data). Fall back to the
+  // feature's own text so downstream validation that requires city+state still
+  // passes when a user picks any identifiable location.
+  const primaryText =
+    feature.text || feature.place_name?.split(",")[0]?.trim() || ""
+  const finalCity = city || primaryText
+  const finalState = state || finalCity || countryContext?.text || ""
+
   return {
     address: feature.place_name,
-    city,
-    state,
+    city: finalCity,
+    state: finalState,
     country: countryCode,
     postalCode: findContext("postcode"),
     latitude,

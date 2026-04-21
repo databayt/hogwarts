@@ -7,6 +7,7 @@ import { useCallback, useMemo, useState } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 
+import type { ArchiveScope } from "@/lib/archive-scope"
 import { asset } from "@/lib/asset-url"
 import { cn } from "@/lib/utils"
 import { useDebouncedSearch } from "@/hooks/use-debounced-search"
@@ -14,11 +15,7 @@ import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
 import { Button } from "@/components/ui/button"
 import { SeeMore } from "@/components/atom/see-more"
-import {
-  confirmDeleteDialog,
-  DeleteToast,
-  ErrorToast,
-} from "@/components/atom/toast"
+import { ErrorToast } from "@/components/atom/toast"
 import { Icons } from "@/components/icons"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -32,14 +29,10 @@ import { DataTable } from "@/components/table/data-table"
 import { useDataTable } from "@/components/table/use-data-table"
 
 import { AccessCodeDialog } from "./access-code-dialog"
-import {
-  bulkSyncStudentGrades,
-  deleteStudent,
-  getStudents,
-  getStudentsCSV,
-} from "./actions"
+import { bulkSyncStudentGrades, getStudents, getStudentsCSV } from "./actions"
 import { getStudentColumns, type StudentRow } from "./columns"
 import { CredentialsDialog } from "./credentials-dialog"
+import { PurgeDialog } from "./purge-dialog"
 import { createDraftStudent } from "./wizard/actions"
 
 interface StudentsTableProps {
@@ -49,6 +42,7 @@ interface StudentsTableProps {
   lang: Locale
   perPage?: number
   gradeOptions?: Array<{ label: string; value: string }>
+  scope?: ArchiveScope
 }
 
 function StudentsTableInner({
@@ -58,6 +52,7 @@ function StudentsTableInner({
   lang,
   perPage = 20,
   gradeOptions = [],
+  scope = "active",
 }: StudentsTableProps) {
   const router = useRouter()
 
@@ -164,6 +159,25 @@ function StudentsTableInner({
     [optimisticRemove]
   )
 
+  // Purge dialog state
+  const [purgeOpen, setPurgeOpen] = useState(false)
+  const [purgeStudentId, setPurgeStudentId] = useState<string | null>(null)
+  const [purgeStudentName, setPurgeStudentName] = useState("")
+
+  const handlePurge = useCallback((studentId: string, studentName: string) => {
+    setPurgeStudentId(studentId)
+    setPurgeStudentName(studentName)
+    // Delay lets Radix DropdownMenu dismiss events fully settle before Dialog opens
+    setTimeout(() => setPurgeOpen(true), 150)
+  }, [])
+
+  const handlePurgeSuccess = useCallback(
+    (id: string) => {
+      optimisticRemove(id)
+    },
+    [optimisticRemove]
+  )
+
   // Generate columns on the client side with dictionary, lang, and callbacks
   const columns = useMemo(
     () =>
@@ -171,7 +185,9 @@ function StudentsTableInner({
         onDeleteSuccess: handleColumnDeleteSuccess,
         onGenerateAccessCode: handleGenerateAccessCode,
         onGenerateCredentials: handleGenerateCredentials,
+        onPurge: handlePurge,
         gradeOptions,
+        scope,
       }),
     [
       dictionary,
@@ -179,7 +195,9 @@ function StudentsTableInner({
       handleColumnDeleteSuccess,
       handleGenerateAccessCode,
       handleGenerateCredentials,
+      handlePurge,
       gradeOptions,
+      scope,
     ]
   )
 
@@ -212,42 +230,8 @@ function StudentsTableInner({
     [setSearchValue]
   )
 
-  // Handle delete with optimistic update
-  const handleDelete = useCallback(
-    async (student: StudentRow) => {
-      try {
-        const ok = await confirmDeleteDialog(undefined, {
-          title: `${t.delete} ${student.name}?`,
-          description: t.cannotBeUndone,
-          confirmText: t.delete,
-          cancelText: t.cancel,
-        })
-        if (!ok) return
-
-        // Optimistic remove
-        optimisticRemove(student.id)
-
-        const result = await deleteStudent({ id: student.id })
-        if (result.success) {
-          DeleteToast()
-        } else {
-          // Revert on error
-          refresh()
-          ErrorToast(
-            dictionary?.failedToDeleteStudent || "Failed to delete student"
-          )
-        }
-      } catch (e) {
-        refresh()
-        ErrorToast(
-          e instanceof Error
-            ? e.message
-            : dictionary?.failedToDeleteStudent || "Failed to delete"
-        )
-      }
-    },
-    [optimisticRemove, refresh, lang]
-  )
+  // Archive/restore happen inside column cells; purge opens the dialog.
+  // No top-level delete handler needed anymore.
 
   // Sync grades for students with yearLevel but no academicGradeId
   const [isSyncing, setIsSyncing] = useState(false)
@@ -458,6 +442,15 @@ function StudentsTableInner({
         studentId={credentialsStudentId}
         studentName={credentialsStudentName}
         dictionary={dictionary}
+      />
+
+      <PurgeDialog
+        open={purgeOpen}
+        onOpenChange={setPurgeOpen}
+        studentId={purgeStudentId}
+        studentName={purgeStudentName}
+        dictionary={dictionary}
+        onSuccess={handlePurgeSuccess}
       />
     </>
   )

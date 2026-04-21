@@ -3,6 +3,7 @@
 
 import { SearchParams } from "nuqs/server"
 
+import { withArchiveScope } from "@/lib/archive-scope"
 import { getDisplayText } from "@/lib/content-display"
 import { getGradeLabel } from "@/lib/grade-label"
 import { getModel } from "@/lib/prisma-guards"
@@ -11,6 +12,7 @@ import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { type StudentRow } from "@/components/school-dashboard/listings/students/columns"
 import { studentsSearchParams } from "@/components/school-dashboard/listings/students/list-params"
+import { ScopeTabs } from "@/components/school-dashboard/listings/students/scope-tabs"
 import { StudentsTable } from "@/components/school-dashboard/listings/students/table"
 
 interface Props {
@@ -108,9 +110,13 @@ export default async function StudentsContent({
   let data: StudentRow[] = []
   let total = 0
   let gradeOptions: Array<{ label: string; value: string }> = []
+  let scopeCounts = { active: 0, archived: 0, all: 0 } as Record<
+    "active" | "archived" | "all",
+    number
+  >
   const studentModel = getModel("student")
   if (effectiveSchoolId && studentModel) {
-    const where: any = {
+    const baseFilters = {
       schoolId: effectiveSchoolId,
       ...(sp.name
         ? {
@@ -123,13 +129,14 @@ export default async function StudentsContent({
         : {}),
       ...(sp.status ? buildStatusFilter(sp.status) : {}),
     }
+    const where: any = withArchiveScope(baseFilters, sp.scope)
     const skip = (sp.page - 1) * sp.perPage
     const take = sp.perPage
     const orderBy =
       sp.sort && Array.isArray(sp.sort) && sp.sort.length
         ? sp.sort.map((s: any) => ({ [s.id]: s.desc ? "desc" : "asc" }))
         : [{ createdAt: "desc" }]
-    const [rows, count] = await Promise.all([
+    const [rows, count, activeCount, archivedCount] = await Promise.all([
       studentModel.findMany({
         where,
         orderBy,
@@ -158,7 +165,24 @@ export default async function StudentsContent({
         },
       }),
       studentModel.count({ where }),
+      studentModel.count({
+        where: withArchiveScope(
+          { schoolId: effectiveSchoolId } as any,
+          "active"
+        ),
+      }),
+      studentModel.count({
+        where: withArchiveScope(
+          { schoolId: effectiveSchoolId } as any,
+          "archived"
+        ),
+      }),
     ])
+    scopeCounts = {
+      active: activeCount as number,
+      archived: archivedCount as number,
+      all: (activeCount as number) + (archivedCount as number),
+    }
 
     const classroomTranslations = new Map<string, string>()
     const nameTranslations = new Map<string, string>()
@@ -265,8 +289,14 @@ export default async function StudentsContent({
     })
     total = count as number
   }
+  const scopeLabels = {
+    active: (dictionary as any)?.students?.active || "Active",
+    archived: (dictionary as any)?.students?.archived || "Archived",
+    all: (dictionary as any)?.students?.all || "All",
+  }
   return (
     <div className="space-y-6">
+      <ScopeTabs counts={scopeCounts} labels={scopeLabels} />
       <StudentsTable
         initialData={data}
         total={total}
@@ -274,6 +304,7 @@ export default async function StudentsContent({
         lang={lang}
         perPage={sp.perPage}
         gradeOptions={gradeOptions}
+        scope={sp.scope}
       />
     </div>
   )
