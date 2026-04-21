@@ -16,7 +16,7 @@ export default async function StudentsLayout({ children, params }: Props) {
   const dictionary = await getDictionary(lang as Locale)
   const d = dictionary?.school?.students
 
-  // Define students page navigation (5 links)
+  // Define students page navigation (6 links)
   const studentsPages: PageNavItem[] = [
     { name: d?.navigation?.all || "All", href: `/${lang}/students` },
     {
@@ -30,6 +30,10 @@ export default async function StudentsLayout({ children, params }: Props) {
     {
       name: d?.navigation?.reports || "Reports",
       href: `/${lang}/students/reports`,
+    },
+    {
+      name: d?.navigation?.archive || d?.archived || "Archive",
+      href: `/${lang}/students/archived`,
     },
     {
       name: d?.navigation?.settings || "Settings",
