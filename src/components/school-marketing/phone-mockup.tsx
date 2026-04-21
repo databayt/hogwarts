@@ -1,356 +1,93 @@
 "use client"
 
-import { useRef } from "react"
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 import Image from "next/image"
-import {
-  motion,
-  useScroll,
-  useSpring,
-  useTransform,
-  type MotionValue,
-} from "framer-motion"
+import { motion } from "framer-motion"
 
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 
 type Dictionary = Awaited<ReturnType<typeof getDictionary>>
 
-// Left side items — matching Zenda reference exactly
-const LEFT_ITEMS = [
+type Pill =
+  | { kind: "textIcon"; labelKey: PillKey; icon: string }
+  | { kind: "iconOnly"; icon: string; alt: string }
+  | { kind: "textOnly"; labelKey: PillKey }
+
+type PillKey =
+  | "activities"
+  | "uniform"
+  | "transport"
+  | "security"
+  | "fees"
+  | "notebooks"
+  | "supplies"
+  | "laboratoryEquipment"
+  | "events"
+  | "tripsAndTours"
+
+const ROW_1: Pill[] = [
   {
-    text: "Activities",
+    kind: "textIcon",
+    labelKey: "activities",
     icon: "/icons/services/basketball.webp",
-    type: "both" as const,
-    y: -280,
-    x: -20,
-    row: 1,
   },
   {
-    text: "Uniform",
-    icon: "/icons/services/uniform.webp",
-    type: "both" as const,
-    y: -140,
-    x: -60,
-    row: 2,
-  },
-  {
-    text: "",
-    icon: "/icons/services/activities-goggles.webp",
-    type: "icon" as const,
-    y: -140,
-    x: 60,
-    row: 2,
-  },
-  {
-    text: "",
-    icon: "/icons/services/juice.webp",
-    type: "icon" as const,
-    y: 0,
-    x: -80,
-    row: 3,
-  },
-  {
-    text: "Notebooks",
-    icon: "/icons/services/textbooks.webp",
-    type: "both" as const,
-    y: 0,
-    x: 40,
-    row: 3,
-  },
-  {
-    text: "Laboratory equipment",
-    icon: "/icons/services/frame.webp",
-    type: "both" as const,
-    y: 140,
-    x: -120,
-    row: 4,
-  },
-  {
-    text: "",
-    icon: "/icons/services/activities-paint.png",
-    type: "icon" as const,
-    y: 140,
-    x: 15,
-    row: 4,
-  },
-  {
-    text: "Supplies",
-    icon: "/icons/services/backpack.webp",
-    type: "both" as const,
-    y: 140,
-    x: 110,
-    row: 4,
-  },
-]
-
-// Right side items — matching Zenda reference exactly
-const RIGHT_ITEMS = [
-  {
-    text: "Transport",
+    kind: "textIcon",
+    labelKey: "transport",
     icon: "/icons/services/transport.webp",
-    type: "both" as const,
-    y: -280,
-    x: -20,
-    row: 1,
-  },
-  {
-    text: "Security",
-    icon: "",
-    type: "text" as const,
-    y: -140,
-    x: -90,
-    row: 2,
-  },
-  {
-    text: "",
-    icon: "/icons/services/bread.webp",
-    type: "icon" as const,
-    y: -140,
-    x: 30,
-    row: 2,
-  },
-  {
-    text: "",
-    icon: "/icons/services/clock.webp",
-    type: "icon" as const,
-    y: 0,
-    x: -80,
-    row: 3,
-  },
-  {
-    text: "Fees",
-    icon: "/icons/services/fee.svg",
-    type: "both" as const,
-    y: 0,
-    x: 60,
-    row: 3,
-  },
-  {
-    text: "",
-    icon: "/icons/services/supplies.webp",
-    type: "icon" as const,
-    y: 140,
-    x: -130,
-    row: 4,
-  },
-  {
-    text: "Trips & Tours",
-    icon: "/icons/services/supplies.webp",
-    type: "both" as const,
-    y: 140,
-    x: 15,
-    row: 4,
-  },
-  {
-    text: "Events",
-    icon: "/icons/services/events.webp",
-    type: "both" as const,
-    y: 140,
-    x: 110,
-    row: 4,
   },
 ]
 
-// Inner phone cards
-interface InnerPhoneCard {
-  id: string
-  text: string
-  icon?: string
-  row: 1 | 2 | 3 | 4
-  side: "start" | "end"
-  bgGradient: string
-  textColor: string
-  finalX: number
-  finalY: number
-  isBlob?: boolean
-  isXLarge?: boolean
-  isLarge?: boolean
-  isMedium?: boolean
-}
-
-const INNER_PHONE_CARDS: InnerPhoneCard[] = [
+const ROW_2: Pill[] = [
   {
-    id: "inner-uniform",
-    text: "Uniform",
-    row: 1,
-    side: "start",
-    bgGradient:
-      "bg-gradient-to-br from-purple-500 via-purple-600 to-violet-700",
-    textColor: "text-white",
-    finalX: -30,
-    finalY: 20,
-    isXLarge: true,
+    kind: "textIcon",
+    labelKey: "uniform",
+    icon: "/icons/services/uniform.webp",
   },
   {
-    id: "inner-blob-blue",
-    text: "",
-    row: 1,
-    side: "end",
-    bgGradient: "bg-gradient-to-br from-pink-200 via-purple-200 to-blue-200",
-    textColor: "",
-    finalX: 20,
-    finalY: 30,
-    isBlob: true,
+    kind: "iconOnly",
+    icon: "/icons/services/activities-goggles.webp",
+    alt: "",
   },
   {
-    id: "inner-blob-purple",
-    text: "",
-    row: 2,
-    side: "end",
-    bgGradient:
-      "bg-gradient-to-br from-purple-400 via-purple-500 to-violet-500",
-    textColor: "",
-    finalX: 30,
-    finalY: 100,
-    isBlob: true,
+    kind: "textIcon",
+    labelKey: "supplies",
+    icon: "/icons/services/supplies.webp",
   },
-  {
-    id: "inner-supplies",
-    text: "Supplies",
-    icon: "https://cdn.prod.website-files.com/622da43f87e21836ee21bed6/685d45179dbf65da8996ec74_bag.webp",
-    row: 2,
-    side: "end",
-    bgGradient:
-      "bg-gradient-to-br from-indigo-400 via-purple-400 to-purple-500",
-    textColor: "text-white",
-    finalX: 40,
-    finalY: 190,
-    isLarge: true,
-  },
-  {
-    id: "inner-blob-beige",
-    text: "",
-    row: 3,
-    side: "start",
-    bgGradient: "bg-gradient-to-br from-amber-100 via-orange-100 to-yellow-100",
-    textColor: "",
-    finalX: -40,
-    finalY: 340,
-    isBlob: true,
-  },
-  {
-    id: "inner-rewards",
-    text: "Rewards",
-    icon: "https://cdn.prod.website-files.com/622da43f87e21836ee21bed6/67e431889b4aa073c0a33447_cup-icon.webp",
-    row: 4,
-    side: "end",
-    bgGradient: "bg-gradient-to-br from-pink-100 via-pink-200 to-rose-200",
-    textColor: "text-white",
-    finalX: 30,
-    finalY: 350,
-    isMedium: true,
-  },
+  { kind: "iconOnly", icon: "/icons/services/bread.webp", alt: "" },
+  { kind: "textOnly", labelKey: "security" },
 ]
 
-function InnerCard({
-  card,
-  progress,
-  isRTL,
-}: {
-  card: InnerPhoneCard
-  progress: MotionValue<number>
-  isRTL: boolean
-}) {
-  const physicalSide = isRTL
-    ? card.side === "start"
-      ? "right"
-      : "left"
-    : card.side === "start"
-      ? "left"
-      : "right"
+const ROW_3: Pill[] = [
+  { kind: "iconOnly", icon: "/icons/services/juice.webp", alt: "" },
+  {
+    kind: "textIcon",
+    labelKey: "notebooks",
+    icon: "/icons/services/textbooks.webp",
+  },
+  { kind: "iconOnly", icon: "/icons/services/clock.webp", alt: "" },
+  { kind: "iconOnly", icon: "/icons/services/activities-paint.png", alt: "" },
+  { kind: "textIcon", labelKey: "fees", icon: "/icons/services/fee.svg" },
+  { kind: "iconOnly", icon: "/icons/services/frame.webp", alt: "" },
+]
 
-  const dir = physicalSide === "left" ? -1 : 1
-  const startX = dir * 150
-
-  const x = useTransform(
-    progress,
-    [0.15, 0.4],
-    [startX, card.finalX * (isRTL ? -1 : 1)]
-  )
-  const opacity = useTransform(progress, [0.15, 0.22, 0.38], [0, 0.7, 1])
-
-  const sizes: Record<string, { w: string; h: string }> = {
-    "inner-uniform": { w: "w-36", h: "h-32" },
-    "inner-blob-blue": { w: "w-24", h: "h-20" },
-    "inner-blob-purple": { w: "w-20", h: "h-16" },
-    "inner-supplies": { w: "w-40", h: "h-44" },
-    "inner-blob-beige": { w: "w-20", h: "h-16" },
-    "inner-rewards": { w: "w-36", h: "h-40" },
-  }
-
-  const size = sizes[card.id] || { w: "w-32", h: "h-28" }
-
-  const borderRadius =
-    physicalSide === "left" ? "0 9999px 9999px 0" : "9999px 0 0 9999px"
-
-  if (card.isBlob) {
-    return (
-      <motion.div
-        className={`absolute ${card.bgGradient} ${size.w} ${size.h}`}
-        style={{
-          x,
-          y: card.finalY,
-          opacity,
-          borderRadius,
-          left: physicalSide === "left" ? 0 : "auto",
-          right: physicalSide === "right" ? 0 : "auto",
-        }}
-      />
-    )
-  }
-
-  const sizeClass = card.isXLarge
-    ? "px-12 py-10 gap-3"
-    : card.isLarge
-      ? "px-10 py-8 gap-2"
-      : card.isMedium
-        ? "px-8 py-6 gap-2"
-        : "px-6 py-5 gap-3"
-  const iconSize = card.isXLarge
-    ? "w-28 h-28"
-    : card.isLarge
-      ? "w-24 h-24"
-      : card.isMedium
-        ? "w-18 h-18"
-        : "w-14 h-14"
-  const textSize = card.isXLarge
-    ? "text-2xl"
-    : card.isLarge
-      ? "text-xl"
-      : card.isMedium
-        ? "text-lg"
-        : "text-lg"
-
-  return (
-    <motion.div
-      className={`absolute ${card.bgGradient} flex items-center ${sizeClass}`}
-      style={{
-        x,
-        y: card.finalY,
-        opacity,
-        borderRadius,
-        left: physicalSide === "left" ? 0 : "auto",
-        right: physicalSide === "right" ? 0 : "auto",
-      }}
-    >
-      {card.icon && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={card.icon}
-          alt={card.text}
-          className={`shrink-0 object-contain ${iconSize}`}
-        />
-      )}
-      {card.text && (
-        <span
-          className={`font-semibold ${card.textColor} whitespace-nowrap ${textSize}`}
-        >
-          {card.text}
-        </span>
-      )}
-    </motion.div>
-  )
-}
+const ROW_4: Pill[] = [
+  {
+    kind: "textIcon",
+    labelKey: "laboratoryEquipment",
+    icon: "/icons/services/frame.webp",
+  },
+  { kind: "iconOnly", icon: "/icons/services/palette.webp", alt: "" },
+  { kind: "iconOnly", icon: "/icons/services/fees.svg", alt: "" },
+  { kind: "textIcon", labelKey: "events", icon: "/icons/services/events.webp" },
+  {
+    kind: "textIcon",
+    labelKey: "tripsAndTours",
+    icon: "/icons/services/trips.webp",
+  },
+]
 
 interface PhoneMockupProps {
   dictionary?: Dictionary
@@ -359,192 +96,102 @@ interface PhoneMockupProps {
 
 export function PhoneMockup({ dictionary, lang }: PhoneMockupProps) {
   const isRTL = lang === "ar"
-  const sectionRef = useRef<HTMLElement>(null)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const dict = (dictionary as any)?.marketing?.phoneMockup || {
-    heading: "Your school, in every pocket",
-    subheading:
-      "Discover, enroll, organize, pay and track all transactions in one place",
-    phoneAlt: "School management mobile app",
+  const dict = ((dictionary as any)?.marketing?.phoneMockup ?? {}) as {
+    heading?: string
+    subheading?: string
+    phoneAlt?: string
+    items?: Record<PillKey, string>
   }
 
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start end", "end start"],
-  })
+  const heading = dict.heading ?? "Your school, in every pocket"
+  const subheading =
+    dict.subheading ??
+    "Discover, enroll, organize, pay and track all transactions in one place"
+  const phoneAlt = dict.phoneAlt ?? "School management mobile app"
+  const items = dict.items ?? ({} as Record<PillKey, string>)
 
-  const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 100,
-    damping: 30,
-    restDelta: 0.001,
-  })
-
-  const dir = isRTL ? -1 : 1
-
-  const phoneScale = useTransform(smoothProgress, [0, 0.25], [1.8, 1.1])
-  const phoneY = useTransform(smoothProgress, [0, 0.25], [40, 0])
-  const textY = useTransform(smoothProgress, [0, 0.25], [300, -350])
-  const textOpacity = useTransform(smoothProgress, [0, 0.1, 0.2], [0, 0.7, 1])
-
-  const leftRotate = useTransform(smoothProgress, [0, 0.3], [-25 * dir, 0])
-  const rightRotate = useTransform(smoothProgress, [0, 0.3], [25 * dir, 0])
-
-  const PHONE_EDGE_PADDING = 160
-
-  const leftXRow1 = useTransform(
-    smoothProgress,
-    [0, 0.3],
-    [-200 * dir, PHONE_EDGE_PADDING * dir]
-  )
-  const leftXRow2 = useTransform(
-    smoothProgress,
-    [0, 0.3],
-    [-200 * dir, PHONE_EDGE_PADDING * dir]
-  )
-  const leftXRow3 = useTransform(
-    smoothProgress,
-    [0, 0.3],
-    [-200 * dir, PHONE_EDGE_PADDING * dir]
-  )
-  const leftXRow4 = useTransform(
-    smoothProgress,
-    [0, 0.3],
-    [-200 * dir, (PHONE_EDGE_PADDING + 40) * dir]
-  )
-
-  const rightXRow1 = useTransform(
-    smoothProgress,
-    [0, 0.3],
-    [200 * dir, -PHONE_EDGE_PADDING * dir]
-  )
-  const rightXRow2 = useTransform(
-    smoothProgress,
-    [0, 0.3],
-    [200 * dir, -PHONE_EDGE_PADDING * dir]
-  )
-  const rightXRow3 = useTransform(
-    smoothProgress,
-    [0, 0.3],
-    [200 * dir, -PHONE_EDGE_PADDING * dir]
-  )
-  const rightXRow4 = useTransform(
-    smoothProgress,
-    [0, 0.3],
-    [200 * dir, -(PHONE_EDGE_PADDING + 40) * dir]
-  )
-
-  const getLeftX = (row: number) => {
-    switch (row) {
-      case 1:
-        return leftXRow1
-      case 2:
-        return leftXRow2
-      case 3:
-        return leftXRow3
-      case 4:
-        return leftXRow4
-      default:
-        return leftXRow1
-    }
-  }
-
-  const getRightX = (row: number) => {
-    switch (row) {
-      case 1:
-        return rightXRow1
-      case 2:
-        return rightXRow2
-      case 3:
-        return rightXRow3
-      case 4:
-        return rightXRow4
-      default:
-        return rightXRow1
-    }
-  }
-
-  const startSide = isRTL ? "right" : "left"
-  const endSide = isRTL ? "left" : "right"
+  const labelFor = (key: PillKey): string => items[key] ?? key
 
   return (
     <section
-      ref={sectionRef}
-      className="relative min-h-[200vh] overflow-y-clip"
+      className="relative overflow-hidden px-4 pt-20 pb-32 md:px-6 md:pt-28 md:pb-48 lg:pt-36 lg:pb-56"
+      dir={isRTL ? "rtl" : "ltr"}
     >
-      <div className="sticky top-0 flex h-screen items-center justify-center overflow-hidden">
-        <div className="relative container mx-auto max-w-7xl px-4">
-          {/* Text */}
-          <motion.div
-            className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center"
-            style={{ y: textY, opacity: textOpacity }}
-          >
-            <h2 className="text-foreground mb-4 text-center text-3xl font-bold md:text-5xl">
-              {dict.heading}
-            </h2>
-            <p className="text-muted-foreground mx-auto max-w-2xl text-center text-lg md:text-xl">
-              {dict.subheading}
-            </p>
-          </motion.div>
+      <div className="mx-auto max-w-6xl">
+        {/* Header */}
+        <motion.div
+          className="mx-auto mb-16 max-w-3xl text-center md:mb-24"
+          initial={{ opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+        >
+          <h2 className="text-foreground text-3xl font-bold md:text-5xl lg:text-6xl">
+            {heading}
+          </h2>
+          <p className="text-muted-foreground mt-4 text-base md:text-lg lg:text-xl">
+            {subheading}
+          </p>
+        </motion.div>
 
-          {/* Phone with floating cards */}
-          <div className="relative mx-auto flex min-h-[800px] max-w-6xl items-center justify-center">
-            {/* Left Cards */}
-            <div
-              className="absolute top-1/2 hidden -translate-y-1/2 md:block"
-              style={{ [startSide]: 0 }}
-            >
-              {LEFT_ITEMS.map((item, index) => (
-                <motion.div
-                  key={`left-${index}`}
-                  className={`border-border absolute flex items-center justify-center rounded-full border ${
-                    item.type === "icon"
-                      ? "bg-card p-6"
-                      : "bg-card gap-3 px-7 py-6"
-                  }`}
-                  style={{
-                    [startSide]: `${3 + item.x / 10}rem`,
-                    top: item.y,
-                    x: getLeftX(item.row),
-                    rotate: leftRotate,
-                    zIndex: 20 + index,
-                  }}
-                >
-                  {item.icon && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={item.icon}
-                      alt={item.text || ""}
-                      className={
-                        item.type === "icon"
-                          ? "h-16 w-16 shrink-0 object-contain"
-                          : "h-14 w-14 shrink-0 object-contain"
-                      }
-                    />
-                  )}
-                  {item.text && (
-                    <span className="text-foreground text-sm font-semibold whitespace-nowrap">
-                      {item.text}
-                    </span>
-                  )}
-                </motion.div>
+        {/* Mobile: phone only (pill grid hidden on small screens) */}
+        <div className="flex items-center justify-center md:hidden">
+          <Image
+            src="/images/phone-mockup.webp"
+            alt={phoneAlt}
+            width={320}
+            height={640}
+            className="h-auto w-64"
+            priority
+          />
+        </div>
+
+        {/* Desktop: pill grid with absolutely-centered phone */}
+        <div className="relative hidden min-h-[700px] md:block">
+          {/* Pill rows */}
+          <motion.div
+            className="flex flex-col gap-6"
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
+          >
+            <div className="flex justify-between">
+              {ROW_1.map((p, i) => (
+                <PillItem key={`r1-${i}`} pill={p} labelFor={labelFor} />
               ))}
             </div>
+            <div className="flex justify-start gap-6">
+              {ROW_2.map((p, i) => (
+                <PillItem key={`r2-${i}`} pill={p} labelFor={labelFor} />
+              ))}
+            </div>
+            <div className="flex justify-start gap-6">
+              {ROW_3.map((p, i) => (
+                <PillItem key={`r3-${i}`} pill={p} labelFor={labelFor} />
+              ))}
+            </div>
+            <div className="flex justify-end gap-6">
+              {ROW_4.map((p, i) => (
+                <PillItem key={`r4-${i}`} pill={p} labelFor={labelFor} />
+              ))}
+            </div>
+          </motion.div>
 
-            {/* Phone with inner cards */}
-            <motion.div
-              className="relative z-30 mt-64"
-              style={{ scale: phoneScale, y: phoneY }}
-            >
+          {/* Phone absolutely centered over the rows */}
+          <div className="pointer-events-none absolute top-0 left-1/2 z-10 -translate-x-1/2">
+            <div className="relative">
               <Image
                 src="/images/phone-mockup.webp"
-                alt={dict.phoneAlt}
+                alt={phoneAlt}
                 width={320}
                 height={640}
-                className="relative z-10 h-auto w-64 md:w-80"
+                className="relative z-10 h-auto w-72 lg:w-80"
+                priority
               />
-
-              {/* Inner cards container */}
+              {/* Static decorative gradient screen behind the phone frame */}
               <div
                 className="absolute overflow-hidden"
                 style={{
@@ -557,63 +204,147 @@ export function PhoneMockup({ dictionary, lang }: PhoneMockupProps) {
                     "linear-gradient(180deg, #e8e0f0 0%, #f5f0fa 50%, #faf5f5 100%)",
                 }}
               >
-                {INNER_PHONE_CARDS.map((card) => (
-                  <InnerCard
-                    key={card.id}
-                    card={card}
-                    progress={smoothProgress}
-                    isRTL={isRTL}
-                  />
-                ))}
+                <StaticPhoneScreen />
               </div>
-            </motion.div>
-
-            {/* Right Cards */}
-            <div
-              className="absolute top-1/2 hidden -translate-y-1/2 md:block"
-              style={{ [endSide]: 0 }}
-            >
-              {RIGHT_ITEMS.map((item, index) => (
-                <motion.div
-                  key={`right-${index}`}
-                  className={`border-border absolute flex items-center justify-center rounded-full border ${
-                    item.type === "icon"
-                      ? "bg-card p-6"
-                      : item.type === "text"
-                        ? "bg-card/80 px-8 py-6"
-                        : "bg-card gap-3 px-7 py-6"
-                  }`}
-                  style={{
-                    [endSide]: `${3 + item.x / 10}rem`,
-                    top: item.y,
-                    x: getRightX(item.row),
-                    rotate: rightRotate,
-                    zIndex: 20 + index,
-                  }}
-                >
-                  {item.icon && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={item.icon}
-                      alt={item.text || ""}
-                      className={
-                        item.type === "icon"
-                          ? "h-16 w-16 shrink-0 object-contain"
-                          : "h-14 w-14 shrink-0 object-contain"
-                      }
-                    />
-                  )}
-                  {item.text && (
-                    <span className="text-foreground text-sm font-semibold whitespace-nowrap">
-                      {item.text}
-                    </span>
-                  )}
-                </motion.div>
-              ))}
             </div>
           </div>
         </div>
       </div>
     </section>
+  )
+}
+
+function PillItem({
+  pill,
+  labelFor,
+}: {
+  pill: Pill
+  labelFor: (key: PillKey) => string
+}) {
+  if (pill.kind === "iconOnly") {
+    return (
+      <div className="border-border bg-card flex h-36 w-36 shrink-0 items-center justify-center rounded-full border">
+        <Image
+          src={pill.icon}
+          alt={pill.alt}
+          width={80}
+          height={80}
+          className="h-20 w-20 object-contain"
+        />
+      </div>
+    )
+  }
+
+  if (pill.kind === "textOnly") {
+    return (
+      <div className="flex h-36 shrink-0 items-center rounded-full bg-transparent px-10">
+        <span className="text-foreground text-lg font-semibold whitespace-nowrap">
+          {labelFor(pill.labelKey)}
+        </span>
+      </div>
+    )
+  }
+
+  return (
+    <div className="border-border bg-card flex h-36 shrink-0 items-center gap-4 rounded-full border ps-8 pe-16">
+      <Image
+        src={pill.icon}
+        alt=""
+        width={56}
+        height={56}
+        className="h-14 w-14 shrink-0 object-contain"
+      />
+      <span className="text-foreground text-lg font-semibold whitespace-nowrap">
+        {labelFor(pill.labelKey)}
+      </span>
+    </div>
+  )
+}
+
+function StaticPhoneScreen() {
+  // Decorative static content mirroring Zenda's phone screen: gradient blobs + a
+  // backpack card. No motion, no scroll-linked transforms.
+  return (
+    <>
+      {/* Purple blob top-left */}
+      <div
+        className="absolute"
+        style={{
+          top: "6%",
+          left: "-8%",
+          width: "55%",
+          height: "22%",
+          borderRadius: "0 9999px 9999px 0",
+          background:
+            "linear-gradient(135deg, #a855f7 0%, #9333ea 50%, #6d28d9 100%)",
+        }}
+      />
+      {/* Pink blob top-right */}
+      <div
+        className="absolute"
+        style={{
+          top: "10%",
+          right: "-10%",
+          width: "45%",
+          height: "15%",
+          borderRadius: "9999px 0 0 9999px",
+          background: "linear-gradient(135deg, #fce7f3 0%, #f5d0fe 100%)",
+        }}
+      />
+      {/* Supplies (backpack) card */}
+      <div
+        className="absolute flex items-center justify-center"
+        style={{
+          top: "40%",
+          right: "-8%",
+          width: "60%",
+          height: "22%",
+          borderRadius: "9999px 0 0 9999px",
+          background:
+            "linear-gradient(135deg, #c4b5fd 0%, #a78bfa 50%, #8b5cf6 100%)",
+        }}
+      >
+        <Image
+          src="/icons/services/backpack.webp"
+          alt=""
+          width={96}
+          height={96}
+          className="h-20 w-20 object-contain"
+        />
+      </div>
+      {/* Rewards (trophy) card */}
+      <div
+        className="absolute flex items-center justify-center"
+        style={{
+          top: "70%",
+          right: "-6%",
+          width: "55%",
+          height: "18%",
+          borderRadius: "9999px 0 0 9999px",
+          background: "linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%)",
+        }}
+      >
+        <Image
+          src="/icons/services/activities-trophy.png"
+          alt=""
+          width={72}
+          height={72}
+          className="h-16 w-16 object-contain"
+        />
+      </div>
+      {/* Purple blob bottom */}
+      <div
+        className="absolute"
+        style={{
+          bottom: "-6%",
+          left: "10%",
+          width: "45%",
+          height: "18%",
+          borderRadius: "9999px 9999px 0 0",
+          background:
+            "linear-gradient(180deg, #a855f7 0%, #9333ea 50%, #6d28d9 100%)",
+        }}
+      />
+    </>
   )
 }

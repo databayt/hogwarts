@@ -269,56 +269,12 @@ export function CatalogContentSections({
     [cat]
   )
 
-  const hasTextbook = !!textbookPdfUrl || !!textbookCoverUrl
-  const [coverError, setCoverError] = useState(false)
   const hasVideos = data.videos.length > 0
 
   const accentColor = subjectColor ?? "#1e40af"
 
   return (
     <div className="mt-8 space-y-8">
-      {hasTextbook && (
-        <ContentSection title={t.textbook} accentColor={accentColor}>
-          {(() => {
-            const Wrapper = textbookPdfUrl ? "a" : "div"
-            const wrapperProps = textbookPdfUrl
-              ? {
-                  href: textbookPdfUrl,
-                  target: "_blank" as const,
-                  rel: "noopener noreferrer",
-                }
-              : {}
-            return (
-              <Wrapper
-                {...wrapperProps}
-                className="group relative block shrink-0 overflow-hidden"
-                style={{ width: 180, height: 260 }}
-              >
-                {/* Cover image or color fallback */}
-                {textbookCoverUrl && !coverError ? (
-                  <Image
-                    src={textbookCoverUrl}
-                    alt={t.textbook}
-                    fill
-                    className="object-cover"
-                    sizes="180px"
-                    unoptimized
-                    onError={() => setCoverError(true)}
-                  />
-                ) : (
-                  <div
-                    className="absolute inset-0 flex items-center justify-center"
-                    style={{ backgroundColor: accentColor }}
-                  >
-                    <BookOpen className="size-20 text-white/10" />
-                  </div>
-                )}
-              </Wrapper>
-            )
-          })()}
-        </ContentSection>
-      )}
-
       {hasVideos && (
         <ContentSection
           title={t.videos}
@@ -393,6 +349,8 @@ export function CatalogContentSections({
           materials={data.materials}
           accentColor={accentColor}
           t={t}
+          textbookPdfUrl={textbookPdfUrl}
+          textbookCoverUrl={textbookCoverUrl}
         />
       </ContentSection>
 
@@ -621,11 +579,18 @@ function MaterialTypePipeline({
   materials,
   accentColor,
   t,
+  textbookPdfUrl,
+  textbookCoverUrl,
 }: {
   materials: MaterialItem[]
   accentColor: string
   t: Record<string, string>
+  textbookPdfUrl: string | null
+  textbookCoverUrl: string | null
 }) {
+  const [coverError, setCoverError] = useState(false)
+  const hasTextbook = !!textbookPdfUrl || !!textbookCoverUrl
+
   const typeGroups = useMemo(() => {
     const grouped: Record<
       string,
@@ -663,8 +628,57 @@ function MaterialTypePipeline({
     <div className="no-scrollbar -mx-1 flex gap-3 overflow-x-auto px-1 pb-1">
       {typeGroups.map((group) => {
         const Icon = group.icon
+
+        if (group.key === "TEXTBOOK") {
+          // Skip the empty textbook slot when neither a cover/PDF nor any
+          // TEXTBOOK-typed material rows exist.
+          if (!hasTextbook && group.count === 0) return null
+
+          if (hasTextbook) {
+            const Wrapper = textbookPdfUrl ? "a" : "div"
+            const wrapperProps = textbookPdfUrl
+              ? {
+                  href: textbookPdfUrl,
+                  target: "_blank" as const,
+                  rel: "noopener noreferrer",
+                }
+              : {}
+            return (
+              <Wrapper
+                key={group.key}
+                {...wrapperProps}
+                className="group relative block shrink-0 overflow-hidden"
+                style={{ width: 180, height: 260 }}
+              >
+                {textbookCoverUrl && !coverError ? (
+                  <Image
+                    src={textbookCoverUrl}
+                    alt={t.textbook ?? group.label}
+                    fill
+                    className="object-cover"
+                    sizes="180px"
+                    unoptimized
+                    onError={() => setCoverError(true)}
+                  />
+                ) : (
+                  <div
+                    className="absolute inset-0 flex items-center justify-center"
+                    style={{ backgroundColor: accentColor }}
+                  >
+                    <BookOpen className="size-20 text-white/10" />
+                  </div>
+                )}
+              </Wrapper>
+            )
+          }
+        }
+
         return (
-          <div key={group.key} className="liquid-glass w-44 shrink-0">
+          <div
+            key={group.key}
+            className="liquid-glass shrink-0"
+            style={{ width: 180, height: 260 }}
+          >
             <div className="liquid-glass__filter" />
             <div className="liquid-glass__overlay" />
             <div className="liquid-glass__specular" />

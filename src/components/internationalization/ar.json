@@ -338,7 +338,7 @@
   "marketing": {
     "phoneMockup": {
       "heading": "مدرستك في كل جيب",
-      "subheading": "أدر الدرجات والحضور والجداول والرسائل — كل ذلك من تطبيق واحد",
+      "subheading": "اكتشف وسجّل ونظّم وادفع وتتبّع جميع المعاملات في مكان واحد",
       "phoneAlt": "تطبيق إدارة المدرسة",
       "items": {
         "grades": "الدرجات",
@@ -350,7 +350,15 @@
         "parentPortal": "بوابة الوالدين",
         "finance": "المالية",
         "transport": "النقل",
-        "events": "الفعاليات"
+        "events": "الفعاليات",
+        "activities": "الأنشطة",
+        "uniform": "الزي",
+        "security": "الأمن",
+        "fees": "الرسوم",
+        "notebooks": "الدفاتر",
+        "supplies": "المستلزمات",
+        "laboratoryEquipment": "معدات المختبر",
+        "tripsAndTours": "الرحلات والجولات"
       },
       "innerCards": {
         "gradebook": "سجل الدرجات",
