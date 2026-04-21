@@ -251,6 +251,34 @@ export function MapboxLocationPicker({
       setGpsLoading(false)
     }
 
+    // Last-resort fallback: IP-based geolocation when browser positioning
+    // providers are unavailable (OS Location Services off, corp network,
+    // headless device). City-level accuracy — user can refine by dragging
+    // the pin or searching. Better than a dead button.
+    const tryIpFallback = async (): Promise<boolean> => {
+      try {
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 5000)
+        const res = await fetch("https://ipwho.is/", {
+          signal: controller.signal,
+        })
+        clearTimeout(timeoutId)
+        if (!res.ok) return false
+        const data = await res.json()
+        if (
+          data?.success &&
+          typeof data.latitude === "number" &&
+          typeof data.longitude === "number"
+        ) {
+          await handleMapLocationChange(data.latitude, data.longitude)
+          return true
+        }
+      } catch {
+        // network error, CORS, or aborted — fall through to alert
+      }
+      return false
+    }
+
     navigator.geolocation.getCurrentPosition(
       onSuccess,
       (error) => {
@@ -267,12 +295,15 @@ export function MapboxLocationPicker({
         // before giving up, so the button isn't dead for most users.
         navigator.geolocation.getCurrentPosition(
           onSuccess,
-          () => {
+          async () => {
+            const ipOk = await tryIpFallback()
             setGpsLoading(false)
-            alert(
-              labels?.locationTimeout ||
-                "Could not get your location. Please try again."
-            )
+            if (!ipOk) {
+              alert(
+                labels?.locationTimeout ||
+                  "Could not get your location. Please try again."
+              )
+            }
           },
           { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
         )
