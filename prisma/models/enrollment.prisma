@@ -12,7 +12,7 @@ enum EnrollmentStatus {
 }
 
 model Enrollment {
-  id               String @id @default(cuid())
+  id               String  @id @default(cuid())
   userId           String
   catalogSubjectId String
   schoolId         String?

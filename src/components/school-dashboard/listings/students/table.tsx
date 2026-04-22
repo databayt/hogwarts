@@ -442,6 +442,7 @@ function StudentsTableInner({
         studentId={credentialsStudentId}
         studentName={credentialsStudentName}
         dictionary={dictionary}
+        onClosed={() => router.refresh()}
       />
 
       <PurgeDialog

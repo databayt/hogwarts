@@ -372,7 +372,10 @@ export const MessageBubble = memo(function MessageBubble({
           <div className="group/bubble relative">
             <div
               className={cn(
-                "relative rounded-md break-words",
+                "relative break-words",
+                // Own messages use tighter corners (WhatsApp-style),
+                // received messages keep the softer rounding.
+                isOwnMessage ? "rounded-sm" : "rounded-md",
                 isMediaOnly ? "overflow-hidden p-0" : "px-2.5 py-1.5",
                 isOwnMessage ? "text-foreground" : "text-foreground bg-white",
                 isDeleted && "italic opacity-60",
@@ -559,18 +562,6 @@ export const MessageBubble = memo(function MessageBubble({
                     </div>
                   )}
 
-                  {/* Caption — rendered below the media, WhatsApp order */}
-                  {message.content?.trim() && (
-                    <p
-                      className={cn(
-                        "text-sm whitespace-pre-wrap",
-                        hasMedia && "pt-1"
-                      )}
-                    >
-                      {message.content}
-                    </p>
-                  )}
-
                   {/* Link preview — from OG metadata stored in message.metadata */}
                   {(message.metadata as Record<string, unknown>)
                     ?.linkPreview && (
@@ -583,54 +574,86 @@ export const MessageBubble = memo(function MessageBubble({
                     />
                   )}
 
-                  {/* Timestamp + read receipts — inside every bubble (WhatsApp style) */}
-                  {showTimestamp && (
-                    <span
-                      className={cn(
-                        "flex items-center gap-0.5 text-[11px]",
-                        isMediaOnly
-                          ? "absolute end-2 bottom-2 rounded bg-black/50 px-1.5 py-0.5 text-white"
-                          : "mt-1 justify-end",
-                        !isMediaOnly &&
-                          (isOwnMessage
-                            ? "text-foreground/40"
-                            : "text-muted-foreground")
-                      )}
-                    >
-                      {isEdited && (
-                        <span className="me-0.5">
-                          {m?.ui?.edited || "edited"}
+                  {/* Caption + timestamp share a single row (WhatsApp style).
+                     For media-only messages the timestamp floats on the image;
+                     everywhere else it sits inline at the end of the caption row. */}
+                  {(() => {
+                    const timestampNode = showTimestamp ? (
+                      <>
+                        {isEdited && (
+                          <span className="me-0.5">
+                            {m?.ui?.edited || "edited"}
+                          </span>
+                        )}
+                        <span>
+                          {format(new Date(message.createdAt), "p", {
+                            locale: dateLocale,
+                          })}
                         </span>
-                      )}
-                      <span>
-                        {format(new Date(message.createdAt), "p", {
-                          locale: dateLocale,
-                        })}
-                      </span>
-                      {isOwnMessage && (
-                        <span className="ms-0.5 flex items-center gap-0.5">
-                          <ReadReceiptIcon status={message.status} />
-                          {message.status === "failed" && onRetry && (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                onRetry(message.id)
-                              }}
-                              className="text-destructive hover:text-destructive/80 ms-0.5 text-[10px] underline"
-                            >
-                              {m?.ui?.retry || "Retry"}
-                            </button>
-                          )}
-                          {message.whatsappStatus && (
-                            <WhatsAppStatusIcon
-                              status={message.whatsappStatus}
-                            />
-                          )}
+                        {isOwnMessage && (
+                          <span className="ms-0.5 flex items-center gap-0.5">
+                            <ReadReceiptIcon status={message.status} />
+                            {message.status === "failed" && onRetry && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  onRetry(message.id)
+                                }}
+                                className="text-destructive hover:text-destructive/80 ms-0.5 text-[10px] underline"
+                              >
+                                {m?.ui?.retry || "Retry"}
+                              </button>
+                            )}
+                            {message.whatsappStatus && (
+                              <WhatsAppStatusIcon
+                                status={message.whatsappStatus}
+                              />
+                            )}
+                          </span>
+                        )}
+                      </>
+                    ) : null
+
+                    // Media-only: stamp floats on the image as a pill.
+                    if (isMediaOnly) {
+                      return timestampNode ? (
+                        <span className="absolute end-2 bottom-2 flex items-center gap-0.5 rounded bg-black/50 px-1.5 py-0.5 text-[11px] text-white">
+                          {timestampNode}
                         </span>
-                      )}
-                    </span>
-                  )}
+                      ) : null
+                    }
+
+                    // Caption + timestamp inline row. Caption flex-1, timestamp
+                    // flex-shrink-0 stuck to the end. Long captions wrap; the
+                    // timestamp stays anchored on the last line visually.
+                    return (
+                      <div
+                        className={cn(
+                          "flex items-end justify-end gap-2",
+                          hasMedia && "pt-1"
+                        )}
+                      >
+                        {message.content?.trim() && (
+                          <p className="min-w-0 flex-1 text-sm whitespace-pre-wrap">
+                            {message.content}
+                          </p>
+                        )}
+                        {timestampNode && (
+                          <span
+                            className={cn(
+                              "flex flex-shrink-0 items-center gap-0.5 self-end text-[11px]",
+                              isOwnMessage
+                                ? "text-foreground/40"
+                                : "text-muted-foreground"
+                            )}
+                          >
+                            {timestampNode}
+                          </span>
+                        )}
+                      </div>
+                    )
+                  })()}
                 </>
               )}
             </div>

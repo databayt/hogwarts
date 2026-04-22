@@ -151,7 +151,7 @@ model QuestionAnalytics {
   qualityScore      Int?
   qualityFlags      String[]
   recommendedAction String?
-  sampleSize        Int      @default(0)
+  sampleSize        Int       @default(0)
   lastAnalyzedAt    DateTime?
 
   school   School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
@@ -174,11 +174,11 @@ model QuestionAnalytics {
 }
 
 model QuestionResponse {
-  id           String  @id @default(cuid())
-  schoolId     String
-  questionId   String
-  studentId    String
-  examId       String
+  id         String @id @default(cuid())
+  schoolId   String
+  questionId String
+  studentId  String
+  examId     String
 
   isCorrect       Boolean
   pointsAwarded   Decimal  @db.Decimal(5, 2)

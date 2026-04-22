@@ -25,13 +25,13 @@ model Document {
   slug         String
   lang         String  @default("ar")
   description  String? @db.Text
-  documentType String  // TEXTBOOK_PDF, EXAM_PAPER, WORKSHEET, PRESENTATION, SYLLABUS, GUIDE, AUDIO, ANSWER_KEY, REPORT_CARD, CERTIFICATE, OTHER
+  documentType String // TEXTBOOK_PDF, EXAM_PAPER, WORKSHEET, PRESENTATION, SYLLABUS, GUIDE, AUDIO, ANSWER_KEY, REPORT_CARD, CERTIFICATE, OTHER
 
   // File storage (unified for all types)
-  fileKey  String  // S3 key
+  fileKey  String // S3 key
   fileUrl  String? // Public CDN URL
-  fileSize Int?    // bytes
-  mimeType String  // application/pdf, application/vnd.openxmlformats-officedocument.*, audio/mpeg, etc.
+  fileSize Int? // bytes
+  mimeType String // application/pdf, application/vnd.openxmlformats-officedocument.*, audio/mpeg, etc.
 
   // PDF-specific (null for non-PDFs)
   pageCount Int?

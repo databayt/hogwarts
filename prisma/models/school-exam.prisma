@@ -119,9 +119,9 @@ model SchoolExam {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  school         School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  class          Class       @relation(fields: [classId], references: [id], onDelete: Cascade)
-  subject        Subject     @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  school         School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  class          Class           @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subject        Subject         @relation(fields: [subjectId], references: [id], onDelete: Cascade)
   examResults    ExamResult[]
   results        Result[]
   generatedExam  GeneratedExam?
@@ -149,27 +149,27 @@ model SchoolExam {
 
 // Exam Session — tracks individual student exam attempts with proctoring
 model ExamSession {
-  id              String        @id @default(cuid())
-  schoolId        String
-  examId          String
-  studentId       String
-  attemptNumber   Int           @default(1)
-  status          SessionStatus @default(NOT_STARTED)
+  id            String        @id @default(cuid())
+  schoolId      String
+  examId        String
+  studentId     String
+  attemptNumber Int           @default(1)
+  status        SessionStatus @default(NOT_STARTED)
 
-  startedAt       DateTime?
-  submittedAt     DateTime?
-  lastActivityAt  DateTime?
+  startedAt      DateTime?
+  submittedAt    DateTime?
+  lastActivityAt DateTime?
 
   proctorMode       ProctorMode @default(BASIC)
   ipAddress         String?
   userAgent         String?
   deviceFingerprint String?
 
-  securityFlags  Json    @default("[]")
-  flagCount      Int     @default(0)
-  focusLostCount Int     @default(0)
-  tabSwitchCount Int     @default(0)
-  copyAttempts   Int     @default(0)
+  securityFlags  Json @default("[]")
+  flagCount      Int  @default(0)
+  focusLostCount Int  @default(0)
+  tabSwitchCount Int  @default(0)
+  copyAttempts   Int  @default(0)
 
   answerSnapshot Json?
   lastSavedAt    DateTime?
@@ -244,17 +244,17 @@ model GradeBoundary {
 
 // School-wide grading configuration
 model SchoolGradingConfig {
-  id              String        @id @default(cuid())
-  schoolId        String        @unique
+  id       String @id @default(cuid())
+  schoolId String @unique
 
-  primarySystem    GradingSystem @default(GPA_4)
-  gpaScale         Decimal       @default(4.0) @db.Decimal(3, 1)
+  primarySystem GradingSystem @default(GPA_4)
+  gpaScale      Decimal       @default(4.0) @db.Decimal(3, 1)
 
-  showPercentage   Boolean @default(true)
-  showGPA          Boolean @default(true)
-  showLetter       Boolean @default(true)
+  showPercentage Boolean @default(true)
+  showGPA        Boolean @default(true)
+  showLetter     Boolean @default(true)
 
-  passingThreshold Int     @default(60)
+  passingThreshold Int   @default(60)
   cgpaWeighting    Json?
   customBoundaries Json?
 
@@ -328,10 +328,10 @@ model StudentAnswer {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  school        School        @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  exam          SchoolExam    @relation(fields: [examId], references: [id], onDelete: Cascade)
-  question      QuestionBank  @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  student       Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  school        School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  exam          SchoolExam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+  question      QuestionBank   @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  student       Student        @relation(fields: [studentId], references: [id], onDelete: Cascade)
   markingResult MarkingResult?
 
   @@unique([examId, questionId, studentId])
@@ -549,8 +549,8 @@ model ExamCertificateConfig {
   type        CertificateType
   description String?         @db.Text
 
-  templateStyle  String @default("elegant")
-  orientation    String @default("landscape")
+  templateStyle String @default("elegant")
+  orientation   String @default("landscape")
 
   titleText      String  @default("Certificate of Achievement")
   titleTextAr    String?

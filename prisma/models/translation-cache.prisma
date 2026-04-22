@@ -4,8 +4,8 @@ model TranslationCache {
   id             String   @id @default(cuid())
   schoolId       String
   sourceText     String   @db.Text
-  sourceLanguage String   // "ar" or "en"
-  targetLanguage String   // "ar" or "en"
+  sourceLanguage String // "ar" or "en"
+  targetLanguage String // "ar" or "en"
   translatedText String   @db.Text
   provider       String   @default("google")
   hitCount       Int      @default(0)

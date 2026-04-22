@@ -26,6 +26,20 @@ interface FeePreviewCardDict {
   cashInstructions?: string
   noFeesTitle?: string
   noFeesDescription?: string
+  subtotal?: string
+  netDue?: string
+  discountsHeading?: string
+  siblingDiscountLabel?: string
+  scholarshipDiscountLabel?: string
+  overrideLabel?: string
+  earlyPaymentDiscountLabel?: string
+  scholarshipsHeading?: string
+  scholarshipCoveragePercentage?: string
+  scholarshipCoverageFixed?: string
+  scholarshipCoverageFull?: string
+  awardedBadge?: string
+  earlyPaymentHint?: string
+  earlyPaymentSavings?: string
 }
 
 interface FeePreviewCardProps {
@@ -57,6 +71,45 @@ function formatDate(iso: string | null, locale: string, fallback: string) {
   })
 }
 
+function discountLabelKey(
+  type: "SIBLING" | "SCHOLARSHIP" | "EARLY_PAYMENT" | "ADMIN_OVERRIDE",
+  d: FeePreviewCardDict
+): string {
+  switch (type) {
+    case "SIBLING":
+      return d.siblingDiscountLabel || "Sibling discount"
+    case "SCHOLARSHIP":
+      return d.scholarshipDiscountLabel || "Scholarship"
+    case "EARLY_PAYMENT":
+      return d.earlyPaymentDiscountLabel || "Early payment"
+    case "ADMIN_OVERRIDE":
+      return d.overrideLabel || "Adjustment"
+  }
+}
+
+function scholarshipCoverageText(
+  coverageType: "PERCENTAGE" | "FIXED_AMOUNT" | "FULL",
+  coverageAmount: number,
+  currency: string,
+  locale: string,
+  d: FeePreviewCardDict
+): string {
+  switch (coverageType) {
+    case "PERCENTAGE":
+      return (d.scholarshipCoveragePercentage || "{{value}}% off").replace(
+        "{{value}}",
+        String(coverageAmount)
+      )
+    case "FIXED_AMOUNT":
+      return (d.scholarshipCoverageFixed || "{{value}} off").replace(
+        "{{value}}",
+        formatMoney(coverageAmount, currency, locale)
+      )
+    case "FULL":
+      return d.scholarshipCoverageFull || "Full coverage"
+  }
+}
+
 export function FeePreviewCard({
   preview,
   dictionary: d = {},
@@ -85,6 +138,8 @@ export function FeePreviewCard({
   }
 
   const enabledMethods = preview.paymentMethods.filter((m) => m.enabled)
+  const hasDiscounts = preview.discounts.length > 0
+  const netDiffers = preview.netAmount !== preview.subtotal
 
   return (
     <div className="space-y-4">
@@ -100,14 +155,52 @@ export function FeePreviewCard({
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-baseline justify-between">
-            <div className="text-muted-foreground text-sm">
-              {d.totalDue || "Total Due"}
+          {(hasDiscounts || netDiffers) && (
+            <dl className="space-y-1.5">
+              <div className="flex items-baseline justify-between">
+                <dt className="text-muted-foreground text-sm">
+                  {d.subtotal || "Subtotal"}
+                </dt>
+                <dd className="tabular-nums">
+                  {formatMoney(preview.subtotal, preview.currency, locale)}
+                </dd>
+              </div>
+              {preview.discounts.map((discount, i) => (
+                <div
+                  key={`${discount.type}-${i}`}
+                  className="flex items-baseline justify-between"
+                >
+                  <dt className="text-muted-foreground text-sm">
+                    {discountLabelKey(discount.type, d)}
+                    {discount.reason && (
+                      <span className="ms-1 text-xs">· {discount.reason}</span>
+                    )}
+                  </dt>
+                  <dd className="text-green-600 tabular-nums dark:text-green-500">
+                    −{formatMoney(discount.amount, preview.currency, locale)}
+                  </dd>
+                </div>
+              ))}
+              <Separator />
+              <div className="flex items-baseline justify-between">
+                <dt className="font-medium">{d.netDue || "Net Due"}</dt>
+                <dd className="text-2xl font-semibold tabular-nums">
+                  {formatMoney(preview.netAmount, preview.currency, locale)}
+                </dd>
+              </div>
+            </dl>
+          )}
+
+          {!hasDiscounts && !netDiffers && (
+            <div className="flex items-baseline justify-between">
+              <div className="text-muted-foreground text-sm">
+                {d.totalDue || "Total Due"}
+              </div>
+              <div className="text-2xl font-semibold tabular-nums">
+                {formatMoney(preview.netAmount, preview.currency, locale)}
+              </div>
             </div>
-            <div className="text-2xl font-semibold tabular-nums">
-              {formatMoney(preview.totalAmount, preview.currency, locale)}
-            </div>
-          </div>
+          )}
 
           <Separator />
 
@@ -152,6 +245,66 @@ export function FeePreviewCard({
           </div>
         </CardContent>
       </Card>
+
+      {preview.earlyPaymentHint && (
+        <Alert>
+          <AlertDescription>
+            {(d.earlyPaymentHint || "Pay before {{date}} to save {{savings}}.")
+              .replace(
+                "{{date}}",
+                formatDate(
+                  preview.earlyPaymentHint.deadline,
+                  locale,
+                  d.dueDateTBD || "TBD"
+                )
+              )
+              .replace(
+                "{{savings}}",
+                formatMoney(
+                  preview.earlyPaymentHint.savings,
+                  preview.currency,
+                  locale
+                )
+              )}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {preview.scholarships.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm">
+              {d.scholarshipsHeading || "Available Scholarships"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {preview.scholarships.map((s) => (
+              <div
+                key={s.id}
+                className="flex items-center justify-between gap-3 rounded-md border p-2 text-sm"
+              >
+                <div className="space-y-0.5">
+                  <div className="font-medium">{s.name}</div>
+                  <div className="text-muted-foreground text-xs">
+                    {scholarshipCoverageText(
+                      s.coverageType,
+                      s.coverageAmount,
+                      preview.currency,
+                      locale,
+                      d
+                    )}
+                  </div>
+                </div>
+                {s.alreadyAwarded && (
+                  <Badge variant="secondary">
+                    {d.awardedBadge || "Awarded"}
+                  </Badge>
+                )}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       {enabledMethods.length > 0 && (
         <Card>

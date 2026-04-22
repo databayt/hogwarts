@@ -63,6 +63,9 @@ model Student {
   admissionDate   DateTime?
   graduationDate  DateTime?
 
+  // Billing preferences — set by guardian via /my-fees, consumed by invoice generation
+  preferredPaymentMethod PaymentMethod?
+
   // Academic Category
   category    String? // General, SC/ST, OBC, etc.
   studentType StudentType @default(REGULAR)
@@ -137,9 +140,9 @@ model Student {
   kioskLogs               KioskLog[]
 
   // Gamification relations
-  attendanceRewards       AttendanceReward[]
-  studentBadges           StudentBadge[]
-  attendanceStreak        AttendanceStreak?
+  attendanceRewards AttendanceReward[]
+  studentBadges     StudentBadge[]
+  attendanceStreak  AttendanceStreak?
 
   // Auth relationship
   userId String? @unique

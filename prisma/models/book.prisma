@@ -15,9 +15,9 @@ model Book {
 
   catalogSubject Subject? @relation(fields: [catalogSubjectId], references: [id])
 
-  coverUrl    String?
-  coverKey    String?
-  coverColor  String  @default("#000000")
+  coverUrl   String?
+  coverKey   String?
+  coverColor String  @default("#000000")
 
   publisher       String?
   publicationYear Int?

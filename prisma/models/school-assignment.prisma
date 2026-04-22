@@ -39,12 +39,12 @@ model SchoolAssignment {
   catalogLessonId     String?
   catalogAssignmentId String?
 
-  school              School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  class               Class       @relation(fields: [classId], references: [id], onDelete: Cascade)
-  catalogLesson       Lesson?     @relation(fields: [catalogLessonId], references: [id], onDelete: SetNull)
-  catalogAssignment   Assignment? @relation(fields: [catalogAssignmentId], references: [id], onDelete: SetNull)
-  submissions         AssignmentSubmission[]
-  results             Result[]
+  school            School                 @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  class             Class                  @relation(fields: [classId], references: [id], onDelete: Cascade)
+  catalogLesson     Lesson?                @relation(fields: [catalogLessonId], references: [id], onDelete: SetNull)
+  catalogAssignment Assignment?            @relation(fields: [catalogAssignmentId], references: [id], onDelete: SetNull)
+  submissions       AssignmentSubmission[]
+  results           Result[]
 
   wizardStep String?
 

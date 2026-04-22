@@ -145,26 +145,60 @@ export async function dispatchMessageToWhatsApp(
   const { checkAndConsumeRateLimit } =
     await import("@/lib/whatsapp/rate-limiter")
 
+  // Message has scalar whatsappPhone/whatsappStatus/whatsappMessageId columns,
+  // but groups fan out to N recipients. Writing those scalars in a loop would
+  // last-writer-wins and break retry semantics. Only mirror scalar state for
+  // 1:1 dispatches (one recipient); for groups, rely on per-recipient
+  // WhatsAppMessage rows below. Until a MessageWhatsappDelivery join table
+  // lands, group retries are best-effort via WhatsAppMessage audit rows only.
+  const isSingleRecipient = participants.length === 1
+
   for (const participant of participants) {
     const phone = participant.whatsappPhone!
 
     // Check rate limits
     const rateCheck = checkAndConsumeRateLimit(schoolId)
     if (!rateCheck.allowed) {
-      await db.message.update({
-        where: { id: messageId },
-        data: { whatsappStatus: "pending", whatsappPhone: phone },
-      })
+      if (isSingleRecipient) {
+        await db.message.update({
+          where: { id: messageId },
+          data: { whatsappStatus: "pending", whatsappPhone: phone },
+        })
+      } else {
+        // Record a per-recipient pending row so the cron retry path has a handle.
+        await db.whatsAppMessage.create({
+          data: {
+            schoolId,
+            sessionId: session.id,
+            recipientPhone: phone,
+            content: content || attachments[0]?.fileName || "",
+            contentType:
+              attachments.length > 0
+                ? mimeToMediaType(attachments[0].fileType)
+                : "text",
+            direction: "outgoing",
+            status: "pending",
+            triggerType: "messaging",
+            triggerId: messageId,
+          },
+        })
+      }
       continue
     }
 
     try {
-      let result
+      let representativeResult:
+        | Awaited<ReturnType<typeof evolution.sendMedia>>
+        | Awaited<ReturnType<typeof evolution.sendText>>
+        | undefined
 
       if (attachments.length > 0) {
-        // Send each attachment as media message
+        // Send each attachment as its own media message and log each to the
+        // audit table. `result` previously got overwritten per iteration, so
+        // only the last attachment's WA id survived — fixed by persisting
+        // every send here and keeping the first one as the representative.
         for (const attachment of attachments) {
-          result = await evolution.sendMedia(
+          const attachmentResult = await evolution.sendMedia(
             session.instanceName,
             phone,
             attachment.fileUrl,
@@ -174,55 +208,88 @@ export async function dispatchMessageToWhatsApp(
               fileName: attachment.fileName,
             }
           )
+          if (!representativeResult) representativeResult = attachmentResult
+          await db.whatsAppMessage.create({
+            data: {
+              schoolId,
+              sessionId: session.id,
+              waMessageId: attachmentResult.key.id,
+              recipientPhone: phone,
+              content: attachment.fileName,
+              contentType: mimeToMediaType(attachment.fileType),
+              direction: "outgoing",
+              status: "sent",
+              triggerType: "messaging",
+              triggerId: messageId,
+              sentAt: new Date(),
+            },
+          })
         }
       } else {
-        // Text-only message
-        result = await evolution.sendText(session.instanceName, phone, content)
+        representativeResult = await evolution.sendText(
+          session.instanceName,
+          phone,
+          content
+        )
+        await db.whatsAppMessage.create({
+          data: {
+            schoolId,
+            sessionId: session.id,
+            waMessageId: representativeResult.key.id,
+            recipientPhone: phone,
+            content,
+            contentType: "text",
+            direction: "outgoing",
+            status: "sent",
+            triggerType: "messaging",
+            triggerId: messageId,
+            sentAt: new Date(),
+          },
+        })
       }
 
-      if (!result) continue
+      if (!representativeResult) continue
 
-      // Update message with WhatsApp tracking info
-      await db.message.update({
-        where: { id: messageId },
-        data: {
-          whatsappMessageId: result.key.id,
-          whatsappStatus: "sent",
-          whatsappPhone: phone,
-        },
-      })
-
-      // Also log to WhatsAppMessage for audit
-      await db.whatsAppMessage.create({
-        data: {
-          schoolId,
-          sessionId: session.id,
-          waMessageId: result.key.id,
-          recipientPhone: phone,
-          content: content || attachments[0]?.fileName || "",
-          contentType:
-            attachments.length > 0
-              ? mimeToMediaType(attachments[0].fileType)
-              : "text",
-          direction: "outgoing",
-          status: "sent",
-          triggerType: "messaging",
-          triggerId: messageId,
-          sentAt: new Date(),
-        },
-      })
+      // Only mirror WA state onto the Message row for 1:1 conversations.
+      // For groups the scalar fields would clobber sibling recipients.
+      if (isSingleRecipient) {
+        await db.message.update({
+          where: { id: messageId },
+          data: {
+            whatsappMessageId: representativeResult.key.id,
+            whatsappStatus: "sent",
+            whatsappPhone: phone,
+          },
+        })
+      }
     } catch (error) {
       console.error(
         `[dispatchMessageToWhatsApp] Failed to send to ${phone}:`,
         error
       )
-      await db.message.update({
-        where: { id: messageId },
-        data: {
-          whatsappStatus: "failed",
-          whatsappPhone: phone,
-        },
-      })
+      if (isSingleRecipient) {
+        await db.message.update({
+          where: { id: messageId },
+          data: { whatsappStatus: "failed", whatsappPhone: phone },
+        })
+      } else {
+        await db.whatsAppMessage.create({
+          data: {
+            schoolId,
+            sessionId: session.id,
+            recipientPhone: phone,
+            content: content || attachments[0]?.fileName || "",
+            contentType:
+              attachments.length > 0
+                ? mimeToMediaType(attachments[0].fileType)
+                : "text",
+            direction: "outgoing",
+            status: "failed",
+            triggerType: "messaging",
+            triggerId: messageId,
+          },
+        })
+      }
     }
   }
 }

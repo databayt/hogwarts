@@ -1,26 +1,26 @@
 // School and School Structure Models
 
 model School {
-  id          String   @id @default(cuid())
-  name        String
-  nameEn      String?  // English name (used when locale is "en", avoids translation API)
-  domain      String   @unique // e.g., "hogwarts" for hogwarts.schoolapp.com
-  logoUrl     String?
-  address     String?
-  latitude    Decimal? @db.Decimal(10, 8)
-  longitude   Decimal? @db.Decimal(11, 8)
-  phoneNumber String?
-  email       String?
-  website     String?
-  timezone    String   @default("Africa/Khartoum")
-  preferredLanguage String @default("ar") // Admin's chosen content language ("ar" or "en")
-  nameFormat        String @default("full") // "full" (single full name field) | "split" (first+last fields)
+  id                String   @id @default(cuid())
+  name              String
+  nameEn            String? // English name (used when locale is "en", avoids translation API)
+  domain            String   @unique // e.g., "hogwarts" for hogwarts.schoolapp.com
+  logoUrl           String?
+  address           String?
+  latitude          Decimal? @db.Decimal(10, 8)
+  longitude         Decimal? @db.Decimal(11, 8)
+  phoneNumber       String?
+  email             String?
+  website           String?
+  timezone          String   @default("Africa/Khartoum")
+  preferredLanguage String   @default("ar") // Admin's chosen content language ("ar" or "en")
+  nameFormat        String   @default("full") // "full" (single full name field) | "split" (first+last fields)
 
   // School classification
-  schoolType  String? // private, public, international, technical, special
-  schoolLevel String? // primary, secondary, both
-  timetableStructure  String? @map("curriculum") // timetable structure slug, e.g. "us-standard"
-  description String? @db.Text
+  schoolType         String? // private, public, international, technical, special
+  schoolLevel        String? // primary, secondary, both
+  timetableStructure String? @map("curriculum") // timetable structure slug, e.g. "us-standard"
+  description        String? @db.Text
 
   // Location breakdown (address stays as street address)
   city    String?
@@ -59,82 +59,82 @@ model School {
   // Onboarding lifecycle
   onboardingStep        String?
   onboardingCompletedAt DateTime?
-  isPublished           Boolean @default(false)
+  isPublished           Boolean   @default(false)
 
   // School relationships
-  users                    User[]
-  schoolYears              SchoolYear[]
-  periods                  Period[]
-  terms                    Term[]
-  departments              Department[]
-  yearLevels               YearLevel[]
-  students                 Student[]
-  teachers                 Teacher[]
-  teacherQualifications    TeacherQualification[]
-  teacherExperiences       TeacherExperience[]
-  teacherSubjectExpertise  TeacherSubjectExpertise[]
-  workloadConfigs          WorkloadConfig[]
-  guardians                Guardian[]
+  users                     User[]
+  schoolYears               SchoolYear[]
+  periods                   Period[]
+  terms                     Term[]
+  departments               Department[]
+  yearLevels                YearLevel[]
+  students                  Student[]
+  teachers                  Teacher[]
+  teacherQualifications     TeacherQualification[]
+  teacherExperiences        TeacherExperience[]
+  teacherSubjectExpertise   TeacherSubjectExpertise[]
+  workloadConfigs           WorkloadConfig[]
+  guardians                 Guardian[]
   // Staff (non-teaching employees) relations
-  staffMembers             StaffMember[]
-  staffPhoneNumbers        StaffPhoneNumber[]
-  staffQualifications      StaffQualification[]
-  staffExperiences         StaffExperience[]
-  staffSalaryStructures    StaffSalaryStructure[]
-  staffSalarySlips         StaffSalarySlip[]
-  staffTimesheetEntries    StaffTimesheetEntry[]
-  staffAccessCards         StaffAccessCard[]
-  classrooms               Classroom[]
-  classroomTypes           ClassroomType[]
-  sections                 Section[]
-  teacherDepartments       TeacherDepartment[]
-  teacherPhoneNumbers      TeacherPhoneNumber[]
-  guardianTypes            GuardianType[]
-  studentGuardians         StudentGuardian[]
-  guardianPhoneNumbers     GuardianPhoneNumber[]
-  studentYearLevels        StudentYearLevel[]
-  classes                  Class[]
-  studentClasses           StudentClass[]
-  classTeachers            ClassTeacher[]
-  scoreRanges              ScoreRange[]
-  schoolAssignments        SchoolAssignment[]
-  assignmentSubmissions    AssignmentSubmission[]
-  attendances              Attendance[]
-  announcements              Announcement[]
-  announcementTemplates      AnnouncementTemplate[]
-  announcementConfig         AnnouncementConfig?
-  announcementReads          AnnouncementRead[]
-  announcementNotifications  AnnouncementNotification[]
-  domainRequests           DomainRequest[]
-  subscriptions            Subscription[]
-  invoices                 Invoice[]
+  staffMembers              StaffMember[]
+  staffPhoneNumbers         StaffPhoneNumber[]
+  staffQualifications       StaffQualification[]
+  staffExperiences          StaffExperience[]
+  staffSalaryStructures     StaffSalaryStructure[]
+  staffSalarySlips          StaffSalarySlip[]
+  staffTimesheetEntries     StaffTimesheetEntry[]
+  staffAccessCards          StaffAccessCard[]
+  classrooms                Classroom[]
+  classroomTypes            ClassroomType[]
+  sections                  Section[]
+  teacherDepartments        TeacherDepartment[]
+  teacherPhoneNumbers       TeacherPhoneNumber[]
+  guardianTypes             GuardianType[]
+  studentGuardians          StudentGuardian[]
+  guardianPhoneNumbers      GuardianPhoneNumber[]
+  studentYearLevels         StudentYearLevel[]
+  classes                   Class[]
+  studentClasses            StudentClass[]
+  classTeachers             ClassTeacher[]
+  scoreRanges               ScoreRange[]
+  schoolAssignments         SchoolAssignment[]
+  assignmentSubmissions     AssignmentSubmission[]
+  attendances               Attendance[]
+  announcements             Announcement[]
+  announcementTemplates     AnnouncementTemplate[]
+  announcementConfig        AnnouncementConfig?
+  announcementReads         AnnouncementRead[]
+  announcementNotifications AnnouncementNotification[]
+  domainRequests            DomainRequest[]
+  subscriptions             Subscription[]
+  invoices                  Invoice[]
   // Standalone invoice block relations
-  userInvoices             UserInvoice[]
-  userInvoiceItems         UserInvoiceItem[]
-  userInvoiceAddresses     UserInvoiceAddress[]
-  userInvoiceSettings      UserInvoiceSettings[]
-  userInvoiceSignatures    UserInvoiceSignature[]
-  timetables               Timetable[]
-  schoolWeekConfigs        SchoolWeekConfig[]
+  userInvoices              UserInvoice[]
+  userInvoiceItems          UserInvoiceItem[]
+  userInvoiceAddresses      UserInvoiceAddress[]
+  userInvoiceSettings       UserInvoiceSettings[]
+  userInvoiceSignatures     UserInvoiceSignature[]
+  timetables                Timetable[]
+  schoolWeekConfigs         SchoolWeekConfig[]
   // Timetable optimization relations
-  teacherConstraints       TeacherConstraint[]
-  teacherUnavailableBlocks TeacherUnavailableBlock[]
-  roomConstraints          RoomConstraint[]
-  timetableTemplates       TimetableTemplate[]
-  templateApplications     TemplateApplication[]
-  scheduleExceptions       ScheduleException[]
+  teacherConstraints        TeacherConstraint[]
+  teacherUnavailableBlocks  TeacherUnavailableBlock[]
+  roomConstraints           RoomConstraint[]
+  timetableTemplates        TimetableTemplate[]
+  templateApplications      TemplateApplication[]
+  scheduleExceptions        ScheduleException[]
   // Legal relations
-  legalConsents            LegalConsent[]
-  legalDocuments           LegalDocument[]
-  complianceLogs           ComplianceLog[]
+  legalConsents             LegalConsent[]
+  legalDocuments            LegalDocument[]
+  complianceLogs            ComplianceLog[]
   // Subscription relations
-  discounts                Discount[]
-  appliedDiscounts         AppliedDiscount[]
+  discounts                 Discount[]
+  appliedDiscounts          AppliedDiscount[]
   // Branding and visibility
-  branding                 SchoolBranding?
+  branding                  SchoolBranding?
   // Events relations
-  events                   Event[]
-  eventRegistrations       EventRegistration[]
+  events                    Event[]
+  eventRegistrations        EventRegistration[]
 
   // Examination relations
   schoolExams      SchoolExam[]
@@ -332,21 +332,21 @@ model School {
   // Academic Structure relations
   academicLevels  AcademicLevel[]
   academicGrades  AcademicGrade[]
-  academicStreams  AcademicStream[]
+  academicStreams AcademicStream[]
 
   // Membership relations
-  membershipRequests     MembershipRequest[]
+  membershipRequests MembershipRequest[]
 
   // Catalog Bridge relations
-  subjectSelections          SubjectSelection[]
-  contentOverrides           ContentOverride[]
-  instructorPreferences      InstructorPreference[]
-  bookSelections             BookSelection[]
-  proposals                  Proposal[]
+  subjectSelections     SubjectSelection[]
+  contentOverrides      ContentOverride[]
+  instructorPreferences InstructorPreference[]
+  bookSelections        BookSelection[]
+  proposals             Proposal[]
 
   // Enrollment relations (catalog)
-  catalogEnrollments     Enrollment[]
-  catalogCertificates    SubjectCertificate[]
+  catalogEnrollments  Enrollment[]
+  catalogCertificates SubjectCertificate[]
 
   // Grading Scheme relations
   gradingSchemes GradingScheme[]
@@ -356,11 +356,11 @@ model School {
   videoPurchases VideoPurchase[]
 
   // Sidebar module visibility (null = all visible, array = only listed modules shown)
-  enabledModules        Json?                   // Array of module keys: ["students", "teachers", "exams"]
+  enabledModules Json? // Array of module keys: ["students", "teachers", "exams"]
 
   // AI & Document Processing
-  aiMonthlyBudget       Decimal?                @db.Decimal(10, 2) // Monthly AI budget in USD, null = unlimited
-  aiEnabledDomains      Json?                   // Array of enabled domains: ["admission", "exams", "finance"]
+  aiMonthlyBudget        Decimal?                @db.Decimal(10, 2) // Monthly AI budget in USD, null = unlimited
+  aiEnabledDomains       Json? // Array of enabled domains: ["admission", "exams", "finance"]
   documentProcessingJobs DocumentProcessingJob[]
   aiUsageLogs            AIUsageLog[]
 
@@ -378,10 +378,10 @@ model School {
   GradeOverride         GradeOverride[]
 
   // Promotion & Transcripts
-  promotionPolicies    PromotionPolicy[]
-  promotionBatches     PromotionBatch[]
-  promotionCandidates  PromotionCandidate[]
-  transcripts          Transcript[]
+  promotionPolicies   PromotionPolicy[]
+  promotionBatches    PromotionBatch[]
+  promotionCandidates PromotionCandidate[]
+  transcripts         Transcript[]
 
   // WhatsApp Integration
   whatsappSession          WhatsAppSession?
@@ -509,11 +509,11 @@ model Term {
 }
 
 model YearLevel {
-  id          String  @id @default(cuid())
-  schoolId    String
-  levelName   String
-  lang        String  @default("ar") // Content language
-  levelOrder  Int
+  id         String @id @default(cuid())
+  schoolId   String
+  levelName  String
+  lang       String @default("ar") // Content language
+  levelOrder Int
 
   school            School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   studentYearLevels StudentYearLevel[]

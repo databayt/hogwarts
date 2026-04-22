@@ -6,12 +6,12 @@
 // ============================================================================
 
 model CurriculumStandard {
-  id        String @id @default(cuid())
-  schoolId  String
+  id       String @id @default(cuid())
+  schoolId String
 
   // Standard identification
-  code        String  // e.g., "MATH.6.NS.1", "SCI.8.PS.2"
-  name        String  // Human-readable name
+  code        String // e.g., "MATH.6.NS.1", "SCI.8.PS.2"
+  name        String // Human-readable name
   description String? @db.Text
   lang        String  @default("ar")
 

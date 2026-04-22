@@ -44,21 +44,32 @@
 
 ### P0 — Critical
 
-- None
+- [ ] **Group WhatsApp dispatch needs a join table.** `Message` has scalar `whatsappPhone` / `whatsappStatus` / `whatsappMessageId` columns, so fanning a group message to N participants used to last-writer-wins them. Patched on 2026-04-22 to only write those scalars for 1:1 conversations — groups now log per-recipient rows in `WhatsAppMessage` instead, so no more data corruption, but `retryFailedMessageDispatches()` only retries 1:1 failures. A proper `MessageWhatsappDelivery(messageId, participantId, phone, status, providerMessageId, retryCount, lastError)` model is required before rolling WhatsApp out to group chats. (See audit: `/Users/abdout/.claude/plans/elegant-cooking-unicorn.md` #6.) Needs schema migration — waiting on explicit approval.
 
 ### P1 — High (Ops blockers — must complete before real traffic)
 
-- [ ] `fly deploy` from `socket-server/` — Socket.IO server not yet on Fly.io
-- [ ] Set `SOCKET_SECRET` on Fly.io (same value must match Vercel)
+- [ ] `fly deploy` from `socket-server/` — Socket.IO server not yet on Fly.io (#262 replaces this with Oracle Cloud VM)
+- [ ] Set `SOCKET_SECRET` on Fly.io / Oracle (same value must match Vercel)
 - [ ] Set `SOCKET_SECRET` + `EMIT_SECRET` on Vercel (protects `/api/emit*` routes)
-- [ ] Set `NEXT_PUBLIC_SOCKET_URL=https://hogwarts-socket.fly.dev` on Vercel — currently `.env` has `http://localhost:3001` (dev-only)
-- [ ] Set `CRON_SECRET` on Vercel — currently empty in `.env`; required for `/api/cron/*` endpoints (WhatsApp retry + notification dispatch)
-- [ ] (Optional) Set `REDIS_URL` on Fly.io for multi-instance presence scaling
+- [ ] Set `NEXT_PUBLIC_SOCKET_URL=https://socket.databayt.org` on Vercel — currently `.env` has `http://localhost:3001` (dev-only)
+- [ ] Set `CRON_SECRET` on Vercel — currently empty in `.env`; required for `/api/cron/*` endpoints (WhatsApp retry + notification dispatch). Endpoint now refuses to run in production when unset.
+- [ ] **Set `WHATSAPP_WEBHOOK_SECRET` on Vercel + include `?secret=$WHATSAPP_WEBHOOK_SECRET` in Evolution's `WEBHOOK_GLOBAL_URL`.** Webhook now fails closed in production when this env var is unset.
+- [ ] (Optional) Set `REDIS_URL` for multi-instance presence scaling
 
 ### P2 — Medium
 
 - Student-to-teacher DM restrictions: schema supports `canStudentsDmTeachers` but no admin UI to toggle it
 - WhatsApp phone resolution does not cover plain `User` rows with no Guardian/Teacher/StaffMember profile — these users silently skip WhatsApp delivery (logged as `whatsappError: "No phone number found for user"`)
+
+### Code-level fixes applied 2026-04-22 (pre-Oracle deploy)
+
+- [x] Webhook rate-limited (`RATE_LIMITS.PUBLIC`, keyed by IP + UA)
+- [x] Webhook validates `WHATSAPP_WEBHOOK_SECRET` via `?secret=` query or `Authorization: Bearer` header (constant-time compare)
+- [x] Webhook `fetch` → socket-server calls now carry `x-emit-secret` (previously missing — would have silently broken WA→app push once `EMIT_SECRET` was set on Vercel)
+- [x] Webhook socket-emit failures are logged explicitly instead of swallowed by `catch {}`
+- [x] `NEXT_PUBLIC_SOCKET_URL` missing in production is logged loudly (no more silent `localhost:3001` fallback)
+- [x] Cron `CRON_SECRET` check uses `crypto.timingSafeEqual`; refuses in production when unset
+- [x] WhatsApp dispatch: per-attachment audit rows (fixed `result` overwrite on multi-attachment messages); groups now write per-recipient `WhatsAppMessage` rows on both rate-limit-pending and failure paths
 
 ## WhatsApp Integration Status
 

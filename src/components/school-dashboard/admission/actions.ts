@@ -17,6 +17,7 @@ import { dispatchNotification } from "@/lib/dispatch-notification"
 import { enrollStudentInGradeClasses } from "@/lib/enrollment-sync"
 import { ensureInvoicesForAssignment } from "@/lib/fee-invoice-sync"
 import { extractGradeNumber } from "@/lib/grade-utils"
+import { generateStudentUsername } from "@/lib/student-username"
 import { sendNotificationEmail } from "@/components/school-dashboard/notifications/email-service"
 import { detectLanguage } from "@/components/translation/util"
 
@@ -824,6 +825,26 @@ export async function confirmEnrollment(params: {
           },
         })
 
+        // Resolve the target AcademicGrade so the student code can be
+        // year+grade scoped. Mirrors the cascade used further down for YearLevel.
+        const applyingGradeNumber = extractGradeNumber(
+          application.applyingForClass ?? ""
+        )
+        const resolvedAcademicGrade = applyingGradeNumber
+          ? await tx.academicGrade.findFirst({
+              where: { schoolId, gradeNumber: applyingGradeNumber },
+              select: { id: true },
+            })
+          : null
+
+        // Per-school student code (YYGGGNNNN). Generated inside the tx so
+        // concurrent enrollments see each other's increments.
+        const studentCode = await generateStudentUsername({
+          schoolId,
+          academicGradeId: resolvedAcademicGrade?.id ?? null,
+          tx,
+        })
+
         // 3. Resolve userId — create a User for guest applications
         let userId = application.userId
         if (!userId) {
@@ -835,11 +856,17 @@ export async function confirmEnrollment(params: {
 
           if (existingUser) {
             userId = existingUser.id
+            // Stamp the code onto the existing user's username if they don't
+            // already have one (e.g., an applicant who self-registered).
+            await tx.user.updateMany({
+              where: { id: existingUser.id, username: null },
+              data: { username: studentCode },
+            })
           } else {
             const guestUser = await tx.user.create({
               data: {
                 email: application.email,
-                username: `${application.firstName} ${application.lastName}`,
+                username: studentCode,
                 role: "STUDENT",
                 schoolId,
                 emailVerified: new Date(),
@@ -885,6 +912,7 @@ export async function confirmEnrollment(params: {
                 data: {
                   schoolId,
                   userId,
+                  studentId: studentCode,
                   firstName: application.firstName,
                   middleName: application.middleName,
                   lastName: application.lastName,

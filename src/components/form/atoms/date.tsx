@@ -120,10 +120,18 @@ export function DateField({
                 mode="single"
                 selected={
                   field.value
-                    ? (() => {
-                        const [y, m, d] = field.value.split("-").map(Number)
-                        return new Date(y, m - 1, d)
-                      })()
+                    ? field.value instanceof Date
+                      ? field.value
+                      : (() => {
+                          const [y, m, d] = String(field.value)
+                            .split("-")
+                            .map(Number)
+                          return Number.isFinite(y) &&
+                            Number.isFinite(m) &&
+                            Number.isFinite(d)
+                            ? new Date(y, m - 1, d)
+                            : new Date(field.value)
+                        })()
                     : undefined
                 }
                 onSelect={(date) => {

@@ -2,7 +2,7 @@ import { db } from "@/lib/db"
 import { extractGradeNumber } from "@/lib/grade-utils"
 
 /**
- * Fee preview data for wizard steps.
+ * Fee preview data for wizard steps and /my-fees.
  * Read-only — does not create FeeAssignment or FeeInvoice records.
  * Mirrors autoAssignFeesForStudent matching logic so the preview stays in sync
  * with what will actually be assigned at enrollment/confirmation time.
@@ -28,12 +28,42 @@ export interface FeePreviewPaymentOption {
   enabled: boolean
 }
 
+export interface FeePreviewDiscount {
+  type: "SIBLING" | "SCHOLARSHIP" | "EARLY_PAYMENT" | "ADMIN_OVERRIDE"
+  label: string
+  amount: number
+  reason?: string
+}
+
+export interface FeePreviewScholarshipCandidate {
+  id: string
+  name: string
+  coverageType: "PERCENTAGE" | "FIXED_AMOUNT" | "FULL"
+  coverageAmount: number
+  applicable: boolean
+  alreadyAwarded: boolean
+}
+
+export interface FeePreviewEarlyPaymentHint {
+  deadline: string
+  savings: number
+}
+
 export interface FeePreview {
   matched: boolean
   academicYear: string
   currency: string
+  subtotal: number
+  /**
+   * Alias for `netAmount`. Preserved for call sites that were written before
+   * discounts were modelled in the preview. New code should read `netAmount`.
+   */
   totalAmount: number
+  netAmount: number
   structures: FeePreviewStructure[]
+  discounts: FeePreviewDiscount[]
+  scholarships: FeePreviewScholarshipCandidate[]
+  earlyPaymentHint: FeePreviewEarlyPaymentHint | null
   paymentMethods: FeePreviewPaymentOption[]
   enableOnlinePayment: boolean
   bankDetails: {
@@ -50,6 +80,18 @@ interface PaymentScheduleEntry {
   dueDate?: string
   amount?: number | string
   description?: string
+}
+
+interface DiscountPolicyShape {
+  siblingDiscount?: {
+    type: "PERCENTAGE" | "FIXED"
+    tiers: Array<{ siblingNumber: number; value: number }>
+  }
+  earlyPaymentDiscount?: {
+    type: "PERCENTAGE" | "FIXED"
+    value: number
+    deadlineDays: number
+  }
 }
 
 function buildInstallmentSchedule(
@@ -151,11 +193,20 @@ async function loadAcademicYear(schoolId: string): Promise<string> {
   return `${y}-${y + 1}`
 }
 
+interface FeeStructureRow {
+  id: string
+  name: string
+  totalAmount: unknown
+  installments: number | null
+  paymentSchedule: unknown
+  discountPolicy: unknown
+}
+
 async function findApplicableFeeStructures(
   schoolId: string,
   academicYear: string,
   gradeClassIds: string[]
-) {
+): Promise<FeeStructureRow[]> {
   return db.feeStructure.findMany({
     where: {
       schoolId,
@@ -174,8 +225,168 @@ async function findApplicableFeeStructures(
       totalAmount: true,
       installments: true,
       paymentSchedule: true,
+      discountPolicy: true,
     },
+  }) as unknown as Promise<FeeStructureRow[]>
+}
+
+/**
+ * Compute sibling discount for the student across all matched fee structures.
+ * Caller passes `studentId=null` when the student row does not exist yet
+ * (application wizard pre-enrollment) — sibling discount is skipped in that case.
+ */
+async function computeSiblingDiscounts(
+  schoolId: string,
+  studentId: string | null,
+  structures: FeeStructureRow[],
+  academicYear: string
+): Promise<FeePreviewDiscount[]> {
+  if (!studentId || structures.length === 0) return []
+
+  // Sibling detection: count prior FeeAssignments from sibling students for each structure.
+  // We mirror the logic in `calculateSiblingDiscount` (finance/fees/queries.ts)
+  // but aggregate here so the preview can show all matched discounts.
+  const guardianLinks = await db.studentGuardian.findMany({
+    where: { schoolId, studentId },
+    select: { guardianId: true },
   })
+  const guardianIds = guardianLinks.map((g) => g.guardianId)
+  if (guardianIds.length === 0) return []
+
+  const siblingLinks = await db.studentGuardian.findMany({
+    where: {
+      schoolId,
+      guardianId: { in: guardianIds },
+      studentId: { not: studentId },
+    },
+    select: { studentId: true },
+  })
+  const siblingIds = Array.from(new Set(siblingLinks.map((s) => s.studentId)))
+  if (siblingIds.length === 0) return []
+
+  const discounts: FeePreviewDiscount[] = []
+
+  for (const structure of structures) {
+    const policy = structure.discountPolicy as DiscountPolicyShape | null
+    if (!policy?.siblingDiscount) continue
+
+    const count = await db.feeAssignment.count({
+      where: {
+        schoolId,
+        studentId: { in: siblingIds },
+        feeStructureId: structure.id,
+        academicYear,
+        status: { not: "CANCELLED" },
+      },
+    })
+    if (count === 0) continue
+
+    const childNumber = count + 1
+    const tier = policy.siblingDiscount.tiers
+      .filter((t) => t.siblingNumber <= childNumber)
+      .sort((a, b) => b.siblingNumber - a.siblingNumber)[0]
+    if (!tier) continue
+
+    const base = Number(structure.totalAmount)
+    const amount =
+      policy.siblingDiscount.type === "PERCENTAGE"
+        ? Math.round((base * tier.value) / 100)
+        : Math.min(tier.value, base)
+
+    discounts.push({
+      type: "SIBLING",
+      label: `${structure.name} — sibling #${childNumber}`,
+      amount,
+      reason:
+        policy.siblingDiscount.type === "PERCENTAGE"
+          ? `${tier.value}% off`
+          : `-${tier.value}`,
+    })
+  }
+
+  return discounts
+}
+
+/**
+ * Find applicable scholarships for a grade/year. If `studentId` is provided,
+ * also flags scholarships already awarded on existing FeeAssignment rows.
+ */
+async function findApplicableScholarships(
+  schoolId: string,
+  studentId: string | null,
+  academicYear: string
+): Promise<FeePreviewScholarshipCandidate[]> {
+  const rows = await db.scholarship.findMany({
+    where: { schoolId, academicYear, isActive: true },
+    select: {
+      id: true,
+      name: true,
+      coverageType: true,
+      coverageAmount: true,
+    },
+    orderBy: { name: "asc" },
+  })
+
+  if (rows.length === 0) return []
+
+  const awardedIds = new Set<string>()
+  if (studentId) {
+    const linked = await db.feeAssignment.findMany({
+      where: {
+        schoolId,
+        studentId,
+        academicYear,
+        scholarshipId: { not: null },
+      },
+      select: { scholarshipId: true },
+    })
+    for (const row of linked) {
+      if (row.scholarshipId) awardedIds.add(row.scholarshipId)
+    }
+  }
+
+  return rows.map((r) => ({
+    id: r.id,
+    name: r.name,
+    coverageType: r.coverageType as "PERCENTAGE" | "FIXED_AMOUNT" | "FULL",
+    coverageAmount: Number(r.coverageAmount),
+    applicable: true,
+    alreadyAwarded: awardedIds.has(r.id),
+  }))
+}
+
+/**
+ * Extract the first usable early-payment hint from the matched structures.
+ * Only the earliest deadline + savings is surfaced — the preview stays compact.
+ */
+function extractEarlyPaymentHint(
+  structures: FeeStructureRow[]
+): FeePreviewEarlyPaymentHint | null {
+  for (const structure of structures) {
+    const policy = structure.discountPolicy as DiscountPolicyShape | null
+    if (!policy?.earlyPaymentDiscount) continue
+
+    const schedule = structure.paymentSchedule as PaymentScheduleEntry[] | null
+    const firstDue = Array.isArray(schedule) ? schedule[0]?.dueDate : null
+    if (!firstDue) continue
+
+    const deadlineDate = new Date(firstDue)
+    deadlineDate.setDate(
+      deadlineDate.getDate() - policy.earlyPaymentDiscount.deadlineDays
+    )
+
+    const base = Number(structure.totalAmount)
+    const savings =
+      policy.earlyPaymentDiscount.type === "PERCENTAGE"
+        ? Math.round((base * policy.earlyPaymentDiscount.value) / 100)
+        : policy.earlyPaymentDiscount.value
+
+    return {
+      deadline: deadlineDate.toISOString(),
+      savings,
+    }
+  }
+  return null
 }
 
 function buildEmptyPreview(
@@ -186,8 +397,60 @@ function buildEmptyPreview(
     matched: false,
     academicYear,
     currency: settings.currency,
+    subtotal: 0,
     totalAmount: 0,
+    netAmount: 0,
     structures: [],
+    discounts: [],
+    scholarships: [],
+    earlyPaymentHint: null,
+    paymentMethods: settings.paymentMethods,
+    enableOnlinePayment: settings.enableOnlinePayment,
+    bankDetails: settings.bankDetails,
+    cashPaymentInstructions: settings.cashPaymentInstructions,
+  }
+}
+
+async function buildMatchedPreview(
+  schoolId: string,
+  studentId: string | null,
+  structures: FeeStructureRow[],
+  settings: Awaited<ReturnType<typeof loadSchoolSettings>>,
+  academicYear: string
+): Promise<FeePreview> {
+  const subtotal = structures.reduce((s, x) => s + Number(x.totalAmount), 0)
+
+  const [siblingDiscounts, scholarships] = await Promise.all([
+    computeSiblingDiscounts(schoolId, studentId, structures, academicYear),
+    findApplicableScholarships(schoolId, studentId, academicYear),
+  ])
+
+  const earlyPaymentHint = extractEarlyPaymentHint(structures)
+
+  const discounts = [...siblingDiscounts]
+  const totalDiscount = discounts.reduce((s, d) => s + d.amount, 0)
+  const netAmount = Math.max(0, subtotal - totalDiscount)
+
+  return {
+    matched: true,
+    academicYear,
+    currency: settings.currency,
+    subtotal,
+    totalAmount: netAmount,
+    netAmount,
+    structures: structures.map((s) => ({
+      id: s.id,
+      name: s.name,
+      totalAmount: Number(s.totalAmount),
+      installments: s.installments ?? 1,
+      schedule: buildInstallmentSchedule(
+        { ...s, installments: s.installments ?? 1 },
+        Number(s.totalAmount)
+      ),
+    })),
+    discounts,
+    scholarships,
+    earlyPaymentHint,
     paymentMethods: settings.paymentMethods,
     enableOnlinePayment: settings.enableOnlinePayment,
     bankDetails: settings.bankDetails,
@@ -201,7 +464,8 @@ function buildEmptyPreview(
  */
 export async function getFeePreviewByGradeId(
   schoolId: string,
-  academicGradeId: string
+  academicGradeId: string,
+  studentId: string | null = null
 ): Promise<FeePreview> {
   const [settings, academicYear, gradeClasses] = await Promise.all([
     loadSchoolSettings(schoolId),
@@ -220,23 +484,13 @@ export async function getFeePreviewByGradeId(
 
   if (structures.length === 0) return buildEmptyPreview(settings, academicYear)
 
-  return {
-    matched: true,
-    academicYear,
-    currency: settings.currency,
-    totalAmount: structures.reduce((s, x) => s + Number(x.totalAmount), 0),
-    structures: structures.map((s) => ({
-      id: s.id,
-      name: s.name,
-      totalAmount: Number(s.totalAmount),
-      installments: s.installments ?? 1,
-      schedule: buildInstallmentSchedule(s, Number(s.totalAmount)),
-    })),
-    paymentMethods: settings.paymentMethods,
-    enableOnlinePayment: settings.enableOnlinePayment,
-    bankDetails: settings.bankDetails,
-    cashPaymentInstructions: settings.cashPaymentInstructions,
-  }
+  return buildMatchedPreview(
+    schoolId,
+    studentId,
+    structures,
+    settings,
+    academicYear
+  )
 }
 
 /**
@@ -246,7 +500,8 @@ export async function getFeePreviewByGradeId(
  */
 export async function getFeePreviewByGradeLabel(
   schoolId: string,
-  applyingForClass: string
+  applyingForClass: string,
+  studentId: string | null = null
 ): Promise<FeePreview> {
   const [settings, academicYear] = await Promise.all([
     loadSchoolSettings(schoolId),
@@ -294,21 +549,11 @@ export async function getFeePreviewByGradeLabel(
 
   if (structures.length === 0) return buildEmptyPreview(settings, academicYear)
 
-  return {
-    matched: true,
-    academicYear,
-    currency: settings.currency,
-    totalAmount: structures.reduce((s, x) => s + Number(x.totalAmount), 0),
-    structures: structures.map((s) => ({
-      id: s.id,
-      name: s.name,
-      totalAmount: Number(s.totalAmount),
-      installments: s.installments ?? 1,
-      schedule: buildInstallmentSchedule(s, Number(s.totalAmount)),
-    })),
-    paymentMethods: settings.paymentMethods,
-    enableOnlinePayment: settings.enableOnlinePayment,
-    bankDetails: settings.bankDetails,
-    cashPaymentInstructions: settings.cashPaymentInstructions,
-  }
+  return buildMatchedPreview(
+    schoolId,
+    studentId,
+    structures,
+    settings,
+    academicYear
+  )
 }

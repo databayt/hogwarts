@@ -45,16 +45,16 @@ model AcademicGrade {
   maxStudents Int     @default(40)
 
   // Relations
-  school            School                   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  level             AcademicLevel            @relation(fields: [levelId], references: [id], onDelete: Cascade)
-  yearLevel         YearLevel?               @relation(fields: [yearLevelId], references: [id], onDelete: SetNull)
-  streams            AcademicStream[]
-  subjectSelections  SubjectSelection[]
-  classes            Class[]
-  classrooms         Classroom[]
-  sections           Section[]
-  bookSelections     BookSelection[]
-  students           Student[]
+  school            School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  level             AcademicLevel      @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  yearLevel         YearLevel?         @relation(fields: [yearLevelId], references: [id], onDelete: SetNull)
+  streams           AcademicStream[]
+  subjectSelections SubjectSelection[]
+  classes           Class[]
+  classrooms        Classroom[]
+  sections          Section[]
+  bookSelections    BookSelection[]
+  students          Student[]
 
   // Promotion
   promotionPolicies PromotionPolicy[]
@@ -70,18 +70,18 @@ model AcademicGrade {
 }
 
 model AcademicStream {
-  id         String     @id @default(cuid())
-  schoolId   String
-  gradeId    String
-  name       String
-  slug       String
-  lang       String     @default("ar")
-  streamType StreamType @default(GENERAL)
+  id          String     @id @default(cuid())
+  schoolId    String
+  gradeId     String
+  name        String
+  slug        String
+  lang        String     @default("ar")
+  streamType  StreamType @default(GENERAL)
   maxStudents Int?
 
   // Relations
-  school            School                   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  grade             AcademicGrade            @relation(fields: [gradeId], references: [id], onDelete: Cascade)
+  school            School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  grade             AcademicGrade      @relation(fields: [gradeId], references: [id], onDelete: Cascade)
   subjectSelections SubjectSelection[]
   students          Student[]
 

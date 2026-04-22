@@ -11,15 +11,15 @@ enum UserRole {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  username      String?
-  email         String?
-  emailVerified DateTime?
-  image         String?
-  password          String?
-  role              UserRole  @default(USER)
-  isSuspended       Boolean   @default(false)
-  mustChangePassword Boolean  @default(false)
+  id                 String    @id @default(cuid())
+  username           String?
+  email              String?
+  emailVerified      DateTime?
+  image              String?
+  password           String?
+  role               UserRole  @default(USER)
+  isSuspended        Boolean   @default(false)
+  mustChangePassword Boolean   @default(false)
   passwordChangedAt  DateTime?
 
   // GitHub-style profile fields
@@ -150,21 +150,21 @@ model User {
   pinnedItems    PinnedItem[]
 
   // Catalog Enrollment relations
-  catalogEnrollments     Enrollment[]
-  catalogLessonProgress  LessonProgress[]
-  catalogCertificates    SubjectCertificate[]
+  catalogEnrollments    Enrollment[]
+  catalogLessonProgress LessonProgress[]
+  catalogCertificates   SubjectCertificate[]
 
   // Membership relations
-  membershipRequests       MembershipRequest[]  @relation("MembershipRequestUser")
+  membershipRequests         MembershipRequest[] @relation("MembershipRequestUser")
   reviewedMembershipRequests MembershipRequest[] @relation("MembershipRequestReviewer")
 
   // Event Registration relations
   eventRegistrations EventRegistration[] @relation("EventRegistrations")
 
   // Lesson Content relations
-  videos          Video[]
-  videoPurchases  VideoPurchase[]
-  attachments     Attachment[]
+  videos         Video[]
+  videoPurchases VideoPurchase[]
+  attachments    Attachment[]
 
   // Document Processing relations
   documentProcessingJobs DocumentProcessingJob[]

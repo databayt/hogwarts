@@ -15,17 +15,17 @@ model Textbook {
   author    String?
 
   // File storage
-  fileKey   String? // S3 key for PDF
-  fileUrl   String?
-  fileSize  Int?
-  pageCount Int?
-  tocMapping Json?  // [{chapterId, page, title}]
+  fileKey    String? // S3 key for PDF
+  fileUrl    String?
+  fileSize   Int?
+  pageCount  Int?
+  tocMapping Json? // [{chapterId, page, title}]
 
   // Cover
   coverKey   String?
   coverColor String?
 
-  grades Int[]       @default([])
+  grades Int[]         @default([])
   levels SchoolLevel[]
   status ContentStatus @default(PUBLISHED)
 

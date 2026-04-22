@@ -11,8 +11,8 @@ model Quiz {
   title       String
   description String? @db.Text
   lang        String  @default("ar")
-  quizType    String  // PRACTICE, TIMED, FLASHCARD, COMPETITIVE
-  timeLimit   Int?    // seconds
+  quizType    String // PRACTICE, TIMED, FLASHCARD, COMPETITIVE
+  timeLimit   Int? // seconds
 
   status ContentStatus @default(DRAFT)
   tags   String[]      @default([])
@@ -28,9 +28,9 @@ model Quiz {
   averageScore Float @default(0)
 
   // Relations
-  subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  chapter   Chapter? @relation(fields: [chapterId], references: [id], onDelete: SetNull)
-  lesson    Lesson?  @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  subject   Subject        @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  chapter   Chapter?       @relation(fields: [chapterId], references: [id], onDelete: SetNull)
+  lesson    Lesson?        @relation(fields: [lessonId], references: [id], onDelete: SetNull)
   questions QuizQuestion[]
 
   createdAt DateTime @default(now())

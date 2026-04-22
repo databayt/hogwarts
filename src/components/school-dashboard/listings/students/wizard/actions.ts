@@ -8,6 +8,7 @@ import { auth } from "@/auth"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { generateStudentUsername } from "@/lib/student-username"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import type { StudentWizardData } from "./use-student-wizard"
@@ -131,7 +132,12 @@ export async function completeStudentWizard(
     // Validate required fields are present
     const student = await db.student.findFirst({
       where: { id: studentId, schoolId },
-      select: { firstName: true, lastName: true },
+      select: {
+        firstName: true,
+        lastName: true,
+        studentId: true,
+        academicGradeId: true,
+      },
     })
 
     if (!student) {
@@ -142,9 +148,21 @@ export async function completeStudentWizard(
       return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
 
+    // Assign the per-school code on wizard completion if one wasn't already set.
+    // Draft students are created blank, so this is the first point we know the grade.
+    const code =
+      student.studentId ??
+      (await generateStudentUsername({
+        schoolId,
+        academicGradeId: student.academicGradeId,
+      }))
+
     await db.student.updateMany({
       where: { id: studentId, schoolId },
-      data: { wizardStep: null },
+      data: {
+        wizardStep: null,
+        ...(student.studentId ? {} : { studentId: code }),
+      },
     })
 
     revalidatePath("/students")

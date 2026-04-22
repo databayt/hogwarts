@@ -12,13 +12,13 @@ model Exam {
   description String? @db.Text
   lang        String  @default("ar")
 
-  examType        String // midterm, final, chapter_test, practice
-  durationMinutes Int?
-  totalMarks      Int?
-  passingMarks    Int?
-  questions       Json? // Legacy: use ExamQuestion junction instead
-  totalQuestions  Int?
-  distribution    Json? // e.g. {"MULTIPLE_CHOICE": {"EASY": 5}}
+  examType          String // midterm, final, chapter_test, practice
+  durationMinutes   Int?
+  totalMarks        Int?
+  passingMarks      Int?
+  questions         Json? // Legacy: use ExamQuestion junction instead
+  totalQuestions    Int?
+  distribution      Json? // e.g. {"MULTIPLE_CHOICE": {"EASY": 5}}
   bloomDistribution Json? // e.g. {"REMEMBER": 4, "UNDERSTAND": 3}
 
   gradeRange String?
@@ -86,9 +86,9 @@ model ExamTemplate {
   description      String? @db.Text
   lang             String  @default("ar")
 
-  examType    String // midterm, final, chapter_test, quiz, practice, diagnostic
-  duration    Int // Minutes
-  totalMarks  Decimal @db.Decimal(6, 2)
+  examType   String // midterm, final, chapter_test, quiz, practice, diagnostic
+  duration   Int // Minutes
+  totalMarks Decimal @db.Decimal(6, 2)
 
   distribution      Json // {"MULTIPLE_CHOICE": {"EASY": 5, "MEDIUM": 3}}
   bloomDistribution Json?
@@ -105,9 +105,9 @@ model ExamTemplate {
   rejectionReason     String?
   visibility          ContentVisibility @default(PUBLIC)
 
-  usageCount Int @default(0)
-  status ContentStatus @default(PUBLISHED)
-  tags   String[]      @default([])
+  usageCount Int           @default(0)
+  status     ContentStatus @default(PUBLISHED)
+  tags       String[]      @default([])
 
   // Relations
   catalogSubject Subject @relation(fields: [catalogSubjectId], references: [id], onDelete: Cascade)
@@ -129,9 +129,9 @@ model ExamTemplate {
 
 // Subject-category blueprints (STEM_MATH, LANGUAGE_ARTS, etc.)
 model ExamBlueprint {
-  id       String @id @default(cuid())
-  category String @unique
-  name     String
+  id          String  @id @default(cuid())
+  category    String  @unique
+  name        String
   description String? @db.Text
 
   questionTypeWeights Json
@@ -192,9 +192,9 @@ model PaperTemplate {
   rejectionReason     String?
   visibility          ContentVisibility @default(PUBLIC)
 
-  usageCount Int @default(0)
-  status ContentStatus @default(PUBLISHED)
-  tags   String[]      @default([])
+  usageCount Int           @default(0)
+  status     ContentStatus @default(PUBLISHED)
+  tags       String[]      @default([])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -5,22 +5,22 @@
 
 model Image {
   id      String       @id @default(cuid())
-  concept String                        // "math", "science", "algebra"
+  concept String // "math", "science", "algebra"
   variant String       @default("thumbnail") // thumbnail, banner, cover, icon
-  level   SchoolLevel?                  // null = universal across levels
+  level   SchoolLevel? // null = universal across levels
 
   // File storage
-  imageKey     String                   // S3 key for original image
-  thumbnailKey String?                  // S3 prefix for processed WebP variants (sm/md/lg)
-  pdfKey       String?                  // S3 key for PDF version (textbook covers, etc.)
+  imageKey     String // S3 key for original image
+  thumbnailKey String? // S3 prefix for processed WebP variants (sm/md/lg)
+  pdfKey       String? // S3 key for PDF version (textbook covers, etc.)
 
   // Metadata
-  color    String?                      // Brand color (#hex)
+  color    String? // Brand color (#hex)
   altText  String?
   width    Int?
   height   Int?
-  mimeType String?                      // image/webp, image/png, application/pdf
-  fileSize Int?                         // bytes
+  mimeType String? // image/webp, image/png, application/pdf
+  fileSize Int? // bytes
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

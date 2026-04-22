@@ -15,8 +15,8 @@ model Question {
 
   // Question-specific data (JSON)
   options      Json?
-  sampleAnswer String? @db.Text
-  explanation  String? @db.Text
+  sampleAnswer String?  @db.Text
+  explanation  String?  @db.Text
   tags         String[] @default([])
 
   // Contribution pattern
@@ -66,11 +66,11 @@ model Question {
 
 // Junction table: Exam ↔ Question with ordering and points
 model ExamQuestion {
-  id              String @id @default(cuid())
-  catalogExamId   String
+  id                String  @id @default(cuid())
+  catalogExamId     String
   catalogQuestionId String
-  order           Int
-  points          Decimal @db.Decimal(5, 2)
+  order             Int
+  points            Decimal @db.Decimal(5, 2)
 
   // Relations
   exam     Exam     @relation(fields: [catalogExamId], references: [id], onDelete: Cascade)

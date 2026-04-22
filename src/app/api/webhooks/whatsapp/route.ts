@@ -1,10 +1,114 @@
+import { timingSafeEqual } from "node:crypto"
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
 import { db } from "@/lib/db"
+import { RATE_LIMITS, rateLimit } from "@/lib/rate-limit"
+
+export const dynamic = "force-dynamic"
+
+/**
+ * Emit a Socket.IO event via the external socket server.
+ * Shares the same EMIT_SECRET / SOCKET_SECRET contract as
+ * `messaging/actions.ts` — keep in sync.
+ *
+ * Logs failures explicitly (no silent drops) and surfaces a misconfigured
+ * NEXT_PUBLIC_SOCKET_URL in production so ops catches it before real traffic.
+ */
+async function emitSocket(
+  path: "/api/emit" | "/api/emit-to-users",
+  payload: Record<string, unknown>
+): Promise<void> {
+  const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL
+  if (!socketUrl) {
+    if (process.env.NODE_ENV === "production") {
+      console.error(
+        "[whatsapp-webhook] NEXT_PUBLIC_SOCKET_URL unset in production — real-time bridge disabled"
+      )
+    }
+    return
+  }
+  const emitSecret = process.env.EMIT_SECRET || process.env.SOCKET_SECRET || ""
+  try {
+    const res = await fetch(`${socketUrl}${path}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-emit-secret": emitSecret,
+      },
+      body: JSON.stringify(payload),
+    })
+    if (!res.ok) {
+      console.error(
+        `[whatsapp-webhook] Socket emit ${path} returned ${res.status}`
+      )
+    }
+  } catch (err) {
+    console.error(`[whatsapp-webhook] Socket emit ${path} failed:`, err)
+  }
+}
+
+/**
+ * Constant-time comparison to defeat timing attacks on the webhook secret.
+ * `timingSafeEqual` requires equal-length buffers, so we bail early on
+ * length mismatch (which in itself leaks no useful signal to an attacker).
+ */
+function secretsMatch(a: string, b: string): boolean {
+  if (a.length !== b.length) return false
+  return timingSafeEqual(Buffer.from(a), Buffer.from(b))
+}
+
+/**
+ * Verify the request carries the expected shared secret.
+ *
+ * Evolution API's webhook config supports neither HMAC nor custom auth
+ * headers out of the box, but the webhook URL can carry a query param.
+ * We accept the secret via either `?secret=X` (how Evolution will send it,
+ * configured in `docker-compose.yml` WEBHOOK_GLOBAL_URL) or an explicit
+ * `Authorization: Bearer X` header for future-proofing.
+ *
+ * When `WHATSAPP_WEBHOOK_SECRET` is unset we fail closed in production
+ * and log a warning in development so local testing still works.
+ */
+function isAuthorizedWebhook(request: NextRequest): boolean {
+  const expected = process.env.WHATSAPP_WEBHOOK_SECRET
+  if (!expected) {
+    if (process.env.NODE_ENV === "production") {
+      console.error(
+        "[whatsapp-webhook] WHATSAPP_WEBHOOK_SECRET unset in production — refusing all webhooks"
+      )
+      return false
+    }
+    console.warn(
+      "[whatsapp-webhook] WHATSAPP_WEBHOOK_SECRET unset — allowing in development only"
+    )
+    return true
+  }
+
+  const fromQuery = request.nextUrl.searchParams.get("secret") ?? ""
+  const authHeader = request.headers.get("authorization") ?? ""
+  const fromHeader = authHeader.startsWith("Bearer ")
+    ? authHeader.slice("Bearer ".length)
+    : ""
+
+  return secretsMatch(fromQuery, expected) || secretsMatch(fromHeader, expected)
+}
 
 // Evolution API sends webhook events here
 export async function POST(request: NextRequest) {
+  // Rate limit anonymous POST endpoint — this is an unauthenticated route
+  // that performs DB writes + media downloads. Keep it ahead of any work.
+  const rateLimited = await rateLimit(
+    request,
+    RATE_LIMITS.PUBLIC,
+    "webhook:whatsapp"
+  )
+  if (rateLimited) return rateLimited
+
+  if (!isAuthorizedWebhook(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
   try {
     const body = await request.json()
     const event = body.event
@@ -249,9 +353,6 @@ export async function POST(request: NextRequest) {
                     }),
                   ])
 
-                  const socketUrl =
-                    process.env.NEXT_PUBLIC_SOCKET_URL ||
-                    "http://localhost:3001"
                   const messageData = {
                     id: bridgedMessage.id,
                     conversationId: participant.conversation.id,
@@ -270,18 +371,9 @@ export async function POST(request: NextRequest) {
                     })),
                   }
 
-                  // Emit to conversation room (active chat)
-                  await fetch(`${socketUrl}/api/emit`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      room: `conversation:${participant.conversation.id}`,
-                      event: "message:new",
-                      data: messageData,
-                    }),
-                  })
-
-                  // Emit to all participants' user rooms (sidebar update)
+                  // Emit to conversation room (active chat) + per-user rooms (sidebar).
+                  // emitSocket carries EMIT_SECRET and logs failures — don't wrap in
+                  // try/catch here or upstream errors get swallowed.
                   const allParticipants =
                     await db.conversationParticipant.findMany({
                       where: {
@@ -290,17 +382,21 @@ export async function POST(request: NextRequest) {
                       },
                       select: { userId: true },
                     })
-                  await fetch(`${socketUrl}/api/emit-to-users`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      userIds: allParticipants.map((p) => p.userId),
-                      event: "message:new",
-                      data: messageData,
-                    }),
+                  await emitSocket("/api/emit", {
+                    room: `conversation:${participant.conversation.id}`,
+                    event: "message:new",
+                    data: messageData,
                   })
-                } catch {
-                  // Socket.IO push is best-effort
+                  await emitSocket("/api/emit-to-users", {
+                    userIds: allParticipants.map((p) => p.userId),
+                    event: "message:new",
+                    data: messageData,
+                  })
+                } catch (socketErr) {
+                  console.error(
+                    "[whatsapp-webhook] bridge socket push failed:",
+                    socketErr
+                  )
                 }
               }
             } catch (bridgeError) {
@@ -348,7 +444,7 @@ export async function POST(request: NextRequest) {
             data: { whatsappStatus: mappedStatus },
           })
 
-          // Emit WhatsApp status update via Socket.IO (best-effort)
+          // Emit WhatsApp status update via Socket.IO
           try {
             const updatedMsg = await db.message.findFirst({
               where: {
@@ -358,23 +454,20 @@ export async function POST(request: NextRequest) {
               select: { id: true, conversationId: true },
             })
             if (updatedMsg) {
-              const socketUrl =
-                process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3001"
-              await fetch(`${socketUrl}/api/emit`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  room: `conversation:${updatedMsg.conversationId}`,
-                  event: "message:updated",
-                  data: {
-                    messageId: updatedMsg.id,
-                    whatsappStatus: mappedStatus,
-                  },
-                }),
+              await emitSocket("/api/emit", {
+                room: `conversation:${updatedMsg.conversationId}`,
+                event: "message:updated",
+                data: {
+                  messageId: updatedMsg.id,
+                  whatsappStatus: mappedStatus,
+                },
               })
             }
-          } catch {
-            // Best-effort
+          } catch (statusSocketErr) {
+            console.error(
+              "[whatsapp-webhook] status-update socket push failed:",
+              statusSocketErr
+            )
           }
         }
         break

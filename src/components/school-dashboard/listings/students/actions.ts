@@ -87,6 +87,7 @@ import { db } from "@/lib/db"
 import { getGradeLabel } from "@/lib/grade-label"
 import { getModelOrThrow } from "@/lib/prisma-guards"
 import { buildTranslatedSearchConditions } from "@/lib/search-with-translation"
+import { generateStudentUsername } from "@/lib/student-username"
 import { syncStudentGrades } from "@/lib/sync-student-grades"
 import { getTenantContext } from "@/lib/tenant-context"
 import { arrayToCSV } from "@/components/file"
@@ -344,11 +345,19 @@ export async function createStudent(
       }
     }
 
+    // Pre-generate the per-school student code (YYGGGNNNN) so username and
+    // Student.studentId stay in sync from creation — avoids a second update.
+    const generatedCode = await generateStudentUsername({
+      schoolId,
+      academicGradeId: parsed.academicGradeId || null,
+    })
+
     // Create student record
     const studentModel = getModelOrThrow("student")
     const row = await studentModel.create({
       data: {
         schoolId,
+        studentId: generatedCode,
         firstName: parsed.firstName,
         middleName: parsed.middleName ?? null,
         lastName: parsed.lastName,
@@ -2434,20 +2443,94 @@ export async function bulkSyncStudentGrades(): Promise<
 // Student Credentials
 // ============================================================================
 
+interface StudentCredentialsPayload {
+  username: string
+  email: string
+  /** Plaintext only when we just created a User here. Null for pre-existing Users — admin must click "Reset Password" to mint a new one. */
+  password: string | null
+  /** True the first time a User is minted for this student on this call. */
+  isNew: boolean
+  /** True when the student has a real applicant email (signed up themselves). Password stays under their control; admin shouldn't auto-reset it. */
+  isSelfOnboarded: boolean
+}
+
+type StudentContext = {
+  id: string
+  firstName: string | null
+  lastName: string | null
+  email: string | null
+  userId: string | null
+  studentId: string | null
+  academicGradeId: string | null
+  applicationId: string | null
+}
+
+/** Build a memorable plaintext password: first 3 chars of name + 4 random digits. */
+async function mintPlainPassword(
+  firstName: string | null | undefined
+): Promise<{ plain: string; hashed: string }> {
+  const { hash } = await import("bcryptjs")
+  const namePrefix = (firstName || "std").slice(0, 3).toLowerCase()
+  const randomDigits = Math.floor(1000 + Math.random() * 9000).toString()
+  const plain = `${namePrefix}${randomDigits}`
+  const hashed = await hash(plain, 10)
+  return { plain, hashed }
+}
+
+async function loadStudentForCredentials(
+  studentId: string,
+  schoolId: string
+): Promise<StudentContext | null> {
+  return db.student.findFirst({
+    where: { id: studentId, schoolId },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      userId: true,
+      studentId: true,
+      academicGradeId: true,
+      applicationId: true,
+    },
+  })
+}
+
+async function ensureStudentCode(
+  student: StudentContext,
+  schoolId: string
+): Promise<string> {
+  if (student.studentId) return student.studentId
+
+  const code = await generateStudentUsername({
+    schoolId,
+    academicGradeId: student.academicGradeId,
+  })
+  await db.student.update({
+    where: { id: student.id },
+    data: { studentId: code },
+  })
+  return code
+}
+
+function deriveIsSelfOnboarded(student: StudentContext): boolean {
+  return (
+    !!student.applicationId &&
+    !!student.email &&
+    !student.email.endsWith("@school.local")
+  )
+}
+
 /**
- * Generate login credentials for a student.
- * Creates a User record if one doesn't exist, or resets the password if it does.
- * Returns plaintext email + password for the admin to share.
+ * Read credentials for the credentials dialog. Creates a User on first open for
+ * admin-created students (they need SOMETHING to log in with) but never
+ * rewrites the password of a pre-existing User — self-onboarded students keep
+ * the password they chose during registration. Admin must click "Reset Password"
+ * explicitly to mint a new one.
  */
-export async function generateStudentCredentials(input: {
+export async function getStudentCredentials(input: {
   studentId: string
-}): Promise<
-  ActionResponse<{
-    email: string
-    password: string
-    isNew: boolean
-  }>
-> {
+}): Promise<ActionResponse<StudentCredentialsPayload>> {
   try {
     const session = await auth()
     if (!session?.user) {
@@ -2463,98 +2546,149 @@ export async function generateStudentCredentials(input: {
       .object({ studentId: z.string().min(1) })
       .parse(input)
 
-    const student = await db.student.findFirst({
-      where: { id: studentId, schoolId },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        email: true,
-        userId: true,
-        studentId: true,
-      },
-    })
+    const student = await loadStudentForCredentials(studentId, schoolId)
+    if (!student) return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
 
-    if (!student) {
-      return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
-    }
+    const studentCode = await ensureStudentCode(student, schoolId)
+    const isSelfOnboarded = deriveIsSelfOnboarded(student)
 
-    const { hash } = await import("bcryptjs")
-
-    // Generate a readable password: first 3 chars of name + 4 random digits
-    const namePrefix = (student.firstName || "std").slice(0, 3).toLowerCase()
-    const randomDigits = Math.floor(1000 + Math.random() * 9000).toString()
-    const plainPassword = `${namePrefix}${randomDigits}`
-    const hashedPassword = await hash(plainPassword, 10)
-
-    // Determine email
-    const email =
-      student.email ||
-      `${(student.firstName || "student").toLowerCase()}.${(student.lastName || student.id.slice(0, 4)).toLowerCase()}@school.local`
-
-    let isNew = true
-
+    // Path 1: existing User — read-only, don't touch password.
     if (student.userId) {
-      // Student already has a User — reset their password
-      await db.user.update({
-        where: { id: student.userId },
-        data: {
-          password: hashedPassword,
-          mustChangePassword: true,
-        },
-      })
-      isNew = false
-
-      // Get the existing user's email
       const existingUser = await db.user.findUnique({
         where: { id: student.userId },
-        select: { email: true },
+        select: { email: true, username: true },
       })
 
+      // Stamp code onto username only if the user never had one (e.g., guest
+      // created during admin enrollment without a chosen handle). Self-onboarded
+      // users keep their registered username.
+      if (existingUser && !existingUser.username) {
+        await db.user.update({
+          where: { id: student.userId },
+          data: { username: studentCode },
+        })
+      }
+
+      const syntheticEmail = `${studentCode.toLowerCase()}@school.local`
       return {
         success: true,
         data: {
-          email: existingUser?.email || email,
-          password: plainPassword,
+          username: studentCode,
+          email: existingUser?.email || student.email || syntheticEmail,
+          password: null,
           isNew: false,
+          isSelfOnboarded,
         },
       }
     }
 
-    // Create a new User for the student
+    // Path 2: no User yet — mint one with a fresh password so admin has
+    // something to share with the student on first open.
+    const { plain, hashed } = await mintPlainPassword(student.firstName)
+    const syntheticEmail = `${studentCode.toLowerCase()}@school.local`
+    const email = student.email || syntheticEmail
+
     const newUser = await db.user.create({
       data: {
         email,
-        password: hashedPassword,
+        password: hashed,
         role: "STUDENT",
         schoolId,
-        username: `${student.firstName} ${student.lastName}`.trim(),
+        username: studentCode,
         mustChangePassword: true,
       },
     })
 
-    // Link student to the new user
     await db.student.update({
       where: { id: studentId },
       data: { userId: newUser.id },
     })
 
-    const cookieStore = await cookies()
-    const subdomain = cookieStore.get("x-subdomain")?.value || ""
-    revalidatePath(`/[lang]/s/${subdomain}/students`, "page")
+    // NOTE: no revalidatePath — it remounts the parent server tree and resets
+    // the dialog's open state, closing it before the admin can copy anything.
+    // The dialog triggers router.refresh() on close instead.
 
     return {
       success: true,
       data: {
+        username: studentCode,
         email,
-        password: plainPassword,
+        password: plain,
         isNew: true,
+        isSelfOnboarded,
       },
     }
   } catch (error) {
-    console.error("[generateStudentCredentials] Error:", error)
+    console.error("[getStudentCredentials] Error:", error)
     return actionError(
       ACTION_ERRORS.CREATE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
+  }
+}
+
+/**
+ * Explicit admin action — forces a new password for an existing student User.
+ * Use when the student forgot their password or the admin needs to share a
+ * fresh one. Separate from getStudentCredentials to avoid silent password
+ * wipes for self-onboarded students.
+ */
+export async function resetStudentPassword(input: {
+  studentId: string
+}): Promise<ActionResponse<StudentCredentialsPayload>> {
+  try {
+    const session = await auth()
+    if (!session?.user) {
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    }
+
+    const { studentId } = z
+      .object({ studentId: z.string().min(1) })
+      .parse(input)
+
+    const student = await loadStudentForCredentials(studentId, schoolId)
+    if (!student) return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
+
+    if (!student.userId) {
+      // Delegate first-time creation to getStudentCredentials so the logic
+      // stays in one place.
+      return getStudentCredentials({ studentId })
+    }
+
+    const studentCode = await ensureStudentCode(student, schoolId)
+    const isSelfOnboarded = deriveIsSelfOnboarded(student)
+    const { plain, hashed } = await mintPlainPassword(student.firstName)
+
+    await db.user.update({
+      where: { id: student.userId },
+      data: { password: hashed, mustChangePassword: true },
+    })
+
+    const existingUser = await db.user.findUnique({
+      where: { id: student.userId },
+      select: { email: true },
+    })
+    const syntheticEmail = `${studentCode.toLowerCase()}@school.local`
+
+    return {
+      success: true,
+      data: {
+        username: studentCode,
+        email: existingUser?.email || student.email || syntheticEmail,
+        password: plain,
+        isNew: false,
+        isSelfOnboarded,
+      },
+    }
+  } catch (error) {
+    console.error("[resetStudentPassword] Error:", error)
+    return actionError(
+      ACTION_ERRORS.UPDATE_FAILED,
       error instanceof Error ? error.message : undefined
     )
   }

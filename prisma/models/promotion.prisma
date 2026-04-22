@@ -101,11 +101,11 @@ model PromotionCandidate {
   subjectResults    Json? // Per-subject breakdown [{subjectId, name, grade, score, passed}]
 
   // Decision
-  autoDecision  PromotionDecision
-  finalDecision PromotionDecision
-  overrideReason String?  @db.Text
+  autoDecision   PromotionDecision
+  finalDecision  PromotionDecision
+  overrideReason String?           @db.Text
   overriddenBy   String?
-  conditions     String?  @db.Text // Conditions for CONDITIONAL promotion
+  conditions     String?           @db.Text // Conditions for CONDITIONAL promotion
 
   // Execution
   isExecuted Boolean   @default(false)

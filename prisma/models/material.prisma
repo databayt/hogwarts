@@ -16,7 +16,7 @@ model Material {
   // File metadata
   fileUrl   String?
   fileKey   String? // S3 key
-  fileSize  Int?    // bytes
+  fileSize  Int? // bytes
   mimeType  String?
   pageCount Int?
 

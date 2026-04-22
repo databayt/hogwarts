@@ -8,8 +8,8 @@ model Chapter {
   lang          String        @default("ar")
   description   String?       @db.Text
   sequenceOrder Int
-  concept       String?                              // "algebra", "geometry" — image lookup key
-  thumbnail     String?  @map("thumbnailKey")        // S3 key prefix for thumbnail WebP variants
+  concept       String? // "algebra", "geometry" — image lookup key
+  thumbnail     String?       @map("thumbnailKey") // S3 key prefix for thumbnail WebP variants
   color         String?
   gradeRange    String?
   grades        Int[]         @default([])
@@ -26,17 +26,17 @@ model Chapter {
   ratingCount   Int   @default(0)
 
   // Relations
-  subject   Subject               @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  subject   Subject           @relation(fields: [subjectId], references: [id], onDelete: Cascade)
   lessons   Lesson[]
   exams     Exam[]
-  overrides ContentOverride[]     @relation("ChapterOverrides")
+  overrides ContentOverride[] @relation("ChapterOverrides")
 
   // Content relations
-  questions    Question[]
-  materials    Material[]
-  assignments  Assignment[]
-  quizzes      Quiz[]
-  documents    Document[]
+  questions   Question[]
+  materials   Material[]
+  assignments Assignment[]
+  quizzes     Quiz[]
+  documents   Document[]
 
   // School-scoped reverse relations (FK bridges)
   schoolQuestionBanks QuestionBank[]

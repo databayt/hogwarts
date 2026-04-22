@@ -95,6 +95,18 @@ export async function publishSchool(schoolId: string): Promise<ActionResponse> {
       )
     }
 
+    // Auto-provision per-grade fee structures from School.tuitionFee + currency.
+    // Runs after catalog setup so AcademicGrade rows exist. Non-blocking.
+    try {
+      const { provisionSchoolFees } = await import("@/lib/fee-provisioning")
+      await provisionSchoolFees(schoolId)
+    } catch (feeError) {
+      console.error(
+        `[publishSchool] Fee provisioning failed for school ${schoolId}:`,
+        feeError
+      )
+    }
+
     revalidatePath(`/onboarding/${schoolId}`)
 
     return createActionResponse({

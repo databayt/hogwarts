@@ -21,7 +21,7 @@ model ProgressReportSchedule {
 
   // Schedule configuration
   frequency ProgressReportFrequency
-  isActive  Boolean         @default(true)
+  isActive  Boolean                 @default(true)
 
   // Content toggles
   includeExamResults Boolean @default(true)
@@ -41,8 +41,8 @@ model ProgressReportSchedule {
   createdBy String // Admin/Teacher user ID
 
   // Relations
-  school  School                @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  class   Class?                @relation(fields: [classId], references: [id], onDelete: SetNull)
+  school  School                    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  class   Class?                    @relation(fields: [classId], references: [id], onDelete: SetNull)
   reports GeneratedProgressReport[]
 
   createdAt DateTime @default(now())

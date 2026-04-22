@@ -18,7 +18,7 @@ model GradingScheme {
   decimalPlaces  Int      @default(0)
 
   // Relations
-  school School              @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  school School               @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   grades GradingSchemeGrade[]
 
   createdAt DateTime @default(now())

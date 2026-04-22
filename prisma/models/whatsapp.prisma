@@ -56,7 +56,7 @@ model WhatsAppSession {
   connectedAt  DateTime?
   metadata     Json? // Additional session data from Evolution API
 
-  school   School           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  school   School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   groups   WhatsAppGroup[]
   messages WhatsAppMessage[]
 
@@ -69,25 +69,25 @@ model WhatsAppSession {
 
 // WhatsApp group linked to academic sections or custom groups
 model WhatsAppGroup {
-  id          String           @id @default(cuid())
+  id          String            @id @default(cuid())
   schoolId    String // Multi-tenant scoping (CRITICAL)
   sessionId   String
   groupJid    String // WhatsApp group JID (unique identifier)
   name        String
-  description String?          @db.Text
+  description String?           @db.Text
   imageUrl    String?
   type        WhatsAppGroupType @default(section_parents)
   sectionId   String? // Link to academic section
   classId     String? // Link to class/course
-  isActive    Boolean          @default(true)
-  memberCount Int              @default(0)
+  isActive    Boolean           @default(true)
+  memberCount Int               @default(0)
   metadata    Json?
 
-  school  School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  session WhatsAppSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  section Section?        @relation(fields: [sectionId], references: [id], onDelete: SetNull)
-  class   Class?          @relation(fields: [classId], references: [id], onDelete: SetNull)
-  members WhatsAppGroupMember[]
+  school   School                @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  session  WhatsAppSession       @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  section  Section?              @relation(fields: [sectionId], references: [id], onDelete: SetNull)
+  class    Class?                @relation(fields: [classId], references: [id], onDelete: SetNull)
+  members  WhatsAppGroupMember[]
   messages WhatsAppMessage[]
 
   createdAt DateTime @default(now())
@@ -103,7 +103,7 @@ model WhatsAppGroup {
 
 // Group membership tracking
 model WhatsAppGroupMember {
-  id       String @id @default(cuid())
+  id       String  @id @default(cuid())
   schoolId String // Multi-tenant scoping (CRITICAL)
   groupId  String
   phone    String // Phone number in E.164 format

@@ -43,7 +43,7 @@ model QuickAssessment {
   // Relations
   school    School                    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   class     Class                     @relation(fields: [classId], references: [id], onDelete: Cascade)
-  subject   Subject            @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  subject   Subject                   @relation(fields: [subjectId], references: [id], onDelete: Cascade)
   responses QuickAssessmentResponse[]
 
   createdAt DateTime @default(now())
@@ -59,10 +59,10 @@ model QuickAssessment {
 
 // Student responses to quick assessments
 model QuickAssessmentResponse {
-  id           String @id @default(cuid())
+  id           String  @id @default(cuid())
   schoolId     String
   assessmentId String
-  studentId    String?  // Null if anonymous
+  studentId    String? // Null if anonymous
 
   // Response data (JSON: array of {questionId, answer, isCorrect?})
   responses Json

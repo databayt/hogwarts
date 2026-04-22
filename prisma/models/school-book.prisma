@@ -38,7 +38,7 @@ model SchoolBook {
 
   // Optional link to global catalog
   catalogBookId String?
-  catalogBook   Book? @relation(fields: [catalogBookId], references: [id], onDelete: SetNull)
+  catalogBook   Book?   @relation(fields: [catalogBookId], references: [id], onDelete: SetNull)
 
   borrowRecords BorrowRecord[]
 

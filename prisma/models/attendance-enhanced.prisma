@@ -270,21 +270,21 @@ model AttendancePolicy {
 
 // Policy trigger log - records when a policy fires for a student
 model PolicyTrigger {
-  id         String   @id @default(cuid())
-  schoolId   String
-  school     School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  studentId  String
-  student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  policyId   String
-  tier       Int // 1 = warning, 2 = letter, 3 = meeting, 4 = referral
+  id           String    @id @default(cuid())
+  schoolId     String
+  school       School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  studentId    String
+  student      Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  policyId     String
+  tier         Int // 1 = warning, 2 = letter, 3 = meeting, 4 = referral
   absenceCount Int // Number of absences at time of trigger
-  action     String // LETTER, MEETING, REFERRAL, NOTIFICATION
-  status     String   @default("PENDING") // PENDING, COMPLETED, DISMISSED
-  notes      String?
-  resolvedBy String? // User ID who resolved
-  resolvedAt DateTime?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  action       String // LETTER, MEETING, REFERRAL, NOTIFICATION
+  status       String    @default("PENDING") // PENDING, COMPLETED, DISMISSED
+  notes        String?
+  resolvedBy   String? // User ID who resolved
+  resolvedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   @@unique([schoolId, studentId, policyId, tier]) // One trigger per tier per student
   @@index([schoolId])

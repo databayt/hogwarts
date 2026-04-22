@@ -142,31 +142,31 @@ enum ProposalStatus {
 // ============================================================================
 
 model Subject {
-  id          String        @id @default(cuid())
-  name        String
-  slug        String        @unique
-  lang        String        @default("ar")
-  description    String?       @db.Text
-  objectives     String[]      @default([])
-  prerequisites  String?       @db.Text
-  targetAudience String?       @db.Text
-  department     String // Grouping (e.g. "العلوم")
-  levels      SchoolLevel[]
-  country        String        @default("SD")
-  curriculum     String        @default("national")  // "us-k12", "national", "british", "ib"
-  curriculumId   String?                             // FK to Curriculum (Phase 4 backfill)
-  catalogCurriculum Curriculum? @relation(fields: [curriculumId], references: [id], onDelete: SetNull)
-  schoolTypes String[]      @default([])           // [\"international\", \"private\"]. Empty = all.
-  concept    String?                              // "math", "science" — shared image lookup key
-  thumbnail  String?  @map("thumbnailKey")        // S3 key prefix for thumbnail WebP variants
-  banner     String?  @map("bannerUrl")           // S3 key prefix for banner WebP variants
-  cover      String?                              // S3 key for textbook cover (one per concept, all grades/curricula)
-  pdf        String?                              // S3 key for textbook PDF (unique per subject)
-  color      String?
-  tags          String[]      @default([])
-  status        ContentStatus @default(PUBLISHED)
-  gradeRange    String? // e.g. "1-12", "7-12"
-  grades        Int[]         @default([])
+  id                String        @id @default(cuid())
+  name              String
+  slug              String        @unique
+  lang              String        @default("ar")
+  description       String?       @db.Text
+  objectives        String[]      @default([])
+  prerequisites     String?       @db.Text
+  targetAudience    String?       @db.Text
+  department        String // Grouping (e.g. "العلوم")
+  levels            SchoolLevel[]
+  country           String        @default("SD")
+  curriculum        String        @default("national") // "us-k12", "national", "british", "ib"
+  curriculumId      String? // FK to Curriculum (Phase 4 backfill)
+  catalogCurriculum Curriculum?   @relation(fields: [curriculumId], references: [id], onDelete: SetNull)
+  schoolTypes       String[]      @default([]) // [\"international\", \"private\"]. Empty = all.
+  concept           String? // "math", "science" — shared image lookup key
+  thumbnail         String?       @map("thumbnailKey") // S3 key prefix for thumbnail WebP variants
+  banner            String?       @map("bannerUrl") // S3 key prefix for banner WebP variants
+  cover             String? // S3 key for textbook cover (one per concept, all grades/curricula)
+  pdf               String? // S3 key for textbook PDF (unique per subject)
+  color             String?
+  tags              String[]      @default([])
+  status            ContentStatus @default(PUBLISHED)
+  gradeRange        String? // e.g. "1-12", "7-12"
+  grades            Int[]         @default([])
 
   // ClickView integration
   clickviewId  String?
@@ -189,26 +189,26 @@ model Subject {
   sortOrder Int @default(0)
 
   // === Catalog hierarchy ===
-  chapters       Chapter[]
+  chapters Chapter[]
 
   // === Catalog content ===
-  exams          Exam[]
-  questions      Question[]
-  materials      Material[]
-  assignments    Assignment[]
-  books          Book[]
-  examTemplates  ExamTemplate[]
-  textbooks      Textbook[]
-  quizzes        Quiz[]
-  documents      Document[]
+  exams         Exam[]
+  questions     Question[]
+  materials     Material[]
+  assignments   Assignment[]
+  books         Book[]
+  examTemplates ExamTemplate[]
+  textbooks     Textbook[]
+  quizzes       Quiz[]
+  documents     Document[]
 
   // === Bridges ===
-  subjectSelections      SubjectSelection[]
-  instructorPreferences  InstructorPreference[]
+  subjectSelections     SubjectSelection[]
+  instructorPreferences InstructorPreference[]
 
   // === Engagement ===
-  enrollments    Enrollment[]
-  certificates   SubjectCertificate[]
+  enrollments  Enrollment[]
+  certificates SubjectCertificate[]
 
   // === School-scoped reverse relations ===
   timetableSlots         Timetable[]

@@ -1574,7 +1574,25 @@
       "fees": {
         "title": "School Fees",
         "description": "Fees that will be assigned to this student based on the selected grade.",
-        "noGradeSelected": "No academic grade selected in the enrollment step. Fees cannot be previewed yet."
+        "noGradeSelected": "No academic grade selected in the enrollment step. Fees cannot be previewed yet.",
+        "adminControls": {
+          "title": "Admin Adjustments",
+          "description": "Apply scholarship, waiver, or a custom override. Changes write immediately to the student's fee assignments.",
+          "scholarshipLabel": "Scholarship",
+          "scholarshipNone": "None",
+          "overrideLabel": "Override amount",
+          "overrideHelper": "Absolute amount to subtract from the fee subtotal.",
+          "overrideReasonLabel": "Reason",
+          "overrideReasonPlaceholder": "Auditable reason (min 5 characters).",
+          "waiverCheckbox": "Waive all fees for this student",
+          "saveAdjustments": "Save Adjustments",
+          "saving": "Saving…",
+          "savedToast": "Fee adjustments saved.",
+          "failedToast": "Failed to save adjustments.",
+          "reasonRequired": "Reason must be at least 5 characters.",
+          "noAssignmentsYet": "Fee assignments have not been created yet. Finish the enrollment step and return here.",
+          "currentSummary": "Current summary"
+        }
       },
       "feePreview": {
         "heading": "Fee Preview",
@@ -1595,7 +1613,20 @@
         "swiftCode": "SWIFT",
         "cashInstructions": "Cash Payment Instructions",
         "noFeesTitle": "No fees configured yet",
-        "noFeesDescription": "No fee structures configured for this grade yet."
+        "noFeesDescription": "No fee structures configured for this grade yet.",
+        "subtotal": "Subtotal",
+        "netDue": "Net Due",
+        "discountsHeading": "Discounts",
+        "siblingDiscountLabel": "Sibling discount",
+        "scholarshipDiscountLabel": "Scholarship",
+        "overrideLabel": "Adjustment",
+        "earlyPaymentDiscountLabel": "Early payment",
+        "scholarshipsHeading": "Available Scholarships",
+        "scholarshipCoveragePercentage": "{{value}}% off",
+        "scholarshipCoverageFixed": "{{value}} off",
+        "scholarshipCoverageFull": "Full coverage",
+        "awardedBadge": "Awarded",
+        "earlyPaymentHint": "Pay before {{date}} to save {{savings}}."
       },
       "yearLevels": {
         "title": "Year Levels",
@@ -1999,12 +2030,19 @@
         "title": "Student Credentials",
         "descriptionNew": "New login account created. Share these credentials with the student.",
         "descriptionReset": "Password has been reset. Share the new password with the student.",
-        "descriptionGenerating": "Generating login credentials...",
+        "descriptionGenerating": "Loading login credentials...",
+        "descriptionExisting": "Current login credentials for this student.",
+        "username": "Username",
         "email": "Email",
         "password": "Password",
+        "passwordHidden": "For security, the existing password can't be shown. Click \"Reset Password\" to mint a new one.",
+        "passwordHiddenSelfOnboarded": "The student chose this password themselves during sign-up. Reset it only if they've lost access.",
         "resetPassword": "Reset Password",
+        "resettingPassword": "Resetting password...",
         "mustChangePassword": "The student will be asked to change their password on first login.",
-        "failedToGenerate": "Failed to generate credentials"
+        "selfOnboarded": "This student signed up themselves — they log in with email. Username is for reference.",
+        "failedToGenerate": "Failed to load credentials",
+        "failedToReset": "Failed to reset password"
       },
       "previousEducation": {
         "title": "Previous Education",
@@ -6973,6 +7011,35 @@
       "manualPayment": "Manual Payment",
       "uploadReceipt": "Upload Receipt",
       "receiptApproval": "Receipt Approval"
+    },
+    "myFees": {
+      "title": "My Fees",
+      "description": "View assigned fees and pick your preferred payment method.",
+      "preferredMethodLabel": "Preferred payment method",
+      "preferredMethodUpdated": "Preferred method updated.",
+      "preferredMethodFailed": "Failed to update method.",
+      "preferredMethodNone": "None",
+      "preferredMethodPlaceholder": "Pick a method",
+      "noAssignments": "No fees have been assigned yet. The school will set them up shortly.",
+      "noAccess": "No student record is linked to your account. Contact the school admin.",
+      "methods": {
+        "cash": "Cash",
+        "cheque": "Cheque",
+        "bankTransfer": "Bank Transfer",
+        "creditCard": "Credit / Debit Card",
+        "debitCard": "Debit Card",
+        "upi": "UPI",
+        "netBanking": "Net Banking",
+        "wallet": "Mobile Wallet",
+        "other": "Other"
+      },
+      "status": {
+        "pending": "Pending",
+        "partial": "Partial",
+        "paid": "Paid",
+        "overdue": "Overdue",
+        "cancelled": "Cancelled"
+      }
     },
     "profile": {
       "title": "Profile",

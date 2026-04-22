@@ -8,8 +8,8 @@ model Lesson {
   lang            String        @default("ar")
   description     String?       @db.Text
   sequenceOrder   Int
-  concept         String?                              // inherits from chapter if null
-  thumbnail       String?  @map("thumbnailKey")        // S3 key prefix for thumbnail WebP variants
+  concept         String? // inherits from chapter if null
+  thumbnail       String?       @map("thumbnailKey") // S3 key prefix for thumbnail WebP variants
   color           String?
   durationMinutes Int?
   objectives      String?       @db.Text
@@ -20,8 +20,8 @@ model Lesson {
 
   // ClickView integration
   clickviewCoverId String?
-  videoCount       Int @default(0)
-  resourceCount    Int @default(0)
+  videoCount       Int     @default(0)
+  resourceCount    Int     @default(0)
 
   // Engagement metrics
   usageCount    Int   @default(0)
@@ -29,19 +29,19 @@ model Lesson {
   ratingCount   Int   @default(0)
 
   // Relations
-  chapter     Chapter               @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  chapter     Chapter           @relation(fields: [chapterId], references: [id], onDelete: Cascade)
   videos      Video[]
   attachments Attachment[]
-  overrides   ContentOverride[]     @relation("LessonOverrides")
+  overrides   ContentOverride[] @relation("LessonOverrides")
   progress    LessonProgress[]
-  exams       Exam[]                @relation("LessonExams")
+  exams       Exam[]            @relation("LessonExams")
 
   // Content relations
-  questions    Question[]
-  materials    Material[]
-  assignments  Assignment[]
-  quizzes      Quiz[]
-  documents    Document[]
+  questions   Question[]
+  materials   Material[]
+  assignments Assignment[]
+  quizzes     Quiz[]
+  documents   Document[]
 
   // School-scoped reverse relations (FK bridges)
   schoolQuestionBanks QuestionBank[]

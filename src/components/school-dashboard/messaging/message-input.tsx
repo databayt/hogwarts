@@ -879,7 +879,7 @@ export function MessageInput({
 
           {/* Caption input — fixed, centered pill with icons on both ends */}
           <div className="pointer-events-none fixed inset-x-0 bottom-16 z-[60] flex justify-center px-4">
-            <div className="pointer-events-auto flex w-full max-w-md items-center gap-2 rounded-full border border-white/25 bg-[#2A2A2A]/80 px-3 py-1.5 backdrop-blur-md">
+            <div className="pointer-events-auto flex w-full max-w-xs items-center gap-2 rounded-full border border-white/15 bg-black/70 px-3 py-1.5 backdrop-blur-md">
               <button
                 type="button"
                 className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-white/70 hover:bg-white/10 hover:text-white"
@@ -933,10 +933,11 @@ export function MessageInput({
               type="button"
               onClick={handlePreviewSend}
               disabled={isSendingPreview}
-              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white text-black disabled:opacity-60"
+              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-white disabled:opacity-60"
+              style={{ backgroundColor: "#1FA961" }}
             >
               {isSendingPreview ? (
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black" />
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
               ) : (
                 <HorizontalSendIcon className="h-5 w-5" />
               )}

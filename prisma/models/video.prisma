@@ -2,7 +2,7 @@
 // Attachment — files attached to lessons
 
 model Video {
-  id              String @id @default(cuid())
+  id              String  @id @default(cuid())
   catalogLessonId String
   userId          String
   schoolId        String?
@@ -11,18 +11,18 @@ model Video {
   description String? @db.Text
   lang        String  @default("ar")
 
-  videoUrl     String  @db.Text
-  thumbnailUrl String? @db.Text
+  videoUrl        String  @db.Text
+  thumbnailUrl    String? @db.Text
   durationSeconds Int?
-  provider     String // "youtube", "vimeo", "self-hosted"
-  externalId   String?
+  provider        String // "youtube", "vimeo", "self-hosted"
+  externalId      String?
 
   // Self-hosted storage
   storageProvider String?
   storageKey      String? @db.Text
 
   // Visibility and pricing
-  visibility ContentVisibility       @default(PRIVATE)
+  visibility ContentVisibility @default(PRIVATE)
   price      Float?
   currency   String?
 
@@ -42,11 +42,11 @@ model Video {
   tags       String[] @default([])
 
   // Relations
-  lesson    Lesson                 @relation(fields: [catalogLessonId], references: [id], onDelete: Cascade)
-  user      User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  school    School?                @relation(fields: [schoolId], references: [id], onDelete: SetNull)
+  lesson    Lesson            @relation(fields: [catalogLessonId], references: [id], onDelete: Cascade)
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  school    School?           @relation(fields: [schoolId], references: [id], onDelete: SetNull)
   progress  LessonProgress[]
-  overrides ContentOverride[]      @relation("VideoOverrides")
+  overrides ContentOverride[] @relation("VideoOverrides")
   purchases VideoPurchase[]
 
   createdAt DateTime @default(now())
@@ -90,7 +90,7 @@ model Attachment {
   userId          String
 
   name     String
-  url      String @db.Text
+  url      String  @db.Text
   fileType String?
   fileSize Int?
 

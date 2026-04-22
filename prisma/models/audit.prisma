@@ -2,9 +2,9 @@
 // NOTE: schoolId is optional to allow school-dashboard-level auditing by DEVELOPER role
 // For school-scoped actions, schoolId should always be provided
 model AuditLog {
-  id        String   @id @default(cuid())
+  id        String  @id @default(cuid())
   userId    String
-  schoolId  String?  // Optional for school-dashboard-level actions (DEVELOPER role)
+  schoolId  String? // Optional for school-dashboard-level actions (DEVELOPER role)
   action    String
   reason    String?
   ip        String?

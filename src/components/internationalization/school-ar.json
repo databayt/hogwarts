@@ -1574,7 +1574,25 @@
       "fees": {
         "title": "الرسوم الدراسية",
         "description": "الرسوم التي سيتم تعيينها لهذا الطالب بناءً على الصف المختار.",
-        "noGradeSelected": "لم يتم اختيار المرحلة الدراسية في خطوة التسجيل. لا يمكن معاينة الرسوم بعد."
+        "noGradeSelected": "لم يتم اختيار المرحلة الدراسية في خطوة التسجيل. لا يمكن معاينة الرسوم بعد.",
+        "adminControls": {
+          "title": "تعديلات المسؤول",
+          "description": "تطبيق منحة، إعفاء، أو تعديل مخصص. يتم حفظ التغييرات مباشرة على رسوم الطالب.",
+          "scholarshipLabel": "المنحة",
+          "scholarshipNone": "لا شيء",
+          "overrideLabel": "مبلغ التعديل",
+          "overrideHelper": "المبلغ المطلق الذي سيُخصم من إجمالي الرسوم.",
+          "overrideReasonLabel": "السبب",
+          "overrideReasonPlaceholder": "سبب موثّق (5 أحرف على الأقل).",
+          "waiverCheckbox": "إعفاء هذا الطالب من جميع الرسوم",
+          "saveAdjustments": "حفظ التعديلات",
+          "saving": "جارٍ الحفظ…",
+          "savedToast": "تم حفظ تعديلات الرسوم.",
+          "failedToast": "فشل حفظ التعديلات.",
+          "reasonRequired": "يجب أن يحتوي السبب على 5 أحرف على الأقل.",
+          "noAssignmentsYet": "لم يتم إنشاء تعيينات الرسوم بعد. أكمل خطوة التسجيل ثم عد إلى هنا.",
+          "currentSummary": "الملخص الحالي"
+        }
       },
       "feePreview": {
         "heading": "معاينة الرسوم",
@@ -1595,7 +1613,20 @@
         "swiftCode": "SWIFT",
         "cashInstructions": "تعليمات الدفع نقداً",
         "noFeesTitle": "لم يتم تكوين رسوم بعد",
-        "noFeesDescription": "لم يتم تكوين هياكل رسوم لهذه المرحلة بعد."
+        "noFeesDescription": "لم يتم تكوين هياكل رسوم لهذه المرحلة بعد.",
+        "subtotal": "المجموع الفرعي",
+        "netDue": "الصافي المستحق",
+        "discountsHeading": "الخصومات",
+        "siblingDiscountLabel": "خصم الأشقاء",
+        "scholarshipDiscountLabel": "المنحة",
+        "overrideLabel": "تعديل",
+        "earlyPaymentDiscountLabel": "الدفع المبكر",
+        "scholarshipsHeading": "المنح المتاحة",
+        "scholarshipCoveragePercentage": "خصم {{value}}%",
+        "scholarshipCoverageFixed": "خصم {{value}}",
+        "scholarshipCoverageFull": "تغطية كاملة",
+        "awardedBadge": "ممنوحة",
+        "earlyPaymentHint": "ادفع قبل {{date}} لتوفير {{savings}}."
       },
       "yearLevels": {
         "title": "المراحل الدراسية",
@@ -1999,12 +2030,19 @@
         "title": "بيانات دخول الطالب",
         "descriptionNew": "تم إنشاء حساب دخول جديد. شارك بيانات الدخول مع الطالب.",
         "descriptionReset": "تمت إعادة تعيين كلمة المرور. شارك كلمة المرور الجديدة مع الطالب.",
-        "descriptionGenerating": "جاري إنشاء بيانات الدخول...",
+        "descriptionGenerating": "جاري تحميل بيانات الدخول...",
+        "descriptionExisting": "بيانات الدخول الحالية لهذا الطالب.",
+        "username": "اسم المستخدم",
         "email": "البريد الإلكتروني",
         "password": "كلمة المرور",
+        "passwordHidden": "لا يمكن عرض كلمة المرور الحالية لأسباب أمنية. اضغط \"إعادة تعيين كلمة المرور\" لإنشاء واحدة جديدة.",
+        "passwordHiddenSelfOnboarded": "اختار الطالب كلمة المرور هذه بنفسه عند التسجيل. أعد التعيين فقط إذا فقد حق الوصول.",
         "resetPassword": "إعادة تعيين كلمة المرور",
+        "resettingPassword": "جاري إعادة تعيين كلمة المرور...",
         "mustChangePassword": "سيُطلب من الطالب تغيير كلمة المرور عند أول تسجيل دخول.",
-        "failedToGenerate": "فشل إنشاء بيانات الدخول"
+        "selfOnboarded": "سجّل هذا الطالب بنفسه عبر طلب الالتحاق — يسجّل الدخول بالبريد الإلكتروني. اسم المستخدم للرجوع فقط.",
+        "failedToGenerate": "فشل تحميل بيانات الدخول",
+        "failedToReset": "فشل إعادة تعيين كلمة المرور"
       },
       "previousEducation": {
         "title": "التعليم السابق",
@@ -6981,6 +7019,35 @@
       "manualPayment": "دفع يدوي",
       "uploadReceipt": "رفع الإيصال",
       "receiptApproval": "الموافقة على الإيصال"
+    },
+    "myFees": {
+      "title": "رسومي",
+      "description": "عرض الرسوم المعيّنة واختيار طريقة الدفع المفضلة.",
+      "preferredMethodLabel": "طريقة الدفع المفضلة",
+      "preferredMethodUpdated": "تم تحديث الطريقة المفضلة.",
+      "preferredMethodFailed": "فشل تحديث الطريقة.",
+      "preferredMethodNone": "لا شيء",
+      "preferredMethodPlaceholder": "اختر طريقة",
+      "noAssignments": "لم يتم تعيين أي رسوم بعد. ستقوم المدرسة بإعدادها قريباً.",
+      "noAccess": "لا يوجد سجل طالب مرتبط بحسابك. تواصل مع مسؤول المدرسة.",
+      "methods": {
+        "cash": "نقداً",
+        "cheque": "شيك",
+        "bankTransfer": "تحويل بنكي",
+        "creditCard": "بطاقة ائتمان / خصم",
+        "debitCard": "بطاقة خصم",
+        "upi": "UPI",
+        "netBanking": "بنك إلكتروني",
+        "wallet": "محفظة إلكترونية",
+        "other": "أخرى"
+      },
+      "status": {
+        "pending": "معلق",
+        "partial": "جزئي",
+        "paid": "مدفوع",
+        "overdue": "متأخر",
+        "cancelled": "ملغى"
+      }
     },
     "profile": {
       "title": "الملف الشخصي",

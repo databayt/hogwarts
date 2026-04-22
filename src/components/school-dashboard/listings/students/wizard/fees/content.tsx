@@ -16,7 +16,8 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 
 import { useStudentWizard } from "../use-student-wizard"
-import { getStudentFeePreview } from "./actions"
+import { canApplyFeeAdjustments, getStudentFeePreview } from "./actions"
+import { StudentFeeAdminControls } from "./admin-controls"
 
 export default function FeesContent() {
   const params = useParams()
@@ -27,13 +28,21 @@ export default function FeesContent() {
   const { dictionary } = useDictionary()
   const students = (dictionary?.school as Record<string, unknown> | undefined)
     ?.students as Record<string, unknown> | undefined
-  const t = students?.fees as Record<string, string> | undefined
+  const t = students?.fees as Record<string, unknown> | undefined
   const feePreviewDict = students?.feePreview as
     | Record<string, string>
     | undefined
+  const adminControlsDict =
+    (t?.adminControls as Record<string, string> | undefined) ?? {}
+  const stepTitle = typeof t?.title === "string" ? t.title : undefined
+  const stepDescription =
+    typeof t?.description === "string" ? t.description : undefined
+  const noGradeSelected =
+    typeof t?.noGradeSelected === "string" ? t.noGradeSelected : undefined
 
   const [preview, setPreview] = useState<FeePreview | null>(null)
   const [loadingPreview, setLoadingPreview] = useState(false)
+  const [canApply, setCanApply] = useState(false)
 
   const academicGradeId = data?.academicGradeId
 
@@ -43,14 +52,19 @@ export default function FeesContent() {
       return
     }
     setLoadingPreview(true)
-    getStudentFeePreview(academicGradeId)
+    getStudentFeePreview(academicGradeId, studentId)
       .then((res) => {
         if (res.success && res.data) setPreview(res.data)
       })
       .finally(() => setLoadingPreview(false))
-  }, [academicGradeId])
+  }, [academicGradeId, studentId])
 
-  // Fees step is preview-only — always valid so the admin can proceed
+  useEffect(() => {
+    canApplyFeeAdjustments().then(setCanApply)
+  }, [])
+
+  // Fees step is preview-only — always valid so the admin can proceed.
+  // Admin adjustments (if entered) are committed via their own save action.
   const saveStub: WizardFormRef = {
     saveAndNext: () => Promise.resolve(),
   }
@@ -66,16 +80,16 @@ export default function FeesContent() {
     >
       <FormLayout>
         <FormHeading
-          title={t?.title || "School Fees"}
+          title={stepTitle || "School Fees"}
           description={
-            t?.description ||
+            stepDescription ||
             "Fees that will be assigned to this student based on the selected grade."
           }
         />
         {!academicGradeId ? (
           <Alert>
             <AlertDescription>
-              {t?.noGradeSelected ||
+              {noGradeSelected ||
                 "No academic grade selected in the enrollment step. Fees cannot be previewed yet."}
             </AlertDescription>
           </Alert>
@@ -85,11 +99,22 @@ export default function FeesContent() {
             <Skeleton className="h-32 w-full" />
           </div>
         ) : preview ? (
-          <FeePreviewCard
-            preview={preview}
-            dictionary={feePreviewDict}
-            locale={locale}
-          />
+          <div className="space-y-4">
+            <FeePreviewCard
+              preview={preview}
+              dictionary={feePreviewDict}
+              locale={locale}
+            />
+            {canApply && preview.matched && (
+              <StudentFeeAdminControls
+                studentId={studentId}
+                scholarships={preview.scholarships}
+                currency={preview.currency}
+                locale={locale}
+                dictionary={adminControlsDict}
+              />
+            )}
+          </div>
         ) : (
           <Alert>
             <AlertDescription>

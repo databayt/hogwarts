@@ -24,6 +24,7 @@ import { z, ZodError } from "zod"
 
 import { db } from "@/lib/db"
 import { logger } from "@/lib/logger"
+import { generateStudentUsername } from "@/lib/student-username"
 import { detectLanguage } from "@/components/translation/util"
 
 import {
@@ -282,22 +283,28 @@ class CsvImportService {
             continue
           }
 
-          // Auto-generate studentId if missing
-          if (!validated.studentId) {
-            validated.studentId = `STD-${Date.now()}-${i}`
+          // Only dedupe CSV-provided studentIds here. Missing ones get a
+          // school-scoped code (YYGGGNNNN) assigned later, after we've
+          // resolved each row's grade — see the chunk loop below.
+          if (validated.studentId) {
+            if (existingStudentIds.has(validated.studentId)) {
+              result.warnings?.push({
+                row: rowNumber,
+                warning: `Student ID "${validated.studentId}" already exists — skipped`,
+              })
+              result.skipped++
+              continue
+            }
+            existingStudentIds.add(validated.studentId)
           }
 
-          if (existingStudentIds.has(validated.studentId)) {
-            result.warnings?.push({
-              row: rowNumber,
-              warning: `Student ID "${validated.studentId}" already exists — skipped`,
-            })
-            result.skipped++
-            continue
-          }
+          // Email fallback uses the CSV-provided studentId if present, otherwise
+          // a temporary placeholder that will be replaced once a code is assigned.
+          const emailFallback = validated.studentId
+            ? `${validated.studentId}@school.local`
+            : `row-${rowNumber}@school.local`
+          const studentEmail = validated.email || emailFallback
 
-          const studentEmail =
-            validated.email || `${validated.studentId}@school.local`
           if (existingEmails.has(studentEmail)) {
             result.warnings?.push({
               row: rowNumber,
@@ -307,8 +314,6 @@ class CsvImportService {
             continue
           }
 
-          // Track in-batch duplicates
-          existingStudentIds.add(validated.studentId)
           existingEmails.add(studentEmail)
 
           validRows.push({ rowNumber, validated, email: studentEmail })
@@ -367,7 +372,58 @@ class CsvImportService {
       for (let c = 0; c < validRows.length; c += this.CHUNK_SIZE) {
         const chunk = validRows.slice(c, c + this.CHUNK_SIZE)
 
-        // Parallel bcrypt hashing for the chunk
+        // Phase 2a: resolve grade + section for each row so the generator
+        // can produce a grade-scoped code (YYGGGNNNN) per row.
+        const resolved = chunk.map((r) => {
+          let academicGradeId: string | undefined
+          let sectionId: string | undefined
+
+          if (r.validated.section) {
+            const parsed = parseSectionString(r.validated.section)
+            if (parsed.gradeNumber != null) {
+              academicGradeId =
+                gradeByNumber.get(parsed.gradeNumber) || undefined
+              if (academicGradeId && parsed.sectionLetter) {
+                sectionId =
+                  sectionByKey.get(
+                    `${academicGradeId}:${parsed.sectionLetter}`
+                  ) || undefined
+              }
+            }
+          }
+
+          if (!academicGradeId && r.validated.yearLevel) {
+            const parsed = parseSectionString(r.validated.yearLevel)
+            if (parsed.gradeNumber != null) {
+              academicGradeId =
+                gradeByNumber.get(parsed.gradeNumber) || undefined
+            }
+          }
+
+          return { row: r, academicGradeId, sectionId }
+        })
+
+        // Phase 2b: assign codes. Sequential because each call probes the
+        // latest existing code in its (year,grade) bucket — can't parallelise
+        // without racing on the same bucket.
+        for (const item of resolved) {
+          if (!item.row.validated.studentId) {
+            const code = await generateStudentUsername({
+              schoolId,
+              academicGradeId: item.academicGradeId ?? null,
+            })
+            item.row.validated.studentId = code
+            // Upgrade synthetic email placeholder if it was based on rowNumber
+            if (
+              item.row.email.startsWith("row-") &&
+              item.row.email.endsWith("@school.local")
+            ) {
+              item.row.email = `${code.toLowerCase()}@school.local`
+            }
+          }
+        }
+
+        // Parallel bcrypt hashing for the chunk (uses the now-assigned code)
         const hashes = await Promise.all(
           chunk.map((r) =>
             hash(`student${r.validated.studentId}`, this.BCRYPT_ROUNDS)
@@ -379,11 +435,12 @@ class CsvImportService {
 
         try {
           await db.$transaction(async (tx) => {
-            // Batch create users
+            // Batch create users — username is the per-school code, not the
+            // display name, so it's stable and safe to log in with.
             await tx.user.createMany({
               data: chunk.map((r, idx) => ({
                 id: userIds[idx],
-                username: r.validated.name,
+                username: r.validated.studentId!,
                 email: r.email,
                 password: hashes[idx],
                 role: "STUDENT" as const,
@@ -396,33 +453,7 @@ class CsvImportService {
             await tx.student.createMany({
               data: chunk.map((r, idx) => {
                 const nameParts = r.validated.name.trim().split(/\s+/)
-
-                // Resolve section + grade from CSV
-                let academicGradeId: string | undefined
-                let sectionId: string | undefined
-
-                if (r.validated.section) {
-                  const parsed = parseSectionString(r.validated.section)
-                  if (parsed.gradeNumber != null) {
-                    academicGradeId =
-                      gradeByNumber.get(parsed.gradeNumber) || undefined
-                    if (academicGradeId && parsed.sectionLetter) {
-                      sectionId =
-                        sectionByKey.get(
-                          `${academicGradeId}:${parsed.sectionLetter}`
-                        ) || undefined
-                    }
-                  }
-                }
-
-                // Fallback: use yearLevel for grade if section didn't resolve
-                if (!academicGradeId && r.validated.yearLevel) {
-                  const parsed = parseSectionString(r.validated.yearLevel)
-                  if (parsed.gradeNumber != null) {
-                    academicGradeId =
-                      gradeByNumber.get(parsed.gradeNumber) || undefined
-                  }
-                }
+                const { academicGradeId, sectionId } = resolved[idx]
 
                 // Calculate wizardStep based on missing fields
                 // Wizard steps: personal -> enrollment -> contact -> location -> health -> previous-education

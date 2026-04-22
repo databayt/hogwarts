@@ -20,14 +20,14 @@ model Timetable {
   templateSlotId       String?
 
   // Relations
-  school    School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  term      Term            @relation(fields: [termId], references: [id])
-  period    Period          @relation(fields: [periodId], references: [id])
-  class     Class?          @relation(fields: [classId], references: [id])
-  section   Section?        @relation(fields: [sectionId], references: [id])
-  subject   Subject? @relation(fields: [subjectId], references: [id])
-  teacher   Teacher?        @relation(fields: [teacherId], references: [id])
-  classroom Classroom       @relation(fields: [classroomId], references: [id])
+  school    School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  term      Term      @relation(fields: [termId], references: [id])
+  period    Period    @relation(fields: [periodId], references: [id])
+  class     Class?    @relation(fields: [classId], references: [id])
+  section   Section?  @relation(fields: [sectionId], references: [id])
+  subject   Subject?  @relation(fields: [subjectId], references: [id])
+  teacher   Teacher?  @relation(fields: [teacherId], references: [id])
+  classroom Classroom @relation(fields: [classroomId], references: [id])
 
   // Substitution records where this slot is the original
   substitutionRecords SubstitutionRecord[] @relation("OriginalSlot")
@@ -302,7 +302,7 @@ model ScheduleException {
 
 // Teacher absence record
 model TeacherAbsence {
-  id        String   @id @default(cuid())
+  id        String @id @default(cuid())
   schoolId  String
   teacherId String
 
@@ -314,7 +314,7 @@ model TeacherAbsence {
   isAllDay    Boolean  @default(true)
 
   // Status tracking
-  status     String   @default("PENDING") // PENDING, APPROVED, REJECTED, CANCELLED
+  status     String    @default("PENDING") // PENDING, APPROVED, REJECTED, CANCELLED
   approvedBy String?
   approvedAt DateTime?
 
@@ -351,20 +351,20 @@ model SubstitutionRecord {
   slotDate            DateTime
 
   // Status
-  status    String   @default("PENDING") // PENDING, CONFIRMED, DECLINED, COMPLETED, CANCELLED
-  notes     String?  @db.Text
+  status        String  @default("PENDING") // PENDING, CONFIRMED, DECLINED, COMPLETED, CANCELLED
+  notes         String? @db.Text
   declineReason String?
 
   // Notification tracking
-  notifiedAt         DateTime?
-  confirmedAt        DateTime?
+  notifiedAt  DateTime?
+  confirmedAt DateTime?
 
   // Relations
-  school             School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  absence            TeacherAbsence @relation(fields: [absenceId], references: [id], onDelete: Cascade)
-  originalSlot       Timetable      @relation("OriginalSlot", fields: [originalSlotId], references: [id])
-  originalTeacher    Teacher        @relation("OriginalTeacher", fields: [originalTeacherId], references: [id])
-  substituteTeacher  Teacher        @relation("SubstituteTeacher", fields: [substituteTeacherId], references: [id])
+  school            School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  absence           TeacherAbsence @relation(fields: [absenceId], references: [id], onDelete: Cascade)
+  originalSlot      Timetable      @relation("OriginalSlot", fields: [originalSlotId], references: [id])
+  originalTeacher   Teacher        @relation("OriginalTeacher", fields: [originalTeacherId], references: [id])
+  substituteTeacher Teacher        @relation("SubstituteTeacher", fields: [substituteTeacherId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
