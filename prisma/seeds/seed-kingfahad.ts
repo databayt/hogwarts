@@ -18,6 +18,8 @@ const prisma = new PrismaClient()
 
 const ADMIN_PASSWORD = "1234"
 const ADMIN_EMAIL = "admin@kingfahad.edu"
+const APPLICANT_EMAIL = "applicant@kingfahad.edu"
+const USER_EMAIL = "user@kingfahad.edu"
 
 async function createSchool() {
   console.log("🔍 Checking King Fahad Schools...")
@@ -80,6 +82,57 @@ async function createAdmin(schoolId: string) {
 
   console.log(`✅ Admin user ready: ${admin.email}`)
   return admin
+}
+
+async function createPlatformUser(
+  email: string,
+  username: string,
+  label: string
+) {
+  console.log(`🔍 Checking ${label}...`)
+
+  const existing = await prisma.user.findFirst({
+    where: { email, schoolId: null },
+    orderBy: { createdAt: "asc" },
+  })
+
+  const hashedPassword = await bcrypt.hash(ADMIN_PASSWORD, 10)
+
+  if (existing) {
+    await prisma.user.update({
+      where: { id: existing.id },
+      data: {
+        username,
+        password: hashedPassword,
+        role: "USER",
+        emailVerified: existing.emailVerified ?? new Date(),
+      },
+    })
+    console.log(`✅ ${label} ready: ${email}`)
+    return existing
+  }
+
+  const user = await prisma.user.create({
+    data: {
+      email,
+      username,
+      password: hashedPassword,
+      role: "USER",
+      schoolId: null,
+      emailVerified: new Date(),
+    },
+  })
+
+  console.log(`✅ ${label} created: ${user.email}`)
+  return user
+}
+
+async function createApplicant() {
+  return createPlatformUser(APPLICANT_EMAIL, "لونا لوفغود", "applicant user")
+}
+
+async function createTestUser() {
+  return createPlatformUser(USER_EMAIL, "زائر جولة", "tour visitor user")
 }
 
 async function createAdmissionCampaign(schoolId: string) {
@@ -404,6 +457,8 @@ async function main() {
   try {
     const school = await createSchool()
     await createAdmin(school.id)
+    await createApplicant()
+    await createTestUser()
     await createAdmissionCampaign(school.id)
     await createAdmissionSettings(school.id)
     await createYearLevels(school.id)
@@ -416,8 +471,10 @@ async function main() {
     console.log("  Production: https://kingfahad.databayt.org")
     console.log("  Local dev:  http://kingfahad.localhost:3000")
     console.log("")
-    console.log(`  Admin login: ${ADMIN_EMAIL}`)
-    console.log(`  Password:    ${ADMIN_PASSWORD}`)
+    console.log(`  Admin login:     ${ADMIN_EMAIL}`)
+    console.log(`  Applicant login: ${APPLICANT_EMAIL}`)
+    console.log(`  Tour user login: ${USER_EMAIL}`)
+    console.log(`  Password:        ${ADMIN_PASSWORD}`)
     console.log("")
     console.log("  Admission:   Campaign open (Apr 2026 – Sep 2026)")
     console.log("  Apply URL:   /ar/s/kingfahad/application")

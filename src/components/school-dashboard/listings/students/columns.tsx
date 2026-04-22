@@ -25,6 +25,7 @@ import {
   archiveStudent,
   restoreStudent,
 } from "@/components/school-dashboard/listings/students/actions"
+import { normalizeWizardStep } from "@/components/school-dashboard/listings/students/wizard/config"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
 export type StudentRow = {
@@ -202,7 +203,7 @@ export const getStudentColumns = (
         if (student.wizardStep) {
           return (
             <Link
-              href={`/${lang}/students/add/${student.id}/${student.wizardStep}`}
+              href={`/${lang}/students/add/${student.id}/${normalizeWizardStep(student.wizardStep)}`}
             >
               <Badge variant="outline">{t.draft}</Badge>
             </Link>
@@ -381,7 +382,7 @@ export const getStudentColumns = (
               label={
                 student.wizardStep ? `${t.edit} (${t.incomplete})` : t.edit
               }
-              href={`/${lang}/students/add/${student.id}/${student.wizardStep || "personal"}`}
+              href={`/${lang}/students/add/${student.id}/${normalizeWizardStep(student.wizardStep)}`}
             />
             <DropdownMenuSeparator />
             <ActionMenuItem

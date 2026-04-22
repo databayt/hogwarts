@@ -1598,6 +1598,8 @@
         "heading": "معاينة الرسوم",
         "academicYear": "السنة",
         "totalDue": "الإجمالي المستحق",
+        "tuitionFor": "رسوم {{grade}}",
+        "installmentOptions": "يمكن تقسيطها على {{options}} دفعات",
         "installmentsLabel": "الأقساط",
         "installment": "قسط",
         "dueDateTBD": "لم يحدد",
@@ -1605,6 +1607,9 @@
         "methodStripe": "بطاقة / دفع إلكتروني",
         "methodCash": "نقداً",
         "methodBankTransfer": "تحويل بنكي",
+        "methodBankak": "بنكك",
+        "methodKashi": "كاشي",
+        "methodCredit": "بطاقة ائتمان",
         "bankDetails": "تفاصيل التحويل البنكي",
         "bankName": "البنك",
         "accountName": "اسم الحساب",
@@ -1847,9 +1852,9 @@
       "validationFailed": "فشل التحقق",
       "failedToSave": "فشل الحفظ",
       "wizard": {
-        "essentials": "الأساسيات",
-        "contactDetails": "بيانات الاتصال",
-        "healthHistory": "الصحة والسجل",
+        "basicInformation": "المعلومات الأساسية",
+        "address": "العنوان",
+        "academic": "الأكاديمي",
         "complete": "إتمام",
         "back": "رجوع",
         "next": "التالي",
@@ -1874,7 +1879,10 @@
       },
       "personal": {
         "title": "المعلومات الشخصية",
-        "description": "أدخل البيانات الشخصية للطالب.",
+        "description": "أدخل البيانات الشخصية والعائلية للطالب.",
+        "studentTab": "الطالب",
+        "fatherTab": "الأب",
+        "motherTab": "الأم",
         "firstName": "الاسم الأول",
         "firstNamePlaceholder": "أدخل الاسم الأول",
         "firstNameRequired": "الاسم الأول مطلوب",
@@ -1917,6 +1925,10 @@
         "atLeastOneParent": "مطلوب اسم أحد الوالدين على الأقل",
         "relation": "صلة القرابة",
         "relationPlaceholder": "أدخل صلة القرابة"
+      },
+      "academic": {
+        "title": "المعلومات الأكاديمية",
+        "description": "أدخل تفاصيل التسجيل والتعليم السابق للطالب."
       },
       "enrollment": {
         "title": "تفاصيل التسجيل",
@@ -8925,6 +8937,8 @@
           "heading": "معاينة الرسوم",
           "academicYear": "السنة",
           "totalDue": "الإجمالي المستحق",
+          "tuitionFor": "رسوم {{grade}}",
+          "installmentOptions": "يمكن تقسيطها على {{options}} دفعات",
           "installmentsLabel": "الأقساط",
           "installment": "قسط",
           "dueDateTBD": "لم يُحدَّد",
@@ -8932,6 +8946,9 @@
           "methodStripe": "بطاقة / عبر الإنترنت",
           "methodCash": "نقداً",
           "methodBankTransfer": "تحويل بنكي",
+          "methodBankak": "بنكك",
+          "methodKashi": "كاشي",
+          "methodCredit": "بطاقة ائتمان",
           "bankDetails": "تفاصيل التحويل البنكي",
           "bankName": "البنك",
           "accountName": "اسم الحساب",
@@ -9492,7 +9509,11 @@
         "cashDesc": "ادفع نقداً في مقر المدرسة",
         "bankTransferLabel": "تحويل بنكي",
         "bankTransferDesc": "حوّل المبلغ إلى حساب المدرسة البنكي",
-        "paymentAlreadyRecorded": "تم تسجيل الدفع مسبقاً لهذا الطلب"
+        "paymentAlreadyRecorded": "تم تسجيل الدفع مسبقاً لهذا الطلب",
+        "invalidLinkTitle": "رابط الدفع غير صالح",
+        "invalidLinkDescription": "رابط الدفع هذا غير صالح أو منتهي الصلاحية. يرجى التحقق من بريدك الإلكتروني للحصول على رابط صالح، أو التواصل مع المدرسة للمساعدة.",
+        "goToStatus": "تحقق من حالة الطلب",
+        "goToHome": "الرئيسية"
       },
       "validation": {
         "nameMin": "يجب أن يكون الاسم 3 أحرف على الأقل",

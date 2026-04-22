@@ -12,6 +12,11 @@ import { generateStudentUsername } from "@/lib/student-username"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import type { StudentWizardData } from "./use-student-wizard"
+import {
+  getPersonalCompleteness,
+  isPersonalComplete,
+  listMissingRequirements,
+} from "./validation-helpers"
 
 /** Fetch full student data for the wizard */
 export async function getStudentForWizard(
@@ -129,23 +134,42 @@ export async function completeStudentWizard(
       return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
-    // Validate required fields are present
-    const student = await db.student.findFirst({
-      where: { id: studentId, schoolId },
-      select: {
-        firstName: true,
-        lastName: true,
-        studentId: true,
-        academicGradeId: true,
-      },
-    })
+    // Validate required fields are present. The student wizard now mirrors
+    // the application wizard's structure: personal step is the only required
+    // step, and a parent (father OR mother) is part of "personal complete".
+    const [student, parentCount] = await Promise.all([
+      db.student.findFirst({
+        where: { id: studentId, schoolId },
+        select: {
+          firstName: true,
+          lastName: true,
+          studentId: true,
+          academicGradeId: true,
+        },
+      }),
+      db.studentGuardian.count({
+        where: {
+          studentId,
+          schoolId,
+          guardianType: { name: { in: ["father", "mother"] } },
+        },
+      }),
+    ])
 
     if (!student) {
       return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
     }
 
-    if (!student.firstName || !student.lastName) {
-      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+    const completeness = getPersonalCompleteness({
+      firstName: student.firstName,
+      lastName: student.lastName,
+      hasFatherOrMother: parentCount > 0,
+    })
+    if (!isPersonalComplete(completeness)) {
+      return actionError(
+        ACTION_ERRORS.VALIDATION_ERROR,
+        `Missing: ${listMissingRequirements(completeness).join(", ")}`
+      )
     }
 
     // Assign the per-school code on wizard completion if one wasn't already set.

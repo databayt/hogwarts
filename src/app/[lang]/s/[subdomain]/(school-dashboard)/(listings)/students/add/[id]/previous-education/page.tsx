@@ -1,8 +1,13 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import PreviousEducationContent from "@/components/school-dashboard/listings/students/wizard/previous-education/content"
+import { redirect } from "next/navigation"
 
-export default function PreviousEducationPage() {
-  return <PreviousEducationContent />
+export default async function PreviousEducationRedirectPage({
+  params,
+}: {
+  params: Promise<{ lang: string; id: string }>
+}) {
+  const { lang, id } = await params
+  redirect(`/${lang}/students/add/${id}/academic`)
 }

@@ -5,26 +5,16 @@ import type { WizardConfig } from "@/components/form/wizard"
 
 export const STUDENT_WIZARD_CONFIG: WizardConfig = {
   id: "student",
-  steps: [
-    "attachments",
-    "personal",
-    "guardian",
-    "enrollment",
-    "fees",
-    "contact",
-    "location",
-    "health",
-    "previous-education",
-  ],
+  steps: ["attachments", "personal", "location", "academic"],
   groups: {
-    1: ["attachments", "personal", "guardian", "enrollment", "fees"],
-    2: ["contact", "location"],
-    3: ["health", "previous-education"],
+    1: ["attachments", "personal"],
+    2: ["location"],
+    3: ["academic"],
   },
-  groupLabels: ["Essentials", "Contact Details", "Health & History"],
+  groupLabels: ["Basic Information", "Address", "Academic"],
   i18nGroupLabels: {
-    ar: ["الأساسيات", "بيانات الاتصال", "الصحة والسجل"],
-    en: ["Essentials", "Contact Details", "Health & History"],
+    ar: ["المعلومات الأساسية", "العنوان", "الأكاديمي"],
+    en: ["Basic Information", "Address", "Academic"],
   },
   requiredSteps: ["personal"],
   skipToComplete: true,
@@ -33,4 +23,28 @@ export const STUDENT_WIZARD_CONFIG: WizardConfig = {
     ar: "إنشاء",
     en: "Create",
   },
+}
+
+// Retired step slugs → their new home in the 4-step wizard.
+// Used by both the deprecated step pages (to redirect()) and the
+// columns/edit link (to normalize `student.wizardStep` on resume).
+export const STEP_REDIRECTS: Record<string, string> = {
+  guardian: "personal",
+  enrollment: "academic",
+  contact: "personal",
+  health: "personal",
+  "previous-education": "academic",
+  fees: "academic",
+  photo: "attachments",
+}
+
+/**
+ * Normalize a (possibly deprecated) wizardStep value to a valid slug in
+ * STUDENT_WIZARD_CONFIG.steps. Returns the mapped equivalent if the input
+ * is a retired step, otherwise returns the input unchanged. Undefined/null
+ * inputs resolve to "personal" — the wizard's required entry step.
+ */
+export function normalizeWizardStep(step: string | null | undefined): string {
+  if (!step) return "personal"
+  return STEP_REDIRECTS[step] ?? step
 }

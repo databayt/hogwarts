@@ -1,8 +1,13 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import ContactContent from "@/components/school-dashboard/listings/students/wizard/contact/content"
+import { redirect } from "next/navigation"
 
-export default function ContactPage() {
-  return <ContactContent />
+export default async function ContactRedirectPage({
+  params,
+}: {
+  params: Promise<{ lang: string; id: string }>
+}) {
+  const { lang, id } = await params
+  redirect(`/${lang}/students/add/${id}/personal`)
 }

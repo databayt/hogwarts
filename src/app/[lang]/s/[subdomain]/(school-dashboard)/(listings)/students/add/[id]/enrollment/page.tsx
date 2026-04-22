@@ -1,8 +1,13 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import EnrollmentContent from "@/components/school-dashboard/listings/students/wizard/enrollment/content"
+import { redirect } from "next/navigation"
 
-export default function EnrollmentPage() {
-  return <EnrollmentContent />
+export default async function EnrollmentRedirectPage({
+  params,
+}: {
+  params: Promise<{ lang: string; id: string }>
+}) {
+  const { lang, id } = await params
+  redirect(`/${lang}/students/add/${id}/academic`)
 }

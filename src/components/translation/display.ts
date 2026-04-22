@@ -49,6 +49,14 @@ export async function getDisplayText(
     return text
   }
 
+  // Script mismatch: text is already in the display script — skip translation.
+  // Prevents garbage output when contentLang flag disagrees with actual stored script.
+  const hasArabicScript = /[؀-ۿ]/.test(text)
+  if (displayLang === "ar" && hasArabicScript) return text
+  if (displayLang === "en" && !hasArabicScript && /[a-zA-Z]/.test(text)) {
+    return text
+  }
+
   try {
     return await translateWithCache(text, contentLang, displayLang, schoolId)
   } catch (error) {
@@ -104,6 +112,12 @@ export async function getDisplayFields<T extends Record<string, unknown>>(
       const value = entity[field]
       const text = typeof value === "string" ? value : ""
       if (!text) return [field, ""] as const
+      // Script mismatch guard — content flag disagrees with actual script
+      const hasArabicScript = /[؀-ۿ]/.test(text)
+      if (displayLang === "ar" && hasArabicScript) return [field, text] as const
+      if (displayLang === "en" && !hasArabicScript && /[a-zA-Z]/.test(text)) {
+        return [field, text] as const
+      }
       try {
         const translated = await translateWithCache(
           text,

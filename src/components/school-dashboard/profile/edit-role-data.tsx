@@ -60,14 +60,25 @@ const STUDENT_STEP_FORMS: Record<
     load: () => Promise<{
       default?: React.ComponentType<any>
       ContactForm?: React.ForwardRefExoticComponent<any>
+      PersonalForm?: React.ForwardRefExoticComponent<any>
     }>
   }
 > = {
+  // Student wizard now has a single `personal` step that carries identity,
+  // contact, and emergency-contact fields. Legacy callers pass step="contact";
+  // keep that key alive but route to the new PersonalForm so existing profile
+  // entry points keep working.
   contact: {
     label: "Contact & Emergency",
     dictKey: "contactAndEmergency",
     load: () =>
-      import("@/components/school-dashboard/listings/students/wizard/contact/form"),
+      import("@/components/school-dashboard/listings/students/wizard/personal/form"),
+  },
+  personal: {
+    label: "Personal Information",
+    dictKey: "personalInformation",
+    load: () =>
+      import("@/components/school-dashboard/listings/students/wizard/personal/form"),
   },
 }
 
@@ -120,6 +131,7 @@ export function ProfileEditSection({
       // Find the exported form component (named export or default)
       const Form =
         (module as any).ContactForm ||
+        (module as any).PersonalForm ||
         (module as any).QualificationsForm ||
         (module as any).ExperienceForm ||
         module.default

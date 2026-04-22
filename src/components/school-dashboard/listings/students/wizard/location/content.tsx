@@ -27,7 +27,7 @@ export default function LocationContent() {
   return (
     <WizardStep
       entityId={studentId}
-      nextStep={`/students/add/${studentId}/health`}
+      nextStep={`/students/add/${studentId}/academic`}
       isValid={isValid}
       formRef={formRef}
       isLoading={isLoading}

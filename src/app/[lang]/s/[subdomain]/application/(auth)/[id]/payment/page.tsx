@@ -2,10 +2,12 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import type { Metadata } from "next"
+import Link from "next/link"
 import { notFound } from "next/navigation"
 
 import { db } from "@/lib/db"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
+import { Button } from "@/components/ui/button"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import PaymentContent from "@/components/school-marketing/application/payment/content"
@@ -40,9 +42,53 @@ export default async function PaymentPage({ params, searchParams }: Props) {
   const { subdomain, id: applicationId, lang } = resolvedParams
   const accessToken = resolvedSearch.token
 
+  const dictionary = await getDictionary(lang)
+  const paymentDict = (
+    dictionary as unknown as {
+      school?: { admission?: { apply?: { payment?: Record<string, string> } } }
+    }
+  )?.school?.admission?.apply?.payment
+
+  const renderInvalidLink = () => (
+    <div className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center gap-4 px-4 text-center">
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
+        <svg
+          className="h-8 w-8 text-amber-600 dark:text-amber-400"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+          />
+        </svg>
+      </div>
+      <h2 className="text-xl font-semibold">
+        {paymentDict?.invalidLinkTitle || "Invalid payment link"}
+      </h2>
+      <p className="text-muted-foreground text-sm">
+        {paymentDict?.invalidLinkDescription ||
+          "This payment link is invalid or has expired. Please check your email for a valid link, or contact the school for help."}
+      </p>
+      <div className="mt-2 flex flex-wrap justify-center gap-3">
+        <Button asChild>
+          <Link href={`/${lang}/application/status`}>
+            {paymentDict?.goToStatus || "Check application status"}
+          </Link>
+        </Button>
+        <Button asChild variant="outline">
+          <Link href={`/${lang}`}>{paymentDict?.goToHome || "Home"}</Link>
+        </Button>
+      </div>
+    </div>
+  )
+
   // Access token is required to prevent IDOR attacks
   if (!accessToken) {
-    notFound()
+    return renderInvalidLink()
   }
 
   // Resolve school
@@ -71,15 +117,8 @@ export default async function PaymentPage({ params, searchParams }: Props) {
   })
 
   if (!application) {
-    notFound()
+    return renderInvalidLink()
   }
-
-  const dictionary = await getDictionary(lang)
-  const paymentDict = (
-    dictionary as unknown as {
-      school?: { admission?: { apply?: { payment?: Record<string, string> } } }
-    }
-  )?.school?.admission?.apply?.payment
 
   // Already paid guard
   if (application.applicationFeePaid) {

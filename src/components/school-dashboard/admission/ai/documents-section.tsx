@@ -46,7 +46,7 @@ export function DocumentsSection({
             href={photoUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="group flex h-36 flex-col items-center justify-center gap-2"
+            className="group flex h-36 flex-col items-center justify-center"
           >
             <div className="group-hover:border-foreground/30 h-24 w-24 overflow-hidden rounded-full border-2 transition-colors">
               <img
@@ -55,7 +55,6 @@ export function DocumentsSection({
                 className="h-full w-full object-cover"
               />
             </div>
-            <p className="text-xs font-medium">{t?.photo || "Photo"}</p>
           </a>
         )}
         {/* Signature — thumbnail card with glass label */}
@@ -64,7 +63,7 @@ export function DocumentsSection({
             href={signatureUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="group relative flex h-32 items-center overflow-hidden rounded-lg border transition-colors"
+            className="group relative flex h-36 items-center overflow-hidden rounded-lg border transition-colors"
           >
             <img
               src={signatureUrl}
@@ -107,7 +106,7 @@ export function DocumentsSection({
               href={doc.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="group relative flex h-32 items-center overflow-hidden rounded-lg border transition-colors"
+              className="group relative flex h-36 items-center overflow-hidden rounded-lg border transition-colors"
               onClick={(e) => {
                 if (doc.status === "completed" && doc.extractedData) {
                   e.preventDefault()

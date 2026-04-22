@@ -46,6 +46,19 @@ class ApplyErrorBoundary extends Component<Props, State> {
     const t = apply?.errorBoundary as Record<string, string> | undefined
 
     if (this.state.hasError) {
+      // Let Next.js framework errors (notFound, redirect) bubble up to the
+      // framework so not-found.tsx / redirects render correctly instead of
+      // showing a generic "something went wrong" panel.
+      const digest = (this.state.error as { digest?: string } | null)?.digest
+      if (
+        typeof digest === "string" &&
+        (digest.startsWith("NEXT_NOT_FOUND") ||
+          digest.startsWith("NEXT_REDIRECT") ||
+          digest.startsWith("NEXT_HTTP_ERROR_FALLBACK"))
+      ) {
+        throw this.state.error
+      }
+
       if (this.props.fallback) {
         return this.props.fallback
       }

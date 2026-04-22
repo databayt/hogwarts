@@ -1,8 +1,13 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import HealthContent from "@/components/school-dashboard/listings/students/wizard/health/content"
+import { redirect } from "next/navigation"
 
-export default function HealthPage() {
-  return <HealthContent />
+export default async function HealthRedirectPage({
+  params,
+}: {
+  params: Promise<{ lang: string; id: string }>
+}) {
+  const { lang, id } = await params
+  redirect(`/${lang}/students/add/${id}/personal`)
 }

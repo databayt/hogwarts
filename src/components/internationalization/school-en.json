@@ -1598,6 +1598,8 @@
         "heading": "Fee Preview",
         "academicYear": "Year",
         "totalDue": "Total Due",
+        "tuitionFor": "Tuition for {{grade}}",
+        "installmentOptions": "Payable in {{options}} installments",
         "installmentsLabel": "Installments",
         "installment": "Installment",
         "dueDateTBD": "TBD",
@@ -1605,6 +1607,9 @@
         "methodStripe": "Card / Online",
         "methodCash": "Cash",
         "methodBankTransfer": "Bank Transfer",
+        "methodBankak": "Bankak",
+        "methodKashi": "Kashi",
+        "methodCredit": "Credit Card",
         "bankDetails": "Bank Transfer Details",
         "bankName": "Bank",
         "accountName": "Account Name",
@@ -1847,9 +1852,9 @@
       "validationFailed": "Validation failed",
       "failedToSave": "Failed to save",
       "wizard": {
-        "essentials": "Essentials",
-        "contactDetails": "Contact Details",
-        "healthHistory": "Health & History",
+        "basicInformation": "Basic Information",
+        "address": "Address",
+        "academic": "Academic",
         "complete": "Complete",
         "back": "Back",
         "next": "Next",
@@ -1874,7 +1879,10 @@
       },
       "personal": {
         "title": "Personal Information",
-        "description": "Enter the student's personal details.",
+        "description": "Enter the student's personal and family details.",
+        "studentTab": "Student",
+        "fatherTab": "Father",
+        "motherTab": "Mother",
         "firstName": "First Name",
         "firstNamePlaceholder": "Enter first name",
         "firstNameRequired": "First name is required",
@@ -1917,6 +1925,10 @@
         "atLeastOneParent": "At least one parent name is required",
         "relation": "Relationship",
         "relationPlaceholder": "Enter relationship"
+      },
+      "academic": {
+        "title": "Academic Information",
+        "description": "Enter the student's enrollment and previous education details."
       },
       "enrollment": {
         "title": "Enrollment Details",
@@ -8917,6 +8929,8 @@
           "heading": "Fee Preview",
           "academicYear": "Year",
           "totalDue": "Total Due",
+          "tuitionFor": "Tuition for {{grade}}",
+          "installmentOptions": "Payable in {{options}} installments",
           "installmentsLabel": "Installments",
           "installment": "Installment",
           "dueDateTBD": "TBD",
@@ -8924,6 +8938,9 @@
           "methodStripe": "Card / Online",
           "methodCash": "Cash",
           "methodBankTransfer": "Bank Transfer",
+          "methodBankak": "Bankak",
+          "methodKashi": "Kashi",
+          "methodCredit": "Credit Card",
           "bankDetails": "Bank Transfer Details",
           "bankName": "Bank",
           "accountName": "Account Name",
@@ -9484,7 +9501,11 @@
         "cashDesc": "Pay in cash at the school office",
         "bankTransferLabel": "Bank Transfer",
         "bankTransferDesc": "Transfer to the school bank account",
-        "paymentAlreadyRecorded": "Payment has already been recorded for this application"
+        "paymentAlreadyRecorded": "Payment has already been recorded for this application",
+        "invalidLinkTitle": "Invalid payment link",
+        "invalidLinkDescription": "This payment link is invalid or has expired. Please check your email for a valid link, or contact the school for help.",
+        "goToStatus": "Check application status",
+        "goToHome": "Home"
       },
       "validation": {
         "nameMin": "Name must be at least 3 characters",

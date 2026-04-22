@@ -376,7 +376,7 @@ export const MessageBubble = memo(function MessageBubble({
                 // Own messages use tighter corners (WhatsApp-style),
                 // received messages keep the softer rounding.
                 isOwnMessage ? "rounded-sm" : "rounded-md",
-                isMediaOnly ? "overflow-hidden p-0" : "px-2.5 py-1.5",
+                isMediaOnly ? "p-[3px]" : "px-2.5 py-1.5",
                 isOwnMessage ? "text-foreground" : "text-foreground bg-white",
                 isDeleted && "italic opacity-60",
                 isPending && ""
@@ -408,7 +408,7 @@ export const MessageBubble = memo(function MessageBubble({
                     <div
                       className={cn(
                         "space-y-0.5",
-                        hasMedia ? "-mx-2.5 -mt-1.5" : "-mx-2 -mt-1.5 mb-1"
+                        hasMedia ? "-mx-[7px] -mt-[3px]" : "-mx-2 -mt-1.5 mb-1"
                       )}
                     >
                       {message.attachments.map((attachment) => {
@@ -419,7 +419,7 @@ export const MessageBubble = memo(function MessageBubble({
                               key={attachment.id}
                               type="button"
                               onClick={() => setLightboxUrl(attachment.url)}
-                              className="relative block w-full cursor-pointer overflow-hidden rounded-lg text-start"
+                              className="relative block w-full cursor-pointer overflow-hidden rounded-md text-start"
                             >
                               <img
                                 src={attachment.thumbnail || attachment.url}
@@ -439,7 +439,7 @@ export const MessageBubble = memo(function MessageBubble({
                               href={attachment.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="relative block overflow-hidden rounded-lg"
+                              className="relative block overflow-hidden rounded-md"
                             >
                               {attachment.thumbnail ? (
                                 <img

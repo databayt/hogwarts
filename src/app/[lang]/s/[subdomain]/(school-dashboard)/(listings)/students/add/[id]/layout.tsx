@@ -30,9 +30,9 @@ export default function StudentWizardLayout({
     () => ({
       ...STUDENT_WIZARD_CONFIG,
       groupLabels: [
-        wizard?.essentials || "Essentials",
-        wizard?.contactDetails || "Contact Details",
-        wizard?.healthHistory || "Health & History",
+        wizard?.basicInformation || "Basic Information",
+        wizard?.address || "Address",
+        wizard?.academic || "Academic",
       ],
     }),
     [wizard]

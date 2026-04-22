@@ -30,6 +30,8 @@ import {
   type StudentFeeAssignment,
 } from "@/components/school-dashboard/finance/fees/actions"
 
+import { FeeAdjustmentsDialog } from "../fee-adjustments-dialog"
+
 interface FeesTabProps {
   studentId: string
   lang: Locale
@@ -138,6 +140,15 @@ export function FeesTab({ studentId, lang, dictionary }: FeesTabProps) {
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-end">
+        <FeeAdjustmentsDialog
+          studentId={studentId}
+          locale={lang}
+          dictionary={d}
+          onSaved={loadFees}
+        />
+      </div>
+
       {/* Fee Summary Cards */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Card>

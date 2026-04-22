@@ -1,31 +1,79 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 //
-// Single source of truth: composed from wizard step schemas.
-// Individual step schemas live in ./wizard/*/validation.ts
+// Single source of truth for the full Student record schema used by non-wizard
+// create/update paths (REST-style actions, tests, imports). The wizard itself
+// composes smaller per-step schemas from `./wizard/*/validation.ts`.
+//
+// Fields are flattened here (not imported from wizard) so that retiring wizard
+// steps doesn't break callers that need the full Student shape.
 
 import { z } from "zod"
 
-import { contactSchema } from "./wizard/contact/validation"
-import { enrollmentSchema } from "./wizard/enrollment/validation"
-import { healthSchema } from "./wizard/health/validation"
-import { locationSchema } from "./wizard/location/validation"
-import { personalSchema } from "./wizard/personal/validation"
-import { photoSchema } from "./wizard/photo/validation"
-import { previousEducationSchema } from "./wizard/previous-education/validation"
-
-// Composed full schema from wizard steps + system fields
-export const studentCreateSchema = photoSchema
-  .merge(personalSchema)
-  .merge(contactSchema)
-  .merge(locationSchema)
-  .merge(enrollmentSchema)
-  .merge(healthSchema)
-  .merge(previousEducationSchema)
-  .extend({
-    // System fields (not in wizard UI, set programmatically)
-    userId: z.string().optional(),
-  })
+export const studentCreateSchema = z.object({
+  // Photo
+  profilePhotoUrl: z.string().optional(),
+  // Personal — names are optional in the composed schema so non-wizard
+  // entry points (imports, partial updates) accept incomplete data. The
+  // wizard's per-step `personalStudentSchema` enforces them strictly.
+  firstName: z.string().optional(),
+  middleName: z.string().optional(),
+  lastName: z.string().optional(),
+  dateOfBirth: z.coerce.date().optional(),
+  gender: z.enum(["male", "female"] as const).optional(),
+  nationality: z.string().optional(),
+  // Contact
+  email: z.string().email().optional().or(z.literal("")),
+  mobileNumber: z.string().optional(),
+  alternatePhone: z.string().optional(),
+  emergencyContactName: z.string().optional(),
+  emergencyContactPhone: z.string().optional(),
+  emergencyContactRelation: z.string().optional(),
+  // Location
+  currentAddress: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  postalCode: z.string().optional(),
+  country: z.string().optional(),
+  // Enrollment
+  enrollmentDate: z.coerce.date().optional(),
+  admissionNumber: z.string().optional(),
+  status: z
+    .enum([
+      "ACTIVE",
+      "INACTIVE",
+      "SUSPENDED",
+      "GRADUATED",
+      "TRANSFERRED",
+      "DROPPED_OUT",
+    ])
+    .optional(),
+  studentType: z
+    .enum(["REGULAR", "TRANSFER", "INTERNATIONAL", "EXCHANGE"])
+    .optional(),
+  category: z.string().optional(),
+  academicGradeId: z.string().optional(),
+  academicStreamId: z.string().optional(),
+  sectionId: z.string().optional(),
+  // Health (columns preserved; UI retired — see issue #265)
+  medicalConditions: z.string().optional(),
+  allergies: z.string().optional(),
+  medicationRequired: z.string().optional(),
+  doctorName: z.string().optional(),
+  doctorContact: z.string().optional(),
+  insuranceProvider: z.string().optional(),
+  insuranceNumber: z.string().optional(),
+  bloodGroup: z.string().optional(),
+  // Previous education
+  previousSchoolName: z.string().optional(),
+  previousSchoolAddress: z.string().optional(),
+  previousGrade: z.string().optional(),
+  transferCertificateNo: z.string().optional(),
+  transferDate: z.coerce.date().optional(),
+  previousAcademicRecord: z.string().optional(),
+  // System
+  userId: z.string().optional(),
+})
 
 export const studentUpdateSchema = studentCreateSchema.partial().extend({
   id: z.string().min(1),

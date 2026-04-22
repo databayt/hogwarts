@@ -20,20 +20,26 @@ import { ErrorToast } from "@/components/atom/toast"
 import {
   CountryField,
   DateField,
+  InputField,
   NameFields,
+  PhoneField,
   SelectField,
 } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { createI18nHelpers } from "@/components/internationalization/helpers"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 import { getGenderOptions } from "@/components/school-dashboard/listings/students/config"
 
 import { updateStudentPersonal } from "./actions"
-import { getPersonalSchema, type PersonalFormData } from "./validation"
+import {
+  getPersonalStudentSchema,
+  type PersonalStudentFormData,
+} from "./validation"
 
 interface PersonalFormProps {
   studentId: string
-  initialData?: Partial<PersonalFormData>
+  initialData?: Partial<PersonalStudentFormData>
   nameFormat?: NameFormat
   onValidChange?: (isValid: boolean) => void
 }
@@ -47,9 +53,22 @@ export const PersonalForm = forwardRef<WizardFormRef, PersonalFormProps>(
     const students = (dictionary?.school as Record<string, unknown>)
       ?.students as Record<string, unknown> | undefined
     const t = students?.personal as Record<string, string> | undefined
+    const tContact = students?.contact as Record<string, string> | undefined
     const tRoot = students as Record<string, string> | undefined
 
-    const schema = getPersonalSchema(nameFormat)
+    const { v } = useMemo(() => {
+      const messages = (dictionary as Record<string, unknown>)?.messages as
+        | Record<string, unknown>
+        | undefined
+      if (!messages) return { v: undefined }
+      const { validation } = createI18nHelpers(messages as never)
+      return { v: validation }
+    }, [dictionary])
+
+    const schema = useMemo(
+      () => getPersonalStudentSchema(nameFormat, v),
+      [nameFormat, v]
+    )
 
     const form = useForm({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -62,6 +81,12 @@ export const PersonalForm = forwardRef<WizardFormRef, PersonalFormProps>(
         gender: initialData?.gender,
         nationality: initialData?.nationality || "",
         profilePhotoUrl: initialData?.profilePhotoUrl,
+        email: initialData?.email || "",
+        mobileNumber: initialData?.mobileNumber || "",
+        alternatePhone: initialData?.alternatePhone || "",
+        emergencyContactName: initialData?.emergencyContactName || "",
+        emergencyContactPhone: initialData?.emergencyContactPhone || "",
+        emergencyContactRelation: initialData?.emergencyContactRelation || "",
         ...(nameFormat === "full"
           ? {
               _fullName: composeFullName(
@@ -74,7 +99,7 @@ export const PersonalForm = forwardRef<WizardFormRef, PersonalFormProps>(
       },
     })
 
-    // Notify parent of validity changes
+    // Notify parent of validity changes — personal step requires a name.
     const firstName = form.watch("firstName")
     const lastName = form.watch("lastName")
     const fullName = nameFormat === "full" ? form.watch("_fullName") : null
@@ -100,13 +125,14 @@ export const PersonalForm = forwardRef<WizardFormRef, PersonalFormProps>(
                 return
               }
               const data = form.getValues()
-              // Strip the virtual _fullName field before saving
-              const { _fullName, ...saveData } = data as PersonalFormData & {
-                _fullName?: string
-              }
+              // Strip the virtual _fullName field before saving.
+              const { _fullName, ...saveData } =
+                data as PersonalStudentFormData & {
+                  _fullName?: string
+                }
               const result = await updateStudentPersonal(
                 studentId,
-                saveData as PersonalFormData
+                saveData as PersonalStudentFormData
               )
               if (!result.success) {
                 ErrorToast(
@@ -178,6 +204,65 @@ export const PersonalForm = forwardRef<WizardFormRef, PersonalFormProps>(
             disabled={isPending}
             className="max-w-xs"
           />
+          {/* Contact block — absorbed from the retired `contact` step */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-7">
+            <InputField
+              name="email"
+              label={tContact?.email || "Email"}
+              placeholder={tContact?.emailPlaceholder || "Enter email address"}
+              type="email"
+              disabled={isPending}
+            />
+            <PhoneField
+              name="mobileNumber"
+              label={tContact?.mobile || "Mobile Number"}
+              placeholder={tContact?.mobilePlaceholder || "Enter mobile number"}
+              disabled={isPending}
+            />
+          </div>
+          <PhoneField
+            name="alternatePhone"
+            label={tContact?.alternatePhone || "Alternate Phone"}
+            placeholder={
+              tContact?.alternatePhonePlaceholder || "Enter alternate phone"
+            }
+            disabled={isPending}
+          />
+          {/* Emergency contact — absorbed from retired contact/emergency tab */}
+          <div className="space-y-4 rounded-lg border p-4">
+            <h4 className="text-sm font-medium">
+              {tContact?.emergencyTitle || "Emergency Contact"}
+            </h4>
+            <InputField
+              name="emergencyContactName"
+              label={tContact?.emergencyName || "Emergency Contact Name"}
+              placeholder={
+                tContact?.emergencyNamePlaceholder ||
+                "Enter emergency contact name"
+              }
+              disabled={isPending}
+            />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-7">
+              <PhoneField
+                name="emergencyContactPhone"
+                label={tContact?.emergencyPhone || "Emergency Contact Phone"}
+                placeholder={
+                  tContact?.emergencyPhonePlaceholder ||
+                  "Enter emergency contact phone"
+                }
+                disabled={isPending}
+              />
+              <InputField
+                name="emergencyContactRelation"
+                label={tContact?.relationship || "Relationship"}
+                placeholder={
+                  tContact?.relationshipPlaceholder ||
+                  "Enter relationship to student"
+                }
+                disabled={isPending}
+              />
+            </div>
+          </div>
         </form>
       </Form>
     )

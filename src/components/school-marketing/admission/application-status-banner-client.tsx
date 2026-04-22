@@ -148,7 +148,7 @@ export function ApplicationStatusBannerClient({
   }
 
   return (
-    <div className="relative left-1/2 w-screen -translate-x-1/2 bg-[#E8704E]">
+    <div className="breakout bg-[#E8704E]">
       <div className="mx-auto flex items-center justify-center gap-3 py-2.5">
         <BannerMessage
           status={application.status}
