@@ -319,6 +319,57 @@ export async function deleteClassroom(input: {
 }
 
 // ============================================================================
+// Sync default classrooms
+// ============================================================================
+
+/**
+ * Re-runs only the classroom + section provisioning step from onboarding.
+ * Does NOT trigger broader auto-provisioning (year levels, departments,
+ * subjects, timetables, fees). Idempotent: existing rows are not modified.
+ */
+export async function syncDefaultClassrooms(): Promise<
+  ActionResponse<{ classrooms: number; sections: number; grades: number }>
+> {
+  try {
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    try {
+      assertClassroomPermission(authContext, "create", { schoolId })
+    } catch {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
+    // Ensure the single prereq that stays inside classroom scope.
+    await db.classroomType.upsert({
+      where: { schoolId_name: { schoolId, name: "Classroom" } },
+      create: { schoolId, name: "Classroom" },
+      update: {},
+    })
+
+    const gradeCount = await db.academicGrade.count({ where: { schoolId } })
+    if (gradeCount === 0) {
+      return actionError(ACTION_ERRORS.NO_GRADES_FOUND)
+    }
+
+    const { autoProvisionSections } = await import("@/lib/catalog-setup")
+    const result = await autoProvisionSections(schoolId)
+
+    revalidatePath(CLASSROOMS_PATH)
+    return {
+      success: true,
+      data: { ...result, grades: gradeCount },
+    }
+  } catch (error) {
+    console.error("Error syncing default classrooms:", error)
+    return actionError(ACTION_ERRORS.CREATE_FAILED)
+  }
+}
+
+// ============================================================================
 // Room Detail Queries
 // ============================================================================
 

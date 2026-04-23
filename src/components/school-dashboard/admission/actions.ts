@@ -9,6 +9,7 @@ import type {
   NotificationPriority,
   NotificationType,
 } from "@prisma/client"
+import { nanoid } from "nanoid"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
@@ -497,6 +498,16 @@ export async function updateApplicationStatus(params: {
       data.offerExpiryDate = new Date(
         Date.now() + expiryDays * 24 * 60 * 60 * 1000
       )
+      const existing = await db.application.findUnique({
+        where: { id: params.id, schoolId },
+        select: { accessToken: true },
+      })
+      if (!existing?.accessToken) {
+        data.accessToken = nanoid(32)
+        data.accessTokenExpiry = new Date(
+          Date.now() + expiryDays * 24 * 60 * 60 * 1000
+        )
+      }
     }
 
     await db.application.update({
@@ -512,6 +523,7 @@ export async function updateApplicationStatus(params: {
         firstName: true,
         lastName: true,
         campaignId: true,
+        accessToken: true,
       },
     })
     if (application?.userId) {
@@ -547,8 +559,8 @@ export async function updateApplicationStatus(params: {
           applicationId: params.id,
           status: params.status,
           url:
-            params.status === "SELECTED"
-              ? `/application/${params.id}/offer`
+            params.status === "SELECTED" && application.accessToken
+              ? `/application/${params.id}/offer?token=${encodeURIComponent(application.accessToken)}`
               : "/admission",
         },
         actorId: session.user?.id,

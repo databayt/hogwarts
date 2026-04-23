@@ -24,6 +24,7 @@ import { useDataTable } from "@/components/table/use-data-table"
 import { deleteClassroom, getClassrooms } from "./actions"
 import { getClassroomColumns, type ClassroomRow } from "./columns"
 import { ClassroomForm } from "./form"
+import { SyncClassroomsButton } from "./sync-classrooms-button"
 
 interface ClassroomsTableProps {
   initialData: ClassroomRow[]
@@ -133,6 +134,7 @@ function ClassroomsTableInner({
           create: d?.create || "Create",
           reset: d?.reset || "Reset",
         }}
+        additionalActions={<SyncClassroomsButton />}
       />
 
       <DataTable

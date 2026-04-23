@@ -3,7 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { useEffect, useState } from "react"
-import { useParams } from "next/navigation"
+import { useParams, usePathname } from "next/navigation"
 
 import type { NameFormat } from "@/lib/name-utils"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
@@ -29,8 +29,15 @@ interface ApplyLayoutProps {
   children: React.ReactNode
 }
 
+// Routes that are reached AFTER the wizard submits — render full-width clean
+// content with no progress footer. The wizard chrome only belongs on the
+// actual step pages.
+const STANDALONE_SEGMENTS = /\/(payment|success|offer)(\/|$)/
+
 function ApplyLayoutContent({ children }: ApplyLayoutProps) {
   const params = useParams()
+  const pathname = usePathname() ?? ""
+  const isStandalone = STANDALONE_SEGMENTS.test(pathname)
   const { initSession, session, saveSession } = useApplySession()
   const { isLoading, error, lastSaved, isSaving } = session
   const { dictionary } = useDictionary()
@@ -44,10 +51,19 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
   const dict = (applyRoot?.footer as Record<string, string> | undefined) ?? {}
 
   useEffect(() => {
+    // Skip wizard-session init on post-submit standalone routes (payment,
+    // success, offer) — those pages read state from URL tokens, not the
+    // applicant's in-progress form session.
+    if (isStandalone) return
     if (id && subdomain && !session.sessionToken) {
       initSession(id, subdomain)
     }
-  }, [id, subdomain, initSession, session.sessionToken])
+  }, [id, subdomain, initSession, session.sessionToken, isStandalone])
+
+  // Post-submit standalone pages: no container, no footer, no skeleton.
+  if (isStandalone) {
+    return <>{children}</>
+  }
 
   // Render skeleton based on loading state
   const renderSkeleton = () => (
