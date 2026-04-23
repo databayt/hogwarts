@@ -3,9 +3,18 @@
 
 import { NextRequest, NextResponse } from "next/server"
 
+import { getCatalogImageUrl } from "@/lib/catalog-image-url"
 import { db } from "@/lib/db"
 
 import { authenticate, isAuthError } from "../../lib/authenticate"
+
+const SUBJECT_SUMMARY_SELECT = {
+  id: true,
+  name: true,
+  slug: true,
+  department: true,
+  thumbnail: true,
+} as const
 
 /**
  * GET /api/mobile/subjects/my-subjects — subjects the user is enrolled in or teaches
@@ -16,7 +25,6 @@ export async function GET(request: NextRequest) {
     if (isAuthError(auth)) return auth
 
     if (auth.role === "STUDENT") {
-      // Find student record
       const student = await db.student.findFirst({
         where: { userId: auth.userId, schoolId: auth.schoolId },
         select: { id: true, sectionId: true },
@@ -26,32 +34,20 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ data: [] })
       }
 
-      // Get subjects via student's classes (StudentClass -> Class -> Subject)
       const studentClasses = await db.studentClass.findMany({
         where: { studentId: student.id, schoolId: auth.schoolId },
         select: {
           class: {
             select: {
-              subject: {
-                select: {
-                  id: true,
-                  name: true,
-                  slug: true,
-                  department: true,
-                },
-              },
+              subject: { select: SUBJECT_SUMMARY_SELECT },
               teacher: {
-                select: {
-                  firstName: true,
-                  lastName: true,
-                },
+                select: { firstName: true, lastName: true },
               },
             },
           },
         },
       })
 
-      // Deduplicate by subject ID
       const seen = new Set<string>()
       const data = studentClasses
         .filter((sc) => {
@@ -64,6 +60,7 @@ export async function GET(request: NextRequest) {
           name: sc.class.subject.name,
           slug: sc.class.subject.slug,
           department: sc.class.subject.department,
+          thumbnail_url: getCatalogImageUrl(sc.class.subject.thumbnail, "sm"),
           teacher_name: sc.class.teacher
             ? `${sc.class.teacher.firstName} ${sc.class.teacher.lastName}`
             : null,
@@ -73,7 +70,6 @@ export async function GET(request: NextRequest) {
     }
 
     if (auth.role === "TEACHER") {
-      // Find teacher record
       const teacher = await db.teacher.findFirst({
         where: { userId: auth.userId, schoolId: auth.schoolId },
         select: { id: true },
@@ -83,7 +79,6 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ data: [] })
       }
 
-      // Get subjects from timetable entries
       const timetableEntries = await db.timetable.findMany({
         where: {
           schoolId: auth.schoolId,
@@ -91,14 +86,7 @@ export async function GET(request: NextRequest) {
           subjectId: { not: null },
         },
         select: {
-          subject: {
-            select: {
-              id: true,
-              name: true,
-              slug: true,
-              department: true,
-            },
-          },
+          subject: { select: SUBJECT_SUMMARY_SELECT },
         },
         distinct: ["subjectId"],
       })
@@ -110,24 +98,18 @@ export async function GET(request: NextRequest) {
           name: e.subject!.name,
           slug: e.subject!.slug,
           department: e.subject!.department,
+          thumbnail_url: getCatalogImageUrl(e.subject!.thumbnail, "sm"),
           teacher_name: null,
         }))
 
       return NextResponse.json({ data })
     }
 
-    // For ADMIN or other roles, return all school subjects
+    // ADMIN / fallback: school's adopted catalog subjects
     const selections = await db.subjectSelection.findMany({
       where: { schoolId: auth.schoolId, isActive: true },
       select: {
-        subject: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            department: true,
-          },
-        },
+        subject: { select: SUBJECT_SUMMARY_SELECT },
       },
     })
 
@@ -143,6 +125,7 @@ export async function GET(request: NextRequest) {
         name: s.subject.name,
         slug: s.subject.slug,
         department: s.subject.department,
+        thumbnail_url: getCatalogImageUrl(s.subject.thumbnail, "sm"),
         teacher_name: null,
       }))
 

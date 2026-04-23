@@ -210,7 +210,7 @@ export default function FeeStructureForm({ lang, initialData }: Props) {
               min={1}
               max={12}
               defaultValue={
-                (initialData?.installments as number | undefined) || 1
+                (initialData?.installments as number | undefined) || 4
               }
             />
           </div>

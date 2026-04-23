@@ -1,6 +1,12 @@
 "use client"
 
-import { useCallback, useEffect, useState, useTransition } from "react"
+import {
+  useCallback,
+  useEffect,
+  useState,
+  useSyncExternalStore,
+  useTransition,
+} from "react"
 import { Check, Copy, Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -25,25 +31,88 @@ interface Credentials {
   isSelfOnboarded: boolean
 }
 
-interface CredentialsDialogProps {
+// Module-level store. Survives StudentsTable remounts triggered by Next.js
+// server-action revalidation — the server action invoked inside the dialog
+// would otherwise unmount the subtree and lose every useState inside it,
+// closing the dialog before the admin could read the credentials.
+interface DialogStoreState {
   open: boolean
-  onOpenChange: (open: boolean) => void
   studentId: string | null
   studentName: string
+  credentials: Credentials | null
+  error: string | null
+}
+
+const initialStore: DialogStoreState = {
+  open: false,
+  studentId: null,
+  studentName: "",
+  credentials: null,
+  error: null,
+}
+
+let storeState: DialogStoreState = initialStore
+const storeListeners = new Set<() => void>()
+
+function notifyStore() {
+  storeListeners.forEach((l) => l())
+}
+
+function setStore(patch: Partial<DialogStoreState>) {
+  storeState = { ...storeState, ...patch }
+  notifyStore()
+}
+
+function subscribeStore(cb: () => void) {
+  storeListeners.add(cb)
+  return () => {
+    storeListeners.delete(cb)
+  }
+}
+
+function getStoreSnapshot(): DialogStoreState {
+  return storeState
+}
+
+function getStoreServerSnapshot(): DialogStoreState {
+  return initialStore
+}
+
+export function openCredentialsDialog(studentId: string, studentName: string) {
+  setStore({
+    open: true,
+    studentId,
+    studentName,
+    credentials: null,
+    error: null,
+  })
+}
+
+export function closeCredentialsDialog() {
+  setStore({ open: false })
+}
+
+export function useCredentialsDialogState(): DialogStoreState {
+  return useSyncExternalStore(
+    subscribeStore,
+    getStoreSnapshot,
+    getStoreServerSnapshot
+  )
+}
+
+interface CredentialsDialogProps {
   dictionary?: Dictionary["school"]["students"]
   onClosed?: () => void
 }
 
 export function CredentialsDialog({
-  open,
-  onOpenChange,
-  studentId,
-  studentName,
   dictionary,
   onClosed,
 }: CredentialsDialogProps) {
-  const [credentials, setCredentials] = useState<Credentials | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const { open, studentId, studentName, credentials, error } =
+    useCredentialsDialogState()
+  const setCredentials = (c: Credentials | null) => setStore({ credentials: c })
+  const setError = (e: string | null) => setStore({ error: e })
   const [isLoading, startLoading] = useTransition()
   const [isResetting, startResetting] = useTransition()
   const [copiedField, setCopiedField] = useState<string | null>(null)
@@ -108,13 +177,20 @@ export function CredentialsDialog({
   const handleOpenChange = useCallback(
     (nextOpen: boolean) => {
       if (!nextOpen) {
-        setCredentials(null)
-        setError(null)
+        // Close + clear in one commit so a late remount can't read stale data.
+        setStore({
+          open: false,
+          studentId: null,
+          studentName: "",
+          credentials: null,
+          error: null,
+        })
         onClosed?.()
+        return
       }
-      onOpenChange(nextOpen)
+      setStore({ open: nextOpen })
     },
-    [onOpenChange, onClosed]
+    [onClosed]
   )
 
   const description = credentials?.isNew

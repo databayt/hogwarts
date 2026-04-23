@@ -3,7 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useMemo } from "react"
 import { useRouter } from "next/navigation"
 
 import { useDebouncedSearch } from "@/hooks/use-debounced-search"
@@ -17,13 +17,7 @@ import {
 import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { PlatformToolbar } from "@/components/school-dashboard/shared"
-import {
-  BulkActionsToolbar,
-  createDeleteAction,
-  createExportAction,
-} from "@/components/table/bulk-actions-toolbar"
 import { DataTable } from "@/components/table/data-table"
-import { getSelectColumn } from "@/components/table/select-column"
 import { useDataTable } from "@/components/table/use-data-table"
 
 import {
@@ -141,14 +135,12 @@ function FeeStructuresTableInner({
 
   // Generate columns on the client side with lang
   const columns = useMemo(
-    () => [
-      getSelectColumn<FeeStructureRow>(),
-      ...getFeeStructureColumns(lang, structureCol, {
+    () =>
+      getFeeStructureColumns(lang, structureCol, {
         onToggleActive: handleToggleActive,
         onToggleLocked: handleToggleLocked,
         onDelete: handleSingleDelete,
       }),
-    ],
     [
       lang,
       structureCol,
@@ -171,6 +163,8 @@ function FeeStructuresTableInner({
       },
       columnVisibility: {
         createdAt: false,
+        className: false,
+        academicYear: false,
       },
     },
   })
@@ -187,67 +181,6 @@ function FeeStructuresTableInner({
   const handleCreate = useCallback(() => {
     router.push(`/${lang}/finance/fees/structures/new`)
   }, [router, lang])
-
-  // Bulk delete handler
-  const handleBulkDelete = useCallback(
-    async (rows: FeeStructureRow[]) => {
-      const deleteMsg = `Delete ${rows.length} fee structure(s)?`
-      const ok = await confirmDeleteDialog(deleteMsg)
-      if (!ok) return
-
-      const errors: string[] = []
-      for (const row of rows) {
-        const result = await deleteFeeStructure(row.id)
-        if (result.success) {
-          optimisticRemove(row.id)
-        } else {
-          errors.push(`${row.name}: ${result.error}`)
-        }
-      }
-
-      if (errors.length > 0) {
-        ErrorToast(errors.join("\n"))
-      } else {
-        DeleteToast()
-      }
-      table.toggleAllPageRowsSelected(false)
-    },
-    [optimisticRemove, table]
-  )
-
-  // Bulk export handler
-  const handleBulkExport = useCallback(
-    async (rows: FeeStructureRow[]) => {
-      const header = "Name,Academic Year,Class,Total Amount,Installments,Active"
-      const csv = rows
-        .map(
-          (r) =>
-            `${r.name},${r.academicYear},${r.className || "All Classes"},${r.totalAmount},${r.installments},${r.isActive}`
-        )
-        .join("\n")
-      const csvContent = `${header}\n${csv}`
-
-      // Download
-      const blob = new Blob([csvContent], {
-        type: "text/csv;charset=utf-8;",
-      })
-      const link = document.createElement("a")
-      link.href = URL.createObjectURL(blob)
-      link.download = "fee-structures.csv"
-      link.click()
-      table.toggleAllPageRowsSelected(false)
-    },
-    [table]
-  )
-
-  // Bulk actions
-  const bulkActions = useMemo(
-    () => [
-      createDeleteAction<FeeStructureRow>(handleBulkDelete, lang),
-      createExportAction<FeeStructureRow>(handleBulkExport, lang),
-    ],
-    [handleBulkDelete, handleBulkExport, lang]
-  )
 
   return (
     <>
@@ -270,8 +203,6 @@ function FeeStructuresTableInner({
         isLoading={isLoading}
         onLoadMore={loadMore}
       />
-
-      <BulkActionsToolbar table={table} actions={bulkActions} lang={lang} />
     </>
   )
 }

@@ -386,10 +386,10 @@
     "generateReport": "Generate Report"
   },
   "fees": {
-    "title": "Fee Management",
+    "title": "Fees",
     "navigation": {
       "overview": "Overview",
-      "feeStructure": "Fee Structure",
+      "feeStructure": "Structure",
       "assignments": "Assignments",
       "payments": "Payments",
       "scholarships": "Scholarships",
@@ -670,6 +670,32 @@
       "amount": "Amount",
       "method": "Method",
       "status": "Status"
+    },
+    "sync": {
+      "trigger": "Sync",
+      "syncing": "Syncing…",
+      "menuLabel": "Fee provisioning",
+      "newScope": "Sync new scope only",
+      "newScopeDescription": "Only create missing rows (for newly added grades). Never modifies existing rows.",
+      "recompute": "Recompute auto-generated",
+      "recomputeDescription": "Re-price unlocked auto-generated rows from current settings. Locked rows are skipped.",
+      "reset": "Reset to defaults",
+      "resetDescription": "Overwrites every auto-generated row including locked ones. Admin-created rows stay untouched.",
+      "confirmRecomputeTitle": "Recompute auto-generated fee structures?",
+      "confirmRecomputeBody": "Recompute auto-generated fee structures from current school settings.\n\n• Admin-created rows: untouched\n• Locked rows: untouched\n• Unlocked auto-generated rows: overwritten with current tuition and currency",
+      "confirmResetTitle": "Reset all auto-generated fee structures?",
+      "confirmResetBody": "This also overwrites LOCKED rows. Admin-created rows are still untouched.",
+      "cancel": "Cancel",
+      "confirm": "Continue",
+      "failed": "Sync failed",
+      "noChanges": "no changes",
+      "created": "{count} created",
+      "updated": "{count} updated",
+      "lockedSkipped": "{count} locked skipped",
+      "deactivated": "{count} orphans deactivated",
+      "assignedStudents": "{count} student assignments",
+      "errors": "{count} errors",
+      "schoolWidePrefix": "School-wide fallback — "
     }
   },
   "paymentForm": {

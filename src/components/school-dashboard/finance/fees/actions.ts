@@ -143,7 +143,7 @@ export async function createFeeStructure(
         : null,
       hostelFee: raw.hostelFee ? parseFloat(raw.hostelFee as string) : null,
       totalAmount: parseFloat(raw.totalAmount as string),
-      installments: parseInt(raw.installments as string, 10) || 1,
+      installments: parseInt(raw.installments as string, 10) || 4,
       lateFeeAmount: raw.lateFeeAmount
         ? parseFloat(raw.lateFeeAmount as string)
         : null,
@@ -279,7 +279,7 @@ export async function updateFeeStructure(
           ? parseFloat(formData.hostelFee as string)
           : null,
         totalAmount: parseFloat(formData.totalAmount as string),
-        installments: parseInt(formData.installments as string, 10) || 1,
+        installments: parseInt(formData.installments as string, 10) || 4,
         lateFeeAmount: formData.lateFeeAmount
           ? parseFloat(formData.lateFeeAmount as string)
           : null,

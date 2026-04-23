@@ -119,6 +119,10 @@ function ScholarshipsTableInner({
     [router]
   )
 
+  const handleCreate = useCallback(() => {
+    router.push(`/${lang}/finance/fees/scholarships/new`)
+  }, [router, lang])
+
   const handleBulkExport = useCallback(
     async (rows: ScholarshipRow[]) => {
       const header =
@@ -189,6 +193,7 @@ function ScholarshipsTableInner({
           (dictionary as any)?.finance?.fees?.search?.scholarships ||
           "Search scholarships..."
         }
+        onCreate={handleCreate}
         entityName="scholarships"
       />
       <DataTable

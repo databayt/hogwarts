@@ -31,7 +31,7 @@ import { useDataTable } from "@/components/table/use-data-table"
 import { AccessCodeDialog } from "./access-code-dialog"
 import { bulkSyncStudentGrades, getStudents, getStudentsCSV } from "./actions"
 import { getStudentColumns, type StudentRow } from "./columns"
-import { CredentialsDialog } from "./credentials-dialog"
+import { CredentialsDialog, openCredentialsDialog } from "./credentials-dialog"
 import { PurgeDialog } from "./purge-dialog"
 import { createDraftStudent } from "./wizard/actions"
 
@@ -133,18 +133,12 @@ function StudentsTableInner({
     []
   )
 
-  // Credentials dialog state
-  const [credentialsOpen, setCredentialsOpen] = useState(false)
-  const [credentialsStudentId, setCredentialsStudentId] = useState<
-    string | null
-  >(null)
-  const [credentialsStudentName, setCredentialsStudentName] = useState("")
-
+  // Credentials dialog state lives in a module-level store so it survives
+  // the StudentsTable remount triggered by Next.js server-action revalidation
+  // inside `getStudentCredentials`.
   const handleGenerateCredentials = useCallback(
     (studentId: string, studentName: string) => {
-      setCredentialsStudentId(studentId)
-      setCredentialsStudentName(studentName)
-      setCredentialsOpen(true)
+      openCredentialsDialog(studentId, studentName)
     },
     []
   )
@@ -434,13 +428,7 @@ function StudentsTableInner({
         studentNames={accessCodeStudentNames}
       />
 
-      <CredentialsDialog
-        open={credentialsOpen}
-        onOpenChange={setCredentialsOpen}
-        studentId={credentialsStudentId}
-        studentName={credentialsStudentName}
-        dictionary={dictionary}
-      />
+      <CredentialsDialog dictionary={dictionary} />
 
       <PurgeDialog
         open={purgeOpen}

@@ -32,7 +32,7 @@ export const createFeeStructureSchema = (v: ValidationHelper) =>
     transportFee: z.number().min(0).optional().nullable(),
     hostelFee: z.number().min(0).optional().nullable(),
     totalAmount: z.number().min(0, v.min(0)),
-    installments: z.number().int().min(1).default(1),
+    installments: z.number().int().min(1).default(4),
     lateFeeAmount: z.number().min(0).optional().nullable(),
     lateFeeType: z
       .enum(["FIXED", "PERCENTAGE", "DAILY", "MONTHLY"])
@@ -192,7 +192,7 @@ export const feeStructureSchema = z.object({
   transportFee: z.number().min(0).optional().nullable(),
   hostelFee: z.number().min(0).optional().nullable(),
   totalAmount: z.number().min(0, "Total amount must be non-negative"),
-  installments: z.number().int().min(1).default(1),
+  installments: z.number().int().min(1).default(4),
   lateFeeAmount: z.number().min(0).optional().nullable(),
   lateFeeType: z
     .enum(["FIXED", "PERCENTAGE", "DAILY", "MONTHLY"])

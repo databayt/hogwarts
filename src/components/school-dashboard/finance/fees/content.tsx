@@ -4,10 +4,11 @@
 import Link from "next/link"
 import {
   Award,
+  ChevronRight,
   CircleAlert,
   CreditCard,
   DollarSign,
-  TrendingUp,
+  FileBarChart,
   TriangleAlert,
   Users,
 } from "lucide-react"
@@ -15,14 +16,7 @@ import {
 import { db } from "@/lib/db"
 import { formatCurrency } from "@/lib/i18n-format"
 import { getTenantContext } from "@/lib/tenant-context"
-import { buttonVariants } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -49,18 +43,16 @@ export default async function FeesContent({ dictionary, lang }: Props) {
     )
   }
 
-  // Check permissions for current user
   const canView = await checkCurrentUserPermission(schoolId, "fees", "view")
-  const canCreate = await checkCurrentUserPermission(schoolId, "fees", "create")
   const canPencil = await checkCurrentUserPermission(schoolId, "fees", "edit")
   const canApprove = await checkCurrentUserPermission(
     schoolId,
     "fees",
     "approve"
   )
+  const canCreate = await checkCurrentUserPermission(schoolId, "fees", "create")
   const canExport = await checkCurrentUserPermission(schoolId, "fees", "export")
 
-  // If user can't view fees, show empty state
   if (!canView) {
     const ov = (dictionary as any)?.finance?.fees?.overview as
       | Record<string, string>
@@ -74,76 +66,154 @@ export default async function FeesContent({ dictionary, lang }: Props) {
     )
   }
 
-  // Get comprehensive fee stats
   let feeStructuresCount = 0
   let activeAssignmentsCount = 0
+  let paymentsCount = 0
   let totalFeesCollected = 0
   let pendingPayments = 0
   let overduePayments = 0
   let scholarshipsCount = 0
   let finesCount = 0
 
-  if (schoolId) {
-    try {
-      ;[
-        feeStructuresCount,
-        activeAssignmentsCount,
-        scholarshipsCount,
-        finesCount,
-      ] = await Promise.all([
-        db.feeStructure.count({
-          where: { schoolId },
-        }),
-        db.feeAssignment.count({
-          where: {
-            schoolId,
-            status: { in: ["PENDING", "PARTIAL", "OVERDUE"] },
-          },
-        }),
-        db.scholarship.count({
-          where: { schoolId },
-        }),
-        db.fine.count({
-          where: { schoolId },
-        }),
-      ])
+  try {
+    ;[
+      feeStructuresCount,
+      activeAssignmentsCount,
+      paymentsCount,
+      scholarshipsCount,
+      finesCount,
+    ] = await Promise.all([
+      db.feeStructure.count({ where: { schoolId } }),
+      db.feeAssignment.count({
+        where: {
+          schoolId,
+          status: { in: ["PENDING", "PARTIAL", "OVERDUE"] },
+        },
+      }),
+      db.payment.count({ where: { schoolId, status: "SUCCESS" } }),
+      db.scholarship.count({ where: { schoolId } }),
+      db.fine.count({ where: { schoolId } }),
+    ])
 
-      // Calculate financial totals
-      const [collectedAgg, pendingAgg, overdueAgg] = await Promise.all([
-        db.payment.aggregate({
-          where: { schoolId, status: "SUCCESS" },
-          _sum: { amount: true },
-        }),
-        db.feeAssignment.aggregate({
-          where: { schoolId, status: "PENDING" },
-          _sum: { finalAmount: true },
-        }),
-        db.feeAssignment.aggregate({
-          where: { schoolId, status: "OVERDUE" },
-          _sum: { finalAmount: true },
-        }),
-      ])
+    const [collectedAgg, pendingAgg, overdueAgg] = await Promise.all([
+      db.payment.aggregate({
+        where: { schoolId, status: "SUCCESS" },
+        _sum: { amount: true },
+      }),
+      db.feeAssignment.aggregate({
+        where: { schoolId, status: "PENDING" },
+        _sum: { finalAmount: true },
+      }),
+      db.feeAssignment.aggregate({
+        where: { schoolId, status: "OVERDUE" },
+        _sum: { finalAmount: true },
+      }),
+    ])
 
-      totalFeesCollected = collectedAgg._sum?.amount
-        ? Number(collectedAgg._sum.amount)
-        : 0
-      pendingPayments = pendingAgg._sum?.finalAmount
-        ? Number(pendingAgg._sum.finalAmount)
-        : 0
-      overduePayments = overdueAgg._sum?.finalAmount
-        ? Number(overdueAgg._sum.finalAmount)
-        : 0
-    } catch (error) {
-      console.error("Error fetching fee stats:", error)
-      // Return zeros if tables don't exist yet
-    }
+    totalFeesCollected = collectedAgg._sum?.amount
+      ? Number(collectedAgg._sum.amount)
+      : 0
+    pendingPayments = pendingAgg._sum?.finalAmount
+      ? Number(pendingAgg._sum.finalAmount)
+      : 0
+    overduePayments = overdueAgg._sum?.finalAmount
+      ? Number(overdueAgg._sum.finalAmount)
+      : 0
+  } catch (error) {
+    console.error("Error fetching fee stats:", error)
   }
 
   const d = (dictionary as any)?.finance
-  const fp = (d?.fees?.overview || d?.feesPage) as
-    | Record<string, string>
-    | undefined
-  const c = d?.common as Record<string, string> | undefined
+  // Merge both dict sections so individual missing keys fall back to feesPage
+  const fp = { ...(d?.feesPage || {}), ...(d?.fees?.overview || {}) } as Record<
+    string,
+    string
+  >
+  const c = (d?.common || {}) as Record<string, string>
+  const mp = (d?.mainPage || {}) as Record<string, string>
+
+  interface Module {
+    show: boolean
+    href: string
+    icon: typeof CreditCard
+    iconBg: string
+    iconColor: string
+    title: string
+    count: number
+    countLabel: string
+    viewLabel: string
+  }
+
+  const modules: Module[] = [
+    {
+      show: canPencil,
+      href: `/${lang}/finance/fees/structures`,
+      icon: CreditCard,
+      iconBg: "bg-emerald-500/15",
+      iconColor: "text-emerald-500",
+      title: fp.feeStructures || "Fee Structures",
+      count: feeStructuresCount,
+      countLabel: c.configured || "configured",
+      viewLabel: fp.viewStructures || "View Structures",
+    },
+    {
+      show: true,
+      href: `/${lang}/finance/fees/payments`,
+      icon: DollarSign,
+      iconBg: "bg-primary/10",
+      iconColor: "text-primary",
+      title: fp.paymentTracking || "Payment Tracking",
+      count: paymentsCount,
+      countLabel: c.completed || "completed",
+      viewLabel: fp.viewPayments || "View Payments",
+    },
+    {
+      show: canPencil,
+      href: `/${lang}/finance/fees/assignments`,
+      icon: Users,
+      iconBg: "bg-violet-500/15",
+      iconColor: "text-violet-500",
+      title: fp.studentAssignments || "Student Assignments",
+      count: activeAssignmentsCount,
+      countLabel: mp.pendingLabel || "pending",
+      viewLabel: fp.viewAssignments || "View Assignments",
+    },
+    {
+      show: canApprove,
+      href: `/${lang}/finance/fees/scholarships`,
+      icon: Award,
+      iconBg: "bg-amber-500/15",
+      iconColor: "text-amber-500",
+      title: fp.scholarships || "Scholarships",
+      count: scholarshipsCount,
+      countLabel: c.active?.toLowerCase() || "active",
+      viewLabel: fp.viewScholarships || "View Scholarships",
+    },
+    {
+      show: canCreate,
+      href: `/${lang}/finance/fees/fines`,
+      icon: TriangleAlert,
+      iconBg: "bg-destructive/15",
+      iconColor: "text-destructive",
+      title: fp.finesPenalties || "Fines & Penalties",
+      count: finesCount,
+      countLabel: mp.unpaid || "issued",
+      viewLabel: fp.viewFines || "View Fines",
+    },
+    {
+      show: canExport,
+      href: `/${lang}/finance/fees/reports`,
+      icon: FileBarChart,
+      iconBg: "bg-blue-500/15",
+      iconColor: "text-blue-500",
+      title: fp.feeReports || "Fee Reports",
+      count: 0,
+      countLabel: mp.generated || "generated",
+      viewLabel: c.viewReports || "View Reports",
+    },
+  ]
+
+  const visibleModules = modules.filter((m) => m.show)
 
   return (
     <div className="space-y-6">
@@ -152,7 +222,7 @@ export default async function FeesContent({ dictionary, lang }: Props) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {fp?.feesCollected || "Fees Collected"}
+              {fp.feesCollected || "Fees Collected"}
             </CardTitle>
             <DollarSign className="text-muted-foreground h-4 w-4" />
           </CardHeader>
@@ -161,7 +231,7 @@ export default async function FeesContent({ dictionary, lang }: Props) {
               {formatCurrency(totalFeesCollected, lang)}
             </div>
             <p className="text-muted-foreground text-xs">
-              {fp?.completedPayments || "Completed payments"}
+              {fp.completedPayments || "Completed payments"}
             </p>
           </CardContent>
         </Card>
@@ -169,7 +239,7 @@ export default async function FeesContent({ dictionary, lang }: Props) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {fp?.pendingPayments || "Pending Payments"}
+              {fp.pendingPayments || "Pending Payments"}
             </CardTitle>
             <CircleAlert className="text-muted-foreground h-4 w-4" />
           </CardHeader>
@@ -178,7 +248,7 @@ export default async function FeesContent({ dictionary, lang }: Props) {
               {formatCurrency(pendingPayments, lang)}
             </div>
             <p className="text-muted-foreground text-xs">
-              {activeAssignmentsCount} {fp?.assignments || "assignments"}
+              {activeAssignmentsCount} {fp.assignments || "assignments"}
             </p>
           </CardContent>
         </Card>
@@ -186,7 +256,7 @@ export default async function FeesContent({ dictionary, lang }: Props) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {fp?.overduePayments || "Overdue Payments"}
+              {fp.overduePayments || "Overdue Payments"}
             </CardTitle>
             <TriangleAlert className="text-muted-foreground h-4 w-4" />
           </CardHeader>
@@ -195,7 +265,7 @@ export default async function FeesContent({ dictionary, lang }: Props) {
               {formatCurrency(overduePayments, lang)}
             </div>
             <p className="text-muted-foreground text-xs">
-              {c?.requiresAction || "Requires action"}
+              {c.requiresAction || fp.requiresAction || "Requires action"}
             </p>
           </CardContent>
         </Card>
@@ -203,198 +273,55 @@ export default async function FeesContent({ dictionary, lang }: Props) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {fp?.activeScholarships || "Active Scholarships"}
+              {fp.activeScholarships || "Active Scholarships"}
             </CardTitle>
             <Award className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{scholarshipsCount}</div>
             <p className="text-muted-foreground text-xs">
-              {c?.availablePrograms || "Available programs"}
+              {c.availablePrograms ||
+                fp.availablePrograms ||
+                "Available programs"}
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {/* Fee Structures */}
-        {canPencil && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CreditCard className="h-5 w-5" />
-                {fp?.feeStructures || "Fee Structures"}
-              </CardTitle>
-              <CardDescription>
-                {fp?.defineManageFees ||
-                  "Define and manage fee types and amounts"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Link
-                href={`/${lang}/finance/fees/structures`}
-                className={buttonVariants({ className: "w-full" })}
-              >
-                {`${fp?.viewStructures || "View Structures"} (${feeStructuresCount})`}
-              </Link>
-              {canCreate && (
+      {/* Modules — compact navigation */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {visibleModules.map((m) => {
+          const Icon = m.icon
+          return (
+            <Card key={m.href} className="p-4">
+              <CardContent className="space-y-3 p-0">
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`flex h-10 w-10 items-center justify-center rounded-lg ${m.iconBg}`}
+                  >
+                    <Icon className={`h-5 w-5 ${m.iconColor}`} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-muted-foreground text-xs">{m.title}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-lg font-semibold">{m.count}</p>
+                      <span className="bg-muted text-muted-foreground rounded px-1.5 py-0 text-[10px]">
+                        {m.countLabel}
+                      </span>
+                    </div>
+                  </div>
+                </div>
                 <Link
-                  href={`/${lang}/finance/fees/structures/new`}
-                  className={buttonVariants({
-                    variant: "outline",
-                    size: "sm",
-                    className: "w-full",
-                  })}
+                  href={m.href}
+                  className="text-primary inline-flex items-center text-xs hover:underline"
                 >
-                  {fp?.createNewStructure || "Create New Structure"}
+                  {m.viewLabel}{" "}
+                  <ChevronRight className="ms-1 h-3 w-3 rtl:rotate-180" />
                 </Link>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Payment Tracking */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5" />
-              {fp?.paymentTracking || "Payment Tracking"}
-            </CardTitle>
-            <CardDescription>
-              {fp?.recordTrackPayments ||
-                "Record and track student fee payments"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Link
-              href={`/${lang}/finance/fees/payments`}
-              className={buttonVariants({ className: "w-full" })}
-            >
-              {fp?.viewPayments || "View Payments"}
-            </Link>
-            {canCreate && (
-              <Link
-                href={`/${lang}/finance/fees/payments/new`}
-                className={buttonVariants({
-                  variant: "outline",
-                  size: "sm",
-                  className: "w-full",
-                })}
-              >
-                {fp?.recordPayment || "Record Payment"}
-              </Link>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Student Assignments */}
-        {canPencil && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                {fp?.studentAssignments || "Student Assignments"}
-              </CardTitle>
-              <CardDescription>
-                {fp?.assignFeesTrack ||
-                  "Assign fees to students and track status"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Link
-                href={`/${lang}/finance/fees/assignments`}
-                className={buttonVariants({ className: "w-full" })}
-              >
-                {fp?.viewAssignments || "View Assignments"}
-              </Link>
-              {canCreate && (
-                <Link
-                  href={`/${lang}/finance/fees/assignments/new`}
-                  className={buttonVariants({
-                    variant: "outline",
-                    size: "sm",
-                    className: "w-full",
-                  })}
-                >
-                  {fp?.bulkAssignFees || "Bulk Assign Fees"}
-                </Link>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Scholarships */}
-        {canApprove && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Award className="h-5 w-5" />
-                {fp?.scholarships || "Scholarships"}
-              </CardTitle>
-              <CardDescription>
-                {fp?.manageScholarships ||
-                  "Manage scholarship programs and applications"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Link
-                href={`/${lang}/finance/fees/scholarships`}
-                className={buttonVariants({ className: "w-full" })}
-              >
-                {`${fp?.viewScholarships || "View Scholarships"} (${scholarshipsCount})`}
-              </Link>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Fines */}
-        {canCreate && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TriangleAlert className="h-5 w-5" />
-                {fp?.finesPenalties || "Fines & Penalties"}
-              </CardTitle>
-              <CardDescription>
-                {fp?.trackManageFines ||
-                  "Track and manage student fines and penalties"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Link
-                href={`/${lang}/finance/fees/fines`}
-                className={buttonVariants({ className: "w-full" })}
-              >
-                {`${fp?.viewFines || "View Fines"} (${finesCount})`}
-              </Link>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Reports */}
-        {canExport && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                {fp?.feeReports || "Fee Reports"}
-              </CardTitle>
-              <CardDescription>
-                {fp?.generateFeeReports ||
-                  "Generate fee collection and analysis reports"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Link
-                href={`/${lang}/finance/reports`}
-                className={buttonVariants({ className: "w-full" })}
-              >
-                {c?.viewReports || "View Reports"}
-              </Link>
-            </CardContent>
-          </Card>
-        )}
+              </CardContent>
+            </Card>
+          )
+        })}
       </div>
     </div>
   )

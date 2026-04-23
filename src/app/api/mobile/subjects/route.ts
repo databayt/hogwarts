@@ -9,67 +9,58 @@ import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import type { SupportedLanguage } from "@/components/translation/types"
 
-import { verifyToken } from "../auth/jwt"
+import { authenticate, isAuthError } from "../lib/authenticate"
 
 /**
  * Mobile Subjects API
  *
- * Returns school's adopted catalog subjects formatted for the Subjects feature module.
- * Requires Bearer token with schoolId claim.
+ * Returns the school's adopted catalog subjects. Response mirrors the
+ * fields used by the web Subjects grid (catalog-subjects-grid.tsx) so the
+ * mobile UI can render the same cards: thumbnail, level/grade badges, rating.
  *
  * GET /api/mobile/subjects
  * Query params: search, department, lang
  */
+const SUBJECT_SELECT = {
+  id: true,
+  name: true,
+  slug: true,
+  lang: true,
+  department: true,
+  description: true,
+  thumbnail: true,
+  color: true,
+  levels: true,
+  grades: true,
+  totalChapters: true,
+  totalLessons: true,
+  usageCount: true,
+  averageRating: true,
+  ratingCount: true,
+} as const
+
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get("Authorization")
-    const token = authHeader?.replace("Bearer ", "")
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    let payload
-    try {
-      const result = await verifyToken(token)
-      payload = result.payload
-    } catch {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 })
-    }
-
-    const schoolId = payload.schoolId as string | null
-    if (!schoolId) {
-      return NextResponse.json({ error: "No school context" }, { status: 400 })
-    }
+    const auth = await authenticate(request)
+    if (isAuthError(auth)) return auth
+    const { schoolId } = auth
 
     const { searchParams } = new URL(request.url)
     const search = searchParams.get("search") || undefined
     const department = searchParams.get("department") || undefined
     const lang = (searchParams.get("lang") || "en") as SupportedLanguage
 
-    // Get school's subject selections
     let selections = await db.subjectSelection.findMany({
       where: { schoolId, isActive: true },
       select: {
         catalogSubjectId: true,
         customName: true,
-        subject: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            lang: true,
-            department: true,
-            description: true,
-            thumbnail: true,
-            totalChapters: true,
-            totalLessons: true,
-            usageCount: true,
-          },
-        },
+        subject: { select: SUBJECT_SELECT },
       },
     })
 
-    // Auto-provision if empty
+    // Schools created before catalog setup ran land here with zero selections;
+    // provisioning on first request keeps the feature usable without a manual step.
     if (selections.length === 0) {
       try {
         const { provisioned } = await ensureSubjectSelections(schoolId)
@@ -79,29 +70,15 @@ export async function GET(request: NextRequest) {
             select: {
               catalogSubjectId: true,
               customName: true,
-              subject: {
-                select: {
-                  id: true,
-                  name: true,
-                  slug: true,
-                  lang: true,
-                  department: true,
-                  description: true,
-                  thumbnail: true,
-                  totalChapters: true,
-                  totalLessons: true,
-                  usageCount: true,
-                },
-              },
+              subject: { select: SUBJECT_SELECT },
             },
           })
         }
       } catch {
-        // Fall through
+        // Fall through with empty list
       }
     }
 
-    // Deduplicate by subject ID
     const seen = new Set<string>()
     const unique = selections.filter((s) => {
       if (seen.has(s.catalogSubjectId)) return false
@@ -109,7 +86,6 @@ export async function GET(request: NextRequest) {
       return true
     })
 
-    // Translate and map to SubjectDto shape
     const data = await Promise.all(
       unique
         .filter((s) => {
@@ -140,12 +116,17 @@ export async function GET(request: NextRequest) {
           return {
             id: s.subject.id,
             name,
-            code: s.subject.slug,
+            slug: s.subject.slug,
             department: dept || s.subject.department,
             description: desc,
-            teacher_count: 0,
-            student_count: s.subject.usageCount,
-            icon_url: getCatalogImageUrl(s.subject.thumbnail, "sm"),
+            thumbnail_url: getCatalogImageUrl(s.subject.thumbnail, "sm"),
+            color: s.subject.color,
+            levels: s.subject.levels,
+            grades: s.subject.grades,
+            total_chapters: s.subject.totalChapters,
+            total_lessons: s.subject.totalLessons,
+            average_rating: s.subject.averageRating,
+            rating_count: s.subject.ratingCount,
           }
         })
     )
