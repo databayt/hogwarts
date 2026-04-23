@@ -11,7 +11,7 @@ import { type LocationResult } from "@/lib/mapbox"
 import { Form } from "@/components/ui/form"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ErrorToast } from "@/components/atom/toast"
-import { InputField, TextareaField } from "@/components/form"
+import { CountryField, InputField, TextareaField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
@@ -62,7 +62,7 @@ export const LocationForm = forwardRef<WizardFormRef, LocationFormProps>(
       },
     })
 
-    // Location step is always valid (all fields optional)
+    // Location step is always valid (all fields optional in the wizard).
     React.useEffect(() => {
       onValidChange?.(true)
     }, [onValidChange])
@@ -135,15 +135,17 @@ export const LocationForm = forwardRef<WizardFormRef, LocationFormProps>(
       )
     }
 
-    // Fallback to manual input fields when Mapbox is not configured
+    // Fallback: mirror the public application's manual-input layout.
     return (
       <Form {...form}>
         <form className="space-y-6">
           <TextareaField
             name="currentAddress"
-            label={t?.currentAddress || "Current Address"}
+            label={t?.address || t?.currentAddress || "Address"}
             placeholder={
-              t?.currentAddressPlaceholder || "Enter current address"
+              t?.addressPlaceholder ||
+              t?.currentAddressPlaceholder ||
+              "Enter address"
             }
             disabled={isPending}
           />
@@ -165,10 +167,10 @@ export const LocationForm = forwardRef<WizardFormRef, LocationFormProps>(
             placeholder={t?.postalCodePlaceholder || "Enter postal code"}
             disabled={isPending}
           />
-          <InputField
+          <CountryField
             name="country"
             label={t?.country || "Country"}
-            placeholder={t?.countryPlaceholder || "Enter country"}
+            placeholder={t?.selectCountry || "Select country"}
             disabled={isPending}
           />
         </form>

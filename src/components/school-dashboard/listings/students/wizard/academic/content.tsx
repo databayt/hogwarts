@@ -99,11 +99,10 @@ export default function AcademicContent() {
     | Record<string, unknown>
     | undefined
   const t = students?.academic as Record<string, string> | undefined
-  // Fallback to enrollment dict for admission-history sub-card labels.
   const tEnrollment = students?.enrollment as Record<string, string> | undefined
 
   // Academic is the final step. Next triggers save + completeStudentWizard
-  // + redirect to listings (same pattern the old previous-education step used).
+  // + redirect to listings.
   useEffect(() => {
     const handleNext = async () => {
       if (isSavingRef.current) return
@@ -138,7 +137,7 @@ export default function AcademicContent() {
           title={t?.title || "Academic Information"}
           description={
             t?.description ||
-            "Enter the student's enrollment and previous education details."
+            "Select the student's grade and section to enrol them."
           }
         />
         {data?.application && (
@@ -150,22 +149,9 @@ export default function AcademicContent() {
           initialData={
             data
               ? ({
-                  enrollmentDate: data.enrollmentDate ?? undefined,
-                  admissionNumber: data.admissionNumber ?? undefined,
-                  status: data.status ?? undefined,
-                  studentType: data.studentType ?? undefined,
-                  category: data.category ?? undefined,
                   academicGradeId: data.academicGradeId ?? undefined,
                   sectionId: data.sectionId ?? undefined,
                   previousSchoolName: data.previousSchoolName ?? undefined,
-                  previousSchoolAddress:
-                    data.previousSchoolAddress ?? undefined,
-                  previousGrade: data.previousGrade ?? undefined,
-                  transferCertificateNo:
-                    data.transferCertificateNo ?? undefined,
-                  transferDate: data.transferDate ?? undefined,
-                  previousAcademicRecord:
-                    data.previousAcademicRecord ?? undefined,
                 } as Partial<AcademicFormData>)
               : undefined
           }

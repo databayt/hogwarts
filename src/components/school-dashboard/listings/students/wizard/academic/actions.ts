@@ -150,20 +150,10 @@ export async function getStudentAcademic(
     const student = await db.student.findFirst({
       where: { id: studentId, schoolId },
       select: {
-        enrollmentDate: true,
-        admissionNumber: true,
-        status: true,
-        studentType: true,
-        category: true,
         academicGradeId: true,
         academicStreamId: true,
         sectionId: true,
         previousSchoolName: true,
-        previousSchoolAddress: true,
-        previousGrade: true,
-        transferCertificateNo: true,
-        transferDate: true,
-        previousAcademicRecord: true,
       },
     })
 
@@ -172,20 +162,10 @@ export async function getStudentAcademic(
     return {
       success: true,
       data: {
-        enrollmentDate: student.enrollmentDate ?? undefined,
-        admissionNumber: student.admissionNumber ?? undefined,
-        status: student.status ?? undefined,
-        studentType: student.studentType ?? undefined,
-        category: student.category ?? undefined,
         academicGradeId: student.academicGradeId ?? undefined,
         academicStreamId: student.academicStreamId ?? undefined,
         sectionId: student.sectionId ?? undefined,
         previousSchoolName: student.previousSchoolName ?? undefined,
-        previousSchoolAddress: student.previousSchoolAddress ?? undefined,
-        previousGrade: student.previousGrade ?? undefined,
-        transferCertificateNo: student.transferCertificateNo ?? undefined,
-        transferDate: student.transferDate ?? undefined,
-        previousAcademicRecord: student.previousAcademicRecord ?? undefined,
       },
     }
   } catch (error) {
@@ -196,10 +176,10 @@ export async function getStudentAcademic(
   }
 }
 
-// Single composite save for the academic step. Merges the writes that used to
-// happen across two separate server actions (updateStudentEnrollment +
-// updateStudentPreviousEducation) and preserves the existing side effects:
-// enrolling the student into grade classes + auto-assigning fees.
+// Single save for the academic step. Writes only the fields the simplified
+// wizard collects; enrollment bookkeeping (enrollmentDate, admissionNumber,
+// status, …) keeps its DB defaults or is edited later via the profile.
+// Side effects preserved: enroll into grade classes + auto-assign fees.
 export async function updateStudentAcademic(
   studentId: string,
   input: AcademicFormData
@@ -213,20 +193,10 @@ export async function updateStudentAcademic(
     await db.student.updateMany({
       where: { id: studentId, schoolId },
       data: {
-        enrollmentDate: parsed.enrollmentDate ?? undefined,
-        admissionNumber: parsed.admissionNumber || null,
-        status: parsed.status ?? undefined,
-        studentType: parsed.studentType ?? undefined,
-        category: parsed.category || null,
         academicGradeId: parsed.academicGradeId || null,
         academicStreamId: parsed.academicStreamId || null,
         sectionId: parsed.sectionId || null,
         previousSchoolName: parsed.previousSchoolName || null,
-        previousSchoolAddress: parsed.previousSchoolAddress || null,
-        previousGrade: parsed.previousGrade || null,
-        transferCertificateNo: parsed.transferCertificateNo || null,
-        transferDate: parsed.transferDate ?? null,
-        previousAcademicRecord: parsed.previousAcademicRecord || null,
       },
     })
 
@@ -251,7 +221,7 @@ export async function updateStudentAcademic(
       }
     }
 
-    // Auto-assign fees + generate invoices when a grade is set (parity with admission).
+    // Auto-assign fees + invoices when a grade is set (parity with admission).
     if (parsed.academicGradeId) {
       autoAssignFeesForStudent(schoolId, studentId, parsed.academicGradeId)
         .then(async ({ assignedCount }) => {

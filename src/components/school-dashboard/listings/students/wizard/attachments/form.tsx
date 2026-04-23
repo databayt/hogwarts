@@ -386,7 +386,7 @@ export const AttachmentsForm = forwardRef<WizardFormRef, AttachmentsFormProps>(
 
     return (
       <Form {...form}>
-        <form className="grid grid-cols-3 gap-4">
+        <form className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
           {/* Photo - circle with clear button */}
           <PhotoCard
             name="profilePhotoUrl"

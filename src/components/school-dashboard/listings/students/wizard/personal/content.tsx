@@ -55,8 +55,8 @@ export default function PersonalContent() {
       if (result.success && result.data) {
         setGuardianInitial(result.data)
         setGuardianValid(
-          (result.data.fatherFirstName?.trim().length ?? 0) > 0 ||
-            (result.data.motherFirstName?.trim().length ?? 0) > 0
+          (result.data.fatherName?.trim().length ?? 0) > 0 ||
+            (result.data.motherName?.trim().length ?? 0) > 0
         )
       }
     })
@@ -146,19 +146,8 @@ export default function PersonalContent() {
                     firstName: data.firstName,
                     middleName: data.middleName ?? undefined,
                     lastName: data.lastName,
-                    dateOfBirth: data.dateOfBirth,
-                    gender: data.gender as "male" | "female",
-                    nationality: data.nationality ?? undefined,
-                    profilePhotoUrl: data.profilePhotoUrl ?? undefined,
-                    email: data.email ?? undefined,
                     mobileNumber: data.mobileNumber ?? undefined,
                     alternatePhone: data.alternatePhone ?? undefined,
-                    emergencyContactName:
-                      data.emergencyContactName ?? undefined,
-                    emergencyContactPhone:
-                      data.emergencyContactPhone ?? undefined,
-                    emergencyContactRelation:
-                      data.emergencyContactRelation ?? undefined,
                   }
                 : undefined
             }
@@ -170,7 +159,6 @@ export default function PersonalContent() {
           <GuardianForm
             ref={guardianFormRef}
             studentId={studentId}
-            nameFormat={nameFormat}
             initialData={guardianInitial}
             onValidChange={setGuardianValid}
             controlledParent={activeTab === "mother" ? "mother" : "father"}

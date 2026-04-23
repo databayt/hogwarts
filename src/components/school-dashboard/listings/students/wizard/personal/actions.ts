@@ -7,7 +7,7 @@ import { cookies } from "next/headers"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
-import { createOrLinkGuardian } from "@/lib/guardian-utils"
+import { createOrLinkGuardian, splitGuardianName } from "@/lib/guardian-utils"
 import type { NameFormat } from "@/lib/name-utils"
 import { getTenantContext } from "@/lib/tenant-context"
 
@@ -19,7 +19,9 @@ import {
 } from "./validation"
 
 // -----------------------------------------------------------------------------
-// Student sub-tab — identity + contact + emergency fields on the Student row
+// Student sub-tab — only the fields the simplified wizard collects.
+// Extras (DOB, gender, nationality, email, emergency contact, …) stay on the
+// DB row untouched and are edited later via the student profile page.
 // -----------------------------------------------------------------------------
 
 export async function getStudentPersonal(
@@ -38,16 +40,8 @@ export async function getStudentPersonal(
           firstName: true,
           middleName: true,
           lastName: true,
-          dateOfBirth: true,
-          gender: true,
-          nationality: true,
-          profilePhotoUrl: true,
-          email: true,
           mobileNumber: true,
           alternatePhone: true,
-          emergencyContactName: true,
-          emergencyContactPhone: true,
-          emergencyContactRelation: true,
         },
       }),
       db.school.findUnique({
@@ -64,16 +58,8 @@ export async function getStudentPersonal(
         firstName: student.firstName,
         middleName: student.middleName ?? undefined,
         lastName: student.lastName,
-        dateOfBirth: student.dateOfBirth,
-        gender: student.gender as "male" | "female",
-        nationality: student.nationality ?? undefined,
-        profilePhotoUrl: student.profilePhotoUrl ?? undefined,
-        email: student.email ?? undefined,
         mobileNumber: student.mobileNumber ?? undefined,
         alternatePhone: student.alternatePhone ?? undefined,
-        emergencyContactName: student.emergencyContactName ?? undefined,
-        emergencyContactPhone: student.emergencyContactPhone ?? undefined,
-        emergencyContactRelation: student.emergencyContactRelation ?? undefined,
         nameFormat: (school?.nameFormat as NameFormat) ?? "full",
       },
     }
@@ -95,8 +81,7 @@ export async function updateStudentPersonal(
 
     const parsed = personalStudentSchema.parse(input)
 
-    // Detect the language names were entered in (from current locale cookie)
-    // so dynamic-content translation knows the source language.
+    // Language the names were typed in (from current locale cookie).
     const cookieStore = await cookies()
     const lang = cookieStore.get("NEXT_LOCALE")?.value === "en" ? "en" : "ar"
 
@@ -106,16 +91,8 @@ export async function updateStudentPersonal(
         firstName: parsed.firstName,
         middleName: parsed.middleName ?? null,
         lastName: parsed.lastName,
-        dateOfBirth: parsed.dateOfBirth,
-        gender: parsed.gender,
-        nationality: parsed.nationality ?? null,
-        profilePhotoUrl: parsed.profilePhotoUrl ?? null,
-        email: parsed.email || null,
         mobileNumber: parsed.mobileNumber || null,
         alternatePhone: parsed.alternatePhone || null,
-        emergencyContactName: parsed.emergencyContactName || null,
-        emergencyContactPhone: parsed.emergencyContactPhone || null,
-        emergencyContactRelation: parsed.emergencyContactRelation || null,
         lang,
       },
     })
@@ -131,8 +108,8 @@ export async function updateStudentPersonal(
 
 // -----------------------------------------------------------------------------
 // Guardian sub-tabs — Father + Mother in Guardian / StudentGuardian /
-// GuardianPhoneNumber. Wrapped in a single transaction so a partial save can't
-// leave orphaned guardian rows.
+// GuardianPhoneNumber. Single name field per parent. WhatsApp stored as a
+// second phone row with phoneType="whatsapp".
 // -----------------------------------------------------------------------------
 
 export async function getStudentPersonalGuardians(
@@ -148,40 +125,35 @@ export async function getStudentPersonalGuardians(
     })
 
     const result: PersonalGuardianFormData = {
-      fatherFirstName: "",
-      fatherLastName: "",
-      fatherOccupation: "",
+      fatherName: "",
       fatherPhone: "",
-      fatherEmail: "",
-      motherFirstName: "",
-      motherLastName: "",
-      motherOccupation: "",
+      fatherWhatsapp: "",
+      motherName: "",
       motherPhone: "",
-      motherEmail: "",
+      motherWhatsapp: "",
     }
 
     for (const sg of studentGuardians) {
       const typeName = sg.guardianType.name.toLowerCase()
+      const phones = await db.guardianPhoneNumber.findMany({
+        where: { guardianId: sg.guardianId, schoolId },
+        orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
+      })
+      const primary = phones.find((p) => p.phoneType !== "whatsapp")
+      const whatsapp = phones.find((p) => p.phoneType === "whatsapp")
+      const displayName = [sg.guardian.firstName, sg.guardian.lastName]
+        .filter(Boolean)
+        .join(" ")
+        .trim()
+
       if (typeName === "father") {
-        result.fatherFirstName = sg.guardian.firstName
-        result.fatherLastName = sg.guardian.lastName
-        result.fatherOccupation = sg.occupation || ""
-        result.fatherEmail = sg.guardian.emailAddress || ""
-        const phone = await db.guardianPhoneNumber.findFirst({
-          where: { guardianId: sg.guardianId, schoolId },
-          orderBy: { isPrimary: "desc" },
-        })
-        result.fatherPhone = phone?.phoneNumber || ""
+        result.fatherName = displayName
+        result.fatherPhone = primary?.phoneNumber || ""
+        result.fatherWhatsapp = whatsapp?.phoneNumber || ""
       } else if (typeName === "mother") {
-        result.motherFirstName = sg.guardian.firstName
-        result.motherLastName = sg.guardian.lastName
-        result.motherOccupation = sg.occupation || ""
-        result.motherEmail = sg.guardian.emailAddress || ""
-        const phone = await db.guardianPhoneNumber.findFirst({
-          where: { guardianId: sg.guardianId, schoolId },
-          orderBy: { isPrimary: "desc" },
-        })
-        result.motherPhone = phone?.phoneNumber || ""
+        result.motherName = displayName
+        result.motherPhone = primary?.phoneNumber || ""
+        result.motherWhatsapp = whatsapp?.phoneNumber || ""
       }
     }
 
@@ -205,33 +177,73 @@ export async function saveStudentPersonalGuardians(
     const parsed = personalGuardianSchema.parse(input)
 
     await db.$transaction(async (tx) => {
-      if (parsed.fatherFirstName?.trim()) {
-        await createOrLinkGuardian(tx, {
+      if (parsed.fatherName?.trim()) {
+        const { firstName, lastName } = splitGuardianName(parsed.fatherName)
+        const { guardianId } = await createOrLinkGuardian(tx, {
           schoolId,
           studentId,
           typeName: "father",
-          firstName: parsed.fatherFirstName.trim(),
-          lastName: parsed.fatherLastName?.trim() || "",
-          email: parsed.fatherEmail?.trim() || null,
+          firstName,
+          lastName,
+          email: null,
           phone: parsed.fatherPhone?.trim() || null,
-          occupation: parsed.fatherOccupation?.trim() || null,
+          occupation: null,
           isPrimary: true,
         })
+        if (parsed.fatherWhatsapp?.trim()) {
+          await tx.guardianPhoneNumber.upsert({
+            where: {
+              schoolId_guardianId_phoneNumber: {
+                schoolId,
+                guardianId,
+                phoneNumber: parsed.fatherWhatsapp.trim(),
+              },
+            },
+            create: {
+              schoolId,
+              guardianId,
+              phoneNumber: parsed.fatherWhatsapp.trim(),
+              phoneType: "whatsapp",
+              isPrimary: false,
+            },
+            update: { phoneType: "whatsapp" },
+          })
+        }
       }
 
-      if (parsed.motherFirstName?.trim()) {
-        await createOrLinkGuardian(tx, {
+      if (parsed.motherName?.trim()) {
+        const { firstName, lastName } = splitGuardianName(parsed.motherName)
+        const { guardianId } = await createOrLinkGuardian(tx, {
           schoolId,
           studentId,
           typeName: "mother",
-          firstName: parsed.motherFirstName.trim(),
-          lastName: parsed.motherLastName?.trim() || "",
-          email: parsed.motherEmail?.trim() || null,
+          firstName,
+          lastName,
+          email: null,
           phone: parsed.motherPhone?.trim() || null,
-          occupation: parsed.motherOccupation?.trim() || null,
-          // Mother is the primary contact only if father wasn't provided.
-          isPrimary: !parsed.fatherFirstName?.trim(),
+          occupation: null,
+          // Mother is primary only if father wasn't provided.
+          isPrimary: !parsed.fatherName?.trim(),
         })
+        if (parsed.motherWhatsapp?.trim()) {
+          await tx.guardianPhoneNumber.upsert({
+            where: {
+              schoolId_guardianId_phoneNumber: {
+                schoolId,
+                guardianId,
+                phoneNumber: parsed.motherWhatsapp.trim(),
+              },
+            },
+            create: {
+              schoolId,
+              guardianId,
+              phoneNumber: parsed.motherWhatsapp.trim(),
+              phoneType: "whatsapp",
+              isPrimary: false,
+            },
+            update: { phoneType: "whatsapp" },
+          })
+        }
       }
     })
 

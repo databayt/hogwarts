@@ -17,12 +17,7 @@ import { useForm } from "react-hook-form"
 import { isStreamGrade } from "@/lib/grade-utils"
 import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
-import {
-  DateField,
-  InputField,
-  SelectField,
-  TextareaField,
-} from "@/components/form"
+import { InputField, SelectField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { createI18nHelpers } from "@/components/internationalization/helpers"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
@@ -64,52 +59,6 @@ export const AcademicForm = forwardRef<WizardFormRef, AcademicFormProps>(
 
     const schema = useMemo(() => createAcademicSchema(v), [v])
 
-    const statusOptions = [
-      {
-        label: tEnrollment?.statusOptions?.active || "Active",
-        value: "ACTIVE",
-      },
-      {
-        label: tEnrollment?.statusOptions?.inactive || "Inactive",
-        value: "INACTIVE",
-      },
-      {
-        label: tEnrollment?.statusOptions?.suspended || "Suspended",
-        value: "SUSPENDED",
-      },
-      {
-        label: tEnrollment?.statusOptions?.graduated || "Graduated",
-        value: "GRADUATED",
-      },
-      {
-        label: tEnrollment?.statusOptions?.transferred || "Transferred",
-        value: "TRANSFERRED",
-      },
-      {
-        label: tEnrollment?.statusOptions?.droppedOut || "Dropped Out",
-        value: "DROPPED_OUT",
-      },
-    ]
-
-    const studentTypeOptions = [
-      {
-        label: tEnrollment?.typeOptions?.regular || "Regular",
-        value: "REGULAR",
-      },
-      {
-        label: tEnrollment?.typeOptions?.transfer || "Transfer",
-        value: "TRANSFER",
-      },
-      {
-        label: tEnrollment?.typeOptions?.international || "International",
-        value: "INTERNATIONAL",
-      },
-      {
-        label: tEnrollment?.typeOptions?.exchange || "Exchange",
-        value: "EXCHANGE",
-      },
-    ]
-
     const [gradeOptions, setGradeOptions] = useState<
       { value: string; label: string; gradeNumber: number }[]
     >([])
@@ -124,20 +73,10 @@ export const AcademicForm = forwardRef<WizardFormRef, AcademicFormProps>(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       resolver: zodResolver(schema) as any,
       defaultValues: {
-        enrollmentDate: initialData?.enrollmentDate,
-        admissionNumber: initialData?.admissionNumber || "",
-        status: initialData?.status,
-        studentType: initialData?.studentType,
-        category: initialData?.category || "",
         academicGradeId: initialData?.academicGradeId || "",
         academicStreamId: initialData?.academicStreamId || "",
         sectionId: initialData?.sectionId || "",
         previousSchoolName: initialData?.previousSchoolName || "",
-        previousSchoolAddress: initialData?.previousSchoolAddress || "",
-        previousGrade: initialData?.previousGrade || "",
-        transferCertificateNo: initialData?.transferCertificateNo || "",
-        transferDate: initialData?.transferDate,
-        previousAcademicRecord: initialData?.previousAcademicRecord || "",
       },
     })
 
@@ -176,7 +115,7 @@ export const AcademicForm = forwardRef<WizardFormRef, AcademicFormProps>(
       })
     }, [selectedGradeId, streamEnabled, locale])
 
-    // Reset sectionId and streamId when grade changes (skip initial mount)
+    // Reset sectionId + streamId when grade changes (skip initial mount).
     const gradeRef = React.useRef(initialData?.academicGradeId)
     useEffect(() => {
       if (gradeRef.current !== selectedGradeId) {
@@ -186,7 +125,7 @@ export const AcademicForm = forwardRef<WizardFormRef, AcademicFormProps>(
       gradeRef.current = selectedGradeId
     }, [selectedGradeId, form])
 
-    // Academic step is always valid (all fields optional)
+    // Academic step is always valid (all fields optional).
     React.useEffect(() => {
       onValidChange?.(true)
     }, [onValidChange])
@@ -228,45 +167,7 @@ export const AcademicForm = forwardRef<WizardFormRef, AcademicFormProps>(
     return (
       <Form {...form}>
         <form className="space-y-6">
-          {/* Enrollment section */}
-          <div className="grid grid-cols-2 gap-7">
-            <DateField
-              name="enrollmentDate"
-              label={tEnrollment?.enrollmentDate || "Date"}
-              disabled={isPending}
-            />
-            <InputField
-              name="admissionNumber"
-              label={tEnrollment?.admissionNumber || "Admission"}
-              placeholder={
-                tEnrollment?.admissionNumberPlaceholder ||
-                "Enter admission number"
-              }
-              disabled={isPending}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-7">
-            <SelectField
-              name="status"
-              label={tEnrollment?.status || "Status"}
-              options={statusOptions}
-              disabled={isPending}
-            />
-            <SelectField
-              name="studentType"
-              label={tEnrollment?.studentType || "Type"}
-              options={studentTypeOptions}
-              disabled={isPending}
-            />
-          </div>
-          <InputField
-            name="category"
-            label={tEnrollment?.category || "Category"}
-            placeholder={tEnrollment?.categoryPlaceholder || "Enter category"}
-            disabled={isPending}
-            className="hidden"
-          />
-          <div className="grid grid-cols-2 gap-7">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-7">
             <SelectField
               name="academicGradeId"
               label={tEnrollment?.academicGradeId || "Grade"}
@@ -280,62 +181,17 @@ export const AcademicForm = forwardRef<WizardFormRef, AcademicFormProps>(
               disabled={isPending || !streamEnabled}
             />
           </div>
-          <div className="grid grid-cols-2 gap-7">
-            <SelectField
-              name="sectionId"
-              label={tEnrollment?.sectionId || "Section"}
-              options={sectionOptions}
-              disabled={isPending || !selectedGradeId}
-            />
-          </div>
-
-          {/* Previous education section */}
+          <SelectField
+            name="sectionId"
+            label={tEnrollment?.sectionId || "Section"}
+            options={sectionOptions}
+            disabled={isPending || !selectedGradeId}
+          />
           <InputField
             name="previousSchoolName"
-            label={tPrev?.schoolName || "Previous School Name"}
+            label={tPrev?.schoolName || "Previous School"}
             placeholder={
               tPrev?.schoolNamePlaceholder || "Enter previous school name"
-            }
-            disabled={isPending}
-          />
-          <TextareaField
-            name="previousSchoolAddress"
-            label={tPrev?.schoolAddress || "Previous School Address"}
-            placeholder={
-              tPrev?.schoolAddressPlaceholder || "Enter previous school address"
-            }
-            disabled={isPending}
-          />
-          <div className="grid grid-cols-2 gap-7">
-            <InputField
-              name="previousGrade"
-              label={tPrev?.previousGrade || "Previous Grade"}
-              placeholder={
-                tPrev?.previousGradePlaceholder || "Enter previous grade level"
-              }
-              disabled={isPending}
-            />
-            <InputField
-              name="transferCertificateNo"
-              label={tPrev?.transferCertificate || "Transfer Certificate No."}
-              placeholder={
-                tPrev?.transferCertificatePlaceholder ||
-                "Enter transfer certificate number"
-              }
-              disabled={isPending}
-            />
-          </div>
-          <DateField
-            name="transferDate"
-            label={tPrev?.transferDate || "Transfer Date"}
-            disabled={isPending}
-          />
-          <TextareaField
-            name="previousAcademicRecord"
-            label={tPrev?.academicRecord || "Previous Academic Record"}
-            placeholder={
-              tPrev?.academicRecordPlaceholder ||
-              "Enter previous academic record details"
             }
             disabled={isPending}
           />

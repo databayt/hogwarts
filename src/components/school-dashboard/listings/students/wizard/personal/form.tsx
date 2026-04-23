@@ -4,32 +4,22 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import React, {
   forwardRef,
+  useEffect,
   useImperativeHandle,
   useMemo,
   useTransition,
 } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { ar } from "date-fns/locale/ar"
-import { enUS } from "date-fns/locale/en-US"
 import { useForm } from "react-hook-form"
 
 import type { NameFormat } from "@/lib/name-utils"
 import { composeFullName } from "@/lib/name-utils"
 import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
-import {
-  CountryField,
-  DateField,
-  InputField,
-  NameFields,
-  PhoneField,
-  SelectField,
-} from "@/components/form"
+import { NameFields, PhoneField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { createI18nHelpers } from "@/components/internationalization/helpers"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
-import { useLocale } from "@/components/internationalization/use-locale"
-import { getGenderOptions } from "@/components/school-dashboard/listings/students/config"
 
 import { updateStudentPersonal } from "./actions"
 import {
@@ -47,8 +37,6 @@ interface PersonalFormProps {
 export const PersonalForm = forwardRef<WizardFormRef, PersonalFormProps>(
   ({ studentId, initialData, nameFormat = "full", onValidChange }, ref) => {
     const [isPending, startTransition] = useTransition()
-    const { locale } = useLocale()
-    const dateLocale = useMemo(() => (locale === "ar" ? ar : enUS), [locale])
     const { dictionary } = useDictionary()
     const students = (dictionary?.school as Record<string, unknown>)
       ?.students as Record<string, unknown> | undefined
@@ -77,16 +65,8 @@ export const PersonalForm = forwardRef<WizardFormRef, PersonalFormProps>(
         firstName: initialData?.firstName || "",
         middleName: initialData?.middleName || "",
         lastName: initialData?.lastName || "",
-        dateOfBirth: initialData?.dateOfBirth,
-        gender: initialData?.gender,
-        nationality: initialData?.nationality || "",
-        profilePhotoUrl: initialData?.profilePhotoUrl,
-        email: initialData?.email || "",
         mobileNumber: initialData?.mobileNumber || "",
         alternatePhone: initialData?.alternatePhone || "",
-        emergencyContactName: initialData?.emergencyContactName || "",
-        emergencyContactPhone: initialData?.emergencyContactPhone || "",
-        emergencyContactRelation: initialData?.emergencyContactRelation || "",
         ...(nameFormat === "full"
           ? {
               _fullName: composeFullName(
@@ -99,7 +79,16 @@ export const PersonalForm = forwardRef<WizardFormRef, PersonalFormProps>(
       },
     })
 
-    // Notify parent of validity changes — personal step requires a name.
+    // Auto-fill whatsapp from primary phone (matches application UX).
+    const phoneValue = form.watch("mobileNumber")
+    useEffect(() => {
+      const currentWhatsapp = form.getValues("alternatePhone")
+      if (!currentWhatsapp && phoneValue) {
+        form.setValue("alternatePhone", phoneValue)
+      }
+    }, [phoneValue, form])
+
+    // Student sub-tab is valid as soon as a name is present.
     const firstName = form.watch("firstName")
     const lastName = form.watch("lastName")
     const fullName = nameFormat === "full" ? form.watch("_fullName") : null
@@ -177,91 +166,19 @@ export const PersonalForm = forwardRef<WizardFormRef, PersonalFormProps>(
             required
             disabled={isPending}
           />
-          <div className="grid grid-cols-2 gap-7">
-            <DateField
-              name="dateOfBirth"
-              label={t?.dateOfBirth || "Date of Birth"}
-              disabled={isPending}
-              captionLayout="dropdown"
-              startMonth={new Date(1970, 0)}
-              endMonth={new Date()}
-              maxDate={new Date()}
-              locale={dateLocale}
-            />
-            <SelectField
-              name="gender"
-              label={t?.gender || "Gender"}
-              options={getGenderOptions(
-                students as Parameters<typeof getGenderOptions>[0]
-              )}
-              disabled={isPending}
-            />
-          </div>
-          <CountryField
-            name="nationality"
-            label={t?.nationality || "Nationality"}
-            placeholder={t?.nationalityPlaceholder || "Select nationality"}
-            disabled={isPending}
-            className="max-w-xs"
-          />
-          {/* Contact block — absorbed from the retired `contact` step */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-7">
-            <InputField
-              name="email"
-              label={tContact?.email || "Email"}
-              placeholder={tContact?.emailPlaceholder || "Enter email address"}
-              type="email"
+            <PhoneField
+              name="mobileNumber"
+              label={`${tContact?.phone || t?.phone || "Phone"} *`}
+              placeholder={tContact?.phonePlaceholder || "Enter phone number"}
               disabled={isPending}
             />
             <PhoneField
-              name="mobileNumber"
-              label={tContact?.mobile || "Mobile Number"}
-              placeholder={tContact?.mobilePlaceholder || "Enter mobile number"}
+              name="alternatePhone"
+              label={tContact?.whatsapp || "WhatsApp"}
+              placeholder={tContact?.phonePlaceholder || "Enter phone number"}
               disabled={isPending}
             />
-          </div>
-          <PhoneField
-            name="alternatePhone"
-            label={tContact?.alternatePhone || "Alternate Phone"}
-            placeholder={
-              tContact?.alternatePhonePlaceholder || "Enter alternate phone"
-            }
-            disabled={isPending}
-          />
-          {/* Emergency contact — absorbed from retired contact/emergency tab */}
-          <div className="space-y-4 rounded-lg border p-4">
-            <h4 className="text-sm font-medium">
-              {tContact?.emergencyTitle || "Emergency Contact"}
-            </h4>
-            <InputField
-              name="emergencyContactName"
-              label={tContact?.emergencyName || "Emergency Contact Name"}
-              placeholder={
-                tContact?.emergencyNamePlaceholder ||
-                "Enter emergency contact name"
-              }
-              disabled={isPending}
-            />
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-7">
-              <PhoneField
-                name="emergencyContactPhone"
-                label={tContact?.emergencyPhone || "Emergency Contact Phone"}
-                placeholder={
-                  tContact?.emergencyPhonePlaceholder ||
-                  "Enter emergency contact phone"
-                }
-                disabled={isPending}
-              />
-              <InputField
-                name="emergencyContactRelation"
-                label={tContact?.relationship || "Relationship"}
-                placeholder={
-                  tContact?.relationshipPlaceholder ||
-                  "Enter relationship to student"
-                }
-                disabled={isPending}
-              />
-            </div>
           </div>
         </form>
       </Form>
