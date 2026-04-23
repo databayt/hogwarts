@@ -3571,6 +3571,16 @@
           "ORDERING": "Ordering",
           "MULTI_SELECT": "Multi Select"
         },
+        "questionDescriptions": {
+          "MULTIPLE_CHOICE": "Pick the best answer from multiple options provided",
+          "TRUE_FALSE": "Decide whether each given statement is true or false",
+          "SHORT_ANSWER": "Write a brief response in one or two sentences",
+          "ESSAY": "Compose a detailed long-form answer with full explanation",
+          "FILL_BLANK": "Complete the sentence by filling in the missing words",
+          "MATCHING": "Connect related items by pairing them from two columns",
+          "ORDERING": "Arrange the given items into their correct logical sequence",
+          "MULTI_SELECT": "Choose all the correct answers from the options given"
+        },
         "difficulty": {
           "EASY": "Easy",
           "MEDIUM": "Medium",

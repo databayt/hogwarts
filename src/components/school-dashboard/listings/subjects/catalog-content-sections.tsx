@@ -265,6 +265,31 @@ export function CatalogContentSections({
       exploreQBank: cat?.exploreQBank || "Explore QBank",
       textbook: cat?.textbook || "Textbook",
       openTextbook: cat?.openTextbook || "Open Textbook",
+      // Question type descriptions
+      MULTIPLE_CHOICE_DESC:
+        cat?.questionDescriptions?.MULTIPLE_CHOICE ||
+        "Pick the best answer from multiple options provided",
+      TRUE_FALSE_DESC:
+        cat?.questionDescriptions?.TRUE_FALSE ||
+        "Decide whether each given statement is true or false",
+      SHORT_ANSWER_DESC:
+        cat?.questionDescriptions?.SHORT_ANSWER ||
+        "Write a brief response in one or two sentences",
+      ESSAY_DESC:
+        cat?.questionDescriptions?.ESSAY ||
+        "Compose a detailed long-form answer with full explanation",
+      FILL_BLANK_DESC:
+        cat?.questionDescriptions?.FILL_BLANK ||
+        "Complete the sentence by filling in the missing words",
+      MATCHING_DESC:
+        cat?.questionDescriptions?.MATCHING ||
+        "Connect related items by pairing them from two columns",
+      ORDERING_DESC:
+        cat?.questionDescriptions?.ORDERING ||
+        "Arrange the given items into their correct logical sequence",
+      MULTI_SELECT_DESC:
+        cat?.questionDescriptions?.MULTI_SELECT ||
+        "Choose all the correct answers from the options given",
     }),
     [cat]
   )
@@ -374,6 +399,8 @@ export function CatalogContentSections({
             const card = data.questionStats.cards.find((c) => c.type === type)
             const cardColor = config.color ?? accentColor
             const typeName = t[type as keyof typeof t] ?? type
+            const typeDescription =
+              t[`${type}_DESC` as keyof typeof t] ?? config.description
             return (
               <div
                 key={type}
@@ -412,7 +439,7 @@ export function CatalogContentSections({
                   <div className="absolute inset-x-0 bottom-0 px-3.5 pb-6">
                     <div className="mb-2.5 h-[1.5px] w-8 bg-[#F4F1D0]" />
                     <p className="font-mono text-xs leading-relaxed text-[#F4F1D0]">
-                      {config.description}
+                      {typeDescription}
                     </p>
                   </div>
                 </div>
