@@ -116,13 +116,14 @@ export const getCatalogCourse = cache(async function getCatalogCourse(
             take: 1,
           })
           .then(async (groups) => {
+            const brandName = lang === "ar" ? "هوجورتس" : "Hogwarts"
             const topCreatorSchoolId = groups[0]?.schoolId ?? null
-            if (!topCreatorSchoolId) return "Hogwarts"
+            if (!topCreatorSchoolId) return brandName
             const school = await db.school.findUnique({
               where: { id: topCreatorSchoolId },
               select: { name: true, preferredLanguage: true },
             })
-            if (!school?.name) return "Hogwarts"
+            if (!school?.name) return brandName
             const storedLang = (school.preferredLanguage || "ar") as "ar" | "en"
             const displayLang = (lang === "ar" ? "ar" : "en") as "ar" | "en"
             if (storedLang === displayLang) return school.name
@@ -133,8 +134,8 @@ export const getCatalogCourse = cache(async function getCatalogCourse(
               topCreatorSchoolId
             )
           })
-      : Promise.resolve("Hogwarts")
-    ).catch(() => "Hogwarts"),
+      : Promise.resolve(lang === "ar" ? "هوجورتس" : "Hogwarts")
+    ).catch(() => (lang === "ar" ? "هوجورتس" : "Hogwarts")),
   ])
 
   // Translate all content names for the current locale

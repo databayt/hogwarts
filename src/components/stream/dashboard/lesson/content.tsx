@@ -232,7 +232,7 @@ export function StreamLessonContent({
                       key={grade}
                       className="rounded-md border border-white/30 bg-black/60 px-2.5 text-xs font-medium text-white backdrop-blur-sm"
                     >
-                      Grade {gradeWord(grade)}
+                      {d?.grade || "Grade"} {gradeWord(grade)}
                     </span>
                   ))}
                 </div>
@@ -247,12 +247,14 @@ export function StreamLessonContent({
               <div className="mt-1.5 flex items-center gap-2">
                 <Image
                   src={asset("/icons/logo.png")}
-                  alt="Hogwarts"
+                  alt={d?.brandName || "Hogwarts"}
                   width={16}
                   height={16}
                   className="rounded-sm brightness-0 invert"
                 />
-                <span className="text-sm font-medium text-white">Hogwarts</span>
+                <span className="text-sm font-medium text-white">
+                  {d?.brandName || "Hogwarts"}
+                </span>
               </div>
 
               {/* Chapter & Lesson position + MORE */}
@@ -286,7 +288,7 @@ export function StreamLessonContent({
                 </span>
                 {lesson.isFree && (
                   <span className="rounded border border-white px-1.5 text-xs text-white">
-                    Free
+                    {d?.free || "Free"}
                   </span>
                 )}
                 <span className="rounded border border-white px-1.5 text-xs text-white">

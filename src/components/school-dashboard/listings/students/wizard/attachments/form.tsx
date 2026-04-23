@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils"
 import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { useUpload } from "@/components/file/upload/use-upload"
+import { FileUploadField } from "@/components/form/atoms/file-upload"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
@@ -28,76 +29,89 @@ import { attachmentsSchema, type AttachmentsFormData } from "./validation"
 
 type AttachmentDict = Record<string, string> | undefined
 
-const getDocumentSlots = (t: AttachmentDict) => [
+const DOCUMENT_SLOT_KEYS = [
   {
     key: "degreeUrl" as const,
-    label: t?.degree || "Degree",
+    dictKey: "degree",
     icon: asset("/icons/degree.png"),
   },
   {
     key: "transcriptUrl" as const,
-    label: t?.transcript || "Transcript",
+    dictKey: "transcript",
     icon: asset("/icons/transcript.png"),
   },
-  {
-    key: "idUrl" as const,
-    label: t?.id || "ID",
-    icon: asset("/icons/id.png"),
-  },
+  { key: "idUrl" as const, dictKey: "id", icon: asset("/icons/id.png") },
   {
     key: "resumeUrl" as const,
-    label: t?.resume || "Resume",
+    dictKey: "resume",
     icon: asset("/icons/resume.png"),
   },
   {
     key: "otherUrl" as const,
-    label: t?.other || "Other",
+    dictKey: "other",
     icon: asset("/icons/files.png"),
   },
 ]
 
-/**
- * A single document upload card — shows first-page preview after upload
- * with label at the bottom and a clear button.
- */
 function DocumentCard({
   name,
   label,
   icon,
   disabled,
+  uploadedLabel,
   onUploaded,
 }: {
   name: string
   label: string
   icon: string
   disabled?: boolean
-  onUploaded?: (slotKey: string, fileUrl: string) => void
+  uploadedLabel?: string
+  onUploaded?: (fileUrl: string) => void
 }) {
   const form = useFormContext()
   const currentValue = form.watch(name)
   const hasFile =
-    !!currentValue && typeof currentValue === "object" && currentValue?.url
-  const fileUrl = hasFile ? currentValue.url : null
-  const mimeType = hasFile ? currentValue.mimeType : null
-  const isPdf = mimeType === "application/pdf" || fileUrl?.endsWith(".pdf")
-  const isImage = mimeType?.startsWith("image/")
+    !!currentValue &&
+    ((typeof currentValue === "object" && currentValue?.url) ||
+      (typeof currentValue === "string" && currentValue.length > 0))
 
-  const { isUploading, uploadedFiles, upload, getAcceptedTypes, reset } =
-    useUpload({
-      category: "document",
-      folder: "student-documents",
-      maxSize: 10 * 1024 * 1024,
-      maxFiles: 1,
-      onSuccess: (result) => {
-        form.setValue(name, result)
-        if (result?.url) onUploaded?.(name, result.url)
-      },
-    })
+  const [rejectionError, setRejectionError] = useState<string | null>(null)
+
+  const {
+    isUploading,
+    error: uploadError,
+    upload,
+    reset: resetUpload,
+    getAcceptedTypes,
+  } = useUpload({
+    category: "document",
+    folder: "student-documents",
+    maxSize: 10 * 1024 * 1024,
+    maxFiles: 1,
+    onSuccess: (result) => {
+      setRejectionError(null)
+      form.setValue(name, result)
+      const url =
+        typeof result === "string" ? result : (result as { url?: string })?.url
+      if (url && onUploaded) onUploaded(url)
+    },
+  })
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: async (files) => {
       if (files.length > 0) {
+        setRejectionError(null)
         await upload(files[0])
+      }
+    },
+    onDropRejected: (rejections) => {
+      const code = rejections[0]?.errors[0]?.code
+      if (code === "file-too-large") {
+        setRejectionError("10MB max")
+      } else if (code === "file-invalid-type") {
+        setRejectionError("PDF, DOC, XLS, TXT")
+      } else {
+        setRejectionError("Invalid file")
       }
     },
     accept: getAcceptedTypes(),
@@ -107,73 +121,63 @@ function DocumentCard({
     multiple: false,
   })
 
-  const uploaded = hasFile || uploadedFiles.length > 0
+  const handleClear = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+      form.setValue(name, "", { shouldDirty: true, shouldTouch: true })
+      resetUpload()
+      setRejectionError(null)
+    },
+    [form, name, resetUpload]
+  )
 
-  const handleRemove = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    form.setValue(name, "")
-    reset()
-  }
+  const errorMsg = rejectionError || uploadError
+
+  const uploaded = !!hasFile
+  const fileUrl =
+    typeof currentValue === "string"
+      ? currentValue
+      : (currentValue as { url?: string })?.url || ""
+  const mimeType =
+    typeof currentValue === "object"
+      ? (currentValue as { mimeType?: string })?.mimeType || ""
+      : ""
+  const isImage =
+    /\.(jpe?g|png|gif|webp|bmp|svg)$/i.test(fileUrl) ||
+    mimeType.startsWith("image/")
 
   return (
     <div
       {...getRootProps()}
       className={cn(
-        "relative flex cursor-pointer flex-col items-center justify-center overflow-hidden rounded-lg border transition-colors",
+        "relative flex h-32 cursor-pointer flex-col items-center overflow-hidden rounded-lg border transition-colors",
+        errorMsg && "border-destructive",
         isDragActive && "border-primary bg-primary/10",
         disabled && "cursor-not-allowed opacity-50",
-        uploaded ? "min-h-[8rem] gap-0" : "gap-2 p-4"
+        !uploaded && "justify-center gap-2 p-4"
       )}
     >
       <input {...getInputProps()} />
-      {/* Clear button */}
-      {uploaded && !disabled && (
-        <button
-          type="button"
-          onClick={handleRemove}
-          className="bg-muted text-muted-foreground absolute end-1 top-1 z-10 flex h-5 w-5 items-center justify-center rounded-full"
-        >
-          <X className="h-3 w-3" />
-        </button>
-      )}
-      {/* Content area */}
       {isUploading ? (
-        <>
+        <div className="flex flex-1 items-center justify-center">
           <Loader2 className="text-primary h-8 w-8 animate-spin" />
-          <p className="text-sm font-medium">{label}</p>
-        </>
+        </div>
       ) : uploaded && fileUrl ? (
         <>
-          {/* Document first-page preview */}
-          <div className="pointer-events-none w-full flex-1">
-            {isPdf ? (
-              <object
-                data={`${fileUrl}#page=1&view=FitH`}
-                type="application/pdf"
-                className="h-24 w-full"
-                aria-label={label}
-              >
-                <Image src={icon} alt={label} width={32} height={32} />
-              </object>
-            ) : isImage ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={fileUrl}
-                alt={label}
-                className="h-24 w-full object-cover"
-              />
-            ) : (
-              <div className="flex h-24 items-center justify-center">
-                <Image src={icon} alt={label} width={32} height={32} />
-              </div>
-            )}
-          </div>
-          {/* Label bar at bottom — liquid glass effect */}
-          <div
-            className="absolute inset-x-0 bottom-0 z-10 py-2 text-center"
+          <button
+            type="button"
+            onClick={handleClear}
+            className="absolute end-1.5 top-1.5 z-20 flex h-5 w-5 items-center justify-center rounded-full bg-black/50 text-white transition-colors hover:bg-black/70"
+            aria-label="Remove attachment"
+          >
+            <X className="h-3 w-3" />
+          </button>
+          <p
+            className="absolute inset-x-0 bottom-0 z-10 truncate px-2 pt-4 pb-1.5 text-center text-sm font-medium text-black dark:text-white"
             style={{
               background:
-                "linear-gradient(to top, rgba(0,0,0,0.06) 0%, rgba(0,0,0,0.03) 40%, transparent 100%)",
+                "linear-gradient(to top, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 40%, transparent 100%)",
               backdropFilter: "blur(8px) saturate(110%)",
               WebkitBackdropFilter: "blur(8px) saturate(110%)",
               maskImage:
@@ -182,115 +186,45 @@ function DocumentCard({
                 "linear-gradient(to top, black 0%, black 50%, transparent 100%)",
             }}
           >
-            <p className="text-sm font-medium">{label}</p>
-          </div>
+            {label}
+          </p>
+          {isImage ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={fileUrl}
+              alt={label}
+              className="relative z-0 h-full w-full object-cover"
+            />
+          ) : /\.pdf$/i.test(fileUrl) || mimeType === "application/pdf" ? (
+            <object
+              data={`${fileUrl}#page=1&view=FitH`}
+              type="application/pdf"
+              className="pointer-events-none h-full w-full"
+              aria-label={label}
+            >
+              <div className="flex flex-1 flex-col items-center justify-center gap-1">
+                <CheckCircle className="h-8 w-8 text-green-500" />
+                <p className="text-muted-foreground text-xs">PDF</p>
+              </div>
+            </object>
+          ) : (
+            <div className="flex flex-1 flex-col items-center justify-center gap-1">
+              <CheckCircle className="h-8 w-8 text-green-500" />
+              <p className="text-muted-foreground text-xs">
+                {uploadedLabel || "Uploaded"}
+              </p>
+            </div>
+          )}
         </>
       ) : (
         <>
           <Image src={icon} alt={label} width={32} height={32} />
-          <p className="text-sm font-medium">{label}</p>
+          {errorMsg ? (
+            <p className="text-destructive text-xs">{errorMsg}</p>
+          ) : (
+            <p className="text-sm font-medium">{label}</p>
+          )}
         </>
-      )}
-    </div>
-  )
-}
-
-/**
- * Photo upload with avatar circle and clear button.
- */
-function PhotoCard({
-  name,
-  label,
-  disabled,
-}: {
-  name: string
-  label: string
-  disabled?: boolean
-}) {
-  const form = useFormContext()
-  const currentValue = form.watch(name)
-  // currentValue can be a string URL or an upload result object
-  const hasPhoto =
-    (typeof currentValue === "string" && currentValue.length > 0) ||
-    (typeof currentValue === "object" && currentValue?.url)
-  const photoUrl =
-    typeof currentValue === "string" ? currentValue : currentValue?.url || null
-
-  const { isUploading, upload, getAcceptedTypes, reset } = useUpload({
-    category: "image",
-    folder: "student-photos",
-    maxSize: 5 * 1024 * 1024,
-    maxFiles: 1,
-    onSuccess: (result) => {
-      form.setValue(name, result)
-    },
-  })
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop: async (files) => {
-      if (files.length > 0) {
-        await upload(files[0])
-      }
-    },
-    accept: getAcceptedTypes(),
-    maxSize: 5 * 1024 * 1024,
-    maxFiles: 1,
-    disabled: disabled || isUploading,
-    multiple: false,
-  })
-
-  const handleRemove = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation()
-      form.setValue(name, "")
-      reset()
-    },
-    [form, name, reset]
-  )
-
-  return (
-    <div className="relative flex items-center justify-center">
-      <div
-        {...getRootProps()}
-        className={cn(
-          "border-border bg-muted/50 relative h-32 w-32 rounded-full border border-dashed",
-          "flex cursor-pointer items-center justify-center transition-colors",
-          isDragActive && "border-primary bg-primary/10",
-          disabled && "cursor-not-allowed opacity-50"
-        )}
-      >
-        <input {...getInputProps()} />
-        {isUploading ? (
-          <Loader2 className="text-primary h-8 w-8 animate-spin" />
-        ) : hasPhoto && photoUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={photoUrl}
-            alt={label}
-            className="h-full w-full rounded-full object-cover"
-          />
-        ) : (
-          <div className="flex flex-col items-center gap-1">
-            <Image
-              src={asset("/icons/image.png")}
-              alt={label}
-              width={32}
-              height={32}
-              className="object-contain"
-            />
-            <span className="text-muted-foreground text-xs">{label}</span>
-          </div>
-        )}
-      </div>
-      {/* Clear button outside the circle */}
-      {hasPhoto && !disabled && !isUploading && (
-        <button
-          type="button"
-          onClick={handleRemove}
-          className="bg-muted text-muted-foreground absolute -end-1 top-0 z-10 flex h-6 w-6 items-center justify-center rounded-full"
-        >
-          <X className="h-3.5 w-3.5" />
-        </button>
       )}
     </div>
   )
@@ -382,27 +316,42 @@ export const AttachmentsForm = forwardRef<WizardFormRef, AttachmentsFormProps>(
         }),
     }))
 
-    const documentSlots = getDocumentSlots(t)
-
     return (
       <Form {...form}>
         <form className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
-          {/* Photo - circle with clear button */}
-          <PhotoCard
-            name="profilePhotoUrl"
-            label={t?.photo || "Photo"}
-            disabled={isPending}
-          />
+          {/* Photo - avatar upload */}
+          <div className="flex items-center justify-center">
+            <FileUploadField
+              name="profilePhotoUrl"
+              category="image"
+              type="avatar"
+              folder="student-photos"
+              variant="avatar"
+              maxSize={5 * 1024 * 1024}
+              maxFiles={1}
+              optimizeImages
+              imageOptimization={{
+                maxWidth: 400,
+                maxHeight: 400,
+                quality: 85,
+                format: "webp",
+              }}
+              placeholder={t?.photo || "Photo"}
+              placeholderImage={asset("/icons/image.png")}
+              disabled={isPending}
+            />
+          </div>
 
-          {/* Document slots — icon+label always visible, badge on upload */}
-          {documentSlots.map(({ key, label, icon }) => (
+          {/* Document slots */}
+          {DOCUMENT_SLOT_KEYS.map(({ key, dictKey, icon }) => (
             <DocumentCard
               key={key}
               name={key}
-              label={label}
+              label={t?.[dictKey] || dictKey}
               icon={icon}
               disabled={isPending}
-              onUploaded={onDocumentUploaded}
+              uploadedLabel={t?.uploaded}
+              onUploaded={(fileUrl) => onDocumentUploaded?.(key, fileUrl)}
             />
           ))}
         </form>

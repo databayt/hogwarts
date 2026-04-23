@@ -67,10 +67,8 @@ export default function AttachmentsContent() {
     >
       <FormLayout>
         <FormHeading
-          title={t?.title || "Attachments"}
-          description={
-            t?.description || "Upload photo and documents for the student."
-          }
+          title={t?.title || "Documents"}
+          description={t?.description || "Upload documents to auto-fill data"}
         />
         <AttachmentsForm
           ref={formRef}

@@ -44,6 +44,7 @@ export default function StudentWizardLayout({
       dataProvider={StudentWizardProvider}
       loadHook={useStudentWizard}
       basePath="/students/add"
+      backLabel={wizard?.back}
       onStepChange={(entityId, step) => {
         updateStudentWizardStep(entityId, step)
       }}

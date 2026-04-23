@@ -44,10 +44,7 @@ export function ReasonsSection({
       {/* Reasons Grid */}
       <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-3 md:gap-12 lg:gap-16">
         {reasons.map((reason, index) => (
-          <div
-            key={index}
-            className="flex flex-col items-center text-center rtl:md:items-end rtl:md:text-end"
-          >
+          <div key={index} className="flex flex-col items-center text-center">
             {/* Icon Image */}
             <div className="mb-6">
               {/* eslint-disable-next-line @next/next/no-img-element */}

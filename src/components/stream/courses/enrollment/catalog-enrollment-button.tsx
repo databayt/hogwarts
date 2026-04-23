@@ -8,6 +8,7 @@ import { toast } from "sonner"
 
 import { tryCatch } from "@/hooks/try-catch"
 import { Button } from "@/components/ui/button"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { enrollInSubject } from "./catalog-actions"
 
@@ -31,6 +32,8 @@ export function CatalogEnrollmentButton({
   firstLessonId,
 }: CatalogEnrollmentButtonProps) {
   const [pending, startTransition] = useTransition()
+  const { dictionary } = useDictionary()
+  const d = dictionary?.stream?.enrollmentButton
 
   const isPaid = price && price > 0
   const formattedPrice = isPaid
@@ -51,7 +54,7 @@ export function CatalogEnrollmentButton({
             : `/${lang}/stream/courses/${subjectSlug}`
         }}
       >
-        Continue Learning
+        {d?.continueLearning ?? "Continue Learning"}
       </Button>
     )
   }
@@ -62,7 +65,9 @@ export function CatalogEnrollmentButton({
 
       if (error) {
         toast.error(
-          error.message || "An unexpected error occurred. Please try again."
+          error.message ||
+            d?.enrollError ||
+            "An unexpected error occurred. Please try again."
         )
       }
     })
@@ -77,12 +82,16 @@ export function CatalogEnrollmentButton({
       {pending ? (
         <>
           <Loader2 className="size-4 animate-spin" />
-          Processing...
+          {d?.processing ?? "Processing..."}
         </>
       ) : isPaid ? (
-        `Enroll - ${formattedPrice}`
+        d?.enrollPrice ? (
+          d.enrollPrice.replace("{price}", formattedPrice ?? "")
+        ) : (
+          `Enroll - ${formattedPrice}`
+        )
       ) : (
-        "Enroll for Free"
+        (d?.enrollForFree ?? "Enroll for Free")
       )}
     </Button>
   )

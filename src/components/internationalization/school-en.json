@@ -1856,21 +1856,22 @@
         "address": "Address",
         "academic": "Academic",
         "complete": "Complete",
-        "back": "Back",
+        "back": "Previous",
         "next": "Next",
         "finish": "Finish",
         "skipAndCreate": "Skip & Create",
         "create": "Create"
       },
       "attachments": {
-        "title": "Attachments",
-        "description": "Upload photo and documents for the student.",
+        "title": "Documents",
+        "description": "Upload documents to auto-fill data",
         "degree": "Degree",
         "transcript": "Transcript",
         "id": "ID",
         "resume": "Resume",
         "other": "Other",
-        "photo": "Photo"
+        "photo": "Photo",
+        "uploaded": "Uploaded"
       },
       "photo": {
         "title": "Photo",
@@ -1879,7 +1880,7 @@
       },
       "personal": {
         "title": "Personal Information",
-        "description": "Enter the student's personal and family details.",
+        "description": "Student and guardian personal details",
         "studentTab": "Student",
         "fatherTab": "Father",
         "motherTab": "Mother",

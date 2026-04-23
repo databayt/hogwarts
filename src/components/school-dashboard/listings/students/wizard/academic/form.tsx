@@ -166,35 +166,44 @@ export const AcademicForm = forwardRef<WizardFormRef, AcademicFormProps>(
 
     return (
       <Form {...form}>
-        <form className="space-y-6">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-7">
-            <SelectField
-              name="academicGradeId"
-              label={tEnrollment?.academicGradeId || "Grade"}
-              options={gradeOptions}
-              disabled={isPending}
-            />
-            <SelectField
-              name="academicStreamId"
-              label={tEnrollment?.academicStreamId || "Stream"}
-              options={streamOptions}
-              disabled={isPending || !streamEnabled}
-            />
+        <form className="space-y-8">
+          {/* Previous Education */}
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <InputField
+                name="previousSchoolName"
+                label={tPrev?.schoolName || "Previous School"}
+                placeholder={
+                  tPrev?.schoolNamePlaceholder || "Enter previous school name"
+                }
+                disabled={isPending}
+              />
+            </div>
           </div>
-          <SelectField
-            name="sectionId"
-            label={tEnrollment?.sectionId || "Section"}
-            options={sectionOptions}
-            disabled={isPending || !selectedGradeId}
-          />
-          <InputField
-            name="previousSchoolName"
-            label={tPrev?.schoolName || "Previous School"}
-            placeholder={
-              tPrev?.schoolNamePlaceholder || "Enter previous school name"
-            }
-            disabled={isPending}
-          />
+
+          {/* Current Enrollment */}
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <SelectField
+                name="academicGradeId"
+                label={tEnrollment?.academicGradeId || "Grade"}
+                options={gradeOptions}
+                disabled={isPending}
+              />
+              <SelectField
+                name="academicStreamId"
+                label={tEnrollment?.academicStreamId || "Stream"}
+                options={streamOptions}
+                disabled={isPending || !streamEnabled}
+              />
+              <SelectField
+                name="sectionId"
+                label={tEnrollment?.sectionId || "Section"}
+                options={sectionOptions}
+                disabled={isPending || !selectedGradeId}
+              />
+            </div>
+          </div>
         </form>
       </Form>
     )

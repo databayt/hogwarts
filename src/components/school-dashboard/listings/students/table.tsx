@@ -145,8 +145,10 @@ function StudentsTableInner({
     (studentId: string, studentName: string) => {
       setCredentialsStudentId(studentId)
       setCredentialsStudentName(studentName)
-      // Delay lets Radix DropdownMenu dismiss events fully settle before Dialog opens
-      setTimeout(() => setCredentialsOpen(true), 150)
+      // Delay lets Radix DropdownMenu dismiss events fully settle before
+      // Dialog opens. Dialog also has a 400ms outside-click guard as a
+      // second line of defense (see credentials-dialog.tsx).
+      setTimeout(() => setCredentialsOpen(true), 250)
     },
     []
   )

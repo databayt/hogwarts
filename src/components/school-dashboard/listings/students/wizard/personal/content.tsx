@@ -17,6 +17,7 @@ import { useLocale } from "@/components/internationalization/use-locale"
 
 import { useStudentWizard } from "../use-student-wizard"
 import { getStudentPersonalGuardians } from "./actions"
+import { PERSONAL_STEP_CONFIG } from "./config"
 import { PersonalForm } from "./form"
 import { GuardianForm } from "./guardian-form"
 import type { PersonalGuardianFormData } from "./validation"
@@ -131,8 +132,8 @@ export default function PersonalContent() {
   return (
     <FormLayout>
       <FormHeading
-        title={t?.title || "Personal Information"}
-        description={t?.description || "Enter the student's personal details."}
+        title={t?.title || PERSONAL_STEP_CONFIG.label(isRTL)}
+        description={t?.description || PERSONAL_STEP_CONFIG.description(isRTL)}
       />
       <div className="space-y-6">
         <div className={activeTab === "student" ? "" : "hidden"}>

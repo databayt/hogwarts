@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState, useTransition } from "react"
+import { useCallback, useEffect, useRef, useState, useTransition } from "react"
 import { Check, Copy, Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -47,6 +47,21 @@ export function CredentialsDialog({
   const [isLoading, startLoading] = useTransition()
   const [isResetting, startResetting] = useTransition()
   const [copiedField, setCopiedField] = useState<string | null>(null)
+
+  // Guard against the DropdownMenu click that triggered us being interpreted
+  // as an "outside click" and immediately closing the Dialog. Radix's
+  // DismissableLayer hooks into pointer events on mount; the tail-end of the
+  // opening click can reach it. We swallow outside interactions for the
+  // first 400ms after open.
+  const justOpenedRef = useRef(false)
+  useEffect(() => {
+    if (!open) return
+    justOpenedRef.current = true
+    const timer = setTimeout(() => {
+      justOpenedRef.current = false
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [open])
 
   const t = (dictionary as any)?.credentials as
     | Record<string, string>
@@ -138,7 +153,21 @@ export function CredentialsDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent
+        className="sm:max-w-md"
+        onPointerDownOutside={(event) => {
+          if (justOpenedRef.current) event.preventDefault()
+        }}
+        onInteractOutside={(event) => {
+          if (justOpenedRef.current) event.preventDefault()
+        }}
+        onOpenAutoFocus={(event) => {
+          // Don't yank focus away from the opening menu immediately — the
+          // focus shuffle can re-fire dismissable-layer events on some
+          // browsers. Let the dialog mount, then focus naturally.
+          event.preventDefault()
+        }}
+      >
         <DialogHeader>
           <DialogTitle>{studentName}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>

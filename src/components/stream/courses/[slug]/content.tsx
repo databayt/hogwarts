@@ -206,7 +206,7 @@ export function StreamCourseDetailContent({
               />
               {(!course.price || course.price === 0) && (
                 <span
-                  className="rounded-md px-3 py-1 text-sm font-medium"
+                  className="inline-flex h-9 items-center rounded-md px-3 text-sm font-medium"
                   style={{ backgroundColor: colors.card, color: colors.text }}
                 >
                   {dict?.stream?.courseDetail?.free ?? "FREE"}
@@ -217,7 +217,7 @@ export function StreamCourseDetailContent({
                 userRole === "TEACHER") && (
                 <Link
                   href={`/${lang}/stream/courses/${course.slug}/edit`}
-                  className="inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors"
+                  className="inline-flex h-9 items-center gap-2 rounded-md px-3 text-sm font-medium transition-colors"
                   style={{
                     backgroundColor: colors.card,
                     color: colors.text,

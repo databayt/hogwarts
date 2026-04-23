@@ -74,6 +74,8 @@ interface WizardLayoutProps {
   onStepChange?: (entityId: string, step: string) => void
   /** Final step button label */
   finalLabel?: string
+  /** Back button label override (defaults to dictionary.school.onboarding.back) */
+  backLabel?: string
   /** Redirect destination after the final step */
   finalDestination?: string
   /** Whether to show close button in footer (default: true for wizards) */
@@ -115,6 +117,7 @@ function WizardLayoutContent({
   idParam = "id",
   onStepChange,
   finalLabel,
+  backLabel,
   finalDestination,
   showClose = true,
   closeDestination,
@@ -225,6 +228,7 @@ function WizardLayoutContent({
       finalLabel={
         resolvedFinalLabel || resolveFinalLabel(config, locale) || "Finish"
       }
+      backLabel={backLabel}
       finalDestination={finalDestination || config.finalDestination}
       onStepChange={handleStepChange}
       showClose={showClose}
