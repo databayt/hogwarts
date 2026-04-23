@@ -9,6 +9,7 @@ import type { ArchiveScope } from "@/lib/archive-scope"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import {
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
@@ -398,18 +399,24 @@ export const getStudentColumns = (
               href={`/${lang}/classrooms?studentId=${student.id}`}
             />
             <DropdownMenuSeparator />
-            <ActionMenuItem
-              label={t.generateCredentials}
-              onClick={() =>
+            <DropdownMenuItem
+              className="text-foreground/70"
+              onSelect={(e) => {
+                e.preventDefault()
                 options?.onGenerateCredentials?.(student.id, student.name)
-              }
-            />
-            <ActionMenuItem
-              label={t.linkParent}
-              onClick={() =>
+              }}
+            >
+              {t.generateCredentials}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="text-foreground/70"
+              onSelect={(e) => {
+                e.preventDefault()
                 options?.onGenerateAccessCode?.(student.id, student.name)
-              }
-            />
+              }}
+            >
+              {t.linkParent}
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             {scope === "archived" ? (
               <>

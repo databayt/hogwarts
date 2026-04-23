@@ -128,8 +128,7 @@ function StudentsTableInner({
     (studentId: string, studentName: string) => {
       setAccessCodeStudentIds([studentId])
       setAccessCodeStudentNames({ [studentId]: studentName })
-      // Delay lets Radix DropdownMenu dismiss events fully settle before Dialog opens
-      setTimeout(() => setAccessCodeOpen(true), 150)
+      setAccessCodeOpen(true)
     },
     []
   )
@@ -145,10 +144,7 @@ function StudentsTableInner({
     (studentId: string, studentName: string) => {
       setCredentialsStudentId(studentId)
       setCredentialsStudentName(studentName)
-      // Delay lets Radix DropdownMenu dismiss events fully settle before
-      // Dialog opens. Dialog also has a 400ms outside-click guard as a
-      // second line of defense (see credentials-dialog.tsx).
-      setTimeout(() => setCredentialsOpen(true), 250)
+      setCredentialsOpen(true)
     },
     []
   )
@@ -444,7 +440,6 @@ function StudentsTableInner({
         studentId={credentialsStudentId}
         studentName={credentialsStudentName}
         dictionary={dictionary}
-        onClosed={() => router.refresh()}
       />
 
       <PurgeDialog
