@@ -37,7 +37,8 @@ export default function PersonalContent() {
     | undefined
   const t = students?.personal as Record<string, string> | undefined
 
-  const { enableNext, disableNext, setCustomNavigation } = useWizardValidation()
+  const { enableNext, disableNext, setCustomNavigation, setOnSave } =
+    useWizardValidation()
   const studentFormRef = useRef<WizardFormRef>(null)
   const guardianFormRef = useRef<WizardFormRef>(null)
   const [activeTab, setActiveTab] = useState<ActiveTab>("student")
@@ -96,14 +97,31 @@ export default function PersonalContent() {
     }
   }, [locale, studentId, router])
 
-  // Wire validity + custom onNext into the wizard footer.
+  // Save without advancing. Footer's save-and-skip (Bookmark) icon awaits this
+  // and only redirects on success — must re-throw on failure.
+  const onSaveStep = useCallback(async () => {
+    if (studentFormRef.current) {
+      await studentFormRef.current.saveAndNext()
+    }
+    if (guardianFormRef.current) {
+      await guardianFormRef.current.saveAndNext()
+    }
+  }, [])
+
+  // Wire validity + custom onNext + onSave into the wizard footer.
   useEffect(() => {
     if (studentValid && guardianValid) {
       enableNext()
       setCustomNavigation({ onNext })
+      setOnSave(onSaveStep)
     } else {
       disableNext()
       setCustomNavigation(undefined)
+      setOnSave(undefined)
+    }
+    return () => {
+      setCustomNavigation(undefined)
+      setOnSave(undefined)
     }
   }, [
     studentValid,
@@ -111,7 +129,9 @@ export default function PersonalContent() {
     enableNext,
     disableNext,
     setCustomNavigation,
+    setOnSave,
     onNext,
+    onSaveStep,
   ])
 
   const sections: { key: ActiveTab; label: string }[] = [
