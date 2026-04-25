@@ -51,7 +51,6 @@ const nextConfig: NextConfig = {
       // Content (processed at build time by fumadocs-mdx)
       "./content/**",
       // Dev/test artifacts
-      "./screenshots/**",
       "./playwright-report/**",
       "./test-results/**",
       "./.playwright-mcp/**",
@@ -119,6 +118,11 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "d1dlwtcfl0db67.cloudfront.net",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "cdn.databayt.org",
         pathname: "/**",
       },
     ],

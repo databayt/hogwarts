@@ -1,265 +1,265 @@
 {
   "generated": "2026-04-24T19:36:44.425Z",
   "bucket": "hogwarts-databayt",
-  "cdn": "d1dlwtcfl0db67.cloudfront.net",
+  "cdn": "cdn.databayt.org",
   "count": 43,
   "icons": [
     {
       "name": "ic-wa-archived-24",
       "key": "icons/ic-wa-archived-24.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-archived-24.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-archived-24.svg",
       "bytes": 993
     },
     {
       "name": "ic-wa-bubble-tail-fill",
       "key": "icons/ic-wa-bubble-tail-fill.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-bubble-tail-fill.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-bubble-tail-fill.svg",
       "bytes": 637
     },
     {
       "name": "ic-wa-bubble-tail-mask",
       "key": "icons/ic-wa-bubble-tail-mask.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-bubble-tail-mask.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-bubble-tail-mask.svg",
       "bytes": 286
     },
     {
       "name": "ic-wa-bubble-tail",
       "key": "icons/ic-wa-bubble-tail.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-bubble-tail.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-bubble-tail.svg",
       "bytes": 276
     },
     {
       "name": "ic-wa-camera-24",
       "key": "icons/ic-wa-camera-24.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-camera-24.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-camera-24.svg",
       "bytes": 816
     },
     {
       "name": "ic-wa-camera-small-32",
       "key": "icons/ic-wa-camera-small-32.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-camera-small-32.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-camera-small-32.svg",
       "bytes": 1612
     },
     {
       "name": "ic-wa-check-bubble-17",
       "key": "icons/ic-wa-check-bubble-17.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-check-bubble-17.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-check-bubble-17.svg",
       "bytes": 918
     },
     {
       "name": "ic-wa-check-read-19",
       "key": "icons/ic-wa-check-read-19.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-check-read-19.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-check-read-19.svg",
       "bytes": 884
     },
     {
       "name": "ic-wa-check-sent-19",
       "key": "icons/ic-wa-check-sent-19.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-check-sent-19.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-check-sent-19.svg",
       "bytes": 884
     },
     {
       "name": "ic-wa-chevron-lt-32",
       "key": "icons/ic-wa-chevron-lt-32.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-chevron-lt-32.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-chevron-lt-32.svg",
       "bytes": 227
     },
     {
       "name": "ic-wa-close-circular-24",
       "key": "icons/ic-wa-close-circular-24.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-close-circular-24.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-close-circular-24.svg",
       "bytes": 1024
     },
     {
       "name": "ic-wa-deleted-16",
       "key": "icons/ic-wa-deleted-16.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-deleted-16.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-deleted-16.svg",
       "bytes": 644
     },
     {
       "name": "ic-wa-disappearing-16",
       "key": "icons/ic-wa-disappearing-16.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-disappearing-16.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-disappearing-16.svg",
       "bytes": 2745
     },
     {
       "name": "ic-wa-group-16",
       "key": "icons/ic-wa-group-16.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-group-16.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-group-16.svg",
       "bytes": 904
     },
     {
       "name": "ic-wa-location-16",
       "key": "icons/ic-wa-location-16.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-location-16.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-location-16.svg",
       "bytes": 426
     },
     {
       "name": "ic-wa-lock-12",
       "key": "icons/ic-wa-lock-12.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-lock-12.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-lock-12.svg",
       "bytes": 482
     },
     {
       "name": "ic-wa-meetball-24",
       "key": "icons/ic-wa-meetball-24.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-meetball-24.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-meetball-24.svg",
       "bytes": 689
     },
     {
       "name": "ic-wa-meta-ai-circle",
       "key": "icons/ic-wa-meta-ai-circle.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-meta-ai-circle.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-meta-ai-circle.svg",
       "bytes": 1564
     },
     {
       "name": "ic-wa-mic-32",
       "key": "icons/ic-wa-mic-32.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-mic-32.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-mic-32.svg",
       "bytes": 1567
     },
     {
       "name": "ic-wa-phone-32",
       "key": "icons/ic-wa-phone-32.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-phone-32.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-phone-32.svg",
       "bytes": 1787
     },
     {
       "name": "ic-wa-pin-16",
       "key": "icons/ic-wa-pin-16.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-pin-16.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-pin-16.svg",
       "bytes": 770
     },
     {
       "name": "ic-wa-plus-add-24",
       "key": "icons/ic-wa-plus-add-24.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-plus-add-24.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-plus-add-24.svg",
       "bytes": 573
     },
     {
       "name": "ic-wa-plus-filter-24",
       "key": "icons/ic-wa-plus-filter-24.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-plus-filter-24.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-plus-filter-24.svg",
       "bytes": 565
     },
     {
       "name": "ic-wa-plus-input-32",
       "key": "icons/ic-wa-plus-input-32.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-plus-input-32.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-plus-input-32.svg",
       "bytes": 546
     },
     {
       "name": "ic-wa-search-24",
       "key": "icons/ic-wa-search-24.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-search-24.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-search-24.svg",
       "bytes": 711
     },
     {
       "name": "ic-wa-send-24",
       "key": "icons/ic-wa-send-24.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-send-24.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-send-24.svg",
       "bytes": 503
     },
     {
       "name": "ic-wa-status-battery",
       "key": "icons/ic-wa-status-battery.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-status-battery.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-status-battery.svg",
       "bytes": 821
     },
     {
       "name": "ic-wa-status-cellular",
       "key": "icons/ic-wa-status-cellular.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-status-cellular.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-status-cellular.svg",
       "bytes": 1100
     },
     {
       "name": "ic-wa-status-wifi",
       "key": "icons/ic-wa-status-wifi.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-status-wifi.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-status-wifi.svg",
       "bytes": 1498
     },
     {
       "name": "ic-wa-sticker-24",
       "key": "icons/ic-wa-sticker-24.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-sticker-24.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-sticker-24.svg",
       "bytes": 2666
     },
     {
       "name": "ic-wa-tab-calls-32",
       "key": "icons/ic-wa-tab-calls-32.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-tab-calls-32.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-tab-calls-32.svg",
       "bytes": 1806
     },
     {
       "name": "ic-wa-tab-chats-32",
       "key": "icons/ic-wa-tab-chats-32.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-tab-chats-32.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-tab-chats-32.svg",
       "bytes": 2028
     },
     {
       "name": "ic-wa-tab-communities-32",
       "key": "icons/ic-wa-tab-communities-32.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-tab-communities-32.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-tab-communities-32.svg",
       "bytes": 3052
     },
     {
       "name": "ic-wa-tab-settings-32",
       "key": "icons/ic-wa-tab-settings-32.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-tab-settings-32.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-tab-settings-32.svg",
       "bytes": 4275
     },
     {
       "name": "ic-wa-tab-updates-32",
       "key": "icons/ic-wa-tab-updates-32.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-tab-updates-32.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-tab-updates-32.svg",
       "bytes": 2158
     },
     {
       "name": "ic-wa-updates-ring-bottom",
       "key": "icons/ic-wa-updates-ring-bottom.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-updates-ring-bottom.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-updates-ring-bottom.svg",
       "bytes": 421
     },
     {
       "name": "ic-wa-updates-ring-full",
       "key": "icons/ic-wa-updates-ring-full.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-updates-ring-full.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-updates-ring-full.svg",
       "bytes": 180
     },
     {
       "name": "ic-wa-updates-ring-left",
       "key": "icons/ic-wa-updates-ring-left.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-updates-ring-left.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-updates-ring-left.svg",
       "bytes": 414
     },
     {
       "name": "ic-wa-updates-ring-quarter",
       "key": "icons/ic-wa-updates-ring-quarter.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-updates-ring-quarter.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-updates-ring-quarter.svg",
       "bytes": 417
     },
     {
       "name": "ic-wa-updates-ring-right",
       "key": "icons/ic-wa-updates-ring-right.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-updates-ring-right.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-updates-ring-right.svg",
       "bytes": 419
     },
     {
       "name": "ic-wa-updates-ring-top",
       "key": "icons/ic-wa-updates-ring-top.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-updates-ring-top.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-updates-ring-top.svg",
       "bytes": 422
     },
     {
       "name": "ic-wa-video-32",
       "key": "icons/ic-wa-video-32.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-video-32.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-video-32.svg",
       "bytes": 897
     },
     {
       "name": "ic-wa-voice-16",
       "key": "icons/ic-wa-voice-16.svg",
-      "url": "https://d1dlwtcfl0db67.cloudfront.net/icons/ic-wa-voice-16.svg",
+      "url": "https://cdn.databayt.org/icons/ic-wa-voice-16.svg",
       "bytes": 534
     }
   ]
