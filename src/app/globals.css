@@ -555,3 +555,68 @@ body {
   background-color: var(--msg-incoming);
   clip-path: path("M8 0C8 0 3 1.5 1.5 5C0 8.5 0 13 0 13L8 13Z");
 }
+
+/* WA TOKENS START */
+:root {
+  --wa-surface-primary: #ffffff;
+  --wa-surface-product: #1dab61;
+  --wa-surface-cta-filters: #f4f4f4;
+  --wa-surface-cta-filters-active: #d0fecf;
+  --wa-surface-cta-circular: rgba(10, 10, 10, 0.03);
+  --wa-surface-panel-blur: rgba(244, 244, 244, 0.8);
+  --wa-surface-panel: rgba(245, 242, 235, 0.8);
+  --wa-surface-search-chat: #f4f4f4;
+  --wa-surface-invert: #0a0a0a;
+  --wa-surface-baloon-me: #d0fecf;
+  --wa-surface-baloon-other: #ffffff;
+  --wa-surface-date: #ffffff;
+  --wa-surface-input-chat: #ffffff;
+  --wa-surface-shadow-baloon: rgba(0, 0, 0, 0.06);
+  --wa-text-primary: #0a0a0a;
+  --wa-text-secondary: #767779;
+  --wa-text-secondary-alpha: rgba(0, 0, 0, 0.5);
+  --wa-text-product: #1dab61;
+  --wa-text-invert: #ffffff;
+  --wa-text-cta-filters: #767779;
+  --wa-text-cta-filters-active: #15603e;
+  --wa-text-tabbar: #767779;
+  --wa-text-tabbar-selected: #0a0a0a;
+  --wa-border-panel: rgba(0, 0, 0, 0.3);
+  --wa-border-separator: rgba(0, 0, 0, 0.2);
+  --wa-border-avatar: rgba(10, 10, 10, 0.1);
+  --wa-border-input-chat: #b2b2b2;
+  --wa-border-quote: #d42a66;
+  --wa-text-quote-title: #d42a66;
+}
+.dark {
+  --wa-surface-primary: #0b141a;
+  --wa-surface-product: #1dab61;
+  --wa-surface-cta-filters: #1f2c33;
+  --wa-surface-cta-filters-active: #0b3624;
+  --wa-surface-cta-circular: rgba(255, 255, 255, 0.08);
+  --wa-surface-panel-blur: rgba(17, 27, 33, 0.8);
+  --wa-surface-panel: rgba(17, 27, 33, 0.85);
+  --wa-surface-search-chat: #1f2c33;
+  --wa-surface-invert: #ffffff;
+  --wa-surface-baloon-me: #005c4b;
+  --wa-surface-baloon-other: #202c33;
+  --wa-surface-date: #1f2c33;
+  --wa-surface-input-chat: #1f2c33;
+  --wa-surface-shadow-baloon: rgba(0, 0, 0, 0.2);
+  --wa-text-primary: #e9edef;
+  --wa-text-secondary: #8696a0;
+  --wa-text-secondary-alpha: rgba(233, 237, 239, 0.5);
+  --wa-text-product: #25d366;
+  --wa-text-invert: #0b141a;
+  --wa-text-cta-filters: #8696a0;
+  --wa-text-cta-filters-active: #aff2bf;
+  --wa-text-tabbar: #8696a0;
+  --wa-text-tabbar-selected: #e9edef;
+  --wa-border-panel: rgba(255, 255, 255, 0.12);
+  --wa-border-separator: rgba(134, 150, 160, 0.2);
+  --wa-border-avatar: rgba(255, 255, 255, 0.08);
+  --wa-border-input-chat: #323d44;
+  --wa-border-quote: #f26196;
+  --wa-text-quote-title: #f26196;
+}
+/* WA TOKENS END */

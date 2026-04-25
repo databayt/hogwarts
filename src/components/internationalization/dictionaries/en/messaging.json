@@ -106,7 +106,24 @@
     "video": "Video",
     "voice_message": "Voice message",
     "document": "Document",
-    "image_preview": "Image preview"
+    "image_preview": "Image preview",
+    "filter": {
+      "all": "All",
+      "unread": "Unread",
+      "favourites": "Favourites",
+      "groups": "Groups"
+    },
+    "tab": {
+      "calls": "Calls",
+      "classes": "Classes",
+      "chats": "Chats",
+      "back": "Back"
+    },
+    "encrypt": {
+      "prefix": "Your personal",
+      "topic_messages": "messages",
+      "suffix": "are"
+    }
   },
   "info": {
     "close": "Close",

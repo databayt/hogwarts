@@ -7,13 +7,14 @@ import { useParams, useRouter } from "next/navigation"
 
 import { Skeleton } from "@/components/ui/skeleton"
 import { FormHeading, FormLayout } from "@/components/form"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { useHostValidation } from "@/components/onboarding/host-validation-context"
 
 import { DescriptionForm } from "./form"
 import { useDescription } from "./use-description"
 
 interface Props {
-  dictionary?: any
+  dictionary?: Dictionary
 }
 
 export default function DescriptionContent({ dictionary }: Props) {
@@ -23,7 +24,8 @@ export default function DescriptionContent({ dictionary }: Props) {
   const { enableNext, setCustomNavigation } = useHostValidation()
   const { data: descriptionData, loading } = useDescription(schoolId)
   const [step, setStep] = useState<"type" | "level">("type")
-  const dict = dictionary?.onboarding || {}
+  const dict = ((dictionary?.school as Record<string, unknown> | undefined)
+    ?.onboarding ?? {}) as Record<string, string>
 
   // Set initial step from loaded data
   useEffect(() => {

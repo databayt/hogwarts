@@ -3,6 +3,8 @@
     "required": "مطلوب",
     "email": "بريد إلكتروني صحيح مطلوب",
     "emailRequired": "البريد الإلكتروني مطلوب",
+    "identifierRequired": "البريد الإلكتروني أو اسم المستخدم مطلوب",
+    "invalidIdentifier": "أدخل بريدًا إلكترونيًا أو اسم مستخدم صحيحًا",
     "passwordRequired": "كلمة المرور مطلوبة",
     "confirmPasswordRequired": "تأكيد كلمة المرور مطلوب",
     "passwordMismatch": "كلمات المرور غير متطابقة",

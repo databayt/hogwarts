@@ -13,9 +13,10 @@ import { authenticate, isAuthError } from "../../lib/authenticate"
 /**
  * GET /api/mobile/subjects/:subjectId
  *
- * Returns subject detail with chapters → lessons so mobile can render
- * chapter-grouped topic cards that mirror the web catalog detail view
- * (see src/app/[lang]/s/[subdomain]/(school-dashboard)/(listings)/subjects/[slug]/page.tsx).
+ * Returns subject detail with chapters → lessons AND the content-section
+ * aggregates (videos, materials, exams, question stats, assignments) so the
+ * mobile detail screen can mirror the web catalog detail view at
+ * src/app/[lang]/s/[subdomain]/(school-dashboard)/(listings)/subjects/[slug]/page.tsx.
  */
 export async function GET(
   request: NextRequest,
@@ -30,9 +31,6 @@ export async function GET(
     const { searchParams } = new URL(request.url)
     const lang = (searchParams.get("lang") || "en") as SupportedLanguage
 
-    // Prefer school-scoped lookup (confirms the catalog subject is adopted by
-    // the caller's school) but fall back to a direct catalog lookup for cases
-    // where the client passes an ID the school hasn't explicitly selected.
     const selection = await db.subjectSelection.findFirst({
       where: { schoolId, catalogSubjectId: subjectId, isActive: true },
       select: { customName: true },
@@ -133,6 +131,160 @@ export async function GET(
       }))
     )
 
+    // Videos: flatten all lessons into video cards. Matches the derivation
+    // in src/app/[lang]/.../subjects/[slug]/page.tsx lines 304–318.
+    const videos = subject.chapters.flatMap((ch) =>
+      ch.lessons.map((l) => ({
+        id: l.id,
+        title: "",
+        thumbnail_url: getCatalogImageUrl(l.thumbnail, "original"),
+        duration_seconds: (l.durationMinutes ?? 0) * 60,
+        view_count: 0,
+        is_featured: false,
+        provider: "catalog",
+        catalog_lesson_id: l.id,
+        color: l.color ?? ch.color ?? null,
+      }))
+    )
+    // Translate video titles (fetch once, map back by id for preserved order).
+    const videoTitleMap = new Map<string, string>()
+    await Promise.all(
+      subject.chapters.flatMap((ch) =>
+        ch.lessons.map(async (l) => {
+          videoTitleMap.set(l.id, await t(l.name))
+        })
+      )
+    )
+    for (const v of videos) v.title = videoTitleMap.get(v.id) ?? ""
+
+    const chapterIds = subject.chapters.map((ch) => ch.id)
+    const lessonIds = subject.chapters.flatMap((ch) =>
+      ch.lessons.map((l) => l.id)
+    )
+
+    const contentOr = [
+      { catalogSubjectId: subject.id },
+      ...(chapterIds.length > 0
+        ? [{ catalogChapterId: { in: chapterIds } }]
+        : []),
+      ...(lessonIds.length > 0 ? [{ catalogLessonId: { in: lessonIds } }] : []),
+    ]
+
+    const [rawMaterials, rawExams, questionGroups, rawAssignments] =
+      await Promise.all([
+        db.material.findMany({
+          where: {
+            status: "PUBLISHED",
+            OR: contentOr,
+          },
+          orderBy: { downloadCount: "desc" },
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            type: true,
+            pageCount: true,
+            downloadCount: true,
+            fileSize: true,
+            mimeType: true,
+          },
+        }),
+        db.exam.findMany({
+          where: { subjectId: subject.id, status: "PUBLISHED" },
+          orderBy: { usageCount: "desc" },
+          select: {
+            id: true,
+            title: true,
+            examType: true,
+            durationMinutes: true,
+            totalMarks: true,
+            totalQuestions: true,
+            usageCount: true,
+          },
+        }),
+        db.question.groupBy({
+          by: ["questionType", "difficulty"],
+          where: {
+            approvalStatus: "APPROVED",
+            visibility: { in: ["PUBLIC", "SCHOOL"] },
+            OR: contentOr,
+          },
+          _count: true,
+        }),
+        db.assignment.findMany({
+          where: { status: "PUBLISHED", OR: contentOr },
+          orderBy: { usageCount: "desc" },
+          take: 20,
+          select: {
+            id: true,
+            title: true,
+            assignmentType: true,
+            estimatedTime: true,
+            totalPoints: true,
+            usageCount: true,
+          },
+        }),
+      ])
+
+    const materials = await Promise.all(
+      rawMaterials.map(async (m) => ({
+        id: m.id,
+        title: await t(m.title),
+        description: m.description ? await t(m.description) : null,
+        type: m.type,
+        page_count: m.pageCount,
+        download_count: m.downloadCount,
+        file_size: m.fileSize,
+        mime_type: m.mimeType,
+      }))
+    )
+
+    const exams = await Promise.all(
+      rawExams.map(async (e) => ({
+        id: e.id,
+        title: await t(e.title),
+        exam_type: e.examType,
+        duration_minutes: e.durationMinutes,
+        total_marks: e.totalMarks,
+        total_questions: e.totalQuestions,
+        usage_count: e.usageCount,
+      }))
+    )
+
+    const assignments = await Promise.all(
+      rawAssignments.map(async (a) => ({
+        id: a.id,
+        title: await t(a.title),
+        assignment_type: a.assignmentType,
+        estimated_time: a.estimatedTime,
+        total_points: a.totalPoints != null ? Number(a.totalPoints) : null,
+        usage_count: a.usageCount,
+      }))
+    )
+
+    // Aggregate question groupBy rows into the shape the mobile card expects:
+    // {total, cards: [{type, count, by_difficulty: {EASY/MEDIUM/HARD}}]}
+    const typeMap: Record<
+      string,
+      { count: number; byDifficulty: Record<string, number> }
+    > = {}
+    let total = 0
+    for (const g of questionGroups) {
+      total += g._count
+      const t = g.questionType
+      if (!typeMap[t]) typeMap[t] = { count: 0, byDifficulty: {} }
+      typeMap[t].count += g._count
+      typeMap[t].byDifficulty[g.difficulty] =
+        (typeMap[t].byDifficulty[g.difficulty] ?? 0) + g._count
+    }
+    const questionCards = Object.entries(typeMap)
+      .map(([type, d]) => ({
+        type,
+        count: d.count,
+        by_difficulty: d.byDifficulty,
+      }))
+      .sort((a, b) => b.count - a.count)
+
     return NextResponse.json({
       id: subject.id,
       name,
@@ -156,6 +308,11 @@ export async function GET(
       rating_count: subject.ratingCount,
       status: subject.status,
       chapters,
+      videos,
+      materials,
+      exams,
+      assignments,
+      question_stats: { total, cards: questionCards },
     })
   } catch (error) {
     console.error("Mobile subject detail error:", error)

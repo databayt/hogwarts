@@ -363,12 +363,14 @@ export async function POST(req: Request) {
                     body: `تم تأكيد الدفع الإلكتروني بنجاح. ${newStatus === "PAID" ? "تم سداد الرسوم بالكامل." : ""}`,
                     lang: "ar",
                     priority: "normal",
-                    channels: ["in_app", "email"],
+                    channels: ["in_app", "email", "whatsapp"],
                     metadata: {
                       paymentId: payment.id,
                       feeAssignmentId,
                       amount: paymentAmount,
                       status: newStatus,
+                      receiptNumber: payment.receiptNumber,
+                      url: `/finance/fees/payments/${payment.id}`,
                     },
                   })
                 }

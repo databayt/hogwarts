@@ -11,11 +11,10 @@ import {
   type ActionResponse,
 } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { resolveDefaultCurrency } from "@/lib/payment/gateway-config"
 
 import { requireSchoolOwnership } from "../auth-helpers"
-import { locationSchema } from "./validation"
-
-export type LocationFormData = z.infer<typeof locationSchema>
+import { locationSchema, type LocationFormData } from "./validation"
 
 export async function updateSchoolLocation(
   schoolId: string,
@@ -25,6 +24,21 @@ export async function updateSchoolLocation(
     await requireSchoolOwnership(schoolId)
 
     const validated = locationSchema.parse(data)
+
+    // Step 5: auto-derive currency from country during onboarding. Only
+    // overwrite when the stored value is still the schema default ("USD"),
+    // so admin/user overrides elsewhere are never clobbered. This fixes
+    // the long-standing bug where every school persisted USD regardless
+    // of country (e.g. Sudanese schools stuck with USD instead of SDG).
+    const current = await db.school.findUnique({
+      where: { id: schoolId },
+      select: { currency: true, tuitionFee: true },
+    })
+    const resolvedCurrency = resolveDefaultCurrency(validated.country)
+    const shouldAutoSetCurrency =
+      current?.currency === "USD" &&
+      !current?.tuitionFee &&
+      resolvedCurrency !== "USD"
 
     const updatedSchool = await db.school.update({
       where: { id: schoolId },
@@ -37,6 +51,7 @@ export async function updateSchoolLocation(
           validated.latitude !== 0 ? new Decimal(validated.latitude) : null,
         longitude:
           validated.longitude !== 0 ? new Decimal(validated.longitude) : null,
+        ...(shouldAutoSetCurrency ? { currency: resolvedCurrency } : {}),
       },
     })
 
@@ -44,7 +59,13 @@ export async function updateSchoolLocation(
     return createActionResponse({ id: updatedSchool.id })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return createActionResponse(undefined, error)
+      return {
+        success: false,
+        code: "VALIDATION_ERROR",
+        errors: Object.fromEntries(
+          error.issues.map((i) => [i.path.join("."), i.message])
+        ),
+      }
     }
     return createActionResponse(undefined, error)
   }
@@ -69,7 +90,9 @@ export async function getSchoolLocation(
       },
     })
 
-    if (!school) throw new Error("School not found")
+    if (!school) {
+      return { success: false, code: "SCHOOL_NOT_FOUND" }
+    }
 
     return createActionResponse({
       address: school.address || "",

@@ -9,7 +9,7 @@ interface GenerateArgs {
   tx?: PrismaLike
 }
 
-const PREFIX_LENGTH = 5 // YY + G + GG
+const PREFIX_LENGTH = 4 // YY + GG
 const SEQUENCE_LENGTH = 4
 
 function padTwo(n: number): string {
@@ -58,21 +58,19 @@ async function resolveGradeTwoDigits(
 }
 
 /**
- * Per-school student username code in compact 9-char shape: YYGGGNNNN
+ * Per-school student username code in compact 8-char shape: YYGGNNNN
  *
- * Layout: `${YY}G${GG}${NNNN}` — always 9 chars
+ * Layout: `${YY}${GG}${NNNN}` — always 8 digits
  *   YY    last 2 digits of academic year start (e.g. "26" for 2026-2027)
- *   G     literal separator
  *   GG    AcademicGrade.gradeNumber zero-padded to 2 digits (00 = unassigned)
  *   NNNN  per-(school, year, grade) sequence zero-padded to 4 digits
  *
- * Examples: "26G010001" "26G100042" "27G120007"
+ * Examples: "26010001" "26100042" "27120007"
  *
  * Uniqueness comes from Student.@@unique([schoolId, studentId]) — the generator
- * probes the latest existing code for this prefix and increments. Pass a tx
- * client when called inside a $transaction to share the snapshot.
- *
- * Mirrors generateUniqueInvoiceNumber in finance/invoice/actions.ts.
+ * probes the latest existing code for this prefix and increments. Legacy codes
+ * had a `G` separator (`YYGGGNNNN`, 9 chars); both shapes coexist. The probe
+ * consults both formats to keep the sequence counter monotonic.
  */
 export async function generateStudentUsername(
   args: GenerateArgs
@@ -84,27 +82,36 @@ export async function generateStudentUsername(
     resolveGradeTwoDigits(client, args.academicGradeId),
   ])
 
-  const prefix = `${yy}G${gg}`
+  const newPrefix = `${yy}${gg}`
+  const legacyPrefix = `${yy}G${gg}`
 
-  const latest = await client.student.findFirst({
-    where: {
-      schoolId: args.schoolId,
-      studentId: { startsWith: prefix },
-    },
-    orderBy: { studentId: "desc" },
-    select: { studentId: true },
-  })
+  const [newLatest, legacyLatest] = await Promise.all([
+    client.student.findFirst({
+      where: { schoolId: args.schoolId, studentId: { startsWith: newPrefix } },
+      orderBy: { studentId: "desc" },
+      select: { studentId: true },
+    }),
+    client.student.findFirst({
+      where: {
+        schoolId: args.schoolId,
+        studentId: { startsWith: legacyPrefix },
+      },
+      orderBy: { studentId: "desc" },
+      select: { studentId: true },
+    }),
+  ])
 
-  let nextSeq = 1
-  if (latest?.studentId && latest.studentId.length >= prefix.length) {
-    const tail = latest.studentId.slice(prefix.length)
-    const parsed = parseInt(tail, 10)
-    if (Number.isFinite(parsed) && parsed >= 0) {
-      nextSeq = parsed + 1
-    }
+  const parseTail = (id: string | null | undefined, prefix: string): number => {
+    if (!id || id.length < prefix.length) return 0
+    const parsed = parseInt(id.slice(prefix.length), 10)
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0
   }
 
-  return `${prefix}${padFour(nextSeq)}`
+  const newSeq = parseTail(newLatest?.studentId, newPrefix)
+  const legacySeq = parseTail(legacyLatest?.studentId, legacyPrefix)
+  const nextSeq = Math.max(newSeq, legacySeq) + 1
+
+  return `${newPrefix}${padFour(nextSeq)}`
 }
 
 export const STUDENT_USERNAME_PREFIX_LENGTH = PREFIX_LENGTH

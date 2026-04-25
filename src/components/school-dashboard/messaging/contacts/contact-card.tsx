@@ -247,7 +247,8 @@ export const ContactCard = memo(function ContactCard({
         <div className="flex items-center justify-between gap-2">
           {contact.isTyping ? (
             <p className="truncate text-xs font-medium text-[#06CF9C]">
-              {(m?.ui as Record<string, string>)?.typing || "typing..."}
+              {(m?.ui as unknown as Record<string, string>)?.typing ||
+                "typing..."}
             </p>
           ) : (
             <p className="text-muted-foreground flex items-center gap-1 truncate text-xs">
@@ -272,14 +273,16 @@ export const ContactCard = memo(function ContactCard({
                   ? contact.lastMessage ||
                     (contact.lastMessageHasAttachments
                       ? contact.lastMessageContentType === "image"
-                        ? (m?.ui as Record<string, string>)?.photo || "Photo"
+                        ? (m?.ui as unknown as Record<string, string>)?.photo ||
+                          "Photo"
                         : contact.lastMessageContentType === "video"
-                          ? (m?.ui as Record<string, string>)?.video || "Video"
+                          ? (m?.ui as unknown as Record<string, string>)
+                              ?.video || "Video"
                           : contact.lastMessageContentType === "audio"
-                            ? (m?.ui as Record<string, string>)
+                            ? (m?.ui as unknown as Record<string, string>)
                                 ?.voice_message || "Voice message"
-                            : (m?.ui as Record<string, string>)?.document ||
-                              "Document"
+                            : (m?.ui as unknown as Record<string, string>)
+                                ?.document || "Document"
                       : m?.ui?.no_messages || "No messages")
                   : contact.contextLabel || roleLabel}
               </span>

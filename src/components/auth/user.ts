@@ -57,6 +57,45 @@ export const getUserByEmail = async (
   }
 }
 
+/**
+ * Tenant-aware user lookup that accepts either an email OR a username.
+ *
+ * Branches on presence of `@` in the identifier:
+ * - Email path: delegates to {@link getUserByEmail} to preserve platform and
+ *   cross-school fallback ordering.
+ * - Username path: scoped by schoolId when available (students/teachers/
+ *   guardians all live under a school). Usernames are populated by the
+ *   student-code generator — per-school unique by construction because they
+ *   mirror `Student.studentId` which has `@@unique([schoolId, studentId])`.
+ *
+ * The platform (schoolId = null) does not accept username login — DEVELOPER
+ * accounts and SaaS users sign in with their email on the platform domain.
+ */
+export const getUserByIdentifier = async (
+  identifier: string,
+  schoolId?: string | null
+) => {
+  try {
+    const trimmed = identifier.trim()
+    const isEmail = trimmed.includes("@")
+
+    if (isEmail) {
+      return await getUserByEmail(trimmed, schoolId)
+    }
+
+    if (schoolId) {
+      return await db.user.findFirst({
+        where: { username: trimmed, schoolId },
+      })
+    }
+
+    return null
+  } catch (error) {
+    console.error("[getUserByIdentifier] Database lookup failed:", error)
+    return null
+  }
+}
+
 export type ExtendedUser = PrismaUser & {
   firstName?: string | null
   lastName?: string | null

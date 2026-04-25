@@ -64,11 +64,12 @@ export async function autoAssignFeesForStudent(
   if (feeStructures.length === 0) return { assignedCount: 0 }
 
   let assignedCount = 0
+  const assignmentIds: string[] = []
 
   for (const structure of feeStructures) {
     // Upsert to avoid duplicates (idempotent)
     try {
-      await db.feeAssignment.upsert({
+      const upserted = await db.feeAssignment.upsert({
         where: {
           studentId_feeStructureId_academicYear: {
             studentId,
@@ -86,14 +87,50 @@ export async function autoAssignFeesForStudent(
           status: "PENDING",
         },
         update: {}, // No-op if already exists
+        select: { id: true },
       })
       assignedCount++
+      assignmentIds.push(upserted.id)
     } catch (err) {
       // Skip on unique constraint violation (race condition safety)
       console.warn(
         `[autoAssignFeesForStudent] Skipped duplicate for student=${studentId} structure=${structure.id}:`,
         err
       )
+    }
+  }
+
+  // Step 23: also ensure UserInvoice rows per installment. Idempotent and
+  // non-blocking — invoice-sync failure should never roll back the
+  // assignment itself. Without this call, students see empty /my-fees
+  // because downstream views read from UserInvoice, not FeeAssignment.
+  if (assignmentIds.length > 0) {
+    try {
+      const { ensureInvoicesForAssignment } =
+        await import("@/lib/fee-invoice-sync")
+      await Promise.all(
+        assignmentIds.map((id) =>
+          ensureInvoicesForAssignment(schoolId, id).catch((err) =>
+            console.warn(
+              `[autoAssignFeesForStudent] Invoice sync failed for assignment=${id}:`,
+              err
+            )
+          )
+        )
+      )
+    } catch (err) {
+      console.warn("[autoAssignFeesForStudent] Invoice sync batch failed:", err)
+    }
+  }
+
+  // Steps 25-27: notify the student + their guardians that fees have been
+  // assigned. in_app + email + whatsapp all dispatch from the same call —
+  // per-user preferences are honored inside dispatchNotification.
+  if (assignmentIds.length > 0) {
+    try {
+      await notifyStudentFeesAssigned(schoolId, studentId, assignmentIds.length)
+    } catch (err) {
+      console.warn("[autoAssignFeesForStudent] Notification failed:", err)
     }
   }
 
@@ -104,4 +141,73 @@ export async function autoAssignFeesForStudent(
   }
 
   return { assignedCount }
+}
+
+async function notifyStudentFeesAssigned(
+  schoolId: string,
+  studentId: string,
+  assignmentCount: number
+): Promise<void> {
+  const student = await db.student.findFirst({
+    where: { id: studentId, schoolId },
+    select: {
+      firstName: true,
+      userId: true,
+      studentGuardians: {
+        select: {
+          guardian: {
+            select: { userId: true },
+          },
+        },
+      },
+    },
+  })
+  if (!student) return
+
+  const [school, { dispatchNotification }] = await Promise.all([
+    db.school.findUnique({
+      where: { id: schoolId },
+      select: { preferredLanguage: true, name: true },
+    }),
+    import("@/lib/dispatch-notification"),
+  ])
+
+  const lang = school?.preferredLanguage ?? "ar"
+  const schoolName = school?.name ?? ""
+
+  // Titles + bodies — kept inline (small surface) but stored against the
+  // school's preferredLanguage. Runtime translation handles the rest.
+  const title =
+    lang === "ar" ? `تم تحديد الرسوم الدراسية` : `Tuition fees assigned`
+  const body =
+    lang === "ar"
+      ? `تمت إضافة ${assignmentCount} رسم${assignmentCount === 1 ? "" : "وم"} لطالبك. يمكنك المراجعة والسداد عبر صفحة الرسوم.`
+      : `${assignmentCount} fee${assignmentCount === 1 ? "" : "s"} assigned to your student at ${schoolName}. Review and pay from the My Fees page.`
+
+  const recipients = new Set<string>()
+  if (student.userId) recipients.add(student.userId)
+  for (const sg of student.studentGuardians) {
+    if (sg.guardian?.userId) recipients.add(sg.guardian.userId)
+  }
+
+  await Promise.all(
+    Array.from(recipients).map((userId) =>
+      dispatchNotification({
+        schoolId,
+        userId,
+        type: "fee_due",
+        title,
+        body,
+        lang,
+        priority: "normal",
+        channels: ["in_app", "email", "whatsapp"],
+        metadata: { studentId, assignmentCount },
+      }).catch((err) =>
+        console.warn(
+          `[notifyStudentFeesAssigned] Failed for user=${userId}:`,
+          err
+        )
+      )
+    )
+  )
 }

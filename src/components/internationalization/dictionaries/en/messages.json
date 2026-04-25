@@ -3,6 +3,8 @@
     "required": "Required",
     "email": "Valid email required",
     "emailRequired": "Email is required",
+    "identifierRequired": "Email or username is required",
+    "invalidIdentifier": "Enter a valid email or username",
     "passwordRequired": "Password is required",
     "confirmPasswordRequired": "Confirm password is required",
     "passwordMismatch": "Passwords do not match",

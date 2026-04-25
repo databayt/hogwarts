@@ -109,13 +109,28 @@ export function createResetSchema(dictionary: Dictionary) {
   })
 }
 
+// Username login: YYGGNNNN student codes, teacher/staff handles, and any
+// other per-school username shape. Allows letters, numbers, dot, dash, and
+// underscore; min 3 / max 64. Emails take the other branch via the `@` check.
+const USERNAME_LOGIN_RE = /^[A-Za-z0-9._-]{3,64}$/
+
 export function createLoginSchema(dictionary: Dictionary) {
   const v = getValidationMessages(dictionary)
 
   return z.object({
-    email: z.string().email({
-      message: v.email(),
-    }),
+    identifier: z
+      .string()
+      .min(1, { message: v.get("identifierRequired") })
+      .refine(
+        (val) => {
+          const trimmed = val.trim()
+          if (trimmed.includes("@")) {
+            return z.string().email().safeParse(trimmed).success
+          }
+          return USERNAME_LOGIN_RE.test(trimmed)
+        },
+        { message: v.get("invalidIdentifier") }
+      ),
     password: z.string().min(1, {
       message: v.get("passwordRequired"),
     }),
@@ -190,9 +205,19 @@ export const ResetSchema = z.object({
 })
 
 export const LoginSchema = z.object({
-  email: z.string().email({
-    message: "Email is required",
-  }),
+  identifier: z
+    .string()
+    .min(1, { message: "Email or username is required" })
+    .refine(
+      (val) => {
+        const trimmed = val.trim()
+        if (trimmed.includes("@")) {
+          return z.string().email().safeParse(trimmed).success
+        }
+        return USERNAME_LOGIN_RE.test(trimmed)
+      },
+      { message: "Enter a valid email or username" }
+    ),
   password: z.string().min(1, {
     message: "Password is required",
   }),

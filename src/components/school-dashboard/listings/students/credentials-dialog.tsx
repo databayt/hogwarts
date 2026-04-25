@@ -1,12 +1,6 @@
 "use client"
 
-import {
-  useCallback,
-  useEffect,
-  useState,
-  useSyncExternalStore,
-  useTransition,
-} from "react"
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react"
 import { Check, Copy, Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -25,7 +19,7 @@ import { getStudentCredentials, resetStudentPassword } from "./actions"
 
 interface Credentials {
   username: string
-  email: string
+  email: string | null
   password: string | null
   isNew: boolean
   isSelfOnboarded: boolean
@@ -41,6 +35,11 @@ interface DialogStoreState {
   studentName: string
   credentials: Credentials | null
   error: string | null
+  // Hoisted from useTransition so the spinner is visible on the very first
+  // render after openCredentialsDialog — without this, the dialog briefly
+  // shows an empty body between mount and the first effect-driven fetch.
+  isLoading: boolean
+  isResetting: boolean
 }
 
 const initialStore: DialogStoreState = {
@@ -49,10 +48,13 @@ const initialStore: DialogStoreState = {
   studentName: "",
   credentials: null,
   error: null,
+  isLoading: false,
+  isResetting: false,
 }
 
 let storeState: DialogStoreState = initialStore
 const storeListeners = new Set<() => void>()
+let inflightStudentId: string | null = null
 
 function notifyStore() {
   storeListeners.forEach((l) => l())
@@ -79,17 +81,29 @@ function getStoreServerSnapshot(): DialogStoreState {
 }
 
 export function openCredentialsDialog(studentId: string, studentName: string) {
+  // Atomically: mark open AND loading, so the first render paints the spinner.
   setStore({
     open: true,
     studentId,
     studentName,
     credentials: null,
     error: null,
+    isLoading: true,
+    isResetting: false,
   })
 }
 
 export function closeCredentialsDialog() {
-  setStore({ open: false })
+  inflightStudentId = null
+  setStore({
+    open: false,
+    studentId: null,
+    studentName: "",
+    credentials: null,
+    error: null,
+    isLoading: false,
+    isResetting: false,
+  })
 }
 
 export function useCredentialsDialogState(): DialogStoreState {
@@ -109,52 +123,74 @@ export function CredentialsDialog({
   dictionary,
   onClosed,
 }: CredentialsDialogProps) {
-  const { open, studentId, studentName, credentials, error } =
-    useCredentialsDialogState()
-  const setCredentials = (c: Credentials | null) => setStore({ credentials: c })
-  const setError = (e: string | null) => setStore({ error: e })
-  const [isLoading, startLoading] = useTransition()
-  const [isResetting, startResetting] = useTransition()
+  const {
+    open,
+    studentId,
+    studentName,
+    credentials,
+    error,
+    isLoading,
+    isResetting,
+  } = useCredentialsDialogState()
   const [copiedField, setCopiedField] = useState<string | null>(null)
 
   const t = (dictionary as any)?.credentials as
     | Record<string, string>
     | undefined
 
-  const handleLoad = useCallback(() => {
-    if (!studentId) return
-    setError(null)
-    setCredentials(null)
-    startLoading(async () => {
-      const result = await getStudentCredentials({ studentId })
-      if (result.success && result.data) {
-        setCredentials(result.data)
-      } else {
-        setError(
-          "error" in result
-            ? (result.error ??
-                (t?.failedToGenerate || "Failed to load credentials"))
-            : t?.failedToGenerate || "Failed to load credentials"
-        )
+  const runLoad = useCallback(
+    async (targetStudentId: string) => {
+      if (inflightStudentId === targetStudentId) return
+      inflightStudentId = targetStudentId
+      setStore({ isLoading: true, error: null })
+      try {
+        const result = await getStudentCredentials({
+          studentId: targetStudentId,
+        })
+        // Guard against a stale response arriving after the admin closed or
+        // switched students.
+        if (storeState.studentId !== targetStudentId) return
+        if (result.success && result.data) {
+          setStore({
+            isLoading: false,
+            credentials: result.data as Credentials,
+          })
+        } else {
+          setStore({
+            isLoading: false,
+            error:
+              "error" in result
+                ? (result.error ??
+                  (t?.failedToGenerate || "Failed to load credentials"))
+                : t?.failedToGenerate || "Failed to load credentials",
+          })
+        }
+      } finally {
+        if (inflightStudentId === targetStudentId) inflightStudentId = null
       }
-    })
-  }, [studentId, t])
+    },
+    [t]
+  )
 
-  const handleReset = useCallback(() => {
+  const handleReset = useCallback(async () => {
     if (!studentId) return
-    setError(null)
-    startResetting(async () => {
-      const result = await resetStudentPassword({ studentId })
-      if (result.success && result.data) {
-        setCredentials(result.data)
-      } else {
-        setError(
+    setStore({ isResetting: true, error: null })
+    const result = await resetStudentPassword({ studentId })
+    if (storeState.studentId !== studentId) return
+    if (result.success && result.data) {
+      setStore({
+        isResetting: false,
+        credentials: result.data as Credentials,
+      })
+    } else {
+      setStore({
+        isResetting: false,
+        error:
           "error" in result
             ? (result.error ?? (t?.failedToReset || "Failed to reset password"))
-            : t?.failedToReset || "Failed to reset password"
-        )
-      }
-    })
+            : t?.failedToReset || "Failed to reset password",
+      })
+    }
   }, [studentId, t])
 
   const handleCopy = useCallback(async (text: string, field: string) => {
@@ -167,23 +203,26 @@ export function CredentialsDialog({
     }
   }, [])
 
-  // Auto-load on open (read-only — never resets an existing password)
+  // Auto-load on open. openCredentialsDialog already set isLoading:true, so
+  // the spinner is visible before this effect runs — no empty-body flash.
   useEffect(() => {
-    if (open && studentId && !credentials && !isLoading && !error) {
-      handleLoad()
+    if (open && studentId && !credentials && !error) {
+      runLoad(studentId)
     }
-  }, [open, studentId, credentials, isLoading, error, handleLoad])
+  }, [open, studentId, credentials, error, runLoad])
 
   const handleOpenChange = useCallback(
     (nextOpen: boolean) => {
       if (!nextOpen) {
-        // Close + clear in one commit so a late remount can't read stale data.
+        inflightStudentId = null
         setStore({
           open: false,
           studentId: null,
           studentName: "",
           credentials: null,
           error: null,
+          isLoading: false,
+          isResetting: false,
         })
         onClosed?.()
         return
@@ -235,10 +274,15 @@ export function CredentialsDialog({
 
           {credentials && (
             <>
-              {credentials.isSelfOnboarded && (
+              {credentials.isSelfOnboarded ? (
                 <div className="bg-muted text-muted-foreground rounded-md p-3 text-xs">
                   {t?.selfOnboarded ||
                     "This student signed up themselves — they log in with email. Username is for reference."}
+                </div>
+              ) : (
+                <div className="bg-muted text-muted-foreground rounded-md p-3 text-xs">
+                  {t?.usernameOnly ||
+                    "This student logs in with username and password."}
                 </div>
               )}
 
@@ -268,24 +312,26 @@ export function CredentialsDialog({
                   </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  <Label>{t?.email || "Email"}</Label>
-                  <div className="flex gap-2">
-                    <Input value={credentials.email} readOnly />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="shrink-0"
-                      onClick={() => handleCopy(credentials.email, "email")}
-                    >
-                      {copiedField === "email" ? (
-                        <Check className="h-4 w-4 text-green-500" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                    </Button>
+                {credentials.email && (
+                  <div className="space-y-1.5">
+                    <Label>{t?.email || "Email"}</Label>
+                    <div className="flex gap-2">
+                      <Input value={credentials.email} readOnly />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="shrink-0"
+                        onClick={() => handleCopy(credentials.email!, "email")}
+                      >
+                        {copiedField === "email" ? (
+                          <Check className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <div className="space-y-1.5">
                   <Label>{t?.password || "Password"}</Label>

@@ -71,7 +71,7 @@
     "voice_call": "مكالمة صوتية",
     "video_call": "مكالمة فيديو",
     "search_dots": "بحث...",
-    "archived": "الأرشيف",
+    "archived": "المؤرشفة",
     "starred": "الرسائل المميزة",
     "back": "رجوع",
     "someone": "شخص ما",
@@ -106,7 +106,24 @@
     "video": "فيديو",
     "voice_message": "رسالة صوتية",
     "document": "مستند",
-    "image_preview": "معاينة الصورة"
+    "image_preview": "معاينة الصورة",
+    "filter": {
+      "all": "الكل",
+      "unread": "غير المقروءة",
+      "favourites": "المفضلة",
+      "groups": "المجموعات"
+    },
+    "tab": {
+      "calls": "المكالمات",
+      "classes": "الفصول",
+      "chats": "الدردشات",
+      "back": "العودة"
+    },
+    "encrypt": {
+      "prefix": "رسائلك الشخصية",
+      "topic_messages": "الرسائل",
+      "suffix": "مشفرة"
+    }
   },
   "info": {
     "close": "إغلاق",

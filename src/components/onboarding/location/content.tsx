@@ -9,21 +9,23 @@ import { AlertCircle } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Skeleton } from "@/components/ui/skeleton"
 import { FormHeading, FormLayout } from "@/components/form"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { useHostValidation } from "@/components/onboarding/host-validation-context"
 
 import { LocationForm } from "./form"
 import { useLocation } from "./use-location"
 
 interface Props {
-  dictionary?: any
+  dictionary?: Dictionary
 }
 
 export default function LocationContent({ dictionary }: Props) {
-  const dict = dictionary?.onboarding || {}
+  const dict = ((dictionary?.school as Record<string, unknown> | undefined)
+    ?.onboarding ?? {}) as Record<string, string>
   const params = useParams()
   const schoolId = params.id as string
   const { enableNext, disableNext } = useHostValidation()
-  const { data: locationData, loading, error } = useLocation(schoolId)
+  const { data: locationData, loading, errorCode } = useLocation(schoolId)
 
   // Enable/disable next button based on form completion
   // If Mapbox token is not configured, allow skipping the location step
@@ -51,11 +53,13 @@ export default function LocationContent({ dictionary }: Props) {
     )
   }
 
-  if (error) {
+  if (errorCode) {
     return (
       <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" />
-        <AlertDescription>{error}</AlertDescription>
+        <AlertDescription>
+          {dict.loadErrorLocation ?? "Failed to load location"}
+        </AlertDescription>
       </Alert>
     )
   }

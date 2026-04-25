@@ -42,9 +42,7 @@ export async function completeOnboarding(
     })
 
     if (!schoolCheck?.domain) {
-      throw new Error(
-        "School subdomain not configured. Please complete the subdomain step."
-      )
+      return { success: false, code: "SUBDOMAIN_NOT_CONFIGURED" }
     }
 
     const school = await db.school.update({

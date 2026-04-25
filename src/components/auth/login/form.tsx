@@ -153,12 +153,13 @@ export const LoginForm = ({
     return () => clearTimeout(timer)
   }, [resendCooldown])
 
-  // Auto-login helper
+  // Auto-login helper (used after email verification completes — identifier is
+  // the user's verified email in this path)
   const autoLogin = useCallback(
     async (email: string, pwd: string) => {
       try {
         const result = await signIn("credentials", {
-          email,
+          identifier: email,
           password: pwd,
           redirect: false,
         })
@@ -171,7 +172,7 @@ export const LoginForm = ({
             locale: lang,
           }
           const loginResult = await login(
-            { email, password: pwd },
+            { identifier: email, password: pwd },
             loginOptions
           )
           if (loginResult?.redirectUrl && !tenant) {
@@ -215,6 +216,8 @@ export const LoginForm = ({
           validation: {
             email: "Email is required",
             passwordRequired: "Password is required",
+            identifierRequired: "Email or username is required",
+            invalidIdentifier: "Enter a valid email or username",
           },
           toast: { success: {}, error: {}, warning: {}, info: {} },
           errors: {
@@ -235,7 +238,7 @@ export const LoginForm = ({
   const form = useForm<z.infer<typeof LoginSchema>>({
     resolver: zodResolver(LoginSchema),
     defaultValues: {
-      email: "",
+      identifier: "",
       password: "",
     },
   })
@@ -473,16 +476,25 @@ export const LoginForm = ({
                   <>
                     <FormField
                       control={form.control}
-                      name="email"
+                      name="identifier"
                       render={({ field }) => (
                         <FormItem className="grid gap-2">
                           <FormControl>
                             <Input
                               {...field}
-                              id="email"
-                              type="email"
+                              id="identifier"
+                              type="text"
+                              autoComplete="username"
+                              inputMode="email"
+                              spellCheck={false}
                               disabled={isPending}
-                              placeholder={dictionary?.auth?.email || "Email"}
+                              placeholder={
+                                (dictionary as any)?.auth
+                                  ?.identifierPlaceholder ||
+                                (dictionary as any)?.auth?.identifier ||
+                                dictionary?.auth?.email ||
+                                "Email or username"
+                              }
                             />
                           </FormControl>
                           <FormMessage />

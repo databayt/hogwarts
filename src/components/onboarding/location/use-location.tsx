@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 
 import { getSchoolLocation } from "./actions"
 import { type LocationFormData } from "./validation"
@@ -10,57 +10,49 @@ import { type LocationFormData } from "./validation"
 interface UseLocationReturn {
   data: LocationFormData | null
   loading: boolean
-  error: string | null
+  errorCode: string | null
   refresh: () => Promise<void>
 }
 
 export function useLocation(schoolId: string): UseLocationReturn {
   const [data, setData] = useState<LocationFormData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [errorCode, setErrorCode] = useState<string | null>(null)
 
-  const fetchLocation = async () => {
+  const fetchLocation = useCallback(async () => {
     if (!schoolId) {
-      setError("School ID is missing")
+      setErrorCode("MISSING_SCHOOL_ID")
       setLoading(false)
       return
     }
 
     try {
       setLoading(true)
-      setError(null)
+      setErrorCode(null)
       const result = await getSchoolLocation(schoolId)
 
       if (result.success && result.data) {
         setData(result.data)
       } else if (result.success && !result.data) {
-        // No location data yet, that's okay
         setData(null)
       } else {
-        setError(result.error || "Failed to fetch location")
-        console.error("Location fetch error:", result.error)
+        setErrorCode(result.code ?? "FETCH_FAILED")
       }
-    } catch (err: any) {
-      const errorMessage = err?.message || "An unexpected error occurred"
-      setError(errorMessage)
-      console.error("Error fetching location:", err)
+    } catch {
+      setErrorCode("UNEXPECTED_ERROR")
     } finally {
       setLoading(false)
     }
-  }
+  }, [schoolId])
 
   useEffect(() => {
     fetchLocation()
-  }, [schoolId])
-
-  const refresh = async () => {
-    await fetchLocation()
-  }
+  }, [fetchLocation])
 
   return {
     data,
     loading,
-    error,
-    refresh,
+    errorCode,
+    refresh: fetchLocation,
   }
 }

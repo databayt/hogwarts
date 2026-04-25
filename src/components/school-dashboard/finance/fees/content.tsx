@@ -14,6 +14,7 @@ import {
 } from "lucide-react"
 
 import { db } from "@/lib/db"
+import { selfHealFeeProvisioning } from "@/lib/fee-provisioning-self-heal"
 import { formatCurrency } from "@/lib/i18n-format"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -52,6 +53,11 @@ export default async function FeesContent({ dictionary, lang }: Props) {
   )
   const canCreate = await checkCurrentUserPermission(schoolId, "fees", "create")
   const canExport = await checkCurrentUserPermission(schoolId, "fees", "export")
+
+  // Best-effort: if onboarding's after() was killed before fee provisioning
+  // completed, heal it now so the admin sees fees instead of an empty page.
+  // Idempotent and silent — returns immediately if nothing to do.
+  await selfHealFeeProvisioning(schoolId)
 
   if (!canView) {
     const ov = (dictionary as any)?.finance?.fees?.overview as

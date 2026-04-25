@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useState, useTransition } from "react"
+import { useMemo, useState, useTransition } from "react"
 import Image from "next/image"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { ArrowLeft, GraduationCap, Layers, School } from "lucide-react"
@@ -19,9 +19,11 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { createI18nHelpers } from "@/components/internationalization/helpers"
 
 import { updateSchoolDescription } from "./actions"
-import { descriptionSchema, type DescriptionFormData } from "./validation"
+import { createDescriptionSchema, type DescriptionFormData } from "./validation"
 
 type Step = "type" | "level"
 
@@ -30,7 +32,7 @@ interface DescriptionFormProps {
   initialData?: Partial<DescriptionFormData>
   onSuccess?: () => void
   onStepChange?: (step: Step) => void
-  dictionary?: any
+  dictionary?: Dictionary
 }
 
 const slideVariants = {
@@ -59,15 +61,32 @@ export function DescriptionForm({
     return "type"
   })
   const [direction, setDirection] = useState(1)
-  const dict = dictionary?.onboarding || {}
+  const dict = ((dictionary?.school as Record<string, unknown> | undefined)
+    ?.onboarding ?? {}) as Record<string, string>
+
+  const { v, e } = useMemo(() => {
+    if (!dictionary?.messages) return { v: undefined, e: undefined }
+    const { validation, error } = createI18nHelpers(dictionary.messages)
+    return { v: validation, e: error }
+  }, [dictionary])
+
+  const schema = useMemo(() => createDescriptionSchema(v), [v])
 
   const form = useForm<DescriptionFormData>({
-    resolver: zodResolver(descriptionSchema),
+    resolver: zodResolver(schema),
     defaultValues: {
-      schoolType: initialData?.schoolType || undefined,
-      schoolLevel: initialData?.schoolLevel || undefined,
+      schoolType: initialData?.schoolType,
+      schoolLevel: initialData?.schoolLevel,
     },
   })
+
+  const ERROR_MAP: Record<string, string> = useMemo(
+    () => ({
+      VALIDATION_ERROR: v?.get("invalidSelection") ?? "Invalid selection",
+      SCHOOL_NOT_FOUND: e?.tenant.schoolNotFound() ?? "School not found",
+    }),
+    [v, e]
+  )
 
   const handleSubmit = (data: DescriptionFormData) => {
     startTransition(async () => {
@@ -78,42 +97,47 @@ export function DescriptionForm({
         if (result.success) {
           onSuccess?.()
         } else {
-          setError(result.error || dict.unexpectedError)
+          const translated =
+            (result.code && ERROR_MAP[result.code]) ??
+            e?.server.internalError() ??
+            dict.unexpectedError ??
+            "An error occurred"
+          setError(translated)
           if (result.errors) {
             Object.entries(result.errors).forEach(([field, message]) => {
               form.setError(field as keyof DescriptionFormData, { message })
             })
           }
         }
-      } catch (err) {
-        setError(dict.unexpectedError)
+      } catch {
+        setError(e?.server.internalError() ?? dict.unexpectedError ?? "")
       }
     })
   }
 
   const schoolTypes = [
     {
-      id: "private",
+      id: "private" as const,
       title: dict.privateSchool,
       image: asset("/illustrations/private.png"),
     },
     {
-      id: "public",
+      id: "public" as const,
       title: dict.publicSchool,
       image: asset("/illustrations/onboarding-public.png"),
     },
     {
-      id: "international",
+      id: "international" as const,
       title: dict.internationalSchool,
       image: asset("/illustrations/international.png"),
     },
     {
-      id: "technical",
+      id: "technical" as const,
       title: dict.technicalSchool,
       image: asset("/illustrations/techincal.png"),
     },
     {
-      id: "special",
+      id: "special" as const,
       title: dict.specialSchool,
       image: asset("/illustrations/espical.png"),
     },
@@ -140,7 +164,9 @@ export function DescriptionForm({
     },
   ]
 
-  const handleTypeTransition = (typeId: string) => {
+  const handleTypeTransition = (typeId: DescriptionFormData["schoolType"]) => {
+    // Technical schools are secondary-only by definition; skip the level step
+    // and auto-submit so fee-provisioning downstream sees a complete profile.
     if (typeId === "technical") {
       form.setValue("schoolLevel", "secondary")
       setTimeout(() => form.handleSubmit(handleSubmit)(), 100)
@@ -155,7 +181,7 @@ export function DescriptionForm({
     setDirection(-1)
     setStep("type")
     onStepChange?.("type")
-    form.setValue("schoolLevel", undefined as unknown as "primary")
+    form.setValue("schoolLevel", undefined)
   }
 
   const selectedTypeName =
@@ -189,8 +215,10 @@ export function DescriptionForm({
                     <FormControl>
                       <RadioGroup
                         onValueChange={(value) => {
-                          field.onChange(value)
-                          handleTypeTransition(value)
+                          const typed =
+                            value as DescriptionFormData["schoolType"]
+                          field.onChange(typed)
+                          handleTypeTransition(typed)
                         }}
                         value={field.value}
                         className="grid grid-cols-2 gap-3 sm:grid-cols-3"
@@ -248,6 +276,7 @@ export function DescriptionForm({
                 type="button"
                 onClick={handleBack}
                 className="text-muted-foreground hover:text-foreground mb-4 flex items-center gap-2 text-sm transition-colors"
+                disabled={isPending}
               >
                 <ArrowLeft size={16} className="rtl:rotate-180" />
                 <span>{selectedTypeName}</span>
@@ -261,7 +290,9 @@ export function DescriptionForm({
                     <FormControl>
                       <RadioGroup
                         onValueChange={(value) => {
-                          field.onChange(value)
+                          const typed =
+                            value as DescriptionFormData["schoolLevel"]
+                          field.onChange(typed)
                           setTimeout(() => {
                             form.handleSubmit(handleSubmit)()
                           }, 100)

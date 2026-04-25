@@ -9,7 +9,7 @@ import Google from "next-auth/providers/google"
 
 import { env } from "@/env.mjs"
 import { authLogger } from "@/lib/auth-logger"
-import { getUserByEmail } from "@/components/auth/user"
+import { getUserByIdentifier } from "@/components/auth/user"
 import { LoginSchema } from "@/components/auth/validation"
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -93,15 +93,16 @@ export default {
         const validatedFields = LoginSchema.safeParse(credentials)
 
         if (validatedFields.success) {
-          const { email, password } = validatedFields.data
+          const { identifier, password } = validatedFields.data
+          const trimmedIdentifier = identifier.trim()
           // Extract schoolId hint passed from login action for tenant-aware lookup
           const schoolId = (credentials?.schoolId as string) || undefined
           authLogger.debug("Credentials: Validation passed", {
-            email,
+            identifier: trimmedIdentifier,
             schoolId,
           })
 
-          const user = await getUserByEmail(email, schoolId)
+          const user = await getUserByIdentifier(trimmedIdentifier, schoolId)
           authLogger.debug("Credentials: User lookup result", {
             found: !!user,
             hasPassword: !!user?.password,
@@ -112,7 +113,7 @@ export default {
 
           if (!user || !user.password) {
             authLogger.warn("Credentials: User not found or no password", {
-              email,
+              identifier: trimmedIdentifier,
             })
             return null
           }
@@ -126,12 +127,15 @@ export default {
             authLogger.info("Credentials: Authorization successful", {
               userId: user.id,
               email: user.email,
+              username: user.username,
               role: user.role,
               schoolId: user.schoolId,
             })
             return user
           } else {
-            authLogger.warn("Credentials: Password mismatch", { email })
+            authLogger.warn("Credentials: Password mismatch", {
+              identifier: trimmedIdentifier,
+            })
           }
         } else {
           authLogger.warn("Credentials: Validation failed", {

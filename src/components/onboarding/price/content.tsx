@@ -2,102 +2,190 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useEffect, useRef, useState } from "react"
-import { ChevronDown, DollarSign, Edit2 } from "lucide-react"
+import { useEffect, useMemo, useRef, useState, useTransition } from "react"
+import { DollarSign, Edit2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import type { Locale } from "@/components/internationalization/config"
-import type { getDictionary } from "@/components/internationalization/dictionaries"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { createI18nHelpers } from "@/components/internationalization/helpers"
 import { useHostValidation } from "@/components/onboarding/host-validation-context"
 
+import { getSchoolPricing, updateSchoolTuition } from "./actions"
+import { createTuitionSchema } from "./validation"
+
 interface Props {
-  dictionary: Awaited<ReturnType<typeof getDictionary>>
+  dictionary: Dictionary
   lang: Locale
   id: string
 }
 
-export default function PriceContent(props: Props) {
-  const { dictionary, lang, id } = props
-  const [price, setPrice] = useState<number>(158)
-  const [isFocused, setIsFocused] = useState<boolean>(false)
-  const inputRef = useRef<HTMLInputElement>(null)
+export default function PriceContent({ dictionary, id }: Props) {
   const schoolId = id
-  const { enableNext } = useHostValidation()
-  const dict = (dictionary as any)?.school?.onboarding || {}
+  const { enableNext, setCustomNavigation } = useHostValidation()
+  const dict = ((dictionary?.school as Record<string, unknown> | undefined)
+    ?.onboarding ?? {}) as Record<string, string>
 
-  // Enable next button since we have a default price
+  const [price, setPrice] = useState<number>(5000)
+  const [currency, setCurrency] = useState<string>("USD")
+  const [isFocused, setIsFocused] = useState<boolean>(false)
+  const [isPending, startTransition] = useTransition()
+  const [errorText, setErrorText] = useState<string>("")
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const { v, e } = useMemo(() => {
+    if (!dictionary?.messages) return { v: undefined, e: undefined }
+    const { validation, error } = createI18nHelpers(dictionary.messages)
+    return { v: validation, e: error }
+  }, [dictionary])
+
+  const schema = useMemo(() => createTuitionSchema(v), [v])
+
+  // Initial load from DB — respects whatever admin set last
+  useEffect(() => {
+    let active = true
+    getSchoolPricing(schoolId).then((r) => {
+      if (!active || !r.success || !r.data) return
+      if (typeof r.data.tuitionFee === "number" && r.data.tuitionFee > 0) {
+        setPrice(r.data.tuitionFee)
+      }
+      if (typeof r.data.currency === "string") {
+        setCurrency(r.data.currency)
+      }
+    })
+    return () => {
+      active = false
+    }
+  }, [schoolId])
+
   useEffect(() => {
     enableNext()
   }, [enableNext])
 
   useEffect(() => {
-    // Auto-focus the input when component mounts
     if (inputRef.current) {
       inputRef.current.focus()
       setIsFocused(true)
-      // Position cursor at the end
       const length = inputRef.current.value.length
       inputRef.current.setSelectionRange(length, length)
     }
   }, [])
 
   useEffect(() => {
-    // Position cursor at the end whenever price changes
     if (inputRef.current && isFocused) {
       const length = inputRef.current.value.length
       inputRef.current.setSelectionRange(length, length)
     }
   }, [price, isFocused])
 
-  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace("$", "")
-    const numValue = parseInt(value) || 0
-    setPrice(numValue)
+  // Persist on Next — only when the value is valid + different from what's
+  // stored. The navigation proceeds regardless; failures surface as an
+  // inline error but don't block (user can edit later in admin pricing).
+  useEffect(() => {
+    const onNext = () => {
+      const parsed = schema.safeParse({ tuitionFee: price })
+      if (!parsed.success) {
+        setErrorText(
+          (parsed.error.issues[0].message || v?.get("invalidFormat")) ??
+            "Invalid value"
+        )
+        return false
+      }
+      setErrorText("")
+      startTransition(async () => {
+        const result = await updateSchoolTuition(schoolId, parsed.data)
+        if (!result.success) {
+          setErrorText(
+            e?.server.internalError() ??
+              dict.saveError ??
+              "Could not save tuition"
+          )
+        }
+      })
+      return true
+    }
+    setCustomNavigation({ onNext, nextDisabled: isPending })
+    return () => setCustomNavigation(undefined)
+  }, [
+    schoolId,
+    price,
+    schema,
+    isPending,
+    setCustomNavigation,
+    v,
+    e,
+    dict.saveError,
+  ])
+
+  const currencySymbol = useMemo(() => {
+    try {
+      const parts = new Intl.NumberFormat(undefined, {
+        style: "currency",
+        currency,
+        maximumFractionDigits: 0,
+      }).formatToParts(0)
+      return parts.find((p) => p.type === "currency")?.value ?? currency
+    } catch {
+      return currency
+    }
+  }, [currency])
+
+  const handlePriceChange = (ev: React.ChangeEvent<HTMLInputElement>) => {
+    const cleaned = ev.target.value.replace(/[^\d]/g, "")
+    setPrice(cleaned ? parseInt(cleaned, 10) : 0)
   }
+
+  const displayValue = `${currencySymbol}${price}`
 
   return (
     <div className="flex flex-col items-center space-y-6">
-      {/* Large price display with edit functionality */}
+      {errorText && (
+        <div className="text-destructive bg-destructive/10 rounded-md p-3 text-sm">
+          {errorText}
+        </div>
+      )}
       <div className="mb-6 flex items-start justify-center">
         <div className="relative flex items-center">
           <input
             ref={inputRef}
             type="text"
-            value={`$${price}`}
+            inputMode="numeric"
+            value={displayValue}
             onChange={handlePriceChange}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
-            onKeyDown={(e) => {
-              // Prevent cursor from moving before "$"
-              if (e.key === "ArrowLeft" || e.key === "Home") {
-                const selectionStart = e.currentTarget.selectionStart || 0
-                if (selectionStart <= 1) {
-                  e.preventDefault()
-                  e.currentTarget.setSelectionRange(1, 1)
+            onKeyDown={(ev) => {
+              // Prevent cursor from moving before the currency symbol
+              if (ev.key === "ArrowLeft" || ev.key === "Home") {
+                const selectionStart = ev.currentTarget.selectionStart || 0
+                if (selectionStart <= currencySymbol.length) {
+                  ev.preventDefault()
+                  ev.currentTarget.setSelectionRange(
+                    currencySymbol.length,
+                    currencySymbol.length
+                  )
                 }
               }
             }}
-            onClick={(e) => {
-              // Ensure cursor doesn't go before "$"
-              const selectionStart = e.currentTarget.selectionStart || 0
-              if (selectionStart < 1) {
-                e.currentTarget.setSelectionRange(1, 1)
+            onClick={(ev) => {
+              const selectionStart = ev.currentTarget.selectionStart || 0
+              if (selectionStart < currencySymbol.length) {
+                ev.currentTarget.setSelectionRange(
+                  currencySymbol.length,
+                  currencySymbol.length
+                )
               }
             }}
             className="text-foreground w-auto min-w-0 border-none bg-transparent text-center text-6xl font-extrabold outline-none"
             style={{
-              width: `${`$${price}`.length * 0.8}em`,
+              width: `${displayValue.length * 0.8}em`,
               caretColor: "var(--foreground)",
             }}
           />
           {!isFocused && (
             <div
               className="bg-muted hover:bg-accent -ms-3 mb-4 flex h-8 w-8 cursor-pointer items-center justify-center self-end rounded-full transition-colors"
-              onClick={() => {
-                if (inputRef.current) {
-                  inputRef.current.focus()
-                }
-              }}
+              onClick={() => inputRef.current?.focus()}
             >
               <Edit2 size={16} />
             </div>
@@ -105,7 +193,6 @@ export default function PriceContent(props: Props) {
         </div>
       </div>
 
-      {/* View similar schools button */}
       <div className="mb-4 flex justify-center">
         <Button
           variant="outline"
@@ -116,7 +203,6 @@ export default function PriceContent(props: Props) {
         </Button>
       </div>
 
-      {/* Learn more link */}
       <div className="flex justify-center">
         <Button
           variant="link"

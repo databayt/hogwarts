@@ -69,35 +69,59 @@ const mockDictionary: Dictionary = {
 // ============================================================================
 
 describe("LoginSchema", () => {
-  describe("email validation", () => {
-    it("should accept valid email", () => {
+  describe("identifier validation", () => {
+    it("should accept valid email as identifier", () => {
       const result = LoginSchema.safeParse({
-        email: "test@example.com",
+        identifier: "test@example.com",
         password: "password123",
       })
       expect(result.success).toBe(true)
     })
 
-    it("should reject invalid email format", () => {
+    it("should accept valid username as identifier", () => {
       const result = LoginSchema.safeParse({
-        email: "invalid-email",
+        identifier: "26010042",
+        password: "password123",
+      })
+      expect(result.success).toBe(true)
+    })
+
+    it("should accept username with letters, digits, dot, dash, underscore", () => {
+      const result = LoginSchema.safeParse({
+        identifier: "teacher.abdullah_1-bkh",
+        password: "password123",
+      })
+      expect(result.success).toBe(true)
+    })
+
+    it("should reject identifier containing @ that isn't a valid email", () => {
+      const result = LoginSchema.safeParse({
+        identifier: "bad@",
         password: "password123",
       })
       expect(result.success).toBe(false)
       if (!result.success) {
-        expect(result.error.issues[0].path).toContain("email")
+        expect(result.error.issues[0].path).toContain("identifier")
       }
     })
 
-    it("should reject empty email", () => {
+    it("should reject too-short username (under 3 chars)", () => {
       const result = LoginSchema.safeParse({
-        email: "",
+        identifier: "ab",
         password: "password123",
       })
       expect(result.success).toBe(false)
     })
 
-    it("should reject missing email", () => {
+    it("should reject empty identifier", () => {
+      const result = LoginSchema.safeParse({
+        identifier: "",
+        password: "password123",
+      })
+      expect(result.success).toBe(false)
+    })
+
+    it("should reject missing identifier", () => {
       const result = LoginSchema.safeParse({
         password: "password123",
       })
@@ -108,7 +132,7 @@ describe("LoginSchema", () => {
   describe("password validation", () => {
     it("should accept valid password", () => {
       const result = LoginSchema.safeParse({
-        email: "test@example.com",
+        identifier: "test@example.com",
         password: "password123",
       })
       expect(result.success).toBe(true)
@@ -116,7 +140,7 @@ describe("LoginSchema", () => {
 
     it("should reject empty password", () => {
       const result = LoginSchema.safeParse({
-        email: "test@example.com",
+        identifier: "test@example.com",
         password: "",
       })
       expect(result.success).toBe(false)
@@ -124,7 +148,7 @@ describe("LoginSchema", () => {
 
     it("should reject missing password", () => {
       const result = LoginSchema.safeParse({
-        email: "test@example.com",
+        identifier: "test@example.com",
       })
       expect(result.success).toBe(false)
     })
@@ -133,7 +157,7 @@ describe("LoginSchema", () => {
   describe("2FA code", () => {
     it("should accept login with optional 2FA code", () => {
       const result = LoginSchema.safeParse({
-        email: "test@example.com",
+        identifier: "test@example.com",
         password: "password123",
         code: "123456",
       })
@@ -142,7 +166,7 @@ describe("LoginSchema", () => {
 
     it("should accept login without 2FA code", () => {
       const result = LoginSchema.safeParse({
-        email: "test@example.com",
+        identifier: "test@example.com",
         password: "password123",
       })
       expect(result.success).toBe(true)

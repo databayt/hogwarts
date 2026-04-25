@@ -1,0 +1,201 @@
+{
+  "generated": "2026-04-24T09:09:07.939Z",
+  "count": 39,
+  "assets": [
+    {
+      "name": "ic-wa-lock-12",
+      "ext": "svg",
+      "size": 598
+    },
+    {
+      "name": "ic-wa-disappearing-16",
+      "ext": "svg",
+      "size": 2861
+    },
+    {
+      "name": "ic-wa-pin-16",
+      "ext": "svg",
+      "size": 886
+    },
+    {
+      "name": "ic-wa-archived-24",
+      "ext": "svg",
+      "size": 1109
+    },
+    {
+      "name": "ic-wa-plus-filter-24",
+      "ext": "svg",
+      "size": 681
+    },
+    {
+      "name": "ic-wa-meetball-24",
+      "ext": "svg",
+      "size": 805
+    },
+    {
+      "name": "ic-wa-camera-24",
+      "ext": "svg",
+      "size": 932
+    },
+    {
+      "name": "ic-wa-plus-add-24",
+      "ext": "svg",
+      "size": 679
+    },
+    {
+      "name": "ic-wa-search-24",
+      "ext": "svg",
+      "size": 827
+    },
+    {
+      "name": "ic-wa-check-read-19",
+      "ext": "svg",
+      "size": 1000
+    },
+    {
+      "name": "ic-wa-check-sent-19",
+      "ext": "svg",
+      "size": 1000
+    },
+    {
+      "name": "ic-wa-voice-16",
+      "ext": "svg",
+      "size": 650
+    },
+    {
+      "name": "ic-wa-deleted-16",
+      "ext": "svg",
+      "size": 760
+    },
+    {
+      "name": "ic-wa-location-16",
+      "ext": "svg",
+      "size": 542
+    },
+    {
+      "name": "ic-wa-group-16",
+      "ext": "svg",
+      "size": 1010
+    },
+    {
+      "name": "ic-wa-tab-updates-32",
+      "ext": "svg",
+      "size": 2274
+    },
+    {
+      "name": "ic-wa-tab-calls-32",
+      "ext": "svg",
+      "size": 1922
+    },
+    {
+      "name": "ic-wa-tab-communities-32",
+      "ext": "svg",
+      "size": 3168
+    },
+    {
+      "name": "ic-wa-tab-chats-32",
+      "ext": "svg",
+      "size": 2144
+    },
+    {
+      "name": "ic-wa-tab-settings-32",
+      "ext": "svg",
+      "size": 4391
+    },
+    {
+      "name": "ic-wa-meta-ai-circle",
+      "ext": "svg",
+      "size": 1661
+    },
+    {
+      "name": "ic-wa-updates-ring-full",
+      "ext": "svg",
+      "size": 277
+    },
+    {
+      "name": "ic-wa-updates-ring-right",
+      "ext": "svg",
+      "size": 516
+    },
+    {
+      "name": "ic-wa-updates-ring-left",
+      "ext": "svg",
+      "size": 511
+    },
+    {
+      "name": "ic-wa-updates-ring-top",
+      "ext": "svg",
+      "size": 519
+    },
+    {
+      "name": "ic-wa-updates-ring-bottom",
+      "ext": "svg",
+      "size": 518
+    },
+    {
+      "name": "ic-wa-updates-ring-quarter",
+      "ext": "svg",
+      "size": 514
+    },
+    {
+      "name": "ic-wa-status-cellular",
+      "ext": "svg",
+      "size": 1237
+    },
+    {
+      "name": "ic-wa-status-wifi",
+      "ext": "svg",
+      "size": 1605
+    },
+    {
+      "name": "ic-wa-status-battery",
+      "ext": "svg",
+      "size": 928
+    },
+    {
+      "name": "pic-wa-sample-jenny",
+      "ext": "png",
+      "size": 1311155
+    },
+    {
+      "name": "pic-wa-sample-mom",
+      "ext": "png",
+      "size": 242473
+    },
+    {
+      "name": "pic-wa-sample-daddy",
+      "ext": "jpg",
+      "size": 108121
+    },
+    {
+      "name": "pic-wa-sample-biff",
+      "ext": "jpg",
+      "size": 184558
+    },
+    {
+      "name": "pic-wa-sample-clocktower",
+      "ext": "png",
+      "size": 392425
+    },
+    {
+      "name": "pic-wa-sample-strickland",
+      "ext": "jpg",
+      "size": 39679
+    },
+    {
+      "name": "pic-wa-sample-doc",
+      "ext": "jpg",
+      "size": 12187
+    },
+    {
+      "name": "pic-wa-sample-dave",
+      "ext": "jpg",
+      "size": 14863
+    },
+    {
+      "name": "pic-wa-sample-lynda",
+      "ext": "png",
+      "size": 264441
+    }
+  ]
+}

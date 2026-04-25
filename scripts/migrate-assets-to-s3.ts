@@ -272,6 +272,13 @@ const PATH_MAP: Record<string, string> = {
 
   // ── Onboarding illustration ────────────────────────────────────────────
   "illustrations/onboarding-step2.svg": "illustrations/onboarding-step2.svg",
+
+  // ── Stream home feature icons (shared with mobile app) ─────────────────
+  "icons/stream-curated-courses.svg": "icons/stream-curated-courses.svg",
+  "icons/stream-interactive-learning.svg":
+    "icons/stream-interactive-learning.svg",
+  "icons/stream-progress-tracking.svg": "icons/stream-progress-tracking.svg",
+  "icons/stream-community.svg": "icons/stream-community.svg",
 }
 
 // ---------------------------------------------------------------------------

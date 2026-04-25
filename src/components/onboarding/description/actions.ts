@@ -36,10 +36,13 @@ export async function updateSchoolDescription(
     return createActionResponse({ id: schoolId })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return createActionResponse(undefined, {
-        message: "Validation failed",
-        name: "ValidationError",
-      })
+      return {
+        success: false,
+        code: "VALIDATION_ERROR",
+        errors: Object.fromEntries(
+          error.issues.map((i) => [i.path.join("."), i.message])
+        ),
+      }
     }
     return createActionResponse(undefined, error)
   }
@@ -61,7 +64,9 @@ export async function getSchoolDescription(
       },
     })
 
-    if (!school) throw new Error("School not found")
+    if (!school) {
+      return { success: false, code: "SCHOOL_NOT_FOUND" }
+    }
 
     return createActionResponse({
       schoolType: school.schoolType as

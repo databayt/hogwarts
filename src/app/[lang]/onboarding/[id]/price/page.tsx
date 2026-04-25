@@ -18,7 +18,8 @@ interface Props {
 export default async function Price({ params }: Props) {
   const { lang, id } = await params
   const dictionary = await getDictionary(lang)
-  const dict = (dictionary as any)?.school?.onboarding || {}
+  const dict = ((dictionary?.school as Record<string, unknown> | undefined)
+    ?.onboarding ?? {}) as Record<string, string>
 
   return (
     <HostStepLayout

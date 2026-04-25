@@ -17,5 +17,5 @@ interface PageProps {
 export default async function Description({ params }: PageProps) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
-  return <DescriptionContent dictionary={dictionary.school} />
+  return <DescriptionContent dictionary={dictionary} />
 }

@@ -2,19 +2,22 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useEffect, useState, useTransition } from "react"
+import { useEffect, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
+
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { createI18nHelpers } from "@/components/internationalization/helpers"
 
 import { useHostValidation } from "../host-validation-context"
 import { updateSchoolLocation } from "./actions"
 import { MapForm } from "./map-form"
-import { locationSchema, type LocationFormData } from "./validation"
+import { createLocationSchema, type LocationFormData } from "./validation"
 
 interface LocationFormProps {
   schoolId: string
   initialData?: Partial<LocationFormData>
   onSuccess?: () => void
-  dictionary?: any
+  dictionary?: Dictionary
 }
 
 export function LocationForm({
@@ -39,6 +42,23 @@ export function LocationForm({
   const { setCustomNavigation, enableNext, disableNext } = useHostValidation()
   const hasMapbox = !!process.env.NEXT_PUBLIC_MAPBOX_TOKEN
 
+  const { v, e } = useMemo(() => {
+    if (!dictionary?.messages) return { v: undefined, e: undefined }
+    const { validation, error } = createI18nHelpers(dictionary.messages)
+    return { v: validation, e: error }
+  }, [dictionary])
+
+  const schema = useMemo(() => createLocationSchema(v), [v])
+
+  const ERROR_MAP: Record<string, string> = useMemo(
+    () => ({
+      VALIDATION_ERROR:
+        v?.get("invalidSelection") ?? "Please fill in all required fields",
+      SCHOOL_NOT_FOUND: e?.tenant.schoolNotFound() ?? "School not found",
+    }),
+    [v, e]
+  )
+
   // Enable/disable next button based on location selection
   // If Mapbox token is not configured, allow skipping
   useEffect(() => {
@@ -52,9 +72,8 @@ export function LocationForm({
   // Set up custom navigation to save on next
   useEffect(() => {
     const handleNext = () => {
-      // Skip validation if no Mapbox token or no address entered
       if (!locationData.address && hasMapbox) {
-        setError("Please select a location")
+        setError(v?.get("addressRequired") ?? "Please select a location")
         return
       }
 
@@ -67,24 +86,33 @@ export function LocationForm({
       startTransition(async () => {
         try {
           setError("")
-
-          // Validate the data
-          const validatedData = locationSchema.parse(locationData)
+          const validatedData = schema.parse(locationData)
 
           const result = await updateSchoolLocation(schoolId, validatedData)
 
           if (result.success) {
             onSuccess?.()
-            // Navigate to next step
             router.push(`/onboarding/${schoolId}/stand-out`)
           } else {
-            setError(result.error || "Failed to update location")
+            setError(
+              (result.code && ERROR_MAP[result.code]) ??
+                e?.server.internalError() ??
+                "An error occurred"
+            )
           }
-        } catch (err: any) {
-          if (err.errors) {
-            setError("Please fill in all required fields")
+        } catch (err) {
+          if (
+            err &&
+            typeof err === "object" &&
+            "errors" in (err as Record<string, unknown>)
+          ) {
+            setError(
+              v?.get("invalidSelection") ?? "Please fill in all required fields"
+            )
           } else {
-            setError("An unexpected error occurred")
+            setError(
+              e?.server.internalError() ?? "An unexpected error occurred"
+            )
           }
         }
       })
@@ -105,6 +133,11 @@ export function LocationForm({
     onSuccess,
     setCustomNavigation,
     isPending,
+    hasMapbox,
+    schema,
+    v,
+    e,
+    ERROR_MAP,
   ])
 
   return (

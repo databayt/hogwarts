@@ -345,7 +345,7 @@ export async function createStudent(
       }
     }
 
-    // Pre-generate the per-school student code (YYGGGNNNN) so username and
+    // Pre-generate the per-school student code (YYGGNNNN) so username and
     // Student.studentId stay in sync from creation — avoids a second update.
     const generatedCode = await generateStudentUsername({
       schoolId,
@@ -2445,7 +2445,8 @@ export async function bulkSyncStudentGrades(): Promise<
 
 interface StudentCredentialsPayload {
   username: string
-  email: string
+  /** Null for manually-added students who never provided an email. Self-onboarded students and CSV rows with email populated have this set. */
+  email: string | null
   /** Plaintext only when we just created a User here. Null for pre-existing Users — admin must click "Reset Password" to mint a new one. */
   password: string | null
   /** True the first time a User is minted for this student on this call. */
@@ -2514,11 +2515,10 @@ async function ensureStudentCode(
 }
 
 function deriveIsSelfOnboarded(student: StudentContext): boolean {
-  return (
-    !!student.applicationId &&
-    !!student.email &&
-    !student.email.endsWith("@school.local")
-  )
+  // Self-onboarded = came through the public admission flow (has applicationId)
+  // AND supplied their own email during application. Manually-added students
+  // have no email at all and no applicationId — they log in with username.
+  return !!student.applicationId && !!student.email
 }
 
 /**
@@ -2569,12 +2569,26 @@ export async function getStudentCredentials(input: {
         })
       }
 
-      const syntheticEmail = `${studentCode.toLowerCase()}@school.local`
+      // Legacy cleanup: previous versions stamped a synthetic `@school.local`
+      // email onto manually-added Users. Null it out so the email row hides
+      // in the dialog and the verification gate doesn't chase a dead address.
+      if (existingUser?.email?.endsWith("@school.local")) {
+        await db.user.update({
+          where: { id: student.userId },
+          data: { email: null, emailVerified: new Date() },
+        })
+      }
+
+      const resolvedEmail =
+        existingUser?.email && !existingUser.email.endsWith("@school.local")
+          ? existingUser.email
+          : (student.email ?? null)
+
       return {
         success: true,
         data: {
           username: studentCode,
-          email: existingUser?.email || student.email || syntheticEmail,
+          email: resolvedEmail,
           password: null,
           isNew: false,
           isSelfOnboarded,
@@ -2583,14 +2597,19 @@ export async function getStudentCredentials(input: {
     }
 
     // Path 2: no User yet — mint one with a fresh password so admin has
-    // something to share with the student on first open.
+    // something to share with the student on first open. Only populate email
+    // if the student record carries a real one (self-onboarded or CSV import
+    // with email column); otherwise leave User.email null so login isn't
+    // gated by unverifiable fake addresses.
     const { plain, hashed } = await mintPlainPassword(student.firstName)
-    const syntheticEmail = `${studentCode.toLowerCase()}@school.local`
-    const email = student.email || syntheticEmail
+    const email = student.email ?? null
 
     const newUser = await db.user.create({
       data: {
         email,
+        // Admin added this student manually, so email verification is moot —
+        // timestamp it so the login verification gate never stalls the student.
+        emailVerified: new Date(),
         password: hashed,
         role: "STUDENT",
         schoolId,
@@ -2673,13 +2692,17 @@ export async function resetStudentPassword(input: {
       where: { id: student.userId },
       select: { email: true },
     })
-    const syntheticEmail = `${studentCode.toLowerCase()}@school.local`
+
+    const resolvedEmail =
+      existingUser?.email && !existingUser.email.endsWith("@school.local")
+        ? existingUser.email
+        : (student.email ?? null)
 
     return {
       success: true,
       data: {
         username: studentCode,
-        email: existingUser?.email || student.email || syntheticEmail,
+        email: resolvedEmail,
         password: plain,
         isNew: false,
         isSelfOnboarded,

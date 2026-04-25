@@ -849,7 +849,7 @@ export async function confirmEnrollment(params: {
             })
           : null
 
-        // Per-school student code (YYGGGNNNN). Generated inside the tx so
+        // Per-school student code (YYGGNNNN). Generated inside the tx so
         // concurrent enrollments see each other's increments.
         const studentCode = await generateStudentUsername({
           schoolId,

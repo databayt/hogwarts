@@ -371,8 +371,8 @@ export function MessageList({
                       <div className="flex-1 border-t border-[#06CF9C]" />
                       <span className="mx-3 rounded-full bg-[#06CF9C] px-3 py-0.5 text-[11px] font-medium text-white uppercase">
                         {item.count}{" "}
-                        {(m?.ui as Record<string, string>)?.unread_messages ||
-                          "unread messages"}
+                        {(m?.ui as unknown as Record<string, string>)
+                          ?.unread_messages || "unread messages"}
                       </span>
                       <div className="flex-1 border-t border-[#06CF9C]" />
                     </div>

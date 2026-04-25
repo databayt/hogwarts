@@ -7,6 +7,7 @@ import dynamic from "next/dynamic"
 
 import { type LocationResult } from "@/lib/mapbox"
 import { Skeleton } from "@/components/ui/skeleton"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { type LocationFormData } from "./validation"
 
@@ -30,7 +31,7 @@ const MapboxLocationPicker = dynamic(
 interface MapFormProps {
   initialData?: Partial<LocationFormData>
   onLocationChange: (data: LocationFormData) => void
-  dictionary?: any
+  dictionary?: Dictionary
 }
 
 export function MapForm({
@@ -78,7 +79,8 @@ export function MapForm({
       }
     : null
 
-  const dict = dictionary?.onboarding || {}
+  const dict = ((dictionary?.school as Record<string, unknown> | undefined)
+    ?.onboarding ?? {}) as Record<string, string>
 
   return (
     <MapboxLocationPicker

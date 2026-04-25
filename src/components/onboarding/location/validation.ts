@@ -3,59 +3,34 @@
 
 import { z } from "zod"
 
-import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { getValidationMessages } from "@/components/internationalization/helpers"
+import type { ValidationHelper } from "@/components/internationalization/helpers"
 
-// ============================================================================
-// Schema Factory Functions (i18n-enabled)
-// ============================================================================
+// Single source of truth for location validation. `country` is required as a
+// 2-letter ISO code because fee-provisioning.ts and catalog-setup.ts key off
+// it — silently persisting an empty string would produce schools with no
+// catalog match and no fee structures downstream.
 
-export function createLocationSchema(dictionary: Dictionary) {
-  const v = getValidationMessages(dictionary)
+export function createLocationSchema(v?: ValidationHelper) {
+  const required = v?.required() ?? "Required"
+  const countryRequired = v?.get("countryRequired") ?? "Country is required"
 
   return z.object({
     address: z
       .string()
-      .min(1, { message: v.get("addressRequired") })
-      .trim(),
-    city: z
-      .string()
-      .min(1, { message: v.get("cityRequired") })
-      .trim(),
-    state: z
-      .string()
-      .min(1, { message: v.get("stateRequired") })
-      .trim(),
+      .transform((s) => s.trim())
+      .pipe(z.string().min(1, required)),
+    city: z.string().trim().optional().default(""),
+    state: z.string().trim().optional().default(""),
     country: z
       .string()
-      .min(1, { message: v.get("countryRequired") })
-      .trim()
-      .regex(/^[A-Z]{2}$/, {
-        message: v.get("countryRequired"),
-      }),
+      .transform((s) => s.trim())
+      .pipe(z.string().regex(/^[A-Z]{2}$/, countryRequired)),
     postalCode: z.string().optional().default(""),
-    latitude: z.number().optional().default(0),
-    longitude: z.number().optional().default(0),
+    latitude: z.number(),
+    longitude: z.number(),
   })
 }
 
-// ============================================================================
-// Main Schema (used with Mapbox autocomplete)
-// ============================================================================
-
-export const locationSchema = z.object({
-  address: z.string().min(1, "Address is required").trim(),
-  city: z.string().optional().default(""),
-  state: z.string().optional().default(""),
-  country: z
-    .string()
-    .refine((val) => val === "" || /^[A-Z]{2}$/.test(val), {
-      message: "Country must be a 2-letter ISO code",
-    })
-    .default(""),
-  postalCode: z.string().optional().default(""),
-  latitude: z.number(),
-  longitude: z.number(),
-})
+export const locationSchema = createLocationSchema()
 
 export type LocationFormData = z.infer<typeof locationSchema>

@@ -235,7 +235,10 @@ class CsvImportService {
       interface ValidatedStudent {
         rowNumber: number
         validated: z.infer<typeof studentCsvSchema>
-        email: string
+        // Null when the CSV row didn't carry an email — manually-added
+        // students log in with username + password only. Populated when the
+        // row supplied a real email the student can verify.
+        email: string | null
       }
       const validRows: ValidatedStudent[] = []
 
@@ -284,7 +287,7 @@ class CsvImportService {
           }
 
           // Only dedupe CSV-provided studentIds here. Missing ones get a
-          // school-scoped code (YYGGGNNNN) assigned later, after we've
+          // school-scoped code (YYGGNNNN) assigned later, after we've
           // resolved each row's grade — see the chunk loop below.
           if (validated.studentId) {
             if (existingStudentIds.has(validated.studentId)) {
@@ -298,14 +301,12 @@ class CsvImportService {
             existingStudentIds.add(validated.studentId)
           }
 
-          // Email fallback uses the CSV-provided studentId if present, otherwise
-          // a temporary placeholder that will be replaced once a code is assigned.
-          const emailFallback = validated.studentId
-            ? `${validated.studentId}@school.local`
-            : `row-${rowNumber}@school.local`
-          const studentEmail = validated.email || emailFallback
+          // Only dedupe when the row actually carries an email. Null emails
+          // (manually-added students) aren't globally unique — multiple
+          // students can share "no email" without collision.
+          const studentEmail = validated.email ?? null
 
-          if (existingEmails.has(studentEmail)) {
+          if (studentEmail && existingEmails.has(studentEmail)) {
             result.warnings?.push({
               row: rowNumber,
               warning: `Email "${studentEmail}" already exists — skipped`,
@@ -314,7 +315,7 @@ class CsvImportService {
             continue
           }
 
-          existingEmails.add(studentEmail)
+          if (studentEmail) existingEmails.add(studentEmail)
 
           validRows.push({ rowNumber, validated, email: studentEmail })
         } catch (error) {
@@ -373,7 +374,7 @@ class CsvImportService {
         const chunk = validRows.slice(c, c + this.CHUNK_SIZE)
 
         // Phase 2a: resolve grade + section for each row so the generator
-        // can produce a grade-scoped code (YYGGGNNNN) per row.
+        // can produce a grade-scoped code (YYGGNNNN) per row.
         const resolved = chunk.map((r) => {
           let academicGradeId: string | undefined
           let sectionId: string | undefined
@@ -413,13 +414,6 @@ class CsvImportService {
               academicGradeId: item.academicGradeId ?? null,
             })
             item.row.validated.studentId = code
-            // Upgrade synthetic email placeholder if it was based on rowNumber
-            if (
-              item.row.email.startsWith("row-") &&
-              item.row.email.endsWith("@school.local")
-            ) {
-              item.row.email = `${code.toLowerCase()}@school.local`
-            }
           }
         }
 
@@ -442,6 +436,10 @@ class CsvImportService {
                 id: userIds[idx],
                 username: r.validated.studentId!,
                 email: r.email,
+                // Admin is bulk-importing — the login verification gate has
+                // nothing to verify against, so stamp verified now and let
+                // the student log in with username + password.
+                emailVerified: new Date(),
                 password: hashes[idx],
                 role: "STUDENT" as const,
                 schoolId,
@@ -873,6 +871,9 @@ class CsvImportService {
                 id: userIds[idx],
                 username: r.validated.name,
                 email: r.validated.email,
+                // Bulk import: admin vouches for these teachers, so skip the
+                // login email-verification gate.
+                emailVerified: new Date(),
                 password: hashes[idx],
                 role: "TEACHER" as const,
                 schoolId,
@@ -1283,14 +1284,15 @@ class CsvImportService {
             }
           }
 
-          // Create user account
+          // Create user account. Guardians without an email log in with
+          // username + password — don't fabricate a `@school.local` address
+          // that nobody can verify.
           const defaultPassword = await hash("parent123", 10)
-          const email =
-            validated.emailAddress || `guardian-${Date.now()}-${i}@school.local`
           const user = await db.user.create({
             data: {
               username: `${validated.firstName} ${validated.lastName}`,
-              email,
+              email: validated.emailAddress ?? null,
+              emailVerified: new Date(),
               password: defaultPassword,
               role: "GUARDIAN",
               schoolId,

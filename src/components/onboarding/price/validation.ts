@@ -3,10 +3,12 @@
 
 import { z } from "zod"
 
-import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { getValidationMessages } from "@/components/internationalization/helpers"
+import type { ValidationHelper } from "@/components/internationalization/helpers"
 
-const CurrencyEnum = [
+// Currency enum — kept in sync with the School.currency column (text) and
+// the lib/format.ts formatter. Any addition here must also land in
+// onboarding/currency validation (Step 5) and in the admin pricing form.
+export const CURRENCY_ENUM = [
   "USD",
   "EUR",
   "GBP",
@@ -22,78 +24,66 @@ const CurrencyEnum = [
   "BHD",
   "OMR",
 ] as const
-const PaymentScheduleEnum = [
+
+export const PAYMENT_SCHEDULE_ENUM = [
   "monthly",
   "quarterly",
   "semester",
   "annual",
 ] as const
 
-type Currency = (typeof CurrencyEnum)[number]
-type PaymentSchedule = (typeof PaymentScheduleEnum)[number]
+export type Currency = (typeof CURRENCY_ENUM)[number]
+export type PaymentSchedule = (typeof PAYMENT_SCHEDULE_ENUM)[number]
 
-// ============================================================================
-// Schema Factory Functions (i18n-enabled)
-// ============================================================================
-
-export function createSchoolPriceSchema(dictionary: Dictionary) {
-  const v = getValidationMessages(dictionary)
+// Tuition-only schema — used by the onboarding price step which only captures
+// the headline tuition figure. Currency + paymentSchedule live in their own
+// steps / in admin pricing later.
+export function createTuitionSchema(v?: ValidationHelper) {
+  const nonNeg =
+    v?.get("tuitionFeeNonNegative") ?? "Tuition fee cannot be negative"
+  const tooBig = v?.get("tuitionFeeMaxLimit") ?? "Tuition fee is too high"
 
   return z.object({
-    tuitionFee: z
-      .number()
-      .min(0, { message: v.get("tuitionFeeNonNegative") })
-      .max(50000, { message: v.get("tuitionFeeMaxLimit") }),
-    registrationFee: z
-      .number()
-      .min(0, { message: v.get("registrationFeeNonNegative") })
-      .max(5000, { message: v.get("registrationFeeMaxLimit") })
-      .optional(),
-    applicationFee: z
-      .number()
-      .min(0, { message: v.get("applicationFeeNonNegative") })
-      .max(1000, { message: v.get("applicationFeeMaxLimit") })
-      .optional(),
-    currency: z.enum(CurrencyEnum, { message: v.get("currencyRequired") }),
-    paymentSchedule: z.enum(PaymentScheduleEnum, {
-      message: v.get("paymentScheduleRequired"),
+    tuitionFee: z.number().min(0, nonNeg).max(50000, tooBig),
+  })
+}
+
+export const tuitionSchema = createTuitionSchema()
+export type TuitionFormData = z.infer<typeof tuitionSchema>
+
+// Full pricing schema — used by the admin pricing editor + legacy callers.
+export function createSchoolPriceSchema(v?: ValidationHelper) {
+  const nonNegTuition =
+    v?.get("tuitionFeeNonNegative") ?? "Tuition fee cannot be negative"
+  const maxTuition = v?.get("tuitionFeeMaxLimit") ?? "Tuition fee is too high"
+  const nonNegReg =
+    v?.get("registrationFeeNonNegative") ??
+    "Registration fee cannot be negative"
+  const maxReg =
+    v?.get("registrationFeeMaxLimit") ?? "Registration fee is too high"
+  const nonNegApp =
+    v?.get("applicationFeeNonNegative") ?? "Application fee cannot be negative"
+  const maxApp =
+    v?.get("applicationFeeMaxLimit") ?? "Application fee is too high"
+  const currencyRequired =
+    v?.get("currencyRequired") ?? "Please select a currency"
+  const scheduleRequired =
+    v?.get("paymentScheduleRequired") ?? "Please select a payment schedule"
+
+  return z.object({
+    tuitionFee: z.number().min(0, nonNegTuition).max(50000, maxTuition),
+    registrationFee: z.number().min(0, nonNegReg).max(5000, maxReg).optional(),
+    applicationFee: z.number().min(0, nonNegApp).max(1000, maxApp).optional(),
+    currency: z.enum(CURRENCY_ENUM, { message: currencyRequired }),
+    paymentSchedule: z.enum(PAYMENT_SCHEDULE_ENUM, {
+      message: scheduleRequired,
     }),
   })
 }
 
-// ============================================================================
-// Legacy Schemas (for backward compatibility - will be deprecated)
-// ============================================================================
+export const schoolPriceSchema = createSchoolPriceSchema()
+export type SchoolPriceFormData = z.infer<typeof schoolPriceSchema>
 
-export const schoolPriceSchema = z.object({
-  tuitionFee: z
-    .number()
-    .min(0, "Tuition fee cannot be negative")
-    .max(50000, "Tuition fee cannot exceed $50,000"),
-  registrationFee: z
-    .number()
-    .min(0, "Registration fee cannot be negative")
-    .max(5000, "Registration fee cannot exceed $5,000")
-    .optional(),
-  applicationFee: z
-    .number()
-    .min(0, "Application fee cannot be negative")
-    .max(1000, "Application fee cannot exceed $1,000")
-    .optional(),
-  currency: z.enum(CurrencyEnum).describe("Please select a currency"),
-  paymentSchedule: z
-    .enum(PaymentScheduleEnum)
-    .describe("Please select a payment schedule"),
-})
-
-export type SchoolPriceFormData = {
-  tuitionFee: number
-  registrationFee?: number
-  applicationFee?: number
-  currency: Currency
-  paymentSchedule: PaymentSchedule
-}
-
-// Keep legacy schema for backward compatibility
+// Backward-compat aliases
 export const priceSchema = schoolPriceSchema
 export type PriceFormData = SchoolPriceFormData

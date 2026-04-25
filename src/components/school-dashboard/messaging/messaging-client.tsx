@@ -27,6 +27,7 @@ import { ChatInterface } from "./chat-interface"
 import { ContactsPanel } from "./contacts/contacts-panel"
 import { ConversationInfoPanel } from "./conversation-info-panel"
 import { NoActiveConversation } from "./empty-state"
+import { IosChatList } from "./mobile"
 import type { ConversationDTO, MessageAttachmentDTO, MessageDTO } from "./types"
 
 // Build a MessageDTO from Socket.IO event data
@@ -631,12 +632,45 @@ export function MessagingClient({
 
   return (
     <div className="bg-msg-chat-bg relative flex h-full">
-      {/* Sidebar — unified contact list */}
+      {/* Mobile (<md) — iOS WhatsApp chat list when no active conversation */}
       <div
         className={cn(
-          "bg-msg-sidebar-bg border-border flex min-h-0 flex-shrink-0 flex-col overflow-hidden border-e",
-          "w-full md:w-[350px] md:max-w-[30vw]",
-          activeConversation ? "hidden md:flex" : "flex"
+          "md:hidden",
+          activeConversation ? "hidden" : "flex h-full w-full"
+        )}
+      >
+        <IosChatList
+          conversations={conversations}
+          currentUserId={currentUserId}
+          activeConversationId={activeConversation?.id ?? null}
+          typingConversations={typingConversations}
+          onConversationClick={switchToConversation}
+          locale={locale}
+          labels={{
+            titleChats: m?.ui?.title ?? "Chats",
+            searchPlaceholder: m?.ui?.search_placeholder ?? "Search messages",
+            filterAll: m?.ui?.filter?.all ?? "All",
+            filterUnread: m?.ui?.filter?.unread ?? "Unread",
+            filterFavourites: m?.ui?.filter?.favourites ?? "Favourites",
+            filterGroups: m?.ui?.filter?.groups ?? "Groups",
+            archivedLabel: m?.ui?.archived ?? "Archived",
+            tabCalls: m?.ui?.tab?.calls ?? "Calls",
+            tabClasses: m?.ui?.tab?.classes ?? "Classes",
+            tabChats: m?.ui?.tab?.chats ?? "Chats",
+            tabBack: m?.ui?.tab?.back ?? "Back",
+            encryptPrefix: m?.ui?.encrypt?.prefix ?? "Your personal",
+            encryptTopic: m?.ui?.encrypt?.topic_messages ?? "messages",
+            encryptSuffix: m?.ui?.encrypt?.suffix ?? "are",
+            typingPreview: m?.ui?.typing ?? "typing...",
+          }}
+        />
+      </div>
+
+      {/* Sidebar — desktop-only contact list (md+) */}
+      <div
+        className={cn(
+          "bg-msg-sidebar-bg border-border hidden min-h-0 flex-shrink-0 flex-col overflow-hidden border-e",
+          "md:flex md:w-[350px] md:max-w-[30vw]"
         )}
       >
         <ContactsPanel

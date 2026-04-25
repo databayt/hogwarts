@@ -2054,6 +2054,8 @@
         "resettingPassword": "Resetting password...",
         "mustChangePassword": "The student will be asked to change their password on first login.",
         "selfOnboarded": "This student signed up themselves — they log in with email. Username is for reference.",
+        "usernameOnly": "This student logs in with username and password.",
+        "noEmail": "No email on file",
         "failedToGenerate": "Failed to load credentials",
         "failedToReset": "Failed to reset password"
       },
@@ -7298,6 +7300,7 @@
       "selectGradeLevels": "Select your grade levels",
       "selectGradeLevelsDescription": "Choose the academic levels your school serves.",
       "schoolLocationDescription": "Your school's address will be visible to parents and staff members.",
+      "loadErrorLocation": "Failed to load location",
       "aboutYourSchool": "about your school",
       "capacityDescription": "Tell us about your school's capacity and facilities.",
       "students": "Students",

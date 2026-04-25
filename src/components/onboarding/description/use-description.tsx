@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 
 import { getSchoolDescription } from "./actions"
 import { type DescriptionFormData } from "./validation"
@@ -10,48 +10,43 @@ import { type DescriptionFormData } from "./validation"
 interface UseDescriptionReturn {
   data: DescriptionFormData | null
   loading: boolean
-  error: string | null
+  errorCode: string | null
   refresh: () => Promise<void>
 }
 
 export function useDescription(schoolId: string): UseDescriptionReturn {
   const [data, setData] = useState<DescriptionFormData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [errorCode, setErrorCode] = useState<string | null>(null)
 
-  const fetchDescription = async () => {
+  const fetchDescription = useCallback(async () => {
     if (!schoolId) return
 
     try {
       setLoading(true)
-      setError(null)
+      setErrorCode(null)
       const result = await getSchoolDescription(schoolId)
 
       if (result.success) {
         setData(result.data)
       } else {
-        setError(result.error || "Failed to fetch description")
+        setErrorCode(result.code ?? "FETCH_FAILED")
       }
-    } catch (err) {
-      setError("An unexpected error occurred")
-      console.error("Error fetching description:", err)
+    } catch {
+      setErrorCode("UNEXPECTED_ERROR")
     } finally {
       setLoading(false)
     }
-  }
+  }, [schoolId])
 
   useEffect(() => {
     fetchDescription()
-  }, [schoolId])
-
-  const refresh = async () => {
-    await fetchDescription()
-  }
+  }, [fetchDescription])
 
   return {
     data,
     loading,
-    error,
-    refresh,
+    errorCode,
+    refresh: fetchDescription,
   }
 }

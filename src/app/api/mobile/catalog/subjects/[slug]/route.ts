@@ -263,6 +263,9 @@ async function buildResponse(
                     ? `${lesson.durationMinutes}m`
                     : "",
                   content_url: lessonVideo?.url ?? null,
+                  // Web parity: the catalog lesson row renders a square
+                  // thumbnail. Same `md` size the web's get-course loader uses.
+                  thumbnail_url: getCatalogImageUrl(lesson.thumbnail, "md"),
                   order_index: lesson.sequenceOrder,
                   is_completed: false,
                   is_locked: false,

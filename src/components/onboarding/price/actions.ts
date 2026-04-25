@@ -12,30 +12,47 @@ import {
 import { db } from "@/lib/db"
 
 import { requireSchoolOwnership } from "../auth-helpers"
+import {
+  schoolPriceSchema,
+  tuitionSchema,
+  type SchoolPriceFormData,
+  type TuitionFormData,
+} from "./validation"
 
-export const schoolPriceSchema = z.object({
-  tuitionFee: z
-    .number()
-    .min(0, "Tuition fee cannot be negative")
-    .max(50000, "Tuition fee cannot exceed $50,000"),
-  registrationFee: z
-    .number()
-    .min(0, "Registration fee cannot be negative")
-    .max(5000, "Registration fee cannot exceed $5,000")
-    .optional(),
-  applicationFee: z
-    .number()
-    .min(0, "Application fee cannot be negative")
-    .max(1000, "Application fee cannot exceed $1,000")
-    .optional(),
-  currency: z.enum(["USD", "EUR", "GBP", "CAD", "AUD"]).default("USD"),
-  paymentSchedule: z
-    .enum(["monthly", "quarterly", "semester", "annual"])
-    .default("monthly"),
-})
+// Step 4: tuition-only update used by the onboarding /price step. The full
+// pricing flow (currency, registration/application fees, payment schedule)
+// lives in later steps / admin pricing.
+export async function updateSchoolTuition(
+  schoolId: string,
+  data: TuitionFormData
+): Promise<ActionResponse> {
+  try {
+    await requireSchoolOwnership(schoolId)
 
-export type SchoolPriceFormData = z.infer<typeof schoolPriceSchema>
+    const validated = tuitionSchema.parse(data)
 
+    await db.school.update({
+      where: { id: schoolId },
+      data: { tuitionFee: validated.tuitionFee },
+    })
+
+    revalidatePath(`/onboarding/${schoolId}/price`)
+    return createActionResponse({ id: schoolId })
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        code: "VALIDATION_ERROR",
+        errors: Object.fromEntries(
+          error.issues.map((i) => [i.path.join("."), i.message])
+        ),
+      }
+    }
+    return createActionResponse(undefined, error)
+  }
+}
+
+// Full pricing update — admin pricing editor still uses this shape.
 export async function updateSchoolPricing(
   schoolId: string,
   data: SchoolPriceFormData
@@ -60,10 +77,13 @@ export async function updateSchoolPricing(
     return createActionResponse({ id: schoolId })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return createActionResponse(undefined, {
-        message: "Validation failed",
-        name: "ValidationError",
-      })
+      return {
+        success: false,
+        code: "VALIDATION_ERROR",
+        errors: Object.fromEntries(
+          error.issues.map((i) => [i.path.join("."), i.message])
+        ),
+      }
     }
     return createActionResponse(undefined, error)
   }
@@ -87,7 +107,9 @@ export async function getSchoolPricing(
       },
     })
 
-    if (!school) throw new Error("School not found")
+    if (!school) {
+      return { success: false, code: "SCHOOL_NOT_FOUND" }
+    }
 
     return createActionResponse({
       tuitionFee: school.tuitionFee ? Number(school.tuitionFee) : 0,
@@ -95,12 +117,8 @@ export async function getSchoolPricing(
         ? Number(school.registrationFee)
         : 0,
       applicationFee: school.applicationFee ? Number(school.applicationFee) : 0,
-      currency: school.currency as "USD" | "EUR" | "GBP" | "CAD" | "AUD",
-      paymentSchedule: school.paymentSchedule as
-        | "monthly"
-        | "quarterly"
-        | "semester"
-        | "annual",
+      currency: (school.currency ?? "USD") as string,
+      paymentSchedule: (school.paymentSchedule ?? "annual") as string,
     })
   } catch (error) {
     return createActionResponse(undefined, error)

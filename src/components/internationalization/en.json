@@ -303,6 +303,8 @@
     "signUp": "Sign Up",
     "signOut": "Logout",
     "email": "Email",
+    "identifier": "Email or username",
+    "identifierPlaceholder": "Email or username",
     "password": "Password",
     "confirmPassword": "Confirm Password",
     "forgotPassword": "Forgot Password?",

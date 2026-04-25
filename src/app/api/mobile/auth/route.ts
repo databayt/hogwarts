@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
 
 import { db } from "@/lib/db"
-import { getUserByEmail } from "@/components/auth/user"
+import { getUserByIdentifier } from "@/components/auth/user"
 import { LoginSchema } from "@/components/auth/validation"
 import {
   buildUserResponse,
@@ -43,15 +43,28 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { email, password } = validatedFields.data
+    const { identifier, password } = validatedFields.data
+    const trimmedIdentifier = identifier.trim()
+    const identifierIsEmail = trimmedIdentifier.includes("@")
 
-    // Find user by email — prefer school-scoped user for mobile
-    let user = await getUserByEmail(email)
+    // Find user. Mobile clients may send either an email or a generated
+    // student username — getUserByIdentifier branches on the `@` sign. Without
+    // a subdomain context, username lookups aren't tenant-scoped here; we fall
+    // back to cross-school search for email only (preserves prior behavior).
+    let user = identifierIsEmail
+      ? await getUserByIdentifier(trimmedIdentifier)
+      : // Cross-school username search for mobile — scan schools to find the
+        // matching student handle. Usernames are per-school unique but mobile
+        // has no subdomain hint, so findFirst picks the most recent match.
+        await db.user.findFirst({
+          where: { username: trimmedIdentifier, schoolId: { not: null } },
+          orderBy: { updatedAt: "desc" },
+        })
 
-    if (user && !user.schoolId) {
+    if (user && identifierIsEmail && !user.schoolId) {
       // Platform user found but has no school — check for a school-scoped version
       const schoolUser = await db.user.findFirst({
-        where: { email, schoolId: { not: null } },
+        where: { email: trimmedIdentifier, schoolId: { not: null } },
         orderBy: { updatedAt: "desc" },
       })
       if (schoolUser) user = schoolUser

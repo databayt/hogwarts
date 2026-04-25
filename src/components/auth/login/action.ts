@@ -18,7 +18,7 @@ import {
   generateTwoFactorToken,
   generateVerificationToken,
 } from "@/components/auth/tokens"
-import { getUserByEmail } from "@/components/auth/user"
+import { getUserByIdentifier } from "@/components/auth/user"
 import { LoginSchema } from "@/components/auth/validation"
 import { getTwoFactorConfirmationByUserId } from "@/components/auth/verification/2f-confirmation"
 import { getTwoFactorTokenByEmail } from "@/components/auth/verification/2f-token"
@@ -74,10 +74,13 @@ export const login = async (
     return { error: "INVALID_FIELDS" }
   }
 
-  const { email, password, code } = validatedFields.data
+  const { identifier, password, code } = validatedFields.data
+  const trimmedIdentifier = identifier.trim()
+  const identifierIsEmail = trimmedIdentifier.includes("@")
 
-  // Check brute force protection
-  const blocked = await isBruteForceBlocked(email)
+  // Check brute force protection — key on the identifier before any DB work so
+  // timing can't be used to enumerate valid usernames/emails.
+  const blocked = await isBruteForceBlocked(trimmedIdentifier)
   if (blocked) {
     return {
       error: "Too many failed attempts. Please try again in 15 minutes.",
@@ -94,11 +97,16 @@ export const login = async (
     loginSchoolId = school?.id
   }
 
-  const existingUser = await getUserByEmail(email, loginSchoolId)
+  const existingUser = await getUserByIdentifier(
+    trimmedIdentifier,
+    loginSchoolId
+  )
 
-  if (!existingUser || !existingUser.email || !existingUser.password) {
+  // Email is optional for manually-added students (they log in with username),
+  // so don't require it here — only a password and a User row.
+  if (!existingUser || !existingUser.password) {
     logLoginAttempt({
-      email,
+      email: trimmedIdentifier,
       success: false,
       failureReason: "USER_NOT_FOUND",
       schoolId: null,
@@ -106,7 +114,19 @@ export const login = async (
     return { error: "EMAIL_NOT_FOUND" }
   }
 
-  if (!existingUser.emailVerified) {
+  // Email verification gate only makes sense when:
+  // (a) the user signed in with their email address (not a username), AND
+  // (b) the User row actually has an email that could receive a token, AND
+  // (c) the email isn't a legacy `@school.local` placeholder.
+  // Username logins and null-email logins bypass it — there's nothing to send.
+  const hasRealEmail =
+    !!existingUser.email && !existingUser.email.endsWith("@school.local")
+  if (
+    !existingUser.emailVerified &&
+    identifierIsEmail &&
+    hasRealEmail &&
+    existingUser.email
+  ) {
     const verificationToken = await generateVerificationToken(
       existingUser.email
     )
@@ -327,7 +347,7 @@ export const login = async (
 
   try {
     await signIn("credentials", {
-      email,
+      identifier: trimmedIdentifier,
       password,
       schoolId: loginSchoolId || "",
       redirect: false,
@@ -353,7 +373,7 @@ export const login = async (
 
     // Log successful login (fire-and-forget)
     logLoginAttempt({
-      email,
+      email: trimmedIdentifier,
       success: true,
       schoolId: existingUser.schoolId,
     })
@@ -362,7 +382,7 @@ export const login = async (
   } catch (error) {
     if (error instanceof AuthError) {
       logLoginAttempt({
-        email,
+        email: trimmedIdentifier,
         success: false,
         failureReason: error.type,
         schoolId: existingUser.schoolId,

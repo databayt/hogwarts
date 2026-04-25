@@ -17,5 +17,5 @@ interface PageProps {
 export default async function Location({ params }: PageProps) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
-  return <LocationContent dictionary={dictionary.school} />
+  return <LocationContent dictionary={dictionary} />
 }

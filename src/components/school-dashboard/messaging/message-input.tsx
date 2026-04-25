@@ -567,7 +567,7 @@ export function MessageInput({
             <Mic className="h-4 w-4 text-amber-600 dark:text-amber-400" />
           </div>
           <p className="text-muted-foreground flex-1 text-xs">
-            {(m?.ui as Record<string, string>)?.mic_denied ||
+            {(m?.ui as unknown as Record<string, string>)?.mic_denied ||
               "Microphone access is blocked. Click the lock icon in your browser's address bar and allow microphone."}
           </p>
           <div className="flex items-center gap-1.5">
@@ -579,7 +579,8 @@ export function MessageInput({
               }}
               className="rounded-full bg-amber-600 px-3 py-1 text-xs font-medium text-white hover:bg-amber-700"
             >
-              {(m?.ui as Record<string, string>)?.try_again || "Try Again"}
+              {(m?.ui as unknown as Record<string, string>)?.try_again ||
+                "Try Again"}
             </button>
             <button
               type="button"
@@ -598,7 +599,7 @@ export function MessageInput({
         <div className="flex items-center justify-center gap-2 px-3 py-3">
           <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#1FA961]/30 border-t-[#1FA961]" />
           <span className="text-muted-foreground text-sm">
-            {(m?.ui as Record<string, string>)?.uploading ||
+            {(m?.ui as unknown as Record<string, string>)?.uploading ||
               "Sending voice message..."}
           </span>
         </div>
@@ -893,7 +894,7 @@ export function MessageInput({
                 type="text"
                 autoFocus
                 placeholder={
-                  (m?.ui as Record<string, string>)?.add_caption ||
+                  (m?.ui as unknown as Record<string, string>)?.add_caption ||
                   "Add a caption..."
                 }
                 onKeyDown={(e) => {
@@ -927,7 +928,7 @@ export function MessageInput({
             }}
           >
             <span className="rounded-full bg-[#2A2A2A] px-3 py-1 text-xs font-medium text-white">
-              {(m?.ui as Record<string, string>)?.you || "You"}
+              {(m?.ui as unknown as Record<string, string>)?.you || "You"}
             </span>
             <button
               type="button"

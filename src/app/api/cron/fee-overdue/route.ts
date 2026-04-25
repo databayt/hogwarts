@@ -173,7 +173,7 @@ async function notifyOverdue(
         ? `دفعة ${amount} لـ "${feeName}" متأخرة. يرجى الدفع فوراً.`
         : `Fee payment of ${amount} for "${feeName}" is overdue. Please make payment immediately.`,
       priority: "urgent",
-      channels: ["in_app", "email"],
+      channels: ["in_app", "email", "whatsapp"],
       lang,
       metadata: {
         feeAssignmentId: assignment.id,
