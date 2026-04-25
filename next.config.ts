@@ -122,7 +122,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "cdn.databayt.org",
+        hostname: "assets.databayt.org",
         pathname: "/**",
       },
     ],
