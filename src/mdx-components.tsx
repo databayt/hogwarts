@@ -79,6 +79,7 @@ import {
   TestCredentialsReference,
   UrlsReference,
 } from "@/components/docs/auth-flow"
+import { Callout } from "@/components/docs/callout"
 import { CodeBlockCommand } from "@/components/docs/code-block-command"
 import { CodeTabs } from "@/components/docs/code-tabs"
 import { ComponentPreview } from "@/components/docs/component-preview"
@@ -86,6 +87,7 @@ import { ComponentSource } from "@/components/docs/component-source"
 import { CopyButton } from "@/components/docs/copy-button"
 import { DependencyChain } from "@/components/docs/dependency-chain"
 import { DirectoryStructure } from "@/components/docs/directory-structure"
+import { CardGrid, DocCard } from "@/components/docs/doc-card"
 import { ListingStructure } from "@/components/docs/listing-structure"
 import { PrismaStructure } from "@/components/docs/prisma-structure"
 import { StoryVideo } from "@/components/docs/story-video"
@@ -302,6 +304,9 @@ const mdxComponents = {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
+  Callout,
+  CardGrid,
+  DocCard,
   ComponentPreview,
   ComponentSource,
   CodeTabs,
