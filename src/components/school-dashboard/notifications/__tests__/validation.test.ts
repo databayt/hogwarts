@@ -121,7 +121,8 @@ describe("createNotificationSchema", () => {
     expect(result.success).toBe(true)
   })
 
-  it("accepts all 23 notification types", () => {
+  it("accepts all 24 notification types", () => {
+    // Mirror of Prisma enum NotificationType — keep in sync when adding new types
     const types = [
       "message",
       "message_mention",
@@ -146,10 +147,22 @@ describe("createNotificationSchema", () => {
       "report_ready",
       "absence_intention",
       "absence_intention_decision",
+      "setup_guide",
     ]
 
     for (const type of types) {
       const result = createNotificationSchema.safeParse({ ...validData, type })
+      expect(result.success).toBe(true)
+    }
+  })
+
+  it("accepts all 5 notification channels", () => {
+    const channels = ["in_app", "email", "push", "sms", "whatsapp"]
+    for (const channel of channels) {
+      const result = createNotificationSchema.safeParse({
+        ...validData,
+        channels: [channel],
+      })
       expect(result.success).toBe(true)
     }
   })

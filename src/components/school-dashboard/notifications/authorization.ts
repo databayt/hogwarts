@@ -224,30 +224,10 @@ export function getAllowedNotificationTypes(
   role: UserRole
 ): NotificationType[] {
   if (role === "DEVELOPER" || role === "ADMIN") {
-    // Return all notification types
-    return [
-      "message",
-      "message_mention",
-      "assignment_created",
-      "assignment_due",
-      "assignment_graded",
-      "grade_posted",
-      "attendance_marked",
-      "attendance_alert",
-      "fee_due",
-      "fee_overdue",
-      "fee_paid",
-      "announcement",
-      "event_reminder",
-      "class_cancelled",
-      "class_rescheduled",
-      "system_alert",
-      "account_created",
-      "password_reset",
-      "login_alert",
-      "document_shared",
-      "report_ready",
-    ]
+    // Source from Prisma enum to stay in sync when new types are added.
+    // Avoids the historical bug where this list silently drifted from the
+    // schema (e.g. absence_intention*, setup_guide were missing).
+    return Object.values(NotificationType)
   }
 
   return ROLE_SEND_TYPES[role] ?? []

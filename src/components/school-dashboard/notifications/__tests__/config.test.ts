@@ -17,7 +17,8 @@ import {
   SOCKET_EVENTS,
 } from "../config"
 
-// All 23 NotificationType enum values from Prisma schema
+// All 24 NotificationType enum values from Prisma schema
+// Source: prisma/models/notifications.prisma > enum NotificationType
 const ALL_NOTIFICATION_TYPES = [
   "message",
   "message_mention",
@@ -42,20 +43,22 @@ const ALL_NOTIFICATION_TYPES = [
   "login_alert",
   "document_shared",
   "report_ready",
+  "setup_guide",
 ] as const
 
 // All 4 NotificationPriority enum values
 const ALL_PRIORITIES = ["low", "normal", "high", "urgent"] as const
 
-// All 4 NotificationChannel enum values
-const ALL_CHANNELS = ["in_app", "email", "push", "sms"] as const
+// All 5 NotificationChannel enum values
+// Source: prisma/models/notifications.prisma > enum NotificationChannel
+const ALL_CHANNELS = ["in_app", "email", "push", "sms", "whatsapp"] as const
 
 // ============================================================================
 // NOTIFICATION_TYPE_CONFIG
 // ============================================================================
 
 describe("NOTIFICATION_TYPE_CONFIG", () => {
-  it("has entries for all 23 NotificationType values", () => {
+  it("has entries for all 24 NotificationType values", () => {
     for (const type of ALL_NOTIFICATION_TYPES) {
       expect(NOTIFICATION_TYPE_CONFIG).toHaveProperty(type)
     }
@@ -107,7 +110,7 @@ describe("PRIORITY_CONFIG", () => {
 // ============================================================================
 
 describe("CHANNEL_CONFIG", () => {
-  it("has entries for all 4 NotificationChannel values", () => {
+  it("has entries for all 5 NotificationChannel values", () => {
     for (const channel of ALL_CHANNELS) {
       expect(CHANNEL_CONFIG).toHaveProperty(channel)
     }
@@ -122,9 +125,10 @@ describe("CHANNEL_CONFIG", () => {
     expect(CHANNEL_CONFIG.email.enabled).toBe(true)
   })
 
-  it("push and sms are not yet enabled", () => {
+  it("push, sms, whatsapp are not yet enabled", () => {
     expect(CHANNEL_CONFIG.push.enabled).toBe(false)
     expect(CHANNEL_CONFIG.sms.enabled).toBe(false)
+    expect(CHANNEL_CONFIG.whatsapp.enabled).toBe(false)
   })
 })
 
@@ -133,7 +137,7 @@ describe("CHANNEL_CONFIG", () => {
 // ============================================================================
 
 describe("NOTIFICATION_EXPIRATION", () => {
-  it("has entries for all 23 NotificationType values", () => {
+  it("has entries for all 24 NotificationType values", () => {
     for (const type of ALL_NOTIFICATION_TYPES) {
       expect(NOTIFICATION_EXPIRATION).toHaveProperty(type)
     }
@@ -198,10 +202,11 @@ describe("DEFAULT_NOTIFICATION_PREFERENCES", () => {
     }
   })
 
-  it("push and sms disabled for all roles", () => {
+  it("push, sms, whatsapp disabled for all roles", () => {
     for (const role of roles) {
       expect(DEFAULT_NOTIFICATION_PREFERENCES[role].push).toBe(false)
       expect(DEFAULT_NOTIFICATION_PREFERENCES[role].sms).toBe(false)
+      expect(DEFAULT_NOTIFICATION_PREFERENCES[role].whatsapp).toBe(false)
     }
   })
 })
