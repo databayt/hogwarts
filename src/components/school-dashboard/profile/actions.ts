@@ -10,6 +10,8 @@ import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
+import { getPermissionLevel } from "./detail/permissions"
+import type { PermissionLevel, ProfileContext } from "./detail/types"
 import type {
   ActivityType,
   ContributionDataPoint,
@@ -27,6 +29,31 @@ import {
   updateProfileSchema,
   updateSettingsSchema,
 } from "./validation"
+
+/**
+ * Compute the viewer's permission level for a given profile.
+ * Used by getProfileBasicData so the UI can mask sensitive fields
+ * (emailAddress, employeeId, joiningDate) for non-owners and non-admins.
+ *
+ * The strict admin user-detail-page filter lives in detail/actions.ts.
+ */
+function computeViewerPermission(args: {
+  viewerId: string | null
+  viewerRole: string | null | undefined
+  viewerSchoolId: string | null
+  profileUserId: string
+  profileSchoolId: string | null
+}): PermissionLevel {
+  const ctx: ProfileContext = {
+    viewerId: args.viewerId,
+    viewerRole: (args.viewerRole as ProfileContext["viewerRole"]) ?? null,
+    viewerSchoolId: args.viewerSchoolId,
+    profileUserId: args.profileUserId,
+    profileSchoolId: args.profileSchoolId,
+    profileType: "USER",
+  }
+  return getPermissionLevel(ctx)
+}
 
 // ============================================================================
 // Profile Fetching Actions
@@ -326,22 +353,12 @@ export async function updateProfileSettings(
       return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
-    const parsed = updateSettingsSchema.parse(input)
+    updateSettingsSchema.parse(input)
 
-    // Update user settings
-    // Note: This assumes you have a UserSettings table or similar
-    // If not, you may need to store settings in JSON field on User table
-    await db.user.update({
-      where: { id: session.user.id },
-      data: {
-        // Store settings as JSON or in separate table
-        // This is a placeholder - adjust based on your schema
-      },
-    })
-
-    revalidatePath("/profile")
-    revalidatePath("/profile/settings")
-    return { success: true as const }
+    // The User schema does not yet have settings columns (theme, notification
+    // prefs, allowMessages). Returning NOT_IMPLEMENTED so the UI can render a
+    // proper translated message instead of a misleading success toast.
+    return actionError(ACTION_ERRORS.NOT_IMPLEMENTED)
   } catch (error) {
     console.error("Error updating settings:", error)
     if (error instanceof z.ZodError) {
@@ -351,6 +368,14 @@ export async function updateProfileSettings(
   }
 }
 
+const AVATAR_MAX_BYTES = 5 * 1024 * 1024
+const AVATAR_ALLOWED_MIME = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+])
+
 export async function uploadProfileAvatar(formData: FormData) {
   try {
     const session = await auth()
@@ -358,31 +383,42 @@ export async function uploadProfileAvatar(formData: FormData) {
       return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
-    // This is a placeholder for file upload logic
-    // You would typically:
-    // 1. Extract the file from formData
-    // 2. Upload to cloud storage (S3, Cloudinary, etc.)
-    // 3. Get the URL
-    // 4. Update user's image field
-
-    const file = formData.get("avatar") as File
-    if (!file) {
-      return actionError(ACTION_ERRORS.UNKNOWN)
+    const raw = formData.get("avatar")
+    if (!(raw instanceof File) || raw.size === 0) {
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
 
-    // Placeholder for upload logic
-    // const uploadedUrl = await uploadToCloudStorage(file)
+    if (!AVATAR_ALLOWED_MIME.has(raw.type)) {
+      return actionError(ACTION_ERRORS.INVALID_FILE_TYPE)
+    }
 
-    // await db.user.update({
-    //   where: { id: session.user.id },
-    //   data: { image: uploadedUrl },
-    // })
+    if (raw.size > AVATAR_MAX_BYTES) {
+      return actionError(ACTION_ERRORS.UPLOAD_FAILED, "FILE_TOO_LARGE")
+    }
+
+    // Hand off to the shared file/upload pipeline (auth + tenant + S3 + DB).
+    // Imported lazily so that test mocks and tree-shaking are unaffected.
+    const { uploadFile } = await import("@/components/file/upload/actions")
+
+    const fd = new FormData()
+    fd.append("file", raw)
+    const result = await uploadFile(fd, {
+      category: "image",
+      type: "avatar",
+      access: "public",
+    })
+
+    if (!result.success || !result.url) {
+      return actionError(ACTION_ERRORS.UPLOAD_FAILED)
+    }
+
+    await db.user.update({
+      where: { id: session.user.id },
+      data: { image: result.url },
+    })
 
     revalidatePath("/profile")
-    return {
-      success: true as const,
-      message: "Avatar upload not yet implemented",
-    }
+    return { success: true as const, data: { url: result.url } }
   } catch (error) {
     console.error("Error uploading avatar:", error)
     return actionError(ACTION_ERRORS.UPLOAD_FAILED)
@@ -509,6 +545,15 @@ export async function getProfileBasicData(userId: string, lang?: string) {
           city: student.city,
           enrollmentDate: student.enrollmentDate?.toISOString(),
           role: "STUDENT",
+          viewerPermission: computeViewerPermission({
+            viewerId: session.user.id,
+            viewerRole: session.user.role,
+            viewerSchoolId: session.user.schoolId ?? null,
+            // Wizard-created students have no User row, so the viewer can
+            // never be the "owner" — treat them as a peer/admin viewer.
+            profileUserId: student.id,
+            profileSchoolId: schoolId,
+          }),
         }
 
         if (lang && lang !== "ar" && schoolId && data.firstName) {
@@ -550,6 +595,13 @@ export async function getProfileBasicData(userId: string, lang?: string) {
           employeeId: teacher.employeeId,
           joiningDate: teacher.joiningDate?.toISOString(),
           role: "TEACHER",
+          viewerPermission: computeViewerPermission({
+            viewerId: session.user.id,
+            viewerRole: session.user.role,
+            viewerSchoolId: session.user.schoolId ?? null,
+            profileUserId: teacher.id,
+            profileSchoolId: schoolId,
+          }),
         }
 
         if (lang && lang !== "ar" && schoolId && data.firstName) {
@@ -606,6 +658,18 @@ export async function getProfileBasicData(userId: string, lang?: string) {
       statusEmoji: user.statusEmoji,
       statusMessage: user.statusMessage,
       role: user.role,
+      // Viewer permission level — lets the UI choose whether to show
+      // contact details (emailAddress, employeeId, etc.) or hide them.
+      // See detail/permissions.ts for the strict admin-detail-page filter.
+      viewerPermission: computeViewerPermission({
+        viewerId: session.user.id,
+        viewerRole: session.user.role,
+        viewerSchoolId: session.user.schoolId ?? null,
+        profileUserId: user.id,
+        // user was found via `where: { id, schoolId }` so schoolId is the
+        // tenant we already resolved.
+        profileSchoolId: schoolId,
+      }),
     }
 
     // Translate name and bio if viewing in a different language
@@ -796,9 +860,12 @@ function mapUserRoleToProfileRole(role: string): ProfileRole | null {
   }
 }
 
+// Use UTC throughout the contribution map so the boundaries are stable
+// regardless of the server's local timezone (Vercel runs UTC, but devs
+// in MENA / Asia were getting Dec 31 → Jan 1 drift).
 function getYearDateRange(year: number): { startDate: Date; endDate: Date } {
-  const startDate = new Date(year, 0, 1)
-  const endDate = new Date(year, 11, 31)
+  const startDate = new Date(Date.UTC(year, 0, 1))
+  const endDate = new Date(Date.UTC(year, 11, 31, 23, 59, 59, 999))
   return { startDate, endDate }
 }
 
@@ -821,7 +888,7 @@ function initializeContributionMap(
       level: 0,
       activities: [],
     })
-    current.setDate(current.getDate() + 1)
+    current.setUTCDate(current.getUTCDate() + 1)
   }
 
   return map

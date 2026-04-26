@@ -1,5 +1,18 @@
 "use server"
 
+/**
+ * Strict-permission profile fetcher — foundation for a future admin
+ * "user detail" page. Not currently wired into any route.
+ *
+ * The live GitHub-style profile route at
+ * `app/[lang]/s/[subdomain]/(school-dashboard)/profile/[[...id]]/page.tsx`
+ * uses `getProfileBasicData` from ../actions.ts, which returns a flat
+ * data shape and a `viewerPermission` field for client-side masking.
+ *
+ * This module returns a strictly filtered `FilteredProfileData` shape via
+ * `filterProfileData(profile, level)`. Wire it up when the admin
+ * user-management page exists. See ../detail/permissions.ts.
+ */
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { currentUser } from "@/components/auth/auth"
@@ -177,10 +190,7 @@ export async function getProfileById(userId: string) {
     // Multi-tenant check - ensure user belongs to viewer's school (unless viewer is DEVELOPER)
     if (viewer?.role !== "DEVELOPER") {
       if (user.schoolId !== viewer?.schoolId) {
-        return {
-          success: false,
-          error: "Unauthorized - User does not belong to your school",
-        }
+        return actionError(ACTION_ERRORS.UNAUTHORIZED)
       }
     }
 
@@ -227,10 +237,7 @@ export async function getProfileById(userId: string) {
     }
   } catch (error) {
     console.error("Error fetching profile:", error)
-    return {
-      success: false,
-      error: "Failed to fetch profile data",
-    }
+    return actionError(ACTION_ERRORS.LOAD_FAILED)
   }
 }
 
