@@ -609,23 +609,6 @@ card-actions.tsx   # InvoiceActionCard (client, with onClick handlers)
 
 # Or keep together with "use client" if all variants need interactivity
 card.tsx           # "use client" -- all variants have callbacks
-```
-
-## Quick Reference
-
-### Card Variant Naming
-
-| Variant               | Purpose             | Example              |
-| --------------------- | ------------------- | -------------------- |
-| `<Entity>Card`        | Full entity display | `InvoiceCard`        |
-| `<Entity>CompactCard` | Minimal/list item   | `DomainCompactCard`  |
-| `<Entity>HealthCard`  | Status overview     | `InvoiceHealthCard`  |
-| `<Entity>StatsCard`   | KPI metric          | `InvoiceStatsCard`   |
-| `<Entity>SummaryCard` | Aggregate summary   | `BillingSummaryCard` |
-
-### Import Direction
-
-```
 config.ts     (status variants, labels)
 types.ts      (entity types)
 util.ts       (formatters)

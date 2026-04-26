@@ -117,12 +117,7 @@ const [view, setView] = useState<"grid" | "list">("grid")
 
 // Conditional rendering
 {view === "grid" ? (
-  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-    {filteredDomains.map((d) => (
-      <DomainCard key={d.id} domain={d} showActions />
-    ))}
-  </div>
-) : (
+  ) : (
   <div className="space-y-2">
     {filteredDomains.map((d) => (
       <DomainCompactCard key={d.id} domain={d} />
@@ -284,19 +279,7 @@ export function AllDomains({
           </Button>
         </div>
       ) : view === "grid" ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredDomains.map((domain) => (
-            <DomainCard
-              key={domain.id}
-              domain={domain}
-              showActions
-              onApprove={onApprove}
-              onReject={onReject}
-              onViewDetails={onDomainClick}
-            />
-          ))}
-        </div>
-      ) : (
+        ) : (
         <div className="space-y-2">
           {filteredDomains.map((domain) => (
             <DomainCompactCard
@@ -368,18 +351,7 @@ export function FeaturedInvoices({
           <p className="text-muted-foreground">Quick overview of recent and important invoices</p>
         </div>
       </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {featuredInvoices.map((invoice) => (
-          <InvoiceCard
-            key={invoice.id}
-            invoice={invoice}
-            showActions
-            onViewDetails={onInvoiceClick}
-            onMarkPaid={onMarkPaid}
-          />
-        ))}
       </div>
-    </div>
   )
 }
 
@@ -438,12 +410,7 @@ export function RequiringAttention({
   return (
     <div className="space-y-4">
       <h4>Requiring Attention ({overdueInvoices.length})</h4>
-      <div className="grid gap-4 md:grid-cols-2">
-        {overdueInvoices.map((invoice) => (
-          <InvoiceCard key={invoice.id} invoice={invoice} showActions />
-        ))}
       </div>
-    </div>
   )
 }
 
@@ -463,22 +430,7 @@ export function OverviewStats({
   )
 
   return (
-    <div className="grid gap-4 md:grid-cols-3">
-      <InvoiceStatsCard
-        label="Total Revenue"
-        value={formatCurrency(totalRevenue, "usd")}
-        icon={<TrendingUp className="text-muted-foreground size-4" />}
-      />
-      <InvoiceStatsCard
-        label="Outstanding"
-        value={formatCurrency(totalOutstanding, "usd")}
-      />
-      <InvoiceStatsCard
-        label="Total Invoices"
-        value={String(invoices.length)}
-      />
-    </div>
-  )
+    )
 }
 ```
 
@@ -624,17 +576,3 @@ src/components/<feature>/
   all.tsx         # Grid/list with filtering (this file)
   featured.tsx    # Curated views (this file)
   content.tsx     # Server component (passes data to views)
-```
-
-### What Belongs Where
-
-| Content                     | Belongs in     | Not in      |
-| --------------------------- | -------------- | ----------- |
-| Search/filter UI            | `all.tsx`      | content.tsx |
-| Grid/list layout toggle     | `all.tsx`      | card.tsx    |
-| Client-side filtering logic | `all.tsx`      | util.ts     |
-| Sort functions              | `util.ts`      | all.tsx     |
-| Card rendering              | `card.tsx`     | all.tsx     |
-| Featured/Recent curation    | `featured.tsx` | content.tsx |
-| Aggregate statistics        | `featured.tsx` | util.ts     |
-| Empty state                 | `all.tsx`      | card.tsx    |

@@ -9,102 +9,6 @@ The Messages module provides a comprehensive in-platform messaging system for sc
 
 ### Module Flow
 
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         ENTRY POINT                                     │
-├─────────────────────────────────────────────────────────────────────────┤
-│  All Roles:  /messages              → Messaging Interface               │
-│              /messages?conversation=<id>  → Deep link to conversation   │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                    MESSAGING CLIENT (messaging-client.tsx)               │
-├────────────────────────────┬────────────────────────────────────────────┤
-│       SIDEBAR              │              CHAT INTERFACE                │
-│  ┌──────────────────┐      │  ┌──────────────────────────────────────┐  │
-│  │ Conversation List │      │  │  Chat Header (title, W toggle, call) │  │
-│  │ • Search          │      │  ├──────────────────────────────────────┤  │
-│  │ • Filter by type  │      │  │  Message List (cursor pagination)   │  │
-│  │ • Unread counts   │      │  │  • Message bubbles + WA status      │  │
-│  │ • Pinned convos   │      │  │  • Message groups (same sender)     │  │
-│  │ • W badge (WA)    │      │  │  • Reactions                        │  │
-│  │ • Last message    │      │  │  • Thread replies (replyToId)       │  │
-│  └──────────────────┘      │  ├──────────────────────────────────────┤  │
-│                            │  │  Message Input (useActionState)     │  │
-│  ┌──────────────────┐      │  │  • Text input with send             │  │
-│  │ Contacts Panel    │      │  │  • File attachment button           │  │
-│  │ • Role-based groups│     │  │  • Draft auto-save                  │  │
-│  │ • Click-to-chat   │      │  └──────────────────────────────────────┘  │
-│  │ • WhatsApp-style  │      │                                            │
-│  └──────────────────┘      │                                            │
-└────────────────────────────┴────────────────────────────────────────────┘
-                                    │
-                    ┌───────────────┴───────────────┐
-                    ▼                               ▼
-┌──────────────────────────────┐  ┌──────────────────────────────────────┐
-│   REAL-TIME LAYER            │  │       SERVER ACTIONS                  │
-│  Socket.IO WebSocket         │  │  actions.ts (20+ actions, 1200+ LOC) │
-│  ┌────────────────────────┐  │  │  ┌──────────────────────────────────┐│
-│  │ useRealtimeMessages()  │  │  │  │ Conversations: create, archive, ││
-│  │ • message:new          │  │  │  │   leave, pin, mute, unmute      ││
-│  │ • message:updated      │  │  │  ├──────────────────────────────────┤│
-│  │ • message:deleted      │  │  │  │ Messages: send, sendFromForm,   ││
-│  │ • message:read         │  │  │  │   edit, delete (soft)           ││
-│  │ • message:reaction     │  │  │  ├──────────────────────────────────┤│
-│  │ • typing:start/stop    │  │  │  │ Participants: add, remove       ││
-│  └────────────────────────┘  │  │  ├──────────────────────────────────┤│
-│  ┌────────────────────────┐  │  │  │ Reactions: add, remove          ││
-│  │ useConversationList()  │  │  │  ├──────────────────────────────────┤│
-│  │ • conversation:new     │  │  │  │ Read: markMessage, markConvo    ││
-│  │ • conversation:updated │  │  │  ├──────────────────────────────────┤│
-│  │ • conversation:archived│  │  │  │ Drafts: save, delete            ││
-│  │ • participant events   │  │  │  ├──────────────────────────────────┤│
-│  └────────────────────────┘  │  │  │ Invites: create, respond        ││
-│                              │  │  ├──────────────────────────────────┤│
-│  Rooms:                      │  │  │ Pins: pin, unpin message        ││
-│  • conversation:{id}         │  │  └──────────────────────────────────┘│
-│  • user_conversations:{uid}  │  └──────────────────────────────────────┘
-└──────────────────────────────┘
-                                    │
-                                    ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                      QUERIES (queries.ts, 1300+ LOC)                    │
-├─────────────────────────────────────────────────────────────────────────┤
-│  Conversations:                                                         │
-│  • getConversationsList()        → Paginated with unread counts         │
-│  • getConversation()             → Single with participants             │
-│  • getOrCreateDirectConversation() → Dedup direct conversations         │
-│                                                                         │
-│  Messages:                                                              │
-│  • getMessagesList()             → Standard pagination                  │
-│  • getMessagesWithCursor()       → Cursor-based (infinite scroll)       │
-│                                                                         │
-│  Counts:                                                                │
-│  • getUnreadMessageCount()       → Raw SQL optimized                    │
-│  • getUnreadCountsPerConversation() → Per-conversation counts           │
-│                                                                         │
-│  Search:                                                                │
-│  • fullTextSearchMessages()      → PostgreSQL tsvector/tsquery + rank   │
-│  • globalSearch()                → Cross-conversation search            │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                      SUPPORTING SYSTEMS                                 │
-├──────────────────┬──────────────────┬───────────────────────────────────┤
-│   ATTACHMENTS    │   NOTIFICATIONS  │          AUDIT LOG                │
-│  ┌────────────┐  │  ┌────────────┐  │  ┌─────────────────────────────┐ │
-│  │ S3 / Vercel│  │  │ New message│  │  │ All operations logged via   │ │
-│  │ Blob upload│  │  │ → in-app   │  │  │ AuditLog model              │ │
-│  │ Drag+drop  │  │  │ Mention    │  │  │ • conversation CRUD         │ │
-│  │ Previews   │  │  │ → targeted │  │  │ • message send/edit/delete  │ │
-│  │ Progress   │  │  │ Announce   │  │  │ • participant changes       │ │
-│  └────────────┘  │  │ → priority │  │  │ • permission changes        │ │
-│                  │  └────────────┘  │  └─────────────────────────────┘ │
-└──────────────────┴──────────────────┴───────────────────────────────────┘
-```
-
 ### Key Features
 
 | Feature                    | Status         | Description                                                      |
@@ -147,56 +51,6 @@ All routes under `src/app/[lang]/s/[subdomain]/(school-dashboard)/messages/`:
 | `/messages?conversation=X` | All   | Deep link to specific conversation        |
 
 ### File Structure
-
-```
-src/app/[lang]/s/[subdomain]/(school-dashboard)/messages/
-├── page.tsx                    # Server entry point
-├── loading.tsx                 # Suspense skeleton
-├── error.tsx                   # Error boundary
-
-src/components/school-dashboard/messaging/
-├── content.tsx                 # Server component: fetches data, renders client
-├── messaging-client.tsx        # Client orchestrator: sidebar + chat
-├── chat-interface.tsx          # Chat view: header, messages, input, W toggle
-├── conversation-list.tsx       # Sidebar conversation list
-├── conversation-card.tsx       # Individual conversation card (W badge)
-├── new-conversation-dialog.tsx # Create direct/group with user search
-├── message-list.tsx            # Scrollable messages with load-more
-├── message-bubble.tsx          # Individual message rendering + WA status
-├── message-group.tsx           # Groups consecutive messages from same sender
-├── message-input.tsx           # Text input (React 19 useActionState)
-├── message-search.tsx          # In-conversation search
-├── attachment-upload.tsx       # Drag-and-drop (react-dropzone), previews
-├── auto-scroller.tsx           # Auto-scroll to bottom
-├── empty-state.tsx             # "No active conversation" placeholder
-├── serialization.ts            # Date serialization for SSR
-├── mail-icon.tsx               # Header mail icon with unread badge
-├── whatsapp-bridge.ts          # WhatsApp dual-delivery (Evolution API)
-├── og-unfurl.ts                # Link preview / OG metadata extraction
-├── link-preview.tsx            # Link preview component
-│
-├── config.ts                   # Types, roles, limits, emoji, system templates
-├── types.ts                    # DTOs, filter types
-├── validation.ts               # 25+ Zod schemas
-├── authorization.ts            # RBAC + participant access control
-├── audit.ts                    # Audit logging for all operations
-├── notification-helpers.ts     # Integration with notification system
-├── upload-actions.ts           # File upload/delete/validate server actions
-├── actions.ts                  # 20+ server actions (1200+ LOC)
-├── queries.ts                  # Cursor pagination, full-text search (1300+ LOC)
-│
-├── contacts/
-│   ├── config.ts               # Contact categories per role
-│   ├── types.ts                # ContactDTO, ContactGroup types
-│   ├── queries.ts              # Contact queries with domain model enrichment
-│   ├── contacts-panel.tsx      # WhatsApp-style contacts sidebar
-│   ├── contact-card.tsx        # Individual contact card
-│   └── contact-search.tsx      # Contact search input
-│
-└── hooks/
-    ├── use-realtime-messages.ts # Real-time message subscription hook
-    └── use-presence.ts          # User online presence hook
-```
 
 ## Conversation Types
 
@@ -264,19 +118,6 @@ Teachers can only access `class` conversations for classes they teach (via `Clas
 
 ### Message Status Flow
 
-```
-SENDING
-   │
-   ▼
-  SENT ──────────────────► FAILED
-   │                     (network/validation error)
-   ▼
-DELIVERED
-   │
-   ▼
-  READ
-```
-
 ### Statuses
 
 | Status      | Description                                    |
@@ -308,91 +149,10 @@ Users can edit their own messages. Edited messages display an "edited" indicator
 
 ### Upload Flow
 
-```
-┌──────────────────────────────────────────────────────────────────────┐
-│                      FILE UPLOAD FLOW                                │
-└──────────────────────────────────────────────────────────────────────┘
-
-  [1] USER ACTION              [2] VALIDATION             [3] UPLOAD
-  ┌──────────────┐             ┌──────────────┐           ┌──────────────┐
-  │ Drag-and-drop│             │ File size    │           │ S3 or Vercel │
-  │ or file pick │─────────────│ MIME type    │───────────│ Blob storage │
-  │ (dropzone)   │             │ Dimensions   │           │ Progress bar │
-  └──────────────┘             └──────────────┘           └──────────────┘
-                                                                 │
-                                                                 ▼
-                               [4] ATTACHMENT RECORD      [5] SEND MESSAGE
-                               ┌──────────────┐           ┌──────────────┐
-                               │ fileName     │           │ Message with │
-                               │ fileUrl      │───────────│ contentType  │
-                               │ fileSize     │           │ = image/file │
-                               │ fileType     │           └──────────────┘
-                               │ thumbnail    │
-                               └──────────────┘
-```
-
 ### Storage Path
 
 ```
 messaging/{schoolId}/{conversationId}/{filename}
-```
-
-### File Size Limits
-
-| Category  | Max Size | Supported Types              |
-| --------- | -------- | ---------------------------- |
-| Images    | 10 MB    | JPEG, PNG, GIF, WebP         |
-| Videos    | 100 MB   | MP4, WebM, QuickTime         |
-| Audio     | 25 MB    | MP3, WAV, OGG                |
-| Documents | 50 MB    | PDF, DOC/DOCX, XLS/XLSX, TXT |
-
-### Upload Features
-
-- **Drag-and-drop** via `react-dropzone`
-- **Image previews** before send
-- **Progress bars** during upload
-- **MIME type validation** on client and server
-- **Dimension tracking** for images (width/height)
-- **Thumbnail generation** (not yet implemented)
-
-## Real-Time Architecture
-
-### Socket.IO Events
-
-| Event                              | Direction       | Description                   |
-| ---------------------------------- | --------------- | ----------------------------- |
-| `message:new`                      | Server → Client | New message in conversation   |
-| `message:updated`                  | Server → Client | Message edited                |
-| `message:deleted`                  | Server → Client | Message deleted               |
-| `message:read`                     | Server → Client | Message read receipt          |
-| `message:reaction`                 | Server → Client | Reaction added/removed        |
-| `conversation:new`                 | Server → Client | New conversation created      |
-| `conversation:updated`             | Server → Client | Conversation metadata changed |
-| `conversation:archived`            | Server → Client | Conversation archived         |
-| `conversation:participant_added`   | Server → Client | Participant added             |
-| `conversation:participant_removed` | Server → Client | Participant removed           |
-| `typing:start`                     | Bidirectional   | User started typing           |
-| `typing:stop`                      | Bidirectional   | User stopped typing           |
-| `conversation:invite`              | Server → Client | Conversation invite received  |
-
-### Room Structure
-
-| Room Pattern                    | Purpose                            |
-| ------------------------------- | ---------------------------------- |
-| `conversation:{conversationId}` | All participants of a conversation |
-| `user_conversations:{userId}`   | User's conversation list updates   |
-
-### Client Hooks
-
-```typescript
-// Real-time messages within a conversation
-useRealtimeMessages(conversationId: string)
-// Returns: messages, typing users, connection status
-
-// Sidebar conversation list updates
-useConversationListUpdates(userId: string)
-// Returns: updated conversation list with unread counts
-```
 
 > **Current status:** Real-time WebSocket/SSE infrastructure is TBD. A polling fallback is active -- `pollNewMessages` (5s interval) and `pollConversationUpdates` keep the UI up to date.
 
@@ -401,37 +161,6 @@ useConversationListUpdates(userId: string)
 Messages sent in-app are automatically dual-delivered to WhatsApp when the school has an active WhatsApp session. The integration is bidirectional -- incoming WhatsApp replies are bridged back into conversations via webhook.
 
 ### How It Works
-
-```
-┌──────────────────────────────────────────────────────────────────────┐
-│                    WHATSAPP DUAL-DELIVERY FLOW                       │
-├──────────────────────────────────────────────────────────────────────┤
-│                                                                      │
-│  1. createConversation()                                             │
-│     └─ Checks WhatsAppSession.status === "connected"                 │
-│     └─ Auto-enables whatsappEnabled on conversation                  │
-│     └─ Populates participant phone numbers (non-blocking)            │
-│                                                                      │
-│  2. sendMessage()                                                    │
-│     └─ Persists message in DB                                        │
-│     └─ If conversation.whatsappEnabled:                              │
-│        └─ dispatchMessageToWhatsApp() (non-blocking)                 │
-│        └─ Resolves phone: Guardian → Teacher → StaffMember           │
-│        └─ Sends via Evolution API                                    │
-│        └─ Stores whatsappMessageId + whatsappStatus on Message       │
-│                                                                      │
-│  3. Incoming WhatsApp reply                                          │
-│     └─ Webhook: /api/webhooks/whatsapp/route.ts                      │
-│     └─ Matches sender phone → conversation participant               │
-│     └─ Creates Message in conversation                               │
-│                                                                      │
-│  4. Status updates (sent/delivered/read/failed)                      │
-│     └─ Webhook receives delivery receipts                            │
-│     └─ Updates Message.whatsappStatus                                │
-│     └─ Message bubble shows status icon                              │
-│                                                                      │
-└──────────────────────────────────────────────────────────────────────┘
-```
 
 ### Phone Resolution
 
@@ -854,98 +583,3 @@ enum ParticipantRole {
 ```bash
 pnpm db:seed:single messages          # Conversations, messages, reactions, receipts
 pnpm db:seed:single messaging-phones  # StaffMember + phone numbers for WhatsApp testing
-```
-
-**messages** seed creates:
-
-- 50 conversations across all 5 types
-- 300+ messages with varied content types
-- Reactions, read receipts, and threading
-- File attachment records
-- System messages for lifecycle events
-
-**messaging-phones** seed creates:
-
-- StaffMember records for admin and accountant test accounts
-- Primary phone numbers (admin: 00966557721603, accountant: 00966504559207)
-- Required for WhatsApp dual-delivery testing
-
-## Known Issues
-
-### P0 -- Critical
-
-None
-
-### P1 -- High
-
-1. **Real-time delivery TBD** -- WebSocket/SSE infrastructure not yet deployed. Polling fallback is active (5s interval) and functional.
-2. **`use-realtime-messages.ts` hook exists but backend subscription mechanism TBD**
-
-### P2 -- Medium
-
-3. **Mark-read O(n)** -- Mark-read operations are O(n) per conversation, may need batching for large chats.
-4. **No message forwarding** -- Cannot forward messages between conversations.
-5. **Student-to-teacher DM restrictions** -- Need configuration UI for restricting student-initiated DMs.
-6. **WhatsApp phone resolution gap** -- Users with no domain model (no Guardian/Teacher/StaffMember record) cannot receive WhatsApp messages.
-7. **Voice/video call buttons disabled** -- UI buttons present but disabled, no implementation.
-
-### Post-MVP
-
-8. Typing indicators
-9. Voice messages with transcription
-10. Scheduled messages (send later)
-11. Message threading (reply chains)
-12. Conversation categories (by class, department)
-
-## Production Readiness
-
-| Area                     | Status   | Notes                                                        |
-| ------------------------ | -------- | ------------------------------------------------------------ |
-| RBAC on all actions      | Done     | `authorization.ts` with role + participant matrix            |
-| Multi-tenant isolation   | Done     | `schoolId` on all queries and mutations                      |
-| Conversation dedup       | Done     | `directParticipant1Id`/`directParticipant2Id` prevents dupes |
-| Soft delete              | Done     | `isDeleted`/`deletedAt` on messages                          |
-| Cursor pagination        | Done     | Efficient infinite scroll via `getMessagesWithCursor`        |
-| Full-text search         | Done     | PostgreSQL tsvector/tsquery with ranking                     |
-| File upload validation   | Done     | MIME type + size limits on client and server                 |
-| Audit logging            | Done     | All operations logged via AuditLog model                     |
-| Notification integration | Done     | New message, mention, announcement notifications             |
-| Zod validation           | Done     | 25+ schemas in `validation.ts`                               |
-| WhatsApp dual-delivery   | Done     | Auto-enable, toggle, bidirectional, rate limited             |
-| Contacts sidebar         | Done     | Role-based grouping, click-to-chat, name translation         |
-| Unread badge             | Done     | Header mail icon polls every 30s                             |
-| Polling fallback         | Done     | 5s interval for messages + conversation updates              |
-| Real-time (WebSocket)    | Not done | Hook exists, backend TBD                                     |
-| Typing indicators        | Not done | Backend infrastructure TBD                                   |
-| Voice/video calls        | Not done | Buttons disabled, no implementation                          |
-
-## Best Practices
-
-### For Administrators
-
-1. Use **announcement** conversations for school-wide broadcasts
-2. Create **department** conversations for staff coordination
-3. Monitor audit logs for messaging policy compliance
-4. Archive inactive conversations to keep the sidebar clean
-5. Assign appropriate participant roles (owner/admin/member/read_only)
-
-### For Teachers
-
-1. Use **class** conversations for class-specific communication
-2. Pin important messages for student reference
-3. Use **group** conversations for project-based collaboration
-4. Respond to parent direct messages promptly
-5. Use mentions to notify specific participants
-
-### For Students
-
-1. Use **direct** messages for private teacher communication
-2. Create **group** conversations for study groups
-3. Check pinned messages for important class updates
-4. Mute conversations during study time using the mute toggle
-
-### For Parents/Guardians
-
-1. Use **direct** messages to communicate with teachers
-2. Enable notifications to stay informed of school updates
-3. Check announcement conversations for school-wide information

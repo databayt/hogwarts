@@ -882,17 +882,6 @@ function SubmitButton() {
 
 ### Import Direction
 
-```
-validation.ts     (Zod schemas)
-    |
-actions.ts        (imports schemas, imports ActionResponse)
-    |
-+---+---+
-|       |
-form  content
-.tsx   .tsx
-```
-
 Actions import FROM validation.ts. Client components call actions via `useTransition` or form action.
 
 ### Co-located File Structure
@@ -909,12 +898,3 @@ src/components/<feature>/
   form.tsx          # Client component (calls actions.ts)
   table.tsx         # Client component
   columns.tsx       # Column definitions
-```
-
-### When to Use `actions/` Subdirectory
-
-| File Size   | Action                                                |
-| ----------- | ----------------------------------------------------- |
-| < 300 lines | Single `actions.ts` file                              |
-| 300-600     | Consider splitting, mandatory if 3+ distinct concerns |
-| 600+        | Must split into `actions/` subdirectory               |

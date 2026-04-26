@@ -5,19 +5,6 @@ description: "Applicant-facing admission flow - campaign selection, 6-step wizar
 
 ## Pipeline Overview (Applicant Side)
 
-```
-Applicant                                         System
-────────                                         ──────
-Visit school site ──────────────────────────────────────
-Select campaign ────────────────────────────────────────
-Complete 6-step wizard ─────────────────────────────────
-Submit application ──────────── Application created (SUBMITTED)
-Pay fee (card/cash/bank) ────── Payment recorded
-Track status (OTP) ──────────── Timeline view
-Book school tour ────────────── Calendar invite sent
-Submit inquiry ──────────────── Lead captured
-```
-
 ## Application Flow (A to Z)
 
 This section walks through the entire application flow from the applicant's first click to submission and payment.
@@ -261,14 +248,6 @@ The banner includes a **timeline progress indicator** (4 dots: Submitted → Rev
 
 ### How Sessions Work
 
-```
-┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│  localStorage │ ←──→ │   Context    │ ←──→ │  Database    │
-│  (backup)     │     │  (in-memory) │     │  (source of  │
-│               │     │              │     │   truth)     │
-└──────────────┘     └──────────────┘     └──────────────┘
-```
-
 **Storage key:** `hogwarts_apply_session_{campaignId}`
 
 **Session state:**
@@ -388,56 +367,6 @@ Lead capture for families not ready to apply, at `/{lang}/inquiry`:
 ---
 
 ## File Structure
-
-```
-src/
-├── app/[lang]/s/[subdomain]/application/
-│   ├── page.tsx                    # Campaign selector
-│   ├── overview/page.tsx           # 3-phase overview
-│   ├── continue/page.tsx           # Resume from email link
-│   ├── status/page.tsx             # OTP status tracker
-│   └── [id]/
-│       ├── layout.tsx              # Session + validation providers
-│       ├── page.tsx                # Redirects to /attachments
-│       ├── attachments/page.tsx    # Step 1
-│       ├── personal/page.tsx       # Step 2
-│       ├── contact/page.tsx        # Step 3
-│       ├── location/page.tsx       # Step 4
-│       ├── guardian/page.tsx       # Step 5
-│       ├── academic/page.tsx       # Step 6 (final)
-│       ├── payment/page.tsx        # Payment page
-│       └── success/page.tsx        # Confirmation
-│
-├── components/school-marketing/application/
-│   ├── application-context.tsx     # Session state management
-│   ├── validation-context.tsx      # Per-step validation
-│   ├── submit-action.ts            # Server action wrapper for submit
-│   ├── config.client.ts            # Steps, groups, limits, grades
-│   ├── types.ts                    # TypeScript types for all steps
-│   ├── utils.ts                    # Dictionary accessors
-│   ├── use-auto-fill-merge.ts      # AI extraction → auto-fill
-│   ├── error-boundary.tsx          # Error boundary wrapper
-│   │
-│   ├── overview/                   # Overview page client component
-│   ├── attachments/                # content.tsx, form.tsx, validation.ts, types.ts, config.ts, actions.ts
-│   ├── personal/                   # content.tsx, form.tsx, validation.ts, types.ts, config.ts, actions.ts
-│   ├── contact/                    # content.tsx, form.tsx, validation.ts, types.ts, actions.ts
-│   ├── location/                   # content.tsx, form.tsx, validation.ts, types.ts, actions.ts
-│   ├── guardian/                   # content.tsx, form.tsx, validation.ts, types.ts, actions.ts
-│   ├── academic/                   # content.tsx, form.tsx, validation.ts, types.ts, config.ts, actions.ts
-│   ├── payment/                    # content.tsx (payment method selection)
-│   └── success/                    # content.tsx (confirmation page)
-│
-└── components/school-marketing/admission/
-    ├── actions/
-    │   ├── index.ts                # Re-exports
-    │   ├── application.ts          # Save, submit, session management
-    │   ├── status.ts               # OTP, status tracking
-    │   ├── tour.ts                 # Tour booking actions
-    │   └── inquiry.ts              # Inquiry form actions
-    ├── validation.ts               # Zod schemas (full application, tour, inquiry, OTP)
-    └── types.ts                    # Shared types
-```
 
 ---
 

@@ -7,32 +7,6 @@ description: "Four main entry points architecture - SaaS marketing, operator das
 
 The platform has **four distinct entry points**, each serving different audiences with specific access controls. Understanding these surfaces is critical for development, testing, and user experience design.
 
-```
-                          FOUR ENTRY POINTS
-    ┌──────────────────────────────────────────────────────────────┐
-    │                                                              │
-    │  1. SaaS Marketing (ed.databayt.org)                         │
-    │     └── Public landing for all visitors                      │
-    │     └── "Get Started" → Onboarding                           │
-    │     └── "Login" → Role-based redirect                        │
-    │                                                              │
-    │  2. Operator Dashboard (ed.databayt.org/o/*)                 │
-    │     └── DEVELOPER role only                                  │
-    │     └── Platform management, analytics, billing              │
-    │                                                              │
-    │  3. School Site ({school}.databayt.org)                      │
-    │     └── Public school marketing pages                        │
-    │     └── Prospective students/parents                         │
-    │     └── "Apply" → Admission flow                             │
-    │                                                              │
-    │  4. School Platform ({school}.databayt.org/dashboard)        │
-    │     └── Authenticated school management                      │
-    │     └── Role-based access (30+ modules)                      │
-    │     └── ADMIN, TEACHER, STUDENT, GUARDIAN, STAFF             │
-    │                                                              │
-    └──────────────────────────────────────────────────────────────┘
-```
-
 ---
 
 ## Entry Point 1: SaaS Marketing Page
@@ -42,16 +16,6 @@ The platform has **four distinct entry points**, each serving different audience
 **Purpose**: Public landing page for all visitor types including school owners, principals, teachers, students, parents, guests, investors, and contributors.
 
 ### Route Structure
-
-```
-src/app/[lang]/(marketing)/
-├── page.tsx              # Homepage with hero, features, pricing
-├── layout.tsx            # Marketing layout with SiteHeader
-├── features/page.tsx     # Features page
-├── pricing/page.tsx      # Pricing plans
-├── blog/page.tsx         # Blog listing
-└── docs/page.tsx         # Documentation
-```
 
 ### Key Components
 
@@ -79,35 +43,6 @@ if (existingUser.role === "DEVELOPER") {
 } else {
   finalRedirectUrl = `/${locale}` // Homepage
 }
-```
-
-| Role       | Redirect After Login   |
-| ---------- | ---------------------- |
-| DEVELOPER  | `/{locale}/dashboard`  |
-| All others | `/{locale}` (homepage) |
-
-### Status
-
-| Feature            | Status  |
-| ------------------ | ------- |
-| Homepage render    | Working |
-| Login button       | Working |
-| Get Started flow   | Working |
-| Pricing page       | Working |
-| Feature comparison | Working |
-| SEO/OG metadata    | Working |
-
----
-
-## Entry Point 2: Operator Dashboard (SaaS Dashboard)
-
-**URL**: `https://ed.databayt.org/o/*`
-
-**Purpose**: Platform operator dashboard for DEVELOPER role only. Manages all schools, analytics, billing, and platform configuration.
-
-### Route Structure
-
-```
 src/app/[lang]/(saas-dashboard)/
 ├── layout.tsx                 # SaaS auth guard (DEVELOPER only)
 ├── dashboard/page.tsx         # Operator dashboard home
@@ -136,56 +71,6 @@ if (!session) {
 if (session.user?.role !== "DEVELOPER") {
   redirect(`/${lang}/access-denied`)
 }
-```
-
-**Only DEVELOPER role can access.** All other roles are redirected with access denied.
-
-### Key Components
-
-| Component      | Location                             | Purpose                        |
-| -------------- | ------------------------------------ | ------------------------------ |
-| `SaasSidebar`  | `components/template/saas-sidebar/`  | Navigation for operator routes |
-| `SaasHeader`   | `components/template/saas-header/`   | Operator-specific header       |
-| `UserButton`   | `components/auth/user-button.tsx`    | Logout (variant="saas")        |
-| `TenantsTable` | `components/saas-dashboard/tenants/` | All schools data table         |
-
-### Capabilities
-
-| Capability           | Description                              |
-| -------------------- | ---------------------------------------- |
-| All Schools Access   | View and manage all schools on platform  |
-| Impersonation        | "View as" to enter any school as admin   |
-| Platform Analytics   | Usage metrics, revenue, growth           |
-| Billing Management   | Subscriptions, invoices, payment methods |
-| Domain Configuration | Wildcard DNS, SSL provisioning           |
-| Tenant Management    | Activate/deactivate schools              |
-
-### Status
-
-| Feature        | Status  | Notes                               |
-| -------------- | ------- | ----------------------------------- |
-| Dashboard home | Working | Basic stats                         |
-| Tenants        | Working | School/tenant management            |
-| Billing        | Partial | Has loading skeleton                |
-| Analytics      | Partial | Has loading skeleton                |
-| Domains        | Partial | Has loading skeleton                |
-| Sales          | Working | Has import, analytics sub-routes    |
-| Product        | Working | Product management with detail view |
-| Kanban         | Partial | Has loading skeleton                |
-| Observability  | Partial | Has loading skeleton                |
-| Profile        | Partial | Has loading skeleton                |
-
----
-
-## Entry Point 3: School Marketing Page (School Site)
-
-**URL**: `https://{school}.databayt.org`
-
-**Purpose**: Public-facing school pages for prospective students, parents, and community. Each school has its own subdomain.
-
-### Route Structure
-
-```
 src/app/[lang]/s/[subdomain]/(site)/
 ├── page.tsx              # School homepage
 ├── layout.tsx            # SchoolProvider wrapper
@@ -255,30 +140,6 @@ export const publicRoutes = [
   "/events",
   // ...
 ]
-```
-
-### Status
-
-| Feature           | Status      | Notes                        |
-| ----------------- | ----------- | ---------------------------- |
-| Subdomain routing | Working     | Middleware handles all cases |
-| School homepage   | Working     | Dynamic content from DB      |
-| About page        | Working     | School description           |
-| Academic programs | Working     | Programs listing             |
-| Apply form        | Partial     | Form works, needs backend    |
-| Virtual tour      | Placeholder | Needs 360 integration        |
-
----
-
-## Entry Point 4: School Platform (School Dashboard)
-
-**URL**: `https://{school}.databayt.org/dashboard` (and `/s/{subdomain}/(school-dashboard)/*`)
-
-**Purpose**: Authenticated school management platform with role-based access to 30+ modules.
-
-### Route Structure
-
-```
 src/app/[lang]/s/[subdomain]/(school-dashboard)/
 ├── layout.tsx                # PlatformLayout with sidebar
 ├── dashboard/page.tsx        # Role-specific dashboard
@@ -382,45 +243,6 @@ export function isRouteAllowedForRole(pathname: string, role: Role): boolean {
   // Default: allow for routes not in matrix
   return true
 }
-```
-
-### Role-Specific Dashboard Views
-
-| Role       | Dashboard Modules Visible                             |
-| ---------- | ----------------------------------------------------- |
-| DEVELOPER  | All modules + platform admin link                     |
-| ADMIN      | All school modules + settings                         |
-| TEACHER    | Classes, lessons, attendance, grades, assignments     |
-| STUDENT    | My classes, my grades, my attendance, assignments     |
-| GUARDIAN   | Children's progress, fees, communication              |
-| ACCOUNTANT | Finance modules only                                  |
-| STAFF      | Limited operational views (attendance, announcements) |
-
-### Key Components
-
-| Component         | Location                                                 | Purpose                           |
-| ----------------- | -------------------------------------------------------- | --------------------------------- |
-| `PlatformLayout`  | `app/[lang]/s/[subdomain]/(school-dashboard)/layout.tsx` | Main layout with sidebar          |
-| `PlatformSidebar` | `components/template/platform-sidebar/`                  | Navigation based on role          |
-| `PlatformHeader`  | `components/template/platform-header/`                   | School-dashboard header           |
-| `UserButton`      | `components/auth/user-button.tsx`                        | Profile menu (variant="platform") |
-| `RoleGate`        | `components/auth/role-gate.tsx`                          | Conditional rendering by role     |
-
-### Multi-Tenant Safety
-
-**CRITICAL**: All queries MUST include `schoolId`:
-
-```typescript
-// CORRECT - Includes schoolId
-const students = await db.student.findMany({
-  where: { schoolId, yearLevel: "10" },
-})
-
-// WRONG - Breaks tenant isolation
-const students = await db.student.findMany({
-  where: { yearLevel: "10" },
-})
-```
 
 ### Status
 
@@ -443,171 +265,11 @@ const students = await db.student.findMany({
 
 Users may navigate between entry points based on their role and context:
 
-```
-                    Navigation Between Entry Points
-    ┌──────────────────────────────────────────────────────────────┐
-    │                                                              │
-    │  SaaS Marketing → Login → Onboarding → School Platform       │
-    │       │              │                      ↑                │
-    │       ↓              ↓                      │                │
-    │  Operator Dash  School Site ────────────────┘                │
-    │  (DEVELOPER)    (Any role with school)                       │
-    │                                                              │
-    └──────────────────────────────────────────────────────────────┘
-```
-
 ### Flow: School Site → School Platform ("Platform" Link)
-
-```
-       All Possible Scenarios After Clicking "Platform" Link
-
-  Click "Platform" from {school}.databayt.org header
-                      │
-                      ▼
-          ┌─────────────────────┐
-          │  Is user logged in? │
-          └─────────────────────┘
-                      │
-           ┌──────────┴──────────┐
-           ▼                     ▼
-      [NO - Guest]          [YES - Authenticated]
-           │                     │
-           ▼                     ▼
-     Redirect to            ┌────────────────┐
-     /{locale}/login        │ Correct school?│
-           │                └────────────────┘
-           │                     │
-           │              ┌──────┴──────┐
-           │              ▼             ▼
-           │         [NO - Wrong]  [YES - Match]
-           │              │             │
-           │              ▼             ▼
-           │         Access Denied  ┌─────────────┐
-           │         or Redirect    │  User Role? │
-           │                        └─────────────┘
-           │                             │
-           │              ┌──────┬───────┼───────┬──────┐
-           │              ▼      ▼       ▼       ▼      ▼
-           │           ADMIN  TEACHER STUDENT STAFF  OTHER
-           │              │      │       │       │      │
-           │              ▼      ▼       ▼       ▼      ▼
-           │           Full   Teacher Student Staff  Limited
-           │           Dashboard View   View   View   View
-           │
-           ▼
-     ┌─────────────┐
-     │ Login Form  │
-     └─────────────┘
-           │
-           ▼
-     ┌─────────────────┐
-     │ Valid login?    │
-     └─────────────────┘
-           │
-      ┌────┴────┐
-      ▼         ▼
-    [NO]      [YES]
-      │         │
-      ▼         ▼
-    Error    Redirect to
-    message  /{locale}/dashboard
-```
 
 ### Flow: SaaS Marketing → "Get Started"
 
-```
-       All Possible Scenarios After Clicking "Get Started"
-
-  Click "Get Started" from ed.databayt.org hero
-                      │
-                      ▼
-          ┌─────────────────────┐
-          │  Is user logged in? │
-          └─────────────────────┘
-                      │
-           ┌──────────┴──────────┐
-           ▼                     ▼
-      [NO - Guest]          [YES - Authenticated]
-           │                     │
-           ▼                     ▼
-     Redirect to            ┌────────────────┐
-     /login?callback=       │ Has schoolId?  │
-     /onboarding            └────────────────┘
-           │                     │
-           │              ┌──────┴──────┐
-           │              ▼             ▼
-           │         [YES - Has]   [NO - None]
-           │              │             │
-           │              ▼             ▼
-           │         Redirect to   Continue to
-           │         school dash   /onboarding
-           │
-           ▼
-     ┌─────────────┐
-     │ Login/Join  │
-     │ Options     │
-     └─────────────┘
-           │
-           ▼
-     ┌─────────────────┐
-     │ OAuth or Creds  │
-     └─────────────────┘
-           │
-           ▼
-     ┌─────────────────────┐
-     │ User created/found  │
-     │ schoolId: null      │
-     └─────────────────────┘
-           │
-           ▼
-     ┌─────────────────────┐
-     │ Onboarding Wizard   │
-     │ (16 steps)          │
-     └─────────────────────┘
-           │
-           ▼
-     School created →
-     User = ADMIN →
-     Redirect to {school}.databayt.org
-```
-
 ### Flow: SaaS Marketing → "Live Demo"
-
-```
-       All Possible Scenarios After Clicking "Live Demo"
-
-  Click "Live Demo" from ed.databayt.org hero
-                      │
-                      ▼
-          ┌─────────────────────┐
-          │ Opens new tab to    │
-          │ demo.databayt.org   │
-          └─────────────────────┘
-                      │
-                      ▼
-          ┌─────────────────────┐
-          │ Demo school site    │
-          │ (public marketing)  │
-          └─────────────────────┘
-                      │
-                      ▼
-          User can browse:
-          • School homepage
-          • About page
-          • Academic programs
-          • Faculty/Houses
-          • Contact info
-                      │
-                      ▼
-     ┌────────────────┴────────────────┐
-     │                                 │
-     ▼                                 ▼
-Click "Platform"              Click "Apply"
-     │                                 │
-     ▼                                 ▼
-(See Platform                 Redirect to
- Link flow above)             /application form
-```
 
 ### Navigation Scenarios Summary
 
@@ -733,28 +395,3 @@ test.describe("Entry Points", () => {
     await expect(page).toHaveURL(/\/login/)
   })
 })
-```
-
-### Manual Testing Checklist
-
-| Entry Point        | Test                          | Expected                          |
-| ------------------ | ----------------------------- | --------------------------------- |
-| SaaS Marketing     | Visit ed.databayt.org         | Homepage renders                  |
-| SaaS Marketing     | Click Login                   | Redirect to /login                |
-| SaaS Marketing     | Click Get Started             | Redirect to /login (callback URL) |
-| Operator Dashboard | Visit /o as non-DEVELOPER     | Redirect with access denied       |
-| Operator Dashboard | Visit /o as DEVELOPER         | Dashboard renders                 |
-| School Site        | Visit school.databayt.org     | School homepage renders           |
-| School Site        | Click Apply                   | Application form loads            |
-| School Platform    | Visit /dashboard without auth | Redirect to /login                |
-| School Platform    | Visit /dashboard with auth    | Role-appropriate dashboard        |
-| School Platform    | Access /admin as TEACHER      | Access denied or hidden           |
-
----
-
-## Related Documentation
-
-- [Authentication](/docs/authentication) - Login/logout flows, OAuth, sessions
-- [Onboarding](/docs/onboarding) - School creation wizard
-- [Architecture](/docs/architecture) - Mirror pattern, file structure
-- [Multi-Tenant Safety](/docs/multi-tenancy) - schoolId isolation

@@ -668,53 +668,6 @@ export default async function Page({ params }: Props) {
   const dictionary = await getDictionary(lang)
   return <LoginForm dictionary={dictionary} />
 }
-```
-
-## Quick Reference
-
-### Param Shapes (6 total)
-
-| Shape     | Type                                                | Used by                                          |
-| --------- | --------------------------------------------------- | ------------------------------------------------ |
-| Lang only | `{ lang: Locale }`                                  | auth, saas-marketing, saas-dashboard, onboarding |
-| School    | `{ lang: Locale; subdomain: string }`               | school-marketing, school-dashboard listings      |
-| Detail    | `{ lang: Locale; subdomain: string; id: string }`   | detail/edit pages                                |
-| Slug      | `{ lang: Locale; subdomain: string; slug: string }` | subjects, courses                                |
-| Custom    | Various with courseId, chapterId, lessonId          | deeply nested pages                              |
-| None      | `{}`                                                | root redirect, offline                           |
-
-### Metadata Strategy
-
-| Route Group      | Approach                                          | Reason                          |
-| ---------------- | ------------------------------------------------- | ------------------------------- |
-| School Dashboard | `export const metadata` (static)                  | Behind auth, SEO not critical   |
-| SaaS Dashboard   | `export const metadata` (static)                  | Behind auth, DEVELOPER-only     |
-| SaaS Marketing   | `export const metadata` (static with description) | Public, but content is fixed    |
-| School Marketing | `generateMetadata()`                              | Dynamic school branding for SEO |
-| Auth             | `export const metadata` (static)                  | Simple, fixed content           |
-
-### Dictionary Convention
-
-| Route Group      | Pass to Content                        | Loader                         |
-| ---------------- | -------------------------------------- | ------------------------------ |
-| School Dashboard | `dictionary.school`                    | `getDictionary(lang)`          |
-| SaaS Dashboard   | `dictionary` (full, needs `.operator`) | `getDictionary(lang)`          |
-| SaaS Marketing   | `dictionary`                           | `getMarketingDictionary(lang)` |
-| School Marketing | `dictionary` (full)                    | `getDictionary(lang)`          |
-| Auth             | `dictionary` (full)                    | `getDictionary(lang)`          |
-
-### Import Style
-
-```tsx
-// Type-only imports (ALWAYS use import type for types)
-import type { Metadata } from "next"
-// Value imports
-import { notFound } from "next/navigation"
-
-import type { Locale } from "@/components/internationalization/config"
-import { getDictionary } from "@/components/internationalization/dictionaries"
-import Content from "@/components/school-dashboard/feature/content"
-```
 
 ## Next.js 16 Reference
 

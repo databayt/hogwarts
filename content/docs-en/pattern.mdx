@@ -37,14 +37,7 @@ The patterns documented here emerge from real-world usage across our [open sourc
 
 ## Function Patterns
 
-<div className="my-8 grid grid-cols-1 gap-6 md:grid-cols-2">
-  <div className="rounded-lg border p-6">
-    <h4 className="mb-2 font-semibold">Arrow Functions</h4>
-    <div className="text-muted-foreground mb-4 text-sm">
-      Preferred for utilities, event handlers, and inline functions. Excellent
-      for maintaining lexical scope and modern JavaScript patterns.
-    </div>
-    <pre className="bg-muted rounded p-2 text-xs">
+<pre className="bg-muted rounded p-2 text-xs">
       {`const formatPrice = (amount: number) => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -109,15 +102,6 @@ export async function createUser(formData: FormData) {
 
 ### Atomic Design Structure
 
-```
-components/
-├── atom/           # Basic elements (Button, Input, Icon)
-├── molecule/       # Simple combinations (SearchBox, FormField)
-├── organism/       # Complex components (Header, UserTable)
-├── template/       # Page layouts and structures
-└── page/          # Complete page compositions
-```
-
 ### Component Composition Pattern
 
 ```typescript
@@ -140,20 +124,6 @@ Card.Footer = CardFooter
 The mirror pattern ensures every feature follows a consistent, predictable structure. Each feature directory contains the same file types, making navigation intuitive and reducing cognitive load.
 
 ### Feature Structure
-
-```
-components/<feature>/
-├── content.tsx      # Main UI composition (client component)
-├── actions.ts       # Server actions (mutations, CRUD)
-├── validation.ts    # Zod schemas for data validation
-├── types.ts         # TypeScript types & interfaces
-├── form.tsx         # Form components (client)
-├── table.tsx        # Data table (client)
-├── column.tsx       # Column definitions (client)
-├── use-<feature>.ts # Custom React hooks
-├── config.ts        # Enums, options, defaults
-└── README.md        # Feature documentation
-```
 
 ### Why Mirror Pattern Works
 
@@ -613,19 +583,6 @@ interface TableProps<T> {
 ## File Organization
 
 ### Project Structure
-
-```
-src/
-├── app/                    # Next.js app router
-│   ├── (auth)/            # Route groups
-│   ├── api/               # API routes
-│   └── globals.css        # Global styles
-├── components/            # Reusable components
-├── lib/                   # Utilities and configurations
-├── hooks/                 # Custom React hooks
-├── types/                 # TypeScript type definitions
-└── constants/             # Application constants
-```
 
 ### Import Organization
 

@@ -477,19 +477,7 @@ export default function AttendanceContent({ dictionary }: Props) {
   }
 
   return (
-    <div className="grid gap-3">
-      <Select value={classId} onValueChange={setClassId}>
-        <SelectTrigger>
-          <SelectValue placeholder={dict?.selectClass || "Select class"} />
-        </SelectTrigger>
-        <SelectContent>{/* class options */}</SelectContent>
-      </Select>
-      <AttendanceTable data={rows} onChangeStatus={onChangeStatus} />
-      <Button onClick={onSubmit}>
-        {dict?.saveAttendance || "Save Attendance"}
-      </Button>
-    </div>
-  )
+    )
 }
 ```
 
@@ -785,43 +773,6 @@ export default function AcademicContent({ dictionary }: Props) {
 export default function AcademicContent({ dictionary }: Props) {
   return <div>{/* static JSX */}</div>
 }
-```
-
-## Quick Reference
-
-### Server vs Client Decision Tree
-
-| Question                              | Server | Client |
-| ------------------------------------- | ------ | ------ |
-| Needs `useState` or `useEffect`?      |        | Yes    |
-| Needs event handlers (onClick, etc.)? |        | Yes    |
-| Needs browser APIs (window, etc.)?    |        | Yes    |
-| Needs context hooks (useSchool)?      |        | Yes    |
-| Only fetches data and composes UI?    | Yes    |        |
-| Only renders sub-components?          | Yes    |        |
-
-### Standard Prop Shapes (5 patterns)
-
-| Route Group      | Props                                                         | Dictionary Scope                       |
-| ---------------- | ------------------------------------------------------------- | -------------------------------------- |
-| School Dashboard | `searchParams, dictionary: Dictionary["school"], lang`        | `dictionary.school`                    |
-| SaaS Dashboard   | `dictionary: Dictionary, lang`                                | `dictionary` (full, needs `.operator`) |
-| SaaS Marketing   | `dictionary: Awaited<ReturnType<typeof getDictionary>>, lang` | `dictionary` (full)                    |
-| School Marketing | `school, dictionary, lang, subdomain`                         | `dictionary` (full)                    |
-| Onboarding       | `dictionary?: any` (TODO: type properly)                      | `dictionary?.onboarding`               |
-
-### Dictionary Scoping Rules
-
-| Route Group      | Access Pattern                                   | Fallback               |
-| ---------------- | ------------------------------------------------ | ---------------------- |
-| School Dashboard | `dictionary?.teachers`, `dictionary?.attendance` | English string literal |
-| SaaS Dashboard   | `dictionary?.operator?.tenants`                  | English string literal |
-| SaaS Marketing   | `dictionary?.marketing?.pricing`                 | English string literal |
-| School Marketing | `dictionary?.schoolMarketing?.about`             | English string literal |
-
-### Co-located File Structure
-
-```
 src/components/<feature>/
   content.tsx       # Server or client content component (this file)
   queries.ts        # Extracted Prisma queries (server content only)

@@ -157,13 +157,7 @@ export function TeacherClient({ data, dictionary, lang }: Props) {
 // BAD: Rendering raw UI in client.tsx
 export function TeacherClient({ data }: Props) {
   return (
-    <div className="grid gap-4">
-      {data.map((teacher) => (
-        <div key={teacher.id}>
-          <h3>{teacher.name}</h3>
-          {/* 100 lines of inline card markup */}
-        </div>
-      ))}
+    ))}
     </div>
   )
 }
@@ -660,14 +654,7 @@ client.tsx should orchestrate, not implement. UI belongs in leaf components.
 "use client"
 export function TeacherClient({ data }) {
   return (
-    <div className="grid gap-4">
-      {data.map((teacher) => (
-        <div key={teacher.id} className="rounded-lg border p-4">
-          <h3 className="font-semibold">{teacher.name}</h3>
-          <p className="text-muted-foreground">{teacher.email}</p>
-          {/* 50 more lines of card markup... */}
-        </div>
-      ))}
+    ))}
     </div>
   )
 }
@@ -683,33 +670,7 @@ export function TeacherClient({ data }) {
 
 ### Data Flow
 
-```
-page.tsx (server, thin)
-    |
-content.tsx (server, data fetching)
-    |
-client.tsx ("use client", interactive boundary)
-    |
-+---+---+---+---+
-|   |   |   |   |
-form table card detail all
-.tsx .tsx  .tsx .tsx   .tsx
-```
-
 ### Import Direction
-
-```
-queries.ts    (server data fetching)
-    |
-content.tsx   (server, imports queries + client)
-    |
-client.tsx    (imports leaf components)
-    |
-+---+---+---+
-|   |   |   |
-form table columns
-.tsx .tsx  .tsx
-```
 
 ### Co-located File Structure
 

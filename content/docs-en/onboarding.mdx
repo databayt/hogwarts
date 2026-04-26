@@ -29,106 +29,6 @@ The onboarding system is **100% consolidated** into two directories following th
 
 ### Directory Tree
 
-```
-src/
-├── app/[lang]/onboarding/                       # Routes (21 files)
-│   ├── page.tsx                                 # Landing page
-│   ├── overview/page.tsx                        # School list dashboard
-│   └── [id]/                                    # Dynamic school routes
-│       ├── layout.tsx                           # ListingProvider + validation
-│       ├── route-handler.ts                     # Route utilities
-│       ├── about-school/page.tsx
-│       ├── title/page.tsx
-│       ├── description/page.tsx
-│       ├── location/page.tsx
-│       ├── stand-out/page.tsx
-│       ├── capacity/page.tsx
-│       ├── branding/page.tsx
-│       ├── import/page.tsx
-│       ├── finish-setup/page.tsx
-│       ├── join/page.tsx
-│       ├── visibility/page.tsx
-│       ├── price/page.tsx
-│       ├── discount/page.tsx
-│       ├── legal/page.tsx
-│       ├── subdomain/page.tsx
-│       └── congratulations/page.tsx
-│
-├── app/api/onboarding/                          # API routes (3 endpoints)
-│   ├── create-school/route.ts                   # Atomic school creation
-│   ├── validate-access/route.ts                 # Pre-flight access check
-│   └── extract/route.ts                         # AI document extraction
-│
-└── components/onboarding/                       # Components (145 files)
-    │
-    │ # Core files
-    ├── index.ts                                 # Barrel exports
-    ├── actions.ts                               # Server actions (CRUD)
-    ├── auth.ts                                  # Authentication utilities
-    ├── auth-helpers.ts                          # getAuthContext, requireSchoolOwnership
-    ├── config.ts                                # Step configurations (ONBOARDING_STEPS)
-    ├── config.client.ts                         # Client-side config
-    ├── constants.client.ts                      # Client constants (⚠️ stale STEP_NAVIGATION)
-    ├── types.ts                                 # OnboardingStep, OnboardingSchoolData
-    ├── validation.ts                            # Root Zod schemas
-    ├── validation-utils.ts                      # Validation helpers
-    ├── util.ts                                  # General utilities
-    │
-    │ # State & hooks
-    ├── use-listing.tsx                          # ListingProvider context
-    ├── use-onboarding.ts                        # Navigation & validation
-    ├── use-user-schools.tsx                     # User schools hook
-    ├── with-school-context.tsx                  # HOC for school context
-    │
-    │ # Layout components
-    ├── host-validation-context.tsx              # ⚠️ Deprecated: re-exports from form block
-    ├── host-header.tsx                          # Progress indicator
-    ├── host-step-header.tsx                     # Step header
-    ├── host-step-layout.tsx                     # Step layout wrapper
-    ├── step-header.tsx                          # Generic step header
-    ├── step-navigation.tsx                      # Navigation controls
-    ├── step-title.tsx                           # Step title component
-    ├── step-wrapper.tsx                         # Step wrapper
-    │
-    │ # UI components
-    ├── card.tsx                                 # Card layout
-    ├── column.tsx / column-layout.tsx           # Column utilities
-    ├── content.tsx                              # Content wrapper
-    ├── detail.tsx                               # Detail view
-    ├── all.tsx                                  # All items view
-    ├── form.tsx / form-field.tsx                # Form components
-    ├── selection-card.tsx                       # Selection card
-    ├── progress-indicator.tsx                   # Progress bar
-    ├── error-boundary.tsx                       # Error boundary
-    ├── performance-monitor.ts                   # Performance tracking
-    ├── success-completion-modal.tsx             # Success modal
-    │
-    │ # Step subdirectories (16 + overview + newcomers + floor-plan)
-    ├── about-school/                            # 7 files
-    ├── title/                                   # 8 files
-    ├── description/                             # 9 files
-    ├── location/                                # 9 files
-    ├── stand-out/                               # 7 files
-    ├── capacity/                                # 9 files
-    ├── schedule/                                # 5 files (in type, excluded from nav)
-    ├── branding/                                # 8 files
-    ├── import/                                  # 7 files
-    ├── finish-setup/                            # 7 files
-    ├── join/                                    # 5 files
-    ├── visibility/                              # 4 files
-    ├── price/                                   # 8 files
-    ├── discount/                                # 4 files
-    ├── legal/                                   # 5 files
-    ├── subdomain/                               # 7 files
-    ├── congratulations/                         # 2 files
-    ├── overview/                                # 5 files (dashboard)
-    ├── newcomers/                               # Modal flow for joining members
-    │   ├── config.ts / validation.ts / actions.ts
-    │   ├── newcomers-modal.tsx
-    │   └── steps/ (role, info, verify, profile, welcome)
-    └── floor-plan/                              # 1 file (validation only)
-```
-
 ### File Statistics
 
 | Category         | Count                    |
@@ -142,18 +42,6 @@ src/
 ### Step Directory Pattern
 
 Each step follows a consistent structure:
-
-```
-[step-name]/
-├── actions.ts          # Server actions ("use server")
-├── card.tsx            # Card UI component
-├── config.ts           # Step configuration (STEP_NAME_STEP constant)
-├── content.tsx         # Main content (server component)
-├── form.tsx            # Form implementation (client)
-├── types.ts            # Type definitions
-├── validation.ts       # Zod schemas
-└── use-[step].tsx      # Optional custom hook
-```
 
 ---
 
@@ -604,29 +492,6 @@ Validates ownership and redirects to the about-school step.
 
 ---
 
-## Implementation Status
-
-| Step         | UI  | Form | Actions | Validation |   DB    |         Production          |
-| ------------ | :-: | :--: | :-----: | :--------: | :-----: | :-------------------------: |
-| About School | ✅  |  ✅  |   ✅    |     ✅     |   N/A   |             ✅              |
-| Title        | ✅  |  ✅  |   ✅    |     ✅     |   ✅    |             ✅              |
-| Description  | ✅  |  ✅  |   ✅    |     ✅     |   ✅    |             ✅              |
-| Location     | ✅  |  ✅  |   ✅    |     ✅     |   ✅    | Partial (Maps API pending)  |
-| Stand Out    | ✅  |  ✅  |   ✅    |     ✅     |   N/A   |             ✅              |
-| Capacity     | ✅  |  ✅  |   ✅    |     ✅     |   ✅    |             ✅              |
-| Schedule     | ✅  |  ✅  |   ✅    |     ✅     |   ✅    |      Not in active nav      |
-| Branding     | ✅  |  ✅  |   ✅    |     ✅     |   ✅    |             ✅              |
-| Import       | ✅  |  ✅  |   ✅    |     ✅     | Partial | Partial (parser incomplete) |
-| Finish Setup | ✅  |  ✅  |   ✅    |     ✅     |   N/A   |             ✅              |
-| Join         | ✅  |  ✅  |   ✅    |     ✅     | Partial | Partial (workflow pending)  |
-| Visibility   | ✅  |  ✅  |   ✅    |     ✅     |   ✅    |             ✅              |
-| Price        | ✅  |  ✅  |   ✅    |     ✅     | Partial |  Partial (Stripe pending)   |
-| Discount     | ✅  |  ✅  |   ✅    |     ✅     |   ✅    |             ✅              |
-| Legal        | ✅  |  ✅  |   ✅    |     ✅     | Partial |   Partial (docs pending)    |
-| Subdomain    | ✅  |  ✅  |   ✅    |     ✅     |   ✅    |    Partial (DNS pending)    |
-
----
-
 ## Auto-Provisioning Chain
 
 When `completeOnboarding()` runs (triggered at the legal step), it marks the school as active and executes a 5-step auto-provisioning chain that creates all academic infrastructure. Each step is wrapped in a try/catch so failures don't block the others.
@@ -661,92 +526,6 @@ Resolves curriculum via `inferCurriculum()` and creates the academic structure.
 US → us-k12    GB → british    SD → national
 SA → national  EG → national   AE → national
 QA → national  JO → national   * → us-k12
-```
-
-**Created Resources** (by school level):
-
-| Resource          | primary | secondary | both |
-| ----------------- | ------- | --------- | ---- |
-| AcademicLevels    | 1       | 2         | 3    |
-| AcademicGrades    | 6       | 6         | 12   |
-| AcademicStreams   | 0       | 6         | 6    |
-| SubjectSelections | ~108    | ~132      | ~240 |
-
-Streams are only created for secondary/both levels (science + arts tracks for grades 10-12). Subject selections link catalog subjects to the school's grades and streams.
-
-### Step 3: `applyTimetableStructureForNewSchool()`
-
-Creates the time-based academic structure. Only runs if `school.curriculum` is set.
-
-| Resource   | Count                         |
-| ---------- | ----------------------------- |
-| SchoolYear | 1                             |
-| Terms      | 2                             |
-| Periods    | Varies by timetable structure |
-
-**Timetable Structure → Periods**:
-
-| Structure Slug   | Periods | Used By                  |
-| ---------------- | ------- | ------------------------ |
-| `us-standard`    | 9       | US schools               |
-| `sd-gov-default` | 10      | Sudan government         |
-| `sd-private`     | 9       | Sudan private            |
-| `sd-british`     | 8       | Sudan international      |
-| `gulf-private`   | 9       | Gulf private             |
-| `mena-standard`  | 9       | MENA public              |
-| `intl-default`   | 8       | International (fallback) |
-
-### Step 4: ClassroomType Upsert
-
-Creates a single `ClassroomType` named "Classroom" so the school dashboard's Configure tab works immediately post-onboarding.
-
-### Step 5: `autoProvisionSections()`
-
-Creates classrooms and sections based on the school's capacity settings (grades × `sectionsPerGrade`). Each grade gets N classrooms with corresponding sections, using the ClassroomType from Step 4.
-
----
-
-## Test Scenarios
-
-Nine scenarios covering different country/type/level combinations have been verified. All share: Departments=6, ScoreRanges=9, SchoolYear=1, Terms=2, ClassroomType=1.
-
-| #   | Country | Type    | Level     | Curriculum        | Subjects | Levels | Grades | Streams | Timetable      | Periods | Classrooms |
-| --- | ------- | ------- | --------- | ----------------- | -------- | ------ | ------ | ------- | -------------- | ------- | ---------- |
-| 1   | US      | intl    | primary   | us-k12 (direct)   | ~108     | 1      | 6      | 0       | us-standard    | 9       | 12         |
-| 2   | US      | public  | secondary | us-k12 (direct)   | ~132     | 2      | 6      | 6       | us-standard    | 9       | 12         |
-| 3   | US      | private | both      | us-k12 (direct)   | ~240     | 3      | 12     | 6       | us-standard    | 9       | 24         |
-| 4   | SD      | public  | primary   | national→fallback | ~108     | 1      | 6      | 0       | sd-gov-default | 10      | 12         |
-| 5   | SD      | private | secondary | national→fallback | ~132     | 2      | 6      | 6       | sd-private     | 9       | 12         |
-| 6   | SD      | intl    | both      | us-k12 (direct!)  | ~240     | 3      | 12     | 6       | sd-british     | 8       | 24         |
-| 7   | SA      | private | primary   | national→fallback | ~108     | 1      | 6      | 0       | gulf-private   | 9       | 12         |
-| 8   | EG      | public  | both      | national→fallback | ~240     | 3      | 12     | 6       | mena-standard  | 9       | 24         |
-| 9   | GB      | intl    | secondary | us-k12 (direct!)  | ~132     | 2      | 6      | 6       | intl-default   | 8       | 12         |
-
-**Key observations**:
-
-- International schools always resolve to `us-k12` regardless of country (scenarios 6, 9)
-- "national" curriculum falls back to US K-12 subject catalog (no national catalogs seeded yet)
-- Primary schools get 0 streams; secondary/both get 6 (science + arts for grades 10-12)
-- Classrooms = grades × sectionsPerGrade (default 2)
-
-**Verification SQL**:
-
-```sql
-SELECT
-  (SELECT count(*) FROM "YearLevel" WHERE "schoolId" = $1) as year_levels,
-  (SELECT count(*) FROM "Department" WHERE "schoolId" = $1) as departments,
-  (SELECT count(*) FROM "ScoreRange" WHERE "schoolId" = $1) as score_ranges,
-  (SELECT count(*) FROM "AcademicLevel" WHERE "schoolId" = $1) as academic_levels,
-  (SELECT count(*) FROM "AcademicGrade" WHERE "schoolId" = $1) as academic_grades,
-  (SELECT count(*) FROM "AcademicStream" WHERE "schoolId" = $1) as streams,
-  (SELECT count(*) FROM "SchoolSubjectSelection" WHERE "schoolId" = $1) as subjects,
-  (SELECT count(*) FROM "SchoolYear" WHERE "schoolId" = $1) as school_years,
-  (SELECT count(*) FROM "Term" WHERE "schoolId" = $1) as terms,
-  (SELECT count(*) FROM "Period" WHERE "schoolId" = $1) as periods,
-  (SELECT count(*) FROM "ClassroomType" WHERE "schoolId" = $1) as classroom_types,
-  (SELECT count(*) FROM "Classroom" WHERE "schoolId" = $1) as classrooms,
-  (SELECT count(*) FROM "Section" WHERE "schoolId" = $1) as sections;
-```
 
 ---
 

@@ -624,33 +624,6 @@ export type UpdateBookInput = z.infer<typeof updateBookSchema>
 export type DeleteBookInput = z.infer<typeof deleteBookSchema>
 export type PersonalInput = z.infer<typeof personalSchema>
 export type LeadInput = z.infer<typeof createLeadSchema>
-```
-
-### Composition Patterns
-
-| Method                    | Purpose                       | Example                                           |
-| ------------------------- | ----------------------------- | ------------------------------------------------- |
-| `.partial()`              | Make all fields optional      | `bookSchema.partial()`                            |
-| `.extend({ id })`         | Add fields to existing schema | `bookSchema.partial().extend({ id: z.string() })` |
-| `.pick({ name: true })`   | Select specific fields        | `bookSchema.pick({ title: true, author: true })`  |
-| `.omit({ rating: true })` | Exclude specific fields       | `bookSchema.omit({ rating: true })`               |
-| `.merge(other)`           | Combine two schemas           | `baseSchema.merge(employmentSchema)`              |
-| `.refine(fn)`             | Cross-field validation        | Date range, coupled fields                        |
-
-### Zod 4 Notes
-
-This project uses Zod 4.0.14 (major upgrade from Zod 3). Key differences:
-
-- `z.object()` is stricter by default — unknown keys are stripped (same as `.strip()` in Zod 3)
-- `z.string().email()` validates more strictly
-- `.parse()` error format changed — use `error.issues` (not `error.errors`) for iteration
-- Import is still `import { z } from "zod"` — no breaking import changes
-- `z.infer<>` works identically
-- `.refine()` and `.transform()` APIs unchanged
-
-### Import Direction
-
-```
 config.ts         (limits, option arrays)
     |
 validation.ts     (imports limits, exports schemas + types)
@@ -673,26 +646,3 @@ src/components/<feature>/
   form.tsx          # Client component (imports types from validation.ts)
   content.tsx       # Server component
   types.ts          # Non-Zod types
-```
-
-### What Belongs Where
-
-| Content                           | Belongs in      | Not in               |
-| --------------------------------- | --------------- | -------------------- |
-| Zod schemas                       | `validation.ts` | actions.ts, form.tsx |
-| Inferred types (`z.infer`)        | `validation.ts` | types.ts             |
-| Non-Zod interfaces                | `types.ts`      | validation.ts        |
-| Option arrays, limits             | `config.ts`     | validation.ts        |
-| Schema parsing (`schema.parse()`) | `actions.ts`    | validation.ts        |
-| Form resolver (`zodResolver()`)   | `form.tsx`      | validation.ts        |
-
-### Shared Primitives Candidates
-
-| Primitive            | Current State                    | Target Location                       |
-| -------------------- | -------------------------------- | ------------------------------------- |
-| `emailSchema`        | 6+ different patterns            | `src/lib/validation.ts`               |
-| `phoneSchema`        | 8+ conflicting regex             | `src/lib/validation.ts`               |
-| `cuidSchema`         | 3+ definitions                   | `src/lib/validation.ts`               |
-| `nameSchema`         | Inconsistent min/max/trim        | `src/lib/validation.ts`               |
-| `dateRangeRefine`    | ~15 manual `.refine()` calls     | `src/lib/validation.ts`               |
-| `questionBankSchema` | 3 near-identical 300+ line files | `src/components/shared/validation.ts` |

@@ -573,20 +573,6 @@ src/components/<feature>/
   actions.ts        # Server actions -- mutations only (imports from queries.ts)
   content.tsx       # Server component (imports from queries.ts)
   types.ts          # Shared types
-```
-
-### Function Naming Conventions
-
-| Prefix   | Purpose                   | Example                  |
-| -------- | ------------------------- | ------------------------ |
-| `get`    | Retrieve data             | `getTeacherList`         |
-| `build`  | Construct query parts     | `buildTeacherWhere`      |
-| `verify` | Ownership/existence check | `verifyTeacherOwnership` |
-| `count`  | Count records             | `countActiveTeachers`    |
-
-### Section Order
-
-```
 Types            → Filter types, pagination, sort params
 Select Objects   → ListSelect, DetailSelect (as const)
 Query Builders   → buildWhere, buildOrderBy, buildPagination
@@ -602,20 +588,3 @@ queries.ts     (read-only queries)
 |       |
 content actions
 .tsx    .ts
-```
-
-content.tsx and actions.ts both import FROM queries.ts. Queries never import from actions.
-
-### What Belongs Where
-
-| Content                     | Belongs in   | Not in     |
-| --------------------------- | ------------ | ---------- |
-| `db.model.findMany()`       | `queries.ts` | actions.ts |
-| `db.model.count()`          | `queries.ts` | actions.ts |
-| `db.model.groupBy()`        | `queries.ts` | actions.ts |
-| `db.model.create()`         | `actions.ts` | queries.ts |
-| `db.model.update()`         | `actions.ts` | queries.ts |
-| `db.model.delete()`         | `actions.ts` | queries.ts |
-| Select objects (`as const`) | `queries.ts` | types.ts   |
-| Filter type definitions     | `queries.ts` | types.ts   |
-| Formatting helpers          | `util.ts`    | queries.ts |

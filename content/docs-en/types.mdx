@@ -653,40 +653,6 @@ export interface RegistrationForm {
 export interface ExamFormProps {
   form: UseFormReturn<z.infer<typeof examSchema>>
 }
-```
-
-## Quick Reference
-
-### Type Suffix Conventions
-
-| Suffix          | Purpose                                     | Example                   |
-| --------------- | ------------------------------------------- | ------------------------- |
-| `DTO`           | Database transfer object (raw query result) | `TeacherDTO`              |
-| `Row`           | Table row (what DataTable renders)          | `TeacherRow`              |
-| `Props`         | Component props                             | `TeacherFormStepProps`    |
-| `WithRelations` | Prisma type extended with `&` relations     | `PayrollRunWithRelations` |
-| `FormData`      | Form submission data (from Zod)             | `TeacherFormData`         |
-| `Filters`       | Search/filter options                       | `TenantFilters`           |
-| `Config`        | Configuration object                        | `ExamConfig`              |
-| `Summary`       | Aggregated dashboard data                   | `PayrollSummary`          |
-| `ListItem`      | List/table view model                       | `TenantListItem`          |
-
-### Where Each Type Category Belongs
-
-| Type                                   | Belongs in                                | Not in                   |
-| -------------------------------------- | ----------------------------------------- | ------------------------ |
-| Domain types (DTO, Row, WithRelations) | `types.ts`                                | content.tsx, columns.tsx |
-| Form schemas                           | `validation.ts`                           | types.ts                 |
-| Form data types (`z.infer<>`)          | `types.ts` (derived from validation.ts)   | actions.ts               |
-| Column definitions                     | `columns.tsx` (imports Row from types.ts) | types.ts                 |
-| Query params / filters                 | `types.ts` or `list-params.ts`            | queries.ts               |
-| ActionResponse                         | `@/lib/action-response`                   | actions.ts               |
-| ExtendedUser                           | `@/components/auth/user`                  | any feature types.ts     |
-| PaginationParams                       | Single shared location (to be created)    | queries.ts               |
-
-### Import Hierarchy
-
-```
 @prisma/client          (generated Prisma types)
       |
   types.ts              (domain types, Row, DTO, WithRelations)

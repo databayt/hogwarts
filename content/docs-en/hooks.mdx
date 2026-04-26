@@ -593,18 +593,6 @@ Hook files use `use-<feature>.ts` where `<feature>` matches the parent directory
 
 ### Import Direction
 
-```
-actions.ts    (server actions)
-types.ts      (entity types)
-    |
-use-*.ts      (imports actions + types, exports hook)
-    |
-+---+---+
-|       |
-form  table
-.tsx    .tsx
-```
-
 ### Co-located File Structure
 
 ```
@@ -622,15 +610,3 @@ src/hooks/
   use-media-query.ts      # One copy, imported everywhere
   use-debounced-callback.ts
   use-mobile.ts
-```
-
-### What Belongs Where
-
-| Content                      | Belongs in      | Not in      |
-| ---------------------------- | --------------- | ----------- |
-| React hooks (useState, etc.) | `use-*.ts`      | util.ts     |
-| Server action wrappers       | `use-*.ts`      | actions.ts  |
-| Pure formatting functions    | `util.ts`       | use-\*.ts   |
-| Feature-scoped hooks         | Feature dir     | src/hooks/  |
-| Shared utility hooks         | `src/hooks/`    | Feature dir |
-| Auth session accessors       | `auth/use-*.ts` | use-\*.ts   |

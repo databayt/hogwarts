@@ -117,7 +117,7 @@ CatalogSubject --> CatalogQuestion --> QuestionBank (school exams)
 
 ### LMS / E-Learning Path
 
-```
+````
 CatalogSubject --> Enrollment --> LessonProgress --> SubjectCertificate
 CatalogLesson --> LessonVideo (multi-teacher)
 CatalogLesson --> LessonAttachment
@@ -208,7 +208,7 @@ model CatalogMaterial {
   @@index([contributedBy])
   @@map("catalog_materials")
 }
-```
+````
 
 #### CatalogAssignment (Homework/Assignment Templates)
 
@@ -300,7 +300,7 @@ Links `CatalogExam` to `CatalogQuestion` with ordering and custom points. Replac
 | order             | Int     | Question order within the exam        |
 | points            | Decimal | Points for this question in this exam |
 
-```prisma
+````prisma
 model CatalogExamQuestion {
   id                String  @id @default(cuid())
   catalogExamId     String
@@ -373,7 +373,7 @@ User-contributed videos attached to catalog lessons.
 ```prisma
 clickviewId    String?   // ClickView topic ID (e.g., "GxAzY0z")
 clickviewUrl   String?   // Full ClickView URL for reference
-```
+````
 
 #### New Fields on CatalogLesson
 

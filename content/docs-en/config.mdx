@@ -617,38 +617,6 @@ type Role = "ADMIN" | "TEACHER" | "STUDENT" | ...
 
 // GOOD: Import from Prisma
 import type { UserRole } from "@prisma/client"
-```
-
-### 8. Empty config file
-
-`school-marketing/about/config.ts` is 0 lines. Dead code -- should be deleted.
-
-## Quick Reference
-
-### What Belongs Where
-
-| Content                              | Belongs in           | Not in               |
-| ------------------------------------ | -------------------- | -------------------- |
-| Constants, option arrays, defaults   | `config.ts`          | actions.ts, utils.ts |
-| Status enums, badge variants, colors | `config.ts`          | columns.tsx          |
-| Interfaces, type aliases             | `types.ts`           | config.ts            |
-| Functions, transforms, formatters    | `utils.ts`           | config.ts            |
-| Zod schemas                          | `validation.ts`      | config.ts            |
-| Constants used by 3+ features        | `src/lib/constants/` | feature config.ts    |
-
-### Shared Constants Candidates
-
-| Constant            | Current State                            | Target Location                    |
-| ------------------- | ---------------------------------------- | ---------------------------------- |
-| `GENDER_OPTIONS`    | 4 files, inconsistent values             | `src/lib/constants/options.ts`     |
-| `CURRENCIES`        | 6+ files, different shapes               | `src/lib/constants/currencies.ts`  |
-| `PAGE_SIZE_OPTIONS` | 5+ files, mostly `[10,20,50,100]`        | `src/lib/constants/pagination.ts`  |
-| `FILE_SIZE_LIMITS`  | 7+ files, `file/config.ts` has canonical | `src/lib/constants/file-limits.ts` |
-| `EMPLOYMENT_STATUS` | teachers + staff (identical)             | `src/lib/constants/options.ts`     |
-
-### Import Direction
-
-```
 types.ts          (type definitions)
     |
 config.ts         (imports types, exports constants)
