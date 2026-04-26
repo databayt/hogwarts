@@ -870,82 +870,34 @@ enum NotificationChannel {
 | Publish Announce | `/api/cron/publish-announcements`       | Midnight    |       Y        | Publish scheduled announcements            |
 | Expire Announce  | `/api/cron/expire-announcements`        | Midnight    |       Y        | Expire old announcements                   |
 
-## UI Components
+## UI components
 
-### Bell Icon (`bell-icon.tsx`)
+| File                             | Role                                                                         |
+| -------------------------------- | ---------------------------------------------------------------------------- |
+| `bell-icon.tsx`                  | Animated bell with badge, popover of recent notifications, connection state. |
+| `card.tsx`                       | Individual item: icon, priority colour, time-ago, dismiss, deep link.        |
+| `list.tsx`                       | Tabbed list: all / unread, date grouping (Today, Yesterday, This Week).      |
+| `center.tsx`                     | Full center with bulk select, filters by type / priority / status.           |
+| `notification-center-client.tsx` | Client wrapper merging SSR list + Socket.IO updates.                         |
+| `preferences-form.tsx`           | Per-type per-channel toggle matrix.                                          |
 
-Animated notification bell with:
-
-- Framer Motion unread count badge
-- Popover dropdown with recent notifications
-- Connection status indicator (for Socket.IO)
-- Links to full notification center
-
-### Notification Card (`card.tsx`)
-
-Individual notification display:
-
-- Type-specific icon (from `config.ts`)
-- Priority badge with color coding
-- Time-ago relative timestamp
-- Mark as read / delete actions
-- Deep linking from `metadata.link`
-
-### Notification List (`list.tsx`)
-
-Tabbed notification list:
-
-- **All** / **Unread** tab toggle
-- Mark All as Read button
-- Empty state messaging
-- Grouped by date (Today, Yesterday, This Week, Earlier)
-
-### Notification Center (`center.tsx`)
-
-Full notification management:
-
-- Grouped display by date
-- Bulk select and bulk actions
-- Filter bar (by type, priority, read status)
-- Urgent notifications pulse animation
-
-### Hooks (`use-notifications.ts`)
-
-Three hooks with dual-channel persistence (Socket.IO + server action) and optimistic updates:
+Three hooks expose the data, all dual-channel (Socket.IO when available, 30s polling fallback otherwise) with optimistic updates:
 
 ```typescript
-// Full hook — Socket.IO when available, 30s polling fallback otherwise
 const {
   isConnected,
   unreadCount,
   recentNotifications,
   markAsRead,
   markAllAsRead,
-  clearRecent,
 } = useNotifications({
   autoConnect: true,
   showToast: true,
   pollInterval: 30000,
 })
 
-// Simplified bell hook — just count + 5 recent, no toast (bell has own UI)
-const {
-  isConnected,
-  unreadCount,
-  recentNotifications,
-  markAsRead,
-  markAllAsRead,
-} = useNotificationBell()
-
-// Center hook — all recent with toast integration
-const {
-  isConnected,
-  unreadCount,
-  notifications,
-  markAsRead,
-  markAllAsRead,
-  clearRecent,
-} = useNotificationCenter()
+useNotificationBell() // count + 5 recent, no toast
+useNotificationCenter() // all recent + toasts
 ```
 
 ## Expiration Configuration

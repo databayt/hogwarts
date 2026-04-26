@@ -164,6 +164,7 @@ export default async function TeachersContent({
         dictionary={dictionary?.teachers}
         lang={lang}
         perPage={sp.perPage}
+        permissions={permissions}
       />
     </div>
   )
