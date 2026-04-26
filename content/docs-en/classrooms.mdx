@@ -190,10 +190,12 @@ Classrooms are a core dimension of the timetable. Every timetable slot assigns a
 **Double-booking prevention** -- The Timetable model has 3 unique constraints:
 
 ```
+
 @@unique([schoolId, termId, dayOfWeek, periodId, classId, weekOffset])
 @@unique([schoolId, termId, dayOfWeek, periodId, teacherId, weekOffset])
 @@unique([schoolId, termId, dayOfWeek, periodId, classroomId, weekOffset])
-```
+
+````
 
 The third constraint ensures no room is assigned to two classes in the same period.
 
@@ -224,7 +226,7 @@ model Class {
   classroomId String
   classroom   Classroom @relation(fields: [classroomId], references: [id])
 }
-```
+````
 
 ### Students
 
@@ -328,3 +330,4 @@ prisma/models/timetable.prisma      # RoomConstraint model
 prisma/seeds/classrooms.ts          # Seed logic (types + rooms)
 prisma/seeds/constants.ts           # 28 classroom definitions
 src/app/api/classrooms/route.ts     # Dropdown selection API
+```

@@ -378,7 +378,7 @@ Certificate system at `/exams/certificates` with full lifecycle:
 
 ### Server Actions
 
-```typescript
+````typescript
 createCertificateConfig(input)
 updateCertificateConfig(id, input)
 generateCertificate(input) // Single
@@ -392,7 +392,7 @@ shareCertificate(id)
 ```typescript
 getQuestionAnalytics(questionId: string)
 getQuestionPsychometrics(questionId: string)
-```
+````
 
 ### Generation (`generate/actions.ts`)
 
@@ -567,3 +567,4 @@ pnpm db:seed:single exam-blueprints
 4. **Pagination** - Results and question bank are paginated
 5. **Background Jobs** - Batch PDF and certificate generation runs in background
 6. **Font Registration** - `templates/fonts.ts` registers fonts once (idempotent)
+```
