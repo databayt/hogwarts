@@ -1,713 +1,146 @@
 ---
-title: "Onboarding System"
-description: "Authoritative guide to the school onboarding flow - architecture, steps, auth integration, validation, state management, and production readiness"
+title: Onboarding
+description: Multi-step wizard for school registration, configuration, and business setup. Mirror pattern, 16 steps in 3 groups.
 ---
 
-## Overview
+The onboarding system guides new schools through registration, configuration, and business setup. It follows the mirror pattern and spans ~166 files across 16 steps in 3 groups, with `WizardLayout` driving navigation. Completion takes 10–30 minutes for typical schools.
 
-The **Onboarding System** is a multi-step wizard that guides new schools through platform registration, configuration, and business setup. It follows the mirror pattern and spans **166 files** across **16 steps** organized into **3 groups**.
+## Steps
 
-**Purpose:**
+### Group 1 — Basic information
 
-- **School Administrators**: Complete school profile setup in 15-30 minutes
-- **Developers**: Understand the flow, auth integration, and multi-tenant architecture
-- **Platform**: Ensure data quality and compliance before schools go live
+| Step         | Path            | Required | Database fields                         |
+| ------------ | --------------- | -------- | --------------------------------------- |
+| About school | `/about-school` | No       | static welcome                          |
+| Title        | `/title`        | Yes      | `School.name`                           |
+| Description  | `/description`  | Yes      | `schoolType`, `schoolLevel`, `planType` |
+| Location     | `/location`     | Yes      | `address`, `city`, `state`, `country`   |
+| Stand out    | `/stand-out`    | No       | static                                  |
 
-**Completion Time:**
+### Group 2 — School setup
 
-| Scope                             | Time          |
-| --------------------------------- | ------------- |
-| Basic Setup (required steps only) | 10-15 minutes |
-| Full Setup (all steps)            | 20-30 minutes |
-| With Data Import                  | 30-45 minutes |
+| Step         | Path            | Required | Database fields                            |
+| ------------ | --------------- | -------- | ------------------------------------------ |
+| Capacity     | `/capacity`     | Yes      | `maxStudents`, `maxTeachers`, `maxClasses` |
+| Branding     | `/branding`     | No       | `primaryColor`, `borderRadius`, `shadow`   |
+| Import       | `/import`       | No       | bulk insert (CSV / Excel)                  |
+| Finish setup | `/finish-setup` | No       | static review                              |
 
----
+The `schedule` step is defined in `OnboardingStep` and has its own component directory but is **not** in the active navigation. It lives at `order: 5.5` in `config.ts` for future activation.
 
-## Architecture
+### Group 3 — Business and legal
 
-The onboarding system is **100% consolidated** into two directories following the mirror pattern, plus 3 API routes.
+| Step       | Path          | Required | Database fields                                               |
+| ---------- | ------------- | -------- | ------------------------------------------------------------- |
+| Join       | `/join`       | Yes      | `User`                                                        |
+| Visibility | `/visibility` | No       | `School.isPublished`                                          |
+| Price      | `/price`      | Yes      | `tuitionFee`, `registrationFee`, `applicationFee`, `currency` |
+| Discount   | `/discount`   | No       | `Discount` model                                              |
+| Legal      | `/legal`      | Yes      | `LegalConsent`                                                |
+| Subdomain  | `/subdomain`  | No       | `School.domain`                                               |
 
-### Directory Tree
+After all steps the user lands on `/congratulations`, which performs a smart redirect (school subdomain dashboard or main domain depending on session state).
 
-### File Statistics
+The active step order is `ONBOARDING_CONFIG` in `src/components/form/footer.tsx`. The authoritative metadata (labels, validation, group, order) is `ONBOARDING_STEPS` in `src/components/onboarding/config.ts`.
 
-| Category         | Count                    |
-| ---------------- | ------------------------ |
-| Route files      | 21                       |
-| API route files  | 3                        |
-| Component files  | 145                      |
-| Step directories | 17 (16 steps + overview) |
-| **Total**        | **~169 files**           |
+## Auth integration
 
-### Step Directory Pattern
+The flow is a four-stage handshake:
 
-Each step follows a consistent structure:
+1. **Start** — User visits `/get-started` or `/onboarding` while unauthenticated. `start-onboarding` action persists intent in a cookie and redirects to `/login`.
+2. **Authenticate** — Standard login. After auth, the callback URL routes the user back to `/onboarding`.
+3. **Provision** — `initializeSchoolSetup()` calls `ensureUserSchool()` from `src/lib/school-access.ts`, which runs an atomic Prisma `$transaction` to create the `School` row, the `SchoolMember` row binding the user as ADMIN, and to seed default `YearLevel`s. Idempotent: if a school already exists for this user, returns it.
+4. **Refresh and redirect** — `_sessionRefreshRequired: true` instructs the client to refetch `/api/auth/session`, then `_redirect` sends the user to the next step.
 
----
+Ownership is enforced by `requireSchoolOwnership(id)` on every step's load. Cross-tenant access raises `TenantError`.
 
-## Complete Flow
+## Multi-tenant integration
 
-The onboarding flow consists of **16 steps** in the `OnboardingStep` type, but only **15 are active** in the navigation config (schedule is defined but excluded).
+- **Subdomain routing** — `/onboarding` and child routes live on the main domain (`ed.databayt.org`), not on a subdomain. Subdomain assignment happens at the Subdomain step.
+- **Database scoping** — every read uses `requireSchoolOwnership(id)` first, then queries scoped by `schoolId`.
+- **Session schoolId** — the JWT carries `schoolId` after step 1; subsequent steps trust it after re-verification.
 
-### Group 1: Basic Information
+## Validation
 
-| Step             | Path            | Required | Key Fields                    | Database                                       |
-| ---------------- | --------------- | -------- | ----------------------------- | ---------------------------------------------- |
-| **About School** | `/about-school` | No       | N/A (static welcome)          | N/A                                            |
-| **Title**        | `/title`        | Yes      | School name                   | `School.name`                                  |
-| **Description**  | `/description`  | Yes      | Type, level, description      | `School.schoolType`, `schoolLevel`, `planType` |
-| **Location**     | `/location`     | Yes      | Address, city, state, country | `School.address`, `city`, `state`, `country`   |
-| **Stand Out**    | `/stand-out`    | No       | Unique features (static)      | N/A                                            |
-
-### Group 2: School Setup
-
-| Step             | Path            | Required | Key Fields                                 | Database                                          |
-| ---------------- | --------------- | -------- | ------------------------------------------ | ------------------------------------------------- |
-| **Capacity**     | `/capacity`     | Yes      | maxStudents, maxTeachers, maxClasses       | `School.maxStudents`, `maxTeachers`, `maxClasses` |
-| **Schedule**     | -               | No       | Timetable structure                        | `School` (not in active nav)                      |
-| **Branding**     | `/branding`     | No       | Logo, primary color, border radius, shadow | `School.primaryColor`, `borderRadius`, `shadow`   |
-| **Import**       | `/import`       | No       | CSV/Excel upload                           | Bulk insert                                       |
-| **Finish Setup** | `/finish-setup` | No       | Review (static)                            | N/A                                               |
-
-> **Note:** The `schedule` step exists in the `OnboardingStep` type and has a component directory (`components/onboarding/schedule/`) with actions, validation, and UI. However, it is **not included** in the active `ONBOARDING_CONFIG.steps` array in `src/components/form/footer.tsx`, so users do not navigate to it during the flow. It is available at `order: 5.5` in `config.ts` for future activation.
-
-### Group 3: Business & Legal
-
-| Step           | Path          | Required | Key Fields                        | Database                                                                                |
-| -------------- | ------------- | -------- | --------------------------------- | --------------------------------------------------------------------------------------- |
-| **Join**       | `/join`       | Yes      | Registration data                 | `User`                                                                                  |
-| **Visibility** | `/visibility` | No       | Public/private settings           | `School.isPublished`                                                                    |
-| **Price**      | `/price`      | Yes      | Tuition, fees, currency, schedule | `School.tuitionFee`, `registrationFee`, `applicationFee`, `currency`, `paymentSchedule` |
-| **Discount**   | `/discount`   | No       | Promo codes                       | `Discount` model                                                                        |
-| **Legal**      | `/legal`      | Yes      | Terms acceptance                  | `LegalConsent`                                                                          |
-| **Subdomain**  | `/subdomain`  | No       | Custom domain                     | `School.domain`                                                                         |
-
-After all steps: **Congratulations** page at `/congratulations` with smart redirect.
-
-### Active Navigation Config
-
-The actual step order is defined in `src/components/form/footer.tsx`:
+Each step has a Zod schema co-located with its component. Schemas use the i18n factory pattern so the same schema produces Arabic or English error messages depending on the dictionary slice passed in.
 
 ```typescript
-export const ONBOARDING_CONFIG: StepConfig = {
-  steps: [
-    "about-school",
-    "title",
-    "description",
-    "location",
-    "stand-out",
-    "capacity",
-    "branding",
-    "import",
-    "finish-setup",
-    "join",
-    "visibility",
-    "price",
-    "discount",
-    "legal",
-    "subdomain",
-  ],
-  groups: {
-    1: ["about-school", "title", "description", "location", "stand-out"],
-    2: ["capacity", "branding", "import", "finish-setup"],
-    3: ["join", "visibility", "price", "discount", "legal", "subdomain"],
-  },
-  groupLabels: [
-    "Tell us about your school",
-    "Set up your school",
-    "Finish up and publish",
-  ],
-}
+import { createTitleSchema } from "@/components/onboarding/title/validation"
+
+const schema = createTitleSchema(dictionary)
+const result = schema.safeParse(input)
 ```
 
-### Newcomers Flow (Separate)
-
-The `newcomers/` subdirectory contains a **separate modal flow** for internal school members (teachers, staff, parents, students) joining an existing school. It has 5 steps: role → info → verify → profile → welcome.
-
----
-
-## Auth Integration
-
-### Complete Authentication Flow
-
-```mermaid
-sequenceDiagram
-    participant U as User
-    participant M as Marketing Page
-    participant A as Auth System
-    participant O as Onboarding
-    participant DB as Database
-    participant S as Session
-
-    U->>M: Click "Get Started"
-    M->>A: Redirect to /login
-    A->>U: OAuth/Credentials Form
-    U->>A: Submit Credentials
-    A->>DB: Create User (no schoolId)
-    DB-->>A: User Created
-    A->>S: Create Session (no schoolId)
-    A->>O: Redirect to /onboarding
-
-    Note over O,DB: initializeSchoolSetup()
-    O->>DB: Check if user has school
-
-    alt User has no school
-        O->>DB: BEGIN TRANSACTION
-        DB->>DB: Create School
-        DB->>DB: Link User.schoolId
-        DB->>DB: Set User.role = ADMIN
-        DB->>DB: COMMIT TRANSACTION
-        DB-->>O: School + User updated
-        O->>S: Trigger Session Refresh
-        S->>S: Update JWT with schoolId
-        S-->>O: Session refreshed
-    else User already has school
-        DB-->>O: Return existing school
-    end
-
-    O->>U: Redirect to /onboarding/{schoolId}/about-school
-
-    Note over U,O: User completes steps
-
-    U->>O: Complete all steps
-    O->>O: Navigate to /subdomain
-    U->>O: Set subdomain (e.g., "hogwarts")
-    O->>DB: Update School.domain
-
-    O->>U: Redirect to /congratulations
-    U->>O: Click "Visit Your School"
-
-    alt Has subdomain
-        S->>U: Redirect to hogwarts.databayt.org
-    else No subdomain
-        S->>U: Redirect to /s/{schoolId}/dashboard
-    end
-```
-
-### Atomic School Creation
-
-`initializeSchoolSetup()` delegates to `ensureUserSchool()` in `src/lib/school-access.ts`, which uses Prisma transactions:
-
-```typescript
-export async function ensureUserSchool(userId: string) {
-  return await db.$transaction(async (tx) => {
-    // 1. Check if user already has a school (idempotent)
-    const user = await tx.user.findUnique({
-      where: { id: userId },
-      select: { schoolId: true },
-    })
-
-    if (user?.schoolId) {
-      const school = await tx.school.findUnique({
-        where: { id: user.schoolId },
-      })
-      return { success: true, schoolId: user.schoolId, school }
-    }
-
-    // 2. Create school + link user atomically
-    const school = await tx.school.create({
-      data: {
-        name: "New School",
-        domain: `school-${Date.now()}`,
-        createdByUserId: userId,
-      },
-    })
-
-    await tx.user.update({
-      where: { id: userId },
-      data: { schoolId: school.id, role: "ADMIN" },
-    })
-
-    return { success: true, schoolId: school.id, school }
-  })
-}
-```
-
-**Key properties:**
-
-- **Atomicity**: School creation and user linking in a single transaction
-- **Idempotency**: Safe to call multiple times (returns existing school)
-- **Race condition handling**: Transaction isolation prevents duplicate schools
-
-### Session Refresh
-
-After school creation, the client must refresh the session to get the new `schoolId` in the JWT:
-
-```typescript
-const result = await initializeSchoolSetup()
-
-if (result.success && result.data._sessionRefreshRequired) {
-  await fetch("/api/auth/session", { method: "GET" })
-  router.push(result.data._redirect)
-}
-```
-
-### Smart Redirect
-
-After completing onboarding, the system redirects based on subdomain:
-
-- **Has subdomain**: `https://{domain}.databayt.org`
-- **No subdomain**: `/s/{schoolId}/dashboard`
-
----
-
-## Multi-Tenant Integration
-
-### Subdomain Routing
-
-```
-Production:    hogwarts.databayt.org → /[lang]/s/hogwarts/*
-Preview:       hogwarts---branch.vercel.app → /[lang]/s/hogwarts/*
-Development:   hogwarts.localhost:3000 → /[lang]/s/hogwarts/*
-```
-
-### Database Scoping
-
-All business models include `schoolId` with `@@index([schoolId])` and uniqueness constraints scoped by schoolId. The `School` model uses its `id` as the primary key, with `domain` as a unique optional field.
-
-### Ownership Verification
-
-All server actions verify ownership before mutations:
-
-```typescript
-import { requireSchoolOwnership } from "./auth-helpers"
-
-export async function updateListing(id: string, data: Partial<Listing>) {
-  await requireSchoolOwnership(id) // Throws if user doesn't own this school
-  await db.school.update({ where: { id }, data })
-}
-```
-
----
-
-## Validation System
-
-### Factory Pattern
-
-Step schemas use factory functions that accept a dictionary for i18n:
-
-```typescript
-// src/components/onboarding/validation.ts
-import { getValidationMessages } from "@/components/internationalization/helpers"
-
-export function createTitleStepValidation(dictionary: Dictionary) {
-  const v = getValidationMessages(dictionary)
-  return z
-    .object({
-      name: z
-        .string()
-        .min(2, { message: v.minLength(2) })
-        .max(100, { message: v.maxLength(100) })
-        .trim(),
-    })
-    .required({ name: true })
-}
-```
-
-### Step Schemas
-
-| Step        | Schema                      | Required Fields                                        |
-| ----------- | --------------------------- | ------------------------------------------------------ |
-| Title       | `titleStepValidation`       | name                                                   |
-| Description | `descriptionStepValidation` | description, schoolLevel, schoolType                   |
-| Location    | `locationStepValidation`    | address, city, state                                   |
-| Capacity    | `capacityStepValidation`    | maxStudents, maxTeachers                               |
-| Price       | `priceStepValidation`       | tuitionFee, currency, paymentSchedule                  |
-| Legal       | `legalStepValidation`       | termsAccepted, privacyAccepted, dataProcessingAccepted |
-| Subdomain   | `domainSchema`              | domain (3-63 chars, lowercase alphanumeric + hyphens)  |
-
-### Domain Validation
-
-```typescript
-export const domainSchema = z
-  .string()
-  .min(3, "Domain must be at least 3 characters")
-  .max(63, "Domain must be less than 63 characters")
-  .regex(/^[a-z0-9-]+$/, "lowercase letters, numbers, and hyphens only")
-  .regex(/^[a-z0-9]/, "Must start with a letter or number")
-  .regex(/[a-z0-9]$/, "Must end with a letter or number")
-  .refine((val) => !val.includes("--"), "No consecutive hyphens")
-```
-
-### Known Validation Discrepancies
-
-There are value mismatches between the root `validation.ts` and step-specific schemas:
-
-| Field                  | Root `validation.ts` | `price/validation.ts` | `constants.client.ts` |
-| ---------------------- | -------------------- | --------------------- | --------------------- |
-| tuitionFee max         | 100,000              | **50,000**            | -                     |
-| registrationFee max    | 10,000               | **5,000**             | -                     |
-| maxStudents min        | 1                    | -                     | **10**                |
-| maxTeachers max        | 1,000                | -                     | **500**               |
-| maxClasses max         | 500                  | -                     | **100**               |
-| name max length        | 100                  | -                     | **40**                |
-| description min length | 10                   | -                     | **50**                |
-
-The price sub-module uses lower limits than the root schema, and `FORM_LIMITS` in `constants.client.ts` disagrees with the root validation on several fields.
-
----
-
-## State Management
-
-### ListingProvider
-
-Manages school data state across all steps. Defined in `src/components/onboarding/use-listing.tsx`:
-
-```typescript
-interface ListingContextType {
-  listing: Listing | null
-  isLoading: boolean
-  error: string | null
-  setListing: (listing: Listing | null) => void
-  updateListingData: (data: Partial<Listing>) => Promise<void>
-  createNewListing: (data?: Partial<Listing>) => Promise<string | null>
-  loadListing: (id: string) => Promise<void>
-  clearError: () => void
-}
-```
-
-Wrapped at the layout level in `src/app/[lang]/onboarding/[id]/layout.tsx`, providing context to all step pages.
-
-### HostValidationProvider (Deprecated)
-
-`src/components/onboarding/host-validation-context.tsx` is a deprecated shim that re-exports from the form block:
-
-```typescript
-// Deprecated - re-exports from form block
-export {
-  WizardValidationProvider as HostValidationProvider,
-  useWizardValidation as useHostValidation,
-} from "@/components/form/template/wizard-validation-context"
-```
-
-New code should import directly from `@/components/form`:
-
-```typescript
-// Recommended
-import {
-  useWizardValidation,
-  WizardValidationProvider,
-} from "@/components/form"
-// Legacy (still works)
-import {
-  HostValidationProvider,
-  useHostValidation,
-} from "@/components/onboarding/host-validation-context"
-```
-
-### FormFooter (Replaced HostFooter)
-
-`host-footer.tsx` no longer exists. The barrel export in `index.ts` re-exports `FormFooter` as `HostFooter` for backward compatibility:
-
-```typescript
-// src/components/onboarding/index.ts
-export { FormFooter as HostFooter } from "@/components/form/footer"
-```
-
-The actual navigation is handled by `FormFooter` from `src/components/form/footer.tsx`, which accepts a `StepConfig` object and renders Back/Next buttons, progress bars per group, and save/help controls.
-
-### useOnboarding Hook
-
-Main hook for navigation and validation in `src/components/onboarding/use-onboarding.ts`:
-
-```typescript
-export function useOnboarding(schoolId?: string) {
-  // Parallelizes school data and status loading
-  const [schoolResponse, statusResponse] = await Promise.all([
-    getListing(schoolId),
-    getSchoolSetupStatus(schoolId),
-  ])
-
-  return {
-    school,
-    progress,
-    isLoading,
-    updateSchool,
-    goToNextStep,
-    validateCurrentStep,
-  }
-}
-```
-
----
-
-## API Routes
-
-Three API endpoints under `src/app/api/onboarding/`:
-
-| Route                             | Method | Purpose                                                                                                                                                                                      |
-| --------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/api/onboarding/create-school`   | POST   | Idempotent atomic school creation via Prisma `$transaction`; handles race conditions (P2002 unique violation); returns existing school if already created                                    |
-| `/api/onboarding/validate-access` | POST   | Pre-flight check verifying user can access onboarding; auto-provisions school if needed; returns redirect URL if schoolId mismatch                                                           |
-| `/api/onboarding/extract`         | POST   | AI-powered document extraction from uploaded files (10MB max; JPEG/PNG/WebP/PDF); extracts structured data for steps: title, description, location, capacity, branding, import, price, legal |
-
----
-
-## Server Actions
-
-All server actions are in `src/components/onboarding/actions.ts`:
-
-### `initializeSchoolSetup()`
-
-Creates or retrieves school for onboarding. Delegates to `ensureUserSchool()` for atomic transaction.
-
-**Returns:** `{ ...school, _redirect: "/onboarding/{id}/about-school", _sessionRefreshRequired: true }`
-
-### `getListing(id)`
-
-Fetches school data with ownership verification via `requireSchoolOwnership(id)`.
-
-### `updateListing(id, data)`
-
-Updates school fields for a specific step. Validates ownership first.
-
-### `getSchoolSetupStatus(schoolId)`
-
-Calculates onboarding completion percentage based on 6 checks:
-
-1. Name set (not "New School")
-2. School type set
-3. Address set
-4. Max students set
-5. Tuition fee set
-6. Domain set
-
-Returns `{ completionPercentage, nextStep }`.
-
-### `reserveSubdomainForSchool(schoolId, subdomain)`
-
-Reserves a subdomain. Delegates to `reserveSubdomain()` in `src/lib/subdomain-actions.ts`.
-
-### `getCurrentUserSchool()`
-
-Returns the current user's schoolId from auth context or database lookup.
-
-### `getUserSchools()`
-
-Lists schools owned by or associated with the current user.
-
-### `proceedToTitle(schoolId)`
-
-Validates ownership and redirects to the about-school step.
-
----
-
-## Auto-Provisioning Chain
-
-When `completeOnboarding()` runs (triggered at the legal step), it marks the school as active and executes a 5-step auto-provisioning chain that creates all academic infrastructure. Each step is wrapped in a try/catch so failures don't block the others.
-
-**Source**: `src/components/onboarding/legal/actions.ts` → `src/lib/catalog-setup.ts`
-
-### Step 1: `setupDefaultsForSchool()`
-
-Creates foundational school resources. Idempotent — skips if records already exist.
-
-| Resource    | Count by School Level                          |
-| ----------- | ---------------------------------------------- |
-| YearLevels  | primary=8, secondary=6, both=14                |
-| Departments | 6 (always)                                     |
-| ScoreRanges | 9 (always: A+ through F with score boundaries) |
-
-### Step 2: `setupCatalogForSchool()`
-
-Resolves curriculum via `inferCurriculum()` and creates the academic structure.
-
-**Curriculum Resolution** uses progressive fallback:
-
-| Priority | Strategy                      | Example                                           |
-| -------- | ----------------------------- | ------------------------------------------------- |
-| 1        | International type → `us-k12` | Any country + `international`                     |
-| 2        | Country map → exact match     | `US` → `us-k12`, `SD` → `national`                |
-| 3        | Unmapped country → `us-k12`   | `GB` + non-intl → `british`, fallback to `us-k12` |
-
-**Country → Curriculum Map**:
-
-```
-US → us-k12    GB → british    SD → national
-SA → national  EG → national   AE → national
-QA → national  JO → national   * → us-k12
-
----
-
-## Production Blockers
-
-### P0 - Critical
-
-| #   | Issue                                  | Impact                    | Status                            |
-| --- | -------------------------------------- | ------------------------- | --------------------------------- |
-| 1   | Debug `console.log` in `actions.ts`    | Performance, info leakage | Open                              |
-| 2   | Auth fallback logic                    | Security vulnerability    | ✅ Resolved (atomic transactions) |
-| 3   | Missing error boundaries on some steps | White screen on errors    | Open                              |
-
-### P1 - High Priority
-
-| #   | Issue                                     | Steps Affected   | Status                      |
-| --- | ----------------------------------------- | ---------------- | --------------------------- |
-| 1   | Maps API integration                      | Location         | Blocked (API key)           |
-| 2   | Stripe payment processing                 | Price, Discount  | Blocked (account setup)     |
-| 3   | CSV/Excel parser                          | Import           | UI complete, parser missing |
-| 4   | DNS configuration                         | Subdomain        | Form complete, DNS missing  |
-| 5   | File upload service (virus scanning, CDN) | Import, Branding | Partial                     |
-
-### P2 - Medium Priority
-
-| #   | Issue                                         | Steps Affected | Status                    |
-| --- | --------------------------------------------- | -------------- | ------------------------- |
-| 1   | Invitation system (codes, approval workflow)  | Join           | Basic implementation      |
-| 2   | Legal document templates + version control    | Legal          | UI complete, docs missing |
-| 3   | Performance optimizations (caching, prefetch) | All            | Partial                   |
-
----
-
-## Technical Debt
-
-### `constants.client.ts` Has Stale Step Names
-
-`STEP_NAVIGATION` in `src/components/onboarding/constants.client.ts` defines steps that do **not exist** in the `OnboardingStep` type:
-
-- Stale steps: `admin-account`, `school-info`, `academic-setup`, `review`, `tour`
-- Missing steps: `description`, `location`, `capacity`, `branding`, `import`, `join`, `visibility`, `price`, `discount`, `legal`, `stand-out`, `finish-setup`
-
-This map is typed as `Record<string, ...>` (not `Record<OnboardingStep, ...>`), so there is no compile-time enforcement. The actual navigation is `ONBOARDING_CONFIG` in `src/components/form/footer.tsx`.
-
-Additionally, `FORM_LIMITS` in the same file disagrees with the root `validation.ts` on several bounds (see [Validation Discrepancies](#known-validation-discrepancies) above).
-
-### Config Defined in 3 Places
-
-`HOSTING_STEPS` / step ordering is defined in:
-
-1. `config.ts` → `ONBOARDING_STEPS` (authoritative, 16 steps with metadata)
-2. `src/components/form/footer.tsx` → `ONBOARDING_CONFIG` (runtime navigation, 15 steps)
-3. `constants.client.ts` → `STEP_NAVIGATION` (stale, does not match)
-
-Should consolidate to a single source of truth in `config.ts`.
-
-### Action File Naming
-
-Some step subdirectories use `action.ts` (singular), others use `actions.ts` (plural). Should standardize to `actions.ts`.
-
-### Listing Interface vs Types
-
-The `Listing` interface in `use-listing.tsx` has `schoolType` with 5 values, while `SchoolCategory` in `types.ts` and `SCHOOL_CATEGORIES` in `config.ts` have 9 values (adding `national`, `british`, `ib`, `american`).
-
----
-
-## Test Coverage
-
-### Unit Tests
-
-**File:** `src/components/onboarding/__tests__/validation.test.ts` (1,277 lines)
-
-Comprehensive tests for all Zod schemas including domain, email, URL, phone, enums, each step validation, `validateStep` helper, `getRequiredFieldsForStep`, i18n factory functions, and edge cases.
-
-### Property Tests
-
-**File:** `src/components/onboarding/__tests__/validation.property.test.ts` (244 lines)
-
-Property-based tests using `fast-check` for domain validation, email patterns, phone numbers, price field bounds, capacity constraints, and hex color validation.
-
-### Test Factories
-
-**Directory:** `src/components/onboarding/__tests__/factories/`
-
-| File            | Exports                                                                                                                                                                              |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `school.ts`     | `createMockSchool`, `createMinimalSchool`, `createDraftSchool`, step-specific factories (`createTitleStepData`, `createDescriptionStepData`, etc.), invalid/edge-case data factories |
-| `user.ts`       | `createMockUser`                                                                                                                                                                     |
-| `dictionary.ts` | `createMockDictionary` for i18n schema tests                                                                                                                                         |
-
-### E2E Tests (Playwright)
-
-**Directory:** `tests/e2e/epic-5-onboarding/`
-
-| File                      | Purpose                                |
-| ------------------------- | -------------------------------------- |
-| `get-started.spec.ts`     | Landing page and initiation flow       |
-| `full-journey.spec.ts`    | Complete end-to-end onboarding         |
-| `onboarding-flow.spec.ts` | Step-by-step navigation and validation |
-
----
-
-## File Reference
-
-### Routes
-
-| Path                                             | Purpose                              |
-| ------------------------------------------------ | ------------------------------------ |
-| `src/app/[lang]/onboarding/page.tsx`             | Landing page                         |
-| `src/app/[lang]/onboarding/overview/page.tsx`    | School list dashboard                |
-| `src/app/[lang]/onboarding/[id]/layout.tsx`      | ListingProvider + validation context |
-| `src/app/[lang]/onboarding/[id]/[step]/page.tsx` | Each step page (16 routes)           |
-
-### API Routes
-
-| Path                                              | Purpose                 |
-| ------------------------------------------------- | ----------------------- |
-| `src/app/api/onboarding/create-school/route.ts`   | Atomic school creation  |
-| `src/app/api/onboarding/validate-access/route.ts` | Access pre-flight check |
-| `src/app/api/onboarding/extract/route.ts`         | AI document extraction  |
-
-### Core Components
-
-| Path                                                         | Purpose                                       |
-| ------------------------------------------------------------ | --------------------------------------------- |
-| `src/components/onboarding/actions.ts`                       | Server actions                                |
-| `src/components/onboarding/config.ts`                        | Step config (authoritative)                   |
-| `src/components/onboarding/types.ts`                         | `OnboardingStep` type, `OnboardingSchoolData` |
-| `src/components/onboarding/validation.ts`                    | Root Zod schemas                              |
-| `src/components/onboarding/use-listing.tsx`                  | `ListingProvider` context                     |
-| `src/components/onboarding/use-onboarding.ts`                | Navigation + validation hook                  |
-| `src/components/onboarding/auth-helpers.ts`                  | `getAuthContext`, `requireSchoolOwnership`    |
-| `src/components/form/footer.tsx`                             | `FormFooter` + `ONBOARDING_CONFIG`            |
-| `src/components/form/template/wizard-validation-context.tsx` | Validation context (canonical)                |
-| `src/lib/school-access.ts`                                   | `ensureUserSchool` (atomic transaction)       |
-
-### Tests
-
-| Path                                                              | Purpose                        |
-| ----------------------------------------------------------------- | ------------------------------ |
-| `src/components/onboarding/__tests__/validation.test.ts`          | Unit tests (1,277 lines)       |
-| `src/components/onboarding/__tests__/validation.property.test.ts` | Property tests (244 lines)     |
-| `src/components/onboarding/__tests__/factories/`                  | Test data factories            |
-| `tests/e2e/epic-5-onboarding/`                                    | Playwright E2E tests (3 specs) |
-
----
+The root `validation.ts` exports `validateStep(step, data, dictionary)` and `getRequiredFieldsForStep(step)` for shared step-aware validation.
+
+## Auto-provisioning
+
+When `completeOnboarding()` runs at the legal step, the school is marked active and a 5-step provisioning chain creates the academic infrastructure. Each step is wrapped in `try/catch` so one failure doesn't block the rest.
+
+Source: `src/components/onboarding/legal/actions.ts` → `src/lib/catalog-setup.ts`.
+
+| Step                            | Creates                                                               |
+| ------------------------------- | --------------------------------------------------------------------- |
+| `setupDefaultsForSchool()`      | YearLevels (8 / 6 / 14 by school level), 6 Departments, 9 ScoreRanges |
+| `setupCatalogForSchool()`       | Subject / chapter / lesson bridges from the global catalog            |
+| `setupTermsForSchool()`         | Default terms for the academic year                                   |
+| `setupRolesForSchool()`         | Permission templates for the 8 roles                                  |
+| `setupNotificationsForSchool()` | Default notification preferences for ADMIN role                       |
+
+`setupCatalogForSchool` resolves the curriculum via `inferCurriculum()`:
+
+| Priority | Strategy                             | Example                            |
+| -------- | ------------------------------------ | ---------------------------------- |
+| 1        | International school type → `us-k12` | any country + `international`      |
+| 2        | Country exact match                  | `US` → `us-k12`, `SD` → `national` |
+| 3        | Unmapped country → `us-k12`          | `JP`, `KE`, …                      |
+
+## API routes
+
+| Path                              | Method | Purpose                                                                |
+| --------------------------------- | ------ | ---------------------------------------------------------------------- |
+| `/api/onboarding/create-school`   | POST   | Idempotent atomic school creation; handles P2002 unique violation race |
+| `/api/onboarding/validate-access` | POST   | Pre-flight access check; auto-provisions; returns redirect on mismatch |
+| `/api/onboarding/extract`         | POST   | AI document extraction (10 MB max; JPEG / PNG / WebP / PDF)            |
+
+## Server actions
+
+All in `src/components/onboarding/actions.ts`:
+
+| Action                               | Purpose                                                               |
+| ------------------------------------ | --------------------------------------------------------------------- |
+| `initializeSchoolSetup()`            | Creates or retrieves school for the current user; returns `_redirect` |
+| `getListing(id)`                     | Fetch school with ownership verification                              |
+| `updateListing(id, data)`            | Update fields for a step                                              |
+| `getSchoolSetupStatus(schoolId)`     | Completion percentage based on 6 checks                               |
+| `reserveSubdomainForSchool(id, sub)` | Reserve a subdomain (delegates to `src/lib/subdomain-actions.ts`)     |
+| `getCurrentUserSchool()`             | Returns the current user's `schoolId`                                 |
+| `getUserSchools()`                   | Lists schools owned by or associated with the current user            |
+| `proceedToTitle(schoolId)`           | Validates ownership and redirects to the about-school step            |
+
+## Key files
+
+| Path                                             | Purpose                                       |
+| ------------------------------------------------ | --------------------------------------------- |
+| `src/app/[lang]/onboarding/[id]/[step]/page.tsx` | Each step page (16 routes)                    |
+| `src/components/onboarding/actions.ts`           | Server actions                                |
+| `src/components/onboarding/config.ts`            | Step config (authoritative)                   |
+| `src/components/onboarding/types.ts`             | `OnboardingStep` type, `OnboardingSchoolData` |
+| `src/components/onboarding/validation.ts`        | Root Zod schemas                              |
+| `src/components/onboarding/use-listing.tsx`      | `ListingProvider` context                     |
+| `src/components/onboarding/use-onboarding.ts`    | Navigation + validation hook                  |
+| `src/components/onboarding/auth-helpers.ts`      | `getAuthContext`, `requireSchoolOwnership`    |
+| `src/components/form/footer.tsx`                 | `FormFooter` + `ONBOARDING_CONFIG`            |
+| `src/lib/school-access.ts`                       | `ensureUserSchool()` atomic transaction       |
+| `src/lib/catalog-setup.ts`                       | Provisioning chain                            |
 
 ## Troubleshooting
 
-### Build Hangs at "Environments: .env"
-
-**Cause:** TypeScript errors in onboarding components.
-**Fix:** Run `pnpm tsc --noEmit` to identify errors.
-
-### Session Missing schoolId After School Creation
-
-**Cause:** Session not refreshed after atomic transaction.
-**Fix:** Call `fetch("/api/auth/session")` after `initializeSchoolSetup()` returns `_sessionRefreshRequired: true`.
-
-### Cross-Tenant Access Denied
-
-**Cause:** User trying to access a school they don't own.
-**Fix:** `requireSchoolOwnership(id)` throws `TenantError` - ensure the correct schoolId is being passed.
-
-### Subdomain Already Taken
-
-**Cause:** Another school reserved the subdomain.
-**Fix:** The `reserveSubdomainForSchool` action checks availability and returns an error with code `DOMAIN_TAKEN`.
-
-### Form Data Not Persisting
-
-**Cause:** Missing `revalidatePath()` after mutation.
-**Fix:** All update actions must call `revalidatePath("/onboarding")` after database writes.
-
-### Dictionary Property Not Found
-
-**Cause:** Missing translation key.
-**Fix:** Use optional chaining: `dictionary?.onboarding?.title?.label`
-
----
-
-## Related Files
-
-- **[README.md](https://github.com/databayt/hogwarts/blob/main/src/components/onboarding/README.md)** - Architecture overview and step implementation status table
-- **[ISSUE.md](https://github.com/databayt/hogwarts/blob/main/src/components/onboarding/ISSUE.md)** - Production readiness tracker with sprint planning and launch criteria
+| Symptom                             | Cause                                          | Fix                                                             |
+| ----------------------------------- | ---------------------------------------------- | --------------------------------------------------------------- |
+| Build hangs at "Environments: .env" | TypeScript errors in onboarding components     | Run `pnpm tsc --noEmit`                                         |
+| Session missing `schoolId`          | Session not refreshed after atomic transaction | Fetch `/api/auth/session` after `_sessionRefreshRequired: true` |
+| Cross-tenant access denied          | User trying to access a school they don't own  | `requireSchoolOwnership(id)` throws `TenantError`               |
+| Subdomain already taken             | Another school reserved it                     | Action returns `errorCode: "DOMAIN_TAKEN"`                      |
+| Form data not persisting            | Missing `revalidatePath()` after mutation      | All update actions call `revalidatePath("/onboarding")`         |
+| Dictionary property not found       | Missing translation key                        | Use optional chaining: `dictionary?.onboarding?.title?.label`   |
