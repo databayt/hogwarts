@@ -544,100 +544,15 @@ model NotificationDeliveryLog {
 }
 ```
 
-### Supporting Models
+### Supporting models
 
-```prisma
-model NotificationTemplate {
-  id        String             @id @default(cuid())
-  schoolId  String?            // null = global template
-  type      NotificationType
-  channel   NotificationChannel
-  subject   String?
-  body      String             @db.Text  // {{variable}} placeholders
-  active    Boolean            @default(true)
-  // ⚠ Schema only — no rendering pipeline
-}
-
-model NotificationBatch {
-  id           String   @id @default(cuid())
-  schoolId     String
-  type         NotificationType
-  title        String
-  body         String   @db.Text
-  targetRole   String?
-  targetClassId String?
-  targetUserIds String[] // explicit user IDs
-  scheduledFor DateTime?
-  status       String   @default("pending") // pending | processing | completed | failed
-  processedAt  DateTime?
-  createdBy    String
-  // ⚠ Scheduled processing not implemented
-}
-
-model NotificationSubscription {
-  id         String   @id @default(cuid())
-  userId     String
-  entityType String   // "assignment" | "class" | "exam" | ...
-  entityId   String
-  createdAt  DateTime @default(now())
-
-  @@unique([userId, entityType, entityId])
-}
-
-model NotificationSummary {
-  id        String   @id @default(cuid())
-  userId    String
-  schoolId  String
-  period    String   // "2026-03-12" or "2026-W11"
-  type      NotificationType
-  count     Int
-  // ⚠ Schema only — no cron generates digests
-}
-```
+`NotificationTemplate` (schema only — no rendering pipeline), `NotificationBatch` (schema only — no processor), `NotificationSubscription` (per-entity subscriptions), `NotificationSummary` (schema only — no digest cron). Source of truth for fields: `prisma/models/notifications.prisma`.
 
 ### Enums
 
-```prisma
-enum NotificationType {
-  message
-  message_mention
-  assignment_created
-  assignment_due
-  assignment_graded
-  grade_posted
-  attendance_marked
-  attendance_alert
-  absence_intention
-  absence_intention_decision
-  fee_due
-  fee_overdue
-  fee_paid
-  announcement
-  event_reminder
-  class_cancelled
-  class_rescheduled
-  system_alert
-  account_created
-  password_reset
-  login_alert
-  document_shared
-  report_ready
-}
-
-enum NotificationPriority {
-  low
-  normal
-  high
-  urgent
-}
-
-enum NotificationChannel {
-  in_app
-  email
-  push
-  sms
-}
-```
+- `NotificationType` — 23 values; the categorized list above is the canonical set.
+- `NotificationPriority` — `low`, `normal`, `high`, `urgent`.
+- `NotificationChannel` — `in_app`, `email`, `push`, `sms`.
 
 ## Cron Jobs
 
@@ -730,3 +645,4 @@ const {
   markAllAsRead,
   clearRecent,
 } = useNotificationCenter()
+```
