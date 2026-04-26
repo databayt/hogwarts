@@ -38,13 +38,14 @@ The patterns documented here emerge from real-world usage across our [open sourc
 ## Function Patterns
 
 <pre className="bg-muted rounded p-2 text-xs">
-      {`const formatPrice = (amount: number) => {
+  {`const formatPrice = (amount: number) => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD'
   }).format(amount)
 }`}
-    </pre>
+</pre>
+
   </div>
   <div className="rounded-lg border p-6">
     <h4 className="mb-2 font-semibold">Function Declarations</h4>

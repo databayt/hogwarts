@@ -151,7 +151,7 @@ Users can edit their own messages. Edited messages display an "edited" indicator
 
 ### Storage Path
 
-```
+````
 messaging/{schoolId}/{conversationId}/{filename}
 
 > **Current status:** Real-time WebSocket/SSE infrastructure is TBD. A polling fallback is active -- `pollNewMessages` (5s interval) and `pollConversationUpdates` keep the UI up to date.
@@ -260,7 +260,7 @@ fullTextSearchMessages(input: {
   offset?: number
 })
 // Returns: messages ranked by relevance (ts_rank)
-```
+````
 
 ### Global Search
 
@@ -583,3 +583,4 @@ enum ParticipantRole {
 ```bash
 pnpm db:seed:single messages          # Conversations, messages, reactions, receipts
 pnpm db:seed:single messaging-phones  # StaffMember + phone numbers for WhatsApp testing
+```
