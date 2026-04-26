@@ -18,59 +18,6 @@ The **File** module consolidates all file-related functionality into a single, c
 
 ## Module Structure
 
-```
-src/components/file/
-├── index.ts              # Main exports
-├── types.ts              # Core type definitions
-├── config.ts             # Size limits, MIME types, provider config
-├── shared.ts             # Shared utilities
-├── providers/            # Storage providers
-│   ├── vercel-blob.ts
-│   ├── imagekit.ts
-│   ├── s3.ts
-│   └── r2.ts
-├── upload/               # Upload module
-│   ├── actions.ts
-│   ├── validation.ts
-│   ├── use-upload.ts
-│   ├── uploader.tsx
-│   ├── upload-button.tsx
-│   ├── upload-progress.tsx
-│   └── content.tsx       # Presets (AvatarUpload, LogoUpload, etc.)
-├── export/               # Export module
-│   ├── types.ts
-│   ├── formatters.ts
-│   ├── csv-generator.ts
-│   ├── excel-generator.ts
-│   ├── pdf-generator.tsx
-│   ├── use-export.ts
-│   └── export-button.tsx
-├── import/               # Import module
-│   ├── types.ts
-│   ├── parsers.ts
-│   ├── validators.ts
-│   ├── use-import.ts
-│   └── importer.tsx
-├── print/                # Print module
-│   ├── types.ts
-│   ├── use-print.ts
-│   └── print-button.tsx
-├── generate/             # Document generation
-│   ├── types.ts
-│   ├── use-generate.ts
-│   └── templates/
-│       ├── invoice.tsx
-│       ├── receipt.tsx
-│       ├── certificate.tsx
-│       ├── report-card.tsx
-│       ├── id-card.tsx
-│       └── transcript.tsx
-└── browser/              # File browser
-    ├── types.ts
-    ├── use-browser.ts
-    └── file-browser.tsx
-```
-
 ## Quick Start
 
 ```tsx
@@ -1041,21 +988,6 @@ function CustomFileBrowser() {
     </div>
   )
 }
-```
-
-## Configuration
-
-### File Categories
-
-```tsx
-type FileCategory =
-  | "image" // Images (jpg, png, webp, gif)
-  | "document" // Documents (pdf, doc, docx, xls, xlsx)
-  | "video" // Videos (mp4, webm, mov)
-  | "audio" // Audio (mp3, wav, ogg)
-  | "archive" // Archives (zip, rar, 7z)
-  | "other" // Other file types
-```
 
 ### Size Limits
 
@@ -1230,93 +1162,3 @@ import {
   Uploader,
   type ExportColumn,
 } from "@/components/file"
-```
-
-## Best Practices
-
-### 1. Use Preset Components
-
-For common use cases, prefer preset components:
-
-```tsx
-// Instead of configuring Uploader
-<AvatarUpload onUpload={setAvatar} />
-<DocumentUpload folder="contracts" onUpload={addDocs} />
-```
-
-### 2. Define Column Configurations
-
-Create reusable column configurations:
-
-```tsx
-// src/components/school-dashboard/listings/students/columns/export.ts
-export const STUDENT_EXPORT_COLUMNS: ExportColumn<Student>[] = [
-  { key: "name", header: "Name", headerAr: "الاسم" },
-  // ...
-]
-
-// Usage
-<ExportButton data={students} config={{ columns: STUDENT_EXPORT_COLUMNS, filename: "students" }} />
-```
-
-### 3. Handle Large Files
-
-For large file uploads, show progress:
-
-```tsx
-const { files, progress } = useUpload()
-
-{
-  files.map((file) => (
-    <div key={file.id}>
-      {file.name}
-      <Progress value={file.progress} />
-    </div>
-  ))
-}
-```
-
-### 4. Validate Imports
-
-Always validate imported data:
-
-```tsx
-const columns: ImportColumn<Student>[] = [
-  {
-    key: "email",
-    required: true,
-    validate: (value) => {
-      if (!value) return "Email is required"
-      if (!isValidEmail(value)) return "Invalid email format"
-      return true
-    },
-  },
-]
-```
-
-### 5. Use Proper Folder Structure
-
-Organize files by type and context:
-
-```
-/school/{schoolId}/
-  /avatars/          # User avatars
-  /logos/            # School logos
-  /documents/        # General documents
-  /assignments/      # Student assignments
-  /contracts/        # Legal documents
-  /reports/          # Generated reports
-```
-
-## Benefits
-
-| Benefit           | Before       | After                                                               |
-| ----------------- | ------------ | ------------------------------------------------------------------- |
-| Export formats    | CSV only     | CSV, Excel, PDF, JSON                                               |
-| Column selection  | None         | Optional dialog                                                     |
-| Bilingual headers | Manual       | Automatic                                                           |
-| RTL support       | Inconsistent | Built-in                                                            |
-| Code duplication  | 71+ files    | 1 module                                                            |
-| Maintenance       | Per-feature  | Centralized                                                         |
-| TypeScript        | Partial      | Full coverage                                                       |
-| Templates         | 3            | 6 (Invoice, Receipt, Certificate, Report Card, ID Card, Transcript) |

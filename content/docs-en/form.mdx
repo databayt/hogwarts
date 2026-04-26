@@ -981,17 +981,6 @@ const form = useForm<MyInput>({
 
 ### Import Direction
 
-```
-config.ts     (options, limits)
-    |
-validation.ts (schemas, types)
-    |
-+---+---+
-|       |
-form  actions
-.tsx    .ts
-```
-
 Form imports FROM validation.ts (schemas, types) and config.ts (option arrays). Actions.ts also imports from validation.ts.
 
 ### Co-located File Structure
@@ -1019,16 +1008,3 @@ src/components/<feature>/wizard/
     actions.ts               # save<Step> server action
     form.tsx                 # Client form with useImperativeHandle
     content.tsx              # WizardStep wrapper
-```
-
-### What Belongs Where
-
-| Content                         | Belongs in      | Not in      |
-| ------------------------------- | --------------- | ----------- |
-| `useForm()` setup               | `form.tsx`      | content.tsx |
-| `zodResolver(schema)`           | `form.tsx`      | actions.ts  |
-| Zod schema definition           | `validation.ts` | form.tsx    |
-| Server action call              | `form.tsx`      | content.tsx |
-| Option arrays for selects       | `config.ts`     | form.tsx    |
-| Form ref/props types            | `types.ts`      | form.tsx    |
-| Step sub-components (>50 lines) | Separate file   | form.tsx    |
