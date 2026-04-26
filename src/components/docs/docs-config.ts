@@ -29,7 +29,6 @@ export const DOCS_LINKS = [
   { key: "inspiration", href: "/docs/inspiration", fallback: "Inspiration" },
   { key: "demo", href: "/docs/demo", fallback: "Demo" },
   { key: "listings", href: "/docs/listings", fallback: "Listings" },
-  { key: "business", href: "/docs/business", fallback: "Business" },
 ] as const
 
 export type DocsLink = (typeof DOCS_LINKS)[number]
