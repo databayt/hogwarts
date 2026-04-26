@@ -19,6 +19,11 @@ export const generateClassesSchema = z.object({
   termId: z.string().min(1, "Term is required"),
 })
 
+export const bulkEnrollStudentsSchema = z.object({
+  gradeIds: z.array(z.string().min(1)).min(1, "At least one grade is required"),
+})
+
 export type GradeConfigInput = z.infer<typeof gradeConfigSchema>
 export type GenerateSectionsInput = z.infer<typeof generateSectionsSchema>
 export type GenerateClassesInput = z.infer<typeof generateClassesSchema>
+export type BulkEnrollStudentsInput = z.infer<typeof bulkEnrollStudentsSchema>

@@ -1,1172 +1,169 @@
 ---
-title: "Document Intelligence"
-description: "Complete BMAD epic/story breakdown for the Document Intelligence Initiative - AI-powered document extraction, processing queues, and intelligent automation across admissions, exams, finance, onboarding, and library modules"
+title: Document Intelligence
+description: Platform-wide AI document processing — admissions, exams, finance, library — with shared extraction, queue, and budget infrastructure.
 ---
 
-## Overview
-
-The Document Intelligence Initiative is a platform-wide effort to bring AI-powered document processing to every module in Hogwarts. It transforms manual, error-prone document handling into automated extraction, classification, and validation workflows. The initiative spans 8 epics, 42 stories, and 233 story points, building on existing infrastructure rather than replacing it.
-
-### Architecture Context
-
-The plan extends the following existing infrastructure:
-
-| Component           | Location                                     | Current State                                                                                            |
-| ------------------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Document Extraction | `src/lib/document-extraction/`               | Claude 3.5 Sonnet via Vercel AI SDK `generateObject()` with Zod schemas, hardcoded to 8 onboarding steps |
-| AI Providers        | `src/lib/ai/providers.ts`                    | Multi-provider routing (Anthropic + Groq) with task-based selection and cost estimation                  |
-| Rate Limiter        | `src/lib/ai/rate-limiter.ts`                 | Priority queue with 5 concurrent, exponential backoff                                                    |
-| AI Config           | `src/lib/ai/config.ts`                       | `AIServiceConfig` with `monthlyCostLimit`, fallback behavior, confidence thresholds                      |
-| AI Services         | `src/lib/ai/openai.ts`                       | Essay grading, OCR, question generation with `isAIServiceAvailable()` guard pattern                      |
-| Receipt OCR         | `finance/receipt/ai/extract-receipt-data.ts` | Receipt OCR pattern using `generateObject()` with Zod schema + DB status update                          |
-| QBank Engine        | `qbank-automation/engine/`                   | PDF parse + LangChain chunking + embeddings (placeholder `findRelevantChunks()`)                         |
-| PDF Templates       | `src/components/file/generate/`              | `@react-pdf/renderer` templates for invoice, receipt, certificate, report card, ID card, transcript      |
-
-### Key Schema Facts
-
-- `Application.documents` is `Json?` -- untyped array of URLs, no AI processing
-- `Application.entranceScore`, `interviewScore`, `meritScore` are manually entered `Decimal?`
-- `SourceMaterial` + `SourceChunk` models exist but `findRelevantChunks()` returns empty
-- `CatalogMaterial` and `CatalogBook` have `fileUrl`/`digitalFileUrl` but no processing pipeline
-- `FinancialReport` model exists with `status: GENERATING|COMPLETED|FAILED` and `fileUrl` but generation is stub
-- `Payment` model supports `BANK_TRANSFER` method with `receiptUrl` field
-- `ExpenseReceipt` has full OCR pipeline already working
-- `StudentAnswer` has `uploadUrl`, `ocrText`, `ocrConfidence` fields, and `processOCRWithAI()` action exists for single answers
-
-### Patterns to Follow
-
-- Server actions use `"use server"` with `auth()` + `schoolId` guard
-- `getTenantContext()` for server components
-- Error codes returned (not strings) per translation rules
-- All queries scoped by `schoolId`
-- Dictionary-based i18n for all UI text
-
----
-
-## EPIC-0: Document Intelligence Foundation
-
-**Goal:** Build the shared infrastructure layer that all domain-specific document processing epics depend on: a generalized extraction service, async processing queue with status tracking, per-school AI budget enforcement, and the processing status UI atoms.
-
-**Dependencies:** None (foundation for all other epics)
-
-**Estimated Points:** 34
-
----
-
-### Story 0.1: Generalize the Document Extraction Service
-
-**Points:** 8 | **Type:** API
-
-The current `src/lib/document-extraction/` is hardcoded to 8 onboarding step IDs. Refactor it into a domain-agnostic extraction service that accepts any Zod schema and prompt string at call-time, rather than looking them up from a fixed `stepSchemaMap`. This allows admission documents, bank receipts, invoices, textbook metadata, and onboarding docs to all use the same extraction pipeline. The existing onboarding flow continues to work via a thin wrapper that passes the step-specific schema/prompt.
-
-**Acceptance Criteria:**
-
-- Given a caller provides a Zod schema, prompt string, and file URL or buffer, When `extractWithSchema()` is called, Then it returns structured data validated against that schema with confidence scoring
-- Given the old onboarding API at `/api/onboarding/extract` is called, When it receives a file and stepId, Then it delegates to the new generalized extractor via a compatibility wrapper and returns identical results
-- Given the AI provider key is missing, When extraction is attempted, Then it returns `{ success: false, errorCode: "AI_NOT_CONFIGURED" }` matching the existing `isAIServiceAvailable()` pattern
-- Given a text-based document (PDF/Word/CSV/Excel), When processed, Then text is extracted first via existing file-handlers, then passed to Claude as text content (not image) for cost efficiency
-
-**Key Files:**
-
-- `src/lib/document-extraction/claude-extractor.ts` -- refactor `extractWithClaude()` to accept schema+prompt parameters
-- `src/lib/document-extraction/schemas.ts` -- keep existing onboarding schemas, export `stepSchemaMap` unchanged
-- `src/lib/document-extraction/types.ts` -- add `GenericExtractionOptions` type with schema, prompt, context fields
-- `src/lib/document-extraction/index.ts` -- add `extractWithSchema()` public function; keep `extractFromDocument()` as backward-compatible wrapper
-- `src/lib/document-extraction/prompts.ts` -- keep existing; callers now pass prompts directly
-
-**Dependencies:** None
-
----
-
-### Story 0.2: Create Document Processing Queue with Prisma Model
-
-**Points:** 5 | **Type:** Database
-
-Add a `DocumentProcessingJob` Prisma model that tracks async document processing across all domains (admission documents, textbook ingestion, bank receipt verification, bulk scan grading). This enables status tracking, retry logic, and cost attribution per school. The model stores the job type, input file URL, output data (JSON), status (PENDING/PROCESSING/COMPLETED/FAILED), processing cost, and error details. Add a companion `AIUsageLog` model for per-school monthly cost tracking.
-
-**Acceptance Criteria:**
-
-- Given a document processing request is created, When the job is queued, Then a `DocumentProcessingJob` record is created with status PENDING, linked to schoolId and userId
-- Given a job completes, When the result is stored, Then the job status is COMPLETED with `resultData` JSON, `processingTimeMs`, and `costUsd` fields populated
-- Given a school's monthly AI usage is queried, When `AIUsageLog` records are aggregated, Then the total cost for the current month is returned
-- Given a job fails, When the error is recorded, Then status is FAILED with `errorMessage` and `retryCount` incremented
-
-**Key Files:**
-
-- `prisma/models/document-processing.prisma` -- new file with `DocumentProcessingJob` and `AIUsageLog` models
-- `prisma/schema.prisma` -- ensure new model file is referenced
-- `src/lib/document-extraction/types.ts` -- add `ProcessingJobType` enum covering all domains
-
-**Dependencies:** None
-
----
-
-### Story 0.3: Implement AI Budget Enforcement Service
-
-**Points:** 5 | **Type:** API
-
-Build a server-side service that enforces per-school monthly AI spending limits. Before any AI call is made, the caller checks `canUseAI(schoolId)` which queries the `AIUsageLog` aggregation for the current month against the school's configured limit (from a new `aiMonthlyBudget` field on the School model). When the limit is hit, return a specific error code so the UI can show "AI budget exhausted, manual processing required." Also expose `trackAIUsage()` to record costs after each call.
-
-**Acceptance Criteria:**
-
-- Given a school has a monthly budget of $10 and has spent $9.50, When an AI operation costing $0.60 is attempted, Then it returns `{ allowed: false, errorCode: "AI_BUDGET_EXCEEDED", remaining: 0.50 }`
-- Given a school has no budget configured (null), When AI is requested, Then it is allowed (unlimited)
-- Given `trackAIUsage()` is called after a successful extraction, When the cost is $0.03, Then a new `AIUsageLog` record is created with that amount, model name, and job type
-- Given an admin views AI usage dashboard, When monthly stats are fetched, Then per-school totals by job type, model, and day are available
-
-**Key Files:**
-
-- `src/lib/ai/budget.ts` -- new file with `canUseAI()`, `trackAIUsage()`, `getMonthlyUsage()`
-- `src/lib/ai/config.ts` -- extend `AIServiceConfig` with budget-related types
-- `prisma/models/school.prisma` -- add `aiMonthlyBudget Decimal?` field
-
-**Dependencies:** Story 0.2
-
----
-
-### Story 0.4: Build Document Processing Queue Runner
-
-**Points:** 8 | **Type:** API
-
-Implement the async job runner that processes `DocumentProcessingJob` records. This is a server-side function (callable from API routes or server actions) that picks up PENDING jobs, sets them to PROCESSING, executes the appropriate extraction/processing logic based on job type, stores results, and handles failures with retry. Uses the existing `aiRateLimiter` for concurrency control. Each job type has a registered handler function (strategy pattern). Include a `/api/document-processing/run` endpoint for cron-triggered or manual processing.
-
-**Acceptance Criteria:**
-
-- Given 3 PENDING jobs exist, When the runner executes, Then it processes them sequentially (respecting rate limits), updating status to PROCESSING then COMPLETED/FAILED
-- Given a job fails with a retryable error (rate limit, timeout), When the retry count is below max, Then the job status resets to PENDING with incremented `retryCount`
-- Given a job fails with a non-retryable error (invalid file, auth error), When recorded, Then status is FAILED and no retry is scheduled
-- Given budget enforcement rejects an AI call, When the job cannot proceed, Then status is set to FAILED with `errorCode: "AI_BUDGET_EXCEEDED"`
-- Given the runner is invoked via API endpoint, When authenticated as admin, Then it processes up to 10 pending jobs and returns summary stats
-
-**Key Files:**
-
-- `src/lib/document-extraction/queue-runner.ts` -- new file with `processNextJobs()`, `registerHandler()`, `processJob()`
-- `src/lib/document-extraction/handlers/index.ts` -- new handler registry mapping job types to processing functions
-- `src/app/api/document-processing/run/route.ts` -- new API endpoint for triggering processing
-- `src/lib/ai/budget.ts` -- integrate budget check before each processing step
-
-**Dependencies:** Story 0.1, Story 0.2, Story 0.3
-
----
-
-### Story 0.5: Build Processing Status UI Components
-
-**Points:** 5 | **Type:** Component
-
-Create reusable React components for document processing status display, shared across all domain features. Components: `ProcessingStatusBadge` (shows PENDING/PROCESSING/COMPLETED/FAILED with appropriate colors and icons), `ProcessingProgressCard` (shows file name, upload time, current status, confidence score when done, retry button for failed), `AIBudgetIndicator` (shows remaining monthly budget as progress bar), and `ConfidenceScoreDisplay` (color-coded HIGH/MEDIUM/LOW with percentage). All text uses dictionary keys.
-
-**Acceptance Criteria:**
-
-- Given a processing job is in PROCESSING state, When `ProcessingStatusBadge` renders, Then it shows a spinning indicator with "Processing..." text from dictionary
-- Given a job completed with HIGH confidence, When `ConfidenceScoreDisplay` renders, Then it shows a green badge with the percentage
-- Given a school has used 80% of its AI budget, When `AIBudgetIndicator` renders, Then it shows an amber progress bar with remaining amount
-- Given a job failed, When `ProcessingProgressCard` renders, Then it shows error message and a "Retry" button that calls the retry action
-- Given Arabic locale is active, When all components render, Then text is right-to-left from dictionary keys
-
-**Key Files:**
-
-- `src/components/school-dashboard/shared/processing-status-badge.tsx` -- new client component
-- `src/components/school-dashboard/shared/processing-progress-card.tsx` -- new client component
-- `src/components/school-dashboard/shared/ai-budget-indicator.tsx` -- new client component
-- `src/components/school-dashboard/shared/confidence-score-display.tsx` -- new client component
-- `src/components/internationalization/school-en.json` -- add `documentProcessing.*` keys
-- `src/components/internationalization/school-ar.json` -- add Arabic translations
-
-**Dependencies:** Story 0.2, Story 0.3
-
----
-
-### Story 0.6: Add Document Processing Settings to School Settings
-
-**Points:** 3 | **Type:** Component
-
-Add an "AI & Document Processing" section to the school settings page where admins can configure: monthly AI budget limit (USD), enable/disable AI processing per domain (admissions, exams, finance), default confidence threshold for auto-acceptance, and view current month usage summary. This wires the `aiMonthlyBudget` field added in Story 0.3 to the UI.
-
-**Acceptance Criteria:**
-
-- Given an admin navigates to school settings, When the AI section is visible, Then they can set a monthly budget limit and toggle AI per domain
-- Given the admin saves settings, When the form submits, Then the school record is updated with the new `aiMonthlyBudget` value
-- Given the admin views usage summary, When the current month stats are loaded, Then total cost, request count, and per-domain breakdown are shown
-- Given AI is disabled for a domain, When processing is attempted in that domain, Then it returns `AI_DISABLED_FOR_DOMAIN` error code
-
-**Key Files:**
-
-- `src/components/school-dashboard/settings/ai-settings-form.tsx` -- new component
-- `src/components/school-dashboard/settings/actions.ts` -- add `updateAISettings()` server action
-- `src/lib/ai/budget.ts` -- add `isDomainEnabled()` check
-
-**Dependencies:** Story 0.3, Story 0.5
-
----
-
-## EPIC-1: Admission Document Intelligence
-
-**Goal:** Enable AI-powered processing of admission application documents (degree certificates, transcripts, IDs, resumes) to auto-extract applicant data, validate document completeness, and compute merit scores -- replacing fully manual admin review.
-
-**Dependencies:** EPIC-0
-
-**Estimated Points:** 34
-
----
-
-### Story 1.1: Define Admission Document Schemas and Extraction Prompts
-
-**Points:** 3 | **Type:** Setup
-
-Create Zod schemas and Claude prompts for each admission document type: degree certificate (institution name, degree, year, GPA), transcript (courses, grades, GPA), national ID (name, DOB, ID number, nationality), resume/CV (education history, work experience, skills), and generic supporting document. These schemas will be used with the generalized extraction service from EPIC-0.
-
-**Acceptance Criteria:**
-
-- Given a degree certificate PDF, When the schema is applied, Then it validates extracted fields: institution, degree, year, GPA, honors
-- Given a transcript document, When the schema is applied, Then it validates: courses array, cumulative GPA, institution, student name
-- Given an Arabic-language document, When the prompt is used, Then it instructs Claude to extract from Arabic text and transliterate names to English
-- Given all schemas are defined, When imported, Then they are typed and exported from a single barrel file
-
-**Key Files:**
-
-- `src/components/school-dashboard/admission/ai/schemas.ts` -- new file with Zod schemas per document type
-- `src/components/school-dashboard/admission/ai/prompts.ts` -- new file with extraction prompts per document type
-- `src/components/school-dashboard/admission/ai/types.ts` -- new file with TypeScript interfaces for extracted data
-
-**Dependencies:** Story 0.1
-
----
-
-### Story 1.2: Build Admission Document Processing Actions
-
-**Points:** 5 | **Type:** API
-
-Create server actions that accept an application document upload, identify the document type (using Claude vision classification), queue a `DocumentProcessingJob`, and process it through the generalized extraction service. Store extracted data in the `Application.documents` JSON field as structured objects (not just URLs). Include a `processApplicationDocument()` action and a `classifyDocument()` helper.
-
-**Acceptance Criteria:**
-
-- Given an admin uploads a PDF for an application, When `processApplicationDocument()` is called, Then a job is queued and the document is classified (certificate/transcript/ID/resume/other)
-- Given classification completes, When the appropriate schema is selected, Then extraction runs and structured data is stored in `Application.documents` alongside the file URL
-- Given the document is processed, When the application detail page loads, Then extracted fields are displayed with confidence scores
-- Given AI budget is exceeded, When processing is attempted, Then the document is stored as URL-only with status "manual_review_required"
-
-**Key Files:**
-
-- `src/components/school-dashboard/admission/ai/actions.ts` -- new server actions
-- `src/components/school-dashboard/admission/ai/classify.ts` -- document type classification logic
-- `src/lib/document-extraction/handlers/admission.ts` -- new handler for admission jobs, registered with queue runner
-
-**Dependencies:** Story 0.4, Story 1.1
-
----
-
-### Story 1.3: Build Admission Document Review UI
-
-**Points:** 5 | **Type:** Component
-
-Add a "Documents" tab to the application detail page (`application-detail-content.tsx`) that shows uploaded documents in a card grid. Each card shows: document thumbnail, classified type, extraction status badge, confidence score, and extracted fields with inline edit capability. Admin can approve extracted data (merging it into application fields) or reject and re-process. Uses the processing status components from EPIC-0.
-
-**Acceptance Criteria:**
-
-- Given an application has 3 uploaded documents, When the Documents tab is viewed, Then 3 cards are displayed with thumbnails, types, and status badges
-- Given a document is successfully extracted, When the card is expanded, Then extracted fields are shown with edit buttons and an "Approve & Merge" action
-- Given admin approves extracted transcript data, When merged, Then the application's `previousMarks`, `previousPercentage`, and `previousSchool` fields are updated
-- Given a document extraction failed, When the card shows the error, Then a "Retry" button re-queues processing
-- Given Arabic locale, When the UI renders, Then all labels come from dictionary and layout is RTL
-
-**Key Files:**
-
-- `src/components/school-dashboard/admission/application-detail-content.tsx` -- add Documents tab
-- `src/components/school-dashboard/admission/ai/document-card.tsx` -- new component for individual document display
-- `src/components/school-dashboard/admission/ai/document-review-panel.tsx` -- new component for extracted data review
-- `src/components/school-dashboard/admission/actions.ts` -- add `mergeExtractedData()` action
-
-**Dependencies:** Story 0.5, Story 1.2
-
----
-
-### Story 1.4: Implement Document Completeness Validation
-
-**Points:** 3 | **Type:** API
-
-Build a server action that validates whether an application has all required documents (per the campaign's `requiredDocuments` config). Cross-reference uploaded document types against requirements. Generate a completeness report showing: required documents, which are present, which are missing, and which have low confidence. Display this on both the admin review page and the applicant-facing status tracker.
-
-**Acceptance Criteria:**
-
-- Given a campaign requires [transcript, ID, photo] and the applicant uploaded [transcript, photo], When completeness is checked, Then it returns `{ complete: false, missing: ["ID"], present: ["transcript", "photo"] }`
-- Given a document was classified with LOW confidence, When completeness is checked, Then it appears in a "needs_verification" list
-- Given all required documents are present with HIGH confidence, When completeness is checked, Then `{ complete: true }` is returned
-- Given the applicant views their status tracker, When documents section loads, Then they see which documents are accepted, pending, or missing
-
-**Key Files:**
-
-- `src/components/school-dashboard/admission/ai/completeness.ts` -- new completeness validation logic
-- `src/components/school-dashboard/admission/actions.ts` -- add `checkDocumentCompleteness()` action
-- `src/components/school-marketing/admission/status-tracker/` -- update to show document status
-
-**Dependencies:** Story 1.2
-
----
-
-### Story 1.5: Auto-Compute Merit Scores from Extracted Data
-
-**Points:** 5 | **Type:** API
-
-Build a merit score computation engine that uses extracted transcript data (GPA, marks), entrance exam scores (if available), and interview scores to auto-calculate `meritScore` per the campaign's weight configuration (`AdmissionSettings.academicWeight/entranceWeight/interviewWeight`). The engine normalizes scores to a 100-point scale, applies weights, and ranks applicants. Admins see suggested scores with the option to override.
-
-**Acceptance Criteria:**
-
-- Given an application has extracted GPA of 3.5/4.0 and entrance score of 80/100, When merit is computed with weights (academic: 40, entrance: 35, interview: 25), Then `meritScore = (87.5 * 0.4) + (80 * 0.35) + (0 * 0.25) = 63.0` (interview not yet done)
-- Given merit scores are computed for all applications in a campaign, When ranked, Then `meritRank` is assigned in descending order of `meritScore`
-- Given admin overrides a merit score, When saved, Then the override is recorded with reason and the original computed score is preserved
-- Given entrance/interview scores are not yet available, When partial merit is computed, Then only available components are weighted and a "partial" flag is shown
-
-**Key Files:**
-
-- `src/components/school-dashboard/admission/ai/merit-engine.ts` -- new merit computation logic
-- `src/components/school-dashboard/admission/actions.ts` -- add `computeMeritScores()`, `overrideMeritScore()` actions
-- `src/components/school-dashboard/admission/merit-content.tsx` -- update to show computed vs manual scores
-
-**Dependencies:** Story 1.3
-
----
-
-### Story 1.6: Bank Transfer Receipt Verification for Admission Payments
-
-**Points:** 5 | **Type:** API
-
-Enable applicants/parents to upload a bank transfer receipt photo/PDF during the admission payment step. Use the generalized extraction service with a bank-transfer-receipt Zod schema to extract: amount, date, reference number, sender name, bank name. Auto-match extracted data against the pending application payment (by amount and reference). If matched with HIGH confidence, mark payment as verified; otherwise queue for manual admin review.
-
-**Acceptance Criteria:**
-
-- Given an applicant uploads a bank transfer receipt image, When AI extracts amount=$500, reference="TXN123", Then it matches against the pending payment of $500 for that application
-- Given the extracted amount matches within 1% tolerance and reference exists, When auto-matched, Then `Application.applicationFeePaid = true` and `paymentMethod = "bank_transfer"` with `paymentReference` set
-- Given the amount does not match or confidence is LOW, When matching fails, Then the payment enters a manual review queue with extracted data shown to admin
-- Given the admin reviews and approves a receipt, When confirmed, Then the payment is marked verified with the admin's ID recorded
-- Given the receipt is in Arabic, When processed, Then amounts and dates are correctly extracted from Arabic text
-
-**Key Files:**
-
-- `src/components/school-dashboard/admission/ai/bank-receipt-schema.ts` -- Zod schema for bank receipts
-- `src/components/school-dashboard/admission/ai/bank-receipt-actions.ts` -- server actions for upload, extract, match
-- `src/components/school-marketing/application/payment-step.tsx` -- add bank transfer receipt upload UI
-- `src/components/school-dashboard/admission/actions.ts` -- add `verifyBankTransferReceipt()` action
-- `src/lib/document-extraction/handlers/bank-receipt.ts` -- handler for bank receipt processing jobs
-
-**Dependencies:** Story 0.4, Story 1.1
-
----
-
-### Story 1.7: Bulk Document Processing for Admission Campaigns
-
-**Points:** 8 | **Type:** Component
-
-Add a "Process All Documents" bulk action to the applications list that queues AI processing for all unprocessed documents across selected applications. Show a real-time progress indicator using the `DocumentProcessingJob` status. Include filtering by processing status (processed/unprocessed/failed) in the applications table. This enables admins to batch-process an entire admission cycle's documents in one click.
-
-**Acceptance Criteria:**
-
-- Given an admin selects 20 applications with unprocessed documents, When "Process All Documents" is clicked, Then jobs are created for all unprocessed documents and processing begins
-- Given bulk processing is running, When the admin views the page, Then a progress bar shows X/Y documents processed with live updates
-- Given some jobs fail, When processing completes, Then a summary shows succeeded/failed counts with option to retry failed
-- Given the applications table has a "Doc Status" column, When filtered by "Unprocessed", Then only applications with unprocessed documents are shown
-- Given AI budget runs out mid-batch, When processing stops, Then remaining jobs are marked as "budget_exceeded" and admin is notified
-
-**Key Files:**
-
-- `src/components/school-dashboard/admission/applications-content.tsx` -- add bulk action button
-- `src/components/school-dashboard/admission/ai/bulk-process-dialog.tsx` -- new dialog with progress tracking
-- `src/components/school-dashboard/admission/applications-columns.tsx` -- add "Doc Status" column
-- `src/components/school-dashboard/admission/ai/actions.ts` -- add `bulkProcessDocuments()` action
-
-**Dependencies:** Story 1.2, Story 1.3
-
----
-
-## EPIC-2: Textbook Intelligence & Content Indexing
-
-**Goal:** Enable uploading textbooks and educational materials, auto-extracting metadata and chapter structure, generating searchable content indexes, and creating chapter summaries -- providing the content foundation that exam generation (EPIC-3) depends on.
-
-**Dependencies:** EPIC-0
-
-**Estimated Points:** 29
-
----
-
-### Story 2.1: Build Textbook Upload & Metadata Extraction Pipeline
-
-**Points:** 5 | **Type:** API
-
-Create a pipeline that accepts a textbook PDF upload (to CatalogMaterial or CatalogBook), extracts metadata using the QBank engine's existing `parsePDF()` function, then enhances it with AI extraction (title, author, ISBN, publisher, language, page count, table of contents structure). Store extracted metadata in the corresponding model fields. Register a `textbook_metadata` handler with the processing queue.
-
-**Acceptance Criteria:**
-
-- Given a textbook PDF is uploaded, When processing completes, Then `CatalogBook.title`, `author`, `isbn`, `publisher`, `pageCount`, `language` are populated from AI extraction
-- Given the PDF metadata contains author and title, When AI extracts the same fields, Then the higher-confidence value wins
-- Given a 500-page textbook is uploaded, When parsed, Then text extraction and AI metadata extraction complete within 30 seconds
-- Given the PDF is a CatalogMaterial (not a book), When processed, Then `CatalogMaterial.title`, `description`, `pageCount`, `mimeType` are populated
-- Given the uploaded file is not a valid PDF, When validation fails, Then an appropriate error is returned without consuming AI budget
-
-**Key Files:**
-
-- `src/components/school-dashboard/qbank-automation/engine/textbook-processor.ts` -- new file using existing `parsePDF()`
-- `src/lib/document-extraction/handlers/textbook.ts` -- handler registered with queue runner
-- `src/components/school-dashboard/qbank-automation/engine/schemas.ts` -- new Zod schemas for textbook metadata
-
-**Dependencies:** Story 0.1, Story 0.4
-
----
-
-### Story 2.2: Auto-Extract Chapter Structure from Textbooks
-
-**Points:** 5 | **Type:** API
-
-After metadata extraction, use the existing `extractSectionTitles()` from the QBank PDF parser combined with AI analysis to identify the full chapter/section hierarchy of a textbook. Map extracted chapters to `CatalogChapter` records and sections to potential `CatalogLesson` records. This creates the structural backbone that question generation uses to target specific content areas.
-
-**Acceptance Criteria:**
-
-- Given a textbook with clearly numbered chapters, When structure extraction runs, Then a JSON tree of `{ chapters: [{ title, startPage, endPage, sections: [...] }] }` is produced
-- Given extracted chapters match existing `CatalogChapter` records for the subject, When auto-linking is attempted, Then chapters are linked by fuzzy title matching (similarity > 0.8)
-- Given no matching catalog chapters exist, When new chapters are suggested, Then admin can approve creation of new `CatalogChapter` records
-- Given a textbook in Arabic, When chapter titles are extracted, Then they are correctly identified from RTL text
-
-**Key Files:**
-
-- `src/components/school-dashboard/qbank-automation/engine/chapter-extractor.ts` -- new file
-- `src/components/school-dashboard/qbank-automation/engine/pdf-parser.ts` -- extend `extractSectionTitles()` with AI enhancement
-- `src/components/school-dashboard/qbank-automation/engine/schemas.ts` -- add chapter structure schema
-
-**Dependencies:** Story 2.1
-
----
-
-### Story 2.3: Implement Content Chunking and Embedding Pipeline
-
-**Points:** 8 | **Type:** API
-
-Complete the broken embedding pipeline. After chapter extraction, chunk each chapter's text using the existing `chunkContent()` with LangChain `RecursiveCharacterTextSplitter`, generate OpenAI embeddings using existing `generateEmbeddingBatch()`, and store them in `SourceChunk.embedding`. Fix `findRelevantChunks()` to query by cosine similarity using Prisma raw SQL (since pgvector is not available, use the existing `cosineSimilarity()` function in application code with a reasonable candidate set).
-
-**Acceptance Criteria:**
-
-- Given a 20-chapter textbook is uploaded, When chunking completes, Then `SourceChunk` records are created with `content`, `chunkIndex`, `sectionTitle`, `pageNumber`, `tokenCount`, and `embedding`
-- Given `findRelevantChunks("photosynthesis")` is called, When chunks are searched, Then the top 3 most semantically similar chunks are returned with similarity scores
-- Given OpenAI API key is not configured, When embedding generation is attempted, Then chunks are created without embeddings and a warning is logged (text search fallback)
-- Given a chunk belongs to Chapter 5 of Textbook X, When retrieved, Then `sourceId`, `sectionTitle`, and `chapterTitle` are populated for context
-
-**Key Files:**
-
-- `src/components/school-dashboard/qbank-automation/engine/embedding-service.ts` -- fix `findRelevantChunks()` implementation
-- `src/components/school-dashboard/qbank-automation/engine/pdf-parser.ts` -- enhance `associateChunksWithSections()` to set `pageNumber`
-- `src/lib/document-extraction/handlers/textbook.ts` -- extend handler to trigger chunking+embedding after metadata extraction
-
-**Dependencies:** Story 2.2
-
----
-
-### Story 2.4: Generate Chapter Summaries with AI
-
-**Points:** 5 | **Type:** API
-
-For each extracted chapter, generate a concise summary (200-300 words) using Claude AI. Store summaries in `CatalogChapter.description` or a new summary field. These summaries serve as search previews and help teachers understand chapter coverage before generating questions. Process chapters asynchronously via the queue runner. Include a bilingual option (generate summary in both Arabic and English based on source language).
-
-**Acceptance Criteria:**
-
-- Given a chapter with 15 content chunks, When summary generation runs, Then a coherent 200-300 word summary is produced capturing key topics
-- Given the textbook is in Arabic, When bilingual summary is requested, Then both Arabic and English summaries are generated
-- Given all chapters in a textbook have summaries, When the material detail page loads, Then chapter list shows title + summary preview for each
-- Given AI budget is limited, When summaries are requested for 30 chapters, Then they are processed in priority order and remaining chapters are queued
-
-**Key Files:**
-
-- `src/components/school-dashboard/qbank-automation/engine/summary-generator.ts` -- new file
-- `src/lib/document-extraction/handlers/textbook.ts` -- extend to trigger summary generation
-- `src/components/school-dashboard/qbank-automation/engine/prompts.ts` -- add summary generation prompts
-
-**Dependencies:** Story 2.2
-
----
-
-### Story 2.5: Build Textbook Management UI
-
-**Points:** 6 | **Type:** Component
-
-Create a textbook management interface where teachers/admins can: upload textbooks, view processing status, browse extracted chapter structure, read chapter summaries, see chunk counts and embedding status, and link textbooks to catalog subjects. Uses the shared processing status components. This provides the user-facing layer for the textbook intelligence pipeline.
-
-**Acceptance Criteria:**
-
-- Given a teacher navigates to QBank > Source Materials, When the page loads, Then they see a list of uploaded textbooks with processing status badges
-- Given a textbook is fully processed, When clicked, Then the detail view shows: metadata, chapter tree, summary for each chapter, total chunks, and linked subject
-- Given a teacher clicks "Upload Textbook", When they upload a PDF and select a subject, Then a processing job is queued and the status updates in real-time
-- Given a textbook processing failed, When the detail view loads, Then the error is shown with a retry button
-- Given the teacher wants to link to a different subject, When they change the subject dropdown, Then `CatalogMaterial.catalogSubjectId` is updated
-
-**Key Files:**
-
-- `src/components/school-dashboard/qbank-automation/source-materials-content.tsx` -- new/update server component
-- `src/components/school-dashboard/qbank-automation/source-materials-table.tsx` -- new table component
-- `src/components/school-dashboard/qbank-automation/source-material-detail.tsx` -- new detail view
-- `src/components/school-dashboard/qbank-automation/upload-textbook-dialog.tsx` -- new upload dialog
-
-**Dependencies:** Story 0.5, Story 2.3, Story 2.4
-
----
-
-## EPIC-3: Exam Generation from Content
-
-**Goal:** Enable AI-powered question generation from textbook content and previous exam papers, and auto-generate mock exams with proper curriculum alignment -- transforming the existing QBank pipeline from a placeholder into a functional exam generation engine.
-
-**Dependencies:** EPIC-0, EPIC-2
-
-**Estimated Points:** 34
-
----
-
-### Story 3.1: Wire findRelevantChunks to Question Generation Pipeline
-
-**Points:** 5 | **Type:** API
-
-Connect the now-functional `findRelevantChunks()` (from EPIC-2 Story 2.3) to the existing `generateQuestion()` function in the QBank engine. When a teacher requests question generation for a subject+topic, the system finds relevant textbook chunks, builds context from them, and passes that context to Claude for question generation. Update the `GenerationJob` flow to use source material chunks instead of requiring manual context input.
-
-**Acceptance Criteria:**
-
-- Given a teacher requests 5 MCQ questions on "Photosynthesis" for Grade 10 Biology, When generation runs, Then `findRelevantChunks("Photosynthesis")` returns relevant textbook content that is used as context for Claude
-- Given no relevant chunks exist for a topic, When generation is attempted, Then it falls back to generating without source context (using Claude's training data) and flags the questions as "unsourced"
-- Given chunks from multiple textbooks are relevant, When context is assembled, Then the top 5 most relevant chunks are used, staying within token limits
-- Given a `GenerationJob` record is created, When it completes, Then `questionsGenerated` count is updated and each `QuestionBank` record has `sourceId` linking to the source material
-
-**Key Files:**
-
-- `src/components/school-dashboard/qbank-automation/engine/question-generator.ts` -- integrate `findRelevantChunks()` for context retrieval
-- `src/components/school-dashboard/qbank-automation/engine/embedding-service.ts` -- used by generator
-- `src/components/school-dashboard/qbank-automation/engine/prompts.ts` -- update prompts to include source context
-
-**Dependencies:** Story 2.3
-
----
-
-### Story 3.2: Build Topic-Based Question Generation UI
-
-**Points:** 5 | **Type:** Component
-
-Create a teacher-facing question generation wizard: (1) Select subject and topic, (2) Choose question types and difficulty distribution, (3) Select source textbooks (optional), (4) Set count and Bloom's taxonomy levels, (5) Preview and submit. The wizard creates a `GenerationJob` and shows real-time progress. Generated questions appear in the review queue. This replaces the current flow where questions must be created manually.
-
-**Acceptance Criteria:**
-
-- Given a teacher opens the question generation wizard, When they select Biology > Photosynthesis, Then available textbooks for that subject are listed for selection
-- Given the teacher configures 10 MCQs (5 Easy, 3 Medium, 2 Hard), When submitted, Then a `GenerationJob` is created with the correct `distribution` JSON
-- Given generation is running, When the teacher views the job, Then a progress indicator shows questions generated so far
-- Given generation completes with 10 questions, When the teacher opens the review queue, Then all 10 questions are listed with `PENDING` review status and validation scores
-- Given AI is not configured, When the wizard opens, Then a message indicates AI generation is unavailable and manual creation is suggested
-
-**Key Files:**
-
-- `src/components/school-dashboard/qbank-automation/generation-wizard.tsx` -- new multi-step form
-- `src/components/school-dashboard/qbank-automation/generation-progress.tsx` -- new real-time progress display
-- `src/components/school-dashboard/qbank-automation/actions.ts` -- add `createGenerationJob()` server action
-
-**Dependencies:** Story 3.1
-
----
-
-### Story 3.3: Implement Past Exam Paper Ingestion
-
-**Points:** 5 | **Type:** API
-
-Allow teachers to upload previous exam papers (PDF/image) as `SourceMaterial` with type `PAST_PAPER`. Process them through the extraction pipeline to identify questions, extract question text, determine types (MCQ/essay/etc), and add them to the `QuestionBank` with `source: IMPORTED`. This provides historical exam data for mock exam generation and ensures questions align with actual exam patterns.
-
-**Acceptance Criteria:**
-
-- Given a teacher uploads a past exam paper PDF, When processed, Then individual questions are extracted with their types, options (for MCQ), and point values
-- Given the paper contains 30 MCQ questions, When extraction completes, Then 30 `QuestionBank` records are created with `source: IMPORTED`, linked to the source material
-- Given a question is extracted from a scanned image, When OCR + AI extraction runs, Then question text is extracted with confidence score
-- Given extracted questions may have errors, When they enter the review queue, Then teachers can edit question text and options before approval
-- Given the paper includes a header with subject, exam type, and duration, When metadata is extracted, Then a `SourceMaterial` record captures these details
-
-**Key Files:**
-
-- `src/lib/document-extraction/handlers/past-paper.ts` -- new handler for past paper processing
-- `src/components/school-dashboard/qbank-automation/engine/paper-extractor.ts` -- new file for question extraction from exam papers
-- `src/components/school-dashboard/qbank-automation/engine/schemas.ts` -- add exam paper extraction schema
-
-**Dependencies:** Story 0.4, Story 2.1
-
----
-
-### Story 3.4: Build Mock Exam Auto-Generation
-
-**Points:** 8 | **Type:** API
-
-Create a mock exam generation service that assembles exam papers from existing `QuestionBank` questions (both AI-generated and imported from past papers). Given an `ExamTemplate` distribution (e.g., 10 MCQ Easy, 5 MCQ Medium, 3 Essay Hard), select questions matching criteria from the question bank using weighted random selection that considers: question analytics (avoids overused questions), source diversity (questions from multiple textbooks/papers), and Bloom's taxonomy coverage. Create a `GeneratedExam` record linked to a new `Exam` with `isMockEligible = true`.
-
-**Acceptance Criteria:**
-
-- Given an exam template requiring 20 questions across 3 difficulty levels, When mock generation runs, Then 20 questions are selected matching the type/difficulty distribution
-- Given some question types have insufficient bank questions, When selection falls short, Then AI generates additional questions to fill gaps (using EPIC-3 Story 3.1 pipeline)
-- Given `QuestionAnalytics.timesUsed` data exists, When questions are selected, Then less-used questions are preferred (weighted by inverse of `timesUsed`)
-- Given the generated mock exam has all questions, When created, Then a `GeneratedExam` record is linked to the `Exam` and `GeneratedExamQuestion` records capture question order and points
-- Given a teacher previews the mock exam, When the paper template renders, Then the existing `@react-pdf/renderer` exam templates display the generated paper
-
-**Key Files:**
-
-- `src/components/school-dashboard/exams/mock/mock-generator.ts` -- new file for mock exam assembly logic
-- `src/components/school-dashboard/exams/mock/actions.ts` -- server actions for create/preview mock exams
-- `src/components/school-dashboard/qbank-automation/engine/question-selector.ts` -- new weighted selection algorithm
-
-**Dependencies:** Story 3.1, Story 3.3
-
----
-
-### Story 3.5: Build Mock Exam Generation UI and Student Take Flow
-
-**Points:** 5 | **Type:** Component
-
-Create a teacher-facing interface to generate mock exams: select subject, exam template, number of variants, and source preferences (textbook content only, past papers only, or mixed). After generation, exams appear in the exam list with `isMockEligible` flag. Students can take mock exams through the existing exam session flow. Results are tracked separately with a "Mock" badge so they do not affect official grades.
-
-**Acceptance Criteria:**
-
-- Given a teacher clicks "Generate Mock Exam", When the dialog opens, Then they can select template, source preferences, and number of variants
-- Given a mock exam is generated, When it appears in the exam list, Then it has a "Mock" badge and is available for student practice
-- Given a student takes a mock exam, When they submit, Then results are graded using the existing auto-mark pipeline and shown with a "Practice" label
-- Given mock exam results exist, When a teacher views analytics, Then mock performance is tracked separately from official exam scores
-- Given the teacher requests 3 variants (A, B, C), When generated, Then each variant has different question selection/ordering per the randomization seed
-
-**Key Files:**
-
-- `src/components/school-dashboard/exams/mock/mock-generation-dialog.tsx` -- new dialog component
-- `src/components/school-dashboard/exams/mock/mock-exam-content.tsx` -- new content component for mock exam listing
-- `src/components/school-dashboard/exams/manage/columns.tsx` -- add "Mock" badge to exam type column
-
-**Dependencies:** Story 3.4
-
----
-
-### Story 3.6: Curriculum Standards Alignment for Generated Questions
-
-**Points:** 6 | **Type:** API
-
-Enhance question generation to align with curriculum standards. Use the existing `QuestionStandard` relation and `curriculum-standards.prisma` models. When generating questions from a textbook linked to a `CatalogSubject`, auto-tag generated questions with matching curriculum standards. The AI prompt instructs Claude to identify which standards each question addresses. Teachers can filter and verify alignment in the review queue.
-
-**Acceptance Criteria:**
-
-- Given a question is generated from Grade 10 Biology Chapter 3, When curriculum alignment runs, Then the question is tagged with matching standards from the `CurriculumStandard` model
-- Given the review queue shows generated questions, When a teacher views a question, Then linked standards are displayed with AI-suggested alignment
-- Given a teacher disagrees with AI alignment, When they edit standards, Then the manual override is saved and the question's `standards` relation is updated
-- Given an exam template requires coverage of specific standards, When mock generation runs, Then selected questions collectively cover the required standards
-
-**Key Files:**
-
-- `src/components/school-dashboard/qbank-automation/engine/standards-aligner.ts` -- new file for curriculum alignment
-- `src/components/school-dashboard/qbank-automation/engine/prompts.ts` -- add standards alignment prompt
-- `prisma/models/curriculum-standards.prisma` -- verify existing model supports the linking
-
-**Dependencies:** Story 3.2
-
----
-
-## EPIC-4: Bulk Scan Grading Pipeline
-
-**Goal:** Enable teachers to upload stacks of scanned answer sheets, OCR them in bulk, auto-grade with answer keys, and route subjective answers through an AI grading + human review queue -- replacing the current single-answer-at-a-time OCR process.
-
-**Dependencies:** EPIC-0
-
-**Estimated Points:** 29
-
----
-
-### Story 4.1: Build Bulk Answer Sheet Upload and Job Creation
-
-**Points:** 5 | **Type:** API
-
-Create a server action and UI that accepts a batch of scanned answer sheet images/PDFs (one file per student, or a single multi-page PDF with one page per student). For each student's answer sheet, create a `DocumentProcessingJob` with type `answer_sheet_ocr`. Detect student identity from the answer sheet (student ID field, name, or bubble sheet) using OCR. Link each processed sheet to the correct `StudentAnswer` records for the exam.
-
-**Acceptance Criteria:**
-
-- Given a teacher uploads 30 scanned answer sheet images for Exam X, When the upload completes, Then 30 `DocumentProcessingJob` records are created with type `answer_sheet_ocr`
-- Given a single multi-page PDF is uploaded, When pages are split, Then each page becomes a separate job
-- Given the answer sheet has a printed student ID, When OCR runs, Then the student is identified and the job is linked to the correct student
-- Given student identification fails, When OCR confidence is LOW, Then the sheet enters a manual matching queue
-- Given the upload dialog shows progress, When 15/30 are queued, Then the progress bar reflects the upload status
-
-**Key Files:**
-
-- `src/components/school-dashboard/exams/mark/actions/bulk-scan-upload.ts` -- new server action
-- `src/components/school-dashboard/exams/mark/bulk-scan-dialog.tsx` -- new upload dialog
-- `src/lib/document-extraction/handlers/answer-sheet.ts` -- handler for answer sheet OCR jobs
-
-**Dependencies:** Story 0.4
-
----
-
-### Story 4.2: Implement Bulk OCR Processing for Answer Sheets
-
-**Points:** 8 | **Type:** API
-
-Process queued answer sheet OCR jobs through the document processing queue. For each answer sheet: (1) OCR the full page using GPT-4V (existing `processOCRWithAI()`), (2) Segment the extracted text into individual question answers (using question numbers as delimiters), (3) Create or update `StudentAnswer` records with `ocrText` and `ocrConfidence` for each question, (4) Handle multi-page answers by combining text. Uses budget enforcement and the rate limiter.
-
-**Acceptance Criteria:**
-
-- Given a scanned answer sheet for a 20-question exam, When OCR completes, Then 20 `StudentAnswer` records are created/updated with extracted text per question
-- Given question numbers are printed on the answer sheet ("Q1:", "Q2:"), When text is segmented, Then each question's answer is correctly isolated
-- Given handwriting is partially illegible, When OCR returns low confidence for a segment, Then `ocrConfidence` reflects the per-question confidence
-- Given 30 answer sheets are queued, When bulk processing runs, Then all 30 are processed through the rate limiter (5 concurrent) with progress tracked per job
-- Given a student's answer spans two pages, When pages are combined, Then the full answer text is associated with the correct question
-
-**Key Files:**
-
-- `src/lib/document-extraction/handlers/answer-sheet.ts` -- extend with segmentation logic
-- `src/components/school-dashboard/exams/mark/actions/bulk-ocr.ts` -- new bulk processing orchestrator
-- `src/lib/ai/openai.ts` -- reuse `processOCRWithAI()` for OCR
-
-**Dependencies:** Story 4.1
-
----
-
-### Story 4.3: Auto-Grade OCR Results Against Answer Keys
-
-**Points:** 5 | **Type:** API
-
-After OCR completes, auto-grade objective questions (MCQ, T/F, fill-blank) by comparing OCR-extracted answers against the exam's answer key (from `ExamAnswerKey.answers`). For each student answer, use the existing `auto-mark-with-key.ts` logic but feed it the OCR-extracted text instead of digital responses. Route subjective answers (essay, short answer) through the existing AI grading pipeline (`gradeEssayWithAI()`). Create `MarkingResult` records with appropriate `gradingMethod` (AUTO, AI_ASSISTED, MANUAL).
-
-**Acceptance Criteria:**
-
-- Given OCR extracted "B" for MCQ Question 1 and the answer key says "B", When auto-graded, Then `MarkingResult` is created with `gradingMethod: AUTO`, `pointsAwarded: 1`, `status: AUTO_GRADED`
-- Given OCR extracted a short answer text, When AI grading runs, Then `gradeShortAnswerWithAI()` is called and result is stored with `gradingMethod: AI_ASSISTED`
-- Given AI confidence is below 0.85, When the result is created, Then `needsReview: true` is set for teacher review
-- Given all 30 students' objective questions are graded, When batch completes, Then `ExamResult` records are created/updated with preliminary scores
-- Given an OCR text is empty or "[illegible]", When grading is attempted, Then the question is marked `needsReview: true` with `gradingMethod: MANUAL`
-
-**Key Files:**
-
-- `src/components/school-dashboard/exams/mark/actions/bulk-auto-grade-all.ts` -- extend to handle OCR inputs
-- `src/components/school-dashboard/exams/mark/actions/auto-mark-with-key.ts` -- reuse for objective questions
-- `src/components/school-dashboard/exams/mark/actions/ai-grade.ts` -- reuse for subjective questions
-
-**Dependencies:** Story 4.2
-
----
-
-### Story 4.4: Build Review Queue for Bulk-Graded Answers
-
-**Points:** 5 | **Type:** Component
-
-Create a teacher review interface for bulk-graded answers. Show all answers marked `needsReview: true` in a sortable queue grouped by exam and question. For each answer: display the scanned image alongside OCR text, AI grade, AI confidence, and AI reasoning. Teacher can: approve the AI grade, override with a new score, or send back to OCR. Include keyboard shortcuts for rapid review (approve/next, override, skip).
-
-**Acceptance Criteria:**
-
-- Given 150 answers need review after bulk grading, When the review queue loads, Then answers are grouped by question with count badges
-- Given a teacher views a pending review, When the card expands, Then the original scan image, OCR text, AI score, AI confidence, and AI reasoning are displayed side-by-side
-- Given the teacher approves the AI grade, When "Approve" is clicked (or Enter key), Then `MarkingResult.status = REVIEWED` and the next review loads
-- Given the teacher overrides the score, When a new score is entered, Then a `GradeOverride` record is created and `MarkingResult` is updated
-- Given all reviews for an exam are complete, When the teacher clicks "Finalize", Then all `MarkingResult.status = COMPLETED` and `ExamResult` records are finalized
-
-**Key Files:**
-
-- `src/components/school-dashboard/exams/mark/review-queue-content.tsx` -- new server component
-- `src/components/school-dashboard/exams/mark/review-card.tsx` -- new client component with image + extracted data
-- `src/components/school-dashboard/exams/mark/actions/review.ts` -- new actions for approve/override/send-back
-
-**Dependencies:** Story 4.3
-
----
-
-### Story 4.5: Bulk Grading Analytics and Reporting
-
-**Points:** 6 | **Type:** Component
-
-After bulk grading completes for an exam, generate analytics: per-question success rates, grade distribution, AI vs human agreement rate, average OCR confidence, time savings estimation (questions auto-graded vs requiring review). Display as a dashboard card on the exam result page. Update `QuestionAnalytics` records with new psychometric data from the graded responses. Export analytics as a downloadable summary.
-
-**Acceptance Criteria:**
-
-- Given an exam has 30 students with bulk-graded results, When analytics are generated, Then per-question success rates and grade distribution charts are displayed
-- Given AI graded 80% of questions and teachers reviewed 20%, When the agreement rate is computed, Then it shows what percentage of AI grades were approved without change
-- Given `QuestionAnalytics` records exist, When updated with new response data, Then `difficultyIndex`, `discriminationIndex`, and `qualityScore` are recalculated
-- Given the teacher clicks "Export Summary", When generated, Then a PDF summary of grading analytics is downloadable
-- Given this was the first time using bulk grading, When time savings are estimated, Then a comparison shows estimated manual grading hours vs actual processing time
-
-**Key Files:**
-
-- `src/components/school-dashboard/exams/mark/analytics-content.tsx` -- new analytics dashboard
-- `src/components/school-dashboard/exams/mark/actions/analytics.ts` -- server actions for computing analytics
-- `src/components/school-dashboard/exams/results/lib/pdf-generator.ts` -- extend for analytics PDF
-
-**Dependencies:** Story 4.3, Story 4.4
-
----
-
-## EPIC-5: Financial Document Intelligence
-
-**Goal:** Wire PDF generation for invoices and financial reports, enable vendor invoice import via AI extraction into expense records, and implement AI-powered narrative summaries for financial reports.
-
-**Dependencies:** EPIC-0
-
-**Estimated Points:** 31
-
----
-
-### Story 5.1: Wire Invoice PDF Generation to UI
-
-**Points:** 5 | **Type:** Component
-
-The invoice PDF template exists at `src/components/file/generate/invoice.tsx` with complete `@react-pdf/renderer` implementation, and `InvoiceData` types are defined, but the generation is not wired to the invoice detail page. Connect the existing `useGenerate()` hook to the invoice view page so admins can click "Download PDF" and get a rendered invoice. Map `UserInvoice` + `UserInvoiceItem` data to the `InvoiceData` type. Support both English and Arabic templates.
-
-**Acceptance Criteria:**
-
-- Given an admin views an invoice detail page, When they click "Download PDF", Then a PDF is generated using the existing template and downloaded
-- Given the invoice has 5 line items, When the PDF renders, Then all items, subtotal, tax, and total are correctly displayed
-- Given the locale is Arabic, When the PDF generates, Then RTL layout is used with Arabic font (Rubik) and Arabic labels
-- Given the invoice status is PAID, When the PDF generates, Then a "PAID" watermark or stamp is shown
-- Given bulk invoices are selected, When "Download All" is clicked, Then PDFs are generated for each and zipped for download
-
-**Key Files:**
-
-- `src/components/school-dashboard/finance/invoice/invoice/view-content.tsx` -- add PDF download button
-- `src/components/file/generate/invoice.tsx` -- existing template (may need minor adjustments)
-- `src/components/file/generate/use-generate.ts` -- existing hook with `generateInvoice()`
-- `src/components/school-dashboard/finance/invoice/actions.ts` -- add `getInvoiceForPDF()` data mapper
-
-**Dependencies:** None (EPIC-0 not required since no AI extraction)
-
----
-
-### Story 5.2: Build Vendor Invoice Import with AI Extraction
-
-**Points:** 8 | **Type:** API
-
-Enable finance admins to upload vendor invoices (PDF/image) and auto-extract: vendor name, invoice number, date, due date, line items (description, quantity, unit price, total), subtotal, tax, total amount, and payment terms. Create an `Expense` record from the extracted data with the receipt linked. Uses the generalized extraction service with a vendor-invoice Zod schema. Include a review step where the admin verifies extracted data before the expense is created.
-
-**Acceptance Criteria:**
-
-- Given a finance admin uploads a vendor invoice PDF, When AI extraction completes, Then a structured form is pre-filled with vendor name, items, amounts, and dates
-- Given the extracted total is $1,250.00, When the admin reviews, Then the amount field shows $1,250.00 with confidence indicator
-- Given the admin approves the extracted data, When submitted, Then an `Expense` record is created with `expenseDate`, `amount`, `vendor`, `description`, and linked to `ExpenseReceipt`
-- Given the vendor invoice is in a foreign currency, When extracted, Then the currency is identified and amount is shown in original currency
-- Given extraction fails or confidence is LOW, When the form loads, Then all fields are empty and the admin can enter data manually (graceful degradation)
-
-**Key Files:**
-
-- `src/components/school-dashboard/finance/expenses/ai/vendor-invoice-schema.ts` -- new Zod schema
-- `src/components/school-dashboard/finance/expenses/ai/actions.ts` -- new server actions for upload + extract + create expense
-- `src/components/school-dashboard/finance/expenses/import-invoice-dialog.tsx` -- new dialog with extracted data review form
-- `src/lib/document-extraction/handlers/vendor-invoice.ts` -- handler for vendor invoice processing
-
-**Dependencies:** Story 0.1, Story 0.4
-
----
-
-### Story 5.3: Generate Financial Report PDFs
-
-**Points:** 8 | **Type:** API
-
-Implement PDF generation for financial reports (P&L, Balance Sheet, Trial Balance, Fee Collection, Expense Report). Query the accounting data (from `JournalEntry`/`LedgerEntry`/`AccountBalance` models) for the specified date range and fiscal year, format it into report data structures, and render using `@react-pdf/renderer`. Update `FinancialReport.fileUrl` with the stored PDF URL. Update `FinancialReport.status` from GENERATING to COMPLETED.
-
-**Acceptance Criteria:**
-
-- Given an admin generates a Profit & Loss report for Q1, When generation completes, Then a PDF with revenue/expense line items and net profit is created and `FinancialReport.fileUrl` is populated
-- Given a Balance Sheet is generated, When rendered, Then Assets = Liabilities + Equity (balanced)
-- Given a Fee Collection report is generated, When rendered, Then it shows per-class fee collection status with totals
-- Given the report generation takes > 5 seconds, When the admin waits, Then a loading indicator shows and the `FinancialReport.status` transitions from GENERATING to COMPLETED
-- Given no transactions exist for the period, When a report is generated, Then it shows zero values with a "No transactions" note
-
-**Key Files:**
-
-- `src/components/school-dashboard/finance/reports/actions.ts` -- new/extend with `generateReport()` action
-- `src/components/school-dashboard/finance/reports/templates/` -- new directory with PDF templates per report type
-- `src/components/school-dashboard/finance/reports/data-queries.ts` -- new file with queries for each report type
-- `src/components/school-dashboard/finance/reports/content.tsx` -- wire generate buttons to actions
-
-**Dependencies:** None (no AI extraction required)
-
----
-
-### Story 5.4: AI-Powered Financial Report Narratives
-
-**Points:** 5 | **Type:** API
-
-After a financial report is generated, use Claude AI to produce a 2-3 paragraph executive narrative summarizing key findings: trends compared to previous period, notable expenses, revenue changes, and budget variance highlights. Store the narrative in `FinancialReport.parameters` JSON (under a `narrative` key). Display the narrative at the top of the report PDF and on the report detail page. This transforms raw numbers into actionable insights for school administrators.
-
-**Acceptance Criteria:**
-
-- Given a P&L report shows revenue of $50K and expenses of $45K, When narrative generation runs, Then a summary highlights the $5K net profit and compares to prior period
-- Given expenses increased 20% vs last quarter, When the narrative is generated, Then it specifically mentions the increase and identifies the largest expense categories
-- Given a balance sheet shows decreasing cash reserves, When the narrative is generated, Then it flags this as a concern with suggested actions
-- Given AI is not configured, When narrative generation is skipped, Then the report is generated without narrative (graceful degradation)
-- Given the narrative is generated, When the report PDF is re-rendered, Then the narrative appears as the first section
-
-**Key Files:**
-
-- `src/components/school-dashboard/finance/reports/ai/narrative-generator.ts` -- new file
-- `src/components/school-dashboard/finance/reports/ai/prompts.ts` -- new prompts for financial narrative
-- `src/components/school-dashboard/finance/reports/actions.ts` -- extend `generateReport()` to include narrative step
-
-**Dependencies:** Story 0.1, Story 5.3
-
----
-
-### Story 5.5: Build Expense Receipt Batch Processing
-
-**Points:** 5 | **Type:** Component
-
-Extend the existing receipt AI extraction (which processes one receipt at a time) to support batch uploads. Finance admin selects multiple receipt images/PDFs, all are queued for processing via the document processing queue, and results appear in the receipts table with extraction status. Reuse the existing `extractReceiptData()` logic but wrapped in the queue runner. Add a "Batch Upload" button to the receipts page.
-
-**Acceptance Criteria:**
-
-- Given a finance admin selects 10 receipt images, When "Batch Upload" is clicked, Then 10 `DocumentProcessingJob` records are created and 10 `ExpenseReceipt` records are created with status "pending"
-- Given processing completes for 8/10 receipts, When the admin views the receipts table, Then 8 show "processed" status with extracted data and 2 show "processing" or "error"
-- Given a receipt processing fails, When the admin clicks "Retry", Then the job is re-queued
-- Given all 10 are processed, When the admin reviews, Then each receipt card shows merchant, amount, date, and a link to create an expense record
-- Given processing respects rate limits, When 10 receipts are queued, Then they process through the existing rate limiter (5 concurrent)
-
-**Key Files:**
-
-- `src/components/school-dashboard/finance/receipt/batch-upload-dialog.tsx` -- new component
-- `src/components/school-dashboard/finance/receipt/content.tsx` -- add batch upload button
-- `src/lib/document-extraction/handlers/expense-receipt.ts` -- new handler wrapping existing `extractReceiptData()`
-- `src/components/school-dashboard/finance/receipt/ai/extract-receipt-data.ts` -- reuse existing logic
-
-**Dependencies:** Story 0.4
-
----
-
-## EPIC-6: Extended School Onboarding Intelligence
-
-**Goal:** Extend the existing onboarding document extraction service beyond the 8 basic steps to handle license/accreditation documents, floor plans, existing student roster imports, and existing timetable imports -- accelerating the school setup process.
-
-**Dependencies:** EPIC-0
-
-**Estimated Points:** 21
-
----
-
-### Story 6.1: License & Accreditation Document Extraction
-
-**Points:** 5 | **Type:** API
-
-Add new extraction schemas and prompts for school license documents (license number, issuing authority, valid from/to, school type, authorized capacity) and accreditation certificates (accrediting body, accreditation level, validity period, conditions). These extend the onboarding flow with new optional steps. Store extracted data in the school's legal configuration. Reuse the generalized extraction service.
-
-**Acceptance Criteria:**
-
-- Given a school uploads their operating license PDF, When extracted, Then license number, issuing authority, validity dates, and authorized capacity are populated
-- Given an accreditation certificate is uploaded, When extracted, Then accrediting body, level, and validity are captured
-- Given the document is in Arabic, When extraction runs, Then Arabic text is correctly extracted and key fields are transliterated to English where needed
-- Given extracted data conflicts with manually entered data, When admin reviews, Then both values are shown for comparison with a "Use extracted" option
-
-**Key Files:**
-
-- `src/lib/document-extraction/schemas.ts` -- add `licenseExtractionSchema`, `accreditationExtractionSchema`
-- `src/lib/document-extraction/prompts.ts` -- add prompts for license and accreditation documents
-- `src/lib/document-extraction/types.ts` -- extend `OnboardingStep` type union
-- `src/app/api/onboarding/extract/route.ts` -- extend step validation to include new steps
-
-**Dependencies:** Story 0.1
-
----
-
-### Story 6.2: Student Roster Import from Existing Documents
-
-**Points:** 8 | **Type:** API
-
-Enable new schools to upload existing student roster files (Excel/CSV) and auto-map columns to the Student model fields. Use AI to identify column mappings when headers do not match exactly (e.g., "Full Name" maps to firstName + lastName, "DOB" maps to dateOfBirth). Parse the file using existing handlers, let AI suggest mappings, then bulk-create Student records. Handle Arabic names, date format variations, and duplicate detection.
-
-**Acceptance Criteria:**
-
-- Given a school uploads an Excel file with 200 student records, When column detection runs, Then AI suggests: "Student Name" -> firstName+lastName, "Class" -> className, "Birth Date" -> dateOfBirth
-- Given the admin confirms column mappings, When import runs, Then 200 Student records are created with correct field mappings
-- Given a column header is in Arabic, When AI analyzes it, Then it correctly maps Arabic headers to English field names
-- Given a duplicate student (same name + DOB) already exists, When detected, Then the duplicate is flagged for admin resolution (skip/merge/create anyway)
-- Given date formats vary (DD/MM/YYYY vs MM/DD/YYYY), When AI detects the format, Then dates are correctly parsed
-
-**Key Files:**
-
-- `src/components/school-dashboard/listings/students/import/ai-column-mapper.ts` -- new AI-powered column mapping
-- `src/components/school-dashboard/listings/students/import/import-wizard.tsx` -- new multi-step import UI
-- `src/components/school-dashboard/listings/students/import/actions.ts` -- server actions for mapping + bulk create
-- `src/lib/document-extraction/file-handlers.ts` -- reuse `parseExcel()`, `parseCSV()`
-
-**Dependencies:** Story 0.1
-
----
-
-### Story 6.3: Timetable Import from Existing Documents
-
-**Points:** 5 | **Type:** API
-
-Enable schools to upload existing timetable documents (Excel/PDF/image) and auto-extract the schedule into the timetable system. For Excel, parse the grid structure to identify time slots, days, subjects, and teachers. For PDF/image, use AI vision to read the timetable grid. Map extracted data to `TimetableSlot` records. Show a preview with corrections before committing.
-
-**Acceptance Criteria:**
-
-- Given a school uploads an Excel timetable with subjects in a day-vs-period grid, When parsed, Then time slots are extracted with day, period, subject, and teacher
-- Given a scanned timetable image is uploaded, When AI vision processes it, Then the grid structure is identified and slots are extracted
-- Given extracted slots have subject names that do not match existing subjects, When mapping runs, Then AI suggests closest `CatalogSubject` matches with fuzzy matching
-- Given the admin reviews the preview grid, When corrections are made and "Import" is clicked, Then `TimetableSlot` records are created for the section
-- Given a timetable has conflicts (same teacher in two places), When detected, Then conflicts are highlighted before import
-
-**Key Files:**
-
-- `src/components/school-dashboard/timetable/import/timetable-extractor.ts` -- new extraction logic
-- `src/components/school-dashboard/timetable/import/import-dialog.tsx` -- new preview + import UI
-- `src/components/school-dashboard/timetable/import/actions.ts` -- server actions for extraction + creation
-
-**Dependencies:** Story 0.1
-
----
-
-### Story 6.4: Onboarding Document Hub UI
-
-**Points:** 3 | **Type:** Component
-
-Create a centralized document management view within the school settings that shows all documents uploaded during and after onboarding: license, accreditation, floor plans, branding assets, and legal documents. Each document shows: file preview, extraction status, extracted fields, and upload date. Admins can upload additional documents or re-process existing ones. This consolidates the currently scattered document handling.
-
-**Acceptance Criteria:**
-
-- Given a school has uploaded license and accreditation documents, When the document hub loads, Then both documents are shown in a categorized grid
-- Given an admin uploads a new license document, When processed, Then extraction runs and the document appears in the hub with extracted data
-- Given a document was processed with outdated AI, When "Re-process" is clicked, Then a new processing job is queued
-- Given the hub shows all school documents, When filtered by category, Then only documents of that type are displayed
-
-**Key Files:**
-
-- `src/components/school-dashboard/settings/document-hub-content.tsx` -- new server component
-- `src/components/school-dashboard/settings/document-card.tsx` -- new client component
-- `src/components/school-dashboard/settings/actions.ts` -- add document management actions
-
-**Dependencies:** Story 0.5, Story 6.1
-
----
-
-## EPIC-7: Book & Library Intelligence
-
-**Goal:** Auto-extract metadata for books in the library and catalog systems, generate searchable content indexes, and provide AI-powered book summaries and recommendations.
-
-**Dependencies:** EPIC-0, EPIC-2 (shares textbook processing infrastructure)
-
-**Estimated Points:** 21
-
----
-
-### Story 7.1: Auto-Extract Book Metadata on Upload
-
-**Points:** 5 | **Type:** API
-
-When a digital book file is uploaded to `CatalogBook.digitalFileUrl` or `Book` (library), auto-extract metadata: title, author, ISBN, publisher, publication year, language, page count, genre/subject, and table of contents. Use the textbook processing pipeline from EPIC-2 but with a book-specific schema. For catalog books, also extract a cover image from the first page if no cover is provided.
-
-**Acceptance Criteria:**
-
-- Given a librarian uploads a PDF book, When processing completes, Then `CatalogBook.title`, `author`, `isbn`, `publisher`, `publicationYear`, `pageCount`, `language` are auto-populated
-- Given the book has no ISBN in the metadata, When AI extracts from the copyright page, Then the ISBN is found and stored
-- Given a cover image is not provided, When the first page is rendered, Then a thumbnail is generated and stored as `CatalogBook.coverUrl`
-- Given the local `Book` model mirrors a `CatalogBook`, When the catalog book is processed, Then linked `Book` records inherit the metadata
-
-**Key Files:**
-
-- `src/lib/document-extraction/handlers/book-metadata.ts` -- new handler reusing textbook processor
-- `src/components/school-dashboard/qbank-automation/engine/textbook-processor.ts` -- extend for book-specific schema
-- `src/components/school-dashboard/qbank-automation/engine/schemas.ts` -- add book metadata schema
-
-**Dependencies:** Story 2.1
-
----
-
-### Story 7.2: Generate Book Summaries and Content Descriptions
-
-**Points:** 5 | **Type:** API
-
-For books with digital files, generate AI-powered summaries at two levels: a short description (1-2 sentences for search results, stored in `CatalogBook.description`) and a detailed summary (2-3 paragraphs for the book detail page, stored in `CatalogBook.summary`). For books with chapter structure, also generate per-chapter summaries. Leverage the summary generation infrastructure from EPIC-2.
-
-**Acceptance Criteria:**
-
-- Given a book is uploaded and text is extracted, When summary generation runs, Then `CatalogBook.description` gets a 1-2 sentence blurb and `CatalogBook.summary` gets a detailed summary
-- Given a book has 12 chapters, When chapter summaries are generated, Then each chapter has a 100-word summary accessible from the book detail view
-- Given the book is in Arabic, When summaries are generated in Arabic, Then the `lang` field is set to "ar" and English summaries are optionally generated for bilingual display
-- Given AI budget is constrained, When summary requests are queued, Then short descriptions are prioritized over detailed summaries
-
-**Key Files:**
-
-- `src/components/school-dashboard/qbank-automation/engine/summary-generator.ts` -- reuse from EPIC-2
-- `src/lib/document-extraction/handlers/book-metadata.ts` -- extend to trigger summary generation
-- `src/components/school-dashboard/qbank-automation/engine/prompts.ts` -- add book-specific summary prompts
-
-**Dependencies:** Story 7.1, Story 2.4
-
----
-
-### Story 7.3: Build Searchable Content Index for Library
-
-**Points:** 5 | **Type:** API
-
-Create a content index for the library that enables full-text search across all book content. For each processed book, store chunked content with metadata (chapter, page number) that can be searched via Prisma text queries. When a teacher/student searches for "photosynthesis", return matching books with relevant page numbers and context snippets. If embeddings are available (from EPIC-2), use semantic search; otherwise fall back to text-based search.
-
-**Acceptance Criteria:**
-
-- Given a library has 50 books with processed content, When a teacher searches "photosynthesis", Then matching books are returned with chapter name and page number context
-- Given semantic search is available (embeddings present), When searched, Then results are ranked by semantic similarity
-- Given embeddings are not available, When searched, Then Prisma `contains` or `search` is used for text-based matching
-- Given a search returns 5 books, When results are displayed, Then each shows: title, author, matching chapter, page number, and a content snippet with the search term highlighted
-
-**Key Files:**
-
-- `src/components/school-dashboard/library/search/content-search.ts` -- new search service
-- `src/components/school-dashboard/library/search/actions.ts` -- server actions for search
-- `src/components/school-dashboard/library/search/search-results.tsx` -- new search results component
-
-**Dependencies:** Story 7.1, Story 2.3
-
----
-
-### Story 7.4: Library Book Processing UI
-
-**Points:** 6 | **Type:** Component
-
-Add AI processing capabilities to the library management interface. On the book detail page, show: processing status badge, extracted metadata fields (editable), generated summary, chapter structure, and content search availability. On the books list page, add a "Process" bulk action for unprocessed books. Include an "AI Insights" card showing: total processed books, average processing time, and recommended tags.
-
-**Acceptance Criteria:**
-
-- Given a librarian views a book detail page, When the book is processed, Then metadata, summary, and chapter list are displayed with edit capability
-- Given 20 books are not yet processed, When "Process All" is clicked, Then jobs are queued and progress is shown in the list view
-- Given a book's AI-generated description is incorrect, When the librarian edits it, Then the manual value overrides the AI-generated one
-- Given the library dashboard loads, When AI insights are shown, Then total processed books, pending books, and search index coverage are displayed
-- Given Arabic locale, When the UI renders, Then all labels are from dictionary and layout is RTL
-
-**Key Files:**
-
-- `src/components/school-dashboard/library/book-detail-content.tsx` -- update to show AI processing data
-- `src/components/school-dashboard/library/books-content.tsx` -- add bulk processing action
-- `src/components/school-dashboard/library/ai-insights-card.tsx` -- new insights component
-
-**Dependencies:** Story 0.5, Story 7.1, Story 7.2
-
----
-
-## Summary
-
-| Epic      | Title                                    | Stories | Points  | Key Dependencies |
-| --------- | ---------------------------------------- | ------- | ------- | ---------------- |
-| EPIC-0    | Foundation                               | 6       | 34      | None             |
-| EPIC-1    | Admission Document Intelligence          | 7       | 34      | EPIC-0           |
-| EPIC-2    | Textbook Intelligence & Content Indexing | 5       | 29      | EPIC-0           |
-| EPIC-3    | Exam Generation from Content             | 6       | 34      | EPIC-0, EPIC-2   |
-| EPIC-4    | Bulk Scan Grading Pipeline               | 5       | 29      | EPIC-0           |
-| EPIC-5    | Financial Document Intelligence          | 5       | 31      | EPIC-0           |
-| EPIC-6    | Extended School Onboarding Intelligence  | 4       | 21      | EPIC-0           |
-| EPIC-7    | Book & Library Intelligence              | 4       | 21      | EPIC-0, EPIC-2   |
-| **Total** |                                          | **42**  | **233** |                  |
-
----
-
-## Recommended Execution Order
-
-1. **EPIC-0** (Foundation) -- must be first, all others depend on it
-2. **EPIC-5** (Financial Documents) -- Stories 5.1 and 5.3 have no EPIC-0 dependency, can start in parallel
-3. **EPIC-1** (Admission Documents) -- highest business value for the admission pipeline
-4. **EPIC-6** (Onboarding Extension) -- relatively small, unblocks school setup improvements
-5. **EPIC-2** (Textbook Intelligence) -- unlocks EPIC-3 and EPIC-7
-6. **EPIC-4** (Bulk Scan Grading) -- independent of EPIC-2, can run in parallel
-7. **EPIC-3** (Exam Generation) -- depends on EPIC-2 completion
-8. **EPIC-7** (Book & Library) -- depends on EPIC-2, lowest priority
-
----
-
-## Critical Files for Implementation
-
-These are the existing files that serve as the primary extension points for the initiative:
-
-| File                                                                           | Purpose                                                                 |
-| ------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
-| `src/lib/document-extraction/claude-extractor.ts`                              | Core extraction engine that must be generalized                         |
-| `src/lib/ai/config.ts`                                                         | AI service configuration where budget and domain controls will be added |
-| `src/lib/ai/rate-limiter.ts`                                                   | Concurrency control used by all processing pipelines                    |
-| `src/components/school-dashboard/qbank-automation/engine/embedding-service.ts` | Broken `findRelevantChunks()` that must be fixed for EPIC-2 and EPIC-3  |
-| `prisma/models/admission.prisma`                                               | `Application.documents` Json field needs structured processing support  |
+The Document Intelligence Initiative brings AI-powered document handling to every Hogwarts module: admission docs, bank receipts, textbook ingestion, exam answer sheets, expense receipts, library content. It transforms manual entry into automated extraction, classification, validation.
+
+For the focused architecture and implementation details, read [AI Document Processing](/docs/ai-document-processing). This page is the epic-level scope and the references that ground the work.
+
+## Scope
+
+8 epics, 42 stories, 233 story points. Each epic depends on the foundation epic; domain epics can ship independently of one another once the foundation is live.
+
+| Epic                                        | Goal                                                                                                        | Points |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | -----: |
+| EPIC-0 — Foundation                         | Generalized extraction service, async processing queue, per-school budget, status UI atoms.                 |     34 |
+| EPIC-1 — Admission Document Intelligence    | Classify and extract fields from applicant docs; auto-merit; bank-receipt verification; bulk processing.    |     45 |
+| EPIC-2 — Textbook Intelligence              | Upload + chapter extraction + content chunking + chapter summaries + browse UI.                             |     30 |
+| EPIC-3 — Exam Generation from Content       | Topic-based question generation, past-exam ingestion, mock-exam auto-gen, curriculum-standard alignment.    |     32 |
+| EPIC-4 — Bulk Scan Grading                  | Upload answer sheets, OCR, auto-grade vs answer key, review queue, analytics.                               |     22 |
+| EPIC-5 — Financial Document Intelligence    | Wire invoice PDF generation, bank-statement OCR, expense-receipt enhancements, financial report generation. |     20 |
+| EPIC-6 — Onboarding & Provider Optimization | Apply the generic extractor to onboarding-step ingestion; multi-provider routing; quality eval.             |     28 |
+| EPIC-7 — Library & Content Search           | Index `CatalogMaterial` / `CatalogBook` for semantic search; reading-level metadata; recommendations.       |     22 |
+
+## Architecture context
+
+The plan extends existing infrastructure rather than replacing it.
+
+| Component           | Location                                     | Current state                                                                                           |
+| ------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Document extraction | `src/lib/document-extraction/`               | Claude 3.5 Sonnet via Vercel AI SDK `generateObject()` with Zod schemas. Hardcoded to onboarding steps. |
+| AI providers        | `src/lib/ai/providers.ts`                    | Multi-provider routing (Anthropic + Groq) with task-based selection and cost estimation.                |
+| Rate limiter        | `src/lib/ai/rate-limiter.ts`                 | Priority queue, 5 concurrent, exponential backoff.                                                      |
+| AI config           | `src/lib/ai/config.ts`                       | `AIServiceConfig` with `monthlyCostLimit`, fallback behaviour, confidence thresholds.                   |
+| AI services         | `src/lib/ai/openai.ts`                       | Essay grading, OCR, question generation guarded by `isAIServiceAvailable()`.                            |
+| Receipt OCR         | `finance/receipt/ai/extract-receipt-data.ts` | Receipt OCR pattern using `generateObject()` + Zod + DB status update.                                  |
+| QBank engine        | `qbank-automation/engine/`                   | PDF parse + LangChain chunking + embeddings (placeholder `findRelevantChunks()`).                       |
+| PDF templates       | `src/components/file/generate/`              | `@react-pdf/renderer` templates for invoice, receipt, certificate, report card, ID card, transcript.    |
+
+## Key schema facts
+
+- `Application.documents` is `Json?` — untyped URL array, no AI processing today.
+- `Application.entranceScore`, `interviewScore`, `meritScore` are manually entered `Decimal?`.
+- `SourceMaterial` + `SourceChunk` models exist but `findRelevantChunks()` returns empty.
+- `CatalogMaterial` and `CatalogBook` have `fileUrl`/`digitalFileUrl` but no processing pipeline.
+- `FinancialReport` exists with `status: GENERATING | COMPLETED | FAILED` + `fileUrl`; generation is stub.
+- `Payment` supports `BANK_TRANSFER` with `receiptUrl`.
+- `ExpenseReceipt` already has a working OCR pipeline.
+- `StudentAnswer` has `uploadUrl`, `ocrText`, `ocrConfidence`, and a single-answer `processOCRWithAI()` action.
+
+## Patterns followed
+
+Every epic follows the same conventions:
+
+- Server actions are `"use server"` with `auth()` + `schoolId` guard.
+- Server components call `getTenantContext()`.
+- Server actions return error codes, not strings (per the translation rules).
+- All queries are scoped by `schoolId`.
+- All UI text is dictionary-driven (i18n).
+
+## EPIC-0 — Foundation
+
+The shared infrastructure every other epic depends on.
+
+| Story | Title                                                  | Points | Type     |
+| ----- | ------------------------------------------------------ | -----: | -------- |
+| 0.1   | Generalize the document extraction service             |      8 | API      |
+| 0.2   | Create the document processing queue with Prisma model |      5 | Database |
+| 0.3   | Implement the AI budget enforcement service            |      5 | API      |
+| 0.4   | Build the document processing queue runner             |      8 | API      |
+| 0.5   | Build processing-status UI components                  |      5 | UI       |
+| 0.6   | Add document-processing settings to school settings    |      3 | UI       |
+
+The foundation refactors `src/lib/document-extraction/` to accept any Zod schema + prompt at call time (instead of looking them up by step id), adds `DocumentProcessingJob` + `AIUsageLog` Prisma models, enforces per-school monthly spend caps with per-domain toggles, and ships a queue runner with retry + cost attribution. UI atoms render job state badges, progress bars, and retry/cancel actions.
+
+## EPIC-1 — Admission Document Intelligence
+
+Classify and extract structured data from applicant documents.
+
+| Story | Title                                                     | Points | Type |
+| ----- | --------------------------------------------------------- | -----: | ---- |
+| 1.1   | Define admission document schemas and extraction prompts  |      5 | API  |
+| 1.2   | Build admission document processing actions               |      8 | API  |
+| 1.3   | Build admission document review UI                        |      5 | UI   |
+| 1.4   | Document completeness validation                          |      3 | API  |
+| 1.5   | Auto-compute merit scores from extracted data             |      8 | API  |
+| 1.6   | Bank-transfer receipt verification for admission payments |      8 | API  |
+| 1.7   | Bulk document processing for admission campaigns          |      8 | API  |
+
+## EPIC-2 — Textbook Intelligence
+
+Upload textbooks, extract chapter structure, chunk and embed content, summarise chapters.
+
+| Story | Title                                          | Points |
+| ----- | ---------------------------------------------- | -----: |
+| 2.1   | Textbook upload + metadata extraction pipeline |      8 |
+| 2.2   | Auto-extract chapter structure from textbooks  |      8 |
+| 2.3   | Content chunking and embedding pipeline        |      5 |
+| 2.4   | Generate chapter summaries with AI             |      5 |
+| 2.5   | Build textbook management UI                   |      4 |
+
+## EPIC-3 — Exam Generation from Content
+
+Wire `findRelevantChunks` into question generation; ingest past exams; auto-generate mocks aligned to the curriculum.
+
+| Story | Title                                                  | Points |
+| ----- | ------------------------------------------------------ | -----: |
+| 3.1   | Wire findRelevantChunks to question generation         |      5 |
+| 3.2   | Build topic-based question generation UI               |      5 |
+| 3.3   | Past exam paper ingestion                              |      5 |
+| 3.4   | Build mock exam auto-generation                        |      8 |
+| 3.5   | Mock exam generation UI and student take flow          |      5 |
+| 3.6   | Curriculum-standards alignment for generated questions |      4 |
+
+## EPIC-4 — Bulk Scan Grading
+
+Upload bulk answer sheets, OCR, auto-grade against the answer key, review queue, analytics.
+
+| Story | Title                                      | Points |
+| ----- | ------------------------------------------ | -----: |
+| 4.1   | Bulk answer-sheet upload and job creation  |      5 |
+| 4.2   | Bulk OCR processing for answer sheets      |      5 |
+| 4.3   | Auto-grade OCR results against answer keys |      5 |
+| 4.4   | Review queue for bulk-graded answers       |      4 |
+| 4.5   | Bulk grading analytics and reporting       |      3 |
+
+## EPIC-5 — Financial Document Intelligence
+
+Wire the existing PDF templates into UI flows; extend OCR for bank statements; deepen expense receipt extraction.
+
+| Story | Title                                   | Points |
+| ----- | --------------------------------------- | -----: |
+| 5.1   | Wire invoice PDF generation to UI       |      3 |
+| 5.2   | Bank statement OCR + reconciliation     |      5 |
+| 5.3   | Expense receipt extraction enhancements |      4 |
+| 5.4   | Financial report generation pipeline    |      5 |
+| 5.5   | Wire the rest of the PDF templates      |      3 |
+
+## EPIC-6 — Onboarding and Provider Optimization
+
+Apply the generic extractor to onboarding ingestion; route between providers; evaluate quality.
+
+| Story | Title                                                    | Points |
+| ----- | -------------------------------------------------------- | -----: |
+| 6.1   | Migrate onboarding extraction to the generalized service |      4 |
+| 6.2   | Multi-provider routing (Anthropic + Groq) per task       |      5 |
+| 6.3   | Add provider quality eval harness                        |      5 |
+| 6.4   | Confidence thresholds and fallback behaviour             |      5 |
+| 6.5   | Cost dashboard for DEVELOPER role                        |      4 |
+| 6.6   | Provider failover and retry policy                       |      5 |
+
+## EPIC-7 — Library and Content Search
+
+Index catalog content for semantic search, attach reading-level metadata, surface recommendations.
+
+| Story | Title                                                   | Points |
+| ----- | ------------------------------------------------------- | -----: |
+| 7.1   | Index CatalogMaterial / CatalogBook for semantic search |      5 |
+| 7.2   | Reading-level metadata extraction                       |      4 |
+| 7.3   | Recommendation surface (UI)                             |      5 |
+| 7.4   | Search ranking and filters                              |      4 |
+| 7.5   | Content access analytics                                |      4 |
+
+## References
+
+- [AI Document Processing](/docs/ai-document-processing) — focused architecture and infrastructure spec.
+- [Multi-Tenancy](/docs/multi-tenancy) — `schoolId` scoping and budget isolation.
+- [Architecture](/docs/architecture) — mirror pattern that every epic respects.
+- Open issues for individual stories live in GitHub Issues; this page is the epic-level scope.

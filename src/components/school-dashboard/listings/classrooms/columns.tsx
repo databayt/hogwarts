@@ -6,6 +6,10 @@ import Link from "next/link"
 import { type ColumnDef } from "@tanstack/react-table"
 import { Pencil, Trash2 } from "lucide-react"
 
+import {
+  FULL_UI_PERMISSIONS,
+  type UIPermissions,
+} from "@/lib/rbac/ui-permissions"
 import { Badge } from "@/components/ui/badge"
 import { ActionMenu, ActionMenuItem } from "@/components/atom/action-menu"
 
@@ -28,9 +32,11 @@ export function getClassroomColumns(
   callbacks: {
     onEdit?: (id: string) => void
     onDelete?: (row: ClassroomRow) => void
+    permissions?: UIPermissions
   },
   dictionary?: Record<string, string>
 ): ColumnDef<ClassroomRow>[] {
+  const permissions = callbacks?.permissions ?? FULL_UI_PERMISSIONS
   const t = {
     roomName: dictionary?.roomName || "Room",
     type: dictionary?.type || "Type",
@@ -85,17 +91,21 @@ export function getClassroomColumns(
       header: "",
       cell: ({ row }) => (
         <ActionMenu>
-          <ActionMenuItem
-            icon={Pencil}
-            label={t.edit}
-            onClick={() => callbacks.onEdit?.(row.original.id)}
-          />
-          <ActionMenuItem
-            icon={Trash2}
-            label={t.delete}
-            variant="destructive"
-            onClick={() => callbacks.onDelete?.(row.original)}
-          />
+          {permissions.showEditAction && (
+            <ActionMenuItem
+              icon={Pencil}
+              label={t.edit}
+              onClick={() => callbacks.onEdit?.(row.original.id)}
+            />
+          )}
+          {permissions.showDeleteAction && (
+            <ActionMenuItem
+              icon={Trash2}
+              label={t.delete}
+              variant="destructive"
+              onClick={() => callbacks.onDelete?.(row.original)}
+            />
+          )}
         </ActionMenu>
       ),
     },

@@ -121,6 +121,15 @@ export async function getGrades() {
   const { schoolId } = await getTenantContext()
   if (!schoolId) return []
 
+  const session = await auth()
+  const authContext = getAuthContext(session)
+  if (!authContext) return []
+  try {
+    assertClassroomPermission(authContext, "read", { schoolId })
+  } catch {
+    return []
+  }
+
   return db.academicGrade.findMany({
     where: { schoolId },
     select: { id: true, name: true },
@@ -190,10 +199,13 @@ export async function createClassroom(
       school?.maxClasses != null &&
       existingClassroomCount + 1 > school.maxClasses
     ) {
-      return {
-        success: false,
-        error: `Classroom limit reached. Your plan allows ${school.maxClasses} classrooms and you currently have ${existingClassroomCount}. Upgrade your plan to add more.`,
-      }
+      return actionError(
+        ACTION_ERRORS.CLASSROOM_LIMIT_REACHED,
+        JSON.stringify({
+          limit: school.maxClasses,
+          current: existingClassroomCount,
+        })
+      )
     }
 
     const row = await db.classroom.create({
@@ -212,10 +224,10 @@ export async function createClassroom(
     if ((error as any)?.code === "P2002") {
       return actionError(ACTION_ERRORS.ALREADY_EXISTS)
     }
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to create",
-    }
+    return actionError(
+      ACTION_ERRORS.CREATE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -257,10 +269,10 @@ export async function updateClassroom(
     if ((error as any)?.code === "P2002") {
       return actionError(ACTION_ERRORS.ALREADY_EXISTS)
     }
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to update",
-    }
+    return actionError(
+      ACTION_ERRORS.UPDATE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -288,22 +300,22 @@ export async function deleteClassroom(input: {
     ])
 
     if (refs > 0) {
-      return {
-        success: false,
-        error: `Cannot delete: ${refs} class(es) are assigned to this room`,
-      }
+      return actionError(
+        ACTION_ERRORS.HAS_DEPENDENCIES,
+        JSON.stringify({ kind: "classes", count: refs })
+      )
     }
     if (ttRefs > 0) {
-      return {
-        success: false,
-        error: `Cannot delete: ${ttRefs} timetable slot(s) reference this room`,
-      }
+      return actionError(
+        ACTION_ERRORS.HAS_DEPENDENCIES,
+        JSON.stringify({ kind: "timetables", count: ttRefs })
+      )
     }
     if (constraintRefs > 0) {
-      return {
-        success: false,
-        error: `Cannot delete: ${constraintRefs} room constraint(s) reference this room`,
-      }
+      return actionError(
+        ACTION_ERRORS.HAS_DEPENDENCIES,
+        JSON.stringify({ kind: "constraints", count: constraintRefs })
+      )
     }
 
     await db.classroom.deleteMany({ where: { id: input.id, schoolId } })
@@ -311,10 +323,10 @@ export async function deleteClassroom(input: {
     revalidatePath(CLASSROOMS_PATH)
     return { success: true, data: undefined }
   } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to delete",
-    }
+    return actionError(
+      ACTION_ERRORS.DELETE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -412,6 +424,11 @@ export async function getRoomTimetable(input: {
   const authContext = getAuthContext(session)
   if (!authContext)
     return { slots: [], workingDays: [] as number[], periods: [] }
+  try {
+    assertClassroomPermission(authContext, "read", { schoolId })
+  } catch {
+    return { slots: [], workingDays: [] as number[], periods: [] }
+  }
 
   const [slots, weekConfig, periods] = await Promise.all([
     db.timetable.findMany({

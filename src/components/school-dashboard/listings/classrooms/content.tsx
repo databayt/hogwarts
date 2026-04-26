@@ -3,10 +3,12 @@
 
 import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
+import type { Role } from "@/lib/rbac/types"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 
 import { type ClassroomRow } from "./columns"
+import { getUIConfigForRole } from "./permissions"
 import { ClassroomsTable } from "./table"
 
 interface Props {
@@ -15,7 +17,8 @@ interface Props {
 }
 
 export default async function ClassroomsContent({ lang, subdomain }: Props) {
-  const { schoolId } = await getTenantContext()
+  const { schoolId, role } = await getTenantContext()
+  const permissions = getUIConfigForRole(role as Role | null | undefined)
   let data: ClassroomRow[] = []
   let total = 0
 
@@ -82,6 +85,7 @@ export default async function ClassroomsContent({ lang, subdomain }: Props) {
         total={total}
         lang={lang}
         subdomain={subdomain ?? ""}
+        permissions={permissions}
       />
     </div>
   )

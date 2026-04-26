@@ -1,24 +1,20 @@
 ---
 title: File
-description: Centralized file operations for upload, download, export, import, print, and document generation.
+description: Centralized file operations — upload, browse, export, import, print, and document generation.
 ---
 
-Centralized file operations for upload, download, export, import, print, and document generation.
+The `@/components/file` module consolidates every file-related concern into one place. Six sub-modules, one import surface.
 
-## Overview
+| Sub-module | Purpose                                                                               |
+| ---------- | ------------------------------------------------------------------------------------- |
+| Upload     | Cloud-based file upload with drag-and-drop and progress tracking                      |
+| Browser    | File manager UI with grid / list views                                                |
+| Export     | Generate PDF, Excel, CSV, JSON from data                                              |
+| Import     | Parse CSV / Excel with a validation wizard                                            |
+| Print      | Browser-native print and print-to-PDF                                                 |
+| Generate   | Templated documents — invoice, receipt, certificate, report card, ID card, transcript |
 
-The **File** module consolidates all file-related functionality into a single, cohesive module at `@/components/file`. It provides:
-
-- **Upload** - Cloud-based file uploads with progress tracking
-- **Browser** - File manager with grid/list views
-- **Export** - PDF, Excel, CSV, JSON generation
-- **Import** - CSV/Excel parsing with validation wizard
-- **Print** - Browser printing and print-to-PDF
-- **Generate** - Document templates (invoices, receipts, certificates, report cards, ID cards, transcripts)
-
-## Module Structure
-
-## Quick Start
+## Quick start
 
 ```tsx
 import {
@@ -32,1134 +28,250 @@ import {
   useGenerate,
 } from "@/components/file"
 
-// Upload files
-<Uploader
-  folder="documents"
-  category="document"
-  onUpload={(urls) => console.log(urls)}
-/>
+<Uploader folder="documents" category="document" onUpload={(urls) => console.log(urls)} />
 
-// Export data
 <ExportButton
   data={students}
   config={{ columns: STUDENT_EXPORT_COLUMNS, filename: "students" }}
   formats={["csv", "excel", "pdf"]}
 />
 
-// Import data
-<Importer
-  columns={STUDENT_IMPORT_COLUMNS}
-  onImport={handleImport}
-/>
+<Importer columns={STUDENT_IMPORT_COLUMNS} onImport={handleImport} />
 
-// Print content
-<PrintButton contentRef={printRef}>
-  Print Report
-</PrintButton>
+<PrintButton contentRef={printRef}>Print Report</PrintButton>
 
-// Browse files
-<FileBrowser
-  rootFolder="/school/documents"
-  onSelect={handleSelect}
-/>
+<FileBrowser rootFolder="/school/documents" onSelect={handleSelect} />
 ```
 
-## Upload Module
+## Upload
 
-### Uploader Component
-
-The main upload component with drag-and-drop support:
+The `Uploader` component renders a drag-and-drop dropzone backed by S3 signed URLs.
 
 ```tsx
-import { Uploader } from "@/components/file"
-
-;<Uploader
+<Uploader
   folder="avatars"
   category="image"
   accept={{ "image/*": [".jpg", ".png", ".webp"] }}
-  maxSize={5 * 1024 * 1024} // 5MB
+  maxSize={5 * 1024 * 1024}
   maxFiles={1}
   onUpload={(urls) => setAvatarUrl(urls[0])}
   onError={(error) => toast.error(error)}
 />
 ```
 
-### Preset Components
+### Presets
 
-Ready-to-use upload configurations:
+Ready-to-use configurations live alongside the `Uploader`: `AvatarUploader`, `DocumentUploader`, `ImageUploader`, `VideoUploader`. Each presets `accept`, `maxSize`, and `category` for the common shapes. Read source for exact props.
 
-```tsx
-import {
-  AvatarUpload,
-  LogoUpload,
-  DocumentUpload,
-  AssignmentUpload,
-} from "@/components/file"
+### `useUpload` hook
 
-// Profile avatar (circular, 2MB max)
-<AvatarUpload
-  currentUrl={user.avatarUrl}
-  onUpload={(url) => updateAvatar(url)}
-/>
+The hook exposes the same upload pipeline imperatively (no UI), useful for custom triggers.
 
-// School logo (square, 5MB max)
-<LogoUpload
-  currentUrl={school.logoUrl}
-  onUpload={(url) => updateLogo(url)}
-/>
-
-// General documents (10MB max, multiple files)
-<DocumentUpload
-  folder="contracts"
-  onUpload={(urls) => addDocuments(urls)}
-/>
-
-// Student assignments (20MB max)
-<AssignmentUpload
-  studentId={student.id}
-  assignmentId={assignment.id}
-  onUpload={(urls) => submitAssignment(urls)}
-/>
-```
-
-### useUpload Hook
-
-For custom upload implementations:
-
-```tsx
-import { useUpload } from "@/components/file"
-
-function CustomUploader() {
-  const {
-    files,
-    isUploading,
-    progress,
-    error,
-    addFiles,
-    removeFile,
-    upload,
-    clear,
-  } = useUpload({
-    folder: "documents",
-    category: "document",
-    maxSize: 10 * 1024 * 1024,
-    maxFiles: 5,
-  })
-
-  return (
-    <div>
-      <input
-        type="file"
-        multiple
-        onChange={(e) => addFiles(Array.from(e.target.files || []))}
-      />
-      {files.map((file) => (
-        <div key={file.id}>
-          {file.name} - {file.progress}%
-          <button onClick={() => removeFile(file.id)}>Remove</button>
-        </div>
-      ))}
-      <button onClick={upload} disabled={isUploading}>
-        Upload All
-      </button>
-    </div>
-  )
-}
-```
-
-### Server Actions
-
-Direct server action usage:
-
-```tsx
-import {
-  deleteFile,
-  getFiles,
-  uploadFile,
-  uploadFiles,
-} from "@/components/file"
-
-// Upload single file
-const result = await uploadFile(formData, {
+```ts
+const { upload, progress, isUploading, error } = useUpload({
   folder: "documents",
   category: "document",
 })
 
-// Upload multiple files
-const results = await uploadFiles(formDataArray, {
-  folder: "images",
-  category: "image",
-})
-
-// Delete file
-await deleteFile(fileId)
-
-// Query files
-const { files, total } = await getFiles({
-  folder: "documents",
-  category: "document",
-  limit: 20,
-  offset: 0,
-})
+await upload(file) // returns the public URL
 ```
 
-## Export Module
+### Server actions
 
-### ExportButton Component
+Two actions back the module:
 
-Multi-format export with column selection:
+| Action            | Purpose                                                     |
+| ----------------- | ----------------------------------------------------------- |
+| `getSignedUrl()`  | Mint a presigned PUT URL for the client to upload to S3.    |
+| `confirmUpload()` | Persist the resulting `FileObject` row keyed by `schoolId`. |
+
+Both validate `auth()` + `getTenantContext()` and write `schoolId` into every record.
+
+## Export
+
+`ExportButton` opens a format picker (CSV, Excel, PDF, JSON) and triggers download.
 
 ```tsx
-import { ExportButton, type ExportColumn } from "@/components/file"
-
-const columns: ExportColumn<Student>[] = [
-  { key: "name", header: "Name", headerAr: "الاسم" },
-  { key: "email", header: "Email", headerAr: "البريد الإلكتروني" },
-  { key: "grade", header: "Grade", headerAr: "الصف" },
-  {
-    key: "enrollmentDate",
-    header: "Enrollment Date",
-    headerAr: "تاريخ التسجيل",
-    type: "date",
-  },
-  {
-    key: "tuitionPaid",
-    header: "Tuition Paid",
-    headerAr: "الرسوم المدفوعة",
-    type: "currency",
-    currency: "SAR",
-  },
-]
-
 <ExportButton
   data={students}
   config={{
-    columns,
-    filename: "students-export",
-    title: "Student Report",
-    locale: lang,
+    columns: STUDENT_EXPORT_COLUMNS,
+    filename: "students",
+    title: "Student Roster",
   }}
   formats={["csv", "excel", "pdf"]}
 />
 ```
 
-### SimpleExportButton
+For inline use without a picker, `SimpleExportButton` accepts a single `format`.
 
-Single-format export without column selection:
+### `useExport` hook
 
-```tsx
-import { SimpleExportButton } from "@/components/file"
+```ts
+const { exportData, isExporting } = useExport()
 
-;<SimpleExportButton
-  data={attendance}
-  config={{ columns: ATTENDANCE_COLUMNS, filename: "attendance-report" }}
-  format="excel"
-/>
+await exportData({
+  format: "pdf",
+  data: students,
+  config: { columns: STUDENT_EXPORT_COLUMNS, filename: "students" },
+})
 ```
 
-### useExport Hook
+### Columns
 
-For programmatic exports:
+Per-feature column definitions live alongside the feature (e.g. `students/columns-export.ts`). They build on `createColumn(key, label, options)` helpers from `@/components/file/export/columns`. Common options: `format`, `width`, `align`, `accessor`.
 
-```tsx
-import { useExport } from "@/components/file"
+## Import
 
-function ReportPage() {
-  const { exportData, isExporting, error } = useExport()
-
-  const handleExport = async (format: "csv" | "excel" | "pdf") => {
-    await exportData({
-      data: reportData,
-      columns: REPORT_COLUMNS,
-      filename: `report-${Date.now()}`,
-      format,
-      title: "Monthly Report",
-    })
-  }
-
-  return (
-    <div>
-      <button onClick={() => handleExport("pdf")} disabled={isExporting}>
-        Export PDF
-      </button>
-      <button onClick={() => handleExport("excel")} disabled={isExporting}>
-        Export Excel
-      </button>
-    </div>
-  )
-}
-```
-
-### Column Helpers
-
-Built-in helpers for common data types:
+`Importer` renders a four-step wizard: upload → preview → map columns → validate.
 
 ```tsx
-import { createColumnHelpers } from "@/components/file"
-
-const { text, number, currency, date, boolean, percentage, custom } =
-  createColumnHelpers<Invoice>()
-
-const columns = [
-  text("invoiceNumber", "Invoice #", "رقم الفاتورة"),
-  date("issueDate", "Issue Date", undefined, "تاريخ الإصدار"),
-  date("dueDate", "Due Date", undefined, "تاريخ الاستحقاق"),
-  currency("amount", "Amount", "SAR", "المبلغ"),
-  currency("paid", "Paid", "SAR", "المدفوع"),
-  boolean("isPaid", "Status", "الحالة"),
-  custom("balance", "Balance", (row) => row.amount - row.paid, "الرصيد"),
-]
-```
-
-### Feature-Specific Column Definitions
-
-Each feature module has pre-defined column configurations:
-
-```tsx
-// Students
-
-// Assignments
-
-// Exams
-import { EXAM_EXPORT_COLUMNS } from "@/components/platform/exams/manage/columns/export"
-import { ASSIGNMENT_EXPORT_COLUMNS } from "@/components/platform/listings/assignments/columns/export"
-// Classes
-import { CLASS_EXPORT_COLUMNS } from "@/components/platform/listings/classes/columns/export"
-import { STUDENT_EXPORT_COLUMNS } from "@/components/platform/listings/students/columns/export"
-// Teachers
-import { TEACHER_EXPORT_COLUMNS } from "@/components/platform/listings/teachers/columns/export"
-```
-
-**Example: Student Export Columns**
-
-```tsx
-// src/components/school-dashboard/listings/students/columns/export.ts
-import { createColumnHelpers, type ExportColumn } from "@/components/file"
-
-export interface StudentExportData {
-  id: string
-  studentId: string | null
-  firstName: string
-  middleName: string | null
-  lastName: string
-  gender: string | null
-  dateOfBirth: Date | null
-  status: string
-  className: string | null
-  yearLevelName: string | null
-  email: string | null
-  phone: string | null
-  enrollmentDate: Date | null
-  createdAt: Date
-}
-
-const { text, date } = createColumnHelpers<StudentExportData>()
-
-export const STUDENT_EXPORT_COLUMNS: ExportColumn<StudentExportData>[] = [
-  text("studentId", "Student ID", "رقم الطالب"),
-  {
-    key: "fullName",
-    header: "Full Name",
-    headerAr: "الاسم الكامل",
-    type: "string",
-    accessor: (row) =>
-      [row.firstName, row.middleName, row.lastName].filter(Boolean).join(" "),
-  },
-  {
-    key: "gender",
-    header: "Gender",
-    headerAr: "الجنس",
-    type: "string",
-    format: (value, _row, locale) => {
-      const genderMap: Record<string, { en: string; ar: string }> = {
-        MALE: { en: "Male", ar: "ذكر" },
-        FEMALE: { en: "Female", ar: "أنثى" },
-      }
-      const g = genderMap[String(value)] || {
-        en: String(value),
-        ar: String(value),
-      }
-      return locale === "ar" ? g.ar : g.en
-    },
-  },
-  date("dateOfBirth", "Date of Birth", undefined, "تاريخ الميلاد"),
-  text("className", "Class", "الفصل"),
-  text("yearLevelName", "Year Level", "المستوى الدراسي"),
-  text("email", "Email", "البريد الإلكتروني"),
-  text("phone", "Phone", "رقم الهاتف"),
-  date("enrollmentDate", "Enrollment Date", undefined, "تاريخ التسجيل"),
-]
-```
-
-**Usage in Export Button:**
-
-```tsx
-// src/components/school-dashboard/listings/students/export-button.tsx
-"use client"
-
-import { ExportButton as UnifiedExportButton } from "@/components/file"
-
-import { getStudentsExportData } from "./actions"
-import {
-  STUDENT_EXPORT_COLUMNS,
-  type StudentExportData,
-} from "./columns/export"
-
-export function ExportButton({ filters, locale = "en" }) {
-  const [data, setData] = useState<StudentExportData[]>([])
-
-  useEffect(() => {
-    getStudentsExportData(filters).then((result) => {
-      if (result.success) setData(result.data)
-    })
-  }, [filters])
-
-  return (
-    <UnifiedExportButton
-      config={{
-        filename: "students",
-        columns: STUDENT_EXPORT_COLUMNS,
-        locale,
-        title: locale === "ar" ? "قائمة الطلاب" : "Student List",
-      }}
-      data={data}
-      formats={["csv", "excel", "pdf"]}
-    />
-  )
-}
-```
-
-## Import Module
-
-### Importer Component
-
-Multi-step import wizard:
-
-```tsx
-import { Importer, type ImportColumn } from "@/components/file"
-
-const columns: ImportColumn<Student>[] = [
-  {
-    key: "name",
-    header: "Name",
-    headerAr: "الاسم",
-    required: true,
-    aliases: ["student_name", "full_name", "الاسم الكامل"],
-  },
-  {
-    key: "email",
-    header: "Email",
-    headerAr: "البريد الإلكتروني",
-    required: true,
-    validate: (value) => {
-      const email = String(value)
-      if (!email.includes("@")) return "Invalid email format"
-      return true
-    },
-  },
-  {
-    key: "dateOfBirth",
-    header: "Date of Birth",
-    headerAr: "تاريخ الميلاد",
-    type: "date",
-    transform: (value) => new Date(value),
-  },
-  {
-    key: "grade",
-    header: "Grade",
-    headerAr: "الصف",
-    type: "number",
-    validate: (value) => {
-      const grade = Number(value)
-      if (grade < 1 || grade > 12) return "Grade must be between 1-12"
-      return true
-    },
-  },
-]
-
 <Importer
-  columns={columns}
-  onImport={async (data) => {
-    const result = await createStudents(data)
-    return {
-      success: result.created,
-      failed: result.errors.length,
-      errors: result.errors,
-    }
+  columns={STUDENT_IMPORT_COLUMNS}
+  template={{ filename: "students-template.xlsx", sheets: ["Students"] }}
+  onImport={async (rows) => {
+    const result = await bulkImportStudents(rows)
+    toast.success(`Imported ${result.created} of ${rows.length}`)
   }}
-  onComplete={() => {
-    toast.success("Import completed!")
-    router.refresh()
-  }}
-  dictionary={dictionary}
 />
 ```
 
-### useImport Hook
+### `useImport` hook
 
-For custom import flows:
+```ts
+const { parse, validate, isImporting } = useImport()
 
-```tsx
-import { useImport } from "@/components/file"
-
-function CustomImporter() {
-  const {
-    step,
-    preview,
-    validRows,
-    invalidRows,
-    columnMapping,
-    parseFile,
-    setColumnMapping,
-    validateData,
-    importData,
-    reset,
-  } = useImport({ columns: STUDENT_COLUMNS })
-
-  const handleFileSelect = async (file: File) => {
-    await parseFile(file)
-  }
-
-  const handleImport = async () => {
-    const result = await importData(async (data) => {
-      return await createStudents(data)
-    })
-    console.log(`Imported ${result.success} records`)
-  }
-
-  return (
-    // Custom UI implementation
-  )
-}
+const rows = await parse(file)
+const issues = await validate(rows, columns)
 ```
 
-### Validation Helpers
+### Validation
 
-Common validators for import columns:
+`validateRow(row, columns)` checks every column's `required`, `type`, and custom `validate(value, row)`. `validateBatch(rows, columns)` returns a per-row issue list and a totals summary.
+
+## Print
+
+`PrintButton` opens the browser print dialog scoped to a content ref.
 
 ```tsx
-import { commonSchemas, commonValidators } from "@/components/file"
+const printRef = useRef<HTMLDivElement>(null)
 
-const columns: ImportColumn<Student>[] = [
-  {
-    key: "email",
-    header: "Email",
-    validate: commonValidators.email,
-  },
-  {
-    key: "phone",
-    header: "Phone",
-    validate: commonValidators.phone,
-  },
-  {
-    key: "nationalId",
-    header: "National ID",
-    validate: commonValidators.pattern(/^\d{10}$/, "Must be 10 digits"),
-  },
-]
+<PrintButton contentRef={printRef} title="Student Report">
+  Print
+</PrintButton>
 
-// Or use Zod schemas
-const studentSchema = commonSchemas.object({
-  email: commonSchemas.email(),
-  phone: commonSchemas.phone(),
-  grade: commonSchemas.number().min(1).max(12),
-})
+<div ref={printRef}>{/* printable content */}</div>
 ```
 
-## Print Module
+### `usePrint` hook
 
-### PrintButton Component
-
-Simple print trigger:
-
-```tsx
-import { NoPrint, PageBreak, PrintArea, PrintButton } from "@/components/file"
-
-function ReportPage() {
-  const printRef = useRef<HTMLDivElement>(null)
-
-  return (
-    <div>
-      <NoPrint>
-        <PrintButton contentRef={printRef}>Print Report</PrintButton>
-      </NoPrint>
-
-      <PrintArea ref={printRef}>
-        <h1>Student Report</h1>
-        <table>...</table>
-
-        <PageBreak />
-
-        <h2>Attendance Summary</h2>
-        <table>...</table>
-      </PrintArea>
-    </div>
-  )
-}
+```ts
+const { print } = usePrint()
+print(printRef.current, { title: "Student Report" })
 ```
 
-### usePrint Hook
+## Generate
 
-For programmatic printing:
+Pre-built templates render PDFs via `@react-pdf/renderer`. All return a `Blob` and a download trigger.
 
-```tsx
-import { usePrint } from "@/components/file"
+| Template    | Helper                      | Use                                |
+| ----------- | --------------------------- | ---------------------------------- |
+| Invoice     | `useGenerate.invoice()`     | Fee invoices, receipts             |
+| Receipt     | `useGenerate.receipt()`     | Payment confirmation               |
+| Certificate | `useGenerate.certificate()` | Course or achievement certificates |
+| Report card | `useGenerate.reportCard()`  | Term and annual reports            |
+| ID card     | `useGenerate.idCard()`      | Student / staff badges             |
+| Transcript  | `useGenerate.transcript()`  | Academic transcripts               |
 
-function InvoicePage({ invoice }) {
-  const { print, printById, printHtml, isPrinting } = usePrint()
-
-  const handlePrint = () => {
-    printById("invoice-content", {
-      title: `Invoice ${invoice.number}`,
-      styles: `
-        @page { margin: 1cm; }
-        body { font-family: 'Rubik', sans-serif; }
-      `,
-    })
-  }
-
-  return (
-    <div>
-      <button onClick={handlePrint} disabled={isPrinting}>
-        Print Invoice
-      </button>
-      <div id="invoice-content">{/* Invoice content */}</div>
-    </div>
-  )
-}
+```ts
+const { invoice } = useGenerate()
+const blob = await invoice({ schoolId, items, customer, total })
 ```
 
-## Generate Module
+Each template accepts a typed payload and renders both a downloadable PDF and an inline preview component (`InvoicePreview`, etc.).
 
-### Document Templates
+## Browser
 
-Generate professional PDF documents:
-
-```tsx
-import { useGenerate } from "@/components/file"
-
-function InvoicePage({ invoice }) {
-  const { generateInvoice, isGenerating } = useGenerate()
-
-  const handleDownload = async () => {
-    await generateInvoice({
-      invoiceNumber: invoice.number,
-      issueDate: invoice.createdAt,
-      dueDate: invoice.dueDate,
-      status: invoice.status,
-      school: {
-        name: school.name,
-        nameAr: school.nameAr,
-        address: school.address,
-        phone: school.phone,
-        email: school.email,
-        logoUrl: school.logoUrl,
-      },
-      customer: {
-        name: invoice.customer.name,
-        email: invoice.customer.email,
-        address: invoice.customer.address,
-      },
-      items: invoice.items.map((item) => ({
-        description: item.description,
-        descriptionAr: item.descriptionAr,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        total: item.total,
-      })),
-      subtotal: invoice.subtotal,
-      tax: invoice.tax,
-      discount: invoice.discount,
-      total: invoice.total,
-      notes: invoice.notes,
-      currency: "SAR",
-      locale: lang,
-    })
-  }
-
-  return (
-    <button onClick={handleDownload} disabled={isGenerating}>
-      Download Invoice PDF
-    </button>
-  )
-}
-```
-
-### Available Templates
-
-| Template              | Description                          | Use Case                  |
-| --------------------- | ------------------------------------ | ------------------------- |
-| `generateInvoice`     | Professional invoice with line items | Fee collection, billing   |
-| `generateReceipt`     | Payment receipt confirmation         | Payment acknowledgment    |
-| `generateCertificate` | Award/completion certificate         | Achievements, graduations |
-| `generateReportCard`  | Student grades report                | Academic reporting        |
-| `generateIdCard`      | Student/Staff ID card                | Identification            |
-| `generateTranscript`  | Academic transcript                  | Official records          |
-
-### ID Card Example
+`FileBrowser` renders a tree-aware file manager rooted at any S3 prefix.
 
 ```tsx
-const { generateIdCard } = useGenerate()
-
-await generateIdCard({
-  cardType: "student", // "student" | "teacher" | "staff" | "parent"
-  fullName: student.fullName,
-  fullNameAr: student.fullNameAr,
-  photo: student.photoUrl,
-  idNumber: student.studentId,
-  className: student.className,
-  bloodGroup: student.bloodGroup,
-  emergencyContact: student.emergencyPhone,
-  barcodeData: student.studentId,
-  qrCodeData: `https://school.com/verify/${student.id}`,
-  schoolName: school.name,
-  schoolNameAr: school.nameAr,
-  schoolLogo: school.logoUrl,
-  issueDate: new Date(),
-  validUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
-  locale: lang,
-})
-```
-
-### Receipt Example
-
-```tsx
-const { generateReceipt } = useGenerate()
-
-await generateReceipt({
-  receiptNumber: `RCP-${Date.now()}`,
-  paymentDate: new Date(),
-  paymentMethod: "card", // "cash" | "card" | "bank_transfer" | "cheque" | "online"
-  payerName: parent.name,
-  payerEmail: parent.email,
-  studentName: student.name,
-  studentId: student.studentId,
-  items: [
-    { description: "Tuition Fee - Term 1", amount: 5000 },
-    { description: "Book Fee", amount: 500 },
-  ],
-  total: 5500,
-  currency: "SAR",
-  invoiceNumber: invoice.number,
-  transactionId: payment.transactionId,
-  schoolName: school.name,
-  schoolNameAr: school.nameAr,
-  schoolLogo: school.logoUrl,
-  locale: lang,
-})
-```
-
-### Transcript Example
-
-```tsx
-const { generateTranscript } = useGenerate()
-
-await generateTranscript({
-  studentName: student.name,
-  studentNameAr: student.nameAr,
-  studentId: student.studentId,
-  dateOfBirth: student.dateOfBirth,
-  enrollmentDate: student.enrollmentDate,
-  graduationDate: student.graduationDate,
-  programName: "High School Diploma",
-  programNameAr: "شهادة الثانوية العامة",
-  major: "Science",
-  courses: academicRecords.map((record) => ({
-    code: record.subject.code,
-    name: record.subject.name,
-    nameAr: record.subject.nameAr,
-    credits: record.credits,
-    grade: record.letterGrade,
-    gradePoints: record.gradePoints,
-    term: record.term.name,
-    year: record.term.academicYear,
-  })),
-  totalCredits: 120,
-  earnedCredits: 118,
-  cumulativeGpa: 3.75,
-  standing: "Good Standing",
-  degreeAwarded: "High School Diploma",
-  honors: "With Honors",
-  schoolName: school.name,
-  schoolNameAr: school.nameAr,
-  schoolLogo: school.logoUrl,
-  registrarName: "Dr. Ahmed Hassan",
-  issueDate: new Date(),
-  locale: lang,
-})
-```
-
-### Certificate Example
-
-```tsx
-const { generateCertificate } = useGenerate()
-
-await generateCertificate({
-  title: "Certificate of Achievement",
-  titleAr: "شهادة تقدير",
-  recipientName: student.name,
-  recipientNameAr: student.nameAr,
-  description: "For outstanding academic performance in Mathematics",
-  descriptionAr: "للتميز الأكاديمي في مادة الرياضيات",
-  issueDate: new Date(),
-  certificateNumber: `CERT-${Date.now()}`,
-  school: {
-    name: school.name,
-    nameAr: school.nameAr,
-    logoUrl: school.logoUrl,
-  },
-  signatures: [
-    { name: "Dr. Ahmed Hassan", title: "Principal", titleAr: "مدير المدرسة" },
-    { name: "Sarah Ali", title: "Department Head", titleAr: "رئيس القسم" },
-  ],
-  locale: lang,
-})
-```
-
-### Report Card Example
-
-```tsx
-const { generateReportCard } = useGenerate()
-
-await generateReportCard({
-  student: {
-    name: student.name,
-    nameAr: student.nameAr,
-    studentId: student.studentId,
-    grade: student.grade,
-    section: student.section,
-    photoUrl: student.photoUrl,
-  },
-  academicYear: "2024-2025",
-  term: "First Term",
-  termAr: "الفصل الأول",
-  grades: subjects.map((subject) => ({
-    subject: subject.name,
-    subjectAr: subject.nameAr,
-    score: subject.score,
-    maxScore: 100,
-    grade: subject.letterGrade,
-    remarks: subject.remarks,
-  })),
-  attendance: {
-    present: 85,
-    absent: 5,
-    late: 3,
-    excused: 2,
-  },
-  comments: teacherComments,
-  school: {
-    name: school.name,
-    nameAr: school.nameAr,
-    logoUrl: school.logoUrl,
-  },
-  signatures: [
-    { name: teacher.name, title: "Class Teacher" },
-    { name: principal.name, title: "Principal" },
-  ],
-  locale: lang,
-})
-```
-
-## Browser Module
-
-### FileBrowser Component
-
-Full-featured file manager:
-
-```tsx
-import { FileBrowser } from "@/components/file"
-
-;<FileBrowser
-  rootFolder="/school/documents"
-  initialFolder="/school/documents/contracts"
-  config={{
-    selectable: true,
-    multiSelect: true,
-    deletable: true,
-    downloadable: true,
-    navigable: true,
-    pageSize: 24,
-    defaultViewMode: "grid",
-    defaultSort: { field: "date", direction: "desc" },
-  }}
-  onSelect={(files) => setSelectedFiles(files)}
-  onNavigate={(path) => console.log("Navigated to:", path)}
-  dictionary={dictionary}
+<FileBrowser
+  rootFolder={`/${schoolId}/documents`}
+  onSelect={(file) => setSelected(file)}
+  view="grid"
 />
 ```
 
-### useBrowser Hook
+### `useBrowser` hook
 
-For custom file browser implementations:
-
-````tsx
-import { useBrowser } from "@/components/file"
-
-function CustomFileBrowser() {
-  const {
-    files,
-    folders,
-    breadcrumbs,
-    state,
-    actions,
-    currentPage,
-    totalPages,
-    totalFiles,
-    setPage,
-  } = useBrowser({
-    rootFolder: "/documents",
-    pageSize: 20,
-    defaultViewMode: "list",
-  })
-
-  return (
-    <div>
-      {/* Breadcrumbs */}
-      <nav>
-        {breadcrumbs.map((crumb) => (
-          <button
-            key={crumb.path}
-            onClick={() => actions.navigateTo(crumb.path)}
-          >
-            {crumb.name}
-          </button>
-        ))}
-      </nav>
-
-      {/* View mode toggle */}
-      <div>
-        <button onClick={() => actions.setViewMode("grid")}>Grid</button>
-        <button onClick={() => actions.setViewMode("list")}>List</button>
-      </div>
-
-      {/* Search */}
-      <input
-        type="search"
-        value={state.searchQuery}
-        onChange={(e) => actions.setSearch(e.target.value)}
-        placeholder="Search files..."
-      />
-
-      {/* Folders */}
-      {folders.map((folder) => (
-        <div key={folder.path} onClick={() => actions.navigateTo(folder.path)}>
-          {folder.name}
-        </div>
-      ))}
-
-      {/* Files */}
-      {files.map((file) => (
-        <div
-          key={file.id}
-          onClick={() => actions.toggleSelection(file.id)}
-          className={state.selectedIds.has(file.id) ? "selected" : ""}
-        >
-          {file.originalName}
-        </div>
-      ))}
-
-      {/* Pagination */}
-      <div>
-        <button
-          onClick={() => setPage(currentPage - 1)}
-          disabled={currentPage === 1}
-        >
-          Previous
-        </button>
-        <span>
-          {currentPage} / {totalPages}
-        </span>
-        <button
-          onClick={() => setPage(currentPage + 1)}
-          disabled={currentPage === totalPages}
-        >
-          Next
-        </button>
-      </div>
-
-      {/* Actions */}
-      {state.selectedIds.size > 0 && (
-        <div>
-          <button onClick={actions.downloadSelected}>Download</button>
-          <button onClick={actions.deleteSelected}>Delete</button>
-        </div>
-      )}
-    </div>
-  )
-}
-
-### Size Limits
-
-Default size limits by category:
-
-| Category | Limit  |
-| -------- | ------ |
-| Image    | 5 MB   |
-| Document | 10 MB  |
-| Video    | 100 MB |
-| Audio    | 20 MB  |
-| Archive  | 50 MB  |
-| Other    | 10 MB  |
-
-Override limits:
-
-```tsx
-<Uploader
-  maxSize={50 * 1024 * 1024} // 50MB
-  // ...
-/>
-````
-
-### Storage Providers
-
-The module supports multiple storage providers:
-
-| Provider      | Use Case                  |
-| ------------- | ------------------------- |
-| Vercel Blob   | Default, production files |
-| ImageKit      | Image optimization, CDN   |
-| AWS S3        | Large files, archives     |
-| Cloudflare R2 | Cost-effective storage    |
-
-Provider selection is automatic based on file type and size.
-
-## Multi-Tenant Safety
-
-All file operations are scoped by `schoolId`:
-
-```tsx
-// Server action automatically includes schoolId
-export async function uploadFile(formData: FormData, options: UploadOptions) {
-  const session = await auth()
-  const schoolId = session?.user?.schoolId
-
-  if (!schoolId) throw new Error("Unauthorized")
-
-  // Files are stored with schoolId scope
-  const file = await db.fileRecord.create({
-    data: {
-      ...fileData,
-      schoolId, // Required for tenant isolation
-    },
-  })
-}
-
-// Queries are always scoped
-export async function getFiles(options: GetFilesOptions) {
-  const session = await auth()
-  const schoolId = session?.user?.schoolId
-
-  return db.fileRecord.findMany({
-    where: {
-      schoolId, // Never returns other schools' files
-      ...filters,
-    },
-  })
-}
-```
-
-## Internationalization
-
-All components support Arabic (RTL) and English (LTR):
-
-```tsx
-// Export with bilingual headers
-const columns: ExportColumn<Student>[] = [
-  { key: "name", header: "Name", headerAr: "الاسم" },
-  { key: "grade", header: "Grade", headerAr: "الصف" },
-]
-
-// PDF documents render correctly in RTL
-await generateInvoice({
-  // ...
-  locale: "ar", // Renders in Arabic with RTL layout
+```ts
+const { files, currentFolder, navigate, search } = useBrowser({
+  rootFolder: `/${schoolId}/documents`,
 })
-
-// Import supports Arabic column headers
-const columns: ImportColumn<Student>[] = [
-  {
-    key: "name",
-    header: "Name",
-    aliases: ["الاسم", "الاسم الكامل", "student_name"],
-  },
-]
 ```
 
-## Error Handling
+## Storage and limits
 
-```tsx
-import { useUpload } from "@/components/file"
+| Constraint       | Default                                                    |
+| ---------------- | ---------------------------------------------------------- |
+| Provider         | AWS S3 + CloudFront CDN                                    |
+| Default size cap | 10 MB per file (per category override)                     |
+| Image cap        | 5 MB                                                       |
+| Document cap     | 25 MB                                                      |
+| Video cap        | 100 MB                                                     |
+| Allowed types    | Per-category whitelist; rejected uploads return error code |
 
-function Uploader() {
-  const { error, upload } = useUpload({
-    onError: (error) => {
-      // Handle specific error types
-      if (error.code === "FILE_TOO_LARGE") {
-        toast.error("File exceeds maximum size")
-      } else if (error.code === "INVALID_TYPE") {
-        toast.error("File type not allowed")
-      } else if (error.code === "UPLOAD_FAILED") {
-        toast.error("Upload failed. Please try again.")
-      } else {
-        toast.error(error.message)
-      }
-    },
-  })
+## Multi-tenant safety
 
-  return // ...
-}
+Every persisted file row carries `schoolId`. Signed URLs include a `schoolId` claim so cross-tenant URL forging is impossible. `FileBrowser` always rooted at a `schoolId`-scoped prefix.
+
+```ts
+// correct — schoolId scope on every query
+await db.fileObject.findMany({ where: { schoolId, folder } })
 ```
 
-## TypeScript Support
+## i18n
 
-Full TypeScript support with generics:
+UI text comes from the `dictionary.file` slice. Helpers (`getDictionary` server-side, `useI18nMessages` on the client) provide the full set of labels for the picker, the wizard, error toasts, and progress states.
 
-```tsx
+## Errors
+
+Server actions return error codes; the client maps them via `useI18nMessages(dictionary).error`.
+
+| Code                | Meaning                                      |
+| ------------------- | -------------------------------------------- |
+| `FILE_TOO_LARGE`    | Exceeds the per-category size cap            |
+| `INVALID_FILE_TYPE` | MIME type not in the category whitelist      |
+| `UPLOAD_FAILED`     | S3 returned non-2xx                          |
+| `MISSING_TENANT`    | No `schoolId` on the session                 |
+| `UNAUTHORIZED`      | `auth()` check failed                        |
+| `INVALID_FOLDER`    | Folder path outside the schoolId-scoped tree |
+
+## TypeScript
+
+All public exports are fully typed. Common types:
+
+```ts
 import type {
-  ExportColumn,
   ExportConfig,
-  FileCategory,
-  FileType,
-  ImportColumn,
+  FileObject,
+  GenerateConfig,
   ImportConfig,
-  UploadOptions,
-} from "@/components/file"
-
-// Typed export columns
-const columns: ExportColumn<Student>[] = [
-  { key: "name", header: "Name" }, // Type-safe: key must be keyof Student
-]
-
-// Typed import columns
-const importColumns: ImportColumn<CreateStudentInput>[] = [
-  { key: "email", header: "Email", required: true },
-]
-```
-
-## Deprecated Legacy Files
-
-The following legacy files are deprecated and re-export from the File module for backward compatibility:
-
-| Legacy Path                                                | Status          | Migration                               |
-| ---------------------------------------------------------- | --------------- | --------------------------------------- |
-| `src/lib/csv-export.ts`                                    | Deprecated      | Use `@/components/file`                 |
-| `src/lib/csv-import.ts`                                    | Domain-specific | Use for bulk student/teacher DB imports |
-| `src/components/file-upload/`                              | Deprecated      | Use `@/components/file`                 |
-| `src/components/school-dashboard/shared/export-button.tsx` | Deprecated      | Use `ExportButton` from File module     |
-
-### Migration Example
-
-```tsx
-// OLD (deprecated)
-import { arrayToCSV, generateCSVFilename } from "@/lib/csv-export"
-// NEW (recommended)
-import {
-  ExportButton,
-  FileUploader,
-  generateCsvContent,
-  generateExportFilename,
-  Uploader,
-  type ExportColumn,
+  PrintConfig,
+  UploadConfig,
 } from "@/components/file"
 ```
+
+## Migration from the old layout
+
+Older code imported from `@/components/upload`, `@/components/export`, `@/components/import`, etc. Migrate to a single import:
+
+```ts
+// before
+import { ExportButton } from "@/components/export"
+// after
+import { ExportButton, Uploader } from "@/components/file"
+import { Uploader } from "@/components/upload"
+```
+
+The old module paths still re-export for compatibility but are deprecated. Open issues for any direct imports still in the wild.
