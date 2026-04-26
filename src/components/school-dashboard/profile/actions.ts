@@ -797,10 +797,7 @@ export async function updatePinnedItems(
 
     // Validate max 6 pinned items
     if (items.length > 6) {
-      return {
-        success: false as const,
-        error: "Maximum 6 pinned items allowed",
-      }
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR, "MAX_PINNED_EXCEEDED")
     }
 
     // Parse all items

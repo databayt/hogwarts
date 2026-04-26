@@ -460,6 +460,10 @@ describe("Pinned items", () => {
     }))
     const res = await updatePinnedItems(items)
     expect(res.success).toBe(false)
+    if (!res.success) {
+      expect(res.error).toBe("VALIDATION_ERROR")
+      expect(res.details).toBe("MAX_PINNED_EXCEEDED")
+    }
   })
 
   it("replaces existing items in a delete-then-create transaction-like flow", async () => {
