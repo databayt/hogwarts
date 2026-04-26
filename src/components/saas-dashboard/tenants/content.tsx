@@ -60,6 +60,7 @@ async function getTenants(searchParams: Props["searchParams"], lang: Locale) {
       select: {
         id: true,
         name: true,
+        nameEn: true,
         domain: true,
         isActive: true,
         planType: true,
@@ -81,15 +82,21 @@ async function getTenants(searchParams: Props["searchParams"], lang: Locale) {
     db.school.count({ where }),
   ])
 
+  // Prefer pre-translated nameEn for English locale to skip the translation API
+  // (canonical pattern from (school-dashboard)/layout.tsx:67-76).
+  // Fall back to on-demand translation only when nameEn is not set.
   const translatedNames = await Promise.all(
-    tenants.map((tenant) =>
-      getDisplayText(
+    tenants.map((tenant) => {
+      if (lang === "en" && tenant.nameEn) {
+        return Promise.resolve(tenant.nameEn)
+      }
+      return getDisplayText(
         tenant.name,
         (tenant.preferredLanguage ?? "ar") as "en" | "ar",
         lang,
         tenant.id
       )
-    )
+    })
   )
 
   const rows: TenantRow[] = tenants.map((tenant, i) => ({
