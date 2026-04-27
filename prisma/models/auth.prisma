@@ -45,6 +45,9 @@ model User {
   guardian    Guardian?
   staffMember StaffMember?
 
+  // Transportation — driver portal account
+  driverProfile Driver?
+
   // Stripe subscription fields (user-scoped for compatibility with pricing UI)
   stripeSubscriptionId   String?
   stripeCustomerId       String?

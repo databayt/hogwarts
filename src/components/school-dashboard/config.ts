@@ -31,6 +31,13 @@ export const sidebarLinks: SidebarNavItem[] = [
         authorizeOnly: UserRole.ADMIN,
       },
       {
+        // TODO: switch icon to "bus" once registered via /icon-add bus
+        href: "/transportation",
+        icon: "package",
+        title: "Transportation",
+        authorizeOnly: UserRole.ADMIN,
+      },
+      {
         href: "#/lab/posts",
         icon: "post",
         title: "User Posts",
