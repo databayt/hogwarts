@@ -13,10 +13,10 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { auth } from "@/auth"
 import type { GradingSystem } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 
 import {
   calculateCumulativeGPA,
@@ -40,8 +40,7 @@ import {
  * Get school grading configuration
  */
 export async function getGradingConfig() {
-  const session = await auth()
-  const schoolId = session?.user?.schoolId
+  const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
     throw new Error("Unauthorized")
@@ -58,8 +57,7 @@ export async function getGradingConfig() {
  * Create or update school grading configuration
  */
 export async function saveGradingConfig(data: GradingConfigInput) {
-  const session = await auth()
-  const schoolId = session?.user?.schoolId
+  const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
     throw new Error("Unauthorized")
@@ -109,8 +107,7 @@ export async function saveGradingConfig(data: GradingConfigInput) {
  * Convert a grade between systems
  */
 export async function convertGradeAction(data: GradeConversionInput) {
-  const session = await auth()
-  const schoolId = session?.user?.schoolId
+  const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
     throw new Error("Unauthorized")
@@ -149,8 +146,7 @@ export async function convertGradeAction(data: GradeConversionInput) {
  * Get all grade formats for a score
  */
 export async function getAllFormatsAction(percentage: number) {
-  const session = await auth()
-  const schoolId = session?.user?.schoolId
+  const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
     throw new Error("Unauthorized")
@@ -192,8 +188,7 @@ export async function checkPassingAction(
   value: number | string,
   system: GradingSystem
 ) {
-  const session = await auth()
-  const schoolId = session?.user?.schoolId
+  const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
     throw new Error("Unauthorized")
@@ -214,8 +209,7 @@ export async function checkPassingAction(
  * Calculate CGPA for a student
  */
 export async function calculateCGPAAction(data: CGPACalculationInput) {
-  const session = await auth()
-  const schoolId = session?.user?.schoolId
+  const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
     throw new Error("Unauthorized")
@@ -256,8 +250,7 @@ export async function calculateSemesterGPAAction(
   }>,
   gpaScale: 4 | 5 = 4
 ) {
-  const session = await auth()
-  const schoolId = session?.user?.schoolId
+  const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
     throw new Error("Unauthorized")
@@ -279,8 +272,7 @@ export async function calculateSemesterGPAAction(
  * Calculate required GPA to reach target CGPA
  */
 export async function calculateRequiredGPAAction(data: TargetGPAInput) {
-  const session = await auth()
-  const schoolId = session?.user?.schoolId
+  const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
     throw new Error("Unauthorized")
@@ -313,8 +305,7 @@ export async function calculateRequiredGPAAction(data: TargetGPAInput) {
  * Get student's CGPA history
  */
 export async function getStudentCGPAHistory(studentId: string) {
-  const session = await auth()
-  const schoolId = session?.user?.schoolId
+  const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
     throw new Error("Unauthorized")
@@ -439,8 +430,7 @@ export async function updateGradeBoundaries(
     gpa5: number
   }>
 ) {
-  const session = await auth()
-  const schoolId = session?.user?.schoolId
+  const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
     throw new Error("Unauthorized")

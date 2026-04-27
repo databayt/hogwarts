@@ -17,14 +17,21 @@ vi.mock("@/auth", () => ({
 
 vi.mock("@/lib/db", () => ({
   db: {
-    exam: {
+    schoolExam: {
       findFirst: vi.fn(),
       updateMany: vi.fn(),
     },
     examResult: {
       findFirst: vi.fn(),
     },
+    school: {
+      findFirst: vi.fn().mockResolvedValue({ preferredLanguage: "en" }),
+    },
   },
+}))
+
+vi.mock("@/lib/dispatch-notification", () => ({
+  dispatchNotificationsToAudience: vi.fn().mockResolvedValue({ count: 0 }),
 }))
 
 vi.mock("@/lib/tenant-context", () => ({

@@ -4,9 +4,9 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import crypto from "crypto"
 import { revalidatePath } from "next/cache"
-import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 
 import {
   batchGenerateCertificatesSchema,
@@ -48,8 +48,9 @@ function generateShareToken(): string {
 }
 
 async function getSchoolId(): Promise<string | null> {
-  const session = await auth()
-  return session?.user?.schoolId ?? null
+  // Honour impersonation + subdomain header before falling back to the session.
+  const { schoolId } = await getTenantContext()
+  return schoolId
 }
 
 // ============================================================================
