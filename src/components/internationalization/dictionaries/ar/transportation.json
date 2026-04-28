@@ -8,6 +8,7 @@
     "routes": "المسارات",
     "drivers": "السائقون",
     "assignments": "التعيينات",
+    "trips": "الرحلات",
     "settings": "الإعدادات"
   },
   "overview": {
@@ -153,6 +154,54 @@
       "PAUSED": "متوقف مؤقتًا",
       "ENDED": "منتهي"
     }
+  },
+  "trips": {
+    "title": "الرحلات",
+    "subtitle": "تشغيل المسارات اليومية وسجلات الركوب",
+    "addButton": "جدولة رحلة",
+    "fields": {
+      "route": "المسار",
+      "vehicle": "المركبة",
+      "driver": "السائق",
+      "direction": "الاتجاه",
+      "scheduledDate": "تاريخ الجدولة",
+      "scheduledTime": "وقت الجدولة",
+      "actualStart": "بدأت",
+      "actualEnd": "انتهت",
+      "status": "الحالة",
+      "notes": "ملاحظات",
+      "boardings": "الركوب"
+    },
+    "statuses": {
+      "SCHEDULED": "مجدولة",
+      "IN_PROGRESS": "قيد التنفيذ",
+      "COMPLETED": "مكتملة",
+      "CANCELLED": "ملغاة"
+    },
+    "actions": {
+      "start": "بدء الرحلة",
+      "finish": "إنهاء الرحلة",
+      "cancel": "إلغاء الرحلة"
+    },
+    "boardingStatuses": {
+      "PENDING": "معلق",
+      "BOARDED": "ركب",
+      "ALIGHTED": "نزل",
+      "MISSED": "فاتته",
+      "EXCUSED": "معذور"
+    },
+    "toasts": {
+      "scheduled": "تمت جدولة الرحلة",
+      "started": "بدأت الرحلة",
+      "finished": "انتهت الرحلة",
+      "cancelled": "تم إلغاء الرحلة",
+      "boardingRecorded": "تم تسجيل الركوب"
+    },
+    "errors": {
+      "duplicate": "توجد رحلة بالفعل لهذا المسار + التاريخ + الاتجاه",
+      "invalidState": "الرحلة ليست في حالة صالحة لهذا الإجراء"
+    },
+    "empty": "لا توجد رحلات بعد"
   },
   "settings": {
     "title": "إعدادات النقل",

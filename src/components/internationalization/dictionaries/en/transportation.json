@@ -8,6 +8,7 @@
     "routes": "Routes",
     "drivers": "Drivers",
     "assignments": "Assignments",
+    "trips": "Trips",
     "settings": "Settings"
   },
   "overview": {
@@ -153,6 +154,54 @@
       "PAUSED": "Paused",
       "ENDED": "Ended"
     }
+  },
+  "trips": {
+    "title": "Trips",
+    "subtitle": "Daily route runs and boarding records",
+    "addButton": "Schedule trip",
+    "fields": {
+      "route": "Route",
+      "vehicle": "Vehicle",
+      "driver": "Driver",
+      "direction": "Direction",
+      "scheduledDate": "Scheduled date",
+      "scheduledTime": "Scheduled time",
+      "actualStart": "Started",
+      "actualEnd": "Finished",
+      "status": "Status",
+      "notes": "Notes",
+      "boardings": "Boardings"
+    },
+    "statuses": {
+      "SCHEDULED": "Scheduled",
+      "IN_PROGRESS": "In progress",
+      "COMPLETED": "Completed",
+      "CANCELLED": "Cancelled"
+    },
+    "actions": {
+      "start": "Start trip",
+      "finish": "Finish trip",
+      "cancel": "Cancel trip"
+    },
+    "boardingStatuses": {
+      "PENDING": "Pending",
+      "BOARDED": "Boarded",
+      "ALIGHTED": "Alighted",
+      "MISSED": "Missed",
+      "EXCUSED": "Excused"
+    },
+    "toasts": {
+      "scheduled": "Trip scheduled",
+      "started": "Trip started",
+      "finished": "Trip finished",
+      "cancelled": "Trip cancelled",
+      "boardingRecorded": "Boarding recorded"
+    },
+    "errors": {
+      "duplicate": "A trip already exists for this route + date + direction",
+      "invalidState": "Trip is not in a valid state for this action"
+    },
+    "empty": "No trips yet"
   },
   "settings": {
     "title": "Transportation settings",

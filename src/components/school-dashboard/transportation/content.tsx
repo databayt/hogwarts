@@ -79,10 +79,13 @@ export async function TransportationOverviewContent({
               {t.nav.vehicles}
             </Link>
           </Button>
-          <Button asChild>
+          <Button asChild variant="outline">
             <Link href={`/${locale}/transportation/routes`}>
               {t.nav.routes}
             </Link>
+          </Button>
+          <Button asChild>
+            <Link href={`/${locale}/transportation/trips`}>{t.nav.trips}</Link>
           </Button>
         </div>
       </header>

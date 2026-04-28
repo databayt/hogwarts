@@ -323,3 +323,58 @@ export type RouteAssignmentUpdateInput = z.infer<
   typeof routeAssignmentUpdateSchema
 >
 export type EndAssignmentInput = z.infer<typeof endAssignmentSchema>
+
+// ============================================================================
+// Trip + TripBoarding (M2)
+// ============================================================================
+
+export const tripStatusEnum = z.enum([
+  "SCHEDULED",
+  "IN_PROGRESS",
+  "COMPLETED",
+  "CANCELLED",
+])
+export type TripStatus = z.infer<typeof tripStatusEnum>
+
+export const boardingStatusEnum = z.enum([
+  "PENDING",
+  "BOARDED",
+  "ALIGHTED",
+  "MISSED",
+  "EXCUSED",
+])
+export type BoardingStatus = z.infer<typeof boardingStatusEnum>
+
+export const tripSchema = z.object({
+  routeId: idSchema,
+  vehicleId: idSchema.optional(),
+  driverId: idSchema.optional(),
+  direction: routeDirectionEnum.default("ROUND_TRIP"),
+  scheduledDate: z.string().datetime(),
+  scheduledTime: z.string().regex(timeHHmmRegex),
+  notes: z.string().max(2000).optional(),
+})
+
+export const tripStartSchema = z.object({ id: idSchema })
+export const tripFinishSchema = z.object({
+  id: idSchema,
+  notes: z.string().max(2000).optional(),
+})
+export const tripCancelSchema = z.object({
+  id: idSchema,
+  reason: z.string().max(500).optional(),
+})
+
+export const boardingUpsertSchema = z.object({
+  tripId: idSchema,
+  studentId: idSchema,
+  stopId: idSchema,
+  status: boardingStatusEnum,
+  notes: z.string().max(500).optional(),
+})
+
+export type TripServerInput = z.infer<typeof tripSchema>
+export type TripStartInput = z.infer<typeof tripStartSchema>
+export type TripFinishInput = z.infer<typeof tripFinishSchema>
+export type TripCancelInput = z.infer<typeof tripCancelSchema>
+export type BoardingUpsertInput = z.infer<typeof boardingUpsertSchema>

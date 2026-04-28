@@ -123,6 +123,7 @@ model Student {
 
   // Transportation relations
   routeAssignments RouteAssignment[]
+  tripBoardings    TripBoarding[]
 
   // Geo-Attendance relations
   locationTraces      LocationTrace[]

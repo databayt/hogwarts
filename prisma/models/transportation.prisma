@@ -40,6 +40,21 @@ enum DriverStatus {
   INACTIVE
 }
 
+enum TripStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum BoardingStatus {
+  PENDING // Scheduled but not yet recorded
+  BOARDED
+  ALIGHTED
+  MISSED
+  EXCUSED
+}
+
 model Vehicle {
   id                 String        @id @default(cuid())
   schoolId           String
@@ -58,6 +73,7 @@ model Vehicle {
 
   school School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   routes Route[]
+  trips  Trip[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -95,6 +111,7 @@ model Driver {
   staffMember StaffMember? @relation(fields: [staffMemberId], references: [id], onDelete: SetNull)
   user        User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
   routes      Route[]
+  trips       Trip[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -131,6 +148,7 @@ model Route {
   driver      Driver?           @relation(fields: [driverId], references: [id], onDelete: SetNull)
   stops       RouteStop[]
   assignments RouteAssignment[]
+  trips       Trip[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -160,6 +178,7 @@ model RouteStop {
   school      School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   route       Route             @relation(fields: [routeId], references: [id], onDelete: Cascade)
   assignments RouteAssignment[]
+  boardings   TripBoarding[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -197,4 +216,63 @@ model RouteAssignment {
   @@index([schoolId, status, effectiveFrom])
   @@index([deletedAt])
   @@map("transportation_route_assignments")
+}
+
+model Trip {
+  id              String         @id @default(cuid())
+  schoolId        String
+  routeId         String
+  vehicleId       String?
+  driverId        String?
+  direction       RouteDirection @default(ROUND_TRIP)
+  scheduledDate   DateTime       @db.Date
+  scheduledTime   String // HH:mm — copied from Route.departureTime at scheduling time
+  actualStartTime DateTime?
+  actualEndTime   DateTime?
+  status          TripStatus     @default(SCHEDULED)
+  notes           String?        @db.Text
+  lang            String         @default("ar")
+
+  school    School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  route     Route          @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  vehicle   Vehicle?       @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  driver    Driver?        @relation(fields: [driverId], references: [id], onDelete: SetNull)
+  boardings TripBoarding[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@unique([schoolId, routeId, scheduledDate, direction])
+  @@index([schoolId, scheduledDate, status])
+  @@index([schoolId, driverId, scheduledDate])
+  @@index([deletedAt])
+  @@map("transportation_trips")
+}
+
+model TripBoarding {
+  id         String         @id @default(cuid())
+  schoolId   String
+  tripId     String
+  studentId  String
+  stopId     String
+  boardedAt  DateTime?
+  alightedAt DateTime?
+  status     BoardingStatus @default(PENDING)
+  notes      String?
+  recordedBy String? // userId of driver/staff who recorded
+  lang       String         @default("ar")
+
+  school  School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  trip    Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  student Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  stop    RouteStop @relation(fields: [stopId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, tripId, studentId])
+  @@index([schoolId, studentId, status])
+  @@index([schoolId, tripId, status])
+  @@map("transportation_trip_boardings")
 }

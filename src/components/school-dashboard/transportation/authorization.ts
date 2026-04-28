@@ -14,6 +14,8 @@ export type TransportationAction =
   | "manage_driver"
   | "manage_assignment"
   | "manage_settings"
+  | "manage_trip"
+  | "record_boarding"
   | "read_school"
   | "read_class"
   | "read_own"
@@ -45,6 +47,8 @@ const PERMISSION_MATRIX: Record<TransportationAction, UserRole[]> = {
   manage_driver: ["DEVELOPER", "ADMIN"],
   manage_assignment: ["DEVELOPER", "ADMIN", "STAFF"],
   manage_settings: ["DEVELOPER", "ADMIN"],
+  manage_trip: ["DEVELOPER", "ADMIN", "STAFF"],
+  record_boarding: ["DEVELOPER", "ADMIN", "STAFF", "TEACHER"],
   read_school: ["DEVELOPER", "ADMIN", "STAFF"],
   read_class: ["DEVELOPER", "ADMIN", "TEACHER"],
   read_own: ["DEVELOPER", "ADMIN", "STAFF", "TEACHER", "STUDENT", "GUARDIAN"],
@@ -101,3 +105,9 @@ export const canReadAllAssignments = (role: UserRole): boolean =>
 
 export const canViewFees = (role: UserRole): boolean =>
   ["DEVELOPER", "ADMIN", "ACCOUNTANT"].includes(role)
+
+export const canManageTrips = (role: UserRole): boolean =>
+  STAFF_ROLES.includes(role)
+
+export const canRecordBoarding = (role: UserRole): boolean =>
+  ["DEVELOPER", "ADMIN", "STAFF", "TEACHER"].includes(role)

@@ -396,6 +396,8 @@ model School {
   routes           Route[]
   routeStops       RouteStop[]
   routeAssignments RouteAssignment[]
+  trips            Trip[]
+  tripBoardings    TripBoarding[]
 
   @@map("schools")
 }
