@@ -9,34 +9,26 @@ description: "A unified pattern for data tables, grids, and CRUD operations acro
 
 The platform currently has **11 listing entities**, each following the same structure. This makes the codebase predictable for developers and consistent for users. Whether you're working with Students, Teachers, Classrooms, Assignments, or any other entity—the pattern remains the same.
 
-## Key Features
+## Key features
 
-<div className="not-prose mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-  <div className="rounded-lg border p-6">
-    <h4 className="mb-2 font-semibold">Optimistic Updates</h4>
-    <p className="text-muted-foreground text-sm">
-      Add, update, and remove items instantly with automatic rollback on errors.
-    </p>
-  </div>
-  <div className="rounded-lg border p-6">
-    <h4 className="mb-2 font-semibold">URL-Persisted Views</h4>
-    <p className="text-muted-foreground text-sm">
-      Table/Grid view toggle persists via URL query params using nuqs.
-    </p>
-  </div>
-  <div className="rounded-lg border p-6">
-    <h4 className="mb-2 font-semibold">Infinite Scroll</h4>
-    <p className="text-muted-foreground text-sm">
-      Load-more pagination for seamless data browsing without page reloads.
-    </p>
-  </div>
-  <div className="rounded-lg border p-6">
-    <h4 className="mb-2 font-semibold">Centralized Queries</h4>
-    <p className="text-muted-foreground text-sm">
-      Type-safe query builders with role-based authorization per module.
-    </p>
-  </div>
-</div>
+<CardGrid cols={2}>
+  <DocCard
+    title="Optimistic updates"
+    description="Add, update, and remove items instantly with automatic rollback on errors."
+  />
+  <DocCard
+    title="URL-persisted views"
+    description="Table / grid view toggle persists via URL query params (nuqs)."
+  />
+  <DocCard
+    title="Infinite scroll"
+    description="Load-more pagination — no page reloads."
+  />
+  <DocCard
+    title="Centralised queries"
+    description="Type-safe query builders with role-based authorisation per module."
+  />
+</CardGrid>
 
 ---
 

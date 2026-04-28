@@ -240,22 +240,27 @@ function lintFile(file, knownSlugs) {
     }
   }
 
-  // Hardcoded styling classes — check outside code fences only.
+  const cat = inferCategory(file.slug)
   const bodyNoCode = stripCodeFences(body)
-  const hardcodedStylePatterns = [
-    /className\s*=\s*"[^"]*\btext-(?:xs|sm|base|lg|xl|2xl|3xl|4xl|5xl|6xl)\b/g,
-    /className\s*=\s*"[^"]*\bfont-(?:thin|extralight|light|normal|medium|semibold|bold|extrabold|black)\b/g,
-    /className\s*=\s*"[^"]*\btext-(?:red|blue|green|yellow|amber|orange|purple|pink|gray|slate|zinc|neutral|stone)-\d+/g,
-  ]
-  for (const re of hardcodedStylePatterns) {
-    const matches = bodyNoCode.match(re)
-    if (matches) {
-      issues.push({
-        rule: "hardcoded-style-class",
-        message: `Hardcoded style class found (${matches.length} occurrence${matches.length > 1 ? "s" : ""})`,
-        sample: matches[0].slice(0, 80),
-      })
-      break
+
+  // Hardcoded styling classes — check outside code fences only.
+  // Business-group docs are exempt: marketing/landing-style content is the point.
+  if (cat !== "business") {
+    const hardcodedStylePatterns = [
+      /className\s*=\s*"[^"]*\btext-(?:xs|sm|base|lg|xl|2xl|3xl|4xl|5xl|6xl)\b/g,
+      /className\s*=\s*"[^"]*\bfont-(?:thin|extralight|light|normal|medium|semibold|bold|extrabold|black)\b/g,
+      /className\s*=\s*"[^"]*\btext-(?:red|blue|green|yellow|amber|orange|purple|pink|gray|slate|zinc|neutral|stone)-\d+/g,
+    ]
+    for (const re of hardcodedStylePatterns) {
+      const matches = bodyNoCode.match(re)
+      if (matches) {
+        issues.push({
+          rule: "hardcoded-style-class",
+          message: `Hardcoded style class found (${matches.length} occurrence${matches.length > 1 ? "s" : ""})`,
+          sample: matches[0].slice(0, 80),
+        })
+        break
+      }
     }
   }
 
@@ -277,7 +282,6 @@ function lintFile(file, knownSlugs) {
   }
 
   // Length cap.
-  const cat = inferCategory(file.slug)
   const cap = CATEGORY_CAPS[cat] ?? CATEGORY_CAPS.unknown
   if (lineCount > cap) {
     issues.push({

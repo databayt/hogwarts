@@ -148,9 +148,11 @@ Internal: `/docs/<slug>` — relative path, no locale prefix, no `.mdx` extensio
 
 External: full URL, no tracking params. Use markdown link syntax `[text](url)`, not raw `<a>`.
 
-## Hardcoded styles — banned
+## Hardcoded styles — banned (with one exception)
 
 Never write `className="text-xl"`, `className="font-bold"`, `className="text-blue-600"`, hex colors, or RGB values in MDX bodies.
+
+**Exception:** docs in the `business` category (`pitch`, `sales`, `business-model`, `competitors`, `shared-economy`) are exempt. Marketing / landing-style content is their purpose; decorative inline classes are part of that.
 
 The renderer styles headings, paragraphs, lists, tables, code blocks, blockquotes — trust it. If you need emphasis the renderer doesn't provide, you need a registered MDX component (file an issue, don't inline).
 

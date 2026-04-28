@@ -219,7 +219,7 @@ export const roleRoutes: Record<string, Role[]> = {
 
 ### Access Check Function
 
-```typescript
+````typescript
 // src/routes.ts
 export function isRouteAllowedForRole(pathname: string, role: Role): boolean {
   // DEVELOPER has access to everything
@@ -328,7 +328,7 @@ export async function middleware(request: NextRequest) {
 
   return NextResponse.next()
 }
-```
+````
 
 ### Session Context
 
@@ -395,3 +395,4 @@ test.describe("Entry Points", () => {
     await expect(page).toHaveURL(/\/login/)
   })
 })
+```

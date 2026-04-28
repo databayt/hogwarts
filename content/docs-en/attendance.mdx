@@ -423,7 +423,7 @@ Displayed settings sections:
 
 ### Key Action Signatures
 
-```typescript
+````typescript
 // Mark daily attendance (with auto-excuse from AbsenceIntention)
 markAttendance(input: {
   classId: string
@@ -486,7 +486,7 @@ model Attendance {
   @@unique([schoolId, studentId, classId, date, periodId])
   @@index([schoolId, date, periodId])
 }
-```
+````
 
 Supporting models: `AttendanceExcuse`, `AttendanceIntervention`, `QRCodeSession`, `StudentIdentifier`, `AbsenceIntention`, `PolicyTrigger`, `PolicyExemption`, `MasterAttendance`, `HallPass`, `KioskLog`, `AttendanceReward`, `StudentBadge`, `AttendanceStreak`.
 
@@ -494,3 +494,4 @@ Supporting models: `AttendanceExcuse`, `AttendanceIntervention`, `QRCodeSession`
 
 ```bash
 pnpm db:seed:single attendance
+```

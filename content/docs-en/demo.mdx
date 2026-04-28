@@ -1,138 +1,69 @@
 ---
 title: Live Demo
-description: See Hogwarts school management platform in action
+description: See Hogwarts school management platform in action — login and explore.
 ---
 
-Test the platform live. Login and explore the features below.
+Test the platform live. Open [demo.databayt.org/en/dashboard](https://demo.databayt.org/en/dashboard) and log in with `admin@databayt.org` / `1234`.
 
-<div className="not-prose mt-4 mb-6 flex gap-2">
-  <a
-    href="https://demo.databayt.org/en/dashboard"
-    target="_blank"
-    className="bg-primary text-primary-foreground hover:bg-primary/90 rounded px-3 py-1.5 text-sm"
-  >
-    Open Demo
-  </a>
-  <span className="bg-muted rounded px-2 py-1.5 text-xs">
-    admin@databayt.org / 1234
-  </span>
-</div>
+## Quick tour
 
----
+Five places to explore in five minutes.
 
-## Quick Tour
+1. **Settings** — change role to see different dashboards.
+2. **Appearance** — toggle dark / light mode and language (EN / AR).
+3. **Students** — browse the list, add a student, view profile tabs.
+4. **Timetable** — drag-and-drop schedule builder.
+5. **Attendance** — mark daily attendance for a class.
 
-Essential places to explore in 5 minutes.
-
-<div className="not-prose mt-4 mb-4 flex gap-2">
-  <span className="bg-muted rounded px-2 py-1 text-xs">5 steps</span>
-  <span className="rounded bg-green-500/20 px-2 py-1 text-xs font-medium text-green-700 dark:text-green-400">
-    recommended
-  </span>
-</div>
-
-- **Settings** → Change role to see different dashboards <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-orange-500/20 text-orange-700 dark:text-orange-400 rounded font-medium">try first</span>
-- **Appearance** → Toggle dark/light mode and language <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-blue-500/20 text-blue-700 dark:text-blue-400 rounded font-medium">i18n</span>
-- **Students** → Browse list, add student, view profile tabs <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded font-medium">crud</span>
-- **Timetable** → Drag-and-drop schedule builder <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-purple-500/20 text-purple-700 dark:text-purple-400 rounded font-medium">interactive</span>
-- **Attendance** → Mark daily attendance for a class <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-pink-500/20 text-pink-700 dark:text-pink-400 rounded font-medium">tracking</span>
-
----
-
-## Demo Accounts
+## Demo accounts
 
 All accounts use password `1234`.
 
-<div className="not-prose mt-4 mb-4 flex gap-2">
-  <span className="bg-muted rounded px-2 py-1 text-xs">6 roles</span>
-  <span className="rounded bg-violet-500/20 px-2 py-1 text-xs font-medium text-violet-700 dark:text-violet-400">
-    rbac
-  </span>
-</div>
+| Email                     | Role       | Access                                  |
+| ------------------------- | ---------- | --------------------------------------- |
+| `admin@databayt.org`      | ADMIN      | Full access, manage everything          |
+| `teacher@databayt.org`    | TEACHER    | Assigned classes, attendance, grades    |
+| `student@databayt.org`    | STUDENT    | Personal schedule, grades, assignments  |
+| `parent@databayt.org`     | GUARDIAN   | View linked children's data (read-only) |
+| `staff@databayt.org`      | STAFF      | Limited admin on assigned entities      |
+| `accountant@databayt.org` | ACCOUNTANT | Billing and invoices only               |
 
-- **admin@databayt.org** → Full access, manage everything <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-red-500/20 text-red-700 dark:text-red-400 rounded font-medium">admin</span>
-- **teacher@databayt.org** → Assigned classes, attendance, grades <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-blue-500/20 text-blue-700 dark:text-blue-400 rounded font-medium">teacher</span>
-- **student@databayt.org** → Personal schedule, grades, assignments <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-green-500/20 text-green-700 dark:text-green-400 rounded font-medium">student</span>
-- **parent@databayt.org** → View linked children data (read-only) <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 rounded font-medium">guardian</span>
-- **staff@databayt.org** → Limited admin on assigned entities <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-cyan-500/20 text-cyan-700 dark:text-cyan-400 rounded font-medium">staff</span>
-- **accountant@databayt.org** → Billing and invoices only <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-amber-500/20 text-amber-700 dark:text-amber-400 rounded font-medium">finance</span>
+## What to try
 
----
-
-## Features to Test
-
-<div className="not-prose mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-  <div className="rounded-lg border p-6">
-    <h3 className="mb-2 text-base font-medium">Students</h3>
-    <p className="text-muted-foreground text-sm">
-      Enrollment, profiles, guardian links, CSV export.
-    </p>
-  </div>
-  <div className="rounded-lg border p-6">
-    <h3 className="mb-2 text-base font-medium">Listings</h3>
-    <p className="text-muted-foreground text-sm">
-      Subjects, classes, teachers, parents management.
-    </p>
-  </div>
-  <div className="rounded-lg border p-6">
-    <h3 className="mb-2 text-base font-medium">Attendance</h3>
-    <p className="text-muted-foreground text-sm">
-      Daily marking, reports, trends analytics.
-    </p>
-  </div>
-  <div className="rounded-lg border p-6">
-    <h3 className="mb-2 text-base font-medium">Timetable</h3>
-    <p className="text-muted-foreground text-sm">
-      Drag-and-drop scheduling, conflict detection.
-    </p>
-  </div>
-  <div className="rounded-lg border p-6">
-    <h3 className="mb-2 text-base font-medium">Exams</h3>
-    <p className="text-muted-foreground text-sm">
-      Scheduling, grading, result management.
-    </p>
-  </div>
-  <div className="rounded-lg border p-6">
-    <h3 className="mb-2 text-base font-medium">Settings</h3>
-    <p className="text-muted-foreground text-sm">
-      Role switching, appearance, language toggle.
-    </p>
-  </div>
-</div>
-
----
+<CardGrid cols={3}>
+  <DocCard
+    title="Students"
+    description="Enrollment, profiles, guardian links, CSV export."
+  />
+  <DocCard
+    title="Listings"
+    description="Subjects, classes, teachers, parents."
+  />
+  <DocCard
+    title="Attendance"
+    description="Daily marking, reports, trends analytics."
+  />
+  <DocCard
+    title="Timetable"
+    description="Drag-and-drop scheduling, conflict detection."
+  />
+  <DocCard title="Exams" description="Scheduling, grading, results." />
+  <DocCard
+    title="Settings"
+    description="Role switching, appearance, language toggle."
+  />
+</CardGrid>
 
 ## Limitations
 
-<div className="not-prose mt-4 mb-4 flex gap-2">
-  <span className="bg-muted rounded px-2 py-1 text-xs">resets daily</span>
-  <span className="rounded bg-gray-500/20 px-2 py-1 text-xs font-medium text-gray-700 dark:text-gray-400">
-    sandbox
-  </span>
-</div>
+The demo resets daily and runs in sandbox mode:
 
-- Email notifications disabled
-- File uploads limited to 1MB
-- Cannot create new user accounts
-- School settings locked
-
----
+- Email notifications disabled.
+- File uploads limited to 1 MB.
+- Cannot create new user accounts.
+- School settings locked.
 
 ## Feedback
 
-<div className="not-prose mt-4 flex gap-2">
-  <a
-    href="https://github.com/databayt/hogwarts/issues/new"
-    target="_blank"
-    className="bg-muted hover:bg-muted/80 rounded px-3 py-1.5 text-sm"
-  >
-    Report Issue
-  </a>
-  <a
-    href="https://discord.gg/databayt"
-    target="_blank"
-    className="bg-muted hover:bg-muted/80 rounded px-3 py-1.5 text-sm"
-  >
-    Join Discord
-  </a>
-</div>
+- [Report an issue](https://github.com/databayt/hogwarts/issues/new) on GitHub.
+- [Join Discord](https://discord.gg/databayt) for live discussion.
