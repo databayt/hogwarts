@@ -2059,7 +2059,19 @@
         "failedToGenerate": "فشل تحميل بيانات الدخول",
         "failedToReset": "فشل إعادة تعيين كلمة المرور",
         "copyAll": "نسخ جميع البيانات",
-        "copiedToClipboard": "تم النسخ إلى الحافظة"
+        "copiedToClipboard": "تم النسخ إلى الحافظة",
+        "loginUrl": "رابط تسجيل الدخول",
+        "done": "تم",
+        "share": "مشاركة",
+        "whatsapp": "واتساب",
+        "shareEmail": "بريد إلكتروني",
+        "shareSms": "رسالة نصية",
+        "print": "طباعة",
+        "shareMessage": "بيانات دخول {studentName}\n\nاسم المستخدم: {username}\nكلمة المرور: {password}\nرابط الدخول: {loginUrl}\n\nسيُطلب من الطالب تغيير كلمة المرور عند أول تسجيل دخول.",
+        "shareEmailSubject": "بيانات تسجيل الدخول للطالب {studentName}",
+        "printTitle": "بيانات تسجيل الدخول",
+        "printGenerated": "تاريخ الإنشاء",
+        "printInstructions": "يرجى الحفاظ على سرية هذه الورقة. سيُطلب من {studentName} تغيير كلمة المرور عند أول تسجيل دخول."
       },
       "previousEducation": {
         "title": "التعليم السابق",

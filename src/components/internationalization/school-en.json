@@ -2059,7 +2059,19 @@
         "failedToGenerate": "Failed to load credentials",
         "failedToReset": "Failed to reset password",
         "copyAll": "Copy all details",
-        "copiedToClipboard": "Copied to clipboard"
+        "copiedToClipboard": "Copied to clipboard",
+        "loginUrl": "Login URL",
+        "done": "Done",
+        "share": "Share",
+        "whatsapp": "WhatsApp",
+        "shareEmail": "Email",
+        "shareSms": "SMS",
+        "print": "Print",
+        "shareMessage": "Login for {studentName}\n\nUsername: {username}\nPassword: {password}\nLogin at: {loginUrl}\n\nThe student will be asked to change the password on first login.",
+        "shareEmailSubject": "Login credentials for {studentName}",
+        "printTitle": "Login Credentials",
+        "printGenerated": "Generated",
+        "printInstructions": "Please keep this document secure. {studentName} will be asked to change the password on first login."
       },
       "previousEducation": {
         "title": "Previous Education",
