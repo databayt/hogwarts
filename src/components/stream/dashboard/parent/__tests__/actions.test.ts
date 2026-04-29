@@ -30,7 +30,7 @@ vi.mock("@/lib/db", () => ({
     enrollment: {
       findMany: vi.fn(),
     },
-    catalogLesson: {
+    lesson: {
       count: vi.fn(),
     },
   },

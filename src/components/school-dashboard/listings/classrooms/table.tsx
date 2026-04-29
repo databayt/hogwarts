@@ -6,6 +6,10 @@ import * as React from "react"
 import { useCallback, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 
+import {
+  FULL_UI_PERMISSIONS,
+  type UIPermissions,
+} from "@/lib/rbac/ui-permissions"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
 import { useModal } from "@/components/atom/modal/context"
@@ -23,6 +27,7 @@ import { useDataTable } from "@/components/table/use-data-table"
 
 import { deleteClassroom, getClassrooms } from "./actions"
 import { getClassroomColumns, type ClassroomRow } from "./columns"
+import { resolveClassroomError } from "./errors"
 import { ClassroomForm } from "./form"
 import { SyncClassroomsButton } from "./sync-classrooms-button"
 
@@ -32,6 +37,7 @@ interface ClassroomsTableProps {
   lang: Locale
   subdomain: string
   perPage?: number
+  permissions?: UIPermissions
 }
 
 function ClassroomsTableInner({
@@ -40,6 +46,7 @@ function ClassroomsTableInner({
   lang,
   subdomain,
   perPage = 20,
+  permissions = FULL_UI_PERMISSIONS,
 }: ClassroomsTableProps) {
   const router = useRouter()
   const { openModal } = useModal()
@@ -81,7 +88,12 @@ function ClassroomsTableInner({
       } else {
         refresh()
         ErrorToast(
-          result.error || d?.failedToDelete || "Failed to delete classroom"
+          resolveClassroomError(
+            result.error,
+            (result as { details?: string }).details,
+            (d?.errors as never) ?? undefined,
+            d?.failedToDelete || "Failed to delete classroom"
+          )
         )
       }
     },
@@ -95,10 +107,10 @@ function ClassroomsTableInner({
       getClassroomColumns(
         lang,
         subdomain,
-        { onEdit: handleEdit, onDelete: handleDelete },
+        { onEdit: handleEdit, onDelete: handleDelete, permissions },
         d
       ),
-    [lang, subdomain, handleEdit, handleDelete, d]
+    [lang, subdomain, handleEdit, handleDelete, d, permissions]
   )
 
   const { table } = useDataTable<ClassroomRow>({
@@ -127,14 +139,16 @@ function ClassroomsTableInner({
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
         searchPlaceholder={d?.search || "Search rooms..."}
-        onCreate={() => openModal()}
+        onCreate={permissions.showAddButton ? () => openModal() : undefined}
         entityName="classrooms"
         translations={{
           search: d?.search || "Search...",
           create: d?.create || "Create",
           reset: d?.reset || "Reset",
         }}
-        additionalActions={<SyncClassroomsButton />}
+        additionalActions={
+          permissions.showBulkActions ? <SyncClassroomsButton /> : undefined
+        }
       />
 
       <DataTable

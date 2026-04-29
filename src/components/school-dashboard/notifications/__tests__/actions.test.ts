@@ -43,6 +43,11 @@ vi.mock("@/lib/db", () => ({
       upsert: vi.fn(),
       updateMany: vi.fn(),
     },
+    // updateNotificationPreferences runs upserts inside db.$transaction([...])
+    // so the action requires a callable $transaction mock
+    $transaction: vi.fn((ops: unknown) =>
+      Array.isArray(ops) ? Promise.all(ops) : Promise.resolve(ops)
+    ),
   },
 }))
 

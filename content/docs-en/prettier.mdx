@@ -122,16 +122,37 @@ Classes are automatically sorted by Tailwind conventions:
 
 ### ESLint Integration
 
-We use `eslint-config-prettier` to disable conflicting ESLint rules:
+ESLint runs alongside Prettier with conflict rules disabled via `eslint-config-prettier`.
 
 ```js
 // eslint.config.mjs
+import { dirname } from "path"
+import { fileURLToPath } from "url"
+import { FlatCompat } from "@eslint/eslintrc"
 import eslintConfigPrettier from "eslint-config-prettier"
 
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+const compat = new FlatCompat({ baseDirectory: __dirname })
+
 export default [
-  // ... other configs
-  eslintConfigPrettier, // Must be last
+  ...compat.extends("next/core-web-vitals", "next/typescript"),
+  eslintConfigPrettier, // must be last
 ]
+```
+
+#### Rules and conventions
+
+- TypeScript-first: prefer typed modules, avoid `any`.
+- React 19 / Next 16 safe patterns: server components by default, client only when needed.
+- Imports: absolute aliases from `components.json` (e.g. `@/components/ui/button`).
+- Lint before commit: run `pnpm lint`.
+
+#### Commands
+
+```bash
+pnpm lint
+pnpm lint --fix
 ```
 
 ### IDE Setup

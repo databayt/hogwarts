@@ -13,13 +13,34 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 
+import type { StreamDictionary } from "../types"
+
 interface Props {
-  dictionary: any
+  dictionary: Pick<StreamDictionary, "header"> & {
+    notAdmin?: {
+      title?: string
+      description?: string
+      backToHome?: string
+    }
+  }
   lang: string
   subdomain: string
 }
 
-export function StreamNotAdminContent({ dictionary, lang, subdomain }: Props) {
+export function StreamNotAdminContent({ dictionary, lang }: Props) {
+  const title =
+    dictionary.notAdmin?.title ??
+    (lang === "ar" ? "الوصول مقيّد" : "Access Restricted")
+  const description =
+    dictionary.notAdmin?.description ??
+    (lang === "ar"
+      ? "ليس لديك صلاحيات المسؤول لإنشاء الدورات."
+      : "You are not an admin, which means you cannot create courses.")
+  const backToHome =
+    dictionary.notAdmin?.backToHome ??
+    dictionary.header?.home ??
+    (lang === "ar" ? "العودة إلى الرئيسية" : "Back to home")
+
   return (
     <div className="flex min-h-screen items-center justify-center">
       <Card className="w-full max-w-md">
@@ -28,21 +49,20 @@ export function StreamNotAdminContent({ dictionary, lang, subdomain }: Props) {
             <ShieldX className="text-destructive size-16" />
           </div>
 
-          <CardTitle className="text-2xl">Access Restricted</CardTitle>
+          <CardTitle className="text-2xl">{title}</CardTitle>
           <CardDescription className="mx-auto max-w-xs">
-            Hey! You are not an admin, which means you can&apos;t create any
-            courses or stuff like that...
+            {description}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Link
-            href="/"
+            href={`/${lang}`}
             className={buttonVariants({
               className: "w-full",
             })}
           >
             <ArrowLeft className="me-1 size-4 rtl:rotate-180" />
-            Back to home
+            {backToHome}
           </Link>
         </CardContent>
       </Card>

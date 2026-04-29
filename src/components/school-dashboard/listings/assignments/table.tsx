@@ -7,6 +7,10 @@ import { useCallback, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { Plus } from "lucide-react"
 
+import {
+  FULL_UI_PERMISSIONS,
+  type UIPermissions,
+} from "@/lib/rbac/ui-permissions"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { Button } from "@/components/ui/button"
 import {
@@ -32,6 +36,7 @@ interface AssignmentsTableProps {
   common?: Dictionary["school"]["common"]
   lang: Locale
   perPage?: number
+  permissions?: UIPermissions
 }
 
 function AssignmentsTableInner({
@@ -41,6 +46,7 @@ function AssignmentsTableInner({
   common,
   lang,
   perPage = 20,
+  permissions = FULL_UI_PERMISSIONS,
 }: AssignmentsTableProps) {
   const router = useRouter()
 
@@ -123,8 +129,9 @@ function AssignmentsTableInner({
         callbacks: {
           onDelete: handleDelete,
         },
+        permissions,
       }),
-    [dictionary, common, lang, handleDelete]
+    [dictionary, common, lang, handleDelete, permissions]
   )
 
   // Use pageCount of 1 since we're handling all data client-side
@@ -170,18 +177,20 @@ function AssignmentsTableInner({
     >
       <DataTableToolbar table={table}>
         <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-8 w-8 rounded-full p-0"
-            onClick={handleCreate}
-            aria-label={t.create}
-            title={t.create}
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
-          <ExportButton />
+          {permissions.showAddButton && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 w-8 rounded-full p-0"
+              onClick={handleCreate}
+              aria-label={t.create}
+              title={t.create}
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          )}
+          {permissions.showExportButton && <ExportButton />}
         </div>
       </DataTableToolbar>
     </DataTable>

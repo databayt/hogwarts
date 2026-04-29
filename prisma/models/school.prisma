@@ -390,6 +390,15 @@ model School {
   whatsappMessages         WhatsAppMessage[]
   whatsappMessageTemplates WhatsAppMessageTemplate[]
 
+  // Transportation relations
+  vehicles         Vehicle[]
+  drivers          Driver[]
+  routes           Route[]
+  routeStops       RouteStop[]
+  routeAssignments RouteAssignment[]
+  trips            Trip[]
+  tripBoardings    TripBoarding[]
+
   @@map("schools")
 }
 

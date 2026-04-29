@@ -59,6 +59,9 @@ model StaffMember {
   updatedAt         DateTime           @updatedAt
   staffPhoneNumbers StaffPhoneNumber[]
 
+  // Transportation — when a staff member also drives a school vehicle
+  driverProfile Driver?
+
   @@unique([schoolId, emailAddress]) // Unique email per school
   @@unique([schoolId, employeeId]) // Unique employee ID per school
   @@index([schoolId])

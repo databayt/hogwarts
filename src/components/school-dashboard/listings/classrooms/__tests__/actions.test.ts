@@ -128,7 +128,7 @@ describe("Classroom Actions", () => {
       const result = await getClassrooms({})
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Missing school")
+      expect(result.error).toBe("MISSING_SCHOOL")
     })
 
     it("maps response fields correctly", async () => {
@@ -307,10 +307,16 @@ describe("Classroom Actions", () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Missing school")
+      expect(result.error).toBe("MISSING_SCHOOL")
     })
 
     it("handles duplicate room name (P2002 unique constraint)", async () => {
+      // Plan-limit precheck must succeed so we reach the create() call that throws.
+      vi.mocked(db.school.findUnique).mockResolvedValue({
+        maxClasses: 100,
+      } as any)
+      vi.mocked(db.classroom.count).mockResolvedValue(0)
+
       const prismaError = new Error("Unique constraint failed")
       ;(prismaError as any).code = "P2002"
 
@@ -323,7 +329,7 @@ describe("Classroom Actions", () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("A room with this name already exists")
+      expect(result.error).toBe("ALREADY_EXISTS")
     })
   })
 
@@ -369,7 +375,7 @@ describe("Classroom Actions", () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Classroom not found")
+      expect(result.error).toBe("CLASSROOM_NOT_FOUND")
     })
 
     it("returns error when not authenticated", async () => {
@@ -386,7 +392,7 @@ describe("Classroom Actions", () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Missing school")
+      expect(result.error).toBe("MISSING_SCHOOL")
     })
 
     it("handles duplicate room name on update (P2002)", async () => {
@@ -405,7 +411,7 @@ describe("Classroom Actions", () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("A room with this name already exists")
+      expect(result.error).toBe("ALREADY_EXISTS")
     })
   })
 
@@ -447,8 +453,10 @@ describe("Classroom Actions", () => {
       const result = await deleteClassroom({ id: "room-1" })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe(
-        "Cannot delete: 3 class(es) are assigned to this room"
+      expect(result.error).toBe("HAS_DEPENDENCIES")
+      // Structured details so the client can render a translated message.
+      expect((result as any).details).toBe(
+        JSON.stringify({ kind: "classes", count: 3 })
       )
       expect(vi.mocked(db.classroom.deleteMany)).not.toHaveBeenCalled()
     })
@@ -460,8 +468,9 @@ describe("Classroom Actions", () => {
       const result = await deleteClassroom({ id: "room-1" })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe(
-        "Cannot delete: 5 timetable slot(s) reference this room"
+      expect(result.error).toBe("HAS_DEPENDENCIES")
+      expect((result as any).details).toBe(
+        JSON.stringify({ kind: "timetables", count: 5 })
       )
       expect(vi.mocked(db.classroom.deleteMany)).not.toHaveBeenCalled()
     })
@@ -474,8 +483,9 @@ describe("Classroom Actions", () => {
       const result = await deleteClassroom({ id: "room-1" })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe(
-        "Cannot delete: 2 room constraint(s) reference this room"
+      expect(result.error).toBe("HAS_DEPENDENCIES")
+      expect((result as any).details).toBe(
+        JSON.stringify({ kind: "constraints", count: 2 })
       )
       expect(vi.mocked(db.classroom.deleteMany)).not.toHaveBeenCalled()
     })
@@ -491,7 +501,7 @@ describe("Classroom Actions", () => {
       const result = await deleteClassroom({ id: "room-1" })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Missing school")
+      expect(result.error).toBe("MISSING_SCHOOL")
     })
   })
 })

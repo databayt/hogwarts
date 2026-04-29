@@ -5,11 +5,13 @@ import { SearchParams } from "nuqs/server"
 
 import { getDisplayText } from "@/lib/content-display"
 import { detectLanguage } from "@/lib/i18n-content"
+import type { Role } from "@/lib/rbac/types"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
 import { type ResultRow } from "@/components/school-dashboard/listings/grades/columns"
 import { resultsSearchParams } from "@/components/school-dashboard/listings/grades/list-params"
+import { getUIConfigForRole } from "@/components/school-dashboard/listings/grades/permissions"
 import {
   formatResultRow,
   getResultsList,
@@ -28,7 +30,8 @@ export default async function GradesContent({
   lang,
 }: Props) {
   const sp = await resultsSearchParams.parse(await searchParams)
-  const { schoolId } = await getTenantContext()
+  const { schoolId, role } = await getTenantContext()
+  const permissions = getUIConfigForRole(role as Role | null | undefined)
   const t = dictionary.grades
 
   let data: ResultRow[] = []
@@ -97,6 +100,7 @@ export default async function GradesContent({
         dictionary={t}
         lang={lang}
         perPage={sp.perPage}
+        permissions={permissions}
       />
     </div>
   )

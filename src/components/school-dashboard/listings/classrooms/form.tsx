@@ -35,6 +35,7 @@ import {
   getGrades,
   updateClassroom,
 } from "./actions"
+import { resolveClassroomError } from "./errors"
 import { classroomCreateSchema } from "./validation"
 
 type FormData = z.infer<typeof classroomCreateSchema>
@@ -96,7 +97,12 @@ export function ClassroomForm({ onSuccess }: ClassroomFormProps) {
         onSuccess?.()
       } else {
         ErrorToast(
-          result.error || d?.failedToSave || "Failed to save classroom"
+          resolveClassroomError(
+            result.error,
+            (result as { details?: string }).details,
+            (d as { errors?: Record<string, string> } | undefined)?.errors,
+            d?.failedToSave || "Failed to save classroom"
+          )
         )
       }
     })

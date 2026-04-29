@@ -3,10 +3,12 @@
 
 import { getDisplayText } from "@/lib/content-display"
 import { getModel } from "@/lib/prisma-guards"
+import type { Role } from "@/lib/rbac/types"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 
+import { getUIConfigForRole } from "./permissions"
 import { getStaffList } from "./queries"
 import { StaffTable, transformStaffToRow } from "./table"
 
@@ -28,7 +30,8 @@ export async function StaffContent({
   locale,
   searchParams,
 }: StaffContentProps) {
-  const { schoolId } = await getTenantContext()
+  const { schoolId, role } = await getTenantContext()
+  const permissions = getUIConfigForRole(role as Role | null | undefined)
   const dictionary = await getDictionary(locale)
   const d = (dictionary?.school as any)?.staffListing as
     | Record<string, any>
@@ -94,5 +97,12 @@ export async function StaffContent({
 
   const pageCount = Math.ceil(count / perPage)
 
-  return <StaffTable data={data} pageCount={pageCount} locale={locale} />
+  return (
+    <StaffTable
+      data={data}
+      pageCount={pageCount}
+      locale={locale}
+      permissions={permissions}
+    />
+  )
 }

@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/table"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
+import { resolveClassroomError } from "../errors"
 import { bulkUpdateSubjectRooms, type GradeSubjectAssignment } from "./actions"
 
 interface SubjectRoomFormProps {
@@ -80,9 +81,12 @@ export function SubjectRoomForm({ grades }: SubjectRoomFormProps) {
         setPendingChanges(new Map())
       } else {
         toast.error(
-          result.error ||
-            d?.failedToUpdateAssignments ||
-            "Failed to update assignments"
+          resolveClassroomError(
+            result.error,
+            (result as { details?: string }).details,
+            (d as { errors?: Record<string, string> } | undefined)?.errors,
+            d?.failedToUpdateAssignments || "Failed to update assignments"
+          )
         )
       }
     })

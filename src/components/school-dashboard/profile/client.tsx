@@ -7,24 +7,11 @@ import { useSidebar } from "@/components/ui/sidebar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   OcticonBook,
-  OcticonClock,
   OcticonClose,
-  OcticonExpand,
-  OcticonFlame,
-  OcticonGitFork,
-  OcticonGitMerge,
-  OcticonGrabber,
   OcticonIssueOpened,
-  OcticonOrganization,
   OcticonPackage,
-  OcticonPeople,
-  OcticonPullRequest,
   OcticonRepo,
-  OcticonRepoPush,
-  OcticonSmiley,
   OcticonStar,
-  OcticonStarFilled,
-  OcticonStarLarge,
   OcticonTable,
   OcticonTriangleDown,
 } from "@/components/atom/icons"
@@ -311,67 +298,6 @@ export default function ProfileContent({
                 >
                   {year}
                 </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Icon Reference Grid */}
-          <div className="border-border rounded-md border p-3">
-            <h3 className="text-foreground mb-4 text-sm font-semibold">
-              {p?.overview?.octiconIcons ?? "Octicon Icons"}
-            </h3>
-            <div className="grid grid-cols-5 gap-4 sm:grid-cols-7 md:grid-cols-10">
-              {[
-                { icon: <OcticonRepo className="size-5" />, name: "Repo" },
-                { icon: <OcticonBook className="size-5" />, name: "Book" },
-                { icon: <OcticonTable className="size-5" />, name: "Table" },
-                {
-                  icon: <OcticonPackage className="size-5" />,
-                  name: "Package",
-                },
-                { icon: <OcticonStar className="size-5" />, name: "Star" },
-                {
-                  icon: <OcticonStarFilled className="size-5" />,
-                  name: "StarFill",
-                },
-                {
-                  icon: <OcticonStarLarge className="size-5" />,
-                  name: "StarLg",
-                },
-                { icon: <OcticonGitFork className="size-5" />, name: "Fork" },
-                {
-                  icon: <OcticonOrganization className="size-5" />,
-                  name: "Org",
-                },
-                { icon: <OcticonClock className="size-5" />, name: "Clock" },
-                { icon: <OcticonPeople className="size-5" />, name: "People" },
-                { icon: <OcticonSmiley className="size-5" />, name: "Smiley" },
-                { icon: <OcticonRepoPush className="size-5" />, name: "Push" },
-                { icon: <OcticonExpand className="size-5" />, name: "Expand" },
-                {
-                  icon: <OcticonGrabber className="size-5" />,
-                  name: "Grabber",
-                },
-                { icon: <OcticonClose className="size-5" />, name: "Close" },
-                { icon: <OcticonPullRequest className="size-5" />, name: "PR" },
-                { icon: <OcticonFlame className="size-5" />, name: "Flame" },
-                { icon: <OcticonGitMerge className="size-5" />, name: "Merge" },
-                {
-                  icon: <OcticonIssueOpened className="size-5" />,
-                  name: "Issue",
-                },
-                {
-                  icon: <OcticonTriangleDown className="size-5" />,
-                  name: "TriDown",
-                },
-              ].map((item) => (
-                <div
-                  key={item.name}
-                  className="text-muted-foreground hover:text-foreground flex flex-col items-center gap-1.5 rounded-md p-2 transition-colors"
-                >
-                  {item.icon}
-                  <span className="text-[10px]">{item.name}</span>
-                </div>
               ))}
             </div>
           </div>

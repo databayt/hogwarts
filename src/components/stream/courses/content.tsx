@@ -126,22 +126,24 @@ export function StreamCoursesContent({
         <SearchBar lang={lang} dictionary={dictionary} />
       </section>
 
-      {/* Grade Toggle Badges */}
-      <section className="flex flex-wrap gap-2">
-        {GRADES.map((g) => (
-          <button
-            key={g}
-            onClick={() => handleGradeClick(String(g))}
-            className={`cursor-pointer rounded-full px-3 py-1 text-sm font-medium transition-colors ${
-              activeGrade === String(g)
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:bg-muted/80"
-            }`}
-          >
-            {g}
-          </button>
-        ))}
-      </section>
+      {/* Grade Toggle Badges — hidden for students (they're locked to their own grade via the /stream redirect) */}
+      {userRole !== "STUDENT" && (
+        <section className="flex flex-wrap gap-2">
+          {GRADES.map((g) => (
+            <button
+              key={g}
+              onClick={() => handleGradeClick(String(g))}
+              className={`cursor-pointer rounded-full px-3 py-1 text-sm font-medium transition-colors ${
+                activeGrade === String(g)
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+              }`}
+            >
+              {g}
+            </button>
+          ))}
+        </section>
+      )}
 
       {allCourses.length === 0 ? (
         <Card>

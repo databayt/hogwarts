@@ -1,0 +1,33 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
+import type { Role } from "@/lib/rbac/types"
+import {
+  ADMIN_ROLES,
+  FULL_UI_PERMISSIONS,
+  isRoleIn,
+  NO_UI_PERMISSIONS,
+  type UIPermissions,
+} from "@/lib/rbac/ui-permissions"
+import type { PageNavItem } from "@/components/atom/page-nav"
+
+export function getTabsForRole(
+  role: Role | null | undefined,
+  lang: string,
+  d?: Record<string, string>
+): PageNavItem[] {
+  if (!isRoleIn(role, ADMIN_ROLES)) return []
+  return [
+    { name: d?.navAll || "All Leads", href: `/${lang}/sales` },
+    { name: d?.navImport || "Import", href: `/${lang}/sales/import` },
+    { name: d?.navAnalytics || "Analytics", href: `/${lang}/sales/analytics` },
+  ]
+}
+
+export function getUIConfigForRole(
+  role: Role | null | undefined
+): UIPermissions {
+  if (!role) return NO_UI_PERMISSIONS
+  if (isRoleIn(role, ADMIN_ROLES)) return FULL_UI_PERMISSIONS
+  return NO_UI_PERMISSIONS
+}

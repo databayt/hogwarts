@@ -1,11 +1,15 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { PageNav, type PageNavItem } from "@/components/atom/page-nav"
+import { auth } from "@/auth"
+
+import type { Role } from "@/lib/rbac/types"
+import { PageNav } from "@/components/atom/page-nav"
 import { AdminAuthGuard } from "@/components/auth/admin-auth-guard"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
+import { getTabsForRole } from "@/components/school-dashboard/school/permissions"
 
 interface Props {
   children: React.ReactNode
@@ -13,34 +17,12 @@ interface Props {
 }
 
 export default async function SchoolLayout({ children, params }: Props) {
-  const { lang } = await params
-
+  const [{ lang }, session] = await Promise.all([params, auth()])
   const dictionary = await getDictionary(lang as Locale)
   const d = dictionary?.school?.schoolAdmin
-  const n = d?.navigation
+  const role = (session?.user?.role ?? null) as Role | null
 
-  const schoolPages: PageNavItem[] = [
-    { name: n?.overview || "Overview", href: `/${lang}/school` },
-    {
-      name: n?.configuration || "Configuration",
-      href: `/${lang}/school/configuration/title`,
-      matchPrefix: `/${lang}/school/configuration`,
-    },
-    {
-      name: n?.academic || "Academic",
-      href: `/${lang}/school/academic`,
-    },
-    { name: n?.membership || "Membership", href: `/${lang}/school/membership` },
-    { name: n?.bulk || "Bulk", href: `/${lang}/school/bulk` },
-    {
-      name: n?.communication || "Communication",
-      href: `/${lang}/school/communication`,
-    },
-    { name: n?.billing || "Billing", href: `/${lang}/school/billing` },
-    { name: n?.security || "Security", href: `/${lang}/school/security` },
-    { name: n?.reports || "Reports", href: `/${lang}/school/reports` },
-    { name: n?.analysis || "Analysis", href: `/${lang}/school/analysis` },
-  ]
+  const schoolPages = getTabsForRole(role, lang, d)
 
   return (
     <AdminAuthGuard lang={lang as Locale}>

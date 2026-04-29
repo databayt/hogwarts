@@ -34,75 +34,11 @@ Grade-specific:     "Math Grade 1"     grades: [1]   slug: us-g1-math
                     "Math Grade 2"     grades: [2]   slug: us-g2-math
                     "Math Grade 3"     grades: [3]   slug: us-g3-math
                     ...
-```
-
-Key points:
-
-- **Slug convention**: `us-g{N}-{subject}` (e.g., `us-g3-math`)
-- **Single grade per subject**: Each grade-specific subject has `grades: [3]` (single grade) instead of `grades: [1,2,3,4,5,6]`
-- **Chapters and lessons duplicated**: Each grade-specific subject has its own set of chapters and lessons
-- **Descriptions**: All subjects, chapters, and lessons include descriptions
-
-### Multi-Country Support
-
-Every catalog entity carries `country` and `curriculum` fields:
-
-| Field        | Example Values                         | Purpose                             |
-| ------------ | -------------------------------------- | ----------------------------------- |
-| `country`    | `"US"`, `"SD"`, `"GB"`, `"AE"`         | Which country's curriculum          |
-| `curriculum` | `"us-k12"`, `"national"`, `"ib"`       | Which education system / curriculum |
-| `grades`     | `[3]`, `[7]`, etc.                     | Exact grade for this subject        |
-| `levels`     | `[ELEMENTARY]`, `[MIDDLE, HIGH]`, etc. | Legacy level classification         |
-
-### Community Contributions
-
-Schools don't just consume the catalog -- they enrich it:
-
-```
 Teacher creates content (video, question, material)
   > Saved as PENDING + PRIVATE
     > SaaS admin reviews
       > APPROVED: indexed in catalog with visibility tier
       > REJECTED: feedback sent to creator
-```
-
-Content types: `LessonVideo`, `CatalogQuestion`, `CatalogMaterial`, `CatalogExam`, `CatalogAssignment`
-
-### Key Models
-
-| Model               | Scope  | Records | Purpose                                 |
-| ------------------- | ------ | ------- | --------------------------------------- |
-| `CatalogSubject`    | Global | ~220    | Grade-specific subject definitions      |
-| `CatalogChapter`    | Global | varies  | Topic groups within grade-subjects      |
-| `CatalogLesson`     | Global | varies  | Individual lessons                      |
-| `CatalogBook`       | Global | --      | Books linked to grade-specific subjects |
-| `CatalogExam`       | Global | --      | Exam templates at any level             |
-| `CatalogQuestion`   | Global | --      | Global question bank                    |
-| `CatalogMaterial`   | Global | --      | Books, syllabi, worksheets              |
-| `CatalogAssignment` | Global | --      | Homework/project templates              |
-
-**Depends on:** Nothing. The catalog exists before any school.
-
-See: [Catalog](/docs/catalog)
-
----
-
-## Layer 2: School Onboarding
-
-Onboarding collects the school profile that drives all downstream provisioning. 15 steps across 3 groups, but only a few feed into the integration chain.
-
-### Steps That Matter for Integration
-
-| Step          | Order | Collects                                             | Feeds Into                      |
-| ------------- | ----- | ---------------------------------------------------- | ------------------------------- |
-| `description` | 2     | `schoolType` (public, private, british)              | Academic structure, timetable   |
-| `location`    | 3     | `country`, `city`, `state`                           | Catalog filtering, schedule     |
-| `capacity`    | 5     | `teachers`, `sectionsPerGrade`, `studentsPerSection` | Section-based capacity planning |
-| `schedule`    | 5.5   | Timetable structure selection                        | Period records, working days    |
-
-### What Gets Saved
-
-```
 description step --> School.schoolType (e.g., "public", "british", "ib")
 location step    --> School.country, School.city, School.state
 capacity step    --> School.sectionsPerGrade, School.studentsPerSection + computed maxClasses/maxStudents
@@ -204,23 +140,6 @@ See: [Onboarding](/docs/onboarding)
 
 ### What Gets Created
 
-```
-School (country, schoolLevel, schoolType)
-  |
-  +--> AcademicLevel (up to 3)
-  |      ELEMENTARY  (grades 1-6,  levelOrder 1)
-  |      MIDDLE      (grades 7-9,  levelOrder 2)
-  |      HIGH        (grades 10-12, levelOrder 3)
-  |
-  +--> AcademicGrade (one per grade number)
-  |      Grade 1, Grade 2, ... Grade 12
-  |      Each linked to its AcademicLevel
-  |
-  +--> AcademicStream (High only)
-         Science (grades 10, 11, 12)
-         Arts    (grades 10, 11, 12)
-```
-
 ### Level Filtering
 
 The school's `schoolLevel` field determines which levels are created:
@@ -250,17 +169,6 @@ The bridge layer connects the global catalog to school-specific grades. This is 
 ### Auto-Assignment
 
 `setupCatalogForSchool()` checks each catalog subject's `grades` array first (for grade-specific subjects), falling back to level-based mapping only if the `grades` array is empty:
-
-```
-Grade-specific subject (grades: [5]):
-  + AcademicGrade (gradeNumber: 5) --> SchoolSubjectSelection  (direct match)
-  + AcademicGrade (gradeNumber: 7) --> (skipped, not in grades array)
-
-Level-based subject (grades: [], levels: [ELEMENTARY, MIDDLE]):
-  + AcademicGrade (gradeNumber: 5, level: ELEMENTARY) --> SchoolSubjectSelection
-  + AcademicGrade (gradeNumber: 7, level: MIDDLE)     --> SchoolSubjectSelection
-  + AcademicGrade (gradeNumber: 10, level: HIGH)      --> (skipped, not in subject's levels)
-```
 
 Result: ~99% of relevant subjects auto-assigned. Schools start with a working curriculum immediately.
 
@@ -293,34 +201,6 @@ Schools can request new subjects be added to the catalog:
 
 ```
 School creates CRUD request --> SaaS reviews --> Approved --> Added to global catalog
-```
-
-### Key Models
-
-| Model                      | Scope  | Purpose                                                |
-| -------------------------- | ------ | ------------------------------------------------------ |
-| `SchoolSubjectSelection`   | School | "We teach this catalog subject in this grade"          |
-| `SchoolContentOverride`    | School | "Hide this chapter/lesson for our school"              |
-| `Subject.catalogSubjectId` | School | Optional FK bridging classroom subjects to LMS content |
-
-### Bridge Fields (SchoolSubjectSelection)
-
-| Field              | Type      | Description                     |
-| ------------------ | --------- | ------------------------------- |
-| `schoolId`         | `String`  | Tenant isolation                |
-| `catalogSubjectId` | `String`  | FK to CatalogSubject            |
-| `gradeId`          | `String`  | FK to AcademicGrade             |
-| `streamId`         | `String?` | FK to AcademicStream (optional) |
-| `isRequired`       | `Boolean` | Core vs elective                |
-| `weeklyPeriods`    | `Int?`    | Periods per week                |
-| `customName`       | `String?` | School-specific rename          |
-| `isActive`         | `Boolean` | Currently offered               |
-
-### Dual-Use Subject Bridge
-
-The school-scoped `Subject` model (used for classroom scheduling via `Class.subjectId`) now has an optional `catalogSubjectId` FK to `CatalogSubject`. This bridges two previously disconnected systems:
-
-```
 Physical classroom side:          LMS / catalog side:
 Subject (school-scoped)           CatalogSubject (global)
   |                                   |
@@ -355,26 +235,6 @@ Teachers are connected to subjects and classes through multiple relationship typ
 | **Homeroom Teacher**  | `Class` (pastoral, not subject) | Pastoral care, not tied to a specific subject |
 
 ### Assignment Flow
-
-```
-Teacher
-  |
-  +--> TeacherSubjectExpertise  (what they CAN teach)
-  |      schoolId + teacherId + subjectId
-  |      expertiseLevel: PRIMARY, SECONDARY, CERTIFIED
-  |
-  +--> TeacherDepartment         (which department)
-  |      schoolId + teacherId + departmentId
-  |      isPrimary: true/false
-  |      isDepartmentHead: true/false (one head per dept)
-  |
-  +--> Class (as primary teacher)  (what they DO teach)
-  |      Class.teacherId = teacher.id
-  |
-  +--> ClassTeacher               (co-teaching roles)
-         schoolId + classId + teacherId
-         role: PRIMARY, CO_TEACHER, ASSISTANT
-```
 
 ### Key Models
 
@@ -518,129 +378,6 @@ After onboarding completes and teachers/students are added, the admin uses the C
 Step 1: "Generate Sections" (optional) -- add more sections beyond auto-provisioned ones
 Step 2: "Generate Classes"  -- creates 1 Class per subject-per-grade-per-term
 Step 3: "Enroll Students"   -- creates StudentClass for every student x class per grade
-```
-
-These three actions bridge the gap between "school has subjects and grades" and "timetable can be generated."
-
-### Classroom Model
-
-| Field      | Type      | Description                                   |
-| ---------- | --------- | --------------------------------------------- |
-| `schoolId` | `String`  | Tenant isolation                              |
-| `typeId`   | `String`  | FK to ClassroomType                           |
-| `gradeId`  | `String?` | FK to AcademicGrade (optional grade affinity) |
-| `roomName` | `String`  | Display name (e.g., "A101", "Physics Lab")    |
-| `capacity` | `Int`     | Physical seat count for this room             |
-
-### Section Model
-
-Sections represent homeroom groups within a grade (e.g., "Grade 7-A"). Students are placed into sections, and section membership drives class enrollment.
-
-| Field               | Type      | Description                                    |
-| ------------------- | --------- | ---------------------------------------------- |
-| `schoolId`          | `String`  | Tenant isolation                               |
-| `gradeId`           | `String`  | FK to AcademicGrade                            |
-| `name`              | `String`  | Display name (e.g., "Grade 7-A")               |
-| `letter`            | `String`  | Section letter (e.g., "A")                     |
-| `homeroomTeacherId` | `String?` | FK to Teacher (homeroom teacher)               |
-| `classroomId`       | `String?` | FK to Classroom (assigned room)                |
-| `maxCapacity`       | `Int`     | Maximum students in this section (default: 30) |
-
-### Three Capacity Concepts
-
-The platform has three distinct notions of "capacity" that are easy to conflate:
-
-| Concept              | Field         | Model       | Default      | Set During            | Meaning                                         |
-| -------------------- | ------------- | ----------- | ------------ | --------------------- | ----------------------------------------------- |
-| Plan limit: students | `maxStudents` | `School`    | 100          | Onboarding (Layer 2)  | Max total student records the plan allows       |
-| Plan limit: teachers | `maxTeachers` | `School`    | 10           | Onboarding (Layer 2)  | Max total teacher records the plan allows       |
-| Plan limit: classes  | `maxClasses`  | `School`    | 20           | Onboarding (Layer 2)  | Max total `Class` records the school can create |
-| Room capacity        | `capacity`    | `Classroom` | _(required)_ | Admin setup (Layer 6) | Physical seats in this one room                 |
-| Enrollment min       | `minCapacity` | `Class`     | 10           | Class creation        | Minimum students to run this class              |
-| Enrollment max       | `maxCapacity` | `Class`     | 50           | Class creation        | Maximum students enrolled in this class         |
-
-**Plan limits** (School) gate how many records can be created. **Room capacity** (Classroom) describes physical space. **Enrollment bounds** (Class) control class size. Cross-validation is now enforced: `createClass` and `updateClass` return a hard error when `maxCapacity` exceeds the assigned room's `capacity`. The `maxClasses` plan limit is also enforced in `createClass` and `generateSections`.
-
-### 8 Room Types
-
-`classroom`, `lab`, `library`, `art`, `music`, `hall`, `sports`, `admin`
-
-### Seed Inventory (28 Rooms)
-
-The demo school seeds 28 rooms across 5 buildings:
-
-**Building A** -- Classrooms + Admin (9 rooms)
-
-| Room             | Floor | Type      | Capacity |
-| ---------------- | ----- | --------- | -------- |
-| A101             | 1     | classroom | 30       |
-| A102             | 1     | classroom | 30       |
-| A103             | 1     | classroom | 30       |
-| A201             | 2     | classroom | 30       |
-| A202             | 2     | classroom | 30       |
-| A203             | 2     | classroom | 30       |
-| Principal Office | 1     | admin     | 10       |
-| Staff Room       | 1     | admin     | 40       |
-| Meeting Room     | 1     | admin     | 20       |
-
-**Building B** -- Classrooms (6 rooms)
-
-| Room | Floor | Type      | Capacity |
-| ---- | ----- | --------- | -------- |
-| B101 | 1     | classroom | 35       |
-| B102 | 1     | classroom | 35       |
-| B103 | 1     | classroom | 35       |
-| B201 | 2     | classroom | 35       |
-| B202 | 2     | classroom | 35       |
-| B203 | 2     | classroom | 35       |
-
-**Building C** -- Labs (6 rooms)
-
-| Room           | Floor | Type | Capacity |
-| -------------- | ----- | ---- | -------- |
-| Physics Lab    | 1     | lab  | 25       |
-| Chemistry Lab  | 1     | lab  | 25       |
-| Biology Lab    | 1     | lab  | 25       |
-| Computer Lab 1 | 2     | lab  | 30       |
-| Computer Lab 2 | 2     | lab  | 30       |
-| Language Lab   | 2     | lab  | 25       |
-
-**Building D** -- Special Rooms (4 rooms)
-
-| Room          | Floor | Type    | Capacity |
-| ------------- | ----- | ------- | -------- |
-| Library       | 1     | library | 100      |
-| Art Room      | 1     | art     | 25       |
-| Music Room    | 1     | music   | 30       |
-| Assembly Hall | 1     | hall    | 500      |
-
-**Building E** -- Sports (3 rooms)
-
-| Room             | Floor | Type   | Capacity |
-| ---------------- | ----- | ------ | -------- |
-| Sports Hall      | 1     | sports | 200      |
-| Football Field   | 0     | sports | 100      |
-| Basketball Court | 0     | sports | 50       |
-
-**Summary by type:** 12 classrooms (390 seats), 6 labs (160), 1 library (100), 1 art (25), 1 music (30), 1 hall (500), 3 sports (350), 3 admin (70) = **28 rooms, 1,625 total capacity**.
-
-### Room Constraints
-
-`RoomConstraint` stores scheduling rules per room:
-
-| Field                  | Purpose                                              |
-| ---------------------- | ---------------------------------------------------- |
-| `allowedSubjectTypes`  | Restrict room to specific subject types (e.g., labs) |
-| `strictCapacityLimit`  | Enforce hard capacity limit during scheduling        |
-| `reservedPeriods`      | `{dayOfWeek: [periodId, ...]}` -- blocked time slots |
-| `maintenanceBlocks`    | Scheduled maintenance windows                        |
-| `wheelchairAccessible` | Accessibility flag                                   |
-
-### Grade-to-Class Bridge
-
-The `Class` model has an optional `gradeId` FK linking directly to `AcademicGrade`. This connects academic structure to physical space:
-
-```
 AcademicGrade (e.g., Grade 7)
     |
     | gradeId (optional FK)
@@ -657,75 +394,6 @@ AcademicGrade (e.g., Grade 7)
     |
     +--> Classroom (e.g., A101)
            capacity: 30  (physical seats)
-```
-
-Key points:
-
-- **`Class` is the bridge** -- it holds `gradeId`, `subjectId`, `teacherId`, `classroomId`, and `termId`
-- **`gradeId` is optional** -- existing records without it are backfilled via `pnpm db:seed:single backfill-class-grades` (parses grade number from class name)
-- **Class form** includes a grade selector dropdown when `AcademicGrade` records exist for the school
-- **Grade column** appears in the class table and CSV export
-- **Class sections** (A, B, C) are not a formal field -- they are encoded in the `name` (e.g., "Grade 7-A"). The Configure tab auto-provisions sections with consistent naming (`Grade N-A`, `Grade N-B`, etc.)
-- **In seeds**, classrooms are assigned to classes via **round-robin** across available rooms, not by grade affinity
-
-### When to Configure Classrooms
-
-Classrooms are **auto-provisioned during onboarding** by `autoProvisionSections()`. They must exist before:
-
-- **Creating `Class` records** -- `classroomId` is a required FK on `Class`
-- **Creating timetable slots** -- `classroomId` is a required FK on `Timetable`
-
-Current state:
-
-- Unified `/classrooms` route with tabs: Rooms, Configure, Capacity, Subjects, Schedule
-- **Auto-provisioned**: `autoProvisionSections()` creates Classroom + Section pairs per grade during onboarding (N per grade, where N = `School.sectionsPerGrade`)
-- **Manual via Configure tab**: `generateSections()` creates additional Classroom + Section pairs on demand (wrapped in `db.$transaction`)
-- `maxClasses` plan limit enforced in both `createClass` and `generateSections`
-- The demo school has 28 rooms seeded across 5 buildings
-- The `maxClasses` value from onboarding limits `Class` records, not `Classroom` records
-
-### Classrooms RBAC
-
-Access to classroom CRUD operations is controlled by `classrooms/authorization.ts`:
-
-| Role          | Create | Read | Update | Delete |
-| ------------- | ------ | ---- | ------ | ------ |
-| **DEVELOPER** | Yes    | Yes  | Yes    | Yes    |
-| **ADMIN**     | Yes    | Yes  | Yes    | Yes    |
-| **TEACHER**   | No     | Yes  | No     | No     |
-| **STAFF**     | No     | Yes  | No     | No     |
-| Others        | No     | No   | No     | No     |
-
-ADMIN access is scoped to their own school via `schoolId` matching.
-
-**Depends on:** Auto-provisioned during onboarding (Layer 2). Class generation (6b) depends on Layers 4, 5a, and 6. Student enrollment (6c) depends on Layers 5b and 6b.
-
-See: [Classrooms](/docs/classrooms)
-
----
-
-## Layer 7: Timetable
-
-The timetable is the culmination -- it ties together everything from every previous layer into a weekly schedule.
-
-### Prerequisites
-
-Before a timetable slot can be created, all of these must exist:
-
-| Prerequisite          | Model / Config      | Source Layer                      |
-| --------------------- | ------------------- | --------------------------------- |
-| Academic terms        | `Term`              | Layer 2 (auto-created on publish) |
-| Working days          | `SchoolWeekConfig`  | Layer 2 (auto-created on publish) |
-| Periods               | `Period`            | Layer 2 (schedule step)           |
-| Classes with teachers | `Class` + `Teacher` | Layer 5a                          |
-| Students in classes   | `StudentClass`      | Layer 5b                          |
-| Classrooms            | `Classroom`         | Layer 6                           |
-
-### The Timetable Slot
-
-Each slot is one intersection: **day x period x class x teacher x room**.
-
-```
 Timetable {
   schoolId     -- tenant isolation
   termId       -- which academic term
@@ -746,88 +414,9 @@ These prevent double-booking at the database level:
 @@unique([schoolId, termId, dayOfWeek, periodId, classId, weekOffset])
 @@unique([schoolId, termId, dayOfWeek, periodId, teacherId, weekOffset])
 @@unique([schoolId, termId, dayOfWeek, periodId, classroomId, weekOffset])
-```
-
-| Constraint | Prevents                                        |
-| ---------- | ----------------------------------------------- |
-| 1st        | A class being in two places at the same time    |
-| 2nd        | A teacher teaching two classes at the same time |
-| 3rd        | A room hosting two classes at the same time     |
-
-### Views
-
-| View         | Shows                                  | Path                    |
-| ------------ | -------------------------------------- | ----------------------- |
-| Class view   | One class section's weekly schedule    | Class --> Timetable     |
-| Teacher view | One teacher's weekly teaching schedule | Teacher --> Timetable   |
-| Room view    | One room's weekly occupancy            | Classroom --> Timetable |
-
-### Shared Term Resolver
-
-Both timetable and attendance modules need to determine the "current" academic term. The `resolveActiveTerm()` function in `src/lib/term-resolver.ts` uses a 3-priority fallback:
-
-| Priority | Source        | Condition                                   |
-| -------- | ------------- | ------------------------------------------- |
-| 1        | `explicit`    | `Term.isActive = true` (admin-set flag)     |
-| 2        | `date_range`  | `today` falls between `startDate`/`endDate` |
-| 3        | `most_recent` | Latest `startDate` (fallback for gaps)      |
-
-Returns `{ term, source }` so callers can log which resolution path was used. Returns `{ term: null, source: "none" }` if no terms exist at all.
-
-### How Users See Their Timetable
-
-- **Students**: Student --> StudentClass --> Class --> Timetable
-- **Teachers**: Teacher --> Timetable (direct FK)
-- **Admins**: Any view (class, teacher, room)
-
-**Depends on:** All previous layers (1-6).
-
-See: [Timetable](/docs/timetable)
-
----
-
-## Layer 8: Exams & Assessment
-
-Exams and assessments consume the timetable layer's classes, subjects, and enrollment data to produce scored results.
-
-### Models
-
-```
 Exam > ExamSession > StudentAnswer > MarkingResult > ExamResult
 QuestionBank > GeneratedExam > GeneratedPaper
 Result (standalone grades for assignments/homework)
-```
-
-### What It Reads
-
-| Source Layer | Models Used      | Purpose                                     |
-| ------------ | ---------------- | ------------------------------------------- |
-| Layer 5a     | Class, Teacher   | Which class the exam is for, who creates it |
-| Layer 5b     | StudentClass     | Which students take the exam                |
-| Layer 4      | Subject          | Subject of the exam                         |
-| Layer 3      | Term, SchoolYear | Term-scoping for exam scheduling            |
-
-See: [Exams](/docs/exams)
-
----
-
-## Layer 9: Grades Block
-
-The Grades block is the **academic outcomes pipeline** -- it reads from Exams (Layer 8), Grades Listing, and Academic Structure to produce certificates, report cards, transcripts, notifications, and promotion decisions.
-
-### Sub-layers
-
-| Sub-layer | Name               | Reads From                                  | Blocking? | Can Run In Parallel With |
-| --------- | ------------------ | ------------------------------------------- | --------- | ------------------------ |
-| 9a        | Certificates (PDF) | Layer 8 (ExamResult, ExamCertificateConfig) | No        | Layer 9b                 |
-| 9b        | Report Cards       | Layers 5b, 8 (enrollment + exam results)    | No        | Layers 9c, 9e            |
-| 9c        | Transcripts        | Layer 9b (report cards)                     | No        | --                       |
-| 9d        | Notifications      | Layers 9a, 9b, 9e (triggered by events)     | No        | --                       |
-| 9e        | Promotion          | Layer 9b + Attendance                       | Yes       | --                       |
-
-### Data Flow
-
-```
 ExamResult + Result (Layer 8)
     |
     v
@@ -851,42 +440,12 @@ Atom > Section > Variant > Composition > Document
 
 ### Promotion Pipeline
 
-```
+````
 Admin triggers evaluation → PromotionBatch created
     → Per student: GPA + failed subjects + attendance → PromotionCandidate
     → Admin reviews and overrides → Batch approved
     → Execute: Student.academicGradeId updated, StudentYearLevel created
     → Notifications sent
-```
-
----
-
-## Dependency Matrix
-
-| Layer | Name               | Depends On            | Blocking? | Can Run In Parallel With |
-| ----- | ------------------ | --------------------- | --------- | ------------------------ |
-| 1     | Global Catalog     | Nothing               | Yes       | --                       |
-| 2     | School Onboarding  | Layer 1               | Yes       | --                       |
-| 3     | Academic Structure | Layer 2               | Yes       | --                       |
-| 4     | Subject Selection  | Layers 1, 3           | Yes       | --                       |
-| 5a    | Teacher Assignment | Layer 4               | Yes       | Layer 5b                 |
-| 5b    | Student Enrollment | Layers 3, 4           | Yes       | Layer 5a                 |
-| 6     | Classroom Setup    | Auto (Layer 2)\*      | Yes       | Layers 3, 4, 5a, 5b      |
-| 6b    | Class Generation   | Layers 4, 5a, 6       | Yes       | --                       |
-| 6c    | Student Enrollment | Layers 5b, 6b         | Yes       | --                       |
-| 7     | Timetable          | All above             | --        | --                       |
-| 8     | Exams & Assessment | Layers 3, 4, 5a, 5b   | No        | --                       |
-| 9a    | Certificates       | Layer 8               | No        | Layer 9b                 |
-| 9b    | Report Cards       | Layers 5b, 8          | No        | Layers 9c, 9e            |
-| 9c    | Transcripts        | Layer 9b              | No        | --                       |
-| 9d    | Notifications      | Layers 9a, 9b, 9e     | No        | --                       |
-| 9e    | Promotion          | Layer 9b + Attendance | Yes       | --                       |
-
-\*Classrooms + Sections are auto-provisioned during onboarding by `autoProvisionSections()`. Class records (6b) and student enrollment (6c) are manual admin steps via the Configure tab.
-
-### What Blocks What
-
-```
 No Catalog          --> No subject selection     --> No teacher assignment
 No Onboarding       --> No academic structure    --> No grades or streams
 No Academic Structure --> No subject selection   --> No class sections
@@ -898,81 +457,6 @@ No Classrooms        --> No Class records        (classroomId is required on Cla
 No Exams/Results     --> No report cards         --> No transcripts
 No Report Cards      --> No promotion evaluation (GPA required)
 No Attendance Data   --> Promotion runs without attendance check
-```
-
----
-
-## Current Gaps
-
-Known integration issues between layers:
-
-| Gap                                              | Layers    | Status  | Description                                                                                                                                                                                                                                     |
-| ------------------------------------------------ | --------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ~~`setupCatalogForSchool` not wired~~            | 2 --> 3,4 | Fixed   | Now called in `legal/actions.ts` during `completeOnboarding()`.                                                                                                                                                                                 |
-| ~~`schoolLevel` not collected in UI~~            | 2 --> 3   | Fixed   | `description/form.tsx` now collects `schoolLevel` with auto-submit logic.                                                                                                                                                                       |
-| ~~`country` format mismatch~~                    | 1 --> 4   | Fixed   | All models, seeds, and validation now use ISO 2-letter codes. Mapbox returns `short_code`, onboarding validates `^[A-Z]{2}$`.                                                                                                                   |
-| ~~Head of Department not in schema~~             | 5a        | Fixed   | `TeacherDepartment.isDepartmentHead` added. Toggle UI in department content. Seeded with one head per department.                                                                                                                               |
-| ~~No auto-placement after ADMITTED~~             | 5b --> 7  | Fixed   | Placement dialog (per-student) and bulk placement (batch) UI. `placeStudentInSection` action validates section capacity and auto-creates StudentClass records.                                                                                  |
-| ~~Classroom setup not in onboarding~~            | 2 --> 6   | Fixed   | `autoProvisionSections()` now creates Classroom + Section records per grade during onboarding. `ClassroomType` upserted. Capacity step saves `maxClasses` count.                                                                                |
-| ~~Onboarding `facilities` not persisted~~        | 2 --> 6   | Fixed   | Removed from capacity form, validation, and types. No longer collected.                                                                                                                                                                         |
-| ~~`allowedSubjectTypes` unused~~                 | 6 --> 7   | Fixed   | Timetable algorithm now checks `RoomConstraint.allowedSubjectTypes` during slot generation.                                                                                                                                                     |
-| ~~Dashboard mock room data~~                     | 7         | Fixed   | `getUpcomingClass()` server action queries real timetable data (day, period, class, room).                                                                                                                                                      |
-| ~~`maxClasses` naming confusion~~                | 2 --> 6   | Fixed   | Form field renamed from `classrooms` to `classSections`. UI labels consistently say "Class Sections" across onboarding and admin config. DB field `maxClasses` kept for backward compatibility.                                                 |
-| ~~No `gradeId` on Class model~~                  | 3 --> 5a  | Fixed   | Optional `gradeId` FK added to Class. Grade selector in form, grade column in table. Backfill script for existing records.                                                                                                                      |
-| ~~No classroom CRUD UI~~                         | 6         | Fixed   | Full 6-file CRUD pattern exists at `school-dashboard/listings/classrooms/`.                                                                                                                                                                     |
-| ~~Capacity cross-validation missing~~            | 5a --> 6  | Fixed   | `createClass` and `updateClass` enforce a hard error when `maxCapacity` exceeds room `capacity`. `maxClasses` plan limit also enforced in `createClass` and `generateSections`.                                                                 |
-| ~~No Term records auto-created~~                 | 2 --> 7   | Fixed   | `applyTimetableStructureForNewSchool()` now creates 2 default Terms (Term 1: Sep-Jan, Term 2: Feb-Jun) linked to the school year.                                                                                                               |
-| ~~SchoolWeekConfig not created~~                 | 2 --> 7   | Fixed   | `applyTimetableStructureForNewSchool()` now creates a `SchoolWeekConfig` record with working days and lunch config from the selected structure.                                                                                                 |
-| ~~Only Sudan timetable structures~~              | 2         | Fixed   | Now 10 structures: 5 SD, 2 GULF, 1 MENA, 1 US, 1 wildcard. `getRecommendedStructures()` uses scoring system with country/region/wildcard/schoolType/schoolLevel signals.                                                                        |
-| ~~Subjects are level-based, not grade-specific~~ | 1         | Fixed   | 62 level-based subjects replaced by ~220 grade-specific subjects. Each has `grades: [N]` and slug `us-g{N}-{subject}`. Chapters/lessons duplicated per grade.                                                                                   |
-| ~~`Subject` model removed~~                      | 4         | Fixed   | School-scoped `Subject` model removed entirely. `Class.subjectId` now points directly to `CatalogSubject.id`. Schools bridge to catalog via `SchoolSubjectSelection`.                                                                           |
-| ~~CatalogBook disconnected from subjects~~       | 1         | Fixed   | `CatalogBook.catalogSubjectId` now links books to grade-specific `CatalogSubject`. `SchoolBookSelection.gradeId` enables grade-scoped book assignments.                                                                                         |
-| ~~`getUpcomingClass()` missing termId~~          | 7         | Fixed   | `getUpcomingClass()` now looks up the active `Term` and filters timetable entries by `termId`.                                                                                                                                                  |
-| ~~Two disconnected enrollment systems~~          | 5b        | Fixed   | `syncStudentClassToEnrollment()` in `src/lib/enrollment-sync.ts` auto-creates an `Enrollment` record when a `StudentClass` is created. Wired into class enrollment and admission placement actions. Non-blocking (logs failures, never throws). |
-| No Academic Year Setup Wizard                    | 2 --> 7   | Partial | Auto-created during onboarding. Congratulations page now includes "Review Academic Year" card directing admins to Settings > Academic. Full CRUD exists. No guided year-rollover wizard yet.                                                    |
-| ~~Stream-specific subjects not auto-assigned~~   | 4         | Fixed   | `setupCatalogForSchool()` now uses name-based heuristics to assign stream-specific subjects (Physics/Chemistry/Biology → Science, Philosophy → Arts) to the correct `AcademicStream` for grades 10-12. Shared subjects remain unscoped.         |
-| `generateSections()` placeholder teacher         | 5a        | Noted   | By design: sections use first available teacher/subject. Configure tab and post-generation toast now warn admins to reassign in the Classes view.                                                                                               |
-| `generateClassesForGrade()` placeholder teacher  | 6b        | Open    | Assigns the FIRST teacher in the school to ALL generated classes. Should match `TeacherSubjectExpertise.subjectId` against `Class.subjectId` for smarter auto-assignment, falling back to round-robin.                                          |
-| `getWeeklyTimetable()` STUDENT broken            | 7         | Open    | References nonexistent `Student.classId` field (should use `StudentClass` bridge). Also uses `user.id` as student `id` instead of looking up via `userId`. (`timetable/actions.ts:1406-1417`)                                                   |
-| `getWeeklyTimetable()` TEACHER broken            | 7         | Open    | Uses `session.user.id` directly as `teacherId` (different entities). Should look up Teacher record by `userId` first. (`timetable/actions.ts:1396-1402`)                                                                                        |
-| ACCOUNTANT/STAFF get edit access                 | 7         | Open    | Routed to `AdminView` with hardcoded `editable={true}`. Should be read-only. (`timetable/actions.ts:2559`, `admin-view.tsx:353`)                                                                                                                |
-| `getChildTimetable()` shows only 1 class         | 7         | Open    | Uses `findFirst` on `StudentClass` -- returns only the most recent enrollment. Should use `findMany` to get all enrolled classes. (`timetable/actions.ts:2741`)                                                                                 |
-| `getPersonalizedTimetable()` STUDENT 1 class     | 7         | Open    | Same `findFirst` issue as `getChildTimetable()`. (`timetable/actions.ts:2521`)                                                                                                                                                                  |
-| `filterTimetableByRole()` GUARDIAN broken        | 7         | Open    | Compares student IDs against class IDs (`permissions.ts:153`). Latent bug -- guardian view bypasses this via direct `getChildTimetable()` call.                                                                                                 |
-| `preventBackToBack` not enforced                 | 7         | Open    | Detected but empty block body -- no violation returned. (`algorithm.ts:698-705`)                                                                                                                                                                |
-| `AdminView` hardcodes `editable={true}`          | 7         | Open    | No prop override possible. Combined with ACCOUNTANT/STAFF routing, these roles get full edit UI. (`admin-view.tsx:353,388`)                                                                                                                     |
-
----
-
-## Query Patterns
-
-### Follow the full chain (Catalog to Timetable)
-
-```typescript
-// Get a student's full timetable with subject names from catalog
-const timetable = await db.timetable.findMany({
-  where: {
-    schoolId,
-    termId,
-    class: {
-      students: { some: { studentId } },
-    },
-  },
-  include: {
-    period: true,
-    classroom: true,
-    teacher: { select: { id: true, user: { select: { name: true } } } },
-    class: {
-      include: {
-        schoolSubjectSelections: {
-          include: { catalogSubject: { select: { name: true } } },
-        },
-      },
-    },
-  },
-  orderBy: [{ dayOfWeek: "asc" }, { period: { startTime: "asc" } }],
-})
-```
 
 ### Check what a school has set up
 
@@ -1007,4 +491,4 @@ const ready =
   periods > 0 &&
   terms > 0 &&
   weekConfig !== null
-```
+````

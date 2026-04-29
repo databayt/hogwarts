@@ -776,9 +776,20 @@ export async function seedStudents(
           data: { levelId: grade10Level.id },
         })
         // Update DB: birth date to match Grade 10 age (15-16 years old)
+        // and re-link academicGradeId to Grade 10 so the mobile catalog and
+        // any other consumer of Student.academicGrade.gradeNumber see "10".
+        const grade10Academic = await prisma.academicGrade.findFirst({
+          where: { schoolId, yearLevelId: grade10Level.id },
+          select: { id: true },
+        })
         await prisma.student.update({
           where: { id: primaryStudent.id },
-          data: { dateOfBirth: getStudentBirthDate(12) },
+          data: {
+            dateOfBirth: getStudentBirthDate(12),
+            ...(grade10Academic
+              ? { academicGradeId: grade10Academic.id }
+              : {}),
+          },
         })
         // Update in-memory ref so class enrollments use Grade 10
         students[primaryStudentIdx] = {

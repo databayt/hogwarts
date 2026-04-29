@@ -24,6 +24,7 @@ import {
 import { NumberStepper } from "@/components/atom/number-stepper"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
+import { resolveClassroomError } from "../errors"
 import {
   bulkEnrollStudentsInClasses,
   generateClassesForGrade,
@@ -68,6 +69,11 @@ export function ConfigureForm({
   const { dictionary } = useDictionary()
   const t = dictionary?.messages?.toast
   const d = dictionary?.school?.classrooms?.configure
+  const errorsDict = (
+    dictionary?.school?.classrooms as
+      | { errors?: Record<string, string> }
+      | undefined
+  )?.errors
   const [isPending, startTransition] = useTransition()
   const defaultRoomType = roomTypes[0]?.id ?? ""
 
@@ -159,7 +165,14 @@ export function ConfigureForm({
           })
         )
       } else {
-        toast.error(result.error)
+        toast.error(
+          resolveClassroomError(
+            result.error,
+            (result as { details?: string }).details,
+            errorsDict,
+            t?.error?.serverError ?? "Action failed"
+          )
+        )
       }
     })
   }
@@ -168,7 +181,11 @@ export function ConfigureForm({
 
   const handleGenerateClasses = () => {
     if (!selectedTermId) {
-      toast.error("Select an active term first")
+      toast.error(
+        (d as { selectTermFirst?: string } | undefined)?.selectTermFirst ??
+          d?.selectTerm ??
+          "Select an active term first"
+      )
       return
     }
 
@@ -184,7 +201,14 @@ export function ConfigureForm({
         )
         result.data.details.forEach((detail) => toast.info(detail))
       } else {
-        toast.error(result.error)
+        toast.error(
+          resolveClassroomError(
+            result.error,
+            (result as { details?: string }).details,
+            errorsDict,
+            t?.error?.serverError ?? "Action failed"
+          )
+        )
       }
     })
   }
@@ -201,7 +225,14 @@ export function ConfigureForm({
         )
         result.data.details.forEach((detail) => toast.info(detail))
       } else {
-        toast.error(result.error)
+        toast.error(
+          resolveClassroomError(
+            result.error,
+            (result as { details?: string }).details,
+            errorsDict,
+            t?.error?.serverError ?? "Action failed"
+          )
+        )
       }
     })
   }

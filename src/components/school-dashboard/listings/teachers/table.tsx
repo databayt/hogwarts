@@ -8,6 +8,10 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 
 import { asset } from "@/lib/asset-url"
+import {
+  FULL_UI_PERMISSIONS,
+  type UIPermissions,
+} from "@/lib/rbac/ui-permissions"
 import { useDebouncedSearch } from "@/hooks/use-debounced-search"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
@@ -43,6 +47,7 @@ interface TeachersTableProps {
   dictionary?: Dictionary["school"]["teachers"]
   lang: Locale
   perPage?: number
+  permissions?: UIPermissions
 }
 
 function TeachersTableInner({
@@ -51,6 +56,7 @@ function TeachersTableInner({
   dictionary,
   lang,
   perPage = 20,
+  permissions = FULL_UI_PERMISSIONS,
 }: TeachersTableProps) {
   const router = useRouter()
   // Translations with fallbacks
@@ -258,8 +264,16 @@ function TeachersTableInner({
         onEdit: handleEdit,
         onDelete: handleDelete,
         onToggleStatus: handleToggleStatus,
+        permissions,
       }),
-    [dictionary, lang, handleEdit, handleDelete, handleToggleStatus]
+    [
+      dictionary,
+      lang,
+      handleEdit,
+      handleDelete,
+      handleToggleStatus,
+      permissions,
+    ]
   )
 
   // Table instance
@@ -347,8 +361,8 @@ function TeachersTableInner({
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
         searchPlaceholder={t.search}
-        onCreate={handleCreate}
-        getCSV={handleExportCSV}
+        onCreate={permissions.showAddButton ? handleCreate : undefined}
+        getCSV={permissions.showExportButton ? handleExportCSV : undefined}
         entityName="teachers"
         translations={toolbarTranslations}
       />

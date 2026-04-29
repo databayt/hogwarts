@@ -121,6 +121,10 @@ model Student {
   scholarshipApplications ScholarshipApplication[]
   fines                   Fine[]
 
+  // Transportation relations
+  routeAssignments RouteAssignment[]
+  tripBoardings    TripBoarding[]
+
   // Geo-Attendance relations
   locationTraces      LocationTrace[]
   geoAttendanceEvents GeoAttendanceEvent[]

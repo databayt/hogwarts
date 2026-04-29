@@ -6,12 +6,14 @@ import { SearchParams } from "nuqs/server"
 import { getDisplayText } from "@/lib/content-display"
 import { detectLanguage } from "@/lib/i18n-content"
 import { getModel } from "@/lib/prisma-guards"
+import type { Role } from "@/lib/rbac/types"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 import { type AssignmentRow } from "@/components/school-dashboard/listings/assignments/columns"
 import { assignmentsSearchParams } from "@/components/school-dashboard/listings/assignments/list-params"
+import { getUIConfigForRole } from "@/components/school-dashboard/listings/assignments/permissions"
 import { AssignmentsTable } from "@/components/school-dashboard/listings/assignments/table"
 import { Shell as PageContainer } from "@/components/table/shell"
 
@@ -27,7 +29,8 @@ export default async function AssignmentsContent({
   lang,
 }: Props) {
   const sp = await assignmentsSearchParams.parse(await searchParams)
-  const { schoolId } = await getTenantContext()
+  const { schoolId, role } = await getTenantContext()
+  const permissions = getUIConfigForRole(role as Role | null | undefined)
   let data: AssignmentRow[] = []
   let total = 0
   const assignmentModel = getModel("assignment")
@@ -96,6 +99,7 @@ export default async function AssignmentsContent({
           common={dictionary?.school?.common}
           lang={lang}
           perPage={sp.perPage}
+          permissions={permissions}
         />
       </div>
     </PageContainer>

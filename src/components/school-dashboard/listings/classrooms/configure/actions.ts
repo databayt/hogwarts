@@ -12,7 +12,11 @@ import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import { assertClassroomPermission, getAuthContext } from "../authorization"
-import { generateClassesSchema, generateSectionsSchema } from "./validation"
+import {
+  bulkEnrollStudentsSchema,
+  generateClassesSchema,
+  generateSectionsSchema,
+} from "./validation"
 
 export type GradeConfig = {
   gradeId: string
@@ -30,6 +34,21 @@ export type RoomTypeOption = {
 }
 
 const SECTION_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+// Sentinel thrown inside the generateSections transaction so the catch block
+// can map it to the CAPACITY_EXCEEDS_ROOM code (with structured details) rather
+// than leaking a hardcoded English message.
+class CapacityExceedsRoomError extends Error {
+  constructor(
+    public details: {
+      sectionCapacity: number
+      roomName: string
+      roomCapacity: number
+    }
+  ) {
+    super("CAPACITY_EXCEEDS_ROOM")
+  }
+}
 
 /**
  * Get current grade configuration: grades with existing section/room counts
@@ -56,10 +75,7 @@ export async function getGradeConfiguration(): Promise<
     try {
       assertClassroomPermission(authContext, "read", { schoolId })
     } catch {
-      return {
-        success: false,
-        error: "Unauthorized to view classroom configuration",
-      }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const [grades, roomTypes] = await Promise.all([
@@ -119,13 +135,10 @@ export async function getGradeConfiguration(): Promise<
     }
   } catch (error) {
     console.error("[getGradeConfiguration] Error:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to load grade configuration",
-    }
+    return actionError(
+      ACTION_ERRORS.LOAD_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -174,10 +187,14 @@ export async function generateSections(
         0
       )
       if (existingClassroomCount + totalNewClassrooms > school.maxClasses) {
-        return {
-          success: false,
-          error: `Classroom limit reached. Your plan allows ${school.maxClasses} classrooms and you currently have ${existingClassroomCount}. Requested ${totalNewClassrooms} new sections would exceed the limit.`,
-        }
+        return actionError(
+          ACTION_ERRORS.CLASSROOM_LIMIT_REACHED,
+          JSON.stringify({
+            limit: school.maxClasses,
+            current: existingClassroomCount,
+            requested: totalNewClassrooms,
+          })
+        )
       }
     }
 
@@ -246,9 +263,11 @@ export async function generateSections(
             room.capacity != null &&
             gradeConfig.capacityPerSection > room.capacity
           ) {
-            throw new Error(
-              `Section capacity (${gradeConfig.capacityPerSection}) exceeds room "${roomName}" capacity (${room.capacity}). Increase room capacity or reduce section size.`
-            )
+            throw new CapacityExceedsRoomError({
+              sectionCapacity: gradeConfig.capacityPerSection,
+              roomName,
+              roomCapacity: room.capacity,
+            })
           }
 
           const sectionName = `Grade ${grade.gradeNumber}-${letter}`
@@ -282,18 +301,24 @@ export async function generateSections(
   } catch (error) {
     console.error("[generateSections] Error:", error)
 
-    if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      }
+    if (error instanceof CapacityExceedsRoomError) {
+      return actionError(
+        ACTION_ERRORS.CAPACITY_EXCEEDS_ROOM,
+        JSON.stringify(error.details)
+      )
     }
 
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to generate sections",
+    if (error instanceof z.ZodError) {
+      return actionError(
+        ACTION_ERRORS.VALIDATION_ERROR,
+        error.issues.map((e) => e.message).join(", ")
+      )
     }
+
+    return actionError(
+      ACTION_ERRORS.CREATE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -356,11 +381,7 @@ export async function generateClassesForGrade(
     ])
 
     if (allTeachers.length === 0) {
-      return {
-        success: false,
-        error:
-          "No teachers found. Create at least one teacher before generating classes.",
-      }
+      return actionError(ACTION_ERRORS.NO_TEACHERS_FOUND)
     }
 
     // Build expertise lookup: subjectId -> teacherId[]
@@ -376,11 +397,7 @@ export async function generateClassesForGrade(
     let fallbackIndex = 0
 
     if (periods.length < 2) {
-      return {
-        success: false,
-        error:
-          "No periods found. Configure school periods before generating classes.",
-      }
+      return actionError(ACTION_ERRORS.NO_PERIODS_FOUND)
     }
 
     const startPeriodId = periods[0].id
@@ -534,17 +551,16 @@ export async function generateClassesForGrade(
     console.error("[generateClassesForGrade] Error:", error)
 
     if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      }
+      return actionError(
+        ACTION_ERRORS.VALIDATION_ERROR,
+        error.issues.map((e) => e.message).join(", ")
+      )
     }
 
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to generate classes",
-    }
+    return actionError(
+      ACTION_ERRORS.CREATE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -553,9 +569,9 @@ export async function generateClassesForGrade(
  * For each grade: find students with that academicGradeId, find classes with that gradeId,
  * upsert StudentClass for each student×class pair.
  */
-export async function bulkEnrollStudentsInClasses(input: {
-  gradeIds: string[]
-}): Promise<ActionResponse<{ enrolled: number; details: string[] }>> {
+export async function bulkEnrollStudentsInClasses(
+  input: z.infer<typeof bulkEnrollStudentsSchema>
+): Promise<ActionResponse<{ enrolled: number; details: string[] }>> {
   try {
     const session = await auth()
     if (!session?.user) {
@@ -578,10 +594,18 @@ export async function bulkEnrollStudentsInClasses(input: {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
+    const parsed = bulkEnrollStudentsSchema.safeParse(input)
+    if (!parsed.success) {
+      return actionError(
+        ACTION_ERRORS.VALIDATION_ERROR,
+        parsed.error.issues.map((e) => e.message).join(", ")
+      )
+    }
+
     let totalEnrolled = 0
     const details: string[] = []
 
-    for (const gradeId of input.gradeIds) {
+    for (const gradeId of parsed.data.gradeIds) {
       const grade = await db.academicGrade.findFirst({
         where: { id: gradeId, schoolId },
         select: { name: true },
@@ -633,12 +657,9 @@ export async function bulkEnrollStudentsInClasses(input: {
     return { success: true, data: { enrolled: totalEnrolled, details } }
   } catch (error) {
     console.error("[bulkEnrollStudentsInClasses] Error:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to enroll students in classes",
-    }
+    return actionError(
+      ACTION_ERRORS.CREATE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }

@@ -9,6 +9,10 @@ import { useRouter } from "next/navigation"
 import { CircleCheck, CircleX, Link2, Mail, Users } from "lucide-react"
 
 import { asset } from "@/lib/asset-url"
+import {
+  FULL_UI_PERMISSIONS,
+  type UIPermissions,
+} from "@/lib/rbac/ui-permissions"
 import { useDebouncedSearch } from "@/hooks/use-debounced-search"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
@@ -41,6 +45,7 @@ interface ParentsTableProps {
   dictionary?: Dictionary["school"]["parents"]
   lang: Locale
   perPage?: number
+  permissions?: UIPermissions
 }
 
 function ParentsTableInner({
@@ -49,6 +54,7 @@ function ParentsTableInner({
   dictionary,
   lang,
   perPage = 20,
+  permissions = FULL_UI_PERMISSIONS,
 }: ParentsTableProps) {
   const router = useRouter()
 
@@ -149,8 +155,9 @@ function ParentsTableInner({
     () =>
       getParentColumns(dictionary, lang, {
         onDelete: handleDelete,
+        permissions,
       }),
-    [dictionary, lang, handleDelete]
+    [dictionary, lang, handleDelete, permissions]
   )
 
   // Table instance
@@ -248,8 +255,8 @@ function ParentsTableInner({
             searchValue={searchValue}
             onSearchChange={handleSearchChange}
             searchPlaceholder={t.search}
-            onCreate={handleCreate}
-            getCSV={handleExportCSV}
+            onCreate={permissions.showAddButton ? handleCreate : undefined}
+            getCSV={permissions.showExportButton ? handleExportCSV : undefined}
             entityName="parents"
             translations={toolbarTranslations}
           />

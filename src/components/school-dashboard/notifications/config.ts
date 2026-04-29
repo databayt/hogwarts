@@ -272,6 +272,12 @@ export const NOTIFICATIONS_PER_PAGE = 20
 export const MAX_NOTIFICATIONS_DISPLAY = 100
 export const NOTIFICATION_BELL_MAX_DISPLAY = 5
 
+// Filter tabs for the notification center
+// Why: Used by the center.tsx tabs (all/unread) and exposed for tests/consumers
+//      that need to enumerate the available filter modes without hardcoding
+export const NOTIFICATION_FILTER_TYPES = ["all", "unread"] as const
+export type NotificationFilterType = (typeof NOTIFICATION_FILTER_TYPES)[number]
+
 // Socket.IO event names
 export const SOCKET_EVENTS = {
   NEW_NOTIFICATION: "notification:new",

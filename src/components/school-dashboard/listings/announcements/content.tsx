@@ -4,11 +4,13 @@
 import { SearchParams } from "nuqs/server"
 
 import { getDisplayText } from "@/lib/content-display"
+import type { Role } from "@/lib/rbac/types"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { type AnnouncementRow } from "@/components/school-dashboard/listings/announcements/columns"
 import { announcementsSearchParams } from "@/components/school-dashboard/listings/announcements/list-params"
+import { getUIConfigForRole } from "@/components/school-dashboard/listings/announcements/permissions"
 import { getAnnouncementsList } from "@/components/school-dashboard/listings/announcements/queries"
 import { AnnouncementsTable } from "@/components/school-dashboard/listings/announcements/table"
 
@@ -24,7 +26,8 @@ export default async function AnnouncementsContent({
   lang,
 }: Props) {
   const sp = await announcementsSearchParams.parse(await searchParams)
-  const { schoolId } = await getTenantContext()
+  const { schoolId, role } = await getTenantContext()
+  const permissions = getUIConfigForRole(role as Role | null | undefined)
   const t = dictionary.announcements
 
   let data: AnnouncementRow[] = []
@@ -89,6 +92,7 @@ export default async function AnnouncementsContent({
         dictionary={t}
         lang={lang}
         perPage={sp.perPage}
+        permissions={permissions}
       />
     </div>
   )

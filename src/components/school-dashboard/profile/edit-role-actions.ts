@@ -25,12 +25,12 @@ export async function getOwnEntity(
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: "Not authenticated" }
+      return { success: false, error: "NOT_AUTHENTICATED" }
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return { success: false, error: "MISSING_SCHOOL" }
     }
 
     if (entityType === "teacher") {
@@ -48,7 +48,7 @@ export async function getOwnEntity(
       })
 
       if (!teacher) {
-        return { success: false, error: "Teacher profile not found" }
+        return { success: false, error: "TEACHER_NOT_FOUND" }
       }
 
       return {
@@ -66,7 +66,7 @@ export async function getOwnEntity(
       })
 
       if (!student) {
-        return { success: false, error: "Student profile not found" }
+        return { success: false, error: "STUDENT_NOT_FOUND" }
       }
 
       return {
@@ -78,12 +78,10 @@ export async function getOwnEntity(
       }
     }
 
-    return { success: false, error: "Invalid entity type" }
+    return { success: false, error: "VALIDATION_ERROR" }
   } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to load profile",
-    }
+    console.error("Error loading profile entity:", error)
+    return { success: false, error: "LOAD_FAILED" }
   }
 }
 

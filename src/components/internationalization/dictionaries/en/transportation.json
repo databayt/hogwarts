@@ -1,0 +1,285 @@
+{
+  "title": "Transportation",
+  "subtitle": "Manage school buses, routes, drivers, and student assignments",
+  "description": "Fleet management, route planning, driver records, and student-route assignments",
+  "nav": {
+    "overview": "Overview",
+    "vehicles": "Vehicles",
+    "routes": "Routes",
+    "drivers": "Drivers",
+    "assignments": "Assignments",
+    "trips": "Trips",
+    "reports": "Reports",
+    "settings": "Settings"
+  },
+  "overview": {
+    "totalVehicles": "Total vehicles",
+    "totalRoutes": "Total routes",
+    "totalDrivers": "Total drivers",
+    "activeAssignments": "Active assignments",
+    "expiringDocuments": "Expiring documents",
+    "recentAssignments": "Recent assignments",
+    "noData": "No transportation data yet"
+  },
+  "vehicles": {
+    "title": "Vehicles",
+    "subtitle": "Fleet inventory",
+    "addButton": "Add vehicle",
+    "editTitle": "Edit vehicle",
+    "deleteConfirm": "Delete this vehicle?",
+    "fields": {
+      "plateNumber": "Plate number",
+      "make": "Make",
+      "model": "Model",
+      "year": "Year",
+      "capacity": "Capacity",
+      "vehicleType": "Type",
+      "status": "Status",
+      "registrationExpiry": "Registration expiry",
+      "insuranceExpiry": "Insurance expiry",
+      "lastInspection": "Last inspection",
+      "notes": "Notes"
+    },
+    "types": {
+      "BUS": "Bus",
+      "VAN": "Van",
+      "CAR": "Car",
+      "MINIBUS": "Minibus"
+    },
+    "statuses": {
+      "ACTIVE": "Active",
+      "INACTIVE": "Inactive",
+      "MAINTENANCE": "In maintenance",
+      "RETIRED": "Retired"
+    }
+  },
+  "routes": {
+    "title": "Routes",
+    "subtitle": "Bus routes and schedules",
+    "addButton": "Add route",
+    "editTitle": "Edit route",
+    "deleteConfirm": "Delete this route?",
+    "fields": {
+      "name": "Route name",
+      "code": "Code",
+      "direction": "Direction",
+      "status": "Status",
+      "originName": "Origin",
+      "destinationName": "Destination",
+      "departureTime": "Departure time",
+      "returnTime": "Return time",
+      "distanceKm": "Distance (km)",
+      "monthlyFee": "Monthly fee",
+      "vehicle": "Vehicle",
+      "driver": "Driver",
+      "stops": "Stops",
+      "notes": "Notes"
+    },
+    "directions": {
+      "PICKUP": "Pickup (morning)",
+      "DROPOFF": "Dropoff (afternoon)",
+      "ROUND_TRIP": "Round trip"
+    },
+    "statuses": {
+      "ACTIVE": "Active",
+      "INACTIVE": "Inactive",
+      "ARCHIVED": "Archived"
+    }
+  },
+  "stops": {
+    "title": "Stops",
+    "addButton": "Add stop",
+    "editTitle": "Edit stop",
+    "deleteConfirm": "Delete this stop?",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "fields": {
+      "name": "Stop name",
+      "address": "Address",
+      "latitude": "Latitude",
+      "longitude": "Longitude",
+      "stopOrder": "Order",
+      "pickupTime": "Pickup time",
+      "dropoffTime": "Dropoff time",
+      "notes": "Notes"
+    }
+  },
+  "drivers": {
+    "title": "Drivers",
+    "subtitle": "Driver records and licenses",
+    "addButton": "Add driver",
+    "editTitle": "Edit driver",
+    "deleteConfirm": "Delete this driver?",
+    "fields": {
+      "firstName": "First name",
+      "lastName": "Last name",
+      "phone": "Phone",
+      "email": "Email",
+      "address": "Address",
+      "licenseNumber": "License number",
+      "licenseClass": "License class",
+      "licenseExpiry": "License expiry",
+      "status": "Status",
+      "dateOfBirth": "Date of birth",
+      "emergencyContactName": "Emergency contact name",
+      "emergencyContactPhone": "Emergency contact phone",
+      "staffMember": "Linked staff member",
+      "notes": "Notes"
+    },
+    "statuses": {
+      "ACTIVE": "Active",
+      "ON_LEAVE": "On leave",
+      "INACTIVE": "Inactive"
+    },
+    "licenseExpiringSoon": "License expires soon",
+    "licenseExpired": "License expired"
+  },
+  "assignments": {
+    "title": "Route assignments",
+    "subtitle": "Students assigned to routes and stops",
+    "addButton": "Add assignment",
+    "editTitle": "Edit assignment",
+    "deleteConfirm": "End this assignment?",
+    "fields": {
+      "student": "Student",
+      "route": "Route",
+      "stop": "Stop",
+      "direction": "Direction",
+      "effectiveFrom": "Effective from",
+      "effectiveTo": "Effective to",
+      "status": "Status",
+      "notes": "Notes"
+    },
+    "statuses": {
+      "ACTIVE": "Active",
+      "PAUSED": "Paused",
+      "ENDED": "Ended"
+    }
+  },
+  "trips": {
+    "title": "Trips",
+    "subtitle": "Daily route runs and boarding records",
+    "addButton": "Schedule trip",
+    "fields": {
+      "route": "Route",
+      "vehicle": "Vehicle",
+      "driver": "Driver",
+      "direction": "Direction",
+      "scheduledDate": "Scheduled date",
+      "scheduledTime": "Scheduled time",
+      "actualStart": "Started",
+      "actualEnd": "Finished",
+      "status": "Status",
+      "notes": "Notes",
+      "boardings": "Boardings"
+    },
+    "statuses": {
+      "SCHEDULED": "Scheduled",
+      "IN_PROGRESS": "In progress",
+      "COMPLETED": "Completed",
+      "CANCELLED": "Cancelled"
+    },
+    "actions": {
+      "start": "Start trip",
+      "finish": "Finish trip",
+      "cancel": "Cancel trip"
+    },
+    "boardingStatuses": {
+      "PENDING": "Pending",
+      "BOARDED": "Boarded",
+      "ALIGHTED": "Alighted",
+      "MISSED": "Missed",
+      "EXCUSED": "Excused"
+    },
+    "toasts": {
+      "scheduled": "Trip scheduled",
+      "started": "Trip started",
+      "finished": "Trip finished",
+      "cancelled": "Trip cancelled",
+      "boardingRecorded": "Boarding recorded"
+    },
+    "errors": {
+      "duplicate": "A trip already exists for this route + date + direction",
+      "invalidState": "Trip is not in a valid state for this action"
+    },
+    "empty": "No trips yet"
+  },
+  "reports": {
+    "title": "Transportation reports",
+    "subtitle": "Route utilization, driver hours, trip stats, and fee preview (last 30 days)",
+    "empty": "No reportable data yet",
+    "tripStats": {
+      "title": "Trip stats (last 30 days)",
+      "scheduled": "Scheduled",
+      "inProgress": "In progress",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "completionRate": "Completion rate"
+    },
+    "utilization": {
+      "title": "Route utilization (active assignments / vehicle capacity)"
+    },
+    "driverHours": {
+      "title": "Driver hours (completed trips, last 30 days)",
+      "tripsLabel": "trips",
+      "empty": "No completed trips in the last 30 days"
+    },
+    "fees": {
+      "title": "Fee preview",
+      "studentsWithFees": "Students with fees",
+      "studentsWithoutFee": "Without fee",
+      "totalAssignments": "Active assignments",
+      "monthlyTotal": "Monthly revenue",
+      "notice": "Read-only preview. Actual fee records are created in the finance module."
+    }
+  },
+  "settings": {
+    "title": "Transportation settings",
+    "defaultPickupBuffer": "Default pickup buffer (minutes)",
+    "defaultMonthlyFee": "Default monthly fee",
+    "saveButton": "Save settings"
+  },
+  "validation": {
+    "plateRequired": "Plate number is required",
+    "capacityPositive": "Capacity must be at least 1",
+    "licenseFutureDate": "License expiry must be in the future",
+    "stopOrderUnique": "Stop order must be unique within the route",
+    "dateRangeInvalid": "End date must be after start date",
+    "timeFormatInvalid": "Time must be in HH:MM format"
+  },
+  "toasts": {
+    "vehicleCreated": "Vehicle created",
+    "vehicleUpdated": "Vehicle updated",
+    "vehicleDeleted": "Vehicle deleted",
+    "driverCreated": "Driver created",
+    "driverUpdated": "Driver updated",
+    "driverDeleted": "Driver deleted",
+    "routeCreated": "Route created",
+    "routeUpdated": "Route updated",
+    "routeDeleted": "Route deleted",
+    "stopAdded": "Stop added",
+    "stopReordered": "Stops reordered",
+    "stopDeleted": "Stop deleted",
+    "assignmentCreated": "Student assigned to route",
+    "assignmentUpdated": "Assignment updated",
+    "assignmentEnded": "Assignment ended"
+  },
+  "empty": {
+    "noVehicles": "No vehicles yet",
+    "noRoutes": "No routes yet",
+    "noDrivers": "No drivers yet",
+    "noAssignments": "No assignments yet",
+    "noStops": "No stops yet"
+  },
+  "errors": {
+    "plateAlreadyExists": "A vehicle with this plate number already exists",
+    "licenseAlreadyExists": "A driver with this license number already exists",
+    "routeNameTaken": "A route with this name already exists",
+    "stopOrderConflict": "Another stop already uses this order",
+    "assignmentOverlap": "Student already has an active assignment on this route",
+    "notFound": "Record not found",
+    "forbidden": "You don't have permission to perform this action",
+    "validationFailed": "Please fix the errors and try again",
+    "internalError": "Something went wrong. Please try again."
+  }
+}

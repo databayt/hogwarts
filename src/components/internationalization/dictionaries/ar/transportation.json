@@ -1,0 +1,285 @@
+{
+  "title": "النقل",
+  "subtitle": "إدارة الحافلات والمسارات والسائقين وتسجيل الطلاب",
+  "description": "إدارة الأسطول، تخطيط المسارات، سجلات السائقين، وتعيين الطلاب على المسارات",
+  "nav": {
+    "overview": "نظرة عامة",
+    "vehicles": "المركبات",
+    "routes": "المسارات",
+    "drivers": "السائقون",
+    "assignments": "التعيينات",
+    "trips": "الرحلات",
+    "reports": "التقارير",
+    "settings": "الإعدادات"
+  },
+  "overview": {
+    "totalVehicles": "إجمالي المركبات",
+    "totalRoutes": "إجمالي المسارات",
+    "totalDrivers": "إجمالي السائقين",
+    "activeAssignments": "التعيينات النشطة",
+    "expiringDocuments": "مستندات على وشك الانتهاء",
+    "recentAssignments": "التعيينات الأخيرة",
+    "noData": "لا توجد بيانات نقل بعد"
+  },
+  "vehicles": {
+    "title": "المركبات",
+    "subtitle": "سجل الأسطول",
+    "addButton": "إضافة مركبة",
+    "editTitle": "تعديل المركبة",
+    "deleteConfirm": "حذف هذه المركبة؟",
+    "fields": {
+      "plateNumber": "رقم اللوحة",
+      "make": "الصانع",
+      "model": "الموديل",
+      "year": "السنة",
+      "capacity": "السعة",
+      "vehicleType": "النوع",
+      "status": "الحالة",
+      "registrationExpiry": "انتهاء الترخيص",
+      "insuranceExpiry": "انتهاء التأمين",
+      "lastInspection": "آخر فحص",
+      "notes": "ملاحظات"
+    },
+    "types": {
+      "BUS": "حافلة",
+      "VAN": "فان",
+      "CAR": "سيارة",
+      "MINIBUS": "حافلة صغيرة"
+    },
+    "statuses": {
+      "ACTIVE": "نشطة",
+      "INACTIVE": "غير نشطة",
+      "MAINTENANCE": "قيد الصيانة",
+      "RETIRED": "متقاعدة"
+    }
+  },
+  "routes": {
+    "title": "المسارات",
+    "subtitle": "مسارات الحافلات والجداول",
+    "addButton": "إضافة مسار",
+    "editTitle": "تعديل المسار",
+    "deleteConfirm": "حذف هذا المسار؟",
+    "fields": {
+      "name": "اسم المسار",
+      "code": "الرمز",
+      "direction": "الاتجاه",
+      "status": "الحالة",
+      "originName": "نقطة البداية",
+      "destinationName": "الوجهة",
+      "departureTime": "وقت المغادرة",
+      "returnTime": "وقت العودة",
+      "distanceKm": "المسافة (كم)",
+      "monthlyFee": "الرسوم الشهرية",
+      "vehicle": "المركبة",
+      "driver": "السائق",
+      "stops": "المحطات",
+      "notes": "ملاحظات"
+    },
+    "directions": {
+      "PICKUP": "اصطحاب (صباحًا)",
+      "DROPOFF": "توصيل (بعد الظهر)",
+      "ROUND_TRIP": "رحلة ذهاب وعودة"
+    },
+    "statuses": {
+      "ACTIVE": "نشط",
+      "INACTIVE": "غير نشط",
+      "ARCHIVED": "مؤرشف"
+    }
+  },
+  "stops": {
+    "title": "المحطات",
+    "addButton": "إضافة محطة",
+    "editTitle": "تعديل المحطة",
+    "deleteConfirm": "حذف هذه المحطة؟",
+    "moveUp": "تحريك للأعلى",
+    "moveDown": "تحريك للأسفل",
+    "fields": {
+      "name": "اسم المحطة",
+      "address": "العنوان",
+      "latitude": "خط العرض",
+      "longitude": "خط الطول",
+      "stopOrder": "الترتيب",
+      "pickupTime": "وقت الاصطحاب",
+      "dropoffTime": "وقت التوصيل",
+      "notes": "ملاحظات"
+    }
+  },
+  "drivers": {
+    "title": "السائقون",
+    "subtitle": "سجلات السائقين والرخص",
+    "addButton": "إضافة سائق",
+    "editTitle": "تعديل السائق",
+    "deleteConfirm": "حذف هذا السائق؟",
+    "fields": {
+      "firstName": "الاسم الأول",
+      "lastName": "اسم العائلة",
+      "phone": "الهاتف",
+      "email": "البريد الإلكتروني",
+      "address": "العنوان",
+      "licenseNumber": "رقم الرخصة",
+      "licenseClass": "فئة الرخصة",
+      "licenseExpiry": "انتهاء الرخصة",
+      "status": "الحالة",
+      "dateOfBirth": "تاريخ الميلاد",
+      "emergencyContactName": "اسم جهة الاتصال للطوارئ",
+      "emergencyContactPhone": "هاتف جهة الاتصال للطوارئ",
+      "staffMember": "موظف مرتبط",
+      "notes": "ملاحظات"
+    },
+    "statuses": {
+      "ACTIVE": "نشط",
+      "ON_LEAVE": "في إجازة",
+      "INACTIVE": "غير نشط"
+    },
+    "licenseExpiringSoon": "الرخصة تنتهي قريبًا",
+    "licenseExpired": "الرخصة منتهية"
+  },
+  "assignments": {
+    "title": "تعيينات المسارات",
+    "subtitle": "الطلاب المعينون على المسارات والمحطات",
+    "addButton": "إضافة تعيين",
+    "editTitle": "تعديل التعيين",
+    "deleteConfirm": "إنهاء هذا التعيين؟",
+    "fields": {
+      "student": "الطالب",
+      "route": "المسار",
+      "stop": "المحطة",
+      "direction": "الاتجاه",
+      "effectiveFrom": "ساري من",
+      "effectiveTo": "ساري حتى",
+      "status": "الحالة",
+      "notes": "ملاحظات"
+    },
+    "statuses": {
+      "ACTIVE": "نشط",
+      "PAUSED": "متوقف مؤقتًا",
+      "ENDED": "منتهي"
+    }
+  },
+  "trips": {
+    "title": "الرحلات",
+    "subtitle": "تشغيل المسارات اليومية وسجلات الركوب",
+    "addButton": "جدولة رحلة",
+    "fields": {
+      "route": "المسار",
+      "vehicle": "المركبة",
+      "driver": "السائق",
+      "direction": "الاتجاه",
+      "scheduledDate": "تاريخ الجدولة",
+      "scheduledTime": "وقت الجدولة",
+      "actualStart": "بدأت",
+      "actualEnd": "انتهت",
+      "status": "الحالة",
+      "notes": "ملاحظات",
+      "boardings": "الركوب"
+    },
+    "statuses": {
+      "SCHEDULED": "مجدولة",
+      "IN_PROGRESS": "قيد التنفيذ",
+      "COMPLETED": "مكتملة",
+      "CANCELLED": "ملغاة"
+    },
+    "actions": {
+      "start": "بدء الرحلة",
+      "finish": "إنهاء الرحلة",
+      "cancel": "إلغاء الرحلة"
+    },
+    "boardingStatuses": {
+      "PENDING": "معلق",
+      "BOARDED": "ركب",
+      "ALIGHTED": "نزل",
+      "MISSED": "فاتته",
+      "EXCUSED": "معذور"
+    },
+    "toasts": {
+      "scheduled": "تمت جدولة الرحلة",
+      "started": "بدأت الرحلة",
+      "finished": "انتهت الرحلة",
+      "cancelled": "تم إلغاء الرحلة",
+      "boardingRecorded": "تم تسجيل الركوب"
+    },
+    "errors": {
+      "duplicate": "توجد رحلة بالفعل لهذا المسار + التاريخ + الاتجاه",
+      "invalidState": "الرحلة ليست في حالة صالحة لهذا الإجراء"
+    },
+    "empty": "لا توجد رحلات بعد"
+  },
+  "reports": {
+    "title": "تقارير النقل",
+    "subtitle": "استخدام المسارات، ساعات السائقين، إحصاءات الرحلات، ومعاينة الرسوم (آخر 30 يومًا)",
+    "empty": "لا توجد بيانات للإبلاغ بعد",
+    "tripStats": {
+      "title": "إحصاءات الرحلات (آخر 30 يومًا)",
+      "scheduled": "مجدولة",
+      "inProgress": "قيد التنفيذ",
+      "completed": "مكتملة",
+      "cancelled": "ملغاة",
+      "completionRate": "معدل الإكمال"
+    },
+    "utilization": {
+      "title": "استخدام المسارات (التعيينات النشطة / سعة المركبة)"
+    },
+    "driverHours": {
+      "title": "ساعات السائقين (الرحلات المكتملة، آخر 30 يومًا)",
+      "tripsLabel": "رحلة",
+      "empty": "لا توجد رحلات مكتملة في آخر 30 يومًا"
+    },
+    "fees": {
+      "title": "معاينة الرسوم",
+      "studentsWithFees": "طلاب لديهم رسوم",
+      "studentsWithoutFee": "بدون رسوم",
+      "totalAssignments": "التعيينات النشطة",
+      "monthlyTotal": "الإيرادات الشهرية",
+      "notice": "معاينة للقراءة فقط. يتم إنشاء سجلات الرسوم الفعلية في وحدة المالية."
+    }
+  },
+  "settings": {
+    "title": "إعدادات النقل",
+    "defaultPickupBuffer": "هامش وقت الاصطحاب الافتراضي (دقائق)",
+    "defaultMonthlyFee": "الرسوم الشهرية الافتراضية",
+    "saveButton": "حفظ الإعدادات"
+  },
+  "validation": {
+    "plateRequired": "رقم اللوحة مطلوب",
+    "capacityPositive": "السعة يجب أن تكون 1 على الأقل",
+    "licenseFutureDate": "تاريخ انتهاء الرخصة يجب أن يكون في المستقبل",
+    "stopOrderUnique": "ترتيب المحطة يجب أن يكون فريدًا داخل المسار",
+    "dateRangeInvalid": "تاريخ النهاية يجب أن يكون بعد تاريخ البداية",
+    "timeFormatInvalid": "الوقت يجب أن يكون بصيغة HH:MM"
+  },
+  "toasts": {
+    "vehicleCreated": "تم إنشاء المركبة",
+    "vehicleUpdated": "تم تحديث المركبة",
+    "vehicleDeleted": "تم حذف المركبة",
+    "driverCreated": "تم إنشاء السائق",
+    "driverUpdated": "تم تحديث السائق",
+    "driverDeleted": "تم حذف السائق",
+    "routeCreated": "تم إنشاء المسار",
+    "routeUpdated": "تم تحديث المسار",
+    "routeDeleted": "تم حذف المسار",
+    "stopAdded": "تمت إضافة المحطة",
+    "stopReordered": "تم إعادة ترتيب المحطات",
+    "stopDeleted": "تم حذف المحطة",
+    "assignmentCreated": "تم تعيين الطالب على المسار",
+    "assignmentUpdated": "تم تحديث التعيين",
+    "assignmentEnded": "تم إنهاء التعيين"
+  },
+  "empty": {
+    "noVehicles": "لا توجد مركبات بعد",
+    "noRoutes": "لا توجد مسارات بعد",
+    "noDrivers": "لا يوجد سائقون بعد",
+    "noAssignments": "لا توجد تعيينات بعد",
+    "noStops": "لا توجد محطات بعد"
+  },
+  "errors": {
+    "plateAlreadyExists": "توجد مركبة بنفس رقم اللوحة بالفعل",
+    "licenseAlreadyExists": "يوجد سائق بنفس رقم الرخصة بالفعل",
+    "routeNameTaken": "يوجد مسار بنفس الاسم بالفعل",
+    "stopOrderConflict": "محطة أخرى تستخدم نفس الترتيب",
+    "assignmentOverlap": "الطالب لديه تعيين نشط على هذا المسار بالفعل",
+    "notFound": "السجل غير موجود",
+    "forbidden": "ليس لديك صلاحية لتنفيذ هذا الإجراء",
+    "validationFailed": "يرجى تصحيح الأخطاء والمحاولة مجددًا",
+    "internalError": "حدث خطأ. يرجى المحاولة مرة أخرى."
+  }
+}

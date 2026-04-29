@@ -1,93 +1,78 @@
 ---
 title: Introduction
-description: Education automation designed to streamline operations for students, educators, and school administrators.
+description: Hogwarts is an open-source, multi-tenant school automation platform for K-12 institutions.
 ---
 
-**Automate the boring.** At Hogwarts, we're building codebase for school automation, one component at a time. Every line of code is open source, every contribution is valued, and every developer may shape the future of how schools operate.
-
-We sell the origin of value — we sell **Time**, the currency that drives the world — what if you could reclaim yours and focus on what truly matters? It's more than a service — it's an escape from the matrix. A restoration of time through the elimination of repetitive tasks, streamlined operations, and automated processes.
-
-Think of our codebase as a living library where every contribution becomes part of something greater. From atomic components to complete templates, from blocks to micro-services to full automation solutions—we're creating the building blocks that will power education industry.
-
-Follow along as we figure this out together. This isn't just about building software; it's about creating a collaborative ecosystem where developers, businesses, and innovators unite to solve real problems.
+Hogwarts automates the operational core of a school — admissions, classrooms, attendance, grading, fees, messaging — so staff spend less time on paperwork and more on teaching. Every line of code is open source, every contribution is attributed.
 
 <StoryVideo />
 
-## What We Do
+## What it does
 
-- **Development** - Enterprise-grade applications and platforms
-- **Automation** - Streamlined workflows and process optimization
-- **Consulting** - Technical expertise and implementation support
-- **Open Source** - Community-driven development and innovation
+- **School operations.** Multi-tenant SaaS — one platform serves many schools. Each school gets its own subdomain, branding, roles, and data isolation.
+- **Bilingual by default.** Arabic-first with full RTL support; English LTR mirror. UI labels and dynamic content both translate on demand.
+- **AI-augmented.** Document intelligence for admissions, bank receipts, and (planned) exams, library, and onboarding.
+- **Open source.** SSPL-1.0. Self-hostable today, managed SaaS for schools that prefer not to.
 
-## Business Model
+## Architecture
 
-<div className="not-prose mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-  <div className="rounded-lg border p-6">
-    <h3 className="mb-2 text-base font-medium">Per Project</h3>
-    <p className="text-muted-foreground text-sm">
-      Custom solutions tailored to specific client requirements and business
-      processes.
-    </p>
-  </div>
-  <div className="rounded-lg border p-6">
-    <h3 className="mb-2 text-base font-medium">Partners</h3>
-    <p className="text-muted-foreground text-sm">
-      Partnership opportunities for businesses seeking to outsource technology.
-    </p>
-  </div>
-  <div className="rounded-lg border p-6">
-    <h3 className="mb-2 text-base font-medium">Codebase</h3>
-    <p className="text-muted-foreground text-sm">
-      Reusable components where contributors earn a share of the value
-      generated.
-    </p>
-  </div>
-  <div className="rounded-lg border p-6">
-    <h3 className="mb-2 text-base font-medium">SaaS</h3>
-    <p className="text-muted-foreground text-sm">
-      Ready-to-deploy software products for organizations with similar needs.
-    </p>
-  </div>
-</div>
+<CardGrid cols={2}>
+  <DocCard
+    title="Mirror pattern"
+    href="/docs/architecture"
+    description="Routes mirror components. Server components fetch, client components interact. No prop drilling."
+  />
+  <DocCard
+    title="Multi-tenancy"
+    href="/docs/multi-tenancy"
+    description="Subdomain-based tenant resolution, schoolId scoping on every query, edge middleware routing."
+  />
+  <DocCard
+    title="Mirror patterns"
+    href="/docs/pattern"
+    description="Page, layout, content, actions, queries, form, table, columns — canonical shapes for each file."
+  />
+  <DocCard
+    title="Stack"
+    href="/docs/stack"
+    description="Next.js 16, React 19, Prisma 6, NextAuth v5, Tailwind 4, shadcn/ui."
+  />
+</CardGrid>
 
-## Core Values
+## Where to start
 
-- **Transparency:** Every decision, from technical architecture to business strategy, is documented and accessible. Contributions are publicly tracked on GitHub, so every developer can see their impact.
-- **Innovation:** Our best ideas come from our diverse community. We're actively building in: Business Automation, Data Analytics, AI Agents, Blockchain, and Distributed Computing.
-- **Growth:** We balance rapid innovation with long-term sustainability, ensuring our solutions remain robust and our business model benefits all stakeholders.
-- **Excellence:** Every product we ship meets the highest standards of quality, security, and performance.
+<CardGrid cols={2}>
+  <DocCard
+    title="Get started"
+    href="/docs/get-started"
+    description="Clone, install, run the dev server, ship a first PR — under 15 minutes."
+  />
+  <DocCard
+    title="Demo"
+    href="/docs/demo"
+    description="Walk through the live platform with the demo school and credentials."
+  />
+  <DocCard
+    title="MVP"
+    href="/docs/mvp"
+    description="What's in scope, what's shipping, what's deferred."
+  />
+  <DocCard
+    title="Contributing"
+    href="/docs/contributing"
+    description="Commit conventions, testing, community channels, your first PR."
+  />
+</CardGrid>
 
-## What You'll Find Here
+## For stakeholders
 
-### For Developers
+- [Pitch](/docs/pitch) — investor narrative
+- [Business model](/docs/business-model) — pricing tiers and revenue
+- [Sales](/docs/sales) — B2B outreach playbook
+- [Shared economy](/docs/shared-economy) — contributor revenue sharing
 
-- **[Demo](/docs/demo)** – See it in action
-- **[MVP](/docs/mvp)** – Minimum viable product overview
-- **[Get Started](/docs/get-started)** – Quick start guide
-- **[Contributing Guide](/docs/contributing)** – How to get involved in development
+## Conventions
 
-### For Stakeholders
-
-- **[Business Model](/docs/business-model)** – Revenue streams and value creation
-- **[Shared Economy](/docs/shared-economy)** – Fair contribution valuation framework
-- **[MVP](/docs/mvp)** – Product development plans and strategic goals
-- **[Sales Process](/docs/sales)** – Customer acquisition and revenue generation
-
-### For Community
-
-- **[Code of Conduct](/docs/code-of-conduct)** – Community standards and expectations
-- **[Issues & Support](/docs/issues)** – Bug reporting and assistance
-
-## Getting Started
-
-New comer? Start with the essentials:
-
-1. Review the [Code of Conduct](/docs/code-of-conduct)
-2. Explore the [Architecture](/docs/architecture)
-3. Check the [Contributing Guide](/docs/contributing)
-4. Join Community Discussions
-
----
-
-_Building the future of educational automation, one component at a time._
+- One language per record. Generic field names (`title`, `body`, `name`), translation cache for cross-locale display.
+- Every database operation is `schoolId`-scoped. Missing `schoolId` = data leak across tenants.
+- Semantic HTML, theme-aware colors, logical CSS properties for RTL — see [Style guide](/docs/documentation).

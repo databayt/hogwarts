@@ -27,7 +27,8 @@ export default function LocationContent() {
     | undefined
   const t = students?.location as Record<string, string> | undefined
 
-  const { enableNext, disableNext, setCustomNavigation } = useWizardValidation()
+  const { enableNext, disableNext, setCustomNavigation, setOnSave } =
+    useWizardValidation()
   const formRef = useRef<WizardFormRef>(null)
   const [isValid, setIsValid] = useState(true)
 
@@ -42,15 +43,37 @@ export default function LocationContent() {
     }
   }, [locale, studentId, router])
 
+  // Save without advancing — used by the footer's save-and-skip Bookmark icon.
+  // Re-throws so the footer aborts the redirect on failure.
+  const onSaveStep = useCallback(async () => {
+    if (formRef.current) {
+      await formRef.current.saveAndNext()
+    }
+  }, [])
+
   useEffect(() => {
     if (isValid) {
       enableNext()
       setCustomNavigation({ onNext })
+      setOnSave(onSaveStep)
     } else {
       disableNext()
       setCustomNavigation(undefined)
+      setOnSave(undefined)
     }
-  }, [isValid, enableNext, disableNext, setCustomNavigation, onNext])
+    return () => {
+      setCustomNavigation(undefined)
+      setOnSave(undefined)
+    }
+  }, [
+    isValid,
+    enableNext,
+    disableNext,
+    setCustomNavigation,
+    setOnSave,
+    onNext,
+    onSaveStep,
+  ])
 
   if (isLoading) {
     return null

@@ -154,6 +154,18 @@ const whatsappDictionaries = {
     import("./dictionaries/ar/whatsapp.json").then((module) => module.default),
 } as const
 
+// Transportation module dictionaries (fleet, routes, drivers, assignments)
+const transportationDictionaries = {
+  en: () =>
+    import("./dictionaries/en/transportation.json").then(
+      (module) => module.default
+    ),
+  ar: () =>
+    import("./dictionaries/ar/transportation.json").then(
+      (module) => module.default
+    ),
+} as const
+
 // ============================================================================
 // Route-Specific Dictionary Loaders (Optimized)
 // ============================================================================
@@ -523,6 +535,7 @@ export const getDictionary = async (locale: Locale) => {
       attendance,
       messaging,
       whatsapp,
+      transportation,
     ] = await Promise.all([
       generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
       schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
@@ -544,6 +557,8 @@ export const getDictionary = async (locale: Locale) => {
       attendanceDictionaries[locale]?.() ?? attendanceDictionaries["en"](),
       messagingDictionaries[locale]?.() ?? messagingDictionaries["en"](),
       whatsappDictionaries[locale]?.() ?? whatsappDictionaries["en"](),
+      transportationDictionaries[locale]?.() ??
+        transportationDictionaries["en"](),
     ])
 
     // Merge dictionaries with module-specific keys nested under their respective namespaces
@@ -567,6 +582,7 @@ export const getDictionary = async (locale: Locale) => {
       attendance,
       messaging,
       whatsapp,
+      transportation,
     }
   } catch (error) {
     console.warn(
@@ -592,6 +608,7 @@ export const getDictionary = async (locale: Locale) => {
       attendance,
       messaging,
       whatsapp,
+      transportation,
     ] = await Promise.all([
       generalDictionaries["en"](),
       schoolDictionaries["en"](),
@@ -612,6 +629,7 @@ export const getDictionary = async (locale: Locale) => {
       attendanceDictionaries["en"](),
       messagingDictionaries["en"](),
       whatsappDictionaries["en"](),
+      transportationDictionaries["en"](),
     ])
     return {
       ...general,
@@ -633,6 +651,7 @@ export const getDictionary = async (locale: Locale) => {
       attendance,
       messaging,
       whatsapp,
+      transportation,
     }
   }
 }

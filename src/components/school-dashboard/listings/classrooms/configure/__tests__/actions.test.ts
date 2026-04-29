@@ -161,7 +161,7 @@ describe("Classrooms Configure Actions", () => {
 
       expect(result.success).toBe(false)
       if (!result.success) {
-        expect(result.error).toContain("Classroom limit reached")
+        expect(result.error).toBe("CLASSROOM_LIMIT_REACHED")
       }
     })
   })

@@ -9,6 +9,10 @@ import { useRouter } from "next/navigation"
 
 import type { ArchiveScope } from "@/lib/archive-scope"
 import { asset } from "@/lib/asset-url"
+import {
+  FULL_UI_PERMISSIONS,
+  type UIPermissions,
+} from "@/lib/rbac/ui-permissions"
 import { cn } from "@/lib/utils"
 import { useDebouncedSearch } from "@/hooks/use-debounced-search"
 import { usePlatformData } from "@/hooks/use-platform-data"
@@ -43,6 +47,7 @@ interface StudentsTableProps {
   perPage?: number
   gradeOptions?: Array<{ label: string; value: string }>
   scope?: ArchiveScope
+  permissions?: UIPermissions
 }
 
 function StudentsTableInner({
@@ -53,6 +58,7 @@ function StudentsTableInner({
   perPage = 20,
   gradeOptions = [],
   scope = "active",
+  permissions = FULL_UI_PERMISSIONS,
 }: StudentsTableProps) {
   const router = useRouter()
 
@@ -180,6 +186,7 @@ function StudentsTableInner({
         onPurge: handlePurge,
         gradeOptions,
         scope,
+        permissions,
       }),
     [
       dictionary,
@@ -190,6 +197,7 @@ function StudentsTableInner({
       handlePurge,
       gradeOptions,
       scope,
+      permissions,
     ]
   )
 
@@ -334,12 +342,12 @@ function StudentsTableInner({
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
         searchPlaceholder={t.search}
-        onCreate={handleCreate}
-        getCSV={handleExportCSV}
+        onCreate={permissions.showAddButton ? handleCreate : undefined}
+        getCSV={permissions.showExportButton ? handleExportCSV : undefined}
         entityName="students"
         translations={toolbarTranslations}
         additionalActions={
-          hasUnassigned ? (
+          permissions.showBulkActions && hasUnassigned ? (
             <Button
               variant="outline"
               size="icon"

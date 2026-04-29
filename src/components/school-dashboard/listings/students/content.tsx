@@ -7,11 +7,13 @@ import { withArchiveScope } from "@/lib/archive-scope"
 import { getDisplayText } from "@/lib/content-display"
 import { getGradeLabel } from "@/lib/grade-label"
 import { getModel } from "@/lib/prisma-guards"
+import type { Role } from "@/lib/rbac/types"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { type StudentRow } from "@/components/school-dashboard/listings/students/columns"
 import { studentsSearchParams } from "@/components/school-dashboard/listings/students/list-params"
+import { getUIConfigForRole } from "@/components/school-dashboard/listings/students/permissions"
 import { StudentsTable } from "@/components/school-dashboard/listings/students/table"
 
 interface Props {
@@ -102,7 +104,8 @@ export default async function StudentsContent({
   lang,
 }: Props) {
   const sp = await studentsSearchParams.parse(await searchParams)
-  const { schoolId } = await getTenantContext()
+  const { schoolId, role } = await getTenantContext()
+  const permissions = getUIConfigForRole(role as Role | null | undefined)
 
   const effectiveSchoolId = school?.id || schoolId
 
@@ -276,6 +279,7 @@ export default async function StudentsContent({
       perPage={sp.perPage}
       gradeOptions={gradeOptions}
       scope={sp.scope}
+      permissions={permissions}
     />
   )
 }

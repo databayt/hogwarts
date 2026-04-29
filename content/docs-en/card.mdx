@@ -1,57 +1,29 @@
 ---
-title: "Card"
-description: "Canonical patterns for writing card.tsx display components in feature directories"
+title: Card
+description: Canonical patterns for writing card.tsx display components in feature directories.
 ---
 
-## Current Progress (Audit)
+`card.tsx` renders feature-specific display cards composed from shadcn `Card` primitives. KPIs, entity summaries, onboarding step tiles. Pure presentation — no data fetching, no mutations.
 
-92 total card files audited across the codebase (27 card.tsx + 71 \*-card.tsx, ~3,755 lines in card.tsx):
+## Categories
 
-| Area                                         | Status | Detail                                                                        |
-| -------------------------------------------- | ------ | ----------------------------------------------------------------------------- |
-| Card/CardHeader/CardContent/CardFooter usage | PASS   | 100% use shadcn Card primitives consistently                                  |
-| `showActions` prop for conditional footers   | PASS   | Standard pattern across entity cards                                          |
-| Formatters imported from util.ts             | PASS   | 80%+ import formatting from co-located util.ts                                |
-| Multiple card exports per file               | PASS   | Multi-variant pattern (EntityCard, CompactCard, StatsCard) used in 6+ files   |
-| Typed entity props                           | PASS   | Entity types imported from types.ts                                           |
-| JSDoc on card components                     | PASS   | Best examples: billing/card.tsx, domains/card.tsx                             |
-| No consistent naming for multi-card exports  | FAIL   | Mix of EntityCard, CompactCard, HealthCard, SummaryCard, StatsCard naming     |
-| Onboarding cards mix form logic              | FAIL   | 12 onboarding card files include form state management alongside card display |
+| Category        | Shape                                                                | Reference                             |
+| --------------- | -------------------------------------------------------------------- | ------------------------------------- |
+| Entity display  | Full / compact / health / stats variants for one domain entity.      | `saas-dashboard/billing/card.tsx`     |
+| KPI / stats     | Single metric with label, trend, icon.                               | `school-dashboard/dashboard/card.tsx` |
+| Onboarding step | Visual card representing a wizard option (level, curriculum, theme). | `onboarding/branding/card.tsx`        |
+| Atom lab        | Showcase cards in `atom/lab/` for the design system.                 | `atom/lab/*-card.tsx`                 |
 
-## 4 Categories of card.tsx
+## Five rules
 
-### Category 1: Entity Display Cards (~10 files)
+1. **Compose from shadcn `Card` primitives.** `Card`, `CardHeader`, `CardContent`, `CardFooter`, `CardTitle`, `CardDescription`. Don't reinvent.
+2. **Typed entity props.** Import the entity type from `types.ts`. No `any`.
+3. **Formatters from `util.ts`.** Currency, dates, names — formatting helpers live in `util.ts`, not in the card.
+4. **Multiple variants per file.** When a feature needs both `EntityCard` and `CompactCard`, export both from one `card.tsx`. Don't split into two files.
+5. **`showActions` prop for conditional footers.** Lets the same card render in interactive (table cell) and read-only (detail page) contexts.
 
-Data display for domain entities (invoices, domains, tenants). Multiple card variants per file: EntityCard (full), CompactCard (minimal), HealthCard (status), StatsCard (metrics).
-
-Reference: `saas-dashboard/billing/card.tsx` (392 lines), `saas-dashboard/domains/card.tsx` (399 lines)
-
-### Category 2: KPI/Stats Cards (~5 files)
-
-Dashboard metric displays. Single value with label, trend indicator, and icon.
-
-Reference: `school-dashboard/dashboard/card.tsx`, `saas-dashboard/billing/card.tsx` (StatsCard export)
-
-### Category 3: Onboarding Step Cards (~12 files)
-
-Visual cards for onboarding wizard steps. Each card represents a configuration option (school level, curriculum, theme).
-
-Reference: `onboarding/branding/card.tsx`, `onboarding/curriculum/card.tsx`
-
-### Category 4: Atom Lab Cards (~30 files)
-
-Component showcase cards in `atom/lab/`. Demonstrate card variations for the design system.
-
-Reference: `atom/lab/*-card.tsx` (30+ variants in the flat `atom/lab/` directory)
-
-## The 5 Rules
-
-### 1. Always use shadcn Card primitives
-
-Every card component must compose from `Card`, `CardHeader`, `CardContent`, `CardFooter` from shadcn/ui.
-
-```typescript
-// GOOD: shadcn Card composition
+```tsx
+import { Badge } from "@/components/ui/badge"
 import {
   Card,
   CardContent,
@@ -61,592 +33,84 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 
-export function InvoiceCard({ invoice }: InvoiceCardProps) {
-  return (
-    <Card className="transition-shadow hover:shadow-md">
-      <CardHeader>
-        <CardTitle>{invoice.id}</CardTitle>
-        <CardDescription>{invoice.school.name}</CardDescription>
-      </CardHeader>
-      <CardContent>{/* ... */}</CardContent>
-      <CardFooter>{/* ... */}</CardFooter>
-    </Card>
-  )
-}
+import type { TenantDto } from "./types"
+import { formatDate } from "./util"
 
-// BAD: Custom div structure
-export function InvoiceCard({ invoice }: InvoiceCardProps) {
-  return (
-    <div className="rounded-lg border p-4">
-      <div className="font-bold">{invoice.id}</div>
-      {/* ... */}
-    </div>
-  )
-}
-```
-
-### 2. Use `showActions` prop for conditional footers
-
-Cards with action buttons should accept a `showActions` prop. This allows the same card to be used in read-only and interactive contexts.
-
-```typescript
-// GOOD: showActions controls footer
-interface DomainCardProps {
-  domain: DomainRequestWithSchool
+interface TenantCardProps {
+  tenant: TenantDto
   showActions?: boolean
-  onApprove?: (domainId: string) => void
-  onReject?: (domainId: string) => void
 }
 
-export function DomainCard({
-  domain,
-  showActions = false,
-  onApprove,
-  onReject,
-}: DomainCardProps) {
+export function TenantCard({ tenant, showActions = true }: TenantCardProps) {
   return (
     <Card>
-      <CardHeader>{/* ... */}</CardHeader>
-      <CardContent>{/* ... */}</CardContent>
-      {showActions && (
-        <CardFooter className="gap-2">
-          <Button onClick={() => onApprove?.(domain.id)}>Approve</Button>
-          <Button variant="outline" onClick={() => onReject?.(domain.id)}>
-            Reject
-          </Button>
-        </CardFooter>
-      )}
-    </Card>
-  )
-}
-```
-
-### 3. Import formatters from util.ts
-
-Never format currency, dates, or status labels inline in cards. Import from the co-located util.ts.
-
-```typescript
-// GOOD: Formatters from util.ts
-import {
-  formatCurrency,
-  formatBillingPeriod,
-  getInvoiceStatusLabel,
-  isInvoiceOverdue,
-} from "./util"
-
-<CardContent>
-  <div>{formatCurrency(invoice.amountDue, invoice.currency)}</div>
-  <div>{formatBillingPeriod(invoice.periodStart, invoice.periodEnd)}</div>
-</CardContent>
-
-// BAD: Inline formatting
-<CardContent>
-  <div>${(invoice.amountDue / 100).toFixed(2)}</div>
-  <div>{new Date(invoice.periodStart).toLocaleDateString()}</div>
-</CardContent>
-```
-
-### 4. Multiple exports per file with consistent naming
-
-When a file exports multiple card variants, use the pattern: `<Entity>Card` (full), `<Entity>CompactCard` (minimal), `<Entity>HealthCard` (status), `<Entity>StatsCard` (metrics).
-
-```typescript
-// GOOD: Consistent multi-variant exports
-export function InvoiceCard({ ... }) { ... }           // Full card
-export function InvoiceCompactCard({ ... }) { ... }    // Minimal/list item
-export function InvoiceHealthCard({ ... }) { ... }     // Status-focused
-export function InvoiceStatsCard({ ... }) { ... }      // Metrics/KPI
-export function BillingSummaryCard({ ... }) { ... }    // Aggregate
-```
-
-### 5. Import types and config, never hardcode
-
-Status variants, labels, and entity types come from config.ts and types.ts.
-
-```typescript
-// GOOD: Config-driven status badges
-import { INVOICE_STATUS_VARIANTS } from "./config"
-import type { InvoiceStatus, InvoiceWithSchool } from "./types"
-
-<Badge variant={INVOICE_STATUS_VARIANTS[invoice.status as InvoiceStatus]}>
-  {getInvoiceStatusLabel(invoice.status as InvoiceStatus)}
-</Badge>
-
-// BAD: Hardcoded status logic
-<Badge variant={invoice.status === "paid" ? "default" : "destructive"}>
-  {invoice.status}
-</Badge>
-```
-
-## 2 Canonical Templates
-
-### Template A: Entity Display Card
-
-Full entity card with status badge, key metrics, and conditional actions. Reference: `saas-dashboard/domains/card.tsx` (399 lines).
-
-```typescript
-"use client"
-
-import { Globe } from "lucide-react"
-
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-
-import { DOMAIN_STATUS_VARIANTS } from "./config"
-import type { DomainRequestWithSchool, DomainStatus } from "./types"
-import {
-  formatTimeSince,
-  getDomainHealth,
-  getDomainStatusLabel,
-  normalizeDomain,
-} from "./util"
-
-interface DomainCardProps {
-  domain: DomainRequestWithSchool
-  showActions?: boolean
-  onApprove?: (domainId: string) => void
-  onReject?: (domainId: string) => void
-  onVerify?: (domainId: string) => void
-  onViewDetails?: (domainId: string) => void
-}
-
-export function DomainCard({
-  domain,
-  showActions = false,
-  onApprove,
-  onReject,
-  onVerify,
-  onViewDetails,
-}: DomainCardProps) {
-  const normalized = normalizeDomain(domain.domain)
-  const health = getDomainHealth(domain.status as DomainStatus)
-
-  return (
-    <Card className="transition-shadow hover:shadow-md">
       <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <CardTitle className="flex items-center gap-2">
-              <Globe className="size-4" />
-              {normalized}
-            </CardTitle>
-            <CardDescription>{domain.school.name}</CardDescription>
-          </div>
-          <Badge
-            variant={DOMAIN_STATUS_VARIANTS[domain.status as DomainStatus]}
-          >
-            {getDomainStatusLabel(domain.status as DomainStatus)}
-          </Badge>
-        </div>
-      </CardHeader>
-
-      <CardContent className="space-y-3">
-        <div className="flex items-center justify-between">
-          <small className="text-muted-foreground">Requested</small>
-          <div className="font-medium">{formatTimeSince(domain.createdAt)}</div>
-        </div>
-        {domain.notes && (
-          <div>
-            <small className="text-muted-foreground">Notes</small>
-            <p className="text-muted-foreground line-clamp-2">{domain.notes}</p>
-          </div>
-        )}
-      </CardContent>
-
-      {showActions && (
-        <CardFooter className="gap-2">
-          {domain.status === "pending" && (
-            <>
-              <Button size="sm" onClick={() => onApprove?.(domain.id)}>
-                Approve
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onReject?.(domain.id)}
-              >
-                Reject
-              </Button>
-            </>
-          )}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onViewDetails?.(domain.id)}
-          >
-            Details
-          </Button>
-        </CardFooter>
-      )}
-    </Card>
-  )
-}
-```
-
-Key points:
-
-- `showActions` controls footer visibility
-- Action callbacks (`onApprove`, `onReject`, `onViewDetails`) as optional props
-- Status badge driven by config variants
-- Formatters from util.ts (`normalizeDomain`, `formatTimeSince`, `getDomainStatusLabel`)
-- Conditional sections based on data presence (`domain.notes`)
-- `hover:shadow-md` transition for interactive feel
-
-### Template B: Multi-Variant Card File
-
-Multiple card exports in one file for different display contexts. Reference: `saas-dashboard/billing/card.tsx` (392 lines).
-
-```typescript
-"use client"
-
-import { DollarSign, FileText } from "lucide-react"
-
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-
-import { INVOICE_STATUS_VARIANTS } from "./config"
-import type { InvoiceStatus, InvoiceWithSchool } from "./types"
-import {
-  formatBillingPeriod,
-  formatCurrency,
-  getInvoiceHealth,
-  getInvoiceStatusLabel,
-} from "./util"
-
-// ============================================================================
-// Full Invoice Card
-// ============================================================================
-
-interface InvoiceCardProps {
-  invoice: InvoiceWithSchool
-  showActions?: boolean
-  onViewDetails?: (invoiceId: string) => void
-  onMarkPaid?: (invoiceId: string) => void
-}
-
-export function InvoiceCard({
-  invoice,
-  showActions = false,
-  onViewDetails,
-  onMarkPaid,
-}: InvoiceCardProps) {
-  return (
-    <Card className="transition-shadow hover:shadow-md">
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="size-4" />
-              Invoice {invoice.stripeInvoiceId}
-            </CardTitle>
-            <CardDescription>{invoice.school.name}</CardDescription>
-          </div>
-          <Badge
-            variant={INVOICE_STATUS_VARIANTS[invoice.status as InvoiceStatus]}
-          >
-            {getInvoiceStatusLabel(invoice.status as InvoiceStatus)}
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="flex items-center justify-between">
-          <small className="text-muted-foreground">Period</small>
-          <div className="font-medium">
-            {formatBillingPeriod(invoice.periodStart, invoice.periodEnd)}
-          </div>
-        </div>
-        <div className="flex items-center justify-between">
-          <small className="text-muted-foreground">Amount</small>
-          <div className="font-medium tabular-nums">
-            {formatCurrency(invoice.amountDue, invoice.currency)}
-          </div>
-        </div>
-      </CardContent>
-      {showActions && (
-        <CardFooter className="gap-2">
-          <Button size="sm" onClick={() => onViewDetails?.(invoice.id)}>
-            View Details
-          </Button>
-        </CardFooter>
-      )}
-    </Card>
-  )
-}
-
-// ============================================================================
-// Stats Card (KPI)
-// ============================================================================
-
-interface InvoiceStatsCardProps {
-  label: string
-  value: string
-  description?: string
-  icon?: React.ReactNode
-  trend?: { value: number; direction: "up" | "down" }
-}
-
-export function InvoiceStatsCard({
-  label,
-  value,
-  description,
-  icon,
-  trend,
-}: InvoiceStatsCardProps) {
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        {/* Note: Use semantic HTML (<h2>, <h3>) instead of hardcoded text-* classes */}
-        <CardTitle className="text-sm font-medium">{label}</CardTitle>
-        {icon}
+        <CardTitle>{tenant.name}</CardTitle>
+        <CardDescription>{tenant.domain}</CardDescription>
       </CardHeader>
       <CardContent>
-        {/* Note: Use semantic HTML (<h2>, <h3>) instead of hardcoded text-* classes */}
-        <div className="text-2xl font-bold tabular-nums">{value}</div>
-        {description && (
-          <p className="text-muted-foreground text-xs">{description}</p>
-        )}
+        <Badge variant={tenant.isActive ? "default" : "secondary"}>
+          {tenant.isActive ? "Active" : "Suspended"}
+        </Badge>
+        <p className="text-muted-foreground text-sm">
+          Created {formatDate(tenant.createdAt)}
+        </p>
       </CardContent>
+      {showActions && <CardFooter>{/* edit, archive, etc. */}</CardFooter>}
     </Card>
   )
 }
 
-// ============================================================================
-// Health Card (Status Overview)
-// ============================================================================
-
-export function InvoiceHealthCard({
-  invoices,
-}: {
-  invoices: InvoiceWithSchool[]
-}) {
-  const health = getInvoiceHealth(invoices)
-
+export function TenantCompactCard({ tenant }: { tenant: TenantDto }) {
   return (
-    <Card>
+    <Card className="bg-muted/30">
       <CardHeader>
-        <CardTitle>Billing Health</CardTitle>
-        <CardDescription>Overview of invoice statuses</CardDescription>
+        <CardTitle className="text-base">{tenant.name}</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2">
-        {Object.entries(health).map(([status, count]) => (
-          <div key={status} className="flex items-center justify-between">
-            <small>{status}</small>
-            <Badge variant="outline">{count}</Badge>
-          </div>
-        ))}
-      </CardContent>
     </Card>
   )
 }
 ```
 
-Key points:
+## Templates
 
-- Section separators (`// ====`) group related card variants
-- Each variant has its own Props interface
-- Full card: entity display with actions
-- Stats card: KPI metric with label and trend
-- Health card: aggregate status overview
-- All formatters from util.ts
+| Template       | File                                                 |
+| -------------- | ---------------------------------------------------- |
+| Entity display | `src/components/saas-dashboard/billing/card.tsx`     |
+| KPI / stats    | `src/components/school-dashboard/dashboard/card.tsx` |
+| Onboarding     | `src/components/onboarding/branding/card.tsx`        |
 
-> **Semantic HTML:** Per project convention, prefer semantic HTML elements (`<h2>`, `<h3>`, `<p>`) over hardcoded `text-2xl font-bold` classes. Import `typography` from `@/lib/typography` for consistent text styling.
+## Naming for multi-variant exports
 
-## Anti-Patterns
+Pick a consistent suffix system:
 
-### 1. No consistent naming convention for multi-card exports
+| Variant           | Suffix    | Example             |
+| ----------------- | --------- | ------------------- |
+| Full / default    | none      | `TenantCard`        |
+| Compact / minimal | `Compact` | `TenantCompactCard` |
+| Health / status   | `Health`  | `TenantHealthCard`  |
+| Metric / KPI      | `Stats`   | `TenantStatsCard`   |
+| Detail-only       | `Detail`  | `TenantDetailCard`  |
 
-Different files use different naming patterns for the same concept.
+The codebase currently mixes `Compact`, `Health`, `Summary`, `Stats`. Settle on the table above for new code.
 
-```typescript
-// BAD: Inconsistent naming across files
-// billing/card.tsx
-export function BillingSummaryCard() { ... }
-export function InvoiceHealthCard() { ... }
+## Anti-patterns
 
-// domains/card.tsx
-export function DomainCompactCard() { ... }
-export function DomainHealthCard() { ... }
+- **Form logic inside cards** — 12 onboarding card files mix card display with form state. Cards are presentation; lift state to `client.tsx` or the form component.
+- **Reinventing card primitives** — using raw `<div className="rounded-lg border p-6">` instead of `Card`. Use the primitive.
+- **Inline formatters** — `new Intl.NumberFormat(...)` in the card body. Move to `util.ts`.
+- **Untyped props** — `any` for the entity. Import from `types.ts`.
+- **Hardcoded labels** — should come from the dictionary slice for translatable text.
 
-// tenants/card.tsx
-export function TenantOverviewCard() { ... }  // "Overview" vs "Summary"
-export function TenantStatusCard() { ... }    // "Status" vs "Health"
+## Relationship to siblings
 
-// FIX: Standardize on <Entity>Card, <Entity>CompactCard, <Entity>HealthCard, <Entity>StatsCard
-```
+- `card.tsx` is rendered by `content.tsx`, `client.tsx`, or `detail.tsx`.
+- It imports from `types.ts` (entity shape), `util.ts` (formatters), and `config.ts` (status options).
+- It does **not** import from `actions.ts`, `queries.ts`, or `form.tsx`.
+- It does **not** call server actions. Action handlers live one level up.
 
-### 2. Onboarding cards mix form logic with display
+## Naming
 
-12 onboarding card files include form state management, validation, and submission alongside the card display.
-
-```typescript
-// BAD: Form logic in card.tsx
-export function BrandingCard() {
-  const [logo, setLogo] = useState(null)
-  const handleUpload = async (file: File) => { ... }
-  const handleSave = async () => { ... }
-  // ... 200 lines of form logic + card display
-}
-
-// GOOD: Card is display-only, form logic in form.tsx
-export function BrandingCard({ data, onSelect }: BrandingCardProps) {
-  return (
-    <Card onClick={() => onSelect(data.id)}>
-      <CardContent>{/* display only */}</CardContent>
-    </Card>
-  )
-}
-```
-
-### 3. Inline formatting instead of util.ts
-
-Currency, dates, and status labels formatted directly in card components.
-
-```typescript
-// BAD: Inline formatting
-<div>${(amount / 100).toFixed(2)}</div>
-<div>{new Date(date).toLocaleDateString()}</div>
-
-// GOOD: Formatters from util.ts
-<div>{formatCurrency(amount, currency)}</div>
-<div>{formatTimeSince(date)}</div>
-```
-
-## Server-First Architecture
-
-Many cards are pure data display and can be **server components**. Only add `"use client"` when the card has:
-
-- `onClick` handlers or interactive callbacks
-- `showActions` with button event handlers
-- Client state (hover state tracking, animation state)
-
-### Server Component Cards (Preferred)
-
-Cards that only display data don't need `"use client"`:
-
-```typescript
-// GOOD: Server component card (no "use client")
-import { Badge } from "@/components/ui/badge"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-
-import type { InvoiceWithSchool } from "./types"
-import { formatCurrency, getInvoiceStatusLabel } from "./util"
-
-export function InvoiceCard({ invoice }: { invoice: InvoiceWithSchool }) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{invoice.stripeInvoiceId}</CardTitle>
-        <CardDescription>{invoice.school.name}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="font-medium tabular-nums">
-          {formatCurrency(invoice.amountDue, invoice.currency)}
-        </div>
-        <Badge>{getInvoiceStatusLabel(invoice.status)}</Badge>
-      </CardContent>
-    </Card>
-  )
-}
-```
-
-### When Cards Need Client
-
-Add `"use client"` only for interactive cards:
-
-```typescript
-// Client card -- has onClick callbacks
-"use client"
-
-export function DomainCard({
-  domain,
-  showActions,
-  onApprove,
-  onReject,
-}: DomainCardProps) {
-  return (
-    <Card>
-      {/* ... display content ... */}
-      {showActions && (
-        <CardFooter>
-          <Button onClick={() => onApprove?.(domain.id)}>Approve</Button>
-        </CardFooter>
-      )}
-    </Card>
-  )
-}
-```
-
-### Split Pattern for Mixed Cards
-
-When a card file has both display-only and interactive variants, consider splitting:
-
-```
-# Display cards as server components
-card.tsx           # InvoiceCard, InvoiceStatsCard (server, display-only)
-card-actions.tsx   # InvoiceActionCard (client, with onClick handlers)
-
-# Or keep together with "use client" if all variants need interactivity
-card.tsx           # "use client" -- all variants have callbacks
-```
-
-## Quick Reference
-
-### Card Variant Naming
-
-| Variant               | Purpose             | Example              |
-| --------------------- | ------------------- | -------------------- |
-| `<Entity>Card`        | Full entity display | `InvoiceCard`        |
-| `<Entity>CompactCard` | Minimal/list item   | `DomainCompactCard`  |
-| `<Entity>HealthCard`  | Status overview     | `InvoiceHealthCard`  |
-| `<Entity>StatsCard`   | KPI metric          | `InvoiceStatsCard`   |
-| `<Entity>SummaryCard` | Aggregate summary   | `BillingSummaryCard` |
-
-### Import Direction
-
-```
-config.ts     (status variants, labels)
-types.ts      (entity types)
-util.ts       (formatters)
-    |
-card.tsx      (imports all three, exports card variants)
-    |
-+---+---+
-|       |
-all   featured
-.tsx    .tsx
-```
-
-### Co-located File Structure
-
-```
-src/components/<feature>/
-  config.ts         # Status variants, labels
-  types.ts          # Entity types (InvoiceWithSchool, DomainStatus)
-  util.ts           # Formatters (formatCurrency, formatTimeSince)
-  card.tsx          # Card variants (this file)
-  all.tsx           # Grid/list view (imports card.tsx)
-  featured.tsx      # Featured/recent views (imports card.tsx)
-  content.tsx       # Server component
-```
+- Filename: `card.tsx`. Always.
+- Function: `<Feature>Card` for the default; suffix-coded variants per the table above.
+- Named exports.

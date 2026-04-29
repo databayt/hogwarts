@@ -3,18 +3,17 @@ title: "CDN Assets"
 description: "Static assets served via S3 + CloudFront with the asset() helper"
 ---
 
-# CDN Assets
-
 All platform UI assets are served from **S3 + CloudFront** via a single `asset()` helper function.
 
 ## Infrastructure
 
-| Component  | Value                                                |
-| ---------- | ---------------------------------------------------- |
-| S3 Bucket  | `hogwarts-databayt` (`us-east-1`)                    |
-| CloudFront | `d1dlwtcfl0db67.cloudfront.net`                      |
-| Cache      | `public, max-age=31536000, immutable` (1 year)       |
-| Env var    | `NEXT_PUBLIC_CDN_DOMAIN` (build-time, set on Vercel) |
+| Component        | Value                                                          |
+| ---------------- | -------------------------------------------------------------- |
+| S3 Bucket        | `hogwarts-databayt` (`us-east-1`)                              |
+| CloudFront CNAME | `cdn.databayt.org` (preferred)                                 |
+| CloudFront raw   | `d1dlwtcfl0db67.cloudfront.net` (still works — additive alias) |
+| Cache            | `public, max-age=31536000, immutable` (1 year)                 |
+| Env var          | `NEXT_PUBLIC_CDN_DOMAIN` (build-time, set on Vercel)           |
 
 ## Usage
 
@@ -31,7 +30,7 @@ The `asset()` function prepends the CloudFront domain:
 
 ```
 asset("/icons/logo.png")
-→ https://d1dlwtcfl0db67.cloudfront.net/icons/logo.png
+→ https://cdn.databayt.org/icons/logo.png
 ```
 
 ## Directory Structure
