@@ -6,6 +6,10 @@ import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
 import { CheckCircle } from "lucide-react"
 
+import {
+  FULL_UI_PERMISSIONS,
+  type UIPermissions,
+} from "@/lib/rbac/ui-permissions"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -45,6 +49,7 @@ export interface TeacherColumnCallbacks {
   onEdit?: (row: TeacherRow) => void
   onDelete?: (row: TeacherRow) => void
   onToggleStatus?: (row: TeacherRow) => void
+  permissions?: UIPermissions
 }
 
 export const getTeacherColumns = (
@@ -53,6 +58,7 @@ export const getTeacherColumns = (
   callbacks?: TeacherColumnCallbacks
 ): ColumnDef<TeacherRow>[] => {
   const isRtl = lang === "ar"
+  const permissions = callbacks?.permissions ?? FULL_UI_PERMISSIONS
 
   const t = {
     name: dictionary?.fullName || "Name",
@@ -357,34 +363,41 @@ export const getTeacherColumns = (
               href={`/${lang}/profile/${teacher.userId || teacher.id}`}
             />
 
-            {teacher.wizardStep ? (
-              <ActionMenuItem
-                label={t.completeProfile || "Complete Profile"}
-                href={`/${lang}/teachers/add/${teacher.id}/${teacher.wizardStep}`}
-              />
-            ) : (
-              <DropdownMenuItem onClick={() => callbacks?.onEdit?.(teacher)}>
-                {t.edit}
-              </DropdownMenuItem>
+            {permissions.showEditAction &&
+              (teacher.wizardStep ? (
+                <ActionMenuItem
+                  label={t.completeProfile || "Complete Profile"}
+                  href={`/${lang}/teachers/add/${teacher.id}/${teacher.wizardStep}`}
+                />
+              ) : (
+                <DropdownMenuItem onClick={() => callbacks?.onEdit?.(teacher)}>
+                  {t.edit}
+                </DropdownMenuItem>
+              ))}
+
+            {permissions.showToggleStatus && (
+              <>
+                <DropdownMenuSeparator />
+                <ActionMenuItem
+                  label={
+                    teacher.employmentStatus === "ACTIVE"
+                      ? t.deactivate
+                      : t.activate
+                  }
+                  onClick={() => callbacks?.onToggleStatus?.(teacher)}
+                />
+              </>
             )}
 
-            <DropdownMenuSeparator />
-
-            <ActionMenuItem
-              label={
-                teacher.employmentStatus === "ACTIVE"
-                  ? t.deactivate
-                  : t.activate
-              }
-              onClick={() => callbacks?.onToggleStatus?.(teacher)}
-            />
-
-            <DropdownMenuSeparator />
-
-            <ActionMenuItem
-              label={t.delete}
-              onClick={() => callbacks?.onDelete?.(teacher)}
-            />
+            {permissions.showDeleteAction && (
+              <>
+                <DropdownMenuSeparator />
+                <ActionMenuItem
+                  label={t.delete}
+                  onClick={() => callbacks?.onDelete?.(teacher)}
+                />
+              </>
+            )}
           </ActionMenu>
         )
       },

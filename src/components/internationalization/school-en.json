@@ -2057,7 +2057,9 @@
         "usernameOnly": "This student logs in with username and password.",
         "noEmail": "No email on file",
         "failedToGenerate": "Failed to load credentials",
-        "failedToReset": "Failed to reset password"
+        "failedToReset": "Failed to reset password",
+        "copyAll": "Copy all details",
+        "copiedToClipboard": "Copied to clipboard"
       },
       "previousEducation": {
         "title": "Previous Education",

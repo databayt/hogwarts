@@ -4,6 +4,10 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { ColumnDef } from "@tanstack/react-table"
 
+import {
+  FULL_UI_PERMISSIONS,
+  type UIPermissions,
+} from "@/lib/rbac/ui-permissions"
 import { Badge } from "@/components/ui/badge"
 import {
   DropdownMenuLabel,
@@ -21,6 +25,7 @@ export type { EventRow }
 
 export interface EventColumnCallbacks {
   onDelete?: (row: EventRow) => void
+  permissions?: UIPermissions
 }
 
 const STATUS_VARIANTS: Record<
@@ -53,6 +58,7 @@ export const getEventColumns = (
 ): ColumnDef<EventRow>[] => {
   const statuses = dictionary?.statuses as Record<string, string> | undefined
   const types = dictionary?.types as Record<string, string> | undefined
+  const permissions = callbacks?.permissions ?? FULL_UI_PERMISSIONS
 
   const t = {
     title: dictionary?.title || "Title",
@@ -240,8 +246,12 @@ export const getEventColumns = (
               label={t.view}
               href={`/${lang}/events/${event.id}`}
             />
-            <ActionMenuItem label={t.edit} onClick={onEdit} />
-            <ActionMenuItem label={t.delete} onClick={onDelete} />
+            {permissions.showEditAction && (
+              <ActionMenuItem label={t.edit} onClick={onEdit} />
+            )}
+            {permissions.showDeleteAction && (
+              <ActionMenuItem label={t.delete} onClick={onDelete} />
+            )}
           </ActionMenu>
         )
       },

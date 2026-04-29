@@ -1,10 +1,15 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { auth } from "@/auth"
+
+import type { Role } from "@/lib/rbac/types"
+import { isRoleIn } from "@/lib/rbac/ui-permissions"
 import { PageNav, type PageNavItem } from "@/components/atom/page-nav"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
+import { FINANCE_VIEW_ROLES } from "@/components/school-dashboard/finance/permissions"
 
 interface Props {
   children: React.ReactNode
@@ -12,29 +17,39 @@ interface Props {
 }
 
 export default async function SalaryLayout({ children, params }: Props) {
-  const { lang } = await params
+  const [{ lang }, session] = await Promise.all([params, auth()])
   const dictionary = await getDictionary(lang as Locale)
+  const role = (session?.user?.role ?? null) as Role | null
   const d = dictionary?.finance?.salary
+  const canView = isRoleIn(role, FINANCE_VIEW_ROLES)
 
   // Define salary page navigation
   const n = d?.navigation
-  const salaryPages: PageNavItem[] = [
-    { name: n?.overview || "Overview", href: `/${lang}/finance/salary` },
-    {
-      name: n?.structure || "Salary Structure",
-      href: `/${lang}/finance/salary/structure`,
-    },
-    { name: n?.slips || "Salary Slips", href: `/${lang}/finance/salary/slips` },
-    {
-      name: n?.increments || "Increments",
-      href: `/${lang}/finance/salary/increments`,
-    },
-    {
-      name: n?.advances || "Advances",
-      href: `/${lang}/finance/salary/advances`,
-    },
-    { name: n?.reports || "Reports", href: `/${lang}/finance/salary/reports` },
-  ]
+  const salaryPages: PageNavItem[] = !canView
+    ? []
+    : [
+        { name: n?.overview || "Overview", href: `/${lang}/finance/salary` },
+        {
+          name: n?.structure || "Salary Structure",
+          href: `/${lang}/finance/salary/structure`,
+        },
+        {
+          name: n?.slips || "Salary Slips",
+          href: `/${lang}/finance/salary/slips`,
+        },
+        {
+          name: n?.increments || "Increments",
+          href: `/${lang}/finance/salary/increments`,
+        },
+        {
+          name: n?.advances || "Advances",
+          href: `/${lang}/finance/salary/advances`,
+        },
+        {
+          name: n?.reports || "Reports",
+          href: `/${lang}/finance/salary/reports`,
+        },
+      ]
 
   return (
     <div className="space-y-6">

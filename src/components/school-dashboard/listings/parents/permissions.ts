@@ -1,0 +1,73 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
+import type { Role } from "@/lib/rbac/types"
+import {
+  ADMIN_ROLES,
+  FULL_UI_PERMISSIONS,
+  isRoleIn,
+  NO_UI_PERMISSIONS,
+  type UIPermissions,
+} from "@/lib/rbac/ui-permissions"
+import type { PageNavItem } from "@/components/atom/page-nav"
+
+const VIEW_ROLES: readonly Role[] = [
+  "DEVELOPER",
+  "ADMIN",
+  "STAFF",
+  "ACCOUNTANT",
+] as const
+
+const MANAGE_ROLES: readonly Role[] = ["DEVELOPER", "ADMIN", "STAFF"] as const
+
+export function getTabsForRole(
+  role: Role | null | undefined,
+  lang: string,
+  d?: Record<string, string>
+): PageNavItem[] {
+  if (!isRoleIn(role, VIEW_ROLES)) return []
+
+  const isAdmin = isRoleIn(role, ADMIN_ROLES)
+  const canManage = isRoleIn(role, MANAGE_ROLES)
+
+  const tabs: PageNavItem[] = [
+    { name: d?.allParents || "All", href: `/${lang}/parents` },
+  ]
+  if (canManage) {
+    tabs.push({ name: d?.navLink || "Link", href: `/${lang}/parents/link` })
+    tabs.push({
+      name: d?.navCommunication || "Communication",
+      href: `/${lang}/parents/communication`,
+    })
+  }
+  if (isAdmin) {
+    tabs.push({
+      name: d?.navSettings || "Settings",
+      href: `/${lang}/parents/settings`,
+    })
+  }
+  return tabs
+}
+
+export function getUIConfigForRole(
+  role: Role | null | undefined
+): UIPermissions {
+  if (!role) return NO_UI_PERMISSIONS
+  if (isRoleIn(role, ADMIN_ROLES)) return FULL_UI_PERMISSIONS
+  if (role === "STAFF") {
+    return {
+      ...FULL_UI_PERMISSIONS,
+      showDeleteAction: false,
+      showArchiveAction: false,
+      showRestoreAction: false,
+    }
+  }
+  if (role === "ACCOUNTANT") {
+    return {
+      ...NO_UI_PERMISSIONS,
+      showExportButton: true,
+      readOnlyMode: true,
+    }
+  }
+  return NO_UI_PERMISSIONS
+}

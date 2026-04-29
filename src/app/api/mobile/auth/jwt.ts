@@ -11,6 +11,8 @@
 
 import { jwtVerify, SignJWT } from "jose"
 
+import { db } from "@/lib/db"
+
 if (!process.env.AUTH_SECRET) {
   throw new Error("AUTH_SECRET environment variable is required")
 }
@@ -55,9 +57,26 @@ export async function verifyToken(token: string) {
 }
 
 /**
+ * Resolve the AcademicGrade.gradeNumber for a STUDENT-role user. Other roles
+ * have no grade. Returned in the mobile auth response so the Android Stream
+ * catalog can auto-filter for the logged-in student.
+ */
+async function resolveStudentGrade(
+  userId: string,
+  role: string
+): Promise<number | null> {
+  if (role !== "STUDENT") return null
+  const student = await db.student.findUnique({
+    where: { userId },
+    select: { academicGrade: { select: { gradeNumber: true } } },
+  })
+  return student?.academicGrade?.gradeNumber ?? null
+}
+
+/**
  * Build the standard AuthResponse user object (snake_case for mobile DTOs).
  */
-export function buildUserResponse(user: {
+export async function buildUserResponse(user: {
   id: string
   email: string | null
   schoolId: string | null
@@ -65,6 +84,7 @@ export function buildUserResponse(user: {
   username: string | null
   image: string | null
 }) {
+  const grade = await resolveStudentGrade(user.id, user.role)
   return {
     id: user.id,
     email: user.email,
@@ -73,6 +93,7 @@ export function buildUserResponse(user: {
     given_name: user.username?.split(" ")[0] || null,
     family_name: user.username?.split(" ").slice(1).join(" ") || null,
     avatar_url: user.image,
+    grade,
   }
 }
 
@@ -87,7 +108,7 @@ export async function buildAuthResponse(user: {
   username: string | null
   image: string | null
 }) {
-  const [accessToken, refreshToken] = await Promise.all([
+  const [accessToken, refreshToken, userResponse] = await Promise.all([
     generateAccessToken({
       id: user.id,
       email: user.email || "",
@@ -95,6 +116,7 @@ export async function buildAuthResponse(user: {
       role: user.role,
     }),
     generateRefreshToken(user.id),
+    buildUserResponse(user),
   ])
 
   const expiresAt = Date.now() + 24 * 60 * 60 * 1000
@@ -103,6 +125,6 @@ export async function buildAuthResponse(user: {
     access_token: accessToken,
     refresh_token: refreshToken,
     expires_at: expiresAt,
-    user: buildUserResponse(user),
+    user: userResponse,
   }
 }

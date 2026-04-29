@@ -5,6 +5,10 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 
+import {
+  FULL_UI_PERMISSIONS,
+  type UIPermissions,
+} from "@/lib/rbac/ui-permissions"
 import { useModal } from "@/components/atom/modal/context"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { DataTable } from "@/components/table/data-table"
@@ -19,9 +23,15 @@ interface StaffTableProps {
   data: StaffRow[]
   pageCount: number
   locale: string
+  permissions?: UIPermissions
 }
 
-export function StaffTable({ data, pageCount, locale }: StaffTableProps) {
+export function StaffTable({
+  data,
+  pageCount,
+  locale,
+  permissions = FULL_UI_PERMISSIONS,
+}: StaffTableProps) {
   const router = useRouter()
   const { openModal } = useModal()
   const { dictionary } = useDictionary()
@@ -49,11 +59,12 @@ export function StaffTable({ data, pageCount, locale }: StaffTableProps) {
               await deleteStaff(staff.id)
             }
           },
+          permissions,
         },
         locale,
         d
       ),
-    [router, openModal, locale, d, tbl]
+    [router, openModal, locale, d, tbl, permissions]
   )
 
   const { table } = useDataTable({

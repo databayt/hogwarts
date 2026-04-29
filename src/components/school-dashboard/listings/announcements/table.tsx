@@ -14,6 +14,10 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 
 import { asset } from "@/lib/asset-url"
+import {
+  FULL_UI_PERMISSIONS,
+  type UIPermissions,
+} from "@/lib/rbac/ui-permissions"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
 import { Badge } from "@/components/ui/badge"
@@ -47,6 +51,7 @@ interface AnnouncementsTableProps {
   dictionary: Dictionary["school"]["announcements"]
   lang: Locale
   perPage?: number
+  permissions?: UIPermissions
 }
 
 /**
@@ -102,6 +107,7 @@ function AnnouncementsTableInner({
   dictionary,
   lang,
   perPage = 20,
+  permissions = FULL_UI_PERMISSIONS,
 }: AnnouncementsTableProps) {
   const t = dictionary
   const router = useRouter()
@@ -216,8 +222,9 @@ function AnnouncementsTableInner({
       getAnnouncementColumns(t, lang, {
         onDelete: handleDelete,
         onTogglePublish: handleTogglePublish,
+        permissions,
       }),
-    [t, lang, handleDelete, handleTogglePublish]
+    [t, lang, handleDelete, handleTogglePublish, permissions]
   )
 
   // Table instance (for table view)
@@ -316,8 +323,8 @@ function AnnouncementsTableInner({
         searchValue={searchInput}
         onSearchChange={handleSearchChange}
         searchPlaceholder={t.announcementTitle}
-        onCreate={handleCreate}
-        getCSV={getAnnouncementsCSV}
+        onCreate={permissions.showAddButton ? handleCreate : undefined}
+        getCSV={permissions.showExportButton ? getAnnouncementsCSV : undefined}
         entityName="announcements"
         exportFormats={["csv", "excel", "pdf"]}
         translations={toolbarTranslations}

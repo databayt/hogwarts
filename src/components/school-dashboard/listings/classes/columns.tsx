@@ -6,6 +6,10 @@ import { ColumnDef } from "@tanstack/react-table"
 import { CalendarCheck, GraduationCap, Users } from "lucide-react"
 
 import {
+  FULL_UI_PERMISSIONS,
+  type UIPermissions,
+} from "@/lib/rbac/ui-permissions"
+import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
@@ -46,6 +50,7 @@ export function getLocalizedSubjectName(row: ClassRow, locale: Locale): string {
 
 export interface ClassColumnCallbacks {
   onDelete?: (row: ClassRow) => void
+  permissions?: UIPermissions
 }
 
 export const getClassColumns = (
@@ -53,6 +58,7 @@ export const getClassColumns = (
   lang?: Locale,
   callbacks?: ClassColumnCallbacks
 ): ColumnDef<ClassRow>[] => {
+  const permissions = callbacks?.permissions ?? FULL_UI_PERMISSIONS
   const t = {
     className: dictionary?.className || "Class Name",
     courseCode: dictionary?.courseCode || "Course Code",
@@ -237,7 +243,9 @@ export const getClassColumns = (
               label={t.view}
               href={`/${lang}/classrooms/${classItem.id}`}
             />
-            <ActionMenuItem label={t.edit} onClick={onEdit} />
+            {permissions.showEditAction && (
+              <ActionMenuItem label={t.edit} onClick={onEdit} />
+            )}
             <DropdownMenuSeparator />
             <ActionMenuItem
               icon={Users}
@@ -254,8 +262,12 @@ export const getClassColumns = (
               label={t.viewAttendance}
               href={`/${lang}/attendance?classId=${classItem.id}`}
             />
-            <DropdownMenuSeparator />
-            <ActionMenuItem label={t.delete} onClick={onDelete} />
+            {permissions.showDeleteAction && (
+              <>
+                <DropdownMenuSeparator />
+                <ActionMenuItem label={t.delete} onClick={onDelete} />
+              </>
+            )}
           </ActionMenu>
         )
       },

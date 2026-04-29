@@ -6,12 +6,14 @@ import { SearchParams } from "nuqs/server"
 
 import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
+import type { Role } from "@/lib/rbac/types"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
 import { type EventRow } from "@/components/school-dashboard/listings/events/columns"
 import { getTargetAudiences } from "@/components/school-dashboard/listings/events/config"
 import { eventsSearchParams } from "@/components/school-dashboard/listings/events/list-params"
+import { getUIConfigForRole } from "@/components/school-dashboard/listings/events/permissions"
 import { EventsTable } from "@/components/school-dashboard/listings/events/table"
 
 interface Props {
@@ -26,7 +28,8 @@ export default async function EventsContent({
   lang,
 }: Props) {
   const sp = await eventsSearchParams.parse(await searchParams)
-  const { schoolId } = await getTenantContext()
+  const { schoolId, role } = await getTenantContext()
+  const permissions = getUIConfigForRole(role as Role | null | undefined)
   let data: EventRow[] = []
   let total = 0
 
@@ -105,6 +108,7 @@ export default async function EventsContent({
         dictionary={dictionary?.events}
         lang={lang}
         perPage={sp.perPage}
+        permissions={permissions}
       />
     </div>
   )

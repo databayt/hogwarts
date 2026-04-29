@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { getStudentCredentials, resetStudentPassword } from "./actions"
+import { LockMotion } from "./lock-motion"
 
 interface Credentials {
   username: string
@@ -203,6 +204,19 @@ export function CredentialsDialog({
     }
   }, [])
 
+  const handleCopyAll = useCallback(async () => {
+    if (!credentials) return
+    const lines = [
+      `${t?.username || "Username"}: ${credentials.username}`,
+      credentials.email && `${t?.email || "Email"}: ${credentials.email}`,
+      credentials.password &&
+        `${t?.password || "Password"}: ${credentials.password}`,
+    ]
+      .filter(Boolean)
+      .join("\n")
+    await handleCopy(lines, "all")
+  }, [credentials, t, handleCopy])
+
   // Auto-load on open. openCredentialsDialog already set isLoading:true, so
   // the spinner is visible before this effect runs — no empty-body flash.
   useEffect(() => {
@@ -254,9 +268,14 @@ export function CredentialsDialog({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{studentName}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
+        <DialogHeader className="items-center text-center">
+          <div className="text-foreground mx-auto mb-2 h-20 w-20">
+            <LockMotion className="h-full w-full" />
+          </div>
+          <DialogTitle className="text-center">{studentName}</DialogTitle>
+          <DialogDescription className="text-center">
+            {description}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -368,7 +387,27 @@ export function CredentialsDialog({
                 </p>
               )}
 
-              <div className="flex justify-end gap-2">
+              <div className="flex items-center justify-between gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={handleCopyAll}
+                  className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-xs transition-colors"
+                  aria-label={t?.copyAll || "Copy all details"}
+                >
+                  {copiedField === "all" ? (
+                    <>
+                      <Check className="h-3.5 w-3.5 text-green-700" />
+                      <span className="text-green-700">
+                        {t?.copiedToClipboard || "Copied to clipboard"}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-3.5 w-3.5" />
+                      <span>{t?.copyAll || "Copy all details"}</span>
+                    </>
+                  )}
+                </button>
                 <Button
                   variant="outline"
                   size="sm"

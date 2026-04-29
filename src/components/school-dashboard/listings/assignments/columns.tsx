@@ -5,6 +5,10 @@
 import { ColumnDef } from "@tanstack/react-table"
 
 import {
+  FULL_UI_PERMISSIONS,
+  type UIPermissions,
+} from "@/lib/rbac/ui-permissions"
+import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
@@ -32,6 +36,7 @@ export interface GetAssignmentColumnsProps {
   common?: Dictionary["school"]["common"]
   lang?: Locale
   callbacks?: AssignmentColumnCallbacks
+  permissions?: UIPermissions
 }
 
 export const getAssignmentColumns = ({
@@ -39,6 +44,7 @@ export const getAssignmentColumns = ({
   common,
   lang,
   callbacks,
+  permissions = FULL_UI_PERMISSIONS,
 }: GetAssignmentColumnsProps): ColumnDef<AssignmentRow>[] => {
   const t = {
     title: (dictionary as Record<string, any>)?.titleColumn || "Title",
@@ -127,8 +133,12 @@ export const getAssignmentColumns = ({
               label={t.view}
               href={`/${lang}/assignments/${assignment.id}`}
             />
-            <ActionMenuItem label={t.edit} onClick={onEdit} />
-            <ActionMenuItem label={t.delete} onClick={onDelete} />
+            {permissions.showEditAction && (
+              <ActionMenuItem label={t.edit} onClick={onEdit} />
+            )}
+            {permissions.showDeleteAction && (
+              <ActionMenuItem label={t.delete} onClick={onDelete} />
+            )}
           </ActionMenu>
         )
       },

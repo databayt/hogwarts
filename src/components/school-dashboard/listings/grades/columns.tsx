@@ -4,6 +4,10 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { ColumnDef } from "@tanstack/react-table"
 
+import {
+  FULL_UI_PERMISSIONS,
+  type UIPermissions,
+} from "@/lib/rbac/ui-permissions"
 import { Badge } from "@/components/ui/badge"
 import {
   DropdownMenuLabel,
@@ -92,153 +96,161 @@ export type ResultRow = {
 
 export interface ResultColumnCallbacks {
   onDelete?: (row: ResultRow) => void
+  permissions?: UIPermissions
 }
 
 export const resultColumns = (
   t: Dictionary["school"]["grades"],
   locale: Locale = "en",
   callbacks?: ResultColumnCallbacks
-): ColumnDef<ResultRow>[] => [
-  {
-    accessorKey: "studentName",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title={t.student} />
-    ),
-    meta: { label: t.student, variant: "text" },
-    id: "studentName",
-    enableColumnFilter: true,
-  },
-  {
-    accessorKey: "assignmentTitle",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title={t.assignment} />
-    ),
-    meta: { label: t.assignment, variant: "text" },
-    id: "assignmentTitle",
-    enableColumnFilter: true,
-    cell: ({ getValue }) => {
-      const title = getValue<string>() || ""
-      const { name, type } = getAssignmentBadge(title)
-      return (
-        <div className="flex items-center gap-2">
-          <span>{name}</span>
-          <Badge variant="outline" className="px-1.5 py-0 text-[10px]">
-            {type}
-          </Badge>
-        </div>
-      )
+): ColumnDef<ResultRow>[] => {
+  const permissions = callbacks?.permissions ?? FULL_UI_PERMISSIONS
+  return [
+    {
+      accessorKey: "studentName",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t.student} />
+      ),
+      meta: { label: t.student, variant: "text" },
+      id: "studentName",
+      enableColumnFilter: true,
     },
-  },
-  {
-    accessorKey: "className",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title={t.class} />
-    ),
-    meta: { label: t.class, variant: "text" },
-    id: "className",
-    enableColumnFilter: true,
-    cell: ({ getValue }) => {
-      const name = getValue<string>() || ""
-      const { name: className, section } = getClassBadge(name)
-      return (
-        <div className="flex items-center gap-2">
-          <span>{className}</span>
-          {section && (
-            <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
-              {section}
+    {
+      accessorKey: "assignmentTitle",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t.assignment} />
+      ),
+      meta: { label: t.assignment, variant: "text" },
+      id: "assignmentTitle",
+      enableColumnFilter: true,
+      cell: ({ getValue }) => {
+        const title = getValue<string>() || ""
+        const { name, type } = getAssignmentBadge(title)
+        return (
+          <div className="flex items-center gap-2">
+            <span>{name}</span>
+            <Badge variant="outline" className="px-1.5 py-0 text-[10px]">
+              {type}
             </Badge>
-          )}
-        </div>
-      )
+          </div>
+        )
+      },
     },
-  },
-  {
-    accessorKey: "score",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title={t.score} />
-    ),
-    meta: { label: t.score, variant: "number" },
-    id: "score",
-    enableColumnFilter: true,
-  },
-  {
-    accessorKey: "maxScore",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title={t.maxScore} />
-    ),
-    meta: { label: t.maxScore, variant: "number" },
-    id: "maxScore",
-    enableColumnFilter: true,
-  },
-  {
-    accessorKey: "createdAt",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title={t.created} />
-    ),
-    meta: { label: t.created, variant: "text" },
-    cell: ({ getValue }) => (
-      <small className="tabular-nums">
-        {new Date(getValue<string>()).toLocaleDateString(locale)}
-      </small>
-    ),
-  },
-  {
-    accessorKey: "percentage",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title={t.percentage} />
-    ),
-    meta: { label: t.percentage, variant: "number" },
-    id: "percentage",
-    cell: ({ getValue }) => {
-      const value = getValue<number>() || 0
-      return (
+    {
+      accessorKey: "className",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t.class} />
+      ),
+      meta: { label: t.class, variant: "text" },
+      id: "className",
+      enableColumnFilter: true,
+      cell: ({ getValue }) => {
+        const name = getValue<string>() || ""
+        const { name: className, section } = getClassBadge(name)
+        return (
+          <div className="flex items-center gap-2">
+            <span>{className}</span>
+            {section && (
+              <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
+                {section}
+              </Badge>
+            )}
+          </div>
+        )
+      },
+    },
+    {
+      accessorKey: "score",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t.score} />
+      ),
+      meta: { label: t.score, variant: "number" },
+      id: "score",
+      enableColumnFilter: true,
+    },
+    {
+      accessorKey: "maxScore",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t.maxScore} />
+      ),
+      meta: { label: t.maxScore, variant: "number" },
+      id: "maxScore",
+      enableColumnFilter: true,
+    },
+    {
+      accessorKey: "createdAt",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t.created} />
+      ),
+      meta: { label: t.created, variant: "text" },
+      cell: ({ getValue }) => (
         <small className="tabular-nums">
-          {new Intl.NumberFormat(locale, {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0,
-          }).format(value)}
-          %
+          {new Date(getValue<string>()).toLocaleDateString(locale)}
         </small>
-      )
+      ),
     },
-  },
-  {
-    accessorKey: "grade",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title={t.grade} />
-    ),
-    meta: { label: t.grade, variant: "text" },
-    id: "grade",
-    enableColumnFilter: true,
-    cell: ({ getValue }) => {
-      const grade = getValue<string>() || ""
-      return <Badge variant={getGradeVariant(grade)}>{grade}</Badge>
+    {
+      accessorKey: "percentage",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t.percentage} />
+      ),
+      meta: { label: t.percentage, variant: "number" },
+      id: "percentage",
+      cell: ({ getValue }) => {
+        const value = getValue<number>() || 0
+        return (
+          <small className="tabular-nums">
+            {new Intl.NumberFormat(locale, {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0,
+            }).format(value)}
+            %
+          </small>
+        )
+      },
     },
-  },
-  {
-    id: "actions",
-    header: () => <span className="sr-only">{t.actions}</span>,
-    cell: ({ row }) => {
-      const result = row.original
-      const { openModal } = useModal()
-      const onEdit = () => openModal(result.id)
-      const onDelete = () => {
-        callbacks?.onDelete?.(result)
-      }
-      return (
-        <ActionMenu srLabel={t.openMenu}>
-          <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <ActionMenuItem
-            label={t.view}
-            href={`/${locale}/grades/${result.id}`}
-          />
-          <ActionMenuItem label={t.edit} onClick={onEdit} />
-          <ActionMenuItem label={t.delete} onClick={onDelete} />
-        </ActionMenu>
-      )
+    {
+      accessorKey: "grade",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t.grade} />
+      ),
+      meta: { label: t.grade, variant: "text" },
+      id: "grade",
+      enableColumnFilter: true,
+      cell: ({ getValue }) => {
+        const grade = getValue<string>() || ""
+        return <Badge variant={getGradeVariant(grade)}>{grade}</Badge>
+      },
     },
-    enableSorting: false,
-    enableColumnFilter: false,
-  },
-]
+    {
+      id: "actions",
+      header: () => <span className="sr-only">{t.actions}</span>,
+      cell: ({ row }) => {
+        const result = row.original
+        const { openModal } = useModal()
+        const onEdit = () => openModal(result.id)
+        const onDelete = () => {
+          callbacks?.onDelete?.(result)
+        }
+        return (
+          <ActionMenu srLabel={t.openMenu}>
+            <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <ActionMenuItem
+              label={t.view}
+              href={`/${locale}/grades/${result.id}`}
+            />
+            {permissions.showEditAction && (
+              <ActionMenuItem label={t.edit} onClick={onEdit} />
+            )}
+            {permissions.showDeleteAction && (
+              <ActionMenuItem label={t.delete} onClick={onDelete} />
+            )}
+          </ActionMenu>
+        )
+      },
+      enableSorting: false,
+      enableColumnFilter: false,
+    },
+  ]
+}

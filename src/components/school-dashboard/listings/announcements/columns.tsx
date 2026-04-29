@@ -5,6 +5,10 @@
 import { ColumnDef } from "@tanstack/react-table"
 
 import { formatDate } from "@/lib/i18n-format"
+import {
+  FULL_UI_PERMISSIONS,
+  type UIPermissions,
+} from "@/lib/rbac/ui-permissions"
 import { Badge } from "@/components/ui/badge"
 import {
   DropdownMenuLabel,
@@ -23,6 +27,7 @@ import { DataTableColumnHeader } from "@/components/table/data-table-column-head
 export interface ColumnCallbacks {
   onDelete?: (announcement: AnnouncementRow) => void
   onTogglePublish?: (announcement: AnnouncementRow) => void
+  permissions?: UIPermissions
 }
 
 // Single-language row type
@@ -52,6 +57,7 @@ export const getAnnouncementColumns = (
   callbacks?: ColumnCallbacks
 ): ColumnDef<AnnouncementRow>[] => {
   const t = dictionary
+  const permissions = callbacks?.permissions ?? FULL_UI_PERMISSIONS
 
   // Map dictionary keys to column structure for easier access
   const columns = {
@@ -166,12 +172,18 @@ export const getAnnouncementColumns = (
               label={t.view}
               href={`/${locale}/announcements/${announcement.id}`}
             />
-            <ActionMenuItem label={t.edit} onClick={onEdit} />
-            <ActionMenuItem
-              label={announcement.published ? t.unpublish : t.publish}
-              onClick={onToggle}
-            />
-            <ActionMenuItem label={t.delete} onClick={onDelete} />
+            {permissions.showEditAction && (
+              <ActionMenuItem label={t.edit} onClick={onEdit} />
+            )}
+            {permissions.showToggleStatus && (
+              <ActionMenuItem
+                label={announcement.published ? t.unpublish : t.publish}
+                onClick={onToggle}
+              />
+            )}
+            {permissions.showDeleteAction && (
+              <ActionMenuItem label={t.delete} onClick={onDelete} />
+            )}
           </ActionMenu>
         )
       },

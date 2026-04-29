@@ -5,6 +5,10 @@
 import { ColumnDef } from "@tanstack/react-table"
 
 import {
+  FULL_UI_PERMISSIONS,
+  type UIPermissions,
+} from "@/lib/rbac/ui-permissions"
+import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
@@ -25,6 +29,7 @@ export type ParentRow = {
 
 export interface ParentColumnCallbacks {
   onDelete?: (row: ParentRow) => void
+  permissions?: UIPermissions
 }
 
 export const getParentColumns = (
@@ -32,6 +37,7 @@ export const getParentColumns = (
   lang?: Locale,
   callbacks?: ParentColumnCallbacks
 ): ColumnDef<ParentRow>[] => {
+  const permissions = callbacks?.permissions ?? FULL_UI_PERMISSIONS
   const t = {
     name: dictionary?.name || "Name",
     email: dictionary?.email || "Email",
@@ -113,8 +119,12 @@ export const getParentColumns = (
               label={t.view}
               href={`/${lang}/parents/${parent.id}`}
             />
-            <ActionMenuItem label={t.edit} onClick={onEdit} />
-            <ActionMenuItem label={t.delete} onClick={onDelete} />
+            {permissions.showEditAction && (
+              <ActionMenuItem label={t.edit} onClick={onEdit} />
+            )}
+            {permissions.showDeleteAction && (
+              <ActionMenuItem label={t.delete} onClick={onDelete} />
+            )}
           </ActionMenu>
         )
       },

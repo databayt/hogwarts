@@ -7,12 +7,7 @@ import bcrypt from "bcryptjs"
 import { db } from "@/lib/db"
 import { getUserByIdentifier } from "@/components/auth/user"
 import { LoginSchema } from "@/components/auth/validation"
-import {
-  buildUserResponse,
-  generateAccessToken,
-  generateRefreshToken,
-  verifyToken,
-} from "@/app/api/mobile/auth/jwt"
+import { buildAuthResponse, verifyToken } from "@/app/api/mobile/auth/jwt"
 
 /**
  * Mobile Authentication API
@@ -103,34 +98,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Generate tokens
-    const accessToken = await generateAccessToken({
-      id: user.id,
-      email: user.email || "",
-      schoolId: user.schoolId,
-      role: user.role,
-    })
-
-    const refreshToken = await generateRefreshToken(user.id)
-
-    // Calculate expiry timestamp (24 hours from now)
-    const expiresAt = Date.now() + 24 * 60 * 60 * 1000
-
-    // Return tokens and user info
-    return NextResponse.json({
-      access_token: accessToken,
-      refresh_token: refreshToken,
-      expires_at: expiresAt,
-      user: {
-        id: user.id,
-        email: user.email,
-        school_id: user.schoolId,
-        role: user.role,
-        given_name: user.username?.split(" ")[0] || null,
-        family_name: user.username?.split(" ").slice(1).join(" ") || null,
-        avatar_url: user.image,
-      },
-    })
+    // Returns tokens + user info (including student grade for STUDENT-role users)
+    const authResponse = await buildAuthResponse(user)
+    return NextResponse.json(authResponse)
   } catch (error) {
     console.error("Mobile auth error:", error)
     return NextResponse.json(
@@ -187,24 +157,9 @@ export async function PUT(request: NextRequest) {
         return NextResponse.json({ error: "User not found" }, { status: 401 })
       }
 
-      // Generate new tokens
-      const newAccessToken = await generateAccessToken({
-        id: user.id,
-        email: user.email || "",
-        schoolId: user.schoolId,
-        role: user.role,
-      })
+      const authResponse = await buildAuthResponse(user)
 
-      const newRefreshToken = await generateRefreshToken(user.id)
-
-      const expiresAt = Date.now() + 24 * 60 * 60 * 1000
-
-      return NextResponse.json({
-        access_token: newAccessToken,
-        refresh_token: newRefreshToken,
-        expires_at: expiresAt,
-        user: buildUserResponse(user),
-      })
+      return NextResponse.json(authResponse)
     } catch {
       return NextResponse.json(
         { error: "Invalid or expired refresh token" },

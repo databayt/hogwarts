@@ -10,6 +10,10 @@ import { Calendar, MapPin, Users } from "lucide-react"
 
 import { asset } from "@/lib/asset-url"
 import { formatDate } from "@/lib/i18n-format"
+import {
+  FULL_UI_PERMISSIONS,
+  type UIPermissions,
+} from "@/lib/rbac/ui-permissions"
 import { useDebouncedSearch } from "@/hooks/use-debounced-search"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
@@ -40,6 +44,7 @@ interface EventsTableProps {
   dictionary?: Dictionary["school"]["events"]
   lang: Locale
   perPage?: number
+  permissions?: UIPermissions
 }
 
 function EventsTableInner({
@@ -48,6 +53,7 @@ function EventsTableInner({
   dictionary,
   lang,
   perPage = 20,
+  permissions = FULL_UI_PERMISSIONS,
 }: EventsTableProps) {
   const router = useRouter()
 
@@ -154,8 +160,9 @@ function EventsTableInner({
     () =>
       getEventColumns(dictionary, lang, {
         onDelete: handleDelete,
+        permissions,
       }),
-    [dictionary, lang, handleDelete]
+    [dictionary, lang, handleDelete, permissions]
   )
 
   // Table instance
@@ -264,8 +271,8 @@ function EventsTableInner({
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
         searchPlaceholder={t.search}
-        onCreate={handleCreate}
-        getCSV={handleExportCSV}
+        onCreate={permissions.showAddButton ? handleCreate : undefined}
+        getCSV={permissions.showExportButton ? handleExportCSV : undefined}
         entityName="events"
         translations={toolbarTranslations}
       />

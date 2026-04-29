@@ -6,11 +6,13 @@ import { SearchParams } from "nuqs/server"
 import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getModel } from "@/lib/prisma-guards"
+import type { Role } from "@/lib/rbac/types"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { type TeacherRow } from "@/components/school-dashboard/listings/teachers/columns"
 import { teachersSearchParams } from "@/components/school-dashboard/listings/teachers/list-params"
+import { getUIConfigForRole } from "@/components/school-dashboard/listings/teachers/permissions"
 import { TeachersTable } from "@/components/school-dashboard/listings/teachers/table"
 
 interface Props {
@@ -25,7 +27,8 @@ export default async function TeachersContent({
   lang,
 }: Props) {
   const sp = await teachersSearchParams.parse(await searchParams)
-  const { schoolId } = await getTenantContext()
+  const { schoolId, role } = await getTenantContext()
+  const permissions = getUIConfigForRole(role as Role | null | undefined)
   let data: TeacherRow[] = []
   let total = 0
 
@@ -164,6 +167,7 @@ export default async function TeachersContent({
         dictionary={dictionary?.teachers}
         lang={lang}
         perPage={sp.perPage}
+        permissions={permissions}
       />
     </div>
   )

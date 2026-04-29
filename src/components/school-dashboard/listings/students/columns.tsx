@@ -6,6 +6,10 @@ import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
 
 import type { ArchiveScope } from "@/lib/archive-scope"
+import {
+  FULL_UI_PERMISSIONS,
+  type UIPermissions,
+} from "@/lib/rbac/ui-permissions"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -52,6 +56,7 @@ interface ColumnOptions {
   onPurge?: (studentId: string, studentName: string) => void
   gradeOptions?: Array<{ label: string; value: string }>
   scope?: ArchiveScope
+  permissions?: UIPermissions
 }
 
 export const getStudentColumns = (
@@ -62,6 +67,7 @@ export const getStudentColumns = (
   // Helper to safely access dictionary keys (JSON may have keys not in TS type)
   const d = dictionary as Record<string, string> | undefined
   const scope = options?.scope ?? "active"
+  const permissions = options?.permissions ?? FULL_UI_PERMISSIONS
   const t = {
     name: d?.fullName || "Name",
     studentId: d?.studentId || "Student ID",
@@ -379,12 +385,14 @@ export const getStudentColumns = (
               label={t.view}
               href={`/${lang}/profile/${student.userId || student.id}`}
             />
-            <ActionMenuItem
-              label={
-                student.wizardStep ? `${t.edit} (${t.incomplete})` : t.edit
-              }
-              href={`/${lang}/students/add/${student.id}/${normalizeWizardStep(student.wizardStep)}`}
-            />
+            {permissions.showEditAction && (
+              <ActionMenuItem
+                label={
+                  student.wizardStep ? `${t.edit} (${t.incomplete})` : t.edit
+                }
+                href={`/${lang}/students/add/${student.id}/${normalizeWizardStep(student.wizardStep)}`}
+              />
+            )}
             <DropdownMenuSeparator />
             <ActionMenuItem
               label={t.viewGrades}
@@ -398,36 +406,48 @@ export const getStudentColumns = (
               label={t.viewClasses}
               href={`/${lang}/classrooms?studentId=${student.id}`}
             />
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="text-foreground/70"
-              onSelect={(e) => {
-                e.preventDefault()
-                options?.onGenerateCredentials?.(student.id, student.name)
-              }}
-            >
-              {t.generateCredentials}
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="text-foreground/70"
-              onSelect={(e) => {
-                e.preventDefault()
-                options?.onGenerateAccessCode?.(student.id, student.name)
-              }}
-            >
-              {t.linkParent}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
+            {permissions.showAddButton && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-foreground/70"
+                  onSelect={(e) => {
+                    e.preventDefault()
+                    options?.onGenerateCredentials?.(student.id, student.name)
+                  }}
+                >
+                  {t.generateCredentials}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-foreground/70"
+                  onSelect={(e) => {
+                    e.preventDefault()
+                    options?.onGenerateAccessCode?.(student.id, student.name)
+                  }}
+                >
+                  {t.linkParent}
+                </DropdownMenuItem>
+              </>
+            )}
+            {(permissions.showArchiveAction ||
+              permissions.showRestoreAction ||
+              permissions.showDeleteAction) && <DropdownMenuSeparator />}
             {scope === "archived" ? (
               <>
-                <ActionMenuItem label={t.restore} onClick={onRestore} />
-                <ActionMenuItem
-                  label={t.permanentlyDelete}
-                  onClick={() => options?.onPurge?.(student.id, student.name)}
-                />
+                {permissions.showRestoreAction && (
+                  <ActionMenuItem label={t.restore} onClick={onRestore} />
+                )}
+                {permissions.showDeleteAction && (
+                  <ActionMenuItem
+                    label={t.permanentlyDelete}
+                    onClick={() => options?.onPurge?.(student.id, student.name)}
+                  />
+                )}
               </>
             ) : (
-              <ActionMenuItem label={t.archive} onClick={onArchive} />
+              permissions.showArchiveAction && (
+                <ActionMenuItem label={t.archive} onClick={onArchive} />
+              )
             )}
           </ActionMenu>
         )

@@ -9,6 +9,10 @@ import { useRouter } from "next/navigation"
 import { ClipboardCheck, TrendingUp } from "lucide-react"
 
 import { asset } from "@/lib/asset-url"
+import {
+  FULL_UI_PERMISSIONS,
+  type UIPermissions,
+} from "@/lib/rbac/ui-permissions"
 import { useDebouncedSearch } from "@/hooks/use-debounced-search"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
@@ -38,6 +42,7 @@ interface ResultsTableProps {
   dictionary: Dictionary["school"]["grades"]
   lang: Locale
   perPage?: number
+  permissions?: UIPermissions
 }
 
 function ResultsTableInner({
@@ -46,6 +51,7 @@ function ResultsTableInner({
   dictionary,
   lang,
   perPage = 20,
+  permissions = FULL_UI_PERMISSIONS,
 }: ResultsTableProps) {
   const router = useRouter()
   const t = dictionary
@@ -123,8 +129,9 @@ function ResultsTableInner({
     () =>
       resultColumns(t, lang, {
         onDelete: handleDelete,
+        permissions,
       }),
-    [t, lang, handleDelete]
+    [t, lang, handleDelete, permissions]
   )
 
   // Table instance
@@ -226,8 +233,8 @@ function ResultsTableInner({
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
         searchPlaceholder={t.searchResults}
-        onCreate={handleCreate}
-        getCSV={handleExportCSV}
+        onCreate={permissions.showAddButton ? handleCreate : undefined}
+        getCSV={permissions.showExportButton ? handleExportCSV : undefined}
         entityName="grades"
         translations={toolbarTranslations}
       />

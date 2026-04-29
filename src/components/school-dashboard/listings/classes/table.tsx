@@ -9,6 +9,10 @@ import { useRouter } from "next/navigation"
 import { BookOpen, Users } from "lucide-react"
 
 import { asset } from "@/lib/asset-url"
+import {
+  FULL_UI_PERMISSIONS,
+  type UIPermissions,
+} from "@/lib/rbac/ui-permissions"
 import { useDebouncedSearch } from "@/hooks/use-debounced-search"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
@@ -43,6 +47,7 @@ interface ClassesTableProps {
   dictionary?: Dictionary["school"]["classes"]
   lang: Locale
   perPage?: number
+  permissions?: UIPermissions
 }
 
 function ClassesTableInner({
@@ -51,6 +56,7 @@ function ClassesTableInner({
   dictionary,
   lang,
   perPage = 20,
+  permissions = FULL_UI_PERMISSIONS,
 }: ClassesTableProps) {
   const router = useRouter()
 
@@ -140,8 +146,9 @@ function ClassesTableInner({
     () =>
       getClassColumns(dictionary, lang, {
         onDelete: handleDelete,
+        permissions,
       }),
-    [dictionary, lang, handleDelete]
+    [dictionary, lang, handleDelete, permissions]
   )
 
   // Table instance
@@ -236,8 +243,8 @@ function ClassesTableInner({
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
         searchPlaceholder={t.search}
-        onCreate={handleCreate}
-        getCSV={handleExportCSV}
+        onCreate={permissions.showAddButton ? handleCreate : undefined}
+        getCSV={permissions.showExportButton ? handleExportCSV : undefined}
         entityName="classes"
         translations={toolbarTranslations}
       />

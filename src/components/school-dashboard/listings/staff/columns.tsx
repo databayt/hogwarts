@@ -5,6 +5,10 @@
 import Link from "next/link"
 import { type ColumnDef } from "@tanstack/react-table"
 
+import {
+  FULL_UI_PERMISSIONS,
+  type UIPermissions,
+} from "@/lib/rbac/ui-permissions"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -26,6 +30,7 @@ export type StaffColumnActions = {
   onView?: (staff: StaffRow) => void
   onEdit?: (staff: StaffRow) => void
   onDelete?: (staff: StaffRow) => void
+  permissions?: UIPermissions
 }
 
 export function getStaffColumns(
@@ -34,6 +39,7 @@ export function getStaffColumns(
   staffDict?: Record<string, any>
 ): ColumnDef<StaffRow>[] {
   const isAr = lang === "ar"
+  const permissions = actions?.permissions ?? FULL_UI_PERMISSIONS
   const col = staffDict?.columns as Record<string, string> | undefined
 
   const t = {
@@ -193,12 +199,12 @@ export function getStaffColumns(
                 {t.view}
               </DropdownMenuItem>
             )}
-            {actions?.onEdit && (
+            {actions?.onEdit && permissions.showEditAction && (
               <DropdownMenuItem onClick={() => actions.onEdit?.(staff)}>
                 {t.edit}
               </DropdownMenuItem>
             )}
-            {actions?.onDelete && (
+            {actions?.onDelete && permissions.showDeleteAction && (
               <>
                 <DropdownMenuSeparator />
                 <ActionMenuItem
