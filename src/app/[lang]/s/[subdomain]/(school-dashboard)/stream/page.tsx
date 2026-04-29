@@ -2,8 +2,10 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { Metadata } from "next"
+import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 
+import { getPolicyContext } from "@/lib/rbac/context"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
@@ -31,6 +33,19 @@ export default async function StreamHomePage({ params }: Props) {
   const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
   const session = await auth()
+
+  // Students skip the marketing home and go straight to courses for their
+  // grade. Falling back to the unfiltered list when their grade isn't synced
+  // yet — they're a student, they want courses, not the prospect-facing page.
+  if (session?.user?.role === "STUDENT") {
+    const ctx = await getPolicyContext()
+    const grade = ctx.academicGradeNumber
+    redirect(
+      grade != null
+        ? `/${lang}/stream/courses?level=${grade}`
+        : `/${lang}/stream/courses`
+    )
+  }
 
   const isAdmin =
     session?.user?.role === "ADMIN" ||
