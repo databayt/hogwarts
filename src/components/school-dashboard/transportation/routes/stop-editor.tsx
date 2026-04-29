@@ -4,6 +4,23 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
+import {
+  closestCenter,
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core"
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
 import type { RouteStop } from "@prisma/client"
 import { toast } from "sonner"
 
@@ -49,8 +66,47 @@ export function StopEditor({ routeId, initialStops, dictionary }: Props) {
   const [pending, startTransition] = useTransition()
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
+  // Local optimistic order — survives until the server returns
+  const [stops, setStops] = useState<RouteStop[]>(() =>
+    [...initialStops].sort((a, b) => a.stopOrder - b.stopOrder)
+  )
 
-  const stops = [...initialStops].sort((a, b) => a.stopOrder - b.stopOrder)
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 5 }, // tap-vs-drag disambiguation
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
+
+  function persistOrder(nextOrder: RouteStop[]) {
+    startTransition(async () => {
+      const result = await reorderStops({
+        routeId,
+        stopIds: nextOrder.map((s) => s.id),
+      })
+      if (result.success) {
+        toast.success(t.toasts.stopReordered)
+        router.refresh()
+      } else {
+        toast.error(t.errors.internalError)
+        // Roll back optimistic state on failure
+        setStops([...initialStops].sort((a, b) => a.stopOrder - b.stopOrder))
+      }
+    })
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const oldIndex = stops.findIndex((s) => s.id === active.id)
+    const newIndex = stops.findIndex((s) => s.id === over.id)
+    if (oldIndex < 0 || newIndex < 0) return
+    const next = arrayMove(stops, oldIndex, newIndex)
+    setStops(next)
+    persistOrder(next)
+  }
 
   function handleAdd(e: React.FormEvent) {
     e.preventDefault()
@@ -68,29 +124,6 @@ export function StopEditor({ routeId, initialStops, dictionary }: Props) {
         toast.success(t.toasts.stopAdded)
         setOpen(false)
         setForm(EMPTY_FORM)
-        router.refresh()
-      } else {
-        toast.error(t.errors.internalError)
-      }
-    })
-  }
-
-  function handleMove(stopId: string, direction: -1 | 1) {
-    const idx = stops.findIndex((s) => s.id === stopId)
-    if (idx < 0) return
-    const swapIdx = idx + direction
-    if (swapIdx < 0 || swapIdx >= stops.length) return
-
-    const reordered = [...stops]
-    ;[reordered[idx], reordered[swapIdx]] = [reordered[swapIdx], reordered[idx]]
-
-    startTransition(async () => {
-      const result = await reorderStops({
-        routeId,
-        stopIds: reordered.map((s) => s.id),
-      })
-      if (result.success) {
-        toast.success(t.toasts.stopReordered)
         router.refresh()
       } else {
         toast.error(t.errors.internalError)
@@ -128,64 +161,28 @@ export function StopEditor({ routeId, initialStops, dictionary }: Props) {
         {stops.length === 0 ? (
           <TransportationEmptyState title={t.empty.noStops} />
         ) : (
-          <ol className="space-y-2">
-            {stops.map((s, idx) => (
-              <li
-                key={s.id}
-                className="flex items-center justify-between rounded-md border px-3 py-2"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-muted-foreground font-mono text-sm">
-                    #{s.stopOrder}
-                  </span>
-                  <div>
-                    <p className="text-sm font-medium">{s.name}</p>
-                    {s.address ? (
-                      <p className="text-muted-foreground text-xs">
-                        {s.address}
-                      </p>
-                    ) : null}
-                  </div>
-                </div>
-                <div className="flex items-center gap-1">
-                  {s.pickupTime ? (
-                    <span className="text-muted-foreground text-xs">
-                      {s.pickupTime}
-                    </span>
-                  ) : null}
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    type="button"
-                    disabled={idx === 0 || pending}
-                    onClick={() => handleMove(s.id, -1)}
-                    aria-label={t.stops.moveUp}
-                  >
-                    ↑
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    type="button"
-                    disabled={idx === stops.length - 1 || pending}
-                    onClick={() => handleMove(s.id, 1)}
-                    aria-label={t.stops.moveDown}
-                  >
-                    ↓
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    type="button"
-                    onClick={() => handleDelete(s.id)}
-                    disabled={pending}
-                  >
-                    {dictionary.common?.delete ?? "Delete"}
-                  </Button>
-                </div>
-              </li>
-            ))}
-          </ol>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={stops.map((s) => s.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <ol className="space-y-2">
+                {stops.map((s) => (
+                  <SortableStopItem
+                    key={s.id}
+                    stop={s}
+                    pending={pending}
+                    deleteLabel={dictionary.common?.delete ?? "Delete"}
+                    onDelete={() => handleDelete(s.id)}
+                  />
+                ))}
+              </ol>
+            </SortableContext>
+          </DndContext>
         )}
       </CardContent>
 
@@ -262,5 +259,74 @@ export function StopEditor({ routeId, initialStops, dictionary }: Props) {
         </DialogContent>
       </Dialog>
     </Card>
+  )
+}
+
+interface ItemProps {
+  stop: RouteStop
+  pending: boolean
+  deleteLabel: string
+  onDelete: () => void
+}
+
+function SortableStopItem({ stop, pending, deleteLabel, onDelete }: ItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: stop.id })
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+  }
+
+  return (
+    <li
+      ref={setNodeRef}
+      style={style}
+      className="bg-card flex items-center justify-between rounded-md border px-3 py-2"
+    >
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          aria-label="Drag handle"
+          className="text-muted-foreground hover:text-foreground cursor-grab touch-none px-1 active:cursor-grabbing"
+          {...attributes}
+          {...listeners}
+        >
+          ⋮⋮
+        </button>
+        <span className="text-muted-foreground font-mono text-sm">
+          #{stop.stopOrder}
+        </span>
+        <div>
+          <p className="text-sm font-medium">{stop.name}</p>
+          {stop.address ? (
+            <p className="text-muted-foreground text-xs">{stop.address}</p>
+          ) : null}
+        </div>
+      </div>
+      <div className="flex items-center gap-1">
+        {stop.pickupTime ? (
+          <span className="text-muted-foreground text-xs">
+            {stop.pickupTime}
+          </span>
+        ) : null}
+        <Button
+          size="sm"
+          variant="ghost"
+          type="button"
+          onClick={onDelete}
+          disabled={pending}
+        >
+          {deleteLabel}
+        </Button>
+      </div>
+    </li>
   )
 }
