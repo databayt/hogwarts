@@ -786,9 +786,7 @@ export async function seedStudents(
           where: { id: primaryStudent.id },
           data: {
             dateOfBirth: getStudentBirthDate(12),
-            ...(grade10Academic
-              ? { academicGradeId: grade10Academic.id }
-              : {}),
+            ...(grade10Academic ? { academicGradeId: grade10Academic.id } : {}),
           },
         })
         // Update in-memory ref so class enrollments use Grade 10
