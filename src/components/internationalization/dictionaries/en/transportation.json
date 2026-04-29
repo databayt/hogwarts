@@ -9,6 +9,7 @@
     "drivers": "Drivers",
     "assignments": "Assignments",
     "trips": "Trips",
+    "reports": "Reports",
     "settings": "Settings"
   },
   "overview": {
@@ -202,6 +203,35 @@
       "invalidState": "Trip is not in a valid state for this action"
     },
     "empty": "No trips yet"
+  },
+  "reports": {
+    "title": "Transportation reports",
+    "subtitle": "Route utilization, driver hours, trip stats, and fee preview (last 30 days)",
+    "empty": "No reportable data yet",
+    "tripStats": {
+      "title": "Trip stats (last 30 days)",
+      "scheduled": "Scheduled",
+      "inProgress": "In progress",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "completionRate": "Completion rate"
+    },
+    "utilization": {
+      "title": "Route utilization (active assignments / vehicle capacity)"
+    },
+    "driverHours": {
+      "title": "Driver hours (completed trips, last 30 days)",
+      "tripsLabel": "trips",
+      "empty": "No completed trips in the last 30 days"
+    },
+    "fees": {
+      "title": "Fee preview",
+      "studentsWithFees": "Students with fees",
+      "studentsWithoutFee": "Without fee",
+      "totalAssignments": "Active assignments",
+      "monthlyTotal": "Monthly revenue",
+      "notice": "Read-only preview. Actual fee records are created in the finance module."
+    }
   },
   "settings": {
     "title": "Transportation settings",
