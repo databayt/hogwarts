@@ -1,0 +1,618 @@
+{
+  "generatedAt": "2026-04-26T11:14:19.516Z",
+  "knownSlugs": [
+    "accounts",
+    "actions",
+    "add-values",
+    "admission",
+    "ai-document-processing",
+    "application",
+    "architecture",
+    "attendance",
+    "authentication",
+    "authorization",
+    "benchmark",
+    "books-catalog",
+    "business-model",
+    "card",
+    "catalog",
+    "cdn",
+    "classrooms",
+    "clickview",
+    "clickview-elementary",
+    "clickview-high",
+    "clickview-middle",
+    "client",
+    "code-of-conduct",
+    "competitors",
+    "concept",
+    "config",
+    "content",
+    "contributing",
+    "credentials",
+    "curriculum-engineering",
+    "dashboard",
+    "database",
+    "demo",
+    "detail",
+    "document-intelligence",
+    "documentation",
+    "entry-points",
+    "exam-wizard",
+    "exams",
+    "fees",
+    "file",
+    "flow-diagrams",
+    "form",
+    "get-started",
+    "github",
+    "hogwarts",
+    "hooks",
+    "icons",
+    "incubators",
+    "index",
+    "inspiration",
+    "integration-flow",
+    "internationalization",
+    "invitation",
+    "invoice",
+    "issue",
+    "layout",
+    "library",
+    "list-params",
+    "listings",
+    "localhost",
+    "messages",
+    "multi-tenancy",
+    "mvp",
+    "notifications",
+    "oauth",
+    "onboarding",
+    "onboarding-videos",
+    "page",
+    "pattern",
+    "pitch",
+    "playwright",
+    "prd",
+    "prettier",
+    "profile",
+    "prompt",
+    "queries",
+    "readme",
+    "rebound",
+    "safe-seeds",
+    "sales",
+    "seeds",
+    "shared-economy",
+    "stack",
+    "structure",
+    "students",
+    "sudan-curriculum",
+    "table",
+    "teachers",
+    "timetable",
+    "translation",
+    "types",
+    "util",
+    "validation",
+    "views"
+  ],
+  "links": [
+    {
+      "from": "add-values",
+      "to": "onboarding",
+      "exists": true
+    },
+    {
+      "from": "ai-document-processing",
+      "to": "document-intelligence",
+      "exists": true
+    },
+    {
+      "from": "ai-document-processing",
+      "to": "document-intelligence",
+      "exists": true
+    },
+    {
+      "from": "authentication",
+      "to": "credentials",
+      "exists": true
+    },
+    {
+      "from": "authentication",
+      "to": "oauth",
+      "exists": true
+    },
+    {
+      "from": "authentication",
+      "to": "flow-diagrams",
+      "exists": true
+    },
+    {
+      "from": "authentication",
+      "to": "credentials",
+      "exists": true
+    },
+    {
+      "from": "authentication",
+      "to": "oauth",
+      "exists": true
+    },
+    {
+      "from": "authentication",
+      "to": "flow-diagrams",
+      "exists": true
+    },
+    {
+      "from": "authentication",
+      "to": "onboarding",
+      "exists": true
+    },
+    {
+      "from": "authentication",
+      "to": "architecture",
+      "exists": true
+    },
+    {
+      "from": "authentication",
+      "to": "multi-tenancy",
+      "exists": true
+    },
+    {
+      "from": "books-catalog",
+      "to": "catalog",
+      "exists": true
+    },
+    {
+      "from": "business-model",
+      "to": "sales",
+      "exists": true
+    },
+    {
+      "from": "business-model",
+      "to": "prd",
+      "exists": true
+    },
+    {
+      "from": "business-model",
+      "to": "architecture",
+      "exists": true
+    },
+    {
+      "from": "business-model",
+      "to": "shared-economy",
+      "exists": true
+    },
+    {
+      "from": "clickview",
+      "to": "clickview-elementary",
+      "exists": true
+    },
+    {
+      "from": "clickview",
+      "to": "clickview-middle",
+      "exists": true
+    },
+    {
+      "from": "clickview",
+      "to": "clickview-high",
+      "exists": true
+    },
+    {
+      "from": "contributing",
+      "to": "get-started",
+      "exists": true
+    },
+    {
+      "from": "contributing",
+      "to": "localhost",
+      "exists": true
+    },
+    {
+      "from": "credentials",
+      "to": "authentication",
+      "exists": true
+    },
+    {
+      "from": "credentials",
+      "to": "authentication",
+      "exists": true
+    },
+    {
+      "from": "database",
+      "to": "catalog",
+      "exists": true
+    },
+    {
+      "from": "database",
+      "to": "integration-flow",
+      "exists": true
+    },
+    {
+      "from": "database",
+      "to": "safe-seeds",
+      "exists": true
+    },
+    {
+      "from": "documentation",
+      "to": "contributing",
+      "exists": true
+    },
+    {
+      "from": "flow-diagrams",
+      "to": "authentication",
+      "exists": true
+    },
+    {
+      "from": "flow-diagrams",
+      "to": "entry-points",
+      "exists": true
+    },
+    {
+      "from": "flow-diagrams",
+      "to": "multi-tenancy",
+      "exists": true
+    },
+    {
+      "from": "flow-diagrams",
+      "to": "onboarding",
+      "exists": true
+    },
+    {
+      "from": "get-started",
+      "to": "localhost",
+      "exists": true
+    },
+    {
+      "from": "get-started",
+      "to": "mvp",
+      "exists": true
+    },
+    {
+      "from": "get-started",
+      "to": "architecture",
+      "exists": true
+    },
+    {
+      "from": "get-started",
+      "to": "contributing",
+      "exists": true
+    },
+    {
+      "from": "github",
+      "to": "contributing",
+      "exists": true
+    },
+    {
+      "from": "github",
+      "to": "code-of-conduct",
+      "exists": true
+    },
+    {
+      "from": "hogwarts",
+      "to": "code-of-conduct",
+      "exists": true
+    },
+    {
+      "from": "hogwarts",
+      "to": "architecture",
+      "exists": true
+    },
+    {
+      "from": "hogwarts",
+      "to": "contributing",
+      "exists": true
+    },
+    {
+      "from": "incubators",
+      "to": "business-model",
+      "exists": true
+    },
+    {
+      "from": "incubators",
+      "to": "sales",
+      "exists": true
+    },
+    {
+      "from": "incubators",
+      "to": "pitch",
+      "exists": true
+    },
+    {
+      "from": "incubators",
+      "to": "sales",
+      "exists": true
+    },
+    {
+      "from": "incubators",
+      "to": "business-model",
+      "exists": true
+    },
+    {
+      "from": "incubators",
+      "to": "sales",
+      "exists": true
+    },
+    {
+      "from": "incubators",
+      "to": "pitch",
+      "exists": true
+    },
+    {
+      "from": "incubators",
+      "to": "business-model",
+      "exists": true
+    },
+    {
+      "from": "incubators",
+      "to": "sales",
+      "exists": true
+    },
+    {
+      "from": "incubators",
+      "to": "prd",
+      "exists": true
+    },
+    {
+      "from": "incubators",
+      "to": "demo",
+      "exists": true
+    },
+    {
+      "from": "index",
+      "to": "pitch",
+      "exists": true
+    },
+    {
+      "from": "index",
+      "to": "business-model",
+      "exists": true
+    },
+    {
+      "from": "index",
+      "to": "sales",
+      "exists": true
+    },
+    {
+      "from": "index",
+      "to": "shared-economy",
+      "exists": true
+    },
+    {
+      "from": "index",
+      "to": "documentation",
+      "exists": true
+    },
+    {
+      "from": "inspiration",
+      "to": "table",
+      "exists": true
+    },
+    {
+      "from": "inspiration",
+      "to": "onboarding",
+      "exists": true
+    },
+    {
+      "from": "inspiration",
+      "to": "table",
+      "exists": true
+    },
+    {
+      "from": "inspiration",
+      "to": "authentication",
+      "exists": true
+    },
+    {
+      "from": "integration-flow",
+      "to": "onboarding",
+      "exists": true
+    },
+    {
+      "from": "integration-flow",
+      "to": "catalog",
+      "exists": true
+    },
+    {
+      "from": "integration-flow",
+      "to": "admission",
+      "exists": true
+    },
+    {
+      "from": "internationalization",
+      "to": "translation",
+      "exists": true
+    },
+    {
+      "from": "invitation",
+      "to": "contributing",
+      "exists": true
+    },
+    {
+      "from": "invitation",
+      "to": "business-model",
+      "exists": true
+    },
+    {
+      "from": "library",
+      "to": "books-catalog",
+      "exists": true
+    },
+    {
+      "from": "multi-tenancy",
+      "to": "architecture",
+      "exists": true
+    },
+    {
+      "from": "multi-tenancy",
+      "to": "authentication",
+      "exists": true
+    },
+    {
+      "from": "multi-tenancy",
+      "to": "database",
+      "exists": true
+    },
+    {
+      "from": "mvp",
+      "to": "multi-tenancy",
+      "exists": true
+    },
+    {
+      "from": "mvp",
+      "to": "authentication",
+      "exists": true
+    },
+    {
+      "from": "mvp",
+      "to": "attendance",
+      "exists": true
+    },
+    {
+      "from": "mvp",
+      "to": "exams",
+      "exists": true
+    },
+    {
+      "from": "mvp",
+      "to": "timetable",
+      "exists": true
+    },
+    {
+      "from": "mvp",
+      "to": "admission",
+      "exists": true
+    },
+    {
+      "from": "mvp",
+      "to": "fees",
+      "exists": true
+    },
+    {
+      "from": "mvp",
+      "to": "messages",
+      "exists": true
+    },
+    {
+      "from": "mvp",
+      "to": "catalog",
+      "exists": true
+    },
+    {
+      "from": "mvp",
+      "to": "clickview-elementary",
+      "exists": true
+    },
+    {
+      "from": "mvp",
+      "to": "clickview-middle",
+      "exists": true
+    },
+    {
+      "from": "mvp",
+      "to": "clickview-high",
+      "exists": true
+    },
+    {
+      "from": "mvp",
+      "to": "architecture",
+      "exists": true
+    },
+    {
+      "from": "mvp",
+      "to": "prd",
+      "exists": true
+    },
+    {
+      "from": "oauth",
+      "to": "authentication",
+      "exists": true
+    },
+    {
+      "from": "oauth",
+      "to": "credentials",
+      "exists": true
+    },
+    {
+      "from": "oauth",
+      "to": "authentication",
+      "exists": true
+    },
+    {
+      "from": "pattern",
+      "to": "contributing",
+      "exists": true
+    },
+    {
+      "from": "prd",
+      "to": "mvp",
+      "exists": true
+    },
+    {
+      "from": "prd",
+      "to": "mvp",
+      "exists": true
+    },
+    {
+      "from": "prd",
+      "to": "business-model",
+      "exists": true
+    },
+    {
+      "from": "prd",
+      "to": "mvp",
+      "exists": true
+    },
+    {
+      "from": "prd",
+      "to": "architecture",
+      "exists": true
+    },
+    {
+      "from": "prd",
+      "to": "pattern",
+      "exists": true
+    },
+    {
+      "from": "rebound",
+      "to": "architecture",
+      "exists": true
+    },
+    {
+      "from": "rebound",
+      "to": "competitors",
+      "exists": true
+    },
+    {
+      "from": "rebound",
+      "to": "prd",
+      "exists": true
+    },
+    {
+      "from": "sales",
+      "to": "business-model",
+      "exists": true
+    },
+    {
+      "from": "sales",
+      "to": "prd",
+      "exists": true
+    },
+    {
+      "from": "sales",
+      "to": "mvp",
+      "exists": true
+    },
+    {
+      "from": "sales",
+      "to": "business-model",
+      "exists": true
+    },
+    {
+      "from": "sales",
+      "to": "architecture",
+      "exists": true
+    }
+  ],
+  "orphans": []
+}
