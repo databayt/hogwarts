@@ -20,6 +20,7 @@ import {
 } from "@/components/school-dashboard/transportation/validation"
 
 import { requireContext, transportationRevalidatePath } from "./helpers"
+import { notifyGuardiansOfTripEvent } from "./notifications"
 
 export async function scheduleTrip(input: TripServerInput) {
   const ctx = await requireContext("manage_trip")
@@ -124,6 +125,16 @@ export async function startTrip(input: TripStartInput) {
 
     revalidatePath(transportationRevalidatePath("trips"))
     revalidatePath(transportationRevalidatePath(`trips/${id}`))
+
+    void notifyGuardiansOfTripEvent({
+      schoolId,
+      tripId: id,
+      routeId: current.routeId,
+      kind: "trip_started",
+      title: "Bus departed",
+      body: "Your child's bus has started its route.",
+    })
+
     return { success: true as const, data: { id } }
   } catch {
     return actionError(ACTION_ERRORS.TRIP_UPDATE_FAILED)
@@ -162,6 +173,16 @@ export async function finishTrip(input: TripFinishInput) {
 
     revalidatePath(transportationRevalidatePath("trips"))
     revalidatePath(transportationRevalidatePath(`trips/${id}`))
+
+    void notifyGuardiansOfTripEvent({
+      schoolId,
+      tripId: id,
+      routeId: trip.routeId,
+      kind: "trip_finished",
+      title: "Bus arrived",
+      body: "Your child's bus has completed its route.",
+    })
+
     return { success: true as const, data: trip }
   } catch {
     return actionError(ACTION_ERRORS.TRIP_UPDATE_FAILED)
@@ -199,6 +220,18 @@ export async function cancelTrip(input: TripCancelInput) {
 
     revalidatePath(transportationRevalidatePath("trips"))
     revalidatePath(transportationRevalidatePath(`trips/${id}`))
+
+    void notifyGuardiansOfTripEvent({
+      schoolId,
+      tripId: id,
+      routeId: trip.routeId,
+      kind: "trip_cancelled",
+      title: "Bus trip cancelled",
+      body: reason
+        ? `Your child's bus trip was cancelled: ${reason}`
+        : "Your child's bus trip has been cancelled.",
+    })
+
     return { success: true as const, data: trip }
   } catch {
     return actionError(ACTION_ERRORS.TRIP_UPDATE_FAILED)

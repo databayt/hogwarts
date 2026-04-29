@@ -140,12 +140,14 @@ model Route {
   notes           String?        @db.Text
   lang            String         @default("ar")
 
-  vehicleId String?
-  driverId  String?
+  vehicleId  String?
+  driverId   String?
+  geofenceId String? // GeoFence with type=BUS_ROUTE for boarding events
 
   school      School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   vehicle     Vehicle?          @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
   driver      Driver?           @relation(fields: [driverId], references: [id], onDelete: SetNull)
+  geofence    GeoFence?         @relation(fields: [geofenceId], references: [id], onDelete: SetNull)
   stops       RouteStop[]
   assignments RouteAssignment[]
   trips       Trip[]
