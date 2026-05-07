@@ -20,8 +20,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { getStudentCredentials, resetStudentPassword } from "./actions"
@@ -144,7 +142,7 @@ export function CredentialsDialog({
     isLoading,
     isResetting,
   } = useCredentialsDialogState()
-  const [copiedField, setCopiedField] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
   const [printOpen, setPrintOpen] = useState(false)
   // Derived once on mount; window/location are not available during SSR.
   const [hostInfo, setHostInfo] = useState<{
@@ -228,15 +226,30 @@ export function CredentialsDialog({
     }
   }, [studentId, t])
 
-  const handleCopy = useCallback(async (text: string, field: string) => {
-    try {
-      await navigator.clipboard.writeText(text)
-      setCopiedField(field)
-      setTimeout(() => setCopiedField(null), 2000)
-    } catch {
-      // Clipboard API unavailable — skip silently
+  // Multi-field clipboard write — mirrors application-success-modal.tsx so the
+  // admin gets a single tidy "Label: value" block instead of per-field nibbles.
+  const handleCopyAll = useCallback(async () => {
+    if (!credentials) return
+    const lines: string[] = [
+      `${t?.username || "Username"}: ${credentials.username}`,
+    ]
+    if (credentials.email) {
+      lines.push(`${t?.email || "Email"}: ${credentials.email}`)
     }
-  }, [])
+    if (credentials.password) {
+      lines.push(`${t?.password || "Password"}: ${credentials.password}`)
+    }
+    if (hostInfo.loginUrl) {
+      lines.push(`${t?.loginUrl || "Login URL"}: ${hostInfo.loginUrl}`)
+    }
+    try {
+      await navigator.clipboard.writeText(lines.join("\n"))
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // Clipboard blocked — silent. Share strip's WhatsApp/Email is the fallback.
+    }
+  }, [credentials, hostInfo.loginUrl, t])
 
   // Auto-load on open. openCredentialsDialog already set isLoading:true, so
   // the spinner is visible before this effect runs — no empty-body flash.
@@ -316,8 +329,6 @@ export function CredentialsDialog({
       'For security, the existing password can\'t be shown. Click "Reset Password" to mint a new one.'
 
   const shareLabels: ShareLabels = {
-    copyAll: t?.copyAll || "Copy all details",
-    copied: t?.copiedToClipboard || "Copied to clipboard",
     share: t?.share || "Share",
     whatsapp: t?.whatsapp || "WhatsApp",
     email: t?.shareEmail || "Email",
@@ -422,120 +433,88 @@ export function CredentialsDialog({
                     </div>
                   )}
 
-                  <div className="space-y-3">
-                    <div className="space-y-1.5">
-                      <Label>{t?.username || "Username"}</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          value={credentials.username}
-                          readOnly
-                          className="font-mono"
-                        />
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="shrink-0"
-                          onClick={() =>
-                            handleCopy(credentials.username, "username")
-                          }
-                          aria-label={t?.copyAll || "Copy"}
-                        >
-                          {copiedField === "username" ? (
-                            <Check className="h-4 w-4 text-green-500" />
-                          ) : (
-                            <Copy className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
+                  {/* Informative label/value block — no inputs, no per-field
+                      copy buttons. The whole set is copied via the single
+                      inline trigger below (mirrors application-success-modal). */}
+                  <dl className="space-y-2.5">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <dt className="text-muted-foreground text-xs">
+                        {t?.username || "Username"}
+                      </dt>
+                      <dd className="font-mono text-sm">
+                        {credentials.username}
+                      </dd>
                     </div>
 
                     {credentials.email && (
-                      <div className="space-y-1.5">
-                        <Label>{t?.email || "Email"}</Label>
-                        <div className="flex gap-2">
-                          <Input value={credentials.email} readOnly />
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="shrink-0"
-                            onClick={() =>
-                              handleCopy(credentials.email!, "email")
-                            }
-                            aria-label={t?.copyAll || "Copy"}
-                          >
-                            {copiedField === "email" ? (
-                              <Check className="h-4 w-4 text-green-500" />
-                            ) : (
-                              <Copy className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </div>
+                      <div className="flex items-baseline justify-between gap-3">
+                        <dt className="text-muted-foreground text-xs">
+                          {t?.email || "Email"}
+                        </dt>
+                        <dd className="text-end text-sm break-all">
+                          {credentials.email}
+                        </dd>
                       </div>
                     )}
 
-                    <div className="space-y-1.5">
-                      <Label>{t?.password || "Password"}</Label>
+                    <div className="flex items-baseline justify-between gap-3">
+                      <dt className="text-muted-foreground text-xs">
+                        {t?.password || "Password"}
+                      </dt>
                       {credentials.password ? (
-                        <div className="flex gap-2">
-                          <Input
-                            value={credentials.password}
-                            readOnly
-                            className="font-mono"
-                          />
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="shrink-0"
-                            onClick={() =>
-                              handleCopy(credentials.password!, "password")
-                            }
-                            aria-label={t?.copyAll || "Copy"}
-                          >
-                            {copiedField === "password" ? (
-                              <Check className="h-4 w-4 text-green-500" />
-                            ) : (
-                              <Copy className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </div>
+                        <dd className="font-mono text-sm">
+                          {credentials.password}
+                        </dd>
                       ) : (
-                        <p className="text-muted-foreground text-xs">
+                        <dd className="text-muted-foreground max-w-[60%] text-end text-xs">
                           {passwordHint}
-                        </p>
+                        </dd>
                       )}
                     </div>
 
                     {hostInfo.loginUrl && (
-                      <div className="space-y-1.5">
-                        <Label className="flex items-center gap-1.5">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <dt className="text-muted-foreground flex items-center gap-1.5 text-xs">
                           <Globe className="h-3.5 w-3.5" aria-hidden="true" />
                           {t?.loginUrl || "Login URL"}
-                        </Label>
-                        <div className="flex gap-2">
-                          <Input
-                            value={hostInfo.loginUrl}
-                            readOnly
-                            className="font-mono text-xs"
-                          />
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="shrink-0"
-                            onClick={() =>
-                              handleCopy(hostInfo.loginUrl, "loginUrl")
-                            }
-                            aria-label={t?.copyAll || "Copy"}
-                          >
-                            {copiedField === "loginUrl" ? (
-                              <Check className="h-4 w-4 text-green-500" />
-                            ) : (
-                              <Copy className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </div>
+                        </dt>
+                        <dd className="max-w-[60%] text-end font-mono text-xs break-all">
+                          {hostInfo.loginUrl}
+                        </dd>
                       </div>
                     )}
-                  </div>
+                  </dl>
+
+                  {/* Single inline copy trigger — only meaningful when there's
+                      a fresh password to share. Hidden on existing-user views. */}
+                  {credentials.password && (
+                    <div className="flex items-center justify-center gap-1.5">
+                      {copied ? (
+                        <>
+                          <span className="text-xs text-green-700">
+                            {t?.copiedToClipboard || "Copied to clipboard"}
+                          </span>
+                          <Check className="h-3 w-3 text-green-700" />
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-muted-foreground text-xs">
+                            {t?.copyDetails || "Copy details to clipboard"}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={handleCopyAll}
+                            className="text-muted-foreground hover:text-foreground -m-2 p-2 transition-colors"
+                            aria-label={
+                              t?.copyDetails || "Copy details to clipboard"
+                            }
+                          >
+                            <Copy className="h-3.5 w-3.5" />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
 
                   {credentials.password && (
                     <p className="text-muted-foreground text-xs">
@@ -544,7 +523,8 @@ export function CredentialsDialog({
                     </p>
                   )}
 
-                  {/* Share strip — primary handover affordance */}
+                  {/* Contact options row — pure "send via channel" buttons.
+                      Copy lives above; this strip no longer owns clipboard. */}
                   <CredentialsShare
                     credentials={credentials}
                     studentName={studentName}

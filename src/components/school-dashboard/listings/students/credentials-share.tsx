@@ -7,16 +7,16 @@
 // own app, so we never read parent contact info from the database.
 //
 // Channels:
-//   - Copy all    : clipboard write of the composed message (primary CTA)
 //   - WhatsApp    : https://wa.me/?text=… (web + mobile WA)
 //   - Email       : mailto: with subject + body
 //   - SMS         : sms:?body=… (mobile only — matchMedia coarse pointer)
 //   - Web Share   : navigator.share when available (collapses many channels)
 //   - Print       : delegates to the parent dialog (which renders the print sheet)
+//
+// Clipboard copy is owned by the dialog body itself (a quieter inline trigger
+// below the credentials list), so this strip is purely "send via channel".
 import { useEffect, useState } from "react"
 import {
-  Check,
-  Copy,
   Mail,
   MessageCircle,
   MessageSquare,
@@ -24,12 +24,9 @@ import {
   Share2,
 } from "lucide-react"
 
-import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
 export interface ShareLabels {
-  copyAll: string
-  copied: string
   share: string
   whatsapp: string
   email: string
@@ -67,7 +64,6 @@ export function CredentialsShare({
   labels,
   onPrint,
 }: CredentialsShareProps) {
-  const [copied, setCopied] = useState(false)
   const [canNativeShare, setCanNativeShare] = useState(false)
   const [isCoarsePointer, setIsCoarsePointer] = useState(false)
 
@@ -93,17 +89,6 @@ export function CredentialsShare({
   const waHref = `https://wa.me/?text=${encodeURIComponent(message)}`
   const mailHref = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`
   const smsHref = `sms:?&body=${encodeURIComponent(message)}`
-
-  async function copyAll() {
-    if (!hasPassword) return
-    try {
-      await navigator.clipboard.writeText(message)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch {
-      // Clipboard API blocked — silently no-op; per-field copy buttons remain.
-    }
-  }
 
   async function nativeShare() {
     if (!hasPassword) return
@@ -134,20 +119,6 @@ export function CredentialsShare({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <Button
-        type="button"
-        size="sm"
-        onClick={copyAll}
-        className={cn(
-          "gap-1.5 transition-colors",
-          copied && "bg-green-600 text-white hover:bg-green-600/90"
-        )}
-        aria-live="polite"
-      >
-        {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-        <span>{copied ? labels.copied : labels.copyAll}</span>
-      </Button>
-
       <Button asChild variant="outline" size="sm" className="gap-1.5">
         <a
           href={waHref}
