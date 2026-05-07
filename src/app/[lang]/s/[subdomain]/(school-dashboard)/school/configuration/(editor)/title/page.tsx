@@ -33,22 +33,24 @@ export default async function TitlePage({ params }: Props) {
         .catch(() => null)
     : null
 
-  const schoolName = school?.name || ""
+  const storedName = school?.name || ""
   const storedLang = (school?.preferredLanguage || "ar") as "ar" | "en"
 
-  // Translate school name when viewing in a different language
-  let translatedTitle: string | undefined
-  if (schoolId && schoolName && lang !== storedLang) {
-    // Prefer stored English name if available, fall back to on-demand translation
+  // Resolve the value to render in the editor for the current UI language.
+  // When viewing in a non-stored language, prefer the stored translation
+  // (e.g. nameEn) and fall back to on-demand translation.
+  let displayName = storedName
+  if (schoolId && storedName && lang !== storedLang) {
     if (lang === "en" && school?.nameEn) {
-      translatedTitle = school.nameEn
+      displayName = school.nameEn
     } else {
-      translatedTitle = await getDisplayText(
-        schoolName,
+      const translated = await getDisplayText(
+        storedName,
         storedLang,
         lang,
         schoolId
       )
+      if (translated) displayName = translated
     }
   }
 
@@ -56,10 +58,11 @@ export default async function TitlePage({ params }: Props) {
     <ConfigTitleForm
       schoolId={schoolId || ""}
       initialTitle={{
-        title: schoolName,
+        title: displayName,
         subdomain: school?.domain || "",
       }}
-      translatedTitle={translatedTitle}
+      editLang={lang}
+      storedLang={storedLang}
       dictionary={dictionary}
     />
   )

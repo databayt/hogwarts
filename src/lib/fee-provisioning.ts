@@ -222,22 +222,27 @@ export async function provisionSchoolFees(
   }
 
   // Fan out: attach new/updated structures to existing enrolled students so
-  // `/finance/fees/my` is not empty after a sync. autoAssignFeesForStudent
-  // is idempotent (upsert on @@unique[studentId, feeStructureId, academicYear]).
+  // `/finance/fees/my` is not empty after a sync. ensureStudentFeeAssignments
+  // is idempotent (unique constraint on [studentId, feeStructureId, academicYear]).
+  // notify=false on bulk sync — admin already pressed the Sync button and
+  // doesn't need a notification storm in response.
   const students = await db.student.findMany({
     where: { schoolId, academicGradeId: { not: null } },
     select: { id: true, academicGradeId: true },
   })
-  const { autoAssignFeesForStudent } = await import("@/lib/fee-auto-assign")
+  const { ensureStudentFeeAssignments } = await import("@/lib/fee-auto-assign")
   for (const s of students) {
     if (!s.academicGradeId) continue
     try {
-      const r = await autoAssignFeesForStudent(
+      const r = await ensureStudentFeeAssignments({
         schoolId,
-        s.id,
-        s.academicGradeId
-      )
-      result.assignedStudents += r.assignedCount
+        studentId: s.id,
+        academicGradeId: s.academicGradeId,
+        notify: false,
+      })
+      // Preserve old result shape: count both newly-created and pre-existing
+      // matches so the admin sees the full fan-out span.
+      result.assignedStudents += r.created + r.existing
     } catch (err) {
       result.errors.push({
         gradeId: s.academicGradeId,

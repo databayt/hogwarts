@@ -399,6 +399,9 @@ model School {
   trips            Trip[]
   tripBoardings    TripBoarding[]
 
+  // Webhook idempotency — see prisma/models/webhooks.prisma
+  processedWebhookEvents ProcessedWebhookEvent[]
+
   @@map("schools")
 }
 

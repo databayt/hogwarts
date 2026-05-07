@@ -1,0 +1,31 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
+// ProcessedWebhookEvent — single source of truth for webhook idempotency.
+//
+// Every payment-provider webhook (Stripe today, Tap + Bankak later) writes
+// one row here BEFORE its side-effects run. The unique constraint on
+// (provider, providerEventId) is the dedupe primitive: a duplicate insert
+// throws Prisma error P2002, which the handler treats as "already processed,
+// short-circuit with 200 OK".
+//
+// `payload` keeps the full provider event for audit + replay debugging.
+// `schoolId` is nullable because some events (Stripe subscription lifecycle)
+// don't have a tenant context until they're routed.
+model ProcessedWebhookEvent {
+  id              String   @id @default(cuid())
+  schoolId        String?
+  provider        String
+  providerEventId String
+  eventType       String
+  processedAt     DateTime @default(now())
+  payload         Json
+
+  // Optional FK so DELETE on a school cascades cleanup. Stripe SaaS-side
+  // events keep schoolId null and are unaffected.
+  school          School?  @relation(fields: [schoolId], references: [id], onDelete: SetNull)
+
+  @@unique([provider, providerEventId])
+  @@index([schoolId])
+  @@index([processedAt])
+}

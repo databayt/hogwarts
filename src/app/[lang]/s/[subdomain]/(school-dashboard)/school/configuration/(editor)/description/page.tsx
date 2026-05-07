@@ -5,7 +5,7 @@ import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import { DescriptionForm } from "@/components/onboarding/description/form"
+import { ConfigDescriptionForm } from "@/components/school-dashboard/school/configuration/config-description-form"
 
 export const metadata = { title: "Configuration: Description" }
 
@@ -28,7 +28,7 @@ export default async function DescriptionPage({ params }: Props) {
     : null
 
   return (
-    <DescriptionForm
+    <ConfigDescriptionForm
       schoolId={schoolId || ""}
       initialData={{
         schoolType:
@@ -37,7 +37,7 @@ export default async function DescriptionPage({ params }: Props) {
             | "public"
             | "international"
             | "technical"
-            | "special") || "private",
+            | "special") || undefined,
         schoolLevel:
           (school?.schoolLevel as "primary" | "secondary" | "both") ||
           undefined,

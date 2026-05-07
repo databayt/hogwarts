@@ -4,6 +4,7 @@
 export type PaymentGateway =
   | "stripe"
   | "tap"
+  | "bankak"
   | "cash"
   | "bank_transfer"
   | "mobile_money"

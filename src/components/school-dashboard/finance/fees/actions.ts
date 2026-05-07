@@ -79,6 +79,69 @@ function isAuthError(
 }
 
 // ============================================
+// TENANT URL HELPER
+// ============================================
+
+/**
+ * Build the school's tenant-aware base URL for redirects (Stripe success/cancel,
+ * receipt deep links, credential delivery, etc).
+ *
+ * - production + subdomain → `https://${subdomain}.databayt.org`
+ * - development + subdomain → `http://${subdomain}.localhost:3000`
+ * - missing subdomain → falls back to `NEXT_PUBLIC_APP_URL` so non-tenant
+ *   contexts (platform admin, dev fallback) still work.
+ *
+ * Exported so other actions inside this block can reuse it without
+ * duplicating the env-conditional logic.
+ */
+export function buildTenantBaseUrl(
+  subdomain: string | null | undefined
+): string {
+  if (!subdomain) {
+    return process.env.NEXT_PUBLIC_APP_URL || "https://app.databayt.org"
+  }
+  if (process.env.NODE_ENV === "production") {
+    return `https://${subdomain}.databayt.org`
+  }
+  return `http://${subdomain}.localhost:3000`
+}
+
+// ============================================
+// FEE ASSIGNMENT OWNERSHIP CHECK
+// ============================================
+
+/**
+ * Check whether the given user is the student themselves OR a guardian linked
+ * to the student that owns this assignment. The Pay-Online button on
+ * `/finance/fees/my` is rendered for STUDENT and GUARDIAN roles, but
+ * `requireFeePermission("view")` only honors finance admin roles. Without an
+ * ownership check those button clicks would silently fail with UNAUTHORIZED.
+ */
+async function userOwnsAssignment(args: {
+  userId: string
+  studentId: string
+  schoolId: string
+}): Promise<boolean> {
+  // STUDENT: User row links directly to Student via Student.userId
+  const student = await db.student.findFirst({
+    where: { id: args.studentId, schoolId: args.schoolId },
+    select: { userId: true },
+  })
+  if (student?.userId && student.userId === args.userId) return true
+
+  // GUARDIAN: Guardian.userId links to a User; StudentGuardian links Guardian to Student
+  const guardian = await db.guardian.findFirst({
+    where: {
+      schoolId: args.schoolId,
+      userId: args.userId,
+      studentGuardians: { some: { studentId: args.studentId } },
+    },
+    select: { id: true },
+  })
+  return Boolean(guardian)
+}
+
+// ============================================
 // FEE STRUCTURE ACTIONS
 // ============================================
 
@@ -969,6 +1032,32 @@ export async function recordPayment(
       data: { status: newStatus },
     })
 
+    // Post to double-entry ledger so cash + revenue accounts move (issue
+    // #263 P1). Mirrors the call in webhooks/stripe/route.ts; both code
+    // paths must post or trial balance diverges by the cash-only amounts.
+    // Non-fatal: log but don't roll back the payment if posting fails.
+    try {
+      const { postFeePayment } = await import("../lib/accounting/actions")
+      const postResult = await postFeePayment(ctx.schoolId, {
+        paymentId: payment.id,
+        studentId: feeAssignment.studentId,
+        amount,
+        paymentMethod: formData.paymentMethod as string,
+        paymentDate: payment.paymentDate,
+      })
+      if (!postResult.success) {
+        console.error(
+          "[recordPayment] postFeePayment failed:",
+          postResult.errors
+        )
+      }
+    } catch (postingErr) {
+      console.error(
+        "[recordPayment] Ledger posting threw (continuing):",
+        postingErr
+      )
+    }
+
     // Sync linked invoice status — reflect partial payments properly
     try {
       const linkedInvoice = await db.userInvoice.findFirst({
@@ -1542,20 +1631,51 @@ export async function createFeePaymentCheckout(
   lang: string
 ): Promise<ActionResult<{ checkoutUrl: string }>> {
   try {
-    const ctx = await requireFeePermission("view")
-    if (isAuthError(ctx)) return ctx
-
+    // Auth + tenant gate (same shape as requireFeePermission, but we need the
+    // schoolId before the permission check so we can run an ownership-fallback
+    // for STUDENT / GUARDIAN whose Pay-Online button lives on this action).
     const session = await auth()
+    if (!session?.user?.id) {
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
 
-    // Load fee assignment with student and structure
-    const assignment = await db.feeAssignment.findFirst({
-      where: { id: feeAssignmentId, schoolId: ctx.schoolId },
-      include: {
-        student: { select: { id: true, firstName: true, lastName: true } },
-        feeStructure: { select: { name: true } },
-        payments: { where: { status: "SUCCESS" }, select: { amount: true } },
-      },
-    })
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    }
+
+    // Permission and assignment load in parallel — we need the assignment's
+    // studentId to run the ownership check for STUDENT/GUARDIAN, but we want
+    // permission failure to short-circuit before NOT_FOUND so the response
+    // shape matches the legacy (admin-only) flow.
+    const [isFinanceAdmin, assignment] = await Promise.all([
+      checkCurrentUserPermission(schoolId, "fees", "view"),
+      db.feeAssignment.findFirst({
+        where: { id: feeAssignmentId, schoolId },
+        include: {
+          student: { select: { id: true, firstName: true, lastName: true } },
+          feeStructure: { select: { name: true } },
+          payments: { where: { status: "SUCCESS" }, select: { amount: true } },
+        },
+      }),
+    ])
+
+    if (!isFinanceAdmin) {
+      // Without an assignment we can't verify ownership — return UNAUTHORIZED
+      // (not NOT_FOUND) so a non-admin probing for assignment IDs gets a
+      // uniform refusal regardless of whether the row exists.
+      if (!assignment) {
+        return actionError(ACTION_ERRORS.UNAUTHORIZED)
+      }
+      const isOwner = await userOwnsAssignment({
+        userId: session.user.id,
+        studentId: assignment.studentId,
+        schoolId,
+      })
+      if (!isOwner) {
+        return actionError(ACTION_ERRORS.UNAUTHORIZED)
+      }
+    }
 
     if (!assignment) {
       return actionError(ACTION_ERRORS.NOT_FOUND)
@@ -1571,23 +1691,27 @@ export async function createFeePaymentCheckout(
       return actionError(ACTION_ERRORS.FEE_FULLY_PAID)
     }
 
-    // Load school for currency
+    // Load school for currency + subdomain. `domain` is the per-school
+    // subdomain (e.g. "kingfahad" for kingfahad.databayt.org) that drives the
+    // tenant-aware redirect — without it Stripe sends the user back to the
+    // SaaS apex, breaking the school dashboard URL contract.
     const school = await db.school.findFirst({
-      where: { id: ctx.schoolId },
-      select: { currency: true, name: true },
+      where: { id: schoolId },
+      select: { currency: true, name: true, domain: true },
     })
     const currency = school?.currency || "SAR"
+    const baseUrl = buildTenantBaseUrl(school?.domain)
 
     const { createPaymentCheckout } = await import("@/lib/payment/provider")
     const result = await createPaymentCheckout("stripe", {
       amount: remaining,
       currency,
       context: "school_fee",
-      schoolId: ctx.schoolId,
+      schoolId,
       referenceId: feeAssignmentId,
       referenceNumber: `FEE-${feeAssignmentId.slice(-8).toUpperCase()}`,
-      successUrl: `${process.env.NEXT_PUBLIC_APP_URL || ""}/${lang}/finance/fees/assignments/${feeAssignmentId}?payment=success`,
-      cancelUrl: `${process.env.NEXT_PUBLIC_APP_URL || ""}/${lang}/finance/fees/assignments/${feeAssignmentId}?payment=cancelled`,
+      successUrl: `${baseUrl}/${lang}/finance/fees/assignments/${feeAssignmentId}?payment=success`,
+      cancelUrl: `${baseUrl}/${lang}/finance/fees/assignments/${feeAssignmentId}?payment=cancelled`,
       lineItems: [
         {
           name: assignment.feeStructure?.name || "School Fee",
@@ -1600,9 +1724,9 @@ export async function createFeePaymentCheckout(
         type: "fee_payment",
         feeAssignmentId,
         studentId: assignment.studentId,
-        schoolId: ctx.schoolId,
+        schoolId,
       },
-      customerEmail: session?.user?.email || undefined,
+      customerEmail: session.user.email || undefined,
     })
 
     if (!result.success || !result.checkoutUrl) {

@@ -19,6 +19,7 @@ const initiatePaymentSchema = z.object({
   gateway: z.enum([
     "stripe",
     "tap",
+    "bankak",
     "cash",
     "bank_transfer",
     "mobile_money",

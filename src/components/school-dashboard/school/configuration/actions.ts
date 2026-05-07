@@ -474,6 +474,9 @@ const schoolNameSchema = z.object({
     .min(3, "School name must be at least 3 characters")
     .max(100)
     .trim(),
+  // The UI language the editor was in when saving. Used to decide whether
+  // we update the canonical `name` (stored language) or the `nameEn` mirror.
+  editLang: z.enum(["ar", "en"]).optional(),
 })
 
 export async function updateSchoolName(
@@ -490,9 +493,24 @@ export async function updateSchoolName(
 
     const validatedData = schoolNameSchema.parse(data)
 
+    // Determine which field to write. Editing in the school's stored
+    // language updates the canonical `name`; editing in English while
+    // the school is stored in Arabic only updates the `nameEn` mirror.
+    const existing = await db.school.findUnique({
+      where: { id: schoolId },
+      select: { preferredLanguage: true },
+    })
+    const storedLang = (existing?.preferredLanguage || "ar") as "ar" | "en"
+    const editLang = validatedData.editLang ?? storedLang
+
+    const updateData =
+      editLang === "en" && storedLang !== "en"
+        ? { nameEn: validatedData.name }
+        : { name: validatedData.name }
+
     await db.school.update({
       where: { id: schoolId },
-      data: { name: validatedData.name },
+      data: updateData,
     })
 
     revalidatePath("/school/configuration")
@@ -501,6 +519,73 @@ export async function updateSchoolName(
     return { success: true }
   } catch (error) {
     console.error("Error updating school name:", error)
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: error.issues.map((e) => e.message).join(", "),
+      }
+    }
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
+  }
+}
+
+// Schema for subdomain change request. We don't mutate the subdomain
+// directly -- it requires DNS coordination -- so this just emails the
+// platform team with the requested value and an optional reason.
+const subdomainRequestSchema = z.object({
+  desiredSubdomain: z
+    .string()
+    .min(2, "Subdomain must be at least 2 characters")
+    .max(40)
+    .regex(/^[a-z0-9-]+$/, "Only lowercase letters, numbers, and hyphens"),
+  reason: z.string().max(500).optional(),
+})
+
+export async function requestSubdomainChange(
+  schoolId: string,
+  data: z.infer<typeof subdomainRequestSchema>
+): Promise<ActionResult> {
+  try {
+    const session = await auth()
+    const userSchoolId = session?.user?.schoolId
+    if (!userSchoolId || userSchoolId !== schoolId) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
+    const validated = subdomainRequestSchema.parse(data)
+
+    const school = await db.school.findUnique({
+      where: { id: schoolId },
+      select: { name: true, domain: true },
+    })
+
+    // Lazy import to keep this action tree-shakable for callers that
+    // don't touch email infra.
+    const { sendEmail } = await import("@/lib/email")
+    const supportInbox =
+      process.env.PLATFORM_SUPPORT_EMAIL || "support@databayt.org"
+
+    await sendEmail({
+      to: supportInbox,
+      subject: `Subdomain change request: ${school?.domain ?? schoolId}`,
+      template: "subdomain-change-request",
+      data: {
+        schoolId,
+        schoolName: school?.name ?? "(unknown)",
+        currentSubdomain: school?.domain ?? "",
+        desiredSubdomain: validated.desiredSubdomain,
+        reason: validated.reason ?? "",
+        requestedBy: session?.user?.email ?? "(unknown)",
+      },
+    }).catch((err) => {
+      console.error("[requestSubdomainChange] email failed", err)
+      // Surface as failure so the UI can show an error toast.
+      throw err
+    })
+
+    return { success: true }
+  } catch (error) {
+    console.error("Error submitting subdomain change request:", error)
     if (error instanceof z.ZodError) {
       return {
         success: false,

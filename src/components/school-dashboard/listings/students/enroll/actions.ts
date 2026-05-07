@@ -9,8 +9,7 @@ import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { syncStudentClassToEnrollment } from "@/lib/enrollment-sync"
-import { autoAssignFeesForStudent } from "@/lib/fee-auto-assign"
-import { ensureInvoicesForAssignment } from "@/lib/fee-invoice-sync"
+import { ensureStudentFeeAssignments } from "@/lib/fee-auto-assign"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
   assertStudentPermission,
@@ -162,29 +161,21 @@ export async function enrollStudent(input: {
       }
     }
 
-    // Auto-assign fees + generate invoices when grade is set (parity with admission)
+    // Founder contract: enrollment with a known grade always materializes
+    // FeeAssignment + UserInvoice rows before this action returns.
     if (academicGradeId) {
-      autoAssignFeesForStudent(schoolId, studentId, academicGradeId)
-        .then(async ({ assignedCount }) => {
-          if (assignedCount === 0) return
-          const assignments = await db.feeAssignment.findMany({
-            where: { schoolId, studentId },
-            select: { id: true },
-          })
-          await Promise.all(
-            assignments.map((a) =>
-              ensureInvoicesForAssignment(schoolId, a.id).catch((err) =>
-                console.error(
-                  `[enrollStudent] Invoice gen failed for assignment ${a.id}:`,
-                  err
-                )
-              )
-            )
-          )
+      try {
+        await ensureStudentFeeAssignments({
+          schoolId,
+          studentId,
+          academicGradeId,
         })
-        .catch((err) =>
-          console.error("[enrollStudent] Fee auto-assign failed:", err)
+      } catch (err) {
+        console.error(
+          "[enrollStudent] ensureStudentFeeAssignments failed:",
+          err
         )
+      }
     }
 
     revalidatePath("/students")

@@ -8,6 +8,7 @@ import { auth } from "@/auth"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { ensureStudentFeeAssignments } from "@/lib/fee-auto-assign"
 import { generateStudentUsername } from "@/lib/student-username"
 import { getTenantContext } from "@/lib/tenant-context"
 
@@ -188,6 +189,26 @@ export async function completeStudentWizard(
         ...(student.studentId ? {} : { studentId: code }),
       },
     })
+
+    // Defensive auto-assign — the academic step normally handles this, but
+    // when the wizard is completed via a non-standard flow (resumed from
+    // another device, partial state, etc.) the academic step may have been
+    // skipped. Idempotent so a duplicate call here is a no-op when the
+    // assignments already exist.
+    if (student.academicGradeId) {
+      try {
+        await ensureStudentFeeAssignments({
+          schoolId,
+          studentId,
+          academicGradeId: student.academicGradeId,
+        })
+      } catch (err) {
+        console.error(
+          "[completeStudentWizard] ensureStudentFeeAssignments failed:",
+          err
+        )
+      }
+    }
 
     revalidatePath("/students")
     return { success: true }

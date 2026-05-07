@@ -14,7 +14,7 @@ import {
 } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { DictionaryProvider } from "@/components/internationalization/dictionary-context"
-import { ReportIssue } from "@/components/report-issue"
+import { ReportIssueFooter } from "@/components/report-issue-footer"
 import { PageHeadingProvider } from "@/components/school-dashboard/context/page-heading-context"
 import { PageHeadingDisplay } from "@/components/school-dashboard/context/page-heading-display"
 import { SchoolProvider } from "@/components/school-dashboard/context/school-context"
@@ -160,9 +160,7 @@ export default async function PlatformLayout({
                   <div className="dashboard-container overflow-x-clip pb-10 transition-[margin] duration-200 ease-in-out">
                     <PageHeadingDisplay />
                     {children}
-                    <div className="text-muted-foreground pt-8 pb-4 text-start text-sm">
-                      <ReportIssue />
-                    </div>
+                    <ReportIssueFooter />
                   </div>
                 </div>
                 {mustChangePassword && (

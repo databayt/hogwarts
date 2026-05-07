@@ -83,7 +83,9 @@ import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { withArchiveScope } from "@/lib/archive-scope"
 import { getDisplayText } from "@/lib/content-display"
+import { deliverStudentCredentials } from "@/lib/credentials-delivery"
 import { db } from "@/lib/db"
+import { ensureStudentFeeAssignments } from "@/lib/fee-auto-assign"
 import { getGradeLabel } from "@/lib/grade-label"
 import { getModelOrThrow } from "@/lib/prisma-guards"
 import { buildTranslatedSearchConditions } from "@/lib/search-with-translation"
@@ -378,6 +380,21 @@ export async function createStudent(
     // Auto-enroll in classes if grade is set
     if (parsed.academicGradeId) {
       await autoEnrollStudentInClasses(row.id, parsed.academicGradeId, schoolId)
+
+      // Founder contract: every student-create path with a known grade
+      // ends with FeeAssignment rows. Idempotent + transactional.
+      try {
+        await ensureStudentFeeAssignments({
+          schoolId,
+          studentId: row.id,
+          academicGradeId: parsed.academicGradeId,
+        })
+      } catch (err) {
+        console.error(
+          "[createStudent] ensureStudentFeeAssignments failed:",
+          err
+        )
+      }
     }
 
     // Revalidate cache
@@ -497,6 +514,22 @@ export async function updateStudent(
     const gradeId = rest.academicGradeId ?? undefined
     if (gradeId) {
       await autoEnrollStudentInClasses(id, gradeId, schoolId)
+
+      // Grade change → re-run fee auto-assign so any new grade-specific
+      // structures attach. Existing assignments (admin discounts,
+      // scholarships) are left alone — the helper only inserts missing rows.
+      try {
+        await ensureStudentFeeAssignments({
+          schoolId,
+          studentId: id,
+          academicGradeId: gradeId,
+        })
+      } catch (err) {
+        console.error(
+          "[updateStudent] ensureStudentFeeAssignments failed:",
+          err
+        )
+      }
     }
 
     // Revalidate cache
@@ -2623,6 +2656,25 @@ export async function getStudentCredentials(input: {
       data: { userId: newUser.id },
     })
 
+    // Auto-deliver credentials over notification channels (issue: admin had
+    // to manually copy/paste from the dialog into WhatsApp). Non-fatal —
+    // the dialog still shows the credentials so admin can fall back to
+    // manual share if delivery fails.
+    try {
+      await deliverStudentCredentials({
+        schoolId,
+        studentUserId: newUser.id,
+        username: studentCode,
+        tempPassword: plain,
+        isFirstTime: true,
+      })
+    } catch (deliveryErr) {
+      console.error(
+        "[getStudentCredentials] credentials delivery failed:",
+        deliveryErr
+      )
+    }
+
     // NOTE: no revalidatePath — it remounts the parent server tree and resets
     // the dialog's open state, closing it before the admin can copy anything.
     // The dialog triggers router.refresh() on close instead.
@@ -2687,6 +2739,23 @@ export async function resetStudentPassword(input: {
       where: { id: student.userId },
       data: { password: hashed, mustChangePassword: true },
     })
+
+    // Same auto-delivery as first-time creation — the admin re-shared a new
+    // password, so push it through the student's notification channels.
+    try {
+      await deliverStudentCredentials({
+        schoolId,
+        studentUserId: student.userId,
+        username: studentCode,
+        tempPassword: plain,
+        isFirstTime: false,
+      })
+    } catch (deliveryErr) {
+      console.error(
+        "[resetStudentPassword] credentials delivery failed:",
+        deliveryErr
+      )
+    }
 
     const existingUser = await db.user.findUnique({
       where: { id: student.userId },

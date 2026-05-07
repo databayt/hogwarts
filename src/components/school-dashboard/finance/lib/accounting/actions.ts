@@ -65,7 +65,16 @@ export async function initializeAccounting(schoolId: string): Promise<{
 }
 
 /**
- * Post fee payment to accounting
+ * Post fee payment to accounting.
+ *
+ * `actorUserId` lets system contexts (Stripe webhook, scheduled jobs) bypass
+ * the `auth()` check by passing an explicit attribution string. The
+ * `JournalEntry.createdBy` column is a free-form String (not an FK), so a
+ * sentinel like `"system:stripe-webhook"` is valid and gives the audit trail
+ * a clear signal that the entry was posted by an automated path rather than
+ * an admin clicking a button.
+ *
+ * Existing UI callers (no actorUserId) keep their session-derived behavior.
  */
 export async function postFeePayment(
   schoolId: string,
@@ -76,16 +85,21 @@ export async function postFeePayment(
     paymentMethod: string
     paymentDate: Date
     feeType?: string
-  }
+  },
+  actorUserId?: string
 ): Promise<PostingResult> {
   try {
-    const session = await auth()
-    if (!session?.user?.id) {
-      return { success: false, errors: ["Unauthorized"] }
+    let userId = actorUserId
+    if (!userId) {
+      const session = await auth()
+      if (!session?.user?.id) {
+        return { success: false, errors: ["Unauthorized"] }
+      }
+      userId = session.user.id
     }
 
     const entryInput = await createFeePaymentEntry(schoolId, paymentData, db)
-    return await createJournalEntry(schoolId, entryInput, session.user.id)
+    return await createJournalEntry(schoolId, entryInput, userId)
   } catch (error) {
     console.error("Error posting fee payment:", error)
     return {

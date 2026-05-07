@@ -9,8 +9,7 @@ import type { ActionResponse } from "@/lib/action-response"
 import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { enrollStudentInGradeClasses } from "@/lib/enrollment-sync"
-import { autoAssignFeesForStudent } from "@/lib/fee-auto-assign"
-import { ensureInvoicesForAssignment } from "@/lib/fee-invoice-sync"
+import { ensureStudentFeeAssignments } from "@/lib/fee-auto-assign"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { SupportedLanguage } from "@/components/translation/types"
 
@@ -221,29 +220,25 @@ export async function updateStudentAcademic(
       }
     }
 
-    // Auto-assign fees + invoices when a grade is set (parity with admission).
+    // Founder contract: by the time this action returns, FeeAssignment rows
+    // exist for every matching active FeeStructure. Awaited + transactional;
+    // re-running the wizard finalize is idempotent (no duplicate rows).
     if (parsed.academicGradeId) {
-      autoAssignFeesForStudent(schoolId, studentId, parsed.academicGradeId)
-        .then(async ({ assignedCount }) => {
-          if (assignedCount === 0) return
-          const assignments = await db.feeAssignment.findMany({
-            where: { schoolId, studentId },
-            select: { id: true },
-          })
-          await Promise.all(
-            assignments.map((a) =>
-              ensureInvoicesForAssignment(schoolId, a.id).catch((err) =>
-                console.error(
-                  `[updateStudentAcademic] Invoice gen failed for ${a.id}:`,
-                  err
-                )
-              )
-            )
-          )
+      try {
+        await ensureStudentFeeAssignments({
+          schoolId,
+          studentId,
+          academicGradeId: parsed.academicGradeId,
         })
-        .catch((err) =>
-          console.error("[updateStudentAcademic] Fee auto-assign failed:", err)
+      } catch (err) {
+        // Don't block the wizard — fees can be re-synced later via the Sync
+        // button on /finance/fees/structures. We log loudly so production
+        // monitoring catches partial setups instead of silent gaps.
+        console.error(
+          "[updateStudentAcademic] ensureStudentFeeAssignments failed:",
+          err
         )
+      }
     }
 
     return { success: true }

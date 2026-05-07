@@ -43,6 +43,7 @@
  */
 
 import { headers } from "next/headers"
+import { Prisma } from "@prisma/client"
 
 // WHY NO STRIPE TYPES: Keeps route lean, avoids version conflicts
 import { db } from "@/lib/db"
@@ -69,6 +70,48 @@ export async function POST(req: Request) {
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error)
     return new Response(`Webhook Error: ${errorMessage}`, { status: 400 })
+  }
+
+  // Event-ID dedupe — Stripe replays events on transient errors (timeouts,
+  // 5xx responses), and the previous "application-level" dedupe in this
+  // handler relied on per-branch flags (e.g. `applicationFeePaid`) which
+  // happen to short-circuit most replays but leak through for partial
+  // payments. ProcessedWebhookEvent is the unified primitive: race-safe via
+  // @@unique([provider, providerEventId]); P2002 on conflict means
+  // "already processed, ack with 200 OK".
+  const eventEnvelope = event as {
+    id: string
+    type: string
+    data?: { object?: { metadata?: { schoolId?: string } } }
+  }
+  try {
+    await db.processedWebhookEvent.create({
+      data: {
+        provider: "stripe",
+        providerEventId: eventEnvelope.id,
+        eventType: eventEnvelope.type,
+        schoolId: eventEnvelope.data?.object?.metadata?.schoolId ?? null,
+        payload: event as Prisma.InputJsonValue,
+      },
+    })
+  } catch (err: unknown) {
+    if (
+      err &&
+      typeof err === "object" &&
+      "code" in err &&
+      (err as { code?: string }).code === "P2002"
+    ) {
+      console.log(
+        `[Webhook] Duplicate event ${eventEnvelope.id} — skipping (already processed)`
+      )
+      return new Response(null, { status: 200 })
+    }
+    // Any other DB error: log and continue. We'd rather process the event
+    // (potentially twice) than reject a legitimate payment.
+    console.error(
+      "[Webhook] ProcessedWebhookEvent insert failed (continuing):",
+      err
+    )
   }
 
   if ((event as { type: string })?.type === "checkout.session.completed") {
@@ -332,6 +375,39 @@ export async function POST(req: Request) {
               console.log(
                 `[Webhook] Fee payment recorded: ${feeAssignmentId}, amount: ${paymentAmount}, status: ${newStatus}`
               )
+
+              // Post to double-entry ledger (issue #263 P1 — these poster
+              // functions exist in finance/lib/accounting but were never
+              // wired, so every Stripe-paid fee was previously invisible to
+              // the trial balance). Non-fatal: a posting failure surfaces in
+              // logs but the payment itself is already recorded — admin can
+              // re-post manually via the accounting UI.
+              try {
+                const { postFeePayment } =
+                  await import("@/components/school-dashboard/finance/lib/accounting/actions")
+                const postResult = await postFeePayment(
+                  assignment.schoolId,
+                  {
+                    paymentId: payment.id,
+                    studentId: assignment.studentId,
+                    amount: paymentAmount,
+                    paymentMethod: "CREDIT_CARD",
+                    paymentDate: payment.paymentDate,
+                  },
+                  "system:stripe-webhook"
+                )
+                if (!postResult.success) {
+                  console.error(
+                    "[Webhook] postFeePayment failed:",
+                    postResult.errors
+                  )
+                }
+              } catch (postingErr) {
+                console.error(
+                  "[Webhook] Ledger posting threw (continuing):",
+                  postingErr
+                )
+              }
 
               // Sync linked invoice status (non-fatal)
               try {

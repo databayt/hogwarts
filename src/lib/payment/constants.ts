@@ -31,6 +31,14 @@ export const GATEWAY_DISPLAY: Record<
       en: "Pay with mada, credit card, or Apple Pay",
     },
   },
+  bankak: {
+    icon: "Smartphone",
+    label: { ar: "بنكك", en: "Bankak" },
+    description: {
+      ar: "ادفع عبر تطبيق بنكك من بنك الخرطوم",
+      en: "Pay via the Bankak app (Bank of Khartoum)",
+    },
+  },
   cash: {
     icon: "Banknote",
     label: { ar: "الدفع نقدا", en: "Pay in Cash" },

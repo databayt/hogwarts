@@ -5,7 +5,11 @@ import type { PaymentGateway } from "./types"
 
 // Country → preferred gateways (ordered by preference)
 const COUNTRY_GATEWAYS: Record<string, PaymentGateway[]> = {
-  SD: ["mobile_money", "cash", "bank_transfer"],
+  // Sudan: bankak (Bank of Khartoum mobile money) is the dominant rail —
+  // listed first so a future enabled+configured Bankak provider takes
+  // priority over the generic mobile_money fallback. Until the BoK spec is
+  // wired the provider returns isConfigured()=false and is filtered out.
+  SD: ["bankak", "mobile_money", "cash", "bank_transfer"],
   EG: ["stripe", "cash", "bank_transfer"],
   SA: ["tap", "stripe", "cash", "bank_transfer"],
   AE: ["tap", "stripe", "cash", "bank_transfer"],

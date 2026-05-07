@@ -558,34 +558,21 @@ class CsvImportService {
               expiresAt: c.expiresAt.toISOString(),
             }))
 
-            // Phase 4: Auto-assign fees + generate invoices for students with a grade
-            const { autoAssignFeesForStudent } =
+            // Phase 4: Auto-assign fees + invoices via the canonical helper.
+            // notify=false on bulk imports — admin can re-trigger
+            // notifications via the Sync button if desired (avoids
+            // notification storm on a 500-row import).
+            const { ensureStudentFeeAssignments } =
               await import("@/lib/fee-auto-assign")
-            const { ensureInvoicesForAssignment } =
-              await import("@/lib/fee-invoice-sync")
             for (const s of createdStudents) {
               if (!s.academicGradeId) continue
               try {
-                const { assignedCount } = await autoAssignFeesForStudent(
+                await ensureStudentFeeAssignments({
                   schoolId,
-                  s.id,
-                  s.academicGradeId
-                )
-                if (assignedCount === 0) continue
-                const assignments = await db.feeAssignment.findMany({
-                  where: { schoolId, studentId: s.id },
-                  select: { id: true },
+                  studentId: s.id,
+                  academicGradeId: s.academicGradeId,
+                  notify: false,
                 })
-                for (const a of assignments) {
-                  await ensureInvoicesForAssignment(schoolId, a.id).catch(
-                    (err) =>
-                      logger.error(
-                        `Bulk import invoice gen failed for assignment ${a.id}`,
-                        err instanceof Error ? err : new Error("Unknown error"),
-                        { action: "bulk_invoice_gen_error", schoolId }
-                      )
-                  )
-                }
               } catch (feeErr) {
                 logger.error(
                   `Bulk import fee auto-assign failed for student ${s.id}`,

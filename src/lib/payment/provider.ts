@@ -3,6 +3,7 @@
 
 import { resolvePaymentGateways } from "./gateway-config"
 import { bankTransferProvider } from "./providers/bank-transfer"
+import { bankakProvider } from "./providers/bankak"
 import { cashProvider } from "./providers/cash"
 import { mobileMoneyProvider } from "./providers/mobile-money"
 import { stripeProvider } from "./providers/stripe"
@@ -25,6 +26,7 @@ function registerProvider(provider: PaymentProvider) {
 // Register all built-in providers
 registerProvider(stripeProvider)
 registerProvider(tapProvider)
+registerProvider(bankakProvider)
 registerProvider(cashProvider)
 registerProvider(bankTransferProvider)
 registerProvider(mobileMoneyProvider)

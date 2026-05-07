@@ -312,18 +312,37 @@ export const login = async (
   else {
     // Determine where to "stay" based on context
     if (context === "school" && subdomain) {
-      // Logged in from school marketing - stay there
+      // Logged in from school marketing
       const useHttps = process.env.NEXTAUTH_URL?.startsWith("https")
       const protocol = useHttps ? "https" : "http"
       const baseUrl =
         process.env.NODE_ENV === "production"
           ? `https://${subdomain}.databayt.org`
           : `${protocol}://${subdomain}.localhost:3000`
-      finalRedirectUrl = `${baseUrl}/${redirectLocale}`
-      console.log("[LOGIN-ACTION] 🏠 Staying on school marketing:", {
-        subdomain,
-        finalRedirectUrl,
-      })
+
+      // STUDENT and GUARDIAN exist on the platform primarily to view + pay
+      // their own fees. Sending them to school marketing forces a manual
+      // navigation step that's caused real friction in the kingfahad pilot
+      // (admin shares credentials → student logs in → lands on marketing →
+      // gives up). Send them straight to /finance/fees/my instead.
+      const role = existingUser.role
+      if (role === "STUDENT" || role === "GUARDIAN") {
+        finalRedirectUrl = `${baseUrl}/${redirectLocale}/finance/fees/my`
+        console.log("[LOGIN-ACTION] 💸 STUDENT/GUARDIAN to fees:", {
+          subdomain,
+          role,
+          finalRedirectUrl,
+        })
+      } else {
+        // Other school roles (ADMIN, ACCOUNTANT, STAFF, TEACHER) stay on
+        // school marketing — they typically have richer dashboards to
+        // navigate to and aren't payment-focused.
+        finalRedirectUrl = `${baseUrl}/${redirectLocale}`
+        console.log("[LOGIN-ACTION] 🏠 Staying on school marketing:", {
+          subdomain,
+          finalRedirectUrl,
+        })
+      }
     } else {
       // Logged in from SaaS marketing
       if (existingUser.role === "DEVELOPER") {

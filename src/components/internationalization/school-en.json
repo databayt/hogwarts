@@ -490,7 +490,7 @@
           "description": "Name, contact, type, and system details"
         },
         "title": {
-          "title": "School Name",
+          "title": "Name",
           "description": "The official name of your school"
         },
         "description": {
@@ -498,7 +498,7 @@
           "description": "School type and level"
         },
         "location": {
-          "title": "Location Details",
+          "title": "Location",
           "description": "City, state, and country"
         },
         "branding": {
@@ -510,11 +510,11 @@
           "description": "Homepage hero background image"
         },
         "plan": {
-          "title": "Plan & Limits",
+          "title": "Plan",
           "description": "Subscription plan and capacity limits"
         },
         "capacity": {
-          "title": "School Capacity",
+          "title": "Capacity",
           "description": "Students, teachers, and facilities overview"
         },
         "pricing": {
@@ -522,7 +522,7 @@
           "description": "Tuition, registration fees, and payment schedule"
         },
         "price": {
-          "title": "Tuition Fee",
+          "title": "Tuition",
           "description": "Tuition amount and payment schedule"
         },
         "academic": {
@@ -554,11 +554,11 @@
           "description": "Legal and compliance settings"
         },
         "domain": {
-          "title": "Custom Domain",
+          "title": "Domain",
           "description": "Request a custom domain for your school"
         },
         "modules": {
-          "title": "Sidebar Modules",
+          "title": "Modules",
           "description": "Control which modules appear in the sidebar"
         },
         "configured": "Configured",

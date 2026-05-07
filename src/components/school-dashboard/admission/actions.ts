@@ -1105,6 +1105,14 @@ export async function confirmEnrollment(params: {
 
           // 6. Auto-assign fees if matching FeeStructure exists
           // Only assign school-wide (classId=null) or grade-matching fee structures
+          //
+          // NOTE: This duplicates the matching logic in
+          // `src/lib/fee-auto-assign.ts ensureStudentFeeAssignments` because
+          // we are inside an outer `tx` and that helper opens its own
+          // transaction. If we ever extend the helper to accept an optional
+          // `tx` client, this block can be replaced with a single call. See
+          // /docs/fees#auto-provisioning. Behavior must stay equivalent —
+          // any matching-rule change here must also land in the helper.
           try {
             const studentGrade = await tx.student.findUnique({
               where: { id: student.id },

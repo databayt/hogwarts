@@ -11,7 +11,11 @@
     },
     {
       "path": "/api/cron/process-email-notifications",
-      "schedule": "0 0 * * *"
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/process-whatsapp-notifications",
+      "schedule": "*/5 * * * *"
     },
     {
       "path": "/api/cron/cleanup-notifications",
