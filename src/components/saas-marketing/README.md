@@ -2,7 +2,7 @@
 
 ### Overview
 
-Public-facing marketing components for the Hogwarts SaaS platform. Includes the main landing page (hero, features, testimonials, FAQs, logo cloud), feature showcase pages with detailed section renderers, blog system, and content management. Handles the conversion funnel from visitor to registered school.
+Public-facing marketing components for the Hogwarts SaaS platform. Includes the main landing page (hero, features, testimonials, FAQs, logo cloud), feature showcase pages with detailed section renderers, the community resource hub (catalog-backed textbooks/exams/qbank/videos/materials/books), and content management. Handles the conversion funnel from visitor to registered school.
 
 ### File Structure
 
@@ -58,11 +58,24 @@ src/components/saas-marketing/
 │       ├── advance.ts
 │       ├── integration.ts
 │       └── technical.ts
-├── blog/                           # Blog content system
-│   ├── content.tsx
-│   ├── types.ts
-│   ├── util.ts
-│   └── config.ts
+├── community/                      # Public learning-resource hub (see community/CLAUDE.md)
+│   ├── queries.ts                   # Server-only catalog queries (six per-type)
+│   ├── types.ts                     # Card view models + filter shape
+│   ├── config.ts                    # RESOURCE_TYPES registry
+│   ├── search-params.ts             # nuqs/server cache for ?curriculum&grade
+│   ├── util.ts                      # gradesFromGradeRange, formatVideoDuration
+│   ├── hero.tsx                     # full + compact variants
+│   ├── filter-bar.tsx               # CLIENT — curriculum + grade selects (nuqs)
+│   ├── hub-grid.tsx                 # 6 category cards on /community
+│   ├── resource-grid.tsx            # generic grid switching by type
+│   ├── empty-state.tsx
+│   └── cards/                       # one per resource type
+│       ├── textbook-card.tsx
+│       ├── exam-card.tsx
+│       ├── question-card.tsx
+│       ├── video-card.tsx
+│       ├── material-card.tsx
+│       └── book-card.tsx
 └── pricing/                        # Pricing (see pricing/README.md)
 ```
 

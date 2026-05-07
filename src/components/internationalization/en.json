@@ -293,10 +293,58 @@
     "close": "Close",
     "toggleMenu": "Toggle menu",
     "features": "Features",
-    "blog": "Blog",
+    "community": "Community",
     "pricing": "Pricing",
     "documentation": "Documentation",
     "brandName": "Hogwarts"
+  },
+  "community": {
+    "title": "Community",
+    "subtitle": "Free, open educational resources for educators and students.",
+    "lead": "Browse textbooks, mock exams, question banks, videos, and learning materials. No account required.",
+    "filters": {
+      "label": "Filters",
+      "curriculum": "Curriculum",
+      "curriculumPlaceholder": "All curricula",
+      "grade": "Grade",
+      "gradePlaceholder": "All grades",
+      "reset": "Reset"
+    },
+    "types": {
+      "textbooks": {
+        "label": "Textbooks",
+        "description": "Open digital textbooks aligned to your curriculum."
+      },
+      "exams": {
+        "label": "Mock Exams",
+        "description": "Practice papers and full mock exams with rubrics."
+      },
+      "qbank": {
+        "label": "Question Bank",
+        "description": "Crowd-sourced questions sorted by chapter and difficulty."
+      },
+      "videos": {
+        "label": "Videos",
+        "description": "Lesson videos curated and approved by educators."
+      },
+      "materials": {
+        "label": "Materials",
+        "description": "Worksheets, presentations, lab manuals, and study guides."
+      },
+      "books": {
+        "label": "Library Books",
+        "description": "Library readers and reference books."
+      }
+    },
+    "empty": {
+      "title": "No resources match these filters",
+      "description": "Try a different curriculum or grade.",
+      "reset": "Reset filters"
+    },
+    "metadata": {
+      "title": "Community — Free Educational Resources",
+      "description": "Open textbooks, mock exams, question banks, and videos for educators and students."
+    }
   },
   "auth": {
     "signIn": "Login",
@@ -411,7 +459,7 @@
           "title": "Hobby",
           "description": "Get started for free",
           "benefits": [
-            "Up to 5 pages website",
+            "Up to 200 students",
             "Basic responsive design",
             "Contact form integration"
           ]
@@ -420,7 +468,7 @@
           "title": "Pro",
           "description": "For growing businesses",
           "benefits": [
-            "Up to 15 pages website",
+            "Up to 1,000 students",
             "Advanced animations",
             "SEO optimization",
             "Custom branding"
@@ -429,7 +477,7 @@
         "ultra": {
           "title": "Ultra",
           "description": "For large organizations",
-          "benefits": ["Unlimited pages and features", "Custom integrations"]
+          "benefits": ["Unlimited students", "Custom integrations"]
         }
       },
       "constants": {
@@ -640,10 +688,17 @@
     "letsWorkTogether": {
       "title": "Let's Work Together",
       "description": "Ready to revolutionize your educational institution with advanced automation? Experience streamlined operations and enhanced learning outcomes for students and educators.",
+      "emailLabel": "Email address",
+      "messageLabel": "Your message",
       "emailPlaceholder": "Email address",
       "messagePlaceholder": "What educational processes would you like to automate?",
       "submit": "Submit",
-      "liveChat": "Live chat"
+      "submitting": "Sending…",
+      "liveChat": "Live chat",
+      "successToast": "Thanks — we'll get back to you soon.",
+      "errorToast": "Could not send your message. Please try again.",
+      "rateLimited": "Too many requests. Please try again in an hour.",
+      "validationFailed": "Please check the form for errors."
     },
     "faqs": {
       "title": "Frequently Asked Questions",

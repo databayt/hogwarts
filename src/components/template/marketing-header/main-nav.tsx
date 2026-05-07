@@ -49,13 +49,13 @@ export function MainNav({ dictionary }: MainNavProps) {
           <span>{dictionary?.navigation?.features || "Features"}</span>
         </Link>
         <Link
-          href="/blog"
+          href="/community"
           className={cn(
             "text-muted-foreground hover:text-foreground text-sm transition-colors",
-            pathname?.startsWith("/blog") && "text-foreground"
+            pathname?.startsWith("/community") && "text-foreground"
           )}
         >
-          <span>{dictionary?.navigation?.blog || "Blog"}</span>
+          <span>{dictionary?.navigation?.community || "Community"}</span>
         </Link>
         <Link
           href="/pricing"

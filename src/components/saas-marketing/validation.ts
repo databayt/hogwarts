@@ -127,7 +127,7 @@ export type TrialSignupData = z.infer<typeof trialSignupSchema>
 export const leadCaptureSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   source: z
-    .enum(["homepage", "pricing", "features", "blog", "other"])
+    .enum(["homepage", "pricing", "features", "community", "other"])
     .optional(),
   utmSource: z.string().optional(),
   utmMedium: z.string().optional(),

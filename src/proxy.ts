@@ -83,7 +83,7 @@ const publicRoutes = [
   "/new-verification",
   "/features",
   "/pricing",
-  "/blog",
+  "/community",
   "/wa-preview",
 ]
 const authRoutes = ["/login", "/join", "/error", "/reset", "/new-password"]
@@ -205,6 +205,7 @@ export async function proxy(req: NextRequest) {
     publicRoutes.includes(pathWithoutLocale) ||
     pathWithoutLocale.startsWith("/docs") ||
     pathWithoutLocale.startsWith("/stream") ||
+    pathWithoutLocale.startsWith("/community") ||
     pathWithoutLocale.startsWith("/wa-preview")
 
   // Check if it's a public school-marketing route (for subdomains)

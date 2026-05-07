@@ -2,7 +2,7 @@
 
 ## Context
 
-Public-facing landing pages for the Hogwarts SaaS platform: hero, features showcase, pricing, blog, testimonials, FAQs (75% complete). Blocker: typography violations, legacy code cleanup.
+Public-facing landing pages for the Hogwarts SaaS platform: hero, features showcase, pricing, community resource hub, testimonials, FAQs (75% complete). Blocker: typography violations, legacy code cleanup.
 
 ## Before You Start
 
@@ -16,7 +16,7 @@ Public-facing landing pages for the Hogwarts SaaS platform: hero, features showc
 - Page data is static TypeScript objects in `features/page-data/` (not database-driven)
 - Pricing component has its own README at `pricing/README.md`
 - Dictionary-driven i18n via `src/components/internationalization/{en,ar}.json`
-- Blog is content-driven, not CMS-backed
+- Community is catalog-backed (textbooks/exams/qbank/videos/materials/books with curriculum + grade filters), public + anonymous — see `community/CLAUDE.md`
 
 ## Danger Zones
 

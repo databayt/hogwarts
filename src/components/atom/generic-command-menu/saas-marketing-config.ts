@@ -7,7 +7,7 @@ import {
   FileText,
   GraduationCap,
   LayoutDashboard,
-  Newspaper,
+  Library,
   Sparkles,
 } from "lucide-react"
 
@@ -26,12 +26,21 @@ export const saasMarketingSearchConfig: SearchConfig = {
       keywords: ["capabilities", "product", "what"],
     },
     {
-      id: "blog",
-      title: "Blog",
+      id: "community",
+      title: "Community",
       type: "navigation",
-      href: "/blog",
-      icon: Newspaper,
-      keywords: ["articles", "posts", "news"],
+      href: "/community",
+      icon: Library,
+      keywords: [
+        "resources",
+        "textbooks",
+        "exams",
+        "videos",
+        "qbank",
+        "materials",
+        "books",
+        "catalog",
+      ],
     },
     {
       id: "pricing",
