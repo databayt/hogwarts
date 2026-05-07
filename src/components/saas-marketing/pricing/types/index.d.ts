@@ -92,6 +92,7 @@ export type FeatureLdg = {
   description: string
   link: string
   icon: keyof typeof Icons
+  image?: string
 }
 
 export type TestimonialType = {

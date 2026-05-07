@@ -148,6 +148,7 @@ export default function FeatureTabs({ lang }: FeatureTabsProps) {
                     alt={feature.title}
                     width={32}
                     height={32}
+                    className="dark:brightness-90 dark:contrast-125 dark:invert"
                   />
                 ) : (
                   <Icon />

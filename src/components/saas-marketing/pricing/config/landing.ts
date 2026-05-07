@@ -57,46 +57,52 @@ export const infos: InfoLdg[] = [
 
 export const features: FeatureLdg[] = [
   {
-    title: "Feature 1",
+    title: "Admission",
     description:
-      "Amet praesentium deserunt ex commodi tempore fuga voluptatem. Sit, sapiente.",
-    link: "/",
-    icon: "nextjs",
-  },
-  {
-    title: "Feature 2",
-    description:
-      "Amet praesentium deserunt ex commodi tempore fuga voluptatem. Sit, sapiente.",
-    link: "/",
-    icon: "google",
-  },
-  {
-    title: "Feature 3",
-    description:
-      "Amet praesentium deserunt ex commodi tempore fuga voluptatem. Sit, sapiente.",
-    link: "/",
-    icon: "gitHub",
-  },
-  {
-    title: "Feature 4",
-    description:
-      "Amet praesentium deserunt ex commodi tempore fuga voluptatem. Sit, sapiente.",
-    link: "/",
-    icon: "laptop",
-  },
-  {
-    title: "Feature 5",
-    description:
-      "Amet praesentium deserunt ex commodi tempore fuga voluptatem. Sit, sapiente.",
+      "Streamline applications, reviews, and approvals from a single dashboard.",
     link: "/",
     icon: "user",
+    image: "/features/admission.png",
   },
   {
-    title: "Feature 6",
+    title: "LMS",
     description:
-      "Amet praesentium deserunt ex commodi tempore fuga voluptatem. Sit, sapiente.",
+      "Deliver lessons, assignments, and grades with a modern learning experience.",
+    link: "/",
+    icon: "laptop",
+    image: "/features/lms.png",
+  },
+  {
+    title: "Accounting",
+    description:
+      "Track fees, invoices, and payments with built-in double-entry accounting.",
     link: "/",
     icon: "copy",
+    image: "/features/accounting.png",
+  },
+  {
+    title: "Library",
+    description:
+      "Catalog books, manage loans, and keep your school library organized.",
+    link: "/",
+    icon: "gitHub",
+    image: "/features/library.png",
+  },
+  {
+    title: "Events",
+    description:
+      "Plan, publish, and manage school events your community can rally around.",
+    link: "/",
+    icon: "google",
+    image: "/features/events.png",
+  },
+  {
+    title: "Transport",
+    description:
+      "Manage routes, vehicles, and student pickups with real-time visibility.",
+    link: "/",
+    icon: "nextjs",
+    image: "/features/transport.png",
   },
 ]
 

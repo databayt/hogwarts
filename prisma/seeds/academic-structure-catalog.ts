@@ -300,10 +300,21 @@ export async function seedAcademicStructureCatalog(
   // Step 4: Create SubjectSelections (bridge records)
   // ======================================================================
 
+  // Bridge each school to subjects that match its own country/curriculum.
+  // Previously hardcoded `country: "US"` here — that left SD-curriculum schools
+  // (like the demo, country=SD) with zero SubjectSelections and an empty
+  // /stream/courses page. Mirrors the runtime fallback in
+  // src/lib/catalog-setup.ts → findSubjects(country, curriculum, ...).
+  const school = await prisma.school.findUnique({
+    where: { id: schoolId },
+    select: { country: true },
+  })
+  const schoolCountry = school?.country ?? "US"
+
   if (!catalogSubjects) {
     // Load from DB if not passed
     const subjects = await prisma.subject.findMany({
-      where: { status: "PUBLISHED", country: "US" },
+      where: { status: "PUBLISHED", country: schoolCountry },
       select: { id: true, name: true, slug: true, levels: true },
     })
     catalogSubjects = subjects.map((s) => ({
@@ -315,9 +326,17 @@ export async function seedAcademicStructureCatalog(
 
   // Load full catalog subjects with levels for matching
   const fullSubjects = await prisma.subject.findMany({
-    where: { status: "PUBLISHED", country: "US" },
+    where: { status: "PUBLISHED", country: schoolCountry },
     select: { id: true, name: true, levels: true },
   })
+
+  // Orchestrator passes the global catalog (mixed countries) — narrow the
+  // iteration set to this school's country so we don't try to look up levels
+  // for subjects that aren't in fullSubjects.
+  const allowedSubjectIds = new Set(fullSubjects.map((s) => s.id))
+  catalogSubjects = catalogSubjects.filter((cs) =>
+    allowedSubjectIds.has(cs.id)
+  )
 
   const subjectLevelMap = new Map(
     fullSubjects.map((s) => [s.id, s.levels.map((l) => l.toLowerCase())])

@@ -12,6 +12,7 @@ import {
   useTransform,
 } from "framer-motion"
 import { BookOpen, Building2, Cpu, DollarSign } from "lucide-react"
+import { useTheme } from "next-themes"
 
 import { asset } from "@/lib/asset-url"
 import type { Locale } from "@/components/internationalization/config"
@@ -86,6 +87,8 @@ export function DreamSection({ dictionary, lang = "en" }: DreamSectionProps) {
   const [hoveredTag, setHoveredTag] = useState<string | null>(null)
   const [animationComplete, setAnimationComplete] = useState(false)
   const sectionRef = useRef<HTMLDivElement>(null)
+  const { resolvedTheme } = useTheme()
+  const isDark = resolvedTheme === "dark"
 
   // Scroll-linked animation setup
   // Animation starts when section top hits viewport top (after header)
@@ -124,7 +127,7 @@ export function DreamSection({ dictionary, lang = "en" }: DreamSectionProps) {
   const subtitleColor = useTransform(
     smoothProgress,
     [0.35, 0.4],
-    ["#171717", "#E8704E"]
+    [isDark ? "#FAFAFA" : "#171717", "#E8704E"]
   )
 
   // Track when animation completes to enable tag hover
@@ -382,8 +385,8 @@ export function DreamSection({ dictionary, lang = "en" }: DreamSectionProps) {
                   onMouseLeave={() => setHoveredTag(null)}
                   className={`rounded-full px-2.5 py-1.5 text-xs transition-all duration-200 select-none md:px-4 md:py-2 md:text-sm ${
                     isHovered && animationComplete
-                      ? "bg-black text-white outline outline-1 outline-black"
-                      : "bg-transparent text-black outline outline-1 outline-black"
+                      ? "bg-foreground text-background outline-foreground outline outline-1"
+                      : "text-foreground outline-foreground bg-transparent outline outline-1"
                   } `}
                 >
                   #{tagLabel}

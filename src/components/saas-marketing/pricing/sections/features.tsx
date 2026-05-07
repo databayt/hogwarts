@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import Image from "next/image"
 import Link from "next/link"
 
 import { Button } from "@/components/ui/button"
@@ -37,8 +38,18 @@ export default function Features({ lang }: FeaturesProps) {
                 >
                   <div
                     aria-hidden="true"
-                    className="absolute inset-0 aspect-video -translate-y-1/2 rounded-full border bg-gradient-to-b from-purple-500/80 to-white opacity-25 blur-2xl duration-300 group-hover:-translate-y-1/4 dark:from-white dark:to-white dark:opacity-5 dark:group-hover:opacity-10"
+                    className="absolute inset-x-6 top-0 aspect-video -translate-y-1/2 rounded-full border bg-gradient-to-b from-purple-500/80 to-white opacity-25 blur-2xl duration-300 group-hover:-translate-y-[40%] group-hover:scale-125 dark:from-white dark:to-white dark:opacity-5 dark:group-hover:opacity-10"
                   />
+                  {feature.image ? (
+                    <Image
+                      src={feature.image}
+                      alt={feature.title}
+                      width={320}
+                      height={180}
+                      aria-hidden="true"
+                      className="pointer-events-none absolute inset-x-8 top-0 z-10 h-auto w-[calc(100%-4rem)] -translate-y-1/3 scale-90 opacity-0 transition-all duration-300 group-hover:-translate-y-[45%] group-hover:scale-110 group-hover:opacity-100"
+                    />
+                  ) : null}
                   <div className="relative">
                     <div className="border-border relative flex size-12 rounded-2xl border shadow-sm *:relative *:m-auto *:size-6">
                       <Icon />

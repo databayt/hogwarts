@@ -33,13 +33,17 @@ export async function seedCatalogVideos(prisma: PrismaClient): Promise<void> {
     )
   }
 
-  // Query all published ClickView subjects with their first 2 chapters' lessons
+  // Query all published catalog subjects with their first 2 chapters' lessons.
+  // Previously scoped to `curriculum: "us-k12"` only — that left SD-curriculum
+  // lessons without playable videos, so click-through from a Grade-10 SD course
+  // went to an empty player. Now seeds videos across all published curricula.
   const subjects = await prisma.subject.findMany({
-    where: { status: "PUBLISHED", curriculum: "us-k12" },
+    where: { status: "PUBLISHED" },
     select: {
       id: true,
       slug: true,
       name: true,
+      lang: true,
       grades: true,
       levels: true,
       chapters: {
@@ -85,7 +89,7 @@ export async function seedCatalogVideos(prisma: PrismaClient): Promise<void> {
           schoolId: null,
           title: `${lesson.name} - Video`,
           description: `Educational video for ${lesson.name}`,
-          lang: "en",
+          lang: subject.lang || "en",
           videoUrl,
           provider: "self-hosted",
           storageProvider: "aws_s3",
