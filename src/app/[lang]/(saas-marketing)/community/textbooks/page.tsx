@@ -14,6 +14,7 @@ import { CommunityResourceGrid } from "@/components/saas-marketing/community/res
 import { communitySearchParams } from "@/components/saas-marketing/community/search-params"
 
 export const metadata = { title: "Textbooks — Community" }
+export const dynamic = "force-dynamic"
 
 interface Props {
   params: Promise<{ lang: Locale }>

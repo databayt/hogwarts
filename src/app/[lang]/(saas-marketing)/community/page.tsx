@@ -23,6 +23,11 @@ export const metadata = {
     "Open textbooks, mock exams, question banks, and videos for educators and students.",
 }
 
+// Page reads `searchParams` and runs Prisma queries — never statically renderable.
+// Vercel's "Collecting page data" hung when it tried to evaluate the route, so
+// declare dynamic upfront to short-circuit the static-rendering attempt.
+export const dynamic = "force-dynamic"
+
 interface Props {
   params: Promise<{ lang: Locale }>
   searchParams: Promise<Record<string, string | string[] | undefined>>
