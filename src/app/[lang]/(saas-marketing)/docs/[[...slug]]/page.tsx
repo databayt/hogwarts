@@ -18,8 +18,9 @@ import { DocsTableOfContents } from "@/components/docs/toc"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 
-// Docs excluded from Vercel build (shiki MDX compilation OOMs on 8GB Hobby plan).
-// Available locally only. See .vercelignore for details.
+// Code blocks use runtime shiki via fumadocs-ui's DynamicCodeBlock — the
+// Next.js build no longer runs shiki, so docs deploy safely within Vercel
+// Hobby's 8 GB heap. See `source.config.ts` and `src/mdx-components.tsx`.
 export const runtime = "nodejs"
 export const revalidate = false
 export const dynamic = "force-static"

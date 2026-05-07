@@ -5,8 +5,8 @@ import fs from "node:fs/promises"
 import path from "node:path"
 import * as React from "react"
 import { AtomsIndex } from "@/registry/atoms-index"
+import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock"
 
-import { highlightCode } from "@/lib/highlight-code"
 import { cn } from "@/lib/utils"
 import { CopyButton } from "@/components/docs/copy-button"
 
@@ -18,6 +18,9 @@ interface ComponentPreviewProps extends React.HTMLAttributes<HTMLDivElement> {
   code?: string
 }
 
+// Server component still: it reads the source file from disk via the
+// AtomsIndex registry. Highlighting itself moves to the client via
+// DynamicCodeBlock (lazy shiki) so the build heap stays untouched.
 export async function ComponentPreview({
   name,
   children,
@@ -29,7 +32,6 @@ export async function ComponentPreview({
   ...props
 }: ComponentPreviewProps) {
   let code = codeProp
-  let highlightedCode: string | null = null
 
   // If name provided, fetch code from registry
   if (name && !code) {
@@ -46,10 +48,6 @@ export async function ComponentPreview({
         console.error(`Failed to read file: ${filePath}`, error)
       }
     }
-  }
-
-  if (code) {
-    highlightedCode = await highlightCode(code, "tsx")
   }
 
   return (
@@ -70,12 +68,12 @@ export async function ComponentPreview({
         >
           {children}
         </div>
-        {!hideCode && code && highlightedCode && (
+        {!hideCode && code && (
           <div
             data-slot="code"
             className="overflow-hidden [&_[data-rehype-pretty-code-figure]]:!m-0 [&_[data-rehype-pretty-code-figure]]:rounded-t-none [&_[data-rehype-pretty-code-figure]]:border-t [&_pre]:max-h-[400px]"
           >
-            <ComponentCode code={code} highlightedCode={highlightedCode} />
+            <ComponentCode code={code} />
           </div>
         )}
       </div>
@@ -83,17 +81,11 @@ export async function ComponentPreview({
   )
 }
 
-function ComponentCode({
-  code,
-  highlightedCode,
-}: {
-  code: string
-  highlightedCode: string
-}) {
+function ComponentCode({ code }: { code: string }) {
   return (
     <figure data-rehype-pretty-code-figure="" className="[&>pre]:max-h-96">
       <CopyButton value={code} />
-      <div dangerouslySetInnerHTML={{ __html: highlightedCode }} />
+      <DynamicCodeBlock lang="tsx" code={code} />
     </figure>
   )
 }
