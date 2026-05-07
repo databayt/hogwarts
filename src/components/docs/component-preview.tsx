@@ -37,7 +37,15 @@ export async function ComponentPreview({
   if (name && !code) {
     const item = AtomsIndex[name]
     if (item?.files?.[0]) {
-      const filePath = path.join(process.cwd(), item.files[0].path)
+      // Turbopack NFT (Node File Tracing) tries to follow `process.cwd()` and ends
+      // up scanning the whole repo (~13k–46k files), which on Vercel pushes the
+      // build past the 45-minute timeout. The path is a docs-only runtime read of
+      // a known atom file — there's no need to bundle anything from cwd. The
+      // ignore comment caps the trace to this call site.
+      const filePath = path.join(
+        /* turbopackIgnore: true */ process.cwd(),
+        item.files[0].path
+      )
       try {
         code = await fs.readFile(filePath, "utf-8")
         // Transform imports for user consumption
