@@ -29,6 +29,7 @@ import {
   getScholarshipList,
   type DiscountPolicy,
 } from "./queries"
+import { buildTenantBaseUrl } from "./tenant-url"
 import { feeStructureSchema } from "./validation"
 
 // Interpolate {key} placeholders in dictionary strings. Mirrors the
@@ -76,34 +77,6 @@ function isAuthError(
   result: { userId: string; schoolId: string } | ActionResult<never>
 ): result is ActionResult<never> {
   return "success" in result && result.success === false
-}
-
-// ============================================
-// TENANT URL HELPER
-// ============================================
-
-/**
- * Build the school's tenant-aware base URL for redirects (Stripe success/cancel,
- * receipt deep links, credential delivery, etc).
- *
- * - production + subdomain → `https://${subdomain}.databayt.org`
- * - development + subdomain → `http://${subdomain}.localhost:3000`
- * - missing subdomain → falls back to `NEXT_PUBLIC_APP_URL` so non-tenant
- *   contexts (platform admin, dev fallback) still work.
- *
- * Exported so other actions inside this block can reuse it without
- * duplicating the env-conditional logic.
- */
-export function buildTenantBaseUrl(
-  subdomain: string | null | undefined
-): string {
-  if (!subdomain) {
-    return process.env.NEXT_PUBLIC_APP_URL || "https://app.databayt.org"
-  }
-  if (process.env.NODE_ENV === "production") {
-    return `https://${subdomain}.databayt.org`
-  }
-  return `http://${subdomain}.localhost:3000`
 }
 
 // ============================================

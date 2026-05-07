@@ -105,7 +105,7 @@ describe("fees/actions.ts — buildTenantBaseUrl", () => {
   it("uses subdomain.databayt.org host in production", async () => {
     const original = process.env.NODE_ENV
     process.env.NODE_ENV = "production"
-    const { buildTenantBaseUrl } = await import("../actions")
+    const { buildTenantBaseUrl } = await import("../tenant-url")
     expect(buildTenantBaseUrl("acme")).toBe("https://acme.databayt.org")
     if (original) process.env.NODE_ENV = original
   })
@@ -114,7 +114,7 @@ describe("fees/actions.ts — buildTenantBaseUrl", () => {
     const original = process.env.NODE_ENV
     process.env.NODE_ENV = "development"
     vi.resetModules() // re-import to pick up new NODE_ENV
-    const { buildTenantBaseUrl } = await import("../actions")
+    const { buildTenantBaseUrl } = await import("../tenant-url")
     expect(buildTenantBaseUrl("acme")).toBe("http://acme.localhost:3000")
     if (original) process.env.NODE_ENV = original
   })
@@ -123,7 +123,7 @@ describe("fees/actions.ts — buildTenantBaseUrl", () => {
     const originalUrl = process.env.NEXT_PUBLIC_APP_URL
     process.env.NEXT_PUBLIC_APP_URL = "https://app.databayt.org"
     vi.resetModules()
-    const { buildTenantBaseUrl } = await import("../actions")
+    const { buildTenantBaseUrl } = await import("../tenant-url")
     expect(buildTenantBaseUrl(null)).toBe("https://app.databayt.org")
     expect(buildTenantBaseUrl(undefined)).toBe("https://app.databayt.org")
     expect(buildTenantBaseUrl("")).toBe("https://app.databayt.org")
