@@ -1,8 +1,6 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import type { Metadata } from "next"
-
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { CommunityEmptyState } from "@/components/saas-marketing/community/empty-state"
@@ -15,16 +13,11 @@ import {
 import { CommunityResourceGrid } from "@/components/saas-marketing/community/resource-grid"
 import { communitySearchParams } from "@/components/saas-marketing/community/search-params"
 
+export const metadata = { title: "Question Bank — Community" }
+
 interface Props {
   params: Promise<{ lang: Locale }>
   searchParams: Promise<Record<string, string | string[] | undefined>>
-}
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { lang } = await params
-  const dictionary = await getDictionary(lang)
-  const label = dictionary?.community?.types?.qbank?.label ?? "Question Bank"
-  return { title: label }
 }
 
 export default async function CommunityQbankPage({
