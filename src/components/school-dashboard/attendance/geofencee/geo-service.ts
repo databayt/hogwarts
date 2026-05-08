@@ -297,33 +297,39 @@ export async function processGeofenceEvents(
             const today = new Date()
             today.setHours(0, 0, 0, 0)
 
-            // Create/update attendance record via upsert
-            await db.attendance.upsert({
+            // Create attendance only if not already marked.
+            // We avoid `upsert` here because the unique compound index
+            // includes nullable `periodId` and Postgres treats NULLs as
+            // distinct, so an upsert with `periodId: null` would always
+            // fall through to `create` and produce duplicate daily rows.
+            const existingDaily = await db.attendance.findFirst({
               where: {
-                schoolId_studentId_classId_date_periodId: {
-                  schoolId,
-                  studentId,
-                  classId: studentClass.classId,
-                  date: today,
-                  periodId: "", // Daily attendance (not period-specific)
-                },
-              },
-              create: {
                 schoolId,
                 studentId,
                 classId: studentClass.classId,
                 date: today,
-                status: "PRESENT",
-                method: "GEOFENCE",
-                checkInTime: now,
-                location: { lat: location.lat, lon: location.lon },
-                notes: `Auto-marked via geofence: ${result.geofenceName}`,
+                periodId: null,
               },
-              update: {
-                // Only update if not already manually marked
-                // Keep existing status if already marked
-              },
+              select: { id: true },
             })
+
+            if (!existingDaily) {
+              await db.attendance.create({
+                data: {
+                  schoolId,
+                  studentId,
+                  classId: studentClass.classId,
+                  date: today,
+                  periodId: null,
+                  status: "PRESENT",
+                  method: "GEOFENCE",
+                  checkInTime: now,
+                  location: { lat: location.lat, lon: location.lon },
+                  notes: `Auto-marked via geofence: ${result.geofenceName}`,
+                },
+              })
+            }
+            // If a record exists, keep its status — manual marks always win.
           }
         } catch (attendanceError) {
           // Log error but don't fail the geofence event

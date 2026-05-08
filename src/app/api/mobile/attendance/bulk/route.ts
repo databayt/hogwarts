@@ -16,10 +16,12 @@ export async function POST(request: NextRequest) {
     const auth = await authenticate(request)
     if (isAuthError(auth)) return auth
 
+    // Authorization: matches central attendance permission matrix (mark action)
     if (
       auth.role !== "TEACHER" &&
       auth.role !== "ADMIN" &&
-      auth.role !== "SUPER_ADMIN"
+      auth.role !== "STAFF" &&
+      auth.role !== "DEVELOPER"
     ) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
@@ -32,6 +34,48 @@ export async function POST(request: NextRequest) {
         { error: "records array required" },
         { status: 400 }
       )
+    }
+
+    // Cap bulk size to prevent abuse and runaway transactions.
+    const MAX_BULK_SIZE = 500
+    if (records.length > MAX_BULK_SIZE) {
+      return NextResponse.json(
+        { error: `bulk limit ${MAX_BULK_SIZE} records` },
+        { status: 400 }
+      )
+    }
+
+    // Pre-validate every studentId belongs to this tenant before any write.
+    const studentIds = records
+      .map((r: { student_id?: string }) => r.student_id)
+      .filter(Boolean) as string[]
+    const validStudents = await db.student.findMany({
+      where: { id: { in: studentIds }, schoolId: auth.schoolId },
+      select: { id: true },
+    })
+    const validIds = new Set(validStudents.map((s) => s.id))
+    const foreignIds = studentIds.filter((id) => !validIds.has(id))
+    if (foreignIds.length > 0) {
+      return NextResponse.json(
+        {
+          error: "one or more student_id values are not in this school",
+          foreign_ids: foreignIds,
+        },
+        { status: 404 }
+      )
+    }
+
+    if (section_id) {
+      const section = await db.section.findFirst({
+        where: { id: section_id, schoolId: auth.schoolId },
+        select: { id: true },
+      })
+      if (!section) {
+        return NextResponse.json(
+          { error: "section_id is not a member of this school" },
+          { status: 404 }
+        )
+      }
     }
 
     const attendanceDate = date ? new Date(date) : new Date()

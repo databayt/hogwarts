@@ -11,6 +11,7 @@ import { db } from "@/lib/db"
 import { dispatchNotificationsToAudience } from "@/lib/dispatch-notification"
 import { getTenantContext } from "@/lib/tenant-context"
 
+import { checkExamSubmissionRateLimit } from "../../lib/security"
 import type { ActionResponse } from "./types"
 
 /**
@@ -341,9 +342,9 @@ export async function getExamForTaking(examId: string): Promise<
   try {
     const { schoolId } = await getTenantContext()
     const session = await auth()
-    const studentId = session?.user?.id
+    const userId = session?.user?.id
 
-    if (!schoolId || !studentId) {
+    if (!schoolId || !userId) {
       return {
         success: false,
         error: "Missing context",
@@ -390,6 +391,22 @@ export async function getExamForTaking(examId: string): Promise<
       }
     }
 
+    // Resolve Student.id from session user (Student.id !== User.id).
+    // Teachers/admins previewing the exam may not have a Student row — that's OK,
+    // they just won't have any "existingAnswers" to load.
+    const student = await db.student.findFirst({
+      where: { userId, schoolId },
+      select: { id: true },
+    })
+
+    if (!isTeacherOrAdmin && !student) {
+      return {
+        success: false,
+        error: "Student record not found",
+        code: "STUDENT_NOT_FOUND",
+      }
+    }
+
     // Get generated questions
     const generatedExam = await db.generatedExam.findFirst({
       where: {
@@ -422,19 +439,21 @@ export async function getExamForTaking(examId: string): Promise<
       }
     }
 
-    // Get existing answers for this student
-    const existingAnswers = await db.studentAnswer.findMany({
-      where: {
-        examId,
-        studentId,
-        schoolId,
-      },
-      select: {
-        questionId: true,
-        answerText: true,
-        selectedOptionIds: true,
-      },
-    })
+    // Get existing answers for this student. Teachers previewing have no answers.
+    const existingAnswers = student
+      ? await db.studentAnswer.findMany({
+          where: {
+            examId,
+            studentId: student.id,
+            schoolId,
+          },
+          select: {
+            questionId: true,
+            answerText: true,
+            selectedOptionIds: true,
+          },
+        })
+      : []
 
     // Remove correct answers from options for students (prevent cheating)
     const questionsForStudent = generatedExam.questions.map((q) => {
@@ -505,13 +524,42 @@ export async function submitExamAnswers(
   try {
     const { schoolId } = await getTenantContext()
     const session = await auth()
-    const studentId = session?.user?.id
+    const userId = session?.user?.id
 
-    if (!schoolId || !studentId) {
+    if (!schoolId || !userId) {
       return {
         success: false,
         error: "Missing context",
         code: "NO_CONTEXT",
+      }
+    }
+
+    // Resolve Student.id from session user (Student.id !== User.id).
+    // Submissions key on Student.id; using userId here would write phantom rows
+    // that no other action can match.
+    const student = await db.student.findFirst({
+      where: { userId, schoolId },
+      select: { id: true },
+    })
+
+    if (!student) {
+      return {
+        success: false,
+        error: "Student record not found",
+        code: "STUDENT_NOT_FOUND",
+      }
+    }
+
+    const studentId = student.id
+
+    // Per-(student, exam) rate limit on submission. Bursts of 5+ submits per
+    // minute usually mean a misbehaving client or someone hammering the endpoint.
+    const rl = await checkExamSubmissionRateLimit(studentId, examId)
+    if (!rl.allowed) {
+      return {
+        success: false,
+        error: "Too many submission attempts. Please wait before retrying.",
+        code: "RATE_LIMITED",
       }
     }
 
@@ -522,6 +570,7 @@ export async function submitExamAnswers(
         schoolId,
         status: "IN_PROGRESS",
       },
+      select: { id: true },
     })
 
     if (!exam) {
@@ -532,53 +581,49 @@ export async function submitExamAnswers(
       }
     }
 
-    let submitted = 0
-    let failed = 0
+    const now = new Date()
 
-    // Process each answer
-    for (const answer of answers) {
-      try {
-        // Upsert answer
-        await db.studentAnswer.upsert({
-          where: {
-            examId_questionId_studentId: {
+    // Atomically upsert all answers in a single transaction.
+    // Promise.all (not allSettled) so any rejection bubbles out of the txn callback
+    // and Prisma rolls back — exam submission is all-or-nothing. A "submitted: 23,
+    // failed: 2" result would be silent data corruption from the student's view.
+    await db.$transaction((tx) =>
+      Promise.all(
+        answers.map((answer) =>
+          tx.studentAnswer.upsert({
+            where: {
+              examId_questionId_studentId: {
+                examId,
+                questionId: answer.questionId,
+                studentId,
+              },
+            },
+            update: {
+              answerText: answer.answerText || null,
+              selectedOptionIds: answer.selectedOptionIds || [],
+              submittedAt: now,
+            },
+            create: {
+              schoolId,
               examId,
               questionId: answer.questionId,
               studentId,
+              submissionType: "DIGITAL",
+              answerText: answer.answerText || null,
+              selectedOptionIds: answer.selectedOptionIds || [],
+              submittedAt: now,
             },
-          },
-          update: {
-            answerText: answer.answerText || null,
-            selectedOptionIds: answer.selectedOptionIds || [],
-            submittedAt: new Date(),
-          },
-          create: {
-            schoolId,
-            examId,
-            questionId: answer.questionId,
-            studentId,
-            submissionType: "DIGITAL",
-            answerText: answer.answerText || null,
-            selectedOptionIds: answer.selectedOptionIds || [],
-            submittedAt: new Date(),
-          },
-        })
-        submitted++
-      } catch (err) {
-        console.error(
-          `Failed to submit answer for question ${answer.questionId}:`,
-          err
+          })
         )
-        failed++
-      }
-    }
+      )
+    )
 
     revalidatePath(`/exams/${examId}`)
     revalidatePath(`/exams/${examId}/take`)
 
     return {
       success: true,
-      data: { submitted, failed },
+      data: { submitted: answers.length, failed: 0 },
     }
   } catch (error) {
     console.error("Error submitting exam answers:", error)

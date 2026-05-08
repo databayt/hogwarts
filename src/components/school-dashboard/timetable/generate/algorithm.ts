@@ -349,11 +349,30 @@ function placeSectionSubject(
     config.preferences
   )
 
+  // Per-day cap on a (section, subject) pair.
+  // Without this the period loop happily filled Mon P1-P5 with the same
+  // subject before moving to Tuesday, producing schedules where a section
+  // had Math (or whatever) for 5 straight periods. A maxConsecutivePeriods
+  // setting is exposed in the UI (config.constraints.maxConsecutivePeriods)
+  // but was never enforced. We treat it as the per-day cap here, falling
+  // back to ceil(hoursPerWeek / daysToUse) so distribution is roughly even
+  // (e.g. 5 hours over 5 days → 1/day; 6 hours over 4 days → 2/day).
+  const daysAvailable = Math.max(1, daysToUse.length)
+  const evenSpread = Math.max(1, Math.ceil(targetHours / daysAvailable))
+  const cap = config.constraints.maxConsecutivePeriods
+    ? Math.max(
+        evenSpread,
+        Math.min(targetHours, config.constraints.maxConsecutivePeriods)
+      )
+    : Math.max(evenSpread, 2)
+
   for (const day of daysToUse) {
     if (placedCount >= targetHours) break
+    let placedThisDay = 0
 
     for (const periodId of config.periodsPerDay) {
       if (placedCount >= targetHours) break
+      if (placedThisDay >= cap) break
 
       // Section can't be double-booked
       if (isSectionScheduled(section.sectionId, day, periodId, state)) continue
@@ -392,6 +411,7 @@ function placeSectionSubject(
 
       addSlot(slot, state)
       placedCount++
+      placedThisDay++
     }
   }
 

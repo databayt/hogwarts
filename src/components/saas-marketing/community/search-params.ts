@@ -8,18 +8,20 @@ import {
 } from "nuqs/server"
 
 /**
- * URL state shared across `/community` and every drill-down page.
+ * URL state shared across `/community` (hub) and `/community/[slug]` (detail).
  *
- * - `curriculum` is `Curriculum.code` ("national", "us-k12", ...) — DB-id-agnostic
- *   and matches the legacy string column on `Subject.curriculum`.
- * - `grade` is parsed as integer; non-numeric values become null and the filter
- *   is skipped.
+ * - `curriculum` defaults to `"us-k12"` (International US). The dropdown
+ *   round-trips `Curriculum.code`, which matches the legacy string column
+ *   on `Subject.curriculum` directly.
+ * - `grade` is parsed as integer. Driven by the under-hero TabsNav (1..12).
+ *   Absent / non-numeric → no grade filter (the "All" pill).
  *
- * Server pages call `communitySearchParams.parse(searchParams)` to get a typed
- * snapshot. The client `<FilterBar>` reads/writes via `useQueryStates`.
+ * Server pages call `communitySearchParams.parse(searchParams)` to get a
+ * typed snapshot. The client `<TabsNav>` and `<FilterBar>` write via
+ * `useQueryStates` from `nuqs`.
  */
 export const communitySearchParams = createSearchParamsCache({
-  curriculum: parseAsString.withDefault(""),
+  curriculum: parseAsString.withDefault("us-k12"),
   grade: parseAsInteger,
 })
 

@@ -981,6 +981,9 @@ describe("Timetable Actions", () => {
         slotPatterns: [],
         workingDays: [0, 1, 2, 3, 4],
       } as any)
+      // Action now also verifies the target term belongs to this school
+      // before any write — mock it so the happy-path test still passes.
+      vi.mocked(db.term.findFirst).mockResolvedValue({ id: "term-1" } as any)
       vi.mocked(db.templateApplication.create).mockResolvedValue({} as any)
 
       await applyTemplateToTerm({

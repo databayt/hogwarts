@@ -9,6 +9,10 @@ import { auth } from "@/auth"
 import { db } from "@/lib/db"
 
 import {
+  checkCertificateVerifyRateLimit,
+  getClientIP,
+} from "../../lib/security"
+import {
   batchGenerateCertificatesSchema,
   certificateConfigCreateSchema,
   certificateConfigUpdateSchema,
@@ -655,6 +659,18 @@ export async function verifyCertificate(
   try {
     const parsed = verifyCertificateSchema.parse(input)
 
+    // Public endpoint — rate-limit by client IP to slow brute-force enumeration
+    // of verification codes. Distributed via Redis when available.
+    const clientIP = await getClientIP()
+    const rl = await checkCertificateVerifyRateLimit(clientIP)
+    if (!rl.allowed) {
+      return {
+        success: false,
+        error: "Too many verification attempts. Please try again later.",
+        code: "RATE_LIMITED",
+      }
+    }
+
     // Verification is public - no schoolId required
     const certificate = await db.examCertificate.findFirst({
       where: { verificationCode: parsed.code },
@@ -668,6 +684,24 @@ export async function verifyCertificate(
         success: false,
         error: "Invalid verification code",
         code: "INVALID_CODE",
+      }
+    }
+
+    // Reject revoked certificates — don't leak the holder's name/grade.
+    if (certificate.status !== "active") {
+      return {
+        success: false,
+        error: "This certificate has been revoked",
+        code: "CERT_REVOKED",
+      }
+    }
+
+    // Reject expired certificates.
+    if (certificate.expiresAt && new Date() > certificate.expiresAt) {
+      return {
+        success: false,
+        error: "This certificate has expired",
+        code: "CERT_EXPIRED",
       }
     }
 

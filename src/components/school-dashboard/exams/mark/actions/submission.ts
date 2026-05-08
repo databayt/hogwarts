@@ -7,6 +7,7 @@ import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
 
+import { checkExamSubmissionRateLimit } from "../../lib/security"
 import { submitAnswerSchema } from "../validation"
 import type { ActionResponse, SubmitAnswerInput } from "./types"
 
@@ -19,9 +20,9 @@ export async function submitAnswer(
   try {
     const session = await auth()
     const schoolId = session?.user?.schoolId
-    const studentId = session?.user?.id
+    const userId = session?.user?.id
 
-    if (!schoolId || !studentId) {
+    if (!schoolId || !userId) {
       return {
         success: false,
         error: "Unauthorized - Missing school or user context",
@@ -29,7 +30,37 @@ export async function submitAnswer(
       }
     }
 
+    // Resolve Student.id from session user (Student.id !== User.id).
+    const student = await db.student.findFirst({
+      where: { userId, schoolId },
+      select: { id: true },
+    })
+
+    if (!student) {
+      return {
+        success: false,
+        error: "Student record not found",
+        code: "STUDENT_NOT_FOUND",
+      }
+    }
+
+    const studentId = student.id
+
     const formData = Object.fromEntries(data)
+
+    // Best-effort rate-limit gate before parsing, but using examId from input.
+    // We pre-extract examId here to scope the limit to (student, exam).
+    const rawExamId = typeof formData.examId === "string" ? formData.examId : ""
+    if (rawExamId) {
+      const rl = await checkExamSubmissionRateLimit(studentId, rawExamId)
+      if (!rl.allowed) {
+        return {
+          success: false,
+          error: "Too many submission attempts. Please wait before retrying.",
+          code: "RATE_LIMITED",
+        }
+      }
+    }
 
     // Parse selectedOptionIds if it's a JSON string
     if (
@@ -181,9 +212,9 @@ export async function getStudentAnswers(examId: string): Promise<
   try {
     const session = await auth()
     const schoolId = session?.user?.schoolId
-    const studentId = session?.user?.id
+    const userId = session?.user?.id
 
-    if (!schoolId || !studentId) {
+    if (!schoolId || !userId) {
       return {
         success: false,
         error: "Unauthorized - Missing school or user context",
@@ -191,10 +222,24 @@ export async function getStudentAnswers(examId: string): Promise<
       }
     }
 
+    // Resolve Student.id from session user (Student.id !== User.id).
+    const student = await db.student.findFirst({
+      where: { userId, schoolId },
+      select: { id: true },
+    })
+
+    if (!student) {
+      return {
+        success: false,
+        error: "Student record not found",
+        code: "STUDENT_NOT_FOUND",
+      }
+    }
+
     const answers = await db.studentAnswer.findMany({
       where: {
         examId,
-        studentId,
+        studentId: student.id,
         schoolId,
       },
       select: {

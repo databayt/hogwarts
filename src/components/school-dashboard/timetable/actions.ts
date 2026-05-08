@@ -128,8 +128,15 @@ import {
 /**
  * Validate teacher constraints for a proposed slot assignment
  * Returns violations (errors block assignment, warnings are advisory)
+ *
+ * NOT EXPORTED on purpose: with `"use server"` at the file head, every
+ * exported async function becomes a publicly-invocable server action. This
+ * helper accepts a caller-supplied `schoolId` and would otherwise let any
+ * authenticated user read teacher constraints/availability for any tenant.
+ * Internal callers (validateSlotConstraints) pass `schoolId` from their own
+ * `getTenantContext()` so the value is always trusted in practice.
  */
-export async function validateTeacherConstraints(input: {
+async function validateTeacherConstraints(input: {
   schoolId: string
   termId: string
   teacherId: string
@@ -374,7 +381,9 @@ export async function validateTeacherConstraints(input: {
 /**
  * Validate room constraints for a proposed slot assignment
  */
-export async function validateRoomConstraints(input: {
+// NOT EXPORTED — see note on validateTeacherConstraints. Caller-supplied
+// `schoolId` is only safe because the internal caller validates it first.
+async function validateRoomConstraints(input: {
   schoolId: string
   termId: string
   classroomId: string
@@ -512,9 +521,13 @@ export async function validateRoomConstraints(input: {
 
 /**
  * Validate all constraints for a slot (teacher + room)
- * Use this before creating or updating a timetable slot
+ * Use this before creating or updating a timetable slot.
+ *
+ * NOT EXPORTED — see note on validateTeacherConstraints. Internal callers
+ * pass `schoolId` from their own `getTenantContext()` so the value is
+ * trusted; exposing this would let any caller probe foreign tenants.
  */
-export async function validateSlotConstraints(input: {
+async function validateSlotConstraints(input: {
   schoolId: string
   termId: string
   teacherId: string
@@ -568,11 +581,14 @@ export async function validateSlotConstraints(input: {
 }
 
 type Conflict = {
-  type: "TEACHER" | "ROOM"
+  type: "TEACHER" | "ROOM" | "SECTION"
+  // For SECTION conflicts classA/classB hold section labels instead.
   classA: { id: string; name: string }
   classB: { id: string; name: string }
   teacher?: { id: string; name: string } | null
   room?: { id: string; name: string } | null
+  section?: { id: string; name: string } | null
+  affectedCount?: number // > 2 when 3+ slots share the same key
 }
 
 export async function detectTimetableConflicts(input?: unknown) {
@@ -600,45 +616,73 @@ export async function detectTimetableConflicts(input?: unknown) {
     const where: Record<string, unknown> = { schoolId }
     if (validatedInput?.termId) where.termId = validatedInput.termId
 
-    // Step 1: Find teacher conflicts using database grouping
-    // Query slots grouped by (dayOfWeek, periodId, teacherId) with count > 1
+    // Step 1: Find teacher conflicts using database grouping.
+    // weekOffset is part of the GROUP BY so a teacher legitimately assigned
+    // to the same (day, period) on weekOffset=0 AND weekOffset=1 is NOT
+    // reported as a conflict (week A vs week B rotation).
     const teacherConflicts = await db.$queryRaw<
       Array<{
         dayOfWeek: number
         periodId: string
         teacherId: string
+        weekOffset: number
         count: bigint
       }>
     >`
-      SELECT "dayOfWeek", "periodId", "teacherId", COUNT(*) as count
+      SELECT "dayOfWeek", "periodId", "teacherId", "weekOffset", COUNT(*) as count
       FROM timetables
       WHERE "schoolId" = ${schoolId}
         AND "teacherId" IS NOT NULL
         ${validatedInput?.termId ? Prisma.sql`AND "termId" = ${validatedInput.termId}` : Prisma.empty}
-      GROUP BY "dayOfWeek", "periodId", "teacherId"
+      GROUP BY "dayOfWeek", "periodId", "teacherId", "weekOffset"
       HAVING COUNT(*) > 1
     `
 
-    // Step 2: Find room conflicts using database grouping
+    // Step 2: Find room conflicts using database grouping.
+    // Same weekOffset partitioning as above.
     const roomConflicts = await db.$queryRaw<
       Array<{
         dayOfWeek: number
         periodId: string
         classroomId: string
+        weekOffset: number
         count: bigint
       }>
     >`
-      SELECT "dayOfWeek", "periodId", "classroomId", COUNT(*) as count
+      SELECT "dayOfWeek", "periodId", "classroomId", "weekOffset", COUNT(*) as count
       FROM timetables
       WHERE "schoolId" = ${schoolId}
         AND "classroomId" IS NOT NULL
         ${validatedInput?.termId ? Prisma.sql`AND "termId" = ${validatedInput.termId}` : Prisma.empty}
-      GROUP BY "dayOfWeek", "periodId", "classroomId"
+      GROUP BY "dayOfWeek", "periodId", "classroomId", "weekOffset"
       HAVING COUNT(*) > 1
     `
 
-    // Step 3: Fetch details for conflicting slots (only the ones we need)
-    // This is O(conflicts) not O(all slots)
+    // Step 2b: Find section double-bookings (Grade 1-A scheduled to two
+    // subjects in the same period). Section-based scheduling is the
+    // primary path now; this was previously not detected at all.
+    const sectionConflicts = await db.$queryRaw<
+      Array<{
+        dayOfWeek: number
+        periodId: string
+        sectionId: string
+        weekOffset: number
+        count: bigint
+      }>
+    >`
+      SELECT "dayOfWeek", "periodId", "sectionId", "weekOffset", COUNT(*) as count
+      FROM timetables
+      WHERE "schoolId" = ${schoolId}
+        AND "sectionId" IS NOT NULL
+        ${validatedInput?.termId ? Prisma.sql`AND "termId" = ${validatedInput.termId}` : Prisma.empty}
+      GROUP BY "dayOfWeek", "periodId", "sectionId", "weekOffset"
+      HAVING COUNT(*) > 1
+    `
+
+    // Step 3: Fetch details for conflicting slots (only the ones we need).
+    // This is O(conflicts) not O(all slots). We drop `take: 2` so 3+ way
+    // collisions are reported with their true affectedCount instead of
+    // disguising as a 2-way conflict that returns next run.
     for (const tc of teacherConflicts) {
       const conflictSlots = await timetableModel.findMany({
         where: {
@@ -646,30 +690,39 @@ export async function detectTimetableConflicts(input?: unknown) {
           dayOfWeek: tc.dayOfWeek,
           periodId: tc.periodId,
           teacherId: tc.teacherId,
+          weekOffset: tc.weekOffset,
           ...(validatedInput?.termId && { termId: validatedInput.termId }),
         },
         select: {
           classId: true,
+          sectionId: true,
           teacherId: true,
           class: { select: { id: true, name: true } },
+          section: { select: { id: true, name: true } },
           teacher: { select: { firstName: true, lastName: true } },
         },
-        take: 2, // We only need 2 to show conflict
       })
 
       if (conflictSlots.length >= 2) {
         const [a, b] = conflictSlots
+        const labelOf = (s: (typeof conflictSlots)[number]) =>
+          s.class
+            ? { id: s.class.id, name: s.class.name }
+            : s.section
+              ? { id: s.section.id, name: s.section.name }
+              : { id: s.classId ?? s.sectionId ?? "?", name: "—" }
         conflicts.push({
           type: "TEACHER",
-          classA: { id: a.class.id, name: a.class.name },
-          classB: { id: b.class.id, name: b.class.name },
+          classA: labelOf(a),
+          classB: labelOf(b),
           teacher: {
-            id: a.teacherId,
+            id: a.teacherId ?? "",
             name: [a.teacher?.firstName, a.teacher?.lastName]
               .filter(Boolean)
               .join(" "),
           },
           room: null,
+          affectedCount: conflictSlots.length,
         })
       }
     }
@@ -681,28 +734,80 @@ export async function detectTimetableConflicts(input?: unknown) {
           dayOfWeek: rc.dayOfWeek,
           periodId: rc.periodId,
           classroomId: rc.classroomId,
+          weekOffset: rc.weekOffset,
           ...(validatedInput?.termId && { termId: validatedInput.termId }),
         },
         select: {
           classId: true,
+          sectionId: true,
           classroomId: true,
           class: { select: { id: true, name: true } },
+          section: { select: { id: true, name: true } },
           classroom: { select: { roomName: true } },
         },
-        take: 2,
       })
 
       if (conflictSlots.length >= 2) {
         const [a, b] = conflictSlots
+        const labelOf = (s: (typeof conflictSlots)[number]) =>
+          s.class
+            ? { id: s.class.id, name: s.class.name }
+            : s.section
+              ? { id: s.section.id, name: s.section.name }
+              : { id: s.classId ?? s.sectionId ?? "?", name: "—" }
         conflicts.push({
           type: "ROOM",
-          classA: { id: a.class.id, name: a.class.name },
-          classB: { id: b.class.id, name: b.class.name },
+          classA: labelOf(a),
+          classB: labelOf(b),
           teacher: null,
           room: {
             id: a.classroomId,
             name: a.classroom?.roomName ?? a.classroomId,
           },
+          affectedCount: conflictSlots.length,
+        })
+      }
+    }
+
+    // Section conflicts: same section assigned to two subjects in the same
+    // period (e.g. Grade 1-A booked for Math AND Arabic at P1). The room
+    // unique constraint can mask this when both subjects share a homeroom.
+    for (const sc of sectionConflicts) {
+      const conflictSlots = await timetableModel.findMany({
+        where: {
+          schoolId,
+          dayOfWeek: sc.dayOfWeek,
+          periodId: sc.periodId,
+          sectionId: sc.sectionId,
+          weekOffset: sc.weekOffset,
+          ...(validatedInput?.termId && { termId: validatedInput.termId }),
+        },
+        select: {
+          sectionId: true,
+          subjectId: true,
+          section: { select: { id: true, name: true } },
+          subject: { select: { id: true, name: true } },
+        },
+      })
+
+      if (conflictSlots.length >= 2) {
+        const [a, b] = conflictSlots
+        conflicts.push({
+          type: "SECTION",
+          classA: {
+            id: a.subject?.id ?? a.subjectId ?? "?",
+            name: a.subject?.name ?? "—",
+          },
+          classB: {
+            id: b.subject?.id ?? b.subjectId ?? "?",
+            name: b.subject?.name ?? "—",
+          },
+          teacher: null,
+          room: null,
+          section: a.section
+            ? { id: a.section.id, name: a.section.name }
+            : null,
+          affectedCount: conflictSlots.length,
         })
       }
     }
@@ -2826,25 +2931,33 @@ export async function getChildTimetable(input: {
 
   if (!userId) throw new Error("NOT_AUTHENTICATED")
 
-  // Verify guardian has access to this child (unless admin)
+  // Verify access to this child.
+  // Previously this only ran when a `Guardian` row existed; if the caller's
+  // role wasn't DEVELOPER/ADMIN/GUARDIAN the lookup returned null and the
+  // check was silently skipped, letting any in-tenant user read any
+  // student's timetable. Switch to a positive allow-list and require an
+  // explicit guardian-student link for non-privileged roles.
   if (role !== "DEVELOPER" && role !== "ADMIN") {
+    if (role !== "GUARDIAN") {
+      throw new Error("ACCESS_DENIED")
+    }
     const guardian = await db.guardian.findFirst({
       where: { userId, schoolId },
       select: { id: true },
     })
-
-    if (guardian) {
-      const hasAccess = await db.studentGuardian.findFirst({
-        where: {
-          guardianId: guardian.id,
-          studentId: input.childId,
-          schoolId,
-        },
-      })
-
-      if (!hasAccess) {
-        throw new Error("ACCESS_DENIED")
-      }
+    if (!guardian) {
+      throw new Error("ACCESS_DENIED")
+    }
+    const hasAccess = await db.studentGuardian.findFirst({
+      where: {
+        guardianId: guardian.id,
+        studentId: input.childId,
+        schoolId,
+      },
+      select: { id: true },
+    })
+    if (!hasAccess) {
+      throw new Error("ACCESS_DENIED")
     }
   }
 
@@ -3154,6 +3267,15 @@ export async function addTeacherUnavailableBlock(input: {
 
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
+
+  // Verify the parent constraint belongs to this tenant before linking.
+  // Without this check an admin in school A could pass a teacherConstraintId
+  // from school B and create a row that schoolId-says-A but FK-points-to-B.
+  const parentConstraint = await db.teacherConstraint.findFirst({
+    where: { id: input.teacherConstraintId, schoolId },
+    select: { id: true },
+  })
+  if (!parentConstraint) throw new Error("CONSTRAINT_NOT_FOUND")
 
   const block = await db.teacherUnavailableBlock.create({
     data: {
@@ -3480,6 +3602,40 @@ export async function applyTemplateToTerm(input: {
   })
 
   if (!template) throw new Error("TEMPLATE_NOT_FOUND")
+
+  // Verify target term belongs to this school. Otherwise a wrong-school
+  // termId would silently no-op the deleteMany and write rows whose FK
+  // points to another tenant's term (caught by Prisma FK check, but with a
+  // generic error). Fail fast with a clear code.
+  const targetTerm = await db.term.findFirst({
+    where: { id: input.targetTermId, schoolId },
+    select: { id: true },
+  })
+  if (!targetTerm) throw new Error("TERM_NOT_FOUND")
+
+  // Validate teacherMapping/roomMapping values are in this school. Without
+  // this, an admin who knows a teacher/classroom CUID in another school can
+  // attach foreign FKs to this school's timetable rows.
+  const teacherMappingValues = Object.values(input.teacherMapping ?? {})
+  const roomMappingValues = Object.values(input.roomMapping ?? {})
+  if (teacherMappingValues.length > 0) {
+    const validTeachers = await db.teacher.findMany({
+      where: { id: { in: teacherMappingValues }, schoolId },
+      select: { id: true },
+    })
+    if (validTeachers.length !== new Set(teacherMappingValues).size) {
+      throw new Error("INVALID_TEACHER_MAPPING")
+    }
+  }
+  if (roomMappingValues.length > 0) {
+    const validRooms = await db.classroom.findMany({
+      where: { id: { in: roomMappingValues }, schoolId },
+      select: { id: true },
+    })
+    if (validRooms.length !== new Set(roomMappingValues).size) {
+      throw new Error("INVALID_ROOM_MAPPING")
+    }
+  }
 
   // Clear existing slots if requested
   if (input.clearExisting) {
@@ -3929,13 +4085,35 @@ export async function generateTimetablePreview(input: {
 }
 
 /**
- * Apply generated timetable preview to the database
+ * Apply generated timetable preview to the database.
+ *
+ * Why this is wrapped in db.$transaction:
+ * - Previously the deleteMany+createMany pair ran as two top-level
+ *   statements. If createMany threw mid-flight, the existing schedule was
+ *   already gone — torn state.
+ *
+ * Why FKs are pre-validated against schoolId:
+ * - Caller controls every slot's periodId/sectionId/subjectId/teacherId/
+ *   classroomId. Without these checks an attacker could splice in foreign
+ *   tenants' IDs and the row would persist with this school's schoolId
+ *   pointing to another school's resources.
+ *
+ * Why we count and surface skippedDuplicates:
+ * - skipDuplicates: true silently drops rows that collide on the
+ *   (schoolId, termId, dayOfWeek, periodId, classroomId, weekOffset)
+ *   unique key. The previous implementation reported success while
+ *   half the schedule was missing.
  */
 export async function applyGeneratedTimetable(input: {
   termId: string
   slots: GeneratedSlot[]
   clearExisting?: boolean
-}): Promise<{ success: boolean; createdCount: number; errors: string[] }> {
+}): Promise<{
+  success: boolean
+  createdCount: number
+  skippedCount: number
+  errors: string[]
+}> {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
@@ -3943,16 +4121,73 @@ export async function applyGeneratedTimetable(input: {
 
   const errors: string[] = []
   let createdCount = 0
+  let skippedCount = 0
 
   try {
-    // Clear existing slots if requested
-    if (input.clearExisting) {
-      await db.timetable.deleteMany({
-        where: { schoolId, termId: input.termId },
-      })
-    }
+    // Verify target term belongs to this school
+    const targetTerm = await db.term.findFirst({
+      where: { id: input.termId, schoolId },
+      select: { id: true },
+    })
+    if (!targetTerm) throw new Error("TERM_NOT_FOUND")
 
-    // Batch insert all slots using createMany (skip duplicates)
+    // Pre-validate every school-scoped FK referenced by the generated
+    // slots. Build sets of valid IDs in one round-trip per resource and
+    // reject the whole apply if any slot references something outside this
+    // tenant. `Subject` is global (catalog) so Prisma's FK check on insert
+    // is enough — schoolId scoping isn't possible there.
+    const periodIds = new Set(
+      input.slots.map((s) => s.periodId).filter(Boolean)
+    )
+    const sectionIds = new Set(
+      input.slots.map((s) => s.sectionId).filter((v): v is string => Boolean(v))
+    )
+    const teacherIds = new Set(
+      input.slots.map((s) => s.teacherId).filter((v): v is string => Boolean(v))
+    )
+    const classroomIds = new Set(
+      input.slots.map((s) => s.classroomId).filter(Boolean)
+    )
+
+    const [validPeriods, validSections, validTeachers, validClassrooms] =
+      await Promise.all([
+        periodIds.size > 0
+          ? db.period.findMany({
+              where: { id: { in: [...periodIds] }, schoolId },
+              select: { id: true },
+            })
+          : Promise.resolve([] as { id: string }[]),
+        sectionIds.size > 0
+          ? db.section.findMany({
+              where: { id: { in: [...sectionIds] }, schoolId },
+              select: { id: true },
+            })
+          : Promise.resolve([] as { id: string }[]),
+        teacherIds.size > 0
+          ? db.teacher.findMany({
+              where: { id: { in: [...teacherIds] }, schoolId },
+              select: { id: true },
+            })
+          : Promise.resolve([] as { id: string }[]),
+        classroomIds.size > 0
+          ? db.classroom.findMany({
+              where: { id: { in: [...classroomIds] }, schoolId },
+              select: { id: true },
+            })
+          : Promise.resolve([] as { id: string }[]),
+      ])
+
+    if (validPeriods.length !== periodIds.size)
+      throw new Error("INVALID_PERIOD_REFERENCE")
+    if (validSections.length !== sectionIds.size)
+      throw new Error("INVALID_SECTION_REFERENCE")
+    if (validTeachers.length !== teacherIds.size)
+      throw new Error("INVALID_TEACHER_REFERENCE")
+    if (validClassrooms.length !== classroomIds.size)
+      throw new Error("INVALID_CLASSROOM_REFERENCE")
+
+    // Batch insert all slots using createMany (skip duplicates) inside a
+    // transaction so deleteMany + createMany are atomic.
     const slotData = input.slots.map((slot) => ({
       schoolId,
       termId: input.termId,
@@ -3967,25 +4202,44 @@ export async function applyGeneratedTimetable(input: {
       constraintViolations: slot.violations,
     }))
 
-    const result = await db.timetable.createMany({
-      data: slotData,
-      skipDuplicates: true,
+    const txResult = await db.$transaction(async (tx) => {
+      if (input.clearExisting) {
+        await tx.timetable.deleteMany({
+          where: { schoolId, termId: input.termId },
+        })
+      }
+      return await tx.timetable.createMany({
+        data: slotData,
+        skipDuplicates: true,
+      })
     })
-    createdCount = result.count
+    createdCount = txResult.count
+    skippedCount = slotData.length - createdCount
+    if (skippedCount > 0) {
+      errors.push(
+        `${skippedCount} slot(s) were dropped due to a duplicate (room, period, day) key`
+      )
+    }
 
     await logTimetableAction("apply_generated", {
       entityType: "generation",
       metadata: {
         termId: input.termId,
         createdCount,
+        skippedCount,
         clearExisting: input.clearExisting,
       },
     })
 
-    return { success: true, createdCount, errors }
+    return {
+      success: skippedCount === 0,
+      createdCount,
+      skippedCount,
+      errors,
+    }
   } catch (error) {
     errors.push(error instanceof Error ? error.message : "Unknown error")
-    return { success: false, createdCount, errors }
+    return { success: false, createdCount, skippedCount, errors }
   }
 }
 

@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 
 import { authenticate, isAuthError } from "../../../lib/authenticate"
+import { canAccessStudent } from "../../../lib/student-access"
 
 /**
  * GET /api/mobile/attendance/student/:studentId — student attendance records
@@ -19,6 +20,14 @@ export async function GET(
     if (isAuthError(auth)) return auth
 
     const { studentId } = await params
+
+    // Relationship gate: only staff, the student themselves, or their
+    // guardian may read this student's attendance.
+    const allowed = await canAccessStudent(auth, studentId)
+    if (!allowed) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
     const { searchParams } = new URL(request.url)
     const from = searchParams.get("from") || undefined
     const to = searchParams.get("to") || undefined

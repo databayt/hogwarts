@@ -23,6 +23,40 @@ export async function GET(
     if (isAuthError(auth)) return auth
 
     const { userId } = await params
+
+    // Authorization: only the user themselves, a privileged role
+    // (DEVELOPER/ADMIN/STAFF/TEACHER), or a GUARDIAN linked to the target
+    // student may read another user's timetable. Without this gate any
+    // STUDENT could pass a peer's userId and read it (IDOR within tenant).
+    const isSelf = userId === auth.userId
+    if (!isSelf) {
+      const isPrivileged = ["DEVELOPER", "ADMIN", "STAFF", "TEACHER"].includes(
+        auth.role
+      )
+      if (!isPrivileged) {
+        if (auth.role !== "GUARDIAN") {
+          return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+        }
+        const guardian = await db.guardian.findFirst({
+          where: { userId: auth.userId, schoolId: auth.schoolId },
+          select: { id: true },
+        })
+        const link = guardian
+          ? await db.studentGuardian.findFirst({
+              where: {
+                guardianId: guardian.id,
+                schoolId: auth.schoolId,
+                student: { userId },
+              },
+              select: { id: true },
+            })
+          : null
+        if (!link) {
+          return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+        }
+      }
+    }
+
     const { searchParams } = new URL(request.url)
     const dayParam = searchParams.get("day")
     const day = dayParam !== null ? parseInt(dayParam) : undefined

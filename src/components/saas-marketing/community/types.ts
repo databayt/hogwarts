@@ -5,9 +5,8 @@
  * Community block types
  *
  * View-model interfaces for the public learning-resource hub. These shapes are
- * what `queries.ts` returns and what the card components consume — they are
- * deliberately narrower than the underlying Prisma models so that we only ship
- * the fields the cards actually render.
+ * what `queries.ts` returns and what UI components consume — narrower than the
+ * underlying Prisma models so we only ship the fields that actually render.
  */
 
 export type CommunityResourceType =
@@ -18,7 +17,7 @@ export type CommunityResourceType =
   | "materials"
   | "books"
 
-/** Filter shape shared by every per-type query in `queries.ts` */
+/** Filter shape shared across the community queries. */
 export interface CommunityFilters {
   /** matches Subject.curriculum / Curriculum.code (e.g. "national", "us-k12") */
   curriculum?: string
@@ -26,6 +25,8 @@ export interface CommunityFilters {
   grade?: number
   /** restrict to rows where row.lang === currentLocale */
   lang?: string
+  /** narrow per-resource queries to a single subject — used by the detail page */
+  subjectId?: string
   /** per-resource result cap (default 24) */
   limit?: number
 }
@@ -41,17 +42,29 @@ export interface CommunityFilterOptions {
   }>
 }
 
-/** Cards consumed by `<HubGrid>` for the /community overview */
-export interface CommunityCounts {
-  textbooks: number
-  exams: number
-  qbank: number
-  videos: number
-  materials: number
-  books: number
+// === Subject card view-model — drives the SubjectsGrid on /community ===
+//
+// Mirrors the `SubjectItem` shape from
+// `src/components/school-dashboard/listings/subjects/catalog-subjects-grid.tsx:14-29`
+// so the existing client grid component can be reused without forking.
+export interface CommunitySubjectCard {
+  id: string
+  slug: string
+  name: string
+  department: string
+  level: string
+  levels: string[]
+  grades: number[]
+  color: string | null
+  imageUrl: string | null
+  totalChapters: number
+  totalLessons: number
+  averageRating: number
+  usageCount: number
+  ratingCount: number
 }
 
-// === Card view models — one per resource type ===
+// === Resource card view models — used by the subject detail page ===
 
 export interface CommunityTextbookCard {
   id: string

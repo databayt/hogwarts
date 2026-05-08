@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import { UserRole } from "@prisma/client"
 
@@ -14,10 +15,18 @@ interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
 }
 
+const STAFF_ROLES = ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"]
+
 export default async function Page({ params }: Props) {
   const { lang } = await params
-  const dictionary = await getDictionary(lang)
   const session = await auth()
+
+  // Recent activity is a staff dashboard, not a student/guardian view
+  if (!STAFF_ROLES.includes(session?.user?.role ?? "")) {
+    redirect(`/${lang}/attendance`)
+  }
+
+  const dictionary = await getDictionary(lang)
 
   return (
     <RecentActivityContent

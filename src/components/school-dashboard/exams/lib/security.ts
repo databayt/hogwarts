@@ -5,15 +5,53 @@
  * Exam Security Utilities
  *
  * Provides security features for exam operations:
- * - Rate limiting for submissions
+ * - Rate limiting for submissions, AI grading, certificate verification
  * - Attempt locking to prevent double-submit
  * - IP tracking for exam attempts
  * - Session validation
+ *
+ * STORAGE STRATEGY:
+ *   1. If UPSTASH_REDIS_REST_URL is configured → uses @upstash/redis (distributed,
+ *      shared across Vercel lambda instances). Atomic INCR + TTL.
+ *   2. Otherwise → falls back to in-memory Map (per-process). OK for dev/local;
+ *      INSUFFICIENT for production multi-instance deploys (each replica has its
+ *      own Map ⇒ effectively no protection).
+ *
+ * The previous implementation was in-memory only; this change makes the safety
+ * surface real on serverless.
  */
 
 import { headers } from "next/headers"
 
 import { db } from "@/lib/db"
+
+// --- Distributed rate limiting via Upstash Redis (when configured) ---
+
+let _upstashAvailable: boolean | null = null
+let _upstashRedis: import("@upstash/redis").Redis | null = null
+
+function getUpstashRedis(): import("@upstash/redis").Redis | null {
+  if (_upstashAvailable === false) return null
+  if (_upstashRedis) return _upstashRedis
+  const url = process.env.UPSTASH_REDIS_REST_URL
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN
+  if (!url || !token) {
+    _upstashAvailable = false
+    return null
+  }
+  try {
+    const { Redis } =
+      require("@upstash/redis") as typeof import("@upstash/redis")
+    _upstashRedis = new Redis({ url, token })
+    _upstashAvailable = true
+    return _upstashRedis
+  } catch {
+    _upstashAvailable = false
+    return null
+  }
+}
+
+// --- Rate limiting ---
 
 /**
  * Rate limit configuration
@@ -27,25 +65,52 @@ export interface RateLimitConfig {
   key: string
 }
 
-/**
- * In-memory rate limit store (use Redis in production for multi-instance)
- */
-const rateLimitStore = new Map<string, { count: number; resetTime: number }>()
-
-/**
- * Check rate limit for an operation
- * Returns true if within limits, false if exceeded
- */
-export function checkRateLimit(config: RateLimitConfig): {
+export interface RateLimitResult {
   allowed: boolean
   remaining: number
   resetIn: number
-} {
+}
+
+// In-memory fallback when Redis unavailable. Per-process; NOT distributed.
+const rateLimitStore = new Map<string, { count: number; resetTime: number }>()
+
+/**
+ * Check rate limit for an operation. Distributed via Redis when available.
+ * Async because Redis INCR is atomic over the network.
+ */
+export async function checkRateLimit(
+  config: RateLimitConfig
+): Promise<RateLimitResult> {
+  const r = getUpstashRedis()
+
+  if (r) {
+    try {
+      const windowS = Math.ceil(config.windowMs / 1000)
+      const redisKey = `exam:rl:${config.key}`
+      const count = await r.incr(redisKey)
+      if (count === 1) {
+        // First hit in this window — set TTL so the counter expires.
+        await r.expire(redisKey, windowS)
+      }
+      const resetIn = config.windowMs
+      if (count > config.maxRequests) {
+        return { allowed: false, remaining: 0, resetIn }
+      }
+      return {
+        allowed: true,
+        remaining: Math.max(0, config.maxRequests - count),
+        resetIn,
+      }
+    } catch {
+      // Redis transient error — fall through to in-memory.
+    }
+  }
+
+  // Fallback: in-memory (per-process). Safe for dev, leaky on serverless.
   const now = Date.now()
   const entry = rateLimitStore.get(config.key)
 
   if (!entry || now > entry.resetTime) {
-    // Reset or create new entry
     rateLimitStore.set(config.key, {
       count: 1,
       resetTime: now + config.windowMs,
@@ -58,11 +123,7 @@ export function checkRateLimit(config: RateLimitConfig): {
   }
 
   if (entry.count >= config.maxRequests) {
-    return {
-      allowed: false,
-      remaining: 0,
-      resetIn: entry.resetTime - now,
-    }
+    return { allowed: false, remaining: 0, resetIn: entry.resetTime - now }
   }
 
   entry.count++
@@ -75,38 +136,65 @@ export function checkRateLimit(config: RateLimitConfig): {
 
 /**
  * Rate limit for exam submissions
- * Default: 5 submissions per minute per student
+ * Default: 5 submissions per minute per (student, exam) pair.
  */
-export function checkExamSubmissionRateLimit(
+export async function checkExamSubmissionRateLimit(
   studentId: string,
   examId: string
-): { allowed: boolean; remaining: number; resetIn: number } {
+): Promise<RateLimitResult> {
   return checkRateLimit({
     key: `exam-submit:${studentId}:${examId}`,
     maxRequests: 5,
-    windowMs: 60 * 1000, // 1 minute
+    windowMs: 60 * 1000,
   })
 }
 
 /**
  * Rate limit for AI grading requests
- * Default: 100 requests per minute per school
+ * Default: 100 requests per minute per school.
  */
-export function checkAIGradingRateLimit(schoolId: string): {
-  allowed: boolean
-  remaining: number
-  resetIn: number
-} {
+export async function checkAIGradingRateLimit(
+  schoolId: string
+): Promise<RateLimitResult> {
   return checkRateLimit({
     key: `ai-grade:${schoolId}`,
     maxRequests: 100,
-    windowMs: 60 * 1000, // 1 minute
+    windowMs: 60 * 1000,
   })
 }
 
 /**
- * Exam attempt lock status
+ * Rate limit for AI question generation requests
+ * Default: 20 generations per minute per school. Generation calls are large
+ * and expensive, so the cap is much tighter than grading.
  */
+export async function checkAIGenerationRateLimit(
+  schoolId: string
+): Promise<RateLimitResult> {
+  return checkRateLimit({
+    key: `ai-gen:${schoolId}`,
+    maxRequests: 20,
+    windowMs: 60 * 1000,
+  })
+}
+
+/**
+ * Rate limit for public certificate verification
+ * Default: 10 attempts per minute per IP. Designed to slow down brute-force
+ * enumeration of verification codes.
+ */
+export async function checkCertificateVerifyRateLimit(
+  clientIP: string
+): Promise<RateLimitResult> {
+  return checkRateLimit({
+    key: `cert-verify:${clientIP}`,
+    maxRequests: 10,
+    windowMs: 60 * 1000,
+  })
+}
+
+// --- Exam attempt locks (prevent concurrent double-submit) ---
+
 export interface AttemptLock {
   locked: boolean
   lockedAt?: Date
@@ -114,31 +202,51 @@ export interface AttemptLock {
   reason?: string
 }
 
-/**
- * In-memory attempt locks (use Redis in production)
- */
+const ATTEMPT_LOCK_TTL_SECONDS = 5 * 60 // 5 minutes
+
+function attemptLockKey(studentId: string, examId: string): string {
+  return `exam:lock:${studentId}:${examId}`
+}
+
+// In-memory fallback
 const attemptLocks = new Map<string, AttemptLock>()
 
 /**
- * Lock an exam attempt to prevent double-submit
+ * Acquire a lock on (student, exam) for a brief window. Returns true if
+ * acquired, false if already held by another in-flight submission.
+ *
+ * Uses Redis SET NX EX for atomic acquire when Redis is configured —
+ * otherwise per-process Map (NOT safe across serverless instances).
  */
-export function lockExamAttempt(
+export async function lockExamAttempt(
   studentId: string,
   examId: string,
   reason: string = "submission_in_progress"
-): boolean {
-  const key = `attempt:${studentId}:${examId}`
-  const existing = attemptLocks.get(key)
+): Promise<boolean> {
+  const r = getUpstashRedis()
+  const key = attemptLockKey(studentId, examId)
 
+  if (r) {
+    try {
+      // SET NX EX is atomic and the only correct primitive for distributed locks.
+      const result = await r.set(
+        key,
+        JSON.stringify({ studentId, reason, lockedAt: Date.now() }),
+        { nx: true, ex: ATTEMPT_LOCK_TTL_SECONDS }
+      )
+      return result === "OK"
+    } catch {
+      // fall through to in-memory
+    }
+  }
+
+  const existing = attemptLocks.get(key)
   if (existing?.locked) {
-    // Check if lock is stale (older than 5 minutes)
     const lockAge = existing.lockedAt
       ? Date.now() - existing.lockedAt.getTime()
       : 0
-    if (lockAge < 5 * 60 * 1000) {
-      return false // Lock is still valid
-    }
-    // Lock is stale, allow override
+    if (lockAge < ATTEMPT_LOCK_TTL_SECONDS * 1000) return false
+    // stale → fall through and re-acquire
   }
 
   attemptLocks.set(key, {
@@ -147,41 +255,77 @@ export function lockExamAttempt(
     lockedBy: studentId,
     reason,
   })
-
   return true
 }
 
 /**
- * Unlock an exam attempt
+ * Release an attempt lock.
  */
-export function unlockExamAttempt(studentId: string, examId: string): void {
-  const key = `attempt:${studentId}:${examId}`
+export async function unlockExamAttempt(
+  studentId: string,
+  examId: string
+): Promise<void> {
+  const r = getUpstashRedis()
+  const key = attemptLockKey(studentId, examId)
+
+  if (r) {
+    try {
+      await r.del(key)
+      return
+    } catch {
+      // fall through
+    }
+  }
+
   attemptLocks.delete(key)
 }
 
 /**
- * Check if an exam attempt is locked
+ * Inspect the current lock state for (student, exam).
  */
-export function isAttemptLocked(
+export async function isAttemptLocked(
   studentId: string,
   examId: string
-): AttemptLock {
-  const key = `attempt:${studentId}:${examId}`
-  const lock = attemptLocks.get(key)
+): Promise<AttemptLock> {
+  const r = getUpstashRedis()
+  const key = attemptLockKey(studentId, examId)
 
-  if (!lock) {
-    return { locked: false }
+  if (r) {
+    try {
+      const raw = await r.get<string>(key)
+      if (!raw) return { locked: false }
+      try {
+        const parsed = JSON.parse(raw) as {
+          studentId?: string
+          reason?: string
+          lockedAt?: number
+        }
+        return {
+          locked: true,
+          lockedAt: parsed.lockedAt ? new Date(parsed.lockedAt) : undefined,
+          lockedBy: parsed.studentId,
+          reason: parsed.reason,
+        }
+      } catch {
+        return { locked: true }
+      }
+    } catch {
+      // fall through
+    }
   }
 
-  // Check if lock is stale
+  const lock = attemptLocks.get(key)
+  if (!lock) return { locked: false }
+
   const lockAge = lock.lockedAt ? Date.now() - lock.lockedAt.getTime() : 0
-  if (lockAge > 5 * 60 * 1000) {
+  if (lockAge > ATTEMPT_LOCK_TTL_SECONDS * 1000) {
     attemptLocks.delete(key)
     return { locked: false }
   }
-
   return lock
 }
+
+// --- Request metadata helpers ---
 
 /**
  * Get client IP address from request headers
@@ -189,19 +333,17 @@ export function isAttemptLocked(
 export async function getClientIP(): Promise<string> {
   const headersList = await headers()
 
-  // Check various headers for IP (in order of preference)
   const forwardedFor = headersList.get("x-forwarded-for")
   if (forwardedFor) {
-    // x-forwarded-for can contain multiple IPs, get the first one
     return forwardedFor.split(",")[0].trim()
   }
 
   const realIP = headersList.get("x-real-ip")
-  if (realIP) {
-    return realIP
-  }
+  if (realIP) return realIP
 
-  // Fallback
+  const cfIP = headersList.get("cf-connecting-ip")
+  if (cfIP) return cfIP
+
   return "unknown"
 }
 
@@ -230,9 +372,11 @@ export async function getRequestMetadata(): Promise<{
   }
 }
 
+// --- Session validation ---
+
 /**
- * Validate exam session
- * Checks if a student is allowed to take/continue an exam
+ * Validate exam session. Verifies the exam is currently open AND the student
+ * hasn't already submitted AND no one is mid-submission for them.
  */
 export async function validateExamSession(params: {
   studentId: string
@@ -245,7 +389,6 @@ export async function validateExamSession(params: {
 }> {
   const { studentId, examId, schoolId } = params
 
-  // Check if exam exists and is active
   const exam = await db.schoolExam.findFirst({
     where: {
       id: examId,
@@ -268,7 +411,6 @@ export async function validateExamSession(params: {
     }
   }
 
-  // Check if student has an existing session (ExamSession is the correct model)
   const existingSession = await db.examSession.findFirst({
     where: {
       examId,
@@ -285,21 +427,16 @@ export async function validateExamSession(params: {
     }
   }
 
-  // Check time limits
+  // Time-window enforcement
   const now = new Date()
   const examDateTime = new Date(exam.examDate)
 
-  // Parse start and end times
   if (exam.startTime) {
     const [startHour, startMin] = exam.startTime.split(":").map(Number)
     const examStart = new Date(examDateTime)
     examStart.setHours(startHour, startMin, 0, 0)
-
     if (now < examStart) {
-      return {
-        valid: false,
-        reason: "Exam has not started yet",
-      }
+      return { valid: false, reason: "Exam has not started yet" }
     }
   }
 
@@ -307,17 +444,13 @@ export async function validateExamSession(params: {
     const [endHour, endMin] = exam.endTime.split(":").map(Number)
     const examEnd = new Date(examDateTime)
     examEnd.setHours(endHour, endMin, 0, 0)
-
     if (now > examEnd) {
-      return {
-        valid: false,
-        reason: "Exam time has ended",
-      }
+      return { valid: false, reason: "Exam time has ended" }
     }
   }
 
-  // Check if attempt is locked
-  const lock = isAttemptLocked(studentId, examId)
+  // Check if attempt is locked (a concurrent submission in progress).
+  const lock = await isAttemptLocked(studentId, examId)
   if (lock.locked) {
     return {
       valid: false,
@@ -331,31 +464,33 @@ export async function validateExamSession(params: {
   }
 }
 
+// --- Certificate verification helpers ---
+
 /**
- * Certificate verification code generator
+ * Generate a verification code for a new certificate.
  */
 export function generateVerificationCode(): string {
-  // Generate a 12-character alphanumeric code
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
   let code = ""
   for (let i = 0; i < 12; i++) {
-    if (i > 0 && i % 4 === 0) {
-      code += "-"
-    }
+    if (i > 0 && i % 4 === 0) code += "-"
     code += chars.charAt(Math.floor(Math.random() * chars.length))
   }
   return code
 }
 
 /**
- * Verify a certificate code
- * Includes brute-force protection
+ * Public certificate verification with brute-force protection AND status checks.
+ *
+ * Reject when:
+ *   - rate limit exceeded for the caller's IP
+ *   - code does not match any certificate
+ *   - certificate.status !== "active" (revoked / suspended)
+ *   - certificate.expiresAt is in the past
+ *
+ * Returns a sanitized payload — never include schoolId, certificateNumber, or
+ * other internal identifiers in the response.
  */
-const verificationAttempts = new Map<
-  string,
-  { count: number; resetTime: number }
->()
-
 export async function verifyCertificateCode(
   code: string,
   clientIP: string
@@ -364,28 +499,14 @@ export async function verifyCertificateCode(
   certificate?: unknown
   error?: string
 }> {
-  // Rate limit verification attempts by IP
-  const key = `cert-verify:${clientIP}`
-  const attempts = verificationAttempts.get(key)
-  const now = Date.now()
-
-  if (attempts) {
-    if (now < attempts.resetTime && attempts.count >= 10) {
-      return {
-        valid: false,
-        error: "Too many verification attempts. Please try again later.",
-      }
+  const rl = await checkCertificateVerifyRateLimit(clientIP)
+  if (!rl.allowed) {
+    return {
+      valid: false,
+      error: "Too many verification attempts. Please try again later.",
     }
-    if (now > attempts.resetTime) {
-      verificationAttempts.set(key, { count: 1, resetTime: now + 60 * 1000 })
-    } else {
-      attempts.count++
-    }
-  } else {
-    verificationAttempts.set(key, { count: 1, resetTime: now + 60 * 1000 })
   }
 
-  // Look up certificate - uses examResult relation instead of direct exam relation
   const certificate = await db.examCertificate.findFirst({
     where: {
       verificationCode: code.toUpperCase().replace(/-/g, ""),
@@ -409,26 +530,21 @@ export async function verifyCertificateCode(
         },
       },
       school: {
-        select: {
-          name: true,
-        },
+        select: { name: true },
       },
     },
   })
 
   if (!certificate) {
-    return {
-      valid: false,
-      error: "Invalid certificate code",
-    }
+    return { valid: false, error: "Invalid certificate code" }
   }
 
-  // Check if certificate is expired
+  if (certificate.status !== "active") {
+    return { valid: false, error: "This certificate has been revoked" }
+  }
+
   if (certificate.expiresAt && new Date() > certificate.expiresAt) {
-    return {
-      valid: false,
-      error: "This certificate has expired",
-    }
+    return { valid: false, error: "This certificate has expired" }
   }
 
   return {

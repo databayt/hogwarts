@@ -41,11 +41,13 @@ interface Props {
 }
 
 type Conflict = {
-  type: "TEACHER" | "ROOM"
+  type: "TEACHER" | "ROOM" | "SECTION"
   classA: { id: string; name: string }
   classB: { id: string; name: string }
   teacher?: { id: string; name: string } | null
   room?: { id: string; name: string } | null
+  section?: { id: string; name: string } | null
+  affectedCount?: number
 }
 
 export default function TimetableConflictsContent({ dictionary }: Props) {

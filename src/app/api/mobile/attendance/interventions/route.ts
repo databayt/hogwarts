@@ -20,10 +20,13 @@ export async function GET(request: NextRequest) {
     const auth = await authenticate(request)
     if (isAuthError(auth)) return auth
 
+    // Authorization: matches central attendance permission matrix (manage_intervention is admin-only,
+    // but read access is broader — TEACHER/STAFF can view interventions for their students)
     if (
       auth.role !== "TEACHER" &&
       auth.role !== "ADMIN" &&
-      auth.role !== "SUPER_ADMIN"
+      auth.role !== "STAFF" &&
+      auth.role !== "DEVELOPER"
     ) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }

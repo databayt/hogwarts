@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     if (
       auth.role !== "TEACHER" &&
       auth.role !== "ADMIN" &&
-      auth.role !== "SUPER_ADMIN"
+      auth.role !== "DEVELOPER"
     ) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
@@ -31,6 +31,20 @@ export async function POST(request: NextRequest) {
 
     if (!class_id) {
       return NextResponse.json({ error: "class_id required" }, { status: 400 })
+    }
+
+    // Verify the class belongs to this tenant. Without this, a teacher
+    // can pass another school's classId and create a QR session in their
+    // own school with a foreign FK pointing across tenants.
+    const classExists = await db.class.findFirst({
+      where: { id: class_id, schoolId: auth.schoolId },
+      select: { id: true },
+    })
+    if (!classExists) {
+      return NextResponse.json(
+        { error: "class_id is not a member of this school" },
+        { status: 404 }
+      )
     }
 
     const code = randomBytes(16).toString("hex")

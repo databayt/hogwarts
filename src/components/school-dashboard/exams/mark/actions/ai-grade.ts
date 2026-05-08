@@ -15,6 +15,7 @@ import {
 } from "@/lib/ai/openai"
 import { db } from "@/lib/db"
 
+import { checkAIGradingRateLimit } from "../../lib/security"
 import { parseAcceptedAnswers } from "../utils"
 import type {
   ActionResponse,
@@ -80,6 +81,18 @@ export async function aiGradeAnswer(
         success: false,
         error: "Unauthorized - No school context",
         code: "NO_SCHOOL_CONTEXT",
+      }
+    }
+
+    // Per-school AI grading rate limit. Each call is a paid OpenAI API hit;
+    // without this gate a teacher batch-grading 10 classes can blow the budget.
+    const rl = await checkAIGradingRateLimit(schoolId)
+    if (!rl.allowed) {
+      return {
+        success: false,
+        error:
+          "AI grading rate limit reached for this school. Please try again shortly.",
+        code: "RATE_LIMITED",
       }
     }
 

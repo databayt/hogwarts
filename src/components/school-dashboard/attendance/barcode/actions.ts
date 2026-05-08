@@ -30,8 +30,16 @@ export async function processBarcodeScan(
 ) {
   try {
     const session = await auth()
-    if (!session?.user) {
+    if (!session?.user?.role) {
       throw new Error("Unauthorized")
+    }
+
+    // Barcode scanning is initiated by school staff (teacher at the door,
+    // admin at the front desk). Students/guardians do not scan others' cards.
+    const role = session.user.role
+    const SCANNER_ROLES = ["DEVELOPER", "ADMIN", "TEACHER", "STAFF"]
+    if (!SCANNER_ROLES.includes(role)) {
+      throw new Error("Insufficient permissions to scan barcodes")
     }
 
     const { barcode, classId, format, scannedAt, deviceId } = data
@@ -83,25 +91,23 @@ export async function processBarcodeScan(
       // Record rate limit failure
       const failureResult = recordScanFailure(rateLimitId)
 
-      // Log failed scan
-      await db.attendanceEvent.create({
-        data: {
+      // We can't write an AttendanceEvent here because we have no resolved
+      // Student.id (the barcode is unknown), and AttendanceEvent.studentId
+      // is FK-constrained to Student.id. Previously we wrote session.user.id
+      // (the scanner staff's User PK) into the studentId column, which is
+      // a different namespace and corrupted audit data. Log to console
+      // instead until a dedicated ScanFailureLog model exists.
+      console.warn(
+        "[processBarcodeScan] Unknown barcode; skipping AttendanceEvent log",
+        {
           schoolId,
-          studentId: session.user.id, // Scanner user
-          eventType: "SCAN_FAILURE",
-          method: "BARCODE",
-          deviceId,
-          success: false,
-          errorMessage: "Barcode not found in system",
-          metadata: {
-            barcode,
-            format,
-            classId,
-            remainingAttempts: failureResult.remainingAttempts,
-          },
-          timestamp: new Date(scannedAt),
-        },
-      })
+          barcode,
+          format,
+          classId,
+          scannerUserId: session.user.id,
+          remainingAttempts: failureResult.remainingAttempts,
+        }
+      )
 
       if (failureResult.isBlocked) {
         return {
