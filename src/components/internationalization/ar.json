@@ -306,35 +306,23 @@
       "label": "تصفية",
       "curriculum": "المنهج",
       "curriculumPlaceholder": "كل المناهج",
-      "grade": "الصف",
-      "gradePlaceholder": "كل الصفوف",
       "reset": "مسح"
     },
+    "tabs": {
+      "all": "الكل",
+      "gradeShort": "{n}",
+      "gradeAria": "الصف {n}"
+    },
+    "curriculum": {
+      "internationalUS": "الدولي الأمريكي"
+    },
     "types": {
-      "textbooks": {
-        "label": "الكتب المدرسية",
-        "description": "كتب رقمية مفتوحة متوافقة مع منهجك."
-      },
-      "exams": {
-        "label": "الامتحانات التجريبية",
-        "description": "أوراق امتحانات تجريبية كاملة مع نماذج الإجابة."
-      },
-      "qbank": {
-        "label": "بنك الأسئلة",
-        "description": "أسئلة من المجتمع مصنفة حسب الفصل والصعوبة."
-      },
-      "videos": {
-        "label": "الفيديوهات",
-        "description": "فيديوهات دروس منتقاة ومعتمدة من المعلمين."
-      },
-      "materials": {
-        "label": "المواد التعليمية",
-        "description": "أوراق عمل وعروض تقديمية وأدلة مختبر ومراجعات."
-      },
-      "books": {
-        "label": "كتب المكتبة",
-        "description": "كتب قراءة ومراجع للمكتبة."
-      }
+      "textbooks": { "label": "الكتب المدرسية" },
+      "exams": { "label": "الامتحانات التجريبية" },
+      "qbank": { "label": "بنك الأسئلة" },
+      "videos": { "label": "الفيديوهات" },
+      "materials": { "label": "المواد التعليمية" },
+      "books": { "label": "كتب المكتبة" }
     },
     "empty": {
       "title": "لا توجد موارد تطابق هذه التصفية",

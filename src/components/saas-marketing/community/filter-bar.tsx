@@ -2,8 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useMemo } from "react"
-import { parseAsInteger, parseAsString, useQueryStates } from "nuqs"
+import { parseAsString, useQueryStates } from "nuqs"
 
 import {
   Select,
@@ -15,97 +14,56 @@ import {
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import type { CommunityFilterOptions } from "./types"
-import { gradesFromGradeRange } from "./util"
 
 interface Props {
   options: CommunityFilterOptions
   dictionary: Dictionary
 }
 
-// Sentinel used in <Select> for the "no filter" entry. shadcn/Radix forbids
-// an empty-string value, so we round-trip an explicit "all" → URL-empty.
-const ALL = "__all__"
-
+/**
+ * Curriculum dropdown only. Grade is now driven by the under-hero TabsNav,
+ * so this bar is intentionally narrow.
+ *
+ * The `us-k12` row's `name` is overridden in the dropdown to read
+ * "International US" (or its localized equivalent), matching the user-facing
+ * mental model. Underlying value stays `us-k12` so existing query code, URL
+ * params, and the seeded `Subject.curriculum` column all still match.
+ */
 export function CommunityFilterBar({ options, dictionary }: Props) {
-  const [{ curriculum, grade }, setFilters] = useQueryStates(
-    {
-      curriculum: parseAsString.withDefault(""),
-      grade: parseAsInteger,
-    },
+  const [{ curriculum }, setFilters] = useQueryStates(
+    { curriculum: parseAsString.withDefault("us-k12") },
     { shallow: false }
   )
 
   const filters = dictionary?.community?.filters
   const labelCurriculum = filters?.curriculum ?? "Curriculum"
-  const labelGrade = filters?.grade ?? "Grade"
   const placeholderCurriculum =
     filters?.curriculumPlaceholder ?? "All curricula"
-  const placeholderGrade = filters?.gradePlaceholder ?? "All grades"
-
-  // When a curriculum is picked, narrow the grade list to that curriculum's
-  // declared range — otherwise default to 1..12.
-  const grades = useMemo(() => {
-    const selected = options.curricula.find((c) => c.code === curriculum)
-    return gradesFromGradeRange(selected?.gradeRange ?? null)
-  }, [curriculum, options.curricula])
+  const internationalUsLabel =
+    dictionary?.community?.curriculum?.internationalUS ?? "International US"
 
   return (
-    <div className="bg-background sticky top-14 z-30 -mx-4 flex flex-wrap items-center gap-3 border-b px-4 py-3 sm:mx-0 sm:rounded-md sm:border sm:px-4">
+    <div className="bg-background flex flex-wrap items-center gap-3 py-3">
       <div className="flex items-center gap-2">
         <label className="text-muted-foreground text-sm">
           {labelCurriculum}
         </label>
         <Select
-          value={curriculum || ALL}
-          onValueChange={(value) =>
-            setFilters({ curriculum: value === ALL ? "" : value })
-          }
+          value={curriculum || "us-k12"}
+          onValueChange={(value) => setFilters({ curriculum: value })}
         >
-          <SelectTrigger className="w-[200px]" aria-label={labelCurriculum}>
+          <SelectTrigger className="w-[220px]" aria-label={labelCurriculum}>
             <SelectValue placeholder={placeholderCurriculum} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={ALL}>{placeholderCurriculum}</SelectItem>
             {options.curricula.map((c) => (
               <SelectItem key={c.id} value={c.code}>
-                {c.name}
+                {c.code === "us-k12" ? internationalUsLabel : c.name}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
-
-      <div className="flex items-center gap-2">
-        <label className="text-muted-foreground text-sm">{labelGrade}</label>
-        <Select
-          value={grade ? String(grade) : ALL}
-          onValueChange={(value) =>
-            setFilters({ grade: value === ALL ? null : Number(value) })
-          }
-        >
-          <SelectTrigger className="w-[160px]" aria-label={labelGrade}>
-            <SelectValue placeholder={placeholderGrade} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL}>{placeholderGrade}</SelectItem>
-            {grades.map((g) => (
-              <SelectItem key={g} value={String(g)}>
-                {g}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {(curriculum || grade) && filters?.reset ? (
-        <button
-          type="button"
-          onClick={() => setFilters({ curriculum: "", grade: null })}
-          className="text-muted-foreground hover:text-foreground ms-auto text-sm underline-offset-4 hover:underline"
-        >
-          {filters.reset}
-        </button>
-      ) : null}
     </div>
   )
 }

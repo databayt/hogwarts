@@ -3,17 +3,18 @@
 
 import "server-only"
 
+import { getCatalogImageUrl } from "@/lib/catalog-image-url"
 import { db } from "@/lib/db"
 
 import { DEFAULT_RESOURCE_LIMIT } from "./config"
 import type {
   CommunityBookCard,
-  CommunityCounts,
   CommunityExamCard,
   CommunityFilterOptions,
   CommunityFilters,
   CommunityMaterialCard,
   CommunityQuestionCard,
+  CommunitySubjectCard,
   CommunityTextbookCard,
   CommunityVideoCard,
 } from "./types"
@@ -22,25 +23,21 @@ import type {
  * Community block — server-only data layer for the public learning hub.
  *
  * No `auth()` and no `getTenantContext()` — this entire surface is anonymous.
- * Every query follows the public-content gate from
- * `src/app/api/mobile/catalog/subjects/[slug]/route.ts:215-217`:
- *
+ * Public-content gate (per `src/app/api/mobile/catalog/subjects/[slug]/route.ts:215-217`):
  *   - `status: "PUBLISHED"`     (when the model has it)
  *   - `approvalStatus: "APPROVED"` (when the model has it)
  *   - `visibility: "PUBLIC"`    (when the model has it)
  *
- * Textbook is the lone exception — it has only `status` (no community
- * approval pipeline) so the filter degrades gracefully.
+ * Textbook is the lone exception — only `status` (no community approval pipeline).
  *
  * Curriculum filtering matches the legacy string column on `Subject.curriculum`
  * (values: "national" | "us-k12" | "british" | "ib" — see catalog.prisma:156).
- * Grade filtering uses `{ grades: { has: grade } }` against the `Int[]` columns
- * on Subject / Textbook. Books skip grade filtering because `Book.gradeLevel`
- * is a `String`, not an `Int[]`.
+ * Grade filtering uses `{ grades: { has: grade } }` on the `Int[]` columns.
+ * Books skip grade filtering — `Book.gradeLevel` is `String`, not `Int[]`.
  */
 
 // ============================================================================
-// Filter options for the dropdowns
+// Filter options (curriculum dropdown)
 // ============================================================================
 
 export async function getCommunityFilterOptions(): Promise<CommunityFilterOptions> {
@@ -59,27 +56,254 @@ export async function getCommunityFilterOptions(): Promise<CommunityFilterOption
 }
 
 // ============================================================================
-// Counts (cheap, used by the hub /community to show "12 textbooks")
+// Subject queries — drive the hub grid + slug detail page
 // ============================================================================
 
-export async function getCommunityCounts(
+export async function getCommunitySubjects(
   filters: CommunityFilters
-): Promise<CommunityCounts> {
-  const [textbooks, exams, qbank, videos, materials, books] = await Promise.all(
-    [
-      db.textbook.count({ where: textbookWhere(filters) }),
-      db.exam.count({ where: examWhere(filters) }),
-      db.question.count({ where: questionWhere(filters) }),
-      db.video.count({ where: videoWhere(filters) }),
-      db.material.count({ where: materialWhere(filters) }),
-      db.book.count({ where: bookWhere(filters) }),
-    ]
-  )
-  return { textbooks, exams, qbank, videos, materials, books }
+): Promise<CommunitySubjectCard[]> {
+  const where: Record<string, unknown> = { status: "PUBLISHED" }
+  if (filters.curriculum) where.curriculum = filters.curriculum
+  if (filters.grade) where.grades = { has: filters.grade }
+  if (filters.lang) where.lang = filters.lang
+
+  const rows = await db.subject.findMany({
+    where,
+    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      department: true,
+      lang: true,
+      color: true,
+      thumbnail: true,
+      levels: true,
+      grades: true,
+      totalChapters: true,
+      totalLessons: true,
+      averageRating: true,
+      usageCount: true,
+      ratingCount: true,
+    },
+  })
+
+  return rows.map((s) => ({
+    id: s.id,
+    slug: s.slug,
+    name: s.name,
+    department: s.department,
+    // The school-dashboard SubjectsGrid expects a singular `level` for display
+    // (badge text). Take the first; full array stays in `levels` for filtering.
+    level: s.levels[0] ?? "",
+    levels: s.levels,
+    grades: s.grades,
+    color: s.color,
+    imageUrl: getCatalogImageUrl(s.thumbnail, "sm"),
+    totalChapters: s.totalChapters,
+    totalLessons: s.totalLessons,
+    averageRating: s.averageRating,
+    usageCount: s.usageCount,
+    ratingCount: s.ratingCount,
+  }))
+}
+
+/** Hero data for /community/[slug] — full subject + chapter + lesson tree. */
+export async function getCommunitySubjectBySlug(slug: string) {
+  return db.subject.findUnique({
+    where: { slug },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      description: true,
+      department: true,
+      lang: true,
+      color: true,
+      thumbnail: true,
+      banner: true,
+      cover: true,
+      pdf: true,
+      clickviewId: true,
+      levels: true,
+      grades: true,
+      totalChapters: true,
+      totalLessons: true,
+      averageRating: true,
+      usageCount: true,
+      ratingCount: true,
+      chapters: {
+        where: { status: "PUBLISHED" },
+        orderBy: { sequenceOrder: "asc" },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          description: true,
+          color: true,
+          thumbnail: true,
+          totalLessons: true,
+          lessons: {
+            where: { status: "PUBLISHED" },
+            orderBy: { sequenceOrder: "asc" },
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              description: true,
+              color: true,
+              thumbnail: true,
+              durationMinutes: true,
+              videoCount: true,
+              resourceCount: true,
+            },
+          },
+        },
+      },
+    },
+  })
+}
+
+/** Other-grade variants of the same subject (e.g. Arts G1 → G2/G3/...). */
+export async function getCommunitySubjectGradeSiblings(
+  clickviewId: string | null
+): Promise<{ grade: number; slug: string }[]> {
+  if (!clickviewId) return []
+  const siblings = await db.subject.findMany({
+    where: { clickviewId, status: "PUBLISHED" },
+    select: { grades: true, slug: true },
+    orderBy: { sortOrder: "asc" },
+  })
+  return siblings
+    .filter((s) => s.grades.length > 0)
+    .map((s) => ({ grade: s.grades[0], slug: s.slug }))
+    .sort((a, b) => a.grade - b.grade)
+}
+
+/**
+ * Resource bundle for /community/[slug] — mirrors the parallel batch in
+ * `src/app/[lang]/s/[subdomain]/(school-dashboard)/(listings)/subjects/[slug]/page.tsx:156-266`,
+ * minus the schoolId-gated translation step. Public content only.
+ */
+export async function getCommunitySubjectResources(args: {
+  subjectId: string
+  chapterIds: string[]
+  lessonIds: string[]
+}) {
+  const { subjectId, chapterIds, lessonIds } = args
+  const hierarchyOR = [
+    { catalogSubjectId: subjectId },
+    ...(chapterIds.length > 0
+      ? [{ catalogChapterId: { in: chapterIds } }]
+      : []),
+    ...(lessonIds.length > 0 ? [{ catalogLessonId: { in: lessonIds } }] : []),
+  ]
+
+  const [materials, exams, questionStats, assignments] = await Promise.all([
+    db.material.findMany({
+      where: {
+        status: "PUBLISHED",
+        approvalStatus: "APPROVED",
+        visibility: "PUBLIC",
+        OR: hierarchyOR,
+      },
+      orderBy: { downloadCount: "desc" },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        type: true,
+        pageCount: true,
+        downloadCount: true,
+        fileSize: true,
+        mimeType: true,
+      },
+    }),
+
+    db.exam.findMany({
+      where: {
+        subjectId,
+        status: "PUBLISHED",
+        approvalStatus: "APPROVED",
+        visibility: "PUBLIC",
+      },
+      orderBy: { usageCount: "desc" },
+      select: {
+        id: true,
+        title: true,
+        examType: true,
+        durationMinutes: true,
+        totalMarks: true,
+        totalQuestions: true,
+        usageCount: true,
+      },
+    }),
+
+    db.question
+      .groupBy({
+        by: ["questionType", "difficulty"],
+        where: {
+          approvalStatus: "APPROVED",
+          visibility: "PUBLIC",
+          OR: hierarchyOR,
+        },
+        _count: true,
+      })
+      .then((groups) => {
+        const total = groups.reduce((sum, g) => sum + g._count, 0)
+        const typeMap: Record<
+          string,
+          { count: number; byDifficulty: Record<string, number> }
+        > = {}
+        for (const g of groups) {
+          if (!typeMap[g.questionType]) {
+            typeMap[g.questionType] = { count: 0, byDifficulty: {} }
+          }
+          typeMap[g.questionType].count += g._count
+          typeMap[g.questionType].byDifficulty[g.difficulty] =
+            (typeMap[g.questionType].byDifficulty[g.difficulty] ?? 0) + g._count
+        }
+        const cards = Object.entries(typeMap)
+          .map(([type, data]) => ({ type, ...data }))
+          .sort((a, b) => b.count - a.count)
+        return { total, cards }
+      }),
+
+    db.assignment.findMany({
+      where: {
+        status: "PUBLISHED",
+        approvalStatus: "APPROVED",
+        visibility: "PUBLIC",
+        OR: hierarchyOR,
+      },
+      orderBy: { usageCount: "desc" },
+      take: 6,
+      select: {
+        id: true,
+        title: true,
+        assignmentType: true,
+        estimatedTime: true,
+        totalPoints: true,
+        usageCount: true,
+      },
+    }),
+  ])
+
+  return {
+    materials,
+    exams,
+    questionStats,
+    assignments: assignments.map((a) => ({
+      ...a,
+      // CatalogContentSections expects totalPoints as a plain number (not Decimal)
+      totalPoints: a.totalPoints ? Number(a.totalPoints) : null,
+    })),
+  }
 }
 
 // ============================================================================
-// Per-type list queries (one per drill-down page)
+// Per-resource list queries (kept from Phase 1 — usable when caller wants a
+// flat list narrowed by `subjectId` etc.)
 // ============================================================================
 
 export async function getCommunityTextbooks(
@@ -278,7 +502,7 @@ export async function getCommunityBooks(
 }
 
 // ============================================================================
-// Where-clause builders (kept private — count() and findMany() share them)
+// Where-clause builders (private — shared by count() and findMany())
 // ============================================================================
 
 function subjectFilter(filters: CommunityFilters) {
@@ -292,9 +516,8 @@ function textbookWhere(filters: CommunityFilters) {
   const where: Record<string, unknown> = { status: "PUBLISHED" }
   if (filters.lang) where.lang = filters.lang
   if (filters.grade) where.grades = { has: filters.grade }
+  if (filters.subjectId) where.subjectId = filters.subjectId
   if (filters.curriculum) {
-    // Match either the FK relation (Curriculum.code) OR the legacy string
-    // column on Subject so older textbook rows are still discoverable.
     where.OR = [
       { curriculum: { code: filters.curriculum } },
       { subject: { curriculum: filters.curriculum } },
@@ -310,8 +533,9 @@ function examWhere(filters: CommunityFilters) {
     visibility: "PUBLIC",
   }
   if (filters.lang) where.lang = filters.lang
+  if (filters.subjectId) where.subjectId = filters.subjectId
   const subj = subjectFilter(filters)
-  if (subj) where.subject = subj
+  if (subj && !filters.subjectId) where.subject = subj
   return where
 }
 
@@ -321,8 +545,9 @@ function questionWhere(filters: CommunityFilters) {
     approvalStatus: "APPROVED",
     visibility: "PUBLIC",
   }
+  if (filters.subjectId) where.catalogSubjectId = filters.subjectId
   const subj = subjectFilter(filters)
-  if (subj) where.catalogSubject = subj
+  if (subj && !filters.subjectId) where.catalogSubject = subj
   return where
 }
 
@@ -332,9 +557,11 @@ function videoWhere(filters: CommunityFilters) {
     visibility: "PUBLIC",
   }
   if (filters.lang) where.lang = filters.lang
-  const subj = subjectFilter(filters)
-  if (subj) {
-    where.lesson = { chapter: { subject: subj } }
+  if (filters.subjectId) {
+    where.lesson = { chapter: { subjectId: filters.subjectId } }
+  } else {
+    const subj = subjectFilter(filters)
+    if (subj) where.lesson = { chapter: { subject: subj } }
   }
   return where
 }
@@ -346,21 +573,21 @@ function materialWhere(filters: CommunityFilters) {
     visibility: "PUBLIC",
   }
   if (filters.lang) where.lang = filters.lang
+  if (filters.subjectId) where.catalogSubjectId = filters.subjectId
   const subj = subjectFilter(filters)
-  if (subj) where.catalogSubject = subj
+  if (subj && !filters.subjectId) where.catalogSubject = subj
   return where
 }
 
 function bookWhere(filters: CommunityFilters) {
-  // Book.gradeLevel is a String (e.g. "GENERAL"), not an Int[] — grade filter
-  // is intentionally skipped. Curriculum still flows through catalogSubject.
   const where: Record<string, unknown> = {
     status: "PUBLISHED",
     approvalStatus: "APPROVED",
     visibility: "PUBLIC",
   }
   if (filters.lang) where.lang = filters.lang
-  if (filters.curriculum) {
+  if (filters.subjectId) where.catalogSubjectId = filters.subjectId
+  if (filters.curriculum && !filters.subjectId) {
     where.catalogSubject = { curriculum: filters.curriculum }
   }
   return where

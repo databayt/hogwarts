@@ -306,35 +306,23 @@
       "label": "Filters",
       "curriculum": "Curriculum",
       "curriculumPlaceholder": "All curricula",
-      "grade": "Grade",
-      "gradePlaceholder": "All grades",
       "reset": "Reset"
     },
+    "tabs": {
+      "all": "All",
+      "gradeShort": "{n}",
+      "gradeAria": "Grade {n}"
+    },
+    "curriculum": {
+      "internationalUS": "International US"
+    },
     "types": {
-      "textbooks": {
-        "label": "Textbooks",
-        "description": "Open digital textbooks aligned to your curriculum."
-      },
-      "exams": {
-        "label": "Mock Exams",
-        "description": "Practice papers and full mock exams with rubrics."
-      },
-      "qbank": {
-        "label": "Question Bank",
-        "description": "Crowd-sourced questions sorted by chapter and difficulty."
-      },
-      "videos": {
-        "label": "Videos",
-        "description": "Lesson videos curated and approved by educators."
-      },
-      "materials": {
-        "label": "Materials",
-        "description": "Worksheets, presentations, lab manuals, and study guides."
-      },
-      "books": {
-        "label": "Library Books",
-        "description": "Library readers and reference books."
-      }
+      "textbooks": { "label": "Textbooks" },
+      "exams": { "label": "Mock Exams" },
+      "qbank": { "label": "Question Bank" },
+      "videos": { "label": "Videos" },
+      "materials": { "label": "Materials" },
+      "books": { "label": "Library Books" }
     },
     "empty": {
       "title": "No resources match these filters",
