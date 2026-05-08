@@ -70,6 +70,7 @@ import { seedStreamCourses, seedStreamEnrollments } from "./stream"
 import { seedSubjects } from "./subjects"
 import { syncSdCurriculum } from "./sync-sd-curriculum"
 import { seedTimetable } from "./timetable"
+import { seedTransportation } from "./transportation"
 import type {
   ClassRef,
   ClassroomRef,
@@ -180,6 +181,19 @@ async function resolveStudents(
     lastName: s.lastName,
     yearLevelId: s.studentYearLevels[0]?.levelId ?? undefined,
   }))
+}
+
+async function resolveStaffMembers(prisma: PrismaClient, schoolId: string) {
+  return prisma.staffMember.findMany({
+    where: { schoolId },
+    select: {
+      id: true,
+      userId: true,
+      firstName: true,
+      lastName: true,
+      position: true,
+    },
+  })
 }
 
 async function resolveDepartments(
@@ -796,6 +810,15 @@ const SEEDS: Record<string, SeedEntry> = {
       const students = await resolveStudents(prisma, schoolId)
       const classes = await resolveClasses(prisma, schoolId)
       await seedGamification(prisma, schoolId, students, classes)
+    },
+  },
+  transportation: {
+    description:
+      "Fleet, drivers, routes + stops, assignments, trips + boardings, demo API token",
+    run: async (prisma, schoolId) => {
+      const students = await resolveStudents(prisma, schoolId)
+      const staffMembers = await resolveStaffMembers(prisma, schoolId)
+      await seedTransportation(prisma, schoolId, students, staffMembers)
     },
   },
 

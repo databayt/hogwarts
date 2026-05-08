@@ -170,6 +170,7 @@
       "actualStart": "بدأت",
       "actualEnd": "انتهت",
       "status": "الحالة",
+      "boardingStatus": "الركوب",
       "notes": "ملاحظات",
       "boardings": "الركوب"
     },
@@ -235,9 +236,19 @@
   },
   "settings": {
     "title": "إعدادات النقل",
+    "subtitle": "الافتراضيات المُطبقة عند إنشاء مسارات جديدة وإشعارات الرحلات",
     "defaultPickupBuffer": "هامش وقت الاصطحاب الافتراضي (دقائق)",
+    "defaultPickupBufferHelp": "الهامش الموصى به بين موعد الركوب المجدول ووصول الحافلة.",
     "defaultMonthlyFee": "الرسوم الشهرية الافتراضية",
-    "saveButton": "حفظ الإعدادات"
+    "defaultMonthlyFeeHelp": "يُستخدم كقيمة افتراضية عند إنشاء مسارات جديدة. القيمة الخاصة بكل مسار تتجاوز هذه.",
+    "lateThreshold": "حد التأخير (دقائق)",
+    "lateThresholdHelp": "تُعتبر الحافلة متأخرة بعد هذا العدد من الدقائق عن موعد الانطلاق.",
+    "notifyOnStart": "إشعار أولياء الأمور عند انطلاق الرحلة",
+    "notifyOnFinish": "إشعار أولياء الأمور عند انتهاء الرحلة",
+    "notifyOnCancel": "إشعار أولياء الأمور عند إلغاء الرحلة",
+    "saveButton": "حفظ الإعدادات",
+    "savedToast": "تم حفظ الإعدادات",
+    "saveFailedToast": "تعذر حفظ الإعدادات"
   },
   "validation": {
     "plateRequired": "رقم اللوحة مطلوب",
@@ -281,5 +292,69 @@
     "forbidden": "ليس لديك صلاحية لتنفيذ هذا الإجراء",
     "validationFailed": "يرجى تصحيح الأخطاء والمحاولة مجددًا",
     "internalError": "حدث خطأ. يرجى المحاولة مرة أخرى."
+  },
+  "notifications": {
+    "tripStarted": {
+      "title": "انطلاق الحافلة",
+      "body": "بدأت حافلة طفلك مسارها."
+    },
+    "tripFinished": {
+      "title": "وصول الحافلة",
+      "body": "أكملت حافلة طفلك مسارها."
+    },
+    "tripCancelled": {
+      "title": "إلغاء رحلة الحافلة",
+      "body": "تم إلغاء رحلة حافلة طفلك.",
+      "bodyWithReason": "تم إلغاء رحلة حافلة طفلك: {reason}"
+    },
+    "boardingMissed": {
+      "title": "تفويت الركوب",
+      "body": "لم يصعد طفلك إلى الحافلة في هذه الرحلة."
+    }
+  },
+  "common": {
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "confirm": "تأكيد",
+    "back": "رجوع",
+    "close": "إغلاق",
+    "create": "إنشاء",
+    "update": "تحديث",
+    "loading": "جارٍ التحميل…",
+    "dragHandle": "مقبض السحب"
+  },
+  "me": {
+    "title": "نقلي",
+    "subtitle": "مساراتك النشطة ورحلاتك الأخيرة",
+    "subtitleGuardian": "مسارات ورحلات أبنائك الأخيرة",
+    "noAssignments": "لا توجد مسارات نشطة",
+    "noRecentTrips": "لا توجد رحلات أخيرة",
+    "assignmentsHeading": "المسارات النشطة",
+    "recentTripsHeading": "الرحلات الأخيرة",
+    "vehicle": "المركبة",
+    "driver": "السائق",
+    "pickupTime": "وقت الركوب",
+    "dropoffTime": "وقت النزول",
+    "studentLabel": "الطالب",
+    "directionRoundTrip": "ذهاب وإياب",
+    "directionPickup": "ركوب فقط",
+    "directionDropoff": "نزول فقط"
+  },
+  "fees": {
+    "title": "رسوم النقل",
+    "subtitle": "التعيينات النشطة × الرسم الشهري",
+    "exportCsv": "تصدير CSV",
+    "totalActive": "التعيينات النشطة",
+    "totalRecurring": "إجمالي الإيراد الشهري",
+    "perRoute": "حسب المسار",
+    "noFees": "لا توجد تعيينات نشطة للفوترة"
+  },
+  "navAux": {
+    "transportation": "النقل",
+    "transportFees": "رسوم النقل",
+    "myTransportation": "نقلي",
+    "tripsForDrivers": "الرحلات"
   }
 }

@@ -235,3 +235,94 @@ export async function getAssignmentForStudent(studentId: string) {
     return actionError(ACTION_ERRORS.LOAD_FAILED)
   }
 }
+
+export async function restoreAssignment(id: string) {
+  const ctx = await requireContext("manage_assignment")
+  if (!ctx.ok) return ctx.response
+  const { schoolId } = ctx
+
+  try {
+    const current = await db.routeAssignment.findFirst({
+      where: { id, schoolId },
+      select: { id: true, deletedAt: true, studentId: true, routeId: true },
+    })
+    if (!current) return actionError(ACTION_ERRORS.ROUTE_ASSIGNMENT_NOT_FOUND)
+    if (!current.deletedAt) return { success: true as const, data: { id } }
+
+    // Block restore if there's already a non-deleted active assignment for the same student+route
+    const conflict = await db.routeAssignment.findFirst({
+      where: {
+        schoolId,
+        studentId: current.studentId,
+        routeId: current.routeId,
+        status: "ACTIVE",
+        deletedAt: null,
+        NOT: { id },
+      },
+      select: { id: true },
+    })
+    if (conflict) return actionError(ACTION_ERRORS.ROUTE_ASSIGNMENT_OVERLAP)
+
+    await db.routeAssignment.update({
+      where: { id },
+      data: { deletedAt: null },
+    })
+
+    revalidatePath(transportationRevalidatePath("assignments"))
+    return { success: true as const, data: { id } }
+  } catch {
+    return actionError(ACTION_ERRORS.ROUTE_ASSIGNMENT_UPDATE_FAILED)
+  }
+}
+
+/**
+ * Lightweight student lookup used by the assignment form. Permission-gated
+ * so direct Prisma reads in the page-level server component don't bypass the
+ * RBAC matrix. Returns minimal fields needed for the picker.
+ */
+export async function listStudentsForAssignment() {
+  const ctx = await requireContext("manage_assignment")
+  if (!ctx.ok) return ctx.response
+  const { schoolId } = ctx
+
+  try {
+    const students = await db.student.findMany({
+      where: { schoolId },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        admissionNumber: true,
+      },
+      orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+    })
+    return { success: true as const, data: students }
+  } catch {
+    return actionError(ACTION_ERRORS.LOAD_FAILED)
+  }
+}
+
+/**
+ * Lightweight stop lookup used by the assignment form. Permission-gated.
+ */
+export async function listRouteStopsForAssignment() {
+  const ctx = await requireContext("manage_assignment")
+  if (!ctx.ok) return ctx.response
+  const { schoolId } = ctx
+
+  try {
+    const stops = await db.routeStop.findMany({
+      where: { schoolId },
+      select: {
+        id: true,
+        routeId: true,
+        name: true,
+        stopOrder: true,
+      },
+      orderBy: [{ routeId: "asc" }, { stopOrder: "asc" }],
+    })
+    return { success: true as const, data: stops }
+  } catch {
+    return actionError(ACTION_ERRORS.LOAD_FAILED)
+  }
+}

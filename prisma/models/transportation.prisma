@@ -278,3 +278,46 @@ model TripBoarding {
   @@index([schoolId, tripId, status])
   @@map("transportation_trip_boardings")
 }
+
+// One-row-per-school transportation settings.
+// Wires guardian-notification opt-outs and pickup-buffer defaults.
+model TransportationSettings {
+  id                          String   @id @default(cuid())
+  schoolId                    String   @unique
+  defaultPickupBufferMinutes  Int      @default(10)
+  defaultMonthlyFee           Decimal? @db.Decimal(10, 2)
+  notifyGuardiansOnTripStart  Boolean  @default(true)
+  notifyGuardiansOnTripFinish Boolean  @default(true)
+  notifyGuardiansOnTripCancel Boolean  @default(true)
+  lateThresholdMinutes        Int      @default(15)
+  lang                        String   @default("ar")
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("transportation_settings")
+}
+
+// Service-account API tokens. Used by external integrations (e.g. geofence
+// collectors) to authenticate without a user session. Token shape: prefix.secret
+// — the prefix (8 chars) is stored plaintext for fast lookup, the full plaintext
+// is bcrypt-hashed in tokenHash. Plaintext is returned ONCE at creation.
+model SchoolApiToken {
+  id          String    @id @default(cuid())
+  schoolId    String
+  name        String
+  tokenHash   String    @unique
+  tokenPrefix String
+  scopes      String[]
+  createdAt   DateTime  @default(now())
+  lastUsedAt  DateTime?
+  deletedAt   DateTime?
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId, deletedAt])
+  @@index([tokenPrefix])
+  @@map("school_api_tokens")
+}

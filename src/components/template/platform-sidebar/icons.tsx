@@ -7,6 +7,7 @@ import {
   BookOpen,
   Box,
   Building2,
+  Bus,
   Calendar,
   ChartBar,
   ChartPie,
@@ -79,4 +80,5 @@ export const Icons = {
   doorOpen: DoorOpen,
   building: Building2,
   whatsapp: MessageCircle,
+  bus: Bus,
 }

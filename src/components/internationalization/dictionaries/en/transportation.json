@@ -170,6 +170,7 @@
       "actualStart": "Started",
       "actualEnd": "Finished",
       "status": "Status",
+      "boardingStatus": "Boarding",
       "notes": "Notes",
       "boardings": "Boardings"
     },
@@ -235,9 +236,19 @@
   },
   "settings": {
     "title": "Transportation settings",
+    "subtitle": "Defaults applied when creating new routes and trip notifications",
     "defaultPickupBuffer": "Default pickup buffer (minutes)",
+    "defaultPickupBufferHelp": "Recommended buffer between scheduled pickup and the bus arrival.",
     "defaultMonthlyFee": "Default monthly fee",
-    "saveButton": "Save settings"
+    "defaultMonthlyFeeHelp": "Used as a placeholder when creating new routes. Per-route value overrides this.",
+    "lateThreshold": "Late threshold (minutes)",
+    "lateThresholdHelp": "Bus is considered late after this many minutes past scheduled departure.",
+    "notifyOnStart": "Notify guardians on trip start",
+    "notifyOnFinish": "Notify guardians on trip finish",
+    "notifyOnCancel": "Notify guardians on trip cancel",
+    "saveButton": "Save settings",
+    "savedToast": "Settings saved",
+    "saveFailedToast": "Could not save settings"
   },
   "validation": {
     "plateRequired": "Plate number is required",
@@ -281,5 +292,69 @@
     "forbidden": "You don't have permission to perform this action",
     "validationFailed": "Please fix the errors and try again",
     "internalError": "Something went wrong. Please try again."
+  },
+  "notifications": {
+    "tripStarted": {
+      "title": "Bus departed",
+      "body": "Your child's bus has started its route."
+    },
+    "tripFinished": {
+      "title": "Bus arrived",
+      "body": "Your child's bus has completed its route."
+    },
+    "tripCancelled": {
+      "title": "Bus trip cancelled",
+      "body": "Your child's bus trip has been cancelled.",
+      "bodyWithReason": "Your child's bus trip was cancelled: {reason}"
+    },
+    "boardingMissed": {
+      "title": "Missed boarding",
+      "body": "Your child did not board the bus on this trip."
+    }
+  },
+  "common": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "confirm": "Confirm",
+    "back": "Back",
+    "close": "Close",
+    "create": "Create",
+    "update": "Update",
+    "loading": "Loading…",
+    "dragHandle": "Drag handle"
+  },
+  "me": {
+    "title": "My transportation",
+    "subtitle": "Your active routes and recent trips",
+    "subtitleGuardian": "Routes and recent trips for your children",
+    "noAssignments": "No active route assignments",
+    "noRecentTrips": "No recent trips",
+    "assignmentsHeading": "Active assignments",
+    "recentTripsHeading": "Recent trips",
+    "vehicle": "Vehicle",
+    "driver": "Driver",
+    "pickupTime": "Pickup time",
+    "dropoffTime": "Drop-off time",
+    "studentLabel": "Student",
+    "directionRoundTrip": "Round trip",
+    "directionPickup": "Pickup only",
+    "directionDropoff": "Drop-off only"
+  },
+  "fees": {
+    "title": "Transport fees",
+    "subtitle": "Active assignments × monthly fee",
+    "exportCsv": "Export CSV",
+    "totalActive": "Active assignments",
+    "totalRecurring": "Total monthly recurring",
+    "perRoute": "Per route",
+    "noFees": "No active route assignments to bill"
+  },
+  "navAux": {
+    "transportation": "Transportation",
+    "transportFees": "Transport fees",
+    "myTransportation": "My transportation",
+    "tripsForDrivers": "Trips"
   }
 }

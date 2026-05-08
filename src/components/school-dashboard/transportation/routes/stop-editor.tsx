@@ -176,7 +176,8 @@ export function StopEditor({ routeId, initialStops, dictionary }: Props) {
                     key={s.id}
                     stop={s}
                     pending={pending}
-                    deleteLabel={dictionary.common?.delete ?? "Delete"}
+                    deleteLabel={dictionary.common.delete}
+                    dragHandleLabel={t.common.dragHandle}
                     onDelete={() => handleDelete(s.id)}
                   />
                 ))}
@@ -249,10 +250,10 @@ export function StopEditor({ routeId, initialStops, dictionary }: Props) {
                 type="button"
                 onClick={() => setOpen(false)}
               >
-                {dictionary.common?.cancel ?? "Cancel"}
+                {dictionary.common.cancel}
               </Button>
               <Button type="submit" disabled={pending}>
-                {dictionary.common?.save ?? "Save"}
+                {dictionary.common.save}
               </Button>
             </DialogFooter>
           </form>
@@ -266,10 +267,17 @@ interface ItemProps {
   stop: RouteStop
   pending: boolean
   deleteLabel: string
+  dragHandleLabel: string
   onDelete: () => void
 }
 
-function SortableStopItem({ stop, pending, deleteLabel, onDelete }: ItemProps) {
+function SortableStopItem({
+  stop,
+  pending,
+  deleteLabel,
+  dragHandleLabel,
+  onDelete,
+}: ItemProps) {
   const {
     attributes,
     listeners,
@@ -294,7 +302,7 @@ function SortableStopItem({ stop, pending, deleteLabel, onDelete }: ItemProps) {
       <div className="flex items-center gap-3">
         <button
           type="button"
-          aria-label="Drag handle"
+          aria-label={dragHandleLabel}
           className="text-muted-foreground hover:text-foreground cursor-grab touch-none px-1 active:cursor-grabbing"
           {...attributes}
           {...listeners}

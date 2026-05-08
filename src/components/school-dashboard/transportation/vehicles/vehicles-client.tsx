@@ -132,7 +132,7 @@ export function VehiclesClient({ vehicles, dictionary }: Props) {
               onClick={() => handleDelete(row.original.id)}
               type="button"
             >
-              {dictionary.common?.delete ?? "Delete"}
+              {dictionary.common.delete}
             </Button>
           </div>
         ),
@@ -397,10 +397,10 @@ export function VehiclesClient({ vehicles, dictionary }: Props) {
                 type="button"
                 onClick={() => setOpen(false)}
               >
-                {dictionary.common?.cancel ?? "Cancel"}
+                {dictionary.common.cancel}
               </Button>
               <Button type="submit" disabled={pending}>
-                {dictionary.common?.save ?? "Save"}
+                {dictionary.common.save}
               </Button>
             </DialogFooter>
           </form>

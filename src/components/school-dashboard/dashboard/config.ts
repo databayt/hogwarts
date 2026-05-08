@@ -7,6 +7,7 @@ import {
   BarChart3,
   Bell,
   BookOpen,
+  Bus,
   Calendar,
   CalendarDays,
   CheckCircle,
@@ -43,6 +44,7 @@ export const iconMap: Record<string, ElementType> = {
   TrendingDown,
   ChevronRight,
   Bell,
+  Bus,
   Users,
   BookOpen,
   GraduationCap,
@@ -128,16 +130,16 @@ export function getQuickActionsByRole(
           description: "Manage accounts",
         },
         {
+          iconName: "Bus",
+          label: "Transportation",
+          href: `${baseUrl}/transportation`,
+          description: "Fleet & routes",
+        },
+        {
           iconName: "Settings",
           label: "Settings",
           href: `${baseUrl}/settings`,
           description: "Configure system",
-        },
-        {
-          iconName: "BarChart3",
-          label: "Analytics",
-          href: `${baseUrl}/analytics`,
-          description: "View insights",
         },
       ]
 
@@ -202,16 +204,16 @@ export function getQuickActionsByRole(
           description: "Create new",
         },
         {
-          iconName: "MessageSquare",
-          label: "Messages",
-          href: `${baseUrl}/messages`,
-          description: "Inbox",
-        },
-        {
           iconName: "Calendar",
           label: "Timetable",
           href: `${baseUrl}/timetable`,
           description: "View schedule",
+        },
+        {
+          iconName: "Bus",
+          label: "Trips",
+          href: `${baseUrl}/transportation/trips`,
+          description: "Bus trips",
         },
         {
           iconName: "ClipboardList",
@@ -242,10 +244,10 @@ export function getQuickActionsByRole(
           description: "Class schedule",
         },
         {
-          iconName: "MessageSquare",
-          label: "Messages",
-          href: `${baseUrl}/messages`,
-          description: "Inbox",
+          iconName: "Bus",
+          label: "Transport",
+          href: `${baseUrl}/transportation/me`,
+          description: "My route",
         },
         {
           iconName: "BookOpen",
@@ -282,10 +284,10 @@ export function getQuickActionsByRole(
           description: "Track record",
         },
         {
-          iconName: "MessageSquare",
-          label: "Messages",
-          href: `${baseUrl}/messages`,
-          description: "Contact school",
+          iconName: "Bus",
+          label: "Transport",
+          href: `${baseUrl}/transportation/me`,
+          description: "Children's routes",
         },
         {
           iconName: "DollarSign",
@@ -328,10 +330,10 @@ export function getQuickActionsByRole(
           description: "Fee structure",
         },
         {
-          iconName: "CheckCircle",
-          label: "Approvals",
-          href: `${baseUrl}/finance/approvals`,
-          description: "Pending items",
+          iconName: "Bus",
+          label: "Transport fees",
+          href: `${baseUrl}/transportation/fees`,
+          description: "Transport billing",
         },
         {
           iconName: "FolderOpen",
@@ -362,10 +364,10 @@ export function getQuickActionsByRole(
           description: "Inbox",
         },
         {
-          iconName: "Bell",
-          label: "Announce",
-          href: `${baseUrl}/announcements`,
-          description: "School news",
+          iconName: "Bus",
+          label: "Transport",
+          href: `${baseUrl}/transportation`,
+          description: "Routes & trips",
         },
         {
           iconName: "FileText",

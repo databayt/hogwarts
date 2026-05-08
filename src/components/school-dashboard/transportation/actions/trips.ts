@@ -131,8 +131,6 @@ export async function startTrip(input: TripStartInput) {
       tripId: id,
       routeId: current.routeId,
       kind: "trip_started",
-      title: "Bus departed",
-      body: "Your child's bus has started its route.",
     })
 
     return { success: true as const, data: { id } }
@@ -179,8 +177,6 @@ export async function finishTrip(input: TripFinishInput) {
       tripId: id,
       routeId: trip.routeId,
       kind: "trip_finished",
-      title: "Bus arrived",
-      body: "Your child's bus has completed its route.",
     })
 
     return { success: true as const, data: trip }
@@ -226,10 +222,7 @@ export async function cancelTrip(input: TripCancelInput) {
       tripId: id,
       routeId: trip.routeId,
       kind: "trip_cancelled",
-      title: "Bus trip cancelled",
-      body: reason
-        ? `Your child's bus trip was cancelled: ${reason}`
-        : "Your child's bus trip has been cancelled.",
+      reason: reason ?? undefined,
     })
 
     return { success: true as const, data: trip }
@@ -365,5 +358,30 @@ export async function getTrip(id: string) {
     return { success: true as const, data: trip }
   } catch {
     return actionError(ACTION_ERRORS.LOAD_FAILED)
+  }
+}
+
+export async function restoreTrip(id: string) {
+  const ctx = await requireContext("manage_trip")
+  if (!ctx.ok) return ctx.response
+  const { schoolId } = ctx
+
+  try {
+    const current = await db.trip.findFirst({
+      where: { id, schoolId },
+      select: { id: true, deletedAt: true },
+    })
+    if (!current) return actionError(ACTION_ERRORS.TRIP_NOT_FOUND)
+    if (!current.deletedAt) return { success: true as const, data: { id } }
+
+    await db.trip.update({
+      where: { id },
+      data: { deletedAt: null },
+    })
+
+    revalidatePath(transportationRevalidatePath("trips"))
+    return { success: true as const, data: { id } }
+  } catch {
+    return actionError(ACTION_ERRORS.TRIP_UPDATE_FAILED)
   }
 }
