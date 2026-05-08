@@ -26,8 +26,33 @@ export interface CommunityFilters {
   grade?: number
   /** restrict to rows where row.lang === currentLocale */
   lang?: string
+  /** narrow per-resource queries to a single subject — used by the detail page */
+  subjectId?: string
   /** per-resource result cap (default 24) */
   limit?: number
+}
+
+/**
+ * Subject card view-model — drives the SubjectsGrid on /community.
+ * Mirrors the `SubjectItem` shape from
+ * `src/components/school-dashboard/listings/subjects/catalog-subjects-grid.tsx:14-29`
+ * so the existing client grid component can be reused without forking.
+ */
+export interface CommunitySubjectCard {
+  id: string
+  slug: string
+  name: string
+  department: string
+  level: string
+  levels: string[]
+  grades: number[]
+  color: string | null
+  imageUrl: string | null
+  totalChapters: number
+  totalLessons: number
+  averageRating: number
+  usageCount: number
+  ratingCount: number
 }
 
 /** Options exposed to the `<FilterBar>` client component */
@@ -41,17 +66,9 @@ export interface CommunityFilterOptions {
   }>
 }
 
-/** Cards consumed by `<HubGrid>` for the /community overview */
-export interface CommunityCounts {
-  textbooks: number
-  exams: number
-  qbank: number
-  videos: number
-  materials: number
-  books: number
-}
-
-// === Card view models — one per resource type ===
+// === Resource card view models — used by Phase-1-era helpers and any
+//     future per-resource lists (the subject detail page sources its data
+//     directly via `getCommunitySubjectResources`). ===
 
 export interface CommunityTextbookCard {
   id: string
