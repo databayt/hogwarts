@@ -1,0 +1,162 @@
+---
+title: Roadmap
+description: Hogwarts shipped state, next milestones, and long-horizon vision — what's done, what's next, and what's aspirational.
+---
+
+Three buckets: **Shipped** today, **Next** actively planned, **Vision** long-horizon. Each Next item is shaped to fit a GitHub issue so contributors can claim it.
+
+For the full feature inventory, see [MVP](/docs/mvp). For requirements and constraints, see [PRD](/docs/prd).
+
+## Status legend
+
+| Status | Meaning |
+| ------ | ------- |
+| `Shipped` | Live in production today |
+| `Next` | Actively planned; issue exists or will exist |
+| `Vision` | Aspirational; no commitment |
+
+## Shipped today
+
+The 14-epic build is summarised below. Detail per epic in [MVP](/docs/mvp).
+
+| # | Epic | Status |
+| - | ---- | ------ |
+| 01 | Infrastructure — multi-tenant subdomain, edge proxy, Sentry, 11 cron jobs | `Built+Polish` |
+| 02 | Authentication & Users — NextAuth v5, 2FA, OAuth, invitations, audit log | `Built` |
+| 03 | Configuration — 18-step onboarding, school + academic structure | `Built` |
+| 04 | People — students / teachers / parents / staff with multi-step wizards | `Built` |
+| 05 | Admission — 9-step app, OTP, AI doc review, merit, multi-gateway payment | `Built` |
+| 06 | Attendance — 11 capture modes, gamification, AI insights | `Built+Polish` |
+| 07 | Exams — assignments, mock, quizzes, qbank with AI gen, certificates, transcripts | `Built` |
+| 08 | Timetable — visual builder, conflict detection, generation | `Built` |
+| 09 | Finance — 6 payment gateways, Plaid + Dwolla, payroll, invoicing | `Built` |
+| 10 | Communication — announcements, real-time messaging, WhatsApp bridge | `Built` |
+| 11 | Stream / LMS — courses, lessons, certificates, ClickView CDN | `Built+Polish` |
+| 12 | Library — catalog, contribute, borrow records | `Built` |
+| 13 | Transport — drivers, vehicles, routes, geofence boarding | `Built` |
+| 14 | Catalog — global subjects + curricula, contribution workflow | `Built+Polish` |
+
+## Next
+
+Concrete items planned for the upcoming roadmap window. Each is shaped as a GitHub issue.
+
+### Migrations & infra
+
+#### Section-centric migration completion
+Status: `Next` · Effort: large · Owner: TBD
+
+Today: `Timetable` and `Attendance` reference `Class` for backward-compat. Target: `Section.id` everywhere so a single class can have multiple sections (Grade 7-A vs Grade 7-B) without duplication. The migration plan lives at `.bmad/planning/architecture-section-timetable-attendance.md` (status: PROPOSED). Roughly 750 existing timetable slots need a backfill.
+
+#### Multi-tenant isolation regression suite
+Status: `Next` · Effort: medium
+
+Existing isolation tests in `tests/multi-tenant/` cover the happy paths. Harden CI gates: every new server action must pass an isolation check, and any Prisma query without a `schoolId` filter must fail review. Goal: zero cross-tenant leakage forever.
+
+#### 11 daily cron jobs — observability dashboard
+Status: `Next` · Effort: small
+
+Currently the 11 cron jobs (announcements publish / expire, email queue, WhatsApp queue, cleanup-notifications, event-reminders, assignment-reminders, fee-overdue, attendance-policies, teacher-reminders, scheduled-reports) run silently on Vercel. Add a developer-facing dashboard surfacing last-run + duration + error rate per job.
+
+### Polish & gaps
+
+#### ClickView asset wave
+Status: `Next` · Effort: large
+
+Only ~32–40 of ~986 ClickView lesson banners are downloaded; the rest fall back to ClickView's CDN. Plan: complete the asset wave so the corpus is self-hosted on `cdn.databayt.org`, with a verification job that fails if any subject has missing imagery.
+
+#### Dictionary key parity sweep
+Status: `Next` · Effort: medium
+
+11,000+ dictionary keys across EN + AR. Current EN / AR file pairs differ by a handful of lines (drift indicator). Build a coverage report (similar to `/coverage hogwarts translation`) that flags any key present in one locale but missing in the other, and add a CI gate.
+
+#### 2FA UX polish
+Status: `Next` · Effort: small
+
+The 2FA cryptography is wired (`TwoFactorToken` + `TwoFactorConfirmation`). Polish: re-prompt cadence (every 30 days vs every login), recovery codes UI, "trusted device" toggle, and a clearer enable / disable flow in the user profile.
+
+#### Translation cache hit-rate dashboard
+Status: `Next` · Effort: small
+
+`TranslationCache` records every translated read. Surface hit / miss / cost in a developer dashboard so we can tune Google Translate spend and identify bilingual columns we should refactor to single-language storage.
+
+### Missing surfaces
+
+#### Health module — full UI
+Status: `Next` · Effort: large
+
+`HealthRecord` exists as a Prisma model and a tab on the student profile. Build the full UI: clinic visit log, vaccination tracking, allergy alerts, parent visibility, nurse role gate. Schema is mostly ready; UI is the work.
+
+#### Audit log review UI
+Status: `Next` · Effort: small
+
+`AuditLog` is written across the codebase but there is no admin reader UI. Build a filterable timeline (by user, action, resource, date range) for `ADMIN` and `DEVELOPER` roles. Useful for compliance audits and incident response.
+
+#### Custom domain self-service UI
+Status: `Next` · Effort: medium
+
+Backend is wired (Upstash Redis lookup in `proxy.ts`, `DomainRequest` model, `/api/domain-request` route). Build the admin self-service flow so a school admin can request a custom domain (`www.theirschool.com`), see DNS instructions, and verify the CNAME without contacting databayt staff.
+
+#### Mobile API completion
+Status: `Next` · Effort: medium-large
+
+`src/app/api/mobile/*` exists for native-app endpoints; many surfaces are stubbed. Complete the mobile-first contracts (auth, attendance, grades, fees, notifications) ahead of the native-mobile vision item.
+
+### Operations
+
+#### AGENTS.md graduation
+Status: `Next` · Effort: small
+
+Promote `AGENTS.md.draft` (Vercel-style agent manifest, generated 2026-04-25) to root `AGENTS.md`. Sync content with `CLAUDE.md` and link from `README.md`.
+
+#### Pilot enablement
+Status: `Next` · Effort: external
+
+First-customer enablement for the live tenant (`kingfahad.databayt.org`). Tracked outside the docs site — see [Sales](/docs/sales) and [Incubators](/docs/incubators).
+
+## Vision
+
+Long-horizon items with no current commitment. Listed for transparency about where Hogwarts could go.
+
+### Platform expansion
+- Native mobile apps (React Native / Expo) — backend mobile-API surface is partial today.
+- Additional locales: French, Spanish, Hindi, Mandarin. Single-language storage strategy supports drop-in additions.
+- Per-school plugin architecture with sandboxed extensions.
+- District-level management (multi-school groups).
+- Marketplace for community plugins, themes, curricula, and report templates.
+
+### AI capabilities
+- AI teaching assistant (per-subject co-pilot for teachers).
+- Personalised learning paths tuned to student attendance + assessment history.
+- Automatic timetable generation with constraint solver (constraints + preferences in place; solver TBD).
+
+### Trust & credentials
+- Blockchain-anchored academic credentials and transcripts.
+- Verifiable certificates via decentralised identifiers.
+
+### New surfaces
+- VR / AR learning experiences (lab simulations, virtual field trips).
+- Hostel / boarding management.
+- Cafeteria / meal-plan management.
+- Inventory + asset tracking (separate from finance budget).
+- Health clinic — beyond the Health module above, full clinic operations.
+
+### Community
+- Global teacher collaboration network — share lesson plans, syllabi, exam blueprints across schools.
+- Curriculum-engineering pipeline open to outside contributors via the catalog `Proposal` workflow.
+
+## How to add a Next item
+
+1. Open an issue at [github.com/databayt/hogwarts/issues](https://github.com/databayt/hogwarts/issues) using the feature template.
+2. Self-assess effort: `small` / `medium` / `large` / `external`.
+3. Link the issue back to this doc.
+4. If the item changes scope or risk, update [PRD](/docs/prd).
+5. Once shipped, move it from "Next" to the relevant epic in [MVP](/docs/mvp).
+
+## References
+
+- [MVP](/docs/mvp) — current shipped state
+- [PRD](/docs/prd) — product requirements
+- [Architecture](/docs/architecture) — system design
+- [Shared economy](/docs/shared-economy) — OSS contribution and value-sharing model
+- [Sales](/docs/sales) — commercial process and pilot enablement
+- [Incubators](/docs/incubators) — accelerator-specific positioning
