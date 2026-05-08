@@ -1,105 +1,77 @@
 ---
-title: "Hogwarts"
-description: "Hogwarts School Automation Platform - Automate educational operations and reclaim time for what truly matters"
+title: Hogwarts
+description: Open-source, multi-tenant K-12 school platform — built in the open, contributed to in public.
 ---
 
-## Introduction
+Hogwarts is an open-source, multi-tenant K-12 school platform. Every classroom in a school — admission, attendance, exams, fees, messaging, transport, library, LMS — fits inside one codebase, behind one subdomain per school, with one shared catalog underneath.
 
-**Automate the boring.** At Hogwarts, we're building codebase for school automation, one component at a time. Every line of code is open source, every contribution is valued, and every developer may shape the future of how schools operate.
+This page is the entry point. If you're new to the codebase, start here.
 
-**We sell the origin of value** — we sell **Time**, the currency that drives the world — what if you could reclaim yours and focus on what truly matters? It's more than a service — it's an escape from the matrix. A restoration of time through the elimination of repetitive tasks, streamlined operations, and automated processes.
+## What is it
 
-**The Repository of Wonders.** Think of our codebase as a living library where every contribution becomes part of something greater. From atomic components to complete templates, from blocks to micro-services to full automation solutions—we're creating the building blocks that will power education industry.
+A school operations platform built around three ideas:
 
-**Follow along as we figure this out together.** This isn't just about building software; it's about creating a collaborative ecosystem where developers, businesses, and innovators unite to solve real problems. Every contribution you make doesn't just help one project—it becomes part of a growing foundation that serves countless businesses worldwide.
+1. **One subdomain per school.** Each tenant gets `school.databayt.org` (or a custom CNAME). Data is isolated by `schoolId` end-to-end.
+2. **One shared catalog underneath.** Curricula, subjects, chapters, and lessons are global content. Schools subscribe and apply overrides — they don't duplicate.
+3. **Arabic-first, RTL by default.** The default locale is Arabic; English is parity. The codebase enforces logical CSS so RTL works without overrides.
 
-## What We Do
+| Attribute | Value |
+| --------- | ----- |
+| Repository | [github.com/databayt/hogwarts](https://github.com/databayt/hogwarts) |
+| Live | [ed.databayt.org](https://ed.databayt.org) |
+| License | SSPL-1.0 — self-host free; SaaS resale needs commercial license |
+| Stack | Next.js 16, React 19, Prisma 6, NextAuth v5, Tailwind 4, PostgreSQL on Neon |
+| Markets | MEA first (Sudan, Saudi Arabia, Egypt, South Africa) |
 
-- **Development** - Enterprise-grade applications and platforms
-- **Automation** - Streamlined workflows and process optimization
-- **Consulting** - Technical expertise and implementation support
-- **Open Source** - Community-driven development and innovation
+## Where to go next
 
-## Business Model
+### For developers
 
-### Per Project
+- [Get started](/docs/get-started) — clone, install, run locally
+- [Architecture](/docs/architecture) — mirror pattern, file conventions, multi-tenant safety
+- [Pattern](/docs/pattern) — code conventions per feature
+- [Stack](/docs/stack) — the full technology choices
 
-Custom solutions tailored to specific client requirements and business processes. Each project delivers unique automation systems designed to solve particular challenges and operational needs.
+### For product / status
 
-### Partners
+- [PRD](/docs/prd) — requirements, role model, NFRs, constraints
+- [MVP](/docs/mvp) — 14-epic shipped state with maturity badges
+- [Roadmap](/docs/roadmap) — what's next and the long-horizon vision
 
-Partnership opportunities for businesses seeking to outsource technology development, access specialized talent for temporary projects and specific technical expertise.
+### For commercial
 
-### Codebase
+- [Business model](/docs/business-model) — pricing tiers and revenue structure
+- [Sales](/docs/sales) — commercial process and prospect playbook
+- [Incubators](/docs/incubators) — accelerator-specific strategy
+- [Competitors](/docs/competitors) — landscape and positioning
 
-Codebase executes the majority of the task, through accumulated, reusable components. Contributors who expand this foundation earn a share of the value it generates.
+### For community
 
-### SaaS
+- [Contributing](/docs/contributing) — how to send a PR
+- [Code of conduct](/docs/code-of-conduct) — community standards
+- [Shared economy](/docs/shared-economy) — how contributions earn recognition and revenue share
+- [GitHub issues](https://github.com/databayt/hogwarts/issues) — work queue
 
-Ready-to-deploy software products sold to multiple organizations with similar needs. Act as a go-to central hub for businesses seeking automation solutions.
+## Why open source
 
-## Core Values
+Hogwarts is built in public. The reasons are practical:
 
-### Transparency
+- **Schools deserve code they can audit.** Student data is sensitive; black-box vendors are a hazard.
+- **Schools deserve software they can extend.** Curriculum and policy change; a closed platform is a cage.
+- **Contributors deserve transparency.** Every contribution is publicly tracked; the [Shared economy](/docs/shared-economy) doc explains how that converts to recognition and value.
 
-Every decision, from technical architecture to business strategy, is documented and accessible to the community. We use GitHub to manage our codebase and discussions, ensuring transparency, traceability, and open collaboration. Contributions are publicly tracked, so every developer can see their impact and know the process is clear and fair. We believe this openness builds trust and enables better contributions.
+SSPL-1.0 keeps the code free for self-hosters and protects against parasitic SaaS resale. The pattern: **fork, fix, contribute back**.
 
-### Innovation
+## Status at a glance
 
-Our best ideas come from our diverse community of developers, business professionals, and users. We actively encourage contributions and value every perspective. We're actively building in: Business Automation, Data Analytics, AI Agents, Blockchain, and Distributed Computing.
+| Surface | Count |
+| ------- | ----- |
+| Prisma models | 302 across 73 schema files |
+| Prisma enums | 149 |
+| API route handlers | 178 across 52 resource folders |
+| Tenant dashboard pages | ~360 |
+| Dedicated test files | 245 |
+| Dictionary keys (EN + AR) | 11,000+ |
+| Claude harness | 50 agents · 47 commands · 16 skills |
 
-### Growth
-
-We balance rapid innovation with long-term sustainability, ensuring our solutions remain robust and our business model benefits all stakeholders.
-
-### Excellence
-
-Every product we ship meets the highest standards of quality, security, and performance. Our reputation is built on reliable, enterprise-grade solutions.
-
-## What You'll Find Here
-
-### For Developers
-
-- **Architecture** – System design and technical specs
-- **Stack** – Technology used
-- **Pattern** – Best practices and coding standards
-- **Contributing Guide** – How to get involved in development
-
-### For Stakeholders
-
-- **Business Model** – Revenue streams and value creation
-- **Roadmap** – Product development plans and strategic goals
-- **Sales Process** – Customer acquisition and revenue generation
-- **Stock Sharing** – Equity distribution and governance
-
-### For Community
-
-- **Code of Conduct** – Community standards and expectations
-- **Issues & Support** – Bug reporting and assistance
-- **Discussions** – Forums and knowledge sharing
-
-### For Clients
-
-- Understand our **Business Model**
-- See what's ahead in the **Roadmap**
-- Contact **Sales** to discuss your needs
-- Access **Support Options** when needed
-
-### For Legal
-
-- **Open Source Licenses** – Usage terms and compliance
-- **Terms of Service** – Legal policies
-- **Privacy Policy** – Data protection commitments
-
-## Getting Started
-
-New comer? Start with the essentials:
-
-1. Review the [Code of Conduct](/docs/code-of-conduct)
-2. Explore the [Architecture](/docs/architecture)
-3. Check the [Contributing Guide](/docs/contributing)
-4. Join Community Discussions
-
----
-
-_Building the future of educational automation, one component at a time._
+For the full feature inventory and per-epic maturity, see [MVP](/docs/mvp).

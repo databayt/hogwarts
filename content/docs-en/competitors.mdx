@@ -1,23 +1,72 @@
 ---
 title: Competitors
-description: Market landscape and competitor analysis
+description: Market landscape — global SIS / school management platforms, MEA-specific competitors, and how Hogwarts positions against them.
 ---
 
-**Browse competitors for inspiration and study their features.**
+A directory of who else is in the market, segmented by region. The "vs Hogwarts" table at the end captures positioning angles.
 
-## Industry Leaders
+## MEA-specific platforms
 
-1. [PowerSchool](https://www.powerschool.com/) - $5.6B valuation, 60M+ students
-2. [Skyward](https://www.skyward.com/) - 2,500+ districts, Qmlativ platform
-3. [Infinite Campus](https://www.infinitecampus.com/) - 10 SEAs, 34+ US states
-4. [Classter](https://www.classter.com/) - 500+ institutions, 40+ countries
-5. [Blackbaud](https://www.blackbaud.com/) - 40+ years serving private K-12
-6. [Veracross](https://www.veracross.com/) - Private K-12 specialist
-7. [FACTS SIS](https://factsmgt.com/) - Faith-based and private schools
-8. [Fedena](https://www.fedena.com/) - 22 core modules, global reach
-9. [OpenEduCat](https://openeducat.org/) - Open source education management
+Most relevant for our primary market (Sudan, Saudi Arabia, Egypt, South Africa, GCC).
 
-## Features
+1. [Classera](https://www.classera.com/) — Saudi-headquartered LMS + SIS hybrid. Strong in GCC private schools. Closed-source. Arabic-first UX.
+2. [Almentor](https://www.almentor.net/) — Egyptian video-learning platform. Stronger on professional learning than K-12 ops, but creeping into school content distribution.
+3. [Madrasati](https://madrasati.sa/) — Saudi Ministry of Education's national LMS. Government mandate, free for Saudi public schools. Not B2B for private market.
+4. [SIS by Tatweer](https://tatweer.edu.sa/) — Saudi government student-information system. Public-sector default.
+5. [Almis](https://www.almis-edu.com/) — Egyptian SIS focused on private schools. Closed-source, on-prem heritage.
+6. [Edmodo](https://www.edmodo.com/) — Was widely deployed regionally before its 2022 shutdown; some MEA schools still asking for migrations.
+7. [Eduvos](https://www.eduvos.com/) (formerly Pearson Africa) — South African higher-ed, but K-12 partner solutions exist via reseller channel.
+
+## Global K-12 leaders
+
+Mostly US / EU; relevant for feature benchmarking and any school migrating from these.
+
+1. [PowerSchool](https://www.powerschool.com/) — $5.6B valuation, 60M+ students. Industry default in US public schools.
+2. [Skyward](https://www.skyward.com/) — 2,500+ districts; Qmlativ platform.
+3. [Infinite Campus](https://www.infinitecampus.com/) — 10 SEAs, 34+ US states.
+4. [Classter](https://www.classter.com/) — 500+ institutions, 40+ countries. Closer to MEA than other globals.
+5. [Blackbaud](https://www.blackbaud.com/) — 40+ years serving private K-12. Premium pricing.
+6. [Veracross](https://www.veracross.com/) — Private K-12 specialist, strong for independent schools.
+7. [FACTS SIS](https://factsmgt.com/) — Faith-based and private schools.
+8. [Fedena](https://www.fedena.com/) — 22 core modules, global reach. Open-core model.
+9. [OpenEduCat](https://openeducat.org/) — Open-source education management. Closest OSS analog to Hogwarts but India-focused and Odoo-based.
+
+## vs Hogwarts
+
+Where we differ from the field. This is positioning, not boast — every competitor wins on something.
+
+| Dimension | Hogwarts | Most competitors |
+| --------- | -------- | ---------------- |
+| **License** | SSPL-1.0 (open source, self-hostable) | Closed source / proprietary |
+| **Default locale** | Arabic-first, English parity | English-first; Arabic via translation layer |
+| **RTL** | Logical CSS — works without overrides | Bolted on after the fact |
+| **Multi-tenancy** | Subdomain-native, edge-resolved | Single-tenant or instance-per-school |
+| **Custom domains** | Self-service via Upstash Redis lookup | Manual reverse-proxy or not supported |
+| **Stack** | Next.js 16, React 19, Prisma 6, PostgreSQL on Neon | LAMP / Java / Rails legacy or proprietary |
+| **AI in admission** | Anthropic-driven document classification + merit ranking + bank-receipt extraction | Manual review; OCR if any |
+| **Payment gateways** | Stripe + bankak + tap + bank-transfer + cash + mobile-money | Stripe / PayPal only; rarely covers MEA payment methods |
+| **Banking** | Plaid + Dwolla integration for school finance | External bookkeeping; no native banking |
+| **Attendance modes** | 11 (manual, QR, barcode, kiosk, geofence, RFID, biometric, NFC, BLE, bulk-upload, face-recognition) | Manual + QR if lucky |
+| **Messaging** | In-app real-time + email + push + WhatsApp Evolution API bridge | Email + maybe SMS |
+| **Catalog model** | Shared global catalog with per-school overrides | Per-school content silos |
+| **Curricula** | SD / US / IN / FR seeded; Sudan-specific bilingual subject names | One curriculum, US-default |
+| **Architecture transparency** | Full architecture docs + per-feature CLAUDE.md guides | Opaque |
+| **Contribution model** | Public GitHub, [shared-economy](/docs/shared-economy) revenue share | Closed development |
+
+## Where competitors win
+
+Honest accounting of what the field does better today.
+
+- **PowerSchool / Skyward**: deeper US state-reporting integrations (FERPA-aligned exports, district aggregations).
+- **Blackbaud / Veracross**: stronger fundraising / alumni / development modules for private schools.
+- **Classter**: more mature multi-currency + multi-curriculum out of the box.
+- **Almis**: long-standing relationships with Egyptian Ministry of Education for accreditation reporting.
+- **Madrasati**: government mandate makes it the default for Saudi public schools at zero direct cost.
+- **OpenEduCat**: deeper Odoo ecosystem integration if a school already runs Odoo.
+
+## Feature checklist
+
+The fully-loaded feature universe schools ask about. Hogwarts' status per feature is in [MVP](/docs/mvp); items not yet built are tracked in [Roadmap](/docs/roadmap).
 
 - Student Management <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-blue-500/20 text-blue-700 dark:text-blue-400 rounded font-medium">core</span>
 - Teacher Management <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-blue-500/20 text-blue-700 dark:text-blue-400 rounded font-medium">core</span>
@@ -50,10 +99,12 @@ description: Market landscape and competitor analysis
 - Communication Hub <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-pink-500/20 text-pink-700 dark:text-pink-400 rounded font-medium">communication</span>
 - Announcements Board <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-pink-500/20 text-pink-700 dark:text-pink-400 rounded font-medium">communication</span>
 - SMS & Email <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-pink-500/20 text-pink-700 dark:text-pink-400 rounded font-medium">communication</span>
+- WhatsApp Integration <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-pink-500/20 text-pink-700 dark:text-pink-400 rounded font-medium">communication</span>
 - Mobile App <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-pink-500/20 text-pink-700 dark:text-pink-400 rounded font-medium">communication</span>
 - Admissions Portal <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-teal-500/20 text-teal-700 dark:text-teal-400 rounded font-medium">enrollment</span>
 - Online Applications <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-teal-500/20 text-teal-700 dark:text-teal-400 rounded font-medium">enrollment</span>
 - Document Management <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-teal-500/20 text-teal-700 dark:text-teal-400 rounded font-medium">enrollment</span>
+- AI Document Review <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-teal-500/20 text-teal-700 dark:text-teal-400 rounded font-medium">enrollment</span>
 - Alumni Management <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-indigo-500/20 text-indigo-700 dark:text-indigo-400 rounded font-medium">community</span>
 - Event Management <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-indigo-500/20 text-indigo-700 dark:text-indigo-400 rounded font-medium">community</span>
 - Discipline Tracking <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-red-500/20 text-red-700 dark:text-red-400 rounded font-medium">welfare</span>
@@ -68,3 +119,10 @@ description: Market landscape and competitor analysis
 - ID Card Generation <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-sky-500/20 text-sky-700 dark:text-sky-400 rounded font-medium">documents</span>
 - Certificate Generation <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-sky-500/20 text-sky-700 dark:text-sky-400 rounded font-medium">documents</span>
 - Transcripts <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-sky-500/20 text-sky-700 dark:text-sky-400 rounded font-medium">documents</span>
+
+## References
+
+- [PRD](/docs/prd) — what Hogwarts is and its constraints
+- [MVP](/docs/mvp) — current shipped state per feature
+- [Roadmap](/docs/roadmap) — what's planned and the long-horizon vision
+- [Sales](/docs/sales) — commercial process and objection handling

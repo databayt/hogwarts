@@ -29,8 +29,8 @@ For route `/abc`:
 
 ## Tech Stack
 
-- **Framework**: Next.js 16.1.0 with App Router and Turbopack, React 19.2.0, TypeScript 5.8.3
-- **Database**: PostgreSQL with Prisma ORM 6.19.0 (264 models, 132 enums), Neon Serverless
+- **Framework**: Next.js 16.2.x with App Router and Turbopack, React 19.2.x, TypeScript 5.x
+- **Database**: PostgreSQL with Prisma ORM 6.19.x (302 models, 149 enums, 73 schema files), Neon Serverless
 - **Authentication**: NextAuth v5 (beta.30) with custom multi-tenant Prisma adapter
 - **Styling**: Tailwind CSS v4 with OKLCH color format
 - **UI Components**: Radix UI primitives + shadcn/ui (35 component directories)
@@ -99,7 +99,7 @@ Each feature directory follows these naming conventions:
 | `src/lib/catalog-setup.ts`    | 366      | Catalog bridge: academic structure provisioning                           |
 | `src/lib/dns-service.ts`      | 644      | DNS verification: multi-provider custom domains                           |
 | `src/lib/security-headers.ts` | 173      | CSP, HSTS, XSS protection                                                 |
-| `prisma/models/`              | 57 files | 264 models, 132 enums                                                     |
+| `prisma/models/`              | 73 files | 302 models, 149 enums                                                     |
 | `CLAUDE.md`                   | —        | Project-wide architectural guidelines                                     |
 
 ## Anti-patterns

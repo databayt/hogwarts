@@ -1,309 +1,364 @@
 ---
 title: MVP
-description: Scope of the school automation platform across 13 epics — from infrastructure to LMS, finance, and messaging.
+description: Hogwarts current shipped state — 14 epics with maturity badges, plus what's schema-only and what's not built.
 ---
 
-A school can enroll students, manage classes, track attendance, grade assignments, collect fees, and communicate with parents — all on a single platform with multi-tenant isolation. This page lists the epics that define MVP scope. For implementation status, file an issue or check existing ones on GitHub.
+This is a snapshot of what's actually built today. For requirements see [PRD](/docs/prd); for direction see [Roadmap](/docs/roadmap).
 
-## Epics at a glance
+## Maturity badges
+
+| Badge | Meaning |
+| ----- | ------- |
+| `Built` | Feature is shipped end-to-end with backend, UI, i18n, and tests |
+| `Built+Polish` | Feature is shipped but has known polish or migration work in flight |
+| `In Progress` | Backend or UI partial; tracked actively |
+| `Schema Only` | Prisma model exists, no UI or actions yet |
+| `Vaporware` | String mentions in dictionaries but zero code |
+
+## Epics at a glance (14)
 
 <CardGrid cols={3}>
   <DocCard
-    title="Infrastructure"
-    description="Multi-tenant architecture, subdomain routing, core technical setup."
+    title="01 — Infrastructure"
+    href="/docs/architecture"
+    description="Multi-tenant architecture, subdomain routing, edge proxy, Sentry, CI/CD."
   />
   <DocCard
-    title="Authentication"
+    title="02 — Authentication"
     href="/docs/authentication"
-    description="User management, role-based access, secure auth flows."
+    description="NextAuth v5, 2FA, OAuth, password reset, invitations, audit log."
   />
   <DocCard
-    title="Configuration"
-    description="School profile, academic structure, branding, settings."
+    title="03 — Configuration"
+    href="/docs/onboarding"
+    description="School profile, academic year, branding, 18-step onboarding wizard."
   />
   <DocCard
-    title="Student"
+    title="04 — People"
     href="/docs/students"
-    description="Student lifecycle from enrollment to graduation, with profiles."
+    description="Students, teachers, parents, staff — full CRUD with multi-step wizards."
   />
   <DocCard
-    title="Listings"
-    href="/docs/listings"
-    description="Subjects, classes, teachers, parents, staff records."
-  />
-  <DocCard
-    title="Attendance"
-    href="/docs/attendance"
-    description="Daily attendance, reports, absence management."
-  />
-  <DocCard
-    title="Exam"
-    href="/docs/exams"
-    description="Exam scheduling, grading, results, report cards."
-  />
-  <DocCard
-    title="Timetable"
-    href="/docs/timetable"
-    description="Class scheduling, period management, conflict detection."
-  />
-  <DocCard
-    title="Admission"
+    title="05 — Admission"
     href="/docs/admission"
-    description="Application processing, enrollment workflow, registration."
+    description="9-step public application, OTP status tracker, AI doc review, merit ranking, multi-gateway payment."
   />
   <DocCard
-    title="Finance"
+    title="06 — Attendance"
+    href="/docs/attendance"
+    description="11 capture modes, kiosk + geofence + QR + barcode, gamification, AI insights."
+  />
+  <DocCard
+    title="07 — Exams"
+    href="/docs/exams"
+    description="Exams, mock exams, quizzes, qbank, certificates, report cards, transcripts, promotion."
+  />
+  <DocCard
+    title="08 — Timetable"
+    href="/docs/timetable"
+    description="Visual builder, conflict detection, by-class/teacher/room views, generation, templates."
+  />
+  <DocCard
+    title="09 — Finance"
     href="/docs/fees"
-    description="Bookkeeping, invoicing, payroll, banking integration."
+    description="Double-entry bookkeeping, 6 payment gateways, Plaid + Dwolla banking, payroll, invoicing."
   />
   <DocCard
-    title="Stream / LMS"
-    description="School-scoped courses, video player, enrollment, certificates."
-  />
-  <DocCard
-    title="Messaging"
+    title="10 — Communication"
     href="/docs/messages"
-    description="Real-time conversations with attachments and search."
+    description="Announcements, real-time messaging, notifications (email + push), WhatsApp Evolution API."
+  />
+  <DocCard
+    title="11 — Stream / LMS"
+    href="/docs/clickview"
+    description="School-scoped courses, lessons, enrollments, certificates, video player, ClickView CDN."
+  />
+  <DocCard
+    title="12 — Library"
+    href="/docs/library"
+    description="Catalog browse, contribute, borrow records, school admin."
+  />
+  <DocCard
+    title="13 — Transport"
+    description="Drivers, vehicles, routes, trips, geofence boarding, parent notifications."
+  />
+  <DocCard
+    title="14 — Catalog"
+    href="/docs/catalog"
+    description="Global subjects + chapters + lessons + curricula (SD/US/IN/FR), community contributions, ClickView assets."
   />
 </CardGrid>
 
 ## Epic 01 — Infrastructure
 
-Set up the core foundation where each school gets its own subdomain with isolated data. Read more in [Multi-Tenancy](/docs/multi-tenancy).
+**Status:** `Built+Polish`
 
-- Multi-tenant database schema with `schoolId` scoping.
-- Subdomain routing (`school.databayt.org`).
-- Next.js 16 + React 19 + Prisma 6 stack configured.
-- CI/CD pipeline with automated tests.
-- Sentry error monitoring.
-- Internationalization (Arabic / English).
-- Development, staging, and production environments.
-- Database singleton pattern.
-- Testing infrastructure (Vitest, Playwright).
-- Multi-tenant isolation test suite.
-- Edge middleware for subdomain rewriting.
-- `getTenantContext()` helper.
-- Type-safe environment configuration.
-- Tailwind CSS 4 with RTL/LTR support.
-- Layout + font configuration.
+The multi-tenant foundation. Each school is a subdomain (`school.databayt.org`), resolved at the edge, isolated by `schoolId`. See [Architecture](/docs/architecture) and [Multi-tenancy](/docs/multi-tenancy).
 
-## Epic 02 — Authentication
+- Multi-tenant Prisma schema with `schoolId` scoping on every tenant-owned model (302 models, 73 schema files).
+- Subdomain routing via Next.js 16 edge `proxy.ts`.
+- Custom-domain mapping via Upstash Redis (`custom-domain:${host}`).
+- `getTenantContext()` resolves `schoolId` from the `x-subdomain` header for every server action.
+- Vercel + Neon (PostgreSQL serverless) + AWS S3 + CloudFront (`cdn.databayt.org`).
+- Sentry error monitoring (gracefully no-op without DSN).
+- 11 daily cron jobs for housekeeping (notifications, reminders, fee overdue, cleanups).
+- CI/CD: 245 dedicated test files, Playwright suites for auth / multi-tenant / RBAC / smoke.
+- Edge bundle hygiene: `outputFileTracingExcludes` keeps serverless functions under Vercel's 300 MB limit.
+- `experimental.serverActions.bodySizeLimit: "10mb"` for direct file uploads.
 
-Secure login with email, password, and social providers, plus role-based access for school staff. See [Authentication](/docs/authentication).
+## Epic 02 — Authentication & Users
 
-- NextAuth v5 with JWT strategy.
-- Email/password with bcrypt.
-- OAuth providers (Google, Facebook).
-- Two-factor authentication (planned).
-- All 8 roles: DEVELOPER, ADMIN, TEACHER, STUDENT, GUARDIAN, ACCOUNTANT, STAFF, USER.
-- Route-level RBAC enforcement.
-- Password reset flow.
+**Status:** `Built`
+
+NextAuth v5 with email + password, OAuth (Google, Facebook), 2FA, full invitation flow, audit logging. See [Authentication](/docs/authentication).
+
+- NextAuth v5 (beta.30) with JWT strategy and a multi-tenant Prisma adapter.
+- Email + password (bcrypt cost 12).
+- OAuth providers: Google, Facebook.
+- Two-factor authentication via `TwoFactorToken` + `TwoFactorConfirmation` (`src/components/auth/verification/2f-token.ts`, `2f-confirmation.ts`).
+- 8 roles: `DEVELOPER`, `ADMIN`, `TEACHER`, `STUDENT`, `GUARDIAN`, `ACCOUNTANT`, `STAFF`, `USER`.
+- CASL abilities (`@casl/ability` + `@casl/prisma`) for fine-grained authorization.
+- Route-level RBAC via role gates.
+- Password reset flow with email verification.
+- Email verification on signup.
 - Session management with auto-renewal.
-- User profile management.
-- User invitation system (planned).
-- Audit logging for sensitive operations (planned).
+- User profile pages per role (admin / teacher / student / parent / staff variants).
+- User invitation system (`src/lib/invitation-utils.ts`, `src/app/[lang]/accept-invite/page.tsx`, daily `/api/cron/expire-invitations` job).
+- Audit logging for sensitive operations (`AuditLog` model, `src/lib/audit-log.ts`).
+- Brute-force protection via `LoginAttempt` and rate limits.
+- Compliance + legal consent models (`LegalConsent`, `LegalDocument`, `ComplianceLog`).
 
 ## Epic 03 — Configuration
 
-Schools customize branding, academic structure, and settings during onboarding.
+**Status:** `Built`
 
-- School profile creation and management.
-- Academic year setup with start/end dates.
-- Term and period configuration.
-- Year level / grade configuration.
-- Department management.
-- School branding (logo upload).
-- Color picker for school theme.
+Schools customise branding, academic structure, and policies during an 18-step onboarding wizard. See [Onboarding](/docs/onboarding).
+
+- 18-step onboarding wizard: `about-school`, `branding`, `capacity`, `description`, `discount`, `finish-setup`, `import`, `join`, `legal`, `location`, `price`, `schedule`, `stand-out`, `subdomain`, `title`, `visibility`, `congratulations`, `overview`.
+- School profile (`School` model) with academic year, term, period.
+- `SchoolYear`, `Term`, `Period`, `YearLevel`, `AcademicLevel`, `AcademicGrade` models.
+- `StreamType` enum: `GENERAL`, `SCIENCE`, `ARTS`, `COMMERCE`, `TECHNICAL`, `RELIGIOUS`.
+- Configuration editors at `school/configuration/`: branding, capacity, description, discount, domain, hero, join, legal, location, modules, name-format, plan, price, schedule, title, visibility.
+- Logo upload, color picker, theme customisation (`UserTheme`).
 - Timezone configuration.
-- School settings page.
-- Onboarding wizard.
-- Logo preview and management.
+- Domain request flow for custom domains.
 
-## Epic 04 — Student
+## Epic 04 — People
 
-Manage the full student journey from enrollment to graduation with rich profiles and guardian links.
+**Status:** `Built`
 
-- Student enrollment form.
-- Profile page with 8 tabs.
-- Personal information.
-- Academic information.
-- Health records.
-- Documents tab with upload.
-- Achievements tracking.
-- Disciplinary records.
-- Fees tab with payment history.
-- Search and advanced filtering.
-- Guardian relationships and linking.
-- Document upload and management.
-- Photo upload and display.
-- Bulk actions.
-- Individual and bulk CSV export.
-- Status transitions (enrolled / transferred / graduated).
-- Previous education records.
-- Emergency contacts.
+CRUD for the four people types — students, teachers, parents, staff — with multi-step wizards and rich profiles. See [Students](/docs/students), [Teachers](/docs/teachers), [Listings](/docs/listings).
 
-## Epic 05 — Listings
+- **Students** — 12-step wizard (personal, contact, fees, enrollment, location, health, academic, previous-education, guardian, attachments, photo). Profile page with 8 tabs. CSV bulk import.
+- **Teachers** — 9-step wizard (information, contact, employment, expertise, qualifications, experience, location, photo, attachments). Departments, schedule, performance.
+- **Parents / Guardians** — multi-step add (information, contact). Link-child action wires guardians to students.
+- **Staff** — full CRUD with `StaffMember`, `StaffAccessCard`, `StaffSalaryStructure`, `StaffSalarySlip`, `StaffTimesheetEntry`.
+- Status transitions: `enrolled`, `transferred`, `graduated`.
+- Bulk actions, individual + bulk CSV export.
+- Photo uploads to S3 + CloudFront.
 
-CRUD for subjects, classes, teachers, parents, and staff with profile pages and tables.
+## Epic 05 — Admission
 
-- Subject catalog and CRUD.
-- Class creation with capacity.
-- Student enrollment in classes.
-- Student-class conflict detection.
-- Teacher assignment to classes.
-- Teacher-subject allocation.
-- Teacher profile creation, display.
-- Qualifications management.
-- Parent / guardian profile management.
-- Staff profile creation.
-- Department assignment.
-- Class sections.
-- Class roster export.
-- Resource sharing within class.
-- Class analytics dashboard.
+**Status:** `Built`
+
+Public-facing admission portal with a 9-step application form, OTP status tracking, AI document review, merit ranking, multi-gateway fee payment, and one-click enrollment conversion. See [Admission](/docs/admission).
+
+- **Public 9-step application** at `/[lang]/s/[subdomain]/application/...`: personal → contact → location → academic → fees → attachments → offer → payment → success.
+- Auto-save with `ApplicationSession` resume.
+- **OTP-verified status tracker** — applicants check status without an account.
+- **Document upload** with attachments step.
+- **AI document review** (`src/components/school-dashboard/admission/ai/`):
+  - Anthropic-based document classification (`classify.ts`).
+  - Completeness scoring (`completeness.ts`).
+  - Merit engine for entrance / interview / merit / rank scoring (`merit-engine.ts`).
+  - Bank-receipt extraction for offline-payment validation.
+- **Tour booking** with `TourBooking` model and admin time-slot management.
+- **Acceptance / offer flow** — `Application.admissionOffered`, `offerDate`, `offerExpiryDate`, `offerAccepted`.
+- **Automatic enrollment conversion** — accepting an offer triggers `enrollStudentInGradeClasses` (`src/lib/enrollment-sync.ts`), creating Student + User + Guardian + StudentYearLevel + AcademicGrade + FeeAssignments + UserInvoices + StudentDocuments in one transaction.
+- **Merit scoring + ranking** with admin merit table.
+- **Campaigns** (`AdmissionCampaign`) with date-range calendar picker.
+- **Multi-gateway fee payment** — see Epic 09.
+- Admission analytics, settings, bulk placement, interview scheduling.
+- Notifications (email + WhatsApp + push) at every status transition.
+- 5 dedicated test files: `actions.test.ts`, `enrollment-notifications.test.ts`, `enrollment-pipeline.test.ts`, `offer-expiry.test.ts`, `validation.test.ts`.
 
 ## Epic 06 — Attendance
 
-Daily attendance with simple marking or QR / location check-ins. See [Attendance](/docs/attendance).
+**Status:** `Built+Polish`
 
-- Daily attendance marking interface.
-- Status options (present / absent / late / excused).
-- Bulk marking.
-- Reports by class and by student.
-- Monthly summary.
-- Parent absence notifications.
-- Late arrival tracking.
-- Attendance trend analytics.
-- Data export.
-- Teacher attendance tracking.
-- Leave request integration.
+Daily attendance with 11 capture modes, gamification, hall-pass, AI insights. Section-centric migration is in flight. See [Attendance](/docs/attendance).
 
-## Epic 07 — Exam
+- **11 `AttendanceMethod` modes**: `MANUAL`, `GEOFENCE`, `QR_CODE`, `BARCODE`, `RFID`, `FINGERPRINT`, `FACE_RECOGNITION`, `NFC`, `BLUETOOTH`, `BULK_UPLOAD`, `KIOSK`.
+- 24 routes under `attendance/*` covering manual, kiosk, bulk-upload, QR, barcode, geofence, hall-pass, intentions, excuses, letters (auto-generation), interventions, gamification, early-warning, AI, analytics, reports, records, recent.
+- 33+ Prisma models split across `attendance.prisma` (16), `attendance-enhanced.prisma` (10), `geo-attendance.prisma` (3): `AccessCard`, `AttendanceDevice`, `AttendanceEvent`, `AttendancePolicy`, `AttendanceReport`, `AttendanceSession`, `BiometricTemplate`, `BluetoothBeacon`, `KioskSession`, `KioskLog`, `HallPass`, `QRCodeSession`, `MasterAttendance`, `GeoAttendanceEvent`, `GeoFence`, `LocationTrace`, plus competition / badge / streak / reward / intervention models for gamification.
+- Status options: present / absent / late / excused.
+- Parent absence notifications + late-arrival tracking.
+- Trend analytics + monthly summaries + class / student reports.
+- Teacher attendance tracking + leave-request integration.
+- **Section-centric migration `In Progress`** — see `.bmad/planning/architecture-section-timetable-attendance.md` (status: PROPOSED). Today: backward-compat with `StudentClass`. Next: `Section.id` everywhere.
 
-Exam scheduling, grading, weighted result calculation, report card PDF. See [Exams](/docs/exams).
+## Epic 07 — Exams & Grading
 
-- Exam creation and scheduling.
-- Type configuration (midterm / final / quiz).
-- Grade entry interface.
-- Grade scale configuration.
-- Weighted-average result calculation.
-- Report card generation.
-- Report card templates.
-- Result publication workflow.
-- Parent result notifications.
-- Class performance analytics.
-- Subject-wise reports.
-- Grade history tracking.
-- Exam room allocation.
-- Schedule conflict detection.
-- Result export (PDF / CSV).
+**Status:** `Built`
+
+End-to-end assessment lifecycle: assignments, exams, mock exams, quizzes, question bank, generated papers, marking, certificates, report cards, transcripts, promotion. See [Exams](/docs/exams) and [Exam wizard](/docs/exam-wizard).
+
+- 40+ Prisma models across `exam.prisma`, `school-exam.prisma`, `school-qbank.prisma`, `quiz.prisma`, `quiz-game.prisma`, `quick-assessments.prisma`, `grading-scheme.prisma`, `school-assignment.prisma`, `progress-reports.prisma`.
+- **Exam scheduling** with type configuration (midterm, final, quiz, mock).
+- **Mock exams** with practice take + analytics.
+- **Quizzes** including quiz-game leaderboards and category stats.
+- **Question bank** with AI generation, source-material chunking, question analytics, review workflow.
+- **Paper generation** with cover / header / footer / question-type templates.
+- **Marking** with rubrics + criteria + grade boundaries + overrides.
+- **Report cards** + grades + transcripts (PDF + CSV export).
+- **Certificates** with verify-by-code at `/certificate/[shareToken]` and `/verify/[code]`.
+- **Promotion workflow** with `PromotionBatch`, `PromotionCandidate`, `PromotionPolicy`, `Transcript`.
+- **Result analytics** per exam and rolled up per class / subject.
 
 ## Epic 08 — Timetable
 
-Visual schedule builder with drag-and-drop, preventing double-booking of teachers or rooms. See [Timetable](/docs/timetable).
+**Status:** `Built`
 
-- Visual timetable builder.
-- Drag-and-drop scheduling.
-- Period-wise scheduling.
-- Break management.
-- Room allocation.
-- Teacher conflict detection.
-- Room conflict detection.
-- Student conflict detection.
-- Per-teacher, per-class, per-room views.
-- Timetable export (PDF / print).
+Visual schedule builder with drag-and-drop, conflict detection across teacher / room / student, and per-axis views. See [Timetable](/docs/timetable).
 
-## Epic 09 — Admission
+- Visual timetable builder + drag-and-drop scheduling.
+- Period-wise scheduling with break management.
+- Room allocation with `RoomConstraint`.
+- **Conflict detection** for teachers, rooms, students.
+- Per-teacher / per-class / per-room views.
+- Substitution records (`SubstitutionRecord`) for absent teachers.
+- Teacher constraints + unavailable blocks.
+- Generation engine with conflict resolution.
+- Templates (`TimetableTemplate`, `TemplateApplication`) for reusable patterns.
+- Schedule exceptions for one-off changes.
+- Analytics dashboard.
+- Export (PDF / print).
 
-Public-facing application portal with multi-step form, document upload, and admin review. See [Admission](/docs/admission).
+## Epic 09 — Finance & Billing
 
-- Public application portal — no account required.
-- 6-step multi-step application form.
-- Auto-save with session resume.
-- OTP-verified status tracking.
-- Document upload.
-- Self-service tour booking calendar.
-- Tour booking management.
-- Lead-capture inquiry form.
-- Email notifications (confirmation, OTP).
-- Campaign management (admin).
-- Application review workflow.
-- Admission decision (accept / reject / waitlist).
-- Merit scoring.
-- Stripe fee payment integration.
-- Admission analytics.
+**Status:** `Built`
 
-## Epic 10 — Finance
+Comprehensive finance module — double-entry bookkeeping, 6 payment gateways, Plaid + Dwolla banking, payroll, invoicing, scholarships, fines. Significantly larger than typical MVP scope. See [Fees](/docs/fees) and [Invoice](/docs/invoice).
 
-Comprehensive finance module with double-entry bookkeeping, invoicing, payroll, and banking. Built beyond original MVP scope — 205 files across 40+ Prisma models. See [Fees](/docs/fees).
+- 36 Prisma models across 7 finance schema files.
+- **Double-entry bookkeeping** — `ChartOfAccount`, `JournalEntry`, `LedgerEntry`, `AccountBalance`, `FiscalYear`.
+- **6 payment gateways** — `src/lib/payment/providers/`: Stripe, bankak, tap, bank-transfer, cash, mobile-money. Pluggable provider interface in `provider.ts`.
+- **Banking** — Plaid (`react-plaid-link`, `@plaid/plaid`) + Dwolla. `BankAccount`, `BankReconciliation`, `Transaction`, `Transfer`, `PlaidItem`, `DwollaCustomer`.
+- **Fees** — `FeeStructure`, `FeeAssignment` with installment timeline, `Payment`, `Refund`, `Scholarship`, `ScholarshipApplication`, `Fine`.
+- **Invoicing** — `UserInvoice` with line items, addresses, signature, and configurable settings (`UserInvoiceSettings`).
+- **Receipts** — PDF receipt generation with `@react-pdf/renderer`.
+- **Payroll** — `PayrollRun`, `SalaryStructure`, `SalarySlip`, `SalaryAllowance`, `SalaryDeduction`, `TimesheetEntry`, `TimesheetPeriod`.
+- **Budget** — `Budget`, `BudgetAllocation`, `Expense`, `ExpenseCategory`, `Wallet`, `WalletTransaction`.
+- **Subscriptions (school-level)** — `Subscription`, `Invoice`, `BillingHistory`, `BillingPaymentMethod`, `BillingPreferences`, `SubscriptionTier`, `UsageMetrics`, `Discount`, `AppliedDiscount`, `CreditNote`.
+- **Reports** — `FinancialReport` plus dashboards.
+- **Permissions** — `FinancePermission` for finance-staff scoping.
 
-- Chart of accounts (double-entry bookkeeping).
-- Fee structures and assignments.
-- Payment processing and receipts.
-- Invoicing with email delivery.
-- Expense tracking with AI receipt extraction.
-- Salary structures and management.
-- Payroll runs with timesheets and slips.
-- Banking with Plaid integration.
-- Bank reconciliation.
-- Budget management.
-- Wallet system.
-- Financial reports and dashboards.
-- Scholarship management.
-- Fines management.
-- Role-based finance permissions.
+## Epic 10 — Communication & Messaging
+
+**Status:** `Built`
+
+Announcements, real-time messaging, notifications, WhatsApp bridge. See [Messages](/docs/messages).
+
+- **Announcements** (`announcement.prisma`, 5 models): scope (school / class / role), priority, scheduled publishing, expiry, pinned / featured, read receipts, templates.
+- **Messages** (`messages.prisma`, 11 models): `Conversation`, `ConversationInvite`, `ConversationParticipant`, `Message`, `MessageAttachment`, `MessageDraft`, `MessageReaction`, `MessageReadReceipt`, `PinnedMessage`, `StarredMessage`, `TypingIndicator`. Realtime via Socket.io custom server (`server.js`).
+- **Notifications** (`notifications.prisma`, 7 models): in-app + email + push. `Notification`, `NotificationBatch`, `NotificationDeliveryLog`, `NotificationPreference`, `NotificationSubscription`, `NotificationSummary`, `NotificationTemplate`.
+- **WhatsApp** (`whatsapp.prisma`, 5 models) — full Evolution API bridge: `WhatsAppGroup`, `WhatsAppGroupMember`, `WhatsAppMessage`, `WhatsAppMessageTemplate`, `WhatsAppSession`. Retry + exponential backoff.
+- **Email templates** in `src/lib/email-templates/` powered by React Email.
+- 11 daily cron jobs deliver scheduled comms (announcements publish / expire, email / WhatsApp queues, event reminders, assignment reminders, fee-overdue notices, teacher reminders).
 
 ## Epic 11 — Stream / LMS
 
-School-scoped learning management system: courses, video player, enrollment, certificates. 102 files across 8 Prisma models.
+**Status:** `Built+Polish`
 
-- Admin course management (CRUD).
-- Course categories.
+School-scoped LMS — courses, chapters, lessons, enrollments, certificates, video player, ClickView CDN. ClickView asset wave is partial. See [ClickView integration](/docs/clickview).
+
+- 8 Prisma models (`stream.prisma`): `StreamCourse`, `StreamCategory`, `StreamChapter`, `StreamLesson`, `StreamEnrollment`, `StreamLessonProgress`, `StreamCertificate`, `StreamAttachment`.
+- Admin course CRUD + categories.
 - Video player with progress tracking.
-- Student enrollment in courses.
-- Course completion certificates.
-- Rich-text editor for content.
+- Student enrollment + completion certificates.
+- Rich-text editor (Tiptap).
 - Admin analytics dashboard.
 - Enrollment / completion email notifications.
 - Course home page (hero, curriculum, skills).
 - Sortable lesson ordering.
-- Payment flow (cancel / success).
+- Stripe payment flow (cancel / success).
 - Student dashboard with lesson progress.
+- Per-school storage quota (`videoStorageUsedBytes` / `videoStorageQuotaBytes`).
+- **ClickView CDN integration `Built+Polish`** — image library partially downloaded (~32–40 of ~986 lessons); rest fall back to ClickView CDN URLs. Tracked in [Roadmap](/docs/roadmap).
 
-## Epic 12 — Messaging
+## Epic 12 — Library
 
-Real-time messaging with conversations, attachments, and search. 32 files across 12 Prisma models. See [Messages](/docs/messages).
+**Status:** `Built`
 
-- Chat interface with message bubbles.
-- Conversation list and management.
-- New conversation dialog.
-- Attachment upload.
-- Message search.
-- Real-time updates via hooks.
-- Multi-tenant authorization.
-- Message grouping by date.
+Catalog, contribute, borrow records, school admin. See [Library](/docs/library) and [Books catalog](/docs/books-catalog).
 
-## Epic 13 — Catalog
+- Components in `src/components/library/`: admin, book-detail, book-list, catalog, contribute, my-profile.
+- Models: `Book`, `Textbook`, `SchoolBook`, `BorrowRecord`.
+- Browse + search + checkout for students.
+- Admin CRUD + circulation reports.
+- School-scoped via `SchoolBook` while leveraging the global `Book` / `Textbook` catalog.
 
-Platform-wide educational content library sourced from ClickView. 9 Prisma models (global, no `schoolId` by design). See [Catalog](/docs/catalog).
+## Epic 13 — Transport
 
-- Catalog subjects (62 subjects).
-- Catalog chapters (201 chapters).
-- Catalog lessons (986 lessons).
-- S3 / CloudFront image hosting.
-- School-to-catalog bridge pattern.
-- ClickView integration ([elementary](/docs/clickview-elementary), [middle](/docs/clickview-middle), [high](/docs/clickview-high)).
+**Status:** `Built`
 
-## What's not in scope
+Drivers, vehicles, routes, trips, geofence boarding, parent notifications. Most recent epic — merged 2026-04 (PR #291).
 
-- Mobile native apps (mobile web works).
-- Bus / transport routing.
-- Inventory and asset tracking.
-- Health clinic module.
-- Library extensions beyond catalog.
+- 7 Prisma models (`transportation.prisma`): `Driver`, `Vehicle`, `Route`, `RouteStop`, `RouteAssignment`, `Trip`, `TripBoarding`.
+- Routes under `transportation/*`: drivers, vehicles, routes, trips, assignments, reports, settings.
+- Drag-and-drop route stop ordering (dnd-kit).
+- **Geofence-linked boarding** with parent notifications on board / disembark.
+- Mapbox + Leaflet for route visualisation.
+- Trip reports: utilisation, hours, trip stats, fee preview.
+- Block-level guide at `src/components/school-dashboard/transportation/CLAUDE.md`.
+
+## Epic 14 — Catalog (global content)
+
+**Status:** `Built+Polish`
+
+Platform-wide educational content library — global subjects, chapters, lessons across multiple curricula, sourced and contributed. See [Catalog](/docs/catalog) and the ClickView trio: [elementary](/docs/clickview-elementary), [middle](/docs/clickview-middle), [high](/docs/clickview-high).
+
+- 22+ catalog Prisma models across `catalog.prisma`, `curriculum.prisma`, `chapter.prisma`, `lesson.prisma`, `material.prisma`, `book.prisma`, `textbook.prisma`, `video.prisma`, `image.prisma`, `document.prisma`, `assignment.prisma`, `question.prisma`, `quiz.prisma`, `bridge.prisma`, plus operator-level `proposal.prisma`, `enrollment.prisma`.
+- **Bridge pattern** (`bridge.prisma`): schools subscribe to a shared catalog and apply `ContentOverride`, `BookSelection`, `SubjectSelection`, `InstructorPreference`.
+- 4 curricula seeded on disk: SD (Sudan, 12 grades, bilingual subjects), US (246 subject dirs), IN (246 subject dirs), FR.
+- 62 subjects / 201 chapters / 986 lessons (target inventory).
+- Operator-facing dashboard at `/[lang]/(saas-dashboard)/(catalog)/catalog/...`: subjects, books, materials, questions, proposals, approvals, analytics, plus per-subject and per-book detail.
+- **Community contribution workflow** with `Proposal` model (proposed → reviewed → approved → published).
+- S3 + CloudFront image hosting via `cdn.databayt.org`.
+- ClickView asset wave `Built+Polish` — see Epic 11.
+
+## Not built yet
+
+| Module | Status | Notes |
+| ------ | ------ | ----- |
+| Health module | `Schema Only` | `HealthRecord` exists on student profile, no standalone clinic UI. Tracked in [Roadmap](/docs/roadmap). |
+| Hostel | `Vaporware` | Only string mentions in dictionaries. Vision-tier in [Roadmap](/docs/roadmap). |
+| Cafeteria | `Vaporware` | Only string mentions in dictionaries. Vision-tier in [Roadmap](/docs/roadmap). |
+| Native mobile (iOS / Android) | `Vaporware` | Mobile web works today. React Native track in [Roadmap](/docs/roadmap). |
+
+## Surprises beyond original MVP scope
+
+These were not in the early MVP but shipped along the way. They appear inside the relevant epic above; this list is a quick scan for anyone reviewing the corpus.
+
+- AI-driven admission document classification + merit ranking + bank-receipt extraction (Epic 05, Anthropic).
+- Plaid + Dwolla banking integration (Epic 09).
+- Six payment gateways with pluggable provider interface (Epic 09).
+- 11 attendance capture methods including biometric, geofence, and kiosk (Epic 06).
+- Question bank with AI generation, source-material chunking, and analytics (Epic 07).
+- Certificate verification by short code (Epic 07).
+- WhatsApp Evolution API bridge with retry + backoff (Epic 10).
+- Custom-domain self-service via Upstash Redis lookup (Epic 01).
+- Hall-pass system, gamification, early-warning interventions (Epic 06).
+- Catalog community contribution workflow with proposals + approvals (Epic 14).
+- Sales + Lead module with kanban (separate `sales.prisma` — operator-facing).
+- Theme customisation (`UserTheme`).
+- 11 daily cron jobs for housekeeping (Epic 01).
+- AGENTS.md.draft + comprehensive `.claude/` harness (50 agents, 47 commands, 16 skills, 13 block-level CLAUDE.md guides).
+- 4 country curricula seeded on disk with Sudan-specific bilingual subject names (Epic 14).
 
 ## References
 
-- [Architecture](/docs/architecture) — mirror pattern, file conventions
-- [PRD](/docs/prd) — product requirements detail
+- [PRD](/docs/prd) — product requirements, architecture, NFRs, constraints
+- [Roadmap](/docs/roadmap) — Next milestones and Vision
+- [Architecture](/docs/architecture) — system design and patterns
 - [Open issues](https://github.com/databayt/hogwarts/issues) — implementation status and feedback
