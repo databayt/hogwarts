@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 
 import { authenticate, isAuthError } from "../../lib/authenticate"
+import { canAccessStudent } from "../../lib/student-access"
 
 /**
  * GET /api/mobile/attendance/streaks — get attendance streak data
@@ -35,6 +36,12 @@ export async function GET(request: NextRequest) {
         { error: "student_id required" },
         { status: 400 }
       )
+    }
+
+    // Relationship gate
+    const allowed = await canAccessStudent(auth, studentId)
+    if (!allowed) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
     const streak = await db.attendanceStreak.findUnique({

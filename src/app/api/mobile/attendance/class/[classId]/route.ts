@@ -20,6 +20,18 @@ export async function GET(
     const auth = await authenticate(request)
     if (isAuthError(auth)) return auth
 
+    // The class roster contains every student's name and photo. Per the
+    // central permission matrix `read_class` is restricted to staff —
+    // students/guardians cannot enumerate other students.
+    if (
+      auth.role !== "DEVELOPER" &&
+      auth.role !== "ADMIN" &&
+      auth.role !== "TEACHER" &&
+      auth.role !== "STAFF"
+    ) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
     const { classId } = await params
     const { searchParams } = new URL(request.url)
     const date =

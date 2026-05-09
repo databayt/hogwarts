@@ -18,10 +18,13 @@ export async function POST(request: NextRequest) {
     const auth = await authenticate(request)
     if (isAuthError(auth)) return auth
 
+    // Authorization: QR session generation is teacher-driven — STAFF excluded
+    // intentionally because creating QR sessions requires class context.
+    // "SUPER_ADMIN" is dead code — replaced with "DEVELOPER".
     if (
       auth.role !== "TEACHER" &&
       auth.role !== "ADMIN" &&
-      auth.role !== "SUPER_ADMIN"
+      auth.role !== "DEVELOPER"
     ) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
@@ -31,6 +34,20 @@ export async function POST(request: NextRequest) {
 
     if (!class_id) {
       return NextResponse.json({ error: "class_id required" }, { status: 400 })
+    }
+
+    // Verify the class belongs to this tenant. Without this, a teacher
+    // could pass another school's classId and create a QR session in
+    // their own school with an FK pointing across tenants.
+    const classExists = await db.class.findFirst({
+      where: { id: class_id, schoolId: auth.schoolId },
+      select: { id: true },
+    })
+    if (!classExists) {
+      return NextResponse.json(
+        { error: "class_id is not a member of this school" },
+        { status: 404 }
+      )
     }
 
     const code = randomBytes(16).toString("hex")

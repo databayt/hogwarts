@@ -22,10 +22,13 @@ export async function PUT(
     const auth = await authenticate(request)
     if (isAuthError(auth)) return auth
 
+    // Authorization: matches central attendance permission matrix (manage_excuse).
+    // STAFF added per the matrix; "SUPER_ADMIN" is dead code → "DEVELOPER".
     if (
       auth.role !== "TEACHER" &&
       auth.role !== "ADMIN" &&
-      auth.role !== "SUPER_ADMIN"
+      auth.role !== "STAFF" &&
+      auth.role !== "DEVELOPER"
     ) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
