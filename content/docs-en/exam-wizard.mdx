@@ -30,15 +30,15 @@ Phase 1 + Exam P2 use the `(exam-wizard)/` route group (full-screen, no dashboar
 
 ### Exam P1 — template (dynamic count)
 
-| #   | Step            | Description                                                              |
-| --- | --------------- | ------------------------------------------------------------------------ |
-| 1   | gallery         | Regional preset (SD, SA, US, MENA) or blank                              |
-| 2   | info            | Name, subjects, grades, exam type, duration, marks, question types       |
-| 3   | layout          | 6 slots: header, studentInfo, instructions, answerSheet, cover, footer   |
-| 4+  | question-{type} | Dynamic — one per Q type, difficulty distribution                        |
-| N-2 | scoring         | Passing score, grade boundaries (add / remove / reset)                   |
-| N-1 | footer-print    | Footer variant + decorations (accent bar / watermark / frame) + print    |
-| N   | preview         | 4 summary cards + paper mockup + save (creates / updates `ExamTemplate`) |
+| #   | Step              | Description                                                              |
+| --- | ----------------- | ------------------------------------------------------------------------ |
+| 1   | gallery           | Regional preset (SD, SA, US, MENA) or blank                              |
+| 2   | info              | Name, subjects, grades, exam type, duration, marks, question types       |
+| 3   | layout            | 6 slots: header, studentInfo, instructions, answerSheet, cover, footer   |
+| 4+  | `question-{type}` | Dynamic — one per Q type, difficulty distribution                        |
+| N-2 | scoring           | Passing score, grade boundaries (add / remove / reset)                   |
+| N-1 | footer-print      | Footer variant + decorations (accent bar / watermark / frame) + print    |
+| N   | preview           | 4 summary cards + paper mockup + save (creates / updates `ExamTemplate`) |
 
 ### Exam P2 — generation (fixed 5)
 
