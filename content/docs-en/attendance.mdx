@@ -75,10 +75,10 @@ US DoE risk levels:
 
 | Risk               | Attendance rate | Absence rate |
 | ------------------ | --------------- | ------------ |
-| Satisfactory       | ≥95%            | <5%          |
+| Satisfactory       | ≥95%            | `<5%`        |
 | At-risk            | 90 – 94.9%      | 5 – 9.9%     |
 | Moderately chronic | 80 – 89.9%      | 10 – 19.9%   |
-| Severely chronic   | <80%            | ≥20%         |
+| Severely chronic   | `<80%`          | ≥20%         |
 
 Intervention tracking at `/attendance/interventions` — 14 intervention types (parent contact, home visit, counsellor / social worker / administrator referral, attendance contract, truancy referral, community resource, academic support, mentorship, incentive, other) with statuses Scheduled → In Progress → Completed / Cancelled / Escalated. Policy engine in `actions/policy.ts` evaluates triggers and manages exemptions.
 
