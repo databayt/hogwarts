@@ -15,16 +15,15 @@ import {
   Download,
   FileText,
   GraduationCap,
-  Info,
   Layers,
   Loader2,
   Shield,
   Target,
-  Upload,
   UserCheck,
   Users,
 } from "lucide-react"
 
+import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ModalProvider } from "@/components/atom/modal/context"
@@ -124,7 +123,7 @@ function ScrollRow({
   )
 }
 
-// ---------- People Import (Onboarding-style DropZone) ----------
+// ---------- People Import (one-click upload cards) ----------
 
 type ImportType = "students" | "teachers" | "staff" | "guardians"
 
@@ -183,171 +182,102 @@ function downloadTemplate(content: string, filename: string) {
   URL.revokeObjectURL(url)
 }
 
-function DropZone({
+// One-click upload card. Click anywhere → file picker; drag a file onto it →
+// same. Status (busy / success / failure) shows as a small icon next to the
+// download-template button so the layout never grows a second row.
+function UploadCard({
   config,
   state,
-  inputRef,
   t,
   onUpload,
-  onBrowse,
 }: {
   config: DropZoneConfig
   state: SectionState
-  inputRef: (el: HTMLInputElement | null) => void
   t: Record<string, string>
   onUpload: (file: File) => void
-  onBrowse: () => void
 }) {
-  const hasResult = state.result || state.error
+  const inputRef = useRef<HTMLInputElement | null>(null)
   const Icon = config.icon
+  const busy = state.uploading || state.importing
+  const succeeded = !!state.result && !state.error && !state.importing
+  const failed = !!state.error || (state.result?.failed ?? 0) > 0
 
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault()
-      const file = e.dataTransfer.files?.[0]
-      if (file) onUpload(file)
-    },
-    [onUpload]
-  )
+  const openPicker = () => {
+    if (busy) return
+    inputRef.current?.click()
+  }
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
+  const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
-  }, [])
+    const file = e.dataTransfer.files?.[0]
+    if (file && !busy) onUpload(file)
+  }
+
+  const description = state.error
+    ? state.error
+    : state.result
+      ? `${state.result.imported} ${state.importing ? t.importing : t.imported}${
+          state.result.failed > 0 ? ` · ${state.result.failed} ${t.failed}` : ""
+        }`
+      : (t[`${config.type}Desc`] ?? "")
 
   return (
-    <div className="relative">
-      <div
-        className={`min-h-[140px] rounded-lg border-2 border-dashed transition-colors ${
-          state.error
-            ? "border-red-300"
-            : state.result
-              ? state.importing
-                ? "border-orange-300"
-                : "border-muted-foreground/30"
-              : "border-muted-foreground/30 hover:border-muted-foreground/50"
-        }`}
-      >
-        {state.uploading ? (
-          <div className="flex h-[140px] items-center justify-center">
-            <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
-          </div>
-        ) : hasResult ? (
-          <div className="flex min-h-[140px] flex-col items-center justify-center space-y-2 p-4">
-            {state.result && (
-              <div className="space-y-2 text-sm">
-                {state.result.imported > 0 && (
-                  <div
-                    className={`flex items-center justify-center gap-2 ${state.importing ? "text-orange-600" : "text-green-700 dark:text-green-400"}`}
-                  >
-                    {state.importing ? (
-                      <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
-                    ) : (
-                      <CheckCircle2 className="h-4 w-4 shrink-0" />
-                    )}
-                    {state.result.imported}{" "}
-                    {state.importing ? t.importing : t.imported}
-                  </div>
-                )}
-                {state.result.skipped > 0 && (
-                  <div className="text-muted-foreground flex items-center gap-2">
-                    <Info className="h-4 w-4 shrink-0" />
-                    {state.result.skipped}{" "}
-                    {t.skipped || "skipped (already exist)"}
-                  </div>
-                )}
-                {state.result.failed > 0 && (
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-red-600">
-                      <AlertCircle className="h-4 w-4 shrink-0" />
-                      {state.result.failed} {t.failed}
-                    </div>
-                    <div className="max-h-[80px] overflow-y-auto rounded border p-2 text-xs">
-                      {state.result.errors.map((err, i) => (
-                        <div key={i} className="text-muted-foreground py-0.5">
-                          {t.row} {err.row}: {err.error}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {state.error && (
-              <div className="flex items-center gap-2 text-sm text-red-600">
-                <AlertCircle className="h-4 w-4 shrink-0" />
-                {state.error}
-              </div>
-            )}
-
-            {!state.importing && (
-              <div className="text-center">
-                <button
-                  type="button"
-                  onClick={onBrowse}
-                  className="text-muted-foreground hover:text-foreground mt-1 text-xs underline underline-offset-2"
-                >
-                  {t.uploadAnother}
-                </button>
-              </div>
-            )}
-            <input
-              ref={inputRef}
-              type="file"
-              accept={ACCEPTED_FORMATS}
-              onChange={(e) => {
-                const file = e.target.files?.[0]
-                if (file) onUpload(file)
-                e.target.value = ""
-              }}
-              className="sr-only"
-            />
-          </div>
-        ) : (
-          <div
-            className="flex h-[140px] cursor-pointer flex-col items-center justify-center gap-2"
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-            onClick={onBrowse}
-          >
-            <div className="flex items-center gap-2">
-              <Icon className="text-muted-foreground h-5 w-5" />
-              <Upload className="text-muted-foreground h-4 w-4" />
-            </div>
-            <p className="text-sm">
-              {t.dropFile} <span className="font-semibold">{config.label}</span>{" "}
-              {t.fileSuffix}
-            </p>
-            <p className="text-muted-foreground/60 text-xs">CSV, Excel, JSON</p>
-            <input
-              ref={inputRef}
-              type="file"
-              accept={ACCEPTED_FORMATS}
-              onChange={(e) => {
-                const file = e.target.files?.[0]
-                if (file) onUpload(file)
-                e.target.value = ""
-              }}
-              className="sr-only"
-            />
-          </div>
-        )}
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={openPicker}
+      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && openPicker()}
+      onDrop={handleDrop}
+      onDragOver={(e) => e.preventDefault()}
+      className={cn(
+        "hover:bg-muted/50 focus-visible:ring-ring relative cursor-pointer space-y-2 rounded-lg border p-4 transition-colors focus-visible:ring-2 focus-visible:outline-none",
+        busy && "pointer-events-none opacity-60",
+        succeeded && "border-green-500/40",
+        failed && "border-red-300/60"
+      )}
+    >
+      <div className="flex items-center gap-2">
+        <Icon className="text-muted-foreground h-5 w-5" />
       </div>
+      <p className="text-sm font-medium">{config.label}</p>
+      <p className="text-muted-foreground line-clamp-2 text-xs">
+        {description}
+      </p>
 
-      {/* Download template button */}
-      {!hasResult && !state.uploading && (
+      {/* Status / template controls — absolute so they don't add a second row */}
+      <div className="absolute end-2 top-2 flex items-center gap-1">
+        {busy && (
+          <Loader2 className="text-muted-foreground h-4 w-4 animate-spin" />
+        )}
+        {!busy && succeeded && (
+          <CheckCircle2 className="h-4 w-4 text-green-600" />
+        )}
+        {!busy && failed && <AlertCircle className="h-4 w-4 text-red-600" />}
         <button
           type="button"
           onClick={(e) => {
             e.stopPropagation()
             downloadTemplate(config.templateContent, config.templateFilename)
           }}
-          className="text-muted-foreground hover:text-foreground absolute end-2 top-2 rounded p-1 transition-colors"
+          className="text-muted-foreground hover:text-foreground rounded p-1 transition-colors"
           title={t.downloadTemplate}
+          aria-label={t.downloadTemplate}
         >
           <Download className="h-4 w-4" />
         </button>
-      )}
+      </div>
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept={ACCEPTED_FORMATS}
+        className="sr-only"
+        onChange={(e) => {
+          const file = e.target.files?.[0]
+          if (file) onUpload(file)
+          e.target.value = ""
+        }}
+      />
     </div>
   )
 }
@@ -358,9 +288,9 @@ export default function BulkContent({ dictionary, lang }: Props) {
   const t = ((dictionary?.school as Record<string, unknown>)?.bulk ??
     {}) as Record<string, string>
   const [activeAcademic, setActiveAcademic] = useState("years")
-  const [activePeople, setActivePeople] = useState<ImportType>("students")
 
-  // People import state (onboarding two-phase pattern)
+  // Per-entity import state for the People upload cards (two-phase pattern:
+  // parse/validate then background DB write).
   const [sectionStates, setSectionStates] = useState<
     Record<ImportType, SectionState>
   >({
@@ -368,12 +298,6 @@ export default function BulkContent({ dictionary, lang }: Props) {
     teachers: initialSectionState,
     staff: initialSectionState,
     guardians: initialSectionState,
-  })
-  const inputRefs = useRef<Record<ImportType, HTMLInputElement | null>>({
-    students: null,
-    teachers: null,
-    staff: null,
-    guardians: null,
   })
 
   const dropZoneConfigs: DropZoneConfig[] = [
@@ -404,33 +328,6 @@ export default function BulkContent({ dictionary, lang }: Props) {
       label: t.guardians || "Guardians",
       templateContent: GUARDIAN_TEMPLATE,
       templateFilename: "guardians-template.csv",
-    },
-  ]
-
-  const peopleCards: BulkCardItem[] = [
-    {
-      id: "students",
-      icon: GraduationCap,
-      title: t.students || "Students",
-      description: t.studentsDesc || "Import student records",
-    },
-    {
-      id: "teachers",
-      icon: UserCheck,
-      title: t.teachers || "Teachers",
-      description: t.teachersDesc || "Import teacher records",
-    },
-    {
-      id: "staff",
-      icon: Users,
-      title: t.staff || "Staff",
-      description: t.staffDesc || "Import staff records",
-    },
-    {
-      id: "guardians",
-      icon: Shield,
-      title: t.guardians || "Guardians",
-      description: t.guardiansDesc || "Import guardian records",
     },
   ]
 
@@ -599,30 +496,21 @@ export default function BulkContent({ dictionary, lang }: Props) {
 
   return (
     <div className="space-y-10">
-      {/* People (card row + single DropZone) */}
+      {/* People — one row of click-to-upload cards. Each card opens its own
+          file picker (or accepts a drop) and shows status inline; no second
+          row. */}
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">{t.people || "People"}</h2>
-        <ScrollRow
-          items={peopleCards}
-          activeId={activePeople}
-          onSelect={(id) => setActivePeople(id as ImportType)}
-        />
-        <div className="pt-2">
-          {dropZoneConfigs
-            .filter((config) => config.type === activePeople)
-            .map((config) => (
-              <DropZone
-                key={config.type}
-                config={config}
-                state={sectionStates[config.type]}
-                inputRef={(el) => {
-                  inputRefs.current[config.type] = el
-                }}
-                t={t}
-                onUpload={(file) => handleUpload(file, config.type)}
-                onBrowse={() => inputRefs.current[config.type]?.click()}
-              />
-            ))}
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          {dropZoneConfigs.map((config) => (
+            <UploadCard
+              key={config.type}
+              config={config}
+              state={sectionStates[config.type]}
+              t={t}
+              onUpload={(file) => handleUpload(file, config.type)}
+            />
+          ))}
         </div>
       </section>
 
